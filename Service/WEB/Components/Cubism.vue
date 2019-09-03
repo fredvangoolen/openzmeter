@@ -63,8 +63,8 @@
         if(label === undefined) {
           Labels[0] = 'Time';
         } else {
-          var Result = this.SerieProps.FormatValue(label); 
-          Labels[0] = Result.Value + Result.Units;
+          var Result = oZm.FormatSerieValue(label, this.SerieProps); 
+          Labels[0] = Result.ValueHTML + Result.Units;
         }
         this.Graph.updateOptions( { labels: Labels });
       },
@@ -81,7 +81,7 @@
       },
       HoverOut() {
         this.$emit('mouseOver', false);
-      },
+      }
     },
     created: function() {
       this.$parent.$on('SeriesUpdate', this.SetData);
@@ -107,8 +107,8 @@
           }
         },
         axes: {
-          y: { drawAxis: false, drawGrid: false, valueFormatter: function(val) { var Result = this.SerieProps.FormatValue(val); return Result.Value + Result.Units; }.bind(this) },
-          x: { valueFormatter: function (x) { return '<div class="x-axis">' + moment(x).format('hh:mm:ss') + '</div>'; },
+          y: { drawAxis: false, drawGrid: false, valueFormatter: (val) => { var Result = oZm.FormatSerieValue(val, this.SerieProps); return Result.ValueHTML + Result.Units; } },
+          x: { valueFormatter: (x) => { return '<div class="x-axis">' + moment(x).format('hh:mm:ss') + '</div>'; },
                axisLabelFormatter: (this.index !== 0) ? function() { return null; } : function(x, i) {
                  var date = moment(x);
                  if((date.hours() === 0) && (date.minutes() === 0) && (date.seconds() === 0)) {

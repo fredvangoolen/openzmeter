@@ -42,6 +42,9 @@
     },
     methods: {
       CalcOptions() {
+//        var Colors = ['#d9534f', '#5cb85c', '#318ce7'];
+//                var Colors = ['#c38847', '#333333', '#949494'];
+
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
         var Range = this.SerieProps.Range(this.Data, this.Phases);
@@ -50,8 +53,8 @@
           labels: ['Time'].concat(this.SerieProps.Names(Analyzer)), colors: oZm.ColorArray(this.SerieProps.Color, this.SerieProps.Names(Analyzer).length),
           axes: {
             y: { pixelsPerLabel: 15, axisLabelWidth: 30,
-                 valueFormatter: function (x) { var Result = this.SerieProps.FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; }.bind(this),
-                 axisLabelFormatter: function (x) { var Units = oZm.GetBestUnits(Math.max(Math.abs(Range[0]), Math.abs(Range[1]))); return oZm.Round2(oZm.ScaleToUnits(x, Units)); }
+                 valueFormatter: (x) => { var Result = oZm.FormatSerieValue(x, this.SerieProps); return Result.ValuePlain + ' <em class="x-small">' + Result.Units + '</em>'; },
+                 axisLabelFormatter: (x) => { return oZm.FormatSerieValue(x, this.SerieProps, oZm.GetBestUnits(Math.max(Math.abs(Range[0]), Math.abs(Range[1])))).ValuePlain; }
                },
             x: { valueFormatter: function (x) { return moment(x).format('hh:mm:ss'); }, axisLabelFormatter: function (x) { return moment(x).format('hh:mm'); } }
           }
@@ -60,58 +63,43 @@
       },
       UpdateGraph() {
         if(this.$root.SelectedAnalyzer === null) return;
-        
-          $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], To: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Period: 7200000 }), 
-            success: (result) => {
-              if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
-              this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
-              var LastSample = result[this.SerieProps.Serie].slice(-1)[0];
-              if(this.type == 'FREQUENCY') {
-                this.LastValue = oZm.Round3(LastSample);
-                this.PhasesValue = [];
-              } else if(this.type == 'ACTIVE_POWER') {
-                this.LastValue = 0;
-                this.PhasesValue = [];
-                this.UnitsScale = oZm.GetBestUnits(oZm.ArrayAbsMax(LastSample));
-                for(var n = 0; n < LastSample.length; n++) this.LastValue = this.LastValue + LastSample[n];  
-                this.LastValue = oZm.Round2(oZm.ScaleToUnits(this.LastValue, this.UnitsScale));
-                this.PhasesValue = LastSample.map((n) => {
-                  return oZm.Round2Plain(oZm.ScaleToUnits(n, this.UnitsScale));
-                });
-              } else if(this.type == 'VOLTAGE') {
-                this.LastValue = 0;
-                this.PhasesValue = [];
-                this.UnitsScale = oZm.GetBestUnits(oZm.ArrayAbsMax(LastSample));
-                for(var n = 0; n < LastSample.length; n++) this.LastValue = this.LastValue + Math.pow(LastSample[n], 2.0);  
-                this.LastValue = oZm.Round2(oZm.ScaleToUnits(Math.sqrt(this.LastValue / LastSample.length), this.UnitsScale));
-                this.PhasesValue = LastSample.map((n) => {
-                  return oZm.Round2Plain(oZm.ScaleToUnits(n, this.UnitsScale));
-                });               
-              } else if(this.type == 'CURRENT') {
-                this.LastValue = 0;
-                this.PhasesValue = [];
-                this.UnitsScale = oZm.GetBestUnits(oZm.ArrayAbsMax(LastSample));
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], To: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Period: 7200000 }), 
+          success: (result) => {
+            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
+            this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
+            var LastSample = result[this.SerieProps.Serie].slice(-1)[0];
+            if(Array.isArray(LastSample) === false) {
+              this.LastValue = oZm.FormatSerieValue(LastSample, this.SerieProps).ValueHTML;
+              this.PhasesValue = [];
+            } else {
+              this.LastValue = 0;
+              this.PhasesValue = [];
+              this.UnitsScale = oZm.GetBestUnits(oZm.ArrayAbsMax(LastSample));
+              if(this.type === 'ACTIVE_POWER') {
+                for(var n = 0; n < LastSample.length; n++) this.LastValue = this.LastValue + LastSample[n];
+              } else {
                 var PhasesCount = oZm.Series['VOLTAGE'].Names(this.$root.SelectedAnalyzer).length;
                 for(var n = 0; n < PhasesCount; n++) this.LastValue = this.LastValue + Math.pow(LastSample[n], 2.0);  
-                this.LastValue = oZm.Round2(oZm.ScaleToUnits(Math.sqrt(this.LastValue / PhasesCount), this.UnitsScale));
-                this.PhasesValue = LastSample.map((n) => {
-                  return oZm.Round2Plain(oZm.ScaleToUnits(n, this.UnitsScale));
-                });    
+                this.LastValue = Math.sqrt(this.LastValue / PhasesCount);
               }
-              this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
-              this.DateWindow = [result['From'], result['To']];
-              this.LastSample = oZm.LastSampletime(result, this.LastSample);
-              if(this.Data.length > 0) this.CalcOptions();
-              this.ShowSpinner = false;
-            },
-            complete: () => {
-              this.UpdateGraphTimer = setTimeout(this.UpdateGraph, 5000);
-            }, 
-            error: () => {
-              this.ShowSpinner = true;
-            }
-          });
-
+              this.LastValue = oZm.FormatSerieValue(this.LastValue, this.SerieProps, this.UnitsScale).ValueHTML;
+              this.PhasesValue = LastSample.map((n) => {
+                return oZm.FormatSerieValue(n, this.SerieProps, this.UnitsScale).ValuePlain;
+              });
+            } 
+            this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
+            this.DateWindow = [result['From'], result['To']];
+            this.LastSample = oZm.LastSampletime(result, this.LastSample);
+            if(this.Data.length > 0) this.CalcOptions();
+            this.ShowSpinner = false;
+          },
+          complete: () => {
+            this.UpdateGraphTimer = setTimeout(this.UpdateGraph, 5000);
+          }, 
+          error: () => {
+            this.ShowSpinner = true;
+          }
+        });
       },
       SetPhases(phases) {
         this.Phases = phases;
