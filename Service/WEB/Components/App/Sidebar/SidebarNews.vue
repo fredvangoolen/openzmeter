@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="sidenav-version"><div>Build: {{ BuildDate }}</div>
+    <div class="sidenav-version"><div>Version:<br/>{{ BuildDate }}</div>
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" v-on:click="ShowUpdates" :disabled="Updates.length == 0"><img :src="require('Imgs/update.png')"></button>
         <button type="button" class="btn btn-default btn-xs" v-on:click="ShowNews" :disabled="News.length == 0"><img :src="require('Imgs/newspaper.png')"></button>
@@ -141,8 +141,8 @@
     font-size: 12px;
   }
   .sidenav-version > div {
-    line-height: 26px;
-    font-size: 14px;
+    line-height: 13px;
+    font-size: 12px;
     display: inline-block;
   }
   .sidenav-version button {

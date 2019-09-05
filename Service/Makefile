@@ -14,10 +14,11 @@ LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread -lcurl
 
 #Add libs (cctz, nlohmann)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
-BUILD = $(shell date +%Y%m%d.%H%M)
-CFLAGS += -D__BUILD__="\"$(BUILD)\"" -I Libs -I Source/Support
-CC?=gcc
-LD?=ld
+BUILD ?= $(shell date +%Y%m%d.%H%M)
+BRANCH ?= "custom"
+CFLAGS += -D__BUILD__="\"$(BRANCH)_$(BUILD)\"" -I Libs -I Source/Support
+CC ?= gcc
+LD ?= ld
 EXECUTABLE_OBJS	+= $(EXECUTABLE_SOURCE:%=Tmp/%.o)
 #=======================================================================================================================
 default: READCONFIG $(EXECUTABLE_TARGET)
@@ -26,6 +27,7 @@ clean:
 	@rm -rf Tmp
 
 READCONFIG:
+	@echo "Building version '$(BRANCH)_$(BUILD)'"
 ifdef CONFIG
 	@mkdir -p Tmp
 	@echo "Reading configuration from '$(CONFIG)'"
