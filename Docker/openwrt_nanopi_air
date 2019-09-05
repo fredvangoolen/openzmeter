@@ -30,13 +30,9 @@ RUN cd /opt/openWRT_SDK && BUILD_VARIANT="single" make package/fftw3/compile -j8
 #Install npm -------------------------------------------------------------- 
 RUN apk add npm
 
-#Clean intermediate objs --------------------------------------------------
-RUN cd /opt/openWRT_SDK && make toolchain/clean -j8
-RUN cd /opt/openWRT_SDK && make tools/clean -j8
-RUN cd /opt/openWRT_SDK && make package/clean -j8
-
 # OpenWRT SDK --------------------------------------------------------------
-ENV STAGING_DIR "/opt/openWRT_SDK/staging_dir"
+ENV SDK_DIR "/opt/openWRT_SDK"
+ENV STAGING_DIR "${SDK_DIR}/staging_dir"
 ENV TOOLCHAIN "${STAGING_DIR}/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.3.0_musl_eabi"
 ENV CC=arm-openwrt-linux-gcc  
 ENV CXX=arm-openwrt-linux-g++  
@@ -47,4 +43,4 @@ ENV RANLIB=arm-openwrt-linux-ranlib
 ENV AS=arm-openwrt-linux-as  
 ENV AR=arm-openwrt-linux-ar  
 ENV LD=arm-openwrt-linux-ld
-ENV PATH=${TOOLCHAIN}/bin:${PATH}
+ENV PATH=${TOOLCHAIN}/bin:${SDK_DIR}/scripts:${PATH}
