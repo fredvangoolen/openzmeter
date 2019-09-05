@@ -88,6 +88,7 @@ endif
 $(WEB_TARGET):	 $(WEB_SOURCE)
 	@echo "Building WEB interface"
 	@if [ ! -d "WEB/node_modules" ]; then cd WEB; npm install; fi
+	@cd WEB; npm i --silent
 	@cd WEB; npm run --silent build
 
 $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
@@ -105,12 +106,12 @@ $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 	
 $(EXECUTABLE_TARGET): $(EXECUTABLE_OBJS) $(RESOURCES_TARGET)
 	@echo "Linking target" $(TARGET_EXEC)
-	$(CC)  $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
+	@$(CC)  $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
 
 Tmp/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "Building" $@
-	$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 
 #include dirs

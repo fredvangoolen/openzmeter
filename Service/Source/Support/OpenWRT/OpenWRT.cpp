@@ -11,18 +11,19 @@
 #include "OpenWRT.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-bool       System::pRegistered = false;
-System *System::pInstance   = NULL;
-pthread_mutex_t System::pMutex = PTHREAD_MUTEX_INITIALIZER;
+bool            System::pRegistered      = false;
+System         *System::pInstance        = NULL;
+pthread_mutex_t System::pMutex           = PTHREAD_MUTEX_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 System::System() {
   pthread_mutex_lock(&pMutex);
   if(pInstance != NULL) delete pInstance;
   pthread_mutex_unlock(&pMutex);
   json Config = ConfigManager::ReadConfig("/Bluetooth");
-  pBTBridgeName = "br-bt";
-  pBTServerName = "Stopped";
-  pBTStarted    = false;
+  pBTBridgeName    = "br-bt";
+  pBTServerName    = "Stopped";
+  pBTStarted       = false;
+  pLastUpdateCheck = 0;
   DBusError Error;
   dbus_error_init(&Error);
   pDBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
@@ -237,15 +238,16 @@ void System::GetUpdatesCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   //only 'admin' user can get this information
   if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   json Response = json::object();
-  Response["LastCheck"] = pLastUpdateCheck;
+  Response["LastCheck"] = pInstance->pLastUpdateCheck;
   Response["Updates"] = json::array();
   pthread_mutex_lock(&pMutex);
-  for(uint32_t n = 0; n < pUpdates.size(); n++) {
+  for(uint32_t n = 0; n < pInstance->pUpdates.size(); n++) {
     json Update = json::object();
-    Update["Package"] = pUpdates[n].Package;
-    Update["From"] = pUpdates[n].From;
-    Update["To"] = pUpdates[n].To;
+    Update["Package"] = pInstance->pUpdates[n].Package;
+    Update["From"] = pInstance->pUpdates[n].From;
+    Update["To"] = pInstance->pUpdates[n].To;
     Response["Updates"].push_back(Update);
   }
   req.FromJSON(Response);
