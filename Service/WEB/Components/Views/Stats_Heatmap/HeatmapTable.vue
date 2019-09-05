@@ -31,7 +31,7 @@
       </tr>
     </thead>
     <tbody ref="rows">
-      <tr v-for="day in Days"><td>{{ day.DayOfWeek }}</td><td>{{ day.Date }}</td><td v-for="block in day.Cells" class="data" :colspan="(Aggregation === '1H') ? 4 : 1" data-toggle="tooltip" :title="block.Text" v-bind:style="{ 'background-color': block.Color }"></td></tr>
+      <tr v-for="day in Days"><td>{{ day.DayOfWeek }}</td><td>{{ day.Date }}</td><td v-for="block in day.Cells" :colspan="(Aggregation === '1H') ? 4 : 1" data-toggle="tooltip" :title="block.Text" v-bind:style="{ 'background-color': block.Color }"></td></tr>
     </tbody>
   </table>
 </template>
@@ -125,7 +125,16 @@
     text-align:center; 
     table-layout: fixed
   }
-  .heatmap_table td.data {
-    border: 1px solid #CCCCCC;
+  .heatmap_table thead td:nth-child(n+3) {
+     border-bottom: 1px solid #CCCCCC;
+  }
+  .heatmap_table tbody td:nth-child(2) {
+     border-right: 1px solid #CCCCCC;
+  }
+  .heatmap_table tbody tr:last-child td:nth-child(n+3) {
+     border-bottom: 1px solid #CCCCCC;
+  }
+  .heatmap_table tbody tr td:last-child {
+     border-right: 1px solid #CCCCCC;
   }
 </style>

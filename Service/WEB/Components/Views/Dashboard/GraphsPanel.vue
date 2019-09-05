@@ -3,7 +3,7 @@
     <div class="panel-heading">
       <div class="huge header-text">{{ SerieProps.Title }}</div>
       <div class="header-buttons">
-        <div style="margin-top: -3px; height: 33px">
+        <div style="margin-top: -3px">
           <div style="display: inline-block; font-size: 24px; padding-right: 4px; vertical-align: top"><span v-html="LastValue"></span> <em class="huge-small-unit">{{ UnitsScale }}{{ SerieProps.Units }}</em>
             <div style="font-size: 14px; line-height: 14px">{{ Aggregation }}</div>
           </div>
