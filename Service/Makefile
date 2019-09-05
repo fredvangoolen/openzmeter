@@ -15,7 +15,7 @@ LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread -lcurl
 #Add libs (cctz, nlohmann)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
 BUILD = $(shell date +%Y%m%d.%H%M)
-CFLAGS += -D__BUILD__="\"$(BUILD)\"" -I Libs -I Source/Support 
+CFLAGS += -D__BUILD__="\"$(BUILD)\"" -I Libs -I Source/Support
 CC?=gcc
 LD?=ld
 EXECUTABLE_OBJS	+= $(EXECUTABLE_SOURCE:%=Tmp/%.o)
@@ -103,7 +103,7 @@ $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 	done
 	@cd Tmp; $(LD) -r -b binary -o ResourceFiles.o ResourceFiles
 	@rm -f Tmp/ResourceFiles
-	
+
 $(EXECUTABLE_TARGET): $(EXECUTABLE_OBJS) $(RESOURCES_TARGET)
 	@echo "Linking target" $(TARGET_EXEC)
 	@$(CC)  $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
@@ -113,46 +113,3 @@ Tmp/%.cpp.o: %.cpp
 	@echo "Building" $@
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-
-#include dirs
-#INC_DIRS += /usr/include/postgresql /usr/include/dbus-1.0 /usr/lib/x86_64-linux-gnu/dbus-1.0/include /usr/include/libxml2 \
-#	   /usr/local/pgsql/include /usr/lib/arm-linux-gnueabihf/dbus-1.0/include /usr/include/nlohmann
-#LIB_DIRS = /usr/local/pgsql/lib
-
-#General options
-#CC       ?= gcc
-#LD       = ld
-
-#LDFLAGS  += -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic     -lm 
-
-#Specific options
-#debug: CPPFLAGS += -DOZM_DEBUG
-#release: CPPFLAGS += 
-
-#Source and targets files
-#TARGET_EXEC  = openZmeter
-#BUILD_DIR    = Tmp
-#MAINSOURCES  = $(shell find ./Source -maxdepth 2 -name "*.cpp" ! -type d -print) $(shell find ./Libs -name "*.cpp" -o -name "*.cc" ! -type d -print)
-#MAINSOURCES += $(shell find ./Source -mindepth 3 -name "*.cpp" ! -type d -print)
-#RESOURCES    = $(shell find ./Resources ! -type d -print | sort)
-#RESTARGET    = $(BUILD_DIR)/ResourceFiles.o
-#RESTMP       = $(BUILD_DIR)/ResourceFiles
-#OBJS         = $(MAINSOURCES:%=$(BUILD_DIR)/%.o)
-#INC_DIRS    += $(shell find ./Source -type d) $(shell find ./Libs -type d)
-#INC_FLAGS   += $(addprefix -I,$(INC_DIRS))
-#LDFLAGS     += $(addprefix -L,$(LIB_DIRS))
-#CFLAGS    += $(INC_FLAGS)
-#debug: $(OBJS) $(RESTARGET)
-#	@echo "Linking debug target" $(TARGET_EXEC)
-#	$(CC) $(CFLAGS) $(OBJS) $(RESTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
-#	
-#release: $(OBJS) $(RESTARGET)
-#	@echo "Linking release target" $(TARGET_EXEC)
-#	$(CC) $(CFLAGS) $(OBJS) $(RESTARGET) -o $(BUILD_DIR)/$(TARGET_EXEC) $(LDFLAGS)
-#
-#
-#package: $(BUILD_DIR)/$(TARGET_EXEC)
-#	@cp -r Package $(BUILD_DIR)
-#	@mkdir -p $(BUILD_DIR)/Package/usr/sbin/$(TARGET_EXEC)
-#	@cp $(BUILD_DIR)/$(TARGET_EXEC) $(BUILD_DIR)/Package/usr/sbin/$(TARGET_EXEC)
-#	@dpkg-deb -b $(BUILD_DIR)/Package $(BUILD_DIR)/openZmeter.deb
