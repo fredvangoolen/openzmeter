@@ -12,7 +12,9 @@ build:
       - Service/WEB/node_modules
   artifacts:
     paths:
-      - Service/Tmp/openZmeter
+      - Service/Tmp/openZmeter*.ipk
   script:
     - cd Service
-    - make CONFIG=Configs/openWRT.config
+    - make CONFIG=Configs/openWRT_nanoPI-AIR
+    - cd Tmp
+    - ../Package/openWRT_nanoPI-AIR.sh
