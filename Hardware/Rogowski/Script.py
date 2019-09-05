@@ -9,13 +9,12 @@ import collections
 
 pcb = pcbnew.GetBoard()
 Radius = 44
-Lines = 200
 OriginOffsetXY = [100, 100]
 #Some Constants for better Readability
 LayerBCu = 31
 LayerFCu = 0
 LayerEdgeCuts = 44
-AngleInc=1.07
+AngleInc=0.97
 Width=10
 Margin=1
 LineNo=0
@@ -60,7 +59,14 @@ for i in numpy.arange(0,360,1):
 	seg.SetStart(calcXY(Radius-Width-2*Margin-Offset, i))
 	seg.SetEnd(calcXY(Radius-Width-2*Margin-Offset, i+1))
 	seg.SetLayer(LayerEdgeCuts)
-for i in numpy.arange(0,355,AngleInc):
+
+	t = pcbnew.TRACK(pcb)
+	pcb.Add(t)
+	t.SetStart(calcXY(Radius-Width-Margin-Offset-0.53, i))
+	t.SetEnd(calcXY(Radius-Width-Margin-Offset-0.53, i+1))
+	t.SetLayer(LayerBCu)
+
+for i in numpy.arange(0,360,AngleInc):
 	t = pcbnew.TRACK(pcb)
 	pcb.Add(t)
 	t.SetStart(calcXY(Radius-Margin, i))

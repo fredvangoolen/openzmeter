@@ -1,0 +1,16 @@
+image: registry.gitlab.com/zredalmeria/dockers/ozm-openwrt
+
+stages:
+  - build
+
+build:
+  stage: build
+  cache:
+    paths:
+      - Service/WEB/node_modules
+  artifacts:
+    paths:
+      - Tmp/openZmeter
+  script:
+    - cd Service
+    - make CONFIG=Configs/openWRT.config

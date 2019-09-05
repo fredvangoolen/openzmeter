@@ -90,7 +90,7 @@
           dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, showRangeSelector: false,
           labels: ['Harmonic'].concat(oZm.Series['CURRENT'].Names(Analyzer)).concat(oZm.Series['VOLTAGE'].Names(Analyzer)), series: Series,
           drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,
-          colors: oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length)), 
+          colors: oZm.SerieStyle(oZm.Series['CURRENT'], Analyzer, 0).Colors.concat(oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, 0).Colors), 
           axes: { 
             y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + this.COffset, Y1Range[1] + this.COffset],
                  ticker: this.Log ? function(min, max) { return Graph.DBTicks(min, max, this.COffset); }.bind(this) : Dygraph.numericTicks,

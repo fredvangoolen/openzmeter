@@ -1,15 +1,48 @@
 import chroma from 'JS/chroma.js';
 import Dygraph from 'JS/dygraph.js';
 import moment from 'JS/moment.js';
+export function RoundHTML(val, decimals) {
+  if(val === null) {
+    return '-';
+  } else {
+    if(decimals === undefined) decimals = 2;
+    var Exponent = Math.pow(10, decimals);
+    val = Math.round(val * Exponent);
+    var Integer = Math.trunc(val / Exponent);
+    var Fraction = Math.abs(val % Exponent);
+    Fraction = Fraction.toString();
+    while(Fraction.length < decimals) Fraction = '0' + Fraction;
+    return (((Integer === 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + "<span style='font-size:80%'>." + Fraction + '</span>';
+  }
+}
+export function RoundPlain(val, decimals) {
+  if(val === null) {
+    return '-';
+  } else {
+    if(decimals === undefined) decimals = 2;
+    var Exponent = Math.pow(10, decimals);
+    val = Math.round(val * Exponent);
+    var Integer = Math.trunc(val / Exponent);
+    var Fraction = Math.abs(val % Exponent);
+    Fraction = Fraction.toString();
+    while(Fraction.length < decimals) Fraction = '0' + Fraction;
+    return (((Integer === 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + '.' + Fraction;
+  }
+}
+export function FormatSerieValue(val, serie, units) {
+  var Units = '';
+  if(units === undefined) units = GetBestUnits(val); 
+  return { Units: units + serie.Units, ValuePlain: RoundPlain(ScaleToUnits(val, Units), serie.Decimals), ValueHTML: RoundHTML(ScaleToUnits(val, Units), serie.Decimals) };
+}
+export function SerieStyle(serie, analyzer, order) {
+  var SerieLen = serie.Names(analyzer).length;
+  if(SerieLen === 1) return { Colors: [serie.Color], Width: 0.5 };
+  var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];
+  return {Colors: Colors.slice(0, SerieLen), Width: (order == 0) ? 0.5 : 1.5 }
+}
 export var Series = {
-  'VOLTAGE': { 
-    CSS_Class: 'panel-voltage', 
-    Title: 'Voltage', 
-    Serie: 'Voltage', 
-    Units: 'V', 
-    Link: '/Analysis/Voltage', 
-    Color: '#d9534f',
-    FormatValue: function(val) { return {Units: '' + 'V', Value: Round2(val) }; },
+  'VOLTAGE': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V',  Link: '/Analysis/Voltage', Color: '#d9534f', Decimals: 2,
+    FormatValue: function(val, units) { return FormatSerieValue(val, this, units) },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)']; },
     Range: function(values, phases) {
       var UpperRange = -Infinity;
@@ -35,7 +68,7 @@ export var Series = {
       return [LowerRange, UpperRange];  
     }
   },
-  'CURRENT': { CSS_Class: 'panel-current', Title: 'Current', Serie: 'Current', Units: 'A', Link: '/Analysis/Current', Color: '#428bca',
+  'CURRENT': { CSS_Class: 'panel-current', Title: 'Current', Serie: 'Current', Units: 'A', Link: '/Analysis/Current', Color: '#428bca', Decimals: 2,
     FormatValue: function(val) {return {Units: '' + 'A', Value: Round2(val) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['I'] : (analyzer.Mode === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)'];},
     Range: function(values, phases) {
@@ -62,7 +95,7 @@ export var Series = {
       return [LowerRange, UpperRange];  
     }
   },
-  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active Power', Serie: 'Active_Power', Units: 'W', Link: '/Analysis/Power', Color: '#f0ad4e',
+  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active Power', Serie: 'Active_Power', Units: 'W', Link: '/Analysis/Power', Color: '#f0ad4e', Decimals: 2, 
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'W', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; },
     Range: function(values, phases) {
@@ -85,12 +118,7 @@ export var Series = {
       return [LowerRange, UpperRange];  
     }
   },
-  'ACTIVE_ENERGY': {
-    CSS_Class: 'panel-active-energy',
-    Title: 'Active Energy',
-    Serie: 'Active_Energy',
-    Units: 'Wh',
-    Color: '#3d3d8b',
+  'ACTIVE_ENERGY': { CSS_Class: 'panel-active-energy', Title: 'Active Energy', Serie: 'Active_Energy', Units: 'Wh', Color: '#3d3d8b', Decimals: 2,
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'Wh', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; },
     Range: function(values, phases) {
@@ -108,12 +136,7 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
-  'REACTIVE_ENERGY': {
-    CSS_Class: 'panel-reactive-energy',
-    Title: 'Reactive Energy',
-    Serie: 'Reactive_Energy',
-    Units: 'VArh',
-    Color: '#643d8b',
+  'REACTIVE_ENERGY': { CSS_Class: 'panel-reactive-energy', Title: 'Reactive Energy', Serie: 'Reactive_Energy', Units: 'VArh', Color: '#643d8b', Decimals: 2,
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'VArh', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
     Range: function(values, phases) {
@@ -131,7 +154,7 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
-  'FREQUENCY': { CSS_Class: 'panel-frequency', Title: 'Frequency', Serie: 'Frequency', Units: 'Hz', Link: '/Analysis/Frequency', Color: '#5cb85c',
+  'FREQUENCY': { CSS_Class: 'panel-frequency', Title: 'Frequency', Serie: 'Frequency', Units: 'Hz', Link: '/Analysis/Frequency', Color: '#5cb85c', Decimals: 3,
     FormatValue: function(val) { return {Units: 'Hz', Value: Round2(val) }; },
     Names: function(analyzer) { return ['F']; },
     Range: function(values) {
@@ -152,13 +175,7 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
-  'REACTIVE_POWER': { 
-    CSS_Class: '', 
-    Title: 'Fund. Reactive Power', 
-    Serie: 'Reactive_Power', 
-    Units: 'VAr', 
-    Link: '/Analysis/Power',
-    Color:  '#DF842A',
+  'REACTIVE_POWER': { CSS_Class: '', Title: 'Fund. Reactive Power', Serie: 'Reactive_Power', Units: 'VAr', Link: '/Analysis/Power', Color:  '#DF842A', Decimals: 2,
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'VAr', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
     Range: function(values, phases) {
@@ -176,11 +193,7 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
-  'APPARENT_POWER': { 
-    CSS_Class: '', 
-    Title: 'Apparent Power', 
-    Serie: 'Apparent_Power', 
-    Units: 'va',
+  'APPARENT_POWER': { CSS_Class: '', Title: 'Apparent Power', Serie: 'Apparent_Power', Units: 'va', Link: '/Analysis/Power', Color: '', Deciamls: 2,
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['S'] : ['S(R)', 'S(S)', 'S(T)']; },
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'va', Value: Round2(ScaleToUnits(val, Units)) }; },
     rangeFunc: function() {} 
@@ -737,23 +750,23 @@ export function ColorArray(base, items) {
 //  graph.setAnnotations(Events);
 //}
 ///* Convierte un array de floats a cadena con dos decimales, separados por el caracter dado y usando los colores que se pongan (añadiendo cadena1 si es negativo y cadena2 si positivo)*/
-export function Array_Round2(values, colors, cadena1, cadena2) {
-  if(Array.isArray(values) === false) values = [values];
-  for(var i = 0; i < values.length; i++) {
-    if((colors !== undefined) && (colors[i] !== undefined)) {
-     var Text = '<div style="padding: 3px 10px; margin: 0px 5px; border-radius: 3px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
-     if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
-     if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
-     values[i] = Text + '</div>';
-   } else {
-     var Text = Round2(values[i]);
-     if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
-     if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
-     values[i] = Text + '</div>';
-   }
-  }
-  return values.join('');
-}
+//export function Array_Round2(values, colors, cadena1, cadena2) {
+//  if(Array.isArray(values) === false) values = [values];
+//  for(var i = 0; i < values.length; i++) {
+//    if((colors !== undefined) && (colors[i] !== undefined)) {
+//     var Text = '<div style="padding: 3px 10px; margin: 0px 5px; border-radius: 3px; color: #FFF; background:' + colors[i] + '; display:inline-block">' + Round2(values[i]);
+//     if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
+//     if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
+//     values[i] = Text + '</div>';
+//   } else {
+//     var Text = Round2(values[i]);
+//     if((values[i] > 0) && (cadena2 !== undefined)) Text += cadena2;
+//     if((values[i] < 0) && (cadena1 !== undefined)) Text += cadena1;
+//     values[i] = Text + '</div>';
+//   }
+//  }
+//  return values.join('');
+//}
 ///* Format memory size with best units */
 export function GetBestUnitsBin(value) {
   if(value > 1024 * 1024 * 1024) {
