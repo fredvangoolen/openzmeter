@@ -5,6 +5,7 @@ stages:
 
 build:
   stage: build
+  tags: devel
   cache:
     paths:
       - Service/WEB/node_modules
