@@ -1,4 +1,4 @@
-image: registry.gitlab.com/zredalmeria/dockers/ozm-openwrt
+image: registry.gitlab.com/zredalmeria/openzmeter/openwrt_nanopi_air
 
 stages:
   - build
