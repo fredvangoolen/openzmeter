@@ -26,7 +26,7 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data() {
-      return { ShowWarning: true, ShowSpinner: true, MouseOver: false, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' }
+      return { ShowWarning: true, ShowSpinner: true, MouseOver: false, Time: 'Loading data...', GraphOptions: { plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' }
       };
     },
     methods: {
@@ -59,26 +59,26 @@
       },
       CalcOptions: function() {
         if((this.$root.SelectedAnalyzer === null) || (this.Phases === null) || (this.ShowCurrent === null) || (Array.isArray(this.Data) === false)) return;
-        var Analyzer = this.$root.SelectedAnalyzer, Series = {}, CurrentPhases = [], VoltagePhases = [];
+        var Analyzer = this.$root.SelectedAnalyzer, Series = {}, CurrentPhases = [], VoltagePhases = this.Phases.slice(0, oZm.Series['VOLTAGE'].Names(Analyzer).length);
         this.ShowWarning = (this.MaxCurrent < Analyzer.MinCurrent); 
         for(var n = 0; n < this.Phases.length; n++) {
-          if(n < oZm.Series['VOLTAGE'].Names(Analyzer).length) VoltagePhases.push(this.Phases[n]);
           CurrentPhases.push((this.Phases[n] === true) && (this.ShowCurrent === true));
           if((this.Phases[n] === true) && (this.ShowCurrent === true)) Series[oZm.Series['CURRENT'].Names(Analyzer)[n]] = { axis: 'y2' };
         }
         var Y1Range = oZm.Series['VOLTAGE_SAMPLES'].Range(this.Data, VoltagePhases);
         var Y2Range = oZm.Series['CURRENT_SAMPLES'].Range(this.Data, Array(VoltagePhases.length).fill(false).concat(CurrentPhases));
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, ((this.ShowCurrent) ? 1 : 0));
+        var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], Analyzer, 0);
         var Options = {
           legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, visibility: VoltagePhases.concat(CurrentPhases),
           labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)).concat(oZm.Series['CURRENT'].Names(Analyzer)), 
-          colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length).concat(oZm.ColorArray(oZm.Series['CURRENT'].Color, oZm.Series['CURRENT'].Names(Analyzer).length)), 
-          plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
+          colors: VoltageStyle.Colors.concat(CurrentStyle.Colors), showRangeSelector: false,
           axes: {
-            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: Y1Range, 
+            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: Y1Range, strokeWidth: VoltageStyle.Width,
                  valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">V</em>'; },
                  axisLabelFormatter: function (x) { return oZm.Round2(x); }
             },
-            y2: { pixelsPerLabel: 15, axisLabelWidth: (this.ShowCurrent) ? 34 : 0, valueRange: Y2Range, 
+            y2: { pixelsPerLabel: 15, axisLabelWidth: (this.ShowCurrent) ? 34 : 0, valueRange: Y2Range, strokeWidth: CurrentStyle.Width,
                   valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">A</em>'; },
                   axisLabelFormatter: function (x) { return (Object.keys(Series).length > 0) ? oZm.Round2(x) : ''; }
             },

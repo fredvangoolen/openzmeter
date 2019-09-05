@@ -90,13 +90,12 @@
                 this.CurrentValue10MPhases = '';
                 if(result['Voltage'][Pos].length > 1) {
                   for(var n = 0; n < result['Voltage'][Pos].length; n++) {
-                    var Format = oZm.Round2Plain(result['Voltage'][Pos][n]);
-                    this.CurrentValue10MPhases += oZm.Round2Plain(result['Voltage'][Pos][n]) +'<br>';
+                    this.CurrentValue10MPhases += oZm.FormatSerieValue(result['Voltage'][Pos][n], oZm.Series['VOLTAGE']).ValueHTML +'<br>';
                   }
                 }
                 this.CurrentValue10M = 0.0;
                 for(var n = 0; n < result['Voltage'][Pos].length; n++) this.CurrentValue10M += Math.pow(result['Voltage'][Pos][n], 2.0);
-                this.CurrentValue10M = oZm.Round2(Math.sqrt(this.CurrentValue10M / result['Voltage'][Pos].length)) + 'V';
+                this.CurrentValue10M = oZm.FormatSerieValue(Math.sqrt(this.CurrentValue10M / result['Voltage'][Pos].length), oZm.Series['VOLTAGE']).ValueHTML + ' V';
               }
             }
           },
@@ -155,14 +154,14 @@
         this.StdArray = [];
         this.AvgArray = [];
         for(var p = 0; p < MinArray.length; p++) {
-          var Val = oZm.Series['VOLTAGE'].FormatValue(MinArray[p]);
-          this.MinArray.push(Val.Value + '<em>' + Val.Units + '</em>');
-          Val = oZm.Series['VOLTAGE'].FormatValue(MaxArray[p]);
-          this.MaxArray.push(Val.Value + '<em>' + Val.Units + '</em>');
-          Val = oZm.Series['VOLTAGE'].FormatValue(AvgArray[p] / AvgSamples);
-          this.AvgArray.push(Val.Value + '<em>' + Val.Units + '</em>');
-          Val = oZm.Series['VOLTAGE'].FormatValue(Math.sqrt((StdArray[p] / AvgSamples) - Math.pow(AvgArray[p] / AvgSamples, 2)));
-          this.StdArray.push(Val.Value + '<em>' + Val.Units + '</em>');
+          var Val = oZm.FormatSerieValue(MinArray[p], oZm.Series['VOLTAGE']);
+          this.MinArray.push(Val.ValueHTML + ' ' + Val.Units);
+          Val = oZm.FormatSerieValue(MaxArray[p], oZm.Series['VOLTAGE']);
+          this.MaxArray.push(Val.ValueHTML + ' ' + Val.Units);
+          Val = oZm.FormatSerieValue(AvgArray[p] / AvgSamples, oZm.Series['VOLTAGE']);
+          this.AvgArray.push(Val.ValueHTML + ' ' + Val.Units);
+          Val = oZm.FormatSerieValue(Math.sqrt((StdArray[p] / AvgSamples) - Math.pow(AvgArray[p] / AvgSamples, 2)), oZm.Series['VOLTAGE']);
+          this.StdArray.push(Val.ValueHTML + ' ' + Val.Units);
         }
         this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
       }
