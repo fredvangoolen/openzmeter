@@ -66,7 +66,7 @@ System::System() {
     HTTPServer::RegisterCallback("getNTP", GetNTPCallback);
     HTTPServer::RegisterCallback("setNTP", SetNTPCallback);
     HTTPServer::RegisterCallback("getUpdates", GetUpdatesCallback);
-    HTTPServer::RegisterCallback("SetUpdates", UpdateCallback);
+    HTTPServer::RegisterCallback("upgrade", UpgradeCallback);
     pRegistered = true;
   }
   pthread_mutex_lock(&pMutex);
@@ -210,13 +210,16 @@ void System::HandleAgentBT() {
   dbus_message_unref(Msg);
 }
 void System::CheckUpdates() {
+  pLastUpdateCheck = Tools::GetTime();
+  pthread_mutex_lock(&pMutex);
+  pUpdates.clear();
+  pthread_mutex_unlock(&pMutex);
   int ResultCode = 0;
   string Result = Run("opkg update", &ResultCode);
   if(ResultCode != 0) return;
   Result = Run("opkg list-upgradable", &ResultCode);
   if(ResultCode != 0) return;
   pthread_mutex_lock(&pMutex);
-  pUpdates.clear();
   size_t Pos = 0;
   while(Pos < Result.size()) {
     Update_t Update;
@@ -224,7 +227,7 @@ void System::CheckUpdates() {
     Update.Package = Result.substr(Pos, Pos2 - Pos);
     Pos = Pos2 + 3;
     Pos2 = Result.find(" - ", Pos);
-    Update.Package = Result.substr(Pos, Pos2 - Pos);
+    Update.From = Result.substr(Pos, Pos2 - Pos);
     Pos = Pos2 + 3;
     Pos2 = Result.find("\n", Pos);
     if(Pos2 == string::npos) Pos2 = Result.size();
@@ -250,10 +253,20 @@ void System::GetUpdatesCallback(HTTPRequest &req) {
     Update["To"] = pInstance->pUpdates[n].To;
     Response["Updates"].push_back(Update);
   }
+  pthread_mutex_unlock(&pMutex);
   req.FromJSON(Response);
 }
-void System::UpdateCallback(HTTPRequest &req) {
-
+void System::UpgradeCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  //only 'admin' user can get this information
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  json Response = json::object();
+  int ResultCode = 0;
+  string Result = Run("opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade --force-depends", &ResultCode);
+  Response["Result"] = (ResultCode == 0);
+  pInstance->CheckUpdates();
+  req.FromJSON(Response);
 }
 bool System::SendBoolBT(const char *property, bool value) {
   if(pDBus == NULL) return false;
@@ -660,10 +673,7 @@ json System::GetSystemDetails() {
 }
 void System::PeriodicTask() {
   System::HandleAgentBT();
-  if(pLastUpdateCheck < (Tools::GetTime() - 86400000)) {
-    pLastUpdateCheck = Tools::GetTime();
-    CheckUpdates();
-  }
+  if(pLastUpdateCheck < (Tools::GetTime() - 86400000)) CheckUpdates();
   //Comprobar actualizaciones
 }
 //----------------------------------------------------------------------------------------------------------------------
