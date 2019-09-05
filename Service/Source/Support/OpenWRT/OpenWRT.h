@@ -17,8 +17,6 @@ class System {
     static System          *pInstance;
     static pthread_mutex_t  pMutex;
     static bool             pRegistered;
-    static vector<Update_t> pUpdates;
-    static uint64_t         pLastUpdateCheck;
   private :
     DBusConnection  *pDBus;
     string           pBTBridgeName;
@@ -27,6 +25,8 @@ class System {
     string           pInterfaceWIFI;
     string           pNetworkWIFI;
     string           pWirelessWIFI;
+    vector<Update_t> pUpdates;
+    uint64_t         pLastUpdateCheck;
   private:
     bool   StartBT();
     bool   StopBT();

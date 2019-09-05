@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="crt"
-                   displayName="crt"
-                   projectFiles="true"
-                   root="/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/crt">
-      <itemPath>/mnt/openwrt/build_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/musl-1.1.21/crt/crt1.c</itemPath>
-    </logicalFolder>
     <df root="." name="0">
       <df name="Libs">
         <df name="cctz">
@@ -98,6 +92,8 @@
   </logicalFolder>
   <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
   <sourceRootList>
+    <Elem>.</Elem>
+    <Elem>.</Elem>
     <Elem>.</Elem>
     <Elem>.</Elem>
   </sourceRootList>
