@@ -10,7 +10,7 @@ build:
       - Service/WEB/node_modules
   artifacts:
     paths:
-      - Tmp/openZmeter
+      - Service/Tmp/openZmeter
   script:
     - cd Service
     - make CONFIG=Configs/openWRT.config
