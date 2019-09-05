@@ -64,6 +64,8 @@ System::System() {
     HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
     HTTPServer::RegisterCallback("getNTP", GetNTPCallback);
     HTTPServer::RegisterCallback("setNTP", SetNTPCallback);
+    HTTPServer::RegisterCallback("getUpdates", GetUpdatesCallback);
+    HTTPServer::RegisterCallback("SetUpdates", UpdateCallback);
     pRegistered = true;
   }
   pthread_mutex_lock(&pMutex);
@@ -123,7 +125,7 @@ bool System::StartBT() {
   pBTServerName = "openZmeter_" + MAC.substr(8);
   if(SendStringBT("Alias", pBTServerName.c_str()) == false) {
     pthread_mutex_unlock(&pMutex);
-    return false; //Set adapter name 
+    return false;
   }
   if(SendBoolBT("Powered", true) == false) {
     pthread_mutex_unlock(&pMutex);
@@ -205,6 +207,51 @@ void System::HandleAgentBT() {
     dbus_message_unref(Reply);
   }
   dbus_message_unref(Msg);
+}
+void System::CheckUpdates() {
+  int ResultCode = 0;
+  string Result = Run("opkg update", &ResultCode);
+  if(ResultCode != 0) return;
+  Result = Run("opkg list-upgradable", &ResultCode);
+  if(ResultCode != 0) return;
+  pthread_mutex_lock(&pMutex);
+  pUpdates.clear();
+  size_t Pos = 0;
+  while(Pos < Result.size()) {
+    Update_t Update;
+    size_t Pos2 = Result.find(" - ", Pos);
+    Update.Package = Result.substr(Pos, Pos2 - Pos);
+    Pos = Pos2 + 3;
+    Pos2 = Result.find(" - ", Pos);
+    Update.Package = Result.substr(Pos, Pos2 - Pos);
+    Pos = Pos2 + 3;
+    Pos2 = Result.find("\n", Pos);
+    if(Pos2 == string::npos) Pos2 = Result.size();
+    Update.To = Result.substr(Pos, Pos2 - Pos);
+    Pos = Pos2 + 1;
+    pUpdates.push_back(Update);
+  };  
+  pthread_mutex_unlock(&pMutex);
+}
+void System::GetUpdatesCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  //only 'admin' user can get this information
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  json Response = json::object();
+  Response["LastCheck"] = pLastUpdateCheck;
+  Response["Updates"] = json::array();
+  pthread_mutex_lock(&pMutex);
+  for(uint32_t n = 0; n < pUpdates.size(); n++) {
+    json Update = json::object();
+    Update["Package"] = pUpdates[n].Package;
+    Update["From"] = pUpdates[n].From;
+    Update["To"] = pUpdates[n].To;
+    Response["Updates"].push_back(Update);
+  }
+  req.FromJSON(Response);
+}
+void System::UpdateCallback(HTTPRequest &req) {
+
 }
 bool System::SendBoolBT(const char *property, bool value) {
   if(pDBus == NULL) return false;
@@ -611,6 +658,10 @@ json System::GetSystemDetails() {
 }
 void System::PeriodicTask() {
   System::HandleAgentBT();
+  if(pLastUpdateCheck < (Tools::GetTime() - 86400000)) {
+    pLastUpdateCheck = Tools::GetTime();
+    CheckUpdates();
+  }
   //Comprobar actualizaciones
 }
 //----------------------------------------------------------------------------------------------------------------------
