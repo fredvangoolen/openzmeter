@@ -52,8 +52,7 @@
         this.ShowSpinner = true;
         $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: id }), 
           success: function(result) {
-            var TableData = { data: result };
-            this.$refs.table.setData(TableData);
+            this.$refs.table.setData({ data: result });
             this.ShowSpinner = false;
           }.bind(this)
         });
@@ -85,19 +84,19 @@
 </script>
   
 <style scoped>
-@media screen and (min-width: 600px) {
-  .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
-    width: 100px;
-    text-align: center;
+  @media screen and (min-width: 600px) {
+    .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
+      width: 100px;
+      text-align: center;
+    }
+    .table >>> td:nth-child(2), .table >>> td:nth-child(3) {
+      text-align: center;
+    }
+    .table >>> th:nth-child(4) {
+      width: 94px;
+    }
+    .table >>> td:nth-child(4) {
+      text-align: right;
+    }
   }
-  .table >>> td:nth-child(2), .table >>> td:nth-child(3) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(4) {
-    width: 94px;
-  }
-  .table >>> td:nth-child(4) {
-    text-align: right;
-  }
-}
 </style>

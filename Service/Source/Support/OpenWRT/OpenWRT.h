@@ -47,7 +47,7 @@ class System {
     static void GetNTPCallback(HTTPRequest &req);
     static void SetNTPCallback(HTTPRequest &req);
     static void GetUpdatesCallback(HTTPRequest &req);
-    static void UpdateCallback(HTTPRequest &req);
+    static void UpgradeCallback(HTTPRequest &req);
   public :
     static json GetSystemDetails();  
   public:
