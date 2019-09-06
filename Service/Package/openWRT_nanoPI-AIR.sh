@@ -8,7 +8,7 @@ mkdir -p Package/CONTROL
 cp openZmeter Package/usr/sbin/
 cat > Package/CONTROL/control << EOF
 Package: openZmeter-${BUILD_NAME}
-Version: ${BUILD_BRANCH}
+Version: ${BUILD_DATE}
 Section: base
 Priority: optional
 Architecture: arm_cortex-a7_neon-vfpv4
