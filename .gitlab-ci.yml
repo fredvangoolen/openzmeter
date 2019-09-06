@@ -7,7 +7,8 @@ build:
   stage: build
   script:
     - export BUILD_DATE=$(date -d @$(git show -s --format=%ct $CI_COMMIT_SHA) +%Y%m%d.%H%M)
-    - export BUILD_NAME=${CI_BUILD_REF_NAME}
+    - export BUILD_NAME=$CI_COMMIT_REF_NAME
+    - export
   tags:
     - devel
   cache:
