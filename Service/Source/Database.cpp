@@ -50,6 +50,22 @@ void Database::ReadConfig() {
     if(Config["Database"].is_string())      DataBase = Config["Database"];
     if(Config["Username"].is_string())      Username = Config["Username"];
     if(Config["Password"].is_string())      Password = Config["Password"];
+  } else {
+    LOGFile::Info("No database configuration found. Trying to create one with default settings\n");
+    //there no database configuration in config file, this is the first run of application after installing, try to add default user, and create empty database
+    PGconn *DBConn = PQconnectdb("host=localhost user=postgres dbname=postgres");
+      if(PQstatus(DBConn) == CONNECTION_OK) {
+      size_t Len;
+      char *Script = (char*)ResourceLoader::GetFile("SQL/Database_Init.sql", &Len);
+      Script[Len - 1] = 0;
+      PGresult *Result = PQexec(DBConn, Script);
+      if(PQresultStatus(Result) != PGRES_COMMAND_OK) LOGFile::Error("Unable to create default user and database, create it manually\n");
+      PQclear(Result);
+      PQfinish(DBConn);
+    } else {
+      char *Save;
+      LOGFile::Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
+    }
   }
   Config = json::object();
   Config["Hostname"] = Hostname;
@@ -146,19 +162,6 @@ string Database::Bind(const vector<float> &params) const {
   }
   return Result;
 }
-//string Database::Bind(const vector<vector<complex<float> > > &params) const {
-//  string Result = "'{";
-//  for(uint i = 0; i < params.size(); i++) {
-//    Result.append("{");
-//    for(uint n = 0; n < params[i].size(); n++) {
-//      Result.append(isnan(params[i][n].real()) ? string("NULL") : to_string(sqrt(norm(params[i][n]))));
-//      Result.append((n < (params[i].size() - 1)) ? ", " : "}");
-//    }
-//    if(i < (params.size() - 1)) Result.append(", ");
-//  }
-//  Result.append("}'");
-//  return Result;
-//}
 string Database::Bind(const bool param) const {
   return (param == true) ? "true" : "false";
 }
