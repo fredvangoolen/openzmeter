@@ -28,7 +28,7 @@ RUN cd /opt/openWRT_SDK && make package/libusb/compile -j8
 RUN cd /opt/openWRT_SDK && BUILD_VARIANT="single" make package/fftw3/compile -j8
 
 #Install npm -------------------------------------------------------------- 
-RUN apk add npm
+RUN apk add npm openssh-client
 
 # OpenWRT SDK --------------------------------------------------------------
 ENV SDK_DIR "/opt/openWRT_SDK"
