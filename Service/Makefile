@@ -27,7 +27,7 @@ clean:
 	@rm -rf Tmp
 
 READCONFIG:
-	@echo "Building version '$(BRANCH)_$(BUILD)'"
+	@echo "Building version '$(BUILD_NAME)_$(BUILD_DATE)'"
 ifdef CONFIG
 	@mkdir -p Tmp
 	@echo "Reading configuration from '$(CONFIG)'"
