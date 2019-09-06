@@ -26,6 +26,11 @@
           <in>zone_info_source.cpp</in>
         </df>
       </df>
+      <df name="Resources">
+        <df name="SQL">
+          <in>Database_Init.sql</in>
+        </df>
+      </df>
       <df name="Source">
         <df name="Analyzers">
           <df name="Remote">
@@ -627,6 +632,8 @@
             <pElem>.</pElem>
           </incDir>
         </ccTool>
+      </item>
+      <item path="Resources/SQL/Database_Init.sql" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/Analyzers/Analyzer.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="0">
