@@ -1,14 +1,14 @@
 #!/bin/sh
-if [ -z ${BUILD} ]; then BUILD=$(shell date +%Y%m%d.%H%M); fi
-if [ -z ${BRANCH} ]; then BRANCH=${BRANCH:-custom}; fi
-echo "Building openWRT package for version '${BRANCH}_${BUILD}'"
+if [ -z ${BUILD_DATE} ]; then BUILD_DATE=$(date +%Y%m%d.%H%M); fi
+if [ -z ${BUILD_NAME} ]; then BUILD_NAME=${BUILD_NAME:-custom}; fi
+echo "Building openWRT package for version '${BUILD_DATE}_${BUILD_NAME}'"
 mkdir -p Package
 mkdir -p Package/usr/sbin
 mkdir -p Package/CONTROL
 cp openZmeter Package/usr/sbin/
 cat > Package/CONTROL/control << EOF
-Package: openZmeter-${BRANCH}
-Version: ${BUILD}
+Package: openZmeter-${BUILD_NAME}
+Version: ${BUILD_BRANCH}
 Section: base
 Priority: optional
 Architecture: arm_cortex-a7_neon-vfpv4
