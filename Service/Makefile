@@ -14,9 +14,9 @@ LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread -lcurl
 
 #Add libs (cctz, nlohmann)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
-BUILD ?= $(shell date +%Y%m%d.%H%M)
-BRANCH ?= "custom"
-CFLAGS += -D__BUILD__="\"$(BRANCH)_$(BUILD)\"" -I Libs -I Source/Support
+BUILD_DATE ?= $(shell date +%Y%m%d.%H%M)
+BUILD_NAME ?= "custom"
+CFLAGS += -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" -I Libs -I Source/Support
 CC ?= gcc
 LD ?= ld
 EXECUTABLE_OBJS	+= $(EXECUTABLE_SOURCE:%=Tmp/%.o)
