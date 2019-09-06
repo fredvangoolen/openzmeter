@@ -87,10 +87,9 @@ ifeq ($(TARIFF_NONE), true)
 	EXECUTABLE_SOURCE += Source/Tariffs/NONE/TariffPlugin_NONE.cpp
 endif
 
-$(WEB_TARGET):	 $(WEB_SOURCE)
+$(WEB_TARGET): $(WEB_SOURCE)
 	@echo "Building WEB interface"
 	@if [ ! -d "WEB/node_modules" ]; then cd WEB; npm install; fi
-	@cd WEB; npm i --silent
 	@cd WEB; npm run --silent build
 
 $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
@@ -106,7 +105,7 @@ $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 	@cd Tmp; $(LD) -r -b binary -o ResourceFiles.o ResourceFiles
 	@rm -f Tmp/ResourceFiles
 
-$(EXECUTABLE_TARGET): $(EXECUTABLE_OBJS) $(RESOURCES_TARGET)
+$(EXECUTABLE_TARGET): $(RESOURCES_TARGET) $(EXECUTABLE_OBJS)
 	@echo "Linking target" $(TARGET_EXEC)
 	@$(CC)  $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
 
