@@ -24,8 +24,8 @@
           </div>
         </div>
       </div>
-      <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:DateChanged="SetStartDate"></date-picker></div>
-      <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:DateChanged="SetEndDate"></date-picker></div>
+      <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:change="SetStartDate"></date-picker></div>
+      <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:change="SetEndDate"></date-picker></div>
     </div>
     <div class="row periods" v-if="View=='Periods'">
       <div class="col-xs-12">
@@ -79,7 +79,7 @@
               </div>
             </td>
             <td>
-              <date-picker :big="false" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :date="EndDate(idx)" v-on:DateChanged="SetBillPeriods(idx, $event)" :disabled="idx==Rate.Config.Billing.length"></date-picker>
+              <date-picker :big="false" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" :date="EndDate(idx)" v-on:change="SetBillPeriods(idx, $event)" :disabled="idx==Rate.Config.Billing.length"></date-picker>
             </td>
             <td class="text-right">
               <div class="input-group input-group-xs">
