@@ -19,8 +19,8 @@
           <label class="control-label">Time zone</label>
           <option-picker :options="TimeZones" :selected="Tariff.TimeZone" v-on:change="TimezoneChanged" :big="true"></option-picker>
         </div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">Start date</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:DateChanged="SetStartDate"></date-picker></div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">End date</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:DateChanged="SetEndDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">Start date</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:change="SetStartDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">End date</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:change="SetEndDate"></date-picker></div>
         <div class="col-xs-12"><label class="control-label">Description</label><textarea class="form-control" rows="5" v-model="Tariff.Template.Description" style="resize: none"></textarea></div>
         <div class="col-xs-12 col-sm-6">
           <div class="btn-group period-dropdown-group">
