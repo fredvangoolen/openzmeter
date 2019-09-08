@@ -47,7 +47,7 @@
         this.Enable();
       if(this.date != null) $(this.$el).data("DateTimePicker").options({ date: this.date });
       $(this.$el).on('dp.change', (e) => {
-        if(this.Date != e.date.valueOf()) this.$emit('DateChanged', e.date);
+        if(this.Date != e.date.valueOf()) this.$emit('change', e.date);
         this.Date = e.date.valueOf();
       });
     }

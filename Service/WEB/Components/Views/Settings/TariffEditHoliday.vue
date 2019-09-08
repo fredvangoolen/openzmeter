@@ -11,8 +11,8 @@
         <div class="col-xs-12">
           <label class="control-label">Name</label><input type="text" class="form-control" ref="Name" @change="SetName">
         </div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:DateChanged="SetStartDate"></date-picker></div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:DateChanged="SetEndDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:change="SetStartDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:change="SetEndDate"></date-picker></div>
       </div>
     </div>
   </div> 
