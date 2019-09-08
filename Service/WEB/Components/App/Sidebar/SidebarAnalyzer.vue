@@ -9,12 +9,20 @@
       <div class="clearfix"></div>
     </div>
     <analyzer-dialog ref="Dialog"></analyzer-dialog>
+    <analyzer-configure ref="Configure"></analyzer-configure>
+    <analyzer-rates ref="Rates"></analyzer-rates>
+    <analyzer-rate ref="Rate"></analyzer-rate>
+    <analyzer-maintenance ref="Maintenance"></analyzer-maintenance>
   </div> 
 </template> 
 
 <script>
   import ProgressBar from 'Components/ProgressBar.vue';
   import AnalyzerDialog from './Analyzer/Analyzer.vue';
+  import AnalyzerConfigure from './Analyzer/AnalyzerConfigure.vue';
+  import AnalyzerRates from './Analyzer/AnalyzerRates.vue';
+  import AnalyzerRate from './Analyzer/AnalyzerRate.vue';
+  import AnalyzerMaintenance from './Analyzer/AnalyzerMaintenance.vue';
   import moment from 'JS/moment.js';
   export default {
     data() {
@@ -75,9 +83,9 @@
       },
       ShowDialog() {
         this.$refs.Dialog.Show();
-      },
+      }
     },
-    components: { ProgressBar, AnalyzerDialog }
+    components: { ProgressBar, AnalyzerDialog, AnalyzerConfigure, AnalyzerRates, AnalyzerRate, AnalyzerMaintenance }
   }
 </script>
 

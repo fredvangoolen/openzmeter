@@ -1,17 +1,17 @@
 <template>
-  <div class="modal-content" v-bind:class="{ hide: !Show }">
-    <div class="modal-header">
+  <dlg ref="Dialog">
+    <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Maintenance</h4></div>
-      <div class="pull-right btn-group">
+      <div class="pull-right btn-group" v-if="View == 'Main'">
         <button type="button" class="btn btn-default btn-xs" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
-    </div>
-    <div class="modal-body">
-      <input type="file" name="name" style="display: none;" ref="filename" v-on:change="FileSet" accept="application/gzip, .gz"/>
-      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Only stored samples and events are affected by this next actions.<hr style="margin-top: 5px; margin-bottom: 5px;"/>Analyzer data takes currently <strong>{{ DBSize }}</strong></div>
+    </template>
+    <input type="file" name="name" style="display: none;" ref="filename" v-on:change="FileSet" accept="application/gzip, .gz"/>
+    <div v-if="View == 'Main'">
+      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Analyzer data takes currently <strong>{{ DBSize }}</strong></div>
       <div class="row">
-        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetStartDate"></date-picker></div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" v-on:DateChanged="SetEndDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:change="SetStartDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:change="SetEndDate"></date-picker></div>
       </div>
       <hr style="margin-top: 10px; margin-bottom: 10px;"/>
       <div class="row" style="margin-top:5px; margin-bottom: 5px">
@@ -28,61 +28,70 @@
         <div class="col-xs-12"><button type="button" class="btn btn-default btn-block btn-xs" @click="Restore">Restore backup</button></div>
       </div>
     </div>
-  </div>
+    <div v-if="View == 'Save'">
+      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Fetching data, please wait<br>Currently downloading day <strong>{{ DateText }}</strong> - Compressed size: <strong>{{ SizeText }}</strong></div>
+      <div class="row">
+        <div class="col-xs-12"><progress-bar :value="Progress"></progress-bar></div>
+      </div>
+    </div>
+  </dlg>
 </template>
 
 <script>
   import moment from 'JS/moment.js';
   import DatePicker from 'Components/DatePicker.vue';
-  import Spinner from 'Components/Spinner.vue';
+  import ProgressBar from 'Components/ProgressBar.vue';
   import * as oZm from 'JS/openZmeter.js';
-  import Oboe from 'JS/oboe.js';
-  import StreamSaver from 'JS/streamsaver.js';
+  import Dlg from 'Components/Dialog.vue';
+//  import Oboe from 'JS/oboe.js';
+  import FileSaver from 'JS/FileSaver.js';
   import Pako from 'JS/pako.js';
   export default {
     data() {
-      return { Show: false, DBSize: '', StartDate: null, EndDate: null };
+      return { Analyzer: null, DBSize: '', DateText: '', Progress: 0, View: '', SizeText: '' };
     },
     methods: {
-      Load: function(analyzer, id) {
+      Show: function (analyzer) {
         this.Analyzer = analyzer;
-        this.Show = true;
         this.DBSize = oZm.GetBestUnitsBin(analyzer.Size);
-        this.StartDate = moment().startOf('year');
-        this.EndDate = moment().endOf('year');
-        this.$nextTick(function() {
+        this.StartDate = moment.tz(this.Analyzer.TimeZone).startOf('year');
+        this.EndDate = moment.tz(this.Analyzer.TimeZone).endOf('year');
+        this.View = 'Main';
+        this.$refs.Dialog.Show();
+        this.$nextTick(function () {
           this.$refs.StartDate.SetDate(this.StartDate);
           this.$refs.EndDate.SetDate(this.EndDate);
         });
       },
       SetStartDate: function(date) {
-        this.StartDate = date.startOf('day').valueOf();
+        this.StartDate = date.startOf('day');
       },
       SetEndDate: function(date) {
-        this.EndDate = date.endOf('day').valueOf();
+        this.EndDate = date.endOf('day');
       },
-      Back: function() {
-        this.Show = false;
-        this.$parent.$refs.Table.Load(this.Analyzer);
+      Back: function () {
+        this.$refs.Dialog.Close();
+        this.$parent.$refs.Dialog.Show();
       },
-      FileSet: function(evt) {
-        if(evt.target.files.length !== 1) return;
+      FileSet: function (evt) {
+        if (evt.target.files.length !== 1)
+          return;
         var Reader = new FileReader();
         var Inflator = new Pako.Inflate();
         var File = evt.target.files[0];
         var Offset = 0;
         var DecompresedSize = 0;
-        var onDeflatedData = function(data) {
+        var onDeflatedData = function (data) {
           DecompresedSize += data.length;
         };
-        var onLoadHandler = function(evt) {
-          if(evt.target.error !== null) {
+        var onLoadHandler = function (evt) {
+          if (evt.target.error !== null) {
             console.log("ERROR LOADING FILE");
             return;
-          }            
+          }
           Offset += evt.target.result.byteLength;
-          Inflator.push(evt.target.result, (Offset >= File.size) ? Pako.Z_FINISH: Pako.Z_SYNC_FLUSH);
-          if(Offset < File.size) {
+          Inflator.push(evt.target.result, (Offset >= File.size) ? Pako.Z_FINISH : Pako.Z_SYNC_FLUSH);
+          if (Offset < File.size) {
             Reader.readAsArrayBuffer(File.slice(Offset, Offset + 65536));
           } else {
             console.log(DecompresedSize);
@@ -92,36 +101,66 @@
         Inflator.onData = onDeflatedData;
         Reader.readAsArrayBuffer(File.slice(0, 65536));
       },
-      BackupRange: function() {
-        setTimeout(this.GenerateData.bind(this), 100);
+      BackupRange: function () {
+        this.View = 'Save';
+        this.Deflator = new Pako.Deflate({level: 9, gzip: true});
+        this.DateText = this.StartDate.format('DD/MM/YYYY');
+        this.Chunks = [];
+        this.TotalSize = 0;
+        this.SizeText = oZm.GetBestUnitsBin(this.TotalSize);
+        this.Progress = 0;
+        this.Deflator.onEnd = (chunk) => {
+          this.View = 'Main';
+        };
+        this.Deflator.onData = (chunk) => {
+          this.TotalSize += chunk.length;
+          this.SizeText = oZm.GetBestUnitsBin(this.TotalSize);
+          this.Chunks.push(chunk);
+        };
+        this.FetchDay();
       },
-      GenerateData: function(fs) {
-        for(var n= 0; n < 10000; n++) {
-          this.Backup.Voltage.push([230.00000, 230.12234234, 223.23234234]);
-        }
-        console.log(this.Backup.Voltage.length);
-        setTimeout(this.GenerateData.bind(this), 100);
+      FetchDay: function () {
+        var Series3S = ["FREQUENCY", "FLAG", "VOLTAGE", "CURRENT", "ACTIVE_POWER", "REACTIVE_POWER"];
+        var Series1M = ["FREQUENCY","FLAG", "VOLTAGE", "CURRENT", "ACTIVE_POWER", "REACTIVE_POWER"];
+        var Series10M = ["FREQUENCY", "FLAG", "VOLTAGE", "CURRENT"];
+        var Series15M = ["ACTIVE_POWER", "REACTIVE_POWER"];
+        var Series1H = ["FREQUENCY", "FLAG", "VOLTAGE", "CURRENT", "ACTIVE_POWER", "REACTIVE_POWER", "VOLTAGE_STATS", "FREQUENCY_STATS", "VOLTAGE_THD_STATS", "VOLTAGE_HARMONICS_STATS"];
+        $.ajax({url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({Series: Series3S, LastSample: 0, Analyzer: this.Analyzer.Analyzer, Aggreg: '3S', To: this.StartDate.endOf('day').valueOf(), Period: 86399999}),
+          success: (result) => {
+            this.Deflator.push(JSON.stringify(result), this.Days === 364);
+            this.Days++;
+            this.StartDate = this.StartDate.endOf('day').add(1, 'ms');
+            this.DateText = this.StartDate.format('DD/MM/YYYY');
+            this.Progress = Math.round(this.Days / 365.0 * 100);
+            if(this.Days < 365) this.FetchDay();
+          },
+          error: () => {
+            alert("ERRORRRRRR")
+          }
+        });
+
 
       },
-      ClearRange: function() {},
-      Restore: function() {
+      ClearRange: function () {},
+      Restore: function () {
         this.$refs.filename.click();
       },
-      BackupAll: function() {},
-      ClearAll: function() {}
+      BackupAll: function () {},
+      ClearAll: function () {}
     },
-    created: function() {
+    created: function () {
       this.Backup = {Voltage: []};
+      this.Days = 0;
     },
-    beforeDestroy: function() {
-      $(this.$refs.Base).off('onSetSelectValue', this.SelectBase.bind(this));
-      $(this.$refs.Base).off('onUnsetSelectValue', this.DeselectBase.bind(this));
-      $(this.$refs.Base).bsSuggest("destroy");
-    },
-    components: { DatePicker, Spinner }
+    components: {Dlg, DatePicker, ProgressBar}
   }
 </script>
 
 <style scoped>
-
+  div .progress {
+    height: 12px;
+    background-color: #FFFFFF;
+    border:1px solid #BBB;
+    margin-bottom: 0px;
+  }
 </style>
