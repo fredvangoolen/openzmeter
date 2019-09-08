@@ -737,6 +737,8 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   Response["ZipCode"] = pZipCode;
   Response["GeoPosition"] = pGeo;
   Response["SampleRate"] = pSamplerate;
+  req.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + req.Bind(pSerial));
+  if(req.FecthRow()) Response["Size"] = req.ResultUInt64("size");
   json Remote = GetJSONSyncConfig();  
   Response.insert(Remote.begin(), Remote.end());
   pConfigLocks.ReadUnlock();
