@@ -26,7 +26,7 @@ build:
     - |
       cat > Package/CONTROL/control << EOF
       Package: openZmeter-${BUILD_NAME}
-      Version: ${BUILD_DATE}  
+      Version: ${BUILD_DATE}
       Section: base
       Priority: optional
       Architecture: arm_cortex-a7_neon-vfpv4
@@ -55,4 +55,5 @@ build:
         procd_close_instance
       }
       EOF
+    - chmod +x Package/etc/init.d/openZmeter
     - ipkg-build -o root -g root Package .
