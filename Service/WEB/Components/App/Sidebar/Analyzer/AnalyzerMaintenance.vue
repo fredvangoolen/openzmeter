@@ -48,14 +48,14 @@
   import Pako from 'JS/pako.js';
   export default {
     data() {
-      return { Analyzer: null, DBSize: '', DateText: '', Progress: 0, View: '', SizeText: '' };
+      return { Analyzer: null, DBSize: '', DateText: '', Progress: 0, View: '', SizeText: '', Range: 0 };
     },
     methods: {
       Show: function (analyzer) {
         this.Analyzer = analyzer;
         this.DBSize = oZm.GetBestUnitsBin(analyzer.Size);
-        this.StartDate = moment.tz(this.Analyzer.TimeZone).startOf('year');
-        this.EndDate = moment.tz(this.Analyzer.TimeZone).endOf('year');
+        this.StartDate = moment.tz(this.Analyzer.TimeZone).startOf('year').valueOf();
+        this.EndDate = moment.tz(this.Analyzer.TimeZone).endOf('year').valueOf();
         this.View = 'Main';
         this.$refs.Dialog.Show();
         this.$nextTick(function () {
@@ -64,10 +64,10 @@
         });
       },
       SetStartDate: function(date) {
-        this.StartDate = date.startOf('day');
+        this.StartDate = date.startOf('day').valueOf();
       },
       SetEndDate: function(date) {
-        this.EndDate = date.endOf('day');
+        this.EndDate = date.endOf('day').valueOf();
       },
       Back: function () {
         this.$refs.Dialog.Close();
@@ -104,12 +104,14 @@
       BackupRange: function () {
         this.View = 'Save';
         this.Deflator = new Pako.Deflate({level: 9, gzip: true});
-        this.DateText = this.StartDate.format('DD/MM/YYYY');
+        this.DateText = moment.tz(this.StartDate, this.Analyzer.TimeZone).format('DD/MM/YYYY');
         this.Chunks = [];
         this.TotalSize = 0;
         this.SizeText = oZm.GetBestUnitsBin(this.TotalSize);
         this.Progress = 0;
-        this.Deflator.onEnd = (chunk) => {
+        this.Range = this.EndDate - this.StartDate;
+        this.Deflator.onEnd = () => {
+          FileSaver.saveAs(new Blob(this.Chunks, {type: "application/gzip"}), this.Analyzer.Analyzer + '.gz');
           this.View = 'Main';
         };
         this.Deflator.onData = (chunk) => {
@@ -120,26 +122,38 @@
         this.FetchDay();
       },
       FetchDay: function () {
+        var DayData = [];
         var Series3S = ["FREQUENCY", "FLAG", "VOLTAGE", "CURRENT", "ACTIVE_POWER", "REACTIVE_POWER"];
-        var Series1M = ["FREQUENCY","FLAG", "VOLTAGE", "CURRENT", "ACTIVE_POWER", "REACTIVE_POWER"];
+        var Series1M = ["FREQUENCY","FLAG", "VOLTAGE", "CURRENT"];
         var Series10M = ["FREQUENCY", "FLAG", "VOLTAGE", "CURRENT"];
         var Series15M = ["ACTIVE_POWER", "REACTIVE_POWER"];
         var Series1H = ["FREQUENCY", "FLAG", "VOLTAGE", "CURRENT", "ACTIVE_POWER", "REACTIVE_POWER", "VOLTAGE_STATS", "FREQUENCY_STATS", "VOLTAGE_THD_STATS", "VOLTAGE_HARMONICS_STATS"];
-        $.ajax({url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({Series: Series3S, LastSample: 0, Analyzer: this.Analyzer.Analyzer, Aggreg: '3S', To: this.StartDate.endOf('day').valueOf(), Period: 86399999}),
+        var FetchFunc = (aggreg, series) => {
+          var ToDate = moment.tz(this.StartDate, this.Analyzer.TimeZone).endOf('day').valueOf();
+          $.ajax({url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({Series: series, LastSample: 0, Analyzer: this.Analyzer.Analyzer, Aggreg: aggreg, To: ToDate, Period: 86399999}),
           success: (result) => {
-            this.Deflator.push(JSON.stringify(result), this.Days === 364);
-            this.Days++;
-            this.StartDate = this.StartDate.endOf('day').add(1, 'ms');
-            this.DateText = this.StartDate.format('DD/MM/YYYY');
-            this.Progress = Math.round(this.Days / 365.0 * 100);
-            if(this.Days < 365) this.FetchDay();
+            if(result.Sampletime.length > 0) DayData.push(result);
+            if(aggreg == '3S') FetchFunc('1M', Series1M);
+            if(aggreg == '1M') FetchFunc('10M', Series10M);
+            if(aggreg == '10M') FetchFunc('15M', Series15M);
+            if(aggreg == '15M') FetchFunc('1H', Series1H);
+            if(aggreg == '1H') {
+              this.StartDate = ToDate + 1;
+              for(var n = 0; n < DayData.length; n++) this.Deflator.push(JSON.stringify(DayData[n]), false);
+              if(ToDate == this.EndDate) this.Deflator.push('', true);
+              this.DateText = moment.tz(this.StartDate, this.Analyzer.TimeZone).format('DD/MM/YYYY');
+              this.Progress = 100 - Math.round(((this.EndDate - this.StartDate) / this.Range) * 100.0);
+              if(ToDate != this.EndDate) this.FetchDay();
+            }
           },
           error: () => {
             alert("ERRORRRRRR")
           }
         });
-
-
+          
+          
+        };
+        FetchFunc('3S', Series3S);
       },
       ClearRange: function () {},
       Restore: function () {

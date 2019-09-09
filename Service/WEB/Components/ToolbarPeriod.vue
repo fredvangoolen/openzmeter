@@ -166,7 +166,7 @@
       },
       EditPeriod: function () {
         this.TmpDateWindow = Array.from(this.DateWindow);
-        $(this.$refs.Dialog).Show();
+        this.$refs.Dialog.Show();
       },
       SetStartDate: function (date) {
         if(date.valueOf() < this.TmpDateWindow[1]) this.TmpDateWindow[0] = date.valueOf();
@@ -179,7 +179,7 @@
         this.Back();
       },
       Back: function () {
-        $(this.$refs.Dialog).Close();
+        this.$refs.Dialog.Close();
       }
     },
     components: { Dlg, DatePicker }
