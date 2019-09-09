@@ -1,7 +1,7 @@
 FROM alpine:3.8
 
 #install packages ----------------------------------------------------------
-RUN apk add --no-cache asciidoc bash bc binutils bzip2 cdrkit coreutils diffutils findutils flex g++ gawk gcc gettext git grep intltool libxslt linux-headers make ncurses-dev patch perl python2-dev python3-dev tar unzip  util-linux wget zlib-dev xz
+RUN apk add --no-cache asciidoc bash bc binutils bzip2 cdrkit coreutils diffutils findutils flex g++ gawk gcc gettext git grep intltool libxslt linux-headers make ncurses-dev patch perl python2-dev python3-dev tar unzip  util-linux wget zlib-dev xz npm openssh-client
 
 #Download openWRT ----------------------------------------------------------
 RUN mkdir /opt && cd /opt && git clone https://git.openwrt.org/openwrt/openwrt.git openWRT_SDK
@@ -16,8 +16,9 @@ RUN cd /opt/openWRT_SDK && make defconfig
 
 #Generate required openWRT packages ----------------------------------------
 ENV FORCE_UNSAFE_CONFIGURE=1
-RUN cd /opt/openWRT_SDK && make toolchain/install -j8
 RUN cd /opt/openWRT_SDK && make tools/install -j8
+RUN cd /opt/openWRT_SDK && make toolchain/install -j8
+RUN cd /opt/openWRT_SDK && make package/usign/host/compile -j8
 RUN cd /opt/openWRT_SDK && make package/zlib/compile -j8 
 RUN cd /opt/openWRT_SDK && make package/libmicrohttpd/compile -j8
 RUN cd /opt/openWRT_SDK && make package/postgresql/compile -j8
@@ -26,9 +27,6 @@ RUN cd /opt/openWRT_SDK && make package/wireless-tools/compile -j8
 RUN cd /opt/openWRT_SDK && make package/dbus/compile -j8
 RUN cd /opt/openWRT_SDK && make package/libusb/compile -j8
 RUN cd /opt/openWRT_SDK && BUILD_VARIANT="single" make package/fftw3/compile -j8
-
-#Install npm -------------------------------------------------------------- 
-RUN apk add npm openssh-client
 
 # OpenWRT SDK --------------------------------------------------------------
 ENV SDK_DIR "/opt/openWRT_SDK"
@@ -43,4 +41,4 @@ ENV RANLIB=arm-openwrt-linux-ranlib
 ENV AS=arm-openwrt-linux-as  
 ENV AR=arm-openwrt-linux-ar  
 ENV LD=arm-openwrt-linux-ld
-ENV PATH=${TOOLCHAIN}/bin:${SDK_DIR}/scripts:${PATH}
+ENV PATH=${TOOLCHAIN}/bin:${SDK_DIR}/scripts:$STAGING_DIR/host/bin:${PATH}
