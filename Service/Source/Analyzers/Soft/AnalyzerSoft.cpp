@@ -1170,7 +1170,7 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   uint64_t From = To - Period;
   uint32_t PeriodSeconds = 900000;
   //TODO CHECK time zone
-  string TimeZone = "Etc/UTC";
+//  string TimeZone = "Etc/UTC";
   if(Aggreg == "1H") PeriodSeconds = 3600000;
   if((Period / PeriodSeconds) > 100000) {
     Dereference();
@@ -1190,14 +1190,14 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   Result["Bills"]              = json::array();
   //Load involved tariffs, currency and timezone
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  req.ExecSentenceAsyncResult("SELECT currency, timezone, to_json(array_agg(json_build_object('Name', rates.name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) as rate FROM rates WHERE enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To));
+  req.ExecSentenceAsyncResult("SELECT to_json(array_agg(json_build_object('Name', rates.name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) as rate FROM rates WHERE enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To));
   json DBTariffs = json::array();
   if(req.FecthRow()) {
-    Result["Currency"] = req.ResultString("currency");
-    TimeZone = req.ResultString("timezone");
-    DBTariffs = req.ResultJSON("tariff");
+    Result["Currency"] = "€";//req.ResultString("currency");
+//    TimeZone = req.ResultString("timezone");
+    DBTariffs = req.ResultJSON("rate");
   }
-  TariffList Tariffs(DBTariffs, TimeZone);
+  TariffList Tariffs(DBTariffs, pTimeZone);
   //Find start and end date to retrieve data
   uint64_t BillingFrom = Tariffs.BillFrom((LastSample > From) ? LastSample : From);
   uint64_t BillingTo = Tariffs.BillTo(To);
