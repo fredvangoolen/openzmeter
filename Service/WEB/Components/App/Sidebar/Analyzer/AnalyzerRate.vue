@@ -133,6 +133,7 @@
           this.Tariffs[n].description = 'From ' + moment.tz(this.Tariffs[n].StartDate, this.Analyzer.TimeZone).format('DD/MM/YYYY') + ' to ' + moment.tz(this.Tariffs[n].EndDate, this.Analyzer.TimeZone).format('DD/MM/YYYY');
         }
         this.Initial = rate;
+        this.View = 'Main';
         if(rate === null) {
           this.Rate = this.EmptyRate;
         } else {
@@ -152,7 +153,7 @@
         });
       },    
       Round6: function(val) {
-        return RoundPlain(val, 6);
+        return oZm.RoundPlain(val, 6);
       },
       FormatDate: function(val) {
         return val.format('DD/MM/YYYY');

@@ -82,7 +82,7 @@
       Delete: function(tariff, evt) {
         if(confirm("Delete '" + tariff.Name + "' tariff?")){
           $(evt.target).blur();
-          $.ajax({ url: "delTariffs", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify({ TariffID: tariff.TariffID }), 
+          $.ajax({ url: "delTariff", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify({ TariffID: tariff.TariffID }), 
             success: function(result) {
               this.GetTariffs();
             }.bind(this)
