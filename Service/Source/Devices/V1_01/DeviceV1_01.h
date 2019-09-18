@@ -46,6 +46,7 @@ class DeviceV1_01 : public Device {
     struct libusb_device        *pNewDevice;               //USB device
     libusb_context              *pContext;                 //USB context
     pthread_t                    pSignalThread;            //Thread to handle LED and sounds
+    deque<Sample_t>              pAverageValues;           //Average wave value of last second
   private : 
     static bool  GetInstances();
     static void *Capture_Thread(void *args);

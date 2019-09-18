@@ -19,6 +19,10 @@ static bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
+  if((signal == SIGSEGV) || (signal == SIGABRT)) {
+    fprintf(stderr, "Error: signal %d:\n", signal);
+    exit(1);
+  }
 }
 void RunDaemon() {
   LOGFile::Info("Move to background task\n");
@@ -44,6 +48,9 @@ int main(int argc, char** argv) {
   signal(SIGILL, SIG_IGN);
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
+  signal(SIGSEGV, SignalHandler);
+  signal(SIGABRT, SignalHandler);
+  
   string ConfigFileName = "/etc/openZmeter.conf";
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {

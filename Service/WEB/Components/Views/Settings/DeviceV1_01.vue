@@ -23,7 +23,10 @@
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Voltage channel offset</label>
-          <input-spin :min="-20" :max="20" :value="Settings.VoltageOffset" :increment="0.01" prepend="V" v-on:change="Settings.VoltageOffset=$vent"></input-spin>
+          <div style="display: flex">
+            <input-spin :min="-20" :max="20" :value="Settings.VoltageOffset" ref="VoltageOffset" :increment="0.01" prepend="V" v-on:change="Settings.VoltageOffset=$event" style="flex-grow: 100"></input-spin>
+            <button type="button" class="btn btn-default btn-xs" v-on:click="SetVoltageOffset" data-toggle="tooltip" :title="'Last second offset: ' + OffsetV + ' V'"><img :src="require('Imgs/wand.png')"></button>
+          </div>       
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Current channel correction</label>
@@ -38,7 +41,10 @@
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Current channel offset</label>
-          <input-spin :min="-1" :max="1" :value="Settings.CurrentOffset" :increment="0.01" prepend="A" v-on:change="Settings.CurrentOffset=$event"></input-spin>
+          <div style="display: flex">
+            <input-spin :min="-1" :max="1" :value="Settings.CurrentOffset" ref="CurrentOffset" :increment="0.01" prepend="A" v-on:change="Settings.CurrentOffset=$event" style="flex-grow: 100"></input-spin>
+            <button type="button" class="btn btn-default btn-xs" v-on:click="SetCurrentOffset" data-toggle="tooltip" :title="'Last second offset: ' + OffsetC + ' A'"><img :src="require('Imgs/wand.png')"></button>
+          </div>
         </div>
       </div>
     </div>
@@ -55,10 +61,20 @@
   export default {
     props: ['settings'],
     data() {
-      return { Settings: {}, ShowSpinner: false, Error: '' };
+      return { Settings: {}, ShowSpinner: false, Error: '', OffsetV: '', OffsetC: '' };
     },
     created: function() {
       this.Settings = this.settings;
+      this.OffsetV = oZm.RoundPlain(this.settings.Wave_Average.Voltage);
+      this.OffsetC = oZm.RoundPlain(this.settings.Wave_Average.Current);
+    },
+    methods: {
+      SetCurrentOffset: function() {
+        this.$refs.CurrentOffset.SetValue(-this.settings.Wave_Average.Current + this.settings.CurrentOffset);
+      },
+      SetVoltageOffset: function() {
+        this.$refs.VoltageOffset.SetValue(-this.settings.Wave_Average.Voltage + this.settings.VoltageOffset);
+      }
     },
     components: { Spinner, InputSpin, Toggle, OptionPicker }
   }

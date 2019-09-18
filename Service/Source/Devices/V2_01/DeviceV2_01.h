@@ -51,7 +51,8 @@ class DeviceV2_01 : public Device {
     struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
     struct libusb_device        *pNewDevice;               //Dispositivo que se conecta
     libusb_context              *pContext;                 //USB context
-    pthread_mutex_t              pMutex;
+    pthread_mutex_t              pMutex;                   //Configs and critical sections lock
+    deque<Sample_t>              pAverageValues;           //Average wave value of last second
   private :
     static bool  GetInstances();
     static void *Capture_Thread(void *args);

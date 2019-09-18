@@ -189,6 +189,18 @@ bool DeviceV1_01::StopDevice() {
 void DeviceV1_01::GetDevice(HTTPRequest &req) {
   json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
   Config.erase("Analyzer");
+  Sample_t Avg;
+  Avg.Voltage = 0.0;
+  Avg.Current = 0.0;
+  pAnalyzersLock.ReadLock();
+  for(deque<Sample_t>::iterator it = pAverageValues.begin(); it != pAverageValues.end(); it++) {
+    Avg.Voltage += it->Voltage;
+    Avg.Current += it->Current;
+  }
+  pAnalyzersLock.ReadUnlock();
+  Config["Wave_Average"] = json::object();
+  Config["Wave_Average"]["Voltage"] = Avg.Voltage / pAverageValues.size();
+  Config["Wave_Average"]["Current"] = Avg.Current / pAverageValues.size();
   req.FromJSON(Config);
 }
 void DeviceV1_01::SetDevice(HTTPRequest &req) {
@@ -198,6 +210,8 @@ void DeviceV1_01::SetDevice(HTTPRequest &req) {
   StopDevice();
   json Params = req.GetParams();
   json Config = CheckConfig(Params);
+  json Orig = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  Config["Analyzer"] = Orig["Analyzer"];
   bool Result = true;
   ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
   pthread_mutex_lock(&pMutex);
@@ -255,6 +269,8 @@ bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
 //  if(pBuffer.full()) return false;
   Sample_t Sample = { voltageSample, currentSample };
   pBuffer.push_back(Sample);
+  pAverageValues.push_back(Sample);
+  if(pAverageValues.size() > DEVICEV1_01_SAMPLEFREQ) pAverageValues.pop_front();  
   AnalyzerSoft *Analyzer = (AnalyzerSoft*)pAnalyzers[0];
   uint64_t Sampletime = Tools::GetTime();
   if(Analyzer->IsFinished() == false) return true;
