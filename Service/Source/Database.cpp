@@ -180,7 +180,9 @@ string Database::BindID(const string &param) const {
   return Result;
 }
 json Database::ResultJSON(const string &name) const {
-  return json::parse(ResultString(name));
+  json Result = json::parse(ResultString(name), NULL, false);
+  if(Result.is_discarded()) return nullptr;
+  return Result;
 }
 string Database::ResultString(const string &name) const {
   if(pResult == NULL) return "";

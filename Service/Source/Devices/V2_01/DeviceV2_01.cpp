@@ -337,6 +337,35 @@ int DeviceV2_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *
 void DeviceV2_01::GetDevice(HTTPRequest &req) {
   json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
+  Sample_t Avg;
+  Avg.Voltage[0] = 0.0;
+  Avg.Voltage[1] = 0.0;
+  Avg.Voltage[2] = 0.0;
+  Avg.Current[0] = 0.0;
+  Avg.Current[1] = 0.0;
+  Avg.Current[2] = 0.0;
+  Avg.Current[3] = 0.0;
+  pAnalyzersLock.ReadLock();
+  for(deque<Sample_t>::iterator it = pAverageValues.begin(); it != pAverageValues.end(); it++) {
+    Avg.Voltage[0] += it->Voltage[0];
+    Avg.Voltage[1] += it->Voltage[1];
+    Avg.Voltage[2] += it->Voltage[2];
+    Avg.Current[0] += it->Current[0];
+    Avg.Current[1] += it->Current[1];
+    Avg.Current[2] += it->Current[2];
+    Avg.Current[3] += it->Current[3];
+  }
+  pAnalyzersLock.ReadUnlock();
+  Config["Wave_Average"] = json::object();
+  Config["Wave_Average"]["Voltage"] = json::array();
+  Config["Wave_Average"]["Voltage"].push_back(Avg.Voltage[0] / pAverageValues.size());
+  Config["Wave_Average"]["Voltage"].push_back(Avg.Voltage[1] / pAverageValues.size());
+  Config["Wave_Average"]["Voltage"].push_back(Avg.Voltage[2] / pAverageValues.size());
+  Config["Wave_Average"]["Current"] = json::array();
+  Config["Wave_Average"]["Current"].push_back(Avg.Current[0] / pAverageValues.size());
+  Config["Wave_Average"]["Current"].push_back(Avg.Current[1] / pAverageValues.size());
+  Config["Wave_Average"]["Current"].push_back(Avg.Current[2] / pAverageValues.size());
+  Config["Wave_Average"]["Current"].push_back(Avg.Current[3] / pAverageValues.size());
   req.FromJSON(Config);
 }
 void DeviceV2_01::SetDevice(HTTPRequest &req) {
@@ -364,6 +393,8 @@ bool DeviceV2_01::BuffersAppend() {
   pBuffer.push_back(pCapture);
   uint64_t Sampletime = Tools::GetTime();
   pAnalyzersLock.ReadLock();
+  pAverageValues.push_back(pCapture);
+  if(pAverageValues.size() > DEVICEV2_01_SAMPLEFREQ) pAverageValues.pop_front();
   for(uint8_t i = 0; i < pAnalyzers.size(); i++) {
     if(((AnalyzerSoft*)pAnalyzers[i])->IsFinished() == false) {
       pAnalyzersLock.ReadUnlock();
