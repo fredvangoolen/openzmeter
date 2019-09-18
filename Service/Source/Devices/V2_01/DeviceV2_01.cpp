@@ -346,6 +346,11 @@ void DeviceV2_01::SetDevice(HTTPRequest &req) {
   StopDevice();
   json Params = req.GetParams();
   json Config = CheckConfig(Params);
+  json Orig = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  for(uint32_t n = 0; n < Config["Outputs"].size(); n++) {
+    if(n >= Orig["Outputs"].size()) break;
+    if(Config["Outputs"][n]["Mode"] == Orig["Outputs"][n]["Mode"]) Config["Outputs"][n] == Orig["Outputs"][n];
+  }
   bool Result = true;
   ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
   pthread_mutex_lock(&pMutex);
