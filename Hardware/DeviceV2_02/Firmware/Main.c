@@ -16,26 +16,23 @@ typedef struct {
   uint16_t Battery;
 } ADC_Sequence_t;
 typedef struct {
-  uint8_t Battery;            //Battery level
-  uint8_t Buzzer:4;           //Buzzer beeps
-  uint8_t Button:2;           //Pending button action
-  uint8_t Power_R_ON:1;       //Power LED (PB5) RED
-  uint8_t Power_G_ON:1;       //Power LED (PB5) GREEN
-  uint8_t Status_A_ON:1;      //Status LED (PB4)
-  uint8_t Status_A_BLINK:1;
-  uint8_t Status_B_ON:1;
-  uint8_t Status_B_BLINK:1;
-  uint8_t Wifi_A_ON:1;        //Wifi LED (PB3)
-  uint8_t Wifi_A_BLINK:1;
-  uint8_t Wifi_B_ON:1;
-  uint8_t Wifi_B_BLINK:1;
-  uint8_t Bluetooth_ON:1;     //Bluetooth LED (PA9)
-  uint8_t Bluetooth_BLINK:1;
-//  uint8_t On:1;               //System is on (5v boost on)
-//  uint8_t Ready:1;            //NanoPI is active (yet booting or shuting down)
+  uint16_t Power_Color:2;     //Power LED (PB5) Red when off but plugged, off if off and not plugged, green if running and yellow if booting or shuttingdown
+  uint16_t Status_Color:2;    //Status LED (PB4) Green if service running, yellow on events (cleared by software), red on service lost communication or errors.
+  uint16_t Wifi_Color:2;      //Wifi LED (PB3) Green if connected to internet, yellow if connected to network, red if no connection
+  uint16_t Bluetooth_Color:1; //Bluetooth LED (PA9) On when bluetooth enabled
+  uint16_t Buzzer:9;          //Buzzer beeps
+} Signals_t;
+enum LED_Color {OFF = 0, GREEN = 1, YELLOW = 3, RED = 2 };
+typedef struct {
   uint8_t ExtPower:1;         //External power flag
   uint8_t Charging:1;         //Charging flag
-} SystemStatus_t;
+  uint8_t Battery:3;          //Battery level
+  uint8_t Temp:3;             //System temp
+} SysStatus_t;
+typedef struct {
+  uint16_t Button:2;           //Pending button action
+  uint16_t Button_Counter:14;  //Buttons ticks
+} ButtonStatus_t;
 typedef struct {
   uint16_t Buffer[BUFF_LEN];
   uint16_t Head;
@@ -76,7 +73,7 @@ void SysTick_ISR() {
     GPIOA->BSRR = GPIO_BSRR_BS_10 | GPIO_BSRR_BS_15;    //A mode (PA10=1)
     GPIOB->BSRR = GPIO_BSRR_BS_5 | GPIO_BSRR_BS_4;
     if(((SysTicks % 8) == 1) && SysStatus.Power_R_ON  && (!SysStatus.Charging || (SysStatus.Charging && ((SysTicks % 256) < 127)))) GPIOB->BSRR |= GPIO_BSRR_BR_5;
-    if(((SysTicks % 8) == 3) && SysStatus.Status_A_ON && (!SysStatus.Status_A_BLINK || (SysStatus.Status_A_BLINK && ((SysTicks % 256) < 127)))) GPIOB->BSRR |= GPIO_BSRR_BR_4;
+    if(((SysTicks % 8) == 3) && SysStatus.Status_R_ON && (!SysStatus.Status_R_BLINK || (SysStatus.Status_R_BLINK && ((SysTicks % 256) < 127)))) GPIOB->BSRR |= GPIO_BSRR_BR_4;
     if(((SysTicks % 8) == 5) && SysStatus.Wifi_A_ON   && (!SysStatus.Wifi_A_BLINK   || (SysStatus.Wifi_A_BLINK   && ((SysTicks % 256) < 127)))) GPIOA->BSRR |= GPIO_BSRR_BR_15;
   } else {
     GPIOA->BSRR = GPIO_BSRR_BR_10 | GPIO_BSRR_BR_15;    //A mode (PA10=0)

@@ -103,7 +103,7 @@
             this.$refs.Dialog.Close();
             this.$parent.$refs.Configure.Show(result);
           },
-          completed: () => {
+          complete: () => {
             this.$refs.Dialog.ShowSpinner = false;
           }
         });
@@ -118,7 +118,7 @@
             this.$refs.Dialog.Close();
             this.$parent.$refs.Rates.Show(result);
           },
-          completed: () => {
+          complete: () => {
             this.$refs.Dialog.ShowSpinner = false;
           }
         });
@@ -133,7 +133,7 @@
             this.$refs.Dialog.Close();
             this.$parent.$refs.Maintenance.Show(result);
           },
-          completed: () => {
+          complete: () => {
             this.$refs.Dialog.ShowSpinner = false;
           }
         });
