@@ -85,7 +85,7 @@ L 3Phase-rescue:R-3Phase-rescue R15
 U 1 1 5BD04974
 P 4975 8150
 F 0 "R15" V 5055 8150 50  0000 C CNN
-F 1 "10K" V 4975 8150 50  0001 C CNN
+F 1 "10k" V 4975 8150 50  0001 C CNN
 F 2 "Resistor_SMD:R_0603_1608Metric" V 4905 8150 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-8-2K-8K2-9-1K-9K1/624710_32949773329.html" H 4975 8150 50  0001 C CNN
 	1    4975 8150
@@ -96,7 +96,7 @@ L 3Phase-rescue:R-3Phase-rescue R10
 U 1 1 5BD049A1
 P 4950 6975
 F 0 "R10" V 5030 6975 50  0000 C CNN
-F 1 "10K" V 4950 6975 50  0001 C CNN
+F 1 "10k" V 4950 6975 50  0001 C CNN
 F 2 "Resistor_SMD:R_0603_1608Metric" V 4880 6975 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-8-2K-8K2-9-1K-9K1/624710_32949773329.html" H 4950 6975 50  0001 C CNN
 	1    4950 6975
@@ -118,7 +118,7 @@ L 3Phase-rescue:R-3Phase-rescue R13
 U 1 1 5BD04A47
 P 5475 6575
 F 0 "R13" V 5555 6575 50  0000 C CNN
-F 1 "10K" V 5475 6575 50  0001 C CNN
+F 1 "10k" V 5475 6575 50  0001 C CNN
 F 2 "Resistor_SMD:R_0603_1608Metric" V 5405 6575 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-8-2K-8K2-9-1K-9K1/624710_32949773329.html" H 5475 6575 50  0001 C CNN
 	1    5475 6575
@@ -239,7 +239,7 @@ L 3Phase-rescue:R-3Phase-rescue R19
 U 1 1 5BD04D6E
 P 5850 8150
 F 0 "R19" V 5930 8150 50  0000 C CNN
-F 1 "10K" V 5850 8150 50  0001 C CNN
+F 1 "10k" V 5850 8150 50  0001 C CNN
 F 2 "Resistor_SMD:R_0603_1608Metric" V 5780 8150 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-8-2K-8K2-9-1K-9K1/624710_32949773329.html" H 5850 8150 50  0001 C CNN
 	1    5850 8150
@@ -250,7 +250,7 @@ L 3Phase-rescue:R-3Phase-rescue R22
 U 1 1 5BD04DB7
 P 6450 8150
 F 0 "R22" V 6530 8150 50  0000 C CNN
-F 1 "10K" V 6450 8150 50  0001 C CNN
+F 1 "10k" V 6450 8150 50  0001 C CNN
 F 2 "Resistor_SMD:R_0603_1608Metric" V 6380 8150 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-8-2K-8K2-9-1K-9K1/624710_32949773329.html" H 6450 8150 50  0001 C CNN
 	1    6450 8150
@@ -327,7 +327,7 @@ L 3Phase-rescue:R-3Phase-rescue R20
 U 1 1 5BD04FEE
 P 5475 7700
 F 0 "R20" V 5555 7700 50  0000 C CNN
-F 1 "10K" V 5475 7700 50  0001 C CNN
+F 1 "10k" V 5475 7700 50  0001 C CNN
 F 2 "Resistor_SMD:R_0603_1608Metric" V 5405 7700 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-8-2K-8K2-9-1K-9K1/624710_32949773329.html" H 5475 7700 50  0001 C CNN
 	1    5475 7700
@@ -481,7 +481,7 @@ L 3Phase-rescue:C_Small-3Phase-rescue C3
 U 1 1 5BD06311
 P 5700 1700
 F 0 "C3" H 5710 1770 50  0000 L CNN
-F 1 "100nF 50v" H 5710 1620 50  0001 L CNN
+F 1 "100nF" H 5710 1620 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 5700 1700 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 5700 1700 50  0001 C CNN
 	1    5700 1700
@@ -492,7 +492,7 @@ L 3Phase-rescue:C_Small-3Phase-rescue C5
 U 1 1 5BD0638E
 P 4700 1150
 F 0 "C5" H 4710 1220 50  0000 L CNN
-F 1 "C_Small" H 4710 1070 50  0001 L CNN
+F 1 "100nF" H 4710 1070 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 4700 1150 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 4700 1150 50  0001 C CNN
 	1    4700 1150
@@ -892,7 +892,7 @@ L 3Phase-rescue:C_Small-3Phase-rescue C10
 U 1 1 5BDBB3A5
 P 3600 1400
 F 0 "C10" H 3610 1470 50  0000 L CNN
-F 1 "100nF 50v" H 3610 1320 50  0001 L CNN
+F 1 "100nF" H 3610 1320 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 3600 1400 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/Free-shipping-100PCS-capacitance-0402-0-047uF-473-47nF-X7R-25V-10-1-0x0-5mm-1005/511081_1142739709.html" H 3600 1400 50  0001 C CNN
 	1    3600 1400
@@ -960,7 +960,7 @@ L 3Phase-rescue:SY8113-3Phase-rescue U10
 U 1 1 5BDCEBDA
 P 4600 1450
 F 0 "U10" H 4450 1675 50  0000 R CNN
-F 1 "SY8113" H 4475 1550 50  0000 L CNN
+F 1 "SY8201" H 4475 1550 50  0000 L CNN
 F 2 "Package_TO_SOT_SMD:TSOT-23-6" H 4600 875 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-SY8113ADC-SY8113A-SY8113-SOT23-6/614856_32774281809.html" H 4600 1450 50  0001 C CNN
 	1    4600 1450
@@ -971,7 +971,7 @@ L 3Phase-rescue:C_Small-3Phase-rescue C17
 U 1 1 5BDCF00F
 P 4150 1700
 F 0 "C17" H 4160 1770 50  0000 L CNN
-F 1 "100nF 50v" H 4160 1620 50  0001 L CNN
+F 1 "100nF" H 4160 1620 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 4150 1700 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 4150 1700 50  0001 C CNN
 	1    4150 1700
@@ -1130,7 +1130,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    6900 1350
 	0    1    1    0   
 $EndComp
-Text GLabel 7150 1350 2    60   Input ~ 0
+Text GLabel 7325 1350 2    60   Input ~ 0
 BAT_ADC
 Text GLabel 4900 1975 0    60   Input ~ 0
 EXT
@@ -1609,7 +1609,7 @@ L 3Phase-rescue:C_Small-3Phase-rescue C24
 U 1 1 5C110430
 P 2150 8500
 F 0 "C24" H 2160 8570 50  0000 L CNN
-F 1 "C_Small" H 2160 8420 50  0001 L CNN
+F 1 "100nF" H 2160 8420 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 2150 8500 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 2150 8500 50  0001 C CNN
 	1    2150 8500
@@ -2218,7 +2218,7 @@ Wire Wire Line
 Wire Wire Line
 	6700 850  7150 850 
 Wire Wire Line
-	7100 1350 7150 1350
+	7100 1350 7250 1350
 Wire Wire Line
 	6700 1850 7100 1850
 Wire Wire Line
@@ -3520,4 +3520,67 @@ Wire Wire Line
 Connection ~ 7350 4200
 Wire Wire Line
 	7350 4200 7350 5275
+$Comp
+L Components:+1V65 #PWR0122
+U 1 1 5D8A650F
+P 1900 4300
+F 0 "#PWR0122" H 1900 4150 50  0001 C CNN
+F 1 "+1V65" V 1825 4300 50  0000 C CNN
+F 2 "" H 1900 4300 50  0000 C CNN
+F 3 "" H 1900 4300 50  0000 C CNN
+	1    1900 4300
+	0    1    1    0   
+$EndComp
+$Comp
+L 3Phase-rescue:C_Small-3Phase-rescue C37
+U 1 1 5D8F9F1D
+P 7250 1725
+F 0 "C37" H 7260 1795 50  0000 L CNN
+F 1 "100nF" H 7260 1645 50  0001 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 7250 1725 50  0001 C CNN
+F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 7250 1725 50  0001 C CNN
+	1    7250 1725
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7250 1625 7250 1350
+Connection ~ 7250 1350
+Wire Wire Line
+	7250 1350 7325 1350
+Wire Wire Line
+	7250 1825 7250 1850
+Wire Wire Line
+	7250 1850 7100 1850
+Connection ~ 7100 1850
+$Comp
+L 3Phase-rescue:C_Small-3Phase-rescue C?
+U 1 1 5D9A8588
+P 1800 4425
+F 0 "C?" H 1810 4495 50  0000 L CNN
+F 1 "100nF" H 1810 4345 50  0001 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 1800 4425 50  0001 C CNN
+F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 1800 4425 50  0001 C CNN
+	1    1800 4425
+	0    1    -1   0   
+$EndComp
+$Comp
+L power:GND #PWR?
+U 1 1 5D9AACBC
+P 2150 4425
+F 0 "#PWR?" H 2150 4175 50  0001 C CNN
+F 1 "GND" V 2150 4200 50  0000 C CNN
+F 2 "" H 2150 4425 50  0000 C CNN
+F 3 "" H 2150 4425 50  0000 C CNN
+	1    2150 4425
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	2150 4425 1900 4425
+Wire Wire Line
+	1600 4300 1700 4300
+Wire Wire Line
+	1700 4425 1700 4300
+Connection ~ 1700 4300
+Wire Wire Line
+	1700 4300 1900 4300
 $EndSCHEMATC

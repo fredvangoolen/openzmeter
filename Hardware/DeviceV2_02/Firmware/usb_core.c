@@ -106,15 +106,15 @@ USB_Response usbd_process_devrq(usbd_ctlreq *req) {
     case USB_STD_GET_DESCRIPTOR :
       if((req->wValue >> 8) == USB_DTYPE_STRING) {
         if((req->wValue & 0xFF) == 0x00) {
-          udev.status.data_ptr = StringLangID;
+          udev.status.data_ptr = (uint8_t*)StringLangID;
           udev.status.data_count = StringLangID[0];
           return USB_ACK;
         } else if((req->wValue & 0xFF) == 0x01) {
-          udev.status.data_ptr = StringVendor;
+          udev.status.data_ptr = (uint8_t*)StringVendor;
           udev.status.data_count = StringVendor[0];
           return USB_ACK;
         } else if((req->wValue & 0xFF) == 0x02) {
-          udev.status.data_ptr = StringProduct;
+          udev.status.data_ptr = (uint8_t*)StringProduct;
           udev.status.data_count = StringProduct[0];
           return USB_ACK;
         } else if((req->wValue & 0xFF) == 0x03) {
@@ -130,11 +130,11 @@ USB_Response usbd_process_devrq(usbd_ctlreq *req) {
           return USB_FAIL;
         }
       } else if((req->wValue >> 8) == USB_DTYPE_DEVICE) {
-        udev.status.data_ptr = USB_Descriptor;
+        udev.status.data_ptr = (uint8_t*)USB_Descriptor;
         udev.status.data_count = USB_Descriptor[0];
         return USB_ACK;
       } else if((req->wValue >> 8) == USB_DTYPE_CONFIGURATION) {
-        udev.status.data_ptr = USB_ConfigDescriptor;
+        udev.status.data_ptr = (uint8_t*)USB_ConfigDescriptor;
         udev.status.data_count = sizeof(USB_ConfigDescriptor);
         return USB_ACK;
       }

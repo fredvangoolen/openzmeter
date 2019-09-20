@@ -15,7 +15,7 @@ const uint8_t USB_Descriptor[] = {
   0x08,                                   /* bMaxPacketSize0 */
   0x83, 0x04,                             /* idVendor */
   0x70, 0x72,                             /* idProduct */
-  0x01, 0x02,                             /* bcdDevice = 2.00 */
+  0x02, 0x02,                             /* bcdDevice = 2.02 */
   1,                                      /* Index of string descriptor describing manufacturer */
   2,                                      /* Index of string descriptor describing product */
   3,                                      /* Index of string descriptor describing the device's serial number */
@@ -177,7 +177,7 @@ USB_Response cdc_setconf (usbd_device *dev, uint8_t cfg) {
   }
 }
 
-void cdc_init_usbd(void) {
+//void cdc_init_usbd(void) {
 //  uint8_t *dsc = StringSerial;
 //  dsc[0] = 50;
 //  dsc[1] = USB_DTYPE_STRING;
@@ -186,5 +186,14 @@ void cdc_init_usbd(void) {
 //  IntToUnicode(*(__IO uint32_t*)(0x1FFFF7B4), &dsc[34]);
   
   
-    usbd_init(&udev, CDC_EP0_SIZE, ubuf, sizeof(ubuf));
+//    usbd_init(&udev, CDC_EP0_SIZE, ubuf, sizeof(ubuf));
+//}
+
+  void usbd_init(/*usbd_device *dev,*/
+                             /*const uint8_t ep0size, uint32_t *buffer, const uint16_t bsize*/) {
+//    dev->driver = drv;
+    udev.status.ep0size = CDC_EP0_SIZE;
+    udev.status.data_ptr = ubuf;
+    udev.status.data_buf = ubuf;
+    udev.status.data_maxsize = sizeof(ubuf) - __builtin_offsetof(usbd_ctlreq, data);
 }
