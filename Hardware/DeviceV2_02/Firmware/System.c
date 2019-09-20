@@ -66,12 +66,12 @@ const void * Vectors[] __attribute__((section(".vectors"))) = {
   USB_ISR                 /* 31: USB */
 };
 void Init() {
-  // do global/static data initialization
+  // Init data section
   unsigned char *src  = &INIT_DATA_VALUES;
   unsigned char *dest = &INIT_DATA_START;
   unsigned len = &INIT_DATA_END - &INIT_DATA_START;
   while(len--) *dest++ = *src++;
-  // zero out the uninitialized global/static variables
+  // Zero bss section
   dest = &BSS_START;
   len = &BSS_END - &BSS_START;
   while(len--) *dest++=0;

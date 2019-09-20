@@ -1130,7 +1130,7 @@ F 3 "https://es.aliexpress.com/store/product/100PCS-1-6-0-8mm-0603-1-1-10W-1608-
 	1    6900 1350
 	0    1    1    0   
 $EndComp
-Text GLabel 7150 1350 2    60   Input ~ 0
+Text GLabel 7325 1350 2    60   Input ~ 0
 BAT_ADC
 Text GLabel 4900 1975 0    60   Input ~ 0
 EXT
@@ -2218,7 +2218,7 @@ Wire Wire Line
 Wire Wire Line
 	6700 850  7150 850 
 Wire Wire Line
-	7100 1350 7150 1350
+	7100 1350 7250 1350
 Wire Wire Line
 	6700 1850 7100 1850
 Wire Wire Line
@@ -3520,4 +3520,38 @@ Wire Wire Line
 Connection ~ 7350 4200
 Wire Wire Line
 	7350 4200 7350 5275
+$Comp
+L Components:+1V65 #PWR0122
+U 1 1 5D8A650F
+P 1775 4300
+F 0 "#PWR0122" H 1775 4150 50  0001 C CNN
+F 1 "+1V65" V 1700 4300 50  0000 C CNN
+F 2 "" H 1775 4300 50  0000 C CNN
+F 3 "" H 1775 4300 50  0000 C CNN
+	1    1775 4300
+	0    1    1    0   
+$EndComp
+$Comp
+L 3Phase-rescue:C_Small-3Phase-rescue C37
+U 1 1 5D8F9F1D
+P 7250 1725
+F 0 "C37" H 7260 1795 50  0000 L CNN
+F 1 "100nF" H 7260 1645 50  0001 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 7250 1725 50  0001 C CNN
+F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 7250 1725 50  0001 C CNN
+	1    7250 1725
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7250 1625 7250 1350
+Connection ~ 7250 1350
+Wire Wire Line
+	7250 1350 7325 1350
+Wire Wire Line
+	7250 1825 7250 1850
+Wire Wire Line
+	7250 1850 7100 1850
+Connection ~ 7100 1850
+Wire Wire Line
+	1775 4300 1600 4300
 $EndSCHEMATC
