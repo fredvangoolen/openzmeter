@@ -77,4 +77,9 @@ class Analyzer {
     virtual ~Analyzer();
     string Serial() const;
     json   GetJSONShortDescriptor();
+    void   GetAlarms(HTTPRequest &req);
+    void   GetAlarm(HTTPRequest &req);
+    void   SetAlarm(HTTPRequest &req);
+    void   AddAlarm(HTTPRequest &req);
+    void   DelAlarm(HTTPRequest &req);
 };
