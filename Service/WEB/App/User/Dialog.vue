@@ -99,6 +99,7 @@
         this.$refs.Dialog.Close();
       },
       Save: function() {
+        this.$refs.Dialog.ShowSpinner = true;
         
       },
       LoadImage: function() {
