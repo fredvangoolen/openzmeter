@@ -58,7 +58,7 @@
           success: (result) => {
             this.$refs.EditDialog.Show(result);
           },
-          completed: () => {
+          complete: () => {
             this.ShowSpinner = false;
           }
         });

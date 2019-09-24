@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-
 /* USB device machine states */
 typedef enum {
   USB_STATE_DEFAULT,         /* Default */
@@ -28,7 +27,7 @@ typedef enum {
   USB_NACK,                   /**<\brief Function is busy. NAK handshake.*/
 } USB_Response;
 
-// Functions -----------------------------------------------------------------------------------------------------------
+ // Functions -----------------------------------------------------------------------------------------------------------
 uint8_t USB_Connect(bool connect);
 void    USB_Enable(bool enable);
 //void    USB_SetAddress(uint8_t addr);
@@ -343,14 +342,7 @@ struct _usbd_device {
  * \param buffer Pointer to control request data buffer (32-bit aligned)
  * \param bsize Size of the data buffer
  */
-inline static void usbd_init(usbd_device *dev,
-                             const uint8_t ep0size, uint32_t *buffer, const uint16_t bsize) {
-//    dev->driver = drv;
-    dev->status.ep0size = ep0size;
-    dev->status.data_ptr = buffer;
-    dev->status.data_buf = buffer;
-    dev->status.data_maxsize = bsize - __builtin_offsetof(usbd_ctlreq, data);
-}
+void usbd_init();
 
 
 /**\brief Register endpoint callback
