@@ -54,6 +54,8 @@ module.exports = {
   resolve: {
     alias: {
       'Components': path.resolve(__dirname, 'Components'),
+      'Views': path.resolve(__dirname, 'Views'),
+      'App': path.resolve(__dirname, 'App'),
       'JS': path.resolve(__dirname, 'JS'),
       'CSS': path.resolve(__dirname, 'CSS'),
       'Imgs': path.resolve(__dirname, 'Imgs'),
@@ -66,7 +68,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*': { target: 'http://10.42.0.85:80'}
+      '*': { target: 'http://10.8.0.135:80'}
     }
   },
   performance: {

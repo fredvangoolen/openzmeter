@@ -20,7 +20,7 @@ vector<float> AnalyzerSoft::THDRanges        = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5,
 vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), Database(id) {
-  LOGFile::Debug("Creating analyzer database tables\n");
+  LOGFile::Debug("Creating AnalyzerSoft database tables\n");
   ExecResource("SQL/Database_AnalyzerSoft.sql");
   pConfigPath      = optionPath;
   pMode            = mode;

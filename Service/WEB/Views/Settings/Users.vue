@@ -22,7 +22,7 @@
 <script>
   import Vuetable from 'vuetable-2';
   import Spinner from 'Components/Spinner.vue';
-  import UserEdit from 'Components/App/Sidebar/User/User.vue';
+  import UserEdit from 'App/User/Dialog.vue';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
