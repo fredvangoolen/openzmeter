@@ -73,13 +73,14 @@ class Analyzer {
     virtual void AddRate(HTTPRequest &req) = 0;
     virtual void GetPrices(HTTPRequest &req) = 0;
   public :
+    static void GetAlarms(HTTPRequest &req);
+    static void GetAlarm(HTTPRequest &req);
+    static void SetAlarm(HTTPRequest &req);
+    static void AddAlarm(HTTPRequest &req);
+    static void DelAlarm(HTTPRequest &req);
+  public :
     Analyzer(const string &id);
     virtual ~Analyzer();
     string Serial() const;
     json   GetJSONShortDescriptor();
-    void   GetAlarms(HTTPRequest &req);
-    void   GetAlarm(HTTPRequest &req);
-    void   SetAlarm(HTTPRequest &req);
-    void   AddAlarm(HTTPRequest &req);
-    void   DelAlarm(HTTPRequest &req);
 };
