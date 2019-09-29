@@ -7,6 +7,6 @@ CREATE TABLE IF NOT EXISTS alarms(
   aggregation   character varying NOT NULL,
   message       character varying NOT NULL,
   samples       int               NOT NULL,
-  window        int               NOT NULL,
+  window_length int               NOT NULL,
   priority      smallint          NOT NULL
 ) WITH (OIDS=FALSE);
