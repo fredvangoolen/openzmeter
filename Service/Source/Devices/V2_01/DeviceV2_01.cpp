@@ -182,7 +182,7 @@ json DeviceV2_01::CheckConfig(const json& config) {
     }
     if(config.contains("CurrentOffset") && config["CurrentOffset"].is_array() && (config["CurrentOffset"].size() == 4)) {
       for(uint n = 0; n < 4; n++) {
-        if(config["CurrentOffset"][n].is_number() && (config["CurrentOffset"][n] >= -10.0) && (config["CurrentOffset"][n] <= 10.0)) ConfigOUT["CurrentOffset"][n] = config["CurrentOffset"][n];
+        if(config["CurrentOffset"][n].is_number() && (config["CurrentOffset"][n] >= -1000.0) && (config["CurrentOffset"][n] <= 1000.0)) ConfigOUT["CurrentOffset"][n] = config["CurrentOffset"][n];
       }
     }
     if(config.contains("CurrentLevel") && config["CurrentLevel"].is_array() && (config["CurrentLevel"].size() == 4)) {

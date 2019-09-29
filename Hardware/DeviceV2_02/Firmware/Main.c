@@ -6,15 +6,16 @@
 #define BUFF_LEN 1024
 // Types definition ----------------------------------------------------------------------------------------------------
 typedef struct {
-  uint16_t CH[8];
-//  uint16_t VR;
-//  uint16_t VS;
-//  uint16_t VT;
-//  uint16_t IR;
-//  uint16_t IS;
-//  uint16_t IN;
-//  uint16_t IT;
-//  uint16_t Opt;
+  uint16_t Offset;
+  uint16_t V_CH_1;
+  uint16_t V_CH_2;
+  uint16_t V_CH_3;
+  uint16_t I_CH_1;
+  uint16_t I_CH_2;
+  uint16_t I_CH_4;
+  uint16_t I_CH_3;
+  uint16_t Battery;
+  uint16_t Temperature;
 } ADC_Sequence_t;
 typedef struct {
   int16_t  Offset;
@@ -53,7 +54,7 @@ SignalsStatus_t   SignalsStatus = { .Power_Color = OFF, .Status_Color = OFF, .Wi
 SysStatus_t       SysStatus = { .Charging = 0, .ExtPower = 0, .Battery = 0 };
 ButtonStatus_t    ButtonStatus = { .Button = CLICK, .Button_Counter = 0};
 USB_Buffer_t      USB_Buffer = { .Head = 0, .Tail = 0 };
-uint16_t          ADC_Read[4][8];
+ADC_Sequence_t    ADC_Read[8];
 // Buffer management functions -----------------------------------------------------------------------------------------
 void BufferPush(uint16_t value) {
   uint16_t Next = (USB_Buffer.Head + 1) % BUFF_LEN;
@@ -109,65 +110,28 @@ void Suspend() {
 }
 // DMA interrupts to handle ADC oversample -----------------------------------------------------------------------------
 void DMA_CH1_ISR() {
-  ADC1->CR |= ADC_CR_ADSTP;
-  while(ADC1->CR & ADC_CR_ADSTART);
-  uint16_t  Result[8];
-  uint8_t   OptChannel = ADCStatus.OptChannel;
-  uint16_t *Ptr;
-  if(OptChannel == BATTERY) {
-    ADCStatus.OptChannel = TEMP;
-    ADC1->CHSELR = ADC_CHSELR_CHSEL2 | ADC_CHSELR_CHSEL3 | ADC_CHSELR_CHSEL4 | ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6 | ADC_CHSELR_CHSEL7 | ADC_CHSELR_CHSEL8 | ADC_CHSELR_CHSEL16;
-  } else if(OptChannel == TEMP) {
-    ADCStatus.OptChannel = OFFSET;
-    ADC1->CHSELR = ADC_CHSELR_CHSEL1 | ADC_CHSELR_CHSEL2 | ADC_CHSELR_CHSEL3 | ADC_CHSELR_CHSEL4 | ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6 | ADC_CHSELR_CHSEL7 | ADC_CHSELR_CHSEL8;
-  } else if(OptChannel == OFFSET) {
-    ADCStatus.OptChannel = BATTERY;
-    ADC1->CHSELR = ADC_CHSELR_CHSEL2 | ADC_CHSELR_CHSEL3 | ADC_CHSELR_CHSEL4 | ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6 | ADC_CHSELR_CHSEL7 | ADC_CHSELR_CHSEL8 | ADC_CHSELR_CHSEL9;
+  ADC_Sequence_t *Ptr;
+  if(DMA1->ISR & DMA_ISR_HTIF1) {
+    Ptr = &ADC_Read[0];
+    DMA1->IFCR |= DMA_IFCR_CHTIF1;
+  } else {
+    Ptr = &ADC_Read[4];
+    DMA1->IFCR |= DMA_IFCR_CTCIF1;
   }
-  ADC1->CR |= ADC_CR_ADSTART;
-  for(uint8_t n = 0; n < 8; n++) Result[n]  = ADC_Read[0][n];
-  for(uint8_t n = 0; n < 8; n++) Result[n] += ADC_Read[1][n];
-  for(uint8_t n = 0; n < 8; n++) Result[n] += ADC_Read[2][n];
-  for(uint8_t n = 0; n < 8; n++) Result[n] += ADC_Read[3][n];
+  int16_t Offset = (2048 * 4) - (Ptr[0].Offset + Ptr[1].Offset + Ptr[2].Offset + Ptr[3].Offset);
+  BufferPush(((Ptr[0].V_CH_1 + Ptr[1].V_CH_1 + Ptr[2].V_CH_1 + Ptr[3].V_CH_1 + Offset) >> 1) | 0x0000);
+  BufferPush(((Ptr[0].V_CH_2 + Ptr[1].V_CH_2 + Ptr[2].V_CH_2 + Ptr[3].V_CH_2 + Offset) >> 1) | 0x2000);
+  BufferPush(((Ptr[0].V_CH_3 + Ptr[1].V_CH_3 + Ptr[2].V_CH_3 + Ptr[3].V_CH_3 + Offset) >> 1) | 0x4000);
+  BufferPush(((Ptr[0].I_CH_1 + Ptr[1].I_CH_1 + Ptr[2].I_CH_1 + Ptr[3].I_CH_1 + Offset) >> 1) | 0x6000);
+  BufferPush(((Ptr[0].I_CH_2 + Ptr[1].I_CH_2 + Ptr[2].I_CH_2 + Ptr[3].I_CH_2 + Offset) >> 1) | 0x8000);
+  BufferPush(((Ptr[0].I_CH_3 + Ptr[1].I_CH_3 + Ptr[2].I_CH_3 + Ptr[3].I_CH_3 + Offset) >> 1) | 0xA000);
+  BufferPush(((Ptr[0].I_CH_4 + Ptr[1].I_CH_4 + Ptr[2].I_CH_4 + Ptr[3].I_CH_4 + Offset) >> 1) | 0xC000);
 
-  if(OptChannel == OFFSET) {
-    ADCStatus.Offset = Result[0] / 4;
-    Ptr = &Result[1];
-  } else if(OptChannel == TEMP) {
-    Ptr = &Result[0];
-    const uint16_t Temp30 = *(uint16_t*)0x1FFFF7B8;
-    const uint16_t Temp110 = *(uint16_t*)0x1FFFF7C2;
-    int16_t Temp = ((Result[7] / 4 - Temp30) * 80) / (Temp110 - Temp30);
-    if(Temp < 10) {
-        TIM16->CCR1 = 0;
-    } else {
-       TIM16->CCR1 = Temp * 50 + 1000;
-    } 
-  } else if(OptChannel == BATTERY) {
-    Ptr = &Result[0];
-    SysStatus.Battery = Result[7] / 362; //Get battery voltage in volts (x10)
-  }
-  BufferPush((Ptr[0] >> 1) | 0x0000);
-  BufferPush((Ptr[1] >> 1) | 0x2000);
-  BufferPush((Ptr[2] >> 1) | 0x4000);
-  BufferPush((Ptr[2] >> 1) | 0x6000);
-  BufferPush((Ptr[4] >> 1) | 0x8000);
-  BufferPush((Ptr[6] >> 1) | 0xA000);
-  BufferPush((Ptr[5] >> 1) | 0xC000);
-//  ADC_Sequence_t *Ptr = (DMA1->ISR & DMA_ISR_HTIF1) ? &ADC_Read[0] : &ADC_Read[4];
-  
-
-  //Paro conversion, cambio canal y activo otra vez
-
-//  BufferPush(((Ptr[0].VR + Ptr[1].VR + Ptr[2].VR + Ptr[3].VR) >> 1) | 0x0000);
-//  BufferPush(((Ptr[0].VS + Ptr[1].VS + Ptr[2].VS + Ptr[3].VS) >> 1) | 0x2000);
-//  BufferPush(((Ptr[0].VT + Ptr[1].VT + Ptr[2].VT + Ptr[3].VT) >> 1) | 0x4000);
-//  BufferPush(((Ptr[0].IR + Ptr[1].IR + Ptr[2].IR + Ptr[3].IR) >> 1) | 0x6000);
-//  BufferPush(((Ptr[0].IS + Ptr[1].IS + Ptr[2].IS + Ptr[3].IS) >> 1) | 0x8000);
-//  BufferPush(((Ptr[0].IT + Ptr[1].IT + Ptr[2].IT + Ptr[3].IT) >> 1) | 0xA000);
-//  BufferPush(((Ptr[0].IN + Ptr[1].IN + Ptr[2].IN + Ptr[3].IN) >> 1) | 0xC000);
-//  SysStatus.Battery = Ptr[0].Battery >> 4;
-  DMA1->IFCR |= DMA_IFCR_CTCIF1;
+  const uint16_t Temp30 = *(uint16_t*)0x1FFFF7B8;
+  const uint16_t Temp110 = *(uint16_t*)0x1FFFF7C2;
+  int16_t Temp = ((Ptr[0].Temperature - Temp30) * 80) / (Temp110 - Temp30) + 30;
+  TIM16->CCR1 = (Temp < 50) ? 0 : Temp * 30;
+  SysStatus.Battery = ((uint32_t)Ptr[0].Battery * 4522) / 409600; //Get battery voltage in volts (x10)
 }
 // USB callbacks functions ---------------------------------------------------------------------------------------------
 //static void cdc_rxonly (usbd_device *dev, uint8_t event, uint8_t ep) {
@@ -203,8 +167,8 @@ void Setup() {
   FLASH->ACR |= FLASH_ACR_PRFTBE | FLASH_ACR_LATENCY;
   //Clock initialization and power devices
   __enable_irq();
-  RCC->CR2 |= RCC_CR2_HSI48ON | RCC_CR2_HSI14ON;
-  while(((RCC->CR2 & RCC_CR2_HSI48RDY) == 0) || ((RCC->CR2 & RCC_CR2_HSI14RDY) == 0));
+  RCC->CR2 |= RCC_CR2_HSI48ON;
+  while((RCC->CR2 & RCC_CR2_HSI48RDY) == 0);
   RCC->CFGR |= RCC_CFGR_SW_HSI48;
   RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOFEN | RCC_AHBENR_DMA1EN;
   RCC->APB1ENR |= RCC_APB1ENR_USBEN | RCC_APB1ENR_CRSEN | RCC_APB1ENR_PWREN | RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN;
@@ -223,16 +187,17 @@ void Setup() {
   //Enable DMA controller
   DMA1_Channel1->CPAR = (uint32_t)&ADC1->DR;
   DMA1_Channel1->CMAR = (uint32_t)ADC_Read;
-  DMA1_Channel1->CNDTR = 32;
-  DMA1_Channel1->CCR |= DMA_CCR_PL_0 | DMA_CCR_PL_1 | DMA_CCR_PSIZE_0 | DMA_CCR_PSIZE_0 | DMA_CCR_MSIZE_0 | DMA_CCR_MINC | DMA_CCR_CIRC | DMA_CCR_TCIE /*| DMA_CCR_HTIE*/ | DMA_CCR_EN;
+  DMA1_Channel1->CNDTR = 80;
+  DMA1_Channel1->CCR |= DMA_CCR_PL_0 | DMA_CCR_PL_1 | DMA_CCR_PSIZE_0 | DMA_CCR_PSIZE_0 | DMA_CCR_MSIZE_0 | DMA_CCR_MINC | DMA_CCR_CIRC | DMA_CCR_TCIE | DMA_CCR_HTIE | DMA_CCR_EN;
   NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   NVIC_SetPriority(DMA1_Channel1_IRQn, 0);
-  // Initialize the ADC (12MHz, 7.5 adquisition, DMA active, trigger on Timer3)
+  // Initialize the ADC (12MHz, 1.5 adquisition, DMA active, trigger on Timer3)
   ADC->CCR |= ADC_CCR_TSEN;
-  ADC1->SMPR |= ADC_SMPR_SMP_0;
+//  ADC1->SMPR |= ADC_SMPR_SMP_0;
+  ADC1->CFGR2 |= ADC_CFGR2_CKMODE_1;
   ADC1->CR = ADC_CR_ADCAL;
   while(ADC1->CR & ADC_CR_ADCAL);
-  ADC1->CHSELR = ADC_CHSELR_CHSEL2 | ADC_CHSELR_CHSEL3 | ADC_CHSELR_CHSEL4 | ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6 | ADC_CHSELR_CHSEL7 | ADC_CHSELR_CHSEL8 | ADC_CHSELR_CHSEL9;
+  ADC1->CHSELR = ADC_CHSELR_CHSEL1 | ADC_CHSELR_CHSEL2 | ADC_CHSELR_CHSEL3 | ADC_CHSELR_CHSEL4 | ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6 | ADC_CHSELR_CHSEL7 | ADC_CHSELR_CHSEL8 | ADC_CHSELR_CHSEL9 | ADC_CHSELR_CHSEL16;
   ADC1->CFGR1 |= ADC_CFGR1_EXTEN_0 | ADC_CFGR1_EXTSEL_1 | ADC_CFGR1_EXTSEL_0 | ADC_CFGR1_DMACFG | ADC_CFGR1_DMAEN;
   ADC1->CR |= ADC_CR_ADEN;
   while(ADC1->ISR & ADC_ISR_ADRDY);

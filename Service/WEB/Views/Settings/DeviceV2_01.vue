@@ -63,7 +63,7 @@
               <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
               <td><input-spin :min="0.001" :max="1000000" :value="Settings.CurrentLevel[index]" :increment="0.001" :decimals="3" prepend="μV/A" v-on:change="Settings.CurrentLevel[index] = $event"></input-spin></td>
               <td><input-spin :min="-10" :max="10" :value="Settings.CurrentGain[index]" :increment="0.001" :decimals="3" prepend="%" v-on:change="Settings.CurrentGain[index] = $event"></input-spin></td>
-              <td><input-spin :min="-10" :max="10" ref="CurrentOffset" :value="Settings.CurrentOffset[index]" :increment="0.01" prepend="A" v-on:change="Settings.CurrentOffset[index] = $event"></input-spin></td>
+              <td><input-spin :min="-1000" :max="1000" ref="CurrentOffset" :value="Settings.CurrentOffset[index]" :increment="0.01" prepend="A" v-on:change="Settings.CurrentOffset[index] = $event"></input-spin></td>
               <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + OffsetC[index] + ' A'"><img :src="require('Imgs/wand.png')"></button></td>
             </tr>
           </table>
