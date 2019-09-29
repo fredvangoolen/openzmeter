@@ -135,10 +135,17 @@ void DMA_CH1_ISR() {
     Ptr = &Result[1];
   } else if(OptChannel == TEMP) {
     Ptr = &Result[0];
-    ADCStatus.Temperature = Result[7] / 4;
+    const uint16_t Temp30 = *(uint16_t*)0x1FFFF7B8;
+    const uint16_t Temp110 = *(uint16_t*)0x1FFFF7C2;
+    int16_t Temp = ((Result[7] / 4 - Temp30) * 80) / (Temp110 - Temp30);
+    if(Temp < 10) {
+        TIM16->CCR1 = 0;
+    } else {
+       TIM16->CCR1 = Temp * 50 + 1000;
+    } 
   } else if(OptChannel == BATTERY) {
     Ptr = &Result[0];
-    SysStatus.Battery = (((uint32_t)Result[7] - 3500) * 38) / 8192;
+    SysStatus.Battery = Result[7] / 362; //Get battery voltage in volts (x10)
   }
   BufferPush((Ptr[0] >> 1) | 0x0000);
   BufferPush((Ptr[1] >> 1) | 0x2000);
@@ -247,7 +254,6 @@ void Setup() {
   TIM16->EGR    = TIM_EGR_UG; // Generate an update event to reload the prescaler value immediately
   TIM16->CR1   |= TIM_CR1_ARPE | TIM_CR1_CEN;
   TIM16->BDTR  |= TIM_BDTR_MOE; 
-  TIM16->CCR1   = 600;
   //Configure SysTicks every 1ms (48MHz Clock)
   SysTick_Config(48000);
   NVIC_SetPriority(SysTick_IRQn, 2);
