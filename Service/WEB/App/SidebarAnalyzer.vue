@@ -13,16 +13,20 @@
     <analyzer-rates ref="Rates"></analyzer-rates>
     <analyzer-rate ref="Rate"></analyzer-rate>
     <analyzer-maintenance ref="Maintenance"></analyzer-maintenance>
+    <analyzer-alarms ref="Alarms"></analyzer-alarms>
+    <analyzer-alarm ref="Alarm"></analyzer-alarm>
   </div> 
 </template> 
 
 <script>
   import ProgressBar from 'Components/ProgressBar.vue';
-  import AnalyzerDialog from './Analyzer/Analyzer.vue';
-  import AnalyzerConfigure from './Analyzer/AnalyzerConfigure.vue';
-  import AnalyzerRates from './Analyzer/AnalyzerRates.vue';
-  import AnalyzerRate from './Analyzer/AnalyzerRate.vue';
-  import AnalyzerMaintenance from './Analyzer/AnalyzerMaintenance.vue';
+  import AnalyzerDialog from './Analyzer/Dialog.vue';
+  import AnalyzerConfigure from './Analyzer/Configure.vue';
+  import AnalyzerRates from './Analyzer/Rates.vue';
+  import AnalyzerRate from './Analyzer/Rate.vue';
+  import AnalyzerMaintenance from './Analyzer/Maintenance.vue';
+  import AnalyzerAlarms from './Analyzer/Alarms.vue';
+  import AnalyzerAlarm from './Analyzer/Alarm.vue';
   import moment from 'JS/moment.js';
   export default {
     data() {
@@ -85,7 +89,7 @@
         this.$refs.Dialog.Show();
       }
     },
-    components: { ProgressBar, AnalyzerDialog, AnalyzerConfigure, AnalyzerRates, AnalyzerRate, AnalyzerMaintenance }
+    components: { ProgressBar, AnalyzerDialog, AnalyzerConfigure, AnalyzerRates, AnalyzerRate, AnalyzerMaintenance, AnalyzerAlarms, AnalyzerAlarm }
   }
 </script>
 

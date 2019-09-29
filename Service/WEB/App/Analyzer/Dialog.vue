@@ -19,7 +19,7 @@
             <li><a v-on:click="Configure(props.rowData)" v-if="true">Configure</a></li>
             <li><a v-on:click="ACL(props.rowData)" v-if="false">ACL</a></li>
             <li><a v-on:click="Rates(props.rowData)">Rates</a></li>
-            <li><a v-on:click="Alerts(props.rowData)" v-if="false">Alerts</a></li>
+            <li><a v-on:click="Alarms(props.rowData)">Alarms</a></li>
             <li role="separator" class="divider"></li>
             <li><a v-on:click="Maintenance(props.rowData)">Maintenance</a></li>
           </ul>
@@ -123,8 +123,17 @@
           }
         });
       },
-      Alerts: function(id) {
-        alert("Alerts not yet implemented");
+      Alarms: function(analyzer) {
+        this.$refs.Dialog.ShowSpinner = true;
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
+          success: (result) => {
+            this.$refs.Dialog.Close();
+            this.$parent.$refs.Alarms.Show(result);
+          },
+          completed: () => {
+            this.$refs.Dialog.ShowSpinner = false;
+          }
+        });
       },
       Maintenance: function(analyzer) {
         this.$refs.Dialog.ShowSpinner = true;

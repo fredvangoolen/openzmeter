@@ -20,23 +20,22 @@ Vue.use(Router);
 import './CSS/openZmeter.css';
 
 //Views ----------------------------------------
-import App from 'Components/App/App.vue';
-import Dashboard from 'Components/Views/Dashboard/View.vue';
-import AnalysisVoltage from 'Components/Views/Analysis_Voltage/View.vue';
-import AnalysisCurrent from 'Components/Views/Analysis_Current/View.vue';
-import AnalysisPower from 'Components/Views/Analysis_Power/View.vue';
-import AnalysisEnergy from 'Components/Views/Analysis_Energy/View.vue';
-import AnalysisFrequency from 'Components/Views/Analysis_Frequency/View.vue';
-import EventsITIC from 'Components/Views/Events_ITIC/View.vue';
-import EventsDisturbances from 'Components/Views/Events_Disturbances/View.vue';
-import EventsEN50160 from 'Components/Views/Events_EN50160/View.vue';
-import StatsCosts from 'Components/Views/Stats_Costs/View.vue';
-import StatsHeatmap from 'Components/Views/Stats_Heatmap/View.vue';
-import StatsDistribution from 'Components/Views/Stats_Distribution/View.vue';
-import Settings from './Components/Views/Settings/View.vue';
-import Help from './Components/Views/Help/Help.vue';
-
-import PageNotFound from './Components/Views/PageNotFound.vue';
+import App from 'App/App.vue';
+import Dashboard from 'Views/Dashboard/View.vue';
+import AnalysisVoltage from 'Views/Analysis_Voltage/View.vue';
+import AnalysisCurrent from 'Views/Analysis_Current/View.vue';
+import AnalysisPower from 'Views/Analysis_Power/View.vue';
+import AnalysisEnergy from 'Views/Analysis_Energy/View.vue';
+import AnalysisFrequency from 'Views/Analysis_Frequency/View.vue';
+import EventsITIC from 'Views/Events_ITIC/View.vue';
+import EventsDisturbances from 'Views/Events_Disturbances/View.vue';
+import EventsEN50160 from 'Views/Events_EN50160/View.vue';
+import StatsCosts from 'Views/Stats_Costs/View.vue';
+import StatsHeatmap from 'Views/Stats_Heatmap/View.vue';
+import StatsDistribution from 'Views/Stats_Distribution/View.vue';
+import Settings from 'Views/Settings/View.vue';
+import Help from 'Views/Help/Help.vue';
+import PageNotFound from 'Views/PageNotFound.vue';
 
 new Vue({
   el: '#app',
