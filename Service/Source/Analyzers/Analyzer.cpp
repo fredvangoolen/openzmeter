@@ -16,6 +16,14 @@ Analyzer::Analyzer(const string &id) {
   pCurl        = NULL;
   pCurlHeaders = NULL;
   pCurlLocks   = PTHREAD_MUTEX_INITIALIZER;
+  LOGFile::Debug("Creating Analyzer database tables\n");
+  Database DB;
+  DB.ExecResource("SQL/Database_Analyzer.sql");
+  HTTPServer::RegisterCallback("getAlarms", GetAlarms);
+  HTTPServer::RegisterCallback("getAlarm",  GetAlarm);
+  HTTPServer::RegisterCallback("setAlarm",  SetAlarm);
+  HTTPServer::RegisterCallback("addAlarm", AddAlarm);
+  HTTPServer::RegisterCallback("delAlarm",  DelAlarm);
 }
 Analyzer::~Analyzer() {
   StopSync();
@@ -272,6 +280,20 @@ void *Analyzer::Request_Thread(void *args) {
   curl_easy_cleanup(Curl);
   return NULL;
 }
+void Analyzer::GetAlarms(HTTPRequest &req) {
+}
+void Analyzer::GetAlarm(HTTPRequest &req) {
+}
+void Analyzer::SetAlarm(HTTPRequest &req) {
+}
+void Analyzer::AddAlarm(HTTPRequest &req) {
+}
+void Analyzer::DelAlarm(HTTPRequest &req) {
+
+}
+
+
+
 
 //void AnalyzerSoft::ConfigRemote(json_object* config) {
 //  json_object *Find;

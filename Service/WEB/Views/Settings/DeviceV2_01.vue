@@ -36,31 +36,35 @@
         </div>
         <div class="col-xs-12">
           <table>
-            <tr><td colspan="3" class="border-bottom">Voltage channels</td></tr>
+            <tr><td colspan="4" class="border-bottom">Voltage channels</td></tr>
             <tr>
               <td></td>
               <td class="text-right"><strong>Correction</strong></td>
               <td class="text-right"><strong>Offset</strong></td>
+              <td></td>
             </tr>
             <tr v-for="index in [0, 1, 2]">
               <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
               <td><input-spin :min="-10" :max="10" :value="Settings.VoltageGain[index]" :increment="0.001" :decimals="3" prepend="%" v-on:change="Settings.VoltageGain[index] = $event"></input-spin></td>
-              <td><input-spin :min="-20" :max="20" :value="Settings.VoltageOffset[index]" :increment="0.01" prepend="V" v-on:change="Settings.VoltageOffset[index] = $event"></input-spin></td>
+              <td><input-spin :min="-20" :max="20" ref="VoltageOffset" :value="Settings.VoltageOffset[index]" :increment="0.01" prepend="V" v-on:change="Settings.VoltageOffset[index] = $event"></input-spin></td>
+              <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetVoltageOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + OffsetV[index] + ' V'"><img :src="require('Imgs/wand.png')"></button></td>
             </tr>
           </table>
           <table>
-            <tr><td colspan="4" class="border-bottom">Current channels</td></tr>
+            <tr><td colspan="5" class="border-bottom">Current channels</td></tr>
             <tr>
               <td></td>
               <td class="text-right"><strong>Level</strong></td>
               <td class="text-right"><strong>Correction</strong></td>
               <td class="text-right"><strong>Offset</strong></td>
+              <td></td>
             </tr>
             <tr v-for="index in [0, 1, 2, 3]">
               <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
               <td><input-spin :min="0.001" :max="1000000" :value="Settings.CurrentLevel[index]" :increment="0.001" :decimals="3" prepend="μV/A" v-on:change="Settings.CurrentLevel[index] = $event"></input-spin></td>
               <td><input-spin :min="-10" :max="10" :value="Settings.CurrentGain[index]" :increment="0.001" :decimals="3" prepend="%" v-on:change="Settings.CurrentGain[index] = $event"></input-spin></td>
-              <td><input-spin :min="-10" :max="10" :value="Settings.CurrentOffset[index]" :increment="0.01" prepend="A" v-on:change="Settings.CurrentOffset[index] = $event"></input-spin></td>
+              <td><input-spin :min="-10" :max="10" ref="CurrentOffset" :value="Settings.CurrentOffset[index]" :increment="0.01" prepend="A" v-on:change="Settings.CurrentOffset[index] = $event"></input-spin></td>
+              <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + OffsetC[index] + ' A'"><img :src="require('Imgs/wand.png')"></button></td>
             </tr>
           </table>
         </div>
@@ -88,12 +92,12 @@
               </tr>
               <tr>
                 <td class="text-right"><option-picker :options="['CH1', 'CH2', 'CH3']" :selected="item.Voltage[0]" v-on:change="item.Voltage[0] = $event"></option-picker></td>
-              <td class="text-right"><option-picker :options="['CH1', 'CH2', 'CH3']" :selected="item.Voltage[1]" v-on:change="item.Voltage[1] = $event"></option-picker></td>
-              <td class="text-right border-right"><option-picker :options="['CH1', 'CH2', 'CH3']" :selected="item.Voltage[2]" v-on:change="item.Voltage[2] = $event"></option-picker></td>
-              <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[0]" v-on:change="item.Current[0] = $event"></option-picker></td>
-              <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[1]" v-on:change="item.Current[1] = $event"></option-picker></td>
-              <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[2]" v-on:change="item.Current[2] = $event"></option-picker></td>
-              <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[3]" v-on:change="item.Current[3] = $event"></option-picker></td>
+                <td class="text-right"><option-picker :options="['CH1', 'CH2', 'CH3']" :selected="item.Voltage[1]" v-on:change="item.Voltage[1] = $event"></option-picker></td>
+                <td class="text-right border-right"><option-picker :options="['CH1', 'CH2', 'CH3']" :selected="item.Voltage[2]" v-on:change="item.Voltage[2] = $event"></option-picker></td>
+                <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[0]" v-on:change="item.Current[0] = $event"></option-picker></td>
+                <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[1]" v-on:change="item.Current[1] = $event"></option-picker></td>
+                <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[2]" v-on:change="item.Current[2] = $event"></option-picker></td>
+                <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[3]" v-on:change="item.Current[3] = $event"></option-picker></td>
               </tr>
             </table>
             <table v-if="item.Mode == '3PHASE'">
@@ -112,11 +116,11 @@
               </tr>
               <tr>
                 <td class="text-right"><option-picker :options="['CH1', 'CH2', 'CH3']" :selected="item.Voltage[0]" v-on:change="item.Voltage[0] = $event"></option-picker></td>
-              <td class="text-right"><option-picker :options="['CH1', 'CH2', 'CH3']" :selected="item.Voltage[1]" v-on:change="item.Voltage[1] = $event"></option-picker></td>
-              <td class="text-right border-right"><option-picker :options="['CH1', 'CH2', 'CH3']" :selected="item.Voltage[2]" v-on:change="item.Voltage[2] = $event"></option-picker></td>
-              <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[0]" v-on:change="item.Current[0] = $event"></option-picker></td>
-              <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[1]" v-on:change="item.Current[1] = $event"></option-picker></td>
-              <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[2]" v-on:change="item.Current[2] = $event"></option-picker></td>
+                <td class="text-right"><option-picker :options="['CH1', 'CH2', 'CH3']" :selected="item.Voltage[1]" v-on:change="item.Voltage[1] = $event"></option-picker></td>
+                <td class="text-right border-right"><option-picker :options="['CH1', 'CH2', 'CH3']" :selected="item.Voltage[2]" v-on:change="item.Voltage[2] = $event"></option-picker></td>
+                <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[0]" v-on:change="item.Current[0] = $event"></option-picker></td>
+                <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[1]" v-on:change="item.Current[1] = $event"></option-picker></td>
+                <td class="text-right"><option-picker :options="['+CH1', '-CH1', '+CH2', '-CH2', '+CH3', '-CH3', '+CH4', '-CH4']" :selected="item.Current[2]" v-on:change="item.Current[2] = $event"></option-picker></td>
               </tr>
             </table>
             <table v-if="item.Mode == '1PHASE'">
@@ -147,10 +151,12 @@
   export default {
     props: ['settings'],
     data() {
-      return { View: 'Inputs', Settings: {}, ShowSpinner: false, Error: '' };
+      return { View: 'Inputs', Settings: {}, ShowSpinner: false, Error: '', OffsetV: [], OffsetC: [] };
     },
     created: function() {
       this.Settings = this.settings;
+      for(var n = 0; n < this.settings.Wave_Average.Voltage.length; n++) this.OffsetV.push(oZm.RoundPlain(this.settings.Wave_Average.Voltage[n]));
+      for(var n = 0; n < this.settings.Wave_Average.Current.length; n++) this.OffsetC.push(oZm.RoundPlain(this.settings.Wave_Average.Current[n]));
     },
     methods: {
       ShowInputs: function(evt) {
@@ -180,6 +186,12 @@
             this.$set(this.Settings, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' }, { Mode: '1PHASE', Voltage: 'CH2', Current: '+CH2' }, { Mode: '1PHASE', Voltage: 'CH3', Current: '+CH3' }, { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH4' } ]);
           }
         });
+      },
+      SetCurrentOffset: function(index) {
+        this.$refs.CurrentOffset[index].SetValue(-this.settings.Wave_Average.Current[index] + this.settings.CurrentOffset[index]);
+      },
+      SetVoltageOffset: function(index) {
+        this.$refs.VoltageOffset[index].SetValue(-this.settings.Wave_Average.Voltage[index] + this.settings.VoltageOffset[index]);
       }
     },
     components: { Spinner, InputSpin, Toggle, OptionPicker }

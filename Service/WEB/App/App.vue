@@ -8,8 +8,8 @@
 </template>
 
 <script>
-  import Topbar from './Topbar/Topbar.vue';
-  import Sidebar from './Sidebar/Sidebar.vue';
+  import Topbar from './Topbar.vue';
+  import Sidebar from './Sidebar.vue';
   import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
   import Graph from 'Components/Graph.vue';

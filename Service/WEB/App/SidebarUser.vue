@@ -15,7 +15,7 @@
 
 <script>
   import UserLogout from './User/LogoutDialog.vue';
-  import UserEdit from './User/User.vue';
+  import UserEdit from './User/Dialog.vue';
   import Offline from './User/Offline.vue';
   export default {
     data() {

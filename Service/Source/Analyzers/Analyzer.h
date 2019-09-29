@@ -73,6 +73,12 @@ class Analyzer {
     virtual void AddRate(HTTPRequest &req) = 0;
     virtual void GetPrices(HTTPRequest &req) = 0;
   public :
+    static void GetAlarms(HTTPRequest &req);
+    static void GetAlarm(HTTPRequest &req);
+    static void SetAlarm(HTTPRequest &req);
+    static void AddAlarm(HTTPRequest &req);
+    static void DelAlarm(HTTPRequest &req);
+  public :
     Analyzer(const string &id);
     virtual ~Analyzer();
     string Serial() const;
