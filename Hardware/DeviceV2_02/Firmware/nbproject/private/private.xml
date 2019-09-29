@@ -7,5 +7,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group/>
+        <group name="ServiceV2">
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/DeviceV2_02/Firmware/USB.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/DeviceV2_02/Firmware/Main.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/DeviceV2_02/Firmware/USB_Dev.c</file>
+            <file>file:/home/edu/Proyectos/zMeter/V2/Hardware/DeviceV2_02/Firmware/USB.h</file>
+        </group>
     </open-files>
 </project-private>

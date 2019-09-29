@@ -185,16 +185,16 @@ OUTPUT(Tmp/Firmware elf32-littlearm)
  .debug_line    0x000000000000076c      0x100 Tmp/USB.c.o
  .debug_line    0x000000000000086c      0x1e1 Tmp/usb_core.c.o
 
-.debug_str      0x0000000000000000      0xd4f
+.debug_str      0x0000000000000000      0xd8b
  .debug_str     0x0000000000000000      0x847 Tmp/Main.c.o
                                         0x8eb (size before relaxing)
  .debug_str     0x0000000000000847      0x11e Tmp/System.c.o
                                         0x1fd (size before relaxing)
  .debug_str     0x0000000000000965      0x25f Tmp/USB_Dev.c.o
                                         0x5af (size before relaxing)
- .debug_str     0x0000000000000bc4       0xb4 Tmp/USB.c.o
-                                        0x345 (size before relaxing)
- .debug_str     0x0000000000000c78       0xd7 Tmp/usb_core.c.o
+ .debug_str     0x0000000000000bc4       0xf0 Tmp/USB.c.o
+                                        0x344 (size before relaxing)
+ .debug_str     0x0000000000000cb4       0xd7 Tmp/usb_core.c.o
                                         0x5b1 (size before relaxing)
 
 .comment        0x0000000000000000       0x2b
