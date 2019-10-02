@@ -144,6 +144,7 @@ bool DeviceV2_01::Start(const json &config) {
     libusb_exit(pContext);
     return false;
   }
+  pthread_setname_np(pCaptureThread, "DeviceV2_01");
   if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV2_01_VID, DEVICEV2_01_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
     LOGFile::Error("Failed to register libUSB calback...\n");
     pTerminate = true;

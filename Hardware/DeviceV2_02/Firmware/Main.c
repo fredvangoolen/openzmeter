@@ -12,18 +12,11 @@ typedef struct {
   uint16_t V_CH_3;
   uint16_t I_CH_1;
   uint16_t I_CH_2;
-  uint16_t I_CH_4;
   uint16_t I_CH_3;
+  uint16_t I_CH_4;
   uint16_t Battery;
-  uint16_t Temperature;
+//  uint16_t Temperature;
 } ADC_Sequence_t;
-typedef struct {
-  int16_t  Offset;
-  uint16_t Battery;
-  uint16_t Temperature;
-  uint8_t  OptChannel:2;
-} ADCStatus_t;
-enum ADC_OptChannel {BATTERY = 0, TEMP = 1, OFFSET = 2};
 typedef struct {
   uint16_t Power_Color:2;     //Power LED (PB5) Red when off but plugged, off if off and not plugged, green if running and yellow if booting or shuttingdown
   uint16_t Status_Color:2;    //Status LED (PB4) Green if service running, yellow on events (cleared by software), red on service lost communication or errors.
@@ -49,7 +42,6 @@ typedef struct {
 } USB_Buffer_t;
 // Local variables -----------------------------------------------------------------------------------------------------
 volatile uint32_t SysTicks;
-ADCStatus_t       ADCStatus = { .Offset = 0, .OptChannel = OFFSET};
 SignalsStatus_t   SignalsStatus = { .Power_Color = OFF, .Status_Color = OFF, .Wifi_Color = OFF, .Buzzer = 0};
 SysStatus_t       SysStatus = { .Charging = 0, .ExtPower = 0, .Battery = 0 };
 ButtonStatus_t    ButtonStatus = { .Button = CLICK, .Button_Counter = 0};
@@ -95,8 +87,7 @@ void SysTick_ISR() {
     TIM2->CCR2 = ((SignalsStatus.Buzzer & 0x001) ? 1000 - 1 : 0);
     SignalsStatus.Buzzer = SignalsStatus.Buzzer >> 1;    
   }
-  //Detecto pulsacion de boton
-  
+  //Detecto pulsacion de boton  
   SysTicks++;
 }
 // Suspend device and prepare for later wake up on button press --------------------------------------------------------
@@ -110,14 +101,8 @@ void Suspend() {
 }
 // DMA interrupts to handle ADC oversample -----------------------------------------------------------------------------
 void DMA_CH1_ISR() {
-  ADC_Sequence_t *Ptr;
-  if(DMA1->ISR & DMA_ISR_HTIF1) {
-    Ptr = &ADC_Read[0];
-    DMA1->IFCR |= DMA_IFCR_CHTIF1;
-  } else {
-    Ptr = &ADC_Read[4];
-    DMA1->IFCR |= DMA_IFCR_CTCIF1;
-  }
+  ADC_Sequence_t *Ptr = (DMA1->ISR & DMA_ISR_HTIF1) ? &ADC_Read[0] : &ADC_Read[4];
+  DMA1->IFCR |= DMA_IFCR_CTCIF1 | DMA_IFCR_CHTIF1;
   int16_t Offset = (2048 * 4) - (Ptr[0].Offset + Ptr[1].Offset + Ptr[2].Offset + Ptr[3].Offset);
   BufferPush(((Ptr[0].V_CH_1 + Ptr[1].V_CH_1 + Ptr[2].V_CH_1 + Ptr[3].V_CH_1 + Offset) >> 1) | 0x0000);
   BufferPush(((Ptr[0].V_CH_2 + Ptr[1].V_CH_2 + Ptr[2].V_CH_2 + Ptr[3].V_CH_2 + Offset) >> 1) | 0x2000);
@@ -126,12 +111,12 @@ void DMA_CH1_ISR() {
   BufferPush(((Ptr[0].I_CH_2 + Ptr[1].I_CH_2 + Ptr[2].I_CH_2 + Ptr[3].I_CH_2 + Offset) >> 1) | 0x8000);
   BufferPush(((Ptr[0].I_CH_3 + Ptr[1].I_CH_3 + Ptr[2].I_CH_3 + Ptr[3].I_CH_3 + Offset) >> 1) | 0xA000);
   BufferPush(((Ptr[0].I_CH_4 + Ptr[1].I_CH_4 + Ptr[2].I_CH_4 + Ptr[3].I_CH_4 + Offset) >> 1) | 0xC000);
-
-  const uint16_t Temp30 = *(uint16_t*)0x1FFFF7B8;
-  const uint16_t Temp110 = *(uint16_t*)0x1FFFF7C2;
-  int16_t Temp = ((Ptr[0].Temperature - Temp30) * 80) / (Temp110 - Temp30) + 30;
-  TIM16->CCR1 = (Temp < 50) ? 0 : Temp * 30;
-  SysStatus.Battery = ((uint32_t)Ptr[0].Battery * 4522) / 409600; //Get battery voltage in volts (x10)
+  //const uint16_t Temp30 = *(uint16_t*)0x1FFFF7B8;
+  //const uint16_t Temp110 = *(uint16_t*)0x1FFFF7C2;
+//  int32_t Temp = ((Ptr[0].Temperature - Temp30) * 80) / (Temp110 - Temp30) + 30;
+//  TIM16->CCR1 = (Temp < 50) ? 0 : Temp * 30000;
+  int32_t Battery = (Ptr[0].Battery * 4522) / 4096;
+  SysStatus.Battery = (Battery <= 2960) ? 0 : (Battery >= 4240) ? 63 : (Battery - 2960) / 20;
 }
 // USB callbacks functions ---------------------------------------------------------------------------------------------
 //static void cdc_rxonly (usbd_device *dev, uint8_t event, uint8_t ep) {
@@ -167,12 +152,13 @@ void Setup() {
   FLASH->ACR |= FLASH_ACR_PRFTBE | FLASH_ACR_LATENCY;
   //Clock initialization and power devices
   __enable_irq();
-  RCC->CR2 |= RCC_CR2_HSI48ON;
-  while((RCC->CR2 & RCC_CR2_HSI48RDY) == 0);
+  RCC->CR2 |= RCC_CR2_HSI48ON | RCC_CR2_HSI14ON;
+  while(((RCC->CR2 & RCC_CR2_HSI48RDY) == 0) || ((RCC->CR2 & RCC_CR2_HSI14RDY) == 0));
   RCC->CFGR |= RCC_CFGR_SW_HSI48;
   RCC->AHBENR |= RCC_AHBENR_GPIOAEN | RCC_AHBENR_GPIOBEN | RCC_AHBENR_GPIOFEN | RCC_AHBENR_DMA1EN;
   RCC->APB1ENR |= RCC_APB1ENR_USBEN | RCC_APB1ENR_CRSEN | RCC_APB1ENR_PWREN | RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN;
   RCC->APB2ENR |= RCC_APB2ENR_SYSCFGCOMPEN | RCC_APB2ENR_ADC1EN | RCC_APB2ENR_TIM16EN;
+  CRS->CR |= CRS_CR_AUTOTRIMEN | CRS_CR_CEN;
   //Configure port F (PF0, PF1 -> Digital outputs)
   GPIOF->MODER   |= GPIO_MODER_MODER0_0 | GPIO_MODER_MODER1_0;
   GPIOF->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR0 | GPIO_OSPEEDER_OSPEEDR1;
@@ -187,17 +173,17 @@ void Setup() {
   //Enable DMA controller
   DMA1_Channel1->CPAR = (uint32_t)&ADC1->DR;
   DMA1_Channel1->CMAR = (uint32_t)ADC_Read;
-  DMA1_Channel1->CNDTR = 80;
+  DMA1_Channel1->CNDTR = 72;
   DMA1_Channel1->CCR |= DMA_CCR_PL_0 | DMA_CCR_PL_1 | DMA_CCR_PSIZE_0 | DMA_CCR_PSIZE_0 | DMA_CCR_MSIZE_0 | DMA_CCR_MINC | DMA_CCR_CIRC | DMA_CCR_TCIE | DMA_CCR_HTIE | DMA_CCR_EN;
   NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   NVIC_SetPriority(DMA1_Channel1_IRQn, 0);
-  // Initialize the ADC (12MHz, 1.5 adquisition, DMA active, trigger on Timer3)
-  ADC->CCR |= ADC_CCR_TSEN;
+  // Initialize the ADC (14MHz, 7.5 adquisition, DMA active, trigger on Timer3)
+//  ADC->CCR |= ADC_CCR_TSEN;
 //  ADC1->SMPR |= ADC_SMPR_SMP_0;
-  ADC1->CFGR2 |= ADC_CFGR2_CKMODE_1;
+//  ADC1->CFGR2 |= ADC_CFGR2_CKMODE_1;
   ADC1->CR = ADC_CR_ADCAL;
   while(ADC1->CR & ADC_CR_ADCAL);
-  ADC1->CHSELR = ADC_CHSELR_CHSEL1 | ADC_CHSELR_CHSEL2 | ADC_CHSELR_CHSEL3 | ADC_CHSELR_CHSEL4 | ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6 | ADC_CHSELR_CHSEL7 | ADC_CHSELR_CHSEL8 | ADC_CHSELR_CHSEL9 | ADC_CHSELR_CHSEL16;
+  ADC1->CHSELR = ADC_CHSELR_CHSEL1 | ADC_CHSELR_CHSEL2 | ADC_CHSELR_CHSEL3 | ADC_CHSELR_CHSEL4 | ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6 | ADC_CHSELR_CHSEL7 | ADC_CHSELR_CHSEL8 | ADC_CHSELR_CHSEL9;
   ADC1->CFGR1 |= ADC_CFGR1_EXTEN_0 | ADC_CFGR1_EXTSEL_1 | ADC_CFGR1_EXTSEL_0 | ADC_CFGR1_DMACFG | ADC_CFGR1_DMAEN;
   ADC1->CR |= ADC_CR_ADEN;
   while(ADC1->ISR & ADC_ISR_ADRDY);
@@ -208,17 +194,18 @@ void Setup() {
   TIM3->CR1 |= TIM_CR1_DIR | TIM_CR1_CEN;
   // Configure Timer2 (4kHz 50%) for sounder
   TIM2->CCMR1 |= TIM_CCMR1_OC2PE | TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2M_1;
-  TIM2->ARR    = 12000 - 1;
+  TIM2->ARR = 12000 - 1;
   TIM2->CCER  |= TIM_CCER_CC2E; // BEEPER_TIM_CH2 output compare enable
   TIM2->EGR    = TIM_EGR_UG; // Generate an update event to reload the prescaler value immediately
   TIM2->CR1   |= TIM_CR1_ARPE | TIM_CR1_CEN;
-  // Configure Timer16 (40kHz) for fan
+  // Configure Timer16 (20kHz) for fan
   TIM16->CCMR1 |= TIM_CCMR1_OC1PE | TIM_CCMR1_OC1M_2 | TIM_CCMR1_OC1M_1;
-  TIM16->ARR    = 2400 - 1;
+  TIM16->ARR    = 1200 - 1;
   TIM16->CCER  |= TIM_CCER_CC1E; // FAN_TIM_CH1 output compare enable
   TIM16->EGR    = TIM_EGR_UG; // Generate an update event to reload the prescaler value immediately
   TIM16->CR1   |= TIM_CR1_ARPE | TIM_CR1_CEN;
-  TIM16->BDTR  |= TIM_BDTR_MOE; 
+  TIM16->BDTR  |= TIM_BDTR_MOE;
+  TIM16->CCR1 = 800;
   //Configure SysTicks every 1ms (48MHz Clock)
   SysTick_Config(48000);
   NVIC_SetPriority(SysTick_IRQn, 2);

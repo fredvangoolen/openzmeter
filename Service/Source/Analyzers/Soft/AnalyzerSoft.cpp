@@ -103,7 +103,7 @@ void AnalyzerSoft::Configure(const json &options) {
     Stage.ChannelsZ2 = vector<float>((pMode == PHASE1) ? 1 : 3, 0.0);
     pFilters.push_back(Stage);
   }
-  uint32_t PhaseShift = ((pNominalFrequency / pSamplerate) / 4.0) * ZEROCROSSING_FILTERSTAGES;
+  uint32_t PhaseShift = (pSamplerate * ZEROCROSSING_FILTERSTAGES) / (pNominalFrequency * 4.0);
   pDelayVoltage.resize(PhaseShift, vector<float>(pVoltageSamples.size(), 0.0));
   pDelayCurrent.resize(PhaseShift, vector<float>(pCurrentSamples.size(), 0.0));
   pConfigLocks.WriteUnlock();
@@ -116,14 +116,14 @@ void AnalyzerSoft::Configure(const json &options) {
 bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime) {
   if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
   pConfigLocks.ReadLock();
-  pDelayVoltage.push_back(voltageSamples);
-  pDelayCurrent.push_back(currentSamples);
   vector<float> Voltage = pDelayVoltage.front();
   vector<float> Current = pDelayCurrent.front();
   for(uint8_t i = 0; i < pVoltageSamples.size(); i++) pVoltageSamples[i].push_back(Voltage[i]);
   for(uint8_t i = 0; i < pCurrentSamples.size(); i++) pCurrentSamples[i].push_back(Current[i]);
   pDelayVoltage.pop_front();
   pDelayCurrent.pop_front();
+  pDelayVoltage.push_back(voltageSamples);
+  pDelayCurrent.push_back(currentSamples);
   vector<float> Outs = voltageSamples;
   for(uint8_t i = 0; i < voltageSamples.size(); i++) {
     for(uint j = 0; j < pFilters.size(); j++) {
@@ -319,9 +319,13 @@ float AnalyzerSoft::CalcFrequency() {
   uint32_t MinCycle = pSamplerate / (pNominalFrequency * 1.15 * 2.0);
   uint32_t MaxCycle = pSamplerate / (pNominalFrequency * 0.85 * 2.0);
   for(uint i = 0; i < pCycles.size(); i++) {
-    if((pCycles[i] < MinCycle) || (pCycles[i] > MaxCycle)) return NAN;
+    if((pCycles[i] < MinCycle) || (pCycles[i] > MaxCycle)) {
+      printf("Valor de ciclo fuera de rango (%d)\n", pCycles[i]);
+     // return NAN;
+    }
     Samples += pCycles[i];
-  } 
+  }
+  printf("%d, %d, %f\n", pCycles.size(), Samples * 2, pSamplerate);
   return pCycles.size() / ((2.0 * Samples) / pSamplerate);
 }
 float AnalyzerSoft::CalcChange(const float in, const float reference) const {
