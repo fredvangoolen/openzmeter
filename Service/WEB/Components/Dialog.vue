@@ -18,6 +18,7 @@
 <script>
   import Spinner from 'Components/Spinner.vue';
   export default {
+    name: 'Dlg',
     data: function() {
       return { ShowDialog: false, ShowSpinner: false };
     },

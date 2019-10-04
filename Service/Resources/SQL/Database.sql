@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS tariffs(
 
 CREATE TABLE IF NOT EXISTS permisions(
   username   character varying NOT NULL REFERENCES users(username) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,
-  serial     character varying NOT NULL REFERENCES analyzers(serial) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,
+  serial     character varying NOT NULL,
   read       boolean           NOT NULL,
   write      boolean           NOT NULL,
   config     boolean           NOT NULL

@@ -319,13 +319,9 @@ float AnalyzerSoft::CalcFrequency() {
   uint32_t MinCycle = pSamplerate / (pNominalFrequency * 1.15 * 2.0);
   uint32_t MaxCycle = pSamplerate / (pNominalFrequency * 0.85 * 2.0);
   for(uint i = 0; i < pCycles.size(); i++) {
-    if((pCycles[i] < MinCycle) || (pCycles[i] > MaxCycle)) {
-      printf("Valor de ciclo fuera de rango (%d)\n", pCycles[i]);
-     // return NAN;
-    }
+    if((pCycles[i] < MinCycle) || (pCycles[i] > MaxCycle)) return NAN;
     Samples += pCycles[i];
   }
-  printf("%d, %d, %f\n", pCycles.size(), Samples * 2, pSamplerate);
   return pCycles.size() / ((2.0 * Samples) / pSamplerate);
 }
 float AnalyzerSoft::CalcChange(const float in, const float reference) const {

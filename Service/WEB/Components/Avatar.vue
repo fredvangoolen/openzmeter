@@ -7,6 +7,7 @@
 
 <script>
   export default {
+    name: 'Avatar',
     props: ['value'],
     data() {
       return { ImageData: null };
