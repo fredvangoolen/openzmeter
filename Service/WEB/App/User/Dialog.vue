@@ -83,7 +83,6 @@
   
 <script>
   import Dlg from 'Components/Dialog.vue';
-  import Avatar from 'Components/Avatar.vue';
   import OptionPicker from 'Components/OptionPicker.vue';
   import moment from 'JS/moment.js';
   export default {
@@ -109,7 +108,7 @@
         this.$refs.avatar.ClearImage();
       }
     },
-    components: { OptionPicker, Avatar, Dlg }
+    components: { OptionPicker, Dlg }
   }
 </script>
 

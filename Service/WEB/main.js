@@ -1,22 +1,21 @@
-//Libs -----------------------------------------
-import Vue from './JS/vue.js';
-import Router from './JS/vue-router.js';
-//import BootstrapVue from 'bootstrap-vue'
+//VUE components ---------------------------------------------------------------
+import Vue from 'JS/vue.js';
 
-//Vue.use(BootstrapVue)
+import Router from 'JS/vue-router.js';
+Vue.use(Router);
+import Avatar from 'Components/Avatar.vue';
+Vue.component('Avatar', Avatar);
+import Dlg from 'Components/Dialog.vue';
+Vue.component('Dlg', Dlg);
 
-
-
-import jQuery from './JS/jquery.js';
+//Other components -------------------------------------------------------------
+import jQuery from 'JS/jquery.js';
 window.$ = window.jQuery = jQuery;
 //import 'bootstrap/dist/css/bootstrap.css'
 //import 'bootstrap-vue/dist/bootstrap-vue.css'
 
-import './JS/bootstrap.min.js';
-import './CSS/bootstrap.min.css';
-//import './JS/dygraph.js';
-
-Vue.use(Router);
+import 'JS/bootstrap.min.js';
+import 'CSS/bootstrap.min.css';
 import './CSS/openZmeter.css';
 
 //Views ----------------------------------------
@@ -55,10 +54,10 @@ new Vue({
       { path: '/Events/Disturbances', component: EventsDisturbances },
       { path: '/Events/EN50160', component: EventsEN50160 },
       { path: '/Stats/Costs', component: StatsCosts },
-      { path:'/Stats/Heatmap', component: StatsHeatmap },
-      { path:'/Stats/Distribution', component: StatsDistribution },
-      { path:'/Settings', component: Settings },
-      { path:'/Help', component: Help },
+      { path: '/Stats/Heatmap', component: StatsHeatmap },
+      { path: '/Stats/Distribution', component: StatsDistribution },
+      { path: '/Settings', component: Settings },
+      { path: '/Help', component: Help },
       { path: '*', component: PageNotFound }
     ]})
-})
+});
