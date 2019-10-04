@@ -1,4 +1,4 @@
-(kicad_pcb (version 20171130) (host pcbnew 5.0.2+dfsg1-1~bpo9+1)
+(kicad_pcb (version 20171130) (host pcbnew 5.0.1+dfsg1-2~bpo9+1)
 
   (general
     (thickness 1.6)
@@ -7188,7 +7188,7 @@
   (gr_text CH2 (at 89.8906 104.5718) (layer B.SilkS) (tstamp 5CBA4078)
     (effects (font (size 1 1) (thickness 0.25)) (justify mirror))
   )
-  (gr_text N (at 111.3028 104.5718) (layer B.SilkS) (tstamp 5CBA4040)
+  (gr_text CH4 (at 111.3028 104.5718) (layer B.SilkS) (tstamp 5CBA4040)
     (effects (font (size 1 1) (thickness 0.25)) (justify mirror))
   )
   (gr_text CH1 (at 79.0702 104.5718) (layer B.SilkS) (tstamp 5CBA4075)

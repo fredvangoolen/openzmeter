@@ -79,7 +79,12 @@ void Database::ReadConfig() {
 bool Database::FecthRow() {
   if(pResult != NULL) PQclear(pResult);  
   pResult = PQgetResult(pDBConn);
-  return (PQresultStatus(pResult) == PGRES_SINGLE_TUPLE);
+  if(PQresultStatus(pResult) != PGRES_SINGLE_TUPLE) {
+    char *Save;
+    LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    return false;
+  }
+  return true;
 }
 bool Database::ExecResource(const string &file) {
   size_t Len;
