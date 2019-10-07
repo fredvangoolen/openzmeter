@@ -181,7 +181,7 @@ void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) const {
     params.Current_Harmonics = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(50, NAN));
   }
   if((params.Type == AGGREG_10C) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M)) {
-    params.Voltage_THD.resize((pMode == PHASE1) ? 1 : 3, NAN);
+    params.Voltage_THD = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
     params.Voltage_Harmonics = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
   }
   if(params.Type == AGGREG_10C) {
@@ -791,31 +791,47 @@ void AnalyzerSoft::GetSeries(HTTPRequest &req) {
       return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
     }
     string Serie = Params["Series"][i];
-    if((Serie == "FREQUENCY") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {      
+    if((Serie == "FREQUENCY") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
       Query += "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS " + req.BindID("Frequency") + ", ";
     } else if((Serie == "FLAG") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
       Query += "COALESCE(ARRAY_AGG(flag ORDER BY sampletime ASC), '{}') AS " + req.BindID("Flag") + ", ";
-    } else if((Serie == "VOLTAGE") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {      
+    } else if((Serie == "VOLTAGE") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
       Query += "COALESCE(ARRAY_AGG(rms_v ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage") + ", ";
     } else if((Serie == "CURRENT") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {      
       Query += "COALESCE(ARRAY_AGG(rms_i ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current") + ", ";
-    } else if((Serie == "ACTIVE_POWER") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {      
-      Query += "COALESCE(ARRAY_AGG(active_power ORDER BY sampletime ASC), '{}') AS " + req.BindID("Active_Power") + ", ";
+    } else if((Serie == "ACTIVE_POWER") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {
+      if(Aggreg == "1M") {
+        vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
+        Query += "COALESCE(ARRAY_AGG(COALESCE(active_power, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Active_Power") + ", ";
+      } else {
+        Query += "COALESCE(ARRAY_AGG(active_power ORDER BY sampletime ASC), '{}') AS " + req.BindID("Active_Power") + ", ";
+      }
     } else if((Serie == "REACTIVE_POWER") && ((Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {      
-      Query += "COALESCE(ARRAY_AGG(reactive_power ORDER BY sampletime ASC), '{}') AS " + req.BindID("Reactive_Power") + ", ";
+      if(Aggreg == "1M") {
+        vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
+        Query += "COALESCE(ARRAY_AGG(COALESCE(reactive_power, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Reactive_Power") + ", ";
+      } else {
+        Query += "COALESCE(ARRAY_AGG(reactive_power ORDER BY sampletime ASC), '{}') AS " + req.BindID("Reactive_Power") + ", ";
+      }
     } else if((Serie == "POWER_FACTOR") && (Aggreg == "1M")) {
-      Query += "COALESCE(ARRAY_AGG(power_factor ORDER BY sampletime ASC), '{}') AS " + req.BindID("Power_Factor") + ", ";
+      vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
+      Query += "COALESCE(ARRAY_AGG(COALESCE(power_factor, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Power_Factor") + ", ";
     } else if((Serie == "VOLTAGE_THD") && (Aggreg == "1M")) {
-      Query += "COALESCE(ARRAY_AGG(thd_v ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_THD") + ", ";
+      vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
+      Query += "COALESCE(ARRAY_AGG(COALESCE(thd_v, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_THD") + ", ";
     } else if((Serie == "CURRENT_THD") && (Aggreg == "1M")) {
-      Query += "COALESCE(ARRAY_AGG(thd_i ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current_THD") + ", ";
+      vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, NAN);
+      Query += "COALESCE(ARRAY_AGG(COALESCE(thd_i, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current_THD") + ", ";
     } else if((Serie == "PHI") && (Aggreg == "1M")) {
-      Query += "COALESCE(ARRAY_AGG(phi ORDER BY sampletime ASC), '{}') AS " + req.BindID("Phi") + ", ";
+      vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
+      Query += "COALESCE(ARRAY_AGG(COALESCE(phi, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Phi") + ", ";
     } else if((Serie == "VOLTAGE_HARMONICS") && (Aggreg == "1M")) {
-      Query += "COALESCE(ARRAY_AGG(harmonics_v ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics") + ", ";
+      vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
+      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_v, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics") + ", ";
     } else if((Serie == "CURRENT_HARMONICS") && (Aggreg ==  "1M")) {
-      Query += "COALESCE(ARRAY_AGG(harmonics_i ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current_Harmonics") + ", ";
-    } else if((Serie == "VOLTAGE_STATS") && (Aggreg ==  "1H")) {
+      vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(50, NAN));
+      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_i, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current_Harmonics") + ", ";
+    } else if((Serie == "VOLTAGE_STATS") && (Aggreg ==  "1H")) {   
       Query += "COALESCE(ARRAY_AGG(stat_voltage ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Stats") + ", ";
     } else if((Serie == "FREQUENCY_STATS") && (Aggreg ==  "1H")) {
       Query += "COALESCE(ARRAY_AGG(stat_frequency ORDER BY sampletime ASC), '{}') AS " + req.BindID("Frequency_Stats") + ", ";

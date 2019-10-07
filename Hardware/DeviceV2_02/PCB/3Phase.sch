@@ -448,9 +448,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C6
 U 1 1 5BD060D2
 P 4425 4325
 F 0 "C6" H 4435 4395 50  0000 L CNN
-F 1 "100nF" H 4435 4245 50  0001 L CNN
+F 1 "100nF 25v" H 4435 4245 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 4425 4325 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 4425 4325 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 4425 4325 50  0001 C CNN
 	1    4425 4325
 	-1   0    0    -1  
 $EndComp
@@ -459,9 +459,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C4
 U 1 1 5BD0621D
 P 4150 5775
 F 0 "C4" H 4160 5845 50  0000 L CNN
-F 1 "100nF" H 4160 5695 50  0001 L CNN
+F 1 "100nF 25v" H 4160 5695 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 4150 5775 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 4150 5775 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 4150 5775 50  0001 C CNN
 	1    4150 5775
 	-1   0    0    -1  
 $EndComp
@@ -470,9 +470,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C2
 U 1 1 5BD06296
 P 4175 6650
 F 0 "C2" H 4185 6720 50  0000 L CNN
-F 1 "100nF" H 4185 6570 50  0001 L CNN
+F 1 "100nF 25v" H 4185 6570 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 4175 6650 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 4175 6650 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 4175 6650 50  0001 C CNN
 	1    4175 6650
 	-1   0    0    -1  
 $EndComp
@@ -481,9 +481,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C3
 U 1 1 5BD06311
 P 5700 1700
 F 0 "C3" H 5710 1770 50  0000 L CNN
-F 1 "100nF" H 5710 1620 50  0001 L CNN
+F 1 "100nF 25v" H 5710 1620 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 5700 1700 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 5700 1700 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5700 1700 50  0001 C CNN
 	1    5700 1700
 	1    0    0    -1  
 $EndComp
@@ -492,9 +492,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C5
 U 1 1 5BD0638E
 P 4700 1150
 F 0 "C5" H 4710 1220 50  0000 L CNN
-F 1 "100nF" H 4710 1070 50  0001 L CNN
+F 1 "100nF 25v" H 4710 1070 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 4700 1150 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 4700 1150 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 4700 1150 50  0001 C CNN
 	1    4700 1150
 	0    1    1    0   
 $EndComp
@@ -503,9 +503,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C7
 U 1 1 5BD06419
 P 4200 7775
 F 0 "C7" H 4210 7845 50  0000 L CNN
-F 1 "100nF" H 4210 7695 50  0001 L CNN
+F 1 "100nF 25v" H 4210 7695 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 4200 7775 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 4200 7775 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 4200 7775 50  0001 C CNN
 	1    4200 7775
 	-1   0    0    -1  
 $EndComp
@@ -804,9 +804,9 @@ L 3Phase-rescue:CP-3Phase-rescue C9
 U 1 1 5BDB6F21
 P 2450 1550
 F 0 "C9" H 2475 1650 50  0000 L CNN
-F 1 "3.3uF 450v" H 2475 1450 50  0001 L CNN
+F 1 "4.7uF 450v (10x12mm)" H 2475 1450 50  0001 L CNN
 F 2 "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm" H 2488 1400 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/ELECYINGFO-100pcs-3-3uF-450V-RUBYCON-BXC-10x13mm-High-Ripple-Current-Long-Life-450V3-3uF-Aluminum/1596219_32889253375.html" H 2450 1550 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_4-7uF-20-450V_C106429.html" H 2450 1550 50  0001 C CNN
 	1    2450 1550
 	1    0    0    -1  
 $EndComp
@@ -815,9 +815,9 @@ L 3Phase-rescue:CP-3Phase-rescue C8
 U 1 1 5BDB7050
 P 2050 1550
 F 0 "C8" H 2075 1650 50  0000 L CNN
-F 1 "3.3uF 450v" H 2075 1450 50  0001 L CNN
+F 1 "4.7uF 450v (10x12mm)" H 2075 1450 50  0001 L CNN
 F 2 "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm" H 2088 1400 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/ELECYINGFO-100pcs-3-3uF-450V-RUBYCON-BXC-10x13mm-High-Ripple-Current-Long-Life-450V3-3uF-Aluminum/1596219_32889253375.html" H 2050 1550 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_4-7uF-20-450V_C106429.html" H 2050 1550 50  0001 C CNN
 	1    2050 1550
 	1    0    0    -1  
 $EndComp
@@ -826,9 +826,9 @@ L 3Phase-rescue:VIPer22-3Phase-rescue U6
 U 1 1 5BDB6955
 P 3000 1450
 F 0 "U6" H 2850 1675 50  0000 R CNN
-F 1 "VIPer22" H 3100 1675 50  0000 L CNN
+F 1 "VIPER22ADIP-E" H 2750 1125 50  0000 L CNN
 F 2 "Package_DIP:DIP-8_W7.62mm" H 3000 875 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/VIPer22A-viper22-VIPER22A-DIP8-100pcs/4420053_32895985764.html" H 3000 1450 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/PMIC-AC-DC-Converters_STMicroelectronics_VIPER22ADIP-E_VIPER22ADIP-E_C5318.html" H 3000 1450 50  0001 C CNN
 	1    3000 1450
 	-1   0    0    1   
 $EndComp
@@ -892,9 +892,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C10
 U 1 1 5BDBB3A5
 P 3600 1400
 F 0 "C10" H 3610 1470 50  0000 L CNN
-F 1 "100nF" H 3610 1320 50  0001 L CNN
+F 1 "100nF 25v" H 3610 1320 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 3600 1400 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/Free-shipping-100PCS-capacitance-0402-0-047uF-473-47nF-X7R-25V-10-1-0x0-5mm-1005/511081_1142739709.html" H 3600 1400 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 3600 1400 50  0001 C CNN
 	1    3600 1400
 	1    0    0    -1  
 $EndComp
@@ -905,7 +905,7 @@ P 3450 1450
 F 0 "C11" H 3460 1520 50  0000 L CNN
 F 1 "4.7uF 25v" H 3460 1370 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric" H 3450 1450 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-LOT-SMD-ceramic-capacitor-0805-2-2UF-225K-16V-25V-10-X7R-Chip-Capacitor-MLCC/1502554_32924877777.html" H 3450 1450 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_4-7uF-475-10-25V_C37818.html" H 3450 1450 50  0001 C CNN
 	1    3450 1450
 	1    0    0    -1  
 $EndComp
@@ -913,10 +913,10 @@ $Comp
 L 3Phase-rescue:D_Zener_Small_ALT-3Phase-rescue D2
 U 1 1 5BDBB72B
 P 3750 1250
-F 0 "D2" H 3750 1340 50  0000 C CNN
+F 0 "D2" H 3675 1350 50  0000 C CNN
 F 1 "BZT52C15S" H 3750 1160 50  0001 C CNN
 F 2 "Diode_SMD:D_SOD-323" V 3750 1250 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100-PCS-LOT-BZT52C15S-BZT52C15-SOD-323-123-WJ/4580010_32950079051.html" V 3750 1250 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Zener-Diodes_Shandong-Jingdao-Microelectronics-BZT52C15S_C353555.html" V 3750 1250 50  0001 C CNN
 	1    3750 1250
 	-1   0    0    1   
 $EndComp
@@ -927,7 +927,7 @@ P 3350 1700
 F 0 "D1" H 3300 1780 50  0000 L CNN
 F 1 "ES1J" H 3200 1620 50  0001 L CNN
 F 2 "Diode_SMD:D_SMA" V 3350 1700 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-SS14-In5819-1n5819-SS16-SS24-SS34-IN5822-SS36-sr360-SS110-SS220-SS310-ES1J-SMD-SMA/630494_32865102060.html" H 3350 1700 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Diodes-General-Purpose_Bourne-Semicon-Shenzhen-ES1J_C266561.html" H 3350 1700 50  0001 C CNN
 	1    3350 1700
 	0    1    1    0   
 $EndComp
@@ -936,9 +936,9 @@ L 3Phase-rescue:CP_Small-3Phase-rescue C12
 U 1 1 5BDBE803
 P 4000 1700
 F 0 "C12" H 4010 1770 50  0000 L CNN
-F 1 "47uF 25v" H 4010 1620 50  0001 L CNN
+F 1 "47uF 35v" H 4010 1620 50  0001 L CNN
 F 2 "Capacitor_THT:CP_Radial_D5.0mm_P2.50mm" H 4000 1700 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100pcs-lot-47uF-25V-Electrolytic-Capacitor-5x7mm-Aluminum-Electrolytic-Capacitors-Free-Shipping/1743026_32515722504.html" H 4000 1700 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_Ymin-PKCB21V470MF_C269940.html" H 4000 1700 50  0001 C CNN
 	1    4000 1700
 	1    0    0    -1  
 $EndComp
@@ -951,7 +951,7 @@ P 4000 1400
 F 0 "D3" H 3950 1480 50  0000 L CNN
 F 1 "ES1J" H 3850 1320 50  0001 L CNN
 F 2 "Diode_SMD:D_SMA" V 4000 1400 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-SS14-In5819-1n5819-SS16-SS24-SS34-IN5822-SS36-sr360-SS110-SS220-SS310-ES1J-SMD-SMA/630494_32865102060.html" V 4000 1400 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Diodes-General-Purpose_Bourne-Semicon-Shenzhen-ES1J_C266561.html" V 4000 1400 50  0001 C CNN
 	1    4000 1400
 	0    1    1    0   
 $EndComp
@@ -960,9 +960,9 @@ L 3Phase-rescue:SY8113-3Phase-rescue U10
 U 1 1 5BDCEBDA
 P 4600 1450
 F 0 "U10" H 4450 1675 50  0000 R CNN
-F 1 "SY8201" H 4475 1550 50  0000 L CNN
+F 1 "SY8201ABC" H 4325 1450 50  0001 L CNN
 F 2 "Package_TO_SOT_SMD:TSOT-23-6" H 4600 875 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-SY8113ADC-SY8113A-SY8113-SOT23-6/614856_32774281809.html" H 4600 1450 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/DC-DC-Converters_Silergy_SY8201ABC_SY8201ABC_C108052.html" H 4600 1450 50  0001 C CNN
 	1    4600 1450
 	1    0    0    -1  
 $EndComp
@@ -971,9 +971,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C17
 U 1 1 5BDCF00F
 P 4150 1700
 F 0 "C17" H 4160 1770 50  0000 L CNN
-F 1 "100nF" H 4160 1620 50  0001 L CNN
+F 1 "100nF 25v" H 4160 1620 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 4150 1700 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 4150 1700 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 4150 1700 50  0001 C CNN
 	1    4150 1700
 	1    0    0    -1  
 $EndComp
@@ -995,9 +995,9 @@ L 3Phase-rescue:D_ALT-3Phase-rescue D6
 U 1 1 5BDDF7B6
 P 1450 1750
 F 0 "D6" H 1550 1800 50  0000 C CNN
-F 1 "1N4007" H 1450 1650 50  0001 C CNN
+F 1 "1N4007G" H 1450 1650 50  0001 C CNN
 F 2 "Diode_SMD:D_SMA" H 1450 1750 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-Diode-1N4001-M1-1N4005-M5-1N4007-M7-1N4004-M4-SR160-1N4148-1N4148-1N5819-RS1M-RS2M/730231_32868492349.html" H 1450 1750 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Diodes-General-Purpose_Shikues-1N4007G_C111122.html" H 1450 1750 50  0001 C CNN
 	1    1450 1750
 	-1   0    0    1   
 $EndComp
@@ -1006,9 +1006,9 @@ L 3Phase-rescue:D_ALT-3Phase-rescue D4
 U 1 1 5BDDF9F7
 P 1450 1150
 F 0 "D4" H 1550 1200 50  0000 C CNN
-F 1 "1N4007" H 1450 1050 50  0001 C CNN
+F 1 "1N4007G" H 1450 1050 50  0001 C CNN
 F 2 "Diode_SMD:D_SMA" H 1450 1150 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-Diode-1N4001-M1-1N4005-M5-1N4007-M7-1N4004-M4-SR160-1N4148-1N4148-1N5819-RS1M-RS2M/730231_32868492349.html" H 1450 1150 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Diodes-General-Purpose_Shikues-1N4007G_C111122.html" H 1450 1150 50  0001 C CNN
 	1    1450 1150
 	-1   0    0    1   
 $EndComp
@@ -1017,9 +1017,9 @@ L 3Phase-rescue:D_ALT-3Phase-rescue D5
 U 1 1 5BDDFAD0
 P 1450 1450
 F 0 "D5" H 1550 1500 50  0000 C CNN
-F 1 "1N4007" H 1450 1350 50  0001 C CNN
+F 1 "1N4007G" H 1450 1350 50  0001 C CNN
 F 2 "Diode_SMD:D_SMA" H 1450 1450 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-Diode-1N4001-M1-1N4005-M5-1N4007-M7-1N4004-M4-SR160-1N4148-1N4148-1N5819-RS1M-RS2M/730231_32868492349.html" H 1450 1450 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Diodes-General-Purpose_Shikues-1N4007G_C111122.html" H 1450 1450 50  0001 C CNN
 	1    1450 1450
 	-1   0    0    1   
 $EndComp
@@ -1036,7 +1036,7 @@ P 5525 1700
 F 0 "C18" H 5535 1770 50  0000 L CNN
 F 1 "100uF 16v" H 5535 1620 50  0001 L CNN
 F 2 "Capacitor_THT:CP_Radial_D5.0mm_P2.50mm" H 5525 1700 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/50pcs-Electrolytic-Capacitor-100uF-16V-5-7mm-Aluminum-Electrolytic-Capacitor-5X7mm/1361740_32834736874.html" H 5525 1700 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_Ymin-PKCB41C101MF_C269939.html" H 5525 1700 50  0001 C CNN
 	1    5525 1700
 	1    0    0    -1  
 $EndComp
@@ -1056,9 +1056,9 @@ L 3Phase-rescue:Battery_Cell-3Phase-rescue BT1
 U 1 1 5BDEE828
 P 6700 1700
 F 0 "BT1" H 6800 1800 50  0000 L CNN
-F 1 "Battery_Cell" H 6800 1700 50  0001 L CNN
+F 1 "2x2mm connector" H 6800 1700 50  0001 L CNN
 F 2 "Connector_JST:JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical" V 6700 1760 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100-Sets-Micro-JST-2-0-PH-2-Pin-Connector-plug-Male-Female-Crimps/1682443_32772593322.html" H 6700 1760 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Wire-To-Board-Wire-To-Wire-Connector_Boom-Precision-Elec-PH-2A_C2319.html" H 6700 1760 50  0001 C CNN
 	1    6700 1700
 	1    0    0    -1  
 $EndComp
@@ -1080,7 +1080,7 @@ P 6525 850
 F 0 "D8" H 6475 930 50  0000 L CNN
 F 1 "SS14" H 6245 770 50  0001 L CNN
 F 2 "Diode_SMD:D_SMA" V 6525 850 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-SMA-Rectifier-diode-1N5819-SS14-1N5822-SS34-SR160-SS16-1N5817-SS12-SR1100-SS110-SR360-SS36/1969251_32947185076.html" V 6525 850 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Schottky-Barrier-Diodes-SBD_Shandong-Jingdao-Microelectronics-SS12_C353243.html" V 6525 850 50  0001 C CNN
 	1    6525 850 
 	-1   0    0    1   
 $EndComp
@@ -1143,9 +1143,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C13
 U 1 1 5BEB8358
 P 4175 9650
 F 0 "C13" H 4185 9720 50  0000 L CNN
-F 1 "100nF" H 4185 9570 50  0001 L CNN
+F 1 "100nF 25v" H 4185 9570 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 4175 9650 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 4175 9650 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 4175 9650 50  0001 C CNN
 	1    4175 9650
 	1    0    0    -1  
 $EndComp
@@ -1200,9 +1200,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C14
 U 1 1 5BEC9CD0
 P 5425 9575
 F 0 "C14" H 5435 9645 50  0000 L CNN
-F 1 "100nF" H 5435 9495 50  0001 L CNN
+F 1 "100nF 25v" H 5435 9495 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 5425 9575 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 5425 9575 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5425 9575 50  0001 C CNN
 	1    5425 9575
 	1    0    0    -1  
 $EndComp
@@ -1213,7 +1213,7 @@ P 5325 9025
 F 0 "C15" H 5335 9095 50  0000 L CNN
 F 1 "100uF 16v" H 5335 8945 50  0001 L CNN
 F 2 "Capacitor_THT:CP_Radial_D5.0mm_P2.50mm" H 5325 9025 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100pcs-lot-Electrolytic-Capacitors-10V-100uf-10V-Electrolytic-Capacitor-size-4mm-7mm/1021664_1481491846.html" H 5325 9025 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_Ymin-PKCB41C101MF_C269939.html" H 5325 9025 50  0001 C CNN
 	1    5325 9025
 	1    0    0    -1  
 $EndComp
@@ -1255,9 +1255,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C16
 U 1 1 5BEE335C
 P 6725 9400
 F 0 "C16" H 6735 9470 50  0000 L CNN
-F 1 "100nF" H 6735 9320 50  0001 L CNN
+F 1 "100nF 25v" H 6735 9320 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 6725 9400 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 6725 9400 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 6725 9400 50  0001 C CNN
 	1    6725 9400
 	1    0    0    -1  
 $EndComp
@@ -1355,9 +1355,9 @@ L 3Phase-rescue:Buzzer-3Phase-rescue BZ1
 U 1 1 5BFAE180
 P 2125 2875
 F 0 "BZ1" V 2000 2800 50  0000 L CNN
-F 1 "HMB1275-05B" H 2275 2825 50  0001 L CNN
+F 1 "QMB-09B-05" H 2275 2825 50  0001 L CNN
 F 2 "Footprints:Buzzer_9x5.5RM4" V 2100 2975 50  0001 C CNN
-F 3 "" V 2100 2975 50  0000 C CNN
+F 3 "https://lcsc.com/product-detail/Buzzers_Jiangsu-Huaneng-Elec-QMB-09B-05_C161819.html" V 2100 2975 50  0001 C CNN
 	1    2125 2875
 	0    -1   -1   0   
 $EndComp
@@ -1366,9 +1366,9 @@ L Components:NanoPi P2
 U 1 1 5BFAFAB2
 P 2300 7500
 F 0 "P2" H 2650 7575 50  0000 C CNN
-F 1 "NanoPI AIR" H 2400 7500 50  0001 C CNN
+F 1 "2 x 2.54x2 pin header" H 2400 7500 50  0001 C CNN
 F 2 "Footprints:NanoPI Air" H 2300 7500 50  0001 C CNN
-F 3 "" H 2300 7500 50  0000 C CNN
+F 3 "https://lcsc.com/product-detail/Pin-Header-Female-Header_Boom-Precision-Elec-2-54-1-2PFemale_C49661.html" H 2300 7500 50  0001 C CNN
 	1    2300 7500
 	1    0    0    -1  
 $EndComp
@@ -1427,9 +1427,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C19
 U 1 1 5BFFE182
 P 2900 9575
 F 0 "C19" H 2910 9645 50  0000 L CNN
-F 1 "100nF" H 2910 9495 50  0001 L CNN
+F 1 "100nF 25v" H 2910 9495 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 2900 9575 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 2900 9575 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 2900 9575 50  0001 C CNN
 	1    2900 9575
 	1    0    0    -1  
 $EndComp
@@ -1486,9 +1486,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C20
 U 1 1 5C018F55
 P 2900 10225
 F 0 "C20" H 2910 10295 50  0000 L CNN
-F 1 "100nF" H 2910 10145 50  0001 L CNN
+F 1 "100nF 25v" H 2910 10145 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 2900 10225 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 2900 10225 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 2900 10225 50  0001 C CNN
 	1    2900 10225
 	1    0    0    -1  
 $EndComp
@@ -1530,9 +1530,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C21
 U 1 1 5C01E678
 P 2900 10875
 F 0 "C21" H 2910 10945 50  0000 L CNN
-F 1 "100nF" H 2910 10795 50  0001 L CNN
+F 1 "100nF 25v" H 2910 10795 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 2900 10875 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 2900 10875 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 2900 10875 50  0001 C CNN
 	1    2900 10875
 	1    0    0    -1  
 $EndComp
@@ -1587,9 +1587,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C22
 U 1 1 5C10FD29
 P 1750 8500
 F 0 "C22" H 1760 8570 50  0000 L CNN
-F 1 "100nF" H 1760 8420 50  0001 L CNN
+F 1 "100nF 25v" H 1760 8420 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 1750 8500 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 1750 8500 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 1750 8500 50  0001 C CNN
 	1    1750 8500
 	1    0    0    -1  
 $EndComp
@@ -1598,9 +1598,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C23
 U 1 1 5C10FF28
 P 1950 8500
 F 0 "C23" H 1960 8570 50  0000 L CNN
-F 1 "100nF" H 1960 8420 50  0001 L CNN
+F 1 "100nF 25v" H 1960 8420 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 1950 8500 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 1950 8500 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 1950 8500 50  0001 C CNN
 	1    1950 8500
 	1    0    0    -1  
 $EndComp
@@ -1609,9 +1609,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C24
 U 1 1 5C110430
 P 2150 8500
 F 0 "C24" H 2160 8570 50  0000 L CNN
-F 1 "100nF" H 2160 8420 50  0001 L CNN
+F 1 "100nF 25v" H 2160 8420 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 2150 8500 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 2150 8500 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 2150 8500 50  0001 C CNN
 	1    2150 8500
 	1    0    0    -1  
 $EndComp
@@ -2391,9 +2391,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C1
 U 1 1 5C21A3EA
 P 6525 9025
 F 0 "C1" H 6535 9095 50  0000 L CNN
-F 1 "100nF" H 6535 8945 50  0001 L CNN
+F 1 "100nF 25v" H 6535 8945 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 6525 9025 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 6525 9025 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 6525 9025 50  0001 C CNN
 	1    6525 9025
 	1    0    0    -1  
 $EndComp
@@ -2536,9 +2536,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C26
 U 1 1 5BF092ED
 P 5150 7275
 F 0 "C26" H 5160 7345 50  0000 L CNN
-F 1 "100nF" H 5160 7195 50  0001 L CNN
+F 1 "100nF 25v" H 5160 7195 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 5150 7275 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 5150 7275 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5150 7275 50  0001 C CNN
 	1    5150 7275
 	0    1    -1   0   
 $EndComp
@@ -2565,9 +2565,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C25
 U 1 1 5BFF8F92
 P 5125 5225
 F 0 "C25" H 5135 5295 50  0000 L CNN
-F 1 "100nF" H 5135 5145 50  0001 L CNN
+F 1 "100nF 25v" H 5135 5145 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 5125 5225 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 5125 5225 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5125 5225 50  0001 C CNN
 	1    5125 5225
 	0    1    -1   0   
 $EndComp
@@ -2622,7 +2622,7 @@ P 2125 3200
 F 0 "Q2" H 2330 3246 50  0000 L CNN
 F 1 "2N7002" H 2330 3155 50  0000 L CNN
 F 2 "Package_TO_SOT_SMD:SOT-23" H 2325 3125 50  0001 L CIN
-F 3 "https://www.fairchildsemi.com/datasheets/2N/2N7002.pdf" H 2125 3200 50  0001 L CNN
+F 3 "https://lcsc.com/product-detail/MOSFET_Guangdong-Hottech-2N7002_C181082.html" H 2125 3200 50  0001 L CNN
 	1    2125 3200
 	1    0    0    -1  
 $EndComp
@@ -2666,9 +2666,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C28
 U 1 1 5C17FA70
 P 2100 4700
 F 0 "C28" H 2110 4770 50  0000 L CNN
-F 1 "100nF" H 2110 4620 50  0001 L CNN
+F 1 "100nF 25v" H 2110 4620 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 2100 4700 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 2100 4700 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 2100 4700 50  0001 C CNN
 	1    2100 4700
 	0    1    -1   0   
 $EndComp
@@ -2832,7 +2832,7 @@ P 5550 8725
 F 0 "D13" H 5500 8805 50  0000 L CNN
 F 1 "1N5819WS" H 5400 8645 50  0001 L CNN
 F 2 "Diode_SMD:D_SOD-323" V 5550 8725 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-Diode-1N4001-M1-1N4005-M5-1N4007-M7-1N4004-M4-SR160-1N4148-1N4148-1N5819-RS1M-RS2M/730231_32868492349.html" V 5550 8725 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Others_B5819WS_C191023.html" V 5550 8725 50  0001 C CNN
 	1    5550 8725
 	0    -1   -1   0   
 $EndComp
@@ -2864,7 +2864,7 @@ P 2450 2600
 F 0 "J5" H 2530 2642 50  0000 L CNN
 F 1 "Conn_01x03" H 2530 2551 50  0000 L CNN
 F 2 "Footprints:PinHeader_1x03_P2.54mm_Vertical" H 2450 2600 50  0001 C CNN
-F 3 "~" H 2450 2600 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Pin-Header-Female-Header_Boom-Precision-Elec-Header-2-54mm-1-3P_C49257.html" H 2450 2600 50  0001 C CNN
 	1    2450 2600
 	1    0    0    -1  
 $EndComp
@@ -2920,7 +2920,7 @@ P 4475 9450
 F 0 "D14" H 4425 9530 50  0000 L CNN
 F 1 "1N5819WS" H 4325 9370 50  0001 L CNN
 F 2 "Diode_SMD:D_SOD-323" V 4475 9450 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-Diode-1N4001-M1-1N4005-M5-1N4007-M7-1N4004-M4-SR160-1N4148-1N4148-1N5819-RS1M-RS2M/730231_32868492349.html" V 4475 9450 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Others_B5819WS_C191023.html" V 4475 9450 50  0001 C CNN
 	1    4475 9450
 	-1   0    0    1   
 $EndComp
@@ -2939,9 +2939,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C29
 U 1 1 5C6260A8
 P 5050 9625
 F 0 "C29" H 5060 9695 50  0000 L CNN
-F 1 "100nF" H 5060 9545 50  0001 L CNN
+F 1 "100nF 25v" H 5060 9545 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 5050 9625 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 5050 9625 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5050 9625 50  0001 C CNN
 	1    5050 9625
 	1    0    0    -1  
 $EndComp
@@ -2996,9 +2996,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C30
 U 1 1 5D19FBA6
 P 2300 9125
 F 0 "C30" H 2310 9195 50  0000 L CNN
-F 1 "100nF" H 2310 9045 50  0001 L CNN
+F 1 "100nF 25v" H 2310 9045 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 2300 9125 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 2300 9125 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 2300 9125 50  0001 C CNN
 	1    2300 9125
 	0    1    1    0   
 $EndComp
@@ -3079,9 +3079,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C27
 U 1 1 5D4A1360
 P 7525 9525
 F 0 "C27" H 7535 9595 50  0000 L CNN
-F 1 "100nF" H 7535 9445 50  0001 L CNN
+F 1 "100nF 25v" H 7535 9445 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 7525 9525 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 7525 9525 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 7525 9525 50  0001 C CNN
 	1    7525 9525
 	1    0    0    -1  
 $EndComp
@@ -3105,7 +3105,7 @@ P 6200 9650
 F 0 "C31" H 6210 9720 50  0000 L CNN
 F 1 "100uF 16v" H 6210 9570 50  0001 L CNN
 F 2 "Capacitor_THT:CP_Radial_D5.0mm_P2.50mm" H 6200 9650 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100pcs-lot-Electrolytic-Capacitors-10V-100uf-10V-Electrolytic-Capacitor-size-4mm-7mm/1021664_1481491846.html" H 6200 9650 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_Ymin-PKCB41C101MF_C269939.html" H 6200 9650 50  0001 C CNN
 	1    6200 9650
 	1    0    0    -1  
 $EndComp
@@ -3147,7 +3147,7 @@ P 2100 4050
 F 0 "Q3" H 2305 4096 50  0000 L CNN
 F 1 "2N7002" H 2305 4005 50  0000 L CNN
 F 2 "Package_TO_SOT_SMD:SOT-23" H 2300 3975 50  0001 L CIN
-F 3 "https://www.fairchildsemi.com/datasheets/2N/2N7002.pdf" H 2100 4050 50  0001 L CNN
+F 3 "https://lcsc.com/product-detail/MOSFET_Guangdong-Hottech-2N7002_C181082.html" H 2100 4050 50  0001 L CNN
 	1    2100 4050
 	1    0    0    1   
 $EndComp
@@ -3166,9 +3166,9 @@ L Components:Conn_01x02 J6
 U 1 1 5DB54C15
 P 2525 4250
 F 0 "J6" H 2605 4292 50  0000 L CNN
-F 1 "Conn_01x03" H 2605 4201 50  0000 L CNN
+F 1 "2x2mm connector" H 2605 4201 50  0000 L CNN
 F 2 "Connector_JST:JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical" H 2525 4250 50  0001 C CNN
-F 3 "~" H 2525 4250 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Wire-To-Board-Wire-To-Wire-Connector_Boom-Precision-Elec-PH-2A_C2319.html" H 2525 4250 50  0001 C CNN
 	1    2525 4250
 	1    0    0    1   
 $EndComp
@@ -3225,7 +3225,7 @@ P 6400 9225
 F 0 "C32" H 6410 9295 50  0000 L CNN
 F 1 "100uF 16v" H 6410 9145 50  0001 L CNN
 F 2 "Capacitor_THT:CP_Radial_D5.0mm_P2.50mm" H 6400 9225 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100pcs-lot-Electrolytic-Capacitors-10V-100uf-10V-Electrolytic-Capacitor-size-4mm-7mm/1021664_1481491846.html" H 6400 9225 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_Ymin-PKCB41C101MF_C269939.html" H 6400 9225 50  0001 C CNN
 	1    6400 9225
 	1    0    0    -1  
 $EndComp
@@ -3293,9 +3293,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C33
 U 1 1 5F640827
 P 6975 8000
 F 0 "C33" H 6985 8070 50  0000 L CNN
-F 1 "100nF" H 6985 7920 50  0001 L CNN
+F 1 "100nF 25v" H 6985 7920 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 6975 8000 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 6975 8000 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 6975 8000 50  0001 C CNN
 	1    6975 8000
 	1    0    0    1   
 $EndComp
@@ -3334,9 +3334,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C34
 U 1 1 5FB7F377
 P 6925 4825
 F 0 "C34" H 6935 4895 50  0000 L CNN
-F 1 "100nF" H 6935 4745 50  0001 L CNN
+F 1 "100nF 25v" H 6935 4745 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 6925 4825 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 6925 4825 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 6925 4825 50  0001 C CNN
 	1    6925 4825
 	1    0    0    1   
 $EndComp
@@ -3426,9 +3426,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C35
 U 1 1 5D7CE217
 P 5950 3375
 F 0 "C35" H 5960 3445 50  0000 L CNN
-F 1 "100nF" H 5960 3295 50  0001 L CNN
+F 1 "100nF 25v" H 5960 3295 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 5950 3375 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 5950 3375 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5950 3375 50  0001 C CNN
 	1    5950 3375
 	-1   0    0    -1  
 $EndComp
@@ -3437,9 +3437,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C36
 U 1 1 5D7CE3B7
 P 6625 3375
 F 0 "C36" H 6635 3445 50  0000 L CNN
-F 1 "100nF" H 6635 3295 50  0001 L CNN
+F 1 "100nF 25v" H 6635 3295 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 6625 3375 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 6625 3375 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 6625 3375 50  0001 C CNN
 	1    6625 3375
 	-1   0    0    -1  
 $EndComp
@@ -3472,9 +3472,10 @@ L Device:Jumper_NC_Dual JP1
 U 1 1 5D9A3B6B
 P 7025 3200
 F 0 "JP1" H 7025 3439 50  0000 C CNN
-F 1 "Jumper_NC_Dual" H 7025 3348 50  0000 C CNN
+F 1 "2.54x3 pin header" H 7025 3348 50  0000 C CNN
 F 2 "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical" H 7025 3200 50  0001 C CNN
-F 3 "~" H 7025 3200 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Pin-Header-Female-Header_Boom-Precision-Elec-Header-2-54mm-1-3P_C49257.html" H 7025 3200 50  0001 C CNN
+F 4 "https://lcsc.com/product-detail/Shunts-Jumpers_2-54mm-Short-hood_C5305.html" H 7025 3200 50  0001 C CNN "Additional"
 	1    7025 3200
 	1    0    0    -1  
 $EndComp
@@ -3536,9 +3537,9 @@ L 3Phase-rescue:C_Small-3Phase-rescue C37
 U 1 1 5D8F9F1D
 P 7250 1725
 F 0 "C37" H 7260 1795 50  0000 L CNN
-F 1 "100nF" H 7260 1645 50  0001 L CNN
+F 1 "100nF 25v" H 7260 1645 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 7250 1725 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-1nF-10nF-100nF-0-1uF-1uF-10uF-0603-X7R-Error-10-SMD-Thick-Film-Chip/1962508_32923124783.html" H 7250 1725 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 7250 1725 50  0001 C CNN
 	1    7250 1725
 	1    0    0    -1  
 $EndComp
