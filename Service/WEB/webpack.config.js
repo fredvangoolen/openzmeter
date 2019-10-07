@@ -68,7 +68,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*': { target: 'http://10.8.0.135:80'}
+      '*': { target: 'http://localhost:8081'}
     }
   },
   performance: {
@@ -79,7 +79,6 @@ module.exports = {
 
 if (process.env.NODE_ENV === 'production') {
   module.exports.devtool = '#source-map';
-  // http://vue-loader.vuejs.org/en/workflow/production.html
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({
       'process.env': {
@@ -89,6 +88,7 @@ if (process.env.NODE_ENV === 'production') {
     new UglifyJsPlugin({
       'uglifyOptions': {
           parallel: true,
+          cache: true,
           compress: { warnings: false },
           sourceMap: false
       }
