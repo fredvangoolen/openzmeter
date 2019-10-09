@@ -1,4 +1,4 @@
-(module Button_Switch_THT:SW_Tactile_SKHH_Angled (layer F.Cu) (tedit 5CF453B6)
+(module SW_Tactile_SKHH_Angled (layer F.Cu) (tedit 5A02FE31)
   (descr "tactile switch 6mm ALPS SKHH right angle http://www.alps.com/prod/info/E/HTML/Tact/SnapIn/SKHH/SKHHLUA010.html")
   (tags "tactile switch 6mm ALPS SKHH right angle")
   (fp_text reference SW2 (at 2.25 2.5) (layer F.SilkS) hide
@@ -64,9 +64,9 @@
     (scale (xyz 1 1 1))
     (rotate (xyz 0 0 0))
   )
-  (model ${KISYS3DMOD}/Button_Switch_THT.3dshapes/SW_Tactile_SPST_Angled_PTS645Vx58-2LFS.step
-    (at (xyz 0 0 0))
+  (model /home/edu/Descargas/STEP-TATU_6X6_THT_RIGHT_ANGLED_WITH_GROUND_TERMINAL-rev1.stp
+    (offset (xyz 2.25 0 4))
     (scale (xyz 1 1 1))
-    (rotate (xyz 0 0 0))
+    (rotate (xyz 0 0 180))
   )
 )

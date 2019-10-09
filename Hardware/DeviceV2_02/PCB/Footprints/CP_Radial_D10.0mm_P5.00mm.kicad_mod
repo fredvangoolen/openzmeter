@@ -1,13 +1,13 @@
-(module Capacitor_THT:CP_Radial_D10.0mm_P5.00mm (layer F.Cu) (tedit 5D644DC4)
+(module CP_Radial_D10.0mm_P5.00mm (layer F.Cu) (tedit 5D9DD7FF)
   (descr "CP, Radial series, Radial, pin pitch=5.00mm, , diameter=10mm, Electrolytic Capacitor")
   (tags "CP Radial series Radial pin pitch 5.00mm  diameter 10mm Electrolytic Capacitor")
-  (fp_text reference C9 (at 2.5 -6.25) (layer F.SilkS) hide
+  (fp_text reference C8 (at 2.5 -6.25) (layer F.SilkS) hide
     (effects (font (size 1 1) (thickness 0.15)))
   )
-  (fp_text value "3.3uF 450v" (at 2.5 6.25) (layer F.Fab) hide
+  (fp_text value "4.7uF 450v (10x12mm)" (at 2.5 6.25) (layer F.Fab) hide
     (effects (font (size 1 1) (thickness 0.15)))
   )
-  (fp_text user %R (at 2.5 0 90) (layer F.Fab)
+  (fp_text user %R (at 2.5 0) (layer F.Fab)
     (effects (font (size 1 1) (thickness 0.15)))
   )
   (fp_line (start -2.479646 -3.375) (end -2.479646 -2.375) (layer F.SilkS) (width 0.12))
@@ -208,10 +208,10 @@
   (fp_circle (center 2.5 0) (end 7.62 0) (layer F.SilkS) (width 0.12))
   (fp_circle (center 2.5 0) (end 7.5 0) (layer F.Fab) (width 0.1))
   (pad 2 thru_hole circle (at 5 0) (size 2 2) (drill 1) (layers *.Cu *.Mask))
-  (pad 1 thru_hole roundrect (at 0 0) (size 2 2) (drill 1) (layers *.Cu *.Mask) (roundrect_rratio 0.25))
+  (pad 1 thru_hole circle (at 0 0) (size 2 2) (drill 1) (layers *.Cu *.Mask))
   (model ${KISYS3DMOD}/Capacitor_THT.3dshapes/CP_Radial_D10.0mm_P5.00mm.wrl
     (at (xyz 0 0 0))
-    (scale (xyz 1 1 1.2))
+    (scale (xyz 1 1 1))
     (rotate (xyz 0 0 0))
   )
 )
