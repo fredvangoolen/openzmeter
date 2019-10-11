@@ -838,8 +838,8 @@ U 1 1 5BDB7C0C
 P 2175 1100
 F 0 "L1" V 2125 1100 50  0000 C CNN
 F 1 "470uH 350mA" H 2250 1100 50  0001 C CNN
-F 2 "Inductor_THT:L_Axial_L12.0mm_D5.0mm_P5.08mm_Vertical_Fastron_MISC" H 2175 1100 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/100PCS-LOT-1W-color-ring-inductance-DIP-0510-470UH-Inductor/323553_32732378325.html" H 2175 1100 50  0001 C CNN
+F 2 "Footprints:L_Axial_L12.0mm_D5.0mm_P5.08mm_Vertical_Fastron_MISC" H 2175 1100 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/_CENKER-CKL0514-470uH-J-CCA-T_C354673.html" H 2175 1100 50  0001 C CNN
 	1    2175 1100
 	0    -1   -1   0   
 $EndComp
@@ -1091,9 +1091,9 @@ L 3Phase-rescue:PS7516-3Phase-rescue U7
 U 1 1 5BE18D52
 P 4625 9000
 F 0 "U7" H 4825 8750 50  0000 C CNN
-F 1 "PS7516" H 4525 8750 50  0000 C CNN
+F 1 "FP6715" H 4525 8750 50  0000 C CNN
 F 2 "Footprints:TSOT-23-6" H 4625 9100 50  0001 C CNN
-F 3 "https://es.aliexpress.com/store/product/MP1470GJ-LF-Z-SY8008CAAC-CL6808-BCP53-16T1G-L78L33ACUTR-BF998R-PS7516-CAT6219-330TD-GT3-MT7201C-TMB12A05/1913237_32909344731.html" H 4625 9100 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/DC-DC-Converters_FP6715S6CTR_C128048.html" H 4625 9100 50  0001 C CNN
 	1    4625 9000
 	1    0    0    -1  
 $EndComp
@@ -1312,7 +1312,7 @@ U 1 1 5BFAD7FE
 P 2250 5050
 F 0 "D12" H 1975 5000 50  0000 C CNN
 F 1 "3mm bicolor LED" H 2250 4800 50  0001 C CNN
-F 2 "LED_THT:LED_D3.0mm" H 2250 5050 50  0001 C CNN
+F 2 "Footprints:LED_D3.0mm" H 2250 5050 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100pcs-LED-3mm-Round-Diffused-Red-Green-two-Color-Common-Anode-cathode-LED-Diode-Light-Emitting/1758868_32887904538.html" H 2250 5050 50  0001 C CNN
 	1    2250 5050
 	-1   0    0    1   
@@ -1323,7 +1323,7 @@ U 1 1 5BFADB33
 P 2250 5500
 F 0 "D10" H 2025 5375 50  0000 C CNN
 F 1 "3mm bicolor LED" H 2250 5250 50  0001 C CNN
-F 2 "LED_THT:LED_D3.0mm" H 2250 5500 50  0001 C CNN
+F 2 "Footprints:LED_D3.0mm" H 2250 5500 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100pcs-LED-3mm-Round-Diffused-Red-Green-two-Color-Common-Anode-cathode-LED-Diode-Light-Emitting/1758868_32887904538.html" H 2250 5500 50  0001 C CNN
 	1    2250 5500
 	-1   0    0    1   
@@ -1334,7 +1334,7 @@ U 1 1 5BFADE7C
 P 2250 5950
 F 0 "D9" H 2025 5875 50  0000 C CNN
 F 1 "3mm bicolor LED" H 2250 5700 50  0001 C CNN
-F 2 "LED_THT:LED_D3.0mm" H 2250 5950 50  0001 C CNN
+F 2 "Footprints:LED_D3.0mm" H 2250 5950 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100pcs-LED-3mm-Round-Diffused-Red-Green-two-Color-Common-Anode-cathode-LED-Diode-Light-Emitting/1758868_32887904538.html" H 2250 5950 50  0001 C CNN
 	1    2250 5950
 	-1   0    0    1   
@@ -1345,7 +1345,7 @@ U 1 1 5BFADFE9
 P 2325 6250
 F 0 "D11" H 2325 6350 50  0000 C CNN
 F 1 "3mm blue LED" H 2325 6150 50  0001 C CNN
-F 2 "LED_THT:LED_D3.0mm" H 2325 6250 50  0001 C CNN
+F 2 "Footprints:LED_D3.0mm" H 2325 6250 50  0001 C CNN
 F 3 "https://es.aliexpress.com/store/product/100PCS-x-Long-Leg-3mm-5mm-White-Diffused-Jade-Green-Yellow-Red-Blue-Ultra-Bright-LED/102034_32887271791.html" H 2325 6250 50  0001 C CNN
 	1    2325 6250
 	-1   0    0    1   
@@ -3386,7 +3386,7 @@ F 0 "JP1" H 7025 3439 50  0000 C CNN
 F 1 "2.54x3 pin header" H 7025 3348 50  0000 C CNN
 F 2 "Footprints:PinHeader_1x03_P2.54mm_Vertical" H 7025 3200 50  0001 C CNN
 F 3 "https://lcsc.com/product-detail/Pin-Header-Female-Header_Boom-Precision-Elec-Header-2-54mm-1-3P_C49257.html" H 7025 3200 50  0001 C CNN
-F 4 "https://lcsc.com/product-detail/Shunts-Jumpers_2-54mm-Short-hood_C5305.html" H 7025 3200 50  0001 C CNN "Additional"
+F 4 "" H 7025 3200 50  0001 C CNN "Additional"
 	1    7025 3200
 	1    0    0    -1  
 $EndComp
@@ -3531,7 +3531,7 @@ P 6125 8300
 F 0 "R58" V 6205 8300 50  0000 C CNN
 F 1 "1k43" V 6125 8300 50  0001 C CNN
 F 2 "Footprints:R_0603_1608Metric" V 6055 8300 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_RC0402FR-071K43L_C163483.html" H 6125 8300 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_1430R-1431-1_C185360.html" H 6125 8300 50  0001 C CNN
 	1    6125 8300
 	0    -1   1    0   
 $EndComp
@@ -3560,7 +3560,7 @@ P 6125 7025
 F 0 "R54" V 6175 7200 50  0000 C CNN
 F 1 "1k43" V 6125 7025 50  0001 C CNN
 F 2 "Footprints:R_0603_1608Metric" V 6055 7025 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_RC0402FR-071K43L_C163483.html" H 6125 7025 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_1430R-1431-1_C185360.html" H 6125 7025 50  0001 C CNN
 	1    6125 7025
 	0    -1   1    0   
 $EndComp
@@ -3598,7 +3598,7 @@ P 6125 5875
 F 0 "R53" V 6205 5875 50  0000 C CNN
 F 1 "1k43" V 6125 5875 50  0001 C CNN
 F 2 "Footprints:R_0603_1608Metric" V 6055 5875 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_RC0402FR-071K43L_C163483.html" H 6125 5875 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_1430R-1431-1_C185360.html" H 6125 5875 50  0001 C CNN
 	1    6125 5875
 	0    -1   1    0   
 $EndComp
@@ -3629,7 +3629,7 @@ P 6125 4625
 F 0 "R43" V 6205 4625 50  0000 C CNN
 F 1 "1k43" V 6125 4625 50  0001 C CNN
 F 2 "Footprints:R_0603_1608Metric" V 6055 4625 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_RC0402FR-071K43L_C163483.html" H 6125 4625 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_1430R-1431-1_C185360.html" H 6125 4625 50  0001 C CNN
 	1    6125 4625
 	0    -1   1    0   
 $EndComp
