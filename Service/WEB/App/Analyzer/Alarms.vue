@@ -27,7 +27,7 @@
   export default {
     data() {
       return {
-        name: "AlarmsList",
+        Analyzer: null,
 
         alarms: [
           {name: "Alarm 1", id: 1, window: 10, time: 2, formula: "Active > 10", aggregation: '3S'},
@@ -62,7 +62,8 @@
       Delete: function(row) {
 
       },
-      Show: function() {
+      Show: function(analyzer) {
+        this.Analyzer = analyzer;
         this.$refs.Dialog.Show();
         this.$nextTick(() => {
           this.$refs.table.setData({data: this.alarms});
@@ -70,7 +71,7 @@
       },
       Add: function() {
         this.$refs.Dialog.Close();
-        this.$parent.$refs.Alarm.Show();
+        this.$parent.$refs.Alarm.Show(this.Analyzer);
       },
       Back: function() {
         this.$parent.$refs.Table.Load();
