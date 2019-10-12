@@ -7,6 +7,8 @@ import Avatar from 'Components/Avatar.vue';
 Vue.component('Avatar', Avatar);
 import Dlg from 'Components/Dialog.vue';
 Vue.component('Dlg', Dlg);
+import Spinner from 'Components/Spinner.vue';
+Vue.component('Spinner', Spinner);
 
 //Other components -------------------------------------------------------------
 import jQuery from 'JS/jquery.js';

@@ -40,7 +40,6 @@
   import Dlg from 'Components/Dialog.vue';
   import Vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
-  import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
   
 //  import AnalyzerAcls from './AnalyzerACLs.vue';
