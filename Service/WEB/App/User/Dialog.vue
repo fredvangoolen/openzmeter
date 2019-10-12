@@ -72,6 +72,14 @@
       </div>
     </div>
     <div v-bind:style="{ display: ((View=='Preferences') ? 'inherit' : 'none') }">
+      <div class="row">
+        <div class="col-xs-12">
+          <label class="control-label" data-toggle="tooltip" title="Notify alarms with selected priority or higher">Alarms priority</label>
+          <option-picker :options="['LOW', 'NORMAL', 'HIGH']" :selected="User.TimeZone" v-on:change="User.TimeZone=$event" :big="true"></option-picker>
+        </div>
+      </div>
+      Alarms notifications priority
+      
       phase names<br>
       colors -> one color per param, decrement brightness for each phase
       colors -> one color per phase, thiker main variable and thin line for secondari

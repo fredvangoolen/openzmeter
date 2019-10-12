@@ -18,7 +18,7 @@
       </div>
       <div class="col-xs-6">
         <label class="control-label">Aggregation</label>
-        <option-picker :options="['3 seconds', '1 minute', '10 minutes', '15 minutes', '1 hour']" :big="true"></option-picker>
+        <option-picker :options="['3 seconds', '1 minute', '10 minutes', '15 minutes', '1 hour']" selected="3 seconds" v-on:change="AggregationChanged" :big="true"></option-picker>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Occurrences</label>
@@ -32,91 +32,32 @@
         <label class="control-label">Expresion builder</label>
         <div class="input-group">
           <div class="input-group-btn">
-            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img :src="Imgs/math_functions.png"><span class="caret"></span></button>
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img :src="require('Imgs/math_functions.png')"><span class="caret"></span></button>
             <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
               <li class="dropdown-submenu">
-                <a href="#">Variables</a>
+                <a>Variables</a>
                   <ul class="dropdown-menu">
-                    <li class="dropdown-submenu">
-                      <a href="#">Voltage</a>
+                    <li class="dropdown-submenu" v-if="Values.hasOwnProperty('Voltage') && Array.isArray(Values.Voltage)">
+                      <a>Voltage</a>
                       <ul class="dropdown-menu">
-                        <li><a href="#">RMS<span class="float-right">220.0</span></a></li>
-                        <li><a href="#">AVG</a></li>
+                        <li><a>RMS<span class="float-right menu-value" v-html="EvaluateFormat(RMS(Values.Voltage), 2)"></span></a></li>
+                        <li><a>AVG<span class="float-right menu-value" v-html="EvaluateFormat(AVG(Values.Voltage), 2)"></span></a></li>
                         <li role="separator" class="divider"></li>
-                        <li><a href="#">VOLTAGE_1<span class="float-right">220<span style="font-size: 80%">.00</span></span></a></li>
-                        <li><a href="#">VOLTAGE_2</a></li>
-                        <li><a href="#">VOLTAGE_3</a></li>
+                        <li v-for="(val, index) in Values.Voltage"><a>Voltage[{{ index }}]<span class="float-right menu-value" v-html="EvaluateFormat(val, 2)"></span></a></li>
                       </ul>
                     </li>
-                    <li class="dropdown-submenu">
-                      <a href="#">Current</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="#">VOLTAGE_1</a></li>
-                        <li><a href="#">VOLTAGE_2</a></li>
-                        <li><a href="#">VOLTAGE_3</a></li>
-                      </ul>
-                    </li>
-                    <li class="dropdown-submenu">
-                      <a href="#">Active power</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="#">VOLTAGE_1</a></li>
-                        <li><a href="#">VOLTAGE_2</a></li>
-                        <li><a href="#">VOLTAGE_3</a></li>
-                      </ul>
-                    </li>
-                    <li class="dropdown-submenu">
-                      <a href="#">Reactive power</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="#">VOLTAGE_1</a></li>
-                        <li><a href="#">VOLTAGE_2</a></li>
-                        <li><a href="#">VOLTAGE_3</a></li>
-                      </ul>
-                    </li>
-                    <li class="dropdown-submenu">
-                      <a href="#">Frequency</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="#">VOLTAGE_1</a></li>
-                        <li><a href="#">VOLTAGE_2</a></li>
-                        <li><a href="#">VOLTAGE_3</a></li>
-                      </ul>
-                    </li>
-                    <li class="dropdown-submenu">
-                      <a href="#">VOLTAGE_THD</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="#">VOLTAGE_1</a></li>
-                        <li><a href="#">VOLTAGE_2</a></li>
-                        <li><a href="#">VOLTAGE_3</a></li>
-                      </ul>
-                    </li>
-                    <li class="dropdown-submenu">
-                      <a href="#">CURRENT_THD</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="#">VOLTAGE_1</a></li>
-                        <li><a href="#">VOLTAGE_2</a></li>
-                        <li><a href="#">VOLTAGE_3</a></li>
-                      </ul>
-                    </li>
-                    <li class="dropdown-submenu">
-                      <a href="#">POWER_FACTOR</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="#">VOLTAGE_1</a></li>
-                        <li><a href="#">VOLTAGE_2</a></li>
-                        <li><a href="#">VOLTAGE_3</a></li>
-                      </ul>
-                    </li>
-                    <li class="dropdown-submenu">
-                      <a href="#">PHI</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="#">VOLTAGE_1</a></li>
-                        <li><a href="#">VOLTAGE_2</a></li>
-                        <li><a href="#">VOLTAGE_3</a></li>
-                      </ul>
-                    </li>
+                    <li v-if="Values.hasOwnProperty('Voltage') && !Array.isArray(Values.Voltage)"><a>Voltage<span class="float-right menu-value" v-html="EvaluateFormat(Values.Voltage, 2)"></span></a></li>
 
-                    
-                    
-                    
-                    
+                    <li class="dropdown-submenu" v-if="Values.hasOwnProperty('Current') && (Values.Current.length > 1)">
+                      <a>Current</a>
+                      <ul class="dropdown-menu">
+                        <li><a>RMS<span class="float-right menu-value" v-html="EvaluateFormat(RMS(Values.Current), 2)"></span></a></li>
+                        <li><a>AVG<span class="float-right menu-value" v-html="EvaluateFormat(AVG(Values.Current), 2)"></span></a></li>
+                        <li role="separator" class="divider"></li>
+                        <li v-for="(val, index) in Values.Current"><a>Voltage[{{ index }}]<span class="float-right menu-value" v-html="EvaluateFormat(val, 2)"></span></a></li>
+                      </ul>
+                    </li>
+                    <li v-if="Values.hasOwnProperty('Current') && (Values.Current.length == 1)"><a>Current<span class="float-right menu-value" v-html="EvaluateFormat(Values.Current[0], 2)"></span></a></li>
                   </ul>
               </li>
               <li class="dropdown-submenu">
@@ -145,19 +86,49 @@
   import Dlg from 'Components/Dialog.vue';
   import InputSpin from 'Components/InputSpin.vue';
   import OptionPicker from 'Components/OptionPicker.vue';
+  import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return { Alarm: {}, Error: '' };
-    },
-    mounted: function() {
-      $('[data-submenu]').submenupicker();
+      return { Analyzer: null, Alarm: {Aggreg: '3S'}, Error: '', Values: {} };
     },
     methods: {
+      RMS: function(values) {
+        var Val = 0;
+        for(var i = 0; i < values.length; i++) Val += Math.pow(values[i], 2.0);
+        return Math.sqrt(Val / values.length);
+      },
+      AVG: function(values) {
+        var Val = 0;
+        for(var i = 0; i < values.length; i++) Val += values[i];
+        return Val / values.length;
+      },
+      EvaluateFormat: function(expresion, decimals) {
+        return oZm.RoundHTML(expresion, decimals);
+      },
+      AggregationChanged: function(val) {
+        if(val == '3 seconds') {
+          this.Alarm.Aggreg = '3S';
+          $.ajax({url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({Series: ['VOLTAGE', 'CURRENT', 'FREQUENCY', 'FLAG', 'ACTIVE_POWER', 'REACTIVE_POWER'], LastSample: 0, Analyzer: this.Analyzer.Analyzer, Aggreg: this.Alarm.Aggreg, To: 0, Period: 6000}),
+            success: (result) => {
+              this.FilterValues(result);
+            },
+            error: () => {
+              this.FilterValues(null);              
+            }
+          });
+        }
+      },
+      FilterValues: function(result) {
+        this.Values = {};
+         if(result == null) return;    
+        if(result.hasOwnProperty('Voltage') && (result.Voltage.length > 0)) this.Values.Voltage = (result.Voltage.slice(-1)[0].length == 1) ? result.Voltage.slice(-1)[0][0] : result.Voltage.slice(-1)[0];
+        if(result.hasOwnProperty('Current') && (result.Current.length > 0)) this.Values.Current = result.Current.slice(-1)[0];
+      },
       Validate: function(val) {
          try {
-        var Parser = math.parser();
-        Parser.evaluate(val.target.value);
-        this.Error = '';
+        var Parser = math.parse(val.target.value);
+        Parser.compile();
+        this.Error = 'Evaluated to: ' + Parser.evaluate(this.Values);
       } catch (err) {
         this.Error = err.toString();
       }
@@ -181,7 +152,8 @@
         
         
       },
-      Show() {
+      Show: function(analyzer) {
+        this.Analyzer = analyzer;
         this.$refs.Dialog.Show();
         this.$nextTick(() => {
 //          this.loadBlockly();
@@ -329,5 +301,8 @@
     left: -100%;
     margin-left:10px;
     border-radius:6px 0 6px 6px;
+  }
+  .menu-value {
+    color: #666;
   }
 </style>
