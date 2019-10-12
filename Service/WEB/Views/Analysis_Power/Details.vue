@@ -2,6 +2,7 @@
   <div>
     <detail-tabs :tabs="['Waveform', 'Parameters']" variable="PowerDetailTab" v-on:TabChange="TabChange"></detail-tabs>
     <waveform ref="waveform" v-bind:class="{ hide: (ActiveTab != 'Waveform') }"></waveform>
+    <harmonics ref="harmonics" v-bind:class="{ hide: (ActiveTab != 'Harmonics') }"></harmonics>
     <parameters ref="parameters" v-bind:class="{ hide: (ActiveTab != 'Parameters') }"></parameters>
   </div>
 </template>
@@ -15,6 +16,7 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Parameters from './Parameters.vue';
   import Waveform from './Waveform.vue';
+  import Harmonics from './Harmonics.vue';
   import DetailTabs from 'Components/Tabs.vue';
   export default {
     data () {

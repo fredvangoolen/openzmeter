@@ -24,7 +24,6 @@
 <script>
   import vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
-  import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'JS/moment.js';
   export default {
