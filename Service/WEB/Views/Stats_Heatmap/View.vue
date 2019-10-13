@@ -24,13 +24,8 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import Spinner from 'Components/Spinner.vue';
-  import HeatmapTable from './HeatmapTable.vue';
-  import ColorBar from 'Components/ColorBar.vue';
-  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
-  import ToolbarYears from 'Components/ToolbarYears.vue';
   import moment from 'JS/moment.js';
+  import HeatmapTable from './HeatmapTable.vue';
   export default {
     data() {
       return { ShowSpinner: true };
@@ -58,8 +53,8 @@
         });
       }
     },
-    components: { Spinner, ToolbarAggregation, ToolbarYears, HeatmapTable, ColorBar, ToolbarTools }
-}
+    components: { HeatmapTable }
+  }
 </script>
 
 <style>

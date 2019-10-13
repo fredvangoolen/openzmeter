@@ -1,3 +1,9 @@
+//Other components -------------------------------------------------------------
+import jQuery from 'JS/jquery.js';
+window.$ = window.jQuery = jQuery;
+import 'JS/bootstrap.min.js';
+import 'CSS/bootstrap.min.css';
+import 'CSS/openZmeter.css';
 //VUE components ---------------------------------------------------------------
 import Vue from 'JS/vue.js';
 
@@ -5,20 +11,28 @@ import Router from 'JS/vue-router.js';
 Vue.use(Router);
 import Avatar from 'Components/Avatar.vue';
 Vue.component('Avatar', Avatar);
-import Dlg from 'Components/Dialog.vue';
-Vue.component('Dlg', Dlg);
+import ColorBar from 'Components/ColorBar.vue';
+Vue.component('ColorBar', ColorBar);
+
 import Spinner from 'Components/Spinner.vue';
 Vue.component('Spinner', Spinner);
+import Dlg from 'Components/Dialog.vue';
+Vue.component('Dlg', Dlg);
+import Graph from 'Components/Graph.vue';
+Vue.component('Graph', Graph);
+import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
+Vue.component('ToolbarAggregation', ToolbarAggregation);
+import ToolbarTools from 'Components/ToolbarTools.vue';
+Vue.component('ToolbarTools', ToolbarTools);
+import ToolbarYears from 'Components/ToolbarYears.vue';
+Vue.component('ToolbarYears', ToolbarYears);
+import ToolbarPhases from 'Components/ToolbarPhases.vue';
+Vue.component('ToolbarPhases', ToolbarPhases);
+import ToolbarOptions from 'Components/ToolbarOptions.vue';
+Vue.component('ToolbarOptions', ToolbarOptions);
+import DetailTabs from 'Components/Tabs.vue';
+Vue.component('DetailTabs', DetailTabs);
 
-//Other components -------------------------------------------------------------
-import jQuery from 'JS/jquery.js';
-window.$ = window.jQuery = jQuery;
-//import 'bootstrap/dist/css/bootstrap.css'
-//import 'bootstrap-vue/dist/bootstrap-vue.css'
-
-import 'JS/bootstrap.min.js';
-import 'CSS/bootstrap.min.css';
-import './CSS/openZmeter.css';
 
 //Views ----------------------------------------
 import App from 'App/App.vue';

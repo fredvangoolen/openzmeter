@@ -27,12 +27,8 @@
   import Calendar from './Calendar.vue';
   import Months from './Months.vue';
   import Day from './Day.vue';
-  import ToolbarYears from 'Components/ToolbarYears.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
-  import ColorBar from 'Components/ColorBar.vue';
-  import Spinner from 'Components/Spinner.vue';
-  import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
+  import moment from 'JS/moment.js';
   export default {
     data: function() {
       return { ShowSpinner: true };
@@ -68,7 +64,7 @@
         this.$refs.tools.SaveCVS('Distribution.csv', Data);
       }
     },
-    components: { Spinner, ToolbarYears, ToolbarTools, Calendar, Months, Day, ColorBar }
+    components: { Calendar, Months, Day }
   }
 </script>
 

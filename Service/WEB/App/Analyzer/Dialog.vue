@@ -37,7 +37,6 @@
 
 <script>
   import Vue from 'vue';
-  import Dlg from 'Components/Dialog.vue';
   import Vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
@@ -147,7 +146,7 @@
         });
       }
     },
-    components: { Dlg, Spinner, Vuetable }
+    components: { Vuetable }
   }
 </script>
 

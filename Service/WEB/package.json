@@ -23,7 +23,7 @@
     "mathjs": "^6.2.2",
     "moment-timezone": "^0.5.26",
     "momentjs": "^2.0.0",
-    "npm": "^6.11.2",
+    "npm": "^6.12.0",
     "primevue": "^1.0.0-beta.8",
     "vue": "^2.6.10",
     "vue-blockui": "^1.1.7",

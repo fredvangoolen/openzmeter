@@ -16,7 +16,6 @@
 </template>
   
 <script>
-  import Spinner from 'Components/Spinner.vue';
   export default {
     name: 'Dlg',
     data: function() {
@@ -42,8 +41,7 @@
     },
     destroyed: function() {
       this.$root.$el.removeChild(this.$el);
-    },
-    components: { Spinner }
+    }
   }
 </script>
 
