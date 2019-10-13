@@ -14,10 +14,6 @@
 <script>
   import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
-  import Spinner from 'Components/Spinner.vue';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
-  import ToolbarOptions from 'Components/ToolbarOptions.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
   import Advanced from './Advanced.vue';
   import Events from './Events.vue';
   import Evolution from './Evolution.vue';
@@ -25,7 +21,6 @@
   import Parameters from './Parameters.vue';
   import Phasors from './Phasors.vue';
   import Waveform from './Waveform.vue';
-  import DetailTabs from 'Components/Tabs.vue';
   export default {
     data () {
       return { ActiveTab: '' };
@@ -116,7 +111,7 @@
         });
       }
     },
-    components: { Spinner, DetailTabs, Waveform, Harmonics, Evolution, Events, Parameters, Phasors, Advanced, ToolbarPhases, ToolbarOptions, ToolbarTools }
+    components: { Waveform, Harmonics, Evolution, Events, Parameters, Phasors, Advanced }
   }
 </script>
 

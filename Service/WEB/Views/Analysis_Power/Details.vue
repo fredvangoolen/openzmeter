@@ -1,6 +1,6 @@
 <template>
   <div>
-    <detail-tabs :tabs="['Waveform', 'Parameters']" variable="PowerDetailTab" v-on:TabChange="TabChange"></detail-tabs>
+    <detail-tabs :tabs="['Waveform', 'Harmonics', 'Parameters']" variable="PowerDetailTab" v-on:TabChange="TabChange"></detail-tabs>
     <waveform ref="waveform" v-bind:class="{ hide: (ActiveTab != 'Waveform') }"></waveform>
     <harmonics ref="harmonics" v-bind:class="{ hide: (ActiveTab != 'Harmonics') }"></harmonics>
     <parameters ref="parameters" v-bind:class="{ hide: (ActiveTab != 'Parameters') }"></parameters>
@@ -10,14 +10,9 @@
 <script>
   import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
-  import Spinner from 'Components/Spinner.vue';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
-  import ToolbarOptions from 'Components/ToolbarOptions.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
   import Parameters from './Parameters.vue';
   import Waveform from './Waveform.vue';
   import Harmonics from './Harmonics.vue';
-  import DetailTabs from 'Components/Tabs.vue';
   export default {
     data () {
       return { ActiveTab: '' };
@@ -54,12 +49,18 @@
       TabChange(tab, name) {
         if(name !== undefined) this.ActiveTab = name;
         if(this.ActiveTab === 'Waveform') this.$refs.waveform.Redraw();
+        if(this.ActiveTab === 'Harmonics') this.$refs.harmonics.Redraw();
         if(this.ActiveTab === 'Parameters') this.$refs.parameters.Redraw();
       },
       PhasesChangedSingle: function(phase) {
         this.$refs.waveform.SetPhases(phase);
         this.$refs.parameters.SetPhases(phase);
       },
+      PhasesChangedMulti: function(phases) {
+//        this.$refs.waveform.SetPhases(phases);
+        this.$refs.harmonics.SetPhases(phases);
+//        this.$refs.advanced.SetPhases(phases);
+      },      
       SetAnalyzer() {
         this.LastSample = 0;
         this.UpdateGraphs1M();
@@ -82,9 +83,10 @@
       },
       UpdateGraphsNow() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
+        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'POWER_HARMONICS', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
           success: function(result) {
             this.$refs.waveform.SetData(result);
+            this.$refs.harmonics.SetData(result);
             this.$refs.parameters.SetDataNow(result);
           }.bind(this),
           complete: function() {
@@ -94,7 +96,7 @@
         });
       }
     },
-    components: { Spinner, DetailTabs, Waveform, Parameters, ToolbarPhases, ToolbarTools }
+    components: { Waveform, Harmonics, Parameters }
   }
 </script>
 

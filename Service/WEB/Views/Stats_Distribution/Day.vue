@@ -12,7 +12,6 @@
   import moment from 'JS/moment.js';
   import vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
-  import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
   var Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   export default {
@@ -64,7 +63,7 @@
     updated: function(){
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: { vuetable, Spinner }
+    components: { vuetable }
   }
 </script>
 

@@ -12,7 +12,6 @@
   import vuetable from 'vuetable-2';
   import moment from 'JS/moment.js';  
   import 'CSS/table-responsive.css';
-  import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
   var Names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   export default {
@@ -64,7 +63,7 @@
     updated: function(){
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: { vuetable, Spinner }
+    components: { vuetable }
   }
 </script>
 

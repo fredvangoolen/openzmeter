@@ -831,6 +831,9 @@ void AnalyzerSoft::GetSeries(HTTPRequest &req) {
     } else if((Serie == "CURRENT_HARMONICS") && (Aggreg ==  "1M")) {
       vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(50, NAN));
       Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_i, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current_Harmonics") + ", ";
+//    } else if((Serie == "POWER_HARMONICS") && (Aggreg == "1M")) {
+//      vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
+//      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_v, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics") + ", ";      
     } else if((Serie == "VOLTAGE_STATS") && (Aggreg ==  "1H")) {   
       Query += "COALESCE(ARRAY_AGG(stat_voltage ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Stats") + ", ";
     } else if((Serie == "FREQUENCY_STATS") && (Aggreg ==  "1H")) {
@@ -931,6 +934,18 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
           Ch.push_back(Row);
         }
         Result["Current_Harmonics"].push_back(Ch);
+      }
+    } else if(Serie == "POWER_HARMONICS") {
+      Result["Power_Harmonics"] = json::array();
+      for(uint n = 0; n < pAggreg10C.Voltage_Harmonics.size(); n++) {
+        json Ch = json::array();
+        for(uint i = 0; i < pAggreg10C.Voltage_Harmonics[n].size(); i++) {
+          complex<float> Current = pCurrentFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
+          complex<float> Voltage = pVoltageFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
+          float PHI = FFT::CalcAngle(Current, Voltage);
+          Ch.push_back(pCurrentFFT[n]->BinPower(10 + i * 10) * pVoltageFFT[n]->BinPower(10 + i * 10) * cos(PHI));
+        }
+        Result["Power_Harmonics"].push_back(Ch);        
       }
     } else if(Serie == "VOLTAGE_FFT") {
       Result["Voltage_FFT"] = json::array();
