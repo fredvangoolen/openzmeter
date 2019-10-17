@@ -4,6 +4,7 @@
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
 #include <vector>
+#include <queue>
 #include <complex>
 #include <sstream>
 #include <inttypes.h>
@@ -16,6 +17,8 @@ using json = nlohmann::json;
 class Database {
   private :
     static string pConnectionString;
+    static queue<PGconn *> pConnectionPool;
+    static pthread_mutex_t pMutex;
   private :
     PGconn      *pDBConn;
     string       pSchema;
@@ -32,7 +35,6 @@ class Database {
     string      Bind(const vector<float> &params) const;
     string      Bind(const vector<uint16_t> &params) const;
     string      Bind(const bool param) const;
-//    string      Bind(const vector<vector<complex<float> > > &params) const;
     string      Bind(const string &string) const;
     string      BindID(const string &string) const;
     bool        ExecSentenceNoResult(const string &sql);

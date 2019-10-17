@@ -69,11 +69,13 @@ void InstanceLocks::WaitInstances() {
 void InstanceLocks::Reference() {
   pthread_mutex_lock(&pMutex);
   pReferences++;
+  printf("Reference: %d\n", pReferences);
   pthread_mutex_unlock(&pMutex);
 }
 void InstanceLocks::Dereference() {
   pthread_mutex_lock(&pMutex);
   pReferences--;
+  printf("Dereference: %d\n", pReferences);
   if(pReferences == 0) pthread_cond_signal(&pCond);
   pthread_mutex_unlock(&pMutex);
 }

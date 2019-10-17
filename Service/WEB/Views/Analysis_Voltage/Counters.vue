@@ -105,7 +105,7 @@
             this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
           }, 
           error: () => {
-            this.CurrentValue10M = ['No data'];
+            this.CurrentValue10M = 'No data';
             this.Time10M = '';
           }
         });
