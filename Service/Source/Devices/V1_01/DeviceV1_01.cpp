@@ -97,6 +97,7 @@ bool DeviceV1_01::Start(const json &config) {
   pCurrentGain = config["CurrentGain"];
   pCurrentOffset = config["CurrentOffset"];
   pCurrentInvert = config["CurrentInvert"];
+  pDelay = deque<float>(2, 0.0);
   pTerminate    = false;
   pDeviceHandle = NULL;
   pNewDevice    = NULL;
@@ -229,7 +230,6 @@ void DeviceV1_01::ReadCallback(struct libusb_transfer *transfer) {
       if(Pkg[Count * 2 + 0] == -32768) continue;
       float Voltage = ((Pkg[Count * 2 + 0] * 0.0142446289062) * (1.0 + (This->pVoltageGain / 100.0))) + This->pVoltageOffset;
       float Current = ((Pkg[Count * 2 + 1] * 0.0015625000000) * (1.0 + (This->pCurrentGain / 100.0)) * (This->pCurrentInvert ? -1.0 : 1.0)) + This->pCurrentOffset;
-      
       if(This->BuffersAppend(Voltage, Current) == false) {
         LOGFile::Error("Capture buffer overflow! Posible lost of samples\n");
         break;
@@ -267,8 +267,10 @@ bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
 //  write(File, Tmp, strlen(Tmp));
   
 //  if(pBuffer.full()) return false;
-  Sample_t Sample = { voltageSample, currentSample };
+  Sample_t Sample = { pDelay.front(), currentSample };
   pBuffer.push_back(Sample);
+  pDelay.pop_front();
+  pDelay.push_back(voltageSample);
   pAverageValues.push_back(Sample);
   if(pAverageValues.size() > DEVICEV1_01_SAMPLEFREQ) pAverageValues.pop_front();  
   AnalyzerSoft *Analyzer = (AnalyzerSoft*)pAnalyzers[0];

@@ -1,8 +1,9 @@
 <template>
   <div>
-    <detail-tabs :tabs="['Waveform', 'Harmonics', 'Parameters']" variable="PowerDetailTab" v-on:TabChange="TabChange"></detail-tabs>
+    <detail-tabs :tabs="['Waveform', 'Harmonics', 'Distribution', 'Parameters']" variable="PowerDetailTab" v-on:TabChange="TabChange"></detail-tabs>
     <waveform ref="waveform" v-bind:class="{ hide: (ActiveTab != 'Waveform') }"></waveform>
     <harmonics ref="harmonics" v-bind:class="{ hide: (ActiveTab != 'Harmonics') }"></harmonics>
+    <distribution ref="distribution" v-bind:class="{ hide: (ActiveTab != 'Distribution') }"></distribution>
     <parameters ref="parameters" v-bind:class="{ hide: (ActiveTab != 'Parameters') }"></parameters>
   </div>
 </template>
@@ -13,6 +14,7 @@
   import Parameters from './Parameters.vue';
   import Waveform from './Waveform.vue';
   import Harmonics from './Harmonics.vue';
+  import Distribution from './Distribution.vue';
   export default {
     data () {
       return { ActiveTab: '' };
@@ -50,6 +52,7 @@
         if(name !== undefined) this.ActiveTab = name;
         if(this.ActiveTab === 'Waveform') this.$refs.waveform.Redraw();
         if(this.ActiveTab === 'Harmonics') this.$refs.harmonics.Redraw();
+        if(this.ActiveTab === 'Distribution') this.$refs.distribution.Redraw();
         if(this.ActiveTab === 'Parameters') this.$refs.parameters.Redraw();
       },
       PhasesChangedSingle: function(phase) {
@@ -87,6 +90,7 @@
           success: function(result) {
             this.$refs.waveform.SetData(result);
             this.$refs.harmonics.SetData(result);
+            this.$refs.distribution.SetData(result);
             this.$refs.parameters.SetDataNow(result);
           }.bind(this),
           complete: function() {
@@ -96,7 +100,7 @@
         });
       }
     },
-    components: { Waveform, Harmonics, Parameters }
+    components: { Distribution, Waveform, Harmonics, Parameters }
   }
 </script>
 

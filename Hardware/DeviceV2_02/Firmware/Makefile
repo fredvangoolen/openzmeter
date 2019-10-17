@@ -1,6 +1,6 @@
 #Executable related components
 EXECUTABLE_TARGET = Tmp/Firmware
-EXECUTABLE_SOURCE = Main.c System.c USB_Dev.c USB.c usb_core.c
+EXECUTABLE_SOURCE = Main.c System.c USB.c
 LIBSPEC=-L /usr/lib/gcc/arm-none-eabi/5.4.1/armv6-m
 CFLAGS += -Wall -std=c99 -mcpu=cortex-m0 -mthumb -march=armv6-m -mfloat-abi=soft -mlong-calls -g -O2
 LDFLAGS += -T STM32F042K6.ld -nostdlib -lgcc -Wl,--cref -Wl,-Map=$(EXECUTABLE_TARGET:%=%.map)

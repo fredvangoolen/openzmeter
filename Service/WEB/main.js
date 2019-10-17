@@ -1,4 +1,4 @@
-//Other components -------------------------------------------------------------
+//Main libs and style ----------------------------------------------------------
 import jQuery from 'JS/jquery.js';
 window.$ = window.jQuery = jQuery;
 import 'JS/bootstrap.min.js';
@@ -33,6 +33,9 @@ Vue.component('ToolbarOptions', ToolbarOptions);
 import DetailTabs from 'Components/Tabs.vue';
 Vue.component('DetailTabs', DetailTabs);
 
+//External components ----------------------------------------------------------
+import VueApexCharts from 'JS/vue-apexcharts.js';
+Vue.component('VueApexCharts', VueApexCharts);
 
 //Views ----------------------------------------
 import App from 'App/App.vue';
