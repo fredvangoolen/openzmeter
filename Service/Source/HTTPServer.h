@@ -72,5 +72,5 @@ class HTTPServer {
   public :
     HTTPServer();
     virtual ~HTTPServer();
-    void     RemoveExpiredSessions() const;
+    void     RemoveExpiredSessions(Database &db) const;
 };

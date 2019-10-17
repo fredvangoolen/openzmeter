@@ -74,10 +74,8 @@ int main(int argc, char** argv) {
   LOGFile LOGFile;
   /* Create database tables */
   LOGFile::Debug("Creating database tables\n");
-  {
-    Database DB("public");
-    if(DB.ExecResource("SQL/Database.sql") == false) return EXIT_FAILURE;
-  }
+  Database DB("public");
+  if(DB.ExecResource("SQL/Database.sql") == false) return EXIT_FAILURE;
   /* Create system manager */
   System SystemManager;
   /* Create devices interface */
@@ -88,7 +86,7 @@ int main(int argc, char** argv) {
   uint32_t Iter = 0;
   while(!Terminate) {
     SystemManager.PeriodicTask();
-    if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
+    if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions(DB);
     Iter++;
     usleep(1000000);
   }

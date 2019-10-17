@@ -136,7 +136,7 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
   pConfigLocks.ReadUnlock();
   if(pBlockCycles.size() == pBlockCycles.capacity()) pBlockCycles.clear();
   pCycleLen++;
-  if(((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) {
+  if((((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) && (pCycleLen > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))){
     pBlockCycles.push_back(pCycleLen);
     pCycles.push_back(pCycleLen);
     if(pCycles.size() > (ZEROCROSSING_SECONDS * pNominalFrequency)) pCycles.pop_front();

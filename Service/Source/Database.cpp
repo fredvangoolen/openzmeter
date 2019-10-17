@@ -7,16 +7,28 @@
 #include <string.h>
 #include <float.h>
 #include <math.h>
+#include <fstream>
 #include "Database.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-string Database::pConnectionString;
+string          Database::pConnectionString;
+queue<PGconn*>  Database::pConnectionPool;
+pthread_mutex_t Database::pMutex = PTHREAD_MUTEX_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(const string &schema) {
   if(pConnectionString.empty() == true) ReadConfig();
   pSchema    = schema;
   pResult    = NULL;
-  pDBConn    = PQconnectdb(pConnectionString.c_str());
+  pDBConn    = NULL;
+  bool Pool  = false;
+  pthread_mutex_lock(&pMutex);
+  if(pConnectionPool.size() > 0) {
+    pDBConn = pConnectionPool.front();
+    pConnectionPool.pop();
+    Pool = true;
+  }
+  pthread_mutex_unlock(&pMutex);
+  if(pDBConn == NULL) pDBConn = PQconnectdb(pConnectionString.c_str());
   if(PQstatus(pDBConn) != CONNECTION_OK) {
     char *Save;
     LOGFile::Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
@@ -24,10 +36,18 @@ Database::Database(const string &schema) {
     pDBConn = NULL;
     return;
   }
-  if(ExecSentenceNoResult("SET synchronous_commit TO OFF; SET client_min_messages = error; CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + "; SET search_path TO " +  Bind(pSchema) + ", public") == false) {
-    PQfinish(pDBConn);
-    pDBConn = NULL;
-    return;
+  if(Pool == false) {
+    if(ExecSentenceNoResult("SET synchronous_commit TO OFF; SET client_min_messages = error; CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + "; SET search_path TO " +  Bind(pSchema) + ", public") == false) {
+      PQfinish(pDBConn);
+      pDBConn = NULL;
+      return;
+    }
+  } else {
+    if(ExecSentenceNoResult("CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + "; SET search_path TO " +  Bind(pSchema) + ", public") == false) {
+      PQfinish(pDBConn);
+      pDBConn = NULL;
+      return;
+    }
   }
 }
 string Database::GetSchema() const {
@@ -35,7 +55,12 @@ string Database::GetSchema() const {
 }
 Database::~Database() {
   ClearAsync();
-  if(pDBConn) PQfinish(pDBConn);
+  if(pDBConn) {
+    pthread_mutex_lock(&pMutex);
+    pConnectionPool.push(pDBConn);
+    pDBConn = NULL;
+    pthread_mutex_unlock(&pMutex);
+  }
 }
 void Database::ReadConfig() {
   json Config = ConfigManager::ReadConfig("/Database");

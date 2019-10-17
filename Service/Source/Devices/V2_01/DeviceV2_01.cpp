@@ -44,6 +44,7 @@ bool DeviceV2_01::GetInstances() {
     libusb_device_handle *Dev_Handle = NULL;
     if(libusb_open(Devs[i], &Dev_Handle) != LIBUSB_SUCCESS) {
       LOGFile::Error("Can not open USB device...\n");
+      continue;
     }
     char String[256];
     if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iManufacturer, (unsigned char*)String, sizeof(String)) < 0) {

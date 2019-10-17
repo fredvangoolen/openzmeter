@@ -190,10 +190,9 @@ void HTTPServer::UnregisterCallback(const string &handleName) {
   }
   pLock.WriteUnlock();
 }
-void HTTPServer::RemoveExpiredSessions() const {
-  Database DB;
+void HTTPServer::RemoveExpiredSessions(Database &db) const {
   if(Tools::GetTime() < 1296000000) return;
-  DB.ExecSentenceNoResult("DELETE FROM sessions WHERE (timestamp < " + DB.Bind(Tools::GetTime() - 1296000000) + " AND username IS NOT NULL) OR (timestamp < " + DB.Bind(Tools::GetTime() - 60000) + " AND username IS NULL)");
+  db.ExecSentenceNoResult("DELETE FROM sessions WHERE (timestamp < " + db.Bind(Tools::GetTime() - 1296000000) + " AND username IS NOT NULL) OR (timestamp < " + db.Bind(Tools::GetTime() - 60000) + " AND username IS NULL)");
 }
 int HTTPServer::SendRedirect(struct MHD_Connection *connection, const string &url) {
   LOGFile::Debug("Redirecting client to '%s'\n", (pRelativePath + url).c_str());
