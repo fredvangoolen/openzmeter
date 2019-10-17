@@ -17,6 +17,7 @@
 #define DEVICEV1_01_SAMPLEFREQ    15625.00                          //Frequencia de muestreo
 #define DEVICEV1_01_BUFFERSECONDS       10                          //Tamaño del buffer (10 segundos)
 #define DEVICEV1_01_TRANSFERS           32                          //Numero de transferencias a encolar
+#define DEVICEV1_01_VOLTAGEDELAY         2                          //Samples to delay
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 class DeviceV1_01 : public Device {
@@ -46,6 +47,7 @@ class DeviceV1_01 : public Device {
     struct libusb_device        *pNewDevice;               //USB device
     libusb_context              *pContext;                 //USB context
     pthread_t                    pSignalThread;            //Thread to handle LED and sounds
+    deque<float>                 pDelay;                   //Delay buffer for voltage/current compensation
     deque<Sample_t>              pAverageValues;           //Average wave value of last second
   private : 
     static bool  GetInstances();

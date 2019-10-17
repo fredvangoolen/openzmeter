@@ -1,5 +1,5 @@
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('apexcharts')) :
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('JS/apexcharts.js')) :
   typeof define === 'function' && define.amd ? define(['apexcharts'], factory) :
   (global.VueApexCharts = factory(global.ApexCharts));
 }(this, (function (ApexCharts) { 'use strict';

@@ -15,7 +15,6 @@ typedef struct {
   uint16_t I_CH_3;
   uint16_t I_CH_4;
   uint16_t Battery;
-//  uint16_t Temperature;
 } ADC_Sequence_t;
 typedef struct {
   uint16_t Power_Color:2;     //Power LED (PB5) Red when off but plugged, off if off and not plugged, green if running and yellow if booting or shuttingdown
@@ -31,8 +30,8 @@ typedef struct {
   uint8_t Battery:6;          //Battery level
 } SysStatus_t;
 typedef struct {
-  uint16_t Button:2;           //Pending button action
-  uint16_t Button_Counter:14;  //Buttons ticks
+  uint16_t Action:2;           //Pending button action
+  uint16_t Counter:14;  //Buttons ticks
 } ButtonStatus_t;
 enum Button_Action { NONE = 0, CLICK = 1, LONG_CLICK = 2, VERY_LONG_CLICK = 3};
 typedef struct {
@@ -44,7 +43,7 @@ typedef struct {
 volatile uint32_t SysTicks;
 SignalsStatus_t   SignalsStatus = { .Power_Color = OFF, .Status_Color = OFF, .Wifi_Color = OFF, .Buzzer = 0};
 SysStatus_t       SysStatus = { .Charging = 0, .ExtPower = 0, .Battery = 0 };
-ButtonStatus_t    ButtonStatus = { .Button = CLICK, .Button_Counter = 0};
+ButtonStatus_t    ButtonStatus = { .Action = CLICK, .Counter = 0};
 USB_Buffer_t      USB_Buffer = { .Head = 0, .Tail = 0 };
 ADC_Sequence_t    ADC_Read[8];
 // Buffer management functions -----------------------------------------------------------------------------------------
@@ -60,7 +59,7 @@ void BufferPush(uint16_t value) {
 }
 uint16_t BufferPop() {
   if(USB_Buffer.Head == USB_Buffer.Tail) {
-    return 0xFFFF;
+    return 0xE000 | (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
   } else {
     uint16_t Val = USB_Buffer.Buffer[USB_Buffer.Tail];
     USB_Buffer.Tail = (USB_Buffer.Tail + 1) % BUFF_LEN;
@@ -87,7 +86,26 @@ void SysTick_ISR() {
     TIM2->CCR2 = ((SignalsStatus.Buzzer & 0x001) ? 1000 - 1 : 0);
     SignalsStatus.Buzzer = SignalsStatus.Buzzer >> 1;    
   }
-  //Detecto pulsacion de boton  
+  //Detecto pulsacion de boton
+  if(ButtonStatus.Action != NONE) {
+    if(GPIOA->IDR & GPIO_IDR_0) {
+      if(ButtonStatus.Counter == 0) SignalsStatus.Buzzer = 0b000000001;
+      ButtonStatus.Counter++;
+      if(ButtonStatus.Counter > 10000) {
+        ButtonStatus.Action = VERY_LONG_CLICK;
+        SignalsStatus.Buzzer = 0b101010111;
+        ButtonStatus.Counter = 0;
+      }
+    } else if(ButtonStatus.Counter > 1000) {
+      ButtonStatus.Action = LONG_CLICK;
+      SignalsStatus.Buzzer = 0b001010111; 
+      ButtonStatus.Counter = 0;
+    } else if(ButtonStatus.Counter > 5000) {
+      ButtonStatus.Action = CLICK;
+      SignalsStatus.Buzzer = 0b000010111;
+      ButtonStatus.Counter = 0;
+    }
+  }
   SysTicks++;
 }
 // Suspend device and prepare for later wake up on button press --------------------------------------------------------
@@ -124,7 +142,7 @@ void DMA_CH1_ISR() {
 //}
 uint16_t Serie = 0;
 uint16_t fifo[32];
-void cdc_txonly(usbd_device *dev, uint8_t event, uint8_t ep) {
+void cdc_txonly(uint8_t event, uint8_t ep) {
 //    uint8_t _t = dev->driver->frame_no();
 //    memset(fifo, _t, CDC_DATA_SZ);
 //  if(USB_Buffer.Size < 31) {
@@ -134,7 +152,7 @@ void cdc_txonly(usbd_device *dev, uint8_t event, uint8_t ep) {
   for(int x = 0; x < 32; x++) {
     fifo[x] = BufferPop();
   }
-  ep_write(ep, fifo, 64);
+  USB_EP_Write(ep, fifo, 64);
 }
 
 void SendBuffer() {
@@ -179,7 +197,7 @@ void Setup() {
   NVIC_SetPriority(DMA1_Channel1_IRQn, 0);
   // Initialize the ADC (14MHz, 7.5 adquisition, DMA active, trigger on Timer3)
 //  ADC->CCR |= ADC_CCR_TSEN;
-//  ADC1->SMPR |= ADC_SMPR_SMP_0;
+  ADC1->SMPR |= ADC_SMPR_SMP_0;
 //  ADC1->CFGR2 |= ADC_CFGR2_CKMODE_1;
   ADC1->CR = ADC_CR_ADCAL;
   while(ADC1->CR & ADC_CR_ADCAL);
@@ -226,12 +244,8 @@ void Loop() {
   //Read charging and external power bits
   SysStatus.ExtPower = (GPIOB->IDR & GPIO_IDR_7) ? 1 : 0;
   SysStatus.Charging = (GPIOA->IDR & GPIO_IDR_8) ? 0 : 1;
-  //Adjust fan speed
-  //El ventilador va de 1200 a 2400
-  
-  
   //Handle power on action
-  if(((GPIOB->ODR && GPIO_ODR_6) == 0) && (ButtonStatus.Button == CLICK)) {
+  if(((GPIOB->ODR && GPIO_ODR_6) == 0) && (ButtonStatus.Action == CLICK)) {
     SignalsStatus.Power_Color = RED;
     Sleep(1000);
     SignalsStatus.Power_Color = YELLOW;
@@ -240,8 +254,8 @@ void Loop() {
     //Wait NanoPI up to 20 sec
     uint32_t Time = SysTicks + 20000;
     while(SysTicks < Time) {
-      if(udev.status.device_state == USB_STATE_CONFIGURED) {
-        ButtonStatus.Button = NONE;
+      if(udev.Status.device_state == USB_STATE_CONFIGURED) {
+        ButtonStatus.Action = NONE;
         SignalsStatus.Power_Color = GREEN;
         return;
       }
@@ -251,72 +265,13 @@ void Loop() {
     Sleep(1000);
     GPIOB->BSRR |= GPIO_BSRR_BR_6;
   }
-  return;
-  while(1);
-  //If button click while off and 1 sec elapsed
-//  if((SysStatus.On == 0) && (SysStatus.Ready == 0) && (SysStatus.Button == 0b01) && (Timeout < SysTicks)) {
-    
-//  }
-//  return;  
-//  bool PowerON  = false;  //Boost converter enabled
-//  bool Ready    = false;  //NanoPI ready (false while booting or shutting down)
-//  bool ExtPower = false;  //External power present
-//  bool Charging = false;  //Battery charging
-//  SysStatus.Bluetooth_ON = 1;
-//  SysStatus.Bluetooth_BLINK = 1;
-//  for(uint32_t x = 0; x < 10000000; x++);
-  //Suspend();
- 
-    //Leo entrada alimentacion, carga y nivel bateria (tengo 14 bits)
-    
-    //LED DE ALIMENTACION
-//    if((PowerON == false) && (ExtPower == false)) {
-      //Apago LED alimentacion
-//    } else if((PowerON == false) && (ExtPower == true)) {
-      //Led en rojo (Si esta cargado fijo, si cargando parpadeo)
-//    } else if((PowerON == true) && (ExtPower == false)) {
-      //Led en amarillo fijo (parpadea si bateria baja)
-//    } else if((PowerON == true) && (ExtPower == true)) {
-      //Led verde (Si esta cargado fijo, si cargando parpadeo)
-//    }
-
-    //LED DE ESTADO
-    //Si el driver no reporta error {
-      //Si estoy encendiendo parpadeo verde
-      //Si estoy encendido fijo verde
-      //Si estoy apagando parpadeo amarillo
-      //Si estoy apagado dejo fijo el led en amarillo y al segundo corto alimentacion y apago led
-    //} else {
-      //El driver decide si es parpadeo o fijo en rojo (00 no error, 01 error leve, 10 error medio, 11 error chungo)
-  
-    //}
-    
-    //Leo boton
-    //No pulsacion (00)
-    //Click es una pulsacion de menos de 1 segundo (01)
-    //Long click mas de 5 segundos (10)
-    //El boton tambien maneja el buzzer, push down 100ms de beep, a los 5 segundos hago beep beep, a los 15 segundos no hago nada apago de golpe
-    //click muy largo 15 segundos (11)
-    //click estando apagado -> paso a encendiendo
-    //click estando encendido -> envio a driver (toggle BT)
-    //click largo estando encendico -> envio a driver (apagar)
-    //click muy largo -> apago por webos
-    
-    //LED WIFI solo muestro estado de lo que me diga el firmware
-    //000 apagado
-    //001 parpadeo verde
-    //010 fijo verde
-    //011 parpadeo rojo
-    //100 fijo rojo
-    //101 parpadeo amarillo
-    //110 fijo amarillo
-    //111 reserved
-    
-    //LED BT solo muestro estado de lo que me diga el firmware
-    //00 apagao
-    //01 parpadeo
-    //10 fijo
-    //11 reserved
-
-    
+  if(((GPIOB->ODR && GPIO_ODR_6) == 1) && (ButtonStatus.Action == CLICK)) {
+    //Envio pulsacion corta a la nanopi
+  }
+  if(((GPIOB->ODR && GPIO_ODR_6) == 1) && (ButtonStatus.Action == LONG_CLICK)) {
+    //Envio pulsacion corta a la nanopi
+  }
+  if(((GPIOB->ODR && GPIO_ODR_6) == 1) && (ButtonStatus.Action == VERY_LONG_CLICK)) {
+    Suspend();
+  }
 }

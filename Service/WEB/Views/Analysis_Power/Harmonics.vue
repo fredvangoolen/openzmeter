@@ -4,7 +4,7 @@
       <div class="header-text">{{ MouseOver ? 'Paused while over graph' : Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
         <div class="header-buttons" ref="Toolbar">
           <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti" type="VOLTAGE"></toolbar-phases>
-          <toolbar-options variable="DetailOptions" :options="['1st Harmonic', 'Log']" v-on:OptionChanged="SetOption"></toolbar-options>
+          <toolbar-options variable="DetailOptions" :options="['1st Harmonic']" v-on:OptionChanged="SetOption"></toolbar-options>
           <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
         </div>
       </div>
@@ -36,7 +36,6 @@
       },
       SetOption: function(option, val) {
         if(option === '1st Harmonic') this.First = val;
-        if(option === 'Log') this.Log = val;
         this.CalcOptions();
       },
       SetData(result) {
@@ -52,22 +51,15 @@
         this.ShowSpinner = false;
       },
       CalcOptions() {
-        if((this.$root.SelectedAnalyzer === null) || (this.Phases === null) || (this.First === null) || (this.Log === null) || (this.Data === null)) return;
+        if((this.$root.SelectedAnalyzer === null) || (this.Phases === null) || (this.First === null) || (this.Data === null)) return;
         var Analyzer = this.$root.SelectedAnalyzer, Series = {}, ToShow = [];
         this.ShowWarning = (this.MaxCurrent < Analyzer.MinCurrent);
         for(var i = this.First ? 0 : 1; i < this.Data.length; i++) {
           var Row = [i];
-          for(var n = 0; n < this.Data[i].length; n++) Row.push(this.Log ? 20.0 * Math.log10(Math.max(0.001, this.Data[i][n])) : this.Data[i][n]);
+          for(var n = 0; n < this.Data[i].length; n++) Row.push(this.Data[i][n]);
           ToShow.push(Row);
         }
         var Y1Range = oZm.Series['ACTIVE_POWER'].Range(ToShow, this.Phases);
-//        if(this.Log) Y1Range[0] = -60;
-//        this.POffset = (Y1Range[0] < 0.0) ? -Y1Range[0] : 0.0;
-//        for(var i = 0; i < ToShow.length; i++) {
-//          var Row = [ToShow[i][0]];
-//          for(n = 0; n < oZm.Series['ACTIVE_POWER'].Names(Analyzer).length; n++) Row.push(ToShow[i][n + 1] + this.POffset);
-//          ToShow[i] = Row;
-//        }
         var Options = {
           strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { }, plotter: Graph.multiColumnBarPlotter, visibility: this.Phases,
           dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, showRangeSelector: false,
@@ -76,9 +68,8 @@
           colors: oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, 0).Colors.concat(oZm.SerieStyle(oZm.Series['CURRENT'], Analyzer, 0).Colors), 
           axes: { 
             y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + this.VOffset, Y1Range[1] + this.VOffset],
-                 ticker: this.Log ? function(min, max) { return Graph.DBTicks(min, max, this.VOffset); }.bind(this) : Dygraph.numericTicks,
-                 valueFormatter: function(x) { return oZm.Round2(x - this.POffset) + '<em class="x-small">' + (this.Log ? 'dB' : 'W') + '</em>'; }.bind(this),
-                 axisLabelFormatter: function (x) { return oZm.Round2(x - this.POffset); }.bind(this)
+                 valueFormatter: function(x) { return oZm.Round2(x) + '<em class="x-small">W</em>'; }.bind(this),
+                 axisLabelFormatter: function (x) { return oZm.Round2(x); }.bind(this)
                },
             x: { drawGrid: false, ticker: Graph.OddHarmonicsTicks, axisLabelFormatter: function (x) { return oZm.Series['HARMONICS'].Names[x]; },
                  valueFormatter: function(y) { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (Analyzer.NominalFreq * (y + 1)) + '<em class="small"> Hz</em>)'; }           
@@ -125,8 +116,6 @@
       this.Data = null;
       this.Phases = null;
       this.First = null;
-      this.Log = null;
-      this.POffset = 0;
     }
   }
 </script>

@@ -47,7 +47,7 @@
     data() {
       return { Analyzers: [], Analyzer: null,
         Columns: [
-          {name: 'Online', title: 'Online', callback: 'OnlineStatus'},
+          {name: 'Online', title: 'Online', callback: this.OnlineStatus},
           {name: 'Name', title: 'Description'}, 
           {name: 'Analyzer', title: 'Serial'},
           {name: '__slot:actions', title: ''}

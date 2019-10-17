@@ -103,7 +103,7 @@ void AnalyzerSoft::Configure(const json &options) {
     Stage.ChannelsZ2 = vector<float>((pMode == PHASE1) ? 1 : 3, 0.0);
     pFilters.push_back(Stage);
   }
-  uint32_t PhaseShift = (pSamplerate * ZEROCROSSING_FILTERSTAGES) / (pNominalFrequency * 4.0);
+  uint32_t PhaseShift = (pSamplerate * ZEROCROSSING_FILTERSTAGES) / (pNominalFrequency * 2.0);
   pDelayVoltage.resize(PhaseShift, vector<float>(pVoltageSamples.size(), 0.0));
   pDelayCurrent.resize(PhaseShift, vector<float>(pCurrentSamples.size(), 0.0));
   pConfigLocks.WriteUnlock();
