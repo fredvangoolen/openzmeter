@@ -11,9 +11,9 @@
 #include "Database.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-string          Database::pConnectionString;
-queue<PGconn*>  Database::pConnectionPool;
-pthread_mutex_t Database::pMutex = PTHREAD_MUTEX_INITIALIZER;
+string                             Database::pConnectionString;
+queue<Database::PoolConnection_t>  Database::pConnectionPool;
+pthread_mutex_t                    Database::pMutex = PTHREAD_MUTEX_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(const string &schema) {
   if(pConnectionString.empty() == true) ReadConfig();
@@ -23,7 +23,7 @@ Database::Database(const string &schema) {
   bool Pool  = false;
   pthread_mutex_lock(&pMutex);
   if(pConnectionPool.size() > 0) {
-    pDBConn = pConnectionPool.front();
+    pDBConn = pConnectionPool.front().Connection;
     pConnectionPool.pop();
     Pool = true;
   }
@@ -53,11 +53,25 @@ Database::Database(const string &schema) {
 string Database::GetSchema() const {
   return pSchema;
 }
+void Database::RemoveExpiredSessions() {
+  pthread_mutex_lock(&pMutex);
+  while(pConnectionPool.size() > 0) {
+    PoolConnection_t Connection = pConnectionPool.front();
+    if(Connection.LastUse > (Tools::GetTime() - 60000)) break;
+    pConnectionPool.pop();
+    PQfinish(Connection.Connection);
+  }
+  LOGFile::Debug("Adjusted queries pool to %d connections\n", pConnectionPool.size());
+  pthread_mutex_unlock(&pMutex);
+}
 Database::~Database() {
   ClearAsync();
   if(pDBConn) {
     pthread_mutex_lock(&pMutex);
-    pConnectionPool.push(pDBConn);
+    PoolConnection_t Connection;
+    Connection.LastUse = Tools::GetTime();
+    Connection.Connection = pDBConn;
+    pConnectionPool.push(Connection);
     pDBConn = NULL;
     pthread_mutex_unlock(&pMutex);
   }
@@ -106,7 +120,7 @@ bool Database::FecthRow() {
   pResult = PQgetResult(pDBConn);
   if(PQresultStatus(pResult) != PGRES_SINGLE_TUPLE) {
     char *Save;
-    LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LOGFile::Error("Error in SQL query (%s - %d)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save), PQresultStatus(pResult));
     return false;
   }
   return true;

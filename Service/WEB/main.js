@@ -1,6 +1,6 @@
 //Main libs and style ----------------------------------------------------------
 import jQuery from 'JS/jquery.js';
-window.$ = window.jQuery = jQuery;
+window.$ = window.jquery = jQuery;
 import 'JS/bootstrap.min.js';
 import 'CSS/bootstrap.min.css';
 import 'CSS/openZmeter.css';
@@ -34,8 +34,8 @@ import DetailTabs from 'Components/Tabs.vue';
 Vue.component('DetailTabs', DetailTabs);
 
 //External components ----------------------------------------------------------
-import VueApexCharts from 'JS/vue-apexcharts.js';
-Vue.component('VueApexCharts', VueApexCharts);
+//import VueApexCharts from 'JS/vue-apexcharts.js';
+//Vue.component('VueApexCharts', VueApexCharts);
 
 //Views ----------------------------------------
 import App from 'App/App.vue';

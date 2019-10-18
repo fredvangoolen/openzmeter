@@ -16,8 +16,13 @@ using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class Database {
   private :
+    typedef struct {
+      PGconn   *Connection;
+      uint64_t  LastUse;
+    } PoolConnection_t;
+  private :
     static string pConnectionString;
-    static queue<PGconn *> pConnectionPool;
+    static queue<PoolConnection_t> pConnectionPool;
     static pthread_mutex_t pMutex;
   private :
     PGconn      *pDBConn;
@@ -27,6 +32,8 @@ class Database {
     static void ReadConfig();
   private :
     void ClearAsync();
+  public :
+    static void RemoveExpiredSessions();
   public :
     string      Bind(const uint32_t param) const;
     string      Bind(const uint64_t param) const;

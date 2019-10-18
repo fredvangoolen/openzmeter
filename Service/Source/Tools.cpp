@@ -62,20 +62,20 @@ InstanceLocks::InstanceLocks() {
 }
 void InstanceLocks::WaitInstances() {
   pthread_mutex_lock(&pMutex);
-  LOGFile::Debug("Waiting %d instances to terminate\n", pReferences);
-  while(pReferences != 0) pthread_cond_wait(&pCond, &pMutex);
+  while(pReferences != 0) {
+    LOGFile::Debug("Waiting %d instances to terminate\n", this, pReferences);
+    pthread_cond_wait(&pCond, &pMutex);
+  }
   pthread_mutex_unlock(&pMutex);
 }
 void InstanceLocks::Reference() {
   pthread_mutex_lock(&pMutex);
   pReferences++;
-  printf("Reference: %d\n", pReferences);
   pthread_mutex_unlock(&pMutex);
 }
 void InstanceLocks::Dereference() {
   pthread_mutex_lock(&pMutex);
   pReferences--;
-  printf("Dereference: %d\n", pReferences);
   if(pReferences == 0) pthread_cond_signal(&pCond);
   pthread_mutex_unlock(&pMutex);
 }

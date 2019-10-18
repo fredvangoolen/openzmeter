@@ -81,7 +81,7 @@
 </template>
 
 <script>
-  import { create, all } from 'mathjs';
+//  import { create, all } from 'mathjs';
   const math = create(all);
   import Dlg from 'Components/Dialog.vue';
   import InputSpin from 'Components/InputSpin.vue';
@@ -126,9 +126,9 @@
       },
       Validate: function(val) {
          try {
-        var Parser = math.parse(val.target.value);
-        Parser.compile();
-        this.Error = 'Evaluated to: ' + Parser.evaluate(this.Values);
+//        var Parser = math.parse(val.target.value);
+//        Parser.compile();
+//        this.Error = 'Evaluated to: ' + Parser.evaluate(this.Values);
       } catch (err) {
         this.Error = err.toString();
       }

@@ -73,6 +73,7 @@ void Device::StopDevice(HTTPRequest &req) {
   json Response = json::object();
   Response["Status"] = StopDevice();
   req.FromJSON(Response);
+  Dereference();
 }
 bool Device::GetAnalyzer(HTTPRequest& req) {
   Reference();
