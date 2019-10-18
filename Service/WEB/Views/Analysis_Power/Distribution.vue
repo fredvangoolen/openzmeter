@@ -33,7 +33,7 @@
     data: function() {
       return { ShowWarning: true,  ShowSpinner: true, Time: 'Loading data...',
         Columns: [
-          {name: 'Color', title: ''},
+          {name: 'Color', title: 'Color'},
           {name: 'Harmonic', title: 'Harmonic'},
           {name: 'Power', title: 'Active power'},
           {name: 'Ratio', title: 'Ratio'}
@@ -44,7 +44,7 @@
       this.Data = [];
       this.GraphOptions = {
         highlightCircleSize: 0,  interactionModel: { }, legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, plotter: this.Plotter,
-        labels: ['Type', 'Total', 'Pos. Harmonics', 'Neg. Harmonics', 'Fundamental'], colors: ['#f0ad4e', '#3d3d8b', '#643d8b', '#DF842A'], dateWindow: [-0.5, 1.5],
+        labels: ['Type', 'Total', 'Fundamental', 'Pos. Harmonics', 'Neg. Harmonics'], colors: ['#f0ad4e', '#DF842A', '#3d3d8b', '#3d3d8b'], dateWindow: [-0.5, 1.5],
         axes: {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
                valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
@@ -126,16 +126,15 @@
         }
         var Harmonics = Positive + Negative;
         var Noise = Total - Fundamental - Harmonics;
-        //'Total', 'Fundamental', 'Positive Harmonics', 'Negative Harmonics'
         this.$refs.graph.SetOptions({ file: [
           [0, Total, null, null, null],
-          [1, null, Positive, Negative, Fundamental]
+          [1, null, Fundamental, Positive, Negative]
         ] });
         this.$refs.table.setData( { data: [
-          { Harmonic: 'Fundamental', Power: oZm.RoundHTML(Fundamental, 2), Ratio: oZm.RoundHTML(Fundamental / Total * 100, 2) + ' %' },
-          { Harmonic: 'Harmonics', Power: oZm.RoundHTML(Harmonics, 2), Ratio: oZm.RoundHTML(Harmonics / Total * 100, 2) + ' %' },
+          { Harmonic: 'Fundamental', Power: oZm.RoundHTML(Fundamental, 2), Ratio: oZm.RoundHTML(Fundamental / Total * 100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #DF842A"></div>' },
+          { Harmonic: 'Harmonics', Power: oZm.RoundHTML(Harmonics, 2), Ratio: oZm.RoundHTML(Harmonics / Total * 100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #3d3d8b"></div>' },
           { Harmonic: 'Noise+Interharmonics', Power: oZm.RoundHTML(Noise, 2), Ratio: oZm.RoundHTML(Noise / Total * 100, 2) + ' %'},
-          { Harmonic: 'Total active power', Power: oZm.RoundHTML(Total, 2), Ratio: oZm.RoundHTML(100, 2) + ' %' } 
+          { Harmonic: 'Total active power', Power: oZm.RoundHTML(Total, 2), Ratio: oZm.RoundHTML(100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #f0ad4e "></div>' } 
         ] });
         this.ShowSpinner = false;
       }

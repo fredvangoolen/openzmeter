@@ -82,7 +82,7 @@
 
 <script>
 //  import { create, all } from 'mathjs';
-  const math = create(all);
+//  const math = create(all);
   import Dlg from 'Components/Dialog.vue';
   import InputSpin from 'Components/InputSpin.vue';
   import OptionPicker from 'Components/OptionPicker.vue';

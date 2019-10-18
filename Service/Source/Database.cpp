@@ -120,7 +120,7 @@ bool Database::FecthRow() {
   pResult = PQgetResult(pDBConn);
   if(PQresultStatus(pResult) != PGRES_SINGLE_TUPLE) {
     char *Save;
-    LOGFile::Error("Error in SQL query (%s - %d)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save), PQresultStatus(pResult));
+    if(PQresultStatus(pResult) != PGRES_TUPLES_OK) LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   }
   return true;
