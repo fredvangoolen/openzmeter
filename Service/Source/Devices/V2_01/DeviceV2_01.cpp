@@ -282,7 +282,8 @@ void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV2_01 *This = (DeviceV2_01*)transfer->user_data;
   uint16_t *Samples = (uint16_t*)transfer->buffer;
   for(int Pos = 0; Pos < (transfer->actual_length / 2); Pos++) {
-    uint8_t Seq = Samples[Pos] >> 13;
+    uint8_t  Seq    = Samples[Pos] >> 13;
+    uint16_t Sample = (Samples[Pos] & 0x1FFF);
     if(This->pCaptureSync == -1) {
       if(Seq == 0) {
         This->pCaptureSync = 0;
@@ -291,7 +292,14 @@ void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
       }
     }
     if(Seq == 7) {
-      //Estado
+      static int bliu = 0;
+      if((bliu % 100000) == 0) {
+        
+//        (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
+        printf("ExtPower: %s, Charging: %s, Bat: %.2f, Btn: %s\n", (Sample & 0x0001) ? "1": "0", (Sample & 0x0002) ? "1": "0", 2.96 + ((Sample & 0x00FC) >> 2) * 0.02, (((Sample & 0x0300) >> 8) == 0) ? "NONE" : (((Sample & 0x0300) >> 8) == 1) ? "CLICK" : "LONG_CLICK");
+      
+      }
+      bliu++;
       continue;
     }
     if(This->pCaptureSync != Seq) {
@@ -299,7 +307,7 @@ void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
       This->pCaptureSync = -1;
       break;
     }
-    ((float*)&This->pCapture)[This->pCaptureSync++] = ((float)(Samples[Pos] & 0x1FFF)) - 4096.0;
+    ((float*)&This->pCapture)[This->pCaptureSync++] = (float)Sample - 4096.0;
     if(This->pCaptureSync == 7) {
       This->pCapture.Voltage[0] = ((This->pCapture.Voltage[0] * 0.110266113281) * (1.0 + (This->pVoltageGain[0] / 100.0))) + This->pVoltageOffset[0];
       This->pCapture.Voltage[1] = ((This->pCapture.Voltage[1] * 0.110266113281) * (1.0 + (This->pVoltageGain[1] / 100.0))) + This->pVoltageOffset[1];

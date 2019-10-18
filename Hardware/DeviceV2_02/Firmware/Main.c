@@ -23,7 +23,7 @@ typedef struct {
   uint16_t Bluetooth_Color:1; //Bluetooth LED (PA9) On when bluetooth enabled
   uint16_t Buzzer:9;          //Buzzer beeps
 } SignalsStatus_t;
-enum LED_Color {OFF = 0, GREEN = 1, YELLOW = 3, RED = 2 };
+enum LED_Color {OFF = 0, RED = 1, GREEN = 2, YELLOW = 3 };
 typedef struct {
   uint8_t ExtPower:1;         //External power flag
   uint8_t Charging:1;         //Charging flag
@@ -53,6 +53,8 @@ void BufferPush(uint16_t value) {
     USB_Buffer.Buffer[USB_Buffer.Head] = value;
     USB_Buffer.Head = Next;
   } else {
+    USB_Buffer.Head = 0;
+    USB_Buffer.Tail = 0;
 //    USB_Buffer.Size = 0;
 //   __asm("BKPT #0\n") ; // Break into the debugger
   }  
@@ -71,15 +73,15 @@ void SysTick_ISR() {
   if(SysTicks % 2) {
     GPIOA->BSRR = GPIO_BSRR_BS_10 | GPIO_BSRR_BS_15;    //A mode (PA10=1)
     GPIOB->BSRR = GPIO_BSRR_BS_5 | GPIO_BSRR_BS_4;
-    if(((SysTicks % 8) == 1) && (SignalsStatus.Power_Color & RED)) GPIOB->BSRR |= GPIO_BSRR_BR_5;
-    if(((SysTicks % 8) == 3) && (SignalsStatus.Status_Color & RED)) GPIOB->BSRR |= GPIO_BSRR_BR_4;
-    if(((SysTicks % 8) == 5) && (SignalsStatus.Wifi_Color & RED)) GPIOA->BSRR |= GPIO_BSRR_BR_15;
+    if(((SysTicks % 8) == 1) && ((SignalsStatus.Power_Color & GREEN) == GREEN)) GPIOB->BSRR |= GPIO_BSRR_BR_5;
+    if(((SysTicks % 8) == 3) && ((SignalsStatus.Status_Color & GREEN) == GREEN)) GPIOB->BSRR |= GPIO_BSRR_BR_4;
+    if(((SysTicks % 8) == 5) && ((SignalsStatus.Wifi_Color & GREEN) == GREEN)) GPIOA->BSRR |= GPIO_BSRR_BR_15;
   } else {
     GPIOA->BSRR = GPIO_BSRR_BR_10 | GPIO_BSRR_BR_15;    //A mode (PA10=0)
     GPIOB->BSRR = GPIO_BSRR_BR_5 | GPIO_BSRR_BR_4;
-    if(((SysTicks % 8) == 0) && (SignalsStatus.Power_Color & GREEN)) GPIOB->BSRR |= GPIO_BSRR_BS_5;
-    if(((SysTicks % 8) == 2) && (SignalsStatus.Status_Color & GREEN)) GPIOB->BSRR |= GPIO_BSRR_BS_4;
-    if(((SysTicks % 8) == 4) && (SignalsStatus.Wifi_Color & GREEN)) GPIOA->BSRR |= GPIO_BSRR_BS_15;
+    if(((SysTicks % 8) == 0) && ((SignalsStatus.Power_Color & RED) == RED)) GPIOB->BSRR |= GPIO_BSRR_BS_5;
+    if(((SysTicks % 8) == 2) && ((SignalsStatus.Status_Color & RED) == RED)) GPIOB->BSRR |= GPIO_BSRR_BS_4;
+    if(((SysTicks % 8) == 4) && ((SignalsStatus.Wifi_Color & RED) == RED)) GPIOA->BSRR |= GPIO_BSRR_BS_15;
   }
   GPIOA->BSRR = (SignalsStatus.Bluetooth_Color) ? GPIO_BSRR_BS_9 : GPIO_BSRR_BR_9;
   if((SysTicks % 64) == 0) {
@@ -87,7 +89,7 @@ void SysTick_ISR() {
     SignalsStatus.Buzzer = SignalsStatus.Buzzer >> 1;    
   }
   //Detecto pulsacion de boton
-  if(ButtonStatus.Action != NONE) {
+  if(ButtonStatus.Action == NONE) {
     if(GPIOA->IDR & GPIO_IDR_0) {
       if(ButtonStatus.Counter == 0) SignalsStatus.Buzzer = 0b000000001;
       ButtonStatus.Counter++;
@@ -96,14 +98,16 @@ void SysTick_ISR() {
         SignalsStatus.Buzzer = 0b101010111;
         ButtonStatus.Counter = 0;
       }
-    } else if(ButtonStatus.Counter > 1000) {
+    } else if(ButtonStatus.Counter > 5000) {
       ButtonStatus.Action = LONG_CLICK;
       SignalsStatus.Buzzer = 0b001010111; 
       ButtonStatus.Counter = 0;
-    } else if(ButtonStatus.Counter > 5000) {
+    } else if(ButtonStatus.Counter > 1000) {
       ButtonStatus.Action = CLICK;
       SignalsStatus.Buzzer = 0b000010111;
       ButtonStatus.Counter = 0;
+    } else {
+      ButtonStatus.Counter = 0;    
     }
   }
   SysTicks++;
@@ -122,6 +126,7 @@ void DMA_CH1_ISR() {
   ADC_Sequence_t *Ptr = (DMA1->ISR & DMA_ISR_HTIF1) ? &ADC_Read[0] : &ADC_Read[4];
   DMA1->IFCR |= DMA_IFCR_CTCIF1 | DMA_IFCR_CHTIF1;
   int16_t Offset = (2048 * 4) - (Ptr[0].Offset + Ptr[1].Offset + Ptr[2].Offset + Ptr[3].Offset);
+  if((Offset > 256) || (Offset < -256)) Offset = 0;
   BufferPush(((Ptr[0].V_CH_1 + Ptr[1].V_CH_1 + Ptr[2].V_CH_1 + Ptr[3].V_CH_1 + Offset) >> 1) | 0x0000);
   BufferPush(((Ptr[0].V_CH_2 + Ptr[1].V_CH_2 + Ptr[2].V_CH_2 + Ptr[3].V_CH_2 + Offset) >> 1) | 0x2000);
   BufferPush(((Ptr[0].V_CH_3 + Ptr[1].V_CH_3 + Ptr[2].V_CH_3 + Ptr[3].V_CH_3 + Offset) >> 1) | 0x4000);
@@ -183,7 +188,7 @@ void Setup() {
   //Configure Port A (PA0, PA8 -> Digital inputs, PA1, PA9, PA10, PA15 -> Digital outputs, PA2, PA3, PA4, PA5, PA6, PA7 -> Analog input, PA11, PA12 -> Alternate function, PA13, PA14 -> SWD)
   GPIOA->MODER |= GPIO_MODER_MODER1_0 | GPIO_MODER_MODER2 | GPIO_MODER_MODER3 | GPIO_MODER_MODER4 | GPIO_MODER_MODER5 | GPIO_MODER_MODER6 | GPIO_MODER_MODER7 | GPIO_MODER_MODER9_0 | 
                   GPIO_MODER_MODER10_0 | GPIO_MODER_MODER11_1 | GPIO_MODER_MODER12_1 | GPIO_MODER_MODER15_0;
-  GPIOA->PUPDR |= GPIO_PUPDR_PUPDR8_0;
+  GPIOA->PUPDR |= GPIO_PUPDR_PUPDR8_0 | GPIO_PUPDR_PUPDR0_1;
   //Configure Port B (PB7 -> Digital input, PB0, PB1 -> Analog inputs, PB4, PB5, PB6 -> Digital output, PB3, PB8 -> Alternate function)
   GPIOB->MODER |= GPIO_MODER_MODER0 | GPIO_MODER_MODER1 | GPIO_MODER_MODER3_1 | GPIO_MODER_MODER8_1 | GPIO_MODER_MODER4_0 | GPIO_MODER_MODER5_0 | GPIO_MODER_MODER6_0;
   GPIOB->AFR[0] |= 0x00002000; //PB3 -> TIM2_CH2
@@ -257,6 +262,7 @@ void Loop() {
       if(udev.Status.device_state == USB_STATE_CONFIGURED) {
         ButtonStatus.Action = NONE;
         SignalsStatus.Power_Color = GREEN;
+        SignalsStatus.Buzzer = 0b111101111;
         return;
       }
     }
@@ -272,6 +278,7 @@ void Loop() {
     //Envio pulsacion corta a la nanopi
   }
   if(((GPIOB->ODR && GPIO_ODR_6) == 1) && (ButtonStatus.Action == VERY_LONG_CLICK)) {
+    Sleep(2000);
     Suspend();
   }
 }
