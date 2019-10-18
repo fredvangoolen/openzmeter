@@ -154,7 +154,7 @@
         var AvgArray = Array(data[0].length).fill(0), StdArray = Array(data[0].length).fill(0);
         for(var x = 0; x < data.length; x++) {
           for(var p = 1; p < data[x].length; p++) {
-            if(data[x][p] === null) data[x][1] = 0;
+            if(data[x][p] === null) data[x][p] = 0;
             if(data[x][p] < MinValue) {
               MinArray = data[x].slice(1);
               MinValue = data[x][p];

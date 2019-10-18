@@ -10,12 +10,12 @@
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
         <div class="col-sm-12 col-md-8 col-lg-6 graphDiv" ref="graphContainer">
-          <vue-apex-charts ref="graph" type="donut" width=380 :options="chartOptions" :series="series"></vue-apex-charts>
+          <graph ref="graph" class="graph" :options="GraphOptions"></graph>
         </div>
-        <!--div class="col-sm-12 col-md-4 col-lg-6">
-          <h4>Voltage and current phase angle</h4>
+        <div class="col-sm-12 col-md-4 col-lg-6">
+          <h4>Active power harmonics distribution</h4>
           <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
-        </div-->
+        </div>
       </div>
     </div>
   </div>
@@ -32,91 +32,111 @@
   export default {
     data: function() {
       return { ShowWarning: true,  ShowSpinner: true, Time: 'Loading data...',
-      Columns: [
-          {name: 'Phase', title: 'Phase'},
-          {name: 'Channel', title: 'Channel'},
-          {name: 'Angle', title: 'Angle'}, 
-          {name: 'SecAngle', title: ''},
-          {name: 'Value', title: 'Value'}
-        ],
-        
-        series: [44, 55, 13, 43, 22],
-        chartOptions: {
-          labels: ['Team A', 'Team B', 'Team C', 'Team D', 'Team E'],
- plotOptions: {
-    pie: {
-      expandOnClick: false
-    },
-    donut: {
-        labels: {
-          show: true,
-          name: "bliu",
-          value: 'blau'
-        }
-    
-  }
- },
-          responsive: [{
-            breakpoint: 480,
-            options: {
-              chart: {
-                width: 200
-              },
-              legend: {
-                position: 'bottom'
-              }
-            }
-          }]
-        }
-        
+        Columns: [
+          {name: 'Color', title: ''},
+          {name: 'Harmonic', title: 'Harmonic'},
+          {name: 'Power', title: 'Active power'},
+          {name: 'Ratio', title: 'Ratio'}
+        ]
       };
     },
     created: function() {
       this.Data = [];
+      this.GraphOptions = {
+        highlightCircleSize: 0,  interactionModel: { }, legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, plotter: this.Plotter,
+        labels: ['Type', 'Total', 'Pos. Harmonics', 'Neg. Harmonics', 'Fundamental'], colors: ['#f0ad4e', '#3d3d8b', '#643d8b', '#DF842A'], dateWindow: [-0.5, 1.5],
+        axes: {
+          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
+               valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
+               axisLabelFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value; }
+             },
+          x: { axisLabelWidth: 80, 
+               axisLabelFormatter: function(x) { return (x == 0) ? 'Active power' : (x == 1) ? 'Breakdown' : '' },
+               valueFormatter: function (x) { return (x == 0) ? 'Active power' : (x == 1) ? 'Breakdown' : '' }
+             }
+        }
+      };
     },
     mounted: function() {
       $(window).on('resize', this.Redraw.bind(this));
     },
     updated: function(){
-//        oZm.createCaptionsForResponsiveTable(this.$refs.table);
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     beforeDestroy: function() {
       $(window).off('resize', this.Redraw);
     },
     methods: {
+      Plotter: function(e) {
+        if(e.seriesIndex !== 0) return;
+        var g = e.dygraph;
+        var ctx = e.drawingContext;
+        var sets = e.allSeriesPoints;
+        g.SeriesCount = sets.length;
+        var min_sep = Infinity;
+        for(var j = 0; j < sets.length; j++) {
+          for(var i = 1; i < sets[j].length; i++) min_sep = Math.min(sets[j][i].canvasx - sets[j][i - 1].canvasx, min_sep);
+        }
+        var bar_width = Math.floor(2.8 / 3 * min_sep);
+        for(var i = 0; i < sets[0].length; i++) {
+          var PosSum = 0;
+          var NegSum = 0;
+          for(var j = 0; j < sets.length; j++) {
+            ctx.strokeStyle = g.getColors()[j];
+            ctx.fillStyle = g.getColors()[j];
+            var p = sets[j][i];
+            var x_left = p.canvasx - (bar_width / 2);
+            if(isNaN(p.yval)) {
+              continue;
+            } else if(p.yval < 0) {
+              var From = e.dygraph.toDomYCoord(0 + NegSum);
+              var Height = e.dygraph.toDomYCoord(p.yval) - e.dygraph.toDomYCoord(0);
+              ctx.fillRect(x_left, From, bar_width, Height);
+              NegSum += p.yval;
+            } else {
+              var From = e.dygraph.toDomYCoord(0 + PosSum);
+              var Height = e.dygraph.toDomYCoord(p.yval) - e.dygraph.toDomYCoord(0);
+              ctx.fillRect(x_left, From, bar_width, Height);
+              PosSum += p.yval;
+            }
+          }
+        }
+      },
       Redraw: function() {
-//        this.$nextTick(function() {
-//          if((this.$refs === undefined) || (this.$refs.graphContainer === undefined)) return;
-//          var Width = this.$refs.graphContainer.clientWidth - 30;
-//          if(Width > 600) Width = 600;
-//          this.$refs.graph.Redraw(Width, Width);
-//        });
+        this.$nextTick(function() {
+          if((this.$refs === undefined) || (this.$refs.graphContainer === undefined)) return;
+          var Width = this.$refs.graphContainer.clientWidth - 30;
+          this.$refs.graph.Redraw(Width, 300);
+        });
       },
       ExportClick: function() {
-//        this.$refs.tools.SaveCVS('Phasors.csv', [['Phase', 'Channel', 'Angle', 'Value']].concat(this.Data));
+        this.$refs.tools.SaveCVS('PowerHarmonicsDistribution.csv', [['Phase', 'Channel', 'Angle', 'Value']].concat(this.Data));
       },
       SetData(result) {
-        var Sum = 0;
-        for(var i = 1; i < result['Power_Harmonics'][0]; i++) Sum += result['Power_Harmonics'][0][i];
-        this.series = [result['Power_Harmonics'][0][0], Sum];
-//        for(var i = 0; i < )
-//        var Analyzer = this.$root.SelectedAnalyzer;
-//        this.ShowWarning = (oZm.ArrayAbsMax(result.Current) < Analyzer.MinCurrent); 
-//        this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
-//        var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
-//        this.Data = [];
-//        var Table = [];
-//        var Vectors = [];
-//        for(var i = 0; i < result['Voltage'].length; i++) {
-//          Vectors.push([i * 2, result.Voltage_Phase[i], result.Voltage[i]]);
-//          Vectors.push([i * 2 + 1, result.Voltage_Phase[i] + result.Phi[i], result.Current[i]]);
-//          this.Data.push([Phases[i], "Voltage", result.Voltage_Phase[i], result['Voltage'][i]]);
-//          this.Data.push([Phases[i], "Current", result.Voltage_Phase[i] + result.Phi[i], result['Current'][i]]);
-//          Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(result.Voltage_Phase[i]) + '°', Value: oZm.Round2(result['Voltage'][i]) + ' V' } );
-//          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(((result.Phi[i] == null) || (result.Voltage_Phase[i] == null)) ? null : result.Voltage_Phase[i] + result.Phi[i]) + '°', SecAngle: '(' + oZm.Round2(result.Phi[i]) + '°)', Value: oZm.Round2(result.Current[i]) + ' A'} );
-//        }
-//        this.$refs.graph.SetOptions({ file: Vectors });
-//        this.$refs.table.setData( { data: Table });
+        var Analyzer = this.$root.SelectedAnalyzer;
+        this.ShowWarning = (oZm.ArrayAbsMax(result.Current) < Analyzer.MinCurrent);
+        this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
+        var Total = result.Active_Power[0];
+        var Fundamental = result['Power_Harmonics'][0][0];
+        var Positive = 0;
+        var Negative = 0;
+        for(var i = 1; i < result['Power_Harmonics'][0].length; i++) {
+          if(result['Power_Harmonics'][0][i] > 0) Positive += result['Power_Harmonics'][0][i];
+          if(result['Power_Harmonics'][0][i] < 0) Negative += result['Power_Harmonics'][0][i];
+        }
+        var Harmonics = Positive + Negative;
+        var Noise = Total - Fundamental - Harmonics;
+        //'Total', 'Fundamental', 'Positive Harmonics', 'Negative Harmonics'
+        this.$refs.graph.SetOptions({ file: [
+          [0, Total, null, null, null],
+          [1, null, Positive, Negative, Fundamental]
+        ] });
+        this.$refs.table.setData( { data: [
+          { Harmonic: 'Fundamental', Power: oZm.RoundHTML(Fundamental, 2), Ratio: oZm.RoundHTML(Fundamental / Total * 100, 2) + ' %' },
+          { Harmonic: 'Harmonics', Power: oZm.RoundHTML(Harmonics, 2), Ratio: oZm.RoundHTML(Harmonics / Total * 100, 2) + ' %' },
+          { Harmonic: 'Noise+Interharmonics', Power: oZm.RoundHTML(Noise, 2), Ratio: oZm.RoundHTML(Noise / Total * 100, 2) + ' %'},
+          { Harmonic: 'Total active power', Power: oZm.RoundHTML(Total, 2), Ratio: oZm.RoundHTML(100, 2) + ' %' } 
+        ] });
         this.ShowSpinner = false;
       }
     },
@@ -136,20 +156,14 @@
       width: 40px;
       text-align: center;
     }  
-    .table >>> th:nth-child(2)  {
-      width: 50px;
-      text-align: center;
-    }
-    .table >>> th:nth-child(3), .table >>> th:nth-child(5)  {
+    .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
       text-align: right;
+      width: 100px;
     }
     .table >>> td {
       font-size: 16px
     }
-    .table >>> td:nth-child(1), .table >>> td:nth-child(1) {
-      text-align: center;
-    }
-    .table >>> td:nth-child(3), .table >>> td:nth-child(5) {
+    .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
       text-align: right;
     }
   }

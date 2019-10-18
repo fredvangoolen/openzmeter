@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
   while(!Terminate) {
     SystemManager.PeriodicTask();
     if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions(DB);
+    if((Iter % 600) == 0) Database::RemoveExpiredSessions();
     Iter++;
     usleep(1000000);
   }

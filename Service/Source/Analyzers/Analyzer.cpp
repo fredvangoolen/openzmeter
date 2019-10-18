@@ -22,7 +22,7 @@ Analyzer::Analyzer(const string &id) {
   HTTPServer::RegisterCallback("getAlarms", GetAlarms);
   HTTPServer::RegisterCallback("getAlarm",  GetAlarm);
   HTTPServer::RegisterCallback("setAlarm",  SetAlarm);
-  HTTPServer::RegisterCallback("addAlarm", AddAlarm);
+  HTTPServer::RegisterCallback("addAlarm",  AddAlarm);
   HTTPServer::RegisterCallback("delAlarm",  DelAlarm);
 }
 Analyzer::~Analyzer() {

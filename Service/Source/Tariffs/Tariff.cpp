@@ -354,7 +354,7 @@ json Tariff::GetResume(uint64_t now) {
     if(it->Type == "PERCENT_ENERGY") Value = pSumEnergyCost * (it->Value / 100.0);
     if(it->Type == "PERCENT_POWER") Value = pSumPowerCost * (it->Value / 100.0);
     if(it->Type == "PERCENT_ENERGY_POWER") Value = (pSumEnergyCost + pSumPowerCost) * (it->Value / 100.0);
-    if(it->Type == "FIXED_QUANTITY") Value = it->Value / 96.0;
+    if(it->Type == "FIXED_QUANTITY") Value = it->Value;
     if(isnan(Value) == false) {
       Tax["Total"] = Value;
       Total += Value;

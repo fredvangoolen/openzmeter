@@ -718,6 +718,8 @@ label.btn:active, label.btn.active {
 .chart{
     height:150px;
     width: 100%;
+    user-select: none;
+    cursor: crosshair;
 }
 
 .big_chart{
