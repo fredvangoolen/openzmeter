@@ -30,9 +30,8 @@ export function RoundPlain(val, decimals) {
   }
 }
 export function FormatSerieValue(val, serie, units) {
-  var Units = '';
   if(units === undefined) units = GetBestUnits(val); 
-  return { Units: units + serie.Units, ValuePlain: RoundPlain(ScaleToUnits(val, Units), serie.Decimals), ValueHTML: RoundHTML(ScaleToUnits(val, Units), serie.Decimals) };
+  return { Units: units + serie.Units, ValuePlain: RoundPlain(ScaleToUnits(val, units), serie.Decimals), ValueHTML: RoundHTML(ScaleToUnits(val, units), serie.Decimals) };
 }
 export function SerieStyle(serie, analyzer, order) {
   var SerieLen = serie.Names(analyzer).length;

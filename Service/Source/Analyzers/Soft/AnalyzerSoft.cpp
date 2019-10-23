@@ -413,7 +413,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
         This->pAggreg10C.Voltage_Harmonics[j][i] = This->pVoltageFFT[j]->BinPower(10 + i * 10);
         if(i > 0) This->pAggreg10C.Voltage_THD[j] = This->AccumulateSUM(This->pAggreg10C.Voltage_THD[j], This->pAggreg10C.Voltage_Harmonics[j][i]);
       }
-      This->pAggreg10C.Voltage_THD[j] = This->pAggreg10C.Voltage_THD[j] / This->pAggreg10C.Voltage_Harmonics[j][0];
+      This->pAggreg10C.Voltage_THD[j] = (This->pAggreg10C.Voltage_THD[j] / This->pAggreg10C.Voltage_Harmonics[j][0]) * 100.0;
     }
     for(int j = 0; j < ((This->pMode == PHASE1) ? 1 : 3); j++) {
       This->pCurrentFFT[j]->Wait();
@@ -426,7 +426,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       float PHI = FFT::CalcAngle(This->pCurrentFFT[j]->Output[10], This->pVoltageFFT[j]->Output[10]);
       This->pAggreg10C.Reactive_Power[j] = This->pAggreg10C.Voltage_Harmonics[j][0] * This->pAggreg10C.Current_Harmonics[j][0] * sin(-PHI);
       This->pAggreg10C.Phi[j] = PHI * 180.0 / M_PI;
-      This->pAggreg10C.Current_THD[j] = This->pAggreg10C.Current_THD[j] / This->pAggreg10C.Current_Harmonics[j][0];
+      This->pAggreg10C.Current_THD[j] = (This->pAggreg10C.Current_THD[j] / This->pAggreg10C.Current_Harmonics[j][0]) * 100.0;
       This->pAggreg10C.Active_Energy[j] = (This->pAggreg10C.Active_Power[j] * This->pCurrentSamples[j].size()) / (This->pSamplerate * 3600.0);
       This->pAggreg10C.Power_Factor[j] = This->pAggreg10C.Active_Power[j] / This->pAggreg10C.Apparent_Power[j];
       This->pAggreg10C.Reactive_Energy[j] = (This->pAggreg10C.Reactive_Power[j] * This->pAggreg10C.Current_Inputs[j]) / (This->pSamplerate * 3600.0);
@@ -436,9 +436,9 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       if(!isnan(This->pAggreg10C.Current[3])) {
         for(uint i = 0; i < This->pAggreg10C.Current_Harmonics[3].size(); i++) {
           This->pAggreg10C.Current_Harmonics[3][i] = This->pCurrentFFT[3]->BinPower(10 + i * 10);
-          if(i > 0) This->pAggreg10C.Current_THD[3] = This->AccumulateSUM(This->pAggreg10C.Current_THD[3], norm(This->pAggreg10C.Current_Harmonics[3][i]));
+          if(i > 0) This->pAggreg10C.Current_THD[3] = This->AccumulateSUM(This->pAggreg10C.Current_THD[3], This->pAggreg10C.Current_Harmonics[3][i]);
         }
-        This->pAggreg10C.Current_THD[3] = sqrt(This->pAggreg10C.Current_THD[3]) / sqrt(norm(This->pAggreg10C.Current_Harmonics[3][0]));
+        This->pAggreg10C.Current_THD[3] = (This->pAggreg10C.Current_THD[3] / This->pAggreg10C.Current_Harmonics[3][0]) * 100.0;
       }
     }
     This->pEventLocks.WaitWorker();

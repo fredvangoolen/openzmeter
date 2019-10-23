@@ -27,7 +27,8 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <flagsDictionary>
-        <element flagsID="0" commonFlags="-std=c99 -march=armv6-m -g -O2"/>
+        <element flagsID="0" commonFlags="-std=c99 -march=armv6-m -g -O1"/>
+        <element flagsID="1" commonFlags="-std=c99 -march=armv6-m -g -O2"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -61,7 +62,7 @@
         </cTool>
       </item>
       <item path="usb_core.c" ex="false" tool="0" flavor2="3">
-        <cTool flags="0">
+        <cTool flags="1">
         </cTool>
       </item>
     </conf>
