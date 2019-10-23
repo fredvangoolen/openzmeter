@@ -8,14 +8,15 @@
 #include "Device.h"
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define DEVICEV2_01_VID              0x0483                          //Product ID
-#define DEVICEV2_01_PID              0x7270                          //Device ID
+#define DEVICEV2_01_VID             0x0483                          //Product ID
+#define DEVICEV2_01_PID             0x7270                          //Device ID
 #define DEVICEV2_01_VERSION         0x0201                          //Device version
 #define DEVICEV2_01_MANSTRING       "zRed"                          //Manufacturer string
 #define DEVICEV2_01_PRODSTRING      "openZmeter - Capture device"   //Product string
 #define DEVICEV2_01_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
 #define DEVICEV2_01_SAMPLEFREQ    19200.00                          //Frequencia de muestreo
 #define DEVICEV2_01_TRANSFERS           32                          //Numero de transferencias a encolar
+#define DEVICEV2_01_CONTROL_SETSTATUS 0x20
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2_01 : public Device {
   private :
@@ -53,6 +54,9 @@ class DeviceV2_01 : public Device {
     libusb_context              *pContext;                 //USB context
     pthread_mutex_t              pMutex;                   //Configs and critical sections lock
     deque<Sample_t>              pAverageValues;           //Average wave value of last second
+    uint64_t                     pLastSignalSend;          //Last LEDs/Buzzer message send
+    uint64_t                     pLastSignalRecv;          //Last battery message recv
+    Transfer_t                   pControlTransfer;         //Transfer used for signaling
   private :
     static bool  GetInstances();
     static void *Capture_Thread(void *args);

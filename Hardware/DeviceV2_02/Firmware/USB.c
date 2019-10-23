@@ -87,7 +87,7 @@ const uint8_t StringProduct[] = {
   'i', 0, 'c', 0, 'e', 0 
 };
 // Variables -----------------------------------------------------------------------------------------------------------
-volatile USB_Device_t USB_Device;
+USB_Device_t USB_Device;
 uint32_t USB_Buffer[0x20] __attribute__ ((aligned (4)));
 
 // Functions -----------------------------------------------------------------------------------------------------------
@@ -610,7 +610,7 @@ void         USB_HandleEP0(uint8_t event, uint8_t ep) {
     case usbd_evt_epsetup:
       /* force switch to setup state */
       USB_Device.Status.control_state = USB_CONTROL_IDLE;
-      USB_Device.Complete_Callback = 0;
+      USB_Device.Complete_Callback = NULL;
     case USB_EVENT_RX:
       return USB_HandleEP0_RX(ep);
     case USB_EVENT_TX:

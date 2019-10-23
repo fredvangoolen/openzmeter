@@ -9,8 +9,13 @@ class System {
     static System          *pInstance;
     static pthread_mutex_t  pMutex;
     static bool             pRegistered;
+  private :
+    float            pBattery;
+    bool             pCharging;
+    bool             pPowered;
   public :
-    static json GetSystemDetails();     
+    static json GetSystemDetails();
+    static void SetBatteryLevel(float level, bool charging, bool powered);
   public:
     System();
     void PeriodicTask();

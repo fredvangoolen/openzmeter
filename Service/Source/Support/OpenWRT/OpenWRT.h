@@ -27,6 +27,9 @@ class System {
     string           pWirelessWIFI;
     vector<Update_t> pUpdates;
     uint64_t         pLastUpdateCheck;
+    float            pBattery;
+    bool             pCharging;
+    bool             pPowered;
   private:
     bool   StartBT();
     bool   StopBT();
@@ -49,7 +52,8 @@ class System {
     static void GetUpdatesCallback(HTTPRequest &req);
     static void UpgradeCallback(HTTPRequest &req);
   public :
-    static json GetSystemDetails();  
+    static json GetSystemDetails();
+    static void SetBatteryLevel(float level, bool charging, bool powered);
   public:
     System();
     void PeriodicTask();

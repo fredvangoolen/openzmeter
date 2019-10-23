@@ -37,6 +37,9 @@ build:
       EOF
     - |
       cat > Package/CONTROL/postinst << EOF
+      if [ ! -d "/usr/share/zoneinfo" ]; then
+        ln -s /usr/share/postgresql/timezone /usr/share/zoneinfo
+      fi
       /etc/init.d/openZmeter enable
       /etc/init.d/openZmeter restart
       EOF

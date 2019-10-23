@@ -7,7 +7,10 @@
 
 class SysSupport {
   private :
-    static bool Registered;
+    static bool  pRegistered;
+    static float pBattery;
+    static bool  pCharging;
+    static bool  pPowered;
   private :
     static bool Register();
     static void GetNewsCallback(HTTPRequest &req);

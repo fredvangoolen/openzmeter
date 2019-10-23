@@ -18,7 +18,7 @@
               <color-picker :selected="props.rowData.Color" :columns="2" v-on:ColorChanged="ColorChanged(props.rowIndex, $event)" :colors="['#fffff0', '#ffecd6', '#ffd8bc', '#ffc4a2', '#ffae88', '#ff986c', '#ff7f50', '#f0ffff', '#d4f2f1', '#b7e5e2', '#98d8d3', '#78ccc5', '#55bfb8', '#20b2aa']"></color-picker>
             </template>
             <template slot="power" slot-scope="props">
-              <option-picker :selected="props.rowData.PowerMode" v-on:change="PowerChanged(props.rowIndex, $event)" :options="['NONE', 'ESP_3.x', 'ESP_6.x']"></option-picker>
+              <option-picker :selected="props.rowData.PowerMode" v-on:change="PowerChanged(props.rowIndex, $event)" :options="['NONE', 'ESP_3.x', 'ESP_6.x (P1)', 'ESP_6.x (P2)', 'ESP_6.x (P3, P4, P5)', 'ESP_6.x (P6)']"></option-picker>
             </template>
             <template slot="reactive" slot-scope="props">
               <option-picker :selected="props.rowData.ReactiveMode" v-on:change="ReactiveChanged(props.rowIndex, $event)" :options="['NONE', 'ESP']"></option-picker>

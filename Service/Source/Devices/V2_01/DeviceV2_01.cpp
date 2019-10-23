@@ -17,6 +17,7 @@
 #include "DeviceV2_01.h"
 #include "DeviceManager.h"
 #include "Tools.h"
+#include "SysSupport.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceV2_01::pRegistered = DeviceV2_01::GetInstances();
 // Funciones ===========================================================================================================
@@ -79,7 +80,6 @@ DeviceV2_01::DeviceV2_01(string serial) {
   pDriver        = "V2.01";
   pName          = "Capture device V2.01";
   pCaptureThread = 0;
-//  pSignalThread  = 0;
   pMutex         = PTHREAD_MUTEX_INITIALIZER;
   pVoltageGain.resize(3, 0.0);
   pCurrentGain.resize(4, 0.00);
@@ -292,14 +292,13 @@ void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
       }
     }
     if(Seq == 7) {
-      static int bliu = 0;
-      if((bliu % 100000) == 0) {
+      if(This->pLastSignalRecv < (Tools::GetTime() - 1000)) {
         
 //        (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
-        printf("RAW: 0x%04X, ExtPower: %s, Charging: %s, Bat: %.2f, Btn: %s\n", Sample, (Sample & 0x0001) ? "1": "0", (Sample & 0x0002) ? "1": "0", 2.96 + ((Sample & 0x00FC) >> 2) * 0.02, (((Sample & 0x0300) >> 8) == 0) ? "NONE" : (((Sample & 0x0300) >> 8) == 1) ? "CLICK" : "LONG_CLICK");
-      
-      }
-      bliu++;
+//        printf("RAW: 0x%04X, ExtPower: %s, Charging: %s, Bat: %.2f, Btn: %s\n", Sample, (Sample & 0x0001) ? "1": "0", (Sample & 0x0002) ? "1": "0", 2.96 + ((Sample & 0x00FC) >> 2) * 0.02, (((Sample & 0x0300) >> 8) == 0) ? "NONE" : (((Sample & 0x0300) >> 8) == 1) ? "CLICK" : "LONG_CLICK");
+        System::SetBatteryLevel(2.96 + ((Sample & 0x00FC) >> 2) * 0.02, (Sample & 0x0002), (Sample & 0x0001));
+        This->pLastSignalRecv = Tools::GetTime();
+      }    
       continue;
     }
     if(This->pCaptureSync != Seq) {
@@ -323,10 +322,11 @@ void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
       This->pCaptureSync = 0;
     }
   }
-  if(This->pTerminate == false) 
-    libusb_submit_transfer(transfer);
-  else
+  if(This->pTerminate == false) {
+    if(transfer != This->pControlTransfer.Transfer) libusb_submit_transfer(transfer);
+  } else {
     libusb_free_transfer(transfer);
+  }
 }
 int DeviceV2_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
   DeviceV2_01 *This = (DeviceV2_01*)user_data;
@@ -430,10 +430,18 @@ bool DeviceV2_01::BuffersAppend() {
 void *DeviceV2_01::Capture_Thread(void *args) {
   DeviceV2_01 *This = (DeviceV2_01*)args;
   for(int i = 0; i < DEVICEV2_01_TRANSFERS; i++) This->pTransfers[i].Transfer = libusb_alloc_transfer(0);
+  This->pControlTransfer.Transfer = libusb_alloc_transfer(0);
   while(!This->pTerminate) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) LOGFile::Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
+    if((This->pDeviceHandle != NULL) && (This->pLastSignalSend < (Tools::GetTime() - 3000))) {
+
+      libusb_fill_control_setup(This->pControlTransfer.Buffer, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, DEVICEV2_01_CONTROL_SETSTATUS, 0x0000, 0x0000, 0);
+      //Añado una transaccion de entrada al EP0 con el estado y accion que quiero para los leds
+        
+        libusb_submit_transfer(This->pControlTransfer.Transfer);
+    }
     if(This->pNewDevice != NULL) {
       struct libusb_device_descriptor Descriptor;
       Result = libusb_get_device_descriptor(This->pNewDevice, &Descriptor);
@@ -506,14 +514,9 @@ void *DeviceV2_01::Capture_Thread(void *args) {
       }
       LOGFile::Info("Capture started on DeviceV2.01 with serial '%s'\n", This->pSerial.c_str());
       This->pNewDevice = NULL;
-//      This->pUSBState = USB_RESET;
-//      int Error = libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x01, 0x0000, 0x0000, NULL, 0, 0);
-//      if(Error < 0) LOGFile::Error("Can not stop device with serial %s (%d)\n", This->pSerial, Error);
-//      usleep(1000000);
-//      This->pUSBState = USB_WAIT;
-//      float Conf[7] = {This->pVoltageOffset[0], This->pCurrentOffset[0], This->pVoltageOffset[1], This->pCurrentOffset[1], This->pVoltageOffset[2], This->pCurrentOffset[2], This->pCurrentOffset[3]};
-//      Error = libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0x00, (This->pChannelMask << 8) | 0x0E, 0x0000, (uint8_t*)Conf, sizeof(Conf), 0);
-//      if(Error < 0) LOGFile::Error("Can not setup device with serial %s (%d)\n", This->pSerial, Error);
+      This->pLastSignalSend = 0;
+      This->pLastSignalRecv = 0;
+      libusb_fill_control_transfer(This->pControlTransfer.Transfer, This->pDeviceHandle, This->pControlTransfer.Buffer, ReadCallback, This, -1);
     }
   }
   libusb_release_interface(This->pDeviceHandle, 0);

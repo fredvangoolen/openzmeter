@@ -7,7 +7,6 @@
 // USB application definitions -----------------------------------------------------------------------------------------
 #define SEND_EP   0x81
 #define USB_CONTROL_CLASS_SETSTATUS     0x20
-#define USB_CONTROL_CLASS_GETSTATUS     0x21
 // Types definition ----------------------------------------------------------------------------------------------------
 typedef struct {
   uint16_t Offset;
@@ -29,16 +28,17 @@ typedef struct {
 } SignalsStatus_t;
 enum LED_Color {OFF = 0, RED = 1, GREEN = 2, YELLOW = 3 };
 typedef struct {
-  uint8_t ExtPower:1;         //External power flag
-  uint8_t Charging:1;         //Charging flag
-  uint8_t Battery:6;          //Battery level
+  uint8_t ExtPower:1;   //External power flag
+  uint8_t Charging:1;   //Charging flag
+  uint8_t Battery:6;    //Battery level
 } SysStatus_t;
 typedef struct {
-  uint16_t Action:2;           //Pending button action
+  uint16_t Action:2;    //Pending button action
   uint16_t Counter:14;  //Buttons ticks
 } ButtonStatus_t;
 enum Button_Action { NONE = 0, CLICK = 1, LONG_CLICK = 2, VERY_LONG_CLICK = 3};
 typedef struct {
+  uint16_t Counter;
   uint16_t Head;
   uint16_t Tail;
   uint16_t Buffer[BUFF_LEN];
@@ -48,10 +48,17 @@ volatile uint32_t SysTicks;
 SignalsStatus_t   SignalsStatus = { .Power_Color = OFF, .Status_Color = OFF, .Wifi_Color = OFF, .Buzzer = 0};
 SysStatus_t       SysStatus = { .Charging = 0, .ExtPower = 0, .Battery = 0 };
 ButtonStatus_t    ButtonStatus = { .Action = CLICK, .Counter = 0};
-USB_Buffer_t      USB_Buffer = { .Head = 0, .Tail = 0 };
+USB_Buffer_t      USB_Buffer = { .Head = 0, .Tail = 0, .Counter = 0 };
 ADC_Sequence_t    ADC_Read[8];
 // Control LED, buton and buzzer ---------------------------------------------------------------------------------------
 void SysTick_ISR() {
+  if(USB_Buffer.Counter == 5000) {
+    SignalsStatus.Status_Color = OFF;
+    SignalsStatus.Wifi_Color = OFF;
+    SignalsStatus.Bluetooth_Color = OFF;    
+  } else {
+    USB_Buffer.Counter++;
+  }
   if(SysTicks % 2) {
     GPIOA->BSRR = GPIO_BSRR_BS_10 | GPIO_BSRR_BS_15;    //A mode (PA10=1)
     GPIOB->BSRR = GPIO_BSRR_BS_5 | GPIO_BSRR_BS_4;
@@ -131,29 +138,20 @@ void DMA_CH1_ISR() {
 }
 // USB callbacks functions ---------------------------------------------------------------------------------------------
 USB_Response USB_HandleEP0_Class(USB_ControlRequest_t *req, USB_Request_Callback_t *callback) {
-  static uint16_t ReturnStatus;
   if(((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) == (USB_REQ_INTERFACE | USB_REQ_CLASS) && req->wIndex == 0 ) {
     switch(req->bRequest) {
       case USB_CONTROL_CLASS_SETSTATUS :
-        //0: if set reset buttons pending actions
-        if((req->data[1] & 0x01) == 1) ButtonStatus.Action = 0;
-        //1: if set instruct to power off after USB disconnect
+        //0-1: reserved
         //2-3: Status_Color
-        SignalsStatus.Status_Color    = (req->data[1] >> 2) & 0x03;
+        SignalsStatus.Status_Color    = (req->wValue >> 2) & 0x0003;
         //4-5: Wifi_Color
-        SignalsStatus.Wifi_Color      = (req->data[1] >> 4) & 0x03;
+        SignalsStatus.Wifi_Color      = (req->wValue >> 4) & 0x0003;
         //6: Bluetooth_Color
-        SignalsStatus.Bluetooth_Color = (req->data[1] >> 6) & 0x01;
+        SignalsStatus.Bluetooth_Color = (req->wValue >> 6) & 0x0001;
         //7-15: Buzzer patern
-        SignalsStatus.Buzzer          = ((req->data[0] >> 7) & 0x01) | req->data[0];
+        SignalsStatus.Buzzer          = (req->wValue >> 7) & 0x01FF;
+        USB_Buffer.Counter = 0;
         return USB_ACK;
-      case USB_CONTROL_CLASS_GETSTATUS : 
-        ReturnStatus = (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
-        USB_Device.Status.data_ptr = &ReturnStatus;
-        USB_Device.Status.data_count = sizeof(ReturnStatus);
-        return USB_ACK;
-      default:
-        return USB_FAIL;
     }
   }
   return USB_FAIL;
@@ -162,7 +160,7 @@ void USB_HandleEP1_TX(uint8_t event, uint8_t ep) {
   uint16_t fifo[32];
   for(int x = 0; x < 32; x++) {
     if(USB_Buffer.Head == USB_Buffer.Tail) {
-      fifo[x] = 0xFFFF;
+      fifo[x] = 0xE000 | (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
     } else {
       uint16_t Val = USB_Buffer.Buffer[USB_Buffer.Tail];
       USB_Buffer.Tail = (USB_Buffer.Tail + 1) % BUFF_LEN;
@@ -266,35 +264,47 @@ void Loop() {
   //Read charging and external power bits
   SysStatus.ExtPower = (GPIOB->IDR & GPIO_IDR_7) ? 1 : 0;
   SysStatus.Charging = (GPIOA->IDR & GPIO_IDR_8) ? 0 : 1;
-  //Handle power on action
-  if(((GPIOB->ODR && GPIO_ODR_6) == 0) && (ButtonStatus.Action == CLICK)) {
-    SignalsStatus.Power_Color = RED;
-    Sleep(1000);
+  if(ButtonStatus.Action == CLICK) {
+    //Handle power on action
+    if((GPIOB->ODR && GPIO_ODR_6) == 0) {
+      SignalsStatus.Power_Color = RED;
+      Sleep(1000);
+      SignalsStatus.Power_Color = YELLOW;
+      SignalsStatus.Buzzer = 0b111010101;
+      GPIOB->BSRR |= GPIO_BSRR_BS_6;
+      //Wait NanoPI up to 20 sec
+      uint32_t Time = SysTicks + 20000;
+      while(SysTicks < Time) {
+        if(USB_Device.Status.device_state == USB_STATE_CONFIGURED) {
+          ButtonStatus.Action = NONE;
+          SignalsStatus.Power_Color = GREEN;
+          SignalsStatus.Buzzer = 0b111101111;
+          return;
+        }
+      }
+      SignalsStatus.Buzzer = 0b000001111;
+      SignalsStatus.Power_Color = RED;
+      Sleep(1000);
+      GPIOB->BSRR |= GPIO_BSRR_BR_6;
+    } else {
+     Sleep(2000);
+     ButtonStatus.Action = NONE;
+    }
+  } else if(ButtonStatus.Action == LONG_CLICK) {
     SignalsStatus.Power_Color = YELLOW;
-    SignalsStatus.Buzzer = 0b111010101;
-    GPIOB->BSRR |= GPIO_BSRR_BS_6;
-    //Wait NanoPI up to 20 sec
+    //Wait NanoPI to shutdown up to 20 sec
     uint32_t Time = SysTicks + 20000;
     while(SysTicks < Time) {
-      if(USB_Device.Status.device_state == USB_STATE_CONFIGURED) {
-        ButtonStatus.Action = NONE;
-        SignalsStatus.Power_Color = GREEN;
-        SignalsStatus.Buzzer = 0b111101111;
-        return;
+      if(USB_Device.Status.device_state == USB_STATE_DEFAULT) {
+        SignalsStatus.Buzzer = 0b000001111;
+        SignalsStatus.Power_Color = RED;
+        Sleep(1000);
+        Suspend();
       }
     }
-    SignalsStatus.Buzzer = 0b000001111;
-    SignalsStatus.Power_Color = RED;
-    Sleep(1000);
-    GPIOB->BSRR |= GPIO_BSRR_BR_6;
-  }
-  if(((GPIOB->ODR && GPIO_ODR_6) == 1) && (ButtonStatus.Action == CLICK)) {
-    //Envio pulsacion corta a la nanopi
-  }
-  if(((GPIOB->ODR && GPIO_ODR_6) == 1) && (ButtonStatus.Action == LONG_CLICK)) {
-    //Envio pulsacion corta a la nanopi
-  }
-  if(((GPIOB->ODR && GPIO_ODR_6) == 1) && (ButtonStatus.Action == VERY_LONG_CLICK)) {
+    SignalsStatus.Power_Color = GREEN;
+    ButtonStatus.Action = NONE;    
+  } else if(ButtonStatus.Action == VERY_LONG_CLICK) {
     Sleep(2000);
     Suspend();
   }
