@@ -63,7 +63,7 @@
         if(label === undefined) {
           Labels[0] = 'Time';
         } else {
-          var Result = oZm.FormatSerieValue(label, this.SerieProps); 
+          var Result = oZm.FormatSerieValue(label, this.SerieProps);
           Labels[0] = Result.ValueHTML + Result.Units;
         }
         this.Graph.updateOptions( { labels: Labels });

@@ -296,7 +296,7 @@ void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
       if((bliu % 100000) == 0) {
         
 //        (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
-        printf("ExtPower: %s, Charging: %s, Bat: %.2f, Btn: %s\n", (Sample & 0x0001) ? "1": "0", (Sample & 0x0002) ? "1": "0", 2.96 + ((Sample & 0x00FC) >> 2) * 0.02, (((Sample & 0x0300) >> 8) == 0) ? "NONE" : (((Sample & 0x0300) >> 8) == 1) ? "CLICK" : "LONG_CLICK");
+        printf("RAW: 0x%04X, ExtPower: %s, Charging: %s, Bat: %.2f, Btn: %s\n", Sample, (Sample & 0x0001) ? "1": "0", (Sample & 0x0002) ? "1": "0", 2.96 + ((Sample & 0x00FC) >> 2) * 0.02, (((Sample & 0x0300) >> 8) == 0) ? "NONE" : (((Sample & 0x0300) >> 8) == 1) ? "CLICK" : "LONG_CLICK");
       
       }
       bliu++;

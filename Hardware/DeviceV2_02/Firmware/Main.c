@@ -3,7 +3,11 @@
 #include <STM32F0xx.h>
 #include "USB.h"
 // Configuration -------------------------------------------------------------------------------------------------------
-#define BUFF_LEN 1024
+#define BUFF_LEN  1024
+// USB application definitions -----------------------------------------------------------------------------------------
+#define SEND_EP   0x81
+#define USB_CONTROL_CLASS_SETSTATUS     0x20
+#define USB_CONTROL_CLASS_GETSTATUS     0x21
 // Types definition ----------------------------------------------------------------------------------------------------
 typedef struct {
   uint16_t Offset;
@@ -46,28 +50,6 @@ SysStatus_t       SysStatus = { .Charging = 0, .ExtPower = 0, .Battery = 0 };
 ButtonStatus_t    ButtonStatus = { .Action = CLICK, .Counter = 0};
 USB_Buffer_t      USB_Buffer = { .Head = 0, .Tail = 0 };
 ADC_Sequence_t    ADC_Read[8];
-// Buffer management functions -----------------------------------------------------------------------------------------
-void BufferPush(uint16_t value) {
-  uint16_t Next = (USB_Buffer.Head + 1) % BUFF_LEN;
-  if(Next != USB_Buffer.Tail) {
-    USB_Buffer.Buffer[USB_Buffer.Head] = value;
-    USB_Buffer.Head = Next;
-  } else {
-    USB_Buffer.Head = 0;
-    USB_Buffer.Tail = 0;
-//    USB_Buffer.Size = 0;
-//   __asm("BKPT #0\n") ; // Break into the debugger
-  }  
-}
-uint16_t BufferPop() {
-  if(USB_Buffer.Head == USB_Buffer.Tail) {
-    return 0xE000 | (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
-  } else {
-    uint16_t Val = USB_Buffer.Buffer[USB_Buffer.Tail];
-    USB_Buffer.Tail = (USB_Buffer.Tail + 1) % BUFF_LEN;
-    return Val;
-  }
-}
 // Control LED, buton and buzzer ---------------------------------------------------------------------------------------
 void SysTick_ISR() {
   if(SysTicks % 2) {
@@ -127,13 +109,19 @@ void DMA_CH1_ISR() {
   DMA1->IFCR |= DMA_IFCR_CTCIF1 | DMA_IFCR_CHTIF1;
   int16_t Offset = (2048 * 4) - (Ptr[0].Offset + Ptr[1].Offset + Ptr[2].Offset + Ptr[3].Offset);
   if((Offset > 256) || (Offset < -256)) Offset = 0;
-  BufferPush(((Ptr[0].V_CH_1 + Ptr[1].V_CH_1 + Ptr[2].V_CH_1 + Ptr[3].V_CH_1 + Offset) >> 1) | 0x0000);
-  BufferPush(((Ptr[0].V_CH_2 + Ptr[1].V_CH_2 + Ptr[2].V_CH_2 + Ptr[3].V_CH_2 + Offset) >> 1) | 0x2000);
-  BufferPush(((Ptr[0].V_CH_3 + Ptr[1].V_CH_3 + Ptr[2].V_CH_3 + Ptr[3].V_CH_3 + Offset) >> 1) | 0x4000);
-  BufferPush(((Ptr[0].I_CH_1 + Ptr[1].I_CH_1 + Ptr[2].I_CH_1 + Ptr[3].I_CH_1 + Offset) >> 1) | 0x6000);
-  BufferPush(((Ptr[0].I_CH_2 + Ptr[1].I_CH_2 + Ptr[2].I_CH_2 + Ptr[3].I_CH_2 + Offset) >> 1) | 0x8000);
-  BufferPush(((Ptr[0].I_CH_3 + Ptr[1].I_CH_3 + Ptr[2].I_CH_3 + Ptr[3].I_CH_3 + Offset) >> 1) | 0xA000);
-  BufferPush(((Ptr[0].I_CH_4 + Ptr[1].I_CH_4 + Ptr[2].I_CH_4 + Ptr[3].I_CH_4 + Offset) >> 1) | 0xC000);
+  uint16_t *Tmp = &Ptr[0].V_CH_1;
+  for(uint8_t Count = 0; Count < 7; Count++) {
+    uint16_t Next = (USB_Buffer.Head + 1) % BUFF_LEN;
+    if(Next != USB_Buffer.Tail) {
+      USB_Buffer.Buffer[USB_Buffer.Head] = ((Tmp[0] + Tmp[9] + Tmp[18] + Tmp[27] + Offset) >> 1) | (Count << 13);
+      USB_Buffer.Head = Next;
+    } else {
+      USB_Buffer.Head = 0;
+      USB_Buffer.Tail = 0;
+//     __asm("BKPT #0\n") ; // Break into the debugger
+    }  
+    Ptr++;
+  }
   //const uint16_t Temp30 = *(uint16_t*)0x1FFFF7B8;
   //const uint16_t Temp110 = *(uint16_t*)0x1FFFF7C2;
 //  int32_t Temp = ((Ptr[0].Temperature - Temp30) * 80) / (Temp110 - Temp30) + 30;
@@ -142,32 +130,61 @@ void DMA_CH1_ISR() {
   SysStatus.Battery = (Battery <= 2960) ? 0 : (Battery >= 4240) ? 63 : (Battery - 2960) / 20;
 }
 // USB callbacks functions ---------------------------------------------------------------------------------------------
-//static void cdc_rxonly (usbd_device *dev, uint8_t event, uint8_t ep) {
-//   usbd_ep_read(dev, ep, fifo, CDC_DATA_SZ);
-//}
-uint16_t Serie = 0;
-uint16_t fifo[32];
-void cdc_txonly(uint8_t event, uint8_t ep) {
-//    uint8_t _t = dev->driver->frame_no();
-//    memset(fifo, _t, CDC_DATA_SZ);
-//  if(USB_Buffer.Size < 31) {
-//    ep_write(ep, fifo, 0);
-//    return;
-//  }
-  for(int x = 0; x < 32; x++) {
-    fifo[x] = BufferPop();
+USB_Response USB_HandleEP0_Class(USB_ControlRequest_t *req, USB_Request_Callback_t *callback) {
+  static uint16_t ReturnStatus;
+  if(((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) == (USB_REQ_INTERFACE | USB_REQ_CLASS) && req->wIndex == 0 ) {
+    switch(req->bRequest) {
+      case USB_CONTROL_CLASS_SETSTATUS :
+        //0: if set reset buttons pending actions
+        if((req->data[1] & 0x01) == 1) ButtonStatus.Action = 0;
+        //1: if set instruct to power off after USB disconnect
+        //2-3: Status_Color
+        SignalsStatus.Status_Color    = (req->data[1] >> 2) & 0x03;
+        //4-5: Wifi_Color
+        SignalsStatus.Wifi_Color      = (req->data[1] >> 4) & 0x03;
+        //6: Bluetooth_Color
+        SignalsStatus.Bluetooth_Color = (req->data[1] >> 6) & 0x01;
+        //7-15: Buzzer patern
+        SignalsStatus.Buzzer          = ((req->data[0] >> 7) & 0x01) | req->data[0];
+        return USB_ACK;
+      case USB_CONTROL_CLASS_GETSTATUS : 
+        ReturnStatus = (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
+        USB_Device.Status.data_ptr = &ReturnStatus;
+        USB_Device.Status.data_count = sizeof(ReturnStatus);
+        return USB_ACK;
+      default:
+        return USB_FAIL;
+    }
   }
-  USB_EP_Write(ep, fifo, 64);
+  return USB_FAIL;
 }
-
-void SendBuffer() {
-  // Copio desde el buffer y voy reduciendo, si no hay muestras que enviar relleno con FFFF para que no se bloquee el EP
-  // Cada 100 bloques enviados mando estado
-
+void USB_HandleEP1_TX(uint8_t event, uint8_t ep) {
+  uint16_t fifo[32];
+  for(int x = 0; x < 32; x++) {
+    if(USB_Buffer.Head == USB_Buffer.Tail) {
+      fifo[x] = 0xFFFF;
+    } else {
+      uint16_t Val = USB_Buffer.Buffer[USB_Buffer.Tail];
+      USB_Buffer.Tail = (USB_Buffer.Tail + 1) % BUFF_LEN;
+      fifo[x] = Val;
+    }
+  }
+  USB_WriteEP(ep, fifo, 64);
 }
-void SetState() {
-  //Configure LEDs state and beeps
-  //Configure gains 
+USB_Response USB_SetConfiguration(uint8_t cfg) {
+  switch(cfg) {
+    case 0:
+      USB_DeconfigEP(SEND_EP);
+      USB_RegisterEP(SEND_EP, 0);
+      return USB_ACK;
+    case 1:
+      USB_ConfigEP(SEND_EP, USB_EPTYPE_BULK | USB_EPTYPE_DBLBUF, 64);
+      USB_RegisterEP(SEND_EP, USB_HandleEP1_TX);
+      USB_WriteEP(SEND_EP, 0, 0);
+      return USB_ACK;
+    default:
+      return USB_FAIL;
+  }
 }
 // Prepare device to run after wakeup or power up ----------------------------------------------------------------------
 void Setup() {
@@ -233,7 +250,7 @@ void Setup() {
   SysTick_Config(48000);
   NVIC_SetPriority(SysTick_IRQn, 2);
   // Configure and init USB 
-  usbd_init();
+  USB_Init();
   //cdc_init_usbd();
   NVIC_EnableIRQ(USB_IRQn);
   NVIC_SetPriority(USB_IRQn, 1);
@@ -259,7 +276,7 @@ void Loop() {
     //Wait NanoPI up to 20 sec
     uint32_t Time = SysTicks + 20000;
     while(SysTicks < Time) {
-      if(udev.Status.device_state == USB_STATE_CONFIGURED) {
+      if(USB_Device.Status.device_state == USB_STATE_CONFIGURED) {
         ButtonStatus.Action = NONE;
         SignalsStatus.Power_Color = GREEN;
         SignalsStatus.Buzzer = 0b111101111;
