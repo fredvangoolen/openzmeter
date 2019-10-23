@@ -82,7 +82,7 @@ typedef void (*USB_Request_Callback_t)(USB_ControlRequest_t *req);
 typedef struct {
   USB_Request_Callback_t Complete_Callback;
   USB_Event_Callback_t   Endpoint[8];
-  USB_Status_t           Status;
+  volatile USB_Status_t  Status;
 } USB_Device_t;
 
 typedef struct {
@@ -280,4 +280,4 @@ USB_Response USB_SetConfiguration (uint8_t cfg);
 
 
 
-extern volatile USB_Device_t USB_Device;
+extern USB_Device_t USB_Device;

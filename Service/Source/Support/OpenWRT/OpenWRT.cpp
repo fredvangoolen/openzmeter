@@ -1,13 +1,5 @@
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
-//#include <netinet/in.h>
-//#include <arpa/inet.h>
-//#include <sys/socket.h>
-//#include <linux/if.h>
-//#include <linux/if_bridge.h>
-//#include <sys/ioctl.h>
-//#include <sys/types.h>
-//#include <sys/wait.h>
 #include "OpenWRT.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -24,6 +16,9 @@ System::System() {
   pBTServerName    = "Stopped";
   pBTStarted       = false;
   pLastUpdateCheck = 0;
+  pBattery         = NAN;
+  pCharging        = false;
+  pPowered         = false;
   DBusError Error;
   dbus_error_init(&Error);
   pDBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
@@ -77,6 +72,15 @@ System::~System() {
   pInstance = NULL;
   StopBT();
   if(pDBus) dbus_connection_unref(pDBus);
+}
+void System::SetBatteryLevel(float level, bool charging, bool powered) {
+  pthread_mutex_lock(&pMutex);  
+  if(pInstance != NULL) {
+    pInstance->pBattery = level;
+    pInstance->pCharging = charging;
+    pInstance->pPowered = powered;
+  }
+  pthread_mutex_unlock(&pMutex);
 }
 string System::Run(string command, int *resultCode) {
   char Buffer[128];
@@ -619,6 +623,11 @@ json System::GetSystemDetails() {
   struct statvfs Disk;
   pthread_mutex_lock(&pMutex);
   json Result = json::object();
+  if(pInstance != NULL) {
+    Result["Battery"] = pInstance->pBattery;
+    Result["Charging"] = pInstance->pCharging;
+    Result["Powered"] = pInstance->pPowered;
+  }
   if(sysinfo(&Info) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pthread_mutex_unlock(&pMutex);
