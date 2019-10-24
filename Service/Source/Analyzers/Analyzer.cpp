@@ -18,7 +18,6 @@ Analyzer::Analyzer(const string &id) {
   pCurlLocks   = PTHREAD_MUTEX_INITIALIZER;
   LOGFile::Debug("Creating Analyzer database tables\n");
   Database DB;
-  DB.ExecResource("SQL/Database_Analyzer.sql");
   HTTPServer::RegisterCallback("getAlarms", GetAlarms);
   HTTPServer::RegisterCallback("getAlarm",  GetAlarm);
   HTTPServer::RegisterCallback("setAlarm",  SetAlarm);

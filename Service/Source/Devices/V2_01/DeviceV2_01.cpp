@@ -293,10 +293,13 @@ void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
     }
     if(Seq == 7) {
       if(This->pLastSignalRecv < (Tools::GetTime() - 1000)) {
-        
 //        (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
 //        printf("RAW: 0x%04X, ExtPower: %s, Charging: %s, Bat: %.2f, Btn: %s\n", Sample, (Sample & 0x0001) ? "1": "0", (Sample & 0x0002) ? "1": "0", 2.96 + ((Sample & 0x00FC) >> 2) * 0.02, (((Sample & 0x0300) >> 8) == 0) ? "NONE" : (((Sample & 0x0300) >> 8) == 1) ? "CLICK" : "LONG_CLICK");
-        System::SetBatteryLevel(2.96 + ((Sample & 0x00FC) >> 2) * 0.02, (Sample & 0x0002), (Sample & 0x0001));
+        json Status = json::object();
+        Status["Charging"] = false;        
+        
+        SysSupport::SetSystemDetails(Status);
+        //System::SetBatteryLevel(2.96 + ((Sample & 0x00FC) >> 2) * 0.02, (Sample & 0x0002), (Sample & 0x0001));
         This->pLastSignalRecv = Tools::GetTime();
       }    
       continue;

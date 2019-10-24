@@ -1,3 +1,19 @@
+CREATE TABLE IF NOT EXISTS aggreg_10c (
+  sampletime     bigint NOT NULL PRIMARY KEY,
+  rms_v          real[] NOT NULL,
+  rms_i          real[] NOT NULL,
+  freq           real,
+  flag           boolean NOT NULL,
+  active_power   real[] NOT NULL,
+  reactive_power real[] NOT NULL,
+  power_factor   real[] NOT NULL,
+  thd_v          real[] NOT NULL,
+  thd_i          real[] NOT NULL,
+  phi            real[] NOT NULL,
+  harmonics_v    real[] NOT NULL,
+  harmonics_i    real[] NOT NULL
+) WITH (OIDS=FALSE);
+
 CREATE TABLE IF NOT EXISTS aggreg_3s (
   sampletime     bigint NOT NULL PRIMARY KEY,
   rms_v          real[] NOT NULL,
@@ -87,4 +103,17 @@ CREATE TABLE IF NOT EXISTS rates(
   enddate   bigint            NOT NULL,
   config    jsonb             NOT NULL,
   template  jsonb             NOT NULL
+) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS alarms(
+  alarm         serial            NOT NULL PRIMARY KEY,  
+  username      character varying NOT NULL REFERENCES users(username) ON UPDATE CASCADE ON DELETE CASCADE,
+  name          character varying NOT NULL,
+  description   character varying NOT NULL,
+  formula       character varying NOT NULL,
+  aggregation   character varying NOT NULL,
+  message       character varying NOT NULL,
+  samples       int               NOT NULL,
+  window_length int               NOT NULL,
+  priority      smallint          NOT NULL
 ) WITH (OIDS=FALSE);

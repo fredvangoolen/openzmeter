@@ -77,12 +77,11 @@ int main(int argc, char** argv) {
   Database DB("public");
   if(DB.ExecResource("SQL/Database.sql") == false) return EXIT_FAILURE;
   /* Create system manager */
-  System SystemManager;
+  SysSupport SystemManager;
   /* Create devices interface */
   DeviceManager DeviceManager;
   /* Create WEB service */
   HTTPServer HTTPServer;
-
   uint32_t Iter = 0;
   while(!Terminate) {
     SystemManager.PeriodicTask();

@@ -87,7 +87,7 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, pri
     vector< vector<float> >    pCurrentSamples;          //Current samples
     float                      pNominalVoltage;          //Analyzer nominal voltage
     float                      pNominalFrequency;        //Analyzer nominal frequency
-    string                     pTimeZone;             //Country code
+    string                     pTimeZone;                //Country code
     string                     pContract;                //Contract identifier
     string                     pZipCode;                 //Installation zip code
     vector<float>              pGeo;                     //GPS position
@@ -96,6 +96,7 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, pri
     float                      pSamplerate;              //Velocidad de muestreo (NaN if unsuported)
     AnalyzerMode               pMode;                    //Operation mode
     uint64_t                   pSequence;                //Numero de bloques analizados
+    bool                       pSave10c;                 //Save 10 cycles aggregation to database
     Params_t                   pAggreg10C;               //Agregacion de 10 ciclos
     Params_t                   pAggreg3S;                //Agregacion de 3 segundos
     Params_t                   pAggreg1M;                //Agregacion de 1 minuto
