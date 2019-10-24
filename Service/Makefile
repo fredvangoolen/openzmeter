@@ -8,7 +8,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
-EXECUTABLE_SOURCE = Source/Tools.cpp Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/Support/SysSupport.cpp Source/Devices/DeviceManager.cpp Source/Devices/Device.cpp Source/Analyzers/Analyzer.cpp Source/Tariffs/Tariff.cpp 
+EXECUTABLE_SOURCE = Source/Tools.cpp Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/SysSupport.cpp Source/Devices/DeviceManager.cpp Source/Devices/Device.cpp Source/Analyzers/Analyzer.cpp Source/Tariffs/Tariff.cpp 
 CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs 
 LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread -lcurl
 
@@ -72,13 +72,11 @@ ifeq ($(ANALYZER_SOFT), true)
 	LDFLAGS += -lfftw3f
 endif
 ifeq ($(OS_TARGET), OPENWRT)
-	EXECUTABLE_SOURCE += Source/Support/OpenWRT/OpenWRT.cpp
-	CFLAGS += -I Source/Support/OpenWRT -DOPENWRT
+	CFLAGS += -DOPENWRT
 	LDFLAGS += -ldbus-1
 endif
 ifeq ($(OS_TARGET), DEBIAN)
-	EXECUTABLE_SOURCE += Source/Support/Debian/Debian.cpp
-	CFLAGS += -I Source/Support/Debian -DDEBIAN
+	CFLAGS += -DDEBIAN
 	LDFLAGS += -ldbus-1
 endif
 ifeq ($(TARIFF_ESP), true)

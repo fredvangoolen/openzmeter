@@ -1,4 +1,3 @@
--- Create database
 CREATE TABLE IF NOT EXISTS users(
   username      character varying  NOT NULL PRIMARY KEY,
   password      character varying  NOT NULL,
