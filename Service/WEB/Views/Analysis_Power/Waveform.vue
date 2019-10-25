@@ -3,7 +3,7 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ MouseOver ? 'Paused while over graph' : Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <div class="header-buttons" ref="Toolbar">
-        <toolbar-phases variable="DetailsPhaseSingle" ref="phases" :multi="false" v-on:PhasesChanged="$parent.PhasesChangedSingle" type="VOLTAGE"></toolbar-phases>
+        <toolbar-phases variable="DetailsPhaseSingle" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedSingle" type="VOLTAGE"></toolbar-phases>
         <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
       </div>
     </div>
@@ -33,9 +33,9 @@
           this.$refs.graph.Redraw('100%', '300');
         });
       },
-      SetPhases: function(phase) {
-        this.$refs.phases.SetPhases(phase);
-        this.Phase = phase;
+      SetPhases: function(phases) {
+        this.$refs.phases.SetPhases(phases);
+        this.Phases = phases;
         this.CalcOptions();
       },
       SetOption: function(option, val) {
@@ -49,7 +49,7 @@
         this.ShowSpinner = false;
       },
       CalcOptions: function() {
-        if((this.$root.SelectedAnalyzer === null) || (this.Phase === null) || (this.Data === null)) return;
+        if((this.$root.SelectedAnalyzer === null) || (this.Phases === null) || (this.Data === null)) return;
         var Analyzer = this.$root.SelectedAnalyzer, Series = { 'Voltage': {axis: 'y2', strokePattern: [1, 2]}, 'Current': {axis: 'y2', strokePattern: [1, 2]}, 'Power': { fillGraph: true }};
         this.ShowWarning = (this.Data.Current[this.Phase] < Analyzer.MinCurrent); 
         var ToShow = [];
@@ -105,7 +105,7 @@
     created: function() {
       this.CurrentMult = 1.0;
       this.Data = null;
-      this.Phase = null;
+      this.Phases = null;
     },
     components: { Spinner, ToolbarPhases, ToolbarTools, Graph }
   }
