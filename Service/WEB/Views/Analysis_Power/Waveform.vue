@@ -3,7 +3,8 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ MouseOver ? 'Paused while over graph' : Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <div class="header-buttons" ref="Toolbar">
-        <toolbar-phases variable="DetailsPhaseSingle" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedSingle" type="VOLTAGE"></toolbar-phases>
+        <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti" type="VOLTAGE"></toolbar-phases>
+        <toolbar-options variable="DetailOptions" :options="['Voltage/Current']" ref="options" v-on:OptionChanged="SetOption"></toolbar-options>
         <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
       </div>
     </div>
@@ -18,13 +19,12 @@
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'JS/moment.js';
   import Dygraph from 'JS/dygraph.js';
-  import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data() {
-      return { ShowWarning: true, MouseOver: false, ShowSpinner: true, Time: 'Loading data...', GraphOptions: { interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' }
+      return { ShowWarning: true, MouseOver: false, ShowSpinner: true, Time: 'Loading data...', GraphOptions: { drawAxesAtZero: true, interactionModel: Graph.FixedRangeInteractionModel(this), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ] }
       };
     },
     methods: {
@@ -36,10 +36,15 @@
       SetPhases: function(phases) {
         this.$refs.phases.SetPhases(phases);
         this.Phases = phases;
+        var PhasesCount = 0;
+        for(var j = 0; j < this.Phases.length; j++) {
+          if(this.Phases[j] === true) PhasesCount++;
+        }
+        this.$refs.options.SetEnable(PhasesCount === 1);
         this.CalcOptions();
       },
       SetOption: function(option, val) {
-        if(option === 'Current') this.ShowCurrent = val;
+        if(option === 'Voltage/Current') this.ShowVoltageCurrent = val;
         this.CalcOptions();
       },
       SetData: function(result) {
@@ -50,24 +55,39 @@
       },
       CalcOptions: function() {
         if((this.$root.SelectedAnalyzer === null) || (this.Phases === null) || (this.Data === null)) return;
-        var Analyzer = this.$root.SelectedAnalyzer, Series = { 'Voltage': {axis: 'y2', strokePattern: [1, 2]}, 'Current': {axis: 'y2', strokePattern: [1, 2]}, 'Power': { fillGraph: true }};
+        var Analyzer = this.$root.SelectedAnalyzer, Series = { 'Voltage': {axis: 'y2'}, 'Current': {axis: 'y2'}, 'Power': { fillGraph: true }};
         this.ShowWarning = (this.Data.Current[this.Phase] < Analyzer.MinCurrent); 
         var ToShow = [];
-        for(var i = 0; i < this.Data.Voltage_Samples[0].length; i++) ToShow.push([i, this.Data.Voltage_Samples[this.Phase][i], this.Data.Current_Samples[this.Phase][i], this.Data.Voltage_Samples[this.Phase][i] * this.Data.Current_Samples[this.Phase][i]]);
-        var Y1Range = oZm.Series['VOLTAGE_SAMPLES'].Range(ToShow, [false, false, true]);
-        var CurrentRange = oZm.Series['VOLTAGE_SAMPLES'].Range(ToShow, [false, true, false]);
-        var VoltageRange = oZm.Series['VOLTAGE_SAMPLES'].Range(ToShow, [true, false, false]);
-        var MaxVoltage = Math.max(Math.abs(VoltageRange[0]), Math.abs(VoltageRange[1]));
-        var MaxCurrent = Math.max(Math.abs(CurrentRange[0]), Math.abs(CurrentRange[1]));
-        var MaxY1      = Math.max(Math.abs(Y1Range[0]), Math.abs(Y1Range[1]));
-        VoltageRange = [-MaxVoltage, MaxVoltage];
-        Y1Range      = [-MaxY1, MaxY1];
-        this.CurrentMult = MaxVoltage / MaxCurrent;
-        for(var i = 0; i < ToShow.length; i++) ToShow[i][2] = ToShow[i][2] * this.CurrentMult;
-        
+        var PhasesCount = 0;
+        for(var j = 0; j < this.Phases.length; j++) {
+          if(this.Phases[j] === true) PhasesCount++;
+        }        
+        for(var i = 0; i < this.Data.Voltage_Samples[0].length; i++) {
+          var Row = [i];
+          var Sum = 0;
+          for(var j = 0; j < this.Phases.length; j++) {
+            if(this.Phases[j] === true) Sum = Sum + this.Data.Voltage_Samples[j][i] * this.Data.Current_Samples[j][i];
+            if((this.ShowVoltageCurrent === true) && (PhasesCount === 1) && (this.Phases[j] === true)) Row = Row.concat([this.Data.Voltage_Samples[j][i], this.Data.Current_Samples[j][i]]);
+          }
+          ToShow.push(Row.concat([Sum]));
+        }
+        var Y1Range = oZm.Series['VOLTAGE_SAMPLES'].Range(ToShow, ((this.ShowVoltageCurrent === true) && (PhasesCount === 1)) ? [false, false, true] : [true]);
+        if(Y1Range[0] > 0) Y1Range[0] = 0;
+        if((this.ShowVoltageCurrent === true) && (PhasesCount === 1)) {
+          var VoltageRange = oZm.Series['VOLTAGE_SAMPLES'].Range(ToShow, [true, false, false]);    
+          var CurrentRange = oZm.Series['VOLTAGE_SAMPLES'].Range(ToShow, [false, true, false]);
+          var MaxVoltage = Math.max(Math.abs(VoltageRange[0]), Math.abs(VoltageRange[1]));
+          var MaxCurrent = Math.max(Math.abs(CurrentRange[0]), Math.abs(CurrentRange[1]));
+          var MaxY1      = Math.max(Math.abs(Y1Range[0]), Math.abs(Y1Range[1]));
+          Y1Range      = [-MaxY1, MaxY1];
+          VoltageRange = [-MaxVoltage, MaxVoltage];
+          this.CurrentMult = MaxVoltage / MaxCurrent;
+          for(var i = 0; i < ToShow.length; i++) ToShow[i][2] = ToShow[i][2] * this.CurrentMult;
+        }
         var Options = {
-          legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, labels: ['Sample', 'Voltage', 'Current', 'Power'], colors: [oZm.Series['VOLTAGE'].Color, oZm.Series['CURRENT'].Color, oZm.Series['ACTIVE_POWER'].Color], 
-          plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], showRangeSelector: false,
+          legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, labels: ((this.ShowVoltageCurrent === true) && (PhasesCount === 1)) ? ['Sample', 'Voltage', 'Current', 'Power'] : ['Sample', 'Power'], 
+          colors: ((this.ShowVoltageCurrent === true) && (PhasesCount === 1)) ? [oZm.Series['VOLTAGE'].Color, oZm.Series['CURRENT'].Color, oZm.Series['ACTIVE_POWER'].Color] : [oZm.Series['ACTIVE_POWER'].Color], 
+          showRangeSelector: false,
           axes: {
             y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: Y1Range,
                valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
@@ -106,8 +126,9 @@
       this.CurrentMult = 1.0;
       this.Data = null;
       this.Phases = null;
+      this.ShowVoltageCurrent = false;
     },
-    components: { Spinner, ToolbarPhases, ToolbarTools, Graph }
+    components: { ToolbarPhases, ToolbarTools, Graph }
   }
 </script>
 

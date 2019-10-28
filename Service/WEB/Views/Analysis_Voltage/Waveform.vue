@@ -26,7 +26,7 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data() {
-      return { ShowWarning: true, ShowSpinner: true, MouseOver: false, Time: 'Loading data...', GraphOptions: { plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' }
+      return { ShowWarning: true, ShowSpinner: true, MouseOver: false, Time: 'Loading data...', GraphOptions: { drawAxesAtZero: true, plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], interactionModel: Graph.FixedRangeInteractionModel(this) }
       };
     },
     methods: {

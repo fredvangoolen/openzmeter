@@ -27,7 +27,7 @@
   export default {
     data() {
       return { ShowWarning: true, MouseOver: false, ShowSpinner: true, Time: 'Loading data...', 
-        GraphOptions: { plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], interactionModel: Graph.FixedRangeInteractionModel(this), selectMode: 'euclidian' } };
+        GraphOptions: { drawAxesAtZero: true, plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ], interactionModel: Graph.FixedRangeInteractionModel(this) } };
     },
     methods: {
       Redraw: function() {

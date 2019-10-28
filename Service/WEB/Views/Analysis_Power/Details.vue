@@ -56,13 +56,11 @@
         if(this.ActiveTab === 'Parameters') this.$refs.parameters.Redraw();
       },
       PhasesChangedSingle: function(phase) {
-        this.$refs.waveform.SetPhases(phase);
         this.$refs.parameters.SetPhases(phase);
       },
       PhasesChangedMulti: function(phases) {
-//        this.$refs.waveform.SetPhases(phases);
+        this.$refs.waveform.SetPhases(phases);
         this.$refs.harmonics.SetPhases(phases);
-//        this.$refs.advanced.SetPhases(phases);
       },      
       SetAnalyzer() {
         this.LastSample = 0;
