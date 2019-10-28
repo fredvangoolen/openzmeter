@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS aggreg_10c (
+CREATE UNLOGGED TABLE IF NOT EXISTS aggreg_10c (
   sampletime     bigint NOT NULL PRIMARY KEY,
   rms_v          real[] NOT NULL,
   rms_i          real[] NOT NULL,
@@ -9,9 +9,7 @@ CREATE TABLE IF NOT EXISTS aggreg_10c (
   power_factor   real[] NOT NULL,
   thd_v          real[] NOT NULL,
   thd_i          real[] NOT NULL,
-  phi            real[] NOT NULL,
-  harmonics_v    real[] NOT NULL,
-  harmonics_i    real[] NOT NULL
+  phi            real[] NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS aggreg_3s (

@@ -22,6 +22,8 @@ vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), Database(id) {
   LOGFile::Debug("Creating AnalyzerSoft database tables\n");
   ExecResource("SQL/Database_AnalyzerSoft.sql");
+  ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + Bind(Tools::GetTime() - 86400000));   //Delete 1 day old
+  ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + Bind(Tools::GetTime() - 3600000));     //Delete 1 hour old
   pConfigPath      = optionPath;
   pMode            = mode;
   pSamplerate      = samplerate;
@@ -252,7 +254,7 @@ float AnalyzerSoft::AccumulateRMS(const float val1, const float val2) const {
 }
 void AnalyzerSoft::SaveAggreg(Params_t &params) {
   if(params.Type == AGGREG_10C)
-    ExecSentenceNoResult("INSERT INTO aggreg_10c(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.Power_Factor) + ", " + Bind(params.Voltage_THD) + ", " + Bind(params.Current_THD) + ", " + Bind(params.Phi) + ", " + Bind(params.Voltage_Harmonics) + ", " + Bind(params.Current_Harmonics) + ")");
+    ExecSentenceNoResult("INSERT INTO aggreg_10c(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.Power_Factor) + ", " + Bind(params.Voltage_THD) + ", " + Bind(params.Current_THD) + ", " + Bind(params.Phi) + ")");
   else if(params.Type == AGGREG_3S)
     ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ")");
   else if(params.Type == AGGREG_1M)
@@ -264,7 +266,7 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
   else if(params.Type == AGGREG_1H)
     ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.StatsVoltage) + ", " + Bind(params.StatsFrequency) + ", " + Bind(params.StatsTHD) + ", " + Bind(params.StatsHarmonics) + ")");
   if(params.Type == AGGREG_1M) ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + Bind(params.Timestamp - 86400000));   //Delete 1 day old
-  if((params.Type == AGGREG_10C) && (pSave10c == true)) ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + Bind(params.Timestamp - 86400000));     //Delete 1 day old
+  if((params.Type == AGGREG_1M) && (pSave10c == true)) ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + Bind(params.Timestamp - 3600000));     //Delete 1 hour old
   //TEST
   json Result;
   if((params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
@@ -518,8 +520,8 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     }
     This->AccumulateAggreg(This->pAggreg1H, This->pAggreg10C);
     This->pPrevTimestamp = This->pAggreg10C.Timestamp;
-    This->PNowDataLock.ProviderWait();
     if(This->pSave10c) This->SaveAggreg(This->pAggreg10C);
+    This->PNowDataLock.ProviderWait();
     This->InitAggreg(This->pAggreg10C, AGGREG_10C);
     LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->GetSchema().c_str(), Tools::GetTime() - Start, This->pSequence);
     This->pCurrentSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : (This->pMode == PHASE3) ? 3 : 4, vector<float>(0));

@@ -1,6 +1,6 @@
 <template>
   <div class="btn-group">
-    <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: Conf[name] }" v-for="(name, index) in options" @click="Toogle(index, name)">{{ name }}</button>
+    <button type="button" class="btn btn-default btn-xs" v-bind:disabled="isDisabled" v-bind:class="{ active: Conf[name] }" v-for="(name, index) in options" @click="Toogle(index, name)">{{ name }}</button>
   </div>
 </template> 
 
@@ -8,9 +8,12 @@
   export default {
     props: { options: Array, variable: String },
     data() {
-      return { Conf: {} };
+      return { Conf: {}, isDisabled: false };
     },
     methods: {
+      SetEnable: function(value) {
+        this.isDisabled = !value;
+      },
       Toogle(index, name) {
         this.Conf[name] = !this.Conf[name];
         this.Conf = Object.assign({}, this.Conf);

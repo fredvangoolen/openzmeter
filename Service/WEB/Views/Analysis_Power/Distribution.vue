@@ -9,10 +9,10 @@
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
-        <div class="col-sm-12 col-md-8 col-lg-6 graphDiv" ref="graphContainer">
+        <!--div class="col-sm-12 col-md-8 col-lg-6 graphDiv" ref="graphContainer">
           <graph ref="graph" class="graph" :options="GraphOptions"></graph>
-        </div>
-        <div class="col-sm-12 col-md-4 col-lg-6">
+        </div-->
+        <div class="col-sm-12">
           <h4>Active power harmonics distribution</h4>
           <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
         </div>
@@ -33,7 +33,7 @@
     data: function() {
       return { ShowWarning: true,  ShowSpinner: true, Time: 'Loading data...',
         Columns: [
-          {name: 'Color', title: 'Color'},
+//          {name: 'Color', title: 'Color'},
           {name: 'Harmonic', title: 'Harmonic'},
           {name: 'Power', title: 'Active power'},
           {name: 'Ratio', title: 'Ratio'}
@@ -126,10 +126,10 @@
         }
         var Harmonics = Positive + Negative;
         var Noise = Total - Fundamental - Harmonics;
-        this.$refs.graph.SetOptions({ file: [
-          [0, Total, null, null, null],
-          [1, null, Fundamental, Positive, Negative]
-        ] });
+//        this.$refs.graph.SetOptions({ file: [
+//          [0, Total, null, null, null],
+//          [1, null, Fundamental, Positive, Negative]
+//        ] });
         this.$refs.table.setData( { data: [
           { Harmonic: 'Fundamental', Power: oZm.RoundHTML(Fundamental, 2), Ratio: oZm.RoundHTML(Fundamental / Total * 100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #DF842A"></div>' },
           { Harmonic: 'Harmonics', Power: oZm.RoundHTML(Harmonics, 2), Ratio: oZm.RoundHTML(Harmonics / Total * 100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #3d3d8b"></div>' },

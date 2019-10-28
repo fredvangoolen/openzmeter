@@ -21,7 +21,6 @@ class SysSupport {
     #endif
   private :
     static SysSupport      *pInstance;
-    static bool             pRegistered;
     static pthread_mutex_t  pMutex;
   private :
     json               pSystemStatus;

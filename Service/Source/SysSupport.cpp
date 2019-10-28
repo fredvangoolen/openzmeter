@@ -2,30 +2,19 @@
   #include <sys/sysinfo.h>
   #include <sys/statvfs.h>
 #endif
-
 #include "SysSupport.h"
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
-bool            SysSupport::pRegistered = SysSupport::Register();
 SysSupport     *SysSupport::pInstance   = NULL;
 pthread_mutex_t SysSupport::pMutex      = PTHREAD_MUTEX_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
-bool SysSupport::Register() {
-  HTTPServer::RegisterCallback("getNews",   SysSupport::GetNewsCallback);
-  HTTPServer::RegisterCallback("getUsers",  SysSupport::GetUsersCallback);  
-  HTTPServer::RegisterCallback("getUser",   SysSupport::GetUserCallback);
-  HTTPServer::RegisterCallback("setUser",   SysSupport::SetUserCallback);
-  HTTPServer::RegisterCallback("addUser",   SysSupport::AddUserCallback);
-  HTTPServer::RegisterCallback("delUser",   SysSupport::DelUserCallback);
-  return true;
-}
 void SysSupport::GetNewsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(Params["NewsTime"].is_number()) {
     uint64_t Time = Params["NewsTime"];
-    req.ExecSentenceAsyncResult("SELECT COALESCE((SELECT json_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) FROM news WHERE newstime = " + req.Bind(Time) + "), 'null') AS result");
+    req.ExecSentenceAsyncResult("SELECT json_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) as result FROM news WHERE newstime = " + req.Bind(Time));
   } else {
-    req.ExecSentenceAsyncResult("SELECT json_build_object('Version', '" __BUILD__ "', 'News', array_agg(newstime ORDER BY newstime ASC)) AS result from news");
+    req.ExecSentenceAsyncResult("SELECT json_build_object('Version', '" __BUILD__ "', 'News', COALESCE(array_agg(newstime ORDER BY newstime ASC), '{}')) AS result from news");
   }
   if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("result"), MHD_HTTP_OK);
@@ -63,6 +52,12 @@ SysSupport::SysSupport() {
   pthread_mutex_lock(&pMutex);
   if(pInstance != NULL) delete pInstance;
   pthread_mutex_unlock(&pMutex);
+  HTTPServer::RegisterCallback("getNews",   GetNewsCallback);
+  HTTPServer::RegisterCallback("getUsers",  GetUsersCallback);  
+  HTTPServer::RegisterCallback("getUser",   GetUserCallback);
+  HTTPServer::RegisterCallback("setUser",   SetUserCallback);
+  HTTPServer::RegisterCallback("addUser",   AddUserCallback);
+  HTTPServer::RegisterCallback("delUser",   DelUserCallback);
   #ifdef OPENWRT
     json Config = ConfigManager::ReadConfig("/Bluetooth");
     pBTBridgeName      = "br-bt";
@@ -103,18 +98,15 @@ SysSupport::SysSupport() {
     Config["Config"] = pWirelessWIFI;
     ConfigManager::WriteConfig("/WIFI", Config);
     if(Enabled) StartBT();
-    if(pRegistered == false) {
-      HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback);
-      HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback);
-      HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
-      HTTPServer::RegisterCallback("getWIFI",  GetWIFICallback);
-      HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
-      HTTPServer::RegisterCallback("getNTP", GetNTPCallback);
-      HTTPServer::RegisterCallback("setNTP", SetNTPCallback);
-      HTTPServer::RegisterCallback("getUpdates", GetUpdatesCallback);
-      HTTPServer::RegisterCallback("upgrade", UpgradeCallback);
-      pRegistered = true;
-    }
+    HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback);
+    HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback);
+    HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
+    HTTPServer::RegisterCallback("getWIFI",  GetWIFICallback);
+    HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
+    HTTPServer::RegisterCallback("getNTP", GetNTPCallback);
+    HTTPServer::RegisterCallback("setNTP", SetNTPCallback);
+    HTTPServer::RegisterCallback("getUpdates", GetUpdatesCallback);
+    HTTPServer::RegisterCallback("upgrade", UpgradeCallback);
   #endif  
   pthread_mutex_lock(&pMutex);
   pInstance = this;
@@ -123,11 +115,26 @@ SysSupport::SysSupport() {
 SysSupport::~SysSupport() {
   pthread_mutex_lock(&pMutex);
   pInstance = NULL;
-  pthread_mutex_unlock(&pMutex);
+  HTTPServer::UnregisterCallback("getNews");
+  HTTPServer::UnregisterCallback("getUsers");
+  HTTPServer::UnregisterCallback("getUser");
+  HTTPServer::UnregisterCallback("setUser");
+  HTTPServer::UnregisterCallback("addUser");
+  HTTPServer::UnregisterCallback("delUser");  
   #ifdef OPENWRT
+    HTTPServer::UnregisterCallback("getBluetooth");
+    HTTPServer::UnregisterCallback("setBluetooth");
+    HTTPServer::UnregisterCallback("scanWIFI");
+    HTTPServer::UnregisterCallback("getWIFI");
+    HTTPServer::UnregisterCallback("setWIFI");
+    HTTPServer::UnregisterCallback("getNTP");
+    HTTPServer::UnregisterCallback("setNTP");
+    HTTPServer::UnregisterCallback("getUpdates");
+    HTTPServer::UnregisterCallback("upgrade");
     StopBT();
     if(pDBus) dbus_connection_unref(pDBus);
   #endif
+  pthread_mutex_unlock(&pMutex);
 }
 void SysSupport::SetSystemDetails(const json &details) {
   pthread_mutex_lock(&pMutex);
