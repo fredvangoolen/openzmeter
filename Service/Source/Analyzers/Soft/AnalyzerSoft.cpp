@@ -182,6 +182,7 @@ void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) const {
     params.Phi = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
     params.Power_Factor = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
     params.Current_Harmonics = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(50, NAN));
+    params.Power_Harmonics = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
   }
   if((params.Type == AGGREG_10C) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M)) {
     params.Voltage_THD = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
@@ -210,6 +211,9 @@ void AnalyzerSoft::AccumulateAggreg(Params_t &dst, const Params_t &src) const {
   for(uint i = 0; i < dst.Voltage_THD.size(); i++) dst.Voltage_THD[i] = AccumulateRMS(dst.Voltage_THD[i], src.Voltage_THD[i]);
   for(uint i = 0; i < dst.Current_THD.size(); i++) dst.Current_THD[i] = AccumulateRMS(dst.Current_THD[i], src.Current_THD[i]);
   for(uint i = 0; i < dst.Phi.size(); i++) dst.Phi[i] = AccumulateSUM(dst.Phi[i], src.Phi[i]);
+  for(uint i = 0; i < dst.Power_Harmonics.size(); i++) {
+    for(uint j = 0; j < dst.Power_Harmonics[i].size(); j++) dst.Power_Harmonics[i][j] = AccumulateSUM(dst.Power_Harmonics[i][j], src.Power_Harmonics[i][j]);
+  }
   for(uint i = 0; i < dst.Voltage_Harmonics.size(); i++) {
     for(uint j = 0; j < dst.Voltage_Harmonics[i].size(); j++) dst.Voltage_Harmonics[i][j] = AccumulateRMS(dst.Voltage_Harmonics[i][j], src.Voltage_Harmonics[i][j]);
   }
@@ -229,6 +233,9 @@ void AnalyzerSoft::NormalizeAggreg(Params_t &params) const {
   for(uint i = 0; i < params.Voltage_THD.size(); i++) params.Voltage_THD[i] = sqrt(params.Voltage_THD[i] / params.Voltage_Inputs);
   for(uint i = 0; i < params.Current_Harmonics.size(); i++) {
     for(uint j = 0; j < params.Current_Harmonics[i].size(); j++) params.Current_Harmonics[i][j] = sqrt(params.Current_Harmonics[i][j] / (float)params.Current_Inputs[i]);
+  }
+  for(uint i = 0; i < params.Power_Harmonics.size(); i++) {
+    for(uint j = 0; j < params.Power_Harmonics[i].size(); j++) params.Power_Harmonics[i][j] = params.Power_Harmonics[i][j] / (float)params.Current_Inputs[i];
   }
   for(uint i = 0; i < params.Voltage_Harmonics.size(); i++) {
     for(uint j = 0; j < params.Voltage_Harmonics[i].size(); j++) params.Voltage_Harmonics[i][j] = sqrt(params.Voltage_Harmonics[i][j] / (float)params.Voltage_Inputs);
@@ -258,7 +265,7 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
   else if(params.Type == AGGREG_3S)
     ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ")");
   else if(params.Type == AGGREG_1M)
-    ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) SELECT sampletime, " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.Power_Factor) + ", " + Bind(params.Voltage_THD) + ", " + Bind(params.Current_THD) + ", " + Bind(params.Phi) + ", " + Bind(params.Voltage_Harmonics) + ", " + Bind(params.Current_Harmonics) + " FROM Sample");
+    ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i, harmonics_p) SELECT sampletime, " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.Power_Factor) + ", " + Bind(params.Voltage_THD) + ", " + Bind(params.Current_THD) + ", " + Bind(params.Phi) + ", " + Bind(params.Voltage_Harmonics) + ", " + Bind(params.Current_Harmonics) + ", " + Bind(params.Power_Harmonics) + " FROM Sample");
   else if(params.Type == AGGREG_10M)
     ExecSentenceNoResult("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ")");
   else if(params.Type == AGGREG_15M)
@@ -427,6 +434,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->pAggreg10C.Apparent_Power[j] = This->pAggreg10C.Voltage[j] * This->pAggreg10C.Current[j];
       for(uint i = 0; i < This->pAggreg10C.Current_Harmonics[j].size(); i++) {
         This->pAggreg10C.Current_Harmonics[j][i] = This->pCurrentFFT[j]->BinPower(10 + i * 10);
+        This->pAggreg10C.Power_Harmonics[j][i] = This->pCurrentFFT[j]->BinPower(10 + i * 10) * This->pVoltageFFT[j]->BinPower(10 + i * 10) * cos(FFT::CalcAngle(This->pCurrentFFT[j]->Output[10 + i * 10] * (float)M_SQRT2, This->pVoltageFFT[j]->Output[10 + i * 10] * (float)M_SQRT2));
         if(i > 0) This->pAggreg10C.Current_THD[j] = This->AccumulateSUM(This->pAggreg10C.Current_THD[j], This->pAggreg10C.Current_Harmonics[j][i]);
       }
       float PHI = FFT::CalcAngle(This->pCurrentFFT[j]->Output[10], This->pVoltageFFT[j]->Output[10]);
@@ -835,15 +843,15 @@ void AnalyzerSoft::GetSeries(HTTPRequest &req) {
     } else if((Serie == "PHI") && ((Aggreg == "10C") || (Aggreg == "1M"))) {
       vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
       Query += "COALESCE(ARRAY_AGG(COALESCE(phi, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Phi") + ", ";
-    } else if((Serie == "VOLTAGE_HARMONICS") && ((Aggreg == "10C") || (Aggreg == "1M"))) {
+    } else if((Serie == "VOLTAGE_HARMONICS") && (Aggreg == "1M")) {
       vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
       Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_v, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics") + ", ";
-    } else if((Serie == "CURRENT_HARMONICS") && ((Aggreg == "10C") || (Aggreg ==  "1M"))) {
+    } else if((Serie == "CURRENT_HARMONICS") && (Aggreg ==  "1M")) {
       vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(50, NAN));
       Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_i, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current_Harmonics") + ", ";
-//    } else if((Serie == "POWER_HARMONICS") && (Aggreg == "1M")) {
-//      vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
-//      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_v, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics") + ", ";      
+    } else if((Serie == "POWER_HARMONICS") && (Aggreg == "1M")) {
+      vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
+      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_p, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Power_Harmonics") + ", ";      
     } else if((Serie == "VOLTAGE_STATS") && (Aggreg ==  "1H")) {   
       Query += "COALESCE(ARRAY_AGG(stat_voltage ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Stats") + ", ";
     } else if((Serie == "FREQUENCY_STATS") && (Aggreg ==  "1H")) {
@@ -947,13 +955,13 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
       }
     } else if(Serie == "POWER_HARMONICS") {
       Result["Power_Harmonics"] = json::array();
-      for(uint n = 0; n < pAggreg10C.Voltage_Harmonics.size(); n++) {
+      for(uint n = 0; n < pAggreg10C.Power_Harmonics.size(); n++) {
         json Ch = json::array();
-        for(uint i = 0; i < pAggreg10C.Voltage_Harmonics[n].size(); i++) {
-          complex<float> Current = pCurrentFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
-          complex<float> Voltage = pVoltageFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
-          float PHI = FFT::CalcAngle(Current, Voltage);
-          Ch.push_back(pCurrentFFT[n]->BinPower(10 + i * 10) * pVoltageFFT[n]->BinPower(10 + i * 10) * cos(PHI));
+        for(uint i = 0; i < pAggreg10C.Power_Harmonics[n].size(); i++) {
+//          complex<float> Current = pCurrentFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
+//          complex<float> Voltage = pVoltageFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
+//          float PHI = FFT::CalcAngle(Current, Voltage);
+          Ch.push_back(pAggreg10C.Power_Harmonics[n][i]);
         }
         Result["Power_Harmonics"].push_back(Ch);        
       }

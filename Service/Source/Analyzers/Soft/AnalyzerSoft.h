@@ -65,8 +65,9 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, pri
       vector<float>                  Current_THD;          //Distorsion harmonica de la corriente
       vector<float>                  Voltage_Phase;        //Angulo entre canales de tension
       vector<float>                  Phi;                  //Angulo de Phi
-      vector< vector<float> >        Voltage_Harmonics;    //Armonicos del canal de tension
-      vector< vector<float> >        Current_Harmonics;    //Armonicos del canal de corriente
+      vector< vector<float> >        Voltage_Harmonics;    //Harmonicos del canal de tension
+      vector< vector<float> >        Current_Harmonics;    //Harmonicos del canal de corriente
+      vector< vector<float> >        Power_Harmonics;      //Power harmonics
     } Params_t;
     typedef struct {
       float                 A0;
