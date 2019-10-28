@@ -39,8 +39,12 @@ CREATE TABLE IF NOT EXISTS aggreg_ext_1m (
   reactive_power real[] NOT NULL,
   phi            real[] NOT NULL,
   harmonics_v    real[] NOT NULL,
-  harmonics_i    real[] NOT NULL
+  harmonics_i    real[] NOT NULL,
+  harmonics_p    real[] NOT NULL
 ) WITH (OIDS=FALSE);
+ALTER TABLE aggreg_ext_1m ADD COLUMN IF NOT EXISTS harmonics_p real[];
+UPDATE aggreg_ext_1m SET harmonics_p = array_fill(NULL::real, ARRAY[array_length(harmonics_v, 1), array_length(harmonics_v, 2)]) WHERE harmonics_p IS NULL;
+ALTER TABLE aggreg_ext_1m ALTER COLUMN harmonics_p SET NOT NULL;
 
 CREATE TABLE IF NOT EXISTS aggreg_10m (
   sampletime bigint NOT NULL PRIMARY KEY, 
