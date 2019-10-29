@@ -60,6 +60,7 @@
               this.$root.$emit('AnalyzerChanged', result);
             }.bind(this),
             error: function() {
+              this.$root.$emit('AnalyzerChanged', null);
               this.$refs.Dialog.Show();
             }.bind(this)
           });

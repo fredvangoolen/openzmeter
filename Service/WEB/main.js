@@ -78,5 +78,6 @@ new Vue({
       { path: '/Settings', component: Settings },
       { path: '/Help', component: Help },
       { path: '*', component: PageNotFound }
+      
     ]})
 });

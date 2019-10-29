@@ -73,6 +73,7 @@
         for(var n = 0; n < data.file.length; n++) {
           if(Math.abs(data.file[n][1]) > Range) Range = Math.abs(data.file[n][1]);
         }
+        if(Range < 1.0) Range = 1.0;
         data.valueRange = [-Range, +Range];
         this.Graph.updateOptions(data);
       },

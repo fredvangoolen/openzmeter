@@ -1,12 +1,12 @@
 <template>
   <ul class="sidenav-menu">
-    <li>
+    <li v-if="AnalyzerSelected">
       <router-link class="link" to="/Dashboard">
         <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/dashboard.png')"></span>
         <span class="sidenav-link-title">Dashboard</span>
       </router-link>
     </li>
-    <li>
+    <li v-if="AnalyzerSelected">
       <a href="javascript:;" data-sidenav-dropdown-toggle>
         <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/draw_wave.png')"></span>
         <span class="sidenav-link-title">Analysis</span>
@@ -21,7 +21,7 @@
         <li><router-link class="link" to="/Analysis/Frequency">Frequency</router-link></li>
       </ul>
     </li>
-    <li>
+    <li v-if="AnalyzerSelected">
       <a href="javascript:;" data-sidenav-dropdown-toggle>
         <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/warning.png')"></span>
         <span class="sidenav-link-title">Events</span>
@@ -34,7 +34,7 @@
         <li><router-link class="link" to="/Events/EN50160">EN50160</router-link></li>
       </ul>
     </li>
-    <li>
+    <li v-if="AnalyzerSelected">
       <a href="javascript:;" data-sidenav-dropdown-toggle>
         <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/table_money.png')"></span>
         <span class="sidenav-link-title">Energy Stats</span>
@@ -65,7 +65,7 @@
 <script>
   export default {
     data() {
-      return { }
+      return { AnalyzerSelected: false }
     }, 
     mounted: function() {
       $('.sidenav-menu').on('click', '[data-sidenav-dropdown-toggle]', function (e) {
@@ -74,6 +74,12 @@
         $(this).find('[data-sidenav-dropdown-icon]').toggleClass('show');
         e.preventDefault();
       });
+      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
+    },
+    methods: {
+      SetAnalyzer: function() {
+        this.AnalyzerSelected = (this.$root.SelectedAnalyzer !== null); 
+      }
     }
   }
 </script>

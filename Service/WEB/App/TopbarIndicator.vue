@@ -12,10 +12,13 @@
 <script>
   import * as oZm from 'JS/openZmeter.js'
   export default {
-    props: ['color', 'units'],
+    props: ['color', 'units', 'decimals'],
     data: function() {
-            return { value: ['Offline'], prefix: '' };
-          },
+      return { value: ['Offline'], prefix: '', Decimals: 2 };
+    },
+    created: function() {
+      if(this.decimals !== undefined) this.Decimals = this.decimals;
+    },
     methods: {
       setValue: function(vals) {
         if(vals === null) {
@@ -24,7 +27,7 @@
           this.prefix = oZm.GetBestUnits(oZm.ArrayAbsMax(vals));
           vals = oZm.ScaleArrayToUnits(vals, this.prefix);
           this.value = [];
-          for(var i = 0; i < vals.length; i++) this.value.push(oZm.Round2(vals[i]));
+          for(var i = 0; i < vals.length; i++) this.value.push(oZm.RoundHTML(vals[i], this.Decimals));
         }
       }
     }
