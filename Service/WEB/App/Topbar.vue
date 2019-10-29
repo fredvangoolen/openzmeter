@@ -13,11 +13,11 @@
       </div>
       <button type="button" class="navbar-toggle"><img :src="require('Imgs/application_menu.png')"></button>
     </div>
-    <div class="indicator-bar">
+    <div class="indicator-bar" v-if="AnalyzerSelected">
       <topbar-indicator units="V"  ref="voltage_indicator"   color="indicator-voltage"></topbar-indicator>
       <topbar-indicator units="A"  ref="current_indicator"   color="indicator-current"></topbar-indicator>
       <topbar-indicator units="W"  ref="power_indicator"     color="indicator-active-power"></topbar-indicator>
-      <topbar-indicator units="Hz" ref="frequency_indicator" color="indicator-frequency"></topbar-indicator>
+      <topbar-indicator units="Hz" ref="frequency_indicator" color="indicator-frequency" :decimals="3"></topbar-indicator>
       <topbar-indicator units="Wh" ref="energy_indicator"    color="indicator-active-energy"></topbar-indicator>
     </div>
   </div>
@@ -29,9 +29,15 @@ import moment from 'JS/moment.js';
 import * as oZm from 'JS/openZmeter.js';
 export default {
   data () {
-    return {Time: null, Uptime: null, SDUse: null, SDTip: null, RAMUse: null, RAMTip: null, CPUUse: null, WIFIPower: null, WIFINetwork: null, BatteryLevel: null, BatteryStatus: null, Temp: null };
+    return { AnalyzerSelected: false, Time: null, Uptime: null, SDUse: null, SDTip: null, RAMUse: null, RAMTip: null, CPUUse: null, WIFIPower: null, WIFINetwork: null, BatteryLevel: null, BatteryStatus: null, Temp: null };
+  },
+  created: function() {
+    this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
   },
   methods: {
+    SetAnalyzer: function() {
+      this.AnalyzerSelected = (this.$root.SelectedAnalyzer !== null);
+    },
     setValue: function(vals) {
       if(vals === null) {
         this.$refs.voltage_indicator.setValue(null);
@@ -101,9 +107,9 @@ export default {
   .navbar-toggle {
     display: block;
   }
-  @media(min-width:1280px) {
+  @media(min-width: 1280px) {
     .navbar-toggle {
-      display: block;
+      display: none;
     }
   }
   .navbar-brand > img {

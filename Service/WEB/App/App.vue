@@ -3,7 +3,12 @@
     <div id="DisableDiv" class="overlay"></div>
     <topbar ref="indicator_bar"></topbar>
     <sidebar ref="sidebar"></sidebar>
-    <router-view id="contents"></router-view>
+    <router-view id="contents" v-if="AnalyzerSelected"></router-view>
+    <div id="contents" v-if="!AnalyzerSelected">
+      <div class="alert alert-danger text-center">
+        <p>No selected analyzer</p>
+      </div>  
+    </div>
   </div>
 </template>
 
@@ -15,7 +20,7 @@
   import Graph from 'Components/Graph.vue';
   export default {
     data: function() {
-      return { };
+      return { AnalyzerSelected: false };
     },
     methods: {
       UpdateIndicators1() {
@@ -56,9 +61,10 @@
           }.bind(this)
         });
       },
-      SetAnalyzer() {
+      SetAnalyzer(analyzer) {
         this.UpdateIndicators1();
         this.UpdateIndicators2();
+        this.AnalyzerSelected = (analyzer !== null);
       }
     },
     created: function() {

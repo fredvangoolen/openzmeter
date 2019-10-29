@@ -24,7 +24,6 @@
     created: function() {
       this.Ajax = null;
       this.LastSample = 0;
-//      this.CurrentMultiplier = 1.0;
       this.UpdateGraphs1MTimer = null;
       this.UpdateGraphsNowTimer = null;
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
