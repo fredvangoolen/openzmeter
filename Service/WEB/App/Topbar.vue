@@ -17,7 +17,7 @@
       <topbar-indicator units="V"  ref="voltage_indicator"   color="indicator-voltage"></topbar-indicator>
       <topbar-indicator units="A"  ref="current_indicator"   color="indicator-current"></topbar-indicator>
       <topbar-indicator units="W"  ref="power_indicator"     color="indicator-active-power"></topbar-indicator>
-      <topbar-indicator units="Hz" ref="frequency_indicator" color="indicator-frequency" :decimals="3"></topbar-indicator>
+      <topbar-indicator units="Hz" ref="frequency_indicator" color="indicator-frequency" :decimals="3" v-if="$root.SelectedAnalyzer.NominalFreq > 0.0"></topbar-indicator>
       <topbar-indicator units="Wh" ref="energy_indicator"    color="indicator-active-energy"></topbar-indicator>
     </div>
   </div>
@@ -59,8 +59,12 @@ export default {
         if(vals['Frequency'] !== undefined) this.$refs.frequency_indicator.setValue([vals['Frequency']]);
         if(vals['Active_Energy'] !== undefined) this.$refs.energy_indicator.setValue(vals['Active_Energy']);
         if(vals['Sampletime'] !== undefined)  this.Time = moment(vals['Sampletime']).format('HH:mm:ss');
-        if(vals['Sys_Stats'] !== undefined) {
-          this.Uptime = moment.duration(vals['Sys_Stats'].UpTime, "seconds").humanize();
+        if(vals['Sys_Stats'] != null) {
+          if(vals['Sys_Stats'].UpTime != undefined) {
+            this.Uptime = moment.duration(vals['Sys_Stats'].UpTime, "seconds").humanize();  
+          } else {
+            this.Uptime = null;
+          }
           if(vals['Sys_Stats'].Disk_Usage != undefined) {
             this.SDUse = Math.round(vals['Sys_Stats'].Disk_Usage) + '%';
             this.SDTip = oZm.GetBestUnitsBin(vals['Sys_Stats'].Disk_Total * vals['Sys_Stats'].Disk_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(vals['Sys_Stats'].Disk_Total);

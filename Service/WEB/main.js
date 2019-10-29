@@ -55,29 +55,36 @@ import Settings from 'Views/Settings/View.vue';
 import Help from 'Views/Help/Help.vue';
 import PageNotFound from 'Views/PageNotFound.vue';
 
+
+const AppRouter = new Router({
+  linkActiveClass: 'active',
+  mode: 'history',
+  routes: [
+    { path: '/', redirect: '/Dashboard' },
+    { path: '/Dashboard', component: Dashboard },
+    { path: '/Analysis/Voltage', component: AnalysisVoltage },
+    { path: '/Analysis/Current', component: AnalysisCurrent },
+    { path: '/Analysis/Power', component: AnalysisPower },
+    { path: '/Analysis/Energy', component: AnalysisEnergy },
+    { path: '/Analysis/Frequency', component: AnalysisFrequency },
+    { path: '/Events/ITIC', component: EventsITIC },
+    { path: '/Events/Disturbances', component: EventsDisturbances },
+    { path: '/Events/EN50160', component: EventsEN50160 },
+    { path: '/Stats/Costs', component: StatsCosts },
+    { path: '/Stats/Heatmap', component: StatsHeatmap },
+    { path: '/Stats/Distribution', component: StatsDistribution },
+    { path: '/Settings', component: Settings },
+    { path: '/Help', component: Help },
+    { path: '*', component: PageNotFound }
+  ]
+});
+//AppRouter.beforeEach((to, from, next) => {
+//  console.log(to, from);
+//  next();
+//  
+//});
 new Vue({
   el: '#app',
   render: h => h(App),
-  router: new Router({
-    linkActiveClass: 'active',
-    mode: 'history',
-    routes: [
-      { path: '/', redirect: '/Dashboard' },
-      { path: '/Dashboard', component: Dashboard },
-      { path: '/Analysis/Voltage', component: AnalysisVoltage },
-      { path: '/Analysis/Current', component: AnalysisCurrent },
-      { path: '/Analysis/Power', component: AnalysisPower },
-      { path: '/Analysis/Energy', component: AnalysisEnergy },
-      { path: '/Analysis/Frequency', component: AnalysisFrequency },
-      { path: '/Events/ITIC', component: EventsITIC },
-      { path: '/Events/Disturbances', component: EventsDisturbances },
-      { path: '/Events/EN50160', component: EventsEN50160 },
-      { path: '/Stats/Costs', component: StatsCosts },
-      { path: '/Stats/Heatmap', component: StatsHeatmap },
-      { path: '/Stats/Distribution', component: StatsDistribution },
-      { path: '/Settings', component: Settings },
-      { path: '/Help', component: Help },
-      { path: '*', component: PageNotFound }
-      
-    ]})
+  router: AppRouter
 });

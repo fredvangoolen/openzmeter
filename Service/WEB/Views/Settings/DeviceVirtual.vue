@@ -22,7 +22,7 @@
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Frequency</label>
-          <input-spin :min="10" :max="100" :value="Settings.Frequency" :increment="1" :decimals="2" prepend="Hz" v-on:change="Settings.Frequency=$event"></input-spin>
+          <input-spin :min="0" :max="100" :value="Settings.Frequency" :increment="1" :decimals="2" prepend="Hz" v-on:change="Settings.Frequency=$event"></input-spin>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Current</label>

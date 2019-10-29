@@ -88,27 +88,33 @@ void AnalyzerSoft::Configure(const json &options) {
   pZipCode          = options["ZipCode"];
   pGeo              = options["GeoPosition"].get<vector<float> >();
   pSave10c          = options["Save10C"];
-  pMaxSamples       = ceil((15.0 * pSamplerate) / pNominalFrequency);
+  pMaxSamples       = (pNominalFrequency == 0.0) ? pSamplerate * 0.2 : ceil((15.0 * pSamplerate) / pNominalFrequency);
   pPrevSamples.resize(0);
   pPrevCycles.resize(0);
   //Calc peak filter coefficients for nominal frequency
   pFilters.clear();
-  for(uint n = 0; n < ZEROCROSSING_FILTERSTAGES; n++) {
-    float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
-    float alpha = sin(w0) / 2.0;
-    Filter_t Stage;
-    Stage.A0 = alpha / (1.0 + alpha);
-    Stage.A1 = 0.0;
-    Stage.A2 = -alpha / (1.0 + alpha);
-    Stage.B1 = (-2.0 * cos(w0)) / (1.0 + alpha);
-    Stage.B2 = (1.0 - alpha) / (1.0 + alpha);
-    Stage.ChannelsZ1 = vector<float>((pMode == PHASE1) ? 1 : 3, 0.0);
-    Stage.ChannelsZ2 = vector<float>((pMode == PHASE1) ? 1 : 3, 0.0);
-    pFilters.push_back(Stage);
+  if(pNominalFrequency != 0.0) {
+    for(uint n = 0; n < ZEROCROSSING_FILTERSTAGES; n++) {
+      float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
+      float alpha = sin(w0) / 2.0;
+      Filter_t Stage;
+      Stage.A0 = alpha / (1.0 + alpha);
+      Stage.A1 = 0.0;
+      Stage.A2 = -alpha / (1.0 + alpha);
+      Stage.B1 = (-2.0 * cos(w0)) / (1.0 + alpha);
+      Stage.B2 = (1.0 - alpha) / (1.0 + alpha);
+      Stage.ChannelsZ1 = vector<float>((pMode == PHASE1) ? 1 : 3, 0.0);
+      Stage.ChannelsZ2 = vector<float>((pMode == PHASE1) ? 1 : 3, 0.0);
+      pFilters.push_back(Stage);
+    }
+    uint32_t PhaseShift = (pSamplerate * ZEROCROSSING_FILTERSTAGES) / (pNominalFrequency * 2.0);
+    pDelayVoltage.resize(PhaseShift, vector<float>(pVoltageSamples.size(), 0.0));
+    pDelayCurrent.resize(PhaseShift, vector<float>(pCurrentSamples.size(), 0.0));
+  } else {
+    pBlockCycles.clear();
+    pDelayVoltage.resize(1, vector<float>(pVoltageSamples.size(), 0.0));
+    pDelayCurrent.resize(1, vector<float>(pCurrentSamples.size(), 0.0));
   }
-  uint32_t PhaseShift = (pSamplerate * ZEROCROSSING_FILTERSTAGES) / (pNominalFrequency * 2.0);
-  pDelayVoltage.resize(PhaseShift, vector<float>(pVoltageSamples.size(), 0.0));
-  pDelayCurrent.resize(PhaseShift, vector<float>(pCurrentSamples.size(), 0.0));
   pConfigLocks.WriteUnlock();
   string Server = options["RemoteServer"];
   string User = options["RemoteUser"];
@@ -139,13 +145,15 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
   pConfigLocks.ReadUnlock();
   if(pBlockCycles.size() == pBlockCycles.capacity()) pBlockCycles.clear();
   pCycleLen++;
-  if((((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) && (pCycleLen > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))){
-    pBlockCycles.push_back(pCycleLen);
-    pCycles.push_back(pCycleLen);
-    if(pCycles.size() > (ZEROCROSSING_SECONDS * pNominalFrequency)) pCycles.pop_front();
-    pCycleLen = 0;
+  if(pNominalFrequency != 0) {
+    if((((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) && (pCycleLen > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))){
+      pBlockCycles.push_back(pCycleLen);
+      pCycles.push_back(pCycleLen);
+      if(pCycles.size() > (ZEROCROSSING_SECONDS * pNominalFrequency)) pCycles.pop_front();
+      pCycleLen = 0;
+    }
+    pLastSamples = Outs;  
   }
-  pLastSamples = Outs;  
   if((pBlockCycles.size() == pBlockCycles.capacity()) || (pVoltageSamples[0].size() == pMaxSamples)) {
     WakeWorker();
     return true;
@@ -390,7 +398,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     This->pEventLocks.WakeWorker();
     for(uint i = 0; i < This->pVoltageFFT.size(); i++) This->pVoltageFFT[i]->Start(This->pVoltageSamples[i]);
     for(uint i = 0; i < This->pCurrentFFT.size(); i++) This->pCurrentFFT[i]->Start(This->pCurrentSamples[i]);
-    This->pAggreg10C.Frequency = This->CalcFrequency();
+    if(This->pNominalFrequency != 0) This->pAggreg10C.Frequency = This->CalcFrequency();
     if(!isnan(This->pAggreg10C.Frequency)) This->pAggreg10C.Frequency_Inputs = 1;
     bool Valid = false;
     vector<float> RMS = vector<float>(This->pAggreg10C.Voltage.size(), 0);

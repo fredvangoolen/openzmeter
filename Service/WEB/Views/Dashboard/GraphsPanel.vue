@@ -37,8 +37,7 @@
   export default {
     props: ['type'],
     data() {
-      return { ShowSpinner: true, PhasesValue:[], LastValue: null, UnitsScale: '', SerieProps: {}, Aggregation: 'Loading data...'        
-      };
+      return { ShowSpinner: true, PhasesValue:[], LastValue: null, UnitsScale: '', SerieProps: {}, Aggregation: 'Loading data...' };
     },
     methods: {
       CalcOptions() {
@@ -59,6 +58,18 @@
         this.$refs.Chart.SetOptions(Options);
       },
       UpdateGraph() {
+//        if(this.$parent.Sync == false) {
+//          var Graphs = [];
+//          if(this.$parent.$refs.voltage.$refs.Chart.Graph) Graphs.push(this.$parent.$refs.voltage.$refs.Chart.Graph);
+//          if(this.$parent.$refs.current.$refs.Chart.Graph) Graphs.push(this.$parent.$refs.current.$refs.Chart.Graph);
+//          if(this.$parent.$refs.active_power.$refs.Chart.Graph) Graphs.push(this.$parent.$refs.active_power.$refs.Chart.Graph);
+//          if(this.$parent.$refs.frequency.$refs.Chart.Graph) Graphs.push(this.$parent.$refs.frequency.$refs.Chart.Graph);
+//          //, this.$parent.$refs.current.$refs.Chart.Graph, this.$parent.$refs.active_power.$refs.Chart.Graph, this.$parent.$refs.frequency.$refs.Chart.Graph];
+//          if(Graphs.length == 4) {
+//            Dygraph.synchronize(Graphs, { range: false, zoom: false });
+//            this.$parent.Sync = true;
+//          }
+//        }
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], To: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Period: 7200000 }), 
           success: (result) => {
