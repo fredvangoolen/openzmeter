@@ -42,6 +42,13 @@
     created: function() {
       
     },
+        beforeRouteEnter (to, from, next) {
+      console.log(to, from);
+      next();
+    // called before the route that renders this component is confirmed.
+    // does NOT have access to `this` component instance,
+    // because it has not been created yet when this guard is called!
+    },
     methods: {
       ProcessRange: function(start, end) {
         this.$refs.date.SetData(start, end, this.Events);
