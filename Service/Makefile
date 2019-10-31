@@ -12,9 +12,9 @@ EXECUTABLE_SOURCE = Source/Tools.cpp Source/Main.cpp Source/Database.cpp Source/
 CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs 
 LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread -lcurl
 
-#Add libs (cctz, nlohmann)
+#Add libs (cctz, nlohmann, muparser)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
-#EXECUTABLE_SOURCE += $(shell find Libs/muParser -name "*.cpp" ! -type d -print)
+EXECUTABLE_SOURCE += $(shell find Libs/muParser -name "*.cpp" ! -type d -print)
 BUILD_DATE ?= $(shell date +%Y%m%d.%H%M)
 BUILD_NAME ?= "custom"
 CFLAGS += -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" -I Libs -I Source/Support
@@ -40,7 +40,7 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -g3 -ggdb -fstack-protector-all
 else
-	CFLAGS  += -O2 -Wall -fno-rtti -fopt-info-vec -s -flto -ftree-vectorize
+	CFLAGS  += -O2 -Wall -fopt-info-vec -s -flto -ftree-vectorize
 	LDFLAGS += -flto
 endif
 ifeq ($(DEVICE_V1_00), true)
@@ -67,7 +67,7 @@ ifeq ($(DEVICE_REMOTE), true)
 	CFLAGS += -I Source/Analyzers/Remote
 endif
 ifeq ($(ANALYZER_SOFT), true)
-	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/Soft/FFT.cpp
+	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/Soft/FFT.cpp Source/Analyzers/Soft/Events.cpp
 	CFLAGS += -I Source/Analyzers/Soft
 	LDFLAGS += -lfftw3f
 endif

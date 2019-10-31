@@ -36,6 +36,12 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("delRate",             DelRateCallback);
   HTTPServer::RegisterCallback("addRate",             AddRateCallback);
   HTTPServer::RegisterCallback("getPrices",           GetPricesCallback);
+  HTTPServer::RegisterCallback("testAlarm",           TestAlarmCallback);
+  HTTPServer::RegisterCallback("getAlarms",           GetAlarmsCallback);
+  HTTPServer::RegisterCallback("getAlarm",            GetAlarmCallback);
+  HTTPServer::RegisterCallback("setAlarm",            SetAlarmCallback);
+  HTTPServer::RegisterCallback("addAlarm",            AddAlarmCallback);
+  HTTPServer::RegisterCallback("delAlarm",            DelAlarmCallback);
 }
 DeviceManager::~DeviceManager() {
   LOGFile::Info("Stopping devices...\n");
@@ -60,6 +66,12 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("delRate");
   HTTPServer::UnregisterCallback("addRate");
   HTTPServer::UnregisterCallback("getPrices");
+  HTTPServer::UnregisterCallback("testAlarm");
+  HTTPServer::UnregisterCallback("getAlarms");
+  HTTPServer::UnregisterCallback("getAlarm");
+  HTTPServer::UnregisterCallback("setAlarm");
+  HTTPServer::UnregisterCallback("addAlarm");
+  HTTPServer::UnregisterCallback("delAlarm");
   pDevicesLock.WriteLock();
   while(pDevices.size() > 0) {
     Device *Dev = pDevices.back();
@@ -83,7 +95,7 @@ bool DeviceManager::AddDevice(Device *dev) {
 void DeviceManager::GetDevicesCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   //only 'admin' user can get this information
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
   json Response = json::array();
   pDevicesLock.ReadLock();
   for(uint i = 0; i < pDevices.size(); i++) Response.push_back(pDevices[i]->GetJSONDescriptor());
@@ -93,7 +105,7 @@ void DeviceManager::GetDevicesCallback(HTTPRequest &req) {
 void DeviceManager::GetDeviceCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   //only 'admin' user can get this information
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
   if(Params["Serial"].is_string() == false) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Serial = Params["Serial"];
   pDevicesLock.ReadLock();
@@ -109,7 +121,7 @@ void DeviceManager::GetDeviceCallback(HTTPRequest &req) {
 void DeviceManager::SetDeviceCallback(HTTPRequest& req) {
   json Params = req.GetParams();
   //only 'admin' user can do this action
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
   if(!Params["Serial"].is_string()) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Serial = Params["Serial"];
   pDevicesLock.ReadLock();
@@ -125,7 +137,7 @@ void DeviceManager::SetDeviceCallback(HTTPRequest& req) {
 void DeviceManager::StartDeviceCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   //only 'admin' user can do this action
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
   if(!Params["Serial"].is_string()) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Serial = Params["Serial"];
   pDevicesLock.ReadLock();
@@ -141,7 +153,7 @@ void DeviceManager::StartDeviceCallback(HTTPRequest &req) {
 void DeviceManager::StopDeviceCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   //only 'admin' user can do this action
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
   if(!Params["Serial"].is_string()) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
   string Serial = Params["Serial"];
   pDevicesLock.ReadLock();
@@ -384,4 +396,16 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
   }
   pDevicesLock.ReadUnlock();
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+}
+void DeviceManager::TestAlarmCallback(HTTPRequest &req) {
+}
+void DeviceManager::GetAlarmsCallback(HTTPRequest &req) {
+}
+void DeviceManager::GetAlarmCallback(HTTPRequest &req) {
+}
+void DeviceManager::SetAlarmCallback(HTTPRequest &req) {
+}
+void DeviceManager::AddAlarmCallback(HTTPRequest &req) {
+}
+void DeviceManager::DelAlarmCallback(HTTPRequest &req) {
 }

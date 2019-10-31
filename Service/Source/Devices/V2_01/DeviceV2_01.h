@@ -18,7 +18,7 @@
 #define DEVICEV2_01_TRANSFERS           32                          //Numero de transferencias a encolar
 #define DEVICEV2_01_CONTROL_SETSTATUS 0x20
 //----------------------------------------------------------------------------------------------------------------------
-class DeviceV2_01 : public Device {
+class DeviceV2_01 final : public Device {
   private :
     typedef struct {
       int8_t                  Voltage[3];

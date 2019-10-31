@@ -14,8 +14,8 @@ using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 class TariffPowerPlugin;
 class TariffEnergyPlugin;
-class Tariff {
-    friend class TariffList;
+class Tariff final {
+  friend class TariffList;
   private :
     static void GetTariffsCallback(HTTPRequest &req);
     static void GetTariffCallback(HTTPRequest &req);
@@ -92,7 +92,7 @@ class Tariff {
     
 };
 //----------------------------------------------------------------------------------------------------------------------
-class TariffList {
+class TariffList final {
   private :
     vector<Tariff*> pList;
     time_zone       pTimeZone;

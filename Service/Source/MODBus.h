@@ -62,10 +62,10 @@
 //#define MB_TCP_REGISTER_START         8
 //#define MB_TCP_REGISTER_NUMBER         10
 //
-//class ModbusTCPSlave
-//{
-//public:
-//  ModbusTCPSlave(void);
+class ModbusTCPSlave {
+  
+  public:
+    ModbusTCPSlave();
 //#ifdef MB_ETHERNET
 //    void begin();
 //    void begin(uint8_t ip[4],uint8_t gateway[4],uint8_t subnet[4]);
@@ -80,7 +80,6 @@
 //    void Run();
 //    unsigned int  MBInputRegister[maxInputRegister];
 //    unsigned int  MBHoldingRegister[maxHoldingRegister];
-//
 //private: 
 //    byte ByteArray[260];
 //    bool ledPinStatus = LOW;
@@ -98,6 +97,6 @@
 //#ifdef MB_ESP8266
 //    WiFiServer MBServer;
 //#endif
-//};
-//
+};
+
 //#endif

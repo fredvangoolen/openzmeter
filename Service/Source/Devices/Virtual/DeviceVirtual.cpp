@@ -26,16 +26,15 @@ DeviceVirtual::DeviceVirtual() {
 }
 DeviceVirtual::~DeviceVirtual() {
   StopDevice();
-  WaitInstances();
 }
 bool DeviceVirtual::Start(const json &config) {
-  pVoltage = config["Voltage"];
-  pFrequency = config["Frequency"];
-  pSampleRate = config["SampleRate"];
-  pCurrent = config["Current"];
+  pVoltage      = config["Voltage"];
+  pFrequency    = config["Frequency"];
+  pSampleRate   = config["SampleRate"];
+  pCurrent      = config["Current"];
   pCurrentPhase = config["CurrentPhase"];    
-  pMode = (config["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (config["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
-  pTerminate = false;
+  pMode         = (config["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (config["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
+  pTerminate    = false;
   string ModeString = config["Mode"];
   pAnalyzersLock.WriteLock();
   pAnalyzers.push_back(new AnalyzerSoft(pSerial + "_" + ModeString, pMode, "/Devices/" + pSerial + "/Analyzer", pSampleRate));

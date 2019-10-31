@@ -8,7 +8,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class DeviceVirtual : public Device {
+class DeviceVirtual final : public Device {
   private :
     static bool                     pRegistered;
   private :

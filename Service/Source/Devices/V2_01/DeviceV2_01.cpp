@@ -89,7 +89,6 @@ DeviceV2_01::DeviceV2_01(string serial) {
 }
 DeviceV2_01::~DeviceV2_01() {
   StopDevice();
-  WaitInstances();
 }
 bool DeviceV2_01::Start(const json &config) {
   for(uint8_t n = 0; n < 3; n++) pVoltageGain[n] = config["VoltageGain"][n];

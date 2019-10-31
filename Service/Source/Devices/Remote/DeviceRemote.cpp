@@ -28,7 +28,7 @@ DeviceRemote::DeviceRemote() {
 }
 DeviceRemote::~DeviceRemote() {
   StopDevice();
-  WaitInstances();
+//  WaitInstances();
   pInstance = NULL;
 }
 bool DeviceRemote::Start(const json &config) {
@@ -107,18 +107,18 @@ void DeviceRemote::GetDevice(HTTPRequest &req) {
 void DeviceRemote::SetDevice(HTTPRequest &req) {
 }
 void DeviceRemote::GetRemoteCallback(HTTPRequest &req) {
-  pInstance->Reference();
+//  pInstance->Reference();
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string() || !Params["Name"].is_string()) return req.FromString("'Analyzer' and 'Name' params are requiered", MHD_HTTP_BAD_REQUEST);
   pInstance->GetRemote(req);
-  pInstance->Dereference();
+//  pInstance->Dereference();
 }
 void DeviceRemote::SetRemoteCallback(HTTPRequest &req) {
-  pInstance->Reference();
+//  pInstance->Reference();
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   pInstance->SetRemote(req);
-  pInstance->Dereference();
+//  pInstance->Dereference();
 }
 void DeviceRemote::GetRemote(HTTPRequest &req) {
   json Params = req.GetParams();

@@ -89,7 +89,6 @@ DeviceV1_00::DeviceV1_00(string serial) {
 }
 DeviceV1_00::~DeviceV1_00() {
   StopDevice();
-  WaitInstances();
 }
 bool DeviceV1_00::Start(const json &config) {
   pVoltageGain = config["VoltageGain"];
@@ -228,7 +227,7 @@ void DeviceV1_00::ReadCallback(struct libusb_transfer *transfer) {
     int16_t *Pkg   = (int16_t*)&transfer->buffer[64 * Block];
     for(uint8_t Count = 0; Count < 16; Count++) {
       if(Pkg[Count * 2 + 0] == -32768) continue;
-      float Voltage = ((Pkg[Count * 2 + 0] * 0.0142446289062) * (1.0 + (This->pVoltageGain / 100.0))) + This->pVoltageOffset;
+      float Voltage = ((Pkg[Count * 2 + 0] * 0.0106834716796) * (1.0 + (This->pVoltageGain / 100.0))) + This->pVoltageOffset;
       float Current = ((Pkg[Count * 2 + 1] * 0.0015625000000) * (1.0 + (This->pCurrentGain / 100.0)) * (This->pCurrentInvert ? -1.0 : 1.0)) + This->pCurrentOffset;
       if(This->BuffersAppend(Voltage, Current) == false) {
         LOGFile::Error("Capture buffer overflow! Posible lost of samples\n");

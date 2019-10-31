@@ -15,7 +15,7 @@ using json = nlohmann::json;
 #define HTTP_CHUNK 32768
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
-class HTTPRequest : public Database {
+class HTTPRequest final : public Database {
   private :
     uint64_t    pStartTime;
     int         pResultCode;
@@ -48,13 +48,13 @@ class HTTPRequest : public Database {
   public :
     static ssize_t WriteFunction(void *cls, uint64_t pos, char *buf, size_t max);
 };
-class HTTPServer {
+class HTTPServer final {
   public :
     typedef void (*Func_t)(HTTPRequest &request);
   private :
     typedef struct {
-      string HandleName;
-      Func_t Function;
+      string  HandleName;
+      Func_t  Function;
     } Callback_t;
   private :
     static RWLocks            pLock;            //Control access to pCallbacks vector
@@ -71,6 +71,6 @@ class HTTPServer {
     static void UnregisterCallback(const string &handleName);
   public :
     HTTPServer();
-    virtual ~HTTPServer();
-    void     RemoveExpiredSessions(Database &db) const;
+    ~HTTPServer();
+    void RemoveExpiredSessions(Database &db) const;
 };

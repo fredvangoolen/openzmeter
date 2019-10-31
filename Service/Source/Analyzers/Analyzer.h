@@ -5,7 +5,6 @@
 #pragma once
 #include <vector>
 #include <complex>
-#include <curl/curl.h>
 #include <nlohmann/json.hpp>
 #include "Tools.h"
 #include "Database.h"
@@ -20,11 +19,6 @@ class Analyzer {
     enum AnalyzerRights { READ = 0x01, WRITE = 0x02, CONFIG = 0x04 };
   private :
     typedef struct {
-      char  *Buffer;
-      size_t Size;
-      size_t MaxSize;
-    } CurlWriteBuff_t;
-    typedef struct {
       json      Params;
       string    Method;
       uint64_t  Sequence;
@@ -32,30 +26,22 @@ class Analyzer {
     } RemoteRequest_t;
   protected :
     RWLocks         pConfigLocks;             //Locks for configurations
+    InstanceLocks   pInstances;               //Control instance counters
     uint64_t        pLastSave;                //Timestamp of last save or communication
     string          pSerial;                  //Serial number
     string          pName;                    //Analyzer description
   private :
-    CURLSH         *pCurl;                    //Shared object for curl lib
-    curl_slist     *pCurlHeaders;             //Common headers
-    pthread_mutex_t pCurlLocks;               //Curl access control
-    bool            pTerminateSync;           //Signal to terminate sync thread
-    pthread_t       pSyncThread;              //Synchronize thread
-    string          pSyncServer;              //Sync server
-    string          pSyncUser;                //Sync username
-    string          pSyncPass;                //Sync password
-  private :
-    void StopSync();
+    
+    
+
+//  private :
+//    void StopSync();
   protected :
     bool CheckRights(HTTPRequest &req, const uint neededAccess) const;
-    bool SetSync(const bool enabled, const string &server, const string &user, const string &pass);
-    json GetJSONSyncConfig();
-  private :
-    static size_t CurlWriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
-    static void   CurlLockCallback(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr);
-    static void   CurlUnlockCallback(CURL *handle, curl_lock_data data, void *userptr);
-    static void  *Sync_Thread(void *args);
-    static void  *Request_Thread(void *args);
+//    bool SetSync(const bool enabled, const string &server, const string &user, const string &pass);
+//    json GetJSONSyncConfig();
+//  private :
+//    static void  *Request_Thread(void *args);
   public :
     virtual void GetAnalyzer(HTTPRequest &req) = 0;
     virtual void SetAnalyzer(HTTPRequest &req) = 0;
@@ -72,12 +58,12 @@ class Analyzer {
     virtual void DelRate(HTTPRequest &req) = 0;
     virtual void AddRate(HTTPRequest &req) = 0;
     virtual void GetPrices(HTTPRequest &req) = 0;
-  public :
-    static void GetAlarms(HTTPRequest &req);
-    static void GetAlarm(HTTPRequest &req);
-    static void SetAlarm(HTTPRequest &req);
-    static void AddAlarm(HTTPRequest &req);
-    static void DelAlarm(HTTPRequest &req);
+    virtual void TestAlarm(HTTPRequest &req) = 0;
+    virtual void GetAlarms(HTTPRequest &req) = 0;
+    virtual void GetAlarm(HTTPRequest &req) = 0;
+    virtual void SetAlarm(HTTPRequest &req) = 0;
+    virtual void AddAlarm(HTTPRequest &req) = 0;
+    virtual void DelAlarm(HTTPRequest &req) = 0;
   public :
     Analyzer(const string &id);
     virtual ~Analyzer();

@@ -68,16 +68,28 @@ void InstanceLocks::WaitInstances() {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void InstanceLocks::Reference() {
-  pthread_mutex_lock(&pMutex);
-  pReferences++;
-  pthread_mutex_unlock(&pMutex);
+//void InstanceLocks::Reference() {
+//  pthread_mutex_lock(&pMutex);
+//  pReferences++;
+//  pthread_mutex_unlock(&pMutex);
+//}
+//void InstanceLocks::Dereference() {
+//  pthread_mutex_lock(&pMutex);
+//  pReferences--;
+//  if(pReferences == 0) pthread_cond_signal(&pCond);
+//  pthread_mutex_unlock(&pMutex);
+//}
+InstanceLocks::Allocator::Allocator(InstanceLocks *parent) {
+  pthread_mutex_lock(&parent->pMutex);
+  parent->pReferences++;
+  pParent = parent;
+  pthread_mutex_unlock(&parent->pMutex);
 }
-void InstanceLocks::Dereference() {
-  pthread_mutex_lock(&pMutex);
-  pReferences--;
-  if(pReferences == 0) pthread_cond_signal(&pCond);
-  pthread_mutex_unlock(&pMutex);
+InstanceLocks::Allocator::~Allocator() {
+  pthread_mutex_lock(&pParent->pMutex);
+  pParent->pReferences--;
+  if(pParent->pReferences == 0) pthread_cond_signal(&pParent->pCond);
+  pthread_mutex_unlock(&pParent->pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
 ProviderLocks::ProviderLocks() {
