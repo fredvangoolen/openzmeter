@@ -20,7 +20,7 @@
 #define DEVICEV1_01_VOLTAGEDELAY         2                          //Samples to delay
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
-class DeviceV1_01 : public Device {
+class DeviceV1_01 final : public Device {
   private :
     typedef struct {
       float Voltage;

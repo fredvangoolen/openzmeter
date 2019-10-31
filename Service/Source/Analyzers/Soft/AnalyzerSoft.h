@@ -8,39 +8,15 @@
 #include <deque>
 #include <list>
 #include "Analyzer.h"
-#include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define ZEROCROSSING_FILTERSTAGES          5
 #define ZEROCROSSING_SECONDS              10        //Used seconds to calc frequency
-#define EVENT_RVC                        5.0        //% variation for RVC detection
-#define EVENT_DIP_SWELL                 10.0        //Variacion en % para generar subida o bajada
-#define EVENT_INTERRUPTION              90.0        //Bajada en % para generar interrupcion
-#define EVENT_HYSTERESIS                02.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
-#define EVENT_RAWENVELOPETIME            0.5        //Time in seconds before and after event to store RAW samples
-#define EVENT_RMSENVELOPETIME           10.0        //Time in seconds before and after event to store RMS samples
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, private InstanceLocks {
+class AnalyzerSoft final : public Analyzer, private Database {
   private :
-    enum EventType { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
-    enum EventState { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
+    class Events;
+    class FFT;
     enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
-    typedef struct {
-      vector<float> RMS;
-      uint64_t      Timestamp;
-    } EventCycle_t;
-    typedef struct {
-      enum EventType                 Type;                 //Running event type
-      EventState                     State;                //Events state
-      uint64_t                       Start;                //Event start timestamp
-      uint64_t                       Duration;             //Event duration in samples
-      vector<float>                  Reference;            //Voltage reference for event (Stationary for RVC, nominal for others)
-      vector<float>                  PeakValue;            //max/min voltage variation along event
-      vector<float>                  ChangeValue;          //diference voltage of event
-      deque<vector<float> >          SamplesRAW_A;         //
-      deque<vector<float> >          SamplesRMS_A;         //
-      deque<vector<float> >          SamplesRAW_B;         //
-      deque<vector<float> >          SamplesRMS_B;         //
-    } Event_t;
     typedef struct {
       AggregType                     Type;                 //Aggregation type
       float                          Frequency;            //Frecuencia
@@ -106,7 +82,8 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, pri
     Params_t                   pAggreg1H;                //Agregacion de 1 hora
     vector<FFT*>               pVoltageFFT;              //Muestras de FFT tension del bloque
     vector<FFT*>               pCurrentFFT;              //Muestras de FFT corriente del bloque
-    pthread_t                  pThread;                  //Hilo de ejecucion
+    pthread_t                  pAnalyzerThread;          //Hilo de ejecucion
+    WorkerLocks                pAnalyzerWorkerLocks;     //Handle analyzer thread
     bool                       pTerminate;               //Marca para finalizar proceso
     uint64_t                   pPrevTimestamp;           //Timestamp del ultimo bloque procesado
     ProviderLocks              PNowDataLock;             //GetSeriesNow access control
@@ -118,16 +95,19 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, pri
     vector<float>              pLastSamples;             //Filter samples backup
     uint32_t                   pCycleLen;                //Current cycle len
     uint32_t                   pMaxSamples;              //Max block samples
-    pthread_t                  pEventThread;             //Hilo de ejecucion
-    WorkerLocks                pEventLocks;              //Control access to event detection thread
-    deque<vector<float> >      pPrevSamples;             //Previous samples
-    deque<EventCycle_t>        pPrevCycles;              //Previous cycles
-    bool                       pPrevStationary;          //Steady state flag
-    list<Event_t>              pEvents;                  //Running events
+    Events                    *pEventsDetector;          //Events detector
+
     string                     pConfigPath;              //Path to configuration
+    pthread_t                  pSyncThread;              //Synchronize thread
+    string                     pSyncServer;
+    string                     pSyncUser;
+    string                     pSyncPass;
+    
   private :
-    static void *Analyzer_Thread(void *args);
-    static void *Events_Thread(void *args);
+    static void  *Analyzer_Thread(void *args);
+    static void  *Sync_Thread(void *args);
+    static void  *Request_Thread(void *args);
+    static float CalcChange(const float in, const float reference);
   private :
     void  Configure(const json &options);
     void  AccumulateAggreg(Params_t &src, const Params_t &dst) const;
@@ -136,11 +116,9 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, pri
     void  NormalizeAggreg(Params_t &src) const;
     void  InitAggreg(Params_t &params, AggregType type) const;
     void  SaveAggreg(Params_t &params);
-    void  SaveEvent(Event_t &evt);
     float CalcFrequency();
-    float CalcChange(const float in, const float reference) const;
-    void  InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
-    bool  FindRunningEvent(const uint32_t mask);
+    
+
     void  GetAnalyzer(HTTPRequest &req);
     void  SetAnalyzer(HTTPRequest &req);
     void  GetSeries(HTTPRequest &req);
@@ -156,6 +134,12 @@ class AnalyzerSoft : public Analyzer, private Database, private WorkerLocks, pri
     void  DelRate(HTTPRequest &req);
     void  AddRate(HTTPRequest &req);
     void  GetPrices(HTTPRequest &req);
+    void  TestAlarm(HTTPRequest &req);
+    void  GetAlarms(HTTPRequest &req);
+    void  GetAlarm(HTTPRequest &req);
+    void  SetAlarm(HTTPRequest &req);
+    void  AddAlarm(HTTPRequest &req);
+    void  DelAlarm(HTTPRequest &req);
   public :
     static json CheckConfig(const json &config);
   public :

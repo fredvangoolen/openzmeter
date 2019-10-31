@@ -10,7 +10,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class DeviceRemote : public Device {
+class DeviceRemote final : public Device {
   private :
     static bool          pRegistered;
     static DeviceRemote *pInstance;

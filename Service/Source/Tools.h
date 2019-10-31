@@ -10,7 +10,7 @@
 using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class RWLocks {
+class RWLocks final {
   //Multiple read access allowed, exclusive access for writing
   private : 
     pthread_mutex_t  pMutex;
@@ -27,7 +27,7 @@ class RWLocks {
     void WriteUnlock();
 };
 //----------------------------------------------------------------------------------------------------------------------
-class InstanceLocks {
+class InstanceLocks final {
   //Hold destructor until no references to object
   private : 
     pthread_mutex_t  pMutex;
@@ -36,11 +36,19 @@ class InstanceLocks {
   public :
     InstanceLocks();
     void WaitInstances();
-    void Reference();
-    void Dereference();
+//    void Reference();
+//    void Dereference();
+    class Allocator  final {
+      private :
+        InstanceLocks *pParent;
+      public :
+        Allocator(InstanceLocks *parent);
+      private :
+        virtual ~Allocator();
+    };
 };
 //----------------------------------------------------------------------------------------------------------------------
-class WorkerLocks {
+class WorkerLocks final {
   //Worker locks until signal to wakeup, caller can wait worker to ends
   private :
     bool            pWorking;

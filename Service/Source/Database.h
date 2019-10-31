@@ -21,9 +21,9 @@ class Database {
       uint64_t  LastUse;
     } PoolConnection_t;
   private :
-    static string pConnectionString;
+    static string                  pConnectionString;
     static queue<PoolConnection_t> pConnectionPool;
-    static pthread_mutex_t pMutex;
+    static pthread_mutex_t         pMutex;
   private :
     PGconn      *pDBConn;
     string       pSchema;
@@ -54,5 +54,5 @@ class Database {
     json        ResultJSON(const string &name) const;
     string      GetSchema() const;
     Database(const string &schema = "public");
-    virtual ~Database();
+    ~Database();
 };

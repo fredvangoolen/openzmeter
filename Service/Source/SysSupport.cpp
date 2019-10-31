@@ -22,7 +22,7 @@ void SysSupport::GetNewsCallback(HTTPRequest &req) {
 void SysSupport::GetUsersCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   //only 'admin' user can get this information
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
   req.ExecSentenceAsyncResult("SELECT to_json(array_agg(json_build_object('UserName', username, 'Name', name, 'EMail', email, 'TimeZone', time_zone))) AS result FROM users");
   if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("result"), MHD_HTTP_OK);
@@ -31,7 +31,7 @@ void SysSupport::GetUserCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   string UserName = req.UserName();
   if(Params.contains("UserName") && Params["UserName"].is_string()) UserName = Params["UserName"];
-  if((req.UserName() != "admin") || (req.UserName() != UserName)) return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+  if((req.UserName() != "admin") || (req.UserName() != UserName)) return req.FromString("", MHD_HTTP_FORBIDDEN);
   req.ExecSentenceAsyncResult("SELECT json_build_object('UserName', username, 'Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'TimeZone', time_zone) AS result FROM users WHERE username = " + req.Bind(UserName));
   if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("result"), MHD_HTTP_OK);
@@ -452,7 +452,7 @@ json SysSupport::GetSystemDetails() {
   void SysSupport::GetUpdatesCallback(HTTPRequest &req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
     if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     json Response = json::object();
     Response["LastCheck"] = pInstance->pLastUpdateCheck;
@@ -471,7 +471,7 @@ json SysSupport::GetSystemDetails() {
   void SysSupport::UpgradeCallback(HTTPRequest &req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
     if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     json Response = json::object();
     int ResultCode = 0;
@@ -483,7 +483,7 @@ json SysSupport::GetSystemDetails() {
   void SysSupport::GetBluetoothCallback(HTTPRequest &req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
     if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     json Config = ConfigManager::ReadConfig("/Bluetooth");
     Config["Name"] = pInstance->pBTServerName;
@@ -493,7 +493,7 @@ json SysSupport::GetSystemDetails() {
   void SysSupport::SetBluetoothCallback(HTTPRequest &req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
     if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     bool Enabled = true;
     if(Params["Enabled"].is_boolean()) Enabled = Params["Enabled"];
@@ -510,7 +510,7 @@ json SysSupport::GetSystemDetails() {
   void SysSupport::ScanWIFICallback(HTTPRequest& req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
     if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     pthread_mutex_lock(&pMutex);
     json Result = json::array();
@@ -540,7 +540,7 @@ json SysSupport::GetSystemDetails() {
   void SysSupport::GetWIFICallback(HTTPRequest& req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
     if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     if(!Params["Type"].is_string() || ((Params["Type"] != "CURRENT") && (Params["Type"] != "CONFIG"))) {
       return req.FromString("'Type' param is requiered to be 'CURRENT' or 'CONFIG'", MHD_HTTP_BAD_REQUEST);
@@ -640,7 +640,7 @@ json SysSupport::GetSystemDetails() {
   void SysSupport::SetWIFICallback(HTTPRequest& req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
     if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     pthread_mutex_lock(&pMutex);
     json Result;
@@ -690,7 +690,7 @@ json SysSupport::GetSystemDetails() {
   void SysSupport::GetNTPCallback(HTTPRequest& req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
     if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     pthread_mutex_lock(&pMutex);
     json Result = json::object();
@@ -718,7 +718,7 @@ json SysSupport::GetSystemDetails() {
   void SysSupport::SetNTPCallback(HTTPRequest& req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_UNAUTHORIZED);
+    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
     if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     pthread_mutex_lock(&pMutex);
     json Result;

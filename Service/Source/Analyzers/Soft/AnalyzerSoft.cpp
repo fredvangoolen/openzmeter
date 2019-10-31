@@ -13,6 +13,8 @@
 #include "Tools.h"
 #include "SysSupport.h"
 #include "Tariff.h"
+#include "Events.h"
+#include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
 vector<float> AnalyzerSoft::FrequencyRanges  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
 vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
@@ -27,15 +29,14 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pConfigPath      = optionPath;
   pMode            = mode;
   pSamplerate      = samplerate;
-  pThread          = 0;
-  pEventThread     = 0;
+  pAnalyzerThread  = 0;
   pCycleLen        = 0;
   pSequence        = 0;
   pTerminate       = false;
   pPrevTimestamp   = 0;
-  pPrevStationary  = false;
   pCurrentSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0.0));
   pVoltageSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(0.0));
+  pEventsDetector  = NULL;
   pBlockCycles.reserve(20);
   pLastSamples.resize((pMode == PHASE1) ? 1 : 3);  
   InitAggreg(pAggreg10C, AGGREG_10C);
@@ -47,24 +48,18 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   for(uint8_t i = 0; i < pVoltageSamples.size(); i++) pVoltageFFT.push_back(new FFT("FFT_V" + to_string(i)));
   for(uint8_t i = 0; i < pCurrentSamples.size(); i++) pCurrentFFT.push_back(new FFT("FFT_I" + to_string(i)));
   Configure(ConfigManager::ReadConfig(optionPath));
-  if(pthread_create(&pEventThread, NULL, Events_Thread, (void*)this) != 0) {
+  if(pthread_create(&pAnalyzerThread, NULL, Analyzer_Thread, (void*)this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    pEventThread = 0;
+    pAnalyzerThread = 0;
     return;
   }
-  if(pthread_create(&pThread, NULL, Analyzer_Thread, (void*)this) != 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    pThread = 0;
-    return;
-  }
-  pthread_setname_np(pEventThread, "EventsDet");
-  pthread_setname_np(pThread, (pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");  
+  pthread_setname_np(pAnalyzerThread, (pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");  
 }
 AnalyzerSoft::~AnalyzerSoft() {
-  WaitInstances();
   pTerminate = true;
-  Abort(&pThread);
-  while(pVoltageFFT.size() > 0) { 
+  if(pthread_join(pSyncThread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
+  pAnalyzerWorkerLocks.Abort(&pAnalyzerThread);
+  while(pVoltageFFT.size() > 0) {
     FFT *Tmp = pVoltageFFT.back();
     pVoltageFFT.pop_back();
     delete Tmp;
@@ -74,7 +69,6 @@ AnalyzerSoft::~AnalyzerSoft() {
     pCurrentFFT.pop_back();
     delete Tmp;
   }
-  pEventLocks.Abort(&pEventThread);
 }
 void AnalyzerSoft::Configure(const json &options) {
   pConfigLocks.WriteLock();
@@ -89,8 +83,6 @@ void AnalyzerSoft::Configure(const json &options) {
   pGeo              = options["GeoPosition"].get<vector<float> >();
   pSave10c          = options["Save10C"];
   pMaxSamples       = (pNominalFrequency == 0.0) ? pSamplerate * 0.2 : ceil((15.0 * pSamplerate) / pNominalFrequency);
-  pPrevSamples.resize(0);
-  pPrevCycles.resize(0);
   //Calc peak filter coefficients for nominal frequency
   pFilters.clear();
   if(pNominalFrequency != 0.0) {
@@ -115,12 +107,31 @@ void AnalyzerSoft::Configure(const json &options) {
     pDelayVoltage.resize(1, vector<float>(pVoltageSamples.size(), 0.0));
     pDelayCurrent.resize(1, vector<float>(pCurrentSamples.size(), 0.0));
   }
-  pConfigLocks.WriteUnlock();
-  string Server = options["RemoteServer"];
-  string User = options["RemoteUser"];
-  string Pass = options["RemotePass"];
+  //StopSync();
   bool   Enabled = options["RemoteEnabled"];
-  SetSync(Enabled, Server, User, Pass);
+    string Server = options["RemoteServer"];
+    string User = options["RemoteUser"];
+    string Pass = options["RemotePass"];
+
+  if(Enabled == true) {
+//    pTerminateSync = false;
+
+    
+  } 
+    
+    
+
+
+  if(pthread_create(&pSyncThread, NULL, Sync_Thread, (void*)this) != 0) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    pSyncThread = 0;
+    return;
+  }  
+  pthread_setname_np(pSyncThread, "RemoteSync");
+
+    
+    
+  pConfigLocks.WriteUnlock();
 }
 bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime) {
   if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
@@ -155,13 +166,13 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
     pLastSamples = Outs;  
   }
   if((pBlockCycles.size() == pBlockCycles.capacity()) || (pVoltageSamples[0].size() == pMaxSamples)) {
-    WakeWorker();
+    pAnalyzerWorkerLocks.WakeWorker();
     return true;
   }
   return false;
 }
 bool AnalyzerSoft::IsFinished() {
-  return IsWorking();
+  return pAnalyzerWorkerLocks.IsWorking();
 }
 void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) const {
   params.Type = type;
@@ -307,34 +318,6 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
   Tools::SendUDP(Result);
   pLastSave = Tools::GetTime();
 }
-void AnalyzerSoft::SaveEvent(Event_t &evt) {
-  string Type = (evt.Type == EVT_RVC) ? "RVC" : (evt.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (evt.Type == EVT_DIP) ? "DIP" : "SWELL";
-  vector<vector<float> > RMS = vector<vector< float> >(evt.Reference.size(), vector<float>());
-  vector<vector<float> > RAW = vector<vector< float> >(evt.Reference.size(), vector<float>());
-  for(deque<vector<float> >::iterator it = evt.SamplesRMS_A.begin(); it != evt.SamplesRMS_A.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
-  }
-  for(deque<vector<float> >::iterator it = evt.SamplesRMS_B.begin(); it != evt.SamplesRMS_B.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
-  }
-  for(deque<vector<float> >::iterator it = evt.SamplesRAW_A.begin(); it != evt.SamplesRAW_A.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
-  }
-  for(deque<vector<float> >::iterator it = evt.SamplesRAW_B.begin(); it != evt.SamplesRAW_B.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
-  }
-  if(evt.State == EVT_RUNNING) {
-    ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, finished, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + Bind(evt.Start) + ", 0, " + Bind(pSamplerate) + ", false, " + Bind(Type) + ", " + Bind(evt.Reference) + ", " + Bind(evt.PeakValue) + ", " + Bind(evt.ChangeValue) + ", '', " + Bind(RAW) + ", " + Bind(RMS) + ")");
-  } else if(evt.State == EVT_CLOSING) {
-    ExecSentenceNoResult("UPDATE events SET duration = " + Bind(evt.Duration) + ", peak = " + Bind(evt.PeakValue) + ", change = " + Bind(evt.ChangeValue) + ", samples2 = " + Bind(RAW) + ", rms2 = " + Bind(RMS) + " WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
-  } else {
-    ExecSentenceNoResult("UPDATE events SET finished = TRUE, samples3 = " + Bind(RAW) + ", rms3 = " + Bind(RMS) + " WHERE starttime = " + Bind(evt.Start) + " AND evttype = " + Bind(Type));
-  }
-  evt.SamplesRAW_A = deque<vector<float> >();
-  evt.SamplesRMS_A = deque<vector<float> >();
-  evt.SamplesRAW_B = deque<vector<float> >();
-  evt.SamplesRMS_B = deque<vector<float> >();
-}
 float AnalyzerSoft::CalcFrequency() {
   uint32_t Samples = 0;
   uint32_t MinCycle = pSamplerate / (pNominalFrequency * 1.15 * 2.0);
@@ -345,57 +328,16 @@ float AnalyzerSoft::CalcFrequency() {
   }
   return pCycles.size() / ((2.0 * Samples) / pSamplerate);
 }
-float AnalyzerSoft::CalcChange(const float in, const float reference) const {
+float AnalyzerSoft::CalcChange(const float in, const float reference) {
   return ((in - reference) / reference) * 100;
-}
-void AnalyzerSoft::InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos) {
-  Event_t Event;
-  Event.Type = type;
-  Event.Duration = 0;
-  Event.State = EVT_RUNNING;
-  Event.Reference = reference;
-  Event.PeakValue = reference;
-  Event.ChangeValue = reference;
-  Event.SamplesRAW_A = deque<vector<float> >();
-  Event.SamplesRMS_A = deque<vector<float> >();
-  Event.SamplesRAW_B = deque<vector<float> >();
-  Event.SamplesRMS_B = deque<vector<float> >();
-  for(deque<EventCycle_t>::reverse_iterator it = pPrevCycles.rbegin(); it != pPrevCycles.rend(); it++) {
-    Event.SamplesRMS_A.push_front(it->RMS);
-    if(Event.SamplesRMS_A.size() == (pNominalFrequency * 2 * EVENT_RMSENVELOPETIME)) break;
-  }
-  for(deque<vector<float> >::reverse_iterator it = pPrevSamples.rbegin(); it != pPrevSamples.rend(); it++) {
-    Event.SamplesRAW_A.push_front(*it);
-    if(Event.SamplesRAW_A.size() == (EVENT_RAWENVELOPETIME * pSamplerate)) break;
-  }
-  //A new event destroy any running RVC
-  if(type != EVT_RVC) {
-    for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); ) {
-      if((it->Type == EVT_RVC) && (it->State == EVT_RUNNING)) {
-        ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + Bind(it->Start) + " AND evttype = 'RVC'");
-        pEvents.erase(it++);
-      } else {
-        it++;
-      }
-    }
-  }
-  Event.Start = pAggreg10C.Timestamp + (uint32_t)((pos * 1000) / pSamplerate);
-  SaveEvent(Event);
-  pEvents.push_back(Event);
-}
-bool AnalyzerSoft::FindRunningEvent(const uint32_t mask) {
-  for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); it++) {
-    if((it->Type & mask) && (it->State == EVT_RUNNING)) return true;
-  }
-  return false;
 }
 void *AnalyzerSoft::Analyzer_Thread(void *args) {
   AnalyzerSoft *This = (AnalyzerSoft*)args;
   while(This->pTerminate == false) {
-    if(This->WorkerWaitTask() == false) break;
+    if(This->pAnalyzerWorkerLocks.WorkerWaitTask() == false) break;
     uint64_t Start = Tools::GetTime();
     //Init FFTs and event detection threads
-    This->pEventLocks.WakeWorker();
+    This->pEventsDetector->Start();
     for(uint i = 0; i < This->pVoltageFFT.size(); i++) This->pVoltageFFT[i]->Start(This->pVoltageSamples[i]);
     for(uint i = 0; i < This->pCurrentFFT.size(); i++) This->pCurrentFFT[i]->Start(This->pCurrentSamples[i]);
     if(This->pNominalFrequency != 0) This->pAggreg10C.Frequency = This->CalcFrequency();
@@ -463,7 +405,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
         This->pAggreg10C.Current_THD[3] = (This->pAggreg10C.Current_THD[3] / This->pAggreg10C.Current_Harmonics[3][0]) * 100.0;
       }
     }
-    This->pEventLocks.WaitWorker();
+    This->pEventsDetector->Wait();
     //Save results
     This->PNowDataLock.ProviderWrite();
     if(((This->pSequence % 15) == 0) && (This->pPrevTimestamp != 0)) {
@@ -543,165 +485,156 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     This->pCurrentSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : (This->pMode == PHASE3) ? 3 : 4, vector<float>(0));
     This->pVoltageSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : 3, vector<float>(0));
     This->pSequence++;
-    This->WorkerEndsTask();
+    This->pAnalyzerWorkerLocks.WorkerEndsTask();
   }
   return NULL;
 }
-void *AnalyzerSoft::Events_Thread(void* args) {
-  AnalyzerSoft *This = (AnalyzerSoft*)args;
+
+void *AnalyzerSoft::Sync_Thread(void *args) {
+  AnalyzerSoft *This       = (AnalyzerSoft*)args;
+  bool          Registered = false;
+
   while(This->pTerminate == false) {
-    if(This->pEventLocks.WorkerWaitTask() == false) break;
-    This->pConfigLocks.ReadLock();
-    uint32_t RequiredRAW = This->pSamplerate * EVENT_RAWENVELOPETIME;
-    uint32_t RequiredRMS = This->pNominalFrequency * 2 * EVENT_RMSENVELOPETIME;
-    uint32_t Pos = 0;
-    This->pAggreg10C.Flag = false;
-    for(uint32_t i = 0; i < This->pBlockCycles.size(); i++) {
-      //Calc cycle stats
-      EventCycle_t Cycle;
-      uint32_t CycleLen = This->pBlockCycles[i];
-      for(uint n = 0; n < This->pVoltageSamples.size(); n++) {
-        float RMS = 0.0;
-        for(uint32_t j = 0; j < CycleLen; j++) RMS += pow(This->pVoltageSamples[n][Pos + j], 2);
-        Cycle.RMS.push_back(sqrt(RMS / CycleLen));
-      }
-      //Calc last 100 cycles AVG (current and previous ones)
-      vector<float> RMS_Avg = Cycle.RMS;
-      for(uint8_t n = 0; n < Cycle.RMS.size(); n++) {
-        uint32_t Len = This->pPrevCycles.size();
-        if(Len > 99) Len = 99;
-        deque<EventCycle_t>::reverse_iterator it = This->pPrevCycles.rbegin();
-        for(uint32_t j = 0; j < Len; j++, it++) RMS_Avg[n] += it->RMS[n];
-        RMS_Avg[n] = RMS_Avg[n] / (Len + 1);
-      }
-      //Check steady state
-      float Tolerance = EVENT_RVC - ((This->pPrevStationary == true) ? 0.0 : EVENT_HYSTERESIS);
-      bool  Stationary = (This->pPrevCycles.size() >= 99);
-      for(uint8_t n = 0; (n < RMS_Avg.size()) && (Stationary == true); n++) {
-        deque<EventCycle_t>::reverse_iterator it = This->pPrevCycles.rbegin();
-        if(fabs(This->CalcChange(Cycle.RMS[n], RMS_Avg[n])) > Tolerance) {
-          Stationary = false;
-          break;
-        }
-        for(int j = 0; j < 99; j++) {
-          if(fabs(This->CalcChange(it->RMS[n], RMS_Avg[n])) > Tolerance) {
-            Stationary = false;
-            break;
-          }
-        }
-      }
-      if(Stationary != This->pPrevStationary) LOGFile::Debug("Analyzer '%s' %s stationary state\n", This->pSerial.c_str(), (Stationary ? "reach" : "leave"));
-      //Check for new events
-      if((This->pPrevSamples.size() >= RequiredRAW) && (This->pPrevCycles.size() >= RequiredRMS)) {
-        for(uint8_t n = 0; n < RMS_Avg.size(); n++) {
-          //Check for interruption new events
-          if((-This->CalcChange(Cycle.RMS[n], This->pNominalVoltage) > EVENT_INTERRUPTION) && (This->FindRunningEvent(EVT_INTERRUPTION) == false)) This->InitEvent(EVT_INTERRUPTION, vector<float>(RMS_Avg.size(), This->pNominalVoltage), Pos);
-          //Check for DIP new events
-          if((-This->CalcChange(Cycle.RMS[n], This->pNominalVoltage) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_DIP) == false)) This->InitEvent(EVT_DIP, vector<float>(RMS_Avg.size(), This->pNominalVoltage), Pos);
-          //Check for SWELL new events
-          if((This->CalcChange(Cycle.RMS[n], This->pNominalVoltage) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_SWELL) == false)) This->InitEvent(EVT_SWELL, vector<float>(RMS_Avg.size(), This->pNominalVoltage), Pos);
-          //Check for RVC new events
-          if((Stationary == false) && (This->pPrevStationary == true) && (This->FindRunningEvent(EVT_RVC | EVT_DIP | EVT_SWELL | EVT_INTERRUPTION) == false)) This->InitEvent(EVT_RVC, RMS_Avg, Pos);
-        }
-      }
-      //Check events state
-      for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); ) {
-        //If closed evend finish post event period save it and remove from list
-        if((it->State == EVT_CLOSING) && (it->SamplesRAW_A.size() == RequiredRAW) && (it->SamplesRMS_A.size() == RequiredRMS)) {
-          it->State = EVT_CLOSED;
-          This->SaveEvent(*it);
-          This->pEvents.erase(it++);
-        } else if(it->State == EVT_CLOSING) {
-          it++;
-        } else {
-          //Check if RVC event can be closed, or update values
-          if(it->Type == EVT_RVC) {
-            if(Stationary == true) {
-              it->State = EVT_CLOSING;
-              it->ChangeValue = RMS_Avg;
-            } else {
-              for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
-                if(fabs(it->Reference[ch] - Cycle.RMS[ch]) > fabs(it->Reference[ch] - it->PeakValue[ch])) it->PeakValue[ch] = Cycle.RMS[ch];
-              }
-            }
-          }
-          //Check if INTERRUPTION event can be closed
-          if(it->Type == EVT_INTERRUPTION) {
-            it->State = EVT_CLOSING;
-            for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
-              if(-This->CalcChange(Cycle.RMS[ch], This->pNominalVoltage) > (EVENT_INTERRUPTION - EVENT_HYSTERESIS)) it->State = EVT_RUNNING;
-            }
-            if(it->State == EVT_RUNNING) {
-              for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
-                if(Cycle.RMS[ch] < it->PeakValue[ch]) it->PeakValue[ch] = Cycle.RMS[ch];
-              }
-            }
-          }
-          //Check if DIP event can be closed
-          if(it->Type == EVT_DIP) {
-            it->State = EVT_CLOSING;
-            for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
-              if(-This->CalcChange(Cycle.RMS[ch], This->pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS)) it->State = EVT_RUNNING;
-            }
-            if(it->State == EVT_RUNNING) {
-              for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
-                if(Cycle.RMS[ch] < it->PeakValue[ch]) it->PeakValue[ch] = Cycle.RMS[ch];
-              }
-            }
-          }
-          //Check if SWELL event can be closed
-          if(it->Type == EVT_SWELL) {
-            it->State = EVT_CLOSING;
-            for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
-              if(This->CalcChange(Cycle.RMS[ch], This->pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS)) it->State = EVT_RUNNING;
-            }
-            if(it->State == EVT_RUNNING) {
-              for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
-                if(Cycle.RMS[ch] > it->PeakValue[ch]) it->PeakValue[ch] = Cycle.RMS[ch];
-              }
-            }
-          }          
-          if(it->State == EVT_RUNNING) {
-            it->Duration += CycleLen;
-            if(it->Type != EVT_RVC) This->pAggreg10C.Flag = true;
-          } else {
-            This->SaveEvent(*it);
-          }
-          it++;
-        }
-      }      
-      //Insert current cycle samples in prev data buffers and in running events than need its
-      for(uint n = 0; n < CycleLen; n++) {
-        vector<float> Sample;
-        for(uint j = 0; j < This->pVoltageSamples.size(); j++) Sample.push_back(This->pVoltageSamples[j][n + Pos]);
-        This->pPrevSamples.push_back(Sample);
-        if(This->pPrevSamples.size() > RequiredRAW) This->pPrevSamples.pop_front();
-        for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
-          if(it->SamplesRAW_A.size() < RequiredRAW) {
-            it->SamplesRAW_A.push_back(Sample);
-          } else if(it->State == EVT_RUNNING) {
-            it->SamplesRAW_B.push_back(Sample);
-            if(it->SamplesRAW_B.size() > RequiredRAW) it->SamplesRAW_B.pop_front();
-          }
-        }
-      }
-      //Insert current cycle in prev data buffers and in running events than need its
-      This->pPrevCycles.push_back(Cycle);
-      if(This->pPrevCycles.size() > RequiredRMS) This->pPrevCycles.pop_front();
-      for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
-        if(it->SamplesRMS_A.size() < RequiredRMS) {
-          it->SamplesRMS_A.push_back(Cycle.RMS);
-        } else if(it->State == EVT_RUNNING) {
-          it->SamplesRMS_B.push_back(Cycle.RMS);
-          if(it->SamplesRMS_B.size() > RequiredRMS) it->SamplesRMS_B.pop_front();
-        }
-      }      
-      Pos = Pos + CycleLen;
-      This->pPrevStationary = Stationary;
-    }
-    This->pConfigLocks.ReadUnlock();
-    This->pEventLocks.WorkerEndsTask();
+//    if(Registered == false) {
+//      json   Content = json::object();
+//      string URL     = This->pSyncServer + "/LogIn";
+//      CurlBuff.Size  = 0;
+//      Content["Username"] = This->pSyncUser;
+//      Content["Password"] = This->pSyncPass;
+//      Content["UpdateLastLogin"] = false;
+//      string ContentText = Content.dump();
+//      curl_easy_setopt(Curl, CURLOPT_URL, URL.c_str());
+//      curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, ContentText.c_str());
+//      curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, ContentText.size());
+//      CURLcode Code = curl_easy_perform(Curl);
+//      curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
+//      if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_OK)) {
+//        json Content = json::parse(CurlBuff.Buffer, NULL, false);
+//        if(!Content.is_discarded() && Content.is_object() && Content["Result"].is_boolean() && (Content["Result"] == true)) {
+//          Registered = Content["Result"];
+//          if(Registered) LOGFile::Info("Analyzer '%s' logged on remote server\n", This->pSerial.c_str());
+//        }
+//      } else {
+//        Registered = false;
+//        LOGFile::Debug("Analyzer '%s' can not login on remote server\n", This->pSerial.c_str());
+//      }        
+      if(Registered == false) usleep(1000000);
+//    } else {
+//      json   Content = json::object();
+//      string URL     = This->pSyncServer + "/getRemote";
+//      CurlBuff.Size = 0;
+//      Content["Analyzer"] = This->pSerial;
+//      This->pConfigLocks.ReadLock();
+//      Content["Name"] = This->pName;
+//      This->pConfigLocks.ReadUnlock();
+//      string ContentText = Content.dump();
+//      curl_easy_setopt(Curl, CURLOPT_URL, URL.c_str());
+//      curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, ContentText.c_str());
+//      curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, ContentText.size());
+//      CURLcode Code = curl_easy_perform(Curl);
+//      curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
+//      if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_OK)) {
+//        json Content = json::parse(CurlBuff.Buffer, NULL, false);
+//        if(!Content.is_discarded() && Content.is_array()) {
+//          for(uint32_t n = 0; n < Content.size(); n++) {
+//            if(Content[n].is_object() && Content[n]["Sequence"].is_number() && Content[n]["Method"].is_string() && Content[n]["Params"].is_object()) {
+//              RemoteRequest_t *Request = new RemoteRequest_t;
+//              Request->Method   = Content[n]["Method"];
+//              Request->Params   = Content[n]["Params"];
+//              Request->Sequence = Content[n]["Sequence"];
+//              Request->Parent   = This;
+//              pthread_t Thread = 0;
+//              if(pthread_create(&Thread, NULL, Request_Thread, (void*)Request) != 0) {
+//                LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//                delete Request;
+//              } else {
+//                pthread_detach(Thread);
+//              }
+//            }
+//          }
+//        }
+//      } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_UNAUTHORIZED)) {
+//        LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pSerial.c_str());
+//        usleep(1000000);
+//        Registered = false;
+//      } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_NO_CONTENT)) {
+//        LOGFile::Debug("No pending queries in remote server for analyzar '%s'\n", This->pSerial.c_str());
+//      } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_METHOD_NOT_ALLOWED)) {
+//        LOGFile::Debug("Device remote is not enabled on remote server\n");
+//        usleep(1000000);
+//      } else {
+//        LOGFile::Debug("Failed request to remote server for analyzer '%s'\n", This->pSerial.c_str());
+//        usleep(1000000);
+//      }
+//    }
   }
+  
+//  curl_easy_cleanup(Curl);
+  return NULL;
+}
+void *AnalyzerSoft::Request_Thread(void *args) {
+//  RemoteRequest_t *This = (RemoteRequest_t*)args;
+//  This->Params["UserName"] = "admin";
+//  string ParamsText = This->Params.dump();
+//  size_t ParamsSize = ParamsText.size();
+//  LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Parent->pSerial.c_str());
+//  HTTPRequest *Request = new HTTPRequest(NULL, false);
+//  Request->AppendParams(ParamsText.c_str(), &ParamsSize);
+//  Request->ProcessParams(true);
+//  if(This->Method == "getAnalyzer") {
+//    This->Parent->GetAnalyzer(*Request);
+//  } else if(This->Method == "setAnalyzer") {
+//    This->Parent->SetAnalyzer(*Request);
+//  } else if(This->Method == "getSeries") {   
+//    This->Parent->GetSeries(*Request);
+//  } else if(This->Method == "getSeriesNow") {
+//    This->Parent->GetSeriesNow(*Request);
+//  } else if(This->Method == "getSeriesRange") {
+//    This->Parent->GetSeriesRange(*Request);
+//  } else if(This->Method == "getEvents") {
+//    This->Parent->GetEvents(*Request);
+//  } else if(This->Method == "getEvent") {
+//    This->Parent->GetEvent(*Request);
+//  } else if(This->Method == "setEvent") {
+//    This->Parent->SetEvent(*Request);
+//  } else if(This->Method == "delEvent") {
+//    This->Parent->DelEvent(*Request);
+//  } else if(This->Method == "getRates") {
+//    This->Parent->GetRates(*Request);
+//  } else if(This->Method == "getRate") {
+//    This->Parent->GetRate(*Request);
+//  } else if(This->Method == "setRate") {
+//    This->Parent->SetRate(*Request);
+//  } else if(This->Method == "delRate") {
+//    This->Parent->DelRate(*Request);
+//  } else if(This->Method == "addRate") {
+//    This->Parent->AddRate(*Request);
+//  } else if(This->Method == "getPrices") {
+//    This->Parent->GetPrices(*Request);
+//  }
+//  CURL           *Curl = curl_easy_init();
+//  CurlWriteBuff_t CurlBuff;
+//  string URL = This->Parent->pSyncServer + "/setRemote";
+//  json Content = json::object();
+//  Content["Code"] = Request->ResultCode();
+//  Content["Sequence"] = This->Sequence;
+//  Content["Analyzer"] = This->Parent->pSerial;
+//  Content["Response"] = Request->Content();
+//  delete Request;
+//  string ContentText = Content.dump();
+//  curl_easy_setopt(Curl, CURLOPT_URL, URL.c_str());
+//  curl_easy_setopt(Curl, CURLOPT_POST, 1L);
+//  curl_easy_setopt(Curl, CURLOPT_SHARE, This->Parent->pCurl);
+//  curl_easy_setopt(Curl, CURLOPT_WRITEDATA, (void*)&CurlBuff);
+//  curl_easy_setopt(Curl, CURLOPT_COOKIEFILE, "");
+//  curl_easy_setopt(Curl, CURLOPT_HTTPHEADER, This->Parent->pCurlHeaders);
+//  curl_easy_setopt(Curl, CURLOPT_ACCEPT_ENCODING, "");
+//  curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback);
+//  curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, ContentText.c_str());
+//  curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, ContentText.size());
+//  CurlBuff.Size = 0;
+//  curl_easy_perform(Curl);
+//  curl_easy_cleanup(Curl);
   return NULL;
 }
 json AnalyzerSoft::CheckConfig(const json &config) {
@@ -742,11 +675,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   return ConfigOUT;
 }
 void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Response = json::object();
   pConfigLocks.ReadLock();
   Response["Analyzer"] = pSerial;
@@ -764,32 +693,22 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   Response["SampleRate"] = pSamplerate;
   req.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + req.Bind(pSerial));
   if(req.FecthRow()) Response["Size"] = req.ResultUInt64("size");
-  json Remote = GetJSONSyncConfig();  
-  Response.insert(Remote.begin(), Remote.end());
+//  json Remote = GetJSONSyncConfig();  
+//  Response.insert(Remote.begin(), Remote.end());
   pConfigLocks.ReadUnlock();
   req.FromJSON(Response);
-  Dereference();
 }
 void AnalyzerSoft::SetAnalyzer(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, CONFIG) == false) return;
   json Config = CheckConfig(req.GetParams());
   ConfigManager::WriteConfig(pConfigPath, Config);
   Configure(Config);
   json Result = json::object();
   Result["Result"] = true;
   req.FromJSON(Result);
-  Dereference();
 }
 void AnalyzerSoft::GetSeries(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
   //Insert defaults
   uint64_t To = Params["To"];
@@ -804,18 +723,12 @@ void AnalyzerSoft::GetSeries(HTTPRequest &req) {
   if(Aggreg == "10M") PeriodSeconds = 600000;
   if(Aggreg == "15M") PeriodSeconds = 900000;
   if(Aggreg == "1H") PeriodSeconds = 3600000;
-  if((Period / PeriodSeconds) > 100000) {
-    Dereference();
-    return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
-  }
+  if((Period / PeriodSeconds) > 100000) return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   string Query = "SELECT row_to_json(Result) AS result FROM ( SELECT " + req.Bind(From) + " AS " + req.BindID("From") + ", " + req.Bind(To) +" AS " + req.BindID("To") + ", ";
   Query += req.Bind((To - From) / PeriodSeconds) + " AS " + req.BindID("MaxSamples") + ", " + req.Bind(Aggreg) + " AS " + req.BindID("Aggregation_Source") + ", ";
   for(uint i = 0; i < Params["Series"].size(); i++) {
-    if(!Params["Series"][i].is_string()) {
-      Dereference();
-      return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
-    }
+    if(!Params["Series"][i].is_string()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
     string Serie = Params["Series"][i];
     if((Serie == "FREQUENCY") && ((Aggreg == "10C") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
       Query += "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS " + req.BindID("Frequency") + ", ";
@@ -869,7 +782,6 @@ void AnalyzerSoft::GetSeries(HTTPRequest &req) {
     } else if((Serie == "VOLTAGE_HARMONICS_STATS") && (Aggreg ==  "1H")) {
       Query += "COALESCE(ARRAY_AGG(stat_harmonics ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics_Stats") + ", ";
     } else {
-      Dereference();
       return req.FromString("Invalid serie in selected aggregation", MHD_HTTP_BAD_REQUEST);
     }
   }
@@ -881,31 +793,17 @@ void AnalyzerSoft::GetSeries(HTTPRequest &req) {
   }
   Query += " WHERE sampletime > " + req.Bind(LastSample) + " AND sampletime >= " + req.Bind(From) + " AND sampletime <= " + req.Bind(To) + ") AS result";
   req.ExecSentenceAsyncResult(Query);
-  if(!req.FecthRow()) {
-    Dereference();
-    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  }
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
-  Dereference();
 }
 void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
-  if(PNowDataLock.ConsumerWait(5000) == false) {
-    Dereference();
-    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  }
+  if(PNowDataLock.ConsumerWait(5000) == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   json Result = json::object();
   Result["Sampletime"] = pAggreg10C.Timestamp;
   for(uint i = 0; i < Params["Series"].size(); i++) {
-    if(!Params["Series"][i].is_string()) {
-      Dereference();
-      return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
-    }
+    if(!Params["Series"][i].is_string()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
     string Serie = Params["Series"][i];
     if(Serie == "FREQUENCY") {
       Result["Frequency"] = pAggreg10C.Frequency;
@@ -965,12 +863,7 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
       Result["Power_Harmonics"] = json::array();
       for(uint n = 0; n < pAggreg10C.Power_Harmonics.size(); n++) {
         json Ch = json::array();
-        for(uint i = 0; i < pAggreg10C.Power_Harmonics[n].size(); i++) {
-//          complex<float> Current = pCurrentFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
-//          complex<float> Voltage = pVoltageFFT[n]->Output[10 + i * 10] * (float)M_SQRT2;
-//          float PHI = FFT::CalcAngle(Current, Voltage);
-          Ch.push_back(pAggreg10C.Power_Harmonics[n][i]);
-        }
+        for(uint i = 0; i < pAggreg10C.Power_Harmonics[n].size(); i++) Ch.push_back(pAggreg10C.Power_Harmonics[n][i]);
         Result["Power_Harmonics"].push_back(Ch);        
       }
     } else if(Serie == "VOLTAGE_FFT") {
@@ -994,37 +887,23 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
     } else if(Serie == "SYS_STATS") {
       Result["Sys_Stats"] = SysSupport::GetSystemDetails();
     } else {
-      Dereference();
       return req.FromString("Unknown serie name", MHD_HTTP_BAD_REQUEST);
     }
   }
   req.FromJSON(Result);
   PNowDataLock.ConsumerEnds();
-  Dereference();
 }
 void AnalyzerSoft::GetSeriesRange(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
   string Aggreg = Params["Aggreg"];
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial) + ", 'public'");
   req.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ");
-  if(!req.FecthRow()) {
-    Dereference();
-    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  }
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("ranges"), MHD_HTTP_OK);
-  Dereference();
 }
 void AnalyzerSoft::GetEvents(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
   uint64_t To = Params["To"];
   uint64_t Period = Params["Period"];
@@ -1036,25 +915,14 @@ void AnalyzerSoft::GetEvents(HTTPRequest &req) {
                               "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
                               "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
                               "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To));
-  if(!req.FecthRow()) {
-    Dereference();
-    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  }
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
-  Dereference();
 }
 void AnalyzerSoft::GetEvent(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  if((Params["Samples"] != "RMS") && (Params["Samples"] != "RAW")) {
-    Dereference();
-    return req.FromString("'Samples' params must be 'RMS' or 'RAW'", MHD_HTTP_BAD_REQUEST);
-  }
+  if((Params["Samples"] != "RMS") && (Params["Samples"] != "RAW")) return req.FromString("'Samples' params must be 'RMS' or 'RAW'", MHD_HTTP_BAD_REQUEST);
   uint64_t ID = Params["StartTime"];
   string Type = Params["Type"];
   string Samples = Params["Samples"];
@@ -1063,19 +931,11 @@ void AnalyzerSoft::GetEvent(HTTPRequest &req) {
   } else {
     req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', rms1, 'Samples', rms2, 'Post_Samples', rms3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
   }
-  if(!req.FecthRow()) {
-    Dereference();
-    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  }
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
-  Dereference();
 }
 void AnalyzerSoft::SetEvent(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   uint64_t ID = Params["StartTime"];
@@ -1083,138 +943,73 @@ void AnalyzerSoft::SetEvent(HTTPRequest &req) {
   string Notes = Params["Notes"];
   bool Result = req.ExecSentenceNoResult("UPDATE events SET Notes = " + req.Bind(Notes) + " WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
   req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
-  Dereference();
 }
 void AnalyzerSoft::DelEvent(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   uint64_t ID = Params["StartTime"];
   string Type = Params["Type"];
   bool Result = req.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
   req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
-  Dereference();
 }
 void AnalyzerSoft::GetRates(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') as result FROM rates");
-  if(!req.FecthRow()) {
-    Dereference();
-    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  }
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
-  Dereference();
 }
 void AnalyzerSoft::GetRate(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
-  if(!Params["RateID"].is_number_unsigned()) {
-    Dereference();
-    return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
-  }
+  if(!Params["RateID"].is_number_unsigned()) return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
   uint32_t RateID = Params["RateID"];
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   req.ExecSentenceAsyncResult("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) as result FROM rates where rate = " + req.Bind(RateID));
-  if(!req.FecthRow()) {
-    Dereference();
-    return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  }
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
-  Dereference();
 }
 void AnalyzerSoft::SetRate(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
-  if(!Params["RateID"].is_number() || !Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) {
-    Dereference();
-    return req.FromString("'RateID', 'StartDate', 'EndDate', Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
-  }
+  if(!Params["RateID"].is_number() || !Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) return req.FromString("'RateID', 'StartDate', 'EndDate', Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
   uint64_t Start    = Params["StartDate"];
   uint64_t End      = Params["EndDate"];
   string   Name     = Params["Name"];
   uint32_t RateID   = Params["RateID"];
   Tariff T(Start, End, pTimeZone);
-  if(T.SetTemplate(Params["Template"]) == false) {
-    Dereference();
-    return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
-  }
-  if(T.SetConfig(Params["Config"]) == false) {
-    Dereference();
-    return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
-  }
+  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
+  if(T.SetConfig(Params["Config"]) == false) return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   bool Result = req.ExecSentenceNoResult("UPDATE rates SET name = " + req.Bind(Name) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", config = " + req.Bind(T.GetConfig().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE rate = " + req.Bind(RateID));
   req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
-  Dereference();
 }
 void AnalyzerSoft::DelRate(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
-  if(!Params["RateID"].is_number_unsigned()) {
-    Dereference();
-    return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
-  }
+  if(!Params["RateID"].is_number_unsigned()) return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
   uint32_t RateID = Params["RateID"];
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   bool Result = req.ExecSentenceNoResult("DELETE FROM rates WHERE rate = " + req.Bind(RateID));
   req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
-  Dereference();
 }
 void AnalyzerSoft::AddRate(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
-  if(!Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) {
-    Dereference();
-    return req.FromString("'StartDate', 'EndDate', 'Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
-  }
+  if(!Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) return req.FromString("'StartDate', 'EndDate', 'Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
   uint64_t Start    = Params["StartDate"];
   uint64_t End      = Params["EndDate"];
   string   Name     = Params["Name"];
   Tariff T(Start, End, pTimeZone);
-  if(T.SetTemplate(Params["Template"]) == false) {
-    Dereference();
-    return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
-  }
-  if(T.SetConfig(Params["Config"]) == false) {
-    Dereference();
-    return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
-  }
+  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
+  if(T.SetConfig(Params["Config"]) == false) return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
   bool Result = req.ExecSentenceNoResult("INSERT INTO rates(startdate, enddate, config, template, name) VALUES (" + req.Bind(Start) + ", " + req.Bind(End) + ", " + req.Bind(T.GetConfig().dump()) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Name) + ")");
   req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
-  Dereference();
 }
 void AnalyzerSoft::GetPrices(HTTPRequest &req) {
-  Reference();
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) {
-    Dereference();
-    return;
-  }
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   //Parse, check params and prepare result struct
   json Params = req.GetParams();
   uint64_t To         = Params["To"];
@@ -1229,10 +1024,7 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   //TODO CHECK time zone
 //  string TimeZone = "Etc/UTC";
   if(Aggreg == "1H") PeriodSeconds = 3600000;
-  if((Period / PeriodSeconds) > 100000) {
-    Dereference();
-    return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
-  }
+  if((Period / PeriodSeconds) > 100000) return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
   json Result;
   Result["To"]                 = To;
   Result["From"]               = From;
@@ -1317,5 +1109,17 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
     } while(Tariff != NULL);
   }
   req.FromJSON(Result);
-  Dereference();
+}
+void AnalyzerSoft::TestAlarm(HTTPRequest &req) {
+}
+void AnalyzerSoft::GetAlarms(HTTPRequest &req) {
+}
+void AnalyzerSoft::GetAlarm(HTTPRequest &req) {
+}
+void AnalyzerSoft::SetAlarm(HTTPRequest &req) {
+}
+void AnalyzerSoft::AddAlarm(HTTPRequest &req) {
+}
+void AnalyzerSoft::DelAlarm(HTTPRequest &req) {
+
 }

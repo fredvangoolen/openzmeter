@@ -1,5 +1,5 @@
 <template>
-  <div class="panel panel-other" v-if="Bluetooth_Support || WIFI_Support || NTP_Support">
+  <div class="panel panel-other" v-if="Bluetooth_Support || WIFI_Support || NTP_Support || Modbus_Support || Telegram_Support">
     <div class="panel-heading">
       <div class="huge-small header-text">Connectivity</div>
       <div class="header-buttons">
@@ -61,6 +61,21 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           <textarea rows="2" class="form-control" disabled>{{ NTPDetails }}</textarea>
         </div>
       </div>
+      <div class="row">
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">Modbus/TCP</label>
+          <div class="input-group">
+            <span class="input-group-addon input-group-addon-toogle">
+              <toggle ref="EnableModbus" v-on:change="EnableModbusChange"></toggle>
+            </span>
+            <input type="text" class="form-control" ref="ntpserver" v-on:input="NTPServerChanged" :disabled="!NTPEnabled">
+          </div>
+        </div>
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">Details</label>
+          <textarea rows="2" class="form-control" disabled></textarea>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -73,9 +88,11 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
   import WifiDialog from './WIFIEdit.vue';
   export default {
     data: function() {
-      return { BTName: '', Bluetooth_Support: false, BTChanges: false,
-                WIFIName: '', WIFIDetails: '', WIFI_Support: false, WIFIChanges: false, WIFISettings: {},
-                NTP_Support: false, NTPDetails: '', NTPChanges: false,
+      return { Bluetooth_Support: false, BTChanges: false, BTName: '', 
+                WIFI_Support: false, WIFIChanges: false, WIFIName: '', WIFIDetails: '', WIFISettings: {},
+                NTP_Support: false, NTPChanges: false, NTPDetails: '',
+                Modbus_Support: false, ModbusChange: false, ModbusSettings: {},
+                Telegram_Support: false, TelegramChange: false, TelegramSettings: {},
                 Loading: false, NTPEnabled: false };
     },
     created: function() {

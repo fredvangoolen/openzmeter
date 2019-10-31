@@ -8,26 +8,21 @@
 #include <stdint.h>
 #include <pthread.h>
 #include "Tools.h"
+#include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
-class FFT : private WorkerLocks {
+class AnalyzerSoft::FFT final {
   public :
     vector<complex<float> > Output;                //Datos de salida
   private :
     pthread_t               pThread;               //Hilo de ejecucion
+    WorkerLocks             pWorkerLocks;          //Threadworker sync
     vector<float>           pInput;                //Muestras de entrada
     bool                    pTerminate;            //Marca para finalizar proceso
   private :
     static pthread_mutex_t  pPlannerMutex;
   private :
     static void *FFT_Thread(void *args);
-//  private :
-//    void   Transform(vector<complex<float> > &vec);
-//    void   InverseTransform(vector<complex<float> > &vec);
-//    void   TransformRadix2(vector<complex<float> > &vec);
-//    void   TransformBluestein(vector<complex<float> > &vec);
-//    void   Convolve(const vector<complex<float> > &xvec, const vector<complex<float> > &yvec, vector<complex<float> > &outvec);
-//    size_t ReverseBits(size_t x, int n);
   public :
     static float CalcAngle(const complex<float> &a, const complex<float> &b);
   public :

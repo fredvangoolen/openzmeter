@@ -299,11 +299,11 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
           pLock.ReadLock();
           for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
             if(it->HandleName != URL) continue;
-            pLock.ReadUnlock();
             it->Function(*Request);
             Handled = true;
             break;
           }
+          pLock.ReadUnlock();
           if(Handled == false) {
             pLock.ReadUnlock();
             Request->FromString("Method not found", MHD_HTTP_METHOD_NOT_ALLOWED);

@@ -1,8 +1,8 @@
 //#include <Arduino.h>
-//#include "ModbusTCPSlave.h"
+#include "MODBus.h"
 //
 //
-//ModbusTCPSlave::ModbusTCPSlave(void):
+ModbusTCPSlave::ModbusTCPSlave(void)
 //#ifdef MB_ETHERNET
 //    MBServer(MB_PORT)
 //    #endif
@@ -13,8 +13,8 @@
 //#ifdef MB_ESP8266
 //    MBServer(MB_PORT)
 //    #endif
-//{
-//}
+{
+}
 //#ifdef MB_ETHERNET
 //void ModbusTCPSlave::begin(){
 //    byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -182,7 +182,7 @@
 //}
 //#endif
 //
-//void ModbusTCPSlave::Run(){
+void ModbusTCPSlave::Run() {
 //    boolean flagClientConnected = 0;
 //    byte byteFN = MB_FC_NONE;
 //    int Start;
@@ -335,5 +335,4 @@
 //        #endif
 //        flagClientConnected = 0;
 //    }
-//}
-//
+}

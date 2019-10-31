@@ -11,8 +11,9 @@
 #include <zlib.h>
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-pthread_mutex_t FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
-FFT::FFT(const string &name) {
+pthread_mutex_t AnalyzerSoft::FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
+//----------------------------------------------------------------------------------------------------------------------
+AnalyzerSoft::FFT::FFT(const string &name) {
   pTerminate = false;
   if(pthread_create(&pThread, NULL, FFT_Thread, (void*)this) != 0) {
     pThread = 0;
@@ -21,21 +22,21 @@ FFT::FFT(const string &name) {
   }
   pthread_setname_np(pThread, name.c_str());
 }
-FFT::~FFT() {
+AnalyzerSoft::FFT::~FFT() {
   pTerminate = true;
-  Abort(&pThread);
+  pWorkerLocks.Abort(&pThread);
 }
-void FFT::Start(const vector<float> &in) {
+void AnalyzerSoft::FFT::Start(const vector<float> &in) {
   pInput = in;
-  WakeWorker();
+  pWorkerLocks.WakeWorker();
 }
-float FFT::BinPower(const uint idx) {
+float AnalyzerSoft::FFT::BinPower(const uint idx) {
   return sqrt(norm(Output[idx])) / M_SQRT2 * 2.0;
 }
-void *FFT::FFT_Thread(void *args) {
+void *AnalyzerSoft::FFT::FFT_Thread(void *args) {
   FFT *This = (FFT*)args;
   while(This->pTerminate == false) {
-    if(This->WorkerWaitTask() == false) return NULL;
+    if(This->pWorkerLocks.WorkerWaitTask() == false) return NULL;
     This->Output.resize((This->pInput.size() / 2) + 1, complex<float>(0.0, 0.0));
     pthread_mutex_lock(&This->pPlannerMutex);
     fftwf_plan Plan = fftwf_plan_dft_r2c_1d(This->pInput.size(), &(This->pInput[0]), (fftwf_complex*)&This->Output[0], FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
@@ -45,14 +46,14 @@ void *FFT::FFT_Thread(void *args) {
     fftwf_destroy_plan(Plan);
     pthread_mutex_unlock(&pPlannerMutex);
     for(uint i = 0; i < This->Output.size(); i++) This->Output[i] = This->Output[i] / (float)(This->pInput.size());
-    This->WorkerEndsTask();
+    This->pWorkerLocks.WorkerEndsTask();
   }
   return NULL;
 }
-void FFT::Wait() {
-  WaitWorker();
+void AnalyzerSoft::FFT::Wait() {
+  pWorkerLocks.WaitWorker();
 }
-float FFT::CalcAngle(const complex<float> &a, const complex<float> &b) {
+float AnalyzerSoft::FFT::CalcAngle(const complex<float> &a, const complex<float> &b) {
   float Tmp;
   if((a.real() == 0) && (a.imag() == 0)) 
     Tmp = 0;
