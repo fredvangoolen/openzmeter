@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <queue>
 #include "HTTPServer.h"
 #ifdef OPENWRT
   #include <iwlib.h>
@@ -21,11 +22,15 @@ class SysSupport {
     #endif
   private :
     static SysSupport      *pInstance;
-    static pthread_mutex_t  pMutex;
+    static pthread_mutex_t  pInstanceMutex;
   private :
-    json               pSystemStatus;
+    json               pSystemDetails;
+    RWLocks            pDetailsLock;
+    queue<string>      pSystemActions;
+    RWLocks            pActionsLock;
     #ifdef OPENWRT
       DBusConnection  *pDBus;
+      ptread_mutex_t   pWorkingMutex;
       string           pBTBridgeName;
       string           pBTServerName;
       bool             pBTStarted;
@@ -72,6 +77,8 @@ class SysSupport {
   public :
     static json GetSystemDetails();
     static void SetSystemDetails(const json &details);
+    static bool PendingSystemActions();
+    static void SetSystemActions(const string &action);
   public:
     SysSupport();
     void PeriodicTask();

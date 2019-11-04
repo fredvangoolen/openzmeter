@@ -5,8 +5,8 @@
 #include "SysSupport.h"
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
-SysSupport     *SysSupport::pInstance   = NULL;
-pthread_mutex_t SysSupport::pMutex      = PTHREAD_MUTEX_INITIALIZER;
+SysSupport     *SysSupport::pInstance      = NULL;
+pthread_mutex_t SysSupport::pInstanceMutex = PTHREAD_MUTEX_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 void SysSupport::GetNewsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -49,9 +49,10 @@ void SysSupport::DelUserCallback(HTTPRequest &req) {
 
 }
 SysSupport::SysSupport() {
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_lock(&pInstanceMutex);
   if(pInstance != NULL) delete pInstance;
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pInstanceMutex);
+  pSystemDetails = json::object();
   HTTPServer::RegisterCallback("getNews",   GetNewsCallback);
   HTTPServer::RegisterCallback("getUsers",  GetUsersCallback);  
   HTTPServer::RegisterCallback("getUser",   GetUserCallback);
@@ -60,6 +61,7 @@ SysSupport::SysSupport() {
   HTTPServer::RegisterCallback("delUser",   DelUserCallback);
   #ifdef OPENWRT
     json Config = ConfigManager::ReadConfig("/Bluetooth");
+    pWorkingMutex      = PTHREAD_MUTEX_INITIALIZER;
     pBTBridgeName      = "br-bt";
     pBTServerName      = "Stopped";
     pBTStarted         = false;
@@ -107,14 +109,15 @@ SysSupport::SysSupport() {
     HTTPServer::RegisterCallback("setNTP", SetNTPCallback);
     HTTPServer::RegisterCallback("getUpdates", GetUpdatesCallback);
     HTTPServer::RegisterCallback("upgrade", UpgradeCallback);
-  #endif  
-  pthread_mutex_lock(&pMutex);
+  #endif
+  pthread_mutex_lock(&pInstanceMutex);
   pInstance = this;
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pInstanceMutex);
 }
 SysSupport::~SysSupport() {
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_lock(&pInstanceMutex);
   pInstance = NULL;
+  pthread_mutex_unlock(&pInstanceMutex);
   HTTPServer::UnregisterCallback("getNews");
   HTTPServer::UnregisterCallback("getUsers");
   HTTPServer::UnregisterCallback("getUser");
@@ -134,23 +137,46 @@ SysSupport::~SysSupport() {
     StopBT();
     if(pDBus) dbus_connection_unref(pDBus);
   #endif
-  pthread_mutex_unlock(&pMutex);
 }
 void SysSupport::SetSystemDetails(const json &details) {
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_lock(&pInstanceMutex);
   if(pInstance != NULL) {
-//    pInstance->pBattery = level;
-//    pInstance->pCharging = charging;
-//    pInstance->pPowered = powered;
+    pInstance->pDetailsLock.WriteLock();
+    pInstance->pSystemDetails.insert(details.begin(), details.end());
+    pInstance->pDetailsLock.WriteUnlock();
   }
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pInstanceMutex);
 }
 json SysSupport::GetSystemDetails() {
+  pthread_mutex_lock(&pInstanceMutex);
   json Result = json::object();
-  pthread_mutex_lock(&pMutex);
-  if(pInstance != NULL) Result = pInstance->pSystemStatus;
-  pthread_mutex_unlock(&pMutex);
+  if(pInstance != NULL) {
+    pInstance->pDetailsLock.ReadLock();
+    Result = pInstance->pSystemDetails;
+    pInstance->pDetailsLock.ReadUnlock();
+  }
+  pthread_mutex_unlock(&pInstanceMutex);
   return Result;
+}
+bool SysSupport::PendingSystemActions() {
+  pthread_mutex_lock(&pInstanceMutex);
+  bool Result = false;
+  if(pInstance != NULL) {
+    pInstance->pActionsLock.ReadLock();
+    if(pInstance->pSystemActions.size() > 0) Result = true;
+    pInstance->pActionsLock.ReadUnlock();
+  }
+  pthread_mutex_unlock(&pInstanceMutex);
+  return Result; 
+}
+void SysSupport::SetSystemActions(const string &action) {
+  pthread_mutex_lock(&pInstanceMutex);
+  if(pInstance != NULL) {
+    pInstance->pActionsLock.WriteLock();
+    pInstance->pSystemActions.push(action);
+    pInstance->pActionsLock.WriteUnlock();
+  }
+  pthread_mutex_unlock(&pInstanceMutex);
 }
 #ifdef OPENWRT
   string SysSupport::Run(string command, int *resultCode) {
@@ -400,53 +426,58 @@ json SysSupport::GetSystemDetails() {
     pLastUpdateCheck = Tools::GetTime();
     if(sysinfo(&Info) != 0) {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      pthread_mutex_unlock(&pMutex);
-      return;
+      pSystemDetails["UpTime"] = nullptr;
+      pSystemDetails["Swap_Total"] = nullptr;
+      pSystemDetails["Swap_Usage"] = nullptr;
+      pSystemDetails["CPU_Usage"] = nullptr;
+    } else {
+      pSystemDetails["UpTime"] = Info.uptime;
+      pSystemDetails["Swap_Total"] = (uint64_t)Info.totalswap * Info.mem_unit;
+      pSystemDetails["Swap_Usage"] = ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap;
+      pSystemDetails["CPU_Usage"] = ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0;
     }
-    pInstance->pSystemStatus["UpTime"] = Info.uptime;
-    pInstance->pSystemStatus["Swap_Total"] = (uint64_t)Info.totalswap * Info.mem_unit;
-    pInstance->pSystemStatus["Swap_Usage"] = ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap;
-    pInstance->pSystemStatus["CPU_Usage"] = ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0;
     if(statvfs("/", &Disk) != 0) {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      pthread_mutex_unlock(&pMutex);
-      return;
-    }
-    pInstance->pSystemStatus["Disk_Total"] = (uint64_t)Disk.f_blocks * Disk.f_frsize;
-    pInstance->pSystemStatus["Disk_Usage"] = ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks;
+      pSystemDetails["Disk_Total"] = nullptr;
+      pSystemDetails["Disk_Usage"] = nullptr;
+    } else {
+      pSystemDetails["Disk_Total"] = (uint64_t)Disk.f_blocks * Disk.f_frsize;
+      pSystemDetails["Disk_Usage"] = ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks;
+    }   
     char Buffer[8192];
     int TmpFile = open("/proc/meminfo", O_RDONLY);
     if(TmpFile > 0) {
       size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
       close(TmpFile);
-      if(Len != 0) {
-        Buffer[Len] = 0;
-        pInstance->pSystemStatus["RAM_Total"] = ParseProcMem("MemTotal:", Buffer);
-        pInstance->pSystemStatus["RAM_Usage"] = ((ParseProcMem("MemTotal:", Buffer) -  ParseProcMem("MemFree:", Buffer) - ParseProcMem("Cached:", Buffer) - ParseProcMem("Buffers:", Buffer)) * 100.0) / + ParseProcMem("MemTotal:", Buffer);
-      }
+      Buffer[Len] = 0;
+      pSystemDetails["RAM_Total"] = ParseProcMem("MemTotal:", Buffer);
+      pSystemDetails["RAM_Usage"] = ((ParseProcMem("MemTotal:", Buffer) -  ParseProcMem("MemFree:", Buffer) - ParseProcMem("Cached:", Buffer) - ParseProcMem("Buffers:", Buffer)) * 100.0) / + ParseProcMem("MemTotal:", Buffer);
+    } else {
+      pSystemDetails["RAM_Total"] = nullptr;
+      pSystemDetails["RAM_Usage"] = nullptr;
     }
     TmpFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
     if(TmpFile > 0) {
       size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
       close(TmpFile);
       Buffer[Len] = 0;
-      pInstance->pSystemStatus["Temperature"] = atoi(Buffer) / 1000.0;
+      pSystemDetails["Temperature"] = atoi(Buffer) / 1000.0;
+    } else {
+      pSystemDetails["Temperature"] = nullptr;
     }
-    string CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInstance->pInterfaceWIFI + "\"}'");
+    string CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
     if(CommandStr.empty() == false) {
       json Tmp = json::parse(CommandStr, NULL, false);
       if(Tmp.is_discarded()) {
-        pthread_mutex_unlock(&pMutex);
-        return;
-      }
-      if(Tmp.is_object()) {
-        if(Tmp["ssid"].is_string()) pInstance->pSystemStatus["WIFI_Network"] = Tmp["ssid"];
-        if(Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
-          float Current = Tmp["quality"], Max = Tmp["quality_max"];
-          pInstance->pSystemStatus["WIFI_Power"] = (int)(Current * 100.0 / Max);
-        }
+        pSystemDetails["WIFI_Network"] = nullptr;
+        pSystemDetails["WIFI_Power"] = nullptr;
+      } else if(Tmp.is_object() && Tmp["ssid"].is_string() && Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
+        pSystemDetails["WIFI_Network"] = Tmp["ssid"];
+        float Current = Tmp["quality"], Max = Tmp["quality_max"];
+        pSystemDetails["WIFI_Power"] = (int)(Current * 100.0 / Max);
       }
     }
+    pSystemDetails["Bluetooth_Network"] = (pBTStarted == true) ? pBTServerName : nullptr;
     pthread_mutex_unlock(&pMutex);
   }
   void SysSupport::GetUpdatesCallback(HTTPRequest &req) {
@@ -747,10 +778,27 @@ json SysSupport::GetSystemDetails() {
   }
 #endif
 void SysSupport::PeriodicTask() {
+  pthread_mutex_lock(&pInstanceMutex);
+  string Action = "";
+  pActionsLock.WriteLock();
+  if(pSystemActions.size() > 0) {
+    Action = pSystemActions.front();
+    pSystemActions.pop();
+  }
+  pActionsLock.WriteUnlock();
   #ifdef OPENWRT
     HandleAgentBT();
     if(pLastDestailsCheck < (Tools::GetTime() - 5000)) UpdateSystemDetails();
     if(pLastUpdateCheck < (Tools::GetTime() - 86400000)) CheckUpdates();
+    if(Action == "PowerOff") {
+      Run("poweroff");
+    } else if(Action == "ToogleBluetooth") {
+      //Si esta encendio apago
+      //Si esta apagao enciendo
+    }
+  #else
+    if(Action.empty() == false) LOGFile::Info("Received '%s' action\n", Action.c_str());  
   #endif
+  pthread_mutex_unlock(&pInstanceMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
