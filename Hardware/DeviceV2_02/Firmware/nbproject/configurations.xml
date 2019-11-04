@@ -27,8 +27,9 @@
         <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <flagsDictionary>
-        <element flagsID="0" commonFlags="-std=c99 -march=armv6-m -g -O1"/>
-        <element flagsID="1" commonFlags="-std=c99 -march=armv6-m -g -O2"/>
+        <element flagsID="0" commonFlags="-march=armv6-m -g -O1 -std=c99"/>
+        <element flagsID="1" commonFlags="-std=c99 -march=armv6-m -g -O1"/>
+        <element flagsID="2" commonFlags="-std=c99 -march=armv6-m -g -O2"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
@@ -38,11 +39,6 @@
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
           <executablePath>Tmp/Firmware</executablePath>
-          <cTool>
-            <incDir>
-              <pElem>CMSIS</pElem>
-            </incDir>
-          </cTool>
         </makeTool>
         <preBuild>
           <preBuildCommandWorkingDir>.</preBuildCommandWorkingDir>
@@ -51,18 +47,34 @@
       </makefileType>
       <item path="Main.c" ex="false" tool="0" flavor2="3">
         <cTool flags="0">
+          <incDir>
+            <pElem>CMSIS</pElem>
+            <pElem>/usr/include/newlib/machine</pElem>
+            <pElem>/usr/include/newlib/sys</pElem>
+            <pElem>.</pElem>
+            <pElem>/usr/include/newlib</pElem>
+          </incDir>
         </cTool>
       </item>
       <item path="System.c" ex="false" tool="0" flavor2="3">
         <cTool flags="0">
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
         </cTool>
       </item>
       <item path="USB.c" ex="false" tool="0" flavor2="3">
-        <cTool flags="0">
+        <cTool flags="1">
+          <incDir>
+            <pElem>CMSIS</pElem>
+          </incDir>
         </cTool>
       </item>
       <item path="usb_core.c" ex="false" tool="0" flavor2="3">
-        <cTool flags="1">
+        <cTool flags="2">
+          <incDir>
+            <pElem>CMSIS</pElem>
+          </incDir>
         </cTool>
       </item>
     </conf>

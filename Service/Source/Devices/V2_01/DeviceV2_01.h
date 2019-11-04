@@ -56,6 +56,7 @@ class DeviceV2_01 final : public Device {
     deque<Sample_t>              pAverageValues;           //Average wave value of last second
     uint64_t                     pLastSignalSend;          //Last LEDs/Buzzer message send
     uint64_t                     pLastSignalRecv;          //Last battery message recv
+    uint8_t                      pLastButtonAction;        //Last action readed
     Transfer_t                   pControlTransfer;         //Transfer used for signaling
   private :
     static bool  GetInstances();

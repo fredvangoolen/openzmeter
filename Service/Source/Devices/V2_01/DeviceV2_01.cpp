@@ -74,13 +74,16 @@ bool DeviceV2_01::GetInstances() {
   return true;
 }
 DeviceV2_01::DeviceV2_01(string serial) {
-  pDeviceHandle  = NULL;
-  pNewDevice     = NULL;
-  pSerial        = serial;
-  pDriver        = "V2.01";
-  pName          = "Capture device V2.01";
-  pCaptureThread = 0;
-  pMutex         = PTHREAD_MUTEX_INITIALIZER;
+  pDeviceHandle     = NULL;
+  pNewDevice        = NULL;
+  pSerial           = serial;
+  pDriver           = "V2.01";
+  pName             = "Capture device V2.01";
+  pCaptureThread    = 0;
+  pMutex            = PTHREAD_MUTEX_INITIALIZER;
+  pLastButtonAction = 0;
+  pLastSignalRecv   = 0;
+  pLastSignalSend   = 0;
   pVoltageGain.resize(3, 0.0);
   pCurrentGain.resize(4, 0.00);
   pVoltageOffset.resize(3, 0.0);
@@ -292,13 +295,22 @@ void DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
     }
     if(Seq == 7) {
       if(This->pLastSignalRecv < (Tools::GetTime() - 1000)) {
-//        (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
-//        printf("RAW: 0x%04X, ExtPower: %s, Charging: %s, Bat: %.2f, Btn: %s\n", Sample, (Sample & 0x0001) ? "1": "0", (Sample & 0x0002) ? "1": "0", 2.96 + ((Sample & 0x00FC) >> 2) * 0.02, (((Sample & 0x0300) >> 8) == 0) ? "NONE" : (((Sample & 0x0300) >> 8) == 1) ? "CLICK" : "LONG_CLICK");
         json Status = json::object();
-        Status["Charging"] = false;        
-        
+        float BattVoltage = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
+        float BattLevel  = (BattVoltage - 2.96) * 80.65;
+        if(BattLevel > 100.0) BattLevel = 100.0;
+        Status["Battery_Voltage"] = BattVoltage;
+        Status["Battery_Level"] = BattLevel;
+        Status["Charging"] = (Sample & 0x0002) ? true: false;
+        Status["Powered"] = (Sample & 0x0001) ? true: false;
         SysSupport::SetSystemDetails(Status);
-        //System::SetBatteryLevel(2.96 + ((Sample & 0x00FC) >> 2) * 0.02, (Sample & 0x0002), (Sample & 0x0001));
+        uint8_t Action = (Sample & 0x0300) >> 8;
+        if((Action == 1) && (This->pLastButtonAction == 0)) {
+          SysSupport::SetSystemActions("ToogleBluetooth");
+        } else if((Action == 2) && (This->pLastButtonAction == 0)) {
+          SysSupport::SetSystemActions("PowerOff");
+        }
+        This->pLastButtonAction = Action;
         This->pLastSignalRecv = Tools::GetTime();
       }    
       continue;

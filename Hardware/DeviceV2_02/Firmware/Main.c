@@ -82,6 +82,8 @@ void SysTick_ISR() {
     if(GPIOA->IDR & GPIO_IDR_0) {
       if(ButtonStatus.Counter == 0) SignalsStatus.Buzzer = 0b000000001;
       ButtonStatus.Counter++;
+      if(ButtonStatus.Counter == 1000) SignalsStatus.Buzzer = 0b000000001;
+      if(ButtonStatus.Counter == 5000) SignalsStatus.Buzzer = 0b000000101;
       if(ButtonStatus.Counter > 10000) {
         ButtonStatus.Action = VERY_LONG_CLICK;
         SignalsStatus.Buzzer = 0b101010111;
@@ -91,7 +93,7 @@ void SysTick_ISR() {
       ButtonStatus.Action = LONG_CLICK;
       SignalsStatus.Buzzer = 0b001010111; 
       ButtonStatus.Counter = 0;
-    } else if(ButtonStatus.Counter > 1000) {
+    } else if(ButtonStatus.Counter > 200) {
       ButtonStatus.Action = CLICK;
       SignalsStatus.Buzzer = 0b000010111;
       ButtonStatus.Counter = 0;
@@ -295,7 +297,7 @@ void Loop() {
     //Wait NanoPI to shutdown up to 20 sec
     uint32_t Time = SysTicks + 20000;
     while(SysTicks < Time) {
-      if(USB_Device.Status.device_state == USB_STATE_DEFAULT) {
+      if(USB->CNTR & USB_CNTR_FSUSP) {
         SignalsStatus.Buzzer = 0b000001111;
         SignalsStatus.Power_Color = RED;
         Sleep(1000);
