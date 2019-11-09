@@ -75,7 +75,7 @@ typedef struct {
   uint8_t     control_state;  /**<\brief Current \ref usbd_ctl_state.*/
 } USB_Status_t;
 
-typedef void (*USB_Event_Callback_t)(uint8_t event, uint8_t ep);
+typedef void (*USB_Event_Callback_t)(uint8_t event);
 typedef void (*USB_Request_Callback_t)(USB_ControlRequest_t *req);
 
 /* Represents a USB device data */

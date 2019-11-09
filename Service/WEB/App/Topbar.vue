@@ -90,7 +90,7 @@ export default {
           }
           if(vals['Sys_Stats'].Battery_Level != undefined) {  
             this.BatteryLevel = Math.round(vals['Sys_Stats'].Battery_Level) + '%';
-            this.BatteryStatus = vals['Sys_Stats'].Battery_Status;
+            this.BatteryStatus = oZm.RoundPlain(vals['Sys_Stats'].Battery_Voltage, 2) + 'v';
           } else {
             this.BatteryLevel = null;
           }

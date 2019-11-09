@@ -5,7 +5,8 @@
 // Configuration -------------------------------------------------------------------------------------------------------
 #define BUFF_LEN  1024
 // USB application definitions -----------------------------------------------------------------------------------------
-#define SEND_EP   0x81
+#define SEND_EP                         0x81
+#define RECV_EP                         0x02
 #define USB_CONTROL_CLASS_SETSTATUS     0x20
 // Types definition ----------------------------------------------------------------------------------------------------
 typedef struct {
@@ -42,22 +43,23 @@ typedef struct {
   uint16_t Head;
   uint16_t Tail;
   uint16_t Buffer[BUFF_LEN];
-} USB_Buffer_t;
+} Samples_Buffer_t;
 // Local variables -----------------------------------------------------------------------------------------------------
 volatile uint32_t SysTicks;
 SignalsStatus_t   SignalsStatus = { .Power_Color = OFF, .Status_Color = OFF, .Wifi_Color = OFF, .Buzzer = 0};
 SysStatus_t       SysStatus = { .Charging = 0, .ExtPower = 0, .Battery = 0 };
 ButtonStatus_t    ButtonStatus = { .Action = CLICK, .Counter = 0};
-USB_Buffer_t      USB_Buffer = { .Head = 0, .Tail = 0, .Counter = 0 };
+Samples_Buffer_t  Samples_Buffer = { .Head = 0, .Tail = 0, .Counter = 0 };
 ADC_Sequence_t    ADC_Read[8];
 // Control LED, buton and buzzer ---------------------------------------------------------------------------------------
 void SysTick_ISR() {
-  if(USB_Buffer.Counter == 5000) {
+  if(Samples_Buffer.Counter == 1000) {
     SignalsStatus.Status_Color = OFF;
     SignalsStatus.Wifi_Color = OFF;
-    SignalsStatus.Bluetooth_Color = OFF;    
+    SignalsStatus.Bluetooth_Color = OFF;
+    TIM3->CR1 &= ~TIM_CR1_CEN;
   } else {
-    USB_Buffer.Counter++;
+    Samples_Buffer.Counter++;
   }
   if(SysTicks % 2) {
     GPIOA->BSRR = GPIO_BSRR_BS_10 | GPIO_BSRR_BS_15;    //A mode (PA10=1)
@@ -120,13 +122,13 @@ void DMA_CH1_ISR() {
   if((Offset > 256) || (Offset < -256)) Offset = 0;
   uint16_t *Tmp = &Ptr[0].V_CH_1;
   for(uint8_t Count = 0; Count < 7; Count++) {
-    uint16_t Next = (USB_Buffer.Head + 1) % BUFF_LEN;
-    if(Next != USB_Buffer.Tail) {
-      USB_Buffer.Buffer[USB_Buffer.Head] = ((Tmp[0] + Tmp[9] + Tmp[18] + Tmp[27] + Offset) >> 1) | (Count << 13);
-      USB_Buffer.Head = Next;
+    uint16_t Next = (Samples_Buffer.Head + 1) % BUFF_LEN;
+    if(Next != Samples_Buffer.Tail) {
+      Samples_Buffer.Buffer[Samples_Buffer.Head] = ((Tmp[0] + Tmp[9] + Tmp[18] + Tmp[27] + Offset) >> 1) | (Count << 13);
+      Samples_Buffer.Head = Next;
     } else {
-      USB_Buffer.Head = 0;
-      USB_Buffer.Tail = 0;
+      Samples_Buffer.Head = 0;
+      Samples_Buffer.Tail = 0;
 //     __asm("BKPT #0\n") ; // Break into the debugger
     }  
     Ptr++;
@@ -139,48 +141,85 @@ void DMA_CH1_ISR() {
   SysStatus.Battery = (Battery <= 2960) ? 0 : (Battery >= 4240) ? 63 : (Battery - 2960) / 20;
 }
 // USB callbacks functions ---------------------------------------------------------------------------------------------
+/*
 USB_Response USB_HandleEP0_Class(USB_ControlRequest_t *req, USB_Request_Callback_t *callback) {
   if(((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) == (USB_REQ_INTERFACE | USB_REQ_CLASS) && req->wIndex == 0 ) {
     switch(req->bRequest) {
       case USB_CONTROL_CLASS_SETSTATUS :
-        //0-1: reserved
-        //2-3: Status_Color
-        SignalsStatus.Status_Color    = (req->wValue >> 2) & 0x0003;
-        //4-5: Wifi_Color
-        SignalsStatus.Wifi_Color      = (req->wValue >> 4) & 0x0003;
-        //6: Bluetooth_Color
-        SignalsStatus.Bluetooth_Color = (req->wValue >> 6) & 0x0001;
-        //7-15: Buzzer patern
-        SignalsStatus.Buzzer          = (req->wValue >> 7) & 0x01FF;
+        //0-1: Status_Color
+        SignalsStatus.Status_Color    = (req->wValue >> 0) & 0x0003;
+        //2-3: Wifi_Color
+        SignalsStatus.Wifi_Color      = (req->wValue >> 2) & 0x0003;
+        //4: Bluetooth_Color
+        SignalsStatus.Bluetooth_Color = (req->wValue >> 4) & 0x0001;
+        //5-13: Buzzer patern
+        SignalsStatus.Buzzer          = (req->wValue >> 5) & 0x01FF;
         USB_Buffer.Counter = 0;
         return USB_ACK;
     }
   }
   return USB_FAIL;
 }
-void USB_HandleEP1_TX(uint8_t event, uint8_t ep) {
+*/
+void USB_HandleEP1_TX(uint8_t event) {
   uint16_t fifo[32];
+  if(event != USB_EVENT_TX) return;
   for(int x = 0; x < 32; x++) {
-    if(USB_Buffer.Head == USB_Buffer.Tail) {
+    if(Samples_Buffer.Head == Samples_Buffer.Tail) {
       fifo[x] = 0xE000 | (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
     } else {
-      uint16_t Val = USB_Buffer.Buffer[USB_Buffer.Tail];
-      USB_Buffer.Tail = (USB_Buffer.Tail + 1) % BUFF_LEN;
+      uint16_t Val = Samples_Buffer.Buffer[Samples_Buffer.Tail];
+      Samples_Buffer.Tail = (Samples_Buffer.Tail + 1) % BUFF_LEN;
       fifo[x] = Val;
     }
   }
-  USB_WriteEP(ep, fifo, 64);
+  USB_WriteEP(SEND_EP, fifo, 64);
+}
+void USB_HandleEP2_RX(uint8_t event) {
+  if(event != USB_EVENT_RX) return;
+  uint16_t Read;
+  USB_ReadEP(RECV_EP, &Read, 2);
+  //0-1: Status_Color
+  SignalsStatus.Status_Color    = (Read >> 0) & 0x0003;
+  //2-3: Wifi_Color
+  SignalsStatus.Wifi_Color      = (Read >> 2) & 0x0003;
+  //4: Bluetooth_Color
+  SignalsStatus.Bluetooth_Color = (Read >> 4) & 0x0001;
+  //5-13: Buzzer patern
+  SignalsStatus.Buzzer          = (Read >> 5) & 0x01FF;
+  Samples_Buffer.Counter = 0;
+  //Pongo el bit de ganancia = (Read >> 14) & 0x0001;
+  TIM3->CR1 |= TIM_CR1_CEN;
+  
+  
+  
+  
+//  uint16_t fifo[32];
+//  for(int x = 0; x < 32; x++) {
+//    if(Samples_Buffer.Head == Samples_Buffer.Tail) {
+//      fifo[x] = 0xE000 | (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
+//    } else {
+//      uint16_t Val = Samples_Buffer.Buffer[Samples_Buffer.Tail];
+//      Samples_Buffer.Tail = (Samples_Buffer.Tail + 1) % BUFF_LEN;
+//      fifo[x] = Val;
+//    }
+//  }
+//  USB_WriteEP(ep, fifo, 64);
 }
 USB_Response USB_SetConfiguration(uint8_t cfg) {
   switch(cfg) {
     case 0:
       USB_DeconfigEP(SEND_EP);
       USB_RegisterEP(SEND_EP, 0);
+      USB_DeconfigEP(RECV_EP);
+      USB_RegisterEP(RECV_EP, 0);
       return USB_ACK;
     case 1:
       USB_ConfigEP(SEND_EP, USB_EPTYPE_BULK | USB_EPTYPE_DBLBUF, 64);
       USB_RegisterEP(SEND_EP, USB_HandleEP1_TX);
-      USB_WriteEP(SEND_EP, 0, 0);
+//      USB_WriteEP(SEND_EP, 0, 0);
+      USB_ConfigEP(RECV_EP, USB_EPTYPE_BULK, 2);
+      USB_RegisterEP(RECV_EP, USB_HandleEP2_RX);
       return USB_ACK;
     default:
       return USB_FAIL;
@@ -218,9 +257,7 @@ void Setup() {
   NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   NVIC_SetPriority(DMA1_Channel1_IRQn, 0);
   // Initialize the ADC (14MHz, 7.5 adquisition, DMA active, trigger on Timer3)
-//  ADC->CCR |= ADC_CCR_TSEN;
   ADC1->SMPR |= ADC_SMPR_SMP_0;
-//  ADC1->CFGR2 |= ADC_CFGR2_CKMODE_1;
   ADC1->CR = ADC_CR_ADCAL;
   while(ADC1->CR & ADC_CR_ADCAL);
   ADC1->CHSELR = ADC_CHSELR_CHSEL1 | ADC_CHSELR_CHSEL2 | ADC_CHSELR_CHSEL3 | ADC_CHSELR_CHSEL4 | ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6 | ADC_CHSELR_CHSEL7 | ADC_CHSELR_CHSEL8 | ADC_CHSELR_CHSEL9;
@@ -231,7 +268,7 @@ void Setup() {
   //Init and Timer3 (19200Hz x 4) for ADC control
   TIM3->ARR = 625 - 1;
   TIM3->CR2 |= TIM_CR2_MMS_1;
-  TIM3->CR1 |= TIM_CR1_DIR | TIM_CR1_CEN;
+  TIM3->CR1 |= TIM_CR1_DIR;
   // Configure Timer2 (4kHz 50%) for sounder
   TIM2->CCMR1 |= TIM_CCMR1_OC2PE | TIM_CCMR1_OC2M_2 | TIM_CCMR1_OC2M_1;
   TIM2->ARR = 12000 - 1;
@@ -263,9 +300,15 @@ void Sleep(uint16_t ms) {
 } 
 // Main loop -----------------------------------------------------------------------------------------------------------
 void Loop() {
+  static uint8_t Charging = 0;
   //Read charging and external power bits
   SysStatus.ExtPower = (GPIOB->IDR & GPIO_IDR_7) ? 1 : 0;
-  SysStatus.Charging = (GPIOA->IDR & GPIO_IDR_8) ? 0 : 1;
+  if(GPIOA->IDR & GPIO_IDR_8) {
+    Charging++;
+    if(Charging == 0xFF) SysStatus.Charging = 1;
+  } else {
+    SysStatus.Charging = 0;
+  }
   if(ButtonStatus.Action == CLICK) {
     //Handle power on action
     if((GPIOB->ODR && GPIO_ODR_6) == 0) {
@@ -286,8 +329,8 @@ void Loop() {
       }
       SignalsStatus.Buzzer = 0b000001111;
       SignalsStatus.Power_Color = RED;
-      Sleep(1000);
       GPIOB->BSRR |= GPIO_BSRR_BR_6;
+      Sleep(1000);
     } else {
      Sleep(2000);
      ButtonStatus.Action = NONE;

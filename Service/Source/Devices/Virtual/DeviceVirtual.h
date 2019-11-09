@@ -12,7 +12,7 @@ class DeviceVirtual final : public Device {
   private :
     static bool                     pRegistered;
   private :
-    pthread_mutex_t                 pMutex;
+//    pthread_mutex_t                 pMutex;
     pthread_t                       pThread;
     bool                            pTerminate;
     Analyzer::AnalyzerMode          pMode;
@@ -27,7 +27,6 @@ class DeviceVirtual final : public Device {
     static json  CheckConfig(const json &config);
   private :
     DeviceVirtual();
-    bool Start(const json &config);
     bool StartDevice() override;
     bool StopDevice() override;
     void GetDevice(HTTPRequest &req) override;
