@@ -17,7 +17,7 @@ class Device {
   public :
     enum DeviceState { UNCONFIGURED, STOPPED, RUNNING };
   protected :
-    RWLocks           pAnalyzersLock;     //Analyzer list locks
+    RWLocks           pMembersLock;       //Lock to properties
     vector<Analyzer*> pAnalyzers;         //Analyzers list
     DeviceState       pState;             //Device state
     string            pSerial;            //Device serial
@@ -31,7 +31,7 @@ class Device {
   private :
     Analyzer *FindAnalyzer(const string &serial);
   protected :
-    Device();
+    Device(const string &serial, const string &driver, const string &name);
   public :
     string Serial();
     json GetJSONDescriptor();

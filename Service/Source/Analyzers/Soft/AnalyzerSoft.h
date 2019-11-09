@@ -96,7 +96,6 @@ class AnalyzerSoft final : public Analyzer, private Database {
     uint32_t                   pCycleLen;                //Current cycle len
     uint32_t                   pMaxSamples;              //Max block samples
     Events                    *pEventsDetector;          //Events detector
-
     string                     pConfigPath;              //Path to configuration
     pthread_t                  pSyncThread;              //Synchronize thread
     string                     pSyncServer;

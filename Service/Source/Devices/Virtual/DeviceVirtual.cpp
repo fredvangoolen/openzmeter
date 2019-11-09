@@ -8,44 +8,9 @@
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceVirtual::pRegistered = DeviceVirtual::GetInstances();
 // Funciones ===========================================================================================================
-bool DeviceVirtual::GetInstances() {
+bool DeviceVirtual::GetInstances(){
   LOGFile::Info("Adding 'Virtual' device driver instance with serial 'VIRTUAL'\n");
   DeviceManager::AddDevice(new DeviceVirtual());
-  return true;
-}
-DeviceVirtual::DeviceVirtual() {
-  pSampleRate = 10000;
-  pVoltage    = 230.0;
-  pFrequency  = 50.0;
-  pMode       = Analyzer::PHASE1;
-  pThread     = 0;
-  pMutex      = PTHREAD_MUTEX_INITIALIZER;          
-  pSerial     = "VIRTUAL";
-  pDriver     = "Virtual";
-  pName       = "Emulate most of real capture device for testing";
-}
-DeviceVirtual::~DeviceVirtual() {
-  StopDevice();
-}
-bool DeviceVirtual::Start(const json &config) {
-  pVoltage      = config["Voltage"];
-  pFrequency    = config["Frequency"];
-  pSampleRate   = config["SampleRate"];
-  pCurrent      = config["Current"];
-  pCurrentPhase = config["CurrentPhase"];    
-  pMode         = (config["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (config["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
-  pTerminate    = false;
-  string ModeString = config["Mode"];
-  pAnalyzersLock.WriteLock();
-  pAnalyzers.push_back(new AnalyzerSoft(pSerial + "_" + ModeString, pMode, "/Devices/" + pSerial + "/Analyzer", pSampleRate));
-  pAnalyzersLock.WriteUnlock();
-  if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
-    pThread = 0;
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    return false;
-  }
-  pthread_setname_np(pThread, "DeviceVirtual");
-  pState = RUNNING;
   return true;
 }
 json DeviceVirtual::CheckConfig(const json &config) {
@@ -70,10 +35,21 @@ json DeviceVirtual::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
+DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of real capture device for testing") {
+  pMembersLock.WriteLock();
+  pSampleRate = 10000;
+  pVoltage    = 230.0;
+  pFrequency  = 50.0;
+  pMode       = Analyzer::PHASE1;
+  pMembersLock.WriteUnlock();
+}
+DeviceVirtual::~DeviceVirtual() {
+  StopDevice();
+}
 bool DeviceVirtual::StartDevice() {
-  pthread_mutex_lock(&pMutex);
+  pMembersLock.WriteLock();
   if(pState == RUNNING) {
-    pthread_mutex_unlock(&pMutex);
+    pMembersLock.WriteUnlock();
     return false;
   }
   LOGFile::Info("Loading 'Virtual' driver configuration\n");
@@ -83,34 +59,46 @@ bool DeviceVirtual::StartDevice() {
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     if(AutoStart == false) {
-      pthread_mutex_unlock(&pMutex);
+      pMembersLock.WriteUnlock();
       return true;
     }
   }
   LOGFile::Info("Starting 'Virtual' driver\n");
-  bool Result = Start(Config);  
-  pthread_mutex_unlock(&pMutex);
-  return Result;
+  pVoltage      = Config["Voltage"];
+  pFrequency    = Config["Frequency"];
+  pSampleRate   = Config["SampleRate"];
+  pCurrent      = Config["Current"];
+  pCurrentPhase = Config["CurrentPhase"];    
+  pMode         = (Config["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Config["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
+  pTerminate    = false;
+  pState        = STOPPED;
+  string ModeString = Config["Mode"];
+  pAnalyzers.push_back(new AnalyzerSoft(pSerial + "_" + ModeString, pMode, "/Devices/" + pSerial + "/Analyzer", pSampleRate));
+  if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  } else {
+    pthread_setname_np(pThread, "DeviceVirtual");
+    pState = RUNNING;
+  }
+  pMembersLock.WriteUnlock();
+  return (pState == RUNNING);
 }
 bool DeviceVirtual::StopDevice() {
-  pthread_mutex_lock(&pMutex);
+  pMembersLock.WriteLock();
   if(pState != RUNNING) {
-    pthread_mutex_unlock(&pMutex);
+    pMembersLock.WriteUnlock();
     return false;
   }
   LOGFile::Info("Stopping 'Virtual' driver...\n");
   pTerminate = true;
-  if(pThread != 0) pthread_join(pThread, NULL);
-  pThread = 0;
-  pAnalyzersLock.WriteLock();
+  pthread_join(pThread, NULL);
   while(pAnalyzers.size() > 0) {
     Analyzer *Analyzer = pAnalyzers.back();
     pAnalyzers.pop_back();
     delete Analyzer;
   }
-  pAnalyzersLock.WriteUnlock();
   pState = STOPPED;
-  pthread_mutex_unlock(&pMutex);
+  pMembersLock.WriteUnlock();
   return true;
 }
 void DeviceVirtual::GetDevice(HTTPRequest &req) {
@@ -119,27 +107,23 @@ void DeviceVirtual::GetDevice(HTTPRequest &req) {
   req.FromJSON(Config);
 }
 void DeviceVirtual::SetDevice(HTTPRequest &req) {
-  pthread_mutex_lock(&pMutex);
+  pMembersLock.ReadLock();
   DeviceState State = pState;
-  pthread_mutex_unlock(&pMutex);
+  pMembersLock.ReadUnlock();
   StopDevice();
   json Params = req.GetParams();
   json Config = CheckConfig(Params);
-  bool Result = true;
   ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
-  pthread_mutex_lock(&pMutex);
-  if((pState != RUNNING) && (State == RUNNING)) Result = Start(Config);
-  pthread_mutex_unlock(&pMutex);
-  json Response;
-  Response["Result"] = Result;
+  json Response = json::object();
+  Response["Result"] = (State == RUNNING) ? StartDevice() : true;
   req.FromJSON(Response);
 }
 void *DeviceVirtual::Capture_Thread(void *args) {
   DeviceVirtual *This = (DeviceVirtual*)args;
-  uint64_t StartTime        = Tools::GetTime();
-  uint64_t GeneratedSamples = 0;
-  AnalyzerSoft *Analyzer    = (AnalyzerSoft*)This->pAnalyzers[0];
-  int32_t Phase = (This->pSampleRate / This->pFrequency) * (This->pCurrentPhase / 360.0);
+  uint64_t       StartTime        = Tools::GetTime();
+  uint64_t       GeneratedSamples = 0;
+  AnalyzerSoft  *Analyzer         = (AnalyzerSoft*)This->pAnalyzers[0];
+  int32_t        Phase            = (This->pSampleRate / This->pFrequency) * (This->pCurrentPhase / 360.0);
   while(!This->pTerminate) {
     vector<float> Voltage;
     vector<float> Current;

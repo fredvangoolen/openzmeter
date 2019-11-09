@@ -5,8 +5,24 @@
 #include "SysSupport.h"
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
-SysSupport     *SysSupport::pInstance      = NULL;
-pthread_mutex_t SysSupport::pInstanceMutex = PTHREAD_MUTEX_INITIALIZER;
+json                           SysSupport::pSystemDetails = json::object();
+RWLocks                        SysSupport::pDetailsLock;
+queue<string>                  SysSupport::pSystemActions;
+RWLocks                        SysSupport::pActionsLock;
+#ifdef OPENWRT
+  DBusConnection              *SysSupport::pDBus         = NULL;
+  pthread_mutex_t              SysSupport::pBTMutex      = PTHREAD_MUTEX_INITIALIZER;
+  string                       SysSupport::pBTBridgeName = "br-bt";
+  string                       SysSupport::pBTServerName;
+  bool                         SysSupport::pBTEnabled    = true;
+  string                       SysSupport::pInterfaceWIFI;
+  string                       SysSupport::pNetworkWIFI;
+  string                       SysSupport::pWirelessWIFI;
+  vector<SysSupport::Update_t> SysSupport::pUpdates;
+  RWLocks                      SysSupport::pUpdatesLock;
+  uint64_t                     SysSupport::pLastUpdateCheck = 0;
+  uint64_t                     SysSupport::pLastDestailsCheck = 0;
+#endif
 //----------------------------------------------------------------------------------------------------------------------
 void SysSupport::GetNewsCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -49,10 +65,6 @@ void SysSupport::DelUserCallback(HTTPRequest &req) {
 
 }
 SysSupport::SysSupport() {
-  pthread_mutex_lock(&pInstanceMutex);
-  if(pInstance != NULL) delete pInstance;
-  pthread_mutex_unlock(&pInstanceMutex);
-  pSystemDetails = json::object();
   HTTPServer::RegisterCallback("getNews",   GetNewsCallback);
   HTTPServer::RegisterCallback("getUsers",  GetUsersCallback);  
   HTTPServer::RegisterCallback("getUser",   GetUserCallback);
@@ -61,12 +73,6 @@ SysSupport::SysSupport() {
   HTTPServer::RegisterCallback("delUser",   DelUserCallback);
   #ifdef OPENWRT
     json Config = ConfigManager::ReadConfig("/Bluetooth");
-    pWorkingMutex      = PTHREAD_MUTEX_INITIALIZER;
-    pBTBridgeName      = "br-bt";
-    pBTServerName      = "Stopped";
-    pBTStarted         = false;
-    pLastDestailsCheck = 0;
-    pLastUpdateCheck   = 0;
     DBusError Error;
     dbus_error_init(&Error);
     pDBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
@@ -76,13 +82,12 @@ SysSupport::SysSupport() {
       pDBus = NULL;
       return;
     }
-    bool Enabled = true;
     if(Config.is_object() == true) {
-      if(Config["Enabled"].is_boolean()) Enabled = Config["Enabled"];
+      if(Config["Enabled"].is_boolean()) pBTEnabled = Config["Enabled"];
       if(Config["Bridge"].is_string()) pBTBridgeName = Config["Bridge"];
     }
     Config = json::object();
-    Config["Enabled"] = Enabled;
+    Config["Enabled"] = pBTEnabled;
     Config["Bridge"] = pBTBridgeName;
     ConfigManager::WriteConfig("/Bluetooth", Config);
     Config = ConfigManager::ReadConfig("/WIFI");
@@ -99,7 +104,7 @@ SysSupport::SysSupport() {
     Config["Network"] = pNetworkWIFI;
     Config["Config"] = pWirelessWIFI;
     ConfigManager::WriteConfig("/WIFI", Config);
-    if(Enabled) StartBT();
+    if(pBTEnabled) StartBT();
     HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback);
     HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback);
     HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
@@ -110,14 +115,8 @@ SysSupport::SysSupport() {
     HTTPServer::RegisterCallback("getUpdates", GetUpdatesCallback);
     HTTPServer::RegisterCallback("upgrade", UpgradeCallback);
   #endif
-  pthread_mutex_lock(&pInstanceMutex);
-  pInstance = this;
-  pthread_mutex_unlock(&pInstanceMutex);
 }
 SysSupport::~SysSupport() {
-  pthread_mutex_lock(&pInstanceMutex);
-  pInstance = NULL;
-  pthread_mutex_unlock(&pInstanceMutex);
   HTTPServer::UnregisterCallback("getNews");
   HTTPServer::UnregisterCallback("getUsers");
   HTTPServer::UnregisterCallback("getUser");
@@ -139,44 +138,28 @@ SysSupport::~SysSupport() {
   #endif
 }
 void SysSupport::SetSystemDetails(const json &details) {
-  pthread_mutex_lock(&pInstanceMutex);
-  if(pInstance != NULL) {
-    pInstance->pDetailsLock.WriteLock();
-    pInstance->pSystemDetails.insert(details.begin(), details.end());
-    pInstance->pDetailsLock.WriteUnlock();
-  }
-  pthread_mutex_unlock(&pInstanceMutex);
+  pDetailsLock.WriteLock();
+  pSystemDetails.insert(details.begin(), details.end());
+  pDetailsLock.WriteUnlock();
 }
 json SysSupport::GetSystemDetails() {
-  pthread_mutex_lock(&pInstanceMutex);
   json Result = json::object();
-  if(pInstance != NULL) {
-    pInstance->pDetailsLock.ReadLock();
-    Result = pInstance->pSystemDetails;
-    pInstance->pDetailsLock.ReadUnlock();
-  }
-  pthread_mutex_unlock(&pInstanceMutex);
+  pDetailsLock.ReadLock();
+  Result = pSystemDetails;
+  pDetailsLock.ReadUnlock();
   return Result;
 }
 bool SysSupport::PendingSystemActions() {
-  pthread_mutex_lock(&pInstanceMutex);
   bool Result = false;
-  if(pInstance != NULL) {
-    pInstance->pActionsLock.ReadLock();
-    if(pInstance->pSystemActions.size() > 0) Result = true;
-    pInstance->pActionsLock.ReadUnlock();
-  }
-  pthread_mutex_unlock(&pInstanceMutex);
+  pActionsLock.ReadLock();
+  if(pSystemActions.size() > 0) Result = true;
+  pActionsLock.ReadUnlock();
   return Result; 
 }
 void SysSupport::SetSystemActions(const string &action) {
-  pthread_mutex_lock(&pInstanceMutex);
-  if(pInstance != NULL) {
-    pInstance->pActionsLock.WriteLock();
-    pInstance->pSystemActions.push(action);
-    pInstance->pActionsLock.WriteUnlock();
-  }
-  pthread_mutex_unlock(&pInstanceMutex);
+  pActionsLock.WriteLock();
+  pSystemActions.push(action);
+  pActionsLock.WriteUnlock();
 }
 #ifdef OPENWRT
   string SysSupport::Run(string command, int *resultCode) {
@@ -194,8 +177,8 @@ void SysSupport::SetSystemActions(const string &action) {
     return Result;
   }
   bool SysSupport::StartBT() {
-    pthread_mutex_lock(&pMutex);
-    if(pBTStarted == true) return true;
+    pthread_mutex_lock(&pBTMutex);
+//    if(pBTEnabled == true) return true;
     //Register agent
     DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "RegisterAgent");
     DBusMessageIter ArgsIter;
@@ -215,38 +198,38 @@ void SysSupport::SetSystemActions(const string &action) {
     if(Reply) dbus_message_unref(Reply);
     dbus_message_unref(Msg);
     if(SendBoolBT("Powered", false) == false) {
-      pthread_mutex_unlock(&pMutex);
-      return false; //Disable adapter
+      pthread_mutex_unlock(&pBTMutex);
+      return false;
     }
     string MAC = GetMacBT();
     if(MAC.empty() == true) {
-      pthread_mutex_unlock(&pMutex);
+      pthread_mutex_unlock(&pBTMutex);
       return false;
     }
     MAC.erase(std::remove(MAC.begin(), MAC.end(), ':'), MAC.end());
     pBTServerName = "openZmeter_" + MAC.substr(8);
     if(SendStringBT("Alias", pBTServerName.c_str()) == false) {
-      pthread_mutex_unlock(&pMutex);
+      pthread_mutex_unlock(&pBTMutex);
       return false;
     }
     if(SendBoolBT("Powered", true) == false) {
-      pthread_mutex_unlock(&pMutex);
-      return false; //enable adapter
-    }
-    if(SendBoolBT("Discoverable", true) == false) {
-      pthread_mutex_unlock(&pMutex);
-      return false;
-    }
-    if(SendUINT32BT("DiscoverableTimeout", 0) == false) {
-      pthread_mutex_unlock(&pMutex);
+      pthread_mutex_unlock(&pBTMutex);
       return false;
     }
     if(SendBoolBT("Discoverable", true) == false) {
-      pthread_mutex_unlock(&pMutex);
+      pthread_mutex_unlock(&pBTMutex);
       return false;
     }
     if(SendUINT32BT("DiscoverableTimeout", 0) == false) {
-      pthread_mutex_unlock(&pMutex);
+      pthread_mutex_unlock(&pBTMutex);
+      return false;
+    }
+    if(SendBoolBT("Discoverable", true) == false) {
+      pthread_mutex_unlock(&pBTMutex);
+      return false;
+    }
+    if(SendUINT32BT("DiscoverableTimeout", 0) == false) {
+      pthread_mutex_unlock(&pBTMutex);
       return false;
     }
     Msg = dbus_message_new_method_call("org.bluez", "/org/bluez/hci0", "org.bluez.NetworkServer1", "Register");
@@ -258,17 +241,17 @@ void SysSupport::SetSystemActions(const string &action) {
     Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
     if(Reply) dbus_message_unref(Reply);
     dbus_message_unref(Msg);
-    pthread_mutex_unlock(&pMutex);
+    pthread_mutex_unlock(&pBTMutex);
     LOGFile::Info("Bluetooth interface UP\n");
-    pBTStarted = true;
+    pBTEnabled = true;
     return true;
   }
   bool SysSupport::StopBT() {
-    pthread_mutex_lock(&pMutex);
-    if(pBTStarted == false) return true;
-    pBTServerName = "Stopped";
+    pthread_mutex_lock(&pBTMutex);
+//    if(pBTEnabled == false) return true;
+    pBTServerName = "";
     if(SendBoolBT("Powered", false) == false) {
-      pthread_mutex_unlock(&pMutex);
+      pthread_mutex_unlock(&pBTMutex);
       return false;
     }
     //Unregister agent
@@ -287,9 +270,9 @@ void SysSupport::SetSystemActions(const string &action) {
     Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
     if(Reply) dbus_message_unref(Reply);
     dbus_message_unref(Msg);
-    pthread_mutex_unlock(&pMutex);
+    pthread_mutex_unlock(&pBTMutex);
     LOGFile::Info("Bluetooth interface DOWN\n");
-    pBTStarted = false;
+    pBTEnabled = false;
     return true;
   }
   void SysSupport::HandleAgentBT() {
@@ -312,15 +295,15 @@ void SysSupport::SetSystemActions(const string &action) {
   }
   void SysSupport::CheckUpdates() {
     pLastUpdateCheck = Tools::GetTime();
-    pthread_mutex_lock(&pMutex);
+    pUpdatesLock.WriteLock();
     pUpdates.clear();
-    pthread_mutex_unlock(&pMutex);
+    pUpdatesLock.WriteUnlock();
     int ResultCode = 0;
     string Result = Run("opkg update", &ResultCode);
     if(ResultCode != 0) return;
     Result = Run("opkg list-upgradable", &ResultCode);
     if(ResultCode != 0) return;
-    pthread_mutex_lock(&pMutex);
+    pUpdatesLock.WriteLock();
     size_t Pos = 0;
     while(Pos < Result.size()) {
       Update_t Update;
@@ -335,8 +318,11 @@ void SysSupport::SetSystemActions(const string &action) {
       Update.To = Result.substr(Pos, Pos2 - Pos);
       Pos = Pos2 + 1;
       pUpdates.push_back(Update);
-    };  
-    pthread_mutex_unlock(&pMutex);
+    }
+    pDetailsLock.WriteLock();
+    pSystemDetails["Updates"] = (pUpdates.size() > 0);
+    pDetailsLock.WriteUnlock();
+    pUpdatesLock.WriteUnlock();
   }
   string SysSupport::GetMacBT() {
     string Result = "";
@@ -422,134 +408,169 @@ void SysSupport::SetSystemActions(const string &action) {
   void SysSupport::UpdateSystemDetails() {
     struct sysinfo Info;
     struct statvfs Disk;
-    pthread_mutex_lock(&pMutex);
-    pLastUpdateCheck = Tools::GetTime();
     if(sysinfo(&Info) != 0) {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      pDetailsLock.WriteLock();
       pSystemDetails["UpTime"] = nullptr;
       pSystemDetails["Swap_Total"] = nullptr;
       pSystemDetails["Swap_Usage"] = nullptr;
       pSystemDetails["CPU_Usage"] = nullptr;
+      pDetailsLock.WriteUnlock();
     } else {
+      pDetailsLock.WriteLock();
       pSystemDetails["UpTime"] = Info.uptime;
       pSystemDetails["Swap_Total"] = (uint64_t)Info.totalswap * Info.mem_unit;
       pSystemDetails["Swap_Usage"] = ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap;
       pSystemDetails["CPU_Usage"] = ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0;
+      pDetailsLock.WriteUnlock();
     }
     if(statvfs("/", &Disk) != 0) {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      pDetailsLock.WriteLock();
       pSystemDetails["Disk_Total"] = nullptr;
       pSystemDetails["Disk_Usage"] = nullptr;
+      pDetailsLock.WriteUnlock();
     } else {
+      pDetailsLock.WriteLock();
       pSystemDetails["Disk_Total"] = (uint64_t)Disk.f_blocks * Disk.f_frsize;
       pSystemDetails["Disk_Usage"] = ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks;
-    }   
+      pDetailsLock.WriteUnlock();
+    }
     char Buffer[8192];
     int TmpFile = open("/proc/meminfo", O_RDONLY);
     if(TmpFile > 0) {
       size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
       close(TmpFile);
       Buffer[Len] = 0;
+      pDetailsLock.WriteLock();
       pSystemDetails["RAM_Total"] = ParseProcMem("MemTotal:", Buffer);
       pSystemDetails["RAM_Usage"] = ((ParseProcMem("MemTotal:", Buffer) -  ParseProcMem("MemFree:", Buffer) - ParseProcMem("Cached:", Buffer) - ParseProcMem("Buffers:", Buffer)) * 100.0) / + ParseProcMem("MemTotal:", Buffer);
+      pDetailsLock.WriteUnlock();
     } else {
+      pDetailsLock.WriteLock();
       pSystemDetails["RAM_Total"] = nullptr;
       pSystemDetails["RAM_Usage"] = nullptr;
+      pDetailsLock.WriteUnlock();
     }
     TmpFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
     if(TmpFile > 0) {
       size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
       close(TmpFile);
       Buffer[Len] = 0;
+      pDetailsLock.WriteLock();
       pSystemDetails["Temperature"] = atoi(Buffer) / 1000.0;
+      pDetailsLock.WriteUnlock();
     } else {
+      pDetailsLock.WriteLock();
       pSystemDetails["Temperature"] = nullptr;
+      pDetailsLock.WriteUnlock();
     }
     string CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
     if(CommandStr.empty() == false) {
       json Tmp = json::parse(CommandStr, NULL, false);
       if(Tmp.is_discarded()) {
+        pDetailsLock.WriteLock();
         pSystemDetails["WIFI_Network"] = nullptr;
         pSystemDetails["WIFI_Power"] = nullptr;
+        pDetailsLock.WriteUnlock();
       } else if(Tmp.is_object() && Tmp["ssid"].is_string() && Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
+        pDetailsLock.WriteLock();
         pSystemDetails["WIFI_Network"] = Tmp["ssid"];
         float Current = Tmp["quality"], Max = Tmp["quality_max"];
         pSystemDetails["WIFI_Power"] = (int)(Current * 100.0 / Max);
+        pDetailsLock.WriteUnlock();
       }
     }
-    pSystemDetails["Bluetooth_Network"] = (pBTStarted == true) ? pBTServerName : nullptr;
-    pthread_mutex_unlock(&pMutex);
+    CommandStr = Run("ubus call uci get '{\"config\":\"system\", \"section\":\"ntp\"}'");
+    if(CommandStr.empty() == false) {
+      json Tmp = json::parse(CommandStr, NULL, false);
+      if(Tmp.is_discarded()) {
+        pDetailsLock.WriteLock();
+        pSystemDetails["NTP_Enabled"] = false;
+        pDetailsLock.WriteUnlock(); 
+      }
+      if(Tmp.is_object() && Tmp["values"].is_object() && Tmp["values"]["enabled"].is_string()) {
+        string Value = Tmp["values"]["enabled"];
+        pDetailsLock.WriteLock();
+        pSystemDetails["NTP_Enabled"] = (Value == "1");
+        pDetailsLock.WriteUnlock(); 
+      }
+    }
+    pDetailsLock.WriteLock();
+    if(pBTEnabled == true) {
+      pSystemDetails["Bluetooth_Network"] = pBTServerName;
+    } else {
+      pSystemDetails["Bluetooth_Network"] = nullptr;
+    }
+    pDetailsLock.WriteUnlock();
   }
   void SysSupport::GetUpdatesCallback(HTTPRequest &req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-    if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     json Response = json::object();
-    Response["LastCheck"] = pInstance->pLastUpdateCheck;
+    Response["LastCheck"] = pLastUpdateCheck;
     Response["Updates"] = json::array();
-    pthread_mutex_lock(&pMutex);
-    for(uint32_t n = 0; n < pInstance->pUpdates.size(); n++) {
+    pUpdatesLock.ReadLock();
+    for(uint32_t n = 0; n < pUpdates.size(); n++) {
       json Update = json::object();
-      Update["Package"] = pInstance->pUpdates[n].Package;
-      Update["From"] = pInstance->pUpdates[n].From;
-      Update["To"] = pInstance->pUpdates[n].To;
+      Update["Package"] = pUpdates[n].Package;
+      Update["From"] = pUpdates[n].From;
+      Update["To"] = pUpdates[n].To;
       Response["Updates"].push_back(Update);
     }
-    pthread_mutex_unlock(&pMutex);
+    pUpdatesLock.ReadUnlock();
     req.FromJSON(Response);
   }
   void SysSupport::UpgradeCallback(HTTPRequest &req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-    if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     json Response = json::object();
     int ResultCode = 0;
     string Result = Run("opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade --force-depends", &ResultCode);
     Response["Result"] = (ResultCode == 0);
-    pInstance->CheckUpdates();
+    CheckUpdates();
     req.FromJSON(Response);
   }
   void SysSupport::GetBluetoothCallback(HTTPRequest &req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-    if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
     json Config = ConfigManager::ReadConfig("/Bluetooth");
-    Config["Name"] = pInstance->pBTServerName;
-    Config["Started"] = pInstance->pBTStarted;
+    pthread_mutex_lock(&pBTMutex);
+    Config["Name"] = pBTServerName;
+    pthread_mutex_unlock(&pBTMutex);
     req.FromJSON(Config);
   }
   void SysSupport::SetBluetoothCallback(HTTPRequest &req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-    if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-    bool Enabled = true;
-    if(Params["Enabled"].is_boolean()) Enabled = Params["Enabled"];
+    if(Params["Enabled"].is_boolean()) pBTEnabled = Params["Enabled"];
     json Config;
-    Config["Enabled"] = Enabled;
-    Config["Bridge"] = pInstance->pBTBridgeName;
+    pthread_mutex_lock(&pBTMutex);
+    Config["Enabled"] = pBTEnabled;
+    Config["Bridge"] = pBTBridgeName;
+    pthread_mutex_unlock(&pBTMutex);
     ConfigManager::WriteConfig("/Bluetooth", Config);
     json Response;
     Response["Status"] = true;
-    if(Enabled == true) Response["Status"] = pInstance->StartBT();
-    if(Enabled == false) Response["Status"] = pInstance->StopBT();
+    if(pBTEnabled == true) Response["Status"] = StartBT();
+    if(pBTEnabled == false) Response["Status"] = StopBT();
     return req.FromJSON(Response); 
   }
   void SysSupport::ScanWIFICallback(HTTPRequest& req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-    if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-    pthread_mutex_lock(&pMutex);
+    pthread_mutex_lock(&pBTMutex);
     json Result = json::array();
-    string CommandStr = Run("ubus call iwinfo scan '{\"device\":\"" + pInstance->pInterfaceWIFI + "\"}'");
+    string CommandStr = Run("ubus call iwinfo scan '{\"device\":\"" + pInterfaceWIFI + "\"}'");
     if(CommandStr.empty() == false) {
       json Tmp = json::parse(CommandStr, NULL, false);
       if(Tmp.is_discarded()) {
-        pthread_mutex_unlock(&pMutex);
+        pthread_mutex_unlock(&pBTMutex);
         return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
       }
       if(Tmp.is_object() && Tmp["results"].is_array()) {
@@ -565,44 +586,41 @@ void SysSupport::SetSystemActions(const string &action) {
         }    
       }
     }  
-    pthread_mutex_unlock(&pMutex);
+    pthread_mutex_unlock(&pBTMutex);
     return req.FromJSON(Result);
   }
   void SysSupport::GetWIFICallback(HTTPRequest& req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-    if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-    if(!Params["Type"].is_string() || ((Params["Type"] != "CURRENT") && (Params["Type"] != "CONFIG"))) {
-      return req.FromString("'Type' param is requiered to be 'CURRENT' or 'CONFIG'", MHD_HTTP_BAD_REQUEST);
-    }
-    pthread_mutex_lock(&pMutex);
+    if(!Params["Type"].is_string() || ((Params["Type"] != "CURRENT") && (Params["Type"] != "CONFIG"))) return req.FromString("'Type' param is requiered to be 'CURRENT' or 'CONFIG'", MHD_HTTP_BAD_REQUEST);
+    pthread_mutex_lock(&pBTMutex);
     json Result = json::object();
     if(Params["Type"] == "CURRENT") {
-      string CommandStr = Run("ubus call network.device status '{\"name\":\"" + pInstance->pInterfaceWIFI + "\"}'");
+      string CommandStr = Run("ubus call network.device status '{\"name\":\"" + pInterfaceWIFI + "\"}'");
       if(CommandStr.empty() == false) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
-          pthread_mutex_unlock(&pMutex);
+          pthread_mutex_unlock(&pBTMutex);
           return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object() && Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
         if(Result["Enabled"] == false) {
-          pthread_mutex_unlock(&pMutex);
+          pthread_mutex_unlock(&pBTMutex);
           return req.FromJSON(Result);
         }
       }
-      CommandStr = Run("ubus call network.interface." + pInstance->pNetworkWIFI + " status");
+      CommandStr = Run("ubus call network.interface." + pNetworkWIFI + " status");
       if(CommandStr.empty() == false) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if (Tmp.is_discarded()) {
-          pthread_mutex_unlock(&pMutex);
+          pthread_mutex_unlock(&pBTMutex);
           return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
           if(Tmp["up"].is_boolean()) Result["Connected"] = Tmp["up"];
           if(Result["Connected"] == false) {
-            pthread_mutex_unlock(&pMutex);
+            pthread_mutex_unlock(&pBTMutex);
             return req.FromJSON(Result);
           }
           if(Tmp["dns-server"].is_array()) Result["DNS"] = Tmp["dns-server"];
@@ -611,11 +629,11 @@ void SysSupport::SetSystemActions(const string &action) {
           if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Gateway"] = Tmp["route"][0]["nexthop"];
         }
       }
-      CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInstance->pInterfaceWIFI + "\"}'");
+      CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
       if(CommandStr.empty() == false) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
-          pthread_mutex_unlock(&pMutex);
+          pthread_mutex_unlock(&pBTMutex);
           return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
@@ -628,11 +646,11 @@ void SysSupport::SetSystemActions(const string &action) {
         }
       }
     } else {
-      string CommandStr = Run("ubus call uci get '{\"config\":\"network\", \"section\":\"" + pInstance->pNetworkWIFI + "\"}'");
+      string CommandStr = Run("ubus call uci get '{\"config\":\"network\", \"section\":\"" + pNetworkWIFI + "\"}'");
       if(CommandStr.empty() == false) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
-          pthread_mutex_unlock(&pMutex);
+          pthread_mutex_unlock(&pBTMutex);
           return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
@@ -647,11 +665,11 @@ void SysSupport::SetSystemActions(const string &action) {
           }
         }
       }
-      CommandStr = Run("ubus call uci get '{\"config\":\"wireless\", \"section\":\"" + pInstance->pWirelessWIFI + "\"}'");
+      CommandStr = Run("ubus call uci get '{\"config\":\"wireless\", \"section\":\"" + pWirelessWIFI + "\"}'");
       if(CommandStr.empty() == false) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
-          pthread_mutex_unlock(&pMutex);
+          pthread_mutex_unlock(&pBTMutex);
           return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
@@ -665,71 +683,69 @@ void SysSupport::SetSystemActions(const string &action) {
         }
       }
     }
-    pthread_mutex_unlock(&pMutex);
+    pthread_mutex_unlock(&pBTMutex);
     return req.FromJSON(Result);
   }
   void SysSupport::SetWIFICallback(HTTPRequest& req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-    if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-    pthread_mutex_lock(&pMutex);
+    pthread_mutex_lock(&pBTMutex);
     json Result;
     Result["Status"] = true;
     int ErrorCode = 0;
     if(Params["Enabled"].is_boolean()) {
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"enabled\":\"" + (Params["Enabled"] ? "1" : "0") + "\"}}'", &ErrorCode);
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"enabled\":\"" + (Params["Enabled"] ? "1" : "0") + "\"}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
     if(Params["IPMode"].is_string() && ((Params["IPMode"] == "DHCP") || (Params["IPMode"] == "STATIC"))) {
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"proto\":\"" + ((Params["IPMode"] == "DHCP") ? "dhcp" : "static") + "\"}}'", &ErrorCode);
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"proto\":\"" + ((Params["IPMode"] == "DHCP") ? "dhcp" : "static") + "\"}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
     if(Params["IP"].is_string()) {
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"ipaddr\":" + Params["IP"].dump() + "}}'", &ErrorCode);
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"ipaddr\":" + Params["IP"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
     if(Params["Netmask"].is_string()) {
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"netmask\":" + Params["Netmask"].dump() + "}}'", &ErrorCode);
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"netmask\":" + Params["Netmask"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
     if(Params["Gateway"].is_string()) {
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"gateway\":" + Params["Gateway"].dump() + "}}'", &ErrorCode);
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"gateway\":" + Params["Gateway"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
     if(Params["DNS"].is_array()) {
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pInstance->pNetworkWIFI + "\", \"values\": {\"dns\":" + Params["DNS"].dump() + "}}'", &ErrorCode);
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"dns\":" + Params["DNS"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
     if(Params["ESSID"].is_string()) {
-      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pInstance->pWirelessWIFI + "\", \"values\": {\"ssid\":" + Params["ESSID"].dump() + "}}'", &ErrorCode);
+      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"ssid\":" + Params["ESSID"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
     if(Params["KeyMode"].is_string() && ((Params["KeyMode"] == "NONE") || (Params["KeyMode"] == "WEP") || (Params["KeyMode"] == "WPA") || (Params["KeyMode"] == "WPA2"))) {
-      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pInstance->pWirelessWIFI + "\", \"values\": {\"encryption\":\"" + ((Params["KeyMode"] == "NONE") ? "none" : (Params["KeyMode"] == "WEP") ? "wep" : (Params["KeyMode"] == "WPA") ? "psk" : "psk2") + "\"}}'", &ErrorCode);
+      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"encryption\":\"" + ((Params["KeyMode"] == "NONE") ? "none" : (Params["KeyMode"] == "WEP") ? "wep" : (Params["KeyMode"] == "WPA") ? "psk" : "psk2") + "\"}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
     if(Params["Key"].is_string()) {
-      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pInstance->pWirelessWIFI + "\", \"values\": {\"key\":" + Params["Key"].dump() + "}}'", &ErrorCode);
+      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"key\":" + Params["Key"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
     Run("uci commit && ubus call network reload", &ErrorCode);
     if(ErrorCode != 0) Result["Status"] = false;
-    pthread_mutex_unlock(&pMutex);
+    pthread_mutex_unlock(&pBTMutex);
     return req.FromJSON(Result);
   }
   void SysSupport::GetNTPCallback(HTTPRequest& req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-    if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-    pthread_mutex_lock(&pMutex);
+    pthread_mutex_lock(&pBTMutex);
     json Result = json::object();
     string CommandStr = Run("ubus call uci get '{\"config\":\"system\", \"section\":\"ntp\"}'");
     if(CommandStr.empty() == false) {
       json Tmp = json::parse(CommandStr, NULL, false);
       if(Tmp.is_discarded()) {
-        pthread_mutex_unlock(&pMutex);
+        pthread_mutex_unlock(&pBTMutex);
         return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
       }
       if(Tmp.is_object()) {
@@ -743,15 +759,14 @@ void SysSupport::SetSystemActions(const string &action) {
       }
     }
     Result["Time"] = Tools::GetTime();
-    pthread_mutex_unlock(&pMutex);
+    pthread_mutex_unlock(&pBTMutex);
     return req.FromJSON(Result);
   }
   void SysSupport::SetNTPCallback(HTTPRequest& req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-    if(pInstance == NULL) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-    pthread_mutex_lock(&pMutex);
+    pthread_mutex_lock(&pBTMutex);
     json Result;
     Result["Status"] = true;
     int ErrorCode = 0;
@@ -773,12 +788,11 @@ void SysSupport::SetSystemActions(const string &action) {
         }
       } 
     }
-    pthread_mutex_unlock(&pMutex);
+    pthread_mutex_unlock(&pBTMutex);
     return req.FromJSON(Result);
   }
 #endif
 void SysSupport::PeriodicTask() {
-  pthread_mutex_lock(&pInstanceMutex);
   string Action = "";
   pActionsLock.WriteLock();
   if(pSystemActions.size() > 0) {
@@ -786,6 +800,7 @@ void SysSupport::PeriodicTask() {
     pSystemActions.pop();
   }
   pActionsLock.WriteUnlock();
+  if(Action.empty() == false) LOGFile::Debug("Action '%s' picked from list\n", Action.c_str());
   #ifdef OPENWRT
     HandleAgentBT();
     if(pLastDestailsCheck < (Tools::GetTime() - 5000)) UpdateSystemDetails();
@@ -793,12 +808,19 @@ void SysSupport::PeriodicTask() {
     if(Action == "PowerOff") {
       Run("poweroff");
     } else if(Action == "ToogleBluetooth") {
-      //Si esta encendio apago
-      //Si esta apagao enciendo
+      pthread_mutex_lock(&pBTMutex);
+      json Config = json::object();
+      Config["Enabled"] = !pBTEnabled;
+      pthread_mutex_unlock(&pBTMutex);
+      ConfigManager::WriteConfig("/Bluetooth", Config);
+      if(pBTEnabled == true) {
+        StopBT();
+      } else {
+        StartBT();
+      }
     }
   #else
     if(Action.empty() == false) LOGFile::Info("Received '%s' action\n", Action.c_str());  
   #endif
-  pthread_mutex_unlock(&pInstanceMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------

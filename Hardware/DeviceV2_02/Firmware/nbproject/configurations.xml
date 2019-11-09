@@ -46,13 +46,9 @@
         </preBuild>
       </makefileType>
       <item path="Main.c" ex="false" tool="0" flavor2="3">
-        <cTool flags="0">
+        <cTool flags="1">
           <incDir>
             <pElem>CMSIS</pElem>
-            <pElem>/usr/include/newlib/machine</pElem>
-            <pElem>/usr/include/newlib/sys</pElem>
-            <pElem>.</pElem>
-            <pElem>/usr/include/newlib</pElem>
           </incDir>
         </cTool>
       </item>

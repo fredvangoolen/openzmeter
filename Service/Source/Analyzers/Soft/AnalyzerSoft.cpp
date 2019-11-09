@@ -59,6 +59,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   pTerminate = true;
   if(pthread_join(pSyncThread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
   pAnalyzerWorkerLocks.Abort(&pAnalyzerThread);
+  if(pEventsDetector != NULL) delete pEventsDetector;
   while(pVoltageFFT.size() > 0) {
     FFT *Tmp = pVoltageFFT.back();
     pVoltageFFT.pop_back();
@@ -83,6 +84,13 @@ void AnalyzerSoft::Configure(const json &options) {
   pGeo              = options["GeoPosition"].get<vector<float> >();
   pSave10c          = options["Save10C"];
   pMaxSamples       = (pNominalFrequency == 0.0) ? pSamplerate * 0.2 : ceil((15.0 * pSamplerate) / pNominalFrequency);
+  bool Events = options["EventsEnabled"];
+  if((Events == false) && (pEventsDetector != NULL)) {
+    delete pEventsDetector;
+    pEventsDetector = NULL;
+  } else if((Events == true) && (pEventsDetector == NULL)) {
+    pEventsDetector = new AnalyzerSoft::Events(this);
+  }
   //Calc peak filter coefficients for nominal frequency
   pFilters.clear();
   if(pNominalFrequency != 0.0) {
@@ -335,9 +343,10 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
   AnalyzerSoft *This = (AnalyzerSoft*)args;
   while(This->pTerminate == false) {
     if(This->pAnalyzerWorkerLocks.WorkerWaitTask() == false) break;
+    This->pConfigLocks.ReadLock();
     uint64_t Start = Tools::GetTime();
     //Init FFTs and event detection threads
-    This->pEventsDetector->Start();
+    if(This->pEventsDetector != NULL) This->pEventsDetector->Start();
     for(uint i = 0; i < This->pVoltageFFT.size(); i++) This->pVoltageFFT[i]->Start(This->pVoltageSamples[i]);
     for(uint i = 0; i < This->pCurrentFFT.size(); i++) This->pCurrentFFT[i]->Start(This->pCurrentSamples[i]);
     if(This->pNominalFrequency != 0) This->pAggreg10C.Frequency = This->CalcFrequency();
@@ -405,7 +414,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
         This->pAggreg10C.Current_THD[3] = (This->pAggreg10C.Current_THD[3] / This->pAggreg10C.Current_Harmonics[3][0]) * 100.0;
       }
     }
-    This->pEventsDetector->Wait();
+    if(This->pEventsDetector != NULL) This->pEventsDetector->Wait();
     //Save results
     This->PNowDataLock.ProviderWrite();
     if(((This->pSequence % 15) == 0) && (This->pPrevTimestamp != 0)) {
@@ -479,12 +488,16 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     This->AccumulateAggreg(This->pAggreg1H, This->pAggreg10C);
     This->pPrevTimestamp = This->pAggreg10C.Timestamp;
     if(This->pSave10c) This->SaveAggreg(This->pAggreg10C);
+    json Status = json::object();
+    Status["Event"] = This->pAggreg10C.Flag;
+    SysSupport::SetSystemDetails(Status);
     This->PNowDataLock.ProviderWait();
     This->InitAggreg(This->pAggreg10C, AGGREG_10C);
     LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->GetSchema().c_str(), Tools::GetTime() - Start, This->pSequence);
     This->pCurrentSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : (This->pMode == PHASE3) ? 3 : 4, vector<float>(0));
     This->pVoltageSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : 3, vector<float>(0));
     This->pSequence++;
+    This->pConfigLocks.ReadUnlock();
     This->pAnalyzerWorkerLocks.WorkerEndsTask();
   }
   return NULL;
@@ -653,6 +666,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   ConfigOUT["RemoteUser"] = "";
   ConfigOUT["RemotePass"] = "";
   ConfigOUT["Save10C"] = false;
+  ConfigOUT["EventsEnabled"] = false;
   if(!config.is_object()) return ConfigOUT;
   if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
   if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
@@ -672,6 +686,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   if(config.contains("RemoteUser") && config["RemoteUser"].is_string()) ConfigOUT["RemoteUser"] = config["RemoteUser"];
   if(config.contains("RemotePass") && config["RemotePass"].is_string()) ConfigOUT["RemotePass"] = config["RemotePass"];
   if(config.contains("Save10C") && config["Save10C"].is_boolean()) ConfigOUT["Save10C"] = config["Save10C"];
+  if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
   return ConfigOUT;
 }
 void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {

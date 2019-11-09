@@ -38,7 +38,7 @@ class InstanceLocks final {
     void WaitInstances();
 //    void Reference();
 //    void Dereference();
-    class Allocator  final {
+    class Allocator final {
       private :
         InstanceLocks *pParent;
       public :

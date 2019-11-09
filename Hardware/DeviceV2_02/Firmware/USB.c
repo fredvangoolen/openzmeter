@@ -44,7 +44,7 @@ const uint8_t USB_Descriptor[] = {
 const uint8_t USB_ConfigDescriptor[] = {
   0x09,                                   /* bLength: Configuation Descriptor size */
   USB_DTYPE_CONFIGURATION,                /* bDescriptorType: Configuration */
-  0x19, 0x00,                             /* wTotalLength:no of returned bytes */
+  0x20, 0x00,                             /* wTotalLength:no of returned bytes */
   0x01,                                   /* bNumInterfaces: 1 interface */
   0x01,                                   /* bConfigurationValue: Configuration value */
   0x00,                                   /* iConfiguration: Index of string descriptor describing the configuration */
@@ -55,7 +55,7 @@ const uint8_t USB_ConfigDescriptor[] = {
   USB_DTYPE_INTERFACE,                    /* bDescriptorType: Interface */
   0x00,                                   /* bInterfaceNumber: Number of Interface */
   0x00,                                   /* bAlternateSetting: Alternate setting */
-  0x01,                                   /* bNumEndpoints: One endpoints used */
+  0x02,                                   /* bNumEndpoints: One endpoints used */
   0xFF,                                   /* bInterfaceClass: Communication Interface Class */
   0xFF,                                   /* bInterfaceSubClass: Abstract Control Model */
   0xFF,                                   /* bInterfaceProtocol: No protocol */
@@ -67,6 +67,13 @@ const uint8_t USB_ConfigDescriptor[] = {
   0x02,                                   /* bmAttributes: Bulk */
   0x40, 0x00,                             /* wMaxPacketSize: */
   0x00,                                   /* bInterval: ignore for Bulk transfer */
+  
+  0x07,                                   /* bLength: Endpoint Descriptor size */
+  USB_DTYPE_ENDPOINT,                     /* bDescriptorType: Endpoint */
+  0x02,                                   /* bEndpointAddress: (OUT2) */
+  0x02,                                   /* bmAttributes: Bulk */
+  0x02, 0x00,                             /* wMaxPacketSize: */
+  0x00                                    /* bInterval: ignore for Bulk transfer */
 };
 const uint8_t StringLangID[] = { 
   0x04,                                   /* bLength */
@@ -106,7 +113,7 @@ void         USB_IntToUnicode(uint32_t value, uint8_t *pbuf) {
 }
 uint16_t     USB_GetNextPMA(uint16_t sz) {
   unsigned _result = USB_PMASIZE;
-  for (int i = 0; i < 8; i++) {
+  for(int i = 0; i < 8; i++) {
     PMA_Table_t *tbl = EPT(i);
     if ((tbl->rx.addr) && (tbl->rx.addr < _result)) _result = tbl->rx.addr;
     if ((tbl->tx.addr) && (tbl->tx.addr < _result)) _result = tbl->tx.addr;
@@ -406,8 +413,8 @@ void         USB_HandleEP0_Complete() {
   }
 }
 USB_Response USB_HandleEP0_Process(USB_ControlRequest_t *req) {
-  USB_Response r = USB_HandleEP0_Class(req, &(USB_Device.Complete_Callback));
-  if(r != USB_FAIL) return r;
+//  USB_Response r = USB_HandleEP0_Class(req, &(USB_Device.Complete_Callback));
+//  if(r != USB_FAIL) return r;
   /* continuing standard USB requests */
   switch (req->bmRequestType & (USB_REQ_TYPE | USB_REQ_RECIPIENT)) {
     case USB_REQ_STANDARD | USB_REQ_DEVICE:
@@ -504,13 +511,13 @@ USB_Response USB_HandleEP0_Process(USB_ControlRequest_t *req) {
       return USB_FAIL;
   }
 }
-void         USB_HandleEP0_TX(uint8_t ep) {
+void         USB_HandleEP0_TX() {
   int32_t _t;
   switch (USB_Device.Status.control_state) {
     case USB_CONTROL_TXPAYLOAD:
     case USB_CONTROL_TXDATA:
       _t = (USB_Device.Status.data_count < USB_Device.Status.ep0size) ? USB_Device.Status.data_count : USB_Device.Status.ep0size;
-      USB_WriteEP(ep, USB_Device.Status.data_ptr, _t);
+      USB_WriteEP(0, USB_Device.Status.data_ptr, _t);
       USB_Device.Status.data_ptr += _t;
       USB_Device.Status.data_count -= _t;
       /* if all data is not sent */
@@ -533,33 +540,31 @@ void         USB_HandleEP0_TX(uint8_t ep) {
       break;
   }
 }
-void         USB_HandleEP0_RX(uint8_t ep) {
+void         USB_HandleEP0_RX() {
   uint16_t _t;
   USB_ControlRequest_t * const req = USB_Device.Status.data_buf;
   switch (USB_Device.Status.control_state) {
     case USB_CONTROL_IDLE:
       /* read SETUP packet, send STALL_PID if incorrect packet length */
-      if (0x08 != USB_ReadEP(ep, req, USB_Device.Status.data_maxsize)) {
-        return USB_StallEP0(ep);
+      if (0x08 != USB_ReadEP(0, req, USB_Device.Status.data_maxsize)) {
+        return USB_StallEP0(0);
       }
       USB_Device.Status.data_ptr = req->data;
       USB_Device.Status.data_count = req->wLength;
       /* processing request with no payload data*/
       if ((req->bmRequestType & USB_REQ_DEVTOHOST) || (0 == req->wLength)) break;
       /* checking available memory for DATA OUT stage */
-      if (req->wLength > USB_Device.Status.data_maxsize) {
-        return USB_StallEP0(ep);
-      }
+      if(req->wLength > USB_Device.Status.data_maxsize) return USB_StallEP0(0);
       /* continue DATA OUT stage */
       USB_Device.Status.control_state = USB_CONTROL_RXDATA;
       return;
     case USB_CONTROL_RXDATA:
       /*receive DATA OUT packet(s) */
-      _t = USB_ReadEP(ep, USB_Device.Status.data_ptr, USB_Device.Status.data_count);
+      _t = USB_ReadEP(0, USB_Device.Status.data_ptr, USB_Device.Status.data_count);
       if (USB_Device.Status.data_count < _t) {
         /* if received packet is large than expected */
         /* Must be error. Let's drop this request */
-        return USB_StallEP0(ep);
+        return USB_StallEP0(0);
       } else if (USB_Device.Status.data_count != _t) {
         /* if all data payload was not received yet */
         USB_Device.Status.data_count -= _t;
@@ -569,12 +574,12 @@ void         USB_HandleEP0_RX(uint8_t ep) {
       break;
     case USB_CONTROL_STATUSOUT:
       /* reading STATUS OUT data to buffer */
-      USB_ReadEP(ep, USB_Device.Status.data_ptr, USB_Device.Status.data_maxsize);
+      USB_ReadEP(0, USB_Device.Status.data_ptr, USB_Device.Status.data_maxsize);
       USB_Device.Status.control_state = USB_CONTROL_IDLE;
       return USB_HandleEP0_Complete();
     default:
       /* unexpected RX packet */
-      return USB_StallEP0(ep);
+      return USB_StallEP0(0);
   }
   /* usb request received. let's handle it */
   USB_Device.Status.data_ptr = req->data;
@@ -591,10 +596,10 @@ void         USB_HandleEP0_RX(uint8_t ep) {
           /* ZLP maybe wanted */
           USB_Device.Status.control_state = USB_CONTROL_TXPAYLOAD;
         }
-        return USB_HandleEP0_TX(ep | 0x80);
+        return USB_HandleEP0_TX(0x80);
       } else {
         /* confirming by ZLP in STATUS_IN stage */
-        USB_WriteEP(ep | 0x80, 0, 0);
+        USB_WriteEP(0x80, 0, 0);
         USB_Device.Status.control_state = USB_CONTROL_STATUSIN;
       }
       break;
@@ -602,19 +607,19 @@ void         USB_HandleEP0_RX(uint8_t ep) {
       USB_Device.Status.control_state = USB_CONTROL_STATUSIN;
       break;
     default:
-      return USB_StallEP0(ep);
+      return USB_StallEP0(0);
   }
 }
-void         USB_HandleEP0(uint8_t event, uint8_t ep) {
+void         USB_HandleEP0(uint8_t event) {
   switch(event) {
     case usbd_evt_epsetup:
       /* force switch to setup state */
       USB_Device.Status.control_state = USB_CONTROL_IDLE;
       USB_Device.Complete_Callback = NULL;
     case USB_EVENT_RX:
-      return USB_HandleEP0_RX(ep);
+      return USB_HandleEP0_RX();
     case USB_EVENT_TX:
-      return USB_HandleEP0_TX(ep);
+      return USB_HandleEP0_TX();
     default:
       break;
   }
@@ -669,7 +674,7 @@ void         USB_ISR() {
     case USB_EVENT_RX:
     case USB_EVENT_TX:
     case usbd_evt_epsetup:
-      if(USB_Device.Endpoint[_ep & 0x07]) USB_Device.Endpoint[_ep & 0x07](_ev, _ep);
+      if(USB_Device.Endpoint[_ep & 0x07]) USB_Device.Endpoint[_ep & 0x07](_ev);
       break;
     default:
       break;

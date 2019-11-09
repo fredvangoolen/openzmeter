@@ -2,9 +2,10 @@
 #include "Database.h"
 #include "AnalyzerSoft.h"
 AnalyzerSoft::Events::Events(AnalyzerSoft *parent) {
-  pParent = parent;
-  pEventThread     = 0;
-  pPrevStationary  = false;
+  pParent         = parent;
+  pTerminate      = false;
+  pEventThread    = 0;
+  pPrevStationary = false;
   if(pthread_create(&pEventThread, NULL, Events_Thread, (void*)this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pEventThread = 0;
@@ -17,13 +18,14 @@ void AnalyzerSoft::Events::Reset() {
   pPrevCycles.resize(0);
 }
 void AnalyzerSoft::Events::Start() {
-  //This->pEventLocks.WakeWorker();
+  pWorkerLocks.WakeWorker();
 }
 void AnalyzerSoft::Events::Wait() {
-  //This->pEventLocks.WaitWorker();
+  pWorkerLocks.WaitWorker();
 }
 AnalyzerSoft::Events::~Events() {
-  pEventLocks.Abort(&pEventThread);
+  pTerminate = true;
+  pWorkerLocks.Abort(&pEventThread);
 }
 void AnalyzerSoft::Events::SaveEvent(Event_t &evt) {
   Database DB(pParent->Serial());
@@ -98,11 +100,10 @@ bool AnalyzerSoft::Events::FindRunningEvent(const uint32_t mask) {
 }
 void *AnalyzerSoft::Events::Events_Thread(void* args) {
   Events *This = (Events*)args;
+  uint32_t RequiredRAW = This->pParent->pSamplerate * EVENT_RAWENVELOPETIME;
+  uint32_t RequiredRMS = This->pParent->pNominalFrequency * 2 * EVENT_RMSENVELOPETIME;
   while(This->pTerminate == false) {
-    if(This->pEventLocks.WorkerWaitTask() == false) break;
-    //This->pConfigLocks.ReadLock();
-    uint32_t RequiredRAW = This->pParent->pSamplerate * EVENT_RAWENVELOPETIME;
-    uint32_t RequiredRMS = This->pParent->pNominalFrequency * 2 * EVENT_RMSENVELOPETIME;
+    if(This->pWorkerLocks.WorkerWaitTask() == false) break;
     uint32_t Pos = 0;
     This->pParent->pAggreg10C.Flag = false;
     for(uint32_t i = 0; i < This->pParent->pBlockCycles.size(); i++) {
@@ -248,7 +249,7 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
       Pos = Pos + CycleLen;
       This->pPrevStationary = Stationary;
     }
-    This->pEventLocks.WorkerEndsTask();
+    This->pWorkerLocks.WorkerEndsTask();
   }
   return NULL;
 }

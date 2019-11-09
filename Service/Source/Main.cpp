@@ -19,10 +19,6 @@ static bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
-  if((signal == SIGSEGV) || (signal == SIGABRT)) {
-    fprintf(stderr, "Error: signal %d:\n", signal);
-    exit(1);
-  }
 }
 void RunDaemon() {
   LOGFile::Info("Move to background task\n");
@@ -48,8 +44,6 @@ int main(int argc, char** argv) {
   signal(SIGILL, SIG_IGN);
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
-  signal(SIGSEGV, SignalHandler);
-  signal(SIGABRT, SignalHandler);
   
   string ConfigFileName = "/etc/openZmeter.conf";
   for(int i = 1; i != argc; i++) {
@@ -84,7 +78,7 @@ int main(int argc, char** argv) {
   HTTPServer HTTPServer;
   uint32_t Iter = 0;
   while(!Terminate) {
-    SystemManager.PeriodicTask();
+    SysSupport::PeriodicTask();
     if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions(DB);
     if((Iter % 600) == 0) Database::RemoveExpiredSessions();
     Iter++;

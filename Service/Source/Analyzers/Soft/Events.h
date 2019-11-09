@@ -37,7 +37,7 @@ class AnalyzerSoft::Events final {
   private :
     AnalyzerSoft              *pParent;                  //Parent analyzer
     pthread_t                  pEventThread;             //Hilo de ejecucion
-    WorkerLocks                pEventLocks;              //Control access to event detection thread
+    WorkerLocks                pWorkerLocks;             //Control access to event detection thread
     deque<vector<float> >      pPrevSamples;             //Previous samples
     deque<EventCycle_t>        pPrevCycles;              //Previous cycles
     bool                       pPrevStationary;          //Steady state flag
