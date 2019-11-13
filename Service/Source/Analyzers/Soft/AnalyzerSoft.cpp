@@ -15,30 +15,30 @@
 #include "Tariff.h"
 #include "Events.h"
 #include "FFT.h"
+#include "Sync.h"
 //----------------------------------------------------------------------------------------------------------------------
 vector<float> AnalyzerSoft::FrequencyRanges  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
 vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
 vector<float> AnalyzerSoft::THDRanges        = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
 vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), Database(id) {
+AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id) {
   LOGFile::Debug("Creating AnalyzerSoft database tables\n");
-  ExecResource("SQL/Database_AnalyzerSoft.sql");
-  ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + Bind(Tools::GetTime() - 86400000));   //Delete 1 day old
-  ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + Bind(Tools::GetTime() - 3600000));     //Delete 1 hour old
+  Database DB(id);
+  DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
+  DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Tools::GetTime() - 86400000));   //Delete 1 day old
+  DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(Tools::GetTime() - 3600000));       //Delete 1 hour old
   pConfigPath      = optionPath;
   pMode            = mode;
   pSamplerate      = samplerate;
-  pAnalyzerThread  = 0;
   pCycleLen        = 0;
-  pSequence        = 0;
   pTerminate       = false;
-  pPrevTimestamp   = 0;
-  pCurrentSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0.0));
   pVoltageSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(0.0));
+  pCurrentSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0.0));
   pEventsDetector  = NULL;
+  pSync            = NULL;
   pBlockCycles.reserve(20);
-  pLastSamples.resize((pMode == PHASE1) ? 1 : 3);  
+  pLastSamples.resize((pMode == PHASE1) ? 1 : 3);
   InitAggreg(pAggreg10C, AGGREG_10C);
   InitAggreg(pAggreg3S, AGGREG_3S);
   InitAggreg(pAggreg1M, AGGREG_1M);
@@ -51,14 +51,15 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   if(pthread_create(&pAnalyzerThread, NULL, Analyzer_Thread, (void*)this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pAnalyzerThread = 0;
-    return;
+  } else {
+    pthread_setname_np(pAnalyzerThread, (pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");
   }
-  pthread_setname_np(pAnalyzerThread, (pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");  
 }
 AnalyzerSoft::~AnalyzerSoft() {
+  pMembersLocks.WriteLock();
   pTerminate = true;
-  if(pthread_join(pSyncThread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
   pAnalyzerWorkerLocks.Abort(&pAnalyzerThread);
+  if(pSync != NULL) delete pSync;
   if(pEventsDetector != NULL) delete pEventsDetector;
   while(pVoltageFFT.size() > 0) {
     FFT *Tmp = pVoltageFFT.back();
@@ -72,7 +73,6 @@ AnalyzerSoft::~AnalyzerSoft() {
   }
 }
 void AnalyzerSoft::Configure(const json &options) {
-  pConfigLocks.WriteLock();
   pName             = options["Name"];
   pNominalVoltage   = options["NominalVoltage"];
   pNominalFrequency = options["NominalFreq"];
@@ -84,12 +84,26 @@ void AnalyzerSoft::Configure(const json &options) {
   pGeo              = options["GeoPosition"].get<vector<float> >();
   pSave10c          = options["Save10C"];
   pMaxSamples       = (pNominalFrequency == 0.0) ? pSamplerate * 0.2 : ceil((15.0 * pSamplerate) / pNominalFrequency);
-  bool Events = options["EventsEnabled"];
-  if((Events == false) && (pEventsDetector != NULL)) {
+  bool EventsEnabled = options["EventsEnabled"];
+  if((EventsEnabled == false) && (pEventsDetector != NULL)) {
     delete pEventsDetector;
     pEventsDetector = NULL;
-  } else if((Events == true) && (pEventsDetector == NULL)) {
+  } else if((EventsEnabled == true) && (pEventsDetector == NULL)) {
     pEventsDetector = new AnalyzerSoft::Events(this);
+  }
+  bool SyncEnabled = options["RemoteEnabled"];
+  if((SyncEnabled == false) && (pSync != NULL)) {
+    delete pSync;
+    pSync = NULL;
+  } else if(SyncEnabled == true) {
+    string Server = options["RemoteServer"];
+    string User = options["RemoteUser"];
+    string Pass = options["RemotePass"];
+    if(pSync == NULL) {
+      pSync = new Sync(this, Server, User, Pass);
+    } else {
+      pSync->Configure(Server, User, Pass);
+    }
   }
   //Calc peak filter coefficients for nominal frequency
   pFilters.clear();
@@ -115,35 +129,9 @@ void AnalyzerSoft::Configure(const json &options) {
     pDelayVoltage.resize(1, vector<float>(pVoltageSamples.size(), 0.0));
     pDelayCurrent.resize(1, vector<float>(pCurrentSamples.size(), 0.0));
   }
-  //StopSync();
-  bool   Enabled = options["RemoteEnabled"];
-    string Server = options["RemoteServer"];
-    string User = options["RemoteUser"];
-    string Pass = options["RemotePass"];
-
-  if(Enabled == true) {
-//    pTerminateSync = false;
-
-    
-  } 
-    
-    
-
-
-  if(pthread_create(&pSyncThread, NULL, Sync_Thread, (void*)this) != 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    pSyncThread = 0;
-    return;
-  }  
-  pthread_setname_np(pSyncThread, "RemoteSync");
-
-    
-    
-  pConfigLocks.WriteUnlock();
 }
-bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime) {
-  if(pAggreg10C.Timestamp == 0) pAggreg10C.Timestamp = sampletime;
-  pConfigLocks.ReadLock();
+bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples) {
+  pMembersLocks.ReadLock();
   vector<float> Voltage = pDelayVoltage.front();
   vector<float> Current = pDelayCurrent.front();
   for(uint8_t i = 0; i < pVoltageSamples.size(); i++) pVoltageSamples[i].push_back(Voltage[i]);
@@ -161,7 +149,7 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
       Outs[i] = Out;
     }
   }
-  pConfigLocks.ReadUnlock();
+  pMembersLocks.ReadUnlock();
   if(pBlockCycles.size() == pBlockCycles.capacity()) pBlockCycles.clear();
   pCycleLen++;
   if(pNominalFrequency != 0) {
@@ -182,7 +170,7 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
 bool AnalyzerSoft::IsFinished() {
   return pAnalyzerWorkerLocks.IsWorking();
 }
-void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) const {
+void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
   params.Type = type;
   params.Timestamp = 0;
   params.Frequency = NAN;
@@ -222,7 +210,7 @@ void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) const {
     params.Apparent_Power = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
   }
 }
-void AnalyzerSoft::AccumulateAggreg(Params_t &dst, const Params_t &src) const {
+void AnalyzerSoft::AccumulateAggreg(Params_t &dst, const Params_t &src) {
   dst.Timestamp = src.Timestamp;
   for(uint i = 0; i < dst.Voltage.size(); i++) dst.Voltage[i] = AccumulateRMS(dst.Voltage[i], src.Voltage[i]);
   dst.Voltage_Inputs += src.Voltage_Inputs;
@@ -249,7 +237,7 @@ void AnalyzerSoft::AccumulateAggreg(Params_t &dst, const Params_t &src) const {
   }
   dst.Flag |= src.Flag;
 }
-void AnalyzerSoft::NormalizeAggreg(Params_t &params) const {
+void AnalyzerSoft::NormalizeAggreg(Params_t &params) {
   for(uint i = 0; i < params.Voltage.size(); i++) params.Voltage[i] = sqrt(params.Voltage[i] / params.Voltage_Inputs);
   for(uint i = 0; i < params.Current.size(); i++) params.Current[i] = sqrt(params.Current[i] / params.Current_Inputs[i]);
   for(uint i = 0; i < params.Active_Power.size(); i++) params.Active_Power[i] = params.Active_Power[i] / params.Current_Inputs[i];
@@ -274,33 +262,34 @@ void AnalyzerSoft::NormalizeAggreg(Params_t &params) const {
     if(params.Current_Inputs[i] > 1) params.Current_Inputs[i] = 1;
   }
 }
-float AnalyzerSoft::AccumulateSUM(const float val1, const float val2) const {
+float AnalyzerSoft::AccumulateSUM(const float val1, const float val2) {
   if(isnan(val1) && isnan(val2))   return NAN;
   if(isnan(val1) && !isnan(val2))  return val2;
   if(!isnan(val1) && isnan(val2))  return val1;
   return val1 + val2;
 }
-float AnalyzerSoft::AccumulateRMS(const float val1, const float val2) const {
+float AnalyzerSoft::AccumulateRMS(const float val1, const float val2) {
   if(isnan(val1) && isnan(val2))   return NAN;
   if(isnan(val1) && !isnan(val2))  return pow(val2, 2.0);
   if(!isnan(val1) && isnan(val2))  return val1;
   return val1 + pow(val2, 2.0);
 }
 void AnalyzerSoft::SaveAggreg(Params_t &params) {
+  Database DB(pSerial);
   if(params.Type == AGGREG_10C)
-    ExecSentenceNoResult("INSERT INTO aggreg_10c(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.Power_Factor) + ", " + Bind(params.Voltage_THD) + ", " + Bind(params.Current_THD) + ", " + Bind(params.Phi) + ")");
+    DB.ExecSentenceNoResult("INSERT INTO aggreg_10c(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ", " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ", " + DB.Bind(params.Power_Factor) + ", " + DB.Bind(params.Voltage_THD) + ", " + DB.Bind(params.Current_THD) + ", " + DB.Bind(params.Phi) + ")");
   else if(params.Type == AGGREG_3S)
-    ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ")");
+    DB.ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ", " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ")");
   else if(params.Type == AGGREG_1M)
-    ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i, harmonics_p) SELECT sampletime, " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.Power_Factor) + ", " + Bind(params.Voltage_THD) + ", " + Bind(params.Current_THD) + ", " + Bind(params.Phi) + ", " + Bind(params.Voltage_Harmonics) + ", " + Bind(params.Current_Harmonics) + ", " + Bind(params.Power_Harmonics) + " FROM Sample");
+    DB.ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i, harmonics_p) SELECT sampletime, " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ", " + DB.Bind(params.Power_Factor) + ", " + DB.Bind(params.Voltage_THD) + ", " + DB.Bind(params.Current_THD) + ", " + DB.Bind(params.Phi) + ", " + DB.Bind(params.Voltage_Harmonics) + ", " + DB.Bind(params.Current_Harmonics) + ", " + DB.Bind(params.Power_Harmonics) + " FROM Sample");
   else if(params.Type == AGGREG_10M)
-    ExecSentenceNoResult("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ")");
+    DB.ExecSentenceNoResult("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ")");
   else if(params.Type == AGGREG_15M)
-    ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ")");
+    DB.ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ")");
   else if(params.Type == AGGREG_1H)
-    ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(" + Bind(params.Timestamp) + ", " + Bind(params.Voltage) + ", " + Bind(params.Current) + ", " + Bind(params.Frequency) + ", " + Bind(params.Flag) + ", " + Bind(params.Active_Power) + ", " + Bind(params.Reactive_Power) + ", " + Bind(params.StatsVoltage) + ", " + Bind(params.StatsFrequency) + ", " + Bind(params.StatsTHD) + ", " + Bind(params.StatsHarmonics) + ")");
-  if(params.Type == AGGREG_1M) ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + Bind(params.Timestamp - 86400000));   //Delete 1 day old
-  if((params.Type == AGGREG_1M) && (pSave10c == true)) ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + Bind(params.Timestamp - 3600000));     //Delete 1 hour old
+    DB.ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ", " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ", " + DB.Bind(params.StatsVoltage) + ", " + DB.Bind(params.StatsFrequency) + ", " + DB.Bind(params.StatsTHD) + ", " + DB.Bind(params.StatsHarmonics) + ")");
+  if(params.Type == AGGREG_1M) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(params.Timestamp - 86400000));   //Delete 1 day old
+  if((params.Type == AGGREG_1M) && (pSave10c == true)) DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(params.Timestamp - 3600000));     //Delete 1 hour old
   //TEST
   json Result;
   if((params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
@@ -341,11 +330,14 @@ float AnalyzerSoft::CalcChange(const float in, const float reference) {
 }
 void *AnalyzerSoft::Analyzer_Thread(void *args) {
   AnalyzerSoft *This = (AnalyzerSoft*)args;
+  uint64_t Sequence      = 0;
+  uint64_t PrevTimestamp = 0;
   while(This->pTerminate == false) {
     if(This->pAnalyzerWorkerLocks.WorkerWaitTask() == false) break;
-    This->pConfigLocks.ReadLock();
     uint64_t Start = Tools::GetTime();
+    This->pAggreg10C.Timestamp = Start;
     //Init FFTs and event detection threads
+    This->pMembersLocks.ReadLock();
     if(This->pEventsDetector != NULL) This->pEventsDetector->Start();
     for(uint i = 0; i < This->pVoltageFFT.size(); i++) This->pVoltageFFT[i]->Start(This->pVoltageSamples[i]);
     for(uint i = 0; i < This->pCurrentFFT.size(); i++) This->pCurrentFFT[i]->Start(This->pCurrentSamples[i]);
@@ -417,7 +409,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     if(This->pEventsDetector != NULL) This->pEventsDetector->Wait();
     //Save results
     This->PNowDataLock.ProviderWrite();
-    if(((This->pSequence % 15) == 0) && (This->pPrevTimestamp != 0)) {
+    if(((Sequence % 15) == 0) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 3S aggregation\n");
       This->NormalizeAggreg(This->pAggreg3S);
       if(This->pAggreg3S.Flag == false) {
@@ -430,7 +422,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->InitAggreg(This->pAggreg3S, AGGREG_3S);
     }
     This->AccumulateAggreg(This->pAggreg3S, This->pAggreg10C);
-    if(((This->pAggreg10C.Timestamp / 60000) > (This->pPrevTimestamp / 60000)) && (This->pPrevTimestamp != 0)) {
+    if(((This->pAggreg10C.Timestamp / 60000) > (PrevTimestamp / 60000)) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 1M aggregation\n");
       This->pAggreg1M.Timestamp = This->pAggreg1M.Timestamp / 60000 * 60000 + 59999;
       This->NormalizeAggreg(This->pAggreg1M);
@@ -438,7 +430,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->InitAggreg(This->pAggreg1M, AGGREG_1M);
     }
     This->AccumulateAggreg(This->pAggreg1M, This->pAggreg10C);
-    if(((This->pAggreg10C.Timestamp / 600000) > (This->pPrevTimestamp / 600000)) && (This->pPrevTimestamp != 0)) {
+    if(((This->pAggreg10C.Timestamp / 600000) > (PrevTimestamp / 600000)) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 10M aggregation\n");
       This->pAggreg10M.Timestamp = This->pAggreg10M.Timestamp / 600000 * 600000 + 599999;
       This->NormalizeAggreg(This->pAggreg10M);
@@ -469,8 +461,9 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->SaveAggreg(This->pAggreg10M);
       This->InitAggreg(This->pAggreg10M, AGGREG_10M);
     }
+    This->pMembersLocks.ReadUnlock();
     This->AccumulateAggreg(This->pAggreg10M, This->pAggreg10C);
-    if(((This->pAggreg10C.Timestamp / 900000) > (This->pPrevTimestamp / 900000)) && (This->pPrevTimestamp != 0)) {
+    if(((This->pAggreg10C.Timestamp / 900000) > (PrevTimestamp / 900000)) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 15M aggregation\n");
       This->pAggreg15M.Timestamp = This->pAggreg15M.Timestamp / 900000 * 900000 + 899999;
       This->NormalizeAggreg(This->pAggreg15M);
@@ -478,7 +471,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->InitAggreg(This->pAggreg15M, AGGREG_15M);
     }
     This->AccumulateAggreg(This->pAggreg15M, This->pAggreg10C);
-    if(((This->pAggreg10C.Timestamp / 3600000) > (This->pPrevTimestamp / 3600000)) && (This->pPrevTimestamp != 0)) {
+    if(((This->pAggreg10C.Timestamp / 3600000) > (PrevTimestamp / 3600000)) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 1H aggregation\n");
       This->pAggreg1H.Timestamp = This->pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
       This->NormalizeAggreg(This->pAggreg1H);
@@ -486,168 +479,19 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->InitAggreg(This->pAggreg1H, AGGREG_1H);
     }
     This->AccumulateAggreg(This->pAggreg1H, This->pAggreg10C);
-    This->pPrevTimestamp = This->pAggreg10C.Timestamp;
+    PrevTimestamp = This->pAggreg10C.Timestamp;
     if(This->pSave10c) This->SaveAggreg(This->pAggreg10C);
     json Status = json::object();
     Status["Event"] = This->pAggreg10C.Flag;
     SysSupport::SetSystemDetails(Status);
     This->PNowDataLock.ProviderWait();
     This->InitAggreg(This->pAggreg10C, AGGREG_10C);
-    LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->GetSchema().c_str(), Tools::GetTime() - Start, This->pSequence);
+    LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->pSerial.c_str(), Tools::GetTime() - Start, Sequence);
     This->pCurrentSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : (This->pMode == PHASE3) ? 3 : 4, vector<float>(0));
     This->pVoltageSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : 3, vector<float>(0));
-    This->pSequence++;
-    This->pConfigLocks.ReadUnlock();
+    Sequence++;
     This->pAnalyzerWorkerLocks.WorkerEndsTask();
   }
-  return NULL;
-}
-
-void *AnalyzerSoft::Sync_Thread(void *args) {
-  AnalyzerSoft *This       = (AnalyzerSoft*)args;
-  bool          Registered = false;
-
-  while(This->pTerminate == false) {
-//    if(Registered == false) {
-//      json   Content = json::object();
-//      string URL     = This->pSyncServer + "/LogIn";
-//      CurlBuff.Size  = 0;
-//      Content["Username"] = This->pSyncUser;
-//      Content["Password"] = This->pSyncPass;
-//      Content["UpdateLastLogin"] = false;
-//      string ContentText = Content.dump();
-//      curl_easy_setopt(Curl, CURLOPT_URL, URL.c_str());
-//      curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, ContentText.c_str());
-//      curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, ContentText.size());
-//      CURLcode Code = curl_easy_perform(Curl);
-//      curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
-//      if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_OK)) {
-//        json Content = json::parse(CurlBuff.Buffer, NULL, false);
-//        if(!Content.is_discarded() && Content.is_object() && Content["Result"].is_boolean() && (Content["Result"] == true)) {
-//          Registered = Content["Result"];
-//          if(Registered) LOGFile::Info("Analyzer '%s' logged on remote server\n", This->pSerial.c_str());
-//        }
-//      } else {
-//        Registered = false;
-//        LOGFile::Debug("Analyzer '%s' can not login on remote server\n", This->pSerial.c_str());
-//      }        
-      if(Registered == false) usleep(1000000);
-//    } else {
-//      json   Content = json::object();
-//      string URL     = This->pSyncServer + "/getRemote";
-//      CurlBuff.Size = 0;
-//      Content["Analyzer"] = This->pSerial;
-//      This->pConfigLocks.ReadLock();
-//      Content["Name"] = This->pName;
-//      This->pConfigLocks.ReadUnlock();
-//      string ContentText = Content.dump();
-//      curl_easy_setopt(Curl, CURLOPT_URL, URL.c_str());
-//      curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, ContentText.c_str());
-//      curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, ContentText.size());
-//      CURLcode Code = curl_easy_perform(Curl);
-//      curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
-//      if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_OK)) {
-//        json Content = json::parse(CurlBuff.Buffer, NULL, false);
-//        if(!Content.is_discarded() && Content.is_array()) {
-//          for(uint32_t n = 0; n < Content.size(); n++) {
-//            if(Content[n].is_object() && Content[n]["Sequence"].is_number() && Content[n]["Method"].is_string() && Content[n]["Params"].is_object()) {
-//              RemoteRequest_t *Request = new RemoteRequest_t;
-//              Request->Method   = Content[n]["Method"];
-//              Request->Params   = Content[n]["Params"];
-//              Request->Sequence = Content[n]["Sequence"];
-//              Request->Parent   = This;
-//              pthread_t Thread = 0;
-//              if(pthread_create(&Thread, NULL, Request_Thread, (void*)Request) != 0) {
-//                LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//                delete Request;
-//              } else {
-//                pthread_detach(Thread);
-//              }
-//            }
-//          }
-//        }
-//      } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_UNAUTHORIZED)) {
-//        LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pSerial.c_str());
-//        usleep(1000000);
-//        Registered = false;
-//      } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_NO_CONTENT)) {
-//        LOGFile::Debug("No pending queries in remote server for analyzar '%s'\n", This->pSerial.c_str());
-//      } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_METHOD_NOT_ALLOWED)) {
-//        LOGFile::Debug("Device remote is not enabled on remote server\n");
-//        usleep(1000000);
-//      } else {
-//        LOGFile::Debug("Failed request to remote server for analyzer '%s'\n", This->pSerial.c_str());
-//        usleep(1000000);
-//      }
-//    }
-  }
-  
-//  curl_easy_cleanup(Curl);
-  return NULL;
-}
-void *AnalyzerSoft::Request_Thread(void *args) {
-//  RemoteRequest_t *This = (RemoteRequest_t*)args;
-//  This->Params["UserName"] = "admin";
-//  string ParamsText = This->Params.dump();
-//  size_t ParamsSize = ParamsText.size();
-//  LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Parent->pSerial.c_str());
-//  HTTPRequest *Request = new HTTPRequest(NULL, false);
-//  Request->AppendParams(ParamsText.c_str(), &ParamsSize);
-//  Request->ProcessParams(true);
-//  if(This->Method == "getAnalyzer") {
-//    This->Parent->GetAnalyzer(*Request);
-//  } else if(This->Method == "setAnalyzer") {
-//    This->Parent->SetAnalyzer(*Request);
-//  } else if(This->Method == "getSeries") {   
-//    This->Parent->GetSeries(*Request);
-//  } else if(This->Method == "getSeriesNow") {
-//    This->Parent->GetSeriesNow(*Request);
-//  } else if(This->Method == "getSeriesRange") {
-//    This->Parent->GetSeriesRange(*Request);
-//  } else if(This->Method == "getEvents") {
-//    This->Parent->GetEvents(*Request);
-//  } else if(This->Method == "getEvent") {
-//    This->Parent->GetEvent(*Request);
-//  } else if(This->Method == "setEvent") {
-//    This->Parent->SetEvent(*Request);
-//  } else if(This->Method == "delEvent") {
-//    This->Parent->DelEvent(*Request);
-//  } else if(This->Method == "getRates") {
-//    This->Parent->GetRates(*Request);
-//  } else if(This->Method == "getRate") {
-//    This->Parent->GetRate(*Request);
-//  } else if(This->Method == "setRate") {
-//    This->Parent->SetRate(*Request);
-//  } else if(This->Method == "delRate") {
-//    This->Parent->DelRate(*Request);
-//  } else if(This->Method == "addRate") {
-//    This->Parent->AddRate(*Request);
-//  } else if(This->Method == "getPrices") {
-//    This->Parent->GetPrices(*Request);
-//  }
-//  CURL           *Curl = curl_easy_init();
-//  CurlWriteBuff_t CurlBuff;
-//  string URL = This->Parent->pSyncServer + "/setRemote";
-//  json Content = json::object();
-//  Content["Code"] = Request->ResultCode();
-//  Content["Sequence"] = This->Sequence;
-//  Content["Analyzer"] = This->Parent->pSerial;
-//  Content["Response"] = Request->Content();
-//  delete Request;
-//  string ContentText = Content.dump();
-//  curl_easy_setopt(Curl, CURLOPT_URL, URL.c_str());
-//  curl_easy_setopt(Curl, CURLOPT_POST, 1L);
-//  curl_easy_setopt(Curl, CURLOPT_SHARE, This->Parent->pCurl);
-//  curl_easy_setopt(Curl, CURLOPT_WRITEDATA, (void*)&CurlBuff);
-//  curl_easy_setopt(Curl, CURLOPT_COOKIEFILE, "");
-//  curl_easy_setopt(Curl, CURLOPT_HTTPHEADER, This->Parent->pCurlHeaders);
-//  curl_easy_setopt(Curl, CURLOPT_ACCEPT_ENCODING, "");
-//  curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback);
-//  curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, ContentText.c_str());
-//  curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, ContentText.size());
-//  CurlBuff.Size = 0;
-//  curl_easy_perform(Curl);
-//  curl_easy_cleanup(Curl);
   return NULL;
 }
 json AnalyzerSoft::CheckConfig(const json &config) {
@@ -691,33 +535,25 @@ json AnalyzerSoft::CheckConfig(const json &config) {
 }
 void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  json Response = json::object();
-  pConfigLocks.ReadLock();
+  json Response = ConfigManager::ReadConfig(pConfigPath);
+  pMembersLocks.ReadLock();
   Response["Analyzer"] = pSerial;
-  Response["Name"] = pName;
   Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
-  Response["NominalVoltage"] = pNominalVoltage;
-  Response["NominalFreq"] = pNominalFrequency;
-  Response["MaxCurrent"] = pMaxCurrent;
-  Response["MinCurrent"] = pMinCurrent;
-  Response["TimeZone"] = pTimeZone;
-  Response["Contract"] = pContract;
-  Response["ZipCode"] = pZipCode;
-  Response["GeoPosition"] = pGeo;
   Response["SampleRate"] = pSamplerate;
+  if(pSync != NULL) Response["RemoteLogged"] = pSync->Logged();
   req.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + req.Bind(pSerial));
   if(req.FecthRow()) Response["Size"] = req.ResultUInt64("size");
-//  json Remote = GetJSONSyncConfig();  
-//  Response.insert(Remote.begin(), Remote.end());
-  pConfigLocks.ReadUnlock();
+  pMembersLocks.ReadUnlock();
   req.FromJSON(Response);
 }
 void AnalyzerSoft::SetAnalyzer(HTTPRequest &req) {
   if(CheckRights(req, CONFIG) == false) return;
   json Config = CheckConfig(req.GetParams());
   ConfigManager::WriteConfig(pConfigPath, Config);
+  pMembersLocks.WriteLock();
   Configure(Config);
+  pMembersLocks.WriteUnlock();
   json Result = json::object();
   Result["Result"] = true;
   req.FromJSON(Result);
@@ -905,8 +741,8 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
       return req.FromString("Unknown serie name", MHD_HTTP_BAD_REQUEST);
     }
   }
-  req.FromJSON(Result);
   PNowDataLock.ConsumerEnds();
+  req.FromJSON(Result);
 }
 void AnalyzerSoft::GetSeriesRange(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
@@ -1036,8 +872,6 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   if(To == 0) To = Now;
   uint64_t From = To - Period;
   uint32_t PeriodSeconds = 900000;
-  //TODO CHECK time zone
-//  string TimeZone = "Etc/UTC";
   if(Aggreg == "1H") PeriodSeconds = 3600000;
   if((Period / PeriodSeconds) > 100000) return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
   json Result;
@@ -1058,10 +892,11 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   json DBTariffs = json::array();
   if(req.FecthRow()) {
     Result["Currency"] = "€";//req.ResultString("currency");
-//    TimeZone = req.ResultString("timezone");
     DBTariffs = req.ResultJSON("rate");
   }
+  pMembersLocks.ReadLock();
   TariffList Tariffs(DBTariffs, pTimeZone);
+  pMembersLocks.ReadUnlock();
   //Find start and end date to retrieve data
   uint64_t BillingFrom = Tariffs.BillFrom((LastSample > From) ? LastSample : From);
   uint64_t BillingTo = Tariffs.BillTo(To);

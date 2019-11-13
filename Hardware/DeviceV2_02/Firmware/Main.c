@@ -9,7 +9,7 @@
 #define RECV_EP                         0x02
 #define USB_CONTROL_CLASS_SETSTATUS     0x20
 // Types definition ----------------------------------------------------------------------------------------------------
-typedef struct {
+/*typedef struct {
   uint16_t Offset;
   uint16_t V_CH_1;
   uint16_t V_CH_2;
@@ -19,7 +19,7 @@ typedef struct {
   uint16_t I_CH_3;
   uint16_t I_CH_4;
   uint16_t Battery;
-} ADC_Sequence_t;
+} ADC_Sequence_t;*/
 typedef struct {
   uint16_t Power_Color:2;     //Power LED (PB5) Red when off but plugged, off if off and not plugged, green if running and yellow if booting or shuttingdown
   uint16_t Status_Color:2;    //Status LED (PB4) Green if service running, yellow on events (cleared by software), red on service lost communication or errors.
@@ -50,7 +50,7 @@ SignalsStatus_t   SignalsStatus = { .Power_Color = OFF, .Status_Color = OFF, .Wi
 SysStatus_t       SysStatus = { .Charging = 0, .ExtPower = 0, .Battery = 0 };
 ButtonStatus_t    ButtonStatus = { .Action = CLICK, .Counter = 0};
 Samples_Buffer_t  Samples_Buffer = { .Head = 0, .Tail = 0, .Counter = 0 };
-ADC_Sequence_t    ADC_Read[8];
+uint16_t          ADC_Read[8][9];
 // Control LED, buton and buzzer ---------------------------------------------------------------------------------------
 void SysTick_ISR() {
   if(Samples_Buffer.Counter == 1000) {
@@ -116,28 +116,27 @@ void Suspend() {
 }
 // DMA interrupts to handle ADC oversample -----------------------------------------------------------------------------
 void DMA_CH1_ISR() {
-  ADC_Sequence_t *Ptr = (DMA1->ISR & DMA_ISR_HTIF1) ? &ADC_Read[0] : &ADC_Read[4];
+  uint16_t *Ptr = (DMA1->ISR & DMA_ISR_HTIF1) ? ADC_Read[0] : ADC_Read[4];
   DMA1->IFCR |= DMA_IFCR_CTCIF1 | DMA_IFCR_CHTIF1;
-  int16_t Offset = (2048 * 4) - (Ptr[0].Offset + Ptr[1].Offset + Ptr[2].Offset + Ptr[3].Offset);
+  int16_t Offset = (2048 * 4) - (Ptr[0] + Ptr[9] + Ptr[18] + Ptr[27]);
   if((Offset > 256) || (Offset < -256)) Offset = 0;
-  uint16_t *Tmp = &Ptr[0].V_CH_1;
   for(uint8_t Count = 0; Count < 7; Count++) {
     uint16_t Next = (Samples_Buffer.Head + 1) % BUFF_LEN;
+    Ptr++;
     if(Next != Samples_Buffer.Tail) {
-      Samples_Buffer.Buffer[Samples_Buffer.Head] = ((Tmp[0] + Tmp[9] + Tmp[18] + Tmp[27] + Offset) >> 1) | (Count << 13);
+      Samples_Buffer.Buffer[Samples_Buffer.Head] = ((Ptr[0] + Ptr[9] + Ptr[18] + Ptr[27] + Offset) >> 1) | (Count << 13);
       Samples_Buffer.Head = Next;
     } else {
       Samples_Buffer.Head = 0;
       Samples_Buffer.Tail = 0;
 //     __asm("BKPT #0\n") ; // Break into the debugger
-    }  
-    Ptr++;
+    }
   }
   //const uint16_t Temp30 = *(uint16_t*)0x1FFFF7B8;
   //const uint16_t Temp110 = *(uint16_t*)0x1FFFF7C2;
 //  int32_t Temp = ((Ptr[0].Temperature - Temp30) * 80) / (Temp110 - Temp30) + 30;
 //  TIM16->CCR1 = (Temp < 50) ? 0 : Temp * 30000;
-  int32_t Battery = (Ptr[0].Battery * 4522) / 4096;
+  int32_t Battery = (Ptr[8] * 4522) / 4096;
   SysStatus.Battery = (Battery <= 2960) ? 0 : (Battery >= 4240) ? 63 : (Battery - 2960) / 20;
 }
 // USB callbacks functions ---------------------------------------------------------------------------------------------

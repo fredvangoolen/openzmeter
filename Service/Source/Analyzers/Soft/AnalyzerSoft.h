@@ -12,10 +12,11 @@
 #define ZEROCROSSING_FILTERSTAGES          5
 #define ZEROCROSSING_SECONDS              10        //Used seconds to calc frequency
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoft final : public Analyzer, private Database {
+class AnalyzerSoft final : public Analyzer {
   private :
     class Events;
     class FFT;
+    class Sync;
     enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
     typedef struct {
       AggregType                     Type;                 //Aggregation type
@@ -60,6 +61,7 @@ class AnalyzerSoft final : public Analyzer, private Database {
     static vector<float>  THDRanges;         //Rangos de distorsion harmonica para estadisticas
     static vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
   private :
+    string                     pConfigPath;              //Path to configuration
     vector< vector<float> >    pVoltageSamples;          //Voltage samples
     vector< vector<float> >    pCurrentSamples;          //Current samples
     float                      pNominalVoltage;          //Analyzer nominal voltage
@@ -70,9 +72,8 @@ class AnalyzerSoft final : public Analyzer, private Database {
     vector<float>              pGeo;                     //GPS position
     float                      pMaxCurrent;              //Max current, over this value warnings are shown
     float                      pMinCurrent;              //Min current, under this value some analysis are disabled
-    float                      pSamplerate;              //Velocidad de muestreo (NaN if unsuported)
+    float                      pSamplerate;              //Velocidad de muestreo
     AnalyzerMode               pMode;                    //Operation mode
-    uint64_t                   pSequence;                //Numero de bloques analizados
     bool                       pSave10c;                 //Save 10 cycles aggregation to database
     Params_t                   pAggreg10C;               //Agregacion de 10 ciclos
     Params_t                   pAggreg3S;                //Agregacion de 3 segundos
@@ -85,7 +86,6 @@ class AnalyzerSoft final : public Analyzer, private Database {
     pthread_t                  pAnalyzerThread;          //Hilo de ejecucion
     WorkerLocks                pAnalyzerWorkerLocks;     //Handle analyzer thread
     bool                       pTerminate;               //Marca para finalizar proceso
-    uint64_t                   pPrevTimestamp;           //Timestamp del ultimo bloque procesado
     ProviderLocks              PNowDataLock;             //GetSeriesNow access control
     deque<vector<float> >      pDelayVoltage;            //Delay buffer for samples
     deque<vector<float> >      pDelayCurrent;            //Delay buffer for samples
@@ -96,54 +96,48 @@ class AnalyzerSoft final : public Analyzer, private Database {
     uint32_t                   pCycleLen;                //Current cycle len
     uint32_t                   pMaxSamples;              //Max block samples
     Events                    *pEventsDetector;          //Events detector
-    string                     pConfigPath;              //Path to configuration
-    pthread_t                  pSyncThread;              //Synchronize thread
-    string                     pSyncServer;
-    string                     pSyncUser;
-    string                     pSyncPass;
-    
+    Sync                      *pSync;                    //Synchronization object
   private :
     static void  *Analyzer_Thread(void *args);
-    static void  *Sync_Thread(void *args);
-    static void  *Request_Thread(void *args);
+//    static void  *Sync_Thread(void *args);
+//    static void  *Request_Thread(void *args);
     static float CalcChange(const float in, const float reference);
+    static void  AccumulateAggreg(Params_t &src, const Params_t &dst);
+    static float AccumulateSUM(const float val1, const float val2);
+    static float AccumulateRMS(const float val1, const float val2);
+    static void  NormalizeAggreg(Params_t &src);
   private :
     void  Configure(const json &options);
-    void  AccumulateAggreg(Params_t &src, const Params_t &dst) const;
-    float AccumulateSUM(const float val1, const float val2) const;
-    float AccumulateRMS(const float val1, const float val2) const;
-    void  NormalizeAggreg(Params_t &src) const;
-    void  InitAggreg(Params_t &params, AggregType type) const;
+    void  InitAggreg(Params_t &params, AggregType type);
     void  SaveAggreg(Params_t &params);
     float CalcFrequency();
-    
-
-    void  GetAnalyzer(HTTPRequest &req);
-    void  SetAnalyzer(HTTPRequest &req);
-    void  GetSeries(HTTPRequest &req);
-    void  GetSeriesNow(HTTPRequest &req);
-    void  GetSeriesRange(HTTPRequest &req);
-    void  GetEvents(HTTPRequest &req);
-    void  GetEvent(HTTPRequest &req);
-    void  SetEvent(HTTPRequest &req);
-    void  DelEvent(HTTPRequest &req);
-    void  GetRates(HTTPRequest &req);
-    void  GetRate(HTTPRequest &req);
-    void  SetRate(HTTPRequest &req);
-    void  DelRate(HTTPRequest &req);
-    void  AddRate(HTTPRequest &req);
-    void  GetPrices(HTTPRequest &req);
-    void  TestAlarm(HTTPRequest &req);
-    void  GetAlarms(HTTPRequest &req);
-    void  GetAlarm(HTTPRequest &req);
-    void  SetAlarm(HTTPRequest &req);
-    void  AddAlarm(HTTPRequest &req);
-    void  DelAlarm(HTTPRequest &req);
+  private :    
+    void  GetAnalyzer(HTTPRequest &req) override;
+    void  SetAnalyzer(HTTPRequest &req) override;
+    void  GetSeries(HTTPRequest &req) override;
+    void  GetSeriesNow(HTTPRequest &req) override;
+    void  GetSeriesRange(HTTPRequest &req) override;
+    void  GetEvents(HTTPRequest &req) override;
+    void  GetEvent(HTTPRequest &req) override;
+    void  SetEvent(HTTPRequest &req) override;
+    void  DelEvent(HTTPRequest &req) override;
+    void  GetRates(HTTPRequest &req) override;
+    void  GetRate(HTTPRequest &req) override;
+    void  SetRate(HTTPRequest &req) override;
+    void  DelRate(HTTPRequest &req) override;
+    void  AddRate(HTTPRequest &req) override;
+    void  GetPrices(HTTPRequest &req) override;
+    void  TestAlarm(HTTPRequest &req) override;
+    void  GetAlarms(HTTPRequest &req) override;
+    void  GetAlarm(HTTPRequest &req) override;
+    void  SetAlarm(HTTPRequest &req) override;
+    void  AddAlarm(HTTPRequest &req) override;
+    void  DelAlarm(HTTPRequest &req) override;
   public :
     static json CheckConfig(const json &config);
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();
-    bool BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples, uint64_t sampletime);
+    bool BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples);
     bool IsFinished();
 };

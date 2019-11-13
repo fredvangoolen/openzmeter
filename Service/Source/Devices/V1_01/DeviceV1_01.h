@@ -34,9 +34,7 @@ class DeviceV1_01 final : public Device {
     static bool                  pRegistered;
   private :
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
-    pthread_mutex_t              pMutex;                   //Critical sections locks
     bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
-    Transfer_t                   pTransfers[DEVICEV1_01_TRANSFERS];
     deque<Sample_t>              pBuffer;                  //Read buffer
     float                        pVoltageGain;             //Voltage gain
     float                        pCurrentGain;             //Current gain
@@ -46,19 +44,18 @@ class DeviceV1_01 final : public Device {
     struct libusb_device_handle *pDeviceHandle;            //USB handle
     struct libusb_device        *pNewDevice;               //USB device
     libusb_context              *pContext;                 //USB context
-    pthread_t                    pSignalThread;            //Thread to handle LED and sounds
     deque<float>                 pDelay;                   //Delay buffer for voltage/current compensation
     deque<Sample_t>              pAverageValues;           //Average wave value of last second
+    RWLocks                      pAverageLocks;            //Lock access to average values
+    Transfer_t                   pTransfers[DEVICEV1_01_TRANSFERS];
   private : 
     static bool  GetInstances();
     static void *Capture_Thread(void *args);
-    static void *Sig_Thread(void *args);
     static void  ReadCallback(struct libusb_transfer *transfer);
     static int   PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
     static json  CheckConfig(const json &config);
   private :
-    DeviceV1_01(string serial);
-    bool Start(const json &config);
+    DeviceV1_01(const string &serial);
     bool StartDevice() override;
     bool StopDevice() override;
     void GetDevice(HTTPRequest &req) override;

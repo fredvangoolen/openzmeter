@@ -17,31 +17,13 @@ class Analyzer {
   public :
     enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
     enum AnalyzerRights { READ = 0x01, WRITE = 0x02, CONFIG = 0x04 };
-  private :
-    typedef struct {
-      json      Params;
-      string    Method;
-      uint64_t  Sequence;
-      Analyzer *Parent;
-    } RemoteRequest_t;
   protected :
-    RWLocks         pConfigLocks;             //Locks for configurations
-    InstanceLocks   pInstances;               //Control instance counters
-    uint64_t        pLastSave;                //Timestamp of last save or communication
-    string          pSerial;                  //Serial number
-    string          pName;                    //Analyzer description
-  private :
-    
-    
-
-//  private :
-//    void StopSync();
+    RWLocks     pMembersLocks;            //Locks for configurations
+    uint64_t    pLastSave;                //Timestamp of last save or communication
+    string      pSerial;                  //Serial number
+    string      pName;                    //Analyzer description
   protected :
-    bool CheckRights(HTTPRequest &req, const uint neededAccess) const;
-//    bool SetSync(const bool enabled, const string &server, const string &user, const string &pass);
-//    json GetJSONSyncConfig();
-//  private :
-//    static void  *Request_Thread(void *args);
+    bool CheckRights(HTTPRequest &req, const uint neededAccess);
   public :
     virtual void GetAnalyzer(HTTPRequest &req) = 0;
     virtual void SetAnalyzer(HTTPRequest &req) = 0;
@@ -67,6 +49,6 @@ class Analyzer {
   public :
     Analyzer(const string &id);
     virtual ~Analyzer();
-    string Serial() const;
+    string Serial();
     json   GetJSONShortDescriptor();
 };

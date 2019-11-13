@@ -1,5 +1,5 @@
 #Enable/Disable device plugins (set to true or false) ------------------------------------------------------------------
-DEVICE_V1_00   = true
+DEVICE_V1_00   = false
 DEVICE_V1_01   = true
 DEVICE_V2_01   = true
 DEVICE_VIRTUAL = true
@@ -13,7 +13,7 @@ TARIFF_ESP  = true
 TARIFF_NONE = true
 
 # Build options --------------------------------------------------------------------------------------------------------
-DEBUG    = true
+DEBUG    = false
 CC       = arm-openwrt-linux-gcc
 LD       = arm-openwrt-linux-ld
 CFLAGS  += -I $(STAGING_DIR)/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include -I $(STAGING_DIR)/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/dbus-1.0 -I $(STAGING_DIR)/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include 

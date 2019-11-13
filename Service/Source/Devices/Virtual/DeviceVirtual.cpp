@@ -151,7 +151,7 @@ void *DeviceVirtual::Capture_Thread(void *args) {
         if(This->pMode == Analyzer::PHASE3) Current.push_back(0);
       }
       GeneratedSamples++;
-      Analyzer->BufferAppend(Voltage, Current, Sampletime);
+      Analyzer->BufferAppend(Voltage, Current);
     } else {
       usleep(1000);
     }

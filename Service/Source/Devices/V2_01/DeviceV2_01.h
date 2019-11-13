@@ -50,23 +50,25 @@ class DeviceV2_01 final : public Device {
     float                        pCurrentOffset[4];        //Offset de corriente
     float                        pCurrentLevel[4];         //Current level
     bool                         pHighGain;                //Choose high gain mode
-    Sample_t                     pCapture;                 //Capture status
+    int16_t                      pCapture[7];              //Capture status
     int                          pCaptureSync;             //Flag for detect lost samples
     struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
     struct libusb_device        *pNewDevice;               //Dispositivo que se conecta
     libusb_context              *pContext;                 //USB context
     deque<Sample_t>              pAverageValues;           //Average wave value of last second
+    RWLocks                      pAverageLocks;            //Lock access to average values
     uint64_t                     pLastSignalRecv;          //Last battery message recv
     bool                         pButtonAction;            //Last action readed
+    Transfer_t                   pTransfers[DEVICEV2_01_TRANSFERS];
+    Transfer_t                   pSignalTransfer;
   private :
     static bool  GetInstances();
     static json  CheckConfig(const json &config);
     static void *Capture_Thread(void *args);
-//    static void *Signal_Thread(void *args);
     static void  ReadCallback(struct libusb_transfer *transfer);
     static int   PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
   private :
-    DeviceV2_01(string serial);
+    DeviceV2_01(const string &serial);
     bool StartDevice() override;
     bool StopDevice() override;
     void GetDevice(HTTPRequest &req) override;
