@@ -153,14 +153,12 @@ json DeviceV2_01::CheckConfig(const json& config) {
   }
   return ConfigOUT;
 }
-DeviceV2_01::DeviceV2_01(string serial) : Device(serial, "V2.01", "Capture device V2.01") {
-  pMembersLock.WriteLock();
+DeviceV2_01::DeviceV2_01(const string &serial) : Device(serial, "V2.01", "Capture device V2.01") {
   for(uint8_t ch = 0; ch < 3; ch++) pVoltageGain[ch] = 0.0;
   for(uint8_t ch = 0; ch < 4; ch++) pCurrentGain[ch] = 0.0;
   for(uint8_t ch = 0; ch < 3; ch++) pVoltageOffset[ch] = 0.0;
   for(uint8_t ch = 0; ch < 4; ch++) pCurrentOffset[ch] = 0.0;
   for(uint8_t ch = 0; ch < 4; ch++) pCurrentLevel[ch] = 1.0;
-  pMembersLock.WriteUnlock();
 }
 DeviceV2_01::~DeviceV2_01() {
   StopDevice();
@@ -269,10 +267,8 @@ void *DeviceV2_01::Capture_Thread(void *args) {
   This->pDeviceHandle = NULL;
   This->pNewDevice    = NULL;
   uint64_t   LastSignalSend = 0;
-  Transfer_t Transfers[DEVICEV2_01_TRANSFERS];
-  Transfer_t SignalTransfer;
-  for(int i = 0; i < DEVICEV2_01_TRANSFERS; i++) Transfers[i].Transfer = libusb_alloc_transfer(0);
-  SignalTransfer.Transfer = libusb_alloc_transfer(0);
+  for(int i = 0; i < DEVICEV2_01_TRANSFERS; i++) This->pTransfers[i].Transfer = libusb_alloc_transfer(0);
+  This->pSignalTransfer.Transfer = libusb_alloc_transfer(0);
   while(!This->pTerminate) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
@@ -315,9 +311,9 @@ void *DeviceV2_01::Capture_Thread(void *args) {
         Status = (Status & 0xFFEF) | 0x0010;
       }
       Status |= (This->pHighGain == true) ? 0x4000 : 0x0000;
-      memcpy(SignalTransfer.Buffer, &Status, sizeof(Status));
-      libusb_submit_transfer(SignalTransfer.Transfer);
-      printf("Enviando estado! 0x%04X\n", Status);
+      memcpy(This->pSignalTransfer.Buffer, &Status, sizeof(Status));
+      libusb_submit_transfer(This->pSignalTransfer.Transfer);
+      printf("sending 0x%04X\n", Status);
       LastSignalSend = Tools::GetTime();
     }
     if(This->pNewDevice != NULL) {
@@ -325,7 +321,6 @@ void *DeviceV2_01::Capture_Thread(void *args) {
       Result = libusb_get_device_descriptor(This->pNewDevice, &Descriptor);
       if(Result < LIBUSB_SUCCESS) {
         LOGFile::Error("libusb_get_device_descriptor return code %d\n", Result);
-        This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
         continue;
       }
@@ -381,8 +376,8 @@ void *DeviceV2_01::Capture_Thread(void *args) {
         LOGFile::Info("Claimed interface 0 for DeviceV2 with serial '%s'\n", This->pSerial.c_str());
       }
       for(int i = 0; i < DEVICEV2_01_TRANSFERS; i++) {
-        libusb_fill_bulk_transfer(Transfers[i].Transfer, This->pDeviceHandle, DEVICEV2_01_ENDPOINT_IN, Transfers[i].Buffer, sizeof(Transfers[i].Buffer), ReadCallback, This, -1);
-        Result |= libusb_submit_transfer(Transfers[i].Transfer);
+        libusb_fill_bulk_transfer(This->pTransfers[i].Transfer, This->pDeviceHandle, DEVICEV2_01_ENDPOINT_IN, This->pTransfers[i].Buffer, sizeof(This->pTransfers[i].Buffer), ReadCallback, This, -1);
+        Result |= libusb_submit_transfer(This->pTransfers[i].Transfer);
       }
       if(Result != LIBUSB_SUCCESS) {
         LOGFile::Error("libusb_submit_transfer returns %d\n", Result);
@@ -395,13 +390,12 @@ void *DeviceV2_01::Capture_Thread(void *args) {
       This->pNewDevice = NULL;
       LastSignalSend = 0;
       This->pLastSignalRecv = 0;
-      libusb_fill_bulk_transfer(SignalTransfer.Transfer, This->pDeviceHandle, DEVICEV2_01_ENDPOINT_OUT, SignalTransfer.Buffer, 2, ReadCallback, This, -1);
+      libusb_fill_bulk_transfer(This->pSignalTransfer.Transfer, This->pDeviceHandle, DEVICEV2_01_ENDPOINT_OUT, This->pSignalTransfer.Buffer, 2, ReadCallback, This, -1);
     }
   }
-  libusb_cancel_transfer(SignalTransfer.Transfer);
-  for(int i = 0; i < DEVICEV2_01_TRANSFERS; i++) libusb_cancel_transfer(Transfers[i].Transfer);
-  libusb_release_interface(This->pDeviceHandle, 0);
-  libusb_close(This->pDeviceHandle);
+  libusb_cancel_transfer(This->pSignalTransfer.Transfer);
+  if(This->pDeviceHandle != 0) libusb_release_interface(This->pDeviceHandle, 0);
+  if(This->pDeviceHandle != 0) libusb_close(This->pDeviceHandle);
   libusb_exit(This->pContext);
   return NULL;
 }
@@ -446,15 +440,8 @@ void  DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
         This->pCaptureSync = -1;
         break;
       }
-      ((float*)&This->pCapture)[This->pCaptureSync++] = (float)Sample - 4096.0;
+      This->pCapture[This->pCaptureSync++] = Sample - 4096;
       if(This->pCaptureSync == 7) {
-        This->pCapture.Voltage[0] = ((This->pCapture.Voltage[0] * 0.110266113281) * (1.0 + (This->pVoltageGain[0] / 100.0))) + This->pVoltageOffset[0];
-        This->pCapture.Voltage[1] = ((This->pCapture.Voltage[1] * 0.110266113281) * (1.0 + (This->pVoltageGain[1] / 100.0))) + This->pVoltageOffset[1];
-        This->pCapture.Voltage[2] = ((This->pCapture.Voltage[2] * 0.110266113281) * (1.0 + (This->pVoltageGain[2] / 100.0))) + This->pVoltageOffset[2];
-        This->pCapture.Current[0] = ((This->pCapture.Current[0] * 201.416015625) * (1.0 + (This->pCurrentGain[0] / 100.0))) / This->pCurrentLevel[0] + This->pCurrentOffset[0];
-        This->pCapture.Current[1] = ((This->pCapture.Current[1] * 201.416015625) * (1.0 + (This->pCurrentGain[1] / 100.0))) / This->pCurrentLevel[1] + This->pCurrentOffset[1];
-        This->pCapture.Current[2] = ((This->pCapture.Current[2] * 201.416015625) * (1.0 + (This->pCurrentGain[2] / 100.0))) / This->pCurrentLevel[2] + This->pCurrentOffset[2];
-        This->pCapture.Current[3] = ((This->pCapture.Current[3] * 201.416015625) * (1.0 + (This->pCurrentGain[3] / 100.0))) / This->pCurrentLevel[3] + This->pCurrentOffset[3];
         if(This->BuffersAppend() == false) {
           LOGFile::Error("Capture buffer overflow! Posible lost of samples\n");
           break;
@@ -464,7 +451,7 @@ void  DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
     }
   }
   if(This->pTerminate == false) {
-    libusb_submit_transfer(transfer);
+    if(transfer->endpoint == DEVICEV2_01_ENDPOINT_IN) libusb_submit_transfer(transfer);
   } else {
     libusb_free_transfer(transfer);
   }
@@ -497,6 +484,7 @@ void  DeviceV2_01::GetDevice(HTTPRequest &req) {
   Avg.Current[1] = 0.0;
   Avg.Current[2] = 0.0;
   Avg.Current[3] = 0.0;
+  pAverageLocks.ReadLock();
   for(deque<Sample_t>::iterator it = pAverageValues.begin(); it != pAverageValues.end(); it++) {
     Avg.Voltage[0] += it->Voltage[0];
     Avg.Voltage[1] += it->Voltage[1];
@@ -516,6 +504,7 @@ void  DeviceV2_01::GetDevice(HTTPRequest &req) {
   Config["Wave_Average"]["Current"].push_back(Avg.Current[1] / pAverageValues.size());
   Config["Wave_Average"]["Current"].push_back(Avg.Current[2] / pAverageValues.size());
   Config["Wave_Average"]["Current"].push_back(Avg.Current[3] / pAverageValues.size());
+  pAverageLocks.ReadUnlock();
   pMembersLock.ReadUnlock();
   req.FromJSON(Config);
 }
@@ -537,10 +526,19 @@ void  DeviceV2_01::SetDevice(HTTPRequest &req) {
   req.FromJSON(Response);
 }
 bool  DeviceV2_01::BuffersAppend() {
-  pBuffer.push_back(pCapture);
-  uint64_t Sampletime = Tools::GetTime();
-  pAverageValues.push_back(pCapture);
-  if(pAverageValues.size() > DEVICEV2_01_SAMPLEFREQ) pAverageValues.pop_front();
+  Sample_t Sample;
+  Sample.Voltage[0] = (((float)pCapture[0] * 0.110266113281) * (1.0 + (pVoltageGain[0] / 100.0))) + pVoltageOffset[0];
+  Sample.Voltage[1] = (((float)pCapture[1] * 0.110266113281) * (1.0 + (pVoltageGain[1] / 100.0))) + pVoltageOffset[1];
+  Sample.Voltage[2] = (((float)pCapture[2] * 0.110266113281) * (1.0 + (pVoltageGain[2] / 100.0))) + pVoltageOffset[2];
+  Sample.Current[0] = (((float)pCapture[3] * 201.416015625) * (1.0 + (pCurrentGain[0] / 100.0))) / pCurrentLevel[0] + pCurrentOffset[0];
+  Sample.Current[1] = (((float)pCapture[4] * 201.416015625) * (1.0 + (pCurrentGain[1] / 100.0))) / pCurrentLevel[1] + pCurrentOffset[1];
+  Sample.Current[2] = (((float)pCapture[5] * 201.416015625) * (1.0 + (pCurrentGain[2] / 100.0))) / pCurrentLevel[2] + pCurrentOffset[2];
+  Sample.Current[3] = (((float)pCapture[6] * 201.416015625) * (1.0 + (pCurrentGain[3] / 100.0))) / pCurrentLevel[3] + pCurrentOffset[3];
+  pBuffer.push_back(Sample);
+  pAverageLocks.WriteLock();
+  pAverageValues.push_back(Sample);
+  if(pAverageValues.size() > DEVICEV2_01_SAMPLEFREQ) pAverageValues.pop_front();  
+  pAverageLocks.WriteUnlock();
   for(uint8_t i = 0; i < pAnalyzers.size(); i++) {
     if(((AnalyzerSoft*)pAnalyzers[i])->IsFinished() == false) return true;
   }
@@ -552,7 +550,7 @@ bool  DeviceV2_01::BuffersAppend() {
       vector<float> Voltage, Current;
       for(uint8_t n = 0; n < ((pAnalyzersSetup[i].Mode == Analyzer::PHASE1) ? 1 : 3); n++) Voltage.push_back(Sample.Voltage[pAnalyzersSetup[i].Voltage[n]]);
       for(uint8_t n = 0; n < ((pAnalyzersSetup[i].Mode == Analyzer::PHASE1) ? 1 : (pAnalyzersSetup[i].Mode == Analyzer::PHASE3) ? 3 : 4); n++) Current.push_back(Sample.Current[pAnalyzersSetup[i].Current[n]] * (pAnalyzersSetup[i].CurrentInvert[n] ? -1.0 : 1.0));
-      if(((AnalyzerSoft*)pAnalyzers[i])->BufferAppend(Voltage, Current, Sampletime) == true) Started = true;
+      if(((AnalyzerSoft*)pAnalyzers[i])->BufferAppend(Voltage, Current) == true) Started = true;
     }
   }
   return true;

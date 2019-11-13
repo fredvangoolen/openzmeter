@@ -20,29 +20,6 @@ bool DeviceRemote::GetInstances() {
   DeviceManager::AddDevice(pInstance);
   return true;
 }
-DeviceRemote::DeviceRemote() {
-  pSerial = "REMOTE";
-  pDriver = "Remote";
-  pName   = "Allow repplication of remote openZmeter devices in local machine";
-  pMutex  = PTHREAD_MUTEX_INITIALIZER;
-}
-DeviceRemote::~DeviceRemote() {
-  StopDevice();
-//  WaitInstances();
-  pInstance = NULL;
-}
-bool DeviceRemote::Start(const json &config) {
-  pAnalyzersLock.WriteLock();
-  while(pAnalyzers.size() > 0) {
-    Analyzer *Analyzer = pAnalyzers.back();
-    pAnalyzers.pop_back();
-    delete Analyzer;
-  }  
-  for(uint n = 0; n < config["Analyzers"].size(); n++) pAnalyzers.push_back(new AnalyzerRemote(config["Analyzers"][n]));
-  pAnalyzersLock.WriteUnlock();
-  pState = RUNNING;
-  return true;
-}
 json DeviceRemote::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Analyzers"] = json::array();
@@ -57,10 +34,15 @@ json DeviceRemote::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
+DeviceRemote::DeviceRemote() : Device("REMOTE", "Remote", "Allow repplication of remote openZmeter devices in local machine") {
+}
+DeviceRemote::~DeviceRemote() {
+  StopDevice();
+}
 bool DeviceRemote::StartDevice() {
-  pthread_mutex_lock(&pMutex);
+  pMembersLock.WriteLock();
   if(pState == RUNNING) {
-    pthread_mutex_unlock(&pMutex);
+    pMembersLock.WriteUnlock();
     return false;
   }
   LOGFile::Info("Loading 'Remote' driver configuration\n");
@@ -70,79 +52,81 @@ bool DeviceRemote::StartDevice() {
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     if(AutoStart == false) {
-      pthread_mutex_unlock(&pMutex);
+      pMembersLock.WriteUnlock();
       return true;
     }
   }
   LOGFile::Info("Starting 'Remote' driver\n");
-  bool Result = Start(Config);
-  HTTPServer::RegisterCallback("setRemote",  SetRemoteCallback);
-  HTTPServer::RegisterCallback("getRemote",  GetRemoteCallback);
-  pthread_mutex_unlock(&pMutex);
-  return Result;
-}
-bool DeviceRemote::StopDevice() {
-  pthread_mutex_lock(&pMutex);
-  if(pState != RUNNING) {
-    pthread_mutex_unlock(&pMutex);
-    return false;
-  }
-  LOGFile::Info("Stopping 'Remote' driver...\n");
-  HTTPServer::UnregisterCallback("setRemote");
-  HTTPServer::UnregisterCallback("getRemote");
-  pAnalyzersLock.WriteLock();
   while(pAnalyzers.size() > 0) {
     Analyzer *Analyzer = pAnalyzers.back();
     pAnalyzers.pop_back();
     delete Analyzer;
   }
-  pAnalyzersLock.WriteUnlock();
+  for(uint n = 0; n < Config["Analyzers"].size(); n++) pAnalyzers.push_back(new AnalyzerRemote(Config["Analyzers"][n]));
+  pState = RUNNING;
+  HTTPServer::RegisterCallback("setRemote",  SetRemoteCallback);
+  HTTPServer::RegisterCallback("getRemote",  GetRemoteCallback);
+  pMembersLock.WriteUnlock();
+  return (pState == RUNNING);
+}
+bool DeviceRemote::StopDevice() {
+  pMembersLock.WriteLock();
+  if(pState != RUNNING) {
+    pMembersLock.WriteUnlock();
+    return false;
+  }
+  LOGFile::Info("Stopping 'Remote' driver...\n");
+  HTTPServer::UnregisterCallback("setRemote");
+  HTTPServer::UnregisterCallback("getRemote");
+  while(pAnalyzers.size() > 0) {
+    Analyzer *Analyzer = pAnalyzers.back();
+    pAnalyzers.pop_back();
+    delete Analyzer;
+  }
   pState = STOPPED;
-  pthread_mutex_unlock(&pMutex);
+  pMembersLock.WriteUnlock();
   return true;
 }
 void DeviceRemote::GetDevice(HTTPRequest &req) {
+  pMembersLock.ReadLock();
   req.FromJSON(ConfigManager::ReadConfig("/Devices/" + pSerial));
+  pMembersLock.ReadUnlock();
 }
 void DeviceRemote::SetDevice(HTTPRequest &req) {
 }
 void DeviceRemote::GetRemoteCallback(HTTPRequest &req) {
-//  pInstance->Reference();
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string() || !Params["Name"].is_string()) return req.FromString("'Analyzer' and 'Name' params are requiered", MHD_HTTP_BAD_REQUEST);
   pInstance->GetRemote(req);
-//  pInstance->Dereference();
 }
 void DeviceRemote::SetRemoteCallback(HTTPRequest &req) {
-//  pInstance->Reference();
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
   pInstance->SetRemote(req);
-//  pInstance->Dereference();
 }
 void DeviceRemote::GetRemote(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  pAnalyzersLock.ReadLock();
+  pMembersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     ((AnalyzerRemote*)pAnalyzers[n])->GetRemote(req);
-    pAnalyzersLock.ReadUnlock();
+    pMembersLock.ReadUnlock();
     return;
   }
-  pAnalyzersLock.ReadUnlock();
+  pMembersLock.ReadUnlock();
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
 }
 void DeviceRemote::SetRemote(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
-  pAnalyzersLock.ReadLock();
+  pMembersLock.ReadLock();
   for(uint n = 0; n != pAnalyzers.size(); n++) {
     if(pAnalyzers[n]->Serial() != Serial) continue;
     ((AnalyzerRemote*)pAnalyzers[n])->SetRemote(req);
-    pAnalyzersLock.ReadUnlock();
+    pMembersLock.ReadUnlock();
     return;
   }
-  pAnalyzersLock.ReadUnlock();
+  pMembersLock.ReadUnlock();
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
 }

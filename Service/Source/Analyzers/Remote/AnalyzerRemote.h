@@ -38,6 +38,12 @@ class AnalyzerRemote : public Analyzer {
     void  DelRate(HTTPRequest &req);
     void  AddRate(HTTPRequest &req);
     void  GetPrices(HTTPRequest &req);
+    void  TestAlarm(HTTPRequest &req);
+    void  GetAlarms(HTTPRequest &req);
+    void  GetAlarm(HTTPRequest &req);
+    void  SetAlarm(HTTPRequest &req);
+    void  AddAlarm(HTTPRequest &req);
+    void  DelAlarm(HTTPRequest &req);
   public :
     AnalyzerRemote(string id);
     ~AnalyzerRemote();

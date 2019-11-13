@@ -152,6 +152,12 @@ void AnalyzerRemote::GetPrices(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getPrices", req);
 }
+void AnalyzerRemote::TestAlarm(HTTPRequest &req) {}
+void AnalyzerRemote::GetAlarms(HTTPRequest &req) {}
+void AnalyzerRemote::GetAlarm(HTTPRequest &req) {}
+void AnalyzerRemote::SetAlarm(HTTPRequest &req) {}
+void AnalyzerRemote::AddAlarm(HTTPRequest &req) {}
+void AnalyzerRemote::DelAlarm(HTTPRequest &req) {}
 
 
 //void AnalyzerRemote::GetParams(Params_t& params, ParamsType& copy) {
