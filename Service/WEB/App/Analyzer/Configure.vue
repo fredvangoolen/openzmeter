@@ -40,7 +40,12 @@
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Max current</label>
         <input-spin prepend="A" :decimals="1" :min="0.1" :max="500" :increment="1" :value="Analyzer.MaxCurrent" v-on:change="Analyzer.MaxCurrent=$event"></input-spin>
-      </div>      
+      </div>
+      <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
+      <div class="col-xs-12">
+        <label class="control-label" style="line-height: 22px">Enable event detection</label>
+        <toggle class="float-right" onText="Yes" offText="No" :value="Analyzer.EventsEnabled" v-on:change="Analyzer.EventsEnabled=$event"></toggle>
+      </div>
     </div>
     <div class="row" v-if="View=='Contract'">
       <div class="col-xs-12">

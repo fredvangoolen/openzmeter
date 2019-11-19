@@ -11,7 +11,6 @@ class AnalyzerRemote : public Analyzer {
     typedef struct {
       uint64_t        Sequence;
       string          Method;
-//      json            RequestContents;
       HTTPRequest    *Request;
       ProviderLocks   Locks;
     } Query_t;
@@ -20,7 +19,6 @@ class AnalyzerRemote : public Analyzer {
     uint64_t         pQuerySequence;
     list<Query_t*>   pQueries;
     ProviderLocks   *pRequestLocks;
-    pthread_mutex_t  pMutex;
   private :
     void  HandleRequest(string url, HTTPRequest &req);
     void  GetAnalyzer(HTTPRequest &req);

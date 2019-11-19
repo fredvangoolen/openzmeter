@@ -47,9 +47,9 @@ void AnalyzerSoft::Events::SaveEvent(Event_t &evt) {
   if(evt.State == EVT_RUNNING) {
     DB.ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, finished, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + DB.Bind(evt.Start) + ", 0, " + DB.Bind(pParent->pSamplerate) + ", false, " + DB.Bind(Type) + ", " + DB.Bind(evt.Reference) + ", " + DB.Bind(evt.PeakValue) + ", " + DB.Bind(evt.ChangeValue) + ", '', " + DB.Bind(RAW) + ", " + DB.Bind(RMS) + ")");
   } else if(evt.State == EVT_CLOSING) {
-    DB.ExecSentenceNoResult("UPDATE events SET duration = " + DB.Bind(evt.Duration) + ", peak = " + DB.Bind(evt.PeakValue) + ", change = " + DB.Bind(evt.ChangeValue) + ", samples2 = " + DB.Bind(RAW) + ", rms2 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start) + " AND evttype = " + DB.Bind(Type));
+    DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", duration = " + DB.Bind(evt.Duration) + ", peak = " + DB.Bind(evt.PeakValue) + ", change = " + DB.Bind(evt.ChangeValue) + ", samples2 = " + DB.Bind(RAW) + ", rms2 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
   } else {
-    DB.ExecSentenceNoResult("UPDATE events SET finished = TRUE, samples3 = " + DB.Bind(RAW) + ", rms3 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start) + " AND evttype = " + DB.Bind(Type));
+    DB.ExecSentenceNoResult("UPDATE events SET finished = TRUE, samples3 = " + DB.Bind(RAW) + ", rms3 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
   }
   evt.SamplesRAW_A = deque<vector<float> >();
   evt.SamplesRMS_A = deque<vector<float> >();
@@ -140,14 +140,22 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
           }
         }
       }
-      if(Stationary != This->pPrevStationary) LOGFile::Debug("Analyzer '%s' %s stationary state\n", This->pParent->pSerial.c_str(), (Stationary ? "reach" : "leave"));
       //Check for new events
       if((This->pPrevSamples.size() >= RequiredRAW) && (This->pPrevCycles.size() >= RequiredRMS)) {
         for(uint8_t n = 0; n < RMS_Avg.size(); n++) {
           //Check for interruption new events
-          if((-This->pParent->CalcChange(Cycle.RMS[n], This->pParent->pNominalVoltage) > EVENT_INTERRUPTION) && (This->FindRunningEvent(EVT_INTERRUPTION) == false)) This->InitEvent(EVT_INTERRUPTION, vector<float>(RMS_Avg.size(), This->pParent->pNominalVoltage), Pos);
+          if((-This->pParent->CalcChange(Cycle.RMS[n], This->pParent->pNominalVoltage) > EVENT_INTERRUPTION) && (This->FindRunningEvent(EVT_INTERRUPTION) == false)) {
+            bool Found = false;
+            for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
+              if((it->Type != EVT_DIP) || (it->State != EVT_RUNNING) || (it->Duration > (EVENT_RAWENVELOPETIME * This->pParent->pSamplerate))) continue;
+              it->Type = EVT_INTERRUPTION;
+              Found = true;
+              break;
+            }
+            if(Found == false) This->InitEvent(EVT_INTERRUPTION, vector<float>(RMS_Avg.size(), This->pParent->pNominalVoltage), Pos);
+          }
           //Check for DIP new events
-          if((-This->pParent->CalcChange(Cycle.RMS[n], This->pParent->pNominalVoltage) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_DIP) == false)) This->InitEvent(EVT_DIP, vector<float>(RMS_Avg.size(), This->pParent->pNominalVoltage), Pos);
+          if((-This->pParent->CalcChange(Cycle.RMS[n], This->pParent->pNominalVoltage) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_DIP | EVT_INTERRUPTION) == false)) This->InitEvent(EVT_DIP, vector<float>(RMS_Avg.size(), This->pParent->pNominalVoltage), Pos);
           //Check for SWELL new events
           if((This->pParent->CalcChange(Cycle.RMS[n], This->pParent->pNominalVoltage) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_SWELL) == false)) This->InitEvent(EVT_SWELL, vector<float>(RMS_Avg.size(), This->pParent->pNominalVoltage), Pos);
           //Check for RVC new events
@@ -179,7 +187,7 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
           if(it->Type == EVT_INTERRUPTION) {
             it->State = EVT_CLOSING;
             for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {
-              if(-This->pParent->CalcChange(Cycle.RMS[ch], This->pParent->pNominalVoltage) > (EVENT_INTERRUPTION - EVENT_HYSTERESIS)) it->State = EVT_RUNNING;
+              if(-This->pParent->CalcChange(Cycle.RMS[ch], This->pParent->pNominalVoltage) > (EVENT_INTERRUPTION - EVENT_INTERRUPTION_HYSTERESIS)) it->State = EVT_RUNNING;
             }
             if(it->State == EVT_RUNNING) {
               for(uint8_t ch = 0; ch < Cycle.RMS.size(); ch++) {

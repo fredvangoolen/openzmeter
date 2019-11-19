@@ -31,10 +31,8 @@ json Analyzer::GetJSONShortDescriptor() {
   return Response;
 }
 bool Analyzer::CheckRights(HTTPRequest &req, const uint neededAccess) {
-  pMembersLocks.ReadLock();
   //req.ExecSentenceAsyncResult("SELECT");  ...
   //  InstanceLocks::Allocator Reference(&pInstances);
 // req.FromString("", MHD_HTTP_UNAUTHORIZED);
-  pMembersLocks.ReadUnlock();
  return true;
 }

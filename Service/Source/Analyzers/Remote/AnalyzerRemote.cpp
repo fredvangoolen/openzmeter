@@ -7,41 +7,43 @@
 #include "Tools.h"
 #include "AnalyzerRemote.h"
 AnalyzerRemote::AnalyzerRemote(string id) : Analyzer(id) {
-  pName = "Never seen";
+  pName          = "Never seen";
   pQuerySequence = 0;
   pRequestLocks  = NULL;
-  pMutex         = PTHREAD_MUTEX_INITIALIZER;
 }
 AnalyzerRemote::~AnalyzerRemote() {
-  pthread_mutex_lock(&pMutex);
+  pMembersLocks.WriteLock();
   if(pRequestLocks != NULL) pRequestLocks->Abort();
   for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) (*it)->Locks.Abort();
-  pthread_mutex_unlock(&pMutex);
+  pMembersLocks.WriteUnlock();
 }
 void AnalyzerRemote::GetRemote(HTTPRequest& req) {
   json Params = req.GetParams();
-  pthread_mutex_lock(&pMutex);
+  pMembersLocks.ReadLock();
   if(pRequestLocks != NULL) {
+    pMembersLocks.ReadUnlock();
     req.FromString("", MHD_HTTP_SERVICE_UNAVAILABLE);
-    pthread_mutex_unlock(&pMutex);
     return;
   }
-  pConfigLocks.WriteLock();
+  pMembersLocks.ReadUnlock();
+
+  pMembersLocks.WriteLock();
   pLastSave = Tools::GetTime();
   pName     = Params["Name"];
-  pConfigLocks.WriteUnlock();
   pRequestLocks = new ProviderLocks();
-  pthread_mutex_unlock(&pMutex);
+  pMembersLocks.WriteUnlock();
+  
   if(pRequestLocks->ConsumerWait(15000) == false) {
-    req.FromString("", MHD_HTTP_NO_CONTENT);
-    pthread_mutex_lock(&pMutex);
+    pMembersLocks.WriteLock();
     delete pRequestLocks;
     pRequestLocks = NULL;
-    pthread_mutex_unlock(&pMutex);
+    pMembersLocks.WriteUnlock();
+    req.FromString("", MHD_HTTP_NO_CONTENT);
     return;
   }
+  
   json Response = json::array();
-  pthread_mutex_lock(&pMutex);
+  pMembersLocks.WriteLock();
   for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
     if((*it)->Sequence != 0) continue;
     (*it)->Sequence = ++pQuerySequence;
@@ -54,7 +56,7 @@ void AnalyzerRemote::GetRemote(HTTPRequest& req) {
   }
   delete pRequestLocks;
   pRequestLocks = NULL;
-  pthread_mutex_unlock(&pMutex);
+  pMembersLocks.WriteUnlock();
   req.FromJSON(Response);
 }
 void AnalyzerRemote::SetRemote(HTTPRequest &req) {
@@ -62,35 +64,35 @@ void AnalyzerRemote::SetRemote(HTTPRequest &req) {
   if(!Params["Code"].is_number() || !Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' and 'Code' param are required", MHD_HTTP_BAD_REQUEST);
   uint64_t Sequence = Params["Sequence"];
   uint16_t Code = Params["Code"];
-  pthread_mutex_lock(&pMutex);
+  pMembersLocks.WriteLock();
   for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
     if((*it)->Sequence != Sequence) continue;
     Query_t *Query = (*it);
     pQueries.erase(it);
-    pthread_mutex_unlock(&pMutex);
+    pMembersLocks.WriteUnlock();
     Query->Request->FromString(Params["Response"], Code);
     Query->Locks.ProviderWrite();
     return;
   }
-  pthread_mutex_unlock(&pMutex);
+  pMembersLocks.WriteUnlock();
 }
 void AnalyzerRemote::HandleRequest(string url, HTTPRequest &req) {
   Query_t Query;
   Query.Sequence = 0;
   Query.Method = url;
   Query.Request = &req;
-  pthread_mutex_lock(&pMutex);
+  pMembersLocks.WriteLock();
   pQueries.push_back(&Query);
   if(pRequestLocks != NULL) pRequestLocks->ProviderWrite();
-  pthread_mutex_unlock(&pMutex);
+  pMembersLocks.WriteUnlock();
   if(Query.Locks.ConsumerWait(15000) == false) req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
-  pthread_mutex_lock(&pMutex);
+  pMembersLocks.WriteLock();
   for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
     if(*it != &Query) continue;
     pQueries.erase(it);
     break;
   }
-  pthread_mutex_unlock(&pMutex);
+  pMembersLocks.WriteUnlock();
 }
 void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;  
@@ -152,12 +154,30 @@ void AnalyzerRemote::GetPrices(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getPrices", req);
 }
-void AnalyzerRemote::TestAlarm(HTTPRequest &req) {}
-void AnalyzerRemote::GetAlarms(HTTPRequest &req) {}
-void AnalyzerRemote::GetAlarm(HTTPRequest &req) {}
-void AnalyzerRemote::SetAlarm(HTTPRequest &req) {}
-void AnalyzerRemote::AddAlarm(HTTPRequest &req) {}
-void AnalyzerRemote::DelAlarm(HTTPRequest &req) {}
+void AnalyzerRemote::TestAlarm(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("testAlarm", req);
+}
+void AnalyzerRemote::GetAlarms(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("getAlarms", req);
+}
+void AnalyzerRemote::GetAlarm(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("getAlarm", req);
+}
+void AnalyzerRemote::SetAlarm(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("setAlarm", req);
+}
+void AnalyzerRemote::AddAlarm(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("addAlarm", req);
+}
+void AnalyzerRemote::DelAlarm(HTTPRequest &req) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+  HandleRequest("delAlarm", req);
+}
 
 
 //void AnalyzerRemote::GetParams(Params_t& params, ParamsType& copy) {

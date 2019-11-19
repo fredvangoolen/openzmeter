@@ -134,6 +134,8 @@ bool DeviceV1_01::StartDevice() {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
       libusb_exit(pContext);
     } else {
+      pDeviceHandle = NULL;
+      pNewDevice    = NULL;
       if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_01_VID, DEVICEV1_01_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
         LOGFile::Error("Failed to register libUSB calback...\n");
         pTerminate = true;
@@ -167,8 +169,6 @@ bool DeviceV1_01::StopDevice() {
 }
 void *DeviceV1_01::Capture_Thread(void *args) {
   DeviceV1_01 *This = (DeviceV1_01*)args;
-  This->pDeviceHandle = NULL;
-  This->pNewDevice    = NULL;
   for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) This->pTransfers[i].Transfer = libusb_alloc_transfer(0);
   while(!This->pTerminate) {
     struct timeval tv = { 1, 0 };

@@ -9,14 +9,15 @@
 #include <list>
 #include "Analyzer.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define ZEROCROSSING_FILTERSTAGES          5
-#define ZEROCROSSING_SECONDS              10        //Used seconds to calc frequency
-//----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoft final : public Analyzer {
+  private :
+    static const uint8_t ZEROCROSSING_FILTERSTAGES =  5;
+    static const uint8_t ZEROCROSSING_SECONDS      = 10;        //Used seconds to calc frequency
   private :
     class Events;
     class FFT;
     class Sync;
+  private :
     enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
     typedef struct {
       AggregType                     Type;                 //Aggregation type
@@ -56,51 +57,46 @@ class AnalyzerSoft final : public Analyzer {
       vector<float>         ChannelsZ2;
     } Filter_t;
   private :
-    static vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
-    static vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
-    static vector<float>  THDRanges;         //Rangos de distorsion harmonica para estadisticas
-    static vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
-  private :
+    static const vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
+    static const vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
+    static const vector<float>  THDRanges;         //Rangos de distorsion harmonica para estadisticas
+    static const vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
+  private : //Variables not changed after initialization or not need locking
+    bool                       pTerminate;               //Marca para finalizar proceso
+    float                      pSamplerate;              //Velocidad de muestreo
     string                     pConfigPath;              //Path to configuration
-    vector< vector<float> >    pVoltageSamples;          //Voltage samples
-    vector< vector<float> >    pCurrentSamples;          //Current samples
+    uint32_t                   pCycleLen;                //Current cycle len
+    pthread_t                  pAnalyzerThread;          //Hilo de ejecucion
+    vector<float>              pLastSamples;             //Filter samples backup
+    AnalyzerMode               pMode;                    //Operation mode
+    WorkerLocks                pAnalyzerWorkerLocks;     //Handle analyzer thread
+    ProviderLocks              PNowDataLock;             //GetSeriesNow access control
+  private :  //Config params (Writed in configure, readed in other places)
+    Events                    *pEventsDetector;          //Events detector
+    Sync                      *pSync;                    //Synchronization object
+    bool                       pSave10c;                 //Save 10 cycles aggregation to database
     float                      pNominalVoltage;          //Analyzer nominal voltage
     float                      pNominalFrequency;        //Analyzer nominal frequency
+    float                      pMaxCurrent;              //Max current, over this value warnings are shown
+    float                      pMinCurrent;              //Min current, under this value some analysis are disabled
+    uint32_t                   pMaxSamples;              //Max block samples
     string                     pTimeZone;                //Country code
     string                     pContract;                //Contract identifier
     string                     pZipCode;                 //Installation zip code
     vector<float>              pGeo;                     //GPS position
-    float                      pMaxCurrent;              //Max current, over this value warnings are shown
-    float                      pMinCurrent;              //Min current, under this value some analysis are disabled
-    float                      pSamplerate;              //Velocidad de muestreo
-    AnalyzerMode               pMode;                    //Operation mode
-    bool                       pSave10c;                 //Save 10 cycles aggregation to database
-    Params_t                   pAggreg10C;               //Agregacion de 10 ciclos
-    Params_t                   pAggreg3S;                //Agregacion de 3 segundos
-    Params_t                   pAggreg1M;                //Agregacion de 1 minuto
-    Params_t                   pAggreg10M;               //Agregacion de 10 minutos
-    Params_t                   pAggreg15M;               //Agregacion de 15 minutos
-    Params_t                   pAggreg1H;                //Agregacion de 1 hora
-    vector<FFT*>               pVoltageFFT;              //Muestras de FFT tension del bloque
-    vector<FFT*>               pCurrentFFT;              //Muestras de FFT corriente del bloque
-    pthread_t                  pAnalyzerThread;          //Hilo de ejecucion
-    WorkerLocks                pAnalyzerWorkerLocks;     //Handle analyzer thread
-    bool                       pTerminate;               //Marca para finalizar proceso
-    ProviderLocks              PNowDataLock;             //GetSeriesNow access control
+    vector<Filter_t>           pFilters;                 //Filter bank
     deque<vector<float> >      pDelayVoltage;            //Delay buffer for samples
     deque<vector<float> >      pDelayCurrent;            //Delay buffer for samples
-    vector<Filter_t>           pFilters;                 //Filter bank
-    deque<uint32_t>            pCycles;                  //Prev cycles lenghts
+  private :  //Analyzer params (write in thread OR append, read in SeriesNow)
+    vector< vector<float> >    pVoltageSamples;          //Voltage samples
+    vector< vector<float> >    pCurrentSamples;          //Current samples
+    vector<FFT*>               pVoltageFFT;              //Muestras de FFT tension del bloque
+    vector<FFT*>               pCurrentFFT;              //Muestras de FFT corriente del bloque
     vector<uint32_t>           pBlockCycles;             //Current block cycles lengths
-    vector<float>              pLastSamples;             //Filter samples backup
-    uint32_t                   pCycleLen;                //Current cycle len
-    uint32_t                   pMaxSamples;              //Max block samples
-    Events                    *pEventsDetector;          //Events detector
-    Sync                      *pSync;                    //Synchronization object
+    deque<uint32_t>            pCycles;                  //Prev cycles lenghts
+    Params_t                   pAggreg10C;               //Agregacion de 10 ciclos
   private :
     static void  *Analyzer_Thread(void *args);
-//    static void  *Sync_Thread(void *args);
-//    static void  *Request_Thread(void *args);
     static float CalcChange(const float in, const float reference);
     static void  AccumulateAggreg(Params_t &src, const Params_t &dst);
     static float AccumulateSUM(const float val1, const float val2);
@@ -110,7 +106,6 @@ class AnalyzerSoft final : public Analyzer {
     void  Configure(const json &options);
     void  InitAggreg(Params_t &params, AggregType type);
     void  SaveAggreg(Params_t &params);
-    float CalcFrequency();
   private :    
     void  GetAnalyzer(HTTPRequest &req) override;
     void  SetAnalyzer(HTTPRequest &req) override;

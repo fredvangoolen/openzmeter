@@ -304,10 +304,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
             break;
           }
           pLock.ReadUnlock();
-          if(Handled == false) {
-            pLock.ReadUnlock();
-            Request->FromString("Method not found", MHD_HTTP_METHOD_NOT_ALLOWED);
-          }
+          if(Handled == false) Request->FromString("Method not found", MHD_HTTP_METHOD_NOT_ALLOWED);
         }
       }
       MHD_Response *Response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 8192, &Request->WriteFunction, Request, NULL);

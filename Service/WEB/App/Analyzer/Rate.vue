@@ -210,7 +210,7 @@
       },
       Save: function() {
         this.$refs.Dialog.ShowSpinner = true;
-        $.ajax({ url: (this.Rate.RateID === undefined) ? "addRate" : "setRate", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.Analyzer, CountryCode: 'ESP' /*this.Analyzer.CountryCode*/ }, this.Rate) ), 
+        $.ajax({ url: (this.Rate.RateID === undefined) ? "addRate" : "setRate", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.Analyzer }, this.Rate) ), 
           success: () => {
             this.$refs.Dialog.ShowSpinner = false;
             this.Back();

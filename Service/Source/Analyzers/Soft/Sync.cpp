@@ -1,4 +1,23 @@
 #include "Sync.h"
+//------------------------------------------------------------------------------
+AnalyzerSoft::Sync::CurlBuff::CurlBuff() {
+  pBuffer = (char*)malloc(1);
+  pSize = 1;
+}
+AnalyzerSoft::Sync::CurlBuff::~CurlBuff() {
+  if(pBuffer != NULL) free(pBuffer);
+}
+bool AnalyzerSoft::Sync::CurlBuff::Append(void *data, uint32_t size) {
+  pSize = pSize + size;
+  pBuffer = (char*)realloc(pBuffer, pSize + size);
+  if(pBuffer == NULL) return false;
+  memcpy(&pBuffer[pSize - size - 1], data, size);
+  pBuffer[pSize - 1] = 0;
+  return true;
+}
+char *AnalyzerSoft::Sync::CurlBuff::Data() {
+  return pBuffer;
+}
 AnalyzerSoft::Sync::Sync(AnalyzerSoft *parent, const string &server, const string &user, const string &pass) {
   pParent       = parent;
   pServer       = server;
@@ -57,57 +76,47 @@ void AnalyzerSoft::Sync::CurlUnlockCallback(CURL *handle, curl_lock_data data, v
   pthread_mutex_unlock((pthread_mutex_t*)userptr); 
 }
 size_t AnalyzerSoft::Sync::CurlWriteCallback(void *contents, size_t size, size_t nmemb, void *userp) {
-  CurlBuff_t *Buffer = (CurlBuff_t*)userp;
-  if((Buffer->Size + size * nmemb + 1) > Buffer->MaxSize) {
-    Buffer->Buffer = (char*)realloc(Buffer->Buffer, Buffer->Size + size * nmemb + 1);
-    if(Buffer->Buffer == NULL) {
-      return 0;
-    } else {
-      Buffer->MaxSize = Buffer->Size + size * nmemb + 1;
-    }
-  }
-  memcpy(&Buffer->Buffer[Buffer->Size], contents, size * nmemb);
-  Buffer->Size += size * nmemb;
-  Buffer->Buffer[Buffer->Size] = 0;
+  CurlBuff *Buffer = (CurlBuff*)userp;
+  if(Buffer->Append(contents, size * nmemb) == false) return 0;
   return size * nmemb;
 }
-uint16_t AnalyzerSoft::Sync::CurlSendPost(CURL **curl, const string &url, const string &contents, CurlBuff_t *buffer) {
-  buffer->Size = 0;
-  if(*curl == NULL) {
-    *curl = curl_easy_init();
-    curl_easy_setopt(*curl, CURLOPT_SHARE, pCurl);
-    curl_easy_setopt(*curl, CURLOPT_HTTPHEADER, pCurlHeaders);
-    curl_easy_setopt(*curl, CURLOPT_COOKIEFILE, "");
-    curl_easy_setopt(*curl, CURLOPT_POST, 1L);
-    curl_easy_setopt(*curl, CURLOPT_ACCEPT_ENCODING, "");
-    curl_easy_setopt(*curl, CURLOPT_WRITEDATA, (void*)buffer);
-    curl_easy_setopt(*curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback);
-  }
-  curl_easy_setopt(*curl, CURLOPT_URL, url.c_str());
-  curl_easy_setopt(*curl, CURLOPT_POSTFIELDS, contents.c_str());
-  curl_easy_setopt(*curl, CURLOPT_POSTFIELDSIZE, contents.size());
-  long Code = curl_easy_perform(*curl);
+uint16_t AnalyzerSoft::Sync::CurlSendPost(const string &url, const string &contents, AnalyzerSoft::Sync::CurlBuff *buffer) {
+  CURL      *Curl = NULL;
+  Curl = curl_easy_init();
+  curl_easy_setopt(Curl, CURLOPT_SHARE, pCurl);
+  curl_easy_setopt(Curl, CURLOPT_HTTPHEADER, pCurlHeaders);
+  curl_easy_setopt(Curl, CURLOPT_COOKIEFILE, "");
+  curl_easy_setopt(Curl, CURLOPT_POST, 1L);
+  curl_easy_setopt(Curl, CURLOPT_ACCEPT_ENCODING, "");
+  curl_easy_setopt(Curl, CURLOPT_WRITEDATA, (void*)buffer);
+  curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, CurlWriteCallback);
+  curl_easy_setopt(Curl, CURLOPT_URL, url.c_str());
+  curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, contents.c_str());
+  curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, contents.size());
+  curl_easy_setopt(Curl, CURLOPT_TIMEOUT, 20L);
+  long Code = curl_easy_perform(Curl);
   if(Code == CURLE_OK) {
     long HTTPCode;
-    curl_easy_getinfo(*curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
+    curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
+    curl_easy_cleanup(Curl);
     return HTTPCode;
   }
+  curl_easy_cleanup(Curl);
   return Code;
 }
 void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
   Sync *This = (Sync*)args;
-  CurlBuff_t Buffer = { .Buffer = NULL };
-  CURL      *Curl   = NULL;
   while(This->pTerminate == false) {
     This->pLocks.ReadLock();
+    CurlBuff Buffer;
     if(This->pLogged == false) {
       json   Content = json::object();
       Content["Username"] = This->pUser;
       Content["Password"] = This->pPass;
       Content["UpdateLastLogin"] = false;
-      uint32_t Code = This->CurlSendPost(&Curl, This->pServer + "/LogIn", Content.dump(), &Buffer);
+      uint32_t Code = This->CurlSendPost(This->pServer + "/LogIn", Content.dump(), &Buffer);
       if(Code == MHD_HTTP_OK) {
-        json Content = json::parse(Buffer.Buffer, NULL, false);
+        json Content = json::parse(Buffer.Data(), NULL, false);
         if(!Content.is_discarded() && Content.is_object() && Content["Result"].is_boolean() && (Content["Result"] == true)) {
           This->pLogged = Content["Result"];
           if(This->pLogged) LOGFile::Info("Analyzer '%s' logged on remote server\n", This->pParent->pSerial.c_str());
@@ -119,13 +128,11 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
       if(This->pLogged == false) usleep(1000000);
     } else {
       json   Content = json::object();
-      This->pParent->pMembersLocks.ReadLock();
       Content["Analyzer"] = This->pParent->pSerial;
       Content["Name"] = This->pParent->pName;
-      This->pParent->pMembersLocks.ReadUnlock();
-      uint32_t Code = This->CurlSendPost(&Curl, This->pServer + "/getRemote", Content.dump(), &Buffer);
+      uint32_t Code = This->CurlSendPost(This->pServer + "/getRemote", Content.dump(), &Buffer);
       if(Code == MHD_HTTP_OK) {
-        json Content = json::parse(Buffer.Buffer, NULL, false);
+        json Content = json::parse(Buffer.Data(), NULL, false);
         if(!Content.is_discarded() && Content.is_array()) {
           for(uint32_t n = 0; n < Content.size(); n++) {
             if(Content[n].is_object() && Content[n]["Sequence"].is_number() && Content[n]["Method"].is_string() && Content[n]["Params"].is_object()) {
@@ -140,30 +147,29 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
                 LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
                 delete Request;
               } else {
-                This->pLocks.ReadLock();
                 This->pThreadsCount++;
-                This->pLocks.ReadUnlock();
                 pthread_detach(Thread);
               }
             }
           }
         }
       } else if(Code == MHD_HTTP_UNAUTHORIZED) {
-//        LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pSerial.c_str());
-//        usleep(1000000);
-//        Registered = false;
-//      } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_NO_CONTENT)) {
-//        LOGFile::Debug("No pending queries in remote server for analyzar '%s'\n", This->pSerial.c_str());
-//      } else if((Code == CURLE_OK) && (HTTPCode == MHD_HTTP_METHOD_NOT_ALLOWED)) {
-//        LOGFile::Debug("Device remote is not enabled on remote server\n");
-//        usleep(1000000);
-//      } else {
-//        LOGFile::Debug("Failed request to remote server for analyzer '%s'\n", This->pSerial.c_str());
-//        usleep(1000000);
+        LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pParent->pSerial.c_str());
+        usleep(1000000);
+        This->pLogged = false;
+      } else if((Code == MHD_HTTP_NO_CONTENT)) {
+        LOGFile::Debug("No pending queries in remote server for analyzar '%s'\n", This->pParent->pSerial.c_str());
+      } else if((Code == MHD_HTTP_METHOD_NOT_ALLOWED)) {
+        LOGFile::Debug("Device remote is not enabled on remote server\n");
+        usleep(1000000);
+      } else {
+        LOGFile::Error("Failed request to remote server for analyzer '%s'\n", This->pParent->pSerial.c_str());
+        usleep(1000000);
       }
     }
+    This->pLocks.ReadUnlock();
   }
-  curl_easy_cleanup(Curl);
+
   return NULL;
 }
 void *AnalyzerSoft::Sync::Request_Thread(void *args) {
@@ -171,6 +177,7 @@ void *AnalyzerSoft::Sync::Request_Thread(void *args) {
   This->Params["UserName"] = "admin";
   string ParamsText = This->Params.dump();
   size_t ParamsSize = ParamsText.size();
+  This->Sync->pLocks.ReadLock();
   LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
   HTTPRequest *Request = new HTTPRequest(NULL, false);
   Request->AppendParams(ParamsText.c_str(), &ParamsSize);
@@ -218,23 +225,22 @@ void *AnalyzerSoft::Sync::Request_Thread(void *args) {
   } else if(This->Method == "delAlarm") {
     This->Analyzer->DelAlarm(*Request);
   }
-  CURL      *Curl = NULL;
-  CurlBuff_t Buffer = { .Buffer = NULL };
+  CurlBuff Buffer;
   json Content = json::object();
   Content["Code"] = Request->ResultCode();
   Content["Sequence"] = This->Sequence;
   Content["Analyzer"] = This->Analyzer->pSerial;
   Content["Response"] = Request->Content();
-  uint32_t Code = This->Sync->CurlSendPost(&Curl, This->Sync->pServer +  "/setRemote", Content.dump(), &Buffer);
+  uint32_t Code = This->Sync->CurlSendPost(This->Sync->pServer +  "/setRemote", Content.dump(), &Buffer);
   if(Code == MHD_HTTP_OK) {
     LOGFile::Debug("Remote request '%s' for analyzer '%s' completed\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
   } else {
     LOGFile::Error("Remote request '%s' for analyzer '%s' failed\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
   }
-  This->Sync->pLocks.ReadLock();
-  This->Sync->pThreadsCount++;
   This->Sync->pLocks.ReadUnlock();
-  curl_easy_cleanup(Curl);
+  This->Sync->pLocks.WriteLock();
+  This->Sync->pThreadsCount--;
+  This->Sync->pLocks.WriteUnlock();
   delete Request;
   return NULL;
 }

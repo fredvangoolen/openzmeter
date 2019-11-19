@@ -54,6 +54,12 @@ class Device {
     bool DelRate(HTTPRequest &req);
     bool AddRate(HTTPRequest &req);
     bool GetPrices(HTTPRequest &req);
+    bool TestAlarm(HTTPRequest &req);
+    bool GetAlarms(HTTPRequest &req);
+    bool GetAlarm(HTTPRequest &req);
+    bool SetAlarm(HTTPRequest &req);
+    bool AddAlarm(HTTPRequest &req);
+    bool DelAlarm(HTTPRequest &req);  
   public :
     virtual ~Device();
 };
