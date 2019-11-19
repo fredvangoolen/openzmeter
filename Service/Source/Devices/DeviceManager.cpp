@@ -321,7 +321,7 @@ void DeviceManager::GetRateCallback(HTTPRequest &req) {
 void DeviceManager::SetRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["RateID"].is_number() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["CountryCode"].is_string()) return req.FromString("'RateID', StartDate', 'EndDate', 'CountryCode' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  if(!Params["RateID"].is_number() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["Config"].is_object() || !Params["Template"].is_object()) return req.FromString("'RateID', StartDate', 'EndDate', 'Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
   pDevicesLock.ReadLock();
   for(uint n = 0; n != pDevices.size(); n++) {
@@ -331,8 +331,7 @@ void DeviceManager::SetRateCallback(HTTPRequest &req) {
 }
 void DeviceManager::DelRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["RateID"].is_number() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["CountryCode"].is_string()) return req.FromString("'RateID', StartDate', 'EndDate', 'CountryCode' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  if(!Params["Analyzer"].is_string() || !Params["RateID"].is_number()) return req.FromString("'Analyzer' and 'RateID0 params are requiered", MHD_HTTP_BAD_REQUEST);
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
   pDevicesLock.ReadLock();
   for(uint n = 0; n != pDevices.size(); n++) {
@@ -343,7 +342,7 @@ void DeviceManager::DelRateCallback(HTTPRequest &req) {
 void DeviceManager::AddRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["CountryCode"].is_string()) return req.FromString("'StartDate', 'EndDate', 'CountryCode' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["TimeZone"].is_string()) return req.FromString("'StartDate', 'EndDate', 'TimeZone' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
   pDevicesLock.ReadLock();
   for(uint n = 0; n != pDevices.size(); n++) {
@@ -364,6 +363,15 @@ void DeviceManager::GetPricesCallback(HTTPRequest &req) {
   pDevicesLock.ReadUnlock();
 }
 void DeviceManager::TestAlarmCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string() || !Params["Expression"].is_string()) return req.FromString("'Analyzer' and 'Expression' params are requiered", MHD_HTTP_BAD_REQUEST);
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  pDevicesLock.ReadLock();
+  for(uint n = 0; n != pDevices.size(); n++) {
+    if(pDevices[n]->TestAlarm(req) == true) break;
+  }
+  pDevicesLock.ReadUnlock();
 }
 void DeviceManager::GetAlarmsCallback(HTTPRequest &req) {
 }

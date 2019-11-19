@@ -17,10 +17,10 @@
 #include "FFT.h"
 #include "Sync.h"
 //----------------------------------------------------------------------------------------------------------------------
-vector<float> AnalyzerSoft::FrequencyRanges  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
-vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
-vector<float> AnalyzerSoft::THDRanges        = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
-vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
+const vector<float> AnalyzerSoft::FrequencyRanges  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
+const vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
+const vector<float> AnalyzerSoft::THDRanges        = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
+const vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id) {
   LOGFile::Debug("Creating AnalyzerSoft database tables\n");
@@ -40,11 +40,6 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pBlockCycles.reserve(20);
   pLastSamples.resize((pMode == PHASE1) ? 1 : 3);
   InitAggreg(pAggreg10C, AGGREG_10C);
-  InitAggreg(pAggreg3S, AGGREG_3S);
-  InitAggreg(pAggreg1M, AGGREG_1M);
-  InitAggreg(pAggreg10M, AGGREG_10M);
-  InitAggreg(pAggreg15M, AGGREG_15M);
-  InitAggreg(pAggreg1H, AGGREG_1H);
   for(uint8_t i = 0; i < pVoltageSamples.size(); i++) pVoltageFFT.push_back(new FFT("FFT_V" + to_string(i)));
   for(uint8_t i = 0; i < pCurrentSamples.size(); i++) pCurrentFFT.push_back(new FFT("FFT_I" + to_string(i)));
   Configure(ConfigManager::ReadConfig(optionPath));
@@ -57,9 +52,13 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
 }
 AnalyzerSoft::~AnalyzerSoft() {
   pMembersLocks.WriteLock();
-  pTerminate = true;
+  if(pSync != NULL) {
+    pSync = NULL;
+    delete pSync;
+  }
+  pMembersLocks.WriteUnlock();
+  pTerminate = true;  
   pAnalyzerWorkerLocks.Abort(&pAnalyzerThread);
-  if(pSync != NULL) delete pSync;
   if(pEventsDetector != NULL) delete pEventsDetector;
   while(pVoltageFFT.size() > 0) {
     FFT *Tmp = pVoltageFFT.back();
@@ -125,7 +124,6 @@ void AnalyzerSoft::Configure(const json &options) {
     pDelayVoltage.resize(PhaseShift, vector<float>(pVoltageSamples.size(), 0.0));
     pDelayCurrent.resize(PhaseShift, vector<float>(pCurrentSamples.size(), 0.0));
   } else {
-    pBlockCycles.clear();
     pDelayVoltage.resize(1, vector<float>(pVoltageSamples.size(), 0.0));
     pDelayCurrent.resize(1, vector<float>(pCurrentSamples.size(), 0.0));
   }
@@ -149,8 +147,7 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
       Outs[i] = Out;
     }
   }
-  pMembersLocks.ReadUnlock();
-  if(pBlockCycles.size() == pBlockCycles.capacity()) pBlockCycles.clear();
+  if((pBlockCycles.size() == pBlockCycles.capacity()) || (pNominalFrequency == 0)) pBlockCycles.clear();
   pCycleLen++;
   if(pNominalFrequency != 0) {
     if((((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) && (pCycleLen > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))){
@@ -159,8 +156,9 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
       if(pCycles.size() > (ZEROCROSSING_SECONDS * pNominalFrequency)) pCycles.pop_front();
       pCycleLen = 0;
     }
-    pLastSamples = Outs;  
+    pLastSamples = Outs;
   }
+  pMembersLocks.ReadUnlock();
   if((pBlockCycles.size() == pBlockCycles.capacity()) || (pVoltageSamples[0].size() == pMaxSamples)) {
     pAnalyzerWorkerLocks.WakeWorker();
     return true;
@@ -315,16 +313,6 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
   Tools::SendUDP(Result);
   pLastSave = Tools::GetTime();
 }
-float AnalyzerSoft::CalcFrequency() {
-  uint32_t Samples = 0;
-  uint32_t MinCycle = pSamplerate / (pNominalFrequency * 1.15 * 2.0);
-  uint32_t MaxCycle = pSamplerate / (pNominalFrequency * 0.85 * 2.0);
-  for(uint i = 0; i < pCycles.size(); i++) {
-    if((pCycles[i] < MinCycle) || (pCycles[i] > MaxCycle)) return NAN;
-    Samples += pCycles[i];
-  }
-  return pCycles.size() / ((2.0 * Samples) / pSamplerate);
-}
 float AnalyzerSoft::CalcChange(const float in, const float reference) {
   return ((in - reference) / reference) * 100;
 }
@@ -332,8 +320,18 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
   AnalyzerSoft *This = (AnalyzerSoft*)args;
   uint64_t Sequence      = 0;
   uint64_t PrevTimestamp = 0;
+  Params_t Aggreg3S;
+  This->InitAggreg(Aggreg3S, AGGREG_3S);
+  Params_t Aggreg1M;
+  This->InitAggreg(Aggreg1M, AGGREG_1M);
+  Params_t Aggreg10M;
+  This->InitAggreg(Aggreg10M, AGGREG_10M);
+  Params_t Aggreg15M;
+  This->InitAggreg(Aggreg15M, AGGREG_15M);
+  Params_t Aggreg1H;
+  This->InitAggreg(Aggreg1H, AGGREG_1H);
   while(This->pTerminate == false) {
-    if(This->pAnalyzerWorkerLocks.WorkerWaitTask() == false) break;
+    if(This->pAnalyzerWorkerLocks.WorkerWaitTask() == false) return NULL;
     uint64_t Start = Tools::GetTime();
     This->pAggreg10C.Timestamp = Start;
     //Init FFTs and event detection threads
@@ -341,7 +339,20 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     if(This->pEventsDetector != NULL) This->pEventsDetector->Start();
     for(uint i = 0; i < This->pVoltageFFT.size(); i++) This->pVoltageFFT[i]->Start(This->pVoltageSamples[i]);
     for(uint i = 0; i < This->pCurrentFFT.size(); i++) This->pCurrentFFT[i]->Start(This->pCurrentSamples[i]);
-    if(This->pNominalFrequency != 0) This->pAggreg10C.Frequency = This->CalcFrequency();
+    if(This->pNominalFrequency != 0) {
+      uint32_t Samples = 0;
+      uint32_t MinCycle = This->pSamplerate / (This->pNominalFrequency * 1.15 * 2.0);
+      uint32_t MaxCycle = This->pSamplerate / (This->pNominalFrequency * 0.85 * 2.0);
+      for(uint i = 0; i < This->pCycles.size(); i++) {
+        if((This->pCycles[i] < MinCycle) || (This->pCycles[i] > MaxCycle)) {
+          Samples = 0;
+          break;
+        } else {
+          Samples += This->pCycles[i];
+        }
+      }
+      This->pAggreg10C.Frequency = (Samples == 0) ? NAN : This->pCycles.size() / ((2.0 * Samples) / This->pSamplerate);
+    }
     if(!isnan(This->pAggreg10C.Frequency)) This->pAggreg10C.Frequency_Inputs = 1;
     bool Valid = false;
     vector<float> RMS = vector<float>(This->pAggreg10C.Voltage.size(), 0);
@@ -408,77 +419,77 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     }
     if(This->pEventsDetector != NULL) This->pEventsDetector->Wait();
     //Save results
-    This->PNowDataLock.ProviderWrite();
     if(((Sequence % 15) == 0) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 3S aggregation\n");
-      This->NormalizeAggreg(This->pAggreg3S);
-      if(This->pAggreg3S.Flag == false) {
-        float Variation = This->CalcChange(This->pAggreg3S.Frequency, This->pNominalFrequency);
+      This->NormalizeAggreg(Aggreg3S);
+      if(Aggreg3S.Flag == false) {
+        float Variation = This->CalcChange(Aggreg3S.Frequency, This->pNominalFrequency);
         for(uint Range = 0; Range < 40; Range++) {
-          if((Variation >= FrequencyRanges[Range]) && (Variation < FrequencyRanges[Range + 1])) This->pAggreg1H.StatsFrequency[Range]++;
+          if((Variation >= FrequencyRanges[Range]) && (Variation < FrequencyRanges[Range + 1])) Aggreg1H.StatsFrequency[Range]++;
         }
       }
-      This->SaveAggreg(This->pAggreg3S);
-      This->InitAggreg(This->pAggreg3S, AGGREG_3S);
+      This->SaveAggreg(Aggreg3S);
+      This->InitAggreg(Aggreg3S, AGGREG_3S);
     }
-    This->AccumulateAggreg(This->pAggreg3S, This->pAggreg10C);
+    This->AccumulateAggreg(Aggreg3S, This->pAggreg10C);
     if(((This->pAggreg10C.Timestamp / 60000) > (PrevTimestamp / 60000)) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 1M aggregation\n");
-      This->pAggreg1M.Timestamp = This->pAggreg1M.Timestamp / 60000 * 60000 + 59999;
-      This->NormalizeAggreg(This->pAggreg1M);
-      This->SaveAggreg(This->pAggreg1M);
-      This->InitAggreg(This->pAggreg1M, AGGREG_1M);
+      Aggreg1M.Timestamp = Aggreg1M.Timestamp / 60000 * 60000 + 59999;
+      This->NormalizeAggreg(Aggreg1M);
+      This->SaveAggreg(Aggreg1M);
+      This->InitAggreg(Aggreg1M, AGGREG_1M);
     }
-    This->AccumulateAggreg(This->pAggreg1M, This->pAggreg10C);
+    This->AccumulateAggreg(Aggreg1M, This->pAggreg10C);
     if(((This->pAggreg10C.Timestamp / 600000) > (PrevTimestamp / 600000)) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 10M aggregation\n");
-      This->pAggreg10M.Timestamp = This->pAggreg10M.Timestamp / 600000 * 600000 + 599999;
-      This->NormalizeAggreg(This->pAggreg10M);
-      if(This->pAggreg10M.Flag == false) {
-        for(uint i = 0; i < This->pAggreg10M.Voltage.size(); i++) {
-          float Variation = This->CalcChange(This->pAggreg10M.Voltage[i], This->pNominalVoltage);
+      Aggreg10M.Timestamp = Aggreg10M.Timestamp / 600000 * 600000 + 599999;
+      This->NormalizeAggreg(Aggreg10M);
+      if(Aggreg10M.Flag == false) {
+        for(uint i = 0; i < Aggreg10M.Voltage.size(); i++) {
+          float Variation = This->CalcChange(Aggreg10M.Voltage[i], This->pNominalVoltage);
           for(uint Range = 0; Range < (VoltageRanges.size() - 1); Range++) {
-            if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) This->pAggreg1H.StatsVoltage[Range]++;
+            if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) Aggreg1H.StatsVoltage[Range]++;
           }
           for(uint Range = 0; Range < (THDRanges.size() - 1); Range++) {
-            if((This->pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (This->pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) This->pAggreg1H.StatsTHD[Range]++;
+            if((Aggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (Aggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) Aggreg1H.StatsTHD[Range]++;
           }
           bool HarmonicsInRange = true;
           for(uint n = 0; n < HarmonicsAllowed.size(); n++) {
-            float Variation = This->CalcChange(sqrt(norm(This->pAggreg10M.Voltage_Harmonics[i][n + 1])), This->pNominalVoltage);
+            float Variation = This->CalcChange(sqrt(norm(Aggreg10M.Voltage_Harmonics[i][n + 1])), This->pNominalVoltage);
             if(Variation > HarmonicsAllowed[n]) {
               HarmonicsInRange = false;
               break;
              }
           }
           if(HarmonicsInRange == true) {
-            This->pAggreg1H.StatsHarmonics[0]++;
+            Aggreg1H.StatsHarmonics[0]++;
           } else {
-            This->pAggreg1H.StatsHarmonics[1]++;
+            Aggreg1H.StatsHarmonics[1]++;
           }
         }
       }
-      This->SaveAggreg(This->pAggreg10M);
-      This->InitAggreg(This->pAggreg10M, AGGREG_10M);
+      This->SaveAggreg(Aggreg10M);
+      This->InitAggreg(Aggreg10M, AGGREG_10M);
     }
     This->pMembersLocks.ReadUnlock();
-    This->AccumulateAggreg(This->pAggreg10M, This->pAggreg10C);
+    This->PNowDataLock.ProviderWrite();
+    This->AccumulateAggreg(Aggreg10M, This->pAggreg10C);
     if(((This->pAggreg10C.Timestamp / 900000) > (PrevTimestamp / 900000)) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 15M aggregation\n");
-      This->pAggreg15M.Timestamp = This->pAggreg15M.Timestamp / 900000 * 900000 + 899999;
-      This->NormalizeAggreg(This->pAggreg15M);
-      This->SaveAggreg(This->pAggreg15M);
-      This->InitAggreg(This->pAggreg15M, AGGREG_15M);
+      Aggreg15M.Timestamp = Aggreg15M.Timestamp / 900000 * 900000 + 899999;
+      This->NormalizeAggreg(Aggreg15M);
+      This->SaveAggreg(Aggreg15M);
+      This->InitAggreg(Aggreg15M, AGGREG_15M);
     }
-    This->AccumulateAggreg(This->pAggreg15M, This->pAggreg10C);
+    This->AccumulateAggreg(Aggreg15M, This->pAggreg10C);
     if(((This->pAggreg10C.Timestamp / 3600000) > (PrevTimestamp / 3600000)) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 1H aggregation\n");
-      This->pAggreg1H.Timestamp = This->pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
-      This->NormalizeAggreg(This->pAggreg1H);
-      This->SaveAggreg(This->pAggreg1H);
-      This->InitAggreg(This->pAggreg1H, AGGREG_1H);
+      Aggreg1H.Timestamp = Aggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
+      This->NormalizeAggreg(Aggreg1H);
+      This->SaveAggreg(Aggreg1H);
+      This->InitAggreg(Aggreg1H, AGGREG_1H);
     }
-    This->AccumulateAggreg(This->pAggreg1H, This->pAggreg10C);
+    This->AccumulateAggreg(Aggreg1H, This->pAggreg10C);
     PrevTimestamp = This->pAggreg10C.Timestamp;
     if(This->pSave10c) This->SaveAggreg(This->pAggreg10C);
     json Status = json::object();
@@ -824,7 +835,6 @@ void AnalyzerSoft::GetRate(HTTPRequest &req) {
 void AnalyzerSoft::SetRate(HTTPRequest &req) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
-  if(!Params["RateID"].is_number() || !Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) return req.FromString("'RateID', 'StartDate', 'EndDate', Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
   uint64_t Start    = Params["StartDate"];
   uint64_t End      = Params["EndDate"];
   string   Name     = Params["Name"];
@@ -866,7 +876,6 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   uint64_t To         = Params["To"];
   uint64_t Period     = Params["Period"];
   uint64_t LastSample = Params.value<uint64_t>("LastSample", 0);
-  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
   string   Aggreg     = Params["Aggreg"];
   uint64_t Now        = Tools::GetTime();
   if(To == 0) To = Now;
@@ -961,6 +970,27 @@ void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   req.FromJSON(Result);
 }
 void AnalyzerSoft::TestAlarm(HTTPRequest &req) {
+  if(CheckRights(req, READ) == false) return;
+  //Parse, check params and prepare result struct
+  json Params = req.GetParams();
+  string   Aggreg     = Params["Aggreg"];
+  string   Expression = Params["Expression"];
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
+  if(Aggreg == "3S") 
+    req.ExecSentenceAsyncResult("SELECT * FROM aggreg_3s ORDER BY sampletime ASC LIMIT 1");
+  else if(Aggreg == "1M")
+    req.ExecSentenceAsyncResult("SELECT * FROM aggreg_3s ORDER BY sampletime ASC LIMIT 1");
+    
+  //requiere agreg y expresion las agregaciones son las normales mas BILLING, que aun no esta definido
+  //tambien se añadiran ofras variables como tension nominal, frecuencia nominal
+  
+  
+  //ejecuto la consulta para obtener el ultimo valor disponible de la consulta que sea (CON LIMIT)
+  
+  //devuelve todos los valores disponibles en la agregacion seleccionada
+  //Devuelve el resultado de la evaluacion
+  
+  
 }
 void AnalyzerSoft::GetAlarms(HTTPRequest &req) {
 }

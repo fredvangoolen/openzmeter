@@ -6,12 +6,17 @@
 #include <curl/curl.h>
 #include "AnalyzerSoft.h"
 class AnalyzerSoft::Sync final {
+  class CurlBuff final {
+    private :
+      char  *pBuffer;
+      size_t pSize;
+    public :
+      CurlBuff();
+      ~CurlBuff();
+      bool Append(void *data, uint32_t size);
+      char *Data();
+  };
   private :
-    typedef struct {
-      char  *Buffer;
-      size_t Size;
-      size_t MaxSize;
-    } CurlBuff_t;
     typedef struct {
       json                Params;
       string              Method;
@@ -39,7 +44,7 @@ class AnalyzerSoft::Sync final {
     static void     CurlLockCallback(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr);
     static void     CurlUnlockCallback(CURL *handle, curl_lock_data data, void *userptr);
   private :
-    uint16_t CurlSendPost(CURL **handle, const string &url, const string &contents, CurlBuff_t *buffer);
+    uint16_t CurlSendPost(const string &url, const string &contents, CurlBuff *buffer);
   public:
     Sync(AnalyzerSoft *parent, const string &server, const string &user, const string &pass);
     ~Sync();

@@ -228,6 +228,9 @@ bool  DeviceV2_01::StartDevice() {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
       libusb_exit(pContext);
     } else {
+      pButtonAction = false;
+      pDeviceHandle = NULL;
+      pNewDevice    = NULL;
       pthread_setname_np(pCaptureThread, "DeviceV2_01");
       if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV2_01_VID, DEVICEV2_01_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
         LOGFile::Error("Failed to register libUSB calback...\n");
@@ -263,9 +266,6 @@ bool  DeviceV2_01::StopDevice() {
 }
 void *DeviceV2_01::Capture_Thread(void *args) {
   DeviceV2_01 *This   = (DeviceV2_01*)args;
-  This->pButtonAction = false;
-  This->pDeviceHandle = NULL;
-  This->pNewDevice    = NULL;
   uint64_t   LastSignalSend = 0;
   for(int i = 0; i < DEVICEV2_01_TRANSFERS; i++) This->pTransfers[i].Transfer = libusb_alloc_transfer(0);
   This->pSignalTransfer.Transfer = libusb_alloc_transfer(0);
@@ -313,7 +313,6 @@ void *DeviceV2_01::Capture_Thread(void *args) {
       Status |= (This->pHighGain == true) ? 0x4000 : 0x0000;
       memcpy(This->pSignalTransfer.Buffer, &Status, sizeof(Status));
       libusb_submit_transfer(This->pSignalTransfer.Transfer);
-      printf("sending 0x%04X\n", Status);
       LastSignalSend = Tools::GetTime();
     }
     if(This->pNewDevice != NULL) {
@@ -345,7 +344,7 @@ void *DeviceV2_01::Capture_Thread(void *args) {
         This->pDeviceHandle = NULL; 
         This->pNewDevice = NULL;
         continue;
-      }        
+      }
       Result = libusb_kernel_driver_active(This->pDeviceHandle, 0);
       if(Result < LIBUSB_SUCCESS) {
         LOGFile::Error("libusb_kernel_driver_active returns %d\n", Result);

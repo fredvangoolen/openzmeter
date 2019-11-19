@@ -216,3 +216,57 @@ bool Device::GetPrices(HTTPRequest &req) {
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
+bool Device::TestAlarm(HTTPRequest &req) {
+  json Params = req.GetParams();
+  string Serial = Params["Analyzer"];
+  pMembersLock.ReadLock();
+  Analyzer *Tmp = FindAnalyzer(Serial);
+  if(Tmp != NULL) Tmp->TestAlarm(req);
+  pMembersLock.ReadUnlock();
+  return (Tmp != NULL);
+}
+bool Device::GetAlarms(HTTPRequest &req) {
+  json Params = req.GetParams();
+  string Serial = Params["Analyzer"];
+  pMembersLock.ReadLock();
+  Analyzer *Tmp = FindAnalyzer(Serial);
+  if(Tmp != NULL) Tmp->GetAlarms(req);
+  pMembersLock.ReadUnlock();
+  return (Tmp != NULL);
+}
+bool Device::GetAlarm(HTTPRequest &req) {
+  json Params = req.GetParams();
+  string Serial = Params["Analyzer"];
+  pMembersLock.ReadLock();
+  Analyzer *Tmp = FindAnalyzer(Serial);
+  if(Tmp != NULL) Tmp->GetAlarm(req);
+  pMembersLock.ReadUnlock();
+  return (Tmp != NULL);
+}
+bool Device::SetAlarm(HTTPRequest &req) {
+  json Params = req.GetParams();
+  string Serial = Params["Analyzer"];
+  pMembersLock.ReadLock();
+  Analyzer *Tmp = FindAnalyzer(Serial);
+  if(Tmp != NULL) Tmp->SetAlarm(req);
+  pMembersLock.ReadUnlock();
+  return (Tmp != NULL);
+}
+bool Device::AddAlarm(HTTPRequest &req) {
+  json Params = req.GetParams();
+  string Serial = Params["Analyzer"];
+  pMembersLock.ReadLock();
+  Analyzer *Tmp = FindAnalyzer(Serial);
+  if(Tmp != NULL) Tmp->AddAlarm(req);
+  pMembersLock.ReadUnlock();
+  return (Tmp != NULL);
+}
+bool Device::DelAlarm(HTTPRequest &req) {
+  json Params = req.GetParams();
+  string Serial = Params["Analyzer"];
+  pMembersLock.ReadLock();
+  Analyzer *Tmp = FindAnalyzer(Serial);
+  if(Tmp != NULL) Tmp->DelAlarm(req);
+  pMembersLock.ReadUnlock();
+  return (Tmp != NULL);
+}

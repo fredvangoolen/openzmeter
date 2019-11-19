@@ -10,7 +10,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 EXECUTABLE_TARGET = Tmp/openZmeter
 EXECUTABLE_SOURCE = Source/Tools.cpp Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/SysSupport.cpp Source/Devices/DeviceManager.cpp Source/Devices/Device.cpp Source/Analyzers/Analyzer.cpp Source/Tariffs/Tariff.cpp 
 CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs 
-LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread -lcurl
+LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread
 
 #Add libs (cctz, nlohmann, muparser)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
@@ -69,7 +69,7 @@ endif
 ifeq ($(ANALYZER_SOFT), true)
 	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/Soft/FFT.cpp Source/Analyzers/Soft/Events.cpp Source/Analyzers/Soft/Sync.cpp
 	CFLAGS += -I Source/Analyzers/Soft
-	LDFLAGS += -lfftw3f
+	LDFLAGS += -lfftw3f -lcurl
 endif
 ifeq ($(OS_TARGET), OPENWRT)
 	CFLAGS += -DOPENWRT

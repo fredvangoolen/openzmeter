@@ -23,6 +23,7 @@ class Analyzer {
     string      pSerial;                  //Serial number
     string      pName;                    //Analyzer description
   protected :
+    Analyzer(const string &id);
     bool CheckRights(HTTPRequest &req, const uint neededAccess);
   public :
     virtual void GetAnalyzer(HTTPRequest &req) = 0;
@@ -46,8 +47,7 @@ class Analyzer {
     virtual void SetAlarm(HTTPRequest &req) = 0;
     virtual void AddAlarm(HTTPRequest &req) = 0;
     virtual void DelAlarm(HTTPRequest &req) = 0;
-  public :
-    Analyzer(const string &id);
+  public :    
     virtual ~Analyzer();
     string Serial();
     json   GetJSONShortDescriptor();

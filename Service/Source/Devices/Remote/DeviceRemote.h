@@ -21,7 +21,6 @@ class DeviceRemote final : public Device {
     static json CheckConfig(const json &config);
   private :
     DeviceRemote();
-//    bool Start(const json &config);
     bool StartDevice();
     bool StopDevice();
     void GetDevice(HTTPRequest &req);
