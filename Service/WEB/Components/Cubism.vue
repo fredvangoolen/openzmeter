@@ -109,13 +109,13 @@
         },
         axes: {
           y: { drawAxis: false, drawGrid: false, valueFormatter: (val) => { var Result = oZm.FormatSerieValue(val, this.SerieProps); return Result.ValueHTML + Result.Units; } },
-          x: { valueFormatter: (x) => { return '<div class="x-axis">' + moment(x).format('hh:mm:ss') + '</div>'; },
+          x: { valueFormatter: (x) => { return '<div class="x-axis">' + moment(x).format('HH:mm:ss') + '</div>'; },
                axisLabelFormatter: (this.index !== 0) ? function() { return null; } : function(x, i) {
                  var date = moment(x);
                  if((date.hours() === 0) && (date.minutes() === 0) && (date.seconds() === 0)) {
                    return '<div class="timeline-day">' + moment(x).format('DD/MM') + '</div>';
                  } else {
-                   return '<div class="timeline">' + moment(x).format('hh:mm') + '</div>';                       
+                   return '<div class="timeline">' + moment(x).format('HH:mm') + '</div>';                       
                  }
                }
              }
