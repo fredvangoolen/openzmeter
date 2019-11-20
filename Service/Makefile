@@ -67,7 +67,7 @@ ifeq ($(DEVICE_REMOTE), true)
 	CFLAGS += -I Source/Analyzers/Remote
 endif
 ifeq ($(ANALYZER_SOFT), true)
-	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/Soft/FFT.cpp Source/Analyzers/Soft/Events.cpp Source/Analyzers/Soft/Sync.cpp
+	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/Soft/FFT.cpp Source/Analyzers/Soft/Events.cpp Source/Analyzers/Soft/Sync.cpp Source/Analyzers/Soft/Alarms.cpp Source/Analyzers/Soft/Rates.cpp
 	CFLAGS += -I Source/Analyzers/Soft
 	LDFLAGS += -lfftw3f -lcurl
 endif

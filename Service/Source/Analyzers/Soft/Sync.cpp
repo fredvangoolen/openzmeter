@@ -93,9 +93,9 @@ uint16_t AnalyzerSoft::Sync::CurlSendPost(const string &url, const string &conte
   curl_easy_setopt(Curl, CURLOPT_URL, url.c_str());
   curl_easy_setopt(Curl, CURLOPT_POSTFIELDS, contents.c_str());
   curl_easy_setopt(Curl, CURLOPT_POSTFIELDSIZE, contents.size());
-  curl_easy_setopt(Curl, CURLOPT_TIMEOUT, 20L);
+  curl_easy_setopt(Curl, CURLOPT_TIMEOUT, 30L);
   long Code = curl_easy_perform(Curl);
-  if(Code == CURLE_OK) {
+  if((Code == CURLE_OK) || (Code == CURLE_PARTIAL_FILE)) {
     long HTTPCode;
     curl_easy_getinfo(Curl, CURLINFO_RESPONSE_CODE, &HTTPCode);
     curl_easy_cleanup(Curl);
@@ -163,7 +163,7 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
         LOGFile::Debug("Device remote is not enabled on remote server\n");
         usleep(1000000);
       } else {
-        LOGFile::Error("Failed request to remote server for analyzer '%s'\n", This->pParent->pSerial.c_str());
+        LOGFile::Error("Failed request to remote server for analyzer '%s' (Code: %u)\n", This->pParent->pSerial.c_str(), Code);
         usleep(1000000);
       }
     }

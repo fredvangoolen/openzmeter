@@ -2,10 +2,11 @@
 #include <vector>
 #include <deque>
 #include <list>
+#include "HTTPServer.h"
 #include "Tools.h"
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define EVENT_RVC                        5.0        //% variation for RVC detection
+#define EVENT_RVC                        5.0        
 #define EVENT_DIP_SWELL                 10.0        //Variacion en % para generar subida o bajada
 #define EVENT_INTERRUPTION              90.0        //Bajada en % para generar interrupcion
 #define EVENT_INTERRUPTION_HYSTERESIS   40.0        //Interruption hysteresis
@@ -53,7 +54,10 @@ class AnalyzerSoft::Events final {
   public :
     Events(AnalyzerSoft *parent);
     ~Events();
+    void GetEvents(HTTPRequest &req);
+    void GetEvent(HTTPRequest &req);
+    void SetEvent(HTTPRequest &req);
+    void DelEvent(HTTPRequest &req);
     void Start();
     void Wait();
-    void Reset();
 };

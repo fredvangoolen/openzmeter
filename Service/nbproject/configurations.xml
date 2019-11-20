@@ -50,9 +50,13 @@
             <in>AnalyzerRemote.cpp</in>
           </df>
           <df name="Soft">
+            <in>Alarms.cpp</in>
+            <in>Alarms.h</in>
             <in>AnalyzerSoft.cpp</in>
             <in>Events.cpp</in>
             <in>FFT.cpp</in>
+            <in>Rates.cpp</in>
+            <in>Rates.h</in>
             <in>Sync.cpp</in>
           </df>
           <in>Analyzer.cpp</in>
@@ -135,6 +139,16 @@
           <cTool flags="0">
           </cTool>
           <ccTool flags="3">
+            <incDir>
+              <pElem>Libs/nlohmann</pElem>
+              <pElem>Source/Analyzers/Remote</pElem>
+              <pElem>Source</pElem>
+              <pElem>Source/Analyzers</pElem>
+              <pElem>/usr/include/postgresql</pElem>
+              <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
+              <pElem>Libs</pElem>
+              <pElem>.</pElem>
+            </incDir>
           </ccTool>
         </makeTool>
         <preBuild>
@@ -895,22 +909,9 @@
         <ccTool flags="1">
         </ccTool>
       </item>
-      <item path="Source/Analyzers/Remote/ElasticSearch.cpp"
-            ex="false"
-            tool="1"
-            flavor2="4">
-        <ccTool>
-          <incDir>
-            <pElem>Libs/nlohmann</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
-        </ccTool>
+      <item path="Source/Analyzers/Soft/Alarms.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/Analyzers/Soft/Alarms.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/Analyzers/Soft/AnalyzerSoft.cpp"
             ex="false"
@@ -980,6 +981,10 @@
             <pElem>.</pElem>
           </incDir>
         </ccTool>
+      </item>
+      <item path="Source/Analyzers/Soft/Rates.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Source/Analyzers/Soft/Rates.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Source/Analyzers/Soft/Sync.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="1">

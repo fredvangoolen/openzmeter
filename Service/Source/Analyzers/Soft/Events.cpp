@@ -13,10 +13,6 @@ AnalyzerSoft::Events::Events(AnalyzerSoft *parent) {
   }
   pthread_setname_np(pEventThread, "EventsDet");
 }
-void AnalyzerSoft::Events::Reset() {
-  pPrevSamples.resize(0);
-  pPrevCycles.resize(0);
-}
 void AnalyzerSoft::Events::Start() {
   pWorkerLocks.WakeWorker();
 }
@@ -260,4 +256,51 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
     This->pWorkerLocks.WorkerEndsTask();
   }
   return NULL;
+}
+void AnalyzerSoft::Events::GetEvents(HTTPRequest &req) {
+  json Params = req.GetParams();
+  uint64_t To = Params["To"];
+  uint64_t Period = Params["Period"];
+  uint64_t LastSample = Params["LastSample"];
+  if(To == 0) To = Tools::GetTime();
+  uint64_t From = To - Period;
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
+  req.ExecSentenceAsyncResult("SELECT json_build_object('From', " + req.Bind(From) + ", 'To', " + req.Bind(To) + ", 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
+                              "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
+                              "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
+                              "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To));
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
+}
+void AnalyzerSoft::Events::GetEvent(HTTPRequest &req) {
+  json Params = req.GetParams();
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
+  if((Params["Samples"] != "RMS") && (Params["Samples"] != "RAW")) return req.FromString("'Samples' params must be 'RMS' or 'RAW'", MHD_HTTP_BAD_REQUEST);
+  uint64_t ID = Params["StartTime"];
+  string Type = Params["Type"];
+  string Samples = Params["Samples"];
+  if(Samples == "RAW") {
+    req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', samples1, 'Samples', samples2, 'Post_Samples', samples3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+  } else {
+    req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', rms1, 'Samples', rms2, 'Post_Samples', rms3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+  }
+  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
+}
+void AnalyzerSoft::Events::SetEvent(HTTPRequest &req) {
+  json Params = req.GetParams();
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
+  uint64_t ID = Params["StartTime"];
+  string Type = Params["Type"];
+  string Notes = Params["Notes"];
+  bool Result = req.ExecSentenceNoResult("UPDATE events SET Notes = " + req.Bind(Notes) + " WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+}
+void AnalyzerSoft::Events::DelEvent(HTTPRequest &req) {
+  json Params = req.GetParams();
+  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
+  uint64_t ID = Params["StartTime"];
+  string Type = Params["Type"];
+  bool Result = req.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
 }
