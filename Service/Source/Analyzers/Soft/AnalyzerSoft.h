@@ -17,8 +17,11 @@ class AnalyzerSoft final : public Analyzer {
     class Events;
     class FFT;
     class Sync;
+    class Alarms;
+    class Rates;
+  public :
+      enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
   private :
-    enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
     typedef struct {
       AggregType                     Type;                 //Aggregation type
       float                          Frequency;            //Frecuencia
@@ -74,6 +77,8 @@ class AnalyzerSoft final : public Analyzer {
   private :  //Config params (Writed in configure, readed in other places)
     Events                    *pEventsDetector;          //Events detector
     Sync                      *pSync;                    //Synchronization object
+    Rates                     *pRates;                   //Rate control object
+    Alarms                    *pAlarms;                  //Alarms control object
     bool                       pSave10c;                 //Save 10 cycles aggregation to database
     float                      pNominalVoltage;          //Analyzer nominal voltage
     float                      pNominalFrequency;        //Analyzer nominal frequency
@@ -112,16 +117,19 @@ class AnalyzerSoft final : public Analyzer {
     void  GetSeries(HTTPRequest &req) override;
     void  GetSeriesNow(HTTPRequest &req) override;
     void  GetSeriesRange(HTTPRequest &req) override;
+  private : //Events related API
     void  GetEvents(HTTPRequest &req) override;
     void  GetEvent(HTTPRequest &req) override;
     void  SetEvent(HTTPRequest &req) override;
     void  DelEvent(HTTPRequest &req) override;
+  private : //Rates related API
     void  GetRates(HTTPRequest &req) override;
     void  GetRate(HTTPRequest &req) override;
     void  SetRate(HTTPRequest &req) override;
     void  DelRate(HTTPRequest &req) override;
     void  AddRate(HTTPRequest &req) override;
     void  GetPrices(HTTPRequest &req) override;
+  private : //Alarms related API
     void  TestAlarm(HTTPRequest &req) override;
     void  GetAlarms(HTTPRequest &req) override;
     void  GetAlarm(HTTPRequest &req) override;

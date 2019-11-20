@@ -9,16 +9,19 @@
 #include <sys/time.h>
 #include <sys/param.h>
 #include <unistd.h>
+#include "cctz/time_zone.h"
 #include "muParser/muParser.h"
 #include "AnalyzerSoft.h"
 #include "Tools.h"
 #include "SysSupport.h"
-#include "Tariff.h"
 #include "Events.h"
 #include "FFT.h"
 #include "Sync.h"
+#include "Rates.h"
+#include "Alarms.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
+using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 const vector<float> AnalyzerSoft::FrequencyRanges  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
 const vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
@@ -40,6 +43,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pCurrentSamples  = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(0.0));
   pEventsDetector  = NULL;
   pSync            = NULL;
+  pRates           = NULL;
+  pAlarms          = NULL;
   pBlockCycles.reserve(20);
   pLastSamples.resize((pMode == PHASE1) ? 1 : 3);
   InitAggreg(pAggreg10C, AGGREG_10C);
@@ -55,10 +60,9 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
 }
 AnalyzerSoft::~AnalyzerSoft() {
   pMembersLocks.WriteLock();
-  if(pSync != NULL) {
-    pSync = NULL;
-    delete pSync;
-  }
+  if(pSync != NULL) delete pSync;
+  if(pRates != NULL) delete pRates;
+  if(pAlarms != NULL) delete pAlarms;
   pMembersLocks.WriteUnlock();
   pTerminate = true;  
   pAnalyzerWorkerLocks.Abort(&pAnalyzerThread);
@@ -92,6 +96,18 @@ void AnalyzerSoft::Configure(const json &options) {
     pEventsDetector = NULL;
   } else if((EventsEnabled == true) && (pEventsDetector == NULL)) {
     pEventsDetector = new AnalyzerSoft::Events(this);
+  }
+  bool RatesEnabled = options["RatesEnabled"];
+  if((RatesEnabled == true) && (pRates != NULL)) {
+    delete pRates;  
+  } else if((RatesEnabled == true) && (pRates == NULL)) {
+    pRates = new AnalyzerSoft::Rates(this);
+  }
+  bool AlarmsEnabled = options["AlarmsEnabled"];
+  if((AlarmsEnabled == true) && (pAlarms != NULL)) {
+    delete pAlarms;  
+  } else if((AlarmsEnabled == true) && (pAlarms == NULL)) {
+    pAlarms = new AnalyzerSoft::Alarms(this);
   }
   bool SyncEnabled = options["RemoteEnabled"];
   if((SyncEnabled == false) && (pSync != NULL)) {
@@ -525,6 +541,8 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   ConfigOUT["RemotePass"] = "";
   ConfigOUT["Save10C"] = false;
   ConfigOUT["EventsEnabled"] = false;
+  ConfigOUT["RatesEnabled"] = false;
+  ConfigOUT["AlarmsEnabled"] = false;
   if(!config.is_object()) return ConfigOUT;
   if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
   if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
@@ -545,6 +563,8 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   if(config.contains("RemotePass") && config["RemotePass"].is_string()) ConfigOUT["RemotePass"] = config["RemotePass"];
   if(config.contains("Save10C") && config["Save10C"].is_boolean()) ConfigOUT["Save10C"] = config["Save10C"];
   if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
+  if(config.contains("RatesEnabled") && config["RatesEnabled"].is_boolean()) ConfigOUT["RatesEnabled"] = config["RatesEnabled"];
+  if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
   return ConfigOUT;
 }
 void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
@@ -769,276 +789,113 @@ void AnalyzerSoft::GetSeriesRange(HTTPRequest &req) {
 }
 void AnalyzerSoft::GetEvents(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  json Params = req.GetParams();
-  uint64_t To = Params["To"];
-  uint64_t Period = Params["Period"];
-  uint64_t LastSample = Params["LastSample"];
-  if(To == 0) To = Tools::GetTime();
-  uint64_t From = To - Period;
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  req.ExecSentenceAsyncResult("SELECT json_build_object('From', " + req.Bind(From) + ", 'To', " + req.Bind(To) + ", 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
-                              "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
-                              "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
-                              "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To));
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
+  pMembersLocks.ReadLock();
+  if(pEventsDetector != NULL) {
+    pEventsDetector->GetEvents(req);
+  } else {
+    req.FromString("Events detection disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::GetEvent(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  json Params = req.GetParams();
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  if((Params["Samples"] != "RMS") && (Params["Samples"] != "RAW")) return req.FromString("'Samples' params must be 'RMS' or 'RAW'", MHD_HTTP_BAD_REQUEST);
-  uint64_t ID = Params["StartTime"];
-  string Type = Params["Type"];
-  string Samples = Params["Samples"];
-  if(Samples == "RAW") {
-    req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', samples1, 'Samples', samples2, 'Post_Samples', samples3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+  pMembersLocks.ReadLock();
+  if(pEventsDetector != NULL) {
+    pEventsDetector->GetEvent(req);
   } else {
-    req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', rms1, 'Samples', rms2, 'Post_Samples', rms3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+    req.FromString("Events detection disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
   }
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
+  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::SetEvent(HTTPRequest &req) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
-  json Params = req.GetParams();
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  uint64_t ID = Params["StartTime"];
-  string Type = Params["Type"];
-  string Notes = Params["Notes"];
-  bool Result = req.ExecSentenceNoResult("UPDATE events SET Notes = " + req.Bind(Notes) + " WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
-  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  pMembersLocks.ReadLock();
+  if(pEventsDetector != NULL) {
+    pEventsDetector->SetEvent(req);
+  } else {
+    req.FromString("Events detection disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::DelEvent(HTTPRequest &req) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
-  json Params = req.GetParams();
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  uint64_t ID = Params["StartTime"];
-  string Type = Params["Type"];
-  bool Result = req.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
-  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  pMembersLocks.ReadLock();
+  if(pEventsDetector != NULL) {
+    pEventsDetector->DelEvent(req);
+  } else {
+    req.FromString("Events detection disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::GetRates(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') as result FROM rates");
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
+  pMembersLocks.ReadLock();
+  if(pRates != NULL) {
+    pRates->GetRates(req);
+  } else {
+    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::GetRate(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  json Params = req.GetParams();
-  if(!Params["RateID"].is_number_unsigned()) return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
-  uint32_t RateID = Params["RateID"];
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  req.ExecSentenceAsyncResult("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) as result FROM rates where rate = " + req.Bind(RateID));
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
+  pMembersLocks.ReadLock();
+  if(pRates != NULL) {
+    pRates->GetRate(req);
+  } else {
+    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();  
 }
 void AnalyzerSoft::SetRate(HTTPRequest &req) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
-  json Params = req.GetParams();
-  uint64_t Start    = Params["StartDate"];
-  uint64_t End      = Params["EndDate"];
-  string   Name     = Params["Name"];
-  uint32_t RateID   = Params["RateID"];
-  Tariff T(Start, End, pTimeZone);
-  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
-  if(T.SetConfig(Params["Config"]) == false) return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  bool Result = req.ExecSentenceNoResult("UPDATE rates SET name = " + req.Bind(Name) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", config = " + req.Bind(T.GetConfig().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE rate = " + req.Bind(RateID));
-  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  pMembersLocks.ReadLock();
+  if(pRates != NULL) {
+    pRates->SetRate(req);
+  } else {
+    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::DelRate(HTTPRequest &req) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
-  json Params = req.GetParams();
-  if(!Params["RateID"].is_number_unsigned()) return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
-  uint32_t RateID = Params["RateID"];
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  bool Result = req.ExecSentenceNoResult("DELETE FROM rates WHERE rate = " + req.Bind(RateID));
-  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  pMembersLocks.ReadLock();
+  if(pRates != NULL) {
+    pRates->DelRate(req);
+  } else {
+    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();  
 }
 void AnalyzerSoft::AddRate(HTTPRequest &req) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
-  json Params = req.GetParams();
-  if(!Params["Config"].is_object() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) return req.FromString("'StartDate', 'EndDate', 'Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
-  uint64_t Start    = Params["StartDate"];
-  uint64_t End      = Params["EndDate"];
-  string   Name     = Params["Name"];
-  Tariff T(Start, End, pTimeZone);
-  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
-  if(T.SetConfig(Params["Config"]) == false) return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  bool Result = req.ExecSentenceNoResult("INSERT INTO rates(startdate, enddate, config, template, name) VALUES (" + req.Bind(Start) + ", " + req.Bind(End) + ", " + req.Bind(T.GetConfig().dump()) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Name) + ")");
-  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  pMembersLocks.ReadLock();
+  if(pRates != NULL) {
+    pRates->AddRate(req);
+  } else {
+    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();    
 }
 void AnalyzerSoft::GetPrices(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  //Parse, check params and prepare result struct
-  json Params = req.GetParams();
-  uint64_t To         = Params["To"];
-  uint64_t Period     = Params["Period"];
-  uint64_t LastSample = Params.value<uint64_t>("LastSample", 0);
-  string   Aggreg     = Params["Aggreg"];
-  uint64_t Now        = Tools::GetTime();
-  if(To == 0) To = Now;
-  uint64_t From = To - Period;
-  uint32_t PeriodSeconds = 900000;
-  if(Aggreg == "1H") PeriodSeconds = 3600000;
-  if((Period / PeriodSeconds) > 100000) return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
-  json Result;
-  Result["To"]                 = To;
-  Result["From"]               = From;
-  Result["Aggregation_Source"] = Aggreg;
-  Result["Sampletime"]         = json::array();
-  Result["Active_Power"]       = json::array();
-  Result["Reactive_Power"]     = json::array();
-  Result["Period_Name"]        = json::array();
-  Result["Period_Color"]       = json::array();
-  Result["Contracted_Power"]   = json::array();
-  Result["Expense"]            = json::array();
-  Result["Bills"]              = json::array();
-  //Load involved tariffs, currency and timezone
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  req.ExecSentenceAsyncResult("SELECT to_json(array_agg(json_build_object('Name', rates.name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) as rate FROM rates WHERE enddate >= " + req.Bind(From) + " AND startdate <= " + req.Bind(To));
-  json DBTariffs = json::array();
-  if(req.FecthRow()) {
-    Result["Currency"] = "€";//req.ResultString("currency");
-    DBTariffs = req.ResultJSON("rate");
-  }
   pMembersLocks.ReadLock();
-  TariffList Tariffs(DBTariffs, pTimeZone);
-  pMembersLocks.ReadUnlock();
-  //Find start and end date to retrieve data
-  uint64_t BillingFrom = Tariffs.BillFrom((LastSample > From) ? LastSample : From);
-  uint64_t BillingTo = Tariffs.BillTo(To);
-  //Retrieve active and reactive samples
-  req.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime > " + req.Bind(BillingFrom) + " AND sampletime <= " + req.Bind(BillingTo) + " ORDER BY sampletime ASC");
-  bool MoreData = req.FecthRow();
-  //Traverse all samples
-  float AccActive = NAN;
-  float AccReactive = NAN;
-  float AccCost = NAN;
-  for(uint64_t time = BillingFrom + 899999; time != BillingTo; time = time + 900000) {
-    float Active = NAN, Reactive = NAN;
-    if((MoreData == true) && (req.ResultUInt64("sampletime") == time)) {
-      Active = req.ResultFloat("active_power");
-      Reactive = req.ResultFloat("reactive_power");
-      MoreData = req.FecthRow();
-    }
-    Tariff *Tariff = Tariffs.Find(time);
-    if((Tariff != NULL) && (Tariff->PushSample(time, Active, Reactive) == true) && ((time + 900000) != BillingTo)) continue;  //If under a tariff push samples until bill cycle ends or no more data!
-    //Recover/group values
-    do {
-      string   Color      = "";
-      string   Period     = "";
-      uint64_t Time       = time;
-      float    Cost       = NAN;
-      float    Contracted = NAN;
-      if((Tariff != NULL) && (Tariff->PopSample(Time, Active, Reactive, Period, Color, Cost, Contracted) == false)) {
-        Result["Bills"].push_back(Tariff->GetResume(Now));
-        break;
-      }
-      if(Time <= Now) AccActive  = isnan(AccActive) ? Active : isnan(Active) ? AccActive : AccActive + Active;
-      if(Time <= Now) AccReactive = isnan(AccReactive) ? Reactive : isnan(Reactive) ? AccReactive : AccReactive + Reactive;
-      if(Time <= Now) AccCost = isnan(AccCost) ? Cost : isnan(Cost) ? AccCost : AccCost + Cost;
-      if(Aggreg == "1H") {
-        if((Time % 3600000) != 3599999) {
-          if(Tariff != NULL) continue;
-          break;
-        }
-        AccActive = AccActive / 4.0;
-        AccReactive = AccReactive / 4.0;
-      }
-      if((Time > LastSample) && (Time >= From) && (Time <= To)) {
-        Result["Sampletime"].push_back(Time);
-        Result["Active_Power"].push_back(AccActive);
-        Result["Reactive_Power"].push_back(AccReactive);
-        Result["Contracted_Power"].push_back(Contracted);
-        if(Color.empty() == true)
-          Result["Period_Color"].push_back(nullptr);
-        else 
-          Result["Period_Color"].push_back(Color);
-        if(Period.empty() == true)
-          Result["Period_Name"].push_back(nullptr);
-        else 
-          Result["Period_Name"].push_back(Period);
-        Result["Expense"].push_back(AccCost);
-      }
-      AccActive = NAN;
-      AccReactive = NAN;
-      AccCost = NAN;
-    } while(Tariff != NULL);
+  if(pRates != NULL) {
+    pRates->GetPrices(req);
+  } else {
+    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
   }
-  req.FromJSON(Result);
+  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::TestAlarm(HTTPRequest &req) {
   if(CheckRights(req, READ) == false) return;
-  //Parse, check params and prepare result struct
-  json Params = req.GetParams();
-  json Result = json::object();
-  Result["Variables"] = json::object();
-  json Query  = nullptr;
   pMembersLocks.ReadLock();
-  Result["NominalVoltage"] = pNominalVoltage;
-  Result["NominalFreq"] = pNominalFrequency;
+  if(pAlarms != NULL) {
+    pAlarms->TestAlarm(req);
+  } else {
+    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
   pMembersLocks.ReadUnlock();
-  string   Aggreg     = Params["Aggreg"];
-  string   Expression = Params["Expression"];
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  if(Aggreg == "3S") {
-    req.ExecSentenceAsyncResult("SELECT json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag, 'Active_Power', active_power, 'Reactive_Power', reactive_power) as result FROM aggreg_3s ORDER BY sampletime DESC LIMIT 1");
-    Result["Aggregation_Source"] = "3S";
-    if(req.FecthRow() == true) Query = req.ResultJSON("result");
-  } else if(Aggreg == "1M") {
-    req.ExecSentenceAsyncResult("SELECT * FROM aggreg_3s ORDER BY sampletime ASC LIMIT 1");
-  }
-  if(Query != nullptr) {
-    if(Query["Voltage"].is_array()) {
-      uint8_t Phases = Query["Voltage"].size();
-      for(uint8_t n = 0; n < Phases; n++) {
-        float Tmp = 0.0;
-        if(Query["Voltage"][n].is_number()) Tmp = Query["Voltage"][n];
-        Result["Variables"][(Phases > 1) ? "Voltage_" + to_string(n + 1) : "Voltage"] = Tmp;
-      }
-    }  
-    if(Query["Current"].is_array()) {
-      for(uint8_t n = 0; n < Query["Current"].size(); n++) {
-        float Tmp = 0.0;
-        if(Query["Current"][n].is_number()) Tmp = Query["Current"][n];
-        Result["Variables"]["Current_" + to_string(n + 1)] = Tmp;
-      }
-    }
-    if(Query["Active_Power"].is_array()) {
-      for(uint8_t n = 0; n < Query["Active_Power"].size(); n++) {
-        float Tmp = 0.0;
-        if(Query["Active_Power"][n].is_number()) Tmp = Query["Active_Power"][n];
-        Result["Variables"]["Active_Power_" + to_string(n + 1)] = Tmp;
-      }
-    }
-    if(Query["Reactive_Power"].is_array()) {
-      for(uint8_t n = 0; n < Query["Reactive_Power"].size(); n++) {
-        float Tmp = 0.0;
-        if(Query["Reactive_Power"][n].is_number()) Tmp = Query["Reactive_Power"][n];
-        Result["Variables"]["Reactive_Power_" + to_string(n + 1)] = Tmp;
-      }
-    }  
-    if(Query["Frequency"].is_number()) {
-      float Tmp = 0.0;
-      if(Query["Frequency"].is_number()) Tmp = Query["Frequency"];
-      Result["Variables"]["Frequency"] = Tmp;
-    }
-    try {
-      Parser Exp;
-      for(auto it = Result["Variables"].begin(); it != Result["Variables"].end(); ++it) Exp.DefineConst(it.key(), it.value());
-      Exp.SetExpr(Expression);
-      float Tmp = Exp.Eval();
-      Result["Result"] = Tmp;
-    } catch (Parser::exception_type &e) {
-      Result["Error"] = e.GetMsg();
-    }
-  }
-  req.FromJSON(Result);
 }
 void AnalyzerSoft::GetAlarms(HTTPRequest &req) {
 }
