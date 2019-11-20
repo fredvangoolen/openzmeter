@@ -9,6 +9,7 @@
 #include <sys/time.h>
 #include <sys/param.h>
 #include <unistd.h>
+#include "muParser/muParser.h"
 #include "AnalyzerSoft.h"
 #include "Tools.h"
 #include "SysSupport.h"
@@ -16,6 +17,8 @@
 #include "Events.h"
 #include "FFT.h"
 #include "Sync.h"
+//----------------------------------------------------------------------------------------------------------------------
+using namespace mu;
 //----------------------------------------------------------------------------------------------------------------------
 const vector<float> AnalyzerSoft::FrequencyRanges  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
 const vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
@@ -973,24 +976,69 @@ void AnalyzerSoft::TestAlarm(HTTPRequest &req) {
   if(CheckRights(req, READ) == false) return;
   //Parse, check params and prepare result struct
   json Params = req.GetParams();
+  json Result = json::object();
+  Result["Variables"] = json::object();
+  json Query  = nullptr;
+  pMembersLocks.ReadLock();
+  Result["NominalVoltage"] = pNominalVoltage;
+  Result["NominalFreq"] = pNominalFrequency;
+  pMembersLocks.ReadUnlock();
   string   Aggreg     = Params["Aggreg"];
   string   Expression = Params["Expression"];
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  if(Aggreg == "3S") 
+  if(Aggreg == "3S") {
+    req.ExecSentenceAsyncResult("SELECT json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag, 'Active_Power', active_power, 'Reactive_Power', reactive_power) as result FROM aggreg_3s ORDER BY sampletime DESC LIMIT 1");
+    Result["Aggregation_Source"] = "3S";
+    if(req.FecthRow() == true) Query = req.ResultJSON("result");
+  } else if(Aggreg == "1M") {
     req.ExecSentenceAsyncResult("SELECT * FROM aggreg_3s ORDER BY sampletime ASC LIMIT 1");
-  else if(Aggreg == "1M")
-    req.ExecSentenceAsyncResult("SELECT * FROM aggreg_3s ORDER BY sampletime ASC LIMIT 1");
-    
-  //requiere agreg y expresion las agregaciones son las normales mas BILLING, que aun no esta definido
-  //tambien se añadiran ofras variables como tension nominal, frecuencia nominal
-  
-  
-  //ejecuto la consulta para obtener el ultimo valor disponible de la consulta que sea (CON LIMIT)
-  
-  //devuelve todos los valores disponibles en la agregacion seleccionada
-  //Devuelve el resultado de la evaluacion
-  
-  
+  }
+  if(Query != nullptr) {
+    if(Query["Voltage"].is_array()) {
+      uint8_t Phases = Query["Voltage"].size();
+      for(uint8_t n = 0; n < Phases; n++) {
+        float Tmp = 0.0;
+        if(Query["Voltage"][n].is_number()) Tmp = Query["Voltage"][n];
+        Result["Variables"][(Phases > 1) ? "Voltage_" + to_string(n + 1) : "Voltage"] = Tmp;
+      }
+    }  
+    if(Query["Current"].is_array()) {
+      for(uint8_t n = 0; n < Query["Current"].size(); n++) {
+        float Tmp = 0.0;
+        if(Query["Current"][n].is_number()) Tmp = Query["Current"][n];
+        Result["Variables"]["Current_" + to_string(n + 1)] = Tmp;
+      }
+    }
+    if(Query["Active_Power"].is_array()) {
+      for(uint8_t n = 0; n < Query["Active_Power"].size(); n++) {
+        float Tmp = 0.0;
+        if(Query["Active_Power"][n].is_number()) Tmp = Query["Active_Power"][n];
+        Result["Variables"]["Active_Power_" + to_string(n + 1)] = Tmp;
+      }
+    }
+    if(Query["Reactive_Power"].is_array()) {
+      for(uint8_t n = 0; n < Query["Reactive_Power"].size(); n++) {
+        float Tmp = 0.0;
+        if(Query["Reactive_Power"][n].is_number()) Tmp = Query["Reactive_Power"][n];
+        Result["Variables"]["Reactive_Power_" + to_string(n + 1)] = Tmp;
+      }
+    }  
+    if(Query["Frequency"].is_number()) {
+      float Tmp = 0.0;
+      if(Query["Frequency"].is_number()) Tmp = Query["Frequency"];
+      Result["Variables"]["Frequency"] = Tmp;
+    }
+    try {
+      Parser Exp;
+      for(auto it = Result["Variables"].begin(); it != Result["Variables"].end(); ++it) Exp.DefineConst(it.key(), it.value());
+      Exp.SetExpr(Expression);
+      float Tmp = Exp.Eval();
+      Result["Result"] = Tmp;
+    } catch (Parser::exception_type &e) {
+      Result["Error"] = e.GetMsg();
+    }
+  }
+  req.FromJSON(Result);
 }
 void AnalyzerSoft::GetAlarms(HTTPRequest &req) {
 }
