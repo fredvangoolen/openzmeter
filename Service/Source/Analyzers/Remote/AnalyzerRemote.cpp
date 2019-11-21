@@ -19,45 +19,52 @@ AnalyzerRemote::~AnalyzerRemote() {
 }
 void AnalyzerRemote::GetRemote(HTTPRequest& req) {
   json Params = req.GetParams();
-  pMembersLocks.ReadLock();
-  if(pRequestLocks != NULL) {
-    pMembersLocks.ReadUnlock();
-    req.FromString("", MHD_HTTP_SERVICE_UNAVAILABLE);
-    return;
-  }
-  pMembersLocks.ReadUnlock();
-
+  json Response = json::array();
   pMembersLocks.WriteLock();
   pLastSave = Tools::GetTime();
   pName     = Params["Name"];
-  pRequestLocks = new ProviderLocks();
-  pMembersLocks.WriteUnlock();
-  
-  if(pRequestLocks->ConsumerWait(15000) == false) {
-    pMembersLocks.WriteLock();
-    delete pRequestLocks;
-    pRequestLocks = NULL;
+  if(pQueries.size() > 0) {
+    for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
+      if((*it)->Sequence != 0) continue;
+      (*it)->Sequence = ++pQuerySequence;
+      json Query = json::object();
+      Query["Method"] = (*it)->Method;
+      Query["Params"] = (*it)->Request->GetParams();
+      Query["Params"].erase("Analyzer");
+      Query["Sequence"] = (*it)->Sequence;
+      Response.push_back(Query);
+    }
     pMembersLocks.WriteUnlock();
-    req.FromString("", MHD_HTTP_NO_CONTENT);
-    return;
+    return req.FromJSON(Response);
+  } else {
+    if(pRequestLocks != NULL) {
+      pMembersLocks.WriteUnlock();
+      return req.FromString("", MHD_HTTP_SERVICE_UNAVAILABLE);
+    } else {
+      pRequestLocks = new ProviderLocks();
+      pMembersLocks.WriteUnlock();
+      if(pRequestLocks->ConsumerWait(15000) == false) {
+        pMembersLocks.WriteLock();
+        req.FromString("", MHD_HTTP_NO_CONTENT);
+      } else {
+        pMembersLocks.WriteLock();
+        for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
+          if((*it)->Sequence != 0) continue;
+          (*it)->Sequence = ++pQuerySequence;
+          json Query = json::object();
+          Query["Method"] = (*it)->Method;
+          Query["Params"] = (*it)->Request->GetParams();
+          Query["Params"].erase("Analyzer");
+          Query["Sequence"] = (*it)->Sequence;
+          Response.push_back(Query);
+        }
+        req.FromJSON(Response);
+      }
+      delete pRequestLocks;
+      pRequestLocks = NULL;
+      pMembersLocks.WriteUnlock();
+    }
   }
-  
-  json Response = json::array();
-  pMembersLocks.WriteLock();
-  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-    if((*it)->Sequence != 0) continue;
-    (*it)->Sequence = ++pQuerySequence;
-    json Query = json::object();
-    Query["Method"] = (*it)->Method;
-    Query["Params"] = (*it)->Request->GetParams();
-    Query["Params"].erase("Analyzer");
-    Query["Sequence"] = (*it)->Sequence;
-    Response.push_back(Query);
-  }
-  delete pRequestLocks;
-  pRequestLocks = NULL;
-  pMembersLocks.WriteUnlock();
-  req.FromJSON(Response);
 }
 void AnalyzerRemote::SetRemote(HTTPRequest &req) {
   json Params = req.GetParams();

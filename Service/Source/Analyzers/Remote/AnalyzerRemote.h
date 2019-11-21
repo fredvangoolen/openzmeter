@@ -14,11 +14,16 @@ class AnalyzerRemote : public Analyzer {
       HTTPRequest    *Request;
       ProviderLocks   Locks;
     } Query_t;
+    typedef struct {
+      HTTPRequest    *Request;htop
+              
+      ProviderLocks   Locks;    
+    } Request_t;
   private :
     pthread_t        pThread;
     uint64_t         pQuerySequence;
     list<Query_t*>   pQueries;
-    ProviderLocks   *pRequestLocks;
+    ProviderLocks    *pRequestLocks;
   private :
     void  HandleRequest(string url, HTTPRequest &req);
     void  GetAnalyzer(HTTPRequest &req);

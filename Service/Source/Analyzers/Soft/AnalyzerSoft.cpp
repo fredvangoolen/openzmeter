@@ -898,13 +898,52 @@ void AnalyzerSoft::TestAlarm(HTTPRequest &req) {
   pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::GetAlarms(HTTPRequest &req) {
+  if(CheckRights(req, READ) == false) return;
+  pMembersLocks.ReadLock();
+  if(pAlarms != NULL) {
+    pAlarms->GetAlarms(req);
+  } else {
+    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();  
 }
 void AnalyzerSoft::GetAlarm(HTTPRequest &req) {
+  if(CheckRights(req, READ) == false) return;
+  pMembersLocks.ReadLock();
+  if(pAlarms != NULL) {
+    pAlarms->GetAlarm(req);
+  } else {
+    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::SetAlarm(HTTPRequest &req) {
+  if(CheckRights(req, READ) == false) return;
+  pMembersLocks.ReadLock();
+  if(pAlarms != NULL) {
+    pAlarms->SetAlarm(req);
+  } else {
+    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::AddAlarm(HTTPRequest &req) {
+  if(CheckRights(req, READ) == false) return;
+  pMembersLocks.ReadLock();
+  if(pAlarms != NULL) {
+    pAlarms->AddAlarm(req);
+  } else {
+    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::DelAlarm(HTTPRequest &req) {
-
+  if(CheckRights(req, READ) == false) return;
+  pMembersLocks.ReadLock();
+  if(pAlarms != NULL) {
+    pAlarms->DelAlarm(req);
+  } else {
+    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+  }
+  pMembersLocks.ReadUnlock();
 }
