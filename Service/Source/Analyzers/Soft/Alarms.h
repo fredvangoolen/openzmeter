@@ -28,6 +28,11 @@ class AnalyzerSoft::Alarms final {
     Alarms(AnalyzerSoft *parent);
     ~Alarms();
     void TestAlarm(HTTPRequest &req);
+    void GetAlarms(HTTPRequest &req);
+    void GetAlarm(HTTPRequest &req);
+    void SetAlarm(HTTPRequest &req);
+    void AddAlarm(HTTPRequest &req);
+    void DelAlarm(HTTPRequest &req);
 };
 
 

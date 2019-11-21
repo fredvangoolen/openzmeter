@@ -76,3 +76,8 @@ void AnalyzerSoft::Alarms::TestAlarm(HTTPRequest &req) {
   }
   req.FromJSON(Result);
 }
+void AnalyzerSoft::Alarms::GetAlarms(HTTPRequest &req) {}
+void AnalyzerSoft::Alarms::GetAlarm(HTTPRequest &req) {}
+void AnalyzerSoft::Alarms::SetAlarm(HTTPRequest &req) {}
+void AnalyzerSoft::Alarms::AddAlarm(HTTPRequest &req) {}
+void AnalyzerSoft::Alarms::DelAlarm(HTTPRequest &req) {}
