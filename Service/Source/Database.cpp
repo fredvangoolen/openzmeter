@@ -14,21 +14,32 @@
 string                             Database::pConnectionString;
 queue<Database::PoolConnection_t>  Database::pConnectionPool;
 pthread_mutex_t                    Database::pMutex = PTHREAD_MUTEX_INITIALIZER;
+bool                               Database::pPoolEnabled = false;
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(const string &schema) {
   if(pConnectionString.empty() == true) ReadConfig();
   pSchema    = schema;
   pResult    = NULL;
   pDBConn    = NULL;
-  bool Pool  = false;
+  bool New   = false;
   pthread_mutex_lock(&pMutex);
-  if(pConnectionPool.size() > 0) {
-    pDBConn = pConnectionPool.front().Connection;
-    pConnectionPool.pop();
-    Pool = true;
+  if(pPoolEnabled == true) {
+    if(pConnectionPool.size() > 0) {
+      pDBConn = pConnectionPool.front().Connection;
+      pUsageTime = pConnectionPool.front().UsageTime;
+      pLastTime = Tools::GetTime();
+      pFreeTime = pConnectionPool.front().FreeTime + (pLastTime - pConnectionPool.front().LastTime);
+      pConnectionPool.pop();
+    }
   }
   pthread_mutex_unlock(&pMutex);
-  if(pDBConn == NULL) pDBConn = PQconnectdb(pConnectionString.c_str());
+  if(pDBConn == NULL) {
+    New = true;
+    pUsageTime = 0;
+    pFreeTime = 0;
+    pLastTime = Tools::GetTime();
+    pDBConn = PQconnectdb(pConnectionString.c_str());
+  }
   if(PQstatus(pDBConn) != CONNECTION_OK) {
     char *Save;
     LOGFile::Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
@@ -36,7 +47,7 @@ Database::Database(const string &schema) {
     pDBConn = NULL;
     return;
   }
-  if(Pool == false) {
+  if(New == true) {
     if(ExecSentenceNoResult("SET synchronous_commit TO OFF; SET client_min_messages = error; CREATE SCHEMA IF NOT EXISTS " + BindID(pSchema) + "; SET search_path TO " +  Bind(pSchema) + ", public") == false) {
       PQfinish(pDBConn);
       pDBConn = NULL;
@@ -50,14 +61,33 @@ Database::Database(const string &schema) {
     }
   }
 }
+void Database::EnablePool() {
+  pthread_mutex_lock(&pMutex);
+  pPoolEnabled = true;
+  pthread_mutex_unlock(&pMutex);
+}
+void Database::DisablePool() {
+  pthread_mutex_lock(&pMutex);
+  while(pConnectionPool.size() > 0) {
+    PoolConnection_t Connection = pConnectionPool.front();
+    pConnectionPool.pop();
+    PQfinish(Connection.Connection);
+  }
+  pPoolEnabled = false;
+  pthread_mutex_unlock(&pMutex);
+}
 string Database::GetSchema() const {
   return pSchema;
 }
 void Database::RemoveExpiredSessions() {
   pthread_mutex_lock(&pMutex);
+  uint64_t Time = Tools::GetTime();
   while(pConnectionPool.size() > 0) {
+    pConnectionPool.front().FreeTime;
+    pConnectionPool.front().FreeTime = pConnectionPool.front().FreeTime + (Time - pConnectionPool.front().LastTime);
+    pConnectionPool.front().LastTime = Time;
+    if(pConnectionPool.front().FreeTime < pConnectionPool.front().UsageTime) break;
     PoolConnection_t Connection = pConnectionPool.front();
-    if(Connection.LastUse > (Tools::GetTime() - 60000)) break;
     pConnectionPool.pop();
     PQfinish(Connection.Connection);
   }
@@ -68,11 +98,16 @@ Database::~Database() {
   ClearAsync();
   if(pDBConn) {
     pthread_mutex_lock(&pMutex);
-    PoolConnection_t Connection;
-    Connection.LastUse = Tools::GetTime();
-    Connection.Connection = pDBConn;
-    pConnectionPool.push(Connection);
-    pDBConn = NULL;
+    if(pPoolEnabled == true) {
+      PoolConnection_t Connection;
+      Connection.FreeTime = pFreeTime;
+      Connection.LastTime = Tools::GetTime();
+      Connection.UsageTime = pUsageTime + (Connection.LastTime - pLastTime);
+      Connection.Connection = pDBConn;
+      pConnectionPool.push(Connection);
+    } else {
+      PQfinish(pDBConn);
+    }
     pthread_mutex_unlock(&pMutex);
   }
 }

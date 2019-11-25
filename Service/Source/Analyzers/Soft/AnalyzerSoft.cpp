@@ -491,7 +491,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       This->InitAggreg(Aggreg10M, AGGREG_10M);
     }
     This->pMembersLocks.ReadUnlock();
-    This->PNowDataLock.ProviderWrite();
+    This->pNowDataLock.ProviderWrite();
     This->AccumulateAggreg(Aggreg10M, This->pAggreg10C);
     if(((This->pAggreg10C.Timestamp / 900000) > (PrevTimestamp / 900000)) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 15M aggregation\n");
@@ -514,7 +514,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     json Status = json::object();
     Status["Event"] = This->pAggreg10C.Flag;
     SysSupport::SetSystemDetails(Status);
-    This->PNowDataLock.ProviderWait();
+    This->pNowDataLock.ProviderWait();
     This->InitAggreg(This->pAggreg10C, AGGREG_10C);
     LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->pSerial.c_str(), Tools::GetTime() - Start, Sequence);
     This->pCurrentSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : (This->pMode == PHASE3) ? 3 : 4, vector<float>(0));
@@ -525,7 +525,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
   return NULL;
 }
 json AnalyzerSoft::CheckConfig(const json &config) {
-  json ConfigOUT = config;
+  json ConfigOUT = json::object();
   ConfigOUT["Name"] = "Unnamed analyzer";
   ConfigOUT["NominalVoltage"] = 230.0;
   ConfigOUT["NominalFreq"] = 50.0;
@@ -684,11 +684,14 @@ void AnalyzerSoft::GetSeries(HTTPRequest &req) {
 void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   json Params = req.GetParams();
-  if(PNowDataLock.ConsumerWait(5000) == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+  if(pNowDataLock.ConsumerWait(5000) == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   json Result = json::object();
   Result["Sampletime"] = pAggreg10C.Timestamp;
   for(uint i = 0; i < Params["Series"].size(); i++) {
-    if(!Params["Series"][i].is_string()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+    if(!Params["Series"][i].is_string()) {
+      pNowDataLock.ConsumerEnds();
+      return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+    }
     string Serie = Params["Series"][i];
     if(Serie == "FREQUENCY") {
       Result["Frequency"] = pAggreg10C.Frequency;
@@ -772,10 +775,11 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
     } else if(Serie == "SYS_STATS") {
       Result["Sys_Stats"] = SysSupport::GetSystemDetails();
     } else {
+      pNowDataLock.ConsumerEnds();
       return req.FromString("Unknown serie name", MHD_HTTP_BAD_REQUEST);
     }
   }
-  PNowDataLock.ConsumerEnds();
+  pNowDataLock.ConsumerEnds();
   req.FromJSON(Result);
 }
 void AnalyzerSoft::GetSeriesRange(HTTPRequest &req) {

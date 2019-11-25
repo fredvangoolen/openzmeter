@@ -140,9 +140,11 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
   }
 }
 //----------------------------------------------------------------------------------------------------------------------
-vector<HTTPServer::Callback_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
-RWLocks                        HTTPServer::pLock = RWLocks();
-string                         HTTPServer::pRelativePath = "/";
+HTTPCallback::HTTPCallback(const string& handle, Func_t function) : HandleName(handle), Function(function) {};
+//----------------------------------------------------------------------------------------------------------------------
+vector<HTTPCallback> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
+RWLocks                                                  HTTPServer::pLock = RWLocks();
+string                                                   HTTPServer::pRelativePath = "/";
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   pDaemon = NULL;
@@ -169,21 +171,20 @@ HTTPServer::HTTPServer() {
 HTTPServer::~HTTPServer() {
   if(pDaemon) MHD_stop_daemon(pDaemon);
 }
-void HTTPServer::RegisterCallback(const string &handleName, const HTTPServer::Func_t function) {
-  Callback_t Item = {handleName, function};
+void HTTPServer::RegisterCallback(const string &handleName, const HTTPCallback::Func_t function) {
   pLock.WriteLock();
-  for(uint n = 0; n < pCallbacks.size(); n++) {
-    if(pCallbacks[n].HandleName != handleName) continue;
-    pCallbacks[n] = Item;
+  for(HTTPCallback &Callback : pCallbacks) {
+    if(Callback.HandleName != handleName) continue;
+    Callback.Function = function;
     pLock.WriteUnlock();
     return;
   }
-  pCallbacks.push_back(Item);
+  pCallbacks.emplace_back(handleName, function);
   pLock.WriteUnlock();
 }
 void HTTPServer::UnregisterCallback(const string &handleName) {
   pLock.WriteLock();
-  for(vector<Callback_t>::iterator it = pCallbacks.begin(); it < pCallbacks.end(); it++) {
+  for(auto it = pCallbacks.begin(); it < pCallbacks.end(); it++) {
     if(it->HandleName != handleName) continue;
     pCallbacks.erase(it);
     break;
@@ -204,10 +205,12 @@ int HTTPServer::SendRedirect(struct MHD_Connection *connection, const string &ur
 }
 void HTTPServer::HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe) {
   if(*con_cls != NULL) delete (HTTPRequest*)*con_cls;
+  pthread_setname_np(pthread_self(), "HTTP_Wait");
 }
 int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr) {
   HTTPRequest *Request = (HTTPRequest*)*ptr;
   string URL = string(url).erase(0, pRelativePath.size());
+  pthread_setname_np(pthread_self(), URL.c_str());
   if(Request == NULL) {
     LOGFile::Debug("HTTP %s request '%s'\n", method, URL.c_str());
     string FilePath;
@@ -297,9 +300,9 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
         } else {
           bool Handled = false;
           pLock.ReadLock();
-          for(vector<Callback_t>::iterator it = pCallbacks.begin() ; it != pCallbacks.end(); ++it) {
-            if(it->HandleName != URL) continue;
-            it->Function(*Request);
+          for(HTTPCallback &Callback : pCallbacks) {
+            if(Callback.HandleName != URL) continue;
+            Callback.Function(*Request);
             Handled = true;
             break;
           }

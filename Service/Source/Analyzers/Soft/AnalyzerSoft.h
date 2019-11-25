@@ -73,7 +73,7 @@ class AnalyzerSoft final : public Analyzer {
     vector<float>              pLastSamples;             //Filter samples backup
     AnalyzerMode               pMode;                    //Operation mode
     WorkerLocks                pAnalyzerWorkerLocks;     //Handle analyzer thread
-    ProviderLocks              PNowDataLock;             //GetSeriesNow access control
+    ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private :  //Config params (Writed in configure, readed in other places)
     Events                    *pEventsDetector;          //Events detector
     Sync                      *pSync;                    //Synchronization object

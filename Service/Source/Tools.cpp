@@ -129,7 +129,11 @@ bool ProviderLocks::ConsumerWait(uint timeoutMS) {
   pthread_mutex_unlock(&pWaitingThreadsMutex);
   pthread_mutex_lock(&pDataReadyMutex);
   while((pDataReady == false) && (Error == 0)) {
-    if(pTerminate == true) return false;
+    if(pTerminate == true) {
+      pthread_mutex_unlock(&pDataReadyMutex);
+      ConsumerEnds();
+      return false;
+    }
     struct timeval  Current;
     struct timespec Timeout;
     gettimeofday(&Current, NULL);
@@ -398,10 +402,10 @@ uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
       pFiles.push_back(File);
     }
   }
-  for(uint32_t i = 0; i < pFiles.size(); i++) {
-    if(pFiles[i].Name != name) continue;
-    *size = pFiles[i].Size;
-    return pFiles[i].Ptr;
+  for(File_t &File : pFiles) {
+    if(File.Name != name) continue;
+    *size = File.Size;
+    return File.Ptr;
   }
   return NULL;
 }
