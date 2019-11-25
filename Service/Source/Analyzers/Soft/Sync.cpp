@@ -2,17 +2,18 @@
 //------------------------------------------------------------------------------
 AnalyzerSoft::Sync::CurlBuff::CurlBuff() {
   pBuffer = (char*)malloc(1);
-  pSize = 1;
+  pSize = 0;
 }
 AnalyzerSoft::Sync::CurlBuff::~CurlBuff() {
   if(pBuffer != NULL) free(pBuffer);
 }
 bool AnalyzerSoft::Sync::CurlBuff::Append(void *data, uint32_t size) {
+  char *Tmp = (char*)realloc(pBuffer, pSize + size + 1);
+  if(Tmp == NULL) return false;
+  pBuffer = Tmp;
+  memcpy(&pBuffer[pSize], data, size);
   pSize = pSize + size;
-  pBuffer = (char*)realloc(pBuffer, pSize + size);
-  if(pBuffer == NULL) return false;
-  memcpy(&pBuffer[pSize - size - 1], data, size);
-  pBuffer[pSize - 1] = 0;
+  pBuffer[pSize] = 0;
   return true;
 }
 char *AnalyzerSoft::Sync::CurlBuff::Data() {
@@ -107,8 +108,8 @@ uint16_t AnalyzerSoft::Sync::CurlSendPost(const string &url, const string &conte
 void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
   Sync *This = (Sync*)args;
   while(This->pTerminate == false) {
-    This->pLocks.ReadLock();
     CurlBuff Buffer;
+    This->pLocks.ReadLock();
     if(This->pLogged == false) {
       json   Content = json::object();
       Content["Username"] = This->pUser;
@@ -147,6 +148,7 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
                 LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
                 delete Request;
               } else {
+                pthread_setname_np(Thread, Request->Method.c_str());
                 This->pThreadsCount++;
                 pthread_detach(Thread);
               }
@@ -169,7 +171,6 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
     }
     This->pLocks.ReadUnlock();
   }
-
   return NULL;
 }
 void *AnalyzerSoft::Sync::Request_Thread(void *args) {
@@ -242,5 +243,6 @@ void *AnalyzerSoft::Sync::Request_Thread(void *args) {
   This->Sync->pThreadsCount--;
   This->Sync->pLocks.WriteUnlock();
   delete Request;
+  delete This;
   return NULL;
 }

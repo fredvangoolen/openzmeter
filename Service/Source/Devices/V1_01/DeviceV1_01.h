@@ -26,13 +26,23 @@ class DeviceV1_01 final : public Device {
       float Voltage;
       float Current;
     } Sample_t;
-    typedef struct {
-      uint8_t          Buffer[8192];
-      libusb_transfer *Transfer;
-    } Transfer_t;
+    class Transfer {
+      private :
+        libusb_transfer *pTransfer;
+        uint8_t         *pBuffer;
+        uint32_t         pBufferSize;
+        DeviceV1_01     *pParent;
+      public :
+        Transfer(DeviceV1_01 *parent, uint32_t size);
+        ~Transfer();
+        int Submit();
+        int Submit(libusb_device_handle *deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout);
+        uint32_t BufferSize();
+    };
   private :
     static bool                  pRegistered;
   private :
+    uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
     bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
     deque<Sample_t>              pBuffer;                  //Read buffer
@@ -47,7 +57,7 @@ class DeviceV1_01 final : public Device {
     deque<float>                 pDelay;                   //Delay buffer for voltage/current compensation
     deque<Sample_t>              pAverageValues;           //Average wave value of last second
     RWLocks                      pAverageLocks;            //Lock access to average values
-    Transfer_t                   pTransfers[DEVICEV1_01_TRANSFERS];
+    vector<Transfer>             pTransfers;
   private : 
     static bool  GetInstances();
     static void *Capture_Thread(void *args);

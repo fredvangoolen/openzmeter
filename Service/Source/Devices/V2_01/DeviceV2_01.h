@@ -24,43 +24,58 @@ class DeviceV2_01 final : public Device {
     enum Button_Action { NONE = 0, CLICK = 1, LONG_CLICK = 2, VERY_LONG_CLICK = 3};
     enum LED_Color {OFF = 0, RED = 1, GREEN = 2, YELLOW = 3 };
     typedef struct {
-      int8_t                  Voltage[3];
-      int8_t                  Current[4];
-      bool                    CurrentInvert[4];
+      uint8_t Index;
+      float   Invert;
+    } CurrentCH_t;
+    typedef struct {
+      vector<uint8_t>         Voltage;
+      vector<CurrentCH_t>     Current;
       Analyzer::AnalyzerMode  Mode;
+      AnalyzerSoft           *Parent;
     } Analyzer_t;
     typedef struct {
       float Voltage[3];
       float Current[4];
     } Sample_t;
-    typedef struct {
-      uint8_t          Buffer[8192];
-      libusb_transfer *Transfer;
-    } Transfer_t;    
+    class Transfer {
+      private :
+        libusb_transfer *pTransfer;
+        uint8_t         *pBuffer;
+        uint32_t         pBufferSize;
+        DeviceV2_01     *pParent;
+      public :
+        Transfer(DeviceV2_01 *parent, uint32_t size);
+        ~Transfer();
+        int      Submit();
+        int      Submit(void *data, uint32_t size);
+        int      Submit(libusb_device_handle *deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout);
+        void     Setup(libusb_device_handle *deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout);
+        uint32_t BufferSize();
+    };   
   private :
     static bool                  pRegistered;    
   private :
+    uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
     bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
     vector<Analyzer_t>           pAnalyzersSetup;          //Listado de analyzadores
     deque<Sample_t>              pBuffer;                  //Read buffer
-    float                        pVoltageGain[3];          //Ganancia de tension
-    float                        pCurrentGain[4];          //Ganancia de corriente
-    float                        pVoltageOffset[3];        //Offset de tension
-    float                        pCurrentOffset[4];        //Offset de corriente
-    float                        pCurrentLevel[4];         //Current level
+    vector<float>                pVoltageGain;             //Ganancia de tension
+    vector<float>                pCurrentGain;             //Ganancia de corriente
+    vector<float>                pVoltageOffset;           //Offset de tension
+    vector<float>                pCurrentOffset;           //Offset de corriente
+    vector<float>                pCurrentLevel;            //Current level
     bool                         pHighGain;                //Choose high gain mode
-    int16_t                      pCapture[7];              //Capture status
-    int                          pCaptureSync;             //Flag for detect lost samples
-    struct libusb_device_handle *pDeviceHandle;            //Dispositivo de captura
-    struct libusb_device        *pNewDevice;               //Dispositivo que se conecta
+    vector<int16_t>              pCapture;                 //Capture status
+    libusb_device_handle        *pDeviceHandle;            //Dispositivo de captura
+    libusb_device               *pNewDevice;               //Dispositivo que se conecta
     libusb_context              *pContext;                 //USB context
     deque<Sample_t>              pAverageValues;           //Average wave value of last second
     RWLocks                      pAverageLocks;            //Lock access to average values
     uint64_t                     pLastSignalRecv;          //Last battery message recv
     bool                         pButtonAction;            //Last action readed
-    Transfer_t                   pTransfers[DEVICEV2_01_TRANSFERS];
-    Transfer_t                   pSignalTransfer;
+    vector<Transfer>             pTransfers;
+    Transfer                     pSignalTransfer;
   private :
     static bool  GetInstances();
     static json  CheckConfig(const json &config);

@@ -15,7 +15,7 @@ class AnalyzerRemote : public Analyzer {
       ProviderLocks   Locks;
     } Query_t;
     typedef struct {
-      HTTPRequest    *Request;htop
+      HTTPRequest    *Request;
               
       ProviderLocks   Locks;    
     } Request_t;

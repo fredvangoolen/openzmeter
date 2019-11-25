@@ -48,18 +48,20 @@ class HTTPRequest final : public Database {
   public :
     static ssize_t WriteFunction(void *cls, uint64_t pos, char *buf, size_t max);
 };
-class HTTPServer final {
+class HTTPCallback {
   public :
     typedef void (*Func_t)(HTTPRequest &request);
+  public :
+    string  HandleName;
+    Func_t  Function;
+  public :
+    HTTPCallback(const string &handle, Func_t function);
+};
+class HTTPServer final {
   private :
-    typedef struct {
-      string  HandleName;
-      Func_t  Function;
-    } Callback_t;
-  private :
-    static RWLocks            pLock;            //Control access to pCallbacks vector
-    static vector<Callback_t> pCallbacks;       //List of callbacks URLs
-    static string             pRelativePath;    //Relative path of server
+    static RWLocks              pLock;            //Control access to pCallbacks vector
+    static vector<HTTPCallback> pCallbacks;       //List of callbacks URLs
+    static string               pRelativePath;    //Relative path of server
   private:
     MHD_Daemon  *pDaemon;
   private :
@@ -67,7 +69,7 @@ class HTTPServer final {
     static void HandleComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe);
     static int  SendRedirect(struct MHD_Connection *connection, const string &url);
   public :
-    static void RegisterCallback(const string &handleName, const Func_t function);
+    static void RegisterCallback(const string &handleName, const HTTPCallback::Func_t function);
     static void UnregisterCallback(const string &handleName);
   public :
     HTTPServer();

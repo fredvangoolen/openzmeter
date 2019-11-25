@@ -45,9 +45,9 @@ json Device::GetJSONDescriptor() {
 json Device::GetJSONAnalyzerDescriptor(const string &serial) {
   json Response = nullptr;
   pMembersLock.ReadLock();
-  for(uint n = 0; n != pAnalyzers.size(); n++) {
-    if(pAnalyzers[n]->Serial() != serial) continue;
-    Response = pAnalyzers[n]->GetJSONShortDescriptor();
+  for(Analyzer *Tmp : pAnalyzers) {
+    if(Tmp->Serial() != serial) continue;
+    Response = Tmp->GetJSONShortDescriptor();
     break;
   }
   pMembersLock.ReadUnlock();
@@ -56,7 +56,7 @@ json Device::GetJSONAnalyzerDescriptor(const string &serial) {
 json Device::GetJSONAllAnalyzerDescriptors() {
   json Response = json::array();
   pMembersLock.ReadLock();
-  for(uint n = 0; n != pAnalyzers.size(); n++) Response.push_back(pAnalyzers[n]->GetJSONShortDescriptor());
+  for(Analyzer *Tmp : pAnalyzers) Response.push_back(Tmp->GetJSONShortDescriptor());
   pMembersLock.ReadUnlock();
   return Response;
 }
@@ -71,15 +71,14 @@ void Device::StopDevice(HTTPRequest &req) {
   req.FromJSON(Response);
 }
 Analyzer *Device::FindAnalyzer(const string &serial) {
-  Analyzer *Tmp = NULL;
   pMembersLock.ReadLock();
-  for(uint n = 0; n != pAnalyzers.size(); n++) {
-    if(pAnalyzers[n]->Serial() != serial) continue;
-    Tmp = pAnalyzers[n];
-    break;
+  for(Analyzer *Tmp : pAnalyzers) {
+    if(Tmp->Serial() != serial) continue;
+    pMembersLock.ReadUnlock();
+    return Tmp;
   }
   pMembersLock.ReadUnlock();
-  return Tmp;
+  return NULL;
 }
 bool Device::GetAnalyzer(HTTPRequest& req) {
   json Params = req.GetParams();

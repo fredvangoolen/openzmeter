@@ -42,6 +42,7 @@ int main(int argc, char** argv) {
   setbuf(stdout, NULL);
   signal(SIGPIPE, SIG_IGN);
   signal(SIGILL, SIG_IGN);
+  signal(SIGALRM, SIG_IGN);
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
   
@@ -68,6 +69,7 @@ int main(int argc, char** argv) {
   LOGFile LOGFile;
   /* Create database tables */
   LOGFile::Debug("Creating database tables\n");
+  Database::EnablePool();
   Database DB("public");
   if(DB.ExecResource("SQL/Database.sql") == false) return EXIT_FAILURE;
   /* Create system manager */
@@ -84,5 +86,6 @@ int main(int argc, char** argv) {
     Iter++;
     usleep(1000000);
   }
+  Database::DisablePool();
   return EXIT_SUCCESS;
 }

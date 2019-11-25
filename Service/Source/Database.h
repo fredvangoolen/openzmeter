@@ -18,22 +18,30 @@ class Database {
   private :
     typedef struct {
       PGconn   *Connection;
-      uint64_t  LastUse;
+      uint64_t  FreeTime;     //Total usage time
+      uint64_t  UsageTime;    //Total free time
+      uint64_t  LastTime;     //Last time event
     } PoolConnection_t;
   private :
     static string                  pConnectionString;
     static queue<PoolConnection_t> pConnectionPool;
     static pthread_mutex_t         pMutex;
+    static bool                    pPoolEnabled;
   private :
     PGconn      *pDBConn;
     string       pSchema;
     PGresult    *pResult;
+    uint64_t     pUsageTime;
+    uint64_t     pFreeTime;
+    uint64_t     pLastTime;
   private :
     static void ReadConfig();
   private :
     void ClearAsync();
   public :
     static void RemoveExpiredSessions();
+    static void EnablePool();
+    static void DisablePool();
   public :
     string      Bind(const uint32_t param) const;
     string      Bind(const uint64_t param) const;

@@ -101,6 +101,23 @@ DeviceV1_01::DeviceV1_01(const string &serial) : Device(serial, "V1.01", "Captur
 DeviceV1_01::~DeviceV1_01() {
   StopDevice();
 }
+DeviceV1_01::Transfer::Transfer(DeviceV1_01 *parent, uint32_t size) {
+  pBufferSize = size;
+  pParent = parent;
+  pBuffer = (uint8_t*)malloc(size);
+  pTransfer = libusb_alloc_transfer(0);
+}
+DeviceV1_01::Transfer::~Transfer() {
+  if(pBuffer != NULL) free(pBuffer);
+  if(pTransfer != NULL) libusb_free_transfer(pTransfer);
+}
+int DeviceV1_01::Transfer::Submit() {
+  return libusb_submit_transfer(pTransfer);
+}
+int DeviceV1_01::Transfer::Submit(libusb_device_handle* deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout) {
+  libusb_fill_bulk_transfer(pTransfer, deviceHandle, endpoint, pBuffer, pBufferSize, callback, pParent, timeout);
+  return Submit();
+}
 bool DeviceV1_01::StartDevice() {
   pMembersLock.WriteLock();
   if(pState == RUNNING) {
@@ -136,6 +153,7 @@ bool DeviceV1_01::StartDevice() {
     } else {
       pDeviceHandle = NULL;
       pNewDevice    = NULL;
+      pSubmittedTransfers = 0;
       if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE , DEVICEV1_01_VID, DEVICEV1_01_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
         LOGFile::Error("Failed to register libUSB calback...\n");
         pTerminate = true;
@@ -169,11 +187,15 @@ bool DeviceV1_01::StopDevice() {
 }
 void *DeviceV1_01::Capture_Thread(void *args) {
   DeviceV1_01 *This = (DeviceV1_01*)args;
-  for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) This->pTransfers[i].Transfer = libusb_alloc_transfer(0);
-  while(!This->pTerminate) {
+  This->pTransfers.resize(DEVICEV1_01_TRANSFERS, Transfer(This, 8192));
+  while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) LOGFile::Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
+    if(This->pTerminate == true) {
+      printf("esperando %u transacciones\n", This->pSubmittedTransfers);
+      continue;
+    }
     if(This->pNewDevice != NULL) {
       struct libusb_device_descriptor Descriptor;
       Result = libusb_get_device_descriptor(This->pNewDevice, &Descriptor);
@@ -234,9 +256,9 @@ void *DeviceV1_01::Capture_Thread(void *args) {
       } else {
         LOGFile::Info("Claimed interface 0 for DeviceV1.01 with serial %s\n", This->pSerial.c_str());
       }
-      for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) {
-        libusb_fill_bulk_transfer(This->pTransfers[i].Transfer, This->pDeviceHandle, DEVICEV1_01_ENDPOINT_IN, This->pTransfers[i].Buffer, sizeof(This->pTransfers[i].Buffer), ReadCallback, This, -1);
-        Result |= libusb_submit_transfer(This->pTransfers[i].Transfer);
+      for(Transfer &Tmp : This->pTransfers) {
+        Result |= Tmp.Submit(This->pDeviceHandle, DEVICEV1_01_ENDPOINT_IN, ReadCallback, 1000);
+        This->pSubmittedTransfers++;
       }
       if(Result != LIBUSB_SUCCESS) {
         LOGFile::Error("libusb_submit_transfer returns %d\n", Result);
@@ -249,10 +271,11 @@ void *DeviceV1_01::Capture_Thread(void *args) {
       This->pNewDevice = NULL;
     }
   }
-  for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) libusb_cancel_transfer(This->pTransfers[i].Transfer);
+//  for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) libusb_cancel_transfer(This->pTransfers[i].Transfer);
   libusb_release_interface(This->pDeviceHandle, 0);
   libusb_close(This->pDeviceHandle);
   libusb_exit(This->pContext);
+  This->pTransfers.clear();
   return NULL;
 }
 void DeviceV1_01::ReadCallback(struct libusb_transfer *transfer) {
@@ -271,10 +294,11 @@ void DeviceV1_01::ReadCallback(struct libusb_transfer *transfer) {
       }
     }
   }
-  if(This->pTerminate == false) 
+  if(This->pTerminate == false) { 
     libusb_submit_transfer(transfer);
-  else
-    libusb_free_transfer(transfer);
+  } else {
+    This->pSubmittedTransfers--;
+  }
 }
 int DeviceV1_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
   DeviceV1_01 *This = (DeviceV1_01*)user_data;
@@ -334,6 +358,10 @@ bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
   
 //  if(pBuffer.full()) return false;
   Sample_t Sample = { pDelay.front(), currentSample };
+  if(pBuffer.size() > (DEVICEV1_01_SAMPLEFREQ * DEVICEV1_01_BUFFERSECONDS)) {
+    pBuffer.clear();
+    LOGFile::Error("Creared input buffer on device '%s'\n", pSerial.c_str());
+  }
   pBuffer.push_back(Sample);
   pDelay.pop_front();
   pDelay.push_back(voltageSample);
