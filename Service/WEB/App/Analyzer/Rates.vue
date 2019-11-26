@@ -30,10 +30,10 @@
     data() {
       return { Error: '', Analyzer: null, Tariffs: null,
         Columns: [
-          {name: 'Name', title: 'Name'},
-          {name: 'StartDate', title: 'Start date', callback: 'DateFormat'},
-          {name: 'EndDate', title: 'End date', callback: 'DateFormat'}, 
-          {name: '__slot:actions', title: ''}
+          { name: 'Name', title: 'Name' },
+          { name: 'StartDate', title: 'Start date', callback: this.DateFormat },
+          { name: 'EndDate', title: 'End date', callback: this.DateFormat },
+          { name: '__slot:actions', title: '' }
         ]
       };
     },
@@ -92,7 +92,7 @@
         });
       },        
       Delete: function(row) {
-        if(confirm("Delete '"+row.Name+"' rate?")){
+        if(confirm("Delete '"+row.Name+"' rate?")) {
           this.$refs.Dialog.ShowSpinner = true;
           $.ajax({ url: "delRate", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analyzer.Analyzer }), 
             success: () => { 

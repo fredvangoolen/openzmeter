@@ -374,8 +374,24 @@ void DeviceManager::TestAlarmCallback(HTTPRequest &req) {
   pDevicesLock.ReadUnlock();
 }
 void DeviceManager::GetAlarmsCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' params are requiered", MHD_HTTP_BAD_REQUEST);
+  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) {
+    if(Dev->GetAlarms(req) == true) break;
+  }
+  pDevicesLock.ReadUnlock();
 }
 void DeviceManager::GetAlarmCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' params are requiered", MHD_HTTP_BAD_REQUEST);
+  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) {
+    if(Dev->GetAlarm(req) == true) break;
+  }
+  pDevicesLock.ReadUnlock();
 }
 void DeviceManager::SetAlarmCallback(HTTPRequest &req) {
 }

@@ -95,8 +95,8 @@ class AnalyzerSoft final : public Analyzer {
   private :  //Analyzer params (write in thread OR append, read in SeriesNow)
     vector< vector<float> >    pVoltageSamples;          //Voltage samples
     vector< vector<float> >    pCurrentSamples;          //Current samples
-    vector<FFT*>               pVoltageFFT;              //Muestras de FFT tension del bloque
-    vector<FFT*>               pCurrentFFT;              //Muestras de FFT corriente del bloque
+    vector<FFT>                pVoltageFFT;              //Muestras de FFT tension del bloque
+    vector<FFT>                pCurrentFFT;              //Muestras de FFT corriente del bloque
     vector<uint32_t>           pBlockCycles;             //Current block cycles lengths
     deque<uint32_t>            pCycles;                  //Prev cycles lenghts
     Params_t                   pAggreg10C;               //Agregacion de 10 ciclos

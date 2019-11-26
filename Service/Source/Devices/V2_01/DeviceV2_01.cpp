@@ -292,7 +292,8 @@ bool  DeviceV2_01::StopDevice() {
 void *DeviceV2_01::Capture_Thread(void *args) {
   DeviceV2_01 *This   = (DeviceV2_01*)args;
   uint64_t   LastSignalSend = 0;
-  This->pTransfers.resize(DEVICEV2_01_TRANSFERS, Transfer(This, 8192));
+  This->pTransfers.reserve(DEVICEV2_01_TRANSFERS);
+  for(auto n = 0; n < DEVICEV2_01_TRANSFERS; n++) This->pTransfers.emplace_back(This, 8192);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
@@ -399,9 +400,9 @@ void *DeviceV2_01::Capture_Thread(void *args) {
       } else {
         LOGFile::Info("Claimed interface 0 for DeviceV2 with serial '%s'\n", This->pSerial.c_str());
       }
-      This->pSignalTransfer.Setup(This->pDeviceHandle, DEVICEV2_01_ENDPOINT_OUT, ReadCallback, 200);
+      This->pSignalTransfer.Setup(This->pDeviceHandle, DEVICEV2_01_ENDPOINT_OUT, ReadCallback, -1);
       for(Transfer &Tmp : This->pTransfers) {
-        Tmp.Submit(This->pDeviceHandle, DEVICEV2_01_ENDPOINT_IN, ReadCallback, 1000);
+        Tmp.Submit(This->pDeviceHandle, DEVICEV2_01_ENDPOINT_IN, ReadCallback, -1);
         This->pSubmittedTransfers++;
       }
       if(Result != LIBUSB_SUCCESS) {
@@ -475,7 +476,6 @@ void  DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
     }
   } else {
     This->pSubmittedTransfers--;
-    libusb_free_transfer(transfer);
   }
 }
 int   DeviceV2_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) {
