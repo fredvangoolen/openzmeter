@@ -11,7 +11,7 @@ AnalyzerSoft::Rates::~Rates() {
 }
 void AnalyzerSoft::Rates::GetRates(HTTPRequest &req) {
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
-  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') as result FROM rates");
+  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') AS result FROM rates");
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
 }
@@ -20,7 +20,7 @@ void AnalyzerSoft::Rates::GetRate(HTTPRequest &req) {
   if(!Params["RateID"].is_number_unsigned()) return req.FromString("'RateID' params required", MHD_HTTP_BAD_REQUEST);
   uint32_t RateID = Params["RateID"];
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
-  req.ExecSentenceAsyncResult("SELECT json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) as result FROM rates where rate = " + req.Bind(RateID));
+  req.ExecSentenceAsyncResult("SELECT JSON_BUILD_OBJECT('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) AS result FROM rates WHERE rate = " + req.Bind(RateID));
   if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
 }
@@ -59,7 +59,6 @@ void AnalyzerSoft::Rates::AddRate(HTTPRequest &req) {
   req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::Rates::GetPrices(HTTPRequest &req) {
-  
   //Parse, check params and prepare result struct
   json Params = req.GetParams();
   uint64_t To         = Params["To"];

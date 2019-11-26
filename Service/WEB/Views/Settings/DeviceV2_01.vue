@@ -52,16 +52,20 @@
           </table>
           <table>
             <tr><td colspan="5" class="border-bottom">Current channels</td></tr>
+              <tr><td colspan="5">
+                <label class="control-label" style="line-height: 22px">Full scale mode</label>
+                <toggle class="float-right toggle-gain" onText="333mV" onStyle="primary" offText="625mV" offStyle="primary" :value="Settings.HighGain" v-on:change="Settings.HighGain = $event"></toggle>
+              </td></tr>
             <tr>
               <td></td>
-              <td class="text-right"><strong>Level</strong></td>
+              <td class="text-right"><strong>Full scale value</strong></td>
               <td class="text-right"><strong>Correction</strong></td>
               <td class="text-right"><strong>Offset</strong></td>
               <td></td>
             </tr>
             <tr v-for="index in [0, 1, 2, 3]">
               <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
-              <td><input-spin :min="0.001" :max="1000000" :value="Settings.CurrentLevel[index]" :increment="0.001" :decimals="3" prepend="μV/A" v-on:change="Settings.CurrentLevel[index] = $event"></input-spin></td>
+              <td><input-spin :min="0.1" :max="1000000" :value="Settings.CurrentLevel[index]" :increment="0.1" :decimals="1" prepend="A" v-on:change="Settings.CurrentLevel[index] = $event"></input-spin></td>
               <td><input-spin :min="-10" :max="10" :value="Settings.CurrentGain[index]" :increment="0.001" :decimals="3" prepend="%" v-on:change="Settings.CurrentGain[index] = $event"></input-spin></td>
               <td><input-spin :min="-1000" :max="1000" ref="CurrentOffset" :value="Settings.CurrentOffset[index]" :increment="0.01" prepend="A" v-on:change="Settings.CurrentOffset[index] = $event"></input-spin></td>
               <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + OffsetC[index] + ' A'"><img :src="require('Imgs/wand.png')"></button></td>
@@ -223,5 +227,8 @@
     font-size: 12px;
     float:right;
     font-weight: normal;
+  }
+  .toggle-gain >>> .toggle {
+    width: 60px !important;
   }
 </style>

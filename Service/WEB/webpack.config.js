@@ -1,6 +1,7 @@
 var path = require('path');
 var webpack = require('webpack');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const VueLoaderPlugin = require('vue-loader/lib/plugin');
 module.exports = {
   entry: './main.js',
   output: {
@@ -9,6 +10,7 @@ module.exports = {
     filename: 'openZmeter.js'
   },
   plugins: [
+    new VueLoaderPlugin(),
     new webpack.ProvidePlugin({
     $: "jquery",
     jQuery: "jquery",
@@ -32,6 +34,14 @@ module.exports = {
           // other vue-loader options go here
         }
       },
+//      {
+//        test: /\.js$/,
+//        exclude: /node_modules/,
+//        loader: 'eslint-loader',
+//        options: {
+//          // eslint options (if necessary)
+//        },
+//      },
       {
         test: /\.js$/,
         loader: 'babel-loader',
@@ -68,7 +78,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*': { target: 'http://10.8.0.135'}
+      '*': { target: 'http://localhost:8081'}
     }
   },
   performance: {

@@ -5,10 +5,15 @@ import 'JS/bootstrap.min.js';
 import 'CSS/bootstrap.min.css';
 import 'CSS/openZmeter.css';
 //VUE components ---------------------------------------------------------------
-import Vue from 'JS/vue.js';
-
-import Router from 'JS/vue-router.js';
+import Vue from 'vue';
+import Router from 'vue-router';
 Vue.use(Router);
+import Quasar from 'quasar';
+Vue.use(Quasar);
+//Import Quasar ----------------------------------------------------------------
+import {QBtn} from 'quasar';
+Vue.component('QBtn', QBtn);
+
 import Avatar from 'Components/Avatar.vue';
 Vue.component('Avatar', Avatar);
 import ColorBar from 'Components/ColorBar.vue';

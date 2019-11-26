@@ -3,18 +3,29 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Alarms &raquo; Edit</h4></div>
       <div class="pull-right btn-group">
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" v-on:click="Save"><img :src="require('Imgs/diskette.png')" alt="Save alarm"></button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: View=='Main' }" v-on:click="View='Main'">Main</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: View=='Periods' }" v-on:click="View='Expression'">Expression</button>
         <button type="button" class="btn btn-default btn-xs" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
-        <button type="button" class="btn btn-default btn-xs" v-on:click="Save"><img :src="require('Imgs/tick.png')" alt="Back"></button>
       </div>
     </template>
-    <div class="row">
+    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
+    <div class="row" v-bind:style="{ display: (View=='Main') ? 'block' : 'none' }">
       <div class="col-xs-12">
-        <label class="control-label">Alarm name</label>
-        <input type="text" class="form-control form-control-sm"/>
+        <label class="control-label">Name</label>
+        <input type="text" class="form-control form-control-sm" v-model="Alarm.Name"/>
+      </div>
+      <div class="col-xs-12">
+        <label class="control-label">Description</label>
+        <textarea class="form-control" rows="2" v-model="Alarm.Description" style="resize: none"></textarea>
+      </div>
+      <div class="col-xs-12">
+        <label class="control-label">Alarm message</label>
+        <textarea class="form-control" rows="2" v-model="Alarm.Message" style="resize: none"></textarea>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Priority</label>
-        <option-picker :options="['LOW', 'NORMAL', 'HIGH']" selected="NORMAL" :big="true"></option-picker>
+        <option-picker :options="Priorities" :selected="Priorities[Alarm.Priority]" :big="true"></option-picker>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Aggregation</label>
@@ -28,68 +39,55 @@
         <label class="control-label">Window</label>
         <input-spin :min="1" :value="Alarm.Window" :increment="1" :decimals="0"></input-spin>
       </div>
+      
       <div class="col-xs-12">
-        <label class="control-label">Expresion builder</label>
+        <div>cg</div>
+        <q-btn color="white" text-color="black" label="Standard" />
+      </div>
+    </div>
+    <div class="row" v-bind:style="{ display: (View=='Expression') ? 'block' : 'none' }">
+      <div class="col-xs-12">
+        <label class="control-label">Expression</label>
         <div class="input-group">
-          <div class="input-group-btn">
-            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><img :src="require('Imgs/math_functions.png')"><span class="caret"></span></button>
-            <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu">
-              <li class="dropdown-submenu">
-                <a>Variables</a>
-                  <ul class="dropdown-menu">
-                    <li class="dropdown-submenu" v-if="Values.hasOwnProperty('Voltage') && Array.isArray(Values.Voltage)">
-                      <a>Voltage</a>
-                      <ul class="dropdown-menu">
-                        <li><a>RMS<span class="float-right menu-value" v-html="EvaluateFormat(RMS(Values.Voltage), 2)"></span></a></li>
-                        <li><a>AVG<span class="float-right menu-value" v-html="EvaluateFormat(AVG(Values.Voltage), 2)"></span></a></li>
-                        <li role="separator" class="divider"></li>
-                        <li v-for="(val, index) in Values.Voltage"><a>Voltage[{{ index }}]<span class="float-right menu-value" v-html="EvaluateFormat(val, 2)"></span></a></li>
-                      </ul>
-                    </li>
-                    <li v-if="Values.hasOwnProperty('Voltage') && !Array.isArray(Values.Voltage)"><a>Voltage<span class="float-right menu-value" v-html="EvaluateFormat(Values.Voltage, 2)"></span></a></li>
-
-                    <li class="dropdown-submenu" v-if="Values.hasOwnProperty('Current') && (Values.Current.length > 1)">
-                      <a>Current</a>
-                      <ul class="dropdown-menu">
-                        <li><a>RMS<span class="float-right menu-value" v-html="EvaluateFormat(RMS(Values.Current), 2)"></span></a></li>
-                        <li><a>AVG<span class="float-right menu-value" v-html="EvaluateFormat(AVG(Values.Current), 2)"></span></a></li>
-                        <li role="separator" class="divider"></li>
-                        <li v-for="(val, index) in Values.Current"><a>Voltage[{{ index }}]<span class="float-right menu-value" v-html="EvaluateFormat(val, 2)"></span></a></li>
-                      </ul>
-                    </li>
-                    <li v-if="Values.hasOwnProperty('Current') && (Values.Current.length == 1)"><a>Current<span class="float-right menu-value" v-html="EvaluateFormat(Values.Current[0], 2)"></span></a></li>
-                  </ul>
-              </li>
-              <li class="dropdown-submenu">
-                <a href="#">Operators</a>
-                  <ul class="dropdown-menu">
-                    <li><a href="#">Power</a></li>
-                    <li><a href="#">Square root</a></li>
-                  </ul>
-              </li>
-            </ul>
-          </div>
-          <input type="text" class="form-control form-control-sm" v-on:keyup="Validate"/>
+          <input type="text" class="form-control" v-model="Alarm.Expression">
+          <span class="input-group-btn">
+            <button class="btn btn-default" data-toggle="tooltip" title="Evaluate" type="button" v-on:click="Evaluate"><img :src="require('Imgs/math_functions.png')"></button>
+          </span>
         </div>
       </div>
       <div class="col-xs-12">
-        <div class="form-control" style="margin-top: 5px" ref="formula"></div>
+        <div style="width:100%;max-height: 100px; overflow-y: scroll">
+          <vuetable ref="table" :fields="columns" :api-mode="false" class="table small table-striped">
+            <template slot="actions" slot-scope="props">
+              <div class="btn-group">
+                <button type="button" class="btn btn-primary btn-xs" v-on:click="Inser(props.rowData)">Insert</button>
+              </div>
+            </template>
+          </vuetable>
+        </div>
       </div>
     </div>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
   </dlg>
 </template>
 
 <script>
-//  import { create, all } from 'mathjs';
-//  const math = create(all);
+//  import {Quasar, QBtn} from 'quasar';
+  import vuetable from 'vuetable-2';
+  import 'CSS/table-responsive.css';
   import Dlg from 'Components/Dialog.vue';
   import InputSpin from 'Components/InputSpin.vue';
   import OptionPicker from 'Components/OptionPicker.vue';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return { Analyzer: null, Alarm: {Aggreg: '3S'}, Error: '', Values: {} };
+      return { Analyzer: null, Alarm: {Aggreg: '3S'}, Error: '', Values: {}, View: 'Main', Priorities: ['LOW', 'NORMAL', 'HIGH'],
+        columns: [
+          { name: 'Name', title: 'Variable' },
+          { name: 'Value', title: 'Value', callback: this.ValueFormat },
+          { name: 'Units', title: 'Units' },
+          { name: '__slot:actions', title: '' }
+        ]
+      };
     },
     methods: {
       RMS: function(values) {
@@ -108,16 +106,25 @@
       AggregationChanged: function(val) {
         if(val == '3 seconds') {
           this.Alarm.Aggreg = '3S';
-          $.ajax({url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({Series: ['VOLTAGE', 'CURRENT', 'FREQUENCY', 'FLAG', 'ACTIVE_POWER', 'REACTIVE_POWER'], LastSample: 0, Analyzer: this.Analyzer.Analyzer, Aggreg: this.Alarm.Aggreg, To: 0, Period: 6000}),
+        }
+      },
+      ValueFormat: function(val) {
+        return oZm.Round2Plain(val, 2);
+      },
+      Evaluate: function() {
+            $.ajax({url: 'testAlarm', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, Aggreg: this.Alarm.Aggreg, Expression: this.Alarm.Expression }),
             success: (result) => {
-              this.FilterValues(result);
+              this.$refs.table.setData({ data: result.Variables });
             },
             error: () => {
               this.FilterValues(null);              
             }
           });
-        }
-      },
+
+  
+  
+},
+    
       FilterValues: function(result) {
         this.Values = {};
          if(result == null) return;    
@@ -257,7 +264,7 @@
 
 
     },
-    components: { Dlg, InputSpin, OptionPicker}
+    components: { Dlg, InputSpin, OptionPicker, vuetable }
   }
 </script>
 
@@ -305,4 +312,19 @@
   .menu-value {
     color: #666;
   }
+  @media screen and (min-width: 600px) {
+    .table >>> th:nth-child(2) {
+      width: 100px;
+      text-align: right;
+    }
+    .table >>> td:nth-child(2) {
+      text-align: right;
+    }
+    .table >>> th:nth-child(3) {
+      width: 20px;
+    }
+    .table >>> th:nth-child(4) {
+      width: 30px;
+    }
+  }  
 </style>
