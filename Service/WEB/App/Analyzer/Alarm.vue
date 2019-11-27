@@ -5,7 +5,7 @@
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" v-on:click="Save"><img :src="require('Imgs/diskette.png')" alt="Save alarm"></button>
         <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: View=='Main' }" v-on:click="View='Main'">Main</button>
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: View=='Periods' }" v-on:click="View='Expression'">Expression</button>
+        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: View=='Expression' }" v-on:click="View='Expression'; Evaluate()">Expression</button>
         <button type="button" class="btn btn-default btn-xs" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
@@ -39,16 +39,16 @@
         <label class="control-label">Window</label>
         <input-spin :min="1" :value="Alarm.Window" :increment="1" :decimals="0"></input-spin>
       </div>
-      
-      <div class="col-xs-12">
-        <div>cg</div>
-        <q-btn color="white" text-color="black" label="Standard" />
-      </div>
     </div>
     <div class="row" v-bind:style="{ display: (View=='Expression') ? 'block' : 'none' }">
       <div class="col-xs-12">
         <label class="control-label">Expression</label>
         <div class="input-group">
+          <span class="input-group-addon">
+            <img v-if="EvalResult===true" :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Alarm expression is valid and evaluate as triggered"/>
+            <img v-if="EvalResult===false" :src="require('Imgs/tick.png')" data-toggle="tooltip" title="Alarm expression is valid and evaluate as not triggered!"/>
+            <img v-if="EvalResult===null" :src="require('Imgs/cross.png')" data-toggle="tooltip" title="Alarm expression is invalid"/>
+          </span>
           <input type="text" class="form-control" v-model="Alarm.Expression">
           <span class="input-group-btn">
             <button class="btn btn-default" data-toggle="tooltip" title="Evaluate" type="button" v-on:click="Evaluate"><img :src="require('Imgs/math_functions.png')"></button>
@@ -56,7 +56,7 @@
         </div>
       </div>
       <div class="col-xs-12">
-        <div style="width:100%;max-height: 100px; overflow-y: scroll">
+        <div style="width:100%; height: 200px; overflow-y: auto">
           <vuetable ref="table" :fields="columns" :api-mode="false" class="table small table-striped">
             <template slot="actions" slot-scope="props">
               <div class="btn-group">
@@ -80,7 +80,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return { Analyzer: null, Alarm: {Aggreg: '3S'}, Error: '', Values: {}, View: 'Main', Priorities: ['LOW', 'NORMAL', 'HIGH'],
+      return { Analyzer: null, Alarm: {Aggreg: '3S'}, Error: '', EvalResult: null, View: 'Main', Priorities: ['LOW', 'NORMAL', 'HIGH'],
         columns: [
           { name: 'Name', title: 'Variable' },
           { name: 'Value', title: 'Value', callback: this.ValueFormat },
@@ -90,19 +90,6 @@
       };
     },
     methods: {
-      RMS: function(values) {
-        var Val = 0;
-        for(var i = 0; i < values.length; i++) Val += Math.pow(values[i], 2.0);
-        return Math.sqrt(Val / values.length);
-      },
-      AVG: function(values) {
-        var Val = 0;
-        for(var i = 0; i < values.length; i++) Val += values[i];
-        return Val / values.length;
-      },
-      EvaluateFormat: function(expresion, decimals) {
-        return oZm.RoundHTML(expresion, decimals);
-      },
       AggregationChanged: function(val) {
         if(val == '3 seconds') {
           this.Alarm.Aggreg = '3S';
@@ -112,19 +99,26 @@
         return oZm.Round2Plain(val, 2);
       },
       Evaluate: function() {
-            $.ajax({url: 'testAlarm', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, Aggreg: this.Alarm.Aggreg, Expression: this.Alarm.Expression }),
-            success: (result) => {
-              this.$refs.table.setData({ data: result.Variables });
-            },
-            error: () => {
-              this.FilterValues(null);              
+        if(this.Alarm.Expression == undefined) this.Alarm.Expression = "";
+        $.ajax({url: 'testAlarm', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, Aggreg: this.Alarm.Aggreg, Expression: this.Alarm.Expression }),
+          success: (result) => {
+            if(result.Error != undefined) {
+              this.EvalResult = null;
+              this.Error = result.Error;
+            } else if(result.Result === 0.0) {
+              this.EvalResult = false;
+              this.Error = "";
+            } else {
+              this.EvalResult = true;
+              this.Error = "";
             }
-          });
-
-  
-  
-},
-    
+            this.$refs.table.setData({ data: result.Variables });
+          },
+          error: () => {
+            this.FilterValues(null);              
+          }
+        });
+      },
       FilterValues: function(result) {
         this.Values = {};
          if(result == null) return;    

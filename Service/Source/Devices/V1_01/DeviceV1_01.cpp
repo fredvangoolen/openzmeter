@@ -160,6 +160,7 @@ bool DeviceV1_01::StartDevice() {
         pthread_join(pCaptureThread, NULL);
         libusb_exit(pContext);
       } else {
+        pthread_setname_np(pCaptureThread, "DeviceV1_01");
         pState = RUNNING;
       }
     }
@@ -187,7 +188,8 @@ bool DeviceV1_01::StopDevice() {
 }
 void *DeviceV1_01::Capture_Thread(void *args) {
   DeviceV1_01 *This = (DeviceV1_01*)args;
-  This->pTransfers.resize(DEVICEV1_01_TRANSFERS, Transfer(This, 8192));
+  This->pTransfers.reserve(DEVICEV1_01_TRANSFERS);
+  for(auto n = 0; n < DEVICEV1_01_TRANSFERS; n++) This->pTransfers.emplace_back(This, 8192);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);

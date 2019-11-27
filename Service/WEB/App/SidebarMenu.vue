@@ -32,6 +32,7 @@
         <li><router-link class="link" to="/Events/ITIC">ITIC</router-link></li>
         <li><router-link class="link" to="/Events/Disturbances">Disturbances</router-link></li>
         <li><router-link class="link" to="/Events/EN50160">EN50160</router-link></li>
+        <li><router-link class="link" to="/Events/Alarms">Alarms</router-link></li>
       </ul>
     </li>
     <li v-if="AnalyzerSelected">
