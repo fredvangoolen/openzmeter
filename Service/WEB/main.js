@@ -4,6 +4,7 @@ window.$ = window.jquery = jQuery;
 import 'JS/bootstrap.min.js';
 import 'CSS/bootstrap.min.css';
 import 'CSS/openZmeter.css';
+//import 'quasar/dist/quasar.css'
 //VUE components ---------------------------------------------------------------
 import Vue from 'vue';
 import Router from 'vue-router';
@@ -11,8 +12,9 @@ Vue.use(Router);
 import Quasar from 'quasar';
 Vue.use(Quasar);
 //Import Quasar ----------------------------------------------------------------
-import {QBtn} from 'quasar';
+import {QBtn, QInput} from 'quasar';
 Vue.component('QBtn', QBtn);
+Vue.component('QInput', QInput);
 
 import Avatar from 'Components/Avatar.vue';
 Vue.component('Avatar', Avatar);
@@ -53,6 +55,7 @@ import AnalysisFrequency from 'Views/Analysis_Frequency/View.vue';
 import EventsITIC from 'Views/Events_ITIC/View.vue';
 import EventsDisturbances from 'Views/Events_Disturbances/View.vue';
 import EventsEN50160 from 'Views/Events_EN50160/View.vue';
+import EventsAlarms from 'Views/Events_Alarms/View.vue';
 import StatsCosts from 'Views/Stats_Costs/View.vue';
 import StatsHeatmap from 'Views/Stats_Heatmap/View.vue';
 import StatsDistribution from 'Views/Stats_Distribution/View.vue';
@@ -75,6 +78,7 @@ const AppRouter = new Router({
     { path: '/Events/ITIC', component: EventsITIC },
     { path: '/Events/Disturbances', component: EventsDisturbances },
     { path: '/Events/EN50160', component: EventsEN50160 },
+    { path: '/Events/Alarms', component: EventsAlarms },
     { path: '/Stats/Costs', component: StatsCosts },
     { path: '/Stats/Heatmap', component: StatsHeatmap },
     { path: '/Stats/Distribution', component: StatsDistribution },

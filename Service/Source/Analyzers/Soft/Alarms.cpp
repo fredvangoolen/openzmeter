@@ -36,8 +36,8 @@ void AnalyzerSoft::Alarms::TestAlarm(HTTPRequest &req) {
   }
   if(Query != nullptr) {
     if(Query["Voltage"].is_array()) {
-      uint8_t Phases = Query["Voltage"].size();
-      for(uint8_t n = 0; n < Phases; n++) {
+      unsigned Phases = Query["Voltage"].size();
+      for(unsigned n = 0; n < Phases; n++) {
         float Tmp = 0.0;
         if(Query["Voltage"][n].is_number()) Tmp = Query["Voltage"][n];
         json Voltage = json::object();
@@ -48,8 +48,8 @@ void AnalyzerSoft::Alarms::TestAlarm(HTTPRequest &req) {
       }
     }  
     if(Query["Current"].is_array()) {
-      uint8_t Phases = Query["Current"].size();
-      for(uint8_t n = 0; n < Phases; n++) {
+      unsigned Phases = Query["Current"].size();
+      for(unsigned n = 0; n < Phases; n++) {
         float Tmp = 0.0;
         if(Query["Current"][n].is_number()) Tmp = Query["Current"][n];
         json Current = json::object();
@@ -59,25 +59,39 @@ void AnalyzerSoft::Alarms::TestAlarm(HTTPRequest &req) {
         Result["Variables"].push_back(Current);
       }
     }
-//    if(Query["Active_Power"].is_array()) {
-//      for(uint8_t n = 0; n < Query["Active_Power"].size(); n++) {
-//        float Tmp = 0.0;
-//        if(Query["Active_Power"][n].is_number()) Tmp = Query["Active_Power"][n];
-//        Result["Variables"]["Active_Power_" + to_string(n + 1)] = Tmp;
-//      }
-//    }
-//    if(Query["Reactive_Power"].is_array()) {
-//      for(uint8_t n = 0; n < Query["Reactive_Power"].size(); n++) {
-//        float Tmp = 0.0;
-//        if(Query["Reactive_Power"][n].is_number()) Tmp = Query["Reactive_Power"][n];
-//        Result["Variables"]["Reactive_Power_" + to_string(n + 1)] = Tmp;
-//      }
-//    }  
-//    if(Query["Frequency"].is_number()) {
-//      float Tmp = 0.0;
-//      if(Query["Frequency"].is_number()) Tmp = Query["Frequency"];
-//      Result["Variables"]["Frequency"] = Tmp;
-//    }
+    if(Query["Active_Power"].is_array()) {
+      unsigned Phases = Query["Active_Power"].size();
+      for(unsigned n = 0; n < Phases; n++) {
+        float Tmp = 0.0;
+        if(Query["Active_Power"][n].is_number()) Tmp = Query["Active_Power"][n];
+        json Active_Power = json::object();
+        Active_Power["Name"] = (Phases > 1) ? "Active_Power_" + to_string(n + 1) : "Active_Power";
+        Active_Power["Value"] = Tmp;
+        Active_Power["Units"] = "W";
+        Result["Variables"].push_back(Active_Power);
+      }
+    }
+    if(Query["Reactive_Power"].is_array()) {
+      unsigned Phases = Query["Reactive_Power"].size();
+      for(unsigned n = 0; n < Phases; n++) {
+        float Tmp = 0.0;
+        if(Query["Reactive_Power"][n].is_number()) Tmp = Query["Reactive_Power"][n];
+        json Reactive_Power = json::object();
+        Reactive_Power["Name"] = (Phases > 1) ? "Reactive_Power_" + to_string(n + 1) : "Reactive_Power";
+        Reactive_Power["Value"] = Tmp;
+        Reactive_Power["Units"] = "var";
+        Result["Variables"].push_back(Reactive_Power);
+      }
+    }  
+    if(Query["Frequency"].is_number()) {
+      float Tmp = 0.0;
+      if(Query["Frequency"].is_number()) Tmp = Query["Frequency"];
+      json Frequency = json::object();
+      Frequency["Name"] = "Frequency";
+      Frequency["Value"] = Tmp;
+      Frequency["Units"] = "Hz";
+      Result["Variables"].push_back(Frequency);
+    }
     try {
       Parser Exp;
       for(auto &Var : Result["Variables"]) Exp.DefineConst(Var["Name"], Var["Value"]);
