@@ -68,7 +68,7 @@
           TimeZone: moment.tz.guess(),
           StartDate: moment().startOf('year').valueOf(),
           EndDate: moment().endOf('year').valueOf(),
-          Name: 'No nane', 
+          Name: 'No name', 
           Template: {
             Description: 'Add tariff description here',
             Seasons: [], 

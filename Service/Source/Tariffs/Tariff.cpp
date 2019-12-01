@@ -104,7 +104,7 @@ void Tariff::SetTariffCallback(HTTPRequest &req) {
   string   TimeZone = Params["TimeZone"];
   uint32_t TariffID = Params["TariffID"];
   Tariff T(Start, End, TimeZone);
-  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
+  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid template", MHD_HTTP_BAD_REQUEST);
   bool Result = req.ExecSentenceNoResult("UPDATE tariffs SET name = " + req.Bind(Name) + ", time_zone = " + req.Bind(TimeZone) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE tariff = " + req.Bind(TariffID) + ((req.UserName() != "admin") ? " AND username = " + req.Bind(req.UserName()) : ""));
   req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
 }
@@ -123,7 +123,7 @@ void Tariff::AddTariffCallback(HTTPRequest &req) {
   string   Name     = Params["Name"];
   string   TimeZone = Params["TimeZone"];
   Tariff T(Start, End, TimeZone);
-  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
+  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid template", MHD_HTTP_BAD_REQUEST);
   bool Result = req.ExecSentenceNoResult("INSERT into tariffs(name, username, time_zone, template, startdate, enddate) VALUES(" + req.Bind(Name) + ", " + req.Bind(req.UserName()) + ", " + req.Bind(TimeZone) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ")");
   req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
 }
@@ -184,12 +184,12 @@ bool Tariff::SetTemplate(json t) {
     for(uint8_t p = 0; p < t["Seasons"][n]["DayPeriods"].size(); p++) {
       if(!t["Seasons"][n]["DayPeriods"][p].is_number_integer()) return false;
       uint8_t Hour = t["Seasons"][n]["DayPeriods"][p];
-      if((Hour < 0) || (Hour >= pPeriods.size())) return false;
+      if((Hour < 0) || (Hour >= pPeriods.size()))  return false;
       Season.DayPeriods[p] = Hour;
     }
     pSeasons.push_back(Season);
   }
-  if(pSeasons.size() == 0) return false;
+  if(pSeasons.size() == 0)  return false;
   if(pSeasons.back().EndDate < pEndDate) return false;
   if(!t["Holidays"].is_array()) return false;
   for(uint32_t n = 0; n < t["Holidays"].size(); n++) {
@@ -198,7 +198,7 @@ bool Tariff::SetTemplate(json t) {
     Holiday.Name = t["Holidays"][n]["Name"];
     if(!t["Holidays"][n]["StartDate"].is_number_unsigned()) return false;
     Holiday.StartDate = t["Holidays"][n]["StartDate"];
-    if(Holiday.StartDate < pStartDate) return false;
+//    if(Holiday.StartDate < pStartDate) return "3";
     if(!t["Holidays"][n]["EndDate"].is_number_unsigned()) return false;
     Holiday.EndDate = t["Holidays"][n]["EndDate"];
     if((Holiday.StartDate % 900000) != 0) return false;

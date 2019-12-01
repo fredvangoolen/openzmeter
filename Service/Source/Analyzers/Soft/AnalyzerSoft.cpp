@@ -52,7 +52,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   for(uint8_t i = 0; i < pVoltageSamples.size(); i++) pVoltageFFT.emplace_back("FFT_V" + to_string(i));
   pCurrentFFT.reserve(pCurrentSamples.size());
   for(uint8_t i = 0; i < pCurrentSamples.size(); i++) pCurrentFFT.emplace_back("FFT_I" + to_string(i));
-  Configure(ConfigManager::ReadConfig(optionPath));
+  Configure(CheckConfig(ConfigManager::ReadConfig(optionPath)));
   if(pthread_create(&pAnalyzerThread, NULL, Analyzer_Thread, (void*)this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pAnalyzerThread = 0;
@@ -69,16 +69,6 @@ AnalyzerSoft::~AnalyzerSoft() {
   pTerminate = true;  
   pAnalyzerWorkerLocks.Abort(&pAnalyzerThread);
   if(pEventsDetector != NULL) delete pEventsDetector;
-//  while(pVoltageFFT.size() > 0) {
-//    FFT *Tmp = pVoltageFFT.back();
-//    pVoltageFFT.pop_back();
-//    delete Tmp;
-//  }
-//  while(pCurrentFFT.size() > 0) { 
-//    FFT *Tmp = pCurrentFFT.back();
-//    pCurrentFFT.pop_back();
-//    delete Tmp;
-//  }
 }
 void AnalyzerSoft::Configure(const json &options) {
   pName             = options["Name"];
@@ -109,7 +99,7 @@ void AnalyzerSoft::Configure(const json &options) {
   if((AlarmsEnabled == true) && (pAlarms != NULL)) {
     delete pAlarms;  
   } else if((AlarmsEnabled == true) && (pAlarms == NULL)) {
-    pAlarms = new AnalyzerSoft::Alarms(this);
+    pAlarms = new AnalyzerSoft::Alarms(this, options["Alarms"]);
   }
   bool SyncEnabled = options["RemoteEnabled"];
   if((SyncEnabled == false) && (pSync != NULL)) {
@@ -443,6 +433,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     if(((Sequence % 15) == 0) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 3S aggregation\n");
       This->NormalizeAggreg(Aggreg3S);
+      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg3S);
       if(Aggreg3S.Flag == false) {
         float Variation = This->CalcChange(Aggreg3S.Frequency, This->pNominalFrequency);
         for(uint Range = 0; Range < 40; Range++) {
@@ -450,6 +441,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
         }
       }
       This->SaveAggreg(Aggreg3S);
+      if(This->pAlarms != NULL) This->pAlarms->Wait();
       This->InitAggreg(Aggreg3S, AGGREG_3S);
     }
     This->AccumulateAggreg(Aggreg3S, This->pAggreg10C);
@@ -457,7 +449,9 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       LOGFile::Debug("Storing 1M aggregation\n");
       Aggreg1M.Timestamp = Aggreg1M.Timestamp / 60000 * 60000 + 59999;
       This->NormalizeAggreg(Aggreg1M);
+      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg1M);
       This->SaveAggreg(Aggreg1M);
+      if(This->pAlarms != NULL) This->pAlarms->Wait();
       This->InitAggreg(Aggreg1M, AGGREG_1M);
     }
     This->AccumulateAggreg(Aggreg1M, This->pAggreg10C);
@@ -465,6 +459,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       LOGFile::Debug("Storing 10M aggregation\n");
       Aggreg10M.Timestamp = Aggreg10M.Timestamp / 600000 * 600000 + 599999;
       This->NormalizeAggreg(Aggreg10M);
+      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg10M);
       if(Aggreg10M.Flag == false) {
         for(uint i = 0; i < Aggreg10M.Voltage.size(); i++) {
           float Variation = This->CalcChange(Aggreg10M.Voltage[i], This->pNominalVoltage);
@@ -490,6 +485,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
         }
       }
       This->SaveAggreg(Aggreg10M);
+      if(This->pAlarms != NULL) This->pAlarms->Wait();
       This->InitAggreg(Aggreg10M, AGGREG_10M);
     }
     This->pMembersLocks.ReadUnlock();
@@ -499,7 +495,9 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       LOGFile::Debug("Storing 15M aggregation\n");
       Aggreg15M.Timestamp = Aggreg15M.Timestamp / 900000 * 900000 + 899999;
       This->NormalizeAggreg(Aggreg15M);
+      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg15M);
       This->SaveAggreg(Aggreg15M);
+      if(This->pAlarms != NULL) This->pAlarms->Wait();
       This->InitAggreg(Aggreg15M, AGGREG_15M);
     }
     This->AccumulateAggreg(Aggreg15M, This->pAggreg10C);
@@ -507,7 +505,9 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       LOGFile::Debug("Storing 1H aggregation\n");
       Aggreg1H.Timestamp = Aggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
       This->NormalizeAggreg(Aggreg1H);
+      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg1H);
       This->SaveAggreg(Aggreg1H);
+      if(This->pAlarms != NULL) This->pAlarms->Wait();
       This->InitAggreg(Aggreg1H, AGGREG_1H);
     }
     This->AccumulateAggreg(Aggreg1H, This->pAggreg10C);
@@ -545,6 +545,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   ConfigOUT["EventsEnabled"] = false;
   ConfigOUT["RatesEnabled"] = false;
   ConfigOUT["AlarmsEnabled"] = false;
+  ConfigOUT["Alarms"] = json::array();
   if(!config.is_object()) return ConfigOUT;
   if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
   if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
@@ -567,16 +568,18 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
   if(config.contains("RatesEnabled") && config["RatesEnabled"].is_boolean()) ConfigOUT["RatesEnabled"] = config["RatesEnabled"];
   if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
+  if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = Alarms::CheckConfig(config["Alarms"]);
   return ConfigOUT;
 }
 void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  json Response = ConfigManager::ReadConfig(pConfigPath);
+  json Response = CheckConfig(ConfigManager::ReadConfig(pConfigPath));
   pMembersLocks.ReadLock();
   Response["Analyzer"] = pSerial;
   Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"] = pSamplerate;
+  Response.erase("Alarms");
   if(pSync != NULL) Response["RemoteLogged"] = pSync->Logged();
   req.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + req.Bind(pSerial));
   if(req.FecthRow()) Response["Size"] = req.ResultUInt64("size");
@@ -586,9 +589,10 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
 void AnalyzerSoft::SetAnalyzer(HTTPRequest &req) {
   if(CheckRights(req, CONFIG) == false) return;
   json Config = CheckConfig(req.GetParams());
+  Config.erase("Alarms");
   ConfigManager::WriteConfig(pConfigPath, Config);
   pMembersLocks.WriteLock();
-  Configure(Config);
+  Configure(ConfigManager::ReadConfig(pConfigPath));
   pMembersLocks.WriteUnlock();
   json Result = json::object();
   Result["Result"] = true;

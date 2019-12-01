@@ -24,7 +24,7 @@
   import Dlg from 'Components/Dialog.vue';
   export default {
     data() {
-      return { Analyzer: null, Alarms: null,
+      return { Analyzer: null,
         columns: [
           { name: 'Name', title: 'Name' },
           { name: 'UserName', title: 'User' },
@@ -87,8 +87,8 @@
       },
       PriorityFormat: function(val) {
         if(val === 0) return 'Low';
-        if(val === 0) return 'Normal';
-        if(val === 0) return 'High';
+        if(val === 1) return 'Normal';
+        if(val === 2) return 'High';
       }
     },
     components: { vuetable, Dlg }

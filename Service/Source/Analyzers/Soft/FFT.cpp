@@ -26,8 +26,8 @@ AnalyzerSoft::FFT::~FFT() {
   pTerminate = true;
   pWorkerLocks.Abort(&pThread);
 }
-void AnalyzerSoft::FFT::Start(const vector<float> &in) {
-  pInput = in;
+void AnalyzerSoft::FFT::Start(vector<float> &in) {
+  pInput = &in;
   pWorkerLocks.WakeWorker();
 }
 float AnalyzerSoft::FFT::BinPower(const uint idx) {
@@ -37,15 +37,15 @@ void *AnalyzerSoft::FFT::FFT_Thread(void *args) {
   FFT *This = (FFT*)args;
   while(This->pTerminate == false) {
     if(This->pWorkerLocks.WorkerWaitTask() == false) return NULL;
-    This->Output.resize((This->pInput.size() / 2) + 1, complex<float>(0.0, 0.0));
+    This->Output.resize((This->pInput->size() / 2) + 1, complex<float>(0.0, 0.0));
     pthread_mutex_lock(&This->pPlannerMutex);
-    fftwf_plan Plan = fftwf_plan_dft_r2c_1d(This->pInput.size(), &(This->pInput[0]), (fftwf_complex*)&This->Output[0], FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
+    fftwf_plan Plan = fftwf_plan_dft_r2c_1d(This->pInput->size(), &((*This->pInput)[0]), (fftwf_complex*)&This->Output[0], FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
     pthread_mutex_unlock(&pPlannerMutex);
-    fftwf_execute_dft_r2c(Plan, &(This->pInput[0]), (fftwf_complex*)&This->Output[0]);
+    fftwf_execute_dft_r2c(Plan, &((*This->pInput)[0]), (fftwf_complex*)&This->Output[0]);
     pthread_mutex_lock(&This->pPlannerMutex);
     fftwf_destroy_plan(Plan);
     pthread_mutex_unlock(&pPlannerMutex);
-    for(uint i = 0; i < This->Output.size(); i++) This->Output[i] = This->Output[i] / (float)(This->pInput.size());
+    for(uint i = 0; i < This->Output.size(); i++) This->Output[i] = This->Output[i] / (float)(This->pInput->size());
     This->pWorkerLocks.WorkerEndsTask();
   }
   return NULL;
