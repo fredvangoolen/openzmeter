@@ -342,7 +342,7 @@ void DeviceManager::DelRateCallback(HTTPRequest &req) {
 void DeviceManager::AddRateCallback(HTTPRequest &req) {
   json Params = req.GetParams();
   if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["TimeZone"].is_string()) return req.FromString("'StartDate', 'EndDate', 'TimeZone' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+  if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) return req.FromString("'StartDate', 'EndDate' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
   pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
@@ -385,7 +385,7 @@ void DeviceManager::GetAlarmsCallback(HTTPRequest &req) {
 }
 void DeviceManager::GetAlarmCallback(HTTPRequest &req) {
   json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' params are requiered", MHD_HTTP_BAD_REQUEST);
+  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned()) return req.FromString("'Analyzer' and 'AlarmID' params are requiered", MHD_HTTP_BAD_REQUEST);
   req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
   pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
@@ -394,8 +394,34 @@ void DeviceManager::GetAlarmCallback(HTTPRequest &req) {
   pDevicesLock.ReadUnlock();
 }
 void DeviceManager::SetAlarmCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned() || !Params["Name"].is_string() || !Params["Priority"].is_number_unsigned() || !Params["Expression"].is_string() || !Params["Aggreg"].is_string() || !Params["Message"].is_string() || !Params["Samples"].is_number_unsigned() || !Params["Window"].is_number_unsigned()) return req.FromString("'Analyzer', 'AlarmID', 'Name', 'Priority', 'Expression', 'Aggreg', 'Message', 'Samples' and 'Window' params are requiered", MHD_HTTP_BAD_REQUEST);
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) {
+    if(Dev->SetAlarm(req) == true) break;
+  }
+  pDevicesLock.ReadUnlock();
 }
 void DeviceManager::AddAlarmCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string() || !Params["Name"].is_string() || !Params["Priority"].is_number_unsigned() || !Params["Expression"].is_string() || !Params["Aggreg"].is_string() || !Params["Message"].is_string() || !Params["Samples"].is_number_unsigned() || !Params["Window"].is_number_unsigned()) return req.FromString("'Analyzer', 'Name', 'Priority', 'Expression', 'Aggreg', 'Message', 'Samples' and 'Window' params are requiered", MHD_HTTP_BAD_REQUEST);
+  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) {
+    if(Dev->AddAlarm(req) == true) break;
+  }
+  pDevicesLock.ReadUnlock();
 }
 void DeviceManager::DelAlarmCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned()) return req.FromString("'Analyzer' and 'AlarmID' params are requiered", MHD_HTTP_BAD_REQUEST);
+  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) {
+    if(Dev->DelAlarm(req) == true) break;
+  }
+  pDevicesLock.ReadUnlock();
 }

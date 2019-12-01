@@ -31,7 +31,7 @@ void AnalyzerSoft::Rates::SetRate(HTTPRequest &req) {
   string   Name     = Params["Name"];
   uint32_t RateID   = Params["RateID"];
   Tariff T(Start, End, pParent->pTimeZone);
-  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
+  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid template", MHD_HTTP_BAD_REQUEST);
   if(T.SetConfig(Params["Config"]) == false) return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
   bool Result = req.ExecSentenceNoResult("UPDATE rates SET name = " + req.Bind(Name) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", config = " + req.Bind(T.GetConfig().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE rate = " + req.Bind(RateID));
@@ -52,7 +52,7 @@ void AnalyzerSoft::Rates::AddRate(HTTPRequest &req) {
   uint64_t End      = Params["EndDate"];
   string   Name     = Params["Name"];
   Tariff T(Start, End, pParent->pTimeZone);
-  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid 'Template' format", MHD_HTTP_BAD_REQUEST);
+  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid template", MHD_HTTP_BAD_REQUEST);
   if(T.SetConfig(Params["Config"]) == false) return req.FromString("Invalid 'Config' format", MHD_HTTP_BAD_REQUEST);
   req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
   bool Result = req.ExecSentenceNoResult("INSERT INTO rates(startdate, enddate, config, template, name) VALUES (" + req.Bind(Start) + ", " + req.Bind(End) + ", " + req.Bind(T.GetConfig().dump()) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Name) + ")");

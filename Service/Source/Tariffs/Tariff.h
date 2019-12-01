@@ -88,8 +88,6 @@ class Tariff final {
     uint64_t StartDate();
     bool PushSample(const uint64_t time, const float active, const float reactive);
     bool PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower);
-  public :
-    
 };
 //----------------------------------------------------------------------------------------------------------------------
 class TariffList final {

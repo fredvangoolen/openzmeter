@@ -17,7 +17,7 @@ class AnalyzerSoft::FFT final {
   private :
     pthread_t               pThread;               //Hilo de ejecucion
     WorkerLocks             pWorkerLocks;          //Threadworker sync
-    vector<float>           pInput;                //Muestras de entrada
+    vector<float>          *pInput;                //Muestras de entrada
     bool                    pTerminate;            //Marca para finalizar proceso
   private :
     static pthread_mutex_t  pPlannerMutex;
@@ -27,7 +27,7 @@ class AnalyzerSoft::FFT final {
     static float CalcAngle(const complex<float> &a, const complex<float> &b);
   public :
     FFT(const string &name);
-    void  Start(const vector<float> &in);
+    void  Start(vector<float> &in);
     float BinPower(const uint bin);
     void  Wait();
     ~FFT();

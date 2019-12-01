@@ -43,7 +43,7 @@
           {name: 'Name', title: 'Name'},
           {name: '__slot:power', title: 'Power mode'},
           {name: '__slot:reactive', title: 'Reactive mode'},
-          {name: '__slot:color', title: 'Color'}
+          {name: '__slot:color', title: 'Colour'}
         ] };
     },
     methods: {

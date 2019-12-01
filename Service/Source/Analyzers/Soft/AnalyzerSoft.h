@@ -111,7 +111,7 @@ class AnalyzerSoft final : public Analyzer {
     void  Configure(const json &options);
     void  InitAggreg(Params_t &params, AggregType type);
     void  SaveAggreg(Params_t &params);
-  private :    
+  private :
     void  GetAnalyzer(HTTPRequest &req) override;
     void  SetAnalyzer(HTTPRequest &req) override;
     void  GetSeries(HTTPRequest &req) override;

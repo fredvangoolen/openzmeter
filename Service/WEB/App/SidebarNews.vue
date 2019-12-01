@@ -2,7 +2,7 @@
   <div>
     <div class="sidenav-version"><div>Version:<br/>{{ BuildDate }}</div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-on:click="ShowUpdates" :disabled="Updates.length == 0"><img :src="require('Imgs/update.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" v-on:click="ShowUpdates" :disabled="Updates.length == 0"><img v-bind:class="{blink_img: (Updates.length != 0)}" :src="require('Imgs/update.png')"></button>
         <button type="button" class="btn btn-default btn-xs" v-on:click="ShowNews" :disabled="News.length == 0"><img :src="require('Imgs/newspaper.png')"></button>
       </div>
     </div>
@@ -23,21 +23,13 @@
     <dlg ref="Updates">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">System updates</h4></div>
-        <div class="pull-right btn-group" v-if="!Upgrading">
-          <button type="button" class="btn btn-default btn-xs btn-primary" data-toggle="tooltip" title="Save changes" v-on:click="Upgrade">Upgrade</button>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs btn-primary" v-if="!Upgrading" data-toggle="tooltip" title="Save changes" v-on:click="Upgrade">Upgrade</button>
           <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" v-on:click="UpdatesBack"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
         <div class="pull-right page-count">Last check<br/>{{ UpdateDate }}</div>
       </template>
-      <div v-if="Upgrading" class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Upgrade can take some time to complete.<br/>Reload page in a few minutes.</div>
-      <vuetable v-if="!Upgrading" :data="Updates" :fields="Columns" :api-mode="false" class="table small table-striped">
-        <template slot="actions" slot-scope="props">
-          <div class="btn-group">
-            <button type="button" class="btn btn-default btn-xs" v-on:click="Edit(props.rowData)">Edit</button>
-            <button type="button" class="btn btn-danger btn-xs" v-on:click="Delete(props.rowData)">Delete</button>
-          </div>
-        </template>
-      </vuetable>                  
+      <vuetable :data="Updates" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>                  
     </dlg>
   </div>
 </template>
@@ -82,11 +74,20 @@
         success: (result) => {
           this.Updates = result.Updates;
           this.UpdateDate = moment(result.LastCheck).format('DD/MM/YYYY');
-          if(this.Updates.length > 0) this.ShowUpdates();
+          this.$refs.Updates.SpinnerState(result.Updating);
         }
       });
     },
     methods: {
+      FetchUpdates: function() {
+        $.ajax({ url: "getUpdates", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
+          success: (result) => {
+            this.Updates = result.Updates;
+            this.UpdateDate = moment(result.LastCheck).format('DD/MM/YYYY');
+            this.$refs.Updates.SpinnerState(result.Updating);
+          }
+        });
+      },
       FetchNews: function() {
         this.$refs.News.SpinnerState(true);
         $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ NewsTime: this.News[this.NewsPos] }),
@@ -121,9 +122,20 @@
       UpdatesBack: function() {
         this.$refs.Updates.Close();
       },
-      Upgrade: function() {
+      Upgrade: function(row) {
         this.Upgrading = true;
-        $.ajax({ url: "upgrade", timeout: 200000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ })});
+        this.$refs.Updates.SpinnerState(true);
+        $.ajax({ url: "upgrade", timeout: 900000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
+          success: () => {
+            this.Upgrading = true;
+            this.FetchUpdates();
+            this.$refs.Updates.SpinnerState(false);
+          },  
+          error: () => {
+            this.$refs.Updates.SpinnerState(false);
+            this.Upgrading = false;
+          }
+        });
       }
     },
     components: { vuetable, Dlg }
@@ -165,5 +177,11 @@
     .table >>> td:nth-child(2), .table >>> td:nth-child(3) {
       text-align: center;
     }
+  }
+  .blink_img {
+    animation: blinker_img 1s linear infinite;
+  }
+  @keyframes blinker_img {  
+    20% { opacity: 0.2; }
   }
 </style>
