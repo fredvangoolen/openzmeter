@@ -1,6 +1,6 @@
 <template>
   <div>
-    <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Parameters']" variable="CurrentDetailTab" v-on:TabChange="TabChange"></detail-tabs>
+    <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Parameters']" storage="CurrentDetailTab" v-model="ActiveTab"></detail-tabs>
     <waveform ref="waveform" v-bind:class="{ hide: (ActiveTab != 'Waveform') }"></waveform>
     <harmonics ref="harmonics" v-bind:class="{ hide: (ActiveTab != 'Harmonics') }"></harmonics>
     <evolution ref="evolution" v-bind:class="{ hide: (ActiveTab != 'Evolution') }"></evolution>
@@ -24,7 +24,7 @@
   import DetailTabs from 'Components/Tabs.vue';
   export default {
     data() {
-      return { ActiveTab: '', Paused: false };
+      return { ActiveTab: null, Paused: false };
     },
     created: function() {
       this.LastSample = 0;
@@ -37,11 +37,19 @@
         this.UpdateGraphs1M();
         this.UpdateGraphsNow();
       }
-      this.TabChange();
     },
     beforeDestroy: function() {
       if(this.UpdateGraphs1MTimer !== null) clearTimeout(this.UpdateGraphs1MTimer);
       if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);
+    },
+    watch: {
+      ActiveTab: function(val) {
+        if(name === 'Waveform') this.$refs.waveform.Redraw();
+        if(name === 'Harmonics') this.$refs.harmonics.Redraw();
+        if(name === 'Evolution') this.$refs.evolution.Redraw();
+        if(name === 'Advanced') this.$refs.advanced.Redraw();
+        if(name === 'Parameters') this.$refs.parameters.Redraw();
+      }
     },
     methods: {
       PlayStatusChanged: function(stat) {
@@ -53,14 +61,6 @@
         this.$refs.waveform.$refs.tools.SetPlayStatus(stat);
         this.$refs.harmonics.$refs.tools.SetPlayStatus(stat);
         this.$refs.advanced.$refs.tools.SetPlayStatus(stat);
-      },
-      TabChange(tab, name) {
-        if(name !== undefined) this.ActiveTab = name;
-        if(this.ActiveTab === 'Waveform') this.$refs.waveform.Redraw();
-        if(this.ActiveTab === 'Harmonics') this.$refs.harmonics.Redraw();
-        if(this.ActiveTab === 'Evolution') this.$refs.evolution.Redraw();
-        if(this.ActiveTab === 'Advanced') this.$refs.advanced.Redraw();
-        if(this.ActiveTab === 'Parameters') this.$refs.parameters.Redraw();
       },
       PhasesChangedMulti: function(phases) {
         this.$refs.waveform.SetPhases(phases);

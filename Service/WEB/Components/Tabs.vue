@@ -1,6 +1,6 @@
 <template>
   <ul class="nav nav-tabs">
-    <li v-for="(tab, index) in tabs" v-bind:class="{ active: (Index == index) }"><a data-toggle="tab">{{ tab }}</a></li>
+    <li v-for="tab in tabs" v-bind:class="{ active: (tab == Value) }" :index="tab"><a data-toggle="tab">{{ tab }}</a></li>
   </ul>
 </template>
 
@@ -8,27 +8,29 @@
   import scrollingTabs from 'jquery-bootstrap-scrolling-tabs';
   import 'jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.css';
   export default {
-    props: ['tabs', 'variable'],
+    props: ['value', 'tabs', 'storage'],
     data() {
-      return { Index: 0 };
+      return { Value: null };
     },
     created: function() {
-      this.Index = parseInt(localStorage.getItem(this.variable));
-      if((this.Index < 0) || (this.Index >= this.tabs.length) || (isNaN(this.Index) === true)) this.Index = 0;
-      localStorage.setItem(this.variable, this.Index);
+      this.Value = this.value;
+      if(this.storage != undefined) {
+        this.Value = localStorage.getItem(this.storage);
+        this.$emit('input', this.Value);
+      }
     },
     mounted: function() {
-      $(this.$el).scrollingTabs({ tabClickHandler: this.TabChange });
-      this.$emit('TabChange', this.Index, this.tabs[this.Index]);
+      $(this.$el).scrollingTabs({ enableSwiping: true, tabClickHandler: this.TabChange });
     },
     beforeDestroy: function() {
       $(this.$el).scrollingTabs('destroy');
     },
     methods: {
       TabChange: function(sender) {
-        this.Index = $(sender['target']).parent().index();
-        localStorage.setItem(this.variable, this.Index);
-        this.$emit('TabChange', this.Index, $(sender['target']).text());
+        if(this.storage != undefined) {
+          localStorage.setItem(this.storage, $(sender['target']).text());
+        }
+        this.$emit('input', $(sender['target']).text());
       }
     }
   }
