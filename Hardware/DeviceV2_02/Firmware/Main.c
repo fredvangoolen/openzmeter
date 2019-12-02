@@ -61,20 +61,20 @@ void SysTick_ISR() {
   } else {
     Samples_Buffer.Counter++;
   }
-  if(SysTicks % 2) {
+  if((SysTicks % 4) == 0) {
     GPIOA->BSRR = GPIO_BSRR_BS_10 | GPIO_BSRR_BS_15;    //A mode (PA10=1)
     GPIOB->BSRR = GPIO_BSRR_BS_5 | GPIO_BSRR_BS_4;
-    if(((SysTicks % 8) == 1) && ((SignalsStatus.Power_Color & GREEN) == GREEN)) GPIOB->BSRR |= GPIO_BSRR_BR_5;
-    if(((SysTicks % 8) == 3) && ((SignalsStatus.Status_Color & GREEN) == GREEN)) GPIOB->BSRR |= GPIO_BSRR_BR_4;
-    if(((SysTicks % 8) == 5) && ((SignalsStatus.Wifi_Color & GREEN) == GREEN)) GPIOA->BSRR |= GPIO_BSRR_BR_15;
+    GPIOA->BSRR = (SignalsStatus.Bluetooth_Color) ? GPIO_BSRR_BS_9 : GPIO_BSRR_BR_9;
+    if(SignalsStatus.Power_Color & RED) GPIOB->BSRR |= GPIO_BSRR_BR_5;
+    if(SignalsStatus.Status_Color & RED) GPIOB->BSRR |= GPIO_BSRR_BR_4;
+    if(SignalsStatus.Wifi_Color & RED) GPIOA->BSRR |= GPIO_BSRR_BR_15;
   } else {
-    GPIOA->BSRR = GPIO_BSRR_BR_10 | GPIO_BSRR_BR_15;    //A mode (PA10=0)
+    GPIOA->BSRR = GPIO_BSRR_BR_10 | GPIO_BSRR_BR_15 | GPIO_BSRR_BR_9;    //A mode (PA10=0)
     GPIOB->BSRR = GPIO_BSRR_BR_5 | GPIO_BSRR_BR_4;
-    if(((SysTicks % 8) == 0) && ((SignalsStatus.Power_Color & RED) == RED)) GPIOB->BSRR |= GPIO_BSRR_BS_5;
-    if(((SysTicks % 8) == 2) && ((SignalsStatus.Status_Color & RED) == RED)) GPIOB->BSRR |= GPIO_BSRR_BS_4;
-    if(((SysTicks % 8) == 4) && ((SignalsStatus.Wifi_Color & RED) == RED)) GPIOA->BSRR |= GPIO_BSRR_BS_15;
+    if(SignalsStatus.Power_Color & GREEN) GPIOB->BSRR |= GPIO_BSRR_BS_5;
+    if(SignalsStatus.Status_Color & GREEN) GPIOB->BSRR |= GPIO_BSRR_BS_4;
+    if(SignalsStatus.Wifi_Color & GREEN) GPIOA->BSRR |= GPIO_BSRR_BS_15;
   }
-  GPIOA->BSRR = (SignalsStatus.Bluetooth_Color) ? GPIO_BSRR_BS_9 : GPIO_BSRR_BR_9;
   if((SysTicks % 64) == 0) {
     TIM2->CCR2 = ((SignalsStatus.Buzzer & 0x001) ? 1000 - 1 : 0);
     SignalsStatus.Buzzer = SignalsStatus.Buzzer >> 1;    
@@ -140,26 +140,6 @@ void DMA_CH1_ISR() {
   SysStatus.Battery = (Battery <= 2960) ? 0 : (Battery >= 4240) ? 63 : (Battery - 2960) / 20;
 }
 // USB callbacks functions ---------------------------------------------------------------------------------------------
-/*
-USB_Response USB_HandleEP0_Class(USB_ControlRequest_t *req, USB_Request_Callback_t *callback) {
-  if(((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) == (USB_REQ_INTERFACE | USB_REQ_CLASS) && req->wIndex == 0 ) {
-    switch(req->bRequest) {
-      case USB_CONTROL_CLASS_SETSTATUS :
-        //0-1: Status_Color
-        SignalsStatus.Status_Color    = (req->wValue >> 0) & 0x0003;
-        //2-3: Wifi_Color
-        SignalsStatus.Wifi_Color      = (req->wValue >> 2) & 0x0003;
-        //4: Bluetooth_Color
-        SignalsStatus.Bluetooth_Color = (req->wValue >> 4) & 0x0001;
-        //5-13: Buzzer patern
-        SignalsStatus.Buzzer          = (req->wValue >> 5) & 0x01FF;
-        USB_Buffer.Counter = 0;
-        return USB_ACK;
-    }
-  }
-  return USB_FAIL;
-}
-*/
 void USB_HandleEP1_TX(uint8_t event) {
   uint16_t fifo[32];
   if(event != USB_EVENT_TX) return;
@@ -187,23 +167,9 @@ void USB_HandleEP2_RX(uint8_t event) {
   //5-13: Buzzer patern
   SignalsStatus.Buzzer          = (Read >> 5) & 0x01FF;
   Samples_Buffer.Counter = 0;
-  //Pongo el bit de ganancia = (Read >> 14) & 0x0001;
+  //14: Gain bit
+  GPIOF->BSRR |= ((Read >> 14) & 0x0001) ? GPIO_BSRR_BS_1 : GPIO_BSRR_BR_1;
   TIM3->CR1 |= TIM_CR1_CEN;
-  
-  
-  
-  
-//  uint16_t fifo[32];
-//  for(int x = 0; x < 32; x++) {
-//    if(Samples_Buffer.Head == Samples_Buffer.Tail) {
-//      fifo[x] = 0xE000 | (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
-//    } else {
-//      uint16_t Val = Samples_Buffer.Buffer[Samples_Buffer.Tail];
-//      Samples_Buffer.Tail = (Samples_Buffer.Tail + 1) % BUFF_LEN;
-//      fifo[x] = Val;
-//    }
-//  }
-//  USB_WriteEP(ep, fifo, 64);
 }
 USB_Response USB_SetConfiguration(uint8_t cfg) {
   switch(cfg) {
@@ -216,7 +182,6 @@ USB_Response USB_SetConfiguration(uint8_t cfg) {
     case 1:
       USB_ConfigEP(SEND_EP, USB_EPTYPE_BULK | USB_EPTYPE_DBLBUF, 64);
       USB_RegisterEP(SEND_EP, USB_HandleEP1_TX);
-//      USB_WriteEP(SEND_EP, 0, 0);
       USB_ConfigEP(RECV_EP, USB_EPTYPE_BULK, 2);
       USB_RegisterEP(RECV_EP, USB_HandleEP2_RX);
       return USB_ACK;
@@ -237,11 +202,11 @@ void Setup() {
   RCC->APB1ENR |= RCC_APB1ENR_USBEN | RCC_APB1ENR_CRSEN | RCC_APB1ENR_PWREN | RCC_APB1ENR_TIM2EN | RCC_APB1ENR_TIM3EN;
   RCC->APB2ENR |= RCC_APB2ENR_SYSCFGCOMPEN | RCC_APB2ENR_ADC1EN | RCC_APB2ENR_TIM16EN;
   CRS->CR |= CRS_CR_AUTOTRIMEN | CRS_CR_CEN;
-  //Configure port F (PF0, PF1 -> Digital outputs)
-  GPIOF->MODER   |= GPIO_MODER_MODER0_0 | GPIO_MODER_MODER1_0;
+  //Configure port F (PF1 -> Digital outputs)
+  GPIOF->MODER   |= GPIO_MODER_MODER1_0;
   GPIOF->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR0 | GPIO_OSPEEDER_OSPEEDR1;
-  //Configure Port A (PA0, PA8 -> Digital inputs, PA1, PA9, PA10, PA15 -> Digital outputs, PA2, PA3, PA4, PA5, PA6, PA7 -> Analog input, PA11, PA12 -> Alternate function, PA13, PA14 -> SWD)
-  GPIOA->MODER |= GPIO_MODER_MODER1_0 | GPIO_MODER_MODER2 | GPIO_MODER_MODER3 | GPIO_MODER_MODER4 | GPIO_MODER_MODER5 | GPIO_MODER_MODER6 | GPIO_MODER_MODER7 | GPIO_MODER_MODER9_0 | 
+  //Configure Port A (PA0, PA8 -> Digital inputs, PA9, PA10, PA15 -> Digital outputs, PA1, PA2, PA3, PA4, PA5, PA6, PA7 -> Analog input, PA11, PA12 -> Alternate function, PA13, PA14 -> SWD)
+  GPIOA->MODER |= GPIO_MODER_MODER1 | GPIO_MODER_MODER2 | GPIO_MODER_MODER3 | GPIO_MODER_MODER4 | GPIO_MODER_MODER5 | GPIO_MODER_MODER6 | GPIO_MODER_MODER7 | GPIO_MODER_MODER9_0 | 
                   GPIO_MODER_MODER10_0 | GPIO_MODER_MODER11_1 | GPIO_MODER_MODER12_1 | GPIO_MODER_MODER15_0;
   GPIOA->PUPDR |= GPIO_PUPDR_PUPDR8_0 | GPIO_PUPDR_PUPDR0_1;
   //Configure Port B (PB7 -> Digital input, PB0, PB1 -> Analog inputs, PB4, PB5, PB6 -> Digital output, PB3, PB8 -> Alternate function)
@@ -281,7 +246,7 @@ void Setup() {
   TIM16->EGR    = TIM_EGR_UG; // Generate an update event to reload the prescaler value immediately
   TIM16->CR1   |= TIM_CR1_ARPE | TIM_CR1_CEN;
   TIM16->BDTR  |= TIM_BDTR_MOE;
-  TIM16->CCR1 = 800;
+  TIM16->CCR1 = 900;
   //Configure SysTicks every 1ms (48MHz Clock)
   SysTick_Config(48000);
   NVIC_SetPriority(SysTick_IRQn, 2);

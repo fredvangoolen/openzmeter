@@ -13,7 +13,7 @@
     <vuetable ref="table" :fields="Columns" :data="Analyzers" :api-mode="false" class="table small table-striped">
       <template slot="actions" slot-scope="props">
         <div class="btn-group">
-          <button type="button" class="btn btn-success btn-xs" v-bind:disabled="$root.SelectedAnalyzer.Analyzer === props.rowData.Analyzer" v-on:click="Select(props.rowData)">Select</button>
+          <button type="button" class="btn btn-success btn-xs" v-bind:disabled="CurrentAnalyzer(props.rowData)" v-on:click="Select(props.rowData)">Select</button>
           <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
           <ul class="dropdown-menu pull-right">
             <li><a v-on:click="Configure(props.rowData)">Configure</a></li>
@@ -60,6 +60,11 @@
     methods: {
       OnlineStatus: function(value) {
         return (value === true) ? '&#9635;' : '&#9633;';
+      },
+      CurrentAnalyzer: function(analyzer) {
+        if(this.$root.SelectedAnalyzer === null) return false;
+        if(this.$root.SelectedAnalyzer.Analyzer === analyzer.Analyzer) return true;
+        return false;
       },
       Select: function(analyzer) {
         this.ShowSpinner = true;

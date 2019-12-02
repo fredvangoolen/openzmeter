@@ -1,6 +1,6 @@
 <template>
   <div>
-    <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Distribution', 'Parameters']" variable="PowerDetailTab" v-on:TabChange="TabChange"></detail-tabs>
+    <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Distribution', 'Parameters']" storage="PowerDetailTab" v-model="ActiveTab"></detail-tabs>
     <waveform ref="waveform" v-bind:class="{ hide: (ActiveTab != 'Waveform') }"></waveform>
     <harmonics ref="harmonics" v-bind:class="{ hide: (ActiveTab != 'Harmonics') }"></harmonics>
     <evolution ref="evolution" v-bind:class="{ hide: (ActiveTab != 'Evolution') }"></evolution>
@@ -33,11 +33,19 @@
         this.UpdateGraphs1M();
         this.UpdateGraphsNow();
       }
-      this.TabChange();
     },
     beforeDestroy: function() {
       if(this.UpdateGraphs1MTimer !== null) clearTimeout(this.UpdateGraphs1MTimer);
       if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);
+    },
+    watch: {
+      ActiveTab: function(val) {
+        if(val === 'Waveform') this.$refs.waveform.Redraw();
+        if(val === 'Harmonics') this.$refs.harmonics.Redraw();
+        if(val === 'Evolution') this.$refs.evolution.Redraw();
+        if(val === 'Distribution') this.$refs.distribution.Redraw();
+        if(val === 'Parameters') this.$refs.parameters.Redraw();        
+      }
     },
     methods: {
       PlayStatusChanged: function(stat) {
@@ -48,14 +56,6 @@
           this.UpdateGraphsNow();
         }
         this.$refs.waveform.$refs.tools.SetPlayStatus(stat);
-      },
-      TabChange(tab, name) {
-        if(name !== undefined) this.ActiveTab = name;
-        if(this.ActiveTab === 'Waveform') this.$refs.waveform.Redraw();
-        if(this.ActiveTab === 'Harmonics') this.$refs.harmonics.Redraw();
-        if(this.ActiveTab === 'Evolution') this.$refs.evolution.Redraw();
-        if(this.ActiveTab === 'Distribution') this.$refs.distribution.Redraw();
-        if(this.ActiveTab === 'Parameters') this.$refs.parameters.Redraw();
       },
       PhasesChangedSingle: function(phase) {
         this.$refs.parameters.SetPhases(phase);

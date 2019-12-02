@@ -24,7 +24,7 @@
         <button class="btn btn-default narrow" type="button" v-on:click="Next"><img :src="require('Imgs/resultset_next.png')"></button>
       </div>
     </div>
-    <dlg ref="Dialog">
+    <dlg ref="Dialog" v-if="false">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Data range</h4></div>
         <div class="pull-right btn-group">
