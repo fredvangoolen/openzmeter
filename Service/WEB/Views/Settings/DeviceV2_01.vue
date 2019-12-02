@@ -128,7 +128,7 @@
               </tr>
             </table>
             <table v-if="item.Mode == '1PHASE'">
-              <tr><td colspan="2" class="border-bottom">1PHASE<span class="serial-number">{{ Settings.Serial }}_1P_{{ item.Current.substr(1) }}</span></td></tr>
+              <tr><td colspan="2" class="border-bottom">1PHASE<span class="serial-number">{{ settings.Serial }}_1P_{{ item.Current.substr(1) }}</span></td></tr>
               <tr>
                 <td class="text-center border-right"><strong>Voltage</strong></td>
                 <td class="text-center"><strong>Current</strong></td>
