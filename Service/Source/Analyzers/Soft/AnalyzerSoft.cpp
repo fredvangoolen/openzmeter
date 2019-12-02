@@ -594,9 +594,7 @@ void AnalyzerSoft::SetAnalyzer(HTTPRequest &req) {
   pMembersLocks.WriteLock();
   Configure(ConfigManager::ReadConfig(pConfigPath));
   pMembersLocks.WriteUnlock();
-  json Result = json::object();
-  Result["Result"] = true;
-  req.FromJSON(Result);
+  req.FromString("", MHD_HTTP_OK);
 }
 void AnalyzerSoft::GetSeries(HTTPRequest &req) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;

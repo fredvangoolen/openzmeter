@@ -1,21 +1,14 @@
-//Main libs and style ----------------------------------------------------------
+//Main libs and style --------------------------------------------------------------------------------------------------
 import jQuery from 'JS/jquery.js';
 window.$ = window.jquery = jQuery;
-import 'JS/bootstrap.min.js';
-import 'CSS/bootstrap.min.css';
+import 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import 'CSS/openZmeter.css';
-//import 'quasar/dist/quasar.css'
-//VUE components ---------------------------------------------------------------
+//VUE components -------------------------------------------------------------------------------------------------------
 import Vue from 'vue';
 import Router from 'vue-router';
 Vue.use(Router);
-import Quasar from 'quasar';
-Vue.use(Quasar);
-//Import Quasar ----------------------------------------------------------------
-import {QBtn, QInput} from 'quasar';
-Vue.component('QBtn', QBtn);
-Vue.component('QInput', QInput);
-
+// Custom components ---------------------------------------------------------------------------------------------------
 import Avatar from 'Components/Avatar.vue';
 Vue.component('Avatar', Avatar);
 import ColorBar from 'Components/ColorBar.vue';

@@ -8,7 +8,7 @@
       </div>
     </div>
     <user-logout ref="logout"></user-logout>
-    <user-edit ref="userEdit"></user-edit>
+    <user-edit v-if="ShowUser" ref="userEdit"></user-edit>
     <offline ref="offline"></offline>
   </div>
 </template>
@@ -19,7 +19,7 @@
   import Offline from './User/Offline.vue';
   export default {
     data() {
-      return { UserName: '', ShowEdit: false };
+      return { UserName: '', ShowUser: false };
     },
     methods: {
       Logout: function() {

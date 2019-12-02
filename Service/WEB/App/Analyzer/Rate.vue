@@ -1,5 +1,5 @@
 <template>
-  <dlg ref="Dialog">
+  <dlg :loading="ShowSpinner">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
       <div class="pull-right btn-group">
@@ -12,7 +12,7 @@
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
-    <div class="row" v-bind:style="{ display: (View=='Main') ? 'block' : 'none' }">
+    <div class="row" v-if="View=='Main'">
       <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error == ''">{{ Rate.Template.Description }}<br><strong>Tariff contains {{ Rate.Template.Seasons.length }}  seasons, a total of {{ Rate.Template.Periods.length }}  day periods and {{ Rate.Template.Holidays.length }} holidays<br>Rate contains {{ Rate.Config.Taxs.length }}  concepts and {{ Rate.Config.Billing.length + 1 }} bills</strong></div>
       <div class="col-xs-12">
         <label class="control-label">Base Tariff</label>
@@ -52,7 +52,7 @@
               </div>
             </td>
             <td>
-              <option-picker :options="TypeNames" v-on:change="tax.Type=TypesEnum[TypeNames.indexOf($event)]" :selected="TypeNames[TypesEnum.indexOf(tax.Type)]"></option-picker>
+              <option-picker :options="[ {name: 'Total', value: 'PERCENT_TOTAL'}, {name: 'Energy', value: 'PERCENT_ENERGY'}, {name: 'Power', value: 'PERCENT_POWER'}, {name: 'Energy+Power', value: 'PERCENT_ENERGY_POWER'}, {name: 'Fixed', value: 'FIXED_QUANTITY'} ]" v-model="tax.Type"></option-picker>
             </td>
             <td>
               <div class="input-group input-group-xs">
@@ -111,15 +111,14 @@
   import DatePicker from 'Components/DatePicker.vue';
   import * as oZm from 'JS/openZmeter.js';
   export default {
+    props: ['analyzer', 'tariffs', 'value'],
     data() {
-      return { Rate: null, Error: '', Analyzer: {TimeZone: ''}, Tariffs: null, View: 'Main', Day: 0, Period: 0,
-        TypeNames: ['Total', 'Energy', 'Power', 'Energy+Power', 'Fixed'],
+      return { Rate: null, Error: '', View: 'Main', Day: 0, Period: 0,
         PeriodNames: ['Each month', 'Each two month', 'Each three month'],
         BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th']
       };
     },
     created: function() {
-      this.TypesEnum = ['PERCENT_TOTAL', 'PERCENT_ENERGY', 'PERCENT_POWER', 'PERCENT_ENERGY_POWER', 'FIXED_QUANTITY'];
       this.EmptyRate = { StartDate: 0, EndDate: 0, Template: {Description: '', Seasons: [], Periods: [], Holidays: []}, Config: {Periods: [], Taxs: [], Billing: []} };
       this.Rate = this.EmptyRate;
     },    

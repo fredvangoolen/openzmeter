@@ -5,7 +5,7 @@
 </template>
 
 <script>
-  import Toggle from 'JS/bootstrap-toggle.js';  
+  import Toggle from 'JS/bootstrap-toggle.js';
   export default {
     props: {onText: { type: String, default: 'On'}, offText: {type: String, default: 'Off'}, onStyle: {type: String, default: 'success'}, offStyle: {type: String, default: 'danger'}, size: { type: String, default: 'mini'}, value: { type: Boolean, default: false}},
     data: function() { 
@@ -15,12 +15,18 @@
       $(this.$refs.check).bootstrapToggle({on: this.onText, off: this.offText, onstyle: this.onStyle, offstyle: this.offStyle, size: this.size});
       this.SetState(this.value);  
     },
+    watch: {
+      value: function(val) {
+        this.SetState(val);
+      }
+    },
     methods: {
       SetState: function(checked) {
         $(this.$refs.check).off('change');
         $(this.$refs.check).bootstrapToggle((checked) ? 'on' : 'off');
         $(this.$refs.check).on('change', function(e) {
-          this.$emit('change', $(this.$refs.check).prop('checked'));    
+          this.$emit('change', $(this.$refs.check).prop('checked'));
+          this.$emit('input', $(this.$refs.check).prop('checked'));    
         }.bind(this));
       }
     },

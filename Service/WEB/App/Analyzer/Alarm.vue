@@ -10,7 +10,7 @@
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
-    <div class="row" v-bind:style="{ display: (View=='Main') ? 'block' : 'none' }">
+    <div class="row" v-if="View=='Main'">
       <div class="col-xs-12">
         <label class="control-label">Name</label>
         <input type="text" class="form-control form-control-sm" v-model="Alarm.Name"/>
@@ -21,22 +21,22 @@
       </div>
       <div class="col-xs-6">
         <label class="control-label">Priority</label>
-        <option-picker :options="Priorities" :selected="Priorities[Alarm.Priority]" v-on:change="Alarm.Priority=Priorities.indexOf($event)" :big="true"></option-picker>
+        <option-picker :options="[{name: 'LOW', value: 0}, {name: 'NORMAL', value: 1}, {name: 'HIGH', value:2}]" v-model="Alarm.Priority" :big="true"></option-picker>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Aggregation</label>
-        <option-picker ref="aggreg" :options="['3 seconds', '1 minute', '10 minutes', '15 minutes', '1 hour']" v-on:change="AggregationChanged" :big="true"></option-picker>
+        <option-picker :options="[{name: '3 seconds', value: '3S'}, {name: '1 minute', value: '1M'}, {name: '10 minutes', value: '10M'}, {name: '15 minutes', value: '15M'}, {name: '1 hour', value: '1H'}]" v-model="Alarm.Aggreg" :big="true"></option-picker>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Occurrences</label>
-        <input-spin :min="1" :max="1000" :value="Alarm.Samples" :increment="1" :decimals="0" v-on:change="Alarm.Samples=$event"></input-spin>
+        <input-spin :min="1" :max="1000" v-model="Alarm.Samples" :increment="1" :decimals="0"></input-spin>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Window</label>
-        <input-spin :min="1" :max="1000" :value="Alarm.Window" :increment="1" :decimals="0" v-on:change="Alarm.Window=$event"></input-spin>
+        <input-spin :min="1" :max="1000" :v-model="Alarm.Window" :increment="1" :decimals="0"></input-spin>
       </div>
     </div>
-    <div class="row" v-bind:style="{ display: (View=='Expression') ? 'block' : 'none' }">
+    <div class="row" v-if="View=='Expression'">
       <div class="col-xs-12">
         <label class="control-label">Expression</label>
         <div class="input-group">
@@ -132,17 +132,17 @@
         this.Alarm = (alarm === null) ? {Aggreg: '3S', Expression: '', Message:'', Priority: 1, Samples: 10, Window: 50, Name: 'Unnamed alarm', } : alarm;
         this.$refs.Dialog.Show();
         this.$nextTick(() => {
-          if(this.Alarm.Aggreg === '3S') {
-            this.$refs.aggreg.SetOption('3 seconds');
-          } else if(this.Alarm.Aggreg === '1M') {
-            this.$refs.aggreg.SetOption('1 minute');
-          } else if(this.Alarm.Aggreg === '10M') {
-            this.$refs.aggreg.SetOption('10 minutes');
-          } else if(this.Alarm.Aggreg === '15M') {
-            this.$refs.aggreg.SetOption('15 minutes');
-          } else if(this.Alarm.Aggreg === '1H') {
-            this.$refs.aggreg.SetOption('1 hour');
-          }
+//          if(this.Alarm.Aggreg === '3S') {
+//            this.$refs.aggreg.SetOption('3 seconds');
+//          } else if(this.Alarm.Aggreg === '1M') {
+//            this.$refs.aggreg.SetOption('1 minute');
+//          } else if(this.Alarm.Aggreg === '10M') {
+//            this.$refs.aggreg.SetOption('10 minutes');
+//          } else if(this.Alarm.Aggreg === '15M') {
+//            this.$refs.aggreg.SetOption('15 minutes');
+//          } else if(this.Alarm.Aggreg === '1H') {
+//            this.$refs.aggreg.SetOption('1 hour');
+//          }
         });
       },
       Back() {

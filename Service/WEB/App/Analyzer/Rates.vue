@@ -1,5 +1,5 @@
 <template>
-  <dlg ref="Dialog">
+  <dlg :loading="ShowSpinner">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates</h4></div>
       <div class="pull-right btn-group">
@@ -9,7 +9,7 @@
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
     <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error == ''">All dates/times are in analyzer timezone.</div>
-    <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
+    <vuetable ref="table" :fields="Columns" :data="Rates" :api-mode="false" class="table small table-striped">
       <template slot="actions" slot-scope="props">
         <div class="btn-group">
           <button type="button" class="btn btn-default btn-xs" v-on:click="Edit(props.rowData)">Edit</button>
@@ -27,8 +27,9 @@
   import Dlg from 'Components/Dialog.vue';
   import * as oZm from 'JS/openZmeter.js';
   export default {
+    props: ['value'],
     data() {
-      return { Error: '', Analyzer: null, Tariffs: null,
+      return { Error: '', Tariffs: null, Rates: null, ShowSpinner: false,
         Columns: [
           { name: 'Name', title: 'Name' },
           { name: 'StartDate', title: 'Start date', callback: this.DateFormat },
@@ -40,17 +41,15 @@
     updated: function(){
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
+    mounted: function() {
+      this.GetRates();
+    },
     methods: {
-      Show: function(analyzer) {
-        this.Analyzer = analyzer;
-        this.$refs.Dialog.Show();
-        this.GetRates();
-      },
       GetRates: function() {
-        this.$refs.Dialog.ShowSpinner = true;
-        $.ajax({ url: "getRates", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer }),
+        this.ShowSpinner = true;
+        $.ajax({ url: "getRates", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.value.Analyzer }),
           success: (result) => {
-            this.$refs.table.setData({ data: result });
+            this.Rates = result;
             this.Error = '';
             for(var n = 1; n < result.length; n++) {
               if(result[n].StartDate > result[n - 1].EndDate) continue;
@@ -59,7 +58,7 @@
             }
           },
           complete: () => {
-            this.$refs.Dialog.ShowSpinner = false;
+            this.ShowSpinner = false;
           }
         });
       },
@@ -75,25 +74,27 @@
         });
       },
       DateFormat: function(val) {
-        return moment.tz(val, this.Analyzer.TimeZone).format('DD/MM/YYYY');
+        return moment.tz(val, this.value.TimeZone).format('DD/MM/YYYY');
       },
       Edit: function(row) {
         this.GetTariffs((tariffs) => {
-          this.$refs.Dialog.ShowSpinner = true;
+          this.ShowSpinner = true;
           $.ajax({ url: "getRate", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, RateID: row.RateID }), 
             success: (result) => {
-              this.$refs.Dialog.Close();
-              this.$parent.$refs.Rate.Show(this.Analyzer, tariffs, result);
+              this.$parent.Rate = result;
+              this.$parent.Tariffs = tariffs;
+              this.$parent.View = null;
+              this.$nextTick(() => { this.$parent.View = 'Rate'; });
             },
             complete: () => {
-              this.$refs.Dialog.ShowSpinner = false;              
+              this.ShowSpinner = false;              
             }
           });
         });
       },        
       Delete: function(row) {
-        if(confirm("Delete '"+row.Name+"' rate?")) {
-          this.$refs.Dialog.ShowSpinner = true;
+        if(confirm("Delete '" + row.Name + "' rate?")) {
+          this.ShowSpinner = true;
           $.ajax({ url: "delRate", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analyzer.Analyzer }), 
             success: () => { 
               this.GetRates();
@@ -106,13 +107,17 @@
       },
       Add: function() {
         this.GetTariffs((tariffs) => {
-          this.$refs.Dialog.Close();
-          this.$parent.$refs.Rate.Show(this.Analyzer, tariffs, null);
+          this.$parent.Rate = null;
+          this.$parent.Tariffs = tariffs;
+          this.$parent.View = null;
+          this.$nextTick(() => { this.$parent.View = 'Rate'; });
+          //this.$refs.Dialog.Close();
+          //this.$parent.$refs.Rate.Show(this.Analyzer, tariffs, null);
         });
       },
       Back: function() {
-        this.$refs.Dialog.Close();
-        this.$parent.$refs.Dialog.Show();
+        this.$parent.View = null;
+        this.$nextTick(() => { this.$parent.View = 'Table'; });
       }
     },
     components: { vuetable, Dlg }
