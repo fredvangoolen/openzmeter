@@ -4,23 +4,23 @@
       <div>{{ (SelAnalyzer == null) ? 'None selected' : SelAnalyzer.Name }}</div>
       <div class="btn-group pull-right">
         <button type="button" class="btn btn-default btn-xs" v-on:click="ShowEvents" data-toggle="tooltip" :title="(EventsCount == 0) ? 'No events since last login' : EventsCount + ' events since last login'"><img v-bind:class="{blink_img: (EventsCount != 0)}" :src="require('Imgs/exclamation.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" v-on:click="ShowDialog" data-toggle="tooltip" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" v-on:click="View = 'Table'" data-toggle="tooltip" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
       </div>
       <div class="clearfix"></div>
     </div>
-    <analyzer-dialog ref="Dialog"></analyzer-dialog>
-    <analyzer-configure ref="Configure"></analyzer-configure>
-    <analyzer-rates ref="Rates"></analyzer-rates>
-    <analyzer-rate ref="Rate"></analyzer-rate>
-    <analyzer-maintenance ref="Maintenance"></analyzer-maintenance>
-    <analyzer-alarms ref="Alarms"></analyzer-alarms>
-    <analyzer-alarm ref="Alarm"></analyzer-alarm>
+    <analyzer-table v-if="View == 'Table'"></analyzer-table>
+    <analyzer-configure v-if="View == 'Configure'" :value="Analyzer"></analyzer-configure>
+    <analyzer-rates v-if="View == 'Rates'" :value="Analyzer"></analyzer-rates>
+    <analyzer-rate v-if="View == 'Rate'" :value="Rate" :tariffs="Tariffs" :analyzer="Analyzer"></analyzer-rate>
+    <analyzer-maintenance v-if="View == 'Maintenance'" ref="Maintenance"></analyzer-maintenance>
+    <analyzer-alarms v-if="View == 'Alarms'" ref="Alarms"></analyzer-alarms>
+    <analyzer-alarm v-if="View == 'Alarm'" ref="Alarm"></analyzer-alarm>
   </div> 
 </template> 
 
 <script>
   import ProgressBar from 'Components/ProgressBar.vue';
-  import AnalyzerDialog from './Analyzer/Dialog.vue';
+  import AnalyzerTable from './Analyzer/Table.vue';
   import AnalyzerConfigure from './Analyzer/Configure.vue';
   import AnalyzerRates from './Analyzer/Rates.vue';
   import AnalyzerRate from './Analyzer/Rate.vue';
@@ -30,14 +30,12 @@
   import moment from 'JS/moment.js';
   export default {
     data() {
-      return { SelAnalyzer: null, EventsCount: 0 };
+      return { View: null, SelAnalyzer: null, EventsCount: 0, Analyzer: null, Rate: null,  Tariffs: null };
     },
     created: function() {
       this.LastSample = 0;
       this.Timer = null;
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
-    },
-    mounted: function() {
       this.CheckAnalyzer();
     },
     beforeDestroy: function () {
@@ -52,17 +50,17 @@
       },
       CheckAnalyzer: function() {
         if(localStorage.getItem("SelAnalyzer") === undefined) {
-          this.$refs.Dialog.Show();
+          this.View = 'Table';
         } else {
           $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: localStorage.getItem("SelAnalyzer") }), 
-            success: function(result) { 
+            success: (result) => { 
               this.$root.SelectedAnalyzer = result;  
               this.$root.$emit('AnalyzerChanged', result);
-            }.bind(this),
-            error: function() {
+            },
+            error: () => {
               this.$root.$emit('AnalyzerChanged', null);
-              this.$refs.Dialog.Show();
-            }.bind(this)
+              this.View = 'Table';
+            }
           });
         }
       },
@@ -85,12 +83,9 @@
             this.Timer = setTimeout(this.GetEvents.bind(this), 60000);
           }.bind(this)
         });
-      },
-      ShowDialog() {
-        this.$refs.Dialog.Show();
       }
     },
-    components: { ProgressBar, AnalyzerDialog, AnalyzerConfigure, AnalyzerRates, AnalyzerRate, AnalyzerMaintenance, AnalyzerAlarms, AnalyzerAlarm }
+    components: { ProgressBar, AnalyzerTable, AnalyzerConfigure, AnalyzerRates, AnalyzerRate, AnalyzerMaintenance, AnalyzerAlarms, AnalyzerAlarm }
   }
 </script>
 

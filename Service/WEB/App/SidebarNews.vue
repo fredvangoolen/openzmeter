@@ -1,35 +1,35 @@
 <template>
   <div>
-    <div class="sidenav-version"><div>Version:<br/>{{ BuildDate }}</div>
+    <div class="sidenav-version"><div>Version:<br/>{{ News.Version }}</div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-on:click="ShowUpdates" :disabled="Updates.length == 0"><img v-bind:class="{blink_img: (Updates.length != 0)}" :src="require('Imgs/update.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" v-on:click="ShowNews" :disabled="News.length == 0"><img :src="require('Imgs/newspaper.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" v-if="Updates!=null" v-on:click="ShowUpdates = true" v-bind:disabled="Updates.Updates.length == 0"><img v-bind:class="{blink_img: (Updates.Updates.length != 0)}" :src="require('Imgs/update.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" v-if="News!=null" v-on:click="FetchNews" v-bind:disabled="News.length == 0"><img :src="require('Imgs/newspaper.png')"></button>
       </div>
     </div>
-    <dlg ref="News">
+    <dlg v-if="ShowNews" :loading="NewsLoading">
       <template v-slot:header>
-        <div class="pull-left"><h4 class="modal-title">{{ Title }}</h4></div>
+        <div class="pull-left"><h4 class="modal-title">{{ NewsCurrent.Header }}</h4></div>
         <div class="pull-right btn-group">
           <div class="pull-right btn-group">
-            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Previous" :disabled="NewsPos == 0" v-on:click="NewsPrev"><img :src="require('Imgs/resultset_previous.png')"></button>
-            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Next" :disabled="NewsPos == (News.length - 1)" v-on:click="NewsNext"><img :src="require('Imgs/resultset_next.png')"></button>
-            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" v-on:click="NewsBack"><img :src="require('Imgs/arrow_undo.png')"></button>
+            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Previous" :disabled="News.NewsPos <= 0" v-on:click="NewsPrev"><img :src="require('Imgs/resultset_previous.png')"></button>
+            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Next" :disabled="News.NewsPos == (News.News.length - 1)" v-on:click="NewsNext"><img :src="require('Imgs/resultset_next.png')"></button>
+            <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" v-on:click="ShowNews = false"><img :src="require('Imgs/arrow_undo.png')"></button>
           </div>
         </div>
-        <div class="pull-right page-count">{{ NewsPos + 1}} of {{ News.length }}<br/>{{ NewsDate }}</div>
+        <div class="pull-right page-count">{{ News.NewsPos + 1}} of {{ News.News.length }}<br/>{{ FormatDate(NewsCurrent.NewsTime) }}</div>
       </template>
-      <div class="news-contents" v-html="Contents"></div>
+      <div class="news-contents" v-html="NewsCurrent.Contents"></div>
     </dlg>
-    <dlg ref="Updates">
+    <dlg ref="Updates" v-if="ShowUpdates" :loading="Updating">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">System updates</h4></div>
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs btn-primary" v-if="!Upgrading" data-toggle="tooltip" title="Save changes" v-on:click="Upgrade">Upgrade</button>
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" v-on:click="UpdatesBack"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" v-on:click="ShowUpdates = false"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
-        <div class="pull-right page-count">Last check<br/>{{ UpdateDate }}</div>
+        <div class="pull-right page-count">Last check<br/>{{ FormatDate(News.LastCheck) }}</div>
       </template>
-      <vuetable :data="Updates" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>                  
+      <vuetable ref="table" :data="Updates.Updates" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>                  
     </dlg>
   </div>
 </template>
@@ -42,7 +42,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { BuildDate: 'Wait...', ShowDialog: false, Title: '', Contents: '', NewsDate: '', News: [], NewsPos: -1, Updates: [], UpdateDate: '', Upgrading: false,
+      return { ShowNews: false, NewsLoading: false, NewsCurrent: null, News: { }, ShowUpdates: false, Updates: { Updates: [] }, Updating: false,
         Columns: [
           {name: 'Package', title: 'Package'},
           {name: 'From', title: 'From'},
@@ -53,74 +53,53 @@
     updated: function(){
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    mounted: function() {
+    created: function() {
       $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
         success: (result) => {
-          this.News = result.News;
-          this.BuildDate = result.Version;
+          result.NewsPos = -1;
           if(isNaN(parseInt(localStorage.getItem('LastLogin'))) === true) localStorage.setItem('LastLogin', 0);
           var LastLogin = parseInt(localStorage.getItem('LastLogin'));
-          for(var n = 0; n < this.News.length; n++) {
-            if(this.News[n] > LastLogin) {
-              this.NewsPos = n;
-              this.show();
+          for(var n = 0; n < result.News.length; n++) {
+            if(result.News[n] > LastLogin) {
+              result.NewsPos = n;
+              this.FetchNews();
               break;
             }
           }
-          if(this.NewsPos === -1) this.NewsPos = this.News.length - 1;
+          if(result.NewsPos === -1) result.NewsPos = result.News.length - 1;
+          this.News = result;
         }
       });
-      $.ajax({ url: "getUpdates", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
-        success: (result) => {
-          this.Updates = result.Updates;
-          this.UpdateDate = moment(result.LastCheck).format('DD/MM/YYYY');
-          this.$refs.Updates.SpinnerState(result.Updating);
-        }
-      });
+      this.FetchUpdates();
     },
     methods: {
+      FormatDate: function(val) {
+        return moment(val).format('DD/MM/YYYY');
+      },
       FetchUpdates: function() {
         $.ajax({ url: "getUpdates", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
-          success: (result) => {
-            this.Updates = result.Updates;
-            this.UpdateDate = moment(result.LastCheck).format('DD/MM/YYYY');
-            this.$refs.Updates.SpinnerState(result.Updating);
-          }
+          success: (result) => { this.Updates = result; }
         });
       },
       FetchNews: function() {
-        this.$refs.News.SpinnerState(true);
-        $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ NewsTime: this.News[this.NewsPos] }),
-          success: function(result) {
-            this.Title = result.Header;
-            this.Contents = result.Contents;
-            this.NewsDate = moment(this.News[this.NewsPos]).format('DD/MM/YYYY');
-            this.$refs.News.SpinnerState(false);
+        this.ShowNews = true;
+        this.NewsLoading = true;
+        this.NewsCurrent = {};
+        $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ NewsTime: this.News.News[this.News.NewsPos] }),
+          success: (result) => {
+            this.NewsLoading = false;
+            this.NewsCurrent = result;
             if(result.NewsTime > parseInt(localStorage.getItem('LastLogin'))) localStorage.setItem('LastLogin', result.NewsTime);
-          }.bind(this)
+          }
         });
       },
-      ShowNews: function(time) {
-        if(this.News.length === 0) return;    
-        this.$refs.News.Show();
-        this.FetchNews();
-      },
       NewsPrev: function() {
-        if(this.NewsPos > 0) this.NewsPos--;
+        if(this.News.NewsPos > 0) this.News.NewsPos--;
         this.FetchNews();
       },
       NewsNext: function() {
-        if(this.NewsPos < (this.News.length - 1)) this.NewsPos++;
+        if(this.News.NewsPos < (this.News.News.length - 1)) this.News.NewsPos++;
         this.FetchNews();
-      },
-      NewsBack: function() {
-        this.$refs.News.Close();
-      },
-      ShowUpdates: function() {
-        this.$refs.Updates.Show();
-      },
-      UpdatesBack: function() {
-        this.$refs.Updates.Close();
       },
       Upgrade: function(row) {
         this.Upgrading = true;

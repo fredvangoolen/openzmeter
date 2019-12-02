@@ -1,5 +1,5 @@
 <template>
-  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" data-keyboard="false">
+  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" data-keyboard="false">
     <div class="modal-backdrop in"></div>
     <div class="modal-dialog">
       <div class="modal-content">
@@ -7,7 +7,7 @@
           <slot name="header"></slot>
         </div>
         <div class="modal-body">
-          <spinner v-if="ShowSpinner"></spinner>
+          <spinner v-if="loading"></spinner>
           <slot></slot>          
         </div>
       </div>
@@ -18,34 +18,20 @@
 <script>
   export default {
     name: 'Dlg',
+    props: {loading: {type: Boolean, default: false}},
     data: function() {
-      return { ShowDialog: false, ShowSpinner: false };
-    },
-    methods: {
-      Show: function() {
-        this.ShowDialog = true;
-        this.$nextTick(() => {
-          $(this.$el).modal('show');
-        });
-      },
-      SpinnerState: function(val) {
-        this.ShowSpinner = val;
-      },
-      Close: function() {
-        $(this.$el).modal('hide');
-        this.ShowDialog = false;
-      },
+      return { };
     },
     mounted: function() {
       this.$root.$el.append(this.$el);
-    },
-    destroyed: function() {
-      this.$root.$el.removeChild(this.$el);
+      this.$nextTick(() => {
+        $(this.$el).modal('show');
+      });
     }
   }
 </script>
 
-<style>
+<style scoped>
   .modal-dialog {
     z-index: 1100;
     color: #333;

@@ -3,52 +3,57 @@
     <div class="input-group-btn" v-if="list != null">
       <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>
       <ul class="dropdown-menu">
-        <li v-for="item in list"><a v-on:click="SetValue(item.Value)">{{ item.Text }}</a></li>
+        <li v-for="item in list"><a v-on:click="$emit('input', item.value)">{{ item.name }}</a></li>
       </ul>
     </div>
-    <input type="text" class="form-control" :value="Format(Value)" v-on:change="Change">
+    <input type="text" class="form-control" :value="Format(value)" v-on:change="Change($event.target.value)">
     <span v-if="prepend" class="input-group-addon" id="basic-addon1">{{ prepend }}</span>
     <div class="input-group-btn-vertical">
-      <button class="btn btn-default" type="button" v-on:click="Increment">&#9650;</button>
-      <button class="btn btn-default" type="button" v-on:click="Decrement">&#9660;</button>
+      <button class="btn btn-default" type="button" v-bind:disabled="(value + increment) > max" v-on:click="$emit('input', value + increment)">&#9650;</button>
+      <button class="btn btn-default" type="button" v-bind:disabled="(value - increment) < min" v-on:click="$emit('input', value - increment)">&#9660;</button>
     </div>    
   </div>
 </template>
 
 <script>
   export default {
-    props: {prepend: { type: String }, min: { type: Number, default: 0}, max: { type: Number, default: 100}, increment: { type: Number, default: 0.1 }, value: { type: Number, default: 50}, decimals: { type: Number, default: 2 }, list: { type: Array, default: null} },
+    props: { prepend: { type: String }, min: { type: Number, default: 0}, max: { type: Number, default: 100}, increment: { type: Number, default: 0.1 }, value: { type: Number, default: 50}, decimals: { type: Number, default: 2 }, list: { type: Array, default: null} },
     data: function() {
-      return { Value: 50 };
+      return { };
     },
     created: function() {
-      this.Value = this.value;
+//      this.Value = this.value;
+    },
+    watch: {
+//      value: function(val) {
+        
+//      }
     },
     methods: {
-      SetValue: function(val) {
-        this.Value = parseFloat(val);
-        if(this.Value > this.max) this.Value = this.max;
-        this.$emit('change', this.Value);        
-      },
-      Increment: function(evt) {
-        $(evt.target).blur();
-        this.Value = parseFloat(this.Value) + this.increment;
-        if(this.Value > this.max) this.Value = this.max;
-        this.$emit('change', this.Value);
-      },
-      Decrement: function(evt) {
-        $(evt.target).blur();
-        this.Value = parseFloat(this.Value) - this.increment;
-        if(this.Value < this.min) this.Value = this.min;
-        this.$emit('change', this.Value);
-      },
-      Change: function(evt) {
-        var Value = parseFloat(evt.target.value);
+//      SetValue: function(val) {
+//        this.Value = parseFloat(val);
+//        if(this.Value > this.max) this.Value = this.max;
+//        this.$emit('change', this.Value);        
+//      },
+//      Increment: function(evt) {
+//        $(evt.target).blur();
+//        this.Value = parseFloat(this.Value) + this.increment;
+//        if(this.Value > this.max) this.Value = this.max;
+//        this.$emit('change', this.Value);
+//      },
+//      Decrement: function(evt) {
+//        $(evt.target).blur();
+//        this.Value = parseFloat(this.Value) - this.increment;
+//        if(this.Value < this.min) this.Value = this.min;
+//        this.$emit('change', this.Value);
+//      },
+      Change: function(val) {
+        var Value = parseFloat(val);
         if(isNaN(Value) === true) Value = this.min;
         if(Value > this.max) Value = this.max;
         if(Value < this.min) Value = this.min;
-        this.Value = Value;
-        this.$emit('change', this.Value);
+        this.$emit('change', Value);
+        this.$emit('input', Value);
       },
       Format: function(val) {
         var Exponent = Math.pow(10, this.decimals);
@@ -57,7 +62,11 @@
         var Fraction = Math.abs(val % Exponent);
         Fraction = Fraction.toString();
         while(Fraction.length < this.decimals) Fraction = '0' + Fraction;
-        return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + '.' + Fraction;
+        if(this.decimals > 0) {
+          return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + '.' + Fraction;
+        } else {
+          return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString();
+        }
       }
     }    
   }

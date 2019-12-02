@@ -15,12 +15,16 @@
         </template>
       </vuetable>
     </div>
-    <div class="modal" tabindex="1" role="dialog" ref="dialog" data-backdrop="false" v-if="ShowDialog" data-keyboard="false">
-      <div class="modal-backdrop in"></div>
-      <div class="modal-dialog">
-        <component :is="Driver" ref="settings" :settings="Settings"></component>
-      </div>
-    </div>
+    <dlg v-if="SettingsVisible" :loading="SettingsLoading">
+      <template v-slot:header>
+        <div class="pull-left"><h4 class="modal-title">Device &raquo; {{ Settings.Serial }}</h4></div>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" v-on:click="Save"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" v-on:click="SettingsVisible = false"><img :src="require('Imgs/arrow_undo.png')"></button>
+        </div>
+      </template>
+      <component :is="Driver" v-model="Settings"></component>
+    </dlg>
   </div>
 </template>
 
@@ -34,7 +38,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return {Devices: [], ShowSpinner: true, ShowDialog: false, Driver: null,
+      return {Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null,
         Columns: [
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},
@@ -93,11 +97,7 @@
           success: (result) => {
             this.Settings = result;
             this.Settings.Serial = id.Serial;
-            this.ShowDialog = true;
-            this.$nextTick(function () {
-              this.$root.$el.append(this.$refs.dialog);
-              $(this.$refs.dialog).modal('show');
-            });
+            this.SettingsVisible = true;
           },
           complete: () => {
             this.ShowSpinner = false;
@@ -105,25 +105,18 @@
         });
       },
       Save: function () {
-        this.$refs.settings.ShowSpinner = true;
-        $.ajax({url: "setDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(this.$refs.settings.Settings),
+        this.SettingsLoading = true;
+        $.ajax({url: "setDevice", timeout: 20000, type: "POST", contentType: 'application/json', data: JSON.stringify(this.Settings),
           success: (result) => {
-            this.$refs.settings.ShowSpinner = false;
-            this.Close();
+            this.SettingsLoading = false;
+            this.SettingsVisible = false;
             this.LoadTable();
           },
           error: () => {
-            this.$refs.settings.Error = 'Failed to save device settings!';
-            setTimeout(() => {
-              this.$refs.settings.Error = '';
-            }, 1000);
+            this.Settings.Error = 'Failed to save device settings!';
+            setTimeout(() => { this.Settings.Error = null; }, 1000);
           }
         });
-      },
-      Close: function () {
-        $(this.$refs.dialog).modal('hide');
-        this.$root.$el.removeChild(this.$refs.dialog);
-        this.ShowDialog = false;
       }
     },
     mounted: function () {

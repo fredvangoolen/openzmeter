@@ -1,22 +1,22 @@
 <template>
-  <dlg ref="Dialog">
+  <dlg :loading="ShowSpinner">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers</h4></div>
       <div class="pull-right">
-        <button type="button" class="btn btn-default btn-xs" v-on:click="Close"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" v-on:click="$parent.View = null"><img :src="require('Imgs/arrow_undo.png')"></button>
       </div>
     </template>
     <div class="alert alert-danger text-center" v-if="Analyzers.length == 0" style="margin-bottom: 5px; padding: 5px">
       <p>There are no analyzers available.</p>
       <p>If you are an administrator, check device settings, otherwise request permission.</p>
     </div>
-    <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
+    <vuetable ref="table" :fields="Columns" :data="Analyzers" :api-mode="false" class="table small table-striped">
       <template slot="actions" slot-scope="props">
         <div class="btn-group">
-          <button type="button" class="btn btn-success btn-xs" :disabled="CurrentlySelected(props.rowData)" v-on:click="Select(props.rowData)">Select</button>
+          <button type="button" class="btn btn-success btn-xs" v-bind:disabled="$root.SelectedAnalyzer.Analyzer === props.rowData.Analyzer" v-on:click="Select(props.rowData)">Select</button>
           <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
           <ul class="dropdown-menu pull-right">
-            <li><a v-on:click="Configure(props.rowData)" v-if="true">Configure</a></li>
+            <li><a v-on:click="Configure(props.rowData)">Configure</a></li>
             <li><a v-on:click="ACL(props.rowData)" v-if="false">ACL</a></li>
             <li><a v-on:click="Rates(props.rowData)">Rates</a></li>
             <li><a v-on:click="Alarms(props.rowData)">Alarms</a></li>
@@ -26,12 +26,6 @@
         </div>
       </template>
     </vuetable>
-
-      
-      
-      <!--analyzer-acls ref="ACLs"></analyzer-acls>
-      <analyzer-acl ref="ACL"></analyzer-acl-->
-
   </dlg>
 </template>
 
@@ -40,12 +34,9 @@
   import Vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
-  
-//  import AnalyzerAcls from './AnalyzerACLs.vue';
-//  import AnalyzerAcl from './AnalyzerACL.vue';
   export default {
     data() {
-      return { Analyzers: [], Analyzer: null,
+      return { Analyzers: [], Analyzer: null, ShowSpinner: false,
         Columns: [
           {name: 'Online', title: 'Online', callback: this.OnlineStatus},
           {name: 'Name', title: 'Description'}, 
@@ -57,52 +48,43 @@
     updated: function(){
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
+    mounted: function() {
+      this.ShowSpinner = true;
+      $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+        success: (result) => {
+          this.Analyzers = result;
+          this.ShowSpinner = false;
+        }
+      });
+    },
     methods: {
       OnlineStatus: function(value) {
         return (value === true) ? '&#9635;' : '&#9633;';
       },
-      Show: function() {
-        this.$refs.Dialog.Show();
-        this.$refs.Dialog.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: (result) => {
-            this.Analyzers = result;
-            this.$refs.table.setData({ data: result });
-            this.$refs.Dialog.ShowSpinner = false;
-          }
-        });
-      },
-      Close: function() {
-        this.$refs.Dialog.Close();
-      },
-      CurrentlySelected: function(analyzer) {
-        if(this.$root.SelectedAnalyzer === null) return false;
-        if(analyzer.Analyzer === this.$root.SelectedAnalyzer.Analyzer) return true;
-        return false;
-      },
       Select: function(analyzer) {
-        this.$refs.Dialog.ShowSpinner = true;
+        this.ShowSpinner = true;
         $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
           success: (result) => { 
             this.$root.SelectedAnalyzer = result;
             this.$root.$emit('AnalyzerChanged', result);
-            this.Close();
-            localStorage.setItem('SelAnalyzer', analyzer.Analyzer);
+            localStorage.setItem('SelAnalyzer', result.Analyzer);    
+            this.$parent.View = null;            
           },
           complete: () => {
-            this.$refs.Dialog.ShowSpinner = false;
+            this.ShowSpinner = false;
           }
         });
       },
       Configure: function(analyzer) {
-        this.$refs.Dialog.ShowSpinner = true;
+        this.ShowSpinner = true;
         $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
           success: (result) => {
-            this.$refs.Dialog.Close();
-            this.$parent.$refs.Configure.Show(result);
+            this.$parent.Analyzer = result;
+            this.$parent.View = null;
+            this.$nextTick(() => { this.$parent.View = 'Configure'; } );
           },
           complete: () => {
-            this.$refs.Dialog.ShowSpinner = false;
+            this.ShowSpinner = false;
           }
         });
       },
@@ -110,14 +92,15 @@
         alert("ACL not yet implemented"); 
       },
       Rates: function(analyzer) {
-        this.$refs.Dialog.ShowSpinner = true;
+        this.ShowSpinner = true;
         $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
           success: (result) => {
-            this.$refs.Dialog.Close();
-            this.$parent.$refs.Rates.Show(result);
+            this.$parent.Analyzer = result;
+            this.$parent.View = null;
+            this.$nextTick(() => { this.$parent.View = 'Rates'; } );
           },
           complete: () => {
-            this.$refs.Dialog.ShowSpinner = false;
+            this.ShowSpinner = false;
           }
         });
       },
