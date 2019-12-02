@@ -347,7 +347,7 @@ void DeviceV1_01::SetDevice(HTTPRequest &req) {
   json Orig = ConfigManager::ReadConfig("/Devices/" + pSerial);
   Config["Analyzer"] = Orig["Analyzer"];
   ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
-  req.FromString("", (State == RUNNING) ? StartDevice() : true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR;
+  req.FromString("", ((State == RUNNING) ? StartDevice() : true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
 }
 bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
 //  static int File = 0;

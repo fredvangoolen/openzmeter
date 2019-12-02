@@ -545,7 +545,7 @@ void  DeviceV2_01::SetDevice(HTTPRequest &req) {
   }
   ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
   json Response = json::object();
-  req.FromString("", (State == RUNNING) ? StartDevice() : true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR;
+  req.FromString("", ((State == RUNNING) ? StartDevice() : true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
 }
 bool  DeviceV2_01::BuffersAppend() {
   Sample_t Sample;
