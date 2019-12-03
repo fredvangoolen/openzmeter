@@ -15,15 +15,15 @@
           <tr><td colspan="4" class="border-bottom">Voltage channels</td></tr>
           <tr>
             <td></td>
-            <td class="text-right"><strong>Correction</strong></td>
-            <td class="text-right"><strong>Offset</strong></td>
+            <td class="text-right"><strong>ADC Offset</strong> <img :src="require('Imgs/help16.png')" data-toggle="tooltip" title="Add or substract value to ADC read, to adjust 0 point."></td>
             <td></td>
+            <td class="text-right"><strong>Multiplier</strong> <img :src="require('Imgs/help16.png')" data-toggle="tooltip" title="Multiply read value by a number to adjust input across voltage sensing transformer or for apply calibrations."></td>
           </tr>
           <tr v-for="index in [0, 1, 2]">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
-            <td><input-spin :min="-10" :max="10" v-model="value.VoltageGain[index]" :increment="0.001" :decimals="3" prepend="%"></input-spin></td>
-            <td><input-spin :min="-20" :max="20" v-model="value.VoltageOffset[index]" :increment="0.01" prepend="V"></input-spin></td>
-            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetVoltageOffset(index)" v-bind:disabled="value.Wave_Average.Voltage[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(value.Wave_Average.Voltage[index], 2) + ' V'"><img :src="require('Imgs/wand.png')"></button></td>
+            <td><input-spin :min="-200" :max="200" v-model="value.VoltageOffset[index]" :increment="0.01"></input-spin></td>
+            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetVoltageOffset(index)" v-bind:disabled="value.Wave_Average.Voltage[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(-value.Wave_Average.Voltage[index], 2)"><img :src="require('Imgs/wand.png')"></button></td>
+            <td><input-spin :min="0.1" :max="1000" v-model="value.VoltageGain[index]" :increment="0.001" :decimals="3" prepend="V/V"></input-spin></td>
           </tr>
         </table>
         <table>
@@ -34,17 +34,15 @@
           </td></tr>
           <tr>
             <td></td>
-            <td class="text-right"><strong>Full scale value</strong></td>
-            <td class="text-right"><strong>Correction</strong></td>
-            <td class="text-right"><strong>Offset</strong></td>
+            <td class="text-right"><strong>Offset <img :src="require('Imgs/help16.png')" data-toggle="tooltip" title="Add or substract value to ADC read, to adjust 0 point."></strong></td>
             <td></td>
+            <td class="text-right"><strong>Multiplier</strong></td>
           </tr>
           <tr v-for="index in [0, 1, 2, 3]">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
-            <td><input-spin :min="0.1" :max="1000000" v-model="value.CurrentLevel[index]" :increment="0.1" :decimals="1" prepend="A"></input-spin></td>
-            <td><input-spin :min="-10" :max="10" v-model="value.CurrentGain[index]" :increment="0.001" :decimals="3" prepend="%"></input-spin></td>
-            <td><input-spin :min="-1000" :max="1000" v-model="value.CurrentOffset[index]" :increment="0.01" prepend="A"></input-spin></td>
-            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetCurrentOffset(index)" v-bind:disabled="value.Wave_Average.Current[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(value.Wave_Average.Current[index], 2) + ' A'"><img :src="require('Imgs/wand.png')"></button></td>
+            <td><input-spin :min="-200" :max="200" v-model="value.CurrentOffset[index]" :increment="0.01"></input-spin></td>
+            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + Round(-value.Wave_Average.Current[index], 2)"><img :src="require('Imgs/wand.png')"></button></td>
+            <td><input-spin :min="0.00001" :max="20" v-model="value.CurrentGain[index]" :increment="0.00001" :decimals="5" prepend="A/mV"></input-spin></td>
           </tr>
         </table>
       </div>
@@ -179,11 +177,11 @@
     methods: {
       Round: oZm.RoundPlain,
       SetCurrentOffset: function(index) {
-        this.$set(this.value.CurrentOffset, index, -this.value.Wave_Average.Current[index] + this.value.CurrentOffset[index]);
+        this.$set(this.value.CurrentOffset, index, -this.value.Wave_Average.Current[index]);
         this.value.Wave_Average.Current[index] = 0.0;
       },
       SetVoltageOffset: function(index) {
-        this.$set(this.value.VoltageOffset, index, -this.value.Wave_Average.Voltage[index] + this.value.VoltageOffset[index]);
+        this.$set(this.value.VoltageOffset, index, -this.value.Wave_Average.Voltage[index]);
         this.value.Wave_Average.Voltage[index] = 0.0;
       }
     },

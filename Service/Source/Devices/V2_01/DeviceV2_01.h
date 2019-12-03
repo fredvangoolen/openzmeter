@@ -15,7 +15,7 @@
 #define DEVICEV2_01_PRODSTRING      "openZmeter - Capture device"   //Product string
 #define DEVICEV2_01_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
 #define DEVICEV2_01_ENDPOINT_OUT      0x02                          //Endpoint de escritura de datos
-#define DEVICEV2_01_SAMPLEFREQ    19200.00                          //Frequencia de muestreo
+#define DEVICEV2_01_SAMPLEFREQ    9600.00                          //Frequencia de muestreo
 #define DEVICEV2_01_TRANSFERS           32                          //Numero de transferencias a encolar
 #define DEVICEV2_01_CONTROL_SETSTATUS 0x20
 //----------------------------------------------------------------------------------------------------------------------
@@ -64,13 +64,12 @@ class DeviceV2_01 final : public Device {
     vector<float>                pCurrentGain;             //Ganancia de corriente
     vector<float>                pVoltageOffset;           //Offset de tension
     vector<float>                pCurrentOffset;           //Offset de corriente
-    vector<float>                pCurrentLevel;            //Current level
     bool                         pHighGain;                //Choose high gain mode
     vector<int16_t>              pCapture;                 //Capture status
     libusb_device_handle        *pDeviceHandle;            //Dispositivo de captura
     libusb_device               *pNewDevice;               //Dispositivo que se conecta
     libusb_context              *pContext;                 //USB context
-    deque<Sample_t>              pAverageValues;           //Average wave value of last second
+    deque<vector<int16_t> >      pAverageValues;           //Average wave value of last second
     RWLocks                      pAverageLocks;            //Lock access to average values
     uint64_t                     pLastSignalRecv;          //Last battery message recv
     bool                         pButtonAction;            //Last action readed

@@ -44,11 +44,11 @@
     },
     watch: {
       ActiveTab: function(val) {
-        if(name === 'Waveform') this.$refs.waveform.Redraw();
-        if(name === 'Harmonics') this.$refs.harmonics.Redraw();
-        if(name === 'Evolution') this.$refs.evolution.Redraw();
-        if(name === 'Advanced') this.$refs.advanced.Redraw();
-        if(name === 'Parameters') this.$refs.parameters.Redraw();
+        if(val === 'Waveform') this.$refs.waveform.Redraw();
+        if(val === 'Harmonics') this.$refs.harmonics.Redraw();
+        if(val === 'Evolution') this.$refs.evolution.Redraw();
+        if(val === 'Advanced') this.$refs.advanced.Redraw();
+        if(val === 'Parameters') this.$refs.parameters.Redraw();
       }
     },
     methods: {
