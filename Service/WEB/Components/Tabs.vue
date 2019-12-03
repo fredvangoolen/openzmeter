@@ -13,11 +13,14 @@
       return { Value: null };
     },
     created: function() {
-      this.Value = this.value;
       if(this.storage != undefined) {
-        this.Value = localStorage.getItem(this.storage);
-        this.$emit('input', this.Value);
+        var Find = this.tabs.indexOf(localStorage.getItem(this.storage));
+        this.Value = (Find == -1) ? this.tabs[0] : this.tabs[Find];
+      } else {
+        var Find = this.tabs.indexOf(this.value);
+        this.Value = (Find == -1) ? this.tabs[0] : this.tabs[Find];
       }
+      this.$emit('input', this.Value);        
     },
     mounted: function() {
       $(this.$el).scrollingTabs({ enableSwiping: true, tabClickHandler: this.TabChange });

@@ -9,17 +9,6 @@
 #define RECV_EP                         0x02
 #define USB_CONTROL_CLASS_SETSTATUS     0x20
 // Types definition ----------------------------------------------------------------------------------------------------
-/*typedef struct {
-  uint16_t Offset;
-  uint16_t V_CH_1;
-  uint16_t V_CH_2;
-  uint16_t V_CH_3;
-  uint16_t I_CH_1;
-  uint16_t I_CH_2;
-  uint16_t I_CH_3;
-  uint16_t I_CH_4;
-  uint16_t Battery;
-} ADC_Sequence_t;*/
 typedef struct {
   uint16_t Power_Color:2;     //Power LED (PB5) Red when off but plugged, off if off and not plugged, green if running and yellow if booting or shuttingdown
   uint16_t Status_Color:2;    //Status LED (PB4) Green if service running, yellow on events (cleared by software), red on service lost communication or errors.
@@ -116,8 +105,14 @@ void Suspend() {
 }
 // DMA interrupts to handle ADC oversample -----------------------------------------------------------------------------
 void DMA_CH1_ISR() {
-  uint16_t *Ptr = (DMA1->ISR & DMA_ISR_HTIF1) ? ADC_Read[0] : ADC_Read[4];
-  DMA1->IFCR |= DMA_IFCR_CTCIF1 | DMA_IFCR_CHTIF1;
+  uint16_t *Ptr;
+  if(DMA1->ISR & DMA_ISR_HTIF1) {
+    Ptr = ADC_Read[0];
+    DMA1->IFCR |= DMA_IFCR_CHTIF1;
+  } else {
+    Ptr = ADC_Read[4];
+    DMA1->IFCR |= DMA_IFCR_CTCIF1;
+  }
   int16_t Offset = (2048 * 4) - (Ptr[0] + Ptr[9] + Ptr[18] + Ptr[27]);
   if((Offset > 256) || (Offset < -256)) Offset = 0;
   for(uint8_t Count = 0; Count < 7; Count++) {
@@ -134,8 +129,8 @@ void DMA_CH1_ISR() {
   }
   //const uint16_t Temp30 = *(uint16_t*)0x1FFFF7B8;
   //const uint16_t Temp110 = *(uint16_t*)0x1FFFF7C2;
-//  int32_t Temp = ((Ptr[0].Temperature - Temp30) * 80) / (Temp110 - Temp30) + 30;
-//  TIM16->CCR1 = (Temp < 50) ? 0 : Temp * 30000;
+  //int32_t Temp = ((Ptr[0].Temperature - Temp30) * 80) / (Temp110 - Temp30) + 30;
+  //TIM16->CCR1 = (Temp < 50) ? 0 : Temp * 30000;
   int32_t Battery = (Ptr[8] * 4522) / 4096;
   SysStatus.Battery = (Battery <= 2960) ? 0 : (Battery >= 4240) ? 63 : (Battery - 2960) / 20;
 }
