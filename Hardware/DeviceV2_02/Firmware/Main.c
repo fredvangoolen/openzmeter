@@ -3,7 +3,7 @@
 #include <STM32F0xx.h>
 #include "USB.h"
 // Configuration -------------------------------------------------------------------------------------------------------
-#define BUFF_LEN  1024
+#define BUFF_LEN  1200
 // USB application definitions -----------------------------------------------------------------------------------------
 #define SEND_EP                         0x81
 #define RECV_EP                         0x02
@@ -82,14 +82,14 @@ void SysTick_ISR() {
       }
     } else if(ButtonStatus.Counter > 5000) {
       ButtonStatus.Action = LONG_CLICK;
-      SignalsStatus.Buzzer = 0b001010111; 
+      SignalsStatus.Buzzer = 0b001010111;
       ButtonStatus.Counter = 0;
     } else if(ButtonStatus.Counter > 200) {
       ButtonStatus.Action = CLICK;
       SignalsStatus.Buzzer = 0b000010111;
       ButtonStatus.Counter = 0;
     } else {
-      ButtonStatus.Counter = 0;    
+      ButtonStatus.Counter = 0;
     }
   }
   SysTicks++;
@@ -131,8 +131,14 @@ void DMA_CH1_ISR() {
   //const uint16_t Temp110 = *(uint16_t*)0x1FFFF7C2;
   //int32_t Temp = ((Ptr[0].Temperature - Temp30) * 80) / (Temp110 - Temp30) + 30;
   //TIM16->CCR1 = (Temp < 50) ? 0 : Temp * 30000;
-  int32_t Battery = (Ptr[8] * 4522) / 4096;
-  SysStatus.Battery = (Battery <= 2960) ? 0 : (Battery >= 4240) ? 63 : (Battery - 2960) / 20;
+  if(Ptr[8] < 2560) {
+    SysStatus.Battery = 0;
+  } else {
+    Ptr[8] = Ptr[8] - 2560 / 18;
+    SysStatus.Battery = (Ptr[8] > 63) ? 63 : Ptr[8];
+  }
+//  int32_t Battery = ((uint32_t)Ptr[8] * 4520) / 4096;
+//  SysStatus.Battery = (Battery <= 2960) ? 0 : (Battery >= 4240) ? 63 : (Battery - 2960) / 20;
 }
 // USB callbacks functions ---------------------------------------------------------------------------------------------
 void USB_HandleEP1_TX(uint8_t event) {
@@ -215,8 +221,7 @@ void Setup() {
   DMA1_Channel1->CCR |= DMA_CCR_PL_0 | DMA_CCR_PL_1 | DMA_CCR_PSIZE_0 | DMA_CCR_PSIZE_0 | DMA_CCR_MSIZE_0 | DMA_CCR_MINC | DMA_CCR_CIRC | DMA_CCR_TCIE | DMA_CCR_HTIE | DMA_CCR_EN;
   NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   NVIC_SetPriority(DMA1_Channel1_IRQn, 0);
-  // Initialize the ADC (14MHz, 7.5 adquisition, DMA active, trigger on Timer3)
-  ADC1->SMPR |= ADC_SMPR_SMP_0;
+  // Initialize the ADC (14MHz, 1.5 adquisition, DMA active, trigger on Timer3)
   ADC1->CR = ADC_CR_ADCAL;
   while(ADC1->CR & ADC_CR_ADCAL);
   ADC1->CHSELR = ADC_CHSELR_CHSEL1 | ADC_CHSELR_CHSEL2 | ADC_CHSELR_CHSEL3 | ADC_CHSELR_CHSEL4 | ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6 | ADC_CHSELR_CHSEL7 | ADC_CHSELR_CHSEL8 | ADC_CHSELR_CHSEL9;
@@ -225,7 +230,7 @@ void Setup() {
   while(ADC1->ISR & ADC_ISR_ADRDY);
   ADC1->CR |= ADC_CR_ADSTART;
   //Init and Timer3 (19200Hz x 4) for ADC control
-  TIM3->ARR = 625 - 1;
+  TIM3->ARR = 500 - 1;
   TIM3->CR2 |= TIM_CR2_MMS_1;
   TIM3->CR1 |= TIM_CR1_DIR;
   // Configure Timer2 (4kHz 50%) for sounder

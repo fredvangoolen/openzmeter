@@ -140,6 +140,7 @@
       var Phase3N = 0;
       var Phase3  = 0;
       var Phase1  = 0;
+      if(this.value.Outputs.lengt == 0) this.$set(this.value, 'Outputs', [ { Mode: '3PHASE+N', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3', '+CH4'] } ]);
       for(var idx in this.value.Outputs) {
         if(this.value.Outputs[idx].Mode === '3PHASE+N') Phase3N++;
         if(this.value.Outputs[idx].Mode === '3PHASE') Phase3++;

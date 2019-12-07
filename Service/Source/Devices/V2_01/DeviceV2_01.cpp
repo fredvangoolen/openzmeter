@@ -143,7 +143,7 @@ json DeviceV2_01::CheckConfig(const json& config) {
         }
         Output["Analyzer"] = AnalyzerSoft::CheckConfig(Tmp.contains("Analyzer") ? Tmp["Analyzer"] : json::object());
         if(Error == false) ConfigOUT["Outputs"].push_back(Output);
-      }      
+      }
     }
   }
   return ConfigOUT;
@@ -248,6 +248,9 @@ bool  DeviceV2_01::StartDevice() {
       pDeviceHandle = NULL;
       pNewDevice    = NULL;
       pSubmittedTransfers = 0;
+      pRunAverageCounter = 0;
+      pRunAverageValues.resize(7, 0);
+      pAverageValues.resize(7, 0.0);
       pCapture.clear();
       pthread_setname_np(pCaptureThread, "DeviceV2_01");
       if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE, DEVICEV2_01_VID, DEVICEV2_01_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
@@ -287,7 +290,7 @@ void *DeviceV2_01::Capture_Thread(void *args) {
   DeviceV2_01 *This   = (DeviceV2_01*)args;
   uint64_t   LastSignalSend = 0;
   This->pTransfers.reserve(DEVICEV2_01_TRANSFERS);
-  for(auto n = 0; n < DEVICEV2_01_TRANSFERS; n++) This->pTransfers.emplace_back(This, 8192);
+  for(auto n = 0; n < DEVICEV2_01_TRANSFERS; n++) This->pTransfers.emplace_back(This, 32768);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
@@ -420,15 +423,14 @@ void *DeviceV2_01::Capture_Thread(void *args) {
 }
 void  DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV2_01 *This = (DeviceV2_01*)transfer->user_data;
-  static uint32_t Reads = 0;
-  static uint64_t ReadsTime = Tools::GetTime();
+  uint64_t Time = Tools::GetTime();
   if((transfer->endpoint == DEVICEV2_01_ENDPOINT_IN) && (transfer->status == LIBUSB_TRANSFER_COMPLETED)) {
     uint16_t *Samples = (uint16_t*)transfer->buffer;
     for(int Pos = 0; Pos < (transfer->actual_length / 2); Pos++) {
       uint8_t  Seq    = Samples[Pos] >> 13;
       uint16_t Sample = (Samples[Pos] & 0x1FFF);
       if(Seq == 7) {
-        if(This->pLastSignalRecv < (Tools::GetTime() - 1000)) {
+        if(This->pLastSignalRecv < (Time - 500)) {
           json Status = json::object();
           float BattVoltage = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
           float BattLevel  = (BattVoltage - 2.96) * 80.65;
@@ -445,16 +447,9 @@ void  DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
             SysSupport::SetSystemActions("PowerOff");
           }
           This->pButtonAction = (Action == NONE);
-          This->pLastSignalRecv = Tools::GetTime();
-        }    
-        continue;
-      } else {
-        Reads++;
-        if(Reads == 100000) {
-          printf("%u samples in %u ms\n", Reads, (uint32_t)(Tools::GetTime() - ReadsTime));
-          Reads = 0;
-          ReadsTime = Tools::GetTime();
+          This->pLastSignalRecv = Time;
         }
+        continue;
       }
       if(This->pCapture.size() != Seq) {
         LOGFile::Debug("Lost sample, restarting adquisition\n");
@@ -463,10 +458,7 @@ void  DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
       }
       This->pCapture.push_back(Sample - 4096);
       if(This->pCapture.size() == 7) {
-        if(This->BuffersAppend() == false) {
-          LOGFile::Error("Capture buffer overflow! Posible lost of samples\n");
-          break;
-        }
+        This->BuffersAppend();
         This->pCapture.clear();
       }
     }
@@ -501,21 +493,17 @@ void  DeviceV2_01::GetDevice(HTTPRequest &req) {
   pMembersLock.ReadLock();
   json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
-  vector<float> Avg = vector<float>(7, 0.0);
   pAverageLocks.ReadLock();
-  for(auto it = pAverageValues.begin(); it != pAverageValues.end(); it++) {
-    for(unsigned ch = 0; ch < it->size(); ch++) Avg[ch] += (*it)[ch];
-  }
   Config["Wave_Average"] = json::object();
   Config["Wave_Average"]["Voltage"] = json::array();
-  Config["Wave_Average"]["Voltage"].push_back(Avg[0] / pAverageValues.size());
-  Config["Wave_Average"]["Voltage"].push_back(Avg[1] / pAverageValues.size());
-  Config["Wave_Average"]["Voltage"].push_back(Avg[2] / pAverageValues.size());
+  Config["Wave_Average"]["Voltage"].push_back(pAverageValues[0]);
+  Config["Wave_Average"]["Voltage"].push_back(pAverageValues[1]);
+  Config["Wave_Average"]["Voltage"].push_back(pAverageValues[2]);
   Config["Wave_Average"]["Current"] = json::array();
-  Config["Wave_Average"]["Current"].push_back(Avg[3] / pAverageValues.size());
-  Config["Wave_Average"]["Current"].push_back(Avg[4] / pAverageValues.size());
-  Config["Wave_Average"]["Current"].push_back(Avg[5] / pAverageValues.size());
-  Config["Wave_Average"]["Current"].push_back(Avg[6] / pAverageValues.size());
+  Config["Wave_Average"]["Current"].push_back(pAverageValues[3]);
+  Config["Wave_Average"]["Current"].push_back(pAverageValues[4]);
+  Config["Wave_Average"]["Current"].push_back(pAverageValues[5]);
+  Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
   pAverageLocks.ReadUnlock();
   pMembersLock.ReadUnlock();
   req.FromJSON(Config);
@@ -536,34 +524,38 @@ void  DeviceV2_01::SetDevice(HTTPRequest &req) {
   json Response = json::object();
   req.FromString("", ((State == RUNNING) ? StartDevice() : true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
 }
-bool  DeviceV2_01::BuffersAppend() {
+void  DeviceV2_01::BuffersAppend() {
   Sample_t Sample;
-  pAverageLocks.WriteLock();
-  pAverageValues.push_back(pCapture);
-  if(pAverageValues.size() > DEVICEV2_01_SAMPLEFREQ) pAverageValues.pop_front();
-  pAverageLocks.WriteUnlock();
+  for(unsigned ch = 0; ch < pCapture.size(); ch++) pRunAverageValues[ch] = pRunAverageValues[ch] + pCapture[ch];
+  pRunAverageCounter++;
+  if(pRunAverageCounter == DEVICEV2_01_SAMPLEFREQ * 10) {
+    pAverageLocks.WriteLock();
+    for(unsigned ch = 0; ch < pCapture.size(); ch++) pAverageValues[ch] = pRunAverageValues[ch] / (DEVICEV2_01_SAMPLEFREQ * 10.0);
+    pAverageLocks.WriteUnlock();
+    pRunAverageValues = vector<int32_t>(7, 0);
+    pRunAverageCounter = 0;
+  }
   Sample.Voltage[0] = ((float)pCapture[0] + pVoltageOffset[0]) * 0.110266113281 * pVoltageGain[0];
   Sample.Voltage[1] = ((float)pCapture[1] + pVoltageOffset[1]) * 0.110266113281 * pVoltageGain[1];
   Sample.Voltage[2] = ((float)pCapture[2] + pVoltageOffset[2]) * 0.110266113281 * pVoltageGain[2];
-  Sample.Current[0] = ((float)pCapture[3] + pCurrentOffset[0]) * (pHighGain ? 201.416015625 : 201.416015625) *  pCurrentGain[0];
-  Sample.Current[1] = ((float)pCapture[4] + pCurrentOffset[1]) * (pHighGain ? 201.416015625 : 201.416015625) *  pCurrentGain[1];
-  Sample.Current[2] = ((float)pCapture[5] + pCurrentOffset[2]) * (pHighGain ? 201.416015625 : 201.416015625) *  pCurrentGain[2];
-  Sample.Current[3] = ((float)pCapture[6] + pCurrentOffset[3]) * (pHighGain ? 201.416015625 : 201.416015625) *  pCurrentGain[3];
+  Sample.Current[0] = ((float)pCapture[3] + pCurrentOffset[0]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[0];
+  Sample.Current[1] = ((float)pCapture[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
+  Sample.Current[2] = ((float)pCapture[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
+  Sample.Current[3] = ((float)pCapture[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
   pBuffer.push_back(Sample);
-  for(auto Tmp : pAnalyzersSetup) {
-    if(Tmp.Parent->IsFinished() == false) return true;
+  for(auto &Tmp : pAnalyzersSetup) {
+    if(Tmp.Parent->IsFinished() == false) return;
   }
-  bool Started = false;
-  while((pBuffer.empty() == false) && (Started == false)) {
+  vector<float> Voltage = vector<float>(3);
+  vector<float> Current = vector<float>(4);
+  while(pBuffer.empty() == false) {
     Sample_t Sample = pBuffer.front();
     pBuffer.pop_front();
-    for(auto Tmp : pAnalyzersSetup) {
-      vector<float> Voltage, Current;
-      for(auto VoltCH : Tmp.Voltage) Voltage.push_back(Sample.Voltage[VoltCH]);
-      for(auto CurrCH : Tmp.Current) Current.push_back(Sample.Current[CurrCH.Index] * CurrCH.Invert);
-      if(Tmp.Parent->BufferAppend(Voltage, Current) == true) Started = true;
+    for(auto &Tmp : pAnalyzersSetup) {
+      for(unsigned ch = 0; ch < Tmp.Voltage.size(); ch++) Voltage[ch] = Sample.Voltage[Tmp.Voltage[ch]];
+      for(unsigned ch = 0; ch < Tmp.Current.size(); ch++) Current[ch] = Sample.Current[Tmp.Current[ch].Index] * Tmp.Current[ch].Invert;
+      if(Tmp.Parent->BufferAppend(Voltage, Current) == true) return;
     }
   }
-  return true;
 }
 //======================================================================================================================

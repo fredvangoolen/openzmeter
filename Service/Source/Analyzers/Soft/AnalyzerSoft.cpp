@@ -150,7 +150,7 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
   pDelayVoltage.push_back(voltageSamples);
   pDelayCurrent.push_back(currentSamples);
   vector<float> Outs = voltageSamples;
-  for(uint8_t i = 0; i < voltageSamples.size(); i++) {
+  for(unsigned i = 0; i < voltageSamples.size(); i++) {
     for(auto &Filter : pFilters) {
       float Out = Outs[i] * Filter.A0 + Filter.ChannelsZ1[i];
       Filter.ChannelsZ1[i] = Outs[i] * Filter.A1 + Filter.ChannelsZ2[i] - Filter.B1 * Out;
@@ -161,7 +161,7 @@ bool AnalyzerSoft::BufferAppend(const vector<float> &voltageSamples, const vecto
   if((pBlockCycles.size() == pBlockCycles.capacity()) || (pNominalFrequency == 0)) pBlockCycles.clear();
   pCycleLen++;
   if(pNominalFrequency != 0) {
-    if((((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) && (pCycleLen > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))){
+    if((((pLastSamples[0] >= 0.0) && (Outs[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (Outs[0] > 0.0))) && (pCycleLen > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))) {
       pBlockCycles.push_back(pCycleLen);
       pCycles.push_back(pCycleLen);
       if(pCycles.size() > (ZEROCROSSING_SECONDS * pNominalFrequency)) pCycles.pop_front();
