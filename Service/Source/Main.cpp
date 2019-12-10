@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
   LOGFile::Debug("Creating database tables\n");
   Database::EnablePool();
   Database DB("public");
-  if(DB.ExecResource("SQL/Database.sql") == false) return EXIT_FAILURE;
+  if(DB.ExecResource("SQL/Database.sql") == false) LOGFile::Error("Database is damaged, manual repair is nedded\n");
   /* Create system manager */
   SysSupport SystemManager;
   /* Create devices interface */

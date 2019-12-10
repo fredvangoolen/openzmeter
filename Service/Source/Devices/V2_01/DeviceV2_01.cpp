@@ -300,42 +300,17 @@ void *DeviceV2_01::Capture_Thread(void *args) {
     if(Result < LIBUSB_SUCCESS) LOGFile::Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
     if(This->pTerminate == true) continue;
     if((This->pDeviceHandle != NULL) && (LastSignalSend < (Tools::GetTime() - 500))) {
-      uint16_t Status = 0x0006;
-      json SysStatus = SysSupport::GetSystemDetails();
-      if(SysStatus.contains("RAM_Usage") && SysStatus["RAM_Usage"].is_number()) {
-        float RAM_Usage = SysStatus["RAM_Usage"];
-        if(RAM_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;
-      }
-      if(SysStatus.contains("CPU_Usage") && SysStatus["CPU_Usage"].is_number()) {
-        float CPU_Usage = SysStatus["CPU_Usage"];
-        if(CPU_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;
-      } 
-      if(SysStatus.contains("Disk_Usage") && SysStatus["Disk_Usage"].is_number()) {
-        float Disk_Usage = SysStatus["Disk_Usage"];
-        if(Disk_Usage > 90.0) Status = (Status & 0xFFFC) | 0x0003;
-      }
-      if(SysStatus.contains("Charging") && SysStatus["Charging"].is_boolean()) {
-        bool Charging = SysStatus["Charging"];
-        if(Charging) Status = (Status & 0xFFFC) | 0x0003;
-      }
-      if(SysStatus.contains("Updates") && SysStatus["Updates"].is_boolean()) {
-        bool Updates = SysStatus["Updates"];
-        if(Updates) Status = (Status & 0xFFFC) | 0x0003;
-      }
-      if(SysStatus.contains("Event") && SysStatus["Event"].is_boolean()) {
-        bool Event = SysStatus["Event"];
-        if(Event == true) Status = (Status & 0xC01C) | 0x0021;
-      }
-      if(SysStatus.contains("WIFI_Network") && SysStatus["WIFI_Network"].is_string()) {
-        Status = (Status & 0xFFF3) | 0x000C;
-        if(SysStatus.contains("NTP_Enabled") && SysStatus["NTP_Enabled"].is_boolean()) {
-          bool Enabled = SysStatus["NTP_Enabled"];
-          if(Enabled) Status = (Status & 0xFFF3) | 0x0008;
-        }
-      }
-      if(SysStatus.contains("Bluetooth_Network") && SysStatus["Bluetooth_Network"].is_string()) {
-        Status = (Status & 0xFFEF) | 0x0010;
-      }
+      uint16_t Status = 0x0006; //Stat=GREEN y Wifi=RED
+      SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
+      SysStatus->Lock.ReadLock();
+      if(SysStatus->RAM_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;              //Stat=YELLOW
+      if(SysStatus->CPU_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;              //Stat=YELLOW
+      if(SysStatus->Disk_Usage > 90.0) Status = (Status & 0xFFFC) | 0x0003;             //Stat=YELLOW
+      if(SysStatus->Time_IsSet == false) Status = (Status & 0xFFFC) | 0x0001;           //Stat=RED
+      if(SysStatus->Events == true) Status = (Status & 0xC01C) | 0x0021;                //Stat=RED and short BEEP
+      if(SysStatus->WIFI_Network.empty() == false) Status = (Status & 0xFFF3) | 0x000C; //Wifi=GREEN
+      if(SysStatus->BT_Network.empty() == false) Status = (Status & 0xFFEF) | 0x0010;   //Bt=BLUE
+      SysStatus->Lock.ReadUnlock();
       Status |= (This->pHighGain == true) ? 0x4000 : 0x0000;
       This->pSignalTransfer.Submit(&Status, sizeof(Status));
       This->pSubmittedTransfers++;
@@ -434,15 +409,14 @@ void  DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
       uint16_t Sample = (Samples[Pos] & 0x1FFF);
       if(Seq == 7) {
         if(This->pLastSignalRecv < (Time - 500)) {
-          json Status = json::object();
-          float BattVoltage = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
-          float BattLevel  = (BattVoltage - 2.96) * 80.65;
-          if(BattLevel > 100.0) BattLevel = 100.0;
-          Status["Battery_Voltage"] = BattVoltage;
-          Status["Battery_Level"] = BattLevel;
-          Status["Charging"] = (Sample & 0x0002) ? true: false;
-          Status["Powered"] = (Sample & 0x0001) ? true: false;
-          SysSupport::SetSystemDetails(Status);
+          SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
+          SysStatus->Lock.WriteLock();
+          SysStatus->Battery_Volt = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
+          SysStatus->Battery_Level  = (SysStatus->Battery_Volt - 2.96) * 80.65;
+          if(SysStatus->Battery_Level > 100.0) SysStatus->Battery_Level = 100.0;
+//          Status["Charging"] = (Sample & 0x0002) ? true: false;
+//          Status["Powered"] = (Sample & 0x0001) ? true: false;
+          SysStatus->Lock.WriteUnlock();
           uint8_t Action = (Sample & 0x0300) >> 8;
           if((Action == CLICK) && (This->pButtonAction == false)) {
             SysSupport::SetSystemActions("ToogleBluetooth");

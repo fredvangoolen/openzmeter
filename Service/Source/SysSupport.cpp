@@ -5,8 +5,7 @@
 #include "SysSupport.h"
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
-json                           SysSupport::pSystemDetails = json::object();
-RWLocks                        SysSupport::pDetailsLock;
+SysSupport::SystemStatus_t     SysSupport::pSystemStatus;
 queue<string>                  SysSupport::pSystemActions;
 RWLocks                        SysSupport::pActionsLock;
 #ifdef OPENWRT
@@ -20,8 +19,9 @@ RWLocks                        SysSupport::pActionsLock;
   string                       SysSupport::pWirelessWIFI;
   vector<SysSupport::Update_t> SysSupport::pUpdates;
   RWLocks                      SysSupport::pUpdatesLock;
-  uint64_t                     SysSupport::pLastUpdateCheck = 0;
-  uint64_t                     SysSupport::pLastDestailsCheck = 0;
+  uint64_t                     SysSupport::pLastTask_1H = 0;
+  uint64_t                     SysSupport::pLastTask_1M = 0;
+  uint64_t                     SysSupport::pLastTask_5S = 0;
 #endif
 //----------------------------------------------------------------------------------------------------------------------
 void SysSupport::GetNewsCallback(HTTPRequest &req) {
@@ -137,24 +137,31 @@ SysSupport::~SysSupport() {
     if(pDBus) dbus_connection_unref(pDBus);
   #endif
 }
-void SysSupport::SetSystemDetails(const json &details) {
-  pDetailsLock.WriteLock();
-  pSystemDetails.insert(details.begin(), details.end());
-  pDetailsLock.WriteUnlock();
+SysSupport::SystemStatus_t *SysSupport::GetSystemStatus() {
+  return &pSystemStatus;
 }
-json SysSupport::GetSystemDetails() {
+json SysSupport::GetSystemStatusJSON() {
   json Result = json::object();
-  pDetailsLock.ReadLock();
-  Result = pSystemDetails;
-  pDetailsLock.ReadUnlock();
+  pSystemStatus.Lock.ReadLock();
+  Result["Updates"] = pSystemStatus.Updates;
+  Result["Events"] = pSystemStatus.Events;      
+  Result["UpTime"] = pSystemStatus.UpTime;      
+  Result["Swap_Total"] = pSystemStatus.Swap_Total;      
+  Result["Swap_Usage"] = pSystemStatus.Swap_Usage;      
+  Result["CPU_Usage"] = pSystemStatus.CPU_Usage;      
+  Result["Disk_Total"] = pSystemStatus.Disk_Total;      
+  Result["Disk_Usage"] = pSystemStatus.Disk_Usage;      
+  Result["RAM_Total"] = pSystemStatus.RAM_Total;      
+  Result["RAM_Usage"] = pSystemStatus.RAM_Usage;      
+  Result["Temperature"] = pSystemStatus.Temperature;      
+  Result["WIFI_Network"] = pSystemStatus.WIFI_Network;      
+  Result["WIFI_Power"] = pSystemStatus.WIFI_Power;      
+  Result["BT_Network"] = pSystemStatus.BT_Network;      
+  Result["Time_IsSet"] = pSystemStatus.Time_IsSet;      
+  Result["Battery_Volt"] = pSystemStatus.Battery_Volt;      
+  Result["Battery_Level"] = pSystemStatus.Battery_Level;      
+  pSystemStatus.Lock.ReadUnlock();
   return Result;
-}
-bool SysSupport::PendingSystemActions() {
-  bool Result = false;
-  pActionsLock.ReadLock();
-  if(pSystemActions.size() > 0) Result = true;
-  pActionsLock.ReadUnlock();
-  return Result; 
 }
 void SysSupport::SetSystemActions(const string &action) {
   pActionsLock.WriteLock();
@@ -178,7 +185,6 @@ void SysSupport::SetSystemActions(const string &action) {
   }
   bool SysSupport::StartBT() {
     pthread_mutex_lock(&pBTMutex);
-//    if(pBTEnabled == true) return true;
     //Register agent
     DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "RegisterAgent");
     DBusMessageIter ArgsIter;
@@ -248,7 +254,6 @@ void SysSupport::SetSystemActions(const string &action) {
   }
   bool SysSupport::StopBT() {
     pthread_mutex_lock(&pBTMutex);
-//    if(pBTEnabled == false) return true;
     pBTServerName = "";
     if(SendBoolBT("Powered", false) == false) {
       pthread_mutex_unlock(&pBTMutex);
@@ -292,37 +297,6 @@ void SysSupport::SetSystemActions(const string &action) {
       dbus_message_unref(Reply);
     }
     dbus_message_unref(Msg);
-  }
-  void SysSupport::CheckUpdates() {
-    pLastUpdateCheck = Tools::GetTime();
-    pUpdatesLock.WriteLock();
-    pUpdates.clear();
-    pUpdatesLock.WriteUnlock();
-    int ResultCode = 0;
-    string Result = Run("opkg update", &ResultCode);
-    if(ResultCode != 0) return;
-    Result = Run("opkg list-upgradable", &ResultCode);
-    if(ResultCode != 0) return;
-    pUpdatesLock.WriteLock();
-    size_t Pos = 0;
-    while(Pos < Result.size()) {
-      Update_t Update;
-      size_t Pos2 = Result.find(" - ", Pos);
-      Update.Package = Result.substr(Pos, Pos2 - Pos);
-      Pos = Pos2 + 3;
-      Pos2 = Result.find(" - ", Pos);
-      Update.From = Result.substr(Pos, Pos2 - Pos);
-      Pos = Pos2 + 3;
-      Pos2 = Result.find("\n", Pos);
-      if(Pos2 == string::npos) Pos2 = Result.size();
-      Update.To = Result.substr(Pos, Pos2 - Pos);
-      Pos = Pos2 + 1;
-      pUpdates.push_back(Update);
-    }
-    pDetailsLock.WriteLock();
-    pSystemDetails["Updates"] = (pUpdates.size() > 0);
-    pDetailsLock.WriteUnlock();
-    pUpdatesLock.WriteUnlock();
   }
   string SysSupport::GetMacBT() {
     string Result = "";
@@ -405,36 +379,37 @@ void SysSupport::SetSystemActions(const string &action) {
     if(errno != 0) return 0;
     return Val * 1024;
   }
-  void SysSupport::UpdateSystemDetails() {
+  void SysSupport::PeriodicTask_5S() {
     struct sysinfo Info;
     struct statvfs Disk;
+    pLastTask_5S = Tools::GetTime();
     if(sysinfo(&Info) != 0) {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      pDetailsLock.WriteLock();
-      pSystemDetails["UpTime"] = nullptr;
-      pSystemDetails["Swap_Total"] = nullptr;
-      pSystemDetails["Swap_Usage"] = nullptr;
-      pSystemDetails["CPU_Usage"] = nullptr;
-      pDetailsLock.WriteUnlock();
+      pSystemStatus.Lock.WriteLock();
+      pSystemStatus.UpTime = 0;
+      pSystemStatus.Swap_Total = 0;
+      pSystemStatus.Swap_Usage = NAN;
+      pSystemStatus.CPU_Usage = NAN;
+      pSystemStatus.Lock.WriteUnlock();
     } else {
-      pDetailsLock.WriteLock();
-      pSystemDetails["UpTime"] = Info.uptime;
-      pSystemDetails["Swap_Total"] = (uint64_t)Info.totalswap * Info.mem_unit;
-      pSystemDetails["Swap_Usage"] = ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap;
-      pSystemDetails["CPU_Usage"] = ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0;
-      pDetailsLock.WriteUnlock();
+      pSystemStatus.Lock.WriteLock();
+      pSystemStatus.UpTime = Info.uptime;
+      pSystemStatus.Swap_Total = (uint64_t)Info.totalswap * Info.mem_unit;
+      pSystemStatus.Swap_Usage = ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap;
+      pSystemStatus.CPU_Usage = ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0;
+      pSystemStatus.Lock.WriteUnlock();
     }
     if(statvfs("/", &Disk) != 0) {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      pDetailsLock.WriteLock();
-      pSystemDetails["Disk_Total"] = nullptr;
-      pSystemDetails["Disk_Usage"] = nullptr;
-      pDetailsLock.WriteUnlock();
+      pSystemStatus.Lock.WriteLock();
+      pSystemStatus.Disk_Total = 0;
+      pSystemStatus.Disk_Usage = NAN;
+      pSystemStatus.Lock.WriteUnlock();
     } else {
-      pDetailsLock.WriteLock();
-      pSystemDetails["Disk_Total"] = (uint64_t)Disk.f_blocks * Disk.f_frsize;
-      pSystemDetails["Disk_Usage"] = ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks;
-      pDetailsLock.WriteUnlock();
+      pSystemStatus.Lock.WriteLock();
+      pSystemStatus.Disk_Total = (uint64_t)Disk.f_blocks * Disk.f_frsize;
+      pSystemStatus.Disk_Usage = ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks;
+      pSystemStatus.Lock.WriteUnlock();
     }
     char Buffer[8192];
     int TmpFile = open("/proc/meminfo", O_RDONLY);
@@ -442,74 +417,112 @@ void SysSupport::SetSystemActions(const string &action) {
       size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
       close(TmpFile);
       Buffer[Len] = 0;
-      pDetailsLock.WriteLock();
-      pSystemDetails["RAM_Total"] = ParseProcMem("MemTotal:", Buffer);
-      pSystemDetails["RAM_Usage"] = ((ParseProcMem("MemTotal:", Buffer) -  ParseProcMem("MemFree:", Buffer) - ParseProcMem("Cached:", Buffer) - ParseProcMem("Buffers:", Buffer)) * 100.0) / + ParseProcMem("MemTotal:", Buffer);
-      pDetailsLock.WriteUnlock();
+      pSystemStatus.Lock.WriteLock();
+      pSystemStatus.RAM_Total = ParseProcMem("MemTotal:", Buffer);
+      pSystemStatus.RAM_Usage = ((ParseProcMem("MemTotal:", Buffer) -  ParseProcMem("MemFree:", Buffer) - ParseProcMem("Cached:", Buffer) - ParseProcMem("Buffers:", Buffer)) * 100.0) / + ParseProcMem("MemTotal:", Buffer);
+      pSystemStatus.Lock.WriteUnlock();
     } else {
-      pDetailsLock.WriteLock();
-      pSystemDetails["RAM_Total"] = nullptr;
-      pSystemDetails["RAM_Usage"] = nullptr;
-      pDetailsLock.WriteUnlock();
+      pSystemStatus.Lock.WriteLock();
+      pSystemStatus.RAM_Total = 0;
+      pSystemStatus.RAM_Usage = NAN;
+      pSystemStatus.Lock.WriteUnlock();
     }
     TmpFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
     if(TmpFile > 0) {
       size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
       close(TmpFile);
       Buffer[Len] = 0;
-      pDetailsLock.WriteLock();
-      pSystemDetails["Temperature"] = atoi(Buffer) / 1000.0;
-      pDetailsLock.WriteUnlock();
+      pSystemStatus.Lock.WriteLock();
+      pSystemStatus.Temperature = atoi(Buffer) / 1000.0;
+      pSystemStatus.Lock.WriteUnlock();
     } else {
-      pDetailsLock.WriteLock();
-      pSystemDetails["Temperature"] = nullptr;
-      pDetailsLock.WriteUnlock();
+      pSystemStatus.Lock.WriteLock();
+      pSystemStatus.Temperature = NAN;
+      pSystemStatus.Lock.WriteUnlock();
     }
     string CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
     if(CommandStr.empty() == false) {
       json Tmp = json::parse(CommandStr, NULL, false);
       if(Tmp.is_discarded()) {
-        pDetailsLock.WriteLock();
-        pSystemDetails["WIFI_Network"] = nullptr;
-        pSystemDetails["WIFI_Power"] = nullptr;
-        pDetailsLock.WriteUnlock();
+        pSystemStatus.Lock.WriteLock();
+        pSystemStatus.WIFI_Network = "";
+        pSystemStatus.WIFI_Power = NAN;
+        pSystemStatus.Lock.WriteUnlock();
       } else if(Tmp.is_object() && Tmp["ssid"].is_string() && Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
-        pDetailsLock.WriteLock();
-        pSystemDetails["WIFI_Network"] = Tmp["ssid"];
+        pSystemStatus.Lock.WriteLock();
+        pSystemStatus.WIFI_Network = Tmp["ssid"];
         float Current = Tmp["quality"], Max = Tmp["quality_max"];
-        pSystemDetails["WIFI_Power"] = (int)(Current * 100.0 / Max);
-        pDetailsLock.WriteUnlock();
+        pSystemStatus.WIFI_Power = Current * 100.0 / Max;
+        pSystemStatus.Lock.WriteUnlock();
       }
     }
-    CommandStr = Run("ubus call uci get '{\"config\":\"system\", \"section\":\"ntp\"}'");
+    pSystemStatus.Lock.WriteLock();
+    pSystemStatus.BT_Network = (pBTEnabled == true) ? pBTServerName : "";
+    pSystemStatus.Lock.WriteUnlock();
+  }
+  void SysSupport::PeriodicTask_1M() {
+    pLastTask_1M = Tools::GetTime();
+    string CommandStr = Run("ubus call uci get '{\"config\":\"system\", \"section\":\"ntp\"}'");
     if(CommandStr.empty() == false) {
       json Tmp = json::parse(CommandStr, NULL, false);
-      if(Tmp.is_discarded()) {
-        pDetailsLock.WriteLock();
-        pSystemDetails["NTP_Enabled"] = false;
-        pDetailsLock.WriteUnlock(); 
-      }
-      if(Tmp.is_object() && Tmp["values"].is_object() && Tmp["values"]["enabled"].is_string()) {
+      if((Tmp.is_discarded() == false) && Tmp.is_object() && Tmp["values"].is_object() && Tmp["values"]["enabled"].is_string() && Tmp["values"]["server"].is_string()) {
         string Value = Tmp["values"]["enabled"];
-        pDetailsLock.WriteLock();
-        pSystemDetails["NTP_Enabled"] = (Value == "1");
-        pDetailsLock.WriteUnlock(); 
+        if(Value == "1") {
+          string Server = Tmp["values"]["server"];
+          int Code;
+          CommandStr = Run("ntpd -n -q -p " + Server, &Code);
+          pSystemStatus.Lock.WriteLock();
+          pSystemStatus.Time_IsSet = (Code == 0);
+          pSystemStatus.Lock.WriteUnlock();
+        } else {
+          pSystemStatus.Lock.WriteLock();
+          pSystemStatus.Time_IsSet = (Tools::GetTime() > 946684800000);
+          pSystemStatus.Lock.WriteUnlock();
+        }
+        return;
       }
     }
-    pDetailsLock.WriteLock();
-    if(pBTEnabled == true) {
-      pSystemDetails["Bluetooth_Network"] = pBTServerName;
-    } else {
-      pSystemDetails["Bluetooth_Network"] = nullptr;
+    pSystemStatus.Lock.WriteLock();
+    pSystemStatus.Time_IsSet = false;
+    pSystemStatus.Lock.WriteUnlock();
+  }
+  void SysSupport::PeriodicTask_1H() {
+    pLastTask_1H = Tools::GetTime();
+    pUpdatesLock.WriteLock();
+    pUpdates.clear();
+    pUpdatesLock.WriteUnlock();
+    int ResultCode = 0;
+    string Result = Run("opkg update", &ResultCode);
+    if(ResultCode != 0) return;
+    Result = Run("opkg list-upgradable", &ResultCode);
+    if(ResultCode != 0) return;
+    pUpdatesLock.WriteLock();
+    size_t Pos = 0;
+    while(Pos < Result.size()) {
+      Update_t Update;
+      size_t Pos2 = Result.find(" - ", Pos);
+      Update.Package = Result.substr(Pos, Pos2 - Pos);
+      Pos = Pos2 + 3;
+      Pos2 = Result.find(" - ", Pos);
+      Update.From = Result.substr(Pos, Pos2 - Pos);
+      Pos = Pos2 + 3;
+      Pos2 = Result.find("\n", Pos);
+      if(Pos2 == string::npos) Pos2 = Result.size();
+      Update.To = Result.substr(Pos, Pos2 - Pos);
+      Pos = Pos2 + 1;
+      pUpdates.push_back(Update);
     }
-    pDetailsLock.WriteUnlock();
+    pSystemStatus.Lock.WriteLock();
+    pSystemStatus.Updates = (pUpdates.size() > 0);
+    pSystemStatus.Lock.WriteUnlock();
+    pUpdatesLock.WriteUnlock();
   }
   void SysSupport::GetUpdatesCallback(HTTPRequest &req) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
     json Response = json::object();
-    Response["LastCheck"] = pLastUpdateCheck;
+    Response["LastCheck"] = pLastTask_1H;
     Response["Updates"] = json::array();
     pUpdatesLock.ReadLock();
     for(uint32_t n = 0; n < pUpdates.size(); n++) {
@@ -530,7 +543,7 @@ void SysSupport::SetSystemActions(const string &action) {
     int ResultCode = 0;
     string Result = Run("opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade --force-depends", &ResultCode);
     Response["Result"] = (ResultCode == 0);
-    CheckUpdates();
+    PeriodicTask_1H();
     req.FromJSON(Response);
   }
   void SysSupport::GetBluetoothCallback(HTTPRequest &req) {
@@ -770,14 +783,16 @@ void SysSupport::SetSystemActions(const string &action) {
     json Result;
     Result["Status"] = true;
     int ErrorCode = 0;
-    if(Params["NTP_Enabled"].is_boolean() && Params["NTP_Server"].is_string()) {
-      Run("ubus call uci set '{\"config\":\"system\", \"section\":\"ntp\", \"values\":{\"enabled\":\"" + string((Params["NTP_Enabled"] == true) ? "1" : "0") + "\", \"server\":" + Params["NTP_Server"].dump() + "}}'", &ErrorCode);
+    if(Params["Enabled"].is_boolean() && Params["Server"].is_string()) {
+      bool Enabled = Params["Enabled"];
+      string Server = Params["Server"];
+      Run("ubus call uci set '{\"config\":\"system\", \"section\":\"ntp\", \"values\":{\"enabled\":\"" + string((Enabled == true) ? "1" : "0") + "\", \"server\":\"" + Server + "\"}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
       Run("uci commit", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
       Run("reload_config", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
-      if((Params["NTP_Enabled"] == false) && Params["Time"].is_number_unsigned()) {
+      if((Params["Enabled"] == false) && Params["Time"].is_number_unsigned()) {
         uint64_t Time = Params["Time"];
         timeval TimeVal;
         TimeVal.tv_sec  = Time / 1000;
@@ -803,8 +818,10 @@ void SysSupport::PeriodicTask() {
   if(Action.empty() == false) LOGFile::Debug("Action '%s' picked from list\n", Action.c_str());
   #ifdef OPENWRT
     HandleAgentBT();
-    if(pLastDestailsCheck < (Tools::GetTime() - 5000)) UpdateSystemDetails();
-    if(pLastUpdateCheck < (Tools::GetTime() - 86400000)) CheckUpdates();
+    uint64_t Now = Tools::GetTime();
+    if((Now > 5000) && (pLastTask_5S < (Now - 5000))) PeriodicTask_5S();
+    if((Now > 60000) && (pLastTask_1M < (Now - 60000))) PeriodicTask_1M();
+    if((Now > 86400000) && (pLastTask_1H < (Now - 86400000))) PeriodicTask_1H();
     if(Action == "PowerOff") {
       Run("poweroff");
     } else if(Action == "ToogleBluetooth") {
