@@ -24,7 +24,7 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">System updates</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs btn-primary" v-if="!Upgrading" data-toggle="tooltip" title="Save changes" v-on:click="Upgrade">Upgrade</button>
+          <button type="button" class="btn btn-default btn-xs btn-primary" v-if="!Updating" data-toggle="tooltip" title="Save changes" v-on:click="Upgrade">Upgrade</button>
           <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" v-on:click="ShowUpdates = false"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
         <div class="pull-right page-count">Last check<br/>{{ FormatDate(News.LastCheck) }}</div>
@@ -103,16 +103,14 @@
       },
       Upgrade: function(row) {
         this.Upgrading = true;
-        this.$refs.Updates.SpinnerState(true);
+        this.Updating = true;
         $.ajax({ url: "upgrade", timeout: 900000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
           success: () => {
-            this.Upgrading = true;
+            this.Updating = false;
             this.FetchUpdates();
-            this.$refs.Updates.SpinnerState(false);
           },  
           error: () => {
-            this.$refs.Updates.SpinnerState(false);
-            this.Upgrading = false;
+            this.Updating = false;
           }
         });
       }

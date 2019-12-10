@@ -375,9 +375,9 @@ bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
   while((pBuffer.empty() == false) && (Started == false)) {
     Sample = pBuffer.front();
     pBuffer.pop_front();
-    vector<float> Voltage = {Sample.Voltage};
-    vector<float> Current = {Sample.Current};
-    if(Analyzer->BufferAppend(Voltage, Current) == true) Started = true;
+//    vector<float> Voltage = {Sample.Voltage};
+//    vector<float> Current = {Sample.Current};
+    if(Analyzer->BufferAppend(&Sample.Voltage, &Sample.Current) == true) Started = true;
   }
   return true;
 }

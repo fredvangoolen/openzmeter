@@ -51,13 +51,13 @@ class AnalyzerSoft final : public Analyzer {
       vector< vector<float> >        Power_Harmonics;      //Power harmonics
     } Params_t;
     typedef struct {
-      float                 A0;
-      float                 A1;
-      float                 A2;
-      float                 B1;
-      float                 B2;
-      vector<float>         ChannelsZ1;
-      vector<float>         ChannelsZ2;
+      float   A0;
+      float   A1;
+      float   A2;
+      float   B1;
+      float   B2;
+      float   ChannelsZ1[3];
+      float   ChannelsZ2[3];
     } Filter_t;
   private :
     static const vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
@@ -70,10 +70,12 @@ class AnalyzerSoft final : public Analyzer {
     string                     pConfigPath;              //Path to configuration
     uint32_t                   pCycleLen;                //Current cycle len
     pthread_t                  pAnalyzerThread;          //Hilo de ejecucion
-    vector<float>              pLastSamples;             //Filter samples backup
+    float                      pLastSamples[3];          //Filter samples backup
     AnalyzerMode               pMode;                    //Operation mode
     WorkerLocks                pAnalyzerWorkerLocks;     //Handle analyzer thread
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
+    uint8_t                    pVoltageChannels;         //Voltage channels
+    uint8_t                    pCurrentChannels;         //Current channels
   private :  //Config params (Writed in configure, readed in other places)
     Events                    *pEventsDetector;          //Events detector
     Sync                      *pSync;                    //Synchronization object
@@ -89,14 +91,18 @@ class AnalyzerSoft final : public Analyzer {
     string                     pContract;                //Contract identifier
     string                     pZipCode;                 //Installation zip code
     vector<float>              pGeo;                     //GPS position
-    vector<Filter_t>           pFilters;                 //Filter bank
-    deque<vector<float> >      pDelayVoltage;            //Delay buffer for samples
-    deque<vector<float> >      pDelayCurrent;            //Delay buffer for samples
+    Filter_t                   pFilters[ZEROCROSSING_FILTERSTAGES]; //Filter bank
+    float                     *pDelayVoltage;            //Delay buffer for samples
+    uint16_t                   pDelayVoltageSize;        //Voltage delay samples
+    uint16_t                   pDelayVoltagePos;         //Voltage delay pos
+    float                     *pDelayCurrent;            //Delay buffer for samples
+    uint16_t                   pDelayCurrentSize;        //Current delay samples
+    uint16_t                   pDelayCurrentPos;         //Current delay pos
   private :  //Analyzer params (write in thread OR append, read in SeriesNow)
     vector< vector<float> >    pVoltageSamples;          //Voltage samples
     vector< vector<float> >    pCurrentSamples;          //Current samples
-    vector<FFT>                pVoltageFFT;              //Muestras de FFT tension del bloque
-    vector<FFT>                pCurrentFFT;              //Muestras de FFT corriente del bloque
+    FFT                       *pVoltageFFT[3];           //Muestras de FFT tension del bloque
+    FFT                       *pCurrentFFT[4];           //Muestras de FFT corriente del bloque
     vector<uint32_t>           pBlockCycles;             //Current block cycles lengths
     deque<uint32_t>            pCycles;                  //Prev cycles lenghts
     Params_t                   pAggreg10C;               //Agregacion de 10 ciclos
@@ -141,6 +147,6 @@ class AnalyzerSoft final : public Analyzer {
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();
-    bool BufferAppend(const vector<float> &voltageSamples, const vector<float> &currentSamples);
+    bool BufferAppend(const float *voltageSamples, const float *currentSamples);
     bool IsFinished();
 };
