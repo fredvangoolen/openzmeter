@@ -16,7 +16,8 @@
 #define DEVICEV2_01_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
 #define DEVICEV2_01_ENDPOINT_OUT      0x02                          //Endpoint de escritura de datos
 #define DEVICEV2_01_SAMPLEFREQ    24000.00                          //Frequencia de muestreo
-#define DEVICEV2_01_TRANSFERS            8                          //Numero de transferencias a encolar
+#define DEVICEV2_01_TRANSFERS           32                          //Numero de transferencias a encolar
+#define DEVICEV2_01_BUFFERSIZE      0x4000
 #define DEVICEV2_01_CONTROL_SETSTATUS 0x20
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2_01 final : public Device {
@@ -24,25 +25,20 @@ class DeviceV2_01 final : public Device {
     enum Button_Action { NONE = 0, CLICK = 1, LONG_CLICK = 2, VERY_LONG_CLICK = 3};
     enum LED_Color {OFF = 0, RED = 1, GREEN = 2, YELLOW = 3 };
     typedef struct {
-      uint8_t Index;
-      float   Invert;
-    } CurrentCH_t;
-    typedef struct {
-      vector<uint8_t>         Voltage;
-      vector<CurrentCH_t>     Current;
-      Analyzer::AnalyzerMode  Mode;
       AnalyzerSoft           *Parent;
+      uint8_t                 Voltage[3];
+      uint8_t                 VoltageChannels;
+      uint8_t                 Current[4];
+      float                   CurrentInvert[4];
+      uint8_t                 CurrentChannels;
+      Analyzer::AnalyzerMode  Mode;
     } Analyzer_t;
-    typedef struct {
-      float Voltage[3];
-      float Current[4];
-    } Sample_t;
     class Transfer {
       private :
+        DeviceV2_01     *pParent;
         libusb_transfer *pTransfer;
         uint8_t         *pBuffer;
         uint32_t         pBufferSize;
-        DeviceV2_01     *pParent;
       public :
         Transfer(DeviceV2_01 *parent, uint32_t size);
         ~Transfer();
@@ -59,19 +55,23 @@ class DeviceV2_01 final : public Device {
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
     bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
     vector<Analyzer_t>           pAnalyzersSetup;          //Listado de analyzadores
-    deque<Sample_t>              pBuffer;                  //Read buffer
-    vector<float>                pVoltageGain;             //Ganancia de tension
-    vector<float>                pCurrentGain;             //Ganancia de corriente
-    vector<float>                pVoltageOffset;           //Offset de tension
-    vector<float>                pCurrentOffset;           //Offset de corriente
+    int16_t                     *pBuffer;                  //Read buffer
+    uint32_t                     pBufferTail;              //pBuffer read pos
+    uint32_t                     pBufferHead;              //pBuffer write pos
+    //deque<Sample_t>              pBuffer;                  //Read buffer
+    float                        pVoltageGain[3];          //Ganancia de tension
+    float                        pCurrentGain[4];          //Ganancia de corriente
+    float                        pVoltageOffset[3];        //Offset de tension
+    float                        pCurrentOffset[4];        //Offset de corriente
     bool                         pHighGain;                //Choose high gain mode
-    vector<int16_t>              pCapture;                 //Capture status
+    int16_t                      pCapture[7];              //Captured samples
+    uint8_t                      pCaptureSize;             //Captured samples count
     libusb_device_handle        *pDeviceHandle;            //Dispositivo de captura
     libusb_device               *pNewDevice;               //Dispositivo que se conecta
     libusb_context              *pContext;                 //USB context
-    vector<int32_t>              pRunAverageValues;        //Average wave value of last second
+    int32_t                      pRunAverageValues[7];     //Average wave value of last second
     uint32_t                     pRunAverageCounter;       //Somple count for average
-    vector<float>                pAverageValues;           //Average wave value of last second
+    float                        pAverageValues[7];        //Average wave value of last second
     RWLocks                      pAverageLocks;            //Lock access to average values
     uint64_t                     pLastSignalRecv;          //Last battery message recv
     bool                         pButtonAction;            //Last action readed

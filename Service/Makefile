@@ -40,7 +40,7 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -g3 -ggdb -fstack-protector-all -fstack-check
 else
-	CFLAGS  += -O3 -Wall -fopt-info-vec -s -flto -ftree-vectorize
+	CFLAGS  += -Os -Wall -fopt-info-vec -s -flto -ftree-vectorize
 	LDFLAGS += -flto
 endif
 ifeq ($(DEVICE_V1_00), true)

@@ -75,11 +75,10 @@ bool DeviceV2_01::GetInstances() {
 }
 json DeviceV2_01::CheckConfig(const json& config) {
   json ConfigOUT = json::object();
-  ConfigOUT["VoltageGain"] = vector<float>(3, 0.0);
+  ConfigOUT["VoltageGain"] = vector<float>(3, 1.0);
   ConfigOUT["VoltageOffset"] = vector<float>(3, 0.0);
-  ConfigOUT["CurrentGain"] = vector<float>(4, 0.0);
+  ConfigOUT["CurrentGain"] = vector<float>(4, 1.0);
   ConfigOUT["CurrentOffset"] = vector<float>(4, 0.0);
-  ConfigOUT["CurrentLevel"] = vector<float>(4, 1000000.0);
   ConfigOUT["AutoStart"] = false;
   ConfigOUT["HighGain"] = false;
   ConfigOUT["Outputs"] = json::array();
@@ -149,13 +148,13 @@ json DeviceV2_01::CheckConfig(const json& config) {
   return ConfigOUT;
 }
 DeviceV2_01::DeviceV2_01(const string &serial) : Device(serial, "V2.01", "Capture device V2.01"), pSignalTransfer(this, 2) {
-  pVoltageGain = vector<float>(3, 1.0);
-  pVoltageOffset = vector<float>(3, 0.0);
-  pCurrentGain = vector<float>(4, 1.0);
-  pCurrentOffset = vector<float>(4, 0.0);
+  pBuffer     = (int16_t*)malloc(DEVICEV2_01_BUFFERSIZE * sizeof(uint16_t) * 7);
+  pBufferHead = 0;
+  pBufferTail = 0;
 }
 DeviceV2_01::~DeviceV2_01() {
   StopDevice();
+  free(pBuffer);
 }
 DeviceV2_01::Transfer::Transfer(DeviceV2_01 *parent, uint32_t size) {
   pBufferSize = size;
@@ -170,7 +169,7 @@ DeviceV2_01::Transfer::~Transfer() {
 int DeviceV2_01::Transfer::Submit() {
   return libusb_submit_transfer(pTransfer);
 }
-int DeviceV2_01::Transfer::Submit(libusb_device_handle* deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout) {
+int DeviceV2_01::Transfer::Submit(libusb_device_handle *deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout) {
   Setup(deviceHandle, endpoint, callback, timeout);
   return Submit();
 }
@@ -200,10 +199,14 @@ bool  DeviceV2_01::StartDevice() {
     }
   }
   LOGFile::Info("Starting 'V2.01' driver for serial '%s'\n", pSerial.c_str());
-  for(uint8_t n = 0; n < pVoltageGain.size(); n++) pVoltageGain[n] = Config["VoltageGain"][n];
-  for(uint8_t n = 0; n < pVoltageOffset.size(); n++) pVoltageOffset[n] = Config["VoltageOffset"][n];
-  for(uint8_t n = 0; n < pCurrentGain.size(); n++) pCurrentGain[n] = Config["CurrentGain"][n];
-  for(uint8_t n = 0; n < pCurrentOffset.size(); n++) pCurrentOffset[n] = Config["CurrentOffset"][n];
+  for(unsigned Ch = 0; Ch < 3; Ch++) {
+    pVoltageGain[Ch] = Config["VoltageGain"][Ch];
+    pVoltageOffset[Ch] = Config["VoltageOffset"][Ch];
+  }
+  for(unsigned Ch = 0; Ch < 4; Ch++) {
+    pCurrentGain[Ch] = Config["CurrentGain"][Ch];
+    pCurrentOffset[Ch] = Config["CurrentOffset"][Ch];
+  }
   pHighGain = Config["HighGain"];
   pTerminate = false;
   for(auto Tmp : Config["Outputs"]) {
@@ -212,25 +215,25 @@ bool  DeviceV2_01::StartDevice() {
     string Name = pSerial;
     if(AnalyzerSetup.Mode == Analyzer::PHASE1) {
       string Voltage = Tmp["Voltage"];
-      AnalyzerSetup.Voltage.push_back(Voltage[2] - '1');
+      AnalyzerSetup.Voltage[0] = (Voltage[2] - '1');
       string Current = Tmp["Current"];
-      CurrentCH_t CurrentCH;
-      CurrentCH.Index = Current[3] - '1';
-      CurrentCH.Invert = (Current[0] == '+') ? 1.0 : -1.0;
-      AnalyzerSetup.Current.push_back(CurrentCH);
-      Name += "_1P_CH" + to_string(CurrentCH.Index + 1);
+      AnalyzerSetup.Current[0] = Current[3] - '1' + 3;
+      AnalyzerSetup.CurrentInvert[0] = (Current[0] == '+') ? 1.0 : -1.0;
+      AnalyzerSetup.CurrentChannels = 1;
+      AnalyzerSetup.VoltageChannels = 1;
+      Name += "_1P_CH" + to_string(Current[3]);
     } else {
-      for(auto Voltage : Tmp["Voltage"]) {
-        string VoltCH = Voltage;
-        AnalyzerSetup.Voltage.push_back(VoltCH[2] - '1');
+      for(unsigned Ch = 0; Ch < Tmp["Voltage"].size(); Ch++) {
+        string Voltage = Tmp["Voltage"][Ch];
+        AnalyzerSetup.Voltage[Ch] = (Voltage[2] - '1');
       }
-      for(auto Current : Tmp["Current"]) {
-        string CurrCH = Current;
-        CurrentCH_t CurrentCH;
-        CurrentCH.Index = CurrCH[3] - '1';
-        CurrentCH.Invert = (CurrCH[0] == '+') ? 1.0 : -1.0;
-        AnalyzerSetup.Current.push_back(CurrentCH);
+      for(unsigned Ch = 0; Ch < Tmp["Current"].size(); Ch++) {
+        string Current =  Tmp["Current"][Ch];
+        AnalyzerSetup.Current[Ch] = Current[3] - '1' + 3;
+        AnalyzerSetup.CurrentInvert[Ch] = (Current[0] == '+') ? 1.0 : -1.0;        
       }
+      AnalyzerSetup.CurrentChannels = Tmp["Current"].size();
+      AnalyzerSetup.VoltageChannels = Tmp["Voltage"].size();
       Name += (AnalyzerSetup.Mode == Analyzer::PHASE3) ? "_3P" : "_3PN";
     }
     AnalyzerSetup.Parent = new AnalyzerSoft(Name, AnalyzerSetup.Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzersSetup.size()) + "/Analyzer", DEVICEV2_01_SAMPLEFREQ);
@@ -249,9 +252,9 @@ bool  DeviceV2_01::StartDevice() {
       pNewDevice    = NULL;
       pSubmittedTransfers = 0;
       pRunAverageCounter = 0;
-      pRunAverageValues.resize(7, 0);
-      pAverageValues.resize(7, 0.0);
-      pCapture.clear();
+      memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
+      memset(pAverageValues, 0 , sizeof(pAverageValues));
+      pCaptureSize = 0;
       pthread_setname_np(pCaptureThread, "DeviceV2_01");
       if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE, DEVICEV2_01_VID, DEVICEV2_01_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
         LOGFile::Error("Failed to register libUSB calback...\n");
@@ -290,7 +293,7 @@ void *DeviceV2_01::Capture_Thread(void *args) {
   DeviceV2_01 *This   = (DeviceV2_01*)args;
   uint64_t   LastSignalSend = 0;
   This->pTransfers.reserve(DEVICEV2_01_TRANSFERS);
-  for(auto n = 0; n < DEVICEV2_01_TRANSFERS; n++) This->pTransfers.emplace_back(This, 32768);
+  for(auto n = 0; n < DEVICEV2_01_TRANSFERS; n++) This->pTransfers.emplace_back(This, 8192);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
@@ -451,15 +454,17 @@ void  DeviceV2_01::ReadCallback(struct libusb_transfer *transfer) {
         }
         continue;
       }
-      if(This->pCapture.size() != Seq) {
+      if(This->pCaptureSize != Seq) {
         LOGFile::Debug("Lost sample, restarting adquisition\n");
-        This->pCapture.clear();
+        This->pCaptureSize = 0;
         break;
       }
-      This->pCapture.push_back(Sample - 4096);
-      if(This->pCapture.size() == 7) {
+      This->pCapture[This->pCaptureSize] = Sample - 4096;
+      if(This->pCaptureSize == 6) {
         This->BuffersAppend();
-        This->pCapture.clear();
+        This->pCaptureSize = 0;
+      } else {
+        This->pCaptureSize++;
       }
     }
   }
@@ -525,36 +530,45 @@ void  DeviceV2_01::SetDevice(HTTPRequest &req) {
   req.FromString("", ((State == RUNNING) ? StartDevice() : true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
 }
 void  DeviceV2_01::BuffersAppend() {
-  Sample_t Sample;
-  for(unsigned ch = 0; ch < pCapture.size(); ch++) pRunAverageValues[ch] = pRunAverageValues[ch] + pCapture[ch];
+  for(unsigned Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] = pRunAverageValues[Ch] + pCapture[Ch];
   pRunAverageCounter++;
   if(pRunAverageCounter == DEVICEV2_01_SAMPLEFREQ * 10) {
     pAverageLocks.WriteLock();
-    for(unsigned ch = 0; ch < pCapture.size(); ch++) pAverageValues[ch] = pRunAverageValues[ch] / (DEVICEV2_01_SAMPLEFREQ * 10.0);
+    for(unsigned Ch = 0; Ch < 7; Ch++) pAverageValues[Ch] = pRunAverageValues[Ch] / (DEVICEV2_01_SAMPLEFREQ * 10.0);
     pAverageLocks.WriteUnlock();
-    pRunAverageValues = vector<int32_t>(7, 0);
+    memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
     pRunAverageCounter = 0;
   }
-  Sample.Voltage[0] = ((float)pCapture[0] + pVoltageOffset[0]) * 0.110266113281 * pVoltageGain[0];
-  Sample.Voltage[1] = ((float)pCapture[1] + pVoltageOffset[1]) * 0.110266113281 * pVoltageGain[1];
-  Sample.Voltage[2] = ((float)pCapture[2] + pVoltageOffset[2]) * 0.110266113281 * pVoltageGain[2];
-  Sample.Current[0] = ((float)pCapture[3] + pCurrentOffset[0]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[0];
-  Sample.Current[1] = ((float)pCapture[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
-  Sample.Current[2] = ((float)pCapture[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
-  Sample.Current[3] = ((float)pCapture[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
-  pBuffer.push_back(Sample);
+  uint32_t Next = (pBufferHead + 1) % DEVICEV2_01_BUFFERSIZE;
+  if(Next != pBufferTail) {
+    memcpy(&pBuffer[pBufferHead * 7], pCapture, sizeof(pCapture));
+    pBufferHead = Next;
+  } else {
+    pBufferHead = 0;
+    pBufferTail = 0;
+    LOGFile::Error("Capture buffer overflow in device '%s'\n", pSerial.c_str());
+  }
   for(auto &Tmp : pAnalyzersSetup) {
     if(Tmp.Parent->IsFinished() == false) return;
   }
-  vector<float> Voltage = vector<float>(3);
-  vector<float> Current = vector<float>(4);
-  while(pBuffer.empty() == false) {
-    Sample_t Sample = pBuffer.front();
-    pBuffer.pop_front();
+  bool AnalyzerRun = false;
+  while((pBufferTail != pBufferHead) && (AnalyzerRun == false)) {
+    int16_t *Ptr = &pBuffer[pBufferTail * 7];
+    pBufferTail = (pBufferTail + 1) % DEVICEV2_01_BUFFERSIZE;
+    float Values[7];
+    Values[0] = ((float)Ptr[0] + pVoltageOffset[0]) * 0.110266113281 * pVoltageGain[0];
+    Values[1] = ((float)Ptr[1] + pVoltageOffset[1]) * 0.110266113281 * pVoltageGain[1];
+    Values[2] = ((float)Ptr[2] + pVoltageOffset[2]) * 0.110266113281 * pVoltageGain[2];
+    Values[3] = ((float)Ptr[3] + pCurrentOffset[0]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[0];
+    Values[4] = ((float)Ptr[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
+    Values[5] = ((float)Ptr[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
+    Values[6] = ((float)Ptr[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
     for(auto &Tmp : pAnalyzersSetup) {
-      for(unsigned ch = 0; ch < Tmp.Voltage.size(); ch++) Voltage[ch] = Sample.Voltage[Tmp.Voltage[ch]];
-      for(unsigned ch = 0; ch < Tmp.Current.size(); ch++) Current[ch] = Sample.Current[Tmp.Current[ch].Index] * Tmp.Current[ch].Invert;
-      if(Tmp.Parent->BufferAppend(Voltage, Current) == true) return;
+      float Voltage[3], Current[4];
+      //vector<float> Voltage(3), Current(4);
+      for(unsigned Ch = 0; Ch < Tmp.VoltageChannels; Ch++) Voltage[Ch] = Values[Tmp.Voltage[Ch]];
+      for(unsigned Ch = 0; Ch < Tmp.CurrentChannels; Ch++) Current[Ch] = Values[Tmp.Current[Ch]] * Tmp.CurrentInvert[Ch];
+      if(Tmp.Parent->BufferAppend(Voltage, Current) == true) AnalyzerRun = true;
     }
   }
 }

@@ -87,9 +87,8 @@ void Database::RemoveExpiredSessions() {
     pConnectionPool.front().FreeTime = pConnectionPool.front().FreeTime + (Time - pConnectionPool.front().LastTime);
     pConnectionPool.front().LastTime = Time;
     if(pConnectionPool.front().FreeTime < pConnectionPool.front().UsageTime) break;
-    PoolConnection_t Connection = pConnectionPool.front();
+    PQfinish(pConnectionPool.front().Connection);
     pConnectionPool.pop();
-    PQfinish(Connection.Connection);
   }
   LOGFile::Debug("Adjusted queries pool to %d connections\n", pConnectionPool.size());
   pthread_mutex_unlock(&pMutex);
