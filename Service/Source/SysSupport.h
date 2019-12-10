@@ -12,6 +12,32 @@
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class SysSupport {
+  public :
+    typedef struct {
+      RWLocks            Lock;            //Lock before access struct
+      
+      bool               Updates;         //System have uninstalled updates
+      bool               Events;          //Running events
+      
+      uint64_t           UpTime;          //Uptime in seconds
+      uint64_t           Swap_Total;      //Total swap memory in bytes
+      float              Swap_Usage;      //Swap usage in percentage
+      float              CPU_Usage;       //CPU usage in percentage
+      uint64_t           Disk_Total;      //Total disk space in bytes
+      float              Disk_Usage;      //Disk usage in percentage
+      uint64_t           RAM_Total;       //Total RAM memory in bytes
+      float              RAM_Usage;       //RAM usage in percentage
+      float              Temperature;     //System temperature
+      
+      string             WIFI_Network;    //Current WIFI network or empty for non connected
+      float              WIFI_Power;      //Current WIFI signal if connected
+      string             BT_Network;      //BT network or empty if disabled
+      bool               Time_IsSet;      //If system time is set (manualy or with NTP comunication)
+      
+      float              Battery_Volt;    //Battery voltage
+      float              Battery_Level;   //Battery percentage
+      
+    } SystemStatus_t;
   private :
     #ifdef OPENWRT
       typedef struct {
@@ -21,8 +47,7 @@ class SysSupport {
       } Update_t;
     #endif
   private :
-    static json               pSystemDetails;
-    static RWLocks            pDetailsLock;
+    static SystemStatus_t     pSystemStatus;
     static queue<string>      pSystemActions;
     static RWLocks            pActionsLock;
     #ifdef OPENWRT
@@ -36,8 +61,9 @@ class SysSupport {
       static string           pWirelessWIFI;
       static vector<Update_t> pUpdates;
       static RWLocks          pUpdatesLock;
-      static uint64_t         pLastUpdateCheck;
-      static uint64_t         pLastDestailsCheck;
+      static uint64_t         pLastTask_1H;
+      static uint64_t         pLastTask_5S;
+      static uint64_t         pLastTask_1M;
     #endif
   private :
     static bool Register();
@@ -65,16 +91,16 @@ class SysSupport {
       static bool     SendUINT32BT(const char *property, uint32_t value);
       static bool     SendStringBT(const char *property, const char *value);
       static void     HandleAgentBT();
-      static void     CheckUpdates();
       static uint64_t ParseProcMem(const char *name, const char *buff);
-      static void     UpdateSystemDetails();
+      static void     PeriodicTask_5S();
+      static void     PeriodicTask_1M();
+      static void     PeriodicTask_1H();
     #endif
   public :
-    static json GetSystemDetails();
-    static void SetSystemDetails(const json &details);
-    static bool PendingSystemActions();
-    static void SetSystemActions(const string &action);
-    static void PeriodicTask();
+    static SystemStatus_t *GetSystemStatus();
+    static json            GetSystemStatusJSON();
+    static void            SetSystemActions(const string &action);
+    static void            PeriodicTask();
   public:
     SysSupport();
     virtual ~SysSupport();

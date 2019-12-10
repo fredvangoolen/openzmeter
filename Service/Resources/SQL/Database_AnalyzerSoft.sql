@@ -45,6 +45,10 @@ CREATE TABLE IF NOT EXISTS aggreg_ext_1m (
 ALTER TABLE aggreg_ext_1m ADD COLUMN IF NOT EXISTS harmonics_p real[];
 UPDATE aggreg_ext_1m SET harmonics_p = array_fill(NULL::real, ARRAY[array_length(harmonics_v, 1), array_length(harmonics_v, 2)]) WHERE harmonics_p IS NULL;
 ALTER TABLE aggreg_ext_1m ALTER COLUMN harmonics_p SET NOT NULL;
+ALTER TABLE aggreg_ext_1m ADD COLUMN IF NOT EXISTS unbalance real;
+UPDATE aggreg_ext_1m SET unbalance = 0 WHERE unbalance IS NULL;
+ALTER TABLE aggreg_ext_1m ALTER COLUMN unbalance SET NOT NULL;
+
 
 CREATE TABLE IF NOT EXISTS aggreg_10m (
   sampletime bigint NOT NULL PRIMARY KEY, 
@@ -73,6 +77,10 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
   stat_thd       int4[]  NOT NULL,
   stat_harmonics int4[]  NOT NULL
 ) WITH (OIDS=FALSE);
+ALTER TABLE aggreg_1h ADD COLUMN IF NOT EXISTS stat_unbalance int4[];
+UPDATE aggreg_1h SET stat_unbalance = array_fill(0, ARRAY[31]) WHERE stat_unbalance IS NULL;
+ALTER TABLE aggreg_1h ALTER COLUMN stat_unbalance SET NOT NULL;
+
 
 CREATE TABLE IF NOT EXISTS events (
   starttime   bigint                NOT NULL,

@@ -164,8 +164,11 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
       } else if((Code == MHD_HTTP_METHOD_NOT_ALLOWED)) {
         LOGFile::Debug("Device remote is not enabled on remote server\n");
         usleep(1000000);
+      } else if((Code == MHD_HTTP_BAD_REQUEST)) {
+        LOGFile::Debug("Analyzer '%s' is not authorized in remote server\n", This->pParent->pSerial.c_str());
+        usleep(1000000);        
       } else {
-        LOGFile::Error("Failed request to remote server for analyzer '%s' (Code: %u)\n", This->pParent->pSerial.c_str(), Code);
+        LOGFile::Debug("Failed request to remote server for analyzer '%s' (Code: %u)\n", This->pParent->pSerial.c_str(), Code);
         usleep(1000000);
       }
     }

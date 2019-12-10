@@ -27,6 +27,7 @@ const vector<float> AnalyzerSoft::FrequencyRanges  = {-INFINITY, -5, -4, -3, -2,
 const vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
 const vector<float> AnalyzerSoft::THDRanges        = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
 const vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
+//const vector<float> AnalyzerSoft::UnbalanceRanges  = {0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.50, 1.75, 2.0, 2.25, 2.50, 2.75, 3.0, 3.25, 3.50, 3.75, 4.0, 4.25, 4.50, 4.75, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, INFINITY};
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id) {
   LOGFile::Debug("Creating AnalyzerSoft database tables\n");
@@ -527,16 +528,15 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     This->AccumulateAggreg(Aggreg1H, This->pAggreg10C);
     PrevTimestamp = This->pAggreg10C.Timestamp;
     if(This->pSave10c) This->SaveAggreg(This->pAggreg10C);
-    json Status = json::object();
-    Status["Event"] = This->pAggreg10C.Flag;
-    SysSupport::SetSystemDetails(Status);
+    SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
+    SysStatus->Lock.WriteLock();
+    SysStatus->Events = This->pAggreg10C.Flag;
+    SysStatus->Lock.WriteUnlock();
     This->pNowDataLock.ProviderWait();
     This->InitAggreg(This->pAggreg10C, AGGREG_10C);
     LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->pSerial.c_str(), Tools::GetTime() - Start, Sequence);
     for(unsigned i = 0; i < This->pVoltageChannels; i++) This->pVoltageSamples[i].clear();
     for(unsigned i = 0; i < This->pCurrentChannels; i++) This->pCurrentSamples[i].clear();
-//    This->pCurrentSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : (This->pMode == PHASE3) ? 3 : 4, vector<float>(0));
-//    This->pVoltageSamples = vector<vector<float> >((This->pMode == PHASE1) ? 1 : 3, vector<float>(0));
     Sequence++;
     This->pAnalyzerWorkerLocks.WorkerEndsTask();
   }
@@ -793,7 +793,7 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
     } else if(Serie == "CURRENT_SAMPLES") {
       Result["Current_Samples"] = pCurrentSamples;
     } else if(Serie == "SYS_STATS") {
-      Result["Sys_Stats"] = SysSupport::GetSystemDetails();
+      Result["Sys_Stats"] = SysSupport::GetSystemStatusJSON();
     } else {
       pNowDataLock.ConsumerEnds();
       return req.FromString("Unknown serie name", MHD_HTTP_BAD_REQUEST);

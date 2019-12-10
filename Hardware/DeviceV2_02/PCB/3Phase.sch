@@ -914,7 +914,7 @@ L 3Phase-rescue:D_Zener_Small_ALT-3Phase-rescue D2
 U 1 1 5BDBB72B
 P 3675 1050
 F 0 "D2" H 3600 1150 50  0000 C CNN
-F 1 "BZT52C18S" H 3675 960 50  0001 C CNN
+F 1 "BZT52C15S" H 3675 960 50  0001 C CNN
 F 2 "Footprints:D_SOD-323" V 3675 1050 50  0001 C CNN
 F 3 "https://lcsc.com/product-detail/Zener-Diodes_Shandong-Jingdao-Microelectronics-BZT52C18S_C353551.html" V 3675 1050 50  0001 C CNN
 	1    3675 1050

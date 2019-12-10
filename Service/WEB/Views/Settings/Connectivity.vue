@@ -210,8 +210,8 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
         this.NTPChanges = true;
       },
       SaveChanges: function() {
-        clearInterval(this.Timer);
-        clearInterval(this.Timer2);
+//        clearInterval(this.Timer);
+//        clearInterval(this.Timer2);
         if(this.BTChanges === true) {
           $.ajax({ url: "setBluetooth", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Enabled: this.BTEnabled }) });
           this.BTChanges = false;
@@ -223,7 +223,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           this.WIFISettings = {};
         }
         if(this.NTPChanges === true) 
-          $.ajax({ url: "setNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ NTP_Enabled: this.NTPEnabled, NTP_Server: this.$refs.ntpserver.value, Time: moment().valueOf() }) });
+          $.ajax({ url: "setNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Enabled: this.NTPEnabled, Server: this.$refs.ntpserver.value, Time: moment().valueOf() }) });
           this.NTPChanges = false;
       }
     },
