@@ -20,8 +20,11 @@
     },
     mounted: function() {
       $(this.$refs.button).on("shown.bs.dropdown", function() {
-        var top = $(this).children('ul').scrollTop() + $(this).find(".dropdown-menu li.active").offset().top - $(this).children('ul').offset().top;
-        $(this).children('ul').scrollTop(top);
+        var Item = $(this).find(".dropdown-menu li.active");
+        if(Item.length == 1) {
+          var top = $(this).children('ul').scrollTop() + Item.offset().top - $(this).children('ul').offset().top;
+          $(this).children('ul').scrollTop(top);
+        }
       });
       for(var idx in this.options) {
         if(this.options[idx].value !== this.value) continue;

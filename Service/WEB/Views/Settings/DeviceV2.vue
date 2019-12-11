@@ -136,7 +136,7 @@
     data() {
       return { View: 'Inputs', ShowSpinner: false, Error: '', OutputMode: null };
     },
-    mounted: function() {
+    created: function() {
       var Phase3N = 0;
       var Phase3  = 0;
       var Phase1  = 0;
