@@ -33,6 +33,7 @@ export default {
   },
   created: function() {
     this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
+    this.Energy = [];
   },
   methods: {
     SetAnalyzer: function() {
@@ -53,11 +54,14 @@ export default {
         this.BatteryLevel = null;
         this.Temp = null;
       } else {
-        if(vals['Voltage'] !== undefined) this.$refs.voltage_indicator.setValue(vals['Voltage']);
-        if(vals['Current'] !== undefined) this.$refs.current_indicator.setValue(vals['Current']);
-        if(vals['Active_Power'] !== undefined) this.$refs.power_indicator.setValue(vals['Active_Power']);
-        if((vals['Frequency'] !== undefined) && (this.$refs.frequency_indicator != null)) this.$refs.frequency_indicator.setValue([vals['Frequency']]);
-        if(vals['Active_Energy'] !== undefined) this.$refs.energy_indicator.setValue(vals['Active_Energy']);
+        if(vals['Active_Energy'] !== undefined) this.Energy = vals['Active_Energy'];
+        if(vals['Voltage'] !== undefined) {
+          this.$refs.voltage_indicator.setValue(vals['Voltage']);
+          this.$refs.current_indicator.setValue(vals['Current']);
+          this.$refs.power_indicator.setValue(vals['Active_Power']);
+          if(this.$refs.frequency_indicator != null) this.$refs.frequency_indicator.setValue([vals['Frequency']]);
+          this.$refs.energy_indicator.setValue(this.Energy);
+        }
         if(vals['Sampletime'] !== undefined)  this.Time = moment(vals['Sampletime']).format('HH:mm:ss');
         if(vals['Sys_Stats'] != null) {
           if(vals['Sys_Stats'].UpTime != undefined) {
