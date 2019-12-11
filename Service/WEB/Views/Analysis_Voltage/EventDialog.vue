@@ -170,7 +170,7 @@
                     canvas.restore();
                   }
                 } else if(this.Event.Type == 'RVC') {
-                  var Colors = oZm.ColorArray('#5cb85c', oZm.Series['VOLTAGE'].Names(Analyzer).length);
+                  var Colors = oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, 0).Colors;
                   canvas.save();
                   var HighStart = 0;
                   var HighEnd = 0;
