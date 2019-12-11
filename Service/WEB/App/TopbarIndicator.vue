@@ -34,13 +34,13 @@
               for(var n = 0; n < PhasesCount; n++) Aggreg += Math.pow(vals[n], 2.0);
               AggregType = "RMS";
               Aggreg = Math.sqrt(Aggreg / PhasesCount);
-            } else if(this.units == 'W') {
+            } else if((this.units == 'W') || (this.units == 'Wh')) {
               AggregType = "SUM";
               for(var val in vals) Aggreg += vals[val];
             }
             this.prefix = oZm.GetBestUnits(Aggreg);
             Aggreg = oZm.ScaleToUnits(Aggreg, this.prefix);
-            this.value = [oZm.RoundHTML(Aggreg, this.Decimals), "&nbsp;", '<div style="text-align:center">Phases<br>' + AggregType + '</div>'];
+            this.value = ['<strong>' + oZm.RoundHTML(Aggreg, this.Decimals) + '</strong>', "&nbsp;", '<div style="text-align:center">Phases<br>' + AggregType + '</div>'];
           } else {
             this.prefix = oZm.GetBestUnits(oZm.ArrayAbsMax(vals));
             vals = oZm.ScaleArrayToUnits(vals, this.prefix);
