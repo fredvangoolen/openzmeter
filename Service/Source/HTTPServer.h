@@ -57,6 +57,16 @@ class HTTPCallback {
   public :
     HTTPCallback(const string &handle, Func_t function);
 };
+class URL {
+  public :
+    string Protocol;
+    string Host;
+    string Path;
+    string Query;
+    string Port;
+  public :
+    URL(const string &url);
+};
 class HTTPServer final {
   private :
     static RWLocks              pLock;            //Control access to pCallbacks vector

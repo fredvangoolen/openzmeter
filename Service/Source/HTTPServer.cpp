@@ -146,6 +146,37 @@ vector<HTTPCallback> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
 RWLocks                                                  HTTPServer::pLock = RWLocks();
 string                                                   HTTPServer::pRelativePath = "/";
 //----------------------------------------------------------------------------------------------------------------------
+URL::URL(const string &url) {
+  typedef string::const_iterator iterator_t;
+  if(url.length() == 0) return;
+  iterator_t uriEnd = url.end();
+  iterator_t queryStart = std::find(url.begin(), uriEnd, '?');
+  iterator_t protocolStart = url.begin();
+  iterator_t protocolEnd = std::find(protocolStart, uriEnd, ':');
+  if(protocolEnd != uriEnd) {
+    std::string prot = &*(protocolEnd);
+    if((prot.length() > 3) && (prot.substr(0, 3) == "://")) {
+      Protocol = string(protocolStart, protocolEnd);
+      protocolEnd += 3;
+    } else {
+      protocolEnd = url.begin();
+    }
+  } else {
+    protocolEnd = url.begin();
+  }
+  iterator_t hostStart = protocolEnd;
+  iterator_t pathStart = std::find(hostStart, uriEnd, '/');
+  iterator_t hostEnd = std::find(protocolEnd, (pathStart != uriEnd) ? pathStart : queryStart, ':');
+  Host = string(hostStart, hostEnd);
+  if((hostEnd != uriEnd) && ((&*(hostEnd))[0] == ':')) {
+    hostEnd++;
+    iterator_t portEnd = (pathStart != uriEnd) ? pathStart : queryStart;
+    Port = string(hostEnd, portEnd);
+  }
+  if(pathStart != uriEnd) Path = string(pathStart, queryStart);
+  if(queryStart != uriEnd) Query = string(queryStart, url.end());
+}
+//----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   pDaemon = NULL;
   uint16_t Port = 8080;

@@ -25,6 +25,7 @@ class AnalyzerSoft final : public Analyzer {
     typedef struct {
       AggregType                     Type;                 //Aggregation type
       float                          Frequency;            //Frecuencia
+      float                          Unbalance;            //Unbalance only in 3phase
       bool                           Flag;                 //Periodo marcado
       uint64_t                       Timestamp;            //Aggregation timestampt
       uint16_t                       Voltage_Inputs;       //Valid RMS_V samples in aggregation
@@ -33,6 +34,7 @@ class AnalyzerSoft final : public Analyzer {
       vector<uint16_t>               StatsVoltage;         //Distribucion de tensiones
       vector<uint16_t>               StatsTHD;             //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
       vector<uint16_t>               StatsHarmonics;       //Numero de muestras que cumplen los limites de harmonicos / no cumplen
+      vector<uint16_t>               StatsUnbalance;       //Distribucion de unbalance
       vector<uint16_t>               Current_Inputs;       //Valid RMS_I samples in aggregation
       vector<float>                  Voltage;              //Aggregation average RMS voltage
       vector<float>                  Current;              //Aggregation average RMS current
@@ -63,6 +65,7 @@ class AnalyzerSoft final : public Analyzer {
     static const vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
     static const vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
     static const vector<float>  THDRanges;         //Rangos de distorsion harmonica para estadisticas
+    static const vector<float>  UnbalanceRanges;   //Unbalance ranges
     static const vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
   private : //Variables not changed after initialization or not need locking
     bool                       pTerminate;               //Marca para finalizar proceso
