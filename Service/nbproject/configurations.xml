@@ -41,6 +41,11 @@
           <in>License.txt</in>
         </df>
       </df>
+      <df name="Resources">
+        <df name="SQL">
+          <in>Database_AnalyzerRemote.sql</in>
+        </df>
+      </df>
       <df name="Source">
         <df name="Analyzers">
           <df name="Remote">
@@ -4093,6 +4098,11 @@
         </ccTool>
       </item>
       <item path="Libs/nlohmann/License.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Resources/SQL/Database_AnalyzerRemote.sql"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="Source/Analyzers/Analyzer.cpp" ex="false" tool="1" flavor2="8">
         <ccTool flags="1">

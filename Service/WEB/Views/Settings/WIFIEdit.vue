@@ -1,74 +1,70 @@
 <template>
-  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" data-keyboard="false">
-    <div class="modal-backdrop in"></div>
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="pull-left"><h4 class="modal-title">Wifi settings</h4></div>
-          <div class="pull-right btn-group">
-            <button type="button" class="btn btn-default btn-xs" v-if="Mode=='Edit'" v-bind:class="{ disabled: (Error != '') }" v-on:click="Scan"><img :src="require('Imgs/magnifier.png')" alt="Scan networks"> Scan</button>
-            <button type="button" class="btn btn-default btn-xs" v-if="Mode=='Edit'" v-bind:class="{ disabled: (Error != '') }" v-on:click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes"></button>
-            <button type="button" class="btn btn-default btn-xs" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+  <dlg :loading="loading">
+    <template v-slot:header>
+      <div class="pull-left"><h4 class="modal-title">Wifi settings</h4></div>
+      <div class="pull-right btn-group">
+        <button type="button" class="btn btn-default btn-xs" v-if="Mode=='Edit'" v-on:click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes"></button>
+        <button type="button" class="btn btn-default btn-xs" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+      </div>
+    </template>
+    <div v-if="Mode=='Scan'">
+      <vuetable ref="table" :fields="Columns" :api-mode="false" :data="WifiList" class="table small table-striped">
+        <template slot="actions" slot-scope="props">
+          <div class="btn-group">
+            <button type="button" class="btn btn-success btn-xs" v-on:click="Select(props.rowData)">Select</button>
+          </div>
+        </template>
+        <template slot="signal" slot-scope="props">
+          <progress-bar :value="props.rowData.Quality"></progress-bar>
+        </template>
+      </vuetable>
+    </div>
+    <div v-if="Mode=='Edit'">
+      <div class="row">
+        <div class="col-md-12">
+          <label class="control-label">SSID</label>
+          <div class="input-group">
+            <input type="text" class="form-control" v-model="value.ESSID" autocomplete="off" autocapitalize="off" autocorrect="off">
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default" v-on:click="Scan"><img :src="require('Imgs/magnifier.png')" alt="Scan networks"></button>
+            </span>        
           </div>
         </div>
-        <div class="modal-body" v-if="Mode=='Scan'">
-          <spinner v-if="ShowSpinner"></spinner>
-          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
-            <template slot="actions" slot-scope="props">
-              <div class="btn-group">
-                <button type="button" class="btn btn-success btn-xs" v-on:click="Select(props.rowData)">Select</button>
-              </div>
-            </template>
-            <template slot="signal" slot-scope="props">
-              <progress-bar :value="props.rowData.Quality"></progress-bar>
-            </template>
-          </vuetable>
+        <div class="col-md-3 col-sm-6">
+          <label class="control-label">Mode</label>
+          <option-picker :options="[{name: 'NONE', value: 'NONE'}, {name: 'WEP', value: 'WEP'}, {name: 'WPA', value: 'WPA'}, {name: 'WPA2', value: 'WPA2'}]" v-model="value.KeyMode" :big="true"></option-picker>
         </div>
-        <div class="modal-body" v-if="Mode=='Edit'">
-          <spinner v-if="Loading"></spinner>
-          <div class="row">
-            <div class="col-md-12">
-              <label class="control-label">SSID</label>
-              <input type="text" class="form-control" ref="SSID" :value="Config.ESSID">
-            </div>
-            <div class="col-md-3 col-sm-6">
-              <label class="control-label">Mode</label>
-              <option-picker :options="['NONE', 'WEP', 'WPA', 'WPA2']" :selected="Config.KeyMode" ref="KeyType" v-on:change="SetKeyType" :big="true"></option-picker>
-            </div>
-            <div class="col-md-9 col-sm-6">
-              <label class="control-label">Password</label>
-              <input type='password' class="form-control" ref="Password" :disabled="Config.KeyMode=='NONE'" :value="Config.Key"/>
-            </div>
-            <div class="col-md-12">
-              <label class="control-label">IP address</label>
-              <div class="input-group">
-                <span class="input-group-addon input-group-addon-toogle">
-                  <toggle ref="EnableDHCP" v-on:change="DHCPChanged" onText="DHCP" offText="STATIC"></toggle>
-                </span>
-                <input type="text" class="form-control" ref="IP" :disabled="Config.IPMode==='DHCP'" :value="Config.IP">
-              </div>
-            </div>
-            <div class="col-md-6" v-if="Config.IPMode!=='DHCP'">
-              <label class="control-label">Network mask</label>
-              <input type="text" class="form-control" ref="Mask" :value="Config.Netmask">
-            </div>
-            <div class="col-md-6" v-if="Config.IPMode!=='DHCP'">
-              <label class="control-label">Gateway address</label>
-              <input type="text" class="form-control" ref="GW" :value="Config.Gateway">
-            </div>
-            <div class="col-md-6" v-if="Config.IPMode!=='DHCP'">
-              <label class="control-label">Primary DNS address</label>
-              <input type="text" class="form-control" ref="DNS1" :value="((Config.DNS != undefined) && (Config.DNS[0] != undefined)) ? Config.DNS[0] : ''">
-            </div>
-            <div class="col-md-6" v-if="Config.IPMode!=='DHCP'">
-              <label class="control-label">Secondary DNS address</label>
-              <input type="text" class="form-control" ref="DNS2" :value="((Config.DNS != undefined) && (Config.DNS[1] != undefined)) ? Config.DNS[1] : ''">
-            </div>
-          </div>
+        <div class="col-md-3 col-sm-6">
+          <label class="control-label">IP Mode</label>
+          <option-picker :options="[{name: 'DHCP', value: 'DHCP'}, {name: 'STATIC', value: 'STATIC'}]" v-model="value.IPMode" :big="true"></option-picker>
+        </div>       
+        <div class="col-md-6 col-sm-12">
+          <label class="control-label">ESSID Key</label>
+          <input type='password' class="form-control" :disabled="value.KeyMode=='NONE'" v-model="value.Key"/>
+        </div>
+        <div class="col-md-12" v-if="value.IPMode=='STATIC'">
+          <label class="control-label">IP address</label>
+          <input type="text" class="form-control" :disabled="value.IPMode=='DHCP'" v-model="value.IP">
+        </div>
+        <div class="col-md-6" v-if="value.IPMode=='STATIC'">
+          <label class="control-label">Network mask</label>
+          <input type="text" class="form-control" v-model="value.Netmask">
+        </div>
+        <div class="col-md-6" v-if="value.IPMode=='STATIC'">
+          <label class="control-label">Gateway address</label>
+          <input type="text" class="form-control" v-model="value.Gateway">
+        </div>
+        <div class="col-md-6" v-if="value.IPMode=='STATIC'">
+          <label class="control-label">Primary DNS address</label>
+          <input type="text" class="form-control" v-model="value.DNS[0]">
+        </div>
+        <div class="col-md-6" v-if="value.IPMode=='STATIC'">
+          <label class="control-label">Secondary DNS address</label>
+          <input type="text" class="form-control" v-model="value.DNS[1]">
         </div>
       </div>
     </div>
-  </div>
+  </dlg>
 </template>
 
 <script>
@@ -80,8 +76,9 @@
   import * as oZm from 'JS/openZmeter.js';
   import ProgressBar from 'Components/ProgressBar.vue';
   export default {
+    props: ['value', 'loading'],
     data() {
-      return { Error: '', ShowDialog: false, ShowSpinner: true, Loading: true, Mode: 'Edit', Config: {},
+      return { Mode: 'Edit', WifiList: [], ScanTimer: null,
       Columns: [
           {name: 'ESSID', title: 'Name'},
           {name: 'Channel', title: 'Channel'}, 
@@ -90,106 +87,82 @@
         ]
       };
     },
+    created: function() {
+      this.Mode = 'Edit';
+    },
     methods: {
-      Show: function() {
-        this.Mode = 'Edit';
-        this.ShowDialog = true;
-        this.$nextTick(function() {     
-          $(this.$el).modal('show');
-          $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: 'CONFIG'}), 
-            success: function(result) {
-              this.Config = result;
-              this.$refs.KeyType.SetOption(result.KeyMode);
-              this.$refs.EnableDHCP.SetState(result.IPMode === 'DHCP');
-              this.Loading = false;
-            }.bind(this)
-          });
-        });
-      },
       Back: function() {
         if(this.Mode === 'Scan') {
           this.Mode = 'Edit';
+          clearInterval(this.ScanTimer);
         } else {
-          $(this.$el).modal('hide');
-          this.ShowDialog = false;
+          this.$parent.WifiVisible = false;
         }
+      },
+      ReScan: function() {
+        clearInterval(this.ScanTimer);
+        this.ScanAjax = $.ajax({ url: "scanWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+          success: (result) => {
+            this.WifiList = result;
+          },
+          complete: () => {
+            if(this.Mode == 'Scan') this.ScanTimer = setTimeout(this.ReScan, 3000);
+          }
+        });
       },
       Scan: function() {
         this.Mode = 'Scan';
-        this.ShowSpinner=true;
+        this.$parent.WifiLoading = true;
         $.ajax({ url: "scanWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: function(result) {
-            var TableData = { data: result };
-            this.$refs.table.setData(TableData);
-            this.$nextTick(function() {
-              this.ShowSpinner=false;
-            });
-          }.bind(this)
+          success: (result) => {
+            this.WifiList = result;
+          },
+          complete: () => {
+            this.$parent.WifiLoading = false;
+            this.ScanTimer = setTimeout(this.ReScan, 3000);
+          }
         });
       },
       Select: function(row) {
         this.Mode = 'Edit';
-        this.$nextTick(function() {
-          this.Config.ESSID = row.ESSID;
-        });
+        this.$set(this.value, 'ESSID', row.ESSID);
       },
       Save: function() {
-        this.Config.ESSID = this.$refs.SSID.value;
-        this.Config.Key = this.$refs.Password.value;
-        if(this.Config.IPMode !== 'DHCP') {
-          this.Config.IP = this.$refs.IP.value;
-          this.Config.Netmask = this.$refs.Mask.value;
-          this.Config.Gateway = this.$refs.GW.value;
-          this.Config.DNS = [this.$refs.DNS1.value, this.$refs.DNS2.value];
-        }
-        this.$parent.SetWifiConfig(this.Config);
-        this.Back();
-      },
-      SetKeyType: function(value) {
-        this.Config.KeyMode = value;
-      },
-      DHCPChanged: function(value) {
-        this.Config.IPMode = value===true ? 'DHCP' : 'STATIC';
+        this.$parent.WifiLoading = true;
+        $.ajax({ url: "setWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(this.value),
+          complete: () => {
+            this.$parent.WifiVisible = false;
+          }    
+        });
       }
     },
     updated: function(){
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    mounted: function() {
-      this.$root.$el.append(this.$el);
-    },
-    destroyed: function() {
-      this.$root.$el.removeChild(this.$el);
-    },
-    components: { Toggle, OptionPicker, Spinner, Vuetable, ProgressBar }
+    components: { Toggle, OptionPicker, Vuetable, ProgressBar }
   }
 </script>
 
 <style scoped>
-  .modal-dialog {
-    z-index: 1100;
-    color: #333;
-    font-size: 14px;
+  @media screen and (min-width: 600px) {
+    div >>> .progress {
+      height: 12px;
+      background-color: #FFFFFF;
+      border:1px solid #BBB;
+      margin-bottom: 0px;
+    }
+    .table >>> th:nth-child(2) {
+      width: 60px;
+      text-align: center;
+    }
+    .table >>> th:nth-child(3) {
+      text-align: center;
+    }
+    .table >>> td:nth-child(2) {
+      text-align: center;
+    }
+    .table >>> th:nth-child(4) {
+      width: 60px;
+    }
   }
-@media screen and (min-width: 600px) {
-  .modal-body >>> .progress {
-    height: 12px;
-    background-color: #FFFFFF;
-    border:1px solid #BBB;
-    margin-bottom: 0px;
-  }
-  .table >>> th:nth-child(2) {
-    width: 60px;
-    text-align: center;
-  }
-  .table >>> th:nth-child(3) {
-    text-align: center;
-  }
-  .table >>> td:nth-child(2) {
-    text-align: center;
-  }
-  .table >>> th:nth-child(4) {
-    width: 60px;
-  }
-}
 </style>

@@ -5,17 +5,9 @@
 #include <sys/time.h>
 #include <stdarg.h>
 #include <fcntl.h>
-#include "Tools.h"
-
-
-
-//añadido para probar el envio
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <stdio.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <unistd.h>
+#include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 RWLocks::RWLocks() {
   pMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -410,17 +402,6 @@ uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
   return NULL;
 }
 //----------------------------------------------------------------------------------------------------------------------
-
- 
-//añadido para probar el envio
-//  #include <arpa/inet.h>
-//      #include <netinet/in.h>
-//      #include <stdio.h>
-//      #include <sys/types.h>
-//      #include <sys/socket.h>
-//      #include <unistd.h>
-
-//----------------------------------------------------------------------------------------------------------------------
 uint64_t Tools::GetTime() {
   struct timeval Time;
   if(gettimeofday(&Time, NULL) != 0) {
@@ -428,25 +409,4 @@ uint64_t Tools::GetTime() {
     return 0;
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
-}
-void Tools::SendUDP(const json &obj) {
-  struct sockaddr_in Client;
-  int Socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  if(Socket == -1) {
-    LOGFile::Error("cant open socket\n");
-    return;
-  }
-  memset((char *)&Client, 0, sizeof(Client));
-  Client.sin_family = AF_INET;
-  Client.sin_port = htons(8888);
-  if(inet_aton("127.0.0.1", &Client.sin_addr) == 0) {
-    LOGFile::Error("inet_aton() failed\n");
-    close(Socket);
-    return;
-  }
-  string Data = obj.dump();
-  if(sendto(Socket, Data.c_str(), Data.size(), 0, (sockaddr*)&Client, sizeof(Client)) == -1) {
-    LOGFile::Error("sendto()\n");
-  }
-  close(Socket);
 }

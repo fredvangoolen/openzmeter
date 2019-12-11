@@ -57,7 +57,7 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
       Content["Password"] = This->pPass;
       Content["UpdateLastLogin"] = false;
       if(HTTPClient != NULL) delete HTTPClient;
-      HTTPClient = new Client(This->pServer.c_str(), This->pPort);
+      HTTPClient = new Client(This->pServer.c_str(), This->pPort, 30);
       This->pLocks.ReadUnlock();
       auto Response = HTTPClient->Post(Path.c_str(), Header, Content.dump(), "application/json", true);
       This->pLocks.WriteLock();
@@ -93,11 +93,13 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
       Content["Analyzer"] = This->pParent->pSerial;
       Content["Name"] = This->pParent->pName;
       This->pLocks.ReadUnlock();
+      LOGFile::Debug("Analyzer '%s'request pending queries to server\n", This->pParent->pSerial.c_str());
       auto Response = HTTPClient->Post(Path.c_str(), Header, Content.dump(), "application/json", true);
       This->pLocks.WriteLock();
       if((Response != nullptr) && (Response->status == MHD_HTTP_OK)) {
         json Content = json::parse(Response->body, NULL, false);
         if(!Content.is_discarded() && Content.is_array()) {
+          LOGFile::Debug("Analyzer '%s' receive %u queries from remote server\n", This->pParent->pSerial.c_str(), Content.size());
           for(uint32_t n = 0; n < Content.size(); n++) {
             if(Content[n].is_object() && Content[n]["Sequence"].is_number() && Content[n]["Method"].is_string() && Content[n]["Params"].is_object()) {
               Request_t *Request = new Request_t;
@@ -119,25 +121,29 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
           }
         }
         This->pLocks.WriteUnlock();
-      } else if(Response->status == MHD_HTTP_UNAUTHORIZED) {
+      } else if((Response != nullptr) && (Response->status == MHD_HTTP_UNAUTHORIZED)) {
         This->pCookie = "";
         This->pLocks.WriteUnlock();
         LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pParent->pSerial.c_str());
         usleep(1000000);
-      } else if((Response->status == MHD_HTTP_NO_CONTENT)) {
+      } else if((Response != nullptr) && (Response->status == MHD_HTTP_NO_CONTENT)) {
         This->pLocks.WriteUnlock();
         LOGFile::Debug("No pending queries in remote server for analyzar '%s'\n", This->pParent->pSerial.c_str());
-      } else if((Response->status == MHD_HTTP_METHOD_NOT_ALLOWED)) {
+      } else if((Response != nullptr) && (Response->status == MHD_HTTP_METHOD_NOT_ALLOWED)) {
         This->pLocks.WriteUnlock();
         LOGFile::Debug("Device remote is not enabled on remote server\n");
         usleep(1000000);
-      } else if((Response->status == MHD_HTTP_BAD_REQUEST)) {
+      } else if((Response != nullptr) && (Response->status == MHD_HTTP_BAD_REQUEST)) {
         This->pLocks.WriteUnlock();
         LOGFile::Debug("Analyzer '%s' is not authorized in remote server\n", This->pParent->pSerial.c_str());
+        usleep(1000000);
+      } else if((Response != nullptr) && (Response->status == MHD_HTTP_SERVICE_UNAVAILABLE)) {        
+        This->pLocks.WriteUnlock();
+        LOGFile::Debug("Analyzer '%s' send request while remote server already have one\n", This->pParent->pSerial.c_str());
         usleep(1000000);        
       } else {
         This->pLocks.WriteUnlock();
-        LOGFile::Debug("Failed request to remote server for analyzer '%s' (Code: %u)\n", This->pParent->pSerial.c_str(), Response->status);
+        LOGFile::Debug("Failed request to remote server for analyzer '%s'\n", This->pParent->pSerial.c_str());
         usleep(1000000);
       }
     }

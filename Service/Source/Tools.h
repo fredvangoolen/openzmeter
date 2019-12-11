@@ -5,6 +5,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <pthread.h>
 #include <nlohmann/json.hpp>
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;

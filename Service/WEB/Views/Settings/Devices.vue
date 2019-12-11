@@ -32,8 +32,9 @@
   import Vuetable from 'vuetable-2';
   import Spinner from 'Components/Spinner.vue';
   import DeviceVirtual from './DeviceVirtual.vue';
-  import DeviceV1_0x from './DeviceV1_01.vue';
-  import DeviceV2_01 from './DeviceV2_01.vue';
+  import DeviceV1 from './DeviceV1.vue';
+  import DeviceV2 from './DeviceV2.vue';
+  import DeviceRemote from './DeviceRemote.vue';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
@@ -90,9 +91,10 @@
         $(evt.target).blur();
         this.ShowSpinner = true;
         if(id.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
-        if(id.Driver === 'V1.00') this.Driver = 'DeviceV1_0x';
-        if(id.Driver === 'V1.01') this.Driver = 'DeviceV1_0x';    
-        if(id.Driver === 'V2.01') this.Driver = 'DeviceV2_01';
+        if(id.Driver === 'V1.00') this.Driver = 'DeviceV1';
+        if(id.Driver === 'V1.01') this.Driver = 'DeviceV1';
+        if(id.Driver === 'V2.01') this.Driver = 'DeviceV2';
+        if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
         $.ajax({url: "getDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({Serial: id.Serial}),
           success: (result) => {
             this.Settings = result;
@@ -125,7 +127,7 @@
     updated: function () {
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: {Vuetable, Spinner, DeviceVirtual, DeviceV1_0x, DeviceV2_01}
+    components: {Vuetable, Spinner, DeviceVirtual, DeviceV1, DeviceV2, DeviceRemote}
   }
 </script>
 

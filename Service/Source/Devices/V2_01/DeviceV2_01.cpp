@@ -144,6 +144,14 @@ json DeviceV2_01::CheckConfig(const json& config) {
         if(Error == false) ConfigOUT["Outputs"].push_back(Output);
       }
     }
+    if(ConfigOUT["Outputs"].size() == 0) {
+      json Output     = json::object();
+      Output["Mode"]  = "1PHASE";
+      Output["Voltage"] = "CH1";
+      Output["Current"] = "+CH1";
+      Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object());
+      ConfigOUT["Outputs"].push_back(Output);
+    }
   }
   return ConfigOUT;
 }
