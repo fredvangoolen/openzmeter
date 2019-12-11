@@ -27,7 +27,7 @@ const vector<float> AnalyzerSoft::FrequencyRanges  = {-INFINITY, -5, -4, -3, -2,
 const vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
 const vector<float> AnalyzerSoft::THDRanges        = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
 const vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
-//const vector<float> AnalyzerSoft::UnbalanceRanges  = {0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.50, 1.75, 2.0, 2.25, 2.50, 2.75, 3.0, 3.25, 3.50, 3.75, 4.0, 4.25, 4.50, 4.75, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, INFINITY};
+const vector<float> AnalyzerSoft::UnbalanceRanges  = {0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.50, 1.75, 2.0, 2.25, 2.50, 2.75, 3.0, 3.25, 3.50, 3.75, 4.0, 4.25, 4.50, 4.75, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, INFINITY};
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id) {
   LOGFile::Debug("Creating AnalyzerSoft database tables\n");
@@ -119,11 +119,8 @@ void AnalyzerSoft::Configure(const json &options) {
     string Server = options["RemoteServer"];
     string User = options["RemoteUser"];
     string Pass = options["RemotePass"];
-    if(pSync == NULL) {
-      pSync = new Sync(this, Server, User, Pass);
-    } else {
-      pSync->Configure(Server, User, Pass);
-    }
+    if(pSync == NULL) pSync = new Sync(this);
+    pSync->Configure(Server, User, Pass);
   }
   //Calc peak filter coefficients for nominal frequency
   if(pNominalFrequency != 0.0) {
@@ -198,6 +195,7 @@ void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
   params.Type = type;
   params.Timestamp = 0;
   params.Frequency = NAN;
+  params.Unbalance = NAN;
   params.Voltage_Inputs = 0;
   params.Frequency_Inputs = 0;
   params.Flag = false;
@@ -210,6 +208,7 @@ void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
     params.StatsFrequency = vector<uint16_t>(FrequencyRanges.size() - 1, 0);
     params.StatsVoltage = vector<uint16_t>(VoltageRanges.size() - 1, 0);
     params.StatsTHD = vector<uint16_t>(THDRanges.size() - 1, 0);
+    params.StatsUnbalance = vector<uint16_t>(UnbalanceRanges.size() - 1, 0);
     params.StatsHarmonics = vector<uint16_t>(2, 0);
   }
   if((params.Type == AGGREG_10C) || (params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_15M) || (params.Type == AGGREG_1H)) {
@@ -305,13 +304,13 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
   else if(params.Type == AGGREG_3S)
     DB.ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ", " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ")");
   else if(params.Type == AGGREG_1M)
-    DB.ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i, harmonics_p) SELECT sampletime, " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ", " + DB.Bind(params.Power_Factor) + ", " + DB.Bind(params.Voltage_THD) + ", " + DB.Bind(params.Current_THD) + ", " + DB.Bind(params.Phi) + ", " + DB.Bind(params.Voltage_Harmonics) + ", " + DB.Bind(params.Current_Harmonics) + ", " + DB.Bind(params.Power_Harmonics) + " FROM Sample");
+    DB.ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance, harmonics_v, harmonics_i, harmonics_p) SELECT sampletime, " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ", " + DB.Bind(params.Power_Factor) + ", " + DB.Bind(params.Voltage_THD) + ", " + DB.Bind(params.Current_THD) + ", " + DB.Bind(params.Phi) + ", " + DB.Bind(params.Unbalance) + ", " + DB.Bind(params.Voltage_Harmonics) + ", " + DB.Bind(params.Current_Harmonics) + ", " + DB.Bind(params.Power_Harmonics) + " FROM Sample");
   else if(params.Type == AGGREG_10M)
     DB.ExecSentenceNoResult("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ")");
   else if(params.Type == AGGREG_15M)
     DB.ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ")");
   else if(params.Type == AGGREG_1H)
-    DB.ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ", " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ", " + DB.Bind(params.StatsVoltage) + ", " + DB.Bind(params.StatsFrequency) + ", " + DB.Bind(params.StatsTHD) + ", " + DB.Bind(params.StatsHarmonics) + ")");
+    DB.ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics, stats_unbalance) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ", " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ", " + DB.Bind(params.StatsVoltage) + ", " + DB.Bind(params.StatsFrequency) + ", " + DB.Bind(params.StatsTHD) + ", " + DB.Bind(params.StatsHarmonics) + ", " + DB.Bind(params.StatsUnbalance) + ")");
   if(params.Type == AGGREG_1M) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(params.Timestamp - 86400000));   //Delete 1 day old
   if((params.Type == AGGREG_1M) && (pSave10c == true)) DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(params.Timestamp - 3600000));     //Delete 1 hour old
   //TEST

@@ -3,19 +3,13 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
-#include <curl/curl.h>
+#include "cpp-httplib/httplib.h"
 #include "AnalyzerSoft.h"
+#include "HTTPServer.h"
+//----------------------------------------------------------------------------------------------------------------------
+using namespace httplib;
+//----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoft::Sync final {
-  class CurlBuff final {
-    private :
-      char  *pBuffer;
-      size_t pSize;
-    public :
-      CurlBuff();
-      ~CurlBuff();
-      bool Append(void *data, uint32_t size);
-      char *Data();
-  };
   private :
     typedef struct {
       json                Params;
@@ -25,28 +19,22 @@ class AnalyzerSoft::Sync final {
       AnalyzerSoft       *Analyzer;
     } Request_t;
   private :
+    AnalyzerSoft   *pParent;
     string          pServer;
+    string          pPath;
+    uint16_t        pPort;
     string          pUser;
     string          pPass;
     pthread_t       pThread;
     bool            pTerminate;
-    bool            pLogged;
+    string          pCookie;
     RWLocks         pLocks;
-    AnalyzerSoft   *pParent;
-    CURLSH         *pCurl;                    //Shared object for curl lib
-    curl_slist     *pCurlHeaders;             //Common headers
-    pthread_mutex_t pCurlLocks;               //Curl access control
     uint32_t        pThreadsCount;            //Keep threads count
   private :
     static void    *Sync_Thread(void *args);
     static void    *Request_Thread(void *args);
-    static size_t   CurlWriteCallback(void *contents, size_t size, size_t nmemb, void *userp);
-    static void     CurlLockCallback(CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr);
-    static void     CurlUnlockCallback(CURL *handle, curl_lock_data data, void *userptr);
-  private :
-    uint16_t CurlSendPost(const string &url, const string &contents, CurlBuff *buffer);
   public:
-    Sync(AnalyzerSoft *parent, const string &server, const string &user, const string &pass);
+    Sync(AnalyzerSoft *parent);
     ~Sync();
     void Configure(const string &server, const string &user, const string &pass);
     bool Logged();

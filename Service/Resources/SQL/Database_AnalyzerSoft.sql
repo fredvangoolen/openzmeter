@@ -46,9 +46,6 @@ ALTER TABLE aggreg_ext_1m ADD COLUMN IF NOT EXISTS harmonics_p real[];
 UPDATE aggreg_ext_1m SET harmonics_p = array_fill(NULL::real, ARRAY[array_length(harmonics_v, 1), array_length(harmonics_v, 2)]) WHERE harmonics_p IS NULL;
 ALTER TABLE aggreg_ext_1m ALTER COLUMN harmonics_p SET NOT NULL;
 ALTER TABLE aggreg_ext_1m ADD COLUMN IF NOT EXISTS unbalance real;
-UPDATE aggreg_ext_1m SET unbalance = 0 WHERE unbalance IS NULL;
-ALTER TABLE aggreg_ext_1m ALTER COLUMN unbalance SET NOT NULL;
-
 
 CREATE TABLE IF NOT EXISTS aggreg_10m (
   sampletime bigint NOT NULL PRIMARY KEY, 
