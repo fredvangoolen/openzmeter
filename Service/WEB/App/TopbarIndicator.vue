@@ -18,16 +18,36 @@
     },
     created: function() {
       if(this.decimals !== undefined) this.Decimals = this.decimals;
+      this.Group = false;
     },
     methods: {
       setValue: function(vals) {
         if(vals === null) {
           this.value = ['Offline'];
         } else {
-          this.prefix = oZm.GetBestUnits(oZm.ArrayAbsMax(vals));
-          vals = oZm.ScaleArrayToUnits(vals, this.prefix);
-          this.value = [];
-          for(var i = 0; i < vals.length; i++) this.value.push(oZm.RoundHTML(vals[i], this.Decimals));
+          if(vals.length == 1) this.Group = false;
+          if(this.Group == true) {
+            var Aggreg = 0.0;
+            var AggregType;
+            if((this.units == 'V') || (this.units == 'A')) {
+              var PhasesCount = oZm.Series['VOLTAGE'].Names(this.$root.SelectedAnalyzer).length;
+              for(var n = 0; n < PhasesCount; n++) Aggreg += Math.pow(vals[n], 2.0);
+              AggregType = "RMS";
+              Aggreg = Math.sqrt(Aggreg / PhasesCount);
+            } else if(this.units == 'W') {
+              AggregType = "SUM";
+              for(var val in vals) Aggreg += vals[val];
+            }
+            this.prefix = oZm.GetBestUnits(Aggreg);
+            Aggreg = oZm.ScaleToUnits(Aggreg, this.prefix);
+            this.value = [oZm.RoundHTML(Aggreg, this.Decimals), "&nbsp;", '<div style="text-align:center">Phases<br>' + AggregType + '</div>'];
+          } else {
+            this.prefix = oZm.GetBestUnits(oZm.ArrayAbsMax(vals));
+            vals = oZm.ScaleArrayToUnits(vals, this.prefix);
+            this.value = [];
+            for(var i = 0; i < vals.length; i++) this.value.push(oZm.RoundHTML(vals[i], this.Decimals));
+          }
+          this.Group = !this.Group;
         }
       }
     }
@@ -91,7 +111,7 @@
     font-weight: normal;
     line-height: 10px;
     padding: 2px;
-    min-width: 32px;
+    min-width: 44px;
   }
   .indicator-bar > div > div > div > span {
     display: block;

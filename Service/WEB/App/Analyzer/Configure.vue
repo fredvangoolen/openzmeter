@@ -43,8 +43,20 @@
       </div>
       <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12">
-        <label class="control-label" style="line-height: 22px">Enable event detection</label>
+        <label class="control-label" style="line-height: 22px">Enable event</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="value.EventsEnabled"></toggle>
+      </div>
+      <div class="col-xs-12">
+        <label class="control-label" style="line-height: 22px">Enable alarms</label>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="value.AlarmsEnabled"></toggle>
+      </div>
+      <div class="col-xs-12">
+        <label class="control-label" style="line-height: 22px">Enable rates</label>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="value.RatesEnabled"></toggle>
+      </div>
+      <div class="col-xs-12">
+        <label class="control-label" style="line-height: 22px">Enable remote</label>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="value.RemoteEnabled"></toggle>
       </div>
     </div>
     <div class="row" v-if="View=='Contract'">
