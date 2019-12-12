@@ -1,8 +1,8 @@
 <template>
   <div id="app">
     <div id="DisableDiv" class="overlay"></div>
-    <topbar ref="indicator_bar"></topbar>
-    <sidebar ref="sidebar"></sidebar>
+    <topbar :value="Values"></topbar>
+    <sidebar></sidebar>
     <router-view id="contents"></router-view>
   </div>
 </template>
@@ -15,29 +15,37 @@
   import Graph from 'Components/Graph.vue';
   export default {
     data: function() {
-      return { };
+      return { Values: {} };
     },
     methods: {
       UpdateIndicators1() {
         if(this.UpdateIndicatorsTimer1) clearInterval(this.UpdateIndicatorsTimer1);
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS'], Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
-          success: function(result) {
-            this.$refs.indicator_bar.setValue(result);
-          }.bind(this),
-          complete: function() {
+          success: (result) => {
+            this.$set(this.Values, 'Voltage', result['Voltage']);
+            this.$set(this.Values, 'Current', result['Current']);
+            this.$set(this.Values, 'Active_Power', result['Active_Power']);
+            this.$set(this.Values, 'Frequency', [result['Frequency']]);
+            this.$set(this.Values, 'Sys_Stats', result['Sys_Stats']);
+          },
+          complete: () => {
             this.UpdateIndicatorsTimer1 = setTimeout(this.UpdateIndicators1, 2000);
-          }.bind(this), 
-          error: function() {
-            this.$refs.indicator_bar.setValue(null);
-          }.bind(this)
+          }, 
+          error: () => {
+            this.$set(this.Values, 'Voltage', null);
+            this.$set(this.Values, 'Current', null);
+            this.$set(this.Values, 'Active_Power', null);
+            this.$set(this.Values, 'Frequency', null);
+            this.$set(this.Values, 'Sys_Stats', null);
+          }
         });
       },
       UpdateIndicators2() {
         if(this.UpdateIndicatorsTimer2) clearInterval(this.UpdateIndicatorsTimer2);
         if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Aggreg: '15M', To: moment().endOf('day').valueOf(), Period: 86400000 }), 
-          success: function(result) {
+          success: (result) => {
             var Energy;
             if(result['Active_Power'].length > 0) Energy = Array(result['Active_Power'][0].length).fill(0);
             for(var n = 0; n < result['Active_Power'].length; n++) {
@@ -46,14 +54,14 @@
                 Energy[p] = Energy[p] + result['Active_Power'][n][p] / 4.0;
               }
             }
-            this.$refs.indicator_bar.setValue({ Active_Energy: Energy });
-          }.bind(this),
-          complete: function() {
+            this.Values["Active_Energy"] = Energy;
+          },
+          complete: () => {
             this.UpdateIndicatorsTimer2 = setTimeout(this.UpdateIndicators2, 1000000);
-          }.bind(this), 
-          error: function() {
-            this.$refs.indicator_bar.setValue(null);
-          }.bind(this)
+          }, 
+          error: () => {
+            this.Values['Active_Energy'] = null;
+          }
         });
       },
       SetAnalyzer(analyzer) {

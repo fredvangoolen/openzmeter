@@ -1,10 +1,10 @@
 <template>
-  <div :class="color">
+  <div v-bind:style="{ 'background-color': Color, 'border-color': Color }" style="border-width: 1px; border-style: solid">
     <div>
       <div>
-        <span v-for="val in value" v-html="val"></span>
+        <span v-for="val in Value" v-html="val"></span>
       </div>
-      <div>{{ prefix }}{{ units }}</div>
+      <div>{{ Prefix }}{{ Units }}<br><span style="font-size: 10px; font-weight: normal; font-stretch: condensed">{{ AggregType }}</span></div>
     </div>
   </div>
 </template>
@@ -12,44 +12,50 @@
 <script>
   import * as oZm from 'JS/openZmeter.js'
   export default {
-    props: ['color', 'units', 'decimals'],
+    props: ['value', 'serie', 'grouped'],
     data: function() {
-      return { value: ['Offline'], prefix: '', Decimals: 2 };
+      return { Color: oZm.Series[this.serie].Color, Value: ['Offline'], Units: oZm.Series[this.serie].Units, Prefix: '', AggregType: '' };
     },
-    created: function() {
-      if(this.decimals !== undefined) this.Decimals = this.decimals;
-      this.Group = false;
+    watch: {
+      value: function() {
+        this.SetValue();
+      },
+      grouped: function() {
+        this.SetValue();
+      }
     },
     methods: {
-      setValue: function(vals) {
-        if(vals === null) {
-          this.value = ['Offline'];
-        } else {
-          if(vals.length == 1) this.Group = false;
-          if(this.Group == true) {
-            var Aggreg = 0.0;
-            var AggregType;
-            if((this.units == 'V') || (this.units == 'A')) {
-              var PhasesCount = oZm.Series['VOLTAGE'].Names(this.$root.SelectedAnalyzer).length;
-              for(var n = 0; n < PhasesCount; n++) Aggreg += Math.pow(vals[n], 2.0);
-              AggregType = "RMS";
-              Aggreg = Math.sqrt(Aggreg / PhasesCount);
-            } else if((this.units == 'W') || (this.units == 'Wh')) {
-              AggregType = "SUM";
-              for(var val in vals) Aggreg += vals[val];
-            }
-            this.prefix = oZm.GetBestUnits(Aggreg);
-            Aggreg = oZm.ScaleToUnits(Aggreg, this.prefix);
-            this.value = ['<strong>' + oZm.RoundHTML(Aggreg, this.Decimals) + '</strong>', "&nbsp;", '<div style="text-align:center">Phases<br>' + AggregType + '</div>'];
-          } else {
-            this.prefix = oZm.GetBestUnits(oZm.ArrayAbsMax(vals));
-            vals = oZm.ScaleArrayToUnits(vals, this.prefix);
-            this.value = [];
-            for(var i = 0; i < vals.length; i++) this.value.push(oZm.RoundHTML(vals[i], this.Decimals));
+      SetValue: function() {
+        if(this.value === null) {
+          this.Value = ['Offline'];
+          this.AggregType = '';
+        } else if(this.value.length == 1) {
+          this.Prefix = oZm.GetBestUnits(Math.abs(this.value[0]));
+          this.Value = [oZm.RoundHTML(oZm.ScaleToUnits(this.value[0], this.Prefix), 2)];
+          this.AggregType = '';
+        } else if(this.grouped == true) {
+          var Aggreg = 0.0;
+          this.AggregType = '';
+          if((this.serie == 'VOLTAGE') || (this.serie == 'CURRENT')) {
+            var PhasesCount = oZm.Series['VOLTAGE'].Names(this.$root.SelectedAnalyzer).length;
+            for(var n = 0; n < PhasesCount; n++) Aggreg += Math.pow(this.value[n], 2.0);
+            this.AggregType = "RMS";
+            Aggreg = Math.sqrt(Aggreg / PhasesCount);
+          } else if((this.serie == 'ACTIVE_POWER') || (this.serie == 'ACTIVE_ENERGY')) {
+            this.AggregType = "SUM";
+            for(var i in this.value) Aggreg += this.value[i];
           }
-          this.Group = !this.Group;
+          this.Prefix = oZm.GetBestUnits(Aggreg);
+          Aggreg = oZm.ScaleToUnits(Aggreg, this.Prefix);
+          this.Value = ['<strong>' + oZm.RoundHTML(Aggreg, this.Decimals) + '</strong>'];
+        } else {
+          this.Prefix = oZm.GetBestUnits(oZm.ArrayAbsMax(this.value));
+          this.AggregType = '';
+          var Values = oZm.ScaleArrayToUnits(this.value, this.Prefix);
+          this.Value = [];
+          for(var i = 0; i < Values.length; i++) this.Value.push(oZm.RoundHTML(Values[i], oZm.Series[this.serie].Decimals));
         }
-      }
+      }      
     }
   }
 </script>

@@ -13,12 +13,12 @@
       </div>
       <button type="button" class="navbar-toggle"><img :src="require('Imgs/application_menu.png')"></button>
     </div>
-    <div class="indicator-bar" v-if="AnalyzerSelected">
-      <topbar-indicator units="V"  ref="voltage_indicator"   color="indicator-voltage"></topbar-indicator>
-      <topbar-indicator units="A"  ref="current_indicator"   color="indicator-current"></topbar-indicator>
-      <topbar-indicator units="W"  ref="power_indicator"     color="indicator-active-power"></topbar-indicator>
-      <topbar-indicator units="Hz" ref="frequency_indicator" color="indicator-frequency" :decimals="3" v-if="$root.SelectedAnalyzer.NominalFreq > 0.0"></topbar-indicator>
-      <topbar-indicator units="Wh" ref="energy_indicator"    color="indicator-active-energy"></topbar-indicator>
+    <div class="indicator-bar" v-if="AnalyzerSelected" v-on:click="ToogleGrouped">
+      <topbar-indicator serie="VOLTAGE" :grouped="Grouped" :value="value.Voltage"></topbar-indicator>
+      <topbar-indicator serie="CURRENT" :grouped="Grouped" :value="value.Current"></topbar-indicator>
+      <topbar-indicator serie="ACTIVE_POWER" :grouped="Grouped" :value="value.Active_Power"></topbar-indicator>
+      <topbar-indicator serie="FREQUENCY" :value="value.Frequency" v-if="$root.SelectedAnalyzer.NominalFreq > 0.0"></topbar-indicator>
+      <topbar-indicator serie="ACTIVE_ENERGY" :grouped="Grouped" :value="value.Active_Energy"></topbar-indicator>
     </div>
   </div>
 </template>
@@ -28,42 +28,20 @@ import TopbarIndicator from './TopbarIndicator.vue';
 import moment from 'JS/moment.js';
 import * as oZm from 'JS/openZmeter.js';
 export default {
+  props: ['value'],
   data () {
-    return { AnalyzerSelected: false, Time: null, Uptime: null, SDUse: null, SDTip: null, RAMUse: null, RAMTip: null, CPUUse: null, WIFIPower: null, WIFINetwork: null, BatteryLevel: null, BatteryStatus: null, Temp: null };
+    return { AnalyzerSelected: false, Time: null, Uptime: null, SDUse: null, SDTip: null, RAMUse: null, RAMTip: null, CPUUse: null, WIFIPower: null, WIFINetwork: null, BatteryLevel: null, BatteryStatus: null, Temp: null, Grouped: false};
   },
   created: function() {
     this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
-    this.Energy = [];
+    this.SetAnalyzer();
   },
-  methods: {
-    SetAnalyzer: function() {
-      this.AnalyzerSelected = (this.$root.SelectedAnalyzer !== null);
-    },
-    setValue: function(vals) {
-      if(vals === null) {
-        this.$refs.voltage_indicator.setValue(null);
-        this.$refs.current_indicator.setValue(null);
-        this.$refs.power_indicator.setValue(null);
-        this.$refs.frequency_indicator.setValue(null);
-        this.$refs.energy_indicator.setValue(null);
-        this.Time = null;
-        this.SDUse = null;
-        this.RAMUse = null;
-        this.CPUUse = null;
-        this.WIFIPower = null;
-        this.BatteryLevel = null;
-        this.Temp = null;
-      } else {
-        if(vals['Active_Energy'] !== undefined) this.Energy = vals['Active_Energy'];
-        if(vals['Voltage'] !== undefined) {
-          this.$refs.voltage_indicator.setValue(vals['Voltage']);
-          this.$refs.current_indicator.setValue(vals['Current']);
-          this.$refs.power_indicator.setValue(vals['Active_Power']);
-          if(this.$refs.frequency_indicator != null) this.$refs.frequency_indicator.setValue([vals['Frequency']]);
-          this.$refs.energy_indicator.setValue(this.Energy);
-        }
-        if(vals['Sampletime'] !== undefined)  this.Time = moment(vals['Sampletime']).format('HH:mm:ss');
-        if(vals['Sys_Stats'] != null) {
+  beforeDestroy: function() {
+    this.$root.$off('AnalyzerChanged', this.SetAnalyzer);
+  },
+  watch: {
+    value: function(vals) {
+      if(vals['Sys_Stats'] != null) {
           if(vals['Sys_Stats'].UpTime != undefined) {
             this.Uptime = moment.duration(vals['Sys_Stats'].UpTime, "seconds").humanize();  
           } else {
@@ -104,8 +82,43 @@ export default {
             this.Temp = null;
           }
         }
-      }
     }
+  },
+  methods: {
+    ToogleGrouped: function() {
+      this.Grouped = !this.Grouped;
+    },
+    SetAnalyzer: function() {
+      this.AnalyzerSelected = (this.$root.SelectedAnalyzer !== null);
+    },
+//    setValue: function(vals) {
+//      if(vals === null) {
+//        this.Values = {};
+//        this.$refs.voltage_indicator.setValue(null);
+//        this.$refs.current_indicator.setValue(null);
+//        this.$refs.power_indicator.setValue(null);
+//        this.$refs.frequency_indicator.setValue(null);
+//        this.$refs.energy_indicator.setValue(null);
+//        this.Time = null;
+//        this.SDUse = null;
+//        this.RAMUse = null;
+//        this.CPUUse = null;
+//        this.WIFIPower = null;
+//        this.BatteryLevel = null;
+//        this.Temp = null;
+//      } else {
+//        if(vals['Active_Energy'] !== undefined) this.Energy = vals['Active_Energy'];
+//        if(vals['Voltage'] !== undefined) {
+//          this.$refs.voltage_indicator.setValue(vals['Voltage']);
+//          this.$refs.current_indicator.setValue(vals['Current']);
+//          this.$refs.power_indicator.setValue(vals['Active_Power']);
+//          if(this.$refs.frequency_indicator != null) this.$refs.frequency_indicator.setValue([vals['Frequency']]);
+//          this.$refs.energy_indicator.setValue(this.Energy);
+//        }
+//        if(vals['Sampletime'] !== undefined)  this.Time = moment(vals['Sampletime']).format('HH:mm:ss');
+       
+//      }
+//    }
   },
   components: { TopbarIndicator }
 }
