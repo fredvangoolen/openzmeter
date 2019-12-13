@@ -121,7 +121,7 @@ int DeviceV1_01::Transfer::Submit(libusb_device_handle* deviceHandle, uint8_t en
 bool DeviceV1_01::StartDevice() {
   pMembersLock.WriteLock();
   if(pState == RUNNING) {
-    pMembersLock.WriteLock();
+    pMembersLock.WriteUnlock();
     return false;
   }
   LOGFile::Info("Loading 'V1.01' driver configuration for serial '%s'\n", pSerial.c_str());
@@ -131,7 +131,7 @@ bool DeviceV1_01::StartDevice() {
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     if(AutoStart == false) {
-      pMembersLock.WriteLock();
+      pMembersLock.WriteUnlock();
       return true;
     }
   }

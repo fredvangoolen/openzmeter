@@ -78,7 +78,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*': { target: 'http://localhost:8089'}
+      '*': { target: 'http://10.42.0.225:80'}
     }
   },
   performance: {

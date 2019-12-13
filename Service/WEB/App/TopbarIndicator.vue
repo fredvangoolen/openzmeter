@@ -62,6 +62,7 @@
  
 <style>
   .indicator-bar {
+    cursor: grabbing;
     background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
     text-align: center;
     font-size: 14px;

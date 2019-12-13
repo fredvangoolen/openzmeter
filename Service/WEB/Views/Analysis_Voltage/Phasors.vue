@@ -9,12 +9,58 @@
     <div class="panel-body">
       <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
       <div class="row">
-        <div class="col-sm-12 col-md-8 col-lg-6 graphDiv" ref="graphContainer">
-          <graph ref="graph" class="graph" :options="GraphOptions"></graph>
+        <div class="col-xs-12 col-md-4 panel-body">
+          <table>
+            <tr><td class="border-bottom">Positive sequence</td></tr>
+            <tr>
+              <td>
+                <div style="height:100px"></div>
+              </td>
+            </tr>
+          </table>
         </div>
-        <div class="col-sm-12 col-md-4 col-lg-6">
-          <h4>Voltage and current phase angle</h4>
-          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
+        <div class="col-xs-12 col-md-4 panel-body">
+          <table>
+            <tr><td class="border-bottom">Negative sequence</td></tr>
+            <tr>
+              <td>
+                <div style="height:100px"></div>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="col-xs-12 col-md-4 panel-body">
+          <table>
+            <tr><td class="border-bottom">Zero sequence</td></tr>
+            <tr>
+              <td>
+                <div style="height:100px"></div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12 col-md-8 col-lg-6 panel-body">
+          <table>
+            <tr><td class="border-bottom">Phasor view</td></tr>
+            <tr>
+              <td ref="graphContainer" class="graphDiv">
+                <graph ref="graph" class="graph" :options="GraphOptions"></graph>
+              </td>
+            </tr>
+          </table>
+        </div>
+        
+        <div class="col-sm-12 col-md-8 col-lg-6 panel-body">
+          <table>
+            <tr><td class="border-bottom">Voltage and current phase angle</td></tr>
+            <tr>
+              <td ref="graphContainer">
+                <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
+              </td>
+            </tr>
+          </table>
         </div>
       </div>
     </div>
@@ -227,6 +273,9 @@
   .graphDiv >>> .graph {
     margin: auto;
   }
+  .table {
+    border: none;
+  }
   @media screen and (min-width: 600px) {
     .table >>> th:nth-child(1)  {
       width: 40px;
@@ -258,5 +307,25 @@
   }
   .title-warning img {
     margin: -4px 4px 0px 0px;
+  }
+    table {
+     width: 100%;
+     border-radius: 6px;
+     border: 1px solid #ccc;
+  }
+  table:not(:first-child), .output-table:not(:first-child) {
+    margin-top: 5px;
+  }
+  table tr td {
+    border-spacing: 0px;
+    padding: 3px;
+  }
+  table .border-bottom {
+    border-bottom: 1px solid #ccc;
+    background: #eee;
+    font-weight: bold;
+  }
+  table .border-right {
+    border-right: 1px solid #ccc;
   }
 </style>

@@ -184,7 +184,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
         this.WIFIChanges = false;
       },
       SaveChangesNTP: function(value) {
-        $.ajax({ url: "setNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Enabled: this.NTPEnabled, Server: this.$refs.ntpserver.value, Time: moment().valueOf() }) });
+        $.ajax({ url: "setNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Enabled: this.NTP.Enabled, Server: this.NTP.Server, Time: moment().valueOf() }) });
         this.NTPChanges = false;      
       },
       ConfigWIFI: function() {
