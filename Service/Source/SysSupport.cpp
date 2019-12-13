@@ -728,6 +728,7 @@ void SysSupport::SetSystemActions(const string &action) {
       if(ErrorCode != 0) Result["Status"] = false;
     }
     if(Params["DNS"].is_array()) {
+      if(Params["DNS"].size() == 0) Params["DNS"] = "";
       Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"dns\":" + Params["DNS"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
