@@ -14,7 +14,7 @@
             <tr><td class="border-bottom">Positive sequence</td></tr>
             <tr>
               <td>
-                <div style="height:100px"></div>
+                <graph ref="positive" class="graph" :options="GraphOptions"></graph>
               </td>
             </tr>
           </table>
@@ -24,7 +24,7 @@
             <tr><td class="border-bottom">Negative sequence</td></tr>
             <tr>
               <td>
-                <div style="height:100px"></div>
+                <graph ref="negative" class="graph" :options="GraphOptions"></graph>
               </td>
             </tr>
           </table>
@@ -34,7 +34,7 @@
             <tr><td class="border-bottom">Zero sequence</td></tr>
             <tr>
               <td>
-                <div style="height:100px"></div>
+                <graph ref="zero" class="graph" :options="GraphOptions"></graph>
               </td>
             </tr>
           </table>
@@ -75,6 +75,7 @@
   import Graph from 'Components/Graph.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import vuetable from 'vuetable-2';
+  import Complex from 'complex';
   import 'CSS/table-responsive.css';
   export default {
     data: function() {
@@ -136,7 +137,7 @@
       $(window).on('resize', this.Redraw.bind(this));
     },
     updated: function(){
-        oZm.createCaptionsForResponsiveTable(this.$refs.table);
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     beforeDestroy: function() {
       $(window).off('resize', this.Redraw);
@@ -256,6 +257,20 @@
           this.Data.push([Phases[i], "Current", result.Voltage_Phase[i] + result.Phi[i], result['Current'][i]]);
           Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(result.Voltage_Phase[i]) + '°', Value: oZm.Round2(result['Voltage'][i]) + ' V' } );
           Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(((result.Phi[i] == null) || (result.Voltage_Phase[i] == null)) ? null : result.Voltage_Phase[i] + result.Phi[i]) + '°', SecAngle: '(' + oZm.Round2(result.Phi[i]) + '°)', Value: oZm.Round2(result.Current[i]) + ' A'} );
+        }
+        if(result['Voltage'].length == 3) {
+          var A = new Complex(0.5, Math.sin(120.0 * Math.PI / 180.0));
+          var A2 = A.mult(A);
+          var V1 = new Complex(result.Voltage_Harmonics[0][0][0], result.Voltage_Harmonics[0][0][1]);
+          var V2 = new Complex(result.Voltage_Harmonics[1][0][0], result.Voltage_Harmonics[1][0][1]);
+          var V3 = new Complex(result.Voltage_Harmonics[2][0][0], result.Voltage_Harmonics[2][0][1]);
+          var Zero = V1.add(V2).add(V3);
+          var Positive = V1.add(A2.mult(V2)).add(A.mult(V3));
+          
+      console.log("A",  , A2, Zero, Positive);
+          
+          //var a = complex({re: result.Voltage_Harmonics[0][0][0], im: result.Voltage_Harmonics[0][0][1]});
+          
         }
         this.$refs.graph.SetOptions({ file: Vectors });
         this.$refs.table.setData( { data: Table });

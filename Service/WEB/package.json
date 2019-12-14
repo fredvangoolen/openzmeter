@@ -16,6 +16,7 @@
     "bootstrap-sass-loader": "^1.0.10",
     "bootstrap-year-calendar": "^1.1.1",
     "bootstrap3": "^3.3.5",
+    "complex": "^3.0.1",
     "expose-loader": "^0.7.5",
     "jquery-bootstrap-scrolling-tabs": "^2.6.1",
     "moment-timezone": "^0.5.27",
