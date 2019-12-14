@@ -13,7 +13,7 @@
           <table>
             <tr><td class="border-bottom">Positive sequence</td></tr>
             <tr>
-              <td>
+              <td ref="positiveContainer" class="graphDiv">
                 <graph ref="positive" class="graph" :options="GraphOptions"></graph>
               </td>
             </tr>
@@ -23,7 +23,7 @@
           <table>
             <tr><td class="border-bottom">Negative sequence</td></tr>
             <tr>
-              <td>
+              <td ref="negativeContainer" class="graphDiv">
                 <graph ref="negative" class="graph" :options="GraphOptions"></graph>
               </td>
             </tr>
@@ -33,7 +33,7 @@
           <table>
             <tr><td class="border-bottom">Zero sequence</td></tr>
             <tr>
-              <td>
+              <td ref="zeroContainer" class="graphDiv">
                 <graph ref="zero" class="graph" :options="GraphOptions"></graph>
               </td>
             </tr>
@@ -150,13 +150,13 @@
         var ctx = e.drawingContext;
         var MaxCurrent = 0;
         for(var i = 0; i < e.points.length; i++) {
-          if((i % 2) == 1) MaxCurrent = Math.max(MaxCurrent, e.dygraph.file_[i][2]);
+          if((e.dygraph.file_[i][0] % 2) == 1) MaxCurrent = Math.max(MaxCurrent, e.dygraph.file_[i][2]);
         }
         for(var i = 0; i < e.points.length; i++) {
           if(isNaN(e.allSeriesPoints[1][i].yval)) continue;
-          var Module = Math.log(e.allSeriesPoints[1][i].yval) / (((i % 2) == 0) ? Math.log(Analyzer.NominalVoltage) : Math.log(Analyzer.MaxCurrent)) * 100.0;
+          var Module = Math.log(e.allSeriesPoints[1][i].yval) / (((e.dygraph.file_[i][0] % 2) == 0) ? Math.log(Analyzer.NominalVoltage) : Math.log(Analyzer.MaxCurrent)) * 100.0;
           Module = Math.max(10, Module);
-          if(i % 2) {
+          if(e.dygraph.file_[i][0] % 2) {
             var StartAngle = (e.dygraph.file_[i - 1][1] < e.dygraph.file_[i][1]) ? e.dygraph.file_[i][1] * Math.PI / 180.0 : e.dygraph.file_[i - 1][1] * Math.PI / 180.0;
             var EndAngle   = (e.dygraph.file_[i - 1][1] < e.dygraph.file_[i][1]) ? e.dygraph.file_[i - 1][1] * Math.PI / 180.0 : e.dygraph.file_[i][1] * Math.PI / 180.0;
             //Angular area
@@ -189,10 +189,23 @@
             ctx.fill();
             ctx.restore();  
           }
+          if(((e.dygraph.file_[i][0] % 2) === 0) && ((e.dygraph.file_.length === (i + 1)) || ((e.dygraph.file_[i + 1][0] % 2) === 0))) {
+            //Value legend
+            ctx.save();
+            ctx.translate(e.dygraph.toDomXCoord(100 * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(100 * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
+            ctx.rotate(e.dygraph.file_[i][1] * Math.PI / -180.0);
+            ctx.beginPath();
+            ctx.textAlign = "right";
+            ctx.font = "bold 12px sans";
+            ctx.fillStyle = "#333"; 
+            ctx.fillText((e.dygraph.file_.length === 1) ? 'ALL' : Phases[(e.dygraph.file_[i][0]) / 2], -15, -5);
+            ctx.fill();
+            ctx.restore();
+          }
           //Module line
           ctx.setLineDash([]);
-          ctx.strokeStyle = e.dygraph.getColors()[i % 2];
-          ctx.fillStyle = e.dygraph.getColors()[i % 2];
+          ctx.strokeStyle = e.dygraph.getColors()[e.dygraph.file_[i][0] % 2];
+          ctx.fillStyle = e.dygraph.getColors()[e.dygraph.file_[i][0] % 2];
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.moveTo(e.dygraph.toDomXCoord(0), e.dygraph.toDomYCoord(0));
@@ -207,13 +220,13 @@
           ctx.moveTo(-10, 4);
           ctx.lineTo(5, 0);
           ctx.lineTo(-10, -4);
-          ctx.fillStyle = e.dygraph.getColors()[i % 2];
+          ctx.fillStyle = e.dygraph.getColors()[e.dygraph.file_[i][0] % 2];
           ctx.fill();
           ctx.restore();
           //Dot line for the series
           ctx.lineWidth = 1;
           ctx.setLineDash([2, 2]);
-          ctx.strokeStyle = e.dygraph.getColors()[i % 2];
+          ctx.strokeStyle = e.dygraph.getColors()[e.dygraph.file_[i][0] % 2];
           ctx.beginPath();
           ctx.moveTo(e.dygraph.toDomXCoord(Module * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(Module * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
           ctx.lineTo(e.dygraph.toDomXCoord(120 * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(120 * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
@@ -225,8 +238,8 @@
           ctx.beginPath();
           ctx.textAlign = "left";
           ctx.font = "10px sans";
-          ctx.fillStyle = e.dygraph.getColors()[i % 2];
-          ctx.fillText(oZm.Round2Plain(e.allSeriesPoints[1][i].yval) + ((i % 2) ? "A" : "V"), 2, -5);
+          ctx.fillStyle = e.dygraph.getColors()[e.dygraph.file_[i][0] % 2];
+          ctx.fillText(oZm.Round2Plain(e.allSeriesPoints[1][i].yval) + ((e.dygraph.file_[i][0] % 2) ? "A" : "V"), 2, -5);
           ctx.fill();
           ctx.restore();
         }
@@ -237,6 +250,11 @@
           var Width = this.$refs.graphContainer.clientWidth - 30;
           if(Width > 600) Width = 600;
           this.$refs.graph.Redraw(Width, Width);
+          Width = this.$refs.positiveContainer.clientWidth - 30;
+          if(Width > 600) Width = 600;
+          this.$refs.positive.Redraw(Width, Width);
+          this.$refs.negative.Redraw(Width, Width);
+          this.$refs.zero.Redraw(Width, Width);
         });
       },
       ExportClick: function() {
@@ -256,21 +274,27 @@
           this.Data.push([Phases[i], "Voltage", result.Voltage_Phase[i], result['Voltage'][i]]);
           this.Data.push([Phases[i], "Current", result.Voltage_Phase[i] + result.Phi[i], result['Current'][i]]);
           Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(result.Voltage_Phase[i]) + '°', Value: oZm.Round2(result['Voltage'][i]) + ' V' } );
-          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(((result.Phi[i] == null) || (result.Voltage_Phase[i] == null)) ? null : result.Voltage_Phase[i] + result.Phi[i]) + '°', SecAngle: '(' + oZm.Round2(result.Phi[i]) + '°)', Value: oZm.Round2(result.Current[i]) + ' A'} );
+          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(((result.Phi[i] === null) || (result.Voltage_Phase[i] === null)) ? null : result.Voltage_Phase[i] + result.Phi[i]) + '°', SecAngle: '(' + oZm.Round2(result.Phi[i]) + '°)', Value: oZm.Round2(result.Current[i]) + ' A'} );
         }
-        if(result['Voltage'].length == 3) {
-          var A = new Complex(0.5, Math.sin(120.0 * Math.PI / 180.0));
-          var A2 = A.mult(A);
+        if(result['Voltage'].length === 3) {
+          var A = new Complex(Math.cos(120.0 * Math.PI / 180.0), Math.sin(120.0 * Math.PI / 180.0));
+          var A2 = A.clone().mult(A);
           var V1 = new Complex(result.Voltage_Harmonics[0][0][0], result.Voltage_Harmonics[0][0][1]);
           var V2 = new Complex(result.Voltage_Harmonics[1][0][0], result.Voltage_Harmonics[1][0][1]);
           var V3 = new Complex(result.Voltage_Harmonics[2][0][0], result.Voltage_Harmonics[2][0][1]);
-          var Zero = V1.add(V2).add(V3);
-          var Positive = V1.add(A2.mult(V2)).add(A.mult(V3));
-          
-      console.log("A",  , A2, Zero, Positive);
-          
-          //var a = complex({re: result.Voltage_Harmonics[0][0][0], im: result.Voltage_Harmonics[0][0][1]});
-          
+          var Zero = V1.clone().add(V2).add(V3).mult(new Complex(1.0 / 3.0, 0.0));
+          var Positive = V1.clone().add(A.clone().mult(V2)).add(A2.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
+          var Negative = V1.clone().add(A2.clone().mult(V2)).add(A.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
+          var PositiveVectors = [], NegativeVectors = [], ZeroVectors = [];
+          var OffsetAngle = Positive.arg() * 180.0 / Math.PI;
+          for(var n = 0; n < 3; n++) {
+            PositiveVectors.push([n * 2, Positive.arg() * 180.0 / Math.PI + (n * 120.0) - OffsetAngle, Positive.abs()]);
+            NegativeVectors.push([n * 2, Negative.arg() * 180.0 / Math.PI + (n * -120.0) - OffsetAngle, Negative.abs()]);
+          }
+          ZeroVectors.push([n * 2, Zero.arg() * 180.0 / Math.PI - OffsetAngle, Zero.abs()]);
+          this.$refs.positive.SetOptions({ file: PositiveVectors });
+          this.$refs.negative.SetOptions({ file: NegativeVectors });
+          this.$refs.zero.SetOptions({ file: ZeroVectors });
         }
         this.$refs.graph.SetOptions({ file: Vectors });
         this.$refs.table.setData( { data: Table });
