@@ -52,9 +52,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pDelayVoltage    = NULL;
   pBlockCycles.reserve(20);
   InitAggreg(pAggreg10C, AGGREG_10C);
-//  pVoltageFFT.reserve(pVoltageSamples.size());
   for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFT[i] = new FFT("FFT_V" + to_string(i));
-//  pCurrentFFT.reserve(pCurrentSamples.size());
   for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFT[i] = new FFT("FFT_I" + to_string(i));
   Configure(CheckConfig(ConfigManager::ReadConfig(optionPath)));
   if(pthread_create(&pAnalyzerThread, NULL, Analyzer_Thread, (void*)this) != 0) {
@@ -135,7 +133,7 @@ void AnalyzerSoft::Configure(const json &options) {
       memset(pFilters[n].ChannelsZ1, 0, sizeof(Filter_t::ChannelsZ1));
       memset(pFilters[n].ChannelsZ2, 0, sizeof(Filter_t::ChannelsZ2));
     }
-    pDelayCurrentSize = (pSamplerate * ZEROCROSSING_FILTERSTAGES) / (pNominalFrequency * 2.0);
+    pDelayCurrentSize = ((pSamplerate / pNominalFrequency) / 2.0) * ZEROCROSSING_FILTERSTAGES + 2;
     pDelayVoltageSize = pDelayCurrentSize;
   } else {
     pDelayCurrentSize = 1;

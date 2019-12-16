@@ -52,7 +52,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
             <span class="input-group-addon input-group-addon-toogle">
               <toggle v-model="NTP.Enabled" v-on:change="NTPChanges = true"></toggle>
             </span>
-            <input type="text" class="form-control" v-model="NTP.Server" :disabled="!NTP.Enabled">
+            <input type="text" class="form-control" v-model="NTP.Server" :disabled="!NTP.Enabled" v-on:change="NTPChanges = true">
             <span class="input-group-btn" v-if="NTPChanges">
               <button class="btn btn-default" v-on:click="SaveChangesNTP" data-toggle="tooltip" title="Save changes (If set to disabled, current client date is taken)"><img :src="require('Imgs/diskette.png')"></button>
             </span>
