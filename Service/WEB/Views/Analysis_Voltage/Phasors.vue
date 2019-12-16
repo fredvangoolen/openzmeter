@@ -267,9 +267,7 @@
           var Zero = V1.add(V2).add(V3);
           var Positive = V1.add(A2.mult(V2)).add(A.mult(V3));
           
-      console.log("A",  , A2, Zero, Positive);
-          
-          //var a = complex({re: result.Voltage_Harmonics[0][0][0], im: result.Voltage_Harmonics[0][0][1]});
+      //var a = complex({re: result.Voltage_Harmonics[0][0][0], im: result.Voltage_Harmonics[0][0][1]});
           
         }
         this.$refs.graph.SetOptions({ file: Vectors });

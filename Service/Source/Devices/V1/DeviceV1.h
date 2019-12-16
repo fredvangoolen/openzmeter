@@ -8,19 +8,19 @@
 #include "Device.h"
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
-#define DEVICEV1_01_VID             0x0483                          //Product ID
-#define DEVICEV1_01_PID             0x7270                          //Device ID
-#define DEVICEV1_01_VERSION         0x0101                          //Device version
-#define DEVICEV1_01_MANSTRING       "zRed"                          //Manufacturer string
-#define DEVICEV1_01_PRODSTRING      "openZmeter - Capture device"   //Product string
-#define DEVICEV1_01_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
-#define DEVICEV1_01_SAMPLEFREQ    15625.00                          //Frequencia de muestreo
-#define DEVICEV1_01_BUFFERSECONDS       10                          //Tamaño del buffer (10 segundos)
-#define DEVICEV1_01_TRANSFERS           32                          //Numero de transferencias a encolar
-#define DEVICEV1_01_VOLTAGEDELAY         2                          //Samples to delay
+#define DEVICEV1_VID             0x0483                          //Product ID
+#define DEVICEV1_PID             0x7270                          //Device ID
+//#define DEVICEV1_01_VERSION         0x0100                          //Device version
+#define DEVICEV1_MANSTRING       "zRed"                          //Manufacturer string
+#define DEVICEV1_01_PRODSTRING   "openZmeter - Capture device"   //Product string
+#define DEVICEV1_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
+#define DEVICEV1_SAMPLEFREQ    15625.00                          //Frequencia de muestreo
+#define DEVICEV1_BUFFERSECONDS       10                          //Tamaño del buffer (10 segundos)
+#define DEVICEV1_TRANSFERS           32                          //Numero de transferencias a encolar
+#define DEVICEV1_VOLTAGEDELAY         2                          //Samples to delay
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
-class DeviceV1_01 final : public Device {
+class DeviceV1 final : public Device {
   private :
     typedef struct {
       float Voltage;
@@ -31,9 +31,9 @@ class DeviceV1_01 final : public Device {
         libusb_transfer *pTransfer;
         uint8_t         *pBuffer;
         uint32_t         pBufferSize;
-        DeviceV1_01     *pParent;
+        DeviceV1        *pParent;
       public :
-        Transfer(DeviceV1_01 *parent, uint32_t size);
+        Transfer(DeviceV1 *parent, uint32_t size);
         ~Transfer();
         int Submit();
         int Submit(libusb_device_handle *deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout);
@@ -43,6 +43,7 @@ class DeviceV1_01 final : public Device {
     static bool                  pRegistered;
   private :
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
+    uint16_t                     pHWVersion;               //Hardware version
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
     bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
     deque<Sample_t>              pBuffer;                  //Read buffer
@@ -65,13 +66,13 @@ class DeviceV1_01 final : public Device {
     static int   PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
     static json  CheckConfig(const json &config);
   private :
-    DeviceV1_01(const string &serial);
+    DeviceV1(const string &serial, const uint16_t version);
     bool StartDevice() override;
     bool StopDevice() override;
     void GetDevice(HTTPRequest &req) override;
     void SetDevice(HTTPRequest &req) override;
     bool BuffersAppend(float voltageSample, float currentSample);
   public :
-    ~DeviceV1_01();
+    ~DeviceV1();
 };
 //----------------------------------------------------------------------------------------------------------------------
