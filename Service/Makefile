@@ -43,13 +43,8 @@ else
 	CFLAGS  += -Os -Wall -fopt-info-vec -s -flto -ftree-vectorize
 	LDFLAGS += -flto
 endif
-ifeq ($(DEVICE_V1_00), true)
-	EXECUTABLE_SOURCE += Source/Devices/V1_00/DeviceV1_00.cpp
-	ANALYZER_SOFT = true
-	LDFLAGS += -lusb-1.0
-endif
-ifeq ($(DEVICE_V1_01), true)
-	EXECUTABLE_SOURCE += Source/Devices/V1_01/DeviceV1_01.cpp
+ifeq ($(DEVICE_V1), true)
+	EXECUTABLE_SOURCE += Source/Devices/V1/DeviceV1.cpp
 	ANALYZER_SOFT = true
 	LDFLAGS += -lusb-1.0
 endif
