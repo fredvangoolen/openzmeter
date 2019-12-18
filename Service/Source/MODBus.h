@@ -62,10 +62,14 @@
 //#define MB_TCP_REGISTER_START         8
 //#define MB_TCP_REGISTER_NUMBER         10
 //
-class ModbusTCPSlave {
-  
+class ModbusTCP {
+private :
+  pthread_t   pThread;
+  bool        pTerminate;
+private :
+  void *Thread(void *args);
   public:
-    ModbusTCPSlave();
+    ModbusTCP();
 //#ifdef MB_ETHERNET
 //    void begin();
 //    void begin(uint8_t ip[4],uint8_t gateway[4],uint8_t subnet[4]);

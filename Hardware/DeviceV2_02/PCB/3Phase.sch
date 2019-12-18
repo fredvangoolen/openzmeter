@@ -424,24 +424,24 @@ $EndComp
 $Comp
 L 3Phase-rescue:R-3Phase-rescue R33
 U 1 1 5BD0542F
-P 4925 1450
-F 0 "R33" V 5005 1450 50  0000 C CNN
-F 1 "36k5" V 4925 1450 50  0001 C CNN
-F 2 "Footprints:R_0603_1608Metric" V 4855 1450 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-0736K5L_C227840.html" H 4925 1450 50  0001 C CNN
-	1    4925 1450
+P 4850 1450
+F 0 "R33" V 4930 1450 50  0000 C CNN
+F 1 "36k5" V 4850 1450 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" V 4780 1450 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Others_YAGEO-AC0603FR-0736K5L_C227840.html" H 4850 1450 50  0001 C CNN
+	1    4850 1450
 	-1   0    0    1   
 $EndComp
 $Comp
 L 3Phase-rescue:R-3Phase-rescue R36
 U 1 1 5BD0550F
-P 5275 1250
-F 0 "R36" V 5355 1250 50  0000 C CNN
-F 1 "270k" V 5275 1250 50  0001 C CNN
-F 2 "Footprints:R_0603_1608Metric" V 5205 1250 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 5275 1250 50  0001 C CNN
-	1    5275 1250
-	0    1    1    0   
+P 5300 1425
+F 0 "R36" V 5380 1425 50  0000 C CNN
+F 1 "100k" V 5300 1425 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" V 5230 1425 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 5300 1425 50  0001 C CNN
+	1    5300 1425
+	-1   0    0    1   
 $EndComp
 $Comp
 L 3Phase-rescue:C_Small-3Phase-rescue C6
@@ -914,7 +914,7 @@ L 3Phase-rescue:D_Zener_Small_ALT-3Phase-rescue D2
 U 1 1 5BDBB72B
 P 3675 1050
 F 0 "D2" H 3600 1150 50  0000 C CNN
-F 1 "BZT52C15S" H 3675 960 50  0001 C CNN
+F 1 "BZT52C18S" H 3675 960 50  0001 C CNN
 F 2 "Footprints:D_SOD-323" V 3675 1050 50  0001 C CNN
 F 3 "https://lcsc.com/product-detail/Zener-Diodes_Shandong-Jingdao-Microelectronics-BZT52C18S_C353551.html" V 3675 1050 50  0001 C CNN
 	1    3675 1050
@@ -943,7 +943,7 @@ F 3 "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-Leaded_Ymi
 	1    0    0    -1  
 $EndComp
 Text GLabel 4075 1100 1    60   Input ~ 0
-15v
+20v
 $Comp
 L 3Phase-rescue:D_Small_ALT-3Phase-rescue D3
 U 1 1 5BDBD504
@@ -954,17 +954,6 @@ F 2 "Footprints:D_SMA" V 3925 1200 50  0001 C CNN
 F 3 "https://lcsc.com/product-detail/Diodes-General-Purpose_Bourne-Semicon-Shenzhen-ES1J_C266561.html" V 3925 1200 50  0001 C CNN
 	1    3925 1200
 	0    1    1    0   
-$EndComp
-$Comp
-L 3Phase-rescue:SY8113-3Phase-rescue U10
-U 1 1 5BDCEBDA
-P 4525 1250
-F 0 "U10" H 4375 1475 50  0000 R CNN
-F 1 "SY8201ABC" H 4250 1250 50  0001 L CNN
-F 2 "Footprints:TSOT-23-6" H 4525 675 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/DC-DC-Converters_Silergy_SY8201ABC_SY8201ABC_C108052.html" H 4525 1250 50  0001 C CNN
-	1    4525 1250
-	1    0    0    -1  
 $EndComp
 $Comp
 L 3Phase-rescue:C_Small-3Phase-rescue C17
@@ -980,12 +969,12 @@ $EndComp
 $Comp
 L 3Phase-rescue:L-3Phase-rescue L4
 U 1 1 5BDD2082
-P 5200 1150
-F 0 "L4" V 5150 1150 50  0000 C CNN
-F 1 "2.2uH" V 5275 1150 50  0000 C CNN
-F 2 "Footprints:CD32_3.5x3.0" H 5200 1150 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Power-Inductors_Guangdong-Fenghua-Advanced-Tech-PIO32-2R2MT_C143258.html" H 5200 1150 50  0001 C CNN
-	1    5200 1150
+P 5025 1150
+F 0 "L4" V 4975 1150 50  0000 C CNN
+F 1 "10uH" V 5100 1150 50  0000 C CNN
+F 2 "Footprints:CD43_4.5x4.0" H 5025 1150 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Power-Inductors_Guangdong-Fenghua-Advanced-Tech-PIO32-2R2MT_C143258.html" H 5025 1150 50  0001 C CNN
+	1    5025 1150
 	0    -1   -1   0   
 $EndComp
 Text GLabel 825  10650 0    60   Input ~ 0
@@ -1898,12 +1887,10 @@ Connection ~ 1725 1650
 Connection ~ 3275 1650
 Wire Wire Line
 	3275 1600 3275 1650
-Connection ~ 4925 1650
+Connection ~ 4850 1650
 Connection ~ 4525 1650
 Wire Wire Line
-	4925 1650 4925 1600
-Wire Wire Line
-	4925 1300 4925 1250
+	4850 1650 4850 1600
 Wire Wire Line
 	4825 950  4725 950 
 Wire Wire Line
@@ -2207,7 +2194,7 @@ Wire Wire Line
 Wire Wire Line
 	3275 1650 3925 1650
 Wire Wire Line
-	4525 1650 4925 1650
+	4525 1650 4850 1650
 Wire Wire Line
 	4075 1350 4200 1350
 Wire Wire Line
@@ -2273,11 +2260,11 @@ Wire Wire Line
 Wire Wire Line
 	1600 8350 1750 8350
 Wire Wire Line
-	5350 1150 5450 1150
+	5175 1150 5450 1150
 Wire Wire Line
 	5450 1650 5625 1650
 Wire Wire Line
-	4925 1650 5450 1650
+	4850 1650 5450 1650
 Wire Wire Line
 	5625 1400 5625 1150
 Wire Wire Line
@@ -2288,16 +2275,7 @@ Wire Wire Line
 Wire Wire Line
 	6275 650  6275 900 
 Wire Wire Line
-	4825 1775 5075 1775
-Wire Wire Line
-	5075 1775 5075 1250
-Connection ~ 5075 1250
-Wire Wire Line
-	5075 1250 5125 1250
-Wire Wire Line
 	5450 1400 5450 1250
-Wire Wire Line
-	5450 1250 5425 1250
 Wire Wire Line
 	5450 1250 5450 1150
 Connection ~ 5450 1250
@@ -2960,14 +2938,8 @@ F 3 "" H 5075 4950 50  0000 C CNN
 	1    5075 4950
 	1    0    0    -1  
 $EndComp
-Connection ~ 4825 1150
 Wire Wire Line
-	4825 1150 5050 1150
-Wire Wire Line
-	4825 1250 4925 1250
-Connection ~ 4925 1250
-Wire Wire Line
-	4925 1250 5075 1250
+	4825 1150 4875 1150
 $Comp
 L Device:R_Small R40
 U 1 1 5D62E090
@@ -3800,4 +3772,51 @@ Text GLabel 1650 4200 2    60   Input ~ 0
 GAIN_SW
 Wire Wire Line
 	1650 4200 1600 4200
+Connection ~ 4825 1150
+$Comp
+L 3Phase-rescue:SY8113-3Phase-rescue U10
+U 1 1 5BDCEBDA
+P 4525 1250
+F 0 "U10" H 4375 1475 50  0000 R CNN
+F 1 "SY8201ABC" H 4250 1250 50  0001 L CNN
+F 2 "Footprints:TSOT-23-6" H 4525 675 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/DC-DC-Converters_Silergy_SY8201ABC_SY8201ABC_C108052.html" H 4525 1250 50  0001 C CNN
+	1    4525 1250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4825 1250 4850 1250
+Wire Wire Line
+	4850 1300 4850 1250
+Connection ~ 4850 1250
+Wire Wire Line
+	4850 1250 5125 1250
+Wire Wire Line
+	5300 1250 5300 1275
+Wire Wire Line
+	5300 1250 5450 1250
+$Comp
+L 3Phase-rescue:R-3Phase-rescue R59
+U 1 1 5E2C54F1
+P 5125 1425
+F 0 "R59" V 5205 1425 50  0000 C CNN
+F 1 "150k" V 5125 1425 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" V 5055 1425 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 5125 1425 50  0001 C CNN
+	1    5125 1425
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	5125 1250 5125 1275
+Wire Wire Line
+	5125 1575 5125 1600
+Wire Wire Line
+	5125 1600 5300 1600
+Wire Wire Line
+	5300 1600 5300 1575
+Wire Wire Line
+	5125 1600 5125 1775
+Wire Wire Line
+	4825 1775 5125 1775
+Connection ~ 5125 1600
 $EndSCHEMATC

@@ -268,10 +268,11 @@ void Loop() {
   //Read charging and external power bits
   SysStatus.ExtPower = (GPIOB->IDR & GPIO_IDR_7) ? 1 : 0;
   if(GPIOA->IDR & GPIO_IDR_8) {
-    Charging++;
-    if(Charging == 0xFF) SysStatus.Charging = 1;
-  } else {
     SysStatus.Charging = 0;
+    Charging = 0;
+  } else {
+    Charging++;
+    if(Charging == 0xFF) SysStatus.Charging = 1;    
   }
   if(ButtonStatus.Action == CLICK) {
     //Handle power on action

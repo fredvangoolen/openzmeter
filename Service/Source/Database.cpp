@@ -173,6 +173,7 @@ bool Database::ExecSentenceNoResult(const string &sql) {
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
     char *Save;
     LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    printf("%s\n", sql.c_str());
     PQclear(Result);
     return false;
   } else {
@@ -209,14 +210,14 @@ string Database::Bind(const uint64_t param) const {
   return to_string(param);
 }
 string Database::Bind(const float param) const {
-  return isnan(param) ? string("NULL") : to_string(param);
+  return isnormal(param) ? to_string(param) : string("NULL");
 }
 string Database::Bind(const vector< vector<float> > &params) const {
   string Result = "'{";
   for(uint32_t i = 0; i < params.size(); i++) {
     Result.append("{");
     for(uint32_t n = 0; n < params[i].size(); n++) {
-      Result.append(isnan(params[i][n]) ? string("NULL") : to_string(params[i][n]));
+      Result.append(isnormal(params[i][n]) ? to_string(params[i][n]) : string("NULL"));
       Result.append((n < (params[i].size() - 1)) ? ", " : "}");
     }
     if(i < (params.size() - 1)) Result.append(", ");
@@ -227,7 +228,7 @@ string Database::Bind(const vector< vector<float> > &params) const {
 string Database::Bind(const vector<uint16_t> &params) const {
   string Result = "'{";
   for(uint i = 0; i < params.size(); i++) {
-    Result.append(to_string(params[i]));
+    Result.append(isnormal(params[i]) ? to_string(params[i]) : string("NULL"));
     Result.append((i < (params.size() - 1)) ? ", " : "}'");
   }
   return Result;
@@ -235,8 +236,16 @@ string Database::Bind(const vector<uint16_t> &params) const {
 string Database::Bind(const vector<float> &params) const {
   string Result = "'{";
   for(uint i = 0; i < params.size(); i++) {
-    Result.append(isnan(params[i]) ? string("NULL") : to_string(params[i]));
+    Result.append(isnormal(params[i]) ? to_string(params[i]) : string("NULL"));
     Result.append((i < (params.size() - 1)) ? ", " : "}'");
+  }
+  return Result;
+}
+string Database::Bind(const float *param, unsigned size) const {
+  string Result = "'{";
+  for(unsigned i = 0; i < size; i++) {
+    Result.append(isnormal(param[i]) ? to_string(param[i]) : string("NULL"));
+    Result.append((i < (size - 1)) ? ", " : "}'");
   }
   return Result;
 }

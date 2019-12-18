@@ -91,8 +91,9 @@ json DeviceV1::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial, "V1.01", "Capture device V1.01") {
+DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial, "V1", "Capture device V1") {
   pHWVersion     = version;
+  pVoltageMult   = (version == 0x0100) ? 0.0106834716796 : 0.0142446289062;
   pVoltageGain   = 0.0;
   pCurrentGain   = 0.0;
   pVoltageOffset = 0.0;
@@ -136,7 +137,7 @@ bool DeviceV1::StartDevice() {
       return true;
     }
   }
-  LOGFile::Info("Starting 'V1.01' driver for serial '%s'\n", pSerial.c_str());
+  LOGFile::Info("Starting 'V1' driver for serial '%s'\n", pSerial.c_str());
   pVoltageGain = Config["VoltageGain"];
   pVoltageOffset = Config["VoltageOffset"];
   pCurrentGain = Config["CurrentGain"];
@@ -175,7 +176,7 @@ bool DeviceV1::StopDevice() {
     pMembersLock.WriteUnlock();
     return false;
   }
-  LOGFile::Info("Stopping 'V1.01' driver for serial '%s'\n", pSerial.c_str());
+  LOGFile::Info("Stopping 'V1' driver for serial '%s'\n", pSerial.c_str());
   pTerminate = true;
   pthread_join(pCaptureThread, NULL);
   while(pAnalyzers.size() > 0) {
@@ -243,7 +244,7 @@ void *DeviceV1::Capture_Thread(void *args) {
           This->pNewDevice = NULL;
           continue;
         } else {
-          LOGFile::Info("Kernel driver dettached for DeviceV1.01 with serial '%s'\n", This->pSerial.c_str());
+          LOGFile::Info("Kernel driver dettached for DeviceV1 with serial '%s'\n", This->pSerial.c_str());
         }
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 0);
@@ -254,7 +255,7 @@ void *DeviceV1::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       } else {
-        LOGFile::Info("Claimed interface 0 for DeviceV1.01 with serial %s\n", This->pSerial.c_str());
+        LOGFile::Info("Claimed interface 0 for DeviceV1 with serial %s\n", This->pSerial.c_str());
       }
       for(Transfer &Tmp : This->pTransfers) {
         Result |= Tmp.Submit(This->pDeviceHandle, DEVICEV1_ENDPOINT_IN, ReadCallback, 1000);
@@ -267,11 +268,10 @@ void *DeviceV1::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-      LOGFile::Info("Capture started on DeviceV1.01 with serial '%s'\n", This->pSerial.c_str());
+      LOGFile::Info("Capture started on DeviceV1 with serial '%s'\n", This->pSerial.c_str());
       This->pNewDevice = NULL;
     }
   }
-//  for(int i = 0; i < DEVICEV1_01_TRANSFERS; i++) libusb_cancel_transfer(This->pTransfers[i].Transfer);
   libusb_release_interface(This->pDeviceHandle, 0);
   libusb_close(This->pDeviceHandle);
   libusb_exit(This->pContext);
@@ -285,7 +285,7 @@ void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
       int16_t *Pkg   = (int16_t*)&transfer->buffer[64 * Block];
       for(uint8_t Count = 0; Count < 16; Count++) {
         if(Pkg[Count * 2 + 0] == -32768) continue;
-        float Voltage = ((Pkg[Count * 2 + 0] * 0.0142446289062) * (1.0 + (This->pVoltageGain / 100.0))) + This->pVoltageOffset;
+        float Voltage = ((Pkg[Count * 2 + 0] * This->pVoltageMult) * (1.0 + (This->pVoltageGain / 100.0))) + This->pVoltageOffset;
         float Current = ((Pkg[Count * 2 + 1] * 0.0015625000000) * (1.0 + (This->pCurrentGain / 100.0)) * (This->pCurrentInvert ? -1.0 : 1.0)) + This->pCurrentOffset;
         if(This->BuffersAppend(Voltage, Current) == false) {
           LOGFile::Error("Capture buffer overflow! Posible lost of samples\n");

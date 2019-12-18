@@ -1,5 +1,5 @@
 /* ================================== zMeter ===========================================================================
- * File:     CaptureV1_1.h
+ * File:     CaptureV1.h
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
@@ -10,7 +10,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV1_VID             0x0483                          //Product ID
 #define DEVICEV1_PID             0x7270                          //Device ID
-//#define DEVICEV1_01_VERSION         0x0100                          //Device version
 #define DEVICEV1_MANSTRING       "zRed"                          //Manufacturer string
 #define DEVICEV1_01_PRODSTRING   "openZmeter - Capture device"   //Product string
 #define DEVICEV1_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
@@ -42,6 +41,7 @@ class DeviceV1 final : public Device {
   private :
     static bool                  pRegistered;
   private :
+    float                        pVoltageMult;             //Voltage gain depens on device version (mounted voltage divisor)
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     uint16_t                     pHWVersion;               //Hardware version
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura

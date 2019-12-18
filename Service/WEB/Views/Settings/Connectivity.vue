@@ -63,21 +63,24 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
           <textarea rows="2" class="form-control" disabled>{{ NTPDetails }}</textarea>
         </div>
       </div>
-      <!--div class="row">
+      <div class="row" v-if="ModBus != null">
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Modbus/TCP</label>
           <div class="input-group">
             <span class="input-group-addon input-group-addon-toogle">
-              <toggle ref="EnableModbus" v-on:change="EnableModbusChange"></toggle>
+              <toggle v-model="ModBus.Enabled" v-on:change="ModbusChanges"></toggle>
             </span>
-            <input type="text" class="form-control" ref="ntpserver" v-on:input="NTPServerChanged" :disabled="!NTPEnabled">
+            <input type="text" class="form-control">
+            <span class="input-group-btn" v-if="ModBusChanges">
+              <button class="btn btn-default" v-on:click="SaveChangesModBus" data-toggle="tooltip" title="Save changes"><img :src="require('Imgs/diskette.png')"></button>
+            </span>
           </div>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Details</label>
           <textarea rows="2" class="form-control" disabled></textarea>
         </div>
-      </div-->
+      </div>
     </div>
   </div>
 </template>

@@ -182,7 +182,8 @@ ModbusTCPSlave::ModbusTCPSlave(void)
 //}
 //#endif
 //
-void ModbusTCPSlave::Run() {
+void ModbusTCP::Thread(void *args) {
+  ModbusTCP *This = (ModbusTCP*)args;
 //    boolean flagClientConnected = 0;
 //    byte byteFN = MB_FC_NONE;
 //    int Start;
@@ -201,7 +202,8 @@ void ModbusTCPSlave::Run() {
 //        WiFiClient client = MBServer.available();
 //    #endif
 //    
-//    while (client.connected()) {
+  while (!This.pTerminate) {
+    uint8_t byteFN = MB_FC_NONE;
 //    if(client.available())
 //    {
 //        flagClientConnected = 1;
@@ -232,11 +234,10 @@ void ModbusTCPSlave::Run() {
 //    
 //    // Handle request
 //
-//    switch(byteFN) {
-//        case MB_FC_NONE:
-//            break;
-//        
-//        case MB_FC_READ_REGISTERS:  // 03 Read Holding Registers
+    switch(byteFN) {
+      case MB_FC_NONE :
+        break;
+      case MB_FC_READ_REGISTERS :  // 03 Read Holding Registers
 //            ByteDataLength = WordDataLength * 2;
 //            ByteArray[5] = ByteDataLength + 3; //Number of bytes after this one.
 //            ByteArray[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
@@ -258,7 +259,7 @@ void ModbusTCPSlave::Run() {
 //            byteFN = MB_FC_NONE;
 //            break;
 //            
-//        case MB_FC_READ_INPUT_REGISTERS:  // 04 Read Input Registers
+        case MB_FC_READ_INPUT_REGISTERS:  // 04 Read Input Registers
 //            Start = word(ByteArray[MB_TCP_REGISTER_START],ByteArray[MB_TCP_REGISTER_START+1]);
 //            WordDataLength = word(ByteArray[MB_TCP_REGISTER_NUMBER],ByteArray[MB_TCP_REGISTER_NUMBER+1]);
 //            ByteDataLength = WordDataLength * 2;
@@ -282,7 +283,7 @@ void ModbusTCPSlave::Run() {
 //            byteFN = MB_FC_NONE;
 //            break;
 //            
-//        case MB_FC_WRITE_REGISTER:  // 06 Write Holding Register
+        case MB_FC_WRITE_REGISTER:  // 06 Write Holding Register
 //            MBHoldingRegister[Start] = word(ByteArray[MB_TCP_REGISTER_NUMBER],ByteArray[MB_TCP_REGISTER_NUMBER+1]);
 //            ByteArray[5] = 6; //Number of bytes after this one.
 //            MessageLength = 12;
@@ -302,7 +303,7 @@ void ModbusTCPSlave::Run() {
 //            byteFN = MB_FC_NONE;
 //            break;
 //            
-//        case MB_FC_WRITE_MULTIPLE_REGISTERS:    //16 Write Holding Registers
+        case MB_FC_WRITE_MULTIPLE_REGISTERS:    //16 Write Holding Registers
 //            ByteDataLength = WordDataLength * 2;
 //            ByteArray[5] = ByteDataLength + 3; //Number of bytes after this one.
 //            for(int i = 0; i < WordDataLength; i++)
@@ -326,7 +327,7 @@ void ModbusTCPSlave::Run() {
 //            byteFN = MB_FC_NONE;
 //            break;
 //    }
-//    }
+    }
 //    client.stop();
 //    
 //    if (flagClientConnected == 1){
@@ -334,5 +335,5 @@ void ModbusTCPSlave::Run() {
 //        Serial.println("client disonnected");
 //        #endif
 //        flagClientConnected = 0;
-//    }
+  }
 }

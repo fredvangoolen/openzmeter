@@ -56,18 +56,18 @@
     created: function() {
       $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
         success: (result) => {
-          result.NewsPos = -1;
+          this.News = result;
+          this.News.NewsPos = -1;
           if(isNaN(parseInt(localStorage.getItem('LastLogin'))) === true) localStorage.setItem('LastLogin', 0);
           var LastLogin = parseInt(localStorage.getItem('LastLogin'));
-          for(var n = 0; n < result.News.length; n++) {
-            if(result.News[n] > LastLogin) {
-              result.NewsPos = n;
+          for(var n = 0; n < this.News.News.length; n++) {
+            if(this.News.News[n] > LastLogin) {
+              this.News.NewsPos = n;
               this.FetchNews();
               break;
             }
           }
-          if(result.NewsPos === -1) result.NewsPos = result.News.length - 1;
-          this.News = result;
+          if(this.News.NewsPos === -1) this.News.NewsPos = this.News.News.length - 1;
         }
       });
       this.FetchUpdates();
