@@ -214,12 +214,16 @@ string Database::Bind(const float param) const {
 }
 string Database::Bind(const vector< vector<float> > &params) const {
   string Result = "'{";
+  //printf("Array de fuera de tamaño: %u\n", params.size());
   for(uint32_t i = 0; i < params.size(); i++) {
+    //printf("Array de dentro de tamaño: %u\n", params[i].size());
     Result.append("{");
     for(uint32_t n = 0; n < params[i].size(); n++) {
+      //printf("Valor de dento %f\n", params[i][n]);
       Result.append(isnormal(params[i][n]) ? to_string(params[i][n]) : string("NULL"));
-      Result.append((n < (params[i].size() - 1)) ? ", " : "}");
+      if(n < (params[i].size() - 1)) Result.append(", ");
     }
+    Result.append("}");
     if(i < (params.size() - 1)) Result.append(", ");
   }
   Result.append("}'");

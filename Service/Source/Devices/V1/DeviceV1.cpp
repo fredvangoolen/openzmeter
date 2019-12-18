@@ -40,6 +40,7 @@ bool DeviceV1::GetInstances() {
     }
     if(Descriptor.idVendor != DEVICEV1_VID) continue;
     if(Descriptor.idProduct != DEVICEV1_PID) continue;
+    if((Descriptor.bcdDevice != 0x0100) && (Descriptor.bcdDevice != 0x0101)) continue;
     uint16_t HWVersion = Descriptor.bcdDevice;
     libusb_device_handle *Dev_Handle = NULL;
     if(libusb_open(Devs[i], &Dev_Handle) != LIBUSB_SUCCESS) {
@@ -358,7 +359,7 @@ bool DeviceV1::BuffersAppend(float voltageSample, float currentSample) {
   Sample_t Sample = { pDelay.front(), currentSample };
   if(pBuffer.size() > (DEVICEV1_SAMPLEFREQ * DEVICEV1_BUFFERSECONDS)) {
     pBuffer.clear();
-    LOGFile::Error("Creared input buffer on device '%s'\n", pSerial.c_str());
+    LOGFile::Error("Cleared input buffer on device '%s'\n", pSerial.c_str());
   }
   pBuffer.push_back(Sample);
   pDelay.pop_front();

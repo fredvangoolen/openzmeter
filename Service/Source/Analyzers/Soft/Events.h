@@ -40,7 +40,11 @@ class AnalyzerSoft::Events final {
     uint32_t                   pPrevSamplesPos;          //Previous samples write position
     uint32_t                   pPrevSamplesSize;         //Privious samples buffer size
     
-    deque<vector<float> >        pPrevCycles;              //Previous cycles
+    float                     *pPrevCycles;              //Previous cycles
+    uint32_t                   pPrevCyclesPos;           //Previous cycles write position
+    uint32_t                   pPrevCyclesSize;          //Privious cycles buffer size
+    
+    //deque<vector<float> >        pPrevCycles;              //Previous cycles
     
     
     bool                       pPrevStationary;          //Steady state flag
@@ -50,7 +54,7 @@ class AnalyzerSoft::Events final {
     static void *Events_Thread(void *args);
   private :
     void  SaveEvent(Event_t &evt);
-    void  InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
+    void  InitEvent(const EventType type, const float *reference, const uint32_t pos);
     bool  FindRunningEvent(const uint32_t mask);
   public :
     Events(AnalyzerSoft *parent);

@@ -7,8 +7,14 @@ AnalyzerSoft::Events::Events(AnalyzerSoft *parent) {
   pEventThread     = 0;
   pPrevStationary  = false;
   pPrevSamplesSize = EVENT_RAWENVELOPETIME * parent->pSamplerate;
-  pPrevSamples     = (float*)malloc(pPrevSamplesSize * parent->pVoltageChannels);
+  pPrevSamples     = (float*)malloc(pPrevSamplesSize * sizeof(float) * parent->pVoltageChannels);
   pPrevSamplesPos  = 0;
+
+  pPrevCyclesSize  = EVENT_RMSENVELOPETIME * parent->pNominalFrequency * 2.0;
+  pPrevCycles      = (float*)malloc(pPrevCyclesSize * sizeof(float) * parent->pVoltageChannels);
+  pPrevCyclesPos   = 0;  
+  
+  
   if(pthread_create(&pEventThread, NULL, Events_Thread, (void*)this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pEventThread = 0;
@@ -25,6 +31,8 @@ void AnalyzerSoft::Events::Wait() {
 AnalyzerSoft::Events::~Events() {
   pTerminate = true;
   pWorkerLocks.Abort(&pEventThread);
+  free(pPrevSamples);
+  free(pPrevCycles);
 }
 void AnalyzerSoft::Events::SaveEvent(Event_t &evt) {
   Database DB(pParent->Serial());
@@ -46,7 +54,7 @@ void AnalyzerSoft::Events::SaveEvent(Event_t &evt) {
   if(evt.State == EVT_RUNNING) {
     DB.ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, finished, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + DB.Bind(evt.Start) + ", 0, " + DB.Bind(pParent->pSamplerate) + ", false, " + DB.Bind(Type) + ", " + DB.Bind(evt.Reference, pParent->pVoltageChannels) + ", " + DB.Bind(evt.PeakValue, pParent->pVoltageChannels) + ", " + DB.Bind(evt.ChangeValue, pParent->pVoltageChannels) + ", '', " + DB.Bind(RAW) + ", " + DB.Bind(RMS) + ")");
   } else if(evt.State == EVT_CLOSING) {
-    DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", duration = " + DB.Bind(evt.Duration) + ", peak = " + DB.Bind(evt.PeakValue) + ", change = " + DB.Bind(evt.ChangeValue, pParent->pVoltageChannels) + ", samples2 = " + DB.Bind(RAW) + ", rms2 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
+    DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", duration = " + DB.Bind(evt.Duration) + ", peak = " + DB.Bind(evt.PeakValue, pParent->pVoltageChannels) + ", change = " + DB.Bind(evt.ChangeValue, pParent->pVoltageChannels) + ", samples2 = " + DB.Bind(RAW) + ", rms2 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
   } else {
     DB.ExecSentenceNoResult("UPDATE events SET finished = TRUE, samples3 = " + DB.Bind(RAW) + ", rms3 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
   }
@@ -55,27 +63,35 @@ void AnalyzerSoft::Events::SaveEvent(Event_t &evt) {
   evt.SamplesRAW_B = deque<vector<float> >();
   evt.SamplesRMS_B = deque<vector<float> >();
 }
-void AnalyzerSoft::Events::InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos) {
+void AnalyzerSoft::Events::InitEvent(const EventType type, const float *reference, const uint32_t pos) {
   Event_t Event;
   Event.Type = type;
   Event.Duration = 0;
   Event.State = EVT_RUNNING;
-  for(unsigned i = 0; i < pParent->pVoltageChannels; i++) {
-    Event.Reference[i] = reference[i];
-    Event.PeakValue[i] = reference[i];
-    Event.ChangeValue[i] = reference[i];
-  }
+  for(uint32_t i = 0; i < pParent->pVoltageChannels; i++) Event.Reference[i] = Event.PeakValue[i] = Event.ChangeValue[i] = (reference == NULL) ? pParent->pNominalVoltage : reference[i];
+//    Event.PeakValue[i] = reference[i];
+//    Event.ChangeValue[i] = reference[i];
+//  }
   Event.SamplesRAW_A = deque<vector<float> >();
   Event.SamplesRMS_A = deque<vector<float> >();
   Event.SamplesRAW_B = deque<vector<float> >();
   Event.SamplesRMS_B = deque<vector<float> >();
-  for(auto it = pPrevCycles.rbegin(); it != pPrevCycles.rend(); it++) {
-    Event.SamplesRMS_A.push_front(*it);
-    if(Event.SamplesRMS_A.size() == (pParent->pNominalFrequency * 2 * EVENT_RMSENVELOPETIME)) break;
+
+  uint32_t Pos = pPrevCyclesPos;
+  for(unsigned i = 0; i < pPrevCyclesSize; i++) {
+    Pos = (Pos == 0) ? (pPrevCyclesSize - 1) : (Pos - 1) % pPrevCyclesSize;
+    float *Ptr = &pPrevCycles[Pos * pParent->pVoltageChannels];
+    vector<float> Sample;
+    for(unsigned n = 0; n < pParent->pVoltageChannels; n++) Sample.push_back(Ptr[n]);
+    Event.SamplesRMS_A.push_front(Sample);
   }
-  uint32_t Pos = pPrevSamplesPos;
+//  for(auto it = pPrevCycles.rbegin(); it != pPrevCycles.rend(); it++) {
+//    Event.SamplesRMS_A.push_front(*it);
+//    if(Event.SamplesRMS_A.size() == (pParent->pNominalFrequency * 2 * EVENT_RMSENVELOPETIME)) break;
+//  }
+  Pos = pPrevSamplesPos + pPrevSamplesSize;
   for(unsigned i = 0; i < pPrevSamplesSize; i++) {
-    Pos = (Pos - 1) % pPrevSamplesSize;
+    Pos = (Pos == 0) ? (pPrevSamplesSize - 1) : (Pos - 1) % pPrevSamplesSize;
     float *Ptr = &pPrevSamples[Pos * pParent->pVoltageChannels];
     vector<float> Sample;
     for(unsigned n = 0; n < pParent->pVoltageChannels; n++) Sample.push_back(Ptr[n]);
@@ -109,49 +125,70 @@ bool AnalyzerSoft::Events::FindRunningEvent(const uint32_t mask) {
 }
 void *AnalyzerSoft::Events::Events_Thread(void* args) {
   Events *This = (Events*)args;
-  uint32_t RequiredRAW = This->pParent->pSamplerate * EVENT_RAWENVELOPETIME;
-  uint32_t RequiredRMS = This->pParent->pNominalFrequency * 2 * EVENT_RMSENVELOPETIME;
+  uint32_t RequiredRAW = This->pPrevSamplesSize;
+  uint32_t RequiredRMS = This->pPrevCyclesSize;
   while(This->pTerminate == false) {
     if(This->pWorkerLocks.WorkerWaitTask() == false) break;
-    uint32_t Pos = 0;
+    uint32_t BlockPos = 0;
     This->pParent->pAggreg10C.Flag = false;
     for(uint32_t i = 0; i < This->pParent->pBlockCycles.size(); i++) {
       //Calc cycle stats
-      vector<float> Cycle;
+      float RMS_Avg[3], Cycle[3] = {0.0, 0.0, 0.0};
+//      vector<float> Cycle;
       uint32_t CycleLen = This->pParent->pBlockCycles[i];
-      for(uint n = 0; n < This->pParent->pVoltageSamples.size(); n++) {
-        float RMS = 0.0;
-        for(uint32_t j = 0; j < CycleLen; j++) RMS += pow(This->pParent->pVoltageSamples[n][Pos + j], 2);
-        Cycle.push_back(sqrt(RMS / CycleLen));
+      for(uint32_t n = 0; n < This->pParent->pVoltageChannels; n++) {
+        for(uint32_t j = 0; j < CycleLen; j++) Cycle[n] = Cycle[n] + pow(This->pParent->pVoltageSamples[n][BlockPos + j], 2);
+        Cycle[n] = RMS_Avg[n] = sqrt(Cycle[n] / CycleLen);
       }
       //Calc last 100 cycles AVG (current and previous ones)
-      vector<float> RMS_Avg = Cycle;
-      for(uint8_t n = 0; n < Cycle.size(); n++) {
-        uint32_t Len = This->pPrevCycles.size();
-        if(Len > 99) Len = 99;
-        auto it = This->pPrevCycles.rbegin();
-        for(uint32_t j = 0; j < Len; j++, it++) RMS_Avg[n] += (*it)[n];
-        RMS_Avg[n] = RMS_Avg[n] / (Len + 1);
+      //vector<float> RMS_Avg = Cycle;
+      uint32_t Pos = This->pPrevCyclesPos;
+      for(uint32_t i = 0; i < 99; i++) {
+        Pos = (Pos == 0) ? (This->pPrevCyclesSize - 1) : (Pos - 1) % This->pPrevCyclesSize;
+        float *Ptr = &This->pPrevCycles[Pos * This->pParent->pVoltageChannels];
+        for(uint32_t n = 0; n < This->pParent->pVoltageChannels; n++) RMS_Avg[n] = RMS_Avg[n] + Ptr[n];
       }
+      for(uint32_t n = 0; n < This->pParent->pVoltageChannels; n++) RMS_Avg[n] = RMS_Avg[n] / 100.0;
+//      for(uint32_t n = 0; n < This->pParent->pVoltageChannels; n++) {
+//        uint32_t Len = This->pPrevCycles.size();
+//        if(Len > 99) Len = 99;
+//        auto it = This->pPrevCycles.rbegin();
+//        for(uint32_t j = 0; j < Len; j++, it++) RMS_Avg[n] += (*it)[n];
+//        RMS_Avg[n] = RMS_Avg[n] / (Len + 1);
+//      }
       //Check steady state
       float Tolerance = EVENT_RVC - ((This->pPrevStationary == true) ? 0.0 : EVENT_HYSTERESIS);
-      bool  Stationary = (This->pPrevCycles.size() >= 99);
-      for(uint8_t n = 0; (n < RMS_Avg.size()) && (Stationary == true); n++) {
-        auto it = This->pPrevCycles.rbegin();
-        if(fabs(This->pParent->CalcChange(Cycle[n], RMS_Avg[n])) > Tolerance) {
-          Stationary = false;
-          break;
-        }
-        for(int j = 0; j < 99; j++) {
-          if(fabs(This->pParent->CalcChange((*it)[n], RMS_Avg[n])) > Tolerance) {
-            Stationary = false;
-            break;
-          }
-        }
+      bool  Stationary = (RequiredRMS == 0);
+      for(uint32_t n = 0; n < This->pParent->pVoltageChannels; n++) {
+        if(fabs(This->pParent->CalcChange(Cycle[n], RMS_Avg[n])) <= Tolerance) continue;
+        Stationary = false;
+        goto EndStationary;
       }
+      Pos = This->pPrevCyclesPos;
+      for(uint32_t i = 0; i < 99; i++) {
+        Pos = (Pos == 0) ? (This->pPrevCyclesSize - 1) : (Pos - 1) % This->pPrevCyclesSize;
+        float *Ptr = &This->pPrevCycles[Pos * This->pParent->pVoltageChannels];
+        for(uint32_t n = 0; n < This->pParent->pVoltageChannels; n++) {
+          if(fabs(This->pParent->CalcChange(Ptr[n], RMS_Avg[n])) <= Tolerance) continue;
+          Stationary = false;
+          goto EndStationary;
+        }          
+      }
+      EndStationary:
+        
+        
+//        auto it = This->pPrevCycles.rbegin();
+
+      //  for(int j = 0; j < 99; j++) {
+      //    if(fabs(This->pParent->CalcChange((*it)[n], RMS_Avg[n])) > Tolerance) {
+      //      Stationary = false;
+      //      break;
+      //    }
+      //  }
+      //}
       //Check for new events
-      if( (This->pPrevCycles.size() >= RequiredRMS)) {
-        for(uint8_t n = 0; n < RMS_Avg.size(); n++) {
+      if((RequiredRMS == 0) && (RequiredRAW == 0)) {
+        for(uint32_t n = 0; n < This->pParent->pVoltageChannels; n++) {
           //Check for interruption new events
           if((-This->pParent->CalcChange(Cycle[n], This->pParent->pNominalVoltage) > EVENT_INTERRUPTION) && (This->FindRunningEvent(EVT_INTERRUPTION) == false)) {
             bool Found = false;
@@ -161,20 +198,20 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
               Found = true;
               break;
             }
-            if(Found == false) This->InitEvent(EVT_INTERRUPTION, vector<float>(RMS_Avg.size(), This->pParent->pNominalVoltage), Pos);
+            if(Found == false) This->InitEvent(EVT_INTERRUPTION, NULL, BlockPos);
           }
           //Check for DIP new events
-          if((-This->pParent->CalcChange(Cycle[n], This->pParent->pNominalVoltage) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_DIP | EVT_INTERRUPTION) == false)) This->InitEvent(EVT_DIP, vector<float>(RMS_Avg.size(), This->pParent->pNominalVoltage), Pos);
+          if((-This->pParent->CalcChange(Cycle[n], This->pParent->pNominalVoltage) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_DIP | EVT_INTERRUPTION) == false)) This->InitEvent(EVT_DIP, NULL, BlockPos);
           //Check for SWELL new events
-          if((This->pParent->CalcChange(Cycle[n], This->pParent->pNominalVoltage) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_SWELL) == false)) This->InitEvent(EVT_SWELL, vector<float>(RMS_Avg.size(), This->pParent->pNominalVoltage), Pos);
+          if((This->pParent->CalcChange(Cycle[n], This->pParent->pNominalVoltage) > EVENT_DIP_SWELL) && (This->FindRunningEvent(EVT_SWELL) == false)) This->InitEvent(EVT_SWELL, NULL, BlockPos);
           //Check for RVC new events
-          if((Stationary == false) && (This->pPrevStationary == true) && (This->FindRunningEvent(EVT_RVC | EVT_DIP | EVT_SWELL | EVT_INTERRUPTION) == false)) This->InitEvent(EVT_RVC, RMS_Avg, Pos);
+          if((Stationary == false) && (This->pPrevStationary == true) && (This->FindRunningEvent(EVT_RVC | EVT_DIP | EVT_SWELL | EVT_INTERRUPTION) == false)) This->InitEvent(EVT_RVC, RMS_Avg, BlockPos);
         }
       }
       //Check events state
       for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); ) {
         //If closed evend finish post event period save it and remove from list
-        if((it->State == EVT_CLOSING) && (it->SamplesRAW_A.size() == RequiredRAW) && (it->SamplesRMS_A.size() == RequiredRMS)) {
+        if((it->State == EVT_CLOSING) && (it->SamplesRAW_A.size() == This->pPrevSamplesSize) && (it->SamplesRMS_A.size() == This->pPrevCyclesSize)) {
           it->State = EVT_CLOSED;
           This->SaveEvent(*it);
           This->pEvents.erase(it++);
@@ -187,7 +224,7 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
               it->State = EVT_CLOSING;
               for(unsigned i = 0; i < This->pParent->pVoltageChannels; i++) it->ChangeValue[i] = RMS_Avg[i];
             } else {
-              for(uint8_t ch = 0; ch < Cycle.size(); ch++) {
+              for(uint32_t ch = 0; ch < This->pParent->pVoltageChannels; ch++) {
                 if(fabs(it->Reference[ch] - Cycle[ch]) > fabs(it->Reference[ch] - it->PeakValue[ch])) it->PeakValue[ch] = Cycle[ch];
               }
             }
@@ -195,11 +232,11 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
           //Check if INTERRUPTION event can be closed
           if(it->Type == EVT_INTERRUPTION) {
             it->State = EVT_CLOSING;
-            for(uint8_t ch = 0; ch < Cycle.size(); ch++) {
+            for(uint32_t ch = 0; ch < This->pParent->pVoltageChannels; ch++) {
               if(-This->pParent->CalcChange(Cycle[ch], This->pParent->pNominalVoltage) > (EVENT_INTERRUPTION - EVENT_INTERRUPTION_HYSTERESIS)) it->State = EVT_RUNNING;
             }
             if(it->State == EVT_RUNNING) {
-              for(uint8_t ch = 0; ch < Cycle.size(); ch++) {
+              for(uint32_t ch = 0; ch < This->pParent->pVoltageChannels; ch++) {
                 if(Cycle[ch] < it->PeakValue[ch]) it->PeakValue[ch] = Cycle[ch];
               }
             }
@@ -207,11 +244,11 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
           //Check if DIP event can be closed
           if(it->Type == EVT_DIP) {
             it->State = EVT_CLOSING;
-            for(uint8_t ch = 0; ch < Cycle.size(); ch++) {
+            for(uint32_t ch = 0; ch < This->pParent->pVoltageChannels; ch++) {
               if(-This->pParent->CalcChange(Cycle[ch], This->pParent->pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS)) it->State = EVT_RUNNING;
             }
             if(it->State == EVT_RUNNING) {
-              for(uint8_t ch = 0; ch < Cycle.size(); ch++) {
+              for(uint32_t ch = 0; ch < This->pParent->pVoltageChannels; ch++) {
                 if(Cycle[ch] < it->PeakValue[ch]) it->PeakValue[ch] = Cycle[ch];
               }
             }
@@ -219,11 +256,11 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
           //Check if SWELL event can be closed
           if(it->Type == EVT_SWELL) {
             it->State = EVT_CLOSING;
-            for(uint8_t ch = 0; ch < Cycle.size(); ch++) {
+            for(uint32_t ch = 0; ch < This->pParent->pVoltageChannels; ch++) {
               if(This->pParent->CalcChange(Cycle[ch], This->pParent->pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS)) it->State = EVT_RUNNING;
             }
             if(it->State == EVT_RUNNING) {
-              for(uint8_t ch = 0; ch < Cycle.size(); ch++) {
+              for(uint32_t ch = 0; ch < This->pParent->pVoltageChannels; ch++) {
                 if(Cycle[ch] > it->PeakValue[ch]) it->PeakValue[ch] = Cycle[ch];
               }
             }
@@ -240,33 +277,44 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
       //Insert current cycle samples in prev data buffers and in running events than need its
       for(uint n = 0; n < CycleLen; n++) {
         vector<float> Sample;
-        for(uint j = 0; j < This->pParent->pVoltageSamples.size(); j++) Sample.push_back(This->pParent->pVoltageSamples[j][n + Pos]);
-        //This->pPrevSamples.push_back(Sample);
-        for(unsigned i = 0; i < This->pParent->pVoltageChannels; i++) This->pPrevSamples[This->pPrevSamplesPos * This->pParent->pVoltageChannels + i] = Sample[i];
+        float *Ptr = &This->pPrevSamples[This->pPrevSamplesPos * This->pParent->pVoltageChannels];
+        for(uint j = 0; j < This->pParent->pVoltageChannels; j++) {
+          Sample.push_back(This->pParent->pVoltageSamples[j][n + BlockPos]);
+          Ptr[j] = Sample[j];
+        }
+        if(RequiredRAW > 0) RequiredRAW--;
         This->pPrevSamplesPos = (This->pPrevSamplesPos + 1) % This->pPrevSamplesSize;
         
-//        if(This->pPrevSamples.size() > RequiredRAW) This->pPrevSamples.pop_front();
         for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
-          if(it->SamplesRAW_A.size() < RequiredRAW) {
+          if(it->SamplesRAW_A.size() < This->pPrevSamplesSize) {
             it->SamplesRAW_A.push_back(Sample);
           } else if(it->State == EVT_RUNNING) {
             it->SamplesRAW_B.push_back(Sample);
-            if(it->SamplesRAW_B.size() > RequiredRAW) it->SamplesRAW_B.pop_front();
+            if(it->SamplesRAW_B.size() > This->pPrevSamplesSize) it->SamplesRAW_B.pop_front();
           }
         }
       }
       //Insert current cycle in prev data buffers and in running events than need its
-      This->pPrevCycles.push_back(Cycle);
-      if(This->pPrevCycles.size() > RequiredRMS) This->pPrevCycles.pop_front();
+      float *Ptr = &This->pPrevCycles[This->pPrevCyclesPos * This->pParent->pVoltageChannels];
+      for(uint j = 0; j < This->pParent->pVoltageChannels; j++) Ptr[j] = Cycle[j];
+      if(RequiredRMS > 0) RequiredRMS--;
+      This->pPrevCyclesPos = (This->pPrevCyclesPos + 1) % This->pPrevCyclesSize;
+//      This->pPrevCycles.push_back(Cycle);
+//      if(This->pPrevCycles.size() > RequiredRMS) This->pPrevCycles.pop_front();
+
       for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
-        if(it->SamplesRMS_A.size() < RequiredRMS) {
-          it->SamplesRMS_A.push_back(Cycle);
+        if(it->SamplesRMS_A.size() < This->pPrevCyclesSize) {
+          vector<float> C;
+          for(uint j = 0; j < This->pParent->pVoltageChannels; j++) C.push_back(Cycle[j]);
+          it->SamplesRMS_A.push_back(C);
         } else if(it->State == EVT_RUNNING) {
-          it->SamplesRMS_B.push_back(Cycle);
-          if(it->SamplesRMS_B.size() > RequiredRMS) it->SamplesRMS_B.pop_front();
+          vector<float> C;
+          for(uint j = 0; j < This->pParent->pVoltageChannels; j++) C.push_back(Cycle[j]);          
+          it->SamplesRMS_B.push_back(C);
+          if(it->SamplesRMS_B.size() > This->pPrevCyclesSize) it->SamplesRMS_B.pop_front();
         }
       }      
-      Pos = Pos + CycleLen;
+      BlockPos = BlockPos + CycleLen;
       This->pPrevStationary = Stationary;
     }
     This->pWorkerLocks.WorkerEndsTask();
