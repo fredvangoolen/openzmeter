@@ -229,7 +229,7 @@ bool  DeviceV2_01::StartDevice() {
       AnalyzerSetup.CurrentInvert[0] = (Current[0] == '+') ? 1.0 : -1.0;
       AnalyzerSetup.CurrentChannels = 1;
       AnalyzerSetup.VoltageChannels = 1;
-      Name += "_1P_CH" + to_string(Current[3]);
+      Name += "_1P_CH" + to_string(Current[3] - '1');
     } else {
       for(unsigned Ch = 0; Ch < Tmp["Voltage"].size(); Ch++) {
         string Voltage = Tmp["Voltage"][Ch];

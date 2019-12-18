@@ -17,7 +17,7 @@
 #define DEVICEV2_01_ENDPOINT_OUT      0x02                          //Endpoint de escritura de datos
 #define DEVICEV2_01_SAMPLEFREQ    24000.00                          //Frequencia de muestreo
 #define DEVICEV2_01_TRANSFERS           32                          //Numero de transferencias a encolar
-#define DEVICEV2_01_BUFFERSIZE      0x4000
+#define DEVICEV2_01_BUFFERSIZE  0x00040000
 #define DEVICEV2_01_CONTROL_SETSTATUS 0x20
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2_01 final : public Device {
@@ -58,7 +58,6 @@ class DeviceV2_01 final : public Device {
     int16_t                     *pBuffer;                  //Read buffer
     uint32_t                     pBufferTail;              //pBuffer read pos
     uint32_t                     pBufferHead;              //pBuffer write pos
-    //deque<Sample_t>              pBuffer;                  //Read buffer
     float                        pVoltageGain[3];          //Ganancia de tension
     float                        pCurrentGain[4];          //Ganancia de corriente
     float                        pVoltageOffset[3];        //Offset de tension

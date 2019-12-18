@@ -20,17 +20,13 @@ class AnalyzerSoft::Events final {
     enum EventState { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
   private :
     typedef struct {
-      vector<float> RMS;
-      uint64_t      Timestamp;
-    } EventCycle_t;
-    typedef struct {
       enum EventType                 Type;                 //Running event type
       EventState                     State;                //Events state
       uint64_t                       Start;                //Event start timestamp
       uint64_t                       Duration;             //Event duration in samples
-      vector<float>                  Reference;            //Voltage reference for event (Stationary for RVC, nominal for others)
-      vector<float>                  PeakValue;            //max/min voltage variation along event
-      vector<float>                  ChangeValue;          //diference voltage of event
+      float                          Reference[3];         //Voltage reference for event (Stationary for RVC, nominal for others)
+      float                          PeakValue[3];         //max/min voltage variation along event
+      float                          ChangeValue[3];       //diference voltage of event
       deque<vector<float> >          SamplesRAW_A;         //
       deque<vector<float> >          SamplesRMS_A;         //
       deque<vector<float> >          SamplesRAW_B;         //
@@ -40,8 +36,13 @@ class AnalyzerSoft::Events final {
     AnalyzerSoft              *pParent;                  //Parent analyzer
     pthread_t                  pEventThread;             //Hilo de ejecucion
     WorkerLocks                pWorkerLocks;             //Control access to event detection thread
-    deque<vector<float> >      pPrevSamples;             //Previous samples
-    deque<EventCycle_t>        pPrevCycles;              //Previous cycles
+    float                     *pPrevSamples;             //Previous samples
+    uint32_t                   pPrevSamplesPos;          //Previous samples write position
+    uint32_t                   pPrevSamplesSize;         //Privious samples buffer size
+    
+    deque<vector<float> >        pPrevCycles;              //Previous cycles
+    
+    
     bool                       pPrevStationary;          //Steady state flag
     list<Event_t>              pEvents;                  //Running events
     bool                       pTerminate;               //Signal to terminate

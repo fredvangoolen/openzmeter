@@ -91,8 +91,7 @@
         $(evt.target).blur();
         this.ShowSpinner = true;
         if(id.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
-        if(id.Driver === 'V1.00') this.Driver = 'DeviceV1';
-        if(id.Driver === 'V1.01') this.Driver = 'DeviceV1';
+        if(id.Driver === 'V1') this.Driver = 'DeviceV1';
         if(id.Driver === 'V2.01') this.Driver = 'DeviceV2';
         if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
         $.ajax({url: "getDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({Serial: id.Serial}),
