@@ -316,7 +316,7 @@ void *DeviceV2_01::Capture_Thread(void *args) {
       if(SysStatus->Disk_Usage > 90.0) Status = (Status & 0xFFFC) | 0x0003;             //Stat=YELLOW
       if(SysStatus->Time_IsSet == false) Status = (Status & 0xFFFC) | 0x0001;           //Stat=RED
       if(SysStatus->Events == true) Status = (Status & 0xC01C) | 0x0021;                //Stat=RED and short BEEP
-      if(SysStatus->WIFI_Network.empty() == false) Status = (Status & 0xFFF3) | 0x000C; //Wifi=GREEN
+      if(SysStatus->WIFI_Network.empty() == false) Status = (Status & 0xFFF3) | 0x0008; //Wifi=GREEN
       if(SysStatus->BT_Network.empty() == false) Status = (Status & 0xFFEF) | 0x0010;   //Bt=BLUE
       SysStatus->Lock.ReadUnlock();
       Status |= (This->pHighGain == true) ? 0x4000 : 0x0000;
