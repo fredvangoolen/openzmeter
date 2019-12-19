@@ -9,12 +9,9 @@ AnalyzerSoft::Events::Events(AnalyzerSoft *parent) {
   pPrevSamplesSize = EVENT_RAWENVELOPETIME * parent->pSamplerate;
   pPrevSamples     = (float*)malloc(pPrevSamplesSize * sizeof(float) * parent->pVoltageChannels);
   pPrevSamplesPos  = 0;
-
   pPrevCyclesSize  = EVENT_RMSENVELOPETIME * parent->pNominalFrequency * 2.0;
   pPrevCycles      = (float*)malloc(pPrevCyclesSize * sizeof(float) * parent->pVoltageChannels);
   pPrevCyclesPos   = 0;  
-  
-  
   if(pthread_create(&pEventThread, NULL, Events_Thread, (void*)this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pEventThread = 0;
@@ -69,38 +66,21 @@ void AnalyzerSoft::Events::InitEvent(const EventType type, const float *referenc
   Event.Duration = 0;
   Event.State = EVT_RUNNING;
   for(uint32_t i = 0; i < pParent->pVoltageChannels; i++) Event.Reference[i] = Event.PeakValue[i] = Event.ChangeValue[i] = (reference == NULL) ? pParent->pNominalVoltage : reference[i];
-//    Event.PeakValue[i] = reference[i];
-//    Event.ChangeValue[i] = reference[i];
-//  }
-  Event.SamplesRAW_A = deque<vector<float> >();
-  Event.SamplesRMS_A = deque<vector<float> >();
-  Event.SamplesRAW_B = deque<vector<float> >();
-  Event.SamplesRMS_B = deque<vector<float> >();
-
-  uint32_t Pos = pPrevCyclesPos;
-  for(unsigned i = 0; i < pPrevCyclesSize; i++) {
+  float *RMS = (float*)malloc(pPrevCyclesSize * pParent->pVoltageChannels * sizeof(float));
+  uint32_t Pos = pPrevCyclesPos + pPrevCyclesSize;
+  for(uint32_t i = 0; i < pPrevCyclesSize; i++) {
     Pos = (Pos == 0) ? (pPrevCyclesSize - 1) : (Pos - 1) % pPrevCyclesSize;
     float *Ptr = &pPrevCycles[Pos * pParent->pVoltageChannels];
-    vector<float> Sample;
-    for(unsigned n = 0; n < pParent->pVoltageChannels; n++) Sample.push_back(Ptr[n]);
-    Event.SamplesRMS_A.push_front(Sample);
+    for(unsigned n = 0; n < pParent->pVoltageChannels; n++) RMS[n * pPrevCyclesSize + i] = Ptr[n];
   }
-//  for(auto it = pPrevCycles.rbegin(); it != pPrevCycles.rend(); it++) {
-//    Event.SamplesRMS_A.push_front(*it);
-//    if(Event.SamplesRMS_A.size() == (pParent->pNominalFrequency * 2 * EVENT_RMSENVELOPETIME)) break;
-//  }
+  float *RAW = (float*)malloc(pPrevSamplesSize * pParent->pVoltageChannels * sizeof(float));
+//  Tmp = RAW;
   Pos = pPrevSamplesPos + pPrevSamplesSize;
   for(unsigned i = 0; i < pPrevSamplesSize; i++) {
     Pos = (Pos == 0) ? (pPrevSamplesSize - 1) : (Pos - 1) % pPrevSamplesSize;
     float *Ptr = &pPrevSamples[Pos * pParent->pVoltageChannels];
-    vector<float> Sample;
-    for(unsigned n = 0; n < pParent->pVoltageChannels; n++) Sample.push_back(Ptr[n]);
-    Event.SamplesRAW_A.push_front(Sample);
+    for(unsigned n = 0; n < pParent->pVoltageChannels; n++) RAW[n * pPrevSamplesSize + i] = Ptr[n];
   }
-//  for(auto it = pPrevSamples.rbegin(); it != pPrevSamples.rend(); it++) {
-//    Event.SamplesRAW_A.push_front(*it);
-//    if(Event.SamplesRAW_A.size() == (EVENT_RAWENVELOPETIME * pParent->pSamplerate)) break;
-//  }
   //A new event destroy any running RVC
   if(type != EVT_RVC) {
     for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); ) {
@@ -114,7 +94,15 @@ void AnalyzerSoft::Events::InitEvent(const EventType type, const float *referenc
     }
   }
   Event.Start = pParent->pAggreg10C.Timestamp + (uint32_t)((pos * 1000) / pParent->pSamplerate);
-  SaveEvent(Event);
+  Database DB(pParent->Serial());
+  string Type = (Event.Type == EVT_RVC) ? "RVC" : (Event.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (Event.Type == EVT_DIP) ? "DIP" : "SWELL";
+  DB.ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, finished, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + DB.Bind(Event.Start) + ", 0, " + DB.Bind(pParent->pSamplerate) + ", false, " + DB.Bind(Type) + ", " + DB.Bind(Event.Reference, pParent->pVoltageChannels) + ", " + DB.Bind(Event.PeakValue, pParent->pVoltageChannels) + ", " + DB.Bind(Event.ChangeValue, pParent->pVoltageChannels) + ", '', " + DB.Bind(RAW, pParent->pVoltageChannels, pPrevSamplesSize) + ", " + DB.Bind(RMS, pParent->pVoltageChannels, pPrevCyclesSize) + ")");
+  free(RAW);
+  free(RMS);
+  Event.SamplesRAW_A = deque<vector<float> >();
+  Event.SamplesRMS_A = deque<vector<float> >();
+  Event.SamplesRAW_B = deque<vector<float> >();
+  Event.SamplesRMS_B = deque<vector<float> >();
   pEvents.push_back(Event);
 }
 bool AnalyzerSoft::Events::FindRunningEvent(const uint32_t mask) {
@@ -134,7 +122,6 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
     for(uint32_t i = 0; i < This->pParent->pBlockCycles.size(); i++) {
       //Calc cycle stats
       float RMS_Avg[3], Cycle[3] = {0.0, 0.0, 0.0};
-//      vector<float> Cycle;
       uint32_t CycleLen = This->pParent->pBlockCycles[i];
       for(uint32_t n = 0; n < This->pParent->pVoltageChannels; n++) {
         for(uint32_t j = 0; j < CycleLen; j++) Cycle[n] = Cycle[n] + pow(This->pParent->pVoltageSamples[n][BlockPos + j], 2);

@@ -46,9 +46,11 @@ class Database {
     string      Bind(const uint32_t param) const;
     string      Bind(const uint64_t param) const;
     string      Bind(const float param) const;
+    string      Bind(const float *param, uint32_t size) const;
+    string      Bind(const float *param, uint32_t sizeA, uint32_t sizeB) const;
     string      Bind(const vector< vector<float> > &params) const;
     string      Bind(const vector<float> &params) const;
-    string      Bind(const float *param, unsigned size) const;
+    
     string      Bind(const vector<uint16_t> &params) const;
     string      Bind(const bool param) const;
     string      Bind(const string &string) const;
