@@ -210,17 +210,14 @@ string Database::Bind(const uint64_t param) const {
   return to_string(param);
 }
 string Database::Bind(const float param) const {
-  return isnormal(param) ? to_string(param) : string("NULL");
+  return isfinite(param) ? to_string(param) : string("NULL");
 }
 string Database::Bind(const vector< vector<float> > &params) const {
   string Result = "'{";
-  //printf("Array de fuera de tamaño: %u\n", params.size());
   for(uint32_t i = 0; i < params.size(); i++) {
-    //printf("Array de dentro de tamaño: %u\n", params[i].size());
     Result.append("{");
     for(uint32_t n = 0; n < params[i].size(); n++) {
-      //printf("Valor de dento %f\n", params[i][n]);
-      Result.append(isnormal(params[i][n]) ? to_string(params[i][n]) : string("NULL"));
+      Result.append(isfinite(params[i][n]) ? to_string(params[i][n]) : string("NULL"));
       if(n < (params[i].size() - 1)) Result.append(", ");
     }
     Result.append("}");
@@ -232,7 +229,7 @@ string Database::Bind(const vector< vector<float> > &params) const {
 string Database::Bind(const vector<uint16_t> &params) const {
   string Result = "'{";
   for(uint i = 0; i < params.size(); i++) {
-    Result.append(isnormal(params[i]) ? to_string(params[i]) : string("NULL"));
+    Result.append(isfinite(params[i]) ? to_string(params[i]) : string("NULL"));
     Result.append((i < (params.size() - 1)) ? ", " : "}'");
   }
   return Result;
@@ -240,17 +237,32 @@ string Database::Bind(const vector<uint16_t> &params) const {
 string Database::Bind(const vector<float> &params) const {
   string Result = "'{";
   for(uint i = 0; i < params.size(); i++) {
-    Result.append(isnormal(params[i]) ? to_string(params[i]) : string("NULL"));
+    Result.append(isfinite(params[i]) ? to_string(params[i]) : string("NULL"));
     Result.append((i < (params.size() - 1)) ? ", " : "}'");
   }
   return Result;
 }
-string Database::Bind(const float *param, unsigned size) const {
+string Database::Bind(const float *param, uint32_t size) const {
   string Result = "'{";
   for(unsigned i = 0; i < size; i++) {
-    Result.append(isnormal(param[i]) ? to_string(param[i]) : string("NULL"));
+    Result.append(isfinite(param[i]) ? to_string(param[i]) : string("NULL"));
     Result.append((i < (size - 1)) ? ", " : "}'");
   }
+  return Result;
+}
+string Database::Bind(const float *param, uint32_t sizeA, uint32_t sizeB) const {
+  string Result = "'{";
+  for(uint32_t i = 0; i < sizeA; i++) {
+    Result.append("{");
+    const float *Ptr = &param[i * sizeB];
+    for(uint32_t n = 0; n < sizeB; n++) {
+      Result.append(isfinite(Ptr[n]) ? to_string(Ptr[n]) : string("NULL"));
+      if(n < (sizeB - 1)) Result.append(", ");
+    }
+    Result.append("}");
+    if(i < (sizeA - 1)) Result.append(", ");
+  }
+  Result.append("}'");
   return Result;
 }
 string Database::Bind(const bool param) const {
