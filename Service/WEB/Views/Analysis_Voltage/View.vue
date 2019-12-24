@@ -13,7 +13,8 @@
   import Voltage from './Voltage.vue';
   import DetailsPanel from './Details.vue';
   export default {
-    data() {
+    props: { analyzer: { type: Object } },
+    data: function() {
       return { };
     },
     components: { Voltage, DetailsPanel }

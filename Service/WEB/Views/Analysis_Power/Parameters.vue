@@ -16,7 +16,7 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import Spinner from 'Components/Spinner.vue';
   import Cubism from 'Components/Cubism.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';

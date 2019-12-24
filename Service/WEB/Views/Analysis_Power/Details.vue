@@ -10,7 +10,7 @@
 </template>
 
 <script>
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   import Parameters from './Parameters.vue';
   import Waveform from './Waveform.vue';

@@ -19,7 +19,7 @@
   import EditSeason from './TariffEditSeason.vue';
   import EditHolidays from './TariffEditHolidays.vue';
   import EditHoliday from './TariffEditHoliday.vue';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   export default {
     data: function() {
       return { ShowDialog: false, Tariff: {} };

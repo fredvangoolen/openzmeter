@@ -27,12 +27,13 @@
   import ToolbarWeeks from 'Components/ToolbarWeeks.vue';
   import ProgressBar from 'Components/ProgressBar.vue';
   import Spinner from 'Components/Spinner.vue';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import Frequency from './Frequency.vue';
   import Voltage from './Voltage.vue';
   import Counters from './Counters.vue';
   import Thd from './THD.vue';
   export default {
+    props: { analyzer: { type: Object } },
     data: function() {
       return { ShowSpinner: true, Weeks: [] };
     },

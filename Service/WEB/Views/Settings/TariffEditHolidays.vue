@@ -30,7 +30,7 @@
   import 'CSS/table-responsive.css';
   import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   export default {
     data() {
       return { Show: false, Tariff: null, ShowSpinner: true,

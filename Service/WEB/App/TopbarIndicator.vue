@@ -1,5 +1,5 @@
 <template>
-  <div v-bind:style="{ 'background-color': Color, 'border-color': Color }" style="border-width: 1px; border-style: solid">
+  <div class="indicator" v-bind:style="{ 'background-color': Color, 'border-color': Color }" style="border-width: 1px; border-style: solid">
     <div>
       <div>
         <span v-for="val in Value" v-html="val"></span>
@@ -29,9 +29,13 @@
         if(this.value === null) {
           this.Value = ['Offline'];
           this.AggregType = '';
+        } else if(Array.isArray(this.value) == false) {
+          this.Prefix = oZm.GetBestUnits(Math.abs(this.value));
+          this.Value = [oZm.RoundHTML(oZm.ScaleToUnits(this.value, this.Prefix), oZm.Series[this.serie].Decimals)];
+          this.AggregType = '';          
         } else if(this.value.length == 1) {
           this.Prefix = oZm.GetBestUnits(Math.abs(this.value[0]));
-          this.Value = [oZm.RoundHTML(oZm.ScaleToUnits(this.value[0], this.Prefix), 2)];
+          this.Value = [oZm.RoundHTML(oZm.ScaleToUnits(this.value[0], this.Prefix), oZm.Series[this.serie].Decimals)];
           this.AggregType = '';
         } else if(this.grouped == true) {
           var Aggreg = 0.0;
@@ -60,56 +64,29 @@
   }
 </script>
  
-<style>
-  .indicator-bar {
-    cursor: grabbing;
-    background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
-    text-align: center;
-    font-size: 14px;
-    color: #FFF;
-    font-weight: 700;
-    padding: 2px;
-    border-bottom: 1px solid #c9c9c9;
-    position: relative;
-    z-index: 95;
-    font-size: 18x;
-    top: 0px;
-  }
-  @media(min-width:640px) {
-    .indicator-bar {
-      background-image: none;
-      position: absolute;
-      right: 48px;
-      text-align: right;
-      border: none;
-    }
-  }
-  @media(min-width:1280px) {
-    .indicator-bar {
-      right: 2px;
-    }
-  } 
+<style scoped>
   @media(min-width:768px) {
-    .indicator-bar > div > div > div:first-child {
+    .indicator > div > div:first-child {
       font-size: 12px;
     }
   }
-  .indicator-bar > div {
+  .indicator {
     border-radius: 4px;
     display: inline-block;
     height: 50px;
+    margin: 0px;
   }
-  .indicator-bar > div > div {
+  .indicator > div {
     display: table;
     height: 48px;
   }
-  .indicator-bar > div > div > div {
+  .indicator > div > div {
     display: table-cell;
     vertical-align: middle;
     padding: 0 4px;
     text-align: center;
   }
-  .indicator-bar > div > div > div:first-child {
+  .indicator > div > div:first-child {
     text-align: right;
     background-color: #fff;
     color: #333;
@@ -120,7 +97,7 @@
     padding: 2px;
     min-width: 44px;
   }
-  .indicator-bar > div > div > div > span {
+  .indicator > div > div > span {
     display: block;
   }
 </style>

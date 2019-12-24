@@ -1,73 +1,69 @@
 <template>
-  <ul class="sidenav-menu">
-    <li v-if="AnalyzerSelected">
-      <router-link class="link" to="/Dashboard">
-        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/dashboard.png')"></span>
-        <span class="sidenav-link-title">Dashboard</span>
-      </router-link>
-    </li>
-    <li v-if="AnalyzerSelected">
-      <a href="javascript:;" data-sidenav-dropdown-toggle>
-        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/draw_wave.png')"></span>
-        <span class="sidenav-link-title">Analysis</span>
-        <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-        <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>          
-      </a>
-      <ul class="sidenav-dropdown" data-sidenav-dropdown>
-        <li><router-link class="link" to="/Analysis/Voltage">Voltage</router-link></li>
-        <li><router-link class="link" to="/Analysis/Current">Current</router-link></li>
-        <li><router-link class="link" to="/Analysis/Power">Power</router-link></li>
-        <li><router-link class="link" to="/Analysis/Energy">Energy</router-link></li>
-        <li><router-link class="link" to="/Analysis/Frequency">Frequency</router-link></li>
-      </ul>
-    </li>
-    <li v-if="AnalyzerSelected">
-      <a href="javascript:;" data-sidenav-dropdown-toggle>
-        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/warning.png')"></span>
-        <span class="sidenav-link-title">Events</span>
-        <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-        <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>
-      </a>
-      <ul class="sidenav-dropdown" data-sidenav-dropdown>
-        <li><router-link class="link" to="/Events/ITIC">ITIC</router-link></li>
-        <li><router-link class="link" to="/Events/Disturbances">Disturbances</router-link></li>
-        <li><router-link class="link" to="/Events/EN50160">EN50160</router-link></li>
-        <li><router-link class="link" to="/Events/Alarms">Alarms</router-link></li>
-      </ul>
-    </li>
-    <li v-if="AnalyzerSelected">
-      <a href="javascript:;" data-sidenav-dropdown-toggle>
-        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/table_money.png')"></span>
-        <span class="sidenav-link-title">Energy Stats</span>
-        <span class="sidenav-dropdown-icon show" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-        <span class="sidenav-dropdown-icon" data-sidenav-dropdown-icon><img :src="require('Imgs/bullet_arrow_up.png')"></span>
-      </a>
-      <ul class="sidenav-dropdown" data-sidenav-dropdown>
-        <li><router-link class="link" to="/Stats/Costs">Costs</router-link></li>
-        <li><router-link class="link" to="/Stats/Heatmap">Heatmap</router-link></li>
-        <li><router-link class="link" to="/Stats/Distribution">Distribution</router-link></li>
-      </ul>
-    </li>
-    <li>
-      <router-link class="link" to="/Settings">
-        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/cog.png')"></span>
-        <span class="sidenav-link-title">Settings</span>
-      </router-link>
-    </li>
-    <li>
-      <router-link class="link" to="/Help">
-        <span class="sidenav-link-icon"><img class="sidenav-link-icon" :src="require('Imgs/help.png')"></span>
-        <span class="sidenav-link-title">Help</span>
-      </router-link>
-    </li>
-  </ul>
+  <div>
+    <router-link to="/Dashboard" class="item">
+      <img class="icon" :src="require('Imgs/dashboard.png')">
+      <div class="name">Dashboard</div>
+    </router-link>
+    <div class="item" v-on:click="Submenu = (Submenu == 'Analysis') ? null : 'Analysis'">
+      <img class="icon" :src="require('Imgs/draw_wave.png')">
+      <div class="name">Analysis</div>
+      <span class="dropdown-icon" v-bind:class="{ show: (Submenu != 'Analysis') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+      <span class="dropdown-icon" v-bind:class="{ show: (Submenu == 'Analysis') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
+    </div>
+    <div class="submenu" v-bind:class="{ show: (Submenu == 'Analysis') }">
+      <router-link to="/Analysis/Voltage">Voltage</router-link>
+      <router-link to="/Analysis/Current">Current</router-link>
+      <router-link to="/Analysis/Power">Power</router-link>
+      <router-link to="/Analysis/Energy">Energy</router-link>
+      <router-link to="/Analysis/Frequency">Frequency</router-link>
+    </div>
+    <div class="item" v-on:click="Submenu = (Submenu == 'Events') ? null : 'Events'">
+      <img class="icon" :src="require('Imgs/warning.png')">
+      <div class="name">Events</div>
+      <span class="dropdown-icon" v-bind:class="{ show: (Submenu != 'Events') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+      <span class="dropdown-icon" v-bind:class="{ show: (Submenu == 'Events') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
+    </div>
+    <div class="submenu" v-bind:class="{ show: (Submenu == 'Events') }">
+      <router-link to="/Events/ITIC">ITIC</router-link>
+      <router-link to="/Events/Disturbances">Disturbances</router-link>
+      <router-link to="/Events/EN50160">EN50160</router-link>
+      <router-link to="/Events/Alarms">Alarms</router-link>
+    </div>
+    <div class="item" v-on:click="Submenu = (Submenu == 'Costs') ? null : 'Costs'">
+      <img class="icon" :src="require('Imgs/table_money.png')">
+      <div class="name">Energy Stats</div>
+      <span class="dropdown-icon" v-bind:class="{ show: (Submenu != 'Costs') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+      <span class="dropdown-icon" v-bind:class="{ show: (Submenu == 'Costs') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
+    </div>
+    <div class="submenu" v-bind:class="{ show: (Submenu == 'Costs') }">
+      <router-link class="link" to="/Stats/Costs">Costs</router-link>
+      <router-link class="link" to="/Stats/Heatmap">Heatmap</router-link>
+      <router-link class="link" to="/Stats/Distribution">Distribution</router-link>
+    </div>
+    <router-link to="/Settings" class="item">
+      <img class="icon" :src="require('Imgs/cog.png')">
+      <div class="name">Settings</div>
+    </router-link>
+    <router-link to="/Help" class="item">
+      <img class="icon" :src="require('Imgs/help.png')">
+      <div class="name">Help</div>
+    </router-link>
+
+
+  </div>
 </template>
 
 <script>
   export default {
+    props: { expanded: Boolean },
     data() {
-      return { AnalyzerSelected: false }
-    }, 
+      return { Submenu: null, AnalyzerSelected: false }
+    },
+    watch: {
+      expanded: function(val) {
+        if(val == false) this.Submenu = null;
+      }
+    },
     mounted: function() {
       $('.sidenav-menu').on('click', '[data-sidenav-dropdown-toggle]', function (e) {
         $(this).parent().parent().find("[data-sidenav-dropdown]:visible").not($(this).next('[data-sidenav-dropdown]')).slideUp("fast");
@@ -86,78 +82,60 @@
 </script>
 
 <style scoped>
-  .sidenav-menu {
-    padding: 0px;
+  .item {
+    background-color: #474544;
+    color: #FAFAFA;
+    width: 304px;
+    height: 44px;
+    display: flex;
+    margin-left: 0;
+    transition: margin-left 0.2s;
+    text-decoration: none;
   }
-  .sidenav-menu li {
-    display: block;
-    position: relative
+  .icon {
+    height: 24px;
+    width: 24px;
+    margin: 10px 12px;
   }
-  .sidenav-dropdown-icon, 
-  .sidenav-link-icon {
-    position: absolute;
-    text-align: center;
-    top: 16px
+  .dropdown-icon {
+    height: 16px;
+    width: 16px;
+    margin-top: 10px;
+    display: none;
   }
-  .sidenav-menu a {
-    background: 0 0;
-    color: #BDBDBD;
-    display: block;
+  .dropdown-icon.show {
+    display: inherit;
+  }
+  .name {
+    width: 180px;
+    padding-left: 5px;
     line-height: 24px;
-    padding: 10px 32px;
-    text-decoration: none
+    padding-top: 10px;
   }
-  li ul li a {
-    padding: 5px 32px !important;
-  }
-  .sidenav-menu a:hover {
+  .item:hover, .submenu a:hover {
     background: #616161;
     color: #BDBDBD
   }
-  .sidenav-menu a.active,
-  .sidenav-menu a.active .sidenav-dropdown-icon,
-  .sidenav-menu a.active .sidenav-link-icon {
+  .item.active, .submenu a.active {
     color: #FAFAFA;
     background: #474544;
   }
-  .sidenav-link-icon {
-    color: #757575;
+  .submenu {
     display: block;
-    height: 24px;
-    left: 6px;
-    width: 24px;
-    top: 7px;
+    padding: 0px;
+    overflow: hidden;
+    max-height: 0px;
+    transition: max-height 0.2s ease-in-out;
   }
-  .sidenav-link-title {
-    display: block;
-    padding: 0px 16px 0px 14px;
+  .submenu.show {
+    max-height: 200px;
+    transition: max-height 0.2s ease-in-out;
   }
-  .sidenav-dropdown {
-    display: none;
-    list-style: none;
-    padding: 0
-  }
-  .sidenav-dropdown a {
+  .submenu a {
     background: #191919;
+    display: block;
     color: #BDBDBD;
-    padding-left: 42px
-  }
-  .sidenav-dropdown a:hover {
-    background: #616161;
-    color: #BDBDBD
-  }
-  .sidenav-dropdown li:first-child a {
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .1)
-  }
-  .sidenav-dropdown-icon {
-    color: #757575;
-    display: none;
-    height: 16px;
-    right: 16px;
-    width: 16px;
-    top: 10px;
-  }
-  .sidenav-dropdown-icon.show {
-    display: block
+    padding: 6px 42px;
+    text-decoration: none;
   }
 </style>

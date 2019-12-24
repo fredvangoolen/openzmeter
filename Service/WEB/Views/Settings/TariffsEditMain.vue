@@ -58,7 +58,7 @@
 </template>
 
 <script>
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import DatePicker from 'Components/DatePicker.vue';
   import OptionPicker from 'Components/OptionPicker.vue';
   export default {

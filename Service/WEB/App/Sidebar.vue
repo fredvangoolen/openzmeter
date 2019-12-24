@@ -1,12 +1,12 @@
 <template>
-  <nav class="navbar-nav">
+  <div class="navbar-nav" v-on:mouseenter="MouseOver = true" v-on:mouseleave="MouseOver = false" v-bind:class="{ expanded: MouseOver }">
     <div class="menu-wrapper">
-      <sidebar-analyzer ref="analyzer"></sidebar-analyzer>
-      <sidebar-user></sidebar-user>
-      <sidebar-menu></sidebar-menu>
+      <sidebar-analyzer :analyzer="analyzer" :expanded="MouseOver"></sidebar-analyzer>
+      <sidebar-user :expanded="MouseOver"></sidebar-user>
+      <sidebar-menu :expanded="MouseOver"></sidebar-menu>
     </div>
-    <sidebar-news></sidebar-news>
-  </nav>
+    <sidebar-news v-if="false"></sidebar-news>
+  </div>
 </template>
 
 <script>
@@ -15,7 +15,10 @@ import SidebarAnalyzer from './SidebarAnalyzer.vue';
 import SidebarMenu from './SidebarMenu.vue';
 import SidebarNews from './SidebarNews.vue';
 export default {
-  data() { return {} },
+
+  /*v-on:mouseover="MouseOver = true" v-on:mouseout="MouseOver = false"*/
+  props: { analyzer: { type: Object } },
+  data() { return { MouseOver: true }; },
   mounted: function() {
     $('.navbar-toggle').click(function (e) {
       $('.navbar-nav').toggleClass('show');
@@ -52,7 +55,12 @@ export default {
 }
 </script> 
 
-<style>
+<style scoped>
+  .navbar-nav.expanded {
+    width: 256px;
+    transition: width 0.2s  ease-in-out;
+  }
+
   .navbar-nav.show {
     transform: translate(0, 0);
   }
@@ -70,11 +78,11 @@ export default {
     min-height: 100%;
     left: 0;
     position: fixed;
-    overflow: auto;
-    transform: translate(-262px,0);
-    transition: transform .3s;
+   /* transform: translate(-262px,0);*/
+    transition: transform .2s;
     top: 0;
-    width: 256px;
+    width: 48px;
+    transition: width 0.2s ease-in-out;
     z-index: 1000;
     margin: 0px;
   }

@@ -2,25 +2,29 @@
   <div class="panel panel-other">
     <div class="panel-heading">By month<div class="pull-right">{{ Units }}Wh</div></div>
     <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
+      <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Months" class="table small table-striped"></vuetable>
     </div>
   </div>
 </template>
 
 <script>
   import vuetable from 'vuetable-2';
-  import moment from 'JS/moment.js';  
+  import moment from 'moment';  
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   var Names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   export default {
+    props: { data: Object },
     data: function() {
-      return { ShowSpinner: true, Units: '', Columns: [] };
+      return { Units: '', Columns: [], Months: [], Periods: [] };
     },
-    created: function() {
-      this.Months = null;
-      this.Periods = null;
+    watch: {
+      data: function() {
+        this.SetData();
+      }
+    },
+    mounted: function() {
+      if(this.data != null) this.SetData();
     },
     methods: {
       GetData: function(data) {
@@ -32,17 +36,16 @@
         }
         return data;
       },
-      SetData: function(result) {
+      SetData: function() {
         this.Months = [];
         this.Periods = [];
         var Max = 0.0;
-        for(var i = 0; i < result['Active_Power'].length; i++) {
-          var Month = moment(result.Sampletime[i]).month();
+        for(var i in this.data.Active_Power) {
+          var Month = moment(this.data.Sampletime[i]).month();
           if(this.Months[Month] === undefined) this.Months[Month] = { };
-          var Period = (result.Period_Name[i] === null) ? 'NONE' : result.Period_Name[i];
+          var Period = (this.data.Period_Name[i] === null) ? 'NONE' : this.data.Period_Name[i];
           if(this.Periods.includes(Period) === false) this.Periods.push(Period);
-          if(this.Months[Month][Period] === undefined) this.Months[Month][Period] = null;
-          if(result['Active_Power'][i] !== null) this.Months[Month][Period] = (this.Months[Month][Period] === null) ? result['Active_Power'][i] : this.Months[Month][Period] + result['Active_Power'][i];
+          if(this.data.Active_Power[i] != null) this.Months[Month][Period] = (this.Months[Month][Period] == undefined) ? this.data.Active_Power[i] : this.Months[Month][Period] + this.data.Active_Power[i];
           Max = Math.max(Max, Math.abs(this.Months[Month][Period]));
         }
         this.Units = oZm.GetBestUnits(Max);
@@ -53,11 +56,9 @@
           this.$refs.table.normalizeFields();
         });
         for(var Month in this.Months) {
-          for(var Period in this.Months[Month]) this.Months[Month][Period] = (this.Months[Month][Period] === null) ? '-' : oZm.Round2Plain(oZm.ScaleToUnits(this.Months[Month][Period], this.Units));
+          for(var Period in this.Months[Month]) this.Months[Month][Period] = (this.Months[Month][Period] === null) ? '-' : oZm.RoundPlain(oZm.ScaleToUnits(this.Months[Month][Period], this.Units), 2);
           this.Months[Month].Month = Names[Month];          
         }
-        this.$refs.table.setData({ data: this.Months });
-        this.ShowSpinner = false;
       }
     },
     updated: function(){

@@ -5,8 +5,9 @@
 <script>
   import Graph from 'Components/Graph.vue';
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   export default {
+    props: { value: Array },
     data () {
       return { };
     },
@@ -27,23 +28,26 @@
       };
     },
     mounted: function() {
-      $(window).on('resize', this.ResizeHandler.bind(this));
+      if(this.value != null) this.SetData();
     },
-    beforeDestroy: function() {
-      $(window).off('resize', this.ResizeHandler);
+    watch: {
+      value: function(val) {
+        this.$refs.graph.SetOptions( { dateWindow: [-0.5, 0.5], file: [[0, 0]] } );
+        if(val != null) this.SetData();
+      }
     },
     methods: {
       ResizeHandler: function() {
         if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', '300px');
       },
-      SetData: function(values) {
+      SetData: function() {
         var Summary = [];
         var MonthsNames = moment.months();
-        for(var i = 0; i < values.length; i++) {
-          this.Labels.push(MonthsNames[moment(values[i].To).month()]);
-          Summary.push([i, (values[i].Complete === true) ? values[i].Total : null]);
+        for(var i = 0; i < this.value.length; i++) {
+          this.Labels.push(MonthsNames[moment(this.value[i].To).month()]);
+          Summary.push([i, (this.value[i].Complete === true) ? this.value[i].Total : null]);
         }
-        this.$refs.graph.SetOptions( { dateWindow: [-0.5, values.length - 0.5], file: Summary } );
+        this.$refs.graph.SetOptions( { dateWindow: [-0.5, this.value.length - 0.5], file: Summary } );
         this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
       }
     },

@@ -36,7 +36,7 @@
 
 <script>
   import Dlg from 'Components/Dialog.vue';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';

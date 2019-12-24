@@ -112,7 +112,7 @@
   import OptionPicker from 'Components/OptionPicker.vue';
   import Toggle from 'Components/Toggle.vue';
   import Dlg from 'Components/Dialog.vue';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   export default {
     props: ['value'],
     data() {

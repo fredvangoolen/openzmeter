@@ -107,7 +107,7 @@
   import Dlg from 'Components/Dialog.vue';
   import bsSuggest from 'JS/bootstrap-suggest.js';
   import OptionPicker from 'Components/OptionPicker.vue';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import DatePicker from 'Components/DatePicker.vue';
   import * as oZm from 'JS/openZmeter.js';
   export default {

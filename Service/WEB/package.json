@@ -6,7 +6,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --host 0.0.0.0 --open --hot",
     "build": "cross-env NODE_ENV=production webpack --display=errors-only"
   },
   "dependencies": {
@@ -16,12 +16,13 @@
     "bootstrap-sass-loader": "^1.0.10",
     "bootstrap-year-calendar": "^1.1.1",
     "bootstrap3": "^3.3.5",
+    "chroma-js": "^2.1.0",
     "complex": "^3.0.1",
     "expose-loader": "^0.7.5",
     "jquery-bootstrap-scrolling-tabs": "^2.6.1",
     "moment-timezone": "^0.5.27",
     "momentjs": "^2.0.0",
-    "npm": "^6.13.1",
+    "npm": "^6.13.4",
     "vue": "^2.6.10",
     "vue-resource": "^1.5.1",
     "vueble": "^0.1.3",

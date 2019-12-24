@@ -8,6 +8,9 @@ import 'CSS/openZmeter.css';
 import Vue from 'vue';
 import Router from 'vue-router';
 Vue.use(Router);
+import VueResource from 'vue-resource';
+Vue.use(VueResource);
+
 // Custom components ---------------------------------------------------------------------------------------------------
 import Avatar from 'Components/Avatar.vue';
 Vue.component('Avatar', Avatar);

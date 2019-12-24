@@ -22,6 +22,7 @@
   import Dygraph from 'JS/dygraph.js';
   import 'JS/dygraph-synchronizer.js';
   export default {
+    props: { analyzer: {type: Object, default: null} },
     data() {
       return {
         ShowSpinner: true, LastSample: 0, Phase: 0, DateWindow: [0, 0], Data: {}, Timer: null, TimerNow: null, NowValues: [],

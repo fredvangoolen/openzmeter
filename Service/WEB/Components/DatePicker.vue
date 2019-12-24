@@ -6,7 +6,7 @@
 </template>
 
 <script>
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import datetimepicker from 'JS/bootstrap-datetimepicker.min.js';
   import 'CSS/bootstrap-datetimepicker.min.css'  
   export default {

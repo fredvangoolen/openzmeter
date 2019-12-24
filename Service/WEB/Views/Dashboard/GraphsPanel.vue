@@ -18,7 +18,7 @@
     <div class="panel-footer clearfix">
       <router-link :to="SerieProps.Link" style="line-height: 22px"><span class="pull-left">View Details</span></router-link>
       <div class="pull-right" ref="Toolbar">
-        <toolbar-phases v-on:PhasesChanged="SetPhases" v-if="type != 'FREQUENCY'" :variable="'Dashboard' + type" :type="(type == 'CURRENT') ? 'CURRENT' : 'VOLTAGE'" :multi="true"></toolbar-phases>
+        <toolbar-phases v-on:PhasesChanged="SetPhases" v-if="serie != 'FREQUENCY'" :variable="'Dashboard' + serie" :type="(serie == 'CURRENT') ? 'CURRENT' : 'VOLTAGE'" :multi="true"></toolbar-phases>
         <toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" v-on:ExportClick="ExportClick" ref="tools"></toolbar-tools>
       </div>
     </div>
@@ -28,20 +28,23 @@
 <script>
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import 'JS/dygraph-crosshair.js';
   import Spinner from 'Components/Spinner.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Graph from 'Components/Graph.vue';
   export default {
-    props: ['type'],
+    props: { serie: { type: String }, analyzer: { type: Object } },
     data() {
       return { ShowSpinner: true, PhasesValue:[], LastValue: null, UnitsScale: '', SerieProps: {}, Aggregation: 'Loading data...' };
     },
+    watch: {
+      analyzer: function() {}
+    },
+    
     methods: {
       CalcOptions() {
-        if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
         var Range = this.SerieProps.Range(this.Data, this.Phases);
         var Options = {
@@ -71,7 +74,7 @@
 //          }
 //        }
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.type], To: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Period: 7200000 }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.serie], To: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Period: 7200000 }), 
           success: (result) => {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
@@ -137,7 +140,7 @@
       this.LastSample = 0;
       this.UpdateGraphTimer = null;
       this.Phases = null;
-      this.SerieProps = oZm.Series[this.type];
+      this.SerieProps = oZm.Series[this.serie];
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
       this.GraphOptions = {
         strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, legend: 'follow', 
