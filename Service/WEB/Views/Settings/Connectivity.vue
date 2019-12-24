@@ -84,8 +84,8 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
 
 <script>
   import Toggle from 'Components/Toggle.vue';
-  import moment from 'JS/moment.js';
-  import 'JS/moment-timezone.js';
+  import moment from 'moment';
+  import 'moment-timezone';
   import Spinner from 'Components/Spinner.vue';
   import WifiDialog from './WIFIEdit.vue';
   export default {

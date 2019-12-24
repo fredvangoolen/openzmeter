@@ -1,11 +1,10 @@
 <template>
-  <div>
-    <div class="sidenav-header clearfix">
-      <div>{{ UserName }}</div>
-      <div class="btn-group pull-right">
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" v-on:click="Edit"><img :src="require('Imgs/user_edit.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" v-on:click="Logout"><img :src="require('Imgs/user_go.png')"></button>
-      </div>
+  <div class="this" v-bind:class="{ expanded: expanded }">
+    <img class="icon" :src="require('Imgs/user32.png')">
+    <div class="name">{{ UserName }}</div>
+    <div class="btn-group">
+      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" v-on:click="Edit"><img :src="require('Imgs/user_edit.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" v-on:click="Logout"><img :src="require('Imgs/user_go.png')"></button>
     </div>
     <user-logout ref="logout"></user-logout>
     <user-edit v-if="ShowUser" ref="userEdit"></user-edit>
@@ -18,6 +17,7 @@
   import UserEdit from './User/Dialog.vue';
   import Offline from './User/Offline.vue';
   export default {
+    props: { expanded: Boolean },
     data() {
       return { UserName: '', ShowUser: false };
     },
@@ -69,10 +69,32 @@
 </script>
   
 <style>
-  .sidenav-header > div:first-child {
-    width: 180px;
-  }
-  .sidenav-header {
+  .this {
     background-color: #474544;
+    color: #FAFAFA;
+    width: 304px;
+    height: 32px;
+    display: flex;
+    margin-left: 0;
+    transition: margin-left 0.2s ease-in-out;
+    border-bottom: 1px solid #333;
+  }
+  .this.expanded {
+    margin-left: -48px;
+    transition: margin-left 0.2s ease-in-out;
+  }
+  .icon {
+    height: 24px;
+    width: 24px;
+    margin: 4px 12px;
+  }
+  .name {
+    width: 192px;
+    padding-left: 5px;
+    line-height: 24px;
+    padding-top: 4px;
+  }
+  .btn-group {
+    margin-top: 4px;
   }
 </style>

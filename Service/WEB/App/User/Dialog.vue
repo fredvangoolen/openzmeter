@@ -92,7 +92,7 @@
 <script>
   import Dlg from 'Components/Dialog.vue';
   import OptionPicker from 'Components/OptionPicker.vue';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   export default {
     data: function() {
       return { View: 'Main', TimeZones: moment.tz.names(), User: {} };

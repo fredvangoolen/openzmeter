@@ -13,7 +13,7 @@
     <vuetable ref="table" :fields="Columns" :data="Analyzers" :api-mode="false" class="table small table-striped">
       <template slot="actions" slot-scope="props">
         <div class="btn-group">
-          <button type="button" class="btn btn-success btn-xs" v-bind:disabled="CurrentAnalyzer(props.rowData)" v-on:click="Select(props.rowData)">Select</button>
+          <button type="button" class="btn btn-success btn-xs" v-bind:disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" v-on:click="Select(props.rowData.Analyzer)">Select</button>
           <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
           <ul class="dropdown-menu pull-right">
             <li><a v-on:click="Configure(props.rowData)">Configure</a></li>
@@ -35,6 +35,7 @@
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
+    props: { analyzer: { type: Object } },
     data() {
       return { Analyzers: [], Analyzer: null, ShowSpinner: false,
         Columns: [
@@ -61,18 +62,14 @@
       OnlineStatus: function(value) {
         return (value === true) ? '&#9635;' : '&#9633;';
       },
-      CurrentAnalyzer: function(analyzer) {
-        if(this.$root.SelectedAnalyzer === null) return false;
-        if(this.$root.SelectedAnalyzer.Analyzer === analyzer.Analyzer) return true;
-        return false;
-      },
       Select: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
-          success: (result) => { 
-            this.$root.SelectedAnalyzer = result;
-            this.$root.$emit('AnalyzerChanged', result);
-            localStorage.setItem('SelAnalyzer', result.Analyzer);    
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer }),
+          success: (result) => {
+//            this.$root.SelectedAnalyzer = result;
+//            this.$root.$emit('AnalyzerChanged', result);
+            localStorage.setItem('SelAnalyzer', result.Analyzer);
+            this.$set(this.$parent.$parent.$parent, 'Analyzer', result);
             this.$parent.View = null;            
           },
           complete: () => {
@@ -110,26 +107,28 @@
         });
       },
       Alarms: function(analyzer) {
-        this.$refs.Dialog.ShowSpinner = true;
+        this.ShowSpinner = true;
         $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
           success: (result) => {
-            this.$refs.Dialog.Close();
-            this.$parent.$refs.Alarms.Show(result);
+            this.$parent.Analyzer = result;
+            this.$parent.View = null;
+            this.$nextTick(() => { this.$parent.View = 'Alarms'; } );
           },
           completed: () => {
-            this.$refs.Dialog.ShowSpinner = false;
+            this.ShowSpinner = false;
           }
         });
       },
       Maintenance: function(analyzer) {
-        this.$refs.Dialog.ShowSpinner = true;
+        this.ShowSpinner = true;
         $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
           success: (result) => {
-            this.$refs.Dialog.Close();
-            this.$parent.$refs.Maintenance.Show(result);
+            this.$parent.Analyzer = result;
+            this.$parent.View = null;
+            this.$nextTick(() => { this.$parent.View = 'Maintenance'; } );
           },
           complete: () => {
-            this.$refs.Dialog.ShowSpinner = false;
+            this.ShowSpinner = false;
           }
         });
       }

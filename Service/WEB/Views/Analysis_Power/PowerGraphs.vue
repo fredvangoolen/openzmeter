@@ -46,7 +46,7 @@
   import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
   import Counters from './Counters.vue';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data () {

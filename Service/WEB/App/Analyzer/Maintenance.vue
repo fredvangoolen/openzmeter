@@ -38,7 +38,7 @@
 </template>
 
 <script>
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import DatePicker from 'Components/DatePicker.vue';
   import ProgressBar from 'Components/ProgressBar.vue';
   import * as oZm from 'JS/openZmeter.js';

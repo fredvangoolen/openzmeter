@@ -28,7 +28,7 @@
   import Spinner from 'Components/Spinner.vue';
   import Vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   import EventDialog from './EventDialog.vue';
   import EventNotes from './EventNotes.vue';

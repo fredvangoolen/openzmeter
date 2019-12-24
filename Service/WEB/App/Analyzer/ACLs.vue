@@ -25,7 +25,7 @@
   import vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   export default {
     data() {
       return { Show: false, ShowSpinner: true,

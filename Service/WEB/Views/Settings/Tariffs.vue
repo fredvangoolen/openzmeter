@@ -21,7 +21,7 @@
 
 <script>
   import Vuetable from 'vuetable-2';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import TariffsEdit from './TariffsEdit.vue';
   import Spinner from 'Components/Spinner.vue';
   import 'CSS/table-responsive.css';

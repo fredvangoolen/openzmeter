@@ -31,32 +31,33 @@
       </tr>
     </thead>
     <tbody ref="rows">
-      <tr v-for="day in Days"><td>{{ day.DayOfWeek }}</td><td>{{ day.Date }}</td><td v-for="block in day.Cells" :colspan="(Aggregation === '1H') ? 4 : 1" data-toggle="tooltip" :title="block.Text" v-bind:style="{ 'background-color': block.Color }"></td></tr>
+      <tr v-for="(day, idxd) in Days" :key="idxd">
+        <td>{{ day.DayOfWeek }}</td>
+        <td>{{ day.Date }}</td>
+        <td v-for="(block, idx) in day.Cells" :key="idx" :colspan="(aggreg === '1H') ? 4 : 1" :title="day.Date + ' - ' + block.Date + '\x0A' + block.Text" v-bind:style="{ 'border': '1px solid', 'border-color': block.BorderColor, 'background': block.Color }"></td>
+      </tr>
     </tbody>
   </table>
 </template>
 
 <script>
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import chroma from 'JS/chroma.js';
   import * as oZm from 'JS/openZmeter.js';
   var DaysNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   export default {
+    props: { data: { type: Object, default: null }, aggreg: { type: String, default: '1H'} },
     data: function() {
-      return { Days: {}, Aggregation: '1H' };
+      return { Days: {} };
     },
-    created: function() {
-      this.Data = null;
+    watch: {
+      aggreg: function() { this.CalcOptions(); },
+      data: function() { this.CalcOptions(); }
+    },
+    mounted: function() {
+      this.CalcOptions();
     },
     methods: {
-      SetAggregation: function(aggreg) {
-        this.Aggregation = aggreg;
-        this.CalcOptions();
-      },
-      SetData: function(data) {
-        this.Data = data;
-        this.CalcOptions();
-      },
       GetData: function() {
         var Data = [];
         var Header = ['Day', 'Date'];
@@ -76,65 +77,73 @@
         return Data;
       },
       CalcOptions: function() {
-        if(this.Data === null) return;
-        var Days = {};
-        for(var i = 0; i < this.Data.Sampletime.length; i++) {
-          var Day = moment(this.Data.Sampletime[i]).dayOfYear();
-          if(Days[Day] === undefined) Days[Day] = {DayOfWeek: DaysNames[moment(this.Data.Sampletime[i]).day()], Date: moment(this.Data.Sampletime[i]).format('DD/MM/YYYY'), Cells: Array((this.Aggregation === '1H') ? 24 : 96).fill({ Value: undefined })};
-          var Cell = moment(this.Data.Sampletime[i]).hour();
-          if(this.Aggregation === '15M') Cell = Cell * 4 + Math.trunc(moment(this.Data.Sampletime[i]).minute() / 15);
-          if(Days[Day].Cells[Cell].Value === undefined) Days[Day].Cells[Cell] = { Value: 0 };
-          Days[Day].Cells[Cell].Value = Days[Day].Cells[Cell].Value + this.Data.Active_Power[i][0] / 4.0;
+        this.Days = [];
+        if((this.data == null) || (this.aggreg == null)) return;
+        var Tmp = { };
+        for(var i in this.data.Sampletime) {
+          var RowDate = moment(this.data.Sampletime[i]);
+          if(Tmp.Date != RowDate.format('DD/MM/YYYY')) {
+            this.Days.push(Object.assign({}, Tmp));
+            Tmp = { };
+          }
+          if(Tmp.Date == undefined) {
+            Tmp = { DayOfWeek: DaysNames[RowDate.day()], Date: RowDate.format('DD/MM/YYYY'), Cells: [] };
+            for(var n = 0; n < 24; n++) {
+              if(this.aggreg === '1H') {
+                Tmp.Cells.push({ Value: undefined, Date: 'Hour ' + n });
+              } else {
+                for(var q = 1; q < 5; q++) Tmp.Cells.push({ Value: undefined, Date: 'Hour ' + n + '(' + q + 'Q)' });  
+              }
+            }
+          }
+          var Cell = (this.aggreg === '15M') ? RowDate.hour() * 4 + Math.trunc(RowDate.minute() / 15) : RowDate.hour();
+          for(var c in this.data.Active_Power[i]) {
+            if(this.data.Active_Power[i][c] != null) Tmp.Cells[Cell].Value = (Tmp.Cells[Cell].Value === undefined) ? this.data.Active_Power[i][c] / 4.0 : Tmp.Cells[Cell].Value + this.data.Active_Power[i][c] / 4.0;
+          }
         }
+        if(Tmp.Date != undefined) this.Days.push(Tmp);
         var Max = -Infinity;
         var Min =  Infinity;
-        for(var Day in Days) {    
-          for(var Cell in Days[Day].Cells) {
-            if(Days[Day].Cells[Cell].Value === undefined) {
-              Days[Day].Cells[Cell].Text = 'No data';  
+        for(var i in this.Days) {
+          for(var n in this.Days[i].Cells) {
+            if(this.Days[i].Cells[n].Value === undefined) continue;
+            Max = Math.max(Max, this.Days[i].Cells[n].Value);
+            Min = Math.min(Min, this.Days[i].Cells[n].Value);
+          }
+        }
+        this.$emit('range', [Min, Max]);
+        var ColorScale = chroma.bezier(['#00429d', '#96ffea', '#ffffe0', '#ff005e', '#93003a']);
+        for(var i in this.Days) {
+          for(var n in this.Days[i].Cells) {
+            if(this.Days[i].Cells[n].Value === undefined) {
+              this.Days[i].Cells[n].Color = "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAJElEQVQImT2JsQ0AMAyDyP832q+QIWqZEJDEx6gA0JZr9/mmLvBPKENuQmcdAAAAAElFTkSuQmCC')";
+              this.Days[i].Cells[n].BorderColor = '#EEE'
+              this.Days[i].Cells[n].Text = 'No data';
             } else {
-              Max = Math.max(Max, Days[Day].Cells[Cell].Value);
-              Min = Math.min(Min, Days[Day].Cells[Cell].Value);
-              var Units = oZm.GetBestUnits(Days[Day].Cells[Cell].Value);
-              Days[Day].Cells[Cell].Text = oZm.Round2Plain(oZm.ScaleToUnits(Days[Day].Cells[Cell].Value, Units)) + ' ' + Units + 'Wh';
+              this.Days[i].Cells[n].Color = ColorScale((this.Days[i].Cells[n].Value - Min) / (Max - Min));
+              this.Days[i].Cells[n].BorderColor = chroma(this.Days[i].Cells[n].Color).darken(0.1);
+              var Units = oZm.GetBestUnits(this.Days[i].Cells[n].Value);
+              this.Days[i].Cells[n].Text = oZm.RoundPlain(oZm.ScaleToUnits(this.Days[i].Cells[n].Value, Units), 2) + ' ' + Units + 'Wh';
+
             }
-          };
-        };
-        var Units = oZm.GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
-        this.$emit('RangeChanged', oZm.ScaleToUnits(Min, Units), oZm.ScaleToUnits(Max, Units), Units);
-        var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
-        for(var Day in Days) {    
-          for(var Cell in Days[Day].Cells) {
-            if(Days[Day].Cells[Cell].Value === undefined) {
-              Days[Day].Cells[Cell].Color = '#EEEEEE';
-            } else {
-              Days[Day].Cells[Cell].Color = ColorScale((Days[Day].Cells[Cell].Value - Min) / (Max - Min));
-            }
-          };
-        };
-        this.Days = Days;
+          }
+        }
+        this.Days = this.Days.reverse();
       }
     }
   }
 </script>
 
-<style>
+<style scoped>
   .heatmap_table {
     width: 100%; 
     font-size: 9px; 
-    text-align:center; 
-    table-layout: fixed
+    text-align: center; 
+    table-layout: fixed;
+    border-collapse: separate;
   }
-  .heatmap_table thead td:nth-child(n+3) {
-     border-bottom: 1px solid #CCCCCC;
+  .heatmap_table tbody td {
+    background-repeat: repeat-x;
   }
-  .heatmap_table tbody td:nth-child(2) {
-     border-right: 1px solid #CCCCCC;
-  }
-  .heatmap_table tbody tr:last-child td:nth-child(n+3) {
-     border-bottom: 1px solid #CCCCCC;
-  }
-  .heatmap_table tbody tr td:last-child {
-     border-right: 1px solid #CCCCCC;
-  }
+
 </style>

@@ -23,7 +23,7 @@
 <script>
   import vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import Dlg from 'Components/Dialog.vue';
   import * as oZm from 'JS/openZmeter.js';
   export default {

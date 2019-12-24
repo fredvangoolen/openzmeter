@@ -1,56 +1,58 @@
 <template>
-  <div id="wrapper">
+  <div v-if="analyzer != null">
     <div class="row">
       <div class="col-lg-12">
         <div class="panel panel-active-energy stats-headmap">
           <div class="panel-heading">
             <span class="header-text">Energy Heatmap</span>
             <div class="header-buttons clearfix">
-              <color-bar :width="140" :height="10" ref="colorbar"></color-bar>
-              <toolbar-aggregation variable="HeatmapPeriod" :options="['15M', '1H']" v-on:AggregationChanged="AggregationChanged"></toolbar-aggregation>
-              <toolbar-years @YearChanged="YearChanged" aggreg="15M"></toolbar-years>
+              <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
+              <toolbar-aggregation storage="HeatmapAggreg" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
+              <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="15M" storage="StatsYear"></toolbar-years>
               <toolbar-tools :options="['EXPORT']" ref="tools" v-on:ExportClick="ExportClick"></toolbar-tools>
             </div>
           </div>
           <div class="panel-body" style="min-height: 300px">
             <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-            <heatmap-table ref="table" v-on:RangeChanged="RangeChanged"></heatmap-table>
+            <heatmap-table :data="Data" :aggreg="Aggreg" v-on:range="Range = $event"></heatmap-table>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <div v-else-if="analyzer == null">
+    <div class="alert alert-danger text-center">
+      <p>No selected analyzer</p>
+    </div>  
+  </div>
 </template>
 
 <script>
+  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'JS/moment.js';
   import HeatmapTable from './HeatmapTable.vue';
   export default {
-    data() {
-      return { ShowSpinner: true };
+    props: { analyzer: { type: Object } },
+    data: function() {
+      return { Aggreg: null, Range: null, Data: null, Year: null, ShowSpinner: true };
+    },
+    watch: {
+      Year: function(val) {
+        this.ShowSpinner = true;
+        this.Data = null;
+        var To = moment().year(val).endOf('year').valueOf();
+        var Period = To - moment().year(val).startOf('year').valueOf();
+        this.$http.post("getSeries", { Period: Period, To: To, Aggreg: '15M', LastSample: 0, Series: ['ACTIVE_POWER'], Analyzer: this.analyzer.Analyzer }).then(
+          (result) => {
+            this.ShowSpinner = false;
+            this.Data = result.data;
+          }
+        );
+      }
     },
     methods: {
       ExportClick: function() {
         this.$refs.tools.SaveCVS('Heatmap.csv', this.$refs.table.GetData());
-      },
-      AggregationChanged(aggreg) {
-        this.$refs.table.SetAggregation(aggreg);
-      },
-      RangeChanged(min, max, units) {
-        this.$refs.colorbar.SetRange(oZm.Round2(min), oZm.Round2(max), units + 'Wh');
-      },
-      YearChanged(year) {
-        this.ShowSpinner = true;
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        var Year = moment().year(year);
-        $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), Aggreg: '15M', LastSample: 0, Series: ['ACTIVE_POWER'], Analyzer: Analyzer.Analyzer } ),
-          success: function(result) {
-            this.ShowSpinner = false;
-            this.$refs.table.SetData(result);
-          }.bind(this)
-        });
       }
     },
     components: { HeatmapTable }

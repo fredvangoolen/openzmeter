@@ -9,7 +9,7 @@
 
 <script>
   import Graph from 'Components/Graph.vue';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   export default {
     data: function() {
       return {};
