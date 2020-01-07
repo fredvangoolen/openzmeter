@@ -23,7 +23,6 @@
 </template>
 
 <script>
-  import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
   import Dygraph from 'JS/dygraph.js';
   import * as oZm from 'JS/openZmeter.js';
@@ -259,6 +258,6 @@
         this.$refs.graph.SetOptions( {dateWindow: [0, this.Data.length]} );
       }
     },
-    components: { Spinner, Graph, ToolbarPhases, ToolbarTools }
+    components: { Graph, ToolbarPhases, ToolbarTools }
   };  
 </script>

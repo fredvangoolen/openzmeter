@@ -7,15 +7,19 @@
             <div class="huge header-text">Frequency</div>
             <div class="header-buttons clearfix" ref="Toolbar">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
-              <toolbar-period variable="Period" v-on:PeriodChanged="UpdateGraph" ref="period"></toolbar-period>
-              <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
+              <toolbar-period storage="Period" v-model="Range"></toolbar-period>
+              <div class="btn-group">
+                <button-export :rows="ExportData" file="Frequency"></button-export>
+                <button-expand></button-expand>
+                <!--toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools-->
+              </div>
             </div>
           </div>
           <div class="panel-body">
             <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" :dataNow="NowData"></counters>
-              <frequency class="col-md-6 col-lg-8 col-xl-9" :data="GraphData"></frequency>
+              <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :dataNow="NowData" :dataGraph="GraphData" :height.sync="Height"></counters>
+              <frequency class="col-md-6 col-lg-8 col-xl-9" :data="GraphData" :height="Height"></frequency>
             </div>
           </div>
         </div>
@@ -25,25 +29,33 @@
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">
       <p>No selected analyzer</p>
-    </div>  
+    </div>
   </div>
 </template>
 
 <script>
-  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
-  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
   import Frequency from './Frequency.vue';
   import Counters from './Counters.vue';
   export default {
     props: { analyzer: { type: Object } },
-    data() { return { Aggreg: null, ShowSpinner: true, NowData: null, GraphData: null, NowTimer: null, GraphTimer: null }; },
+    data: function() {
+      return { Aggreg: null, ShowSpinner: true, NowData: null, GraphData: null, NowTimer: null, GraphTimer: null, Range: null, Height: 300 };
+      },
     watch: {
-      analyzer: function() { this.UpdateNowValues(); this.UpdateGraph(); },
-      Aggreg: function() {  this.UpdateGraphValues(); }
+      analyzer: function() { this.UpdateNowValues(); this.UpdateGraphValues(); },
+      Aggreg: function() {  this.UpdateGraphValues(); },
+      Range: function() { this.UpdateGraphValues(); }
+    },
+    computed: {
+      ExportData: function() {
+        if(this.GraphData == null) return [];
+        var Rows = [['Time', 'Frequency']];
+        for(var n in this.GraphData.Sampletime) Rows.push([this.GraphData.Sampletime[n], this.GraphData.Frequency[n]]);
+        return Rows;
+      }
     },
     created: function() {
-      this.UpdateNowValues(); 
+      this.UpdateNowValues();
       this.UpdateGraphValues();
     },
     beforeDestroy: function() {
@@ -58,50 +70,48 @@
       MinimizeClick: function() {
         $(window).bind('resize', this.ResizeHandler.bind(this));
       },
-      ExportClick: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        this.$refs.tools.SaveCVS('Frequency.csv', [['Time', 'Frequency']].concat(this.Data));
-      },
       UpdateNowValues: function() {
         if(this.NowTimer != null) clearTimeout(this.NowTimer);
         if(this.analyzer == null) return;
-        this.NowQuery = this.$http.post('getSeries', { Series: ['FREQUENCY'], To: 0, Aggreg: '3S', Period: 5000, LastSample: 0, Analyzer: this.analyzer.Analyzer }).then( 
-          (result) => {
-            this.NowData = (result.status == 200) ? result.data : null;
-            this.NowTimer = setTimeout(() => { this.UpdateNowValues(); }, 2000);
-          }
+        this.analyzer.GetSeriesLast('3S', ['FREQUENCY'],
+          (working) => {},
+          (result) => { this.NowData = result; },
+          (timeout) => { this.NowTimer = setTimeout( () => { this.UpdateNowValues(); }, timeout); }
         );
       },
-      UpdateGraphValues: function(to, period, lastsample, aggreg) {
-        return;
-        if(lastsample === 0) {
-          this.Data = [];
-          this.ShowSpinner = true;
-        }
-        var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, Series: ['FREQUENCY'], To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }), 
-          success: function(result) {
-            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
-            this.Data = oZm.GraphDataAppend(result, 'Frequency', this.Data);
-            lastsample = oZm.LastSampletime(result, lastsample);
-            this.$refs.graph.SetOptions( { dateWindow: [result.From, result.To], file: this.Data, valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true]) } );
-            this.UpdateCounters(result['Aggregation_Source'], result.From, result.To);
-          }.bind(this),
-          complete: function() {
-            this.ShowSpinner = false;
-            this.$refs.period.UpdateCompleted(lastsample);
-          }.bind(this),
-          error: function(response) {
-            if(response.status === 400) this.$refs.aggregation.AggregationFail();
-            this.ShowSpinner = true;
-          }.bind(this)
-        });
-      },
-      UpdateGraph: function() {
-
+      UpdateGraphValues: function() {
+        if(this.GraphTimer != null) clearTimeout(this.GraphTimer);
+        if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
+        this.analyzer.GetSeriesRange(this.Aggreg, this.Range, this.GraphData, ['FREQUENCY'],
+          (working) => { this.ShowSpinner = working; },
+          (result) => { this.GraphData = Object.freeze(result); },
+          (timeout) => { if(timeout != null) this.GraphTimer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
+        );
+//        if(this.GraphData == null) this.GraphData = { LastSample: 0 };
+//        if(this.GraphData.LastSample == 0) this.ShowSpinner = true;
+//        this.$http.post('getSeries', { Aggreg: this.Aggreg, Series: ['FREQUENCY'], To: Window.To, Period: Window.Period, LastSample: 0, Analyzer: this.analyzer.Analyzer }).then(
+//          (result) => {
+//            this.GraphData = oZm.MergeSeriesResult(result.data, this.GraphData);
+//            this.ShowSpinner = false;
+//            if((result.data['Sampletime'] === null) || (result.data['Sampletime'].length === 0)) return;
+//            this.GraphData = oZm.GraphDataAppend(result.data, 'Frequency', this.GraphData);
+//            lastsample = oZm.LastSampletime(result, lastsample);
+//            this.$refs.graph.SetOptions( { dateWindow: [result.From, result.To], file: this.Data, valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true]) } );
+//            this.UpdateCounters(result['Aggregation_Source'], result.From, result.To);
+//          }
+//        );
+//          complete: function() {
+//            this.ShowSpinner = false;
+//            this.$refs.period.UpdateCompleted(lastsample);
+//          }.bind(this),
+//          error: function(response) {
+//            if(response.status === 400) this.$refs.aggregation.AggregationFail();
+//            this.ShowSpinner = true;
+//          }.bind(this)
+//        });
       }
     },
-    components: { ToolbarAggregation, ToolbarPeriod, ToolbarTools, Frequency, Counters }
+    components: { Frequency, Counters }
   }
 </script>
 

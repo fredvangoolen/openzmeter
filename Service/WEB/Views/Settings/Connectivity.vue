@@ -21,7 +21,7 @@
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Details</label>
           <textarea rows="2" class="form-control" disabled>
-Device IP  : 10.0.0.1 
+Device IP  : 10.0.0.1
 Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
         </div>
       </div>
@@ -41,7 +41,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Details</label>
-          <textarea rows="4" class="form-control" disabled>{{ WIFIDetails }}</textarea>
+          <textarea rows="4" class="form-control" disabled v-model="WIFIDetails"></textarea>
         </div>
       </div>
       <wifi-dialog v-if="WifiVisible" :loading="WifiLoading" v-model="WifiSettings"></wifi-dialog>
@@ -60,7 +60,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Details</label>
-          <textarea rows="2" class="form-control" disabled>{{ NTPDetails }}</textarea>
+          <textarea rows="2" class="form-control" disabled v-model="NTPDetails"></textarea>
         </div>
       </div>
       <!--div class="row">
@@ -93,7 +93,7 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
       return { Bluetooth: null, BTChanges: false,
                 WIFI: false, WIFIChanges: false, WIFIDetails: '', WifiSettings: {}, WifiVisible: false, WifiLoading: false,
                 NTP: false, NTPChanges: false, NTPDetails: '',
-                
+
                 Modbus_Support: false, ModbusChange: false, ModbusSettings: {},
                 Telegram_Support: false, TelegramChange: false, TelegramSettings: {},
                 Loading: false, NTPEnabled: false };
@@ -119,20 +119,20 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
       UpdateTime: function() {
         clearInterval(this.Timer2);
         if(this.NTPAjax) this.NTPAjax.abort();
-        this.NTPAjax = $.ajax({ url: "getNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: (result) => { 
+        this.NTPAjax = $.ajax({ url: "getNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
+          success: (result) => {
             this.NTPDetails = 'Local timezone : ' + moment.tz.zone(moment.tz.guess()).name + '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');
           },
           complete: () => {
             this.Timer2 = setTimeout(this.UpdateTime, 500);
           }
-        });  
+        });
       },
       UpdateWifi: function() {
         clearInterval(this.Timer);
         if(this.WifiAjax) this.WifiAjax.abort();
-        this.WifiAjax = $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: "CURRENT" }), 
-          success: (result) => { 
+        this.WifiAjax = $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: "CURRENT" }),
+          success: (result) => {
             if(result.Connected === true) {
               this.WIFI = result;
               this.WIFIDetails = 'Device IP address   : ' + result.IP + ' (' + result.IPMode + ')\nDNS servers         : ' + result.DNS.join(', ') + '\nDefault gateway     : ' + result.Gateway + '\nCurrent WIFI channel: ' + result.Channel;
@@ -141,19 +141,19 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
               this.WIFIDetails = 'Not connected';
             }
           },
-          complete: () => { 
-            this.Timer = setTimeout(this.UpdateWifi, 5000); 
+          complete: () => {
+            this.Timer = setTimeout(this.UpdateWifi, 5000);
           }
-        });  
+        });
       },
       Load: function() {
-        $.ajax({ url: "getBluetooth", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: (result) => { 
+        $.ajax({ url: "getBluetooth", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
+          success: (result) => {
             this.Bluetooth = result;
           }
         });
-        $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: "CURRENT" }), 
-          success: (result) => { 
+        $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: "CURRENT" }),
+          success: (result) => {
             this.WIFI = result;
             if(result.Connected === true) {
               this.WIFIDetails = 'Device IP address   : ' + result.IP + ' (' + result.IPMode + ')\nDNS servers         : ' + result.DNS.join(', ') + '\nDefault gateway     : ' + result.Gateway + '\nCurrent WIFI channel: ' + result.Channel;
@@ -162,18 +162,18 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
             }
           },
           complete: () => {
-            this.Timer = setTimeout(this.UpdateWifi, 1000); 
+            this.Timer = setTimeout(this.UpdateWifi, 1000);
           }
         });
-        $.ajax({ url: "getNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: (result) => { 
+        $.ajax({ url: "getNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
+          success: (result) => {
             this.NTP = result;
             this.NTPDetails = 'Local timezone : ' + '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');
-          }, 
+          },
           complete: () => {
-            this.Timer2 = setTimeout(this.UpdateTime, 1000); 
+            this.Timer2 = setTimeout(this.UpdateTime, 1000);
           }
-        });  
+        });
       },
       SaveChangesBT: function(value) {
         $.ajax({ url: "setBluetooth", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Enabled: this.Bluetooth.Enabled }) });
@@ -185,14 +185,14 @@ Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
       },
       SaveChangesNTP: function(value) {
         $.ajax({ url: "setNTP", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Enabled: this.NTP.Enabled, Server: this.NTP.Server, Time: moment().valueOf() }) });
-        this.NTPChanges = false;      
+        this.NTPChanges = false;
       },
       ConfigWIFI: function() {
         this.WifiLoading = true;
         this.WifiVisible = true;
-        $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: 'CONFIG'}), 
+        $.ajax({ url: "getWIFI", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Type: 'CONFIG'}),
           success: (result) => {
-            if(result.DNS == undefined) result.DNS = [];    
+            if(result.DNS == undefined) result.DNS = [];
             this.WifiSettings = result;
             this.WifiLoading = false;
           },

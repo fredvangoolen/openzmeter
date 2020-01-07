@@ -3,12 +3,12 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ Aggregation }}</div>
       <div class="header-buttons" ref="Toolbar">
-        <toolbar-phases variable="DetailsPhaseSingle" ref="phases" v-on:PhasesChanged="$parent.PhasesChangedSingle"></toolbar-phases>
+        <toolbar-phases storage="DetailsPhaseSingle" v-model="$parent.PhaseSingle"></toolbar-phases>
         <toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
       </div>
     </div>
     <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+      <spinner v-if="ShowSpinner"></spinner>
       <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" ref="rows" :index="index" v-on:mouseOver="MouseOver"></cubism>
     </div>
   </div>
@@ -18,11 +18,11 @@
   import Cubism from 'Components/Cubism.vue';
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
-  import Spinner from 'Components/Spinner.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Dygraph from 'JS/dygraph.js';
   export default {
+    props: { analyzer: { type: Object }, data: Object, phase: Number, dataGraph: Object },
     data() {
       return { ShowSpinner: true, Aggregation: 'Loading data...', Series: ['POWER_FACTOR', 'VOLTAGE_THD', 'PHI'] };
     },
@@ -31,7 +31,7 @@
         this.mouseOverCount = this.mouseOverCount + ((val === true) ? +1 : -1);
       },
       Redraw() {
-        this.$nextTick(function() {    
+        this.$nextTick(function() {
           for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
           window.dispatchEvent(new Event('resize'));
         });
@@ -66,7 +66,7 @@
         this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
         for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
         if(this.mouseOverCount === 0) this.CalcOptions();
-        this.ShowSpinner = false; 
+        this.ShowSpinner = false;
       },
       SetDataNow(result) {
         if(this.mouseOverCount !== 0) return;
@@ -92,6 +92,6 @@
       for(var i = 0; i < this.Series.length; i++) Graphs.push(this.$refs.rows[i].Graph);
       Dygraph.synchronize(Graphs, { range: false, zoom: false });
     },
-    components: { Cubism, Spinner, ToolbarPhases, ToolbarTools }
+    components: { Cubism, ToolbarPhases, ToolbarTools }
   }
 </script>

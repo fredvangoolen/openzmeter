@@ -71,7 +71,6 @@
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
-  import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import vuetable from 'vuetable-2';
@@ -301,7 +300,7 @@
         this.ShowSpinner = false;
       }
     },
-    components: { Spinner, ToolbarTools, Graph, vuetable }
+    components: { ToolbarTools, Graph, vuetable }
   }
 </script>
 

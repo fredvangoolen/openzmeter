@@ -1,23 +1,6 @@
 <template>
-  <div class="panel panel-current">
-    <div class="panel-heading">
-      <div class="header-text">Current</div>
-      <div class="header-buttons clearfix" ref="Toolbar">
-        <toolbar-aggregation variable="Aggregation" :options="['3S', '1M', '10M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
-        <toolbar-period variable="Period" v-on:PeriodChanged="UpdateGraph" ref="period"></toolbar-period>
-        <toolbar-phases variable="CurrentViewPhases" type="CURRENT" :multi="true" v-on:PhasesChanged="PhasesChanged"></toolbar-phases>
-        <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
-      </div>
-    </div>
-    <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <div class="row">
-        <counters class="col-md-6 col-lg-4 col-xl-3" ref="counters"></counters>
-        <div class="col-md-6 col-lg-8 col-xl-9">
-          <graph ref="graph" :options="GraphOptions"></graph>
-        </div>
-      </div>
-    </div>
+  <div>
+    <graph ref="graph" :options="GraphOptions"></graph>
   </div>
 </template>
 
@@ -28,7 +11,6 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
-  import Counters from './Counters.vue';
   import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
@@ -54,13 +36,13 @@
         }
       };
     },
-    mounted: function() {
-      $(window).on('resize', this.ResizeHandler.bind(this));
-      window.dispatchEvent(new Event('resize'));
-    },
-    beforeDestroy: function() {
-      $(window).off('resize', this.ResizeHandler);
-    },
+//    mounted: function() {
+//      $(window).on('resize', this.ResizeHandler.bind(this));
+//      window.dispatchEvent(new Event('resize'));
+//    },
+//    beforeDestroy: function() {
+//      $(window).off('resize', this.ResizeHandler);
+//    },
     methods: {
       StopAutoupdate: function() {
         this.$refs.period.StopUpdate();
@@ -72,9 +54,9 @@
       AggregationChanged(aggreg) {
         this.$refs.period.SetAggregation(aggreg);
       },
-      ResizeHandler: function() {
-        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', $(this.$refs.counters.$el).height());
-      },
+//      ResizeHandler: function() {
+//        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', $(this.$refs.counters.$el).height());
+//      },
       MaximizeClick: function() {
         $(window).unbind('resize', this.ResizeHandler);
         this.$refs.tools.Maximize('Current', this.$refs.graph.Graph, this.$refs.Toolbar);
@@ -97,7 +79,7 @@
           this.ShowSpinner = true;
         }
         var Analyzer = this.$root.SelectedAnalyzer;
-        this.Ajax = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, Series: ['CURRENT'], To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }), 
+        this.Ajax = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, Series: ['CURRENT'], To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }),
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.Data = oZm.GraphDataAppend(result, 'Current', this.Data);
@@ -123,13 +105,10 @@
         this.$refs.period.SetCustom(minDate, maxDate, true);
       }
     },
-    components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools, Counters, Graph }
+    components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools, Graph }
   }
 </script>
 
 <style scoped>
-  .header-text {
-    font-size: 24px;
-    line-height: 16px;
-  }
+
 </style>

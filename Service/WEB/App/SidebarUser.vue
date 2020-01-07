@@ -26,7 +26,7 @@
         window.location.href = 'Logout';
       },
       Edit: function() {
-        $.ajax({ url: "getUser", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+        $.ajax({ url: "getUser", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
           success: (result) => {
             this.$refs.userEdit.LoadUser(result);
           }
@@ -67,8 +67,8 @@
     components: { UserLogout, UserEdit, Offline }
   }
 </script>
-  
-<style>
+
+<style scoped>
   .this {
     background-color: #474544;
     color: #FAFAFA;

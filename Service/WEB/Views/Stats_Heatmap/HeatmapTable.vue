@@ -42,11 +42,11 @@
 
 <script>
   import moment from 'moment';
-  import chroma from 'JS/chroma.js';
+  import chroma from 'chroma-js';
   import * as oZm from 'JS/openZmeter.js';
   var DaysNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   export default {
-    props: { data: { type: Object, default: null }, aggreg: { type: String, default: '1H'} },
+    props: { analyzer: { type: Object, required: true }, data: { type: Object, default: null }, aggreg: { type: String, default: '1H'}, export: { type: Array, default: [] } },
     data: function() {
       return { Days: {} };
     },
@@ -58,30 +58,12 @@
       this.CalcOptions();
     },
     methods: {
-      GetData: function() {
-        var Data = [];
-        var Header = ['Day', 'Date'];
-        for(var h = 0; h < 24; h++) {
-          if(this.Aggregation === '15M') {
-            for(var q = 1; q < 5; q++) Header.push(("0" + h).slice(-2) + ' Q' + q);
-          } else {
-            Header.push(("0" + h).slice(-2));
-          }
-        }
-        Data.push(Header);
-        for(var Day in this.Days) {
-          var Row = [this.Days[Day].DayOfWeek, this.Days[Day].Date];
-          for(var i = 0; i < this.Days[Day].Cells.length; i++) Row.push((this.Days[Day].Cells[i].Value === undefined) ? '' : this.Days[Day].Cells[i].Value);
-          Data.push(Row);
-        }       
-        return Data;
-      },
       CalcOptions: function() {
         this.Days = [];
         if((this.data == null) || (this.aggreg == null)) return;
         var Tmp = { };
         for(var i in this.data.Sampletime) {
-          var RowDate = moment(this.data.Sampletime[i]);
+          var RowDate = moment(this.data.Sampletime[i]).tz(this.analyzer.TimeZone);
           if(Tmp.Date != RowDate.format('DD/MM/YYYY')) {
             this.Days.push(Object.assign({}, Tmp));
             Tmp = { };
@@ -92,7 +74,7 @@
               if(this.aggreg === '1H') {
                 Tmp.Cells.push({ Value: undefined, Date: 'Hour ' + n });
               } else {
-                for(var q = 1; q < 5; q++) Tmp.Cells.push({ Value: undefined, Date: 'Hour ' + n + '(' + q + 'Q)' });  
+                for(var q = 1; q < 5; q++) Tmp.Cells.push({ Value: undefined, Date: 'Hour ' + n + '(' + q + 'Q)' });
               }
             }
           }
@@ -113,8 +95,20 @@
         }
         this.$emit('range', [Min, Max]);
         var ColorScale = chroma.bezier(['#00429d', '#96ffea', '#ffffe0', '#ff005e', '#93003a']);
+        var Export = [];
+        var Row = ['Day', 'Date'];
+        for(var h = 0; h < 24; h++) {
+          if(this.aggreg === '15M') {
+            for(var q = 1; q < 5; q++) Row.push(("0" + h).slice(-2) + ' Q' + q);
+          } else {
+            Row.push(("0" + h).slice(-2));
+          }
+        }
+        Export.push(Row);
         for(var i in this.Days) {
+          var Row = [this.Days[i].DayOfWeek, this.Days[i].Date];
           for(var n in this.Days[i].Cells) {
+            Row.push((this.Days[i].Cells[n].Value === undefined) ? '' : this.Days[i].Cells[n].Value);
             if(this.Days[i].Cells[n].Value === undefined) {
               this.Days[i].Cells[n].Color = "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAJElEQVQImT2JsQ0AMAyDyP832q+QIWqZEJDEx6gA0JZr9/mmLvBPKENuQmcdAAAAAElFTkSuQmCC')";
               this.Days[i].Cells[n].BorderColor = '#EEE'
@@ -127,8 +121,10 @@
 
             }
           }
+          if(Row.length > 2) Export.push(Row);
         }
         this.Days = this.Days.reverse();
+        this.$emit('update:export', Export);
       }
     }
   }
@@ -136,9 +132,9 @@
 
 <style scoped>
   .heatmap_table {
-    width: 100%; 
-    font-size: 9px; 
-    text-align: center; 
+    width: 100%;
+    font-size: 9px;
+    text-align: center;
     table-layout: fixed;
     border-collapse: separate;
   }

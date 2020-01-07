@@ -39,13 +39,13 @@
   background-image: url(../Imgs/resultset_previous.png);
   width: 16px !important;
   height: 16px !important;
-  display: inline-block;    
+  display: inline-block;
 }
 .glyphicon-chevron-right {
   background-image: url(../Imgs/resultset_next.png);
   width: 16px !important;
   height: 16px !important;
-  display: inline-block;    
+  display: inline-block;
 }
 /* dataTables icons */
 table.dataTable thead .sorting_desc:after {
@@ -127,7 +127,7 @@ img {
 }
 .panel-heading {
   border-radius: 0px;
-  padding: 8px 5px;
+  padding: 4px 4px;
 }
 .rounded-panel {
   border: 1px solid rgba(0,0,0,.2);
@@ -151,7 +151,7 @@ img {
     border-top: 1px solid rgba(255,255,255,0.5);
     float: none;
     text-align: center;
-    padding-top: 2px;
+    padding-top: 4px;
   }
 }
 @media(min-width:1280px) {
@@ -340,7 +340,7 @@ img {
   left: 0px;
   z-index: 100;
 }
-div.scrtabs-tab-container + div.panel { 
+div.scrtabs-tab-container + div.panel {
   border-top-left-radius: 0px;
   border-top-right-radius: 0px;
 }
@@ -715,16 +715,6 @@ label.btn:active, label.btn.active {
     font-size: 7vw;
 }
 
-.chart{
-    height:150px;
-    width: 100%;
-    user-select: none;
-    cursor: crosshair;
-}
-
-.big_chart{
-    height: 300px;
-}
 
 
 
@@ -892,7 +882,7 @@ For energy chart in dashboard
   color: #1a3f1a;
   margin: 5px;
   border-color: #b3e0b3;
-  background-color: #e9f6e9;  
+  background-color: #e9f6e9;
 }
 
 .indicators {
@@ -1030,7 +1020,7 @@ text.area_text {
 
 
 .spinnerdiv {
-  position: absolute; 
+  position: absolute;
   top: 0;
   left:0;
   width:100%;
@@ -1046,7 +1036,7 @@ text.area_text {
   text-align: center;
   font-size: 11px !important;
   font-weight: bold;
-  
+
 }
 .dygraph-annotation {
   position: absolute;

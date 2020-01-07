@@ -7,6 +7,9 @@
             <span class="header-text">Energy costs</span>
             <div class="header-buttons clearfix">
               <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="1H" storage="StatsYear"></toolbar-years>
+              <div class="btn-group">
+                <button-export></button-export>
+              </div>
               <toolbar-tools ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
             </div>
           </div>
@@ -22,13 +25,9 @@
 </template>
 
 <script>
-  import ToolbarYears from 'Components/ToolbarYears.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
-  import Spinner from 'Components/Spinner.vue';
   import SummaryGraph from './SummaryGraph.vue';
   import Bill from './Bill.vue';
   import moment from 'moment';
-  import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
@@ -59,13 +58,13 @@
         this.$refs.tools.SaveCVS('Cost.csv', Data);
       }
     },
-    components: { ToolbarYears, ToolbarTools, Spinner, SummaryGraph, Bill }
+    components: { SummaryGraph, Bill }
   }
 </script>
 
 <style scoped>
   .header-text {
-    font-size: 24px;
-    line-height: 16px;
+    font-size: 20px;
+    line-height: 24px;
   }
 </style>

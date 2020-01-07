@@ -37,10 +37,10 @@
   export default {
     props: { analyzer: { type: Object } },
     data() {
-      return { Analyzers: [], Analyzer: null, ShowSpinner: false,
+      return { Analyzers: [], ShowSpinner: false,
         Columns: [
           {name: 'Online', title: 'Online', callback: this.OnlineStatus},
-          {name: 'Name', title: 'Description'}, 
+          {name: 'Name', title: 'Description'},
           {name: 'Analyzer', title: 'Serial'},
           {name: '__slot:actions', title: ''}
         ]
@@ -51,7 +51,7 @@
     },
     mounted: function() {
       this.ShowSpinner = true;
-      $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+      $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
         success: (result) => {
           this.Analyzers = result;
           this.ShowSpinner = false;
@@ -64,22 +64,20 @@
       },
       Select: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer }),
-          success: (result) => {
-//            this.$root.SelectedAnalyzer = result;
-//            this.$root.$emit('AnalyzerChanged', result);
-            localStorage.setItem('SelAnalyzer', result.Analyzer);
-            this.$set(this.$parent.$parent.$parent, 'Analyzer', result);
-            this.$parent.View = null;            
-          },
-          complete: () => {
+        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
+          (result) => {
+            if(result.status == 200) {
+              localStorage.setItem('Analyzer', result.data.Analyzer);
+              this.$emit('update:analyzer', result.data);
+              this.$parent.View = null;
+            }
             this.ShowSpinner = false;
           }
-        });
+        );
       },
       Configure: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
           success: (result) => {
             this.$parent.Analyzer = result;
             this.$parent.View = null;
@@ -91,11 +89,11 @@
         });
       },
       ACL: function(id) {
-        alert("ACL not yet implemented"); 
+        alert("ACL not yet implemented");
       },
       Rates: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
           success: (result) => {
             this.$parent.Analyzer = result;
             this.$parent.View = null;
@@ -108,7 +106,7 @@
       },
       Alarms: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
           success: (result) => {
             this.$parent.Analyzer = result;
             this.$parent.View = null;
@@ -121,7 +119,7 @@
       },
       Maintenance: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }), 
+        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
           success: (result) => {
             this.$parent.Analyzer = result;
             this.$parent.View = null;
@@ -156,6 +154,6 @@
     }
     .table >>> th:nth-child(4) {
       width: 90px;
-    } 
+    }
   }
 </style>

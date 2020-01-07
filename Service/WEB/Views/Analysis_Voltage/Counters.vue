@@ -45,11 +45,6 @@
 </template>
 
 <script>
-  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
-  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
-  import Spinner from 'Components/Spinner.vue';
-  import Graph from 'Components/Graph.vue';
   import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   export default {

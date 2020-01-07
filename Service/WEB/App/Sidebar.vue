@@ -1,7 +1,7 @@
 <template>
   <div class="navbar-nav" v-on:mouseenter="MouseOver = true" v-on:mouseleave="MouseOver = false" v-bind:class="{ expanded: MouseOver }">
     <div class="menu-wrapper">
-      <sidebar-analyzer :analyzer="analyzer" :expanded="MouseOver"></sidebar-analyzer>
+      <sidebar-analyzer :analyzer="analyzer" @update:analyzer="$emit('update:analyzer', $event)" :expanded="MouseOver"></sidebar-analyzer>
       <sidebar-user :expanded="MouseOver"></sidebar-user>
       <sidebar-menu :expanded="MouseOver"></sidebar-menu>
     </div>
@@ -15,52 +15,49 @@ import SidebarAnalyzer from './SidebarAnalyzer.vue';
 import SidebarMenu from './SidebarMenu.vue';
 import SidebarNews from './SidebarNews.vue';
 export default {
-
-  /*v-on:mouseover="MouseOver = true" v-on:mouseout="MouseOver = false"*/
   props: { analyzer: { type: Object } },
-  data() { return { MouseOver: true }; },
+  data() { return { MouseOver: false }; },
   mounted: function() {
-    $('.navbar-toggle').click(function (e) {
-      $('.navbar-nav').toggleClass('show');
-      if($('.navbar-nav').hasClass('show')) {
-        this.showOverlay();
-      } else {
-        this.hideOverlay();
-      }
-    }.bind(this));
-    $('.link').click(function (e){
-      $(e.target).parent().parent().parent().find("[data-sidenav-dropdown]:visible").not($(e.target).parent().parent()).slideUp("fast");
-      $('.navbar-nav').toggleClass('show');
-      this.hideOverlay();
-    }.bind(this));
-    $('body').on('click', '.sidenav-overlay', this.hideOverlay);
+//    $('.navbar-toggle').click(function (e) {
+//      $('.navbar-nav').toggleClass('show');
+//      if($('.navbar-nav').hasClass('show')) {
+//        this.showOverlay();
+//      } else {
+//        this.hideOverlay();
+//      }
+//    }.bind(this));
+//    $('.link').click(function (e){
+//      $(e.target).parent().parent().parent().find("[data-sidenav-dropdown]:visible").not($(e.target).parent().parent()).slideUp("fast");
+//      $('.navbar-nav').toggleClass('show');
+//      this.hideOverlay();
+//    }.bind(this));
+//    $('body').on('click', '.sidenav-overlay', this.hideOverlay);
   },
   methods: {
-    showOverlay: function () {
-      $('body').toggleClass('sidenav-no-scroll');
-      var overlay = $('[data-sidenav-overlay]');
-      if(overlay[0] === undefined) {
-        overlay = $('<div data-sidenav-overlay class="sidenav-overlay"/>');
-        $('body').append(overlay);
-      }
-      overlay.fadeToggle('fast');
-    },
-    hideOverlay: function () {
-      $('body').removeClass('sidenav-no-scroll');
-      $('.navbar-nav').removeClass('show');
-      $('[data-sidenav-overlay]').fadeOut('fast');
-    }
+//    showOverlay: function () {
+//      $('body').toggleClass('sidenav-no-scroll');
+//      var overlay = $('[data-sidenav-overlay]');
+//      if(overlay[0] === undefined) {
+//        overlay = $('<div data-sidenav-overlay class="sidenav-overlay"/>');
+//        $('body').append(overlay);
+//      }
+//      overlay.fadeToggle('fast');
+//    },
+//    hideOverlay: function () {
+//      $('body').removeClass('sidenav-no-scroll');
+//      $('.navbar-nav').removeClass('show');
+//      $('[data-sidenav-overlay]').fadeOut('fast');
+//    }
   },
   components: { SidebarUser, SidebarAnalyzer, SidebarMenu, SidebarNews }
 }
-</script> 
+</script>
 
 <style scoped>
   .navbar-nav.expanded {
     width: 256px;
     transition: width 0.2s  ease-in-out;
   }
-
   .navbar-nav.show {
     transform: translate(0, 0);
   }
@@ -80,7 +77,7 @@ export default {
     position: fixed;
    /* transform: translate(-262px,0);*/
     transition: transform .2s;
-    top: 0;
+    top: 0px;
     width: 48px;
     transition: width 0.2s ease-in-out;
     z-index: 1000;
@@ -96,7 +93,7 @@ export default {
       min-height: calc(100vh - 48px - 56px);
     }
   }
-  .sidenav-header {
+/*  .sidenav-header {
     padding: 3px 6px;
     color: #DDD;
     font-size: 16px;
@@ -125,7 +122,7 @@ export default {
     width:100%;
     z-index:99
   }
-  .sidenav-no-scroll { 
+  .sidenav-no-scroll {
     overflow: hidden!important
-  }
+  }*/
 </style>

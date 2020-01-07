@@ -19,11 +19,11 @@
   import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
-  import Spinner from 'Components/Spinner.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarOptions from 'Components/ToolbarOptions.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
+    props: { analyzer: { type: Object }, data: Object, phases: Array },
     data() {
       return { ShowWarning: true, ShowSpinner: true, MouseOver: false, Time: 'Loading data...' };
     },
@@ -152,7 +152,7 @@
       this.VOffset = 0;
       this.COffset = 0;
     },
-    components: { Spinner, ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }
+    components: { ToolbarPhases, ToolbarOptions, ToolbarTools, Graph }
   }
 </script>
 

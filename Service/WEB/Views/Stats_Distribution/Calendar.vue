@@ -8,7 +8,8 @@
 <script>
   import calendar from 'JS/bootstrap-year-calendar.js';
   import moment from 'moment';
-  import chroma from 'JS/chroma.js';
+  import 'moment-timezone';
+  import chroma from 'chroma-js';
   import * as oZm from 'JS/openZmeter.js';
   ;(function($) {
     $.fn.calendar.dates['custom'] = {
@@ -22,7 +23,7 @@
     };
   } (jQuery));
   export default {
-    props: { data: Object, year: Number },
+    props: { data: { type: Object, required: true }, analyzer: { type: Object, required: true }, year: { type: Number, required: true }, export: { type: Array, default: [] } },
     data: function() {
       return { };
     },
@@ -32,35 +33,31 @@
       if(this.data != null) this.SetData();
     },
     watch: {
-      year: function(year) {
-        this.Calendar.setYear(year);
-      },
-      data: function() {
-        this.SetData();
-      }
-    }, 
+      year: function(year) { this.Calendar.setYear(year); },
+      data: function() { this.SetData(); }
+    },
     methods: {
-      GetData: function(data) {
-        data.push(['Day', 'Energy']);
-        for(var day in this.Days) data.push([moment().year(this.Year).dayOfYear(day).format('DD/MM/YYYY'), this.Days[day]]);
-        return data;
-      },
       SetData: function() {
         this.Days = [];
         for(var i in this.data['Active_Power']) {
-          var Day = moment(this.data.Sampletime[i]).dayOfYear();
+          var Day = moment(this.data.Sampletime[i]).tz(this.analyzer.TimeZone).dayOfYear();
           if(this.data.Active_Power[i] != null) this.Days[Day] = (this.Days[Day] === undefined) ? this.data.Active_Power[i] / 4.0 : this.Days[Day] + this.data.Active_Power[i] / 4.0;
         }
         var ColorScale = chroma.bezier(['#00429d', '#96ffea', '#ffffe0', '#ff005e', '#93003a']);
         var Max = -Infinity;
         var Min =  Infinity;
+        var Export = [['Day', 'Energy']];
         for(var Day in this.Days) {
           if(this.Days[Day] == undefined) continue;
           Max = Math.max(Max, this.Days[Day]);
           Min = Math.min(Min, this.Days[Day]);
+          Export.push([moment().year(this.year).dayOfYear(Day).format('DD/MM/YYYY'), this.Days[Day]]);
         }
-        this.$emit('range', [Min, Max]);
-        this.Calendar.setCustomDayRenderer(function(element, date) {
+        if(Min == Infinity) Min = 0;
+        if(Max == -Infinity) Max = 1;
+        this.$emit('update:range', [Min, Max]);
+        this.$emit('update:export', Export);
+        this.Calendar.setCustomDayRenderer((element, date) => {
           var Day = moment(date).dayOfYear();
           if((this.Days[Day] == undefined) || (this.Days[Day] == 0)) {
             var Color = "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAJElEQVQImT2JsQ0AMAyDyP832q+QIWqZEJDEx6gA0JZr9/mmLvBPKENuQmcdAAAAAElFTkSuQmCC')";
@@ -72,7 +69,7 @@
             $(element).css({ background: Color, color: chroma(Color).luminance() > 0.5 ? '#000' : '#FFF', border: '1px solid ' + chroma(Color).darker(0.1)});
             $(element).prop({'data-toggle': 'tooltip', 'title': oZm.RoundPlain(oZm.ScaleToUnits(this.Days[Day], Units), 2) + ' ' + Units + 'Wh'} );
           }
-        }.bind(this));
+        });
       }
     }
   }
