@@ -65,15 +65,15 @@
       UpdateComplete: function() {
         this.$refs.period.UpdateCompleted(this.$refs.table.LastSample);
         var TimeLineDataset = new vis.DataSet();
-        for(var i = 0; i < this.$refs.table.Events.length; i++) {    
-          var Item = { 
-            id: i, 
+        for(var i = 0; i < this.$refs.table.Events.length; i++) {
+          var Item = {
+            id: i,
             start: this.$refs.table.Events[i].StartTime,
             content: '<table>' +
                      '<tr><td><strong>Time</strong></td><td> : ' + this.$refs.table.Events[i].Date + '</td></tr>' +
                      '<tr><td><strong>Duration</strong></td><td> : ' + this.$refs.table.Events[i].Duration + '</td></tr>' +
                      '<tr><td><strong>ΔU<sub>max</sub></strong></td><td> : ' + this.$refs.table.Events[i].Change + ' V</td></tr>' +
-                     '<tr><td><strong>% ΔU<sub>max</sub></strong></td><td> : ' + this.$refs.table.Events[i].Percent + '%</td></tr>' + 
+                     '<tr><td><strong>% ΔU<sub>max</sub></strong></td><td> : ' + this.$refs.table.Events[i].Percent + '%</td></tr>' +
                      '</table>'
           };
           if(this.$refs.table.Events[i].Type == 'INTERRUPTION') {

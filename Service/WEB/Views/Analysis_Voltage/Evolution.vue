@@ -18,7 +18,6 @@
   import Cubism from 'Components/Cubism.vue';
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
-  import Spinner from 'Components/Spinner.vue';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Dygraph from 'JS/dygraph.js';
@@ -84,6 +83,6 @@
       for(var i = 0; i < this.Series.length; i++) Graphs.push(this.$refs.rows[i].Graph);
       Dygraph.synchronize(Graphs, { range: false, zoom: false });
     },
-    components: { Cubism, Spinner, ToolbarPhases, ToolbarTools }
+    components: { Cubism, ToolbarPhases, ToolbarTools }
   }
 </script>

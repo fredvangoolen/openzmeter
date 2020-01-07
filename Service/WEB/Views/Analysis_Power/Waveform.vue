@@ -23,6 +23,7 @@
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
+    props: { analyzer: { type: Object }, data: Object, phases: Array },
     data() {
       return { ShowWarning: true, MouseOver: false, ShowSpinner: true, Time: 'Loading data...', GraphOptions: { drawAxesAtZero: true, interactionModel: Graph.FixedRangeInteractionModel(this), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ] }
       };

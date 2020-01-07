@@ -4,7 +4,7 @@
 
 <script>
   import Dygraph from 'JS/dygraph.js';
-  import chroma from 'JS/chroma.js';
+  import chroma from 'chroma-js';
   import * as oZm from 'JS/openZmeter.js';
   function mouseDown(event, g, context) {
     if(this.StopAutoupdate) this.StopAutoupdate();
@@ -47,7 +47,7 @@
     event.preventDefault();
     event.stopPropagation();
     clearInterval(context.MouseWheelTimer);
-    context.MouseWheelTimer = setTimeout( function() { this.WindowChange(Axis[0] + (Axis[1] - Axis[0]) * percentage * xPct, Axis[1] - (Axis[1] - Axis[0]) * percentage * (1 - xPct)); }.bind(this), 500);  
+    context.MouseWheelTimer = setTimeout( function() { this.WindowChange(Axis[0] + (Axis[1] - Axis[0]) * percentage * xPct, Axis[1] - (Axis[1] - Axis[0]) * percentage * (1 - xPct)); }.bind(this), 500);
   }
   function MouseDblClick(event, g, context) {
     this.WindowRestore();
@@ -251,13 +251,26 @@
       g.UndoHighlight.cx[serieIndex]=cx;
       g.UndoHighlight.cy[serieIndex]=cy;
       canvasContext.fillStyle = chroma(color).brighten(2);
-      
+
       var x_left = cx - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
       canvasContext.fillRect(x_left, cy, g.subbar_width, g.y_bottom - cy);
     },
-    props: ['options'],
+    props: { options: Object, height: Number },
     data() {
       return {};
+    },
+    watch: {
+      options: function(val, prev) {
+        if((prev.axes != undefined) && (val.axes != undefined) && (prev.axes.y2 != undefined) && (val.axes.y2 != undefined) && (prev.axes.y2.drawAxis != undefined) && (val.axes.y2.drawAxis != undefined)) {
+          if(prev.axes.y2.drawAxis != val.axes.y2.drawAxis) this.Graph.updateOptions({ showRangeSelector: true}, false);
+        }
+        this.Graph.updateOptions(val);
+      },
+      height: function(val) {
+        $(this.Graph.graphDiv).parent().removeAttr('style');
+        this.Graph.resize('100%', val);
+        this.Graph.resize();
+      }
     },
     methods: {
       SetOptions: function(options) {
@@ -305,10 +318,21 @@
       var Data = [[0, 0]];
       if(this.Options.labels !== undefined) Data = [new Array(this.Options.labels.length).fill(0.0)];
       this.Graph = new Dygraph(this.$el, Data, this.Options);
+              $(this.Graph.graphDiv).parent().removeAttr('style');
+        this.Graph.resize('100%', this.height);
+        this.Graph.resize();
     },
     beforeDestroy: function() {
-      this.Graph.destroy();
+      if(this.Graph == null) this.Graph.destroy();
     }
   }
-  
+
 </script>
+
+<style scoped>
+  .chart {
+    width: 100%;
+    user-select: none;
+    cursor: crosshair;
+  }
+</style>

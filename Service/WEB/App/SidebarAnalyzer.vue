@@ -1,20 +1,20 @@
 <template>
-  <div class="this" v-bind:class="{ expanded: expanded}">
+  <div class="this" v-bind:class="{ expanded: expanded }">
     <img class="icon" :src="require('Imgs/disconnect32.png')">
     <div class="name">{{ (analyzer == null) ? 'None selected' : analyzer.Name }}</div>
     <div class="btn-group">
       <button type="button" class="btn btn-default btn-xs" v-on:click="ShowEvents" data-toggle="tooltip" :title="(EventsCount == 0) ? 'No events since last login' : EventsCount + ' events since last login'"><img v-bind:class="{blink_img: (EventsCount != 0)}" :src="require('Imgs/exclamation.png')"></button>
       <button type="button" class="btn btn-default btn-xs" v-on:click="View = 'Table'" data-toggle="tooltip" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
     </div>
-    <analyzer-table v-if="View == 'Table'" :analyzer="analyzer"></analyzer-table>
+    <analyzer-table v-if="View == 'Table'" :analyzer="analyzer" @update:analyzer="SetAnalyzer($event)"></analyzer-table>
     <analyzer-configure v-if="View == 'Configure'" :value="Analyzer"></analyzer-configure>
     <analyzer-rates v-if="View == 'Rates'" :value="Analyzer"></analyzer-rates>
     <analyzer-rate v-if="View == 'Rate'" :value="Rate" :tariffs="Tariffs" :analyzer="Analyzer"></analyzer-rate>
     <analyzer-maintenance v-if="View == 'Maintenance'" ref="Maintenance"></analyzer-maintenance>
     <analyzer-alarms v-if="View == 'Alarms'"></analyzer-alarms>
     <analyzer-alarm v-if="View == 'Alarm'" ref="Alarm"></analyzer-alarm>
-  </div> 
-</template> 
+  </div>
+</template>
 
 <script>
   import ProgressBar from 'Components/ProgressBar.vue';
@@ -26,43 +26,218 @@
   import AnalyzerAlarms from './Analyzer/Alarms.vue';
   import AnalyzerAlarm from './Analyzer/Alarm.vue';
   import moment from 'moment';
+  import 'moment-timezone';
   export default {
     props: { analyzer: { type: Object }, expanded: Boolean },
     data() {
-      return { View: null, SelAnalyzer: null, EventsCount: 0, Analyzer: null, Rate: null,  Tariffs: null };
+      return { View: null, EventsCount: 0, Analyzer: null, Rate: null,  Tariffs: null };
     },
     created: function() {
       this.LastSample = 0;
       this.Timer = null;
-      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
-      if(localStorage.getItem("SelAnalyzer") === undefined) {
+      if(localStorage.getItem("Analyzer") == null) {
+        this.SetAnalyzer(null);
         this.View = 'Table';
       } else {
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: localStorage.getItem("SelAnalyzer") }), 
-          success: (result) => { 
-            this.$parent.$parent.Analyzer = result;
-            this.$root.SelectedAnalyzer = result;
-              this.$root.$emit('AnalyzerChanged', result);
-            },
-            error: () => {
-              this.$root.$emit('AnalyzerChanged', null);
+        this.$http.post('getAnalyzer', { Analyzer: localStorage.getItem("Analyzer") }).then(
+          (result) => {
+            if(result.status == 200) {
+              this.SetAnalyzer(result.data);
+            } else {
+              this.SetAnalyzer(null);
               this.View = 'Table';
             }
-          });
-        }
-
-  
-  },
+          }
+        );
+      }
+    },
     beforeDestroy: function () {
       clearInterval(this.Timer);
     },
     methods: {
       SetAnalyzer: function(analyzer) {
-        this.SelAnalyzer = analyzer;
-        this.LastSample = 0;
-        this.EventsCount = 0;
-        this.GetEvents();
+        if(analyzer != null) {
+          analyzer.GetSeriesRange = this.GetSeriesRange.bind(this);
+          analyzer.GetPricesRange = this.GetPricesRange.bind(this);
+          analyzer.GetSeriesLast = this.GetSeriesLast.bind(this);
+        }
+        this.$emit('update:analyzer', analyzer);
+//        this.$parent.$parent.Analyzer = result;
+//              this.$root.SelectedAnalyzer = result;
+//              this.$root.$emit('AnalyzerChanged', result);
+
+
+//        this.SelAnalyzer = analyzer;
+//        this.LastSample = 0;
+//        this.EventsCount = 0;
+//        this.GetEvents();
       },
+      GetSeriesRange: function(aggreg, range, prev, series, working, outs, timeout) {
+        var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
+        var ReqRange = null;
+        var Now = moment().tz(this.analyzer.TimeZone);
+        if(range == 'LastDay') ReqRange = [Now.valueOf() - 86400000, Now.valueOf()];
+        if(range == 'LastWeek') ReqRange = [Now.valueOf() - 604800000, Now.valueOf()];
+        if(range == 'LastMonth') ReqRange = [Now.valueOf() - 2592000000, Now.valueOf()];
+        if(range == 'LastYear') ReqRange = [Now.valueOf() - 31536000000, Now.valueOf()];
+        if(range == 'Day') ReqRange = [Now.startOf('day').valueOf(), Now.endOf('day').valueOf()];
+        if(range == 'Week') ReqRange = [Now.startOf('week').valueOf(), Now.endOf('week').valueOf()];
+        if(range == 'Month') ReqRange = [Now.startOf('month').valueOf(), Now.endOf('month').valueOf()];
+        if(range == 'Year') ReqRange = [Now.startOf('year').valueOf(), Now.endOf('year').valueOf()];
+        var Out = {};
+        if(prev != null) Out.Aggregation_Source = prev.Aggregation_Source;
+        if(Out.Aggregation_Source != aggreg) {
+          prev = null;
+          Out = { Aggregation_Source: aggreg };
+        } else if((prev != null) && (prev.Sampletime != undefined)) {
+          for(var serie in prev) {
+            if(Array.isArray(prev[serie]) == false) continue;
+            if(Out[serie] == undefined) Out[serie] = [];
+            for(var pos in prev.Sampletime) {
+              if((prev.Sampletime[pos] >= ReqRange[0]) && (prev.Sampletime[pos] <= ReqRange[1])) Out[serie].push(prev[serie][pos]);
+            }
+          }
+          Out.From = prev.From;
+          Out.To = prev.To;
+        }
+        var Promises = [];
+        if((prev == null) || (prev.From == undefined) || (ReqRange[0] < prev.From)) {
+          var ToTime = ((prev == null) || (prev.From == undefined)) ? ReqRange[1] : prev.From - 1;
+          Promises.push(this.$http.post('getSeries', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ToTime, Period: ToTime - ReqRange[0], Series: series }));
+        }
+        if((prev != null) && (prev.To != undefined) && (ReqRange[1] > prev.To)) {
+          Promises.push(this.$http.post('getSeries', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ReqRange[1], Period: ReqRange[1] - prev.To - 1, Series: series }));
+        }
+        if(Promises.length == 0) {
+          Out.To = ReqRange[1]
+          Out.From = ReqRange[0];
+          if(outs != null) outs(Out);
+          clearTimeout(Timer);
+          if(working != null) working(false);
+        }
+        Promise.all(Promises).then(
+          (result) => {
+            for(var req in result) {
+              if(result[req].data.From == ReqRange[0]) {
+                for(var serie in result[req].data) {
+                  if(Array.isArray(result[req].data[serie]) == false) continue;
+                  Out[serie] = ((prev == null) || (prev[serie] == undefined)) ? result[req].data[serie] : result[req].data[serie].concat(prev[serie]);
+                }
+              } else {
+                for(var serie in result[req].data) {
+                  if(Array.isArray(result[req].data[serie]) == false) continue;
+                  Out[serie] = ((prev == null) || (prev[serie] == undefined)) ? result[req].data[serie] : prev[serie].concat(result[req].data[serie]);
+                }
+              }
+            }
+            Out.To = ReqRange[1]
+            Out.From = ReqRange[0];
+            if(outs != null) outs(Out);
+            clearTimeout(Timer);
+            if(working != null) working(false);
+          }
+        );
+      },
+      GetPricesRange: function(aggreg, range, prev, working, outs, timeout) {
+        var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
+        var ReqRange = null;
+        var Now = moment().tz(this.analyzer.TimeZone);
+        if(range == 'LastDay') ReqRange = [Now.valueOf() - 86400000, Now.valueOf()];
+        if(range == 'LastWeek') ReqRange = [Now.valueOf() - 604800000, Now.valueOf()];
+        if(range == 'LastMonth') ReqRange = [Now.valueOf() - 2592000000, Now.valueOf()];
+        if(range == 'LastYear') ReqRange = [Now.valueOf() - 31536000000, Now.valueOf()];
+        if(range == 'Day') ReqRange = [Now.startOf('day').valueOf(), Now.endOf('day').valueOf()];
+        if(range == 'Week') ReqRange = [Now.startOf('week').valueOf(), Now.endOf('week').valueOf()];
+        if(range == 'Month') ReqRange = [Now.startOf('month').valueOf(), Now.endOf('month').valueOf()];
+        if(range == 'Year') ReqRange = [Now.startOf('year').valueOf(), Now.endOf('year').valueOf()];
+        var Out = {};
+        if(prev != null) Out.Aggregation_Source = prev.Aggregation_Source;
+        if(Out.Aggregation_Source != aggreg) {
+          prev = null;
+          Out = { Aggregation_Source: aggreg };
+        } else if((prev != null) && (prev.Sampletime != undefined)) {
+          for(var serie in prev) {
+            if(Array.isArray(prev[serie]) == false) continue;
+            if(Out[serie] == undefined) Out[serie] = [];
+            for(var pos in prev.Sampletime) {
+              if((prev.Sampletime[pos] >= ReqRange[0]) && (prev.Sampletime[pos] <= ReqRange[1])) Out[serie].push(prev[serie][pos]);
+            }
+          }
+          Out.From = prev.From;
+          Out.To = prev.To;
+        }
+        var Promises = [];
+        if((prev == null) || (prev.From == undefined) || (ReqRange[0] < prev.From)) {
+          var ToTime = ((prev == null) || (prev.From == undefined)) ? ReqRange[1] : prev.From - 1;
+          Promises.push(this.$http.post('getPrices', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ToTime, Period: ToTime - ReqRange[0] }));
+        }
+        if((prev != null) && (prev.To != undefined) && (ReqRange[1] > prev.To)) {
+          Promises.push(this.$http.post('getPrices', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ReqRange[1], Period: ReqRange[1] - prev.To - 1 }));
+        }
+        if(Promises.length == 0) {
+          Out.To = ReqRange[1]
+          Out.From = ReqRange[0];
+          if(outs != null) outs(Out);
+          clearTimeout(Timer);
+          if(working != null) working(false);
+        }
+        Promise.all(Promises).then(
+          (result) => {
+            for(var req in result) {
+              if(result[req].data.From == ReqRange[0]) {
+                for(var serie in result[req].data) {
+                  if(Array.isArray(result[req].data[serie]) == false) continue;
+                  Out[serie] = ((prev == null) || (prev[serie] == undefined)) ? result[req].data[serie] : result[req].data[serie].concat(prev[serie]);
+                }
+              } else {
+                for(var serie in result[req].data) {
+                  if(Array.isArray(result[req].data[serie]) == false) continue;
+                  Out[serie] = ((prev == null) || (prev[serie] == undefined)) ? result[req].data[serie] : prev[serie].concat(result[req].data[serie]);
+                }
+              }
+            }
+            Out.To = ReqRange[1]
+            Out.From = ReqRange[0];
+            if(outs != null) outs(Out);
+            clearTimeout(Timer);
+            if(working != null) working(false);
+          }
+        );
+      },
+      GetSeriesLast: function(aggreg, series, working, outs, timeout) {
+        var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
+        var Period = (aggreg == '3S') ? 6000 : (aggreg == '1M') ? 120000 : (aggreg == '10M') ? 1200000 : (aggreg == '15M') ? 1800000 : 7200000;
+        this.$http.post('getSeries', { Series: series, To: 0, Aggreg: aggreg, Period: Period, LastSample: 0, Analyzer: this.analyzer.Analyzer }).then(
+          (result) => {
+            if((result.status == 200) && (result.data.Sampletime.length > 0)) {
+              var Result = {};
+              for(var n in result.data) {
+                if(Array.isArray(result.data[n])) Result[n] = result.data[n].slice(-1)[0];
+              }
+              if(outs != null) outs(Result);
+            } else {
+              if(outs != null) outs(null);
+            }
+            clearTimeout(Timer);
+            if(working != null) working(false);
+            if(timeout != null) timeout(Period / 2);
+          },
+          () => {
+            if(outs != null) outs(null);
+            if(timeout != null) timeout(Period / 2);
+          }
+        );
+      },
+
+
+
+
+
+
+
+
+
+
       ShowEvents: function() {
         localStorage.setItem('Period', JSON.stringify({Period: moment().valueOf() - parseInt(localStorage.getItem('LastLogin')), To: moment().valueOf() }));
         this.$router.push({path: '/Events/Disturbances'});
@@ -73,7 +248,7 @@
         if(Analyzer === null) return;
         $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: moment().valueOf(), LastSample: this.LastSample, Analyzer: Analyzer.Analyzer, Period: moment().valueOf() - parseInt(localStorage.getItem('LastLogin')) }),
           success: function(result) {
-            if(result.StartTime.length > 0) {        
+            if(result.StartTime.length > 0) {
               this.EventsCount += result.StartTime.length;
               this.LastSample = result.StartTime.slice(-1)[0];
             }
@@ -120,7 +295,7 @@
   .blink_img {
     animation: blinker_img 1s linear infinite;
   }
-  @keyframes blinker_img {  
+  @keyframes blinker_img {
     20% { opacity: 0.2; }
   }
 </style>

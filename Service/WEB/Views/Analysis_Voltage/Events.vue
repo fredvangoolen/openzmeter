@@ -25,7 +25,6 @@
 </template>
 
 <script>
-  import Spinner from 'Components/Spinner.vue';
   import Vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
   import moment from 'moment';
@@ -132,7 +131,7 @@
         this.$refs.tools.SaveCVS('Events.csv', Export);
       }
     },
-    components: { Spinner, Vuetable, EventDialog, EventNotes, ToolbarTools }
+    components: { Vuetable, EventDialog, EventNotes, ToolbarTools }
   }
 </script>
 

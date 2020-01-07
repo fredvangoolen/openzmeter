@@ -1,31 +1,37 @@
 <template>
-  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" data-keyboard="false">
-    <div class="modal-backdrop in"></div>
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <slot name="header"></slot>
-        </div>
-        <div class="modal-body">
-          <spinner v-if="loading"></spinner>
-          <slot></slot>          
+  <portal to="dialogs">
+    <div class="modal" tabindex="1" role="dialog" data-backdrop="false" data-keyboard="false" ref="dialog">
+      <div class="modal-backdrop in"></div>
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <slot name="header"></slot>
+          </div>
+          <div class="modal-body">
+            <spinner v-if="loading"></spinner>
+            <slot></slot>
+          </div>
+          <div class="panel-footer" v-if="$slots['footer']">
+            <slot name="footer"></slot>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </portal>
 </template>
-  
+
 <script>
   export default {
     name: 'Dlg',
-    props: {loading: {type: Boolean, default: false}},
+    props: { loading: { type: Boolean, default: false } },
     data: function() {
       return { };
     },
+
     mounted: function() {
-      this.$root.$el.append(this.$el);
+//      this.$root.$el.append(this.$el);
       this.$nextTick(() => {
-        $(this.$el).modal('show');
+        $(this.$refs.dialog).modal('show');
       });
     }
   }

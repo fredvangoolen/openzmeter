@@ -6,14 +6,14 @@
     <div class="bar" v-bind:style="{ width: width + 'px', height: height + 'px' }">
       <div v-for="(div, idx) in Divs" :key="idx" v-bind:style="{ background: div }"></div>
     </div>
-  </div>  
+  </div>
 </template>
 
 <script>
   import chroma from 'chroma-js';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { width: Number, height: Number, range: Array, units: String },
+    props: { width: Number, height: Number, range: { type: Array, required: true }, units: { type: String, required: true } },
     data() {
       return { Divs: [], Prefix: '', Min: '', Max: '' };
     },
@@ -22,7 +22,6 @@
     },
     methods: {
       CalcRange: function() {
-        if(this.range == null) return;
         this.Prefix = oZm.GetBestUnits(Math.max(Math.abs(this.range[0]), Math.abs(this.range[1])));
         this.Min = oZm.RoundHTML(oZm.ScaleToUnits(this.range[0], this.Prefix), 2);
         this.Max = oZm.RoundHTML(oZm.ScaleToUnits(this.range[1], this.Prefix), 2);

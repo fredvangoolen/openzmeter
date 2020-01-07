@@ -32,7 +32,7 @@
 
 <script>
   export default {
-    props: { value: {type: String, default: '1H' }, options: { type: Array, default: [] }, storage: { type: String, default: null } },
+    props: { value: { type: String }, options: { type: Array, required: true }, storage: { type: String, default: null } },
     data() {
       return { Options: [], showDialog: false, Selected: {} };
     },
@@ -53,7 +53,7 @@
     },
     watch: {
       value: function(val) {
-        if((this.storage != null) && (val != null)) localStorage.setItem(this.storage, val);
+        if((this.storage != null) && (val != '')) localStorage.setItem(this.storage, val);
         for(var idx in this.Options) {
           if(this.Options[idx].value !== val) continue;
           this.Selected = this.Options[idx];
@@ -74,7 +74,7 @@
         this.$nextTick(function() { $(this.$refs.ErrorDialog).modal('show'); });
         var i = this.options.indexOf(this.Selected);
         if(this.options[i + 1] !== undefined) this.Selected = this.options[i + 1];
-        this.SetAggregation();        
+        this.SetAggregation();
       },
 //      SetAggregation() {
 //        if(this.options.includes(this.Selected) !== true) this.Selected = this.options[0];

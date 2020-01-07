@@ -1,10 +1,10 @@
 <template>
   <div class="btn-group">
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('EXPORT')" v-on:click="$emit('ExportClick')" data-toggle="tooltip" title="Export data to CSV file"><img :src="require('Imgs/table_export.png')"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && !ShowMaximized" v-on:click="$emit('MaximizeClick')" data-toggle="tooltip" title="Maximize graph"><img :src="require('Imgs/arrow_out.png')"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('MAXIMIZE') && ShowMaximized" v-on:click="MinimizeClick" data-toggle="tooltip" title="Minimize graph"><img :src="require('Imgs/arrow_in.png')"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && (Pause == true)" v-on:click="PlayClick" data-toggle="tooltip" title="Resume live update"><img :src="require('Imgs/play.png')"></button>
-    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('PLAY') && (Pause == false)" v-on:click="PauseClick" data-toggle="tooltip" title="Pause"><img :src="require('Imgs/pause.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="exportData != null" @click="$emit('export')" data-toggle="tooltip" title="Export data to CSV file"><img :src="require('Imgs/table_export.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('EXPANDABLE') && !ShowMaximized" @click="$emit('maximize')" data-toggle="tooltip" title="Maximize graph"><img :src="require('Imgs/arrow_out.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="options.includes('EXPANDABLE') && ShowMaximized" @click="MinimizeClick" data-toggle="tooltip" title="Minimize graph"><img :src="require('Imgs/arrow_in.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="(play != null) && (play == true)" @click="$emit('play', false)" data-toggle="tooltip" title="Resume live update"><img :src="require('Imgs/play.png')"></button>
+    <button type="button" class="btn btn-default btn-xs" v-if="(play != null) && (play == false)" @click="$emit('play', true)" data-toggle="tooltip" title="Pause"><img :src="require('Imgs/pause.png')"></button>
     <div class="modal" v-if="ShowMaximized" tabindex="1" role="dialog" data-backdrop="static" ref="MaximizeDialog" data-keyboard="false">
       <div class="modal-dialog full-screen-dialog">
         <div class="modal-content" style="height: 100%">
@@ -21,7 +21,7 @@
 
 <script>
   export default {
-    props: { options: Array },
+    props: { exportData: { type: Array, default: null }, play: { type: Boolean, default: null }, options: { type: Array, required: true } },
     data() {
       return { UpdateInProgress: false, Now: false, ShowMaximized: false, Pause: false };
     },

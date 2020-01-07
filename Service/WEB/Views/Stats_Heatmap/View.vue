@@ -9,12 +9,14 @@
               <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
               <toolbar-aggregation storage="HeatmapAggreg" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="15M" storage="StatsYear"></toolbar-years>
-              <toolbar-tools :options="['EXPORT']" ref="tools" v-on:ExportClick="ExportClick"></toolbar-tools>
+              <div class="btn-group">
+                <button-export file="Heatmap" :rows="Export"></button-export>
+              </div>
             </div>
           </div>
           <div class="panel-body" style="min-height: 300px">
             <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-            <heatmap-table :data="Data" :aggreg="Aggreg" v-on:range="Range = $event"></heatmap-table>
+            <heatmap-table :data="Data" :aggreg="Aggreg" :analyzer="analyzer" :range.sync="Range" :export.sync="Export"></heatmap-table>
           </div>
         </div>
       </div>
@@ -23,7 +25,7 @@
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">
       <p>No selected analyzer</p>
-    </div>  
+    </div>
   </div>
 </template>
 
@@ -34,14 +36,14 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Aggreg: null, Range: null, Data: null, Year: null, ShowSpinner: true };
+      return { Aggreg: '1H', Range: [0, 1], Data: {}, Year: 0, ShowSpinner: true, Export: [] };
     },
     watch: {
       Year: function(val) {
         this.ShowSpinner = true;
         this.Data = null;
-        var To = moment().year(val).endOf('year').valueOf();
-        var Period = To - moment().year(val).startOf('year').valueOf();
+        var To = moment.tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
+        var Period = To - moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
         this.$http.post("getSeries", { Period: Period, To: To, Aggreg: '15M', LastSample: 0, Series: ['ACTIVE_POWER'], Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
             this.ShowSpinner = false;
@@ -50,18 +52,13 @@
         );
       }
     },
-    methods: {
-      ExportClick: function() {
-        this.$refs.tools.SaveCVS('Heatmap.csv', this.$refs.table.GetData());
-      }
-    },
     components: { HeatmapTable }
   }
 </script>
 
 <style>
   .stats-headmap .header-text {
-    font-size: 24px;
-    line-height: 16px;
+    font-size: 20px;
+    line-height: 24px;
   }
 </style>

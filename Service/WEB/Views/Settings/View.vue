@@ -1,11 +1,9 @@
 <template>
-  <div id="wrapper">
-    <div class="row">
-      <div class="col-lg-12"><devices></devices></div>
-      <div class="col-lg-12"><tariffs></tariffs></div>
-      <div class="col-lg-12"><connectivity></connectivity></div>
-      <div class="col-lg-12"><users></users></div>
-    </div>
+  <div class="row">
+    <div class="col-lg-12"><devices></devices></div>
+    <div class="col-lg-12"><tariffs></tariffs></div>
+    <div class="col-lg-12"><connectivity></connectivity></div>
+    <div class="col-lg-12"><users></users></div>
   </div>
 </template>
 

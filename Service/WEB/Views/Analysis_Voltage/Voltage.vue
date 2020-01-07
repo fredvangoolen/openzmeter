@@ -1,23 +1,6 @@
 <template>
-  <div class="panel panel-voltage">
-    <div class="panel-heading">
-      <div class="header-text">Voltage</div>
-      <div class="header-buttons clearfix" ref="Toolbar">
-        <toolbar-aggregation variable="Aggregation" :options="['3S', '1M', '10M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
-        <toolbar-period variable="Period" v-on:PeriodChanged="UpdateGraph" ref="period"></toolbar-period>
-        <toolbar-phases variable="VoltageViewPhases" type="VOLTAGE" :multi="true" v-on:PhasesChanged="PhasesChanged"></toolbar-phases>
-        <toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
-      </div>
-    </div>
-    <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <div class="row">
-        <counters class="col-md-6 col-lg-4 col-xl-3" ref="counters"></counters>
-        <div class="col-md-6 col-lg-8 col-xl-9">
-          <graph ref="graph" :options="GraphOptions"></graph>
-        </div>
-      </div>
-    </div>
+  <div>
+    <graph :options="GraphOptions"></graph>
   </div>
 </template>
 
@@ -28,13 +11,13 @@
   import ToolbarTools from 'Components/ToolbarTools.vue';
   import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
-  import Counters from './Counters.vue';
   import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
+    props: { analyzer: {type: Object, required: true }, data: { type: Object, required: true }, phases: { type: Array, required: true } },
     data() {
-      return { ShowSpinner: true };
+      return { };
     },
     created: function() {
       this.Data = [];
@@ -89,12 +72,12 @@
         }
         this.$parent.$refs.details.$refs.events.GetEvents(to, period, lastsample);
         var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, Series: ['VOLTAGE'], To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, Series: ['VOLTAGE'], To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }),
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.Data = oZm.GraphDataAppend(result, 'Voltage', this.Data);
             lastsample = oZm.LastSampletime(result, lastsample);
-            this.$refs.graph.SetOptions({ dateWindow: [result.From, result.To], file: this.Data, valueRange: oZm.Series['VOLTAGE'].Range(this.Data, this.Phases), 
+            this.$refs.graph.SetOptions({ dateWindow: [result.From, result.To], file: this.Data, valueRange: oZm.Series['VOLTAGE'].Range(this.Data, this.Phases),
                                           labels: ['Time'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, 0).Colors } );
             this.$refs.counters.SetStats([result.From, result.To], this.Data, result["Aggregation_Source"]);
           }.bind(this),
@@ -115,7 +98,7 @@
         this.$refs.period.SetCustom(minDate, maxDate, true);
       }
     },
-    components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools, Counters, Graph }
+    components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools, Graph }
   }
 </script>
 

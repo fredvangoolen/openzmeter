@@ -1,8 +1,10 @@
 <template>
   <div id="app">
+    <div class="sidenav-overlay"/>
     <topbar :analyzer="Analyzer" :value="Values"></topbar>
-    <sidebar :analyzer="Analyzer"></sidebar>
+    <sidebar :analyzer.sync="Analyzer"></sidebar>
     <router-view :analyzer="Analyzer" id="contents"></router-view>
+    <portal-target name="dialogs" :multiple="true"></portal-target>
   </div>
 </template>
 
@@ -33,9 +35,9 @@
     right: 0px;
   }
 /*  .modal-dialog.full-screen-dialog{
-    width: 100%; 
-    height: 100%; 
-    padding: 0px; 
+    width: 100%;
+    height: 100%;
+    padding: 0px;
     margin: 0px !important;
   }*/
   @media (min-width: 640px) {
@@ -43,12 +45,23 @@
       top: 56px;
     }
 /*    .modal-dialog.full-screen-dialog{
-      padding: 10px; 
+      padding: 10px;
     }*/
   }
   @media (min-width: 1280px) {
     #contents {
       left: 48px;
     }
+  }
+    .sidenav-overlay {
+    background: #000;
+    opacity: 0.5;
+    display:none;
+    height:100%;
+    left:0;
+    position:fixed;
+    top:0;
+    width:100%;
+    z-index:99
   }
 </style>

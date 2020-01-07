@@ -1,6 +1,7 @@
 <template>
   <div>
     <div class="navbar-header">
+      <button type="button" class="navbar-toggle"><img :src="require('Imgs/application_menu.png')"></button>
       <div class="navbar-brand">
         <img :src="require('Imgs/Logo.png')">
         <div data-toggle="tooltip" :title="'Uptime: ' + Uptime" v-if="Time != null"><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
@@ -11,7 +12,7 @@
         <div data-status="tooltip" :title="'Battery status: ' + BatteryStatus" v-if="BatteryLevel != null"><img :src="require('Imgs/battery.png')">{{ BatteryLevel }}</div-->
         <div v-if="Temp != null"><img :src="require('Imgs/temperature_normal.png')">{{ Temp }}</div>
       </div>
-      <button type="button" class="navbar-toggle"><img :src="require('Imgs/application_menu.png')"></button>
+
     </div>
     <div class="indicator-bar" v-if="analyzer != null" v-on:click="Grouped = !Grouped">
       <topbar-indicator serie="VOLTAGE" :grouped="Grouped" :value="Values1.Voltage"></topbar-indicator>
@@ -22,7 +23,7 @@
     </div>
   </div>
 </template>
- 
+
 <script>
 import TopbarIndicator from './TopbarIndicator.vue';
 import moment from 'moment';
@@ -52,13 +53,13 @@ export default {
         this.UpdateIndicators1();
         this.UpdateIndicators2();
       } else {
-        this.Values = {};  
+        this.Values = {};
       }
     }
   },
   computed: {
     Uptime: function() {
-      if((this.Values1.Sys_Stats != undefined) && (this.Values1.Sys_Stats.UpTime != undefined)) return moment.duration(this.Values1.Sys_Stats.UpTime, "seconds").humanize();  
+      if((this.Values1.Sys_Stats != undefined) && (this.Values1.Sys_Stats.UpTime != undefined)) return moment.duration(this.Values1.Sys_Stats.UpTime, "seconds").humanize();
       return null;
     },
     Time: function() {
@@ -83,7 +84,7 @@ export default {
     },
     CPUUse: function() {
       if((this.Values1.Sys_Stats != undefined) && (this.Values1.Sys_Stats.CPU_Usage != undefined)) return Math.round(this.Values1.Sys_Stats.CPU_Usage) + '%';
-      return null;      
+      return null;
     },
     Temp: function() {
       if((this.Values1.Sys_Stats != undefined) && (this.Values1.Sys_Stats.Temperature != undefined)) return Math.round(this.Values1.Sys_Stats.Temperature) + '°';
@@ -101,7 +102,7 @@ export default {
           } else {
             this.WIFIPower = null;
           }
-          if(vals['Sys_Stats'].Battery_Level != undefined) {  
+          if(vals['Sys_Stats'].Battery_Level != undefined) {
             this.BatteryLevel = Math.round(vals['Sys_Stats'].Battery_Level) + '%';
             this.BatteryStatus = oZm.RoundPlain(vals['Sys_Stats'].Battery_Voltage, 2) + 'v';
           } else {
@@ -113,13 +114,13 @@ export default {
   methods: {
     UpdateIndicators1() {
       if(this.Timer1) clearInterval(this.Timer1);
-      this.Query1 = $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS'], Analyzer: this.analyzer.Analyzer }), 
+      this.Query1 = $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS'], Analyzer: this.analyzer.Analyzer }),
         success: (result) => {
           this.$set(this, 'Values1', result);
         },
         complete: () => {
           this.Timer1 = setTimeout(this.UpdateIndicators1, 2000);
-        }, 
+        },
         error: () => {
           this.$set(this, 'Values1', {});
         }
@@ -127,7 +128,7 @@ export default {
     },
     UpdateIndicators2() {
       if(this.Timer2) clearInterval(this.Timer2);
-      this.Query2 = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: '15M', To: moment().endOf('day').valueOf(), Period: 86400000 }), 
+      this.Query2 = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: '15M', To: moment().endOf('day').valueOf(), Period: 86400000 }),
         success: (result) => {
           var Energy;
           if(result['Active_Power'].length > 0) Energy = Array(result['Active_Power'][0].length).fill(0);
@@ -141,7 +142,7 @@ export default {
         },
         complete: () => {
           this.Timer2 = setTimeout(this.UpdateIndicators2, 1000000);
-        }, 
+        },
         error: () => {
           this.$set(this, 'Values2', {});
         }
@@ -151,10 +152,27 @@ export default {
   components: { TopbarIndicator }
 }
 </script>
- 
+
 <style scoped>
+  .navbar-header {
+    position: relative;
+    background-color: #474544;
+    width: 100%;
+    z-index: 90;
+    height: 56px;
+  }
   .navbar-toggle {
     display: block;
+    padding: 6px 5px;
+    right: 0px;
+    position: absolute;
+    margin: 3px;
+    color: #FFF;
+    border: 1px solid #333;
+    background-color: transparent;
+  }
+  .navbar-toggle img {
+    margin: 2px 0px;
   }
   @media(min-width: 1280px) {
     .navbar-toggle {
@@ -189,25 +207,6 @@ export default {
     text-align: left;
     padding: 0px 6px;
   }
-  .navbar-toggle img {
-    margin: 2px 0px;
-  }
-  .navbar-toggle {
-    padding: 5px 5px;
-    right: 0px;
-    position: absolute;
-    margin: 3px;
-    color: #FFF;
-    border: 1px solid #333;
-    background-color: transparent;
-  }
-  .navbar-header {
-    position: relative;
-    background-color: #474544;
-    width: 100%;
-    z-index: 90;
-    height: 56px;
-  }
   .indicator-bar {
     cursor: grabbing;
     background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
@@ -235,5 +234,5 @@ export default {
     .indicator-bar {
       right: 2px;
     }
-  } 
+  }
 </style>
