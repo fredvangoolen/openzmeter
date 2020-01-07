@@ -211,6 +211,7 @@
           (result) => {
             if((result.status == 200) && (result.data.Sampletime.length > 0)) {
               var Result = {};
+              Result.Aggregation_Source = result.data.Aggregation_Source;
               for(var n in result.data) {
                 if(Array.isArray(result.data[n])) Result[n] = result.data[n].slice(-1)[0];
               }

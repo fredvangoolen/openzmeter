@@ -4,25 +4,35 @@
       <div class="counters-title">Last value:</div>
       <div class="counters-aggreg" v-if="data15M!=null">From 15 minutes aggregation<br>{{ FormatTime(data15M.Sampletime) }}</div>
       <div class="clearfix"></div>
-      <div class="current-value" v-html="CurrentValue15M"></div>
+      <div>
+        <div class="current-value" v-html="(data15M!=null) ? FormatSum(data15M) : '-'"></div>
+        <div class="counters-phases" v-if="(data15M!=null)&&(data15M.Active_Power.length>1)">
+          <div v-for="(phase, idx) in FormatPhases(data15M)" :key="idx" v-html="phase"></div>
+        </div>
+      </div>
     </div>
     <div class="subpanel clearfix">
       <div class="counters-title">Last value:</div>
       <div class="counters-aggreg" v-if="data1H!=null">From 1 hour aggregation<br>{{ FormatTime(data1H.Sampletime) }}</div>
       <div class="clearfix"></div>
-      <div class="current-value" v-html="CurrentValue1H"></div>
+      <div>
+        <div class="current-value" v-html="(data1H!=null) ? FormatSum(data1H) : '-'"></div>
+        <div class="counters-phases" v-if="(data1H!=null)&&(data1H.Active_Power.length>1)">
+          <div v-for="(phase, idx) in FormatPhases(data1H)" :key="idx" v-html="phase"></div>
+        </div>
+      </div>
     </div>
     <div class="subpanel clearfix">
       <div class="counters-title">Period stats:</div>
       <div class="counters-aggreg" v-if="dataGraph!=null">{{ FormatAggregation(dataGraph.Aggregation_Source) }}<br>From {{ FormatDateTime(dataGraph.From) }} to {{ FormatDateTime(dataGraph.To) }}</div>
-      <div class="line" v-bind:class="{'line-border-reactive': (serie == 'REACTIVE_ENERGY')}">
+      <div class="line">
         <div class="float-left">
           <div class="counters-stat-type">Max value:</div>
           <div class="counters-stat-time">{{ isFinite(Max.Value) ? FormatDateTime(Max.Time) : '-' }}</div>
         </div>
         <div class="counters-stat-val" v-html="isFinite(Max.Value) ? FormatHTML(Max.Value) : '-'"></div>
       </div>
-      <div class="line line-border" v-bind:class="{'line-border-reactive': (serie == 'REACTIVE_ENERGY')}">
+      <div class="line line-border">
         <div class="float-left">
           <div class="counters-stat-type">Total in period:</div>
           <div class="counters-stat-time">From {{ (Sum.Count > 0) ? Sum.Count : '-' }} samples</div>
@@ -42,8 +52,8 @@
     data () {
       return { CountersAggregation: 'Loading data...', MaxTime: '', MaxValue: '',
                 CurrentValue15M: '', CurrentValue15MPhases: '',
-                CurrentValue1H: '', CurrentValue1HPhases: '',
-                TimeStatsFrom: '...', TimeStatsTo: '...'
+                CurrentValue1H: '', CurrentValue1HPhases: ''
+
               };
     },
     updated: function() {
@@ -87,21 +97,20 @@
         var Units = oZm.GetBestUnits(val);
         return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'ACTIVE_ENERGY') ? 'Wh' : 'VArh');
       },
-
-      FormatPhases: function(values) {
-        var Return = '';
-        if(values.length > 1) {
-          for(var n = 0; n < values.length; n++) {
-            var Format = oZm.Series[this.variable].FormatValue(values[n]);
-            Return += Format.Value + '<em>' + Format.Units +'</em><br>';
-          }
-        }
-        return Return;
-      },
-      SumPhases: function(values) {
+      FormatSum: function(val) {
+        var Val = (this.serie == 'ACTIVE_ENERGY') ? val.Active_Power : val.Reactive_Power;
+        var Div = (val.Aggregation_Source == '15M') ? 4 : 1;
         var Sum = 0;
-        for(var n = 0; n < values.length; n++) Sum += values[n];
-        return Sum;
+        for(var n in Val) Sum = Sum + Val[n] / Div;
+        return this.FormatHTML(Sum);
+      },
+      FormatPhases: function(val) {
+        var Val = (this.serie == 'ACTIVE_ENERGY') ? val.Active_Power : val.Reactive_Power;
+        var Div = (val.Aggregation_Source == '15M') ? 4 : 1;
+        var Units = oZm.GetBestUnits(oZm.ArrayAbsMax(Val));
+        var Result = [];
+        for(var n in Val) Result.push(this.FormatHTML(Val[n] / Div));
+        return Result;
       },
       FormatAggregBlock(result, quarter) {
         var Variable = (this.variable == 'ACTIVE_ENERGY') ? 'ACTIVE_POWER' : 'REACTIVE_POWER';
@@ -139,8 +148,11 @@
     line-height: 12px;
     font-weight: bold;
     padding-left: 2px;
-    border-left: 1px solid #f0ad4e;
+    border-left: 1px solid #c7c7e6;
     margin-left: 5px;
+  }
+  .panel-reactive-energy .counters-phases{
+    border-left: 1px solid #acadd6;
   }
   .counters-title {
     float: left;
@@ -178,7 +190,7 @@
   .line-border {
     border-top: 1px solid #c7c7e6;
   }
-  .line-border-reactive {
+  .panel-reactive-energy .line-border-reactive {
     border-top: 1px solid #acadd6;
   }
 </style>
