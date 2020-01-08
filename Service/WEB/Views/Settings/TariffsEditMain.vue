@@ -17,7 +17,7 @@
         <div class="col-xs-12 col-sm-6"><label class="control-label">Name</label><input type="text" class="form-control" v-model="Tariff.Name"></div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Time zone</label>
-          <option-picker :options="TimeZones" :selected="Tariff.TimeZone" v-on:change="TimezoneChanged" :big="true"></option-picker>
+          <option-picker :options="TimeZones" v-model="Tariff.TimeZone" :big="true"></option-picker>
         </div>
         <div class="col-xs-12 col-sm-6"><label class="control-label">Start date</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:change="SetStartDate"></date-picker></div>
         <div class="col-xs-12 col-sm-6"><label class="control-label">End date</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:change="SetEndDate"></date-picker></div>
@@ -29,7 +29,7 @@
               <div class="input-group-btn">
                 <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false"><span style="display: inline-block;width: 80px;">{{ (Tariff.Template.WeekendPeriod == null) ? 'Don\'t apply' : 'P' + (Tariff.Template.WeekendPeriod+1) }}</span><span class="caret"></span></button>
                 <ul class="dropdown-menu pull-right">
-                  <li v-for="(period, index) in Tariff.Template.Periods" v-bind:class="{active: Tariff.Template.WeekendPeriod == index}"><a @click="SetWeekEndPeriod(index)">P{{ index + 1 }}</a></li>
+                  <li v-for="(period, index) in Tariff.Template.Periods" :key="index" v-bind:class="{active: Tariff.Template.WeekendPeriod == index}"><a @click="SetWeekEndPeriod(index)">P{{ index + 1 }}</a></li>
                   <li role="separator" class="divider"></li>
                   <li v-bind:class="{active: Tariff.Template.WeekendPeriod == null}"><a @click="SetWeekEndPeriod(null)">Don't apply</a></li>
                 </ul>
@@ -44,7 +44,7 @@
                 <div class="input-group-btn">
                   <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false"><span style="display: inline-block;width: 80px;">{{ (Tariff.Template.HolidayPeriod == null) ? 'Don\'t apply' : 'P' + (Tariff.Template.HolidayPeriod+1) }}</span><span class="caret"></span></button>
                   <ul class="dropdown-menu pull-right">
-                    <li v-for="(period, index) in Tariff.Template.Periods" v-bind:class="{active: Tariff.Template.HolidayPeriod == index}"><a @click="SetHolidayPeriod(index)">P{{ index + 1 }}</a></li>
+                    <li v-for="(period, index) in Tariff.Template.Periods" :key="index" v-bind:class="{active: Tariff.Template.HolidayPeriod == index}"><a @click="SetHolidayPeriod(index)">P{{ index + 1 }}</a></li>
                     <li role="separator" class="divider"></li>
                     <li v-bind:class="{active: Tariff.Template.HolidayPeriod == null}"><a @click="SetHolidayPeriod(null)">Don't apply</a></li>
                   </ul>
@@ -63,7 +63,7 @@
   import OptionPicker from 'Components/OptionPicker.vue';
   export default {
     data() {
-      return { TimeZones: moment.tz.names(), Error: '', Show: false, Tariff: {} };
+      return { TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), Error: '', Show: false, Tariff: {} };
     },
     methods: {
       SetWeekEndPeriod: function(period) {
