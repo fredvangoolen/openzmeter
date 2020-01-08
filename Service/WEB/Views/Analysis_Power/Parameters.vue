@@ -8,7 +8,7 @@
       </div>
     </div>
     <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+      <spinner v-if="ShowSpinner"></spinner>
       <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" ref="rows" :index="index" v-on:mouseOver="MouseOver"></cubism>
     </div>
   </div>

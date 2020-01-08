@@ -8,7 +8,7 @@
         </div>
       </div>
     <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+      <spinner v-if="ShowSpinner"></spinner>
       <cubism v-for="(serie, index) in Series" :serie="'HARMONICS_POWER'" :key="serie" :index="index" ref="rows"></cubism>
     </div>
   </div>

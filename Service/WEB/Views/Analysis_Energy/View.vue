@@ -18,7 +18,7 @@
             <spinner v-if="ShowSpinner"></spinner>
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_ENERGY" :analyzer="analyzer" :data15M="Data15M" :data1H="Data1H" :dataGraph="GraphData" :height.sync="ActiveHeight"></counters>
-              <energy class="col-md-6 col-lg-8 col-xl-9" serie="ACTIVE_ENERGY" :data="GraphData" :height="ActiveHeight"></energy>
+              <energy class="col-md-6 col-lg-8 col-xl-9" serie="ACTIVE_ENERGY" :analyzer="analyzer" :data="GraphData" :height="ActiveHeight"></energy>
             </div>
           </div>
         </div>
@@ -36,7 +36,7 @@
             <spinner v-if="ShowSpinner"></spinner>
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_ENERGY" :analyzer="analyzer" :data15M="Data15M" :data1H="Data1H" :dataGraph="GraphData" :height.sync="ReactiveHeight"></counters>
-              <energy class="col-md-6 col-lg-8 col-xl-9" serie="REACTIVE_ENERGY" :data="GraphData" :height="ReactiveHeight"></energy>
+              <energy class="col-md-6 col-lg-8 col-xl-9" serie="REACTIVE_ENERGY" :analyzer="analyzer" :data="GraphData" :height="ReactiveHeight"></energy>
             </div>
           </div>
         </div>

@@ -1,104 +1,77 @@
 <template>
   <div>
-    <div class="panel panel-active-power">
-      <div class="panel-heading">
-        <div class="huge header-text">Active Power</div>
-        <div class="header-buttons clearfix" ref="ToolbarActive">
-          <toolbar-aggregation variable="AggregationEnergy" :options="['15M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
-          <toolbar-period variable="Period" v-on:PeriodChanged="UpdateGraph" ref="period"></toolbar-period>
-          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClickActive" v-on:MaximizeClick="MaximizeActiveClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
-        </div>
-      </div>
-      <div class="panel-body">
-        <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-        <div class="row">
-          <counters class="col-md-6 col-lg-4 col-xl-3" ref="activeCounters" variable="ACTIVE_POWER"></counters>
-          <div class="col-md-6 col-lg-8 col-xl-9">
-            <graph ref="graphActive" :options="GraphOptionsActive"></graph>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="panel panel-reactive-power" id="ReactivePowerPanel">
-      <div class="panel-heading" id="ReactivePowerPanel">
-        <div class="header-text">Fund. Reactive Power</div>
-        <div class="header-buttons clearfix" ref="ToolbarReactive">
-          <toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClickReactive" v-on:MaximizeClick="MaximizeReactiveClick" v-on:MinimizeClick="MinimizeClick" ref="reactiveTools"></toolbar-tools>
-        </div>
-      </div>
-      <div class="panel-body">
-        <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-        <div class="row">
-          <counters class="col-md-6 col-lg-4 col-xl-3" ref="reactiveCounters" variable="REACTIVE_POWER"></counters>
-          <div class="col-md-6 col-lg-8 col-xl-9">
-            <graph ref="graphReactive" :options="GraphOptionsReactive"></graph>
-          </div>
-        </div>
-      </div>
-    </div>
+    <graph :options="GraphOptions" :height="height"></graph>
   </div>
 </template>
 
 <script>
-  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
-  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
-  import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
-  import Counters from './Counters.vue';
   import moment from 'moment';
+  import 'moment-timezone';
   import * as oZm from 'JS/openZmeter.js';
   export default {
+    props: { data: { type: Object }, serie: { type: String }, height: { type: Number, default: 300 }, analyzer: { type: Object } },
     data () {
-      return { ShowSpinner: true };
+      return { };
+    },
+    computed: {
+      GraphOptions: function() {
+        var Opt = {};
+        Opt.strokeWidth = 0.5;
+        Opt.stepPlot = true;
+        Opt.drawGapEdgePoints = true;
+        Opt.connectSeparatedPoints = false;
+        Opt.fillGraph = true;
+        Opt.gridLineColor = "#BBB";
+        Opt.gridLinePattern = [4, 4];
+        Opt.legend = 'follow';
+        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.interactionModel = Graph.ScrollableInteractionModel(this);
+        Opt.underlayCallback = this.DrawPeriods;
+        Opt.labels = (this.serie == 'ACTIVE_POWER') ? ['Time', 'Active Power'] : ['Time', 'Reactive Power'];
+        Opt.colors = [oZm.Series[this.serie].Color];
+        Opt.xAxisHeight = 24;
+        Opt.selectMode = 'euclidian';
+        Opt.axes = { y: {}, x: {} };
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 34;
+        if(this.serie == 'ACTIVE_POWER') {
+          Opt.axes.y.valueFormatter = (x) => { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' ' + Result.Units; };
+          Opt.axes.y.axisLabelFormatter = (x) => { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value; };
+        } else {
+          Opt.axes.y.valueFormatter = (x) => {  var Result = oZm.Series['REACTIVE_POWER'].FormatValue(x); return Result.Value + ' ' + Result.Units; },
+          Opt.axes.y.axisLabelFormatter = (x) => { var Result = oZm.Series['REACTIVE_POWER'].FormatValue(x); return Result.Value;  }
+        }
+        Opt.axes.x.axisLabelFormatter = (x) => { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); };
+        Opt.axes.x.valueFormatter = (x) => { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); };
+        Opt.file = [];
+        if(this.data != null) {
+          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data[(this.serie == 'ACTIVE_POWER') ? 'Active_Power' : 'Reactive_Power'][n]]);
+        } else {
+          Opt.file.push([0, 0]);
+        }
+        return Opt;
+      }
     },
     created: function() {
       this.Periods = [];
       this.Bills = [];
       this.ActiveData = [];
       this.ReactiveData = [];
-      this.NowTimer = null;
-      this.GraphOptionsActive = {
-        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, underlayCallback: this.DrawPeriods,
-        labels: ['Time', 'Active Power'], interactionModel: Graph.ScrollableInteractionModel(this), colors: [oZm.Series['ACTIVE_POWER'].Color], xAxisHeight: 24, selectMode: 'euclidian',
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
-               axisLabelFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value; }
-             },
-          x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
-               valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
-             }
-        }
-      };
-      this.GraphOptionsReactive = {
-        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: true, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow,
-        labels: ['Time', 'Reactive Power'], interactionModel: Graph.ScrollableInteractionModel(this), colors: [oZm.Series['REACTIVE_POWER'].Color], xAxisHeight: 24, selectMode: 'euclidian', 
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) {  var Result = oZm.Series['REACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
-               axisLabelFormatter: function (x) { var Result = oZm.Series['REACTIVE_POWER'].FormatValue(x); return Result.Value;  }
-             },
-          x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
-               valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
-             }
-        }
-      };
-      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
-    mounted: function() {
-      $(window).on('resize', this.ResizeHandler.bind(this));
-       window.dispatchEvent(new Event('resize'));
-      this.NowValue();
-    },
-    beforeDestroy: function() {
-      $(window).off('resize', this.ResizeHandler);
-      clearInterval(this.NowTimer);
-    },
+//    mounted: function() {
+//      $(window).on('resize', this.ResizeHandler.bind(this));
+//       window.dispatchEvent(new Event('resize'));
+//      this.NowValue();
+//    },
+//    beforeDestroy: function() {
+//      $(window).off('resize', this.ResizeHandler);
+//      clearInterval(this.NowTimer);
+//    },
     methods: {
-      SetAnalyzer: function() {
-        this.NowValue();
-      },
+//      SetAnalyzer: function() {
+//        this.NowValue();
+//      },
       DrawPeriods: function(canvas, area, g) {
         canvas.strokeStyle = '#777';
         canvas.lineWidth = 2;
@@ -170,34 +143,7 @@
         var Analyzer = this.$root.SelectedAnalyzer;
         this.$refs.tools.SaveCVS('Reactive_Power.csv', [['Time'].concat(oZm.Series['REACTIVE_POWER'].Names(Analyzer))].concat(this.ReactiveData));
       },
-      NowValue: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '3S', LastSample: 0, Period: 6000, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
-          success: function(result) {
-            this.$refs.activeCounters.Set3SValues(result);
-            this.$refs.reactiveCounters.Set3SValues(result);
-          }.bind(this),
-          complete: function() {
-            clearTimeout(this.NowTimer);
-            this.NowTimer = setTimeout(this.NowValue.bind(this), 2000);
-            this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
-          }.bind(this), 
-          error: function() {
-            this.$refs.activeCounters.Set3SValues(null);
-            this.$refs.reactiveCounters.Set3SValues(null);
-          }.bind(this)
-        });
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER', 'REACTIVE_POWER'], To: 0, Aggreg: '1M', LastSample: 0, Period: 120000, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
-          success: function(result) {
-            this.$refs.activeCounters.Set1MValues(result);
-            this.$refs.reactiveCounters.Set1MValues(result);
-          }.bind(this),
-          error: function() {
-            this.$refs.activeCounters.Set1MValues(null);
-            this.$refs.reactiveCounters.Set1MValues(null);            
-          }.bind(this)
-        });
-      },
+
       UpdateGraph: function(to, period, lastsample, aggreg) {
         if(lastsample === 0) {
           this.ActiveData = [];
@@ -254,14 +200,7 @@
         this.$refs.period.SetCustom(minDate, maxDate, true);
       }
     },
-    components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarTools, Graph, Counters }
+    components: { Graph }
   }
 </script>
-
-<style scoped>
-  .header-text {
-    font-size: 24px;
-    line-height: 16px;
-  }
-</style>
 

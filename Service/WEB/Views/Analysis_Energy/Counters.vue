@@ -50,11 +50,7 @@
   export default {
     props: { analyzer: { type: Object}, serie: { type: String, required: true }, data15M: { type: Object }, data1H: { type: Object }, dataGraph: { type: Object } },
     data () {
-      return { CountersAggregation: 'Loading data...', MaxTime: '', MaxValue: '',
-                CurrentValue15M: '', CurrentValue15MPhases: '',
-                CurrentValue1H: '', CurrentValue1HPhases: ''
-
-              };
+      return { };
     },
     updated: function() {
       this.$emit('update:height', this.$el.clientHeight);
@@ -82,7 +78,7 @@
           var Value = this.dataGraph[(this.serie == 'ACTIVE_ENERGY') ? 'Active_Power' : 'Reactive_Power'][x] / Divisor;
           if(Value > Max.Value) {
             Max = { Value: Value, Time: this.dataGraph.Sampletime[x], Count: 0 };
-          } else if(Value == Max) {
+          } else if(Value == Max.Value) {
             Max.Count++;
           }
         }
@@ -151,7 +147,7 @@
     border-left: 1px solid #c7c7e6;
     margin-left: 5px;
   }
-  .panel-reactive-energy .counters-phases{
+  .panel-reactive-energy .counters-phases {
     border-left: 1px solid #acadd6;
   }
   .counters-title {
@@ -190,7 +186,7 @@
   .line-border {
     border-top: 1px solid #c7c7e6;
   }
-  .panel-reactive-energy .line-border-reactive {
+  .panel-reactive-energy .line-border {
     border-top: 1px solid #acadd6;
   }
 </style>

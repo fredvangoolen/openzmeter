@@ -7,7 +7,7 @@
       </div>
     </div>
     <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+      <spinner v-if="ShowSpinner"></spinner>
       <div class="row">
         <!--div class="col-sm-12 col-md-8 col-lg-6 graphDiv" ref="graphContainer">
           <graph ref="graph" class="graph" :options="GraphOptions"></graph>

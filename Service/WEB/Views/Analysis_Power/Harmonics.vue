@@ -9,7 +9,7 @@
         </div>
       </div>
     <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+      <spinner v-if="ShowSpinner"></spinner>
       <graph ref="graph" :options="{}" v-on:mouseOver="MouseOver=$event"></graph>
     </div>
   </div>

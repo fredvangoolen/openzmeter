@@ -7,6 +7,7 @@
 <script>
   import Graph from 'Components/Graph.vue';
   import moment from 'moment';
+  import 'moment-timezone';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { data: { type: Object }, serie: { type: String }, height: { type: Number, default: 300 }, analyzer: { type: Object } },
@@ -31,9 +32,9 @@
         Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
         Opt.labels = (this.serie == 'ACTIVE_ENERGY') ? ['Time', 'Active Energy'] : ['Time', 'Reactive Energy'];
         Opt.colors = [oZm.Series[this.serie].Color];
-        Opt.axes = { y: {}, x: {}};
-        Opt.axes.x.axisLabelFormatter = (x) => { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); };
-        Opt.axes.x.valueFormatter = (x) => { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); };
+        Opt.axes = { y: {}, x: {} };
+        Opt.axes.x.axisLabelFormatter = (x) => { return moment(x).tz(this.analyzer.TimeZone).format('DD/MM/YYYY [<br/>] HH:mm:ss'); };
+        Opt.axes.x.valueFormatter = (x) => { return moment(x).tz(this.analyzer.TimeZone).format('DD/MM/YYYY - HH:mm:ss'); };
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         if(this.serie == 'ACTIVE_ENERGY') {
@@ -50,7 +51,6 @@
         } else {
           Opt.file.push([0, 0]);
         }
-
         return Opt;
       }
     },
