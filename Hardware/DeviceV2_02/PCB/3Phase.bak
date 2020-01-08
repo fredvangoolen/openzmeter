@@ -437,7 +437,7 @@ L 3Phase-rescue:R-3Phase-rescue R36
 U 1 1 5BD0550F
 P 5300 1425
 F 0 "R36" V 5380 1425 50  0000 C CNN
-F 1 "120k" V 5300 1425 50  0001 C CNN
+F 1 "100k" V 5300 1425 50  0001 C CNN
 F 2 "Footprints:R_0603_1608Metric" V 5230 1425 50  0001 C CNN
 F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 5300 1425 50  0001 C CNN
 	1    5300 1425
@@ -3796,10 +3796,10 @@ Wire Wire Line
 Wire Wire Line
 	5300 1250 5450 1250
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R?
+L 3Phase-rescue:R-3Phase-rescue R59
 U 1 1 5E2C54F1
 P 5125 1425
-F 0 "R?" V 5205 1425 50  0000 C CNN
+F 0 "R59" V 5205 1425 50  0000 C CNN
 F 1 "150k" V 5125 1425 50  0001 C CNN
 F 2 "Footprints:R_0603_1608Metric" V 5055 1425 50  0001 C CNN
 F 3 "https://lcsc.com/product-detail/_RC0603JR-07270KL_C137642.html" H 5125 1425 50  0001 C CNN

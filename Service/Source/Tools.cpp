@@ -153,12 +153,10 @@ WorkerLocks::WorkerLocks() {
   pCond = PTHREAD_COND_INITIALIZER;
   pMutex = PTHREAD_MUTEX_INITIALIZER;
 }
-void WorkerLocks::Abort(pthread_t *thread) {
+void WorkerLocks::Abort(pthread_t &thread) {
   pTerminate = true;
   pthread_cond_signal(&pCond);
-  if(*thread == 0) return;
-  if(pthread_join(*thread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
-  *thread = 0;
+  if(pthread_join(&thread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
 }
 void WorkerLocks::WakeWorker() {
   pthread_mutex_lock(&pMutex);

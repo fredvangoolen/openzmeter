@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source /home/edu/Proyectos/zMeter/V2/Hardware/DeviceV2_02/PCB/3Phase.sch)
-    (date "mar 17 dic 2019 10:22:42 CET")
+    (date "mar 07 ene 2020 12:09:37 CET")
     (tool "Eeschema 5.0.2+dfsg1-1~bpo9+1")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -545,7 +545,7 @@
       (sheetpath (names /) (tstamps /))
       (tstamp 5BDF4375))
     (comp (ref U7)
-      (value FP6715)
+      (value PS7516)
       (footprint Footprints:TSOT-23-6)
       (datasheet https://lcsc.com/product-detail/DC-DC-Converters_FP6715S6CTR_C128048.html)
       (libsource (lib 3Phase-rescue) (part PS7516-3Phase-rescue) (description ""))
