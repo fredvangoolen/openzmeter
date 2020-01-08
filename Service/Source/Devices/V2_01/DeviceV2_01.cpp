@@ -159,6 +159,7 @@ DeviceV2_01::DeviceV2_01(const string &serial) : Device(serial, "V2.01", "Captur
   pBuffer     = (int16_t*)malloc(DEVICEV2_01_BUFFERSIZE * sizeof(uint16_t) * 7);
   pBufferHead = 0;
   pBufferTail = 0;
+  //tengo que construir el thread de captura aqui, para que se manejen los botones y los leds aunque el driver no este "iniciado"
 }
 DeviceV2_01::~DeviceV2_01() {
   StopDevice();
@@ -217,36 +218,37 @@ bool  DeviceV2_01::StartDevice() {
   }
   pHighGain = Config["HighGain"];
   pTerminate = false;
+  pAnalyzerSetupSize = 0;
+  pAnalyzerSetup = (Analyzers_t*)malloc(Config["Outputs"].size() * sizeof(Analyzer_t));
   for(auto Tmp : Config["Outputs"]) {
-    Analyzer_t AnalyzerSetup;
-    AnalyzerSetup.Mode = (Tmp["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Tmp["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
+    pAnalyzerSetup[pAnalyzerSetupSize].Mode = (Tmp["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Tmp["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
     string Name = pSerial;
-    if(AnalyzerSetup.Mode == Analyzer::PHASE1) {
+    if(pAnalyzerSetup[pAnalyzerSetupSize].Mode == Analyzer::PHASE1) {
       string Voltage = Tmp["Voltage"];
-      AnalyzerSetup.Voltage[0] = (Voltage[2] - '1');
+      pAnalyzerSetup[pAnalyzerSetupSize].Voltage[0] = (Voltage[2] - '1');
       string Current = Tmp["Current"];
-      AnalyzerSetup.Current[0] = Current[3] - '1' + 3;
-      AnalyzerSetup.CurrentInvert[0] = (Current[0] == '+') ? 1.0 : -1.0;
-      AnalyzerSetup.CurrentChannels = 1;
-      AnalyzerSetup.VoltageChannels = 1;
+      pAnalyzerSetup[pAnalyzerSetupSize].Current[0] = Current[3] - '1' + 3;
+      pAnalyzerSetup[pAnalyzerSetupSize].CurrentInvert[0] = (Current[0] == '+') ? 1.0 : -1.0;
+      pAnalyzerSetup[pAnalyzerSetupSize].CurrentChannels = 1;
+      pAnalyzerSetup[pAnalyzerSetupSize].VoltageChannels = 1;
       Name += "_1P_CH" + to_string(Current[3] - '1');
     } else {
       for(unsigned Ch = 0; Ch < Tmp["Voltage"].size(); Ch++) {
         string Voltage = Tmp["Voltage"][Ch];
-        AnalyzerSetup.Voltage[Ch] = (Voltage[2] - '1');
+        pAnalyzerSetup[pAnalyzerSetupSize].Voltage[Ch] = (Voltage[2] - '1');
       }
       for(unsigned Ch = 0; Ch < Tmp["Current"].size(); Ch++) {
         string Current =  Tmp["Current"][Ch];
-        AnalyzerSetup.Current[Ch] = Current[3] - '1' + 3;
-        AnalyzerSetup.CurrentInvert[Ch] = (Current[0] == '+') ? 1.0 : -1.0;        
+        pAnalyzerSetup[pAnalyzerSetupSize].Current[Ch] = Current[3] - '1' + 3;
+        pAnalyzerSetup[pAnalyzerSetupSize].CurrentInvert[Ch] = (Current[0] == '+') ? 1.0 : -1.0;        
       }
-      AnalyzerSetup.CurrentChannels = Tmp["Current"].size();
-      AnalyzerSetup.VoltageChannels = Tmp["Voltage"].size();
+      pAnalyzerSetup[pAnalyzerSetupSize].CurrentChannels = Tmp["Current"].size();
+      pAnalyzerSetup[pAnalyzerSetupSize].VoltageChannels = Tmp["Voltage"].size();
       Name += (AnalyzerSetup.Mode == Analyzer::PHASE3) ? "_3P" : "_3PN";
     }
-    AnalyzerSetup.Parent = new AnalyzerSoft(Name, AnalyzerSetup.Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzersSetup.size()) + "/Analyzer", DEVICEV2_01_SAMPLEFREQ);
-    pAnalyzersSetup.push_back(AnalyzerSetup);
-    pAnalyzers.push_back(AnalyzerSetup.Parent);
+    pAnalyzerSetup[pAnalyzerSetupSize].Parent = new AnalyzerSoft(Name, AnalyzerSetup.Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzersSetupSize) + "/Analyzer", DEVICEV2_01_SAMPLEFREQ);
+    pAnalyzers.push_back(pAnalyzerSetup[pAnalyzerSetupSize].Parent);
+    pAnalyzersSetupSize++;
   }
   if(libusb_init(&pContext) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
@@ -477,22 +479,22 @@ int   DeviceV2_01::PlugCallback(struct libusb_context *ctx, struct libusb_device
   return 0;
 }
 void  DeviceV2_01::GetDevice(HTTPRequest &req) {
-  pMembersLock.ReadLock();
   json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
-  pAverageLocks.ReadLock();
+  float AverageValues[7];
+  pthread_mutex_lock(&pAverageLocks);
+  for(uint32_t n = 0; n < 7; n++) AverafeValues[n] = pAverageValues[n];
+  pthread_mutex_unlock(&pAverageLocks);
   Config["Wave_Average"] = json::object();
   Config["Wave_Average"]["Voltage"] = json::array();
-  Config["Wave_Average"]["Voltage"].push_back(pAverageValues[0]);
-  Config["Wave_Average"]["Voltage"].push_back(pAverageValues[1]);
-  Config["Wave_Average"]["Voltage"].push_back(pAverageValues[2]);
+  Config["Wave_Average"]["Voltage"].push_back(AverageValues[0]);
+  Config["Wave_Average"]["Voltage"].push_back(AverageValues[1]);
+  Config["Wave_Average"]["Voltage"].push_back(AverageValues[2]);
   Config["Wave_Average"]["Current"] = json::array();
-  Config["Wave_Average"]["Current"].push_back(pAverageValues[3]);
-  Config["Wave_Average"]["Current"].push_back(pAverageValues[4]);
-  Config["Wave_Average"]["Current"].push_back(pAverageValues[5]);
-  Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
-  pAverageLocks.ReadUnlock();
-  pMembersLock.ReadUnlock();
+  Config["Wave_Average"]["Current"].push_back(AverageValues[3]);
+  Config["Wave_Average"]["Current"].push_back(AverageValues[4]);
+  Config["Wave_Average"]["Current"].push_back(AverageValues[5]);
+  Config["Wave_Average"]["Current"].push_back(AverageValues[6]);
   req.FromJSON(Config);
 }
 void  DeviceV2_01::SetDevice(HTTPRequest &req) {
@@ -530,8 +532,8 @@ void  DeviceV2_01::BuffersAppend() {
     pBufferTail = 0;
     LOGFile::Error("Capture buffer overflow in device '%s'\n", pSerial.c_str());
   }
-  for(auto &Tmp : pAnalyzersSetup) {
-    if(Tmp.Parent->IsFinished() == false) return;
+  for(uint32_t n = 0; n < pAnalyzersSetupSize; n++) {
+    if(pAnalyzerSetup[n].Parent->IsFinished() == false) return;
   }
   bool AnalyzerRun = false;
   while((pBufferTail != pBufferHead) && (AnalyzerRun == false)) {
@@ -545,12 +547,11 @@ void  DeviceV2_01::BuffersAppend() {
     Values[4] = ((float)Ptr[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
     Values[5] = ((float)Ptr[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
     Values[6] = ((float)Ptr[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
-    for(auto &Tmp : pAnalyzersSetup) {
+    for(uint32_t n = 0; n < pAnalyzerSetupSize; n++) {
       float Voltage[3], Current[4];
-      //vector<float> Voltage(3), Current(4);
-      for(unsigned Ch = 0; Ch < Tmp.VoltageChannels; Ch++) Voltage[Ch] = Values[Tmp.Voltage[Ch]];
-      for(unsigned Ch = 0; Ch < Tmp.CurrentChannels; Ch++) Current[Ch] = Values[Tmp.Current[Ch]] * Tmp.CurrentInvert[Ch];
-      if(Tmp.Parent->BufferAppend(Voltage, Current) == true) AnalyzerRun = true;
+      for(unsigned Ch = 0; Ch < Tmp.VoltageChannels; Ch++) Voltage[Ch] = Values[pAnalyzerSetup[n].Voltage[Ch]];
+      for(unsigned Ch = 0; Ch < Tmp.CurrentChannels; Ch++) Current[Ch] = Values[pAnalyzerSetup[n].Current[Ch]] * Tmp.CurrentInvert[Ch];
+      if(pAnalyzerSetup[n].Parent->BufferAppend(Voltage, Current) == true) AnalyzerRun = true;
     }
   }
 }

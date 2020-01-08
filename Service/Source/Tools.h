@@ -58,7 +58,7 @@ class WorkerLocks final {
     pthread_cond_t  pCond;
   public :
     WorkerLocks();
-    void Abort(pthread_t *thread);
+    void Abort(pthread_t &thread);
     bool WorkerWaitTask();
     void WorkerEndsTask();
     void WakeWorker();

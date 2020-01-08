@@ -54,7 +54,8 @@ class DeviceV2_01 final : public Device {
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
     bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
-    vector<Analyzer_t>           pAnalyzersSetup;          //Listado de analyzadores
+    Analyzer_t                  *pAnalyzersSetup;          //Listado de analyzadores
+    uint32_t                    *pAnalyzerSetupSize;       //Number of analyzers
     int16_t                     *pBuffer;                  //Read buffer
     uint32_t                     pBufferTail;              //pBuffer read pos
     uint32_t                     pBufferHead;              //pBuffer write pos
@@ -71,7 +72,7 @@ class DeviceV2_01 final : public Device {
     int32_t                      pRunAverageValues[7];     //Average wave value of last second
     uint32_t                     pRunAverageCounter;       //Somple count for average
     float                        pAverageValues[7];        //Average wave value of last second
-    RWLocks                      pAverageLocks;            //Lock access to average values
+    pthread_mutex_t              pAverageLocks;            //Lock access to average values
     uint64_t                     pLastSignalRecv;          //Last battery message recv
     bool                         pButtonAction;            //Last action readed
     vector<Transfer>             pTransfers;
