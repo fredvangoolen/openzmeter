@@ -3,7 +3,7 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <div class="header-buttons" ref="Toolbar">
-        <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick"></toolbar-tools>
+        <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick"></toolbar-tools-->
       </div>
     </div>
     <div class="panel-body">
@@ -50,7 +50,7 @@
                valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
                axisLabelFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value; }
              },
-          x: { axisLabelWidth: 80, 
+          x: { axisLabelWidth: 80,
                axisLabelFormatter: function(x) { return (x == 0) ? 'Active power' : (x == 1) ? 'Breakdown' : '' },
                valueFormatter: function (x) { return (x == 0) ? 'Active power' : (x == 1) ? 'Breakdown' : '' }
              }
@@ -134,7 +134,7 @@
           { Harmonic: 'Fundamental', Power: oZm.RoundHTML(Fundamental, 2), Ratio: oZm.RoundHTML(Fundamental / Total * 100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #DF842A"></div>' },
           { Harmonic: 'Harmonics', Power: oZm.RoundHTML(Harmonics, 2), Ratio: oZm.RoundHTML(Harmonics / Total * 100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #3d3d8b"></div>' },
           { Harmonic: 'Noise+Interharmonics', Power: oZm.RoundHTML(Noise, 2), Ratio: oZm.RoundHTML(Noise / Total * 100, 2) + ' %'},
-          { Harmonic: 'Total active power', Power: oZm.RoundHTML(Total, 2), Ratio: oZm.RoundHTML(100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #f0ad4e "></div>' } 
+          { Harmonic: 'Total active power', Power: oZm.RoundHTML(Total, 2), Ratio: oZm.RoundHTML(100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #f0ad4e "></div>' }
         ] });
         this.ShowSpinner = false;
       }
@@ -154,7 +154,7 @@
     .table >>> th:nth-child(1)  {
       width: 40px;
       text-align: center;
-    }  
+    }
     .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
       text-align: right;
       width: 100px;

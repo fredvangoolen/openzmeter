@@ -6,7 +6,7 @@
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
+      <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Tariffs" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
             <button class="btn btn-xs btn-default" @click="Edit(props.rowData, $event)">Edit</button>
@@ -28,28 +28,30 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return {ShowSpinner: true,
+      return {ShowSpinner: true, Tariffs: [],
         Columns: [
-          {name: 'TimeZone', title: 'Time zone'},
-          {name: 'Name', title: 'Name'},
-          {name: 'StartDate', title: 'Start date'},
-          {name: 'EndDate', title: 'End date'},
-          {name: '__slot:actions', title: ''}
+          { name: 'TimeZone', title: 'Time zone' },
+          { name: 'Name', title: 'Name' },
+          { name: 'StartDate', title: 'Start date' },
+          { name: 'EndDate', title: 'End date' },
+          { name: '__slot:actions', title: '' }
         ]
       };
     },
     methods: {
       GetTariffs: function() {
-        $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: function(result) {
-            for(var n = 0; n < result.length; n++) {
-              result[n].StartDate = moment.tz(result[n].StartDate, result[n].TimeZone).format('DD/MM/YYYY');
-              result[n].EndDate   = moment.tz(result[n].EndDate,   result[n].TimeZone).format('DD/MM/YYYY');
+        this.$http.post('getTariffs', { }).then(
+          (result) => {
+            if(result.status == 200) {
+              for(var n in result.data) {
+                result.data[n].StartDate = moment.tz(result.data[n].StartDate, result.data[n].TimeZone).format('DD/MM/YYYY');
+                result.data[n].EndDate   = moment.tz(result.data[n].EndDate,   result.data[n].TimeZone).format('DD/MM/YYYY');
+              }
+              this.Tariffs = result.data;
             }
-            this.$refs.table.setData({ data: result });
             this.ShowSpinner = false;
-          }.bind(this)
-        });
+          }
+        );
       },
       Edit: function(tariff, evt) {
         $(evt.target).blur();
@@ -64,25 +66,25 @@
         });
       },
       Add: function() {
-        this.$refs.EditDialog.Show( { 
+        this.$refs.EditDialog.Show( {
           TimeZone: moment.tz.guess(),
           StartDate: moment().startOf('year').valueOf(),
           EndDate: moment().endOf('year').valueOf(),
-          Name: 'No name', 
+          Name: 'No name',
           Template: {
             Description: 'Add tariff description here',
-            Seasons: [], 
-            Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE', Color: '#fffff0' } ], 
+            Seasons: [],
+            Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE', Color: '#fffff0' } ],
             Holidays: [],
             WeekendPeriod: null,
             HolidayPeriod: null
-          } 
+          }
         });
       },
       Delete: function(tariff, evt) {
         if(confirm("Delete '" + tariff.Name + "' tariff?")){
           $(evt.target).blur();
-          $.ajax({ url: "delTariff", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify({ TariffID: tariff.TariffID }), 
+          $.ajax({ url: "delTariff", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify({ TariffID: tariff.TariffID }),
             success: function(result) {
               this.GetTariffs();
             }.bind(this)

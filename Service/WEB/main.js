@@ -26,6 +26,10 @@ Vue.component('ButtonPause', ButtonPause);
 import ColorBar from 'Components/ColorBar.vue';
 Vue.component('ColorBar', ColorBar);
 import Spinner from 'Components/Spinner.vue';
+
+import Cubism from 'Components/Cubism.vue';
+Vue.component('Cubism', Cubism);
+
 Vue.component('Spinner', Spinner);
 import Dlg from 'Components/Dialog.vue';
 Vue.component('Dlg', Dlg);

@@ -3,13 +3,13 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ MouseOver ? 'Paused while over graph' : Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
         <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti" type="VOLTAGE"></toolbar-phases>
-          <toolbar-options variable="DetailOptions" :options="['1st Harmonic']" v-on:OptionChanged="SetOption"></toolbar-options>
-          <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
+          <toolbar-phases storage="DetailsPhaseMulti" :multi="true" :analyzer="analyzer" v-model="Phases"></toolbar-phases>
+          <toolbar-options storage="DetailOptions" :options="['1st Harmonic']" v-model="Options"></toolbar-options>
+          <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools-->
         </div>
       </div>
     <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
+      <spinner v-if="data==null"></spinner>
       <graph ref="graph" :options="{}" v-on:mouseOver="MouseOver=$event"></graph>
     </div>
   </div>
@@ -18,10 +18,11 @@
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
-  import Graph from 'Components/Graph.vue';  
+  import Graph from 'Components/Graph.vue';
   export default {
+    props: { analyzer: { type: Object }, data: { type: Object } },
     data() {
-      return { ShowWarning: true, ShowSpinner: true, MouseOver: false, Time: 'Loading data...' };
+      return { ShowWarning: true, MouseOver: false, Time: 'Loading data...', Phases: null, Options: {} };
     },
     methods: {
       Redraw: function() {
@@ -65,19 +66,19 @@
           dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, showRangeSelector: false,
           drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,
           labels: ['Harmonic'].concat(oZm.Series['ACTIVE_POWER'].Names(Analyzer)), series: Series,
-          colors: oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, 0).Colors.concat(oZm.SerieStyle(oZm.Series['CURRENT'], Analyzer, 0).Colors), 
-          axes: { 
+          colors: oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, 0).Colors.concat(oZm.SerieStyle(oZm.Series['CURRENT'], Analyzer, 0).Colors),
+          axes: {
             y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + this.VOffset, Y1Range[1] + this.VOffset],
                  valueFormatter: function(x) { return oZm.Round2(x) + '<em class="x-small">W</em>'; }.bind(this),
                  axisLabelFormatter: function (x) { return oZm.Round2(x); }.bind(this)
                },
             x: { drawGrid: false, ticker: Graph.OddHarmonicsTicks, axisLabelFormatter: function (x) { return oZm.Series['HARMONICS'].Names[x]; },
-                 valueFormatter: function(y) { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (Analyzer.NominalFreq * (y + 1)) + '<em class="small"> Hz</em>)'; }           
+                 valueFormatter: function(y) { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (Analyzer.NominalFreq * (y + 1)) + '<em class="small"> Hz</em>)'; }
                }
           },
           file: ToShow
         };
-        this.$refs.graph.SetOptions({ showRangeSelector: true}); 
+        this.$refs.graph.SetOptions({ showRangeSelector: true});
         this.$refs.graph.SetOptions(Options);
       },
       ExportClick: function() {
@@ -85,7 +86,7 @@
         var Analyzer = this.$root.SelectedAnalyzer;
         var Data = [];
         var Header = ['Harmonic'];
-        for(var i = 0; i < oZm.Series['VOLTAGE'].Names(Analyzer).length; i++) { 
+        for(var i = 0; i < oZm.Series['VOLTAGE'].Names(Analyzer).length; i++) {
           Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i]);
           Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i] + ' (dB)');
           Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i] + ' (Complex)');

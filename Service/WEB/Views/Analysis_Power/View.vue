@@ -44,18 +44,18 @@
     </div>
     <div class="col-lg-12">
       <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Distribution', 'Parameters']" storage="PowerDetailTab" v-model="ActiveTab"></detail-tabs>
-      <waveform ref="waveform" v-bind:class="{ hide: (ActiveTab != 'Waveform') }"></waveform>
-      <harmonics ref="harmonics" v-bind:class="{ hide: (ActiveTab != 'Harmonics') }"></harmonics>
-      <evolution ref="evolution" v-bind:class="{ hide: (ActiveTab != 'Evolution') }"></evolution>
-      <distribution ref="distribution" v-bind:class="{ hide: (ActiveTab != 'Distribution') }"></distribution>
-      <parameters ref="parameters" v-bind:class="{ hide: (ActiveTab != 'Parameters') }"></parameters>
+      <waveform v-if="ActiveTab=='Waveform'" :analyzer="analyzer"></waveform>
+      <harmonics v-if="ActiveTab=='Harmonics'" :analyzer="analyzer"></harmonics>
+      <evolution v-if="ActiveTab=='Evolution'" :analyzer="analyzer"></evolution>
+      <distribution v-if="ActiveTab=='Distribution'" :analyzer="analyzer"></distribution>
+      <parameters v-if="ActiveTab=='Parameters'" :analyzer="analyzer"></parameters>
     </div>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">
       <p>No selected analyzer</p>
-    </div>  
-  </div>  
+    </div>
+  </div>
 </template>
 
 <script>
@@ -70,8 +70,8 @@
     props: { analyzer: { type: Object } },
     data: function() {
       return { Aggreg: null, ShowSpinner: true, ActiveTab: null,
-               Data3S: null, Data1M: null, GraphData: null, NowData: null, CubismData: null, 
-               CounterTimer: null, NowTimer: null, CubismTimer: null, GraphTimer: null, 
+               Data3S: null, Data1M: null, GraphData: null, NowData: null, CubismData: null,
+               CounterTimer: null, NowTimer: null, CubismTimer: null, GraphTimer: null,
                Range: null, ActiveHeight: 300, ReactiveHeight: 300 };
     },
     watch: {
@@ -100,7 +100,7 @@
       UpdateCubism: function() {
         if(this.CubismTimer != null) clearTimeout(this.CubismTimer);
         if(this.analyzer == null) return;
-        this.analyzer.GetSeriesRange('1M', 'Day', this.CubismData, ['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'], 
+        this.analyzer.GetSeriesRange('1M', 'Day', this.CubismData, ['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'],
           (working) => {},
           (result) => { this.CubismData = Object.freeze(result); },
           (timeout) => { if(timeout != null) this.CubismTimer = setTimeout( () => { this.UpdateCubism(); }, timeout); }
