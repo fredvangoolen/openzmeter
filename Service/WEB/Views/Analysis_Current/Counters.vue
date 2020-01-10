@@ -77,7 +77,7 @@
       },
       NowValue3S: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT'], To: 0, Aggreg: '3S', Period: 6000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT'], To: 0, Aggreg: '3S', Period: 6000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }),
           success: (result) => {
             this.CurrentValue3S = 'No data';
             this.CurrentValue3SPhases = '';
@@ -102,7 +102,7 @@
           complete: () => {
             this.NowTimer3S = setTimeout(this.NowValue3S.bind(this), 5000);
             this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
-          }, 
+          },
           error: () => {
             this.CurrentValue3S = 'No data';
             this.CurrentValue3SPhases = '';
@@ -112,7 +112,7 @@
       },
       NowValue1M: function() {
         if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT'], To: 0, Aggreg: '1M', Period: 120000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
+        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['CURRENT'], To: 0, Aggreg: '1M', Period: 120000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }),
           success: (result) => {
             this.CurrentValue1M = 'No data';
             this.CurrentValue1MPhases = 'No data';
@@ -138,7 +138,7 @@
             clearTimeout(this.NowTimer);
             this.NowTimer1M = setTimeout(this.NowValue1M.bind(this), 30000);
             this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
-          }, 
+          },
           error: () => {
             this.CurrentValue1M = 'No data';
             this.CurrentValue1MPhases = '';
@@ -147,7 +147,7 @@
         });
       },
       SetStats: function(datewindow, data, aggreg) {
-        this.CountersAggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';
+        this.CountersAggregation = 'From ' + this.analyzer.GetAggregLongName(aggreg) + ' aggregation';
         this.TimeStatsFrom = moment(datewindow[0]).format('DD/MM/YYYY HH:mm:ss');
         this.TimeStatsTo = moment(datewindow[1]).format('DD/MM/YYYY HH:mm:ss');
         var MinValue = +Infinity, MaxValue = -Infinity, MinCount = 0, MaxCount = 0, MinTime = null, MaxTime = null, StdPercent = 0, AvgSamples = 0, MinArray, MaxArray;
@@ -172,7 +172,7 @@
               MaxCount++;
             }
             AvgArray[p - 1] = AvgArray[p - 1] + data[x][p];
-            StdArray[p - 1] = StdArray[p - 1] + Math.pow(data[x][p], 2.0); 
+            StdArray[p - 1] = StdArray[p - 1] + Math.pow(data[x][p], 2.0);
           }
           var InRange = true;
           for(var p = 1; p < data[x].length; p++) {
@@ -184,7 +184,7 @@
         this.AvgSamples = AvgSamples;
         this.MinTime = moment(MinTime).format("hh:mm:ss - DD/MM/YYYY") + ((MinCount > 1) ? ' (and ' + MinCount + ' times more)' : '');
         this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
-        this.StdPercent = oZm.Round2(StdPercent / AvgSamples * 100) + '% within range';    
+        this.StdPercent = oZm.Round2(StdPercent / AvgSamples * 100) + '% within range';
         this.MinArray = [];
         this.MaxArray = [];
         this.StdArray = [];

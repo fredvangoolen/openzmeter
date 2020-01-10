@@ -394,9 +394,9 @@ export function createCaptionsForResponsiveTable (tableVue) {
 //  return (aggreg === '1H') ? 3600000 : (aggreg === '15M') ? 900000 : (aggreg === '10M') ? 600000 : (aggreg === '1M') ? 60000 : 3000;
 //}
 ///* Return full text from aggregation short name */
-export function GetAggregLongName(shortText) {
-  return (shortText === '1H') ? '1 hour' : (shortText === '15M') ? '15 minutes' : (shortText === '10M') ? '10 minutes' : (shortText === '1M') ? '1 minute' : (shortText === '3S') ? '3 seconds' : false;
-}
+//export function GetAggregLongName(shortText) {
+
+//}
 ///* Return short name from full aggregation text*/
 //function GetAggregShortName(longText) {
 //  return (longText === '1 hour') ? '1H' : (longText === '15 minutes') ? '15M' : (longText === '10 minutes') ? '10M' : (longText === '1 minute') ? '1M' : (longText === '3 seconds') ? '3S' : false;

@@ -5,12 +5,10 @@
 </template>
 
 <script>
-  import moment from 'moment';
   import Graph from 'Components/Graph.vue';
-  import 'moment-timezone';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { data: { type: Object }, height: { type: Number, default: 300 } },
+    props: { analyzer: Object, data: Object, height: { type: Number, default: 300 } },
     data() {
       return { };
     },
@@ -32,11 +30,11 @@
         Opt.xAxisHeight = 24;
         Opt.axes = {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { return oZm.Round3(x) + ' <em class="x-small">Hz</em>'; },
-               axisLabelFormatter: function (x) { return oZm.Round3(x); }
+               valueFormatter: (x) => { return oZm.Round3(x) + ' <em class="x-small">Hz</em>'; },
+               axisLabelFormatter: (x) => { return oZm.Round3(x); }
              },
-          x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
-               valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
+          x: { axisLabelFormatter: (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); },
+               valueFormatter: (x) => { return this.analyzer.FormatDateTime(x); }
              }
         };
         Opt.file = [];

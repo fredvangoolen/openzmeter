@@ -9,7 +9,7 @@
 
 <script>
   export default {
-    props: { analyzer: { type: Object, required: true }, storage: { type: String, default: null }, multi: { type: Boolean, default: false }, current: { type: Boolean, dafault: false }, value: { type: Array, required: true } },
+    props: { analyzer: { type: Object, required: true }, storage: { type: String, default: null }, multi: { type: Boolean, default: false }, current: { type: Boolean, dafault: false }, value: { type: Array } },
     data() {
       return { Active: [] };
     },

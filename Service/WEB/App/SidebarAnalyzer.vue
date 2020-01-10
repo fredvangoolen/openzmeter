@@ -60,6 +60,9 @@
           analyzer.GetSeriesRange = this.GetSeriesRange.bind(this);
           analyzer.GetPricesRange = this.GetPricesRange.bind(this);
           analyzer.GetSeriesLast = this.GetSeriesLast.bind(this);
+          analyzer.FormatAggregation = this.FormatAggregation.bind(this);
+          analyzer.FormatTime = this.FormatTime.bind(this);
+          analyzer.FormatDateTime = this.FormatDateTime.bind(this);
         }
         this.$emit('update:analyzer', analyzer);
 //        this.$parent.$parent.Analyzer = result;
@@ -229,8 +232,16 @@
           }
         );
       },
-
-
+      FormatAggregation: function(val) {
+        return (val == '1H') ? '1 hour' : (val == '15M') ? '15 minutes' : (val == '10M') ? '10 minutes' : (val == '1M') ? '1 minute' : (val == '3S') ? '3 seconds' : 'unknown';
+      },
+      FormatTime: function(val) {
+        return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss');
+      },
+      FormatDateTime: function(val, spacer) {
+        if(spacer == null) spacer = ' - ';
+        return moment(val).tz(this.analyzer.TimeZone).format('hh:mm:ss') + spacer + moment(val).tz(this.analyzer.TimeZone).format('DD/MM/YYYY');
+      },
 
 
 

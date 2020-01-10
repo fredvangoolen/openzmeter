@@ -19,7 +19,7 @@
             <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :dataNow="NowData" :dataGraph="GraphData" :height.sync="Height"></counters>
-              <frequency class="col-md-6 col-lg-8 col-xl-9" :data="GraphData" :height="Height"></frequency>
+              <frequency class="col-md-6 col-lg-8 col-xl-9" :analyzer="analyzer" :data="GraphData" :height="Height"></frequency>
             </div>
           </div>
         </div>

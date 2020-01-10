@@ -2,7 +2,7 @@
   <div>
     <div class="subpanel clearfix">
       <div class="counters-title">Last value:</div>
-      <div class="counters-aggreg" v-if="data15M!=null">From 15 minutes aggregation<br>{{ FormatTime(data15M.Sampletime) }}</div>
+      <div class="counters-aggreg" v-if="data15M!=null">From 15 minutes aggregation<br>{{ analyzer.FormatTime(data15M.Sampletime) }}</div>
       <div class="clearfix"></div>
       <div>
         <div class="current-value" v-html="(data15M!=null) ? FormatSum(data15M) : '-'"></div>
@@ -24,11 +24,11 @@
     </div>
     <div class="subpanel clearfix">
       <div class="counters-title">Period stats:</div>
-      <div class="counters-aggreg" v-if="dataGraph!=null">{{ FormatAggregation(dataGraph.Aggregation_Source) }}<br>From {{ FormatDateTime(dataGraph.From) }} to {{ FormatDateTime(dataGraph.To) }}</div>
+      <div class="counters-aggreg" v-if="dataGraph!=null">From {{ analyzer.FormatAggregation(dataGraph.Aggregation_Source) }} aggregation<br>From {{ analyzer.FormatDateTime(dataGraph.From) }} to {{ analyzer.FormatDateTime(dataGraph.To) }}</div>
       <div class="line">
         <div class="float-left">
           <div class="counters-stat-type">Max value:</div>
-          <div class="counters-stat-time">{{ isFinite(Max.Value) ? FormatDateTime(Max.Time) : '-' }}</div>
+          <div class="counters-stat-time">{{ isFinite(Max.Value) ? analyzer.FormatDateTime(Max.Time) : '-' }}</div>
         </div>
         <div class="counters-stat-val" v-html="isFinite(Max.Value) ? FormatHTML(Max.Value) : '-'"></div>
       </div>
@@ -86,9 +86,6 @@
       }
     },
     methods: {
-      FormatTime: function(val) { return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss'); },
-      FormatDateTime: function(val) { return moment(val).tz(this.analyzer.TimeZone).format('hh:mm:ss - DD/MM/YYYY'); },
-      FormatAggregation: function(val) { return 'From ' + oZm.GetAggregLongName(val) + ' aggregation'; },
       FormatHTML: function(val) {
         var Units = oZm.GetBestUnits(val);
         return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'ACTIVE_ENERGY') ? 'Wh' : 'VArh');

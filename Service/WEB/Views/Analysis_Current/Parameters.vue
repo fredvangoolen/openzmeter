@@ -31,7 +31,7 @@
         this.mouseOverCount = this.mouseOverCount + ((val === true) ? +1 : -1);
       },
       Redraw() {
-        this.$nextTick(function() {    
+        this.$nextTick(function() {
           for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
           window.dispatchEvent(new Event('resize'));
         });
@@ -63,10 +63,10 @@
         if(result['Sampletime'].length === 0) return;
         if(this.Data === null) this.Data = [];
         this.DateWindow = [result['From'], result['To']];
-        this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
+        this.Aggregation = 'From ' + this.analyzer.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
         for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
         if(this.mouseOverCount === 0) this.CalcOptions();
-        this.ShowSpinner = false; 
+        this.ShowSpinner = false;
       },
       SetDataNow(result) {
         if(this.mouseOverCount !== 0) return;

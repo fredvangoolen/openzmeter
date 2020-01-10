@@ -28,7 +28,7 @@
     },
     methods: {
       Redraw() {
-        this.$nextTick(function() {    
+        this.$nextTick(function() {
           for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
           window.dispatchEvent(new Event('resize'));
         });
@@ -38,15 +38,15 @@
         if(result['Sampletime'].length === 0) return;
         if(this.Data === null) this.Data = [];
         this.DateWindow = [result['From'], result['To']];
-        this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
+        this.Aggregation = 'From ' + this.analyzer.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
         this.Data = oZm.GraphDataAppend(result, 'Current_Harmonics', this.Data);
         this.CalcOptions();
-        this.ShowSpinner = false; 
+        this.ShowSpinner = false;
       },
       CalcOptions: function() {
         if((this.$root.SelectedAnalyzer === null) || (this.Data === null) || (this.Phase === null)) return;
         for(var n = 0; n < this.Series.length; n++) {
-          var Data = [];    
+          var Data = [];
           for(var i = 0; i < this.Data.length; i++) Data.push([this.Data[i][0], 20 * Math.log10(Math.max(0.000000001, this.Data[i][this.Phase + 1][n]))]);
           this.$refs.rows[n].SetData({ dateWindow: this.DateWindow, file: Data});
         }

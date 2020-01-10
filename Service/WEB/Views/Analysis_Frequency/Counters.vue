@@ -2,24 +2,24 @@
   <div>
     <div class="subpanel clearfix">
       <div class="counters-title">Current value:</div>
-      <div class="counters-aggreg" v-if="dataNow!=null">From 3 seconds aggregation<br>{{ FormatTime(dataNow.Sampletime) }}</div>
+      <div class="counters-aggreg" v-if="dataNow!=null">From 3 seconds aggregation<br>{{ analyzer.FormatTime(dataNow.Sampletime) }}</div>
         <div class="clearfix"></div>
         <div class="current-value" v-html="dataNow!=null ? FormatHTML(dataNow.Frequency) + ' Hz' : 'No data'"></div>
       </div>
       <div class="subpanel clearfix">
         <div class="counters-title">Period stats:</div>
-        <div class="counters-aggreg" v-if="dataGraph != null">{{ FormatAggregation(dataGraph.Aggregation_Source) }}<br>From {{ FormatDateTime(dataGraph.From) }} to {{ FormatDateTime(dataGraph.To) }}</div>
+        <div class="counters-aggreg" v-if="dataGraph!=null">{{ analyzer.FormatAggregation(dataGraph.Aggregation_Source) }}<br>From {{ analyzer.FormatDateTime(dataGraph.From) }} to {{ analyzer.FormatDateTime(dataGraph.To) }}</div>
         <div class="line">
           <div class="float-left">
             <div class="counters-stat-type">Min value:</div>
-            <div class="counters-stat-time">{{ isFinite(Min.Value) ? FormatDateTime(Min.Time) : '-' }}<span v-if="Min.Count > 1">(and {{ Min.Count }} times more)</span></div>
+            <div class="counters-stat-time">{{ isFinite(Min.Value) ? analyzer.FormatDateTime(Min.Time) : '-' }}<span v-if="Min.Count > 1">(and {{ Min.Count }} times more)</span></div>
           </div>
           <div class="counters-stat-val" v-html="isFinite(Min.Value) ? FormatHTML(Min.Value) + ' Hz' : '-'"></div>
         </div>
         <div class="line line-border">
           <div class="float-left">
             <div class="counters-stat-type">Max value:</div>
-            <div class="counters-stat-time">{{ isFinite(Max.Value) ? FormatDateTime(Max.Time) : '-'}}<span v-if="Max.Count > 1">(and {{ Max.Count }} times more)</span></div>
+            <div class="counters-stat-time">{{ isFinite(Max.Value) ? analyzer.FormatDateTime(Max.Time) : '-'}}<span v-if="Max.Count > 1">(and {{ Max.Count }} times more)</span></div>
           </div>
           <div class="counters-stat-val" v-html="isFinite(Max.Value) ? FormatHTML(Max.Value) + ' Hz' : '-'"></div>
         </div>
@@ -33,7 +33,7 @@
         <div class="line line-border">
           <div class="float-left">
             <div class="counters-stat-type">Std deviation:</div>
-            <div class="counters-stat-time">{{ (isFinite(Std.Value) ? FormatPlain(Std.Percent) : '-') + '% within range' }}</div>
+            <div class="counters-stat-time">{{ isFinite(Std.Value) ? FormatPlain(Std.Percent) : '-' }}% within range</div>
           </div>
           <div class="counters-stat-val" v-html="isFinite(Std.Value) ? FormatHTML(Std.Value) + ' Hz' : '-'"></div>
         </div>
@@ -42,7 +42,6 @@
 </template>
 
 <script>
-  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { analyzer: Object, dataNow: Object, dataGraph: Object },
@@ -56,11 +55,11 @@
       Min: function() {
         var Min = { Value: +Infinity, Time: 0, Count: 0 };
         if(this.dataGraph == null) return Min;
-        for(var x in this.dataGraph.Frequency) {
-          if(this.dataGraph.Frequency[x] === null) continue;
+        for(var x in this.dataGraph.Sampletime) {
+          if(this.dataGraph.Frequency[x] == null) continue;
           if(this.dataGraph.Frequency[x] < Min.Value) {
             Min = { Value: this.dataGraph.Frequency[x], Time: this.dataGraph.Sampletime[x], Count: 0 };
-          } else if(this.dataGraph.Frequency[x] === Min) {
+          } else if(this.dataGraph.Frequency[x] == Min) {
             Min.Count++;
           }
         }
@@ -69,11 +68,11 @@
       Max: function() {
         var Max = { Value: -Infinity, Time: 0, Count: 0 };
         if(this.dataGraph == null) return Max;
-        for(var x in this.dataGraph.Frequency) {
-          if(this.dataGraph.Frequency[x] === null) continue;
+        for(var x in this.dataGraph.Sampletime) {
+          if(this.dataGraph.Frequency[x] == null) continue;
           if(this.dataGraph.Frequency[x] > Max.Value) {
             Max = { Value: this.dataGraph.Frequency[x], Time: this.dataGraph.Sampletime[x], Count: 0 };
-          } else if(this.dataGraph.Frequency[x] === Max) {
+          } else if(this.dataGraph.Frequency[x] == Max) {
             Max.Count++;
           }
         }
@@ -83,8 +82,8 @@
         var Std = { Value: 0, Percent: 0 };
         var Avg = 0, Count = 0;
         if(this.dataGraph == null) return Std;
-        for(var x in this.dataGraph.Frequency) {
-          if(this.dataGraph.Frequency[x] === null) continue;
+        for(var x in this.dataGraph.Sampletime) {
+          if(this.dataGraph.Frequency[x] == null) continue;
           if((this.dataGraph.Frequency[x] > this.analyzer.NominalFreq * 0.99) && (this.dataGraph.Frequency[x] < this.analyzer.NominalFreq * 1.01)) Std.Percent++;
           Std.Value += Math.pow(this.dataGraph.Frequency[x], 2.0);
           Avg += this.dataGraph.Frequency[x];
@@ -97,8 +96,8 @@
       Avg: function() {
         var Avg = { Value: 0, Count: 0 };
         if(this.dataGraph == null) return Avg;
-        for(var x in this.dataGraph.Frequency) {
-          if(this.dataGraph.Frequency[x] === null) continue;
+        for(var x in this.dataGraph.Sampletime) {
+          if(this.dataGraph.Frequency[x] == null) continue;
           Avg.Count++;
           Avg.Value += this.dataGraph.Frequency[x];
         }
@@ -107,9 +106,6 @@
        }
     },
     methods: {
-      FormatTime: function(val) { return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss'); },
-      FormatDateTime: function(val) { return moment(val).tz(this.analyzer.TimeZone).format('hh:mm:ss - DD/MM/YYYY'); },
-      FormatAggregation: function(val) { return 'From ' + oZm.GetAggregLongName(val) + ' aggregation'; },
       FormatHTML: function(val) { return oZm.RoundHTML(val, 3); },
       FormatPlain: function(val) { return oZm.RoundPlain(val, 2); },
     }

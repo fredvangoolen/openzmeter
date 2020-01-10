@@ -2,13 +2,17 @@
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
       <div class="header-text">{{ Aggregation }}</div>
-      <div class="header-buttons" ref="Toolbar">
-        <toolbar-phases variable="DetailsPhaseSingle" ref="phases" v-on:PhasesChanged="$parent.PhasesChangedSingle"></toolbar-phases>
-        <toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
+      <div class="header-buttons">
+        <toolbar-phases storage="DetailsPhaseSingle" v-model="Phases" :analyzer="analyzer"></toolbar-phases>
+        <div class="btn-group">
+
+        </div>
+
+        <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools-->
       </div>
     </div>
     <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
+      <spinner v-if="data==null"></spinner>
       <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" ref="rows" :index="index" v-on:mouseOver="MouseOver"></cubism>
     </div>
   </div>
@@ -17,26 +21,24 @@
 <script>
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
-  import Spinner from 'Components/Spinner.vue';
-  import Cubism from 'Components/Cubism.vue';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
   import Dygraph from 'JS/dygraph.js';
   import 'JS/dygraph-synchronizer.js';
   export default {
-    data() {
-      return { ShowSpinner: true, Aggregation: 'Loading data...', Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'] };
+    props: { analyzer: { type: Object }, data: { type: Object }, dataNow: { type: Object } },
+    data: function() {
+      return { Phases: null, Aggregation: 'Loading data...', Series: ['ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'] };
     },
+
     methods: {
       MouseOver: function(val) {
         this.mouseOverCount = this.mouseOverCount + ((val === true) ? +1 : -1);
       },
-      Redraw: function() {
-        this.$nextTick(function() {    
-          for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
-          window.dispatchEvent(new Event('resize'));
-        });
-      },
+//      Redraw: function() {
+//        this.$nextTick(function() {
+//          for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
+//          window.dispatchEvent(new Event('resize'));
+//        });
+//      },
       ExportClick: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
@@ -54,11 +56,11 @@
         }
         this.$refs.tools.SaveCVS('PowerParameters.csv', [Header].concat(Data));
       },
-      SetPhases: function(phase) {
-        this.$refs.phases.SetPhases(phase);
-        this.Phase = phase;
-        this.CalcOptions();
-      },
+//      SetPhases: function(phase) {
+//        this.$refs.phases.SetPhases(phase);
+//        this.Phase = phase;
+//        this.CalcOptions();
+//      },
       SetData: function(result) {
         if(result['Sampletime'] === null) return;
         if(result['Sampletime'].length === 0) return;
@@ -67,7 +69,7 @@
         this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
         for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
         if(this.mouseOverCount === 0) this.CalcOptions();
-        this.ShowSpinner = false; 
+        this.ShowSpinner = false;
       },
       SetDataNow: function(result) {
         if(this.mouseOverCount !== 0) return;
@@ -92,7 +94,6 @@
       var Graphs = [];
       for(var i = 0; i < this.Series.length; i++) Graphs.push(this.$refs.rows[i].Graph);
       Dygraph.synchronize(Graphs, { range: false, zoom: false });
-    },
-    components: { ToolbarTools, Cubism, Spinner, ToolbarPhases }
-  }   
+    }
+  }
 </script>
