@@ -1,43 +1,62 @@
 <template>
-  <dlg :loading="ShowSpinner">
-    <template v-slot:header>
-      <div class="pull-left"><h4 class="modal-title">Analyzers</h4></div>
-      <div class="pull-right">
-        <button type="button" class="btn btn-default btn-xs" v-on:click="$parent.View = null"><img :src="require('Imgs/arrow_undo.png')"></button>
-      </div>
-    </template>
-    <div class="alert alert-danger text-center" v-if="Analyzers.length == 0" style="margin-bottom: 5px; padding: 5px">
-      <p>There are no analyzers available.</p>
-      <p>If you are an administrator, check device settings, otherwise request permission.</p>
-    </div>
-    <vuetable ref="table" :fields="Columns" :data="Analyzers" :api-mode="false" class="table small table-striped">
-      <template slot="actions" slot-scope="props">
-        <div class="btn-group">
-          <button type="button" class="btn btn-success btn-xs" v-bind:disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" v-on:click="Select(props.rowData.Analyzer)">Select</button>
-          <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
-          <ul class="dropdown-menu pull-right">
-            <li><a v-on:click="Configure(props.rowData)">Configure</a></li>
-            <li><a v-on:click="ACL(props.rowData)" v-if="false">ACL</a></li>
-            <li><a v-on:click="Rates(props.rowData)">Rates</a></li>
-            <li><a v-on:click="Alarms(props.rowData)">Alarms</a></li>
-            <li role="separator" class="divider"></li>
-            <li><a v-on:click="Maintenance(props.rowData)">Maintenance</a></li>
-          </ul>
+  <div>
+    <dlg :loading="ShowSpinner" v-if="View==null">
+      <template v-slot:header>
+        <div class="pull-left"><h4 class="modal-title">Analyzers</h4></div>
+        <div class="pull-right">
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </template>
-    </vuetable>
-  </dlg>
+      <div class="alert alert-danger text-center" v-if="Analyzers.length == 0" style="margin-bottom: 5px; padding: 5px">
+        <p>There are no analyzers available.</p>
+        <p>If you are an administrator, check device settings, otherwise request permission.</p>
+      </div>
+      <vuetable key="analyzers" :fields="Columns" :data="Analyzers" :api-mode="false" class="table small table-striped">
+        <template slot="actions" slot-scope="props">
+          <div class="btn-group">
+            <button type="button" class="btn btn-success btn-xs" v-bind:disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" @click="Select(props.rowData.Analyzer)">Select</button>
+            <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
+            <ul class="dropdown-menu pull-right">
+              <li><a v-on:click="Alarms(props.rowData)">Alarms</a></li>
+              <li><a v-on:click="Configure(props.rowData)">Configure</a></li>
+              <li><a v-on:click="Permissions(props.rowData)">Permissions</a></li>
+              <li><a v-on:click="Rates(props.rowData)">Rates</a></li>
+              <li><a v-on:click="Remote(props.rowData)">Remote access</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a v-on:click="Maintenance(props.rowData)">Maintenance</a></li>
+            </ul>
+          </div>
+        </template>
+      </vuetable>
+    </dlg>
+    <analyzer-configure v-if="View=='Configure'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-configure>
+    <analyzer-alarms v-if="View=='Alarms'" :analyzer="Analyzer" @close="View=null"></analyzer-alarms>
+    <analyzer-permissions v-if="View=='Permissions'" :analyzer="Analyzer" @close="View=null"></analyzer-permissions>
+    <analyzer-remote v-if="View=='Remote'" :analyzer="Analyzer" @close="View=null"></analyzer-remote>
+    <analyzer-rates v-if="View=='Rates'" :analyzer="Analyzer" @close="View=null"></analyzer-rates>
+    <analyzer-maintenance v-if="View=='Maintenance'" :analyzer="Analyzer" @close="View=null"></analyzer-maintenance>
+
+
+    <analyzer-alarm v-if="View== 'Alarm'" ref="Alarm"></analyzer-alarm>
+  </div>
 </template>
 
 <script>
   import Vue from 'vue';
+  import AnalyzerConfigure from './Configure.vue';
+  import AnalyzerPermissions from './Permissions.vue';
+  import AnalyzerRates from './Rates.vue';
+  import AnalyzerMaintenance from './Maintenance.vue';
+  import AnalyzerAlarms from './Alarms.vue';
+  import AnalyzerAlarm from './Alarm.vue';
+  import AnalyzerRemote from './Remote.vue';
   import Vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: { type: Object } },
+    props: { analyzer: Object, view: String },
     data() {
-      return { Analyzers: [], ShowSpinner: false,
+      return { View: null, Analyzers: [], ShowSpinner: false, Analyzer: null,
         Columns: [
           {name: 'Online', title: 'Online', callback: this.OnlineStatus},
           {name: 'Name', title: 'Description'},
@@ -69,69 +88,91 @@
             if(result.status == 200) {
               localStorage.setItem('Analyzer', result.data.Analyzer);
               this.$emit('update:analyzer', result.data);
-              this.$parent.View = null;
+              this.$emit('close');
             }
             this.ShowSpinner = false;
           }
         );
       },
+      CloseSelect: function(analyzer) {
+        this.View = null;
+        if(analyzer == null) return;
+        if(analyzer.Analyzer == this.analyzer.Analyzer) this.$emit('update:analyzer', analyzer);
+      },
       Configure: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
-          success: (result) => {
-            this.$parent.Analyzer = result;
-            this.$parent.View = null;
-            this.$nextTick(() => { this.$parent.View = 'Configure'; } );
-          },
-          complete: () => {
+        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+          (result) => {
+            if(result.status == 200) {
+              this.Analyzer = result.data;
+              this.View = 'Configure';
+            }
             this.ShowSpinner = false;
           }
-        });
-      },
-      ACL: function(id) {
-        alert("ACL not yet implemented");
+        );
       },
       Rates: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
-          success: (result) => {
-            this.$parent.Analyzer = result;
-            this.$parent.View = null;
-            this.$nextTick(() => { this.$parent.View = 'Rates'; } );
-          },
-          complete: () => {
+        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+          (result) => {
+            if(result.status == 200) {
+              this.Analyzer = result.data;
+              this.View = 'Rates';
+            }
             this.ShowSpinner = false;
           }
-        });
+        );
       },
       Alarms: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
-          success: (result) => {
-            this.$parent.Analyzer = result;
-            this.$parent.View = null;
-            this.$nextTick(() => { this.$parent.View = 'Alarms'; } );
-          },
-          completed: () => {
+        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+          (result) => {
+            if(result.status == 200) {
+              this.Analyzer = result.data;
+              this.View = 'Alarms';
+            }
             this.ShowSpinner = false;
           }
-        });
+        );
+      },
+      Remote: function(analyzer) {
+        this.ShowSpinner = true;
+        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+          (result) => {
+            if(result.status == 200) {
+              this.Analyzer = result.data;
+              this.View = 'Remote';
+            }
+            this.ShowSpinner = false;
+          }
+        );
+      },
+      Permissions: function(analyzer) {
+        this.ShowSpinner = true;
+        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+          (result) => {
+            if(result.status == 200) {
+              this.Analyzer = result.data;
+              this.View = 'Permissions';
+            }
+            this.ShowSpinner = false;
+          }
+        );
       },
       Maintenance: function(analyzer) {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzer", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: analyzer.Analyzer }),
-          success: (result) => {
-            this.$parent.Analyzer = result;
-            this.$parent.View = null;
-            this.$nextTick(() => { this.$parent.View = 'Maintenance'; } );
-          },
-          complete: () => {
+        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+          (result) => {
+            if(result.status == 200) {
+              this.Analyzer = result.data;
+              this.View = 'Maintenance';
+            }
             this.ShowSpinner = false;
           }
-        });
+        );
       }
     },
-    components: { Vuetable }
+    components: { Vuetable, AnalyzerRemote, AnalyzerConfigure, AnalyzerRates, AnalyzerMaintenance, AnalyzerAlarms, AnalyzerAlarm, AnalyzerPermissions }
   }
 </script>
 

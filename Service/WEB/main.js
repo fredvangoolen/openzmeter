@@ -35,6 +35,12 @@ import Dlg from 'Components/Dialog.vue';
 Vue.component('Dlg', Dlg);
 import Graph from 'Components/Graph.vue';
 Vue.component('Graph', Graph);
+import OptionPicker from 'Components/OptionPicker.vue';
+Vue.component('OptionPicker', OptionPicker);
+import ProgressBar from 'Components/ProgressBar.vue';
+Vue.component('ProgressBar', ProgressBar);
+
+
 import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
 Vue.component('ToolbarAggregation', ToolbarAggregation);
 //import ToolbarTools from 'Components/ToolbarTools.vue';
@@ -49,7 +55,8 @@ import ToolbarOptions from 'Components/ToolbarOptions.vue';
 Vue.component('ToolbarOptions', ToolbarOptions);
 import DetailTabs from 'Components/Tabs.vue';
 Vue.component('DetailTabs', DetailTabs);
-
+import Toggle from 'Components/Toggle.vue';
+Vue.component('Toggle', Toggle);
 //Views ----------------------------------------
 import App from 'App/App.vue';
 import Dashboard from 'Views/Dashboard/View.vue';

@@ -35,18 +35,7 @@
 .glyphicon-calendar:before {
   content: none;
 }
-.glyphicon-chevron-left {
-  background-image: url(../Imgs/resultset_previous.png);
-  width: 16px !important;
-  height: 16px !important;
-  display: inline-block;
-}
-.glyphicon-chevron-right {
-  background-image: url(../Imgs/resultset_next.png);
-  width: 16px !important;
-  height: 16px !important;
-  display: inline-block;
-}
+
 /* dataTables icons */
 table.dataTable thead .sorting_desc:after {
   content: no-open-quote;

@@ -2,7 +2,7 @@
   <div>
     <div class="subpanel clearfix">
       <div class="counters-title">Last value:</div>
-      <div class="counters-aggreg" v-if="data3S!=null">From 3 seconds aggregation<br>{{ FormatTime(data3S.Sampletime) }}</div>
+      <div class="counters-aggreg" v-if="data3S!=null">From 3 seconds aggregation<br>{{ analyzer.FormatTime(data3S.Sampletime) }}</div>
       <div class="clearfix"></div>
       <div>
         <div class="current-value" v-html="(data3S!=null) ? FormatSum(data3S) : '-'"></div>
@@ -13,7 +13,7 @@
     </div>
     <div class="subpanel clearfix">
       <div class="counters-title">Last value:</div>
-      <div class="counters-aggreg" v-if="data1M!=null">From 1 minute aggregation<br>{{ FormatTime(data1M.Sampletime) }}</div>
+      <div class="counters-aggreg" v-if="data1M!=null">From 1 minute aggregation<br>{{ analyzer.FormatTime(data1M.Sampletime) }}</div>
       <div class="clearfix"></div>
       <div>
         <div class="current-value" v-html="(data1M!=null) ? FormatSum(data1M) : '-'"></div>
@@ -24,32 +24,27 @@
     </div>
     <div class="subpanel clearfix">
       <div class="counters-title">Period stats:</div>
-      <div class="counters-aggreg" v-if="dataGraph!=null">{{ FormatAggregation(dataGraph.Aggregation_Source) }}<br>From {{ FormatDateTime(dataGraph.From) }} to {{ FormatDateTime(dataGraph.To) }}</div>
+      <div class="counters-aggreg" v-if="dataGraph!=null">{{ analyzer.FormatAggregation(dataGraph.Aggregation_Source) }}<br>From {{ analyzer.FormatDateTime(dataGraph.From) }} to {{ analyzer.FormatDateTime(dataGraph.To) }}</div>
       <div class="line">
         <div class="float-left">
           <div class="counters-stat-type">Min value:</div>
-          <div class="counters-stat-time">{{ isFinite(Min.Value) ? FormatDateTime(Min.Time) : '-' }}</div>
+          <div class="counters-stat-time">{{ (Min.Time!=0) ? analyzer.FormatDateTime(Min.Time) : '-' }}</div>
         </div>
-        <div class="counters-stat-val" v-html="isFinite(Min.Value) ? FormatHTML(Min.Value) : '-'"></div>
+        <div class="counters-stat-val" v-html="(Min.Time!=0) ? FormatHTML(Min.Value) : '-'"></div>
       </div>
       <div class="line line-border">
         <div class="float-left">
           <div class="counters-stat-type">Max value:</div>
-          <div class="counters-stat-time">{{ isFinite(Max.Value) ? FormatDateTime(Max.Time) : '-' }}</div>
+          <div class="counters-stat-time">{{ (Max.Time!=0) ? analyzer.FormatDateTime(Max.Time) : '-' }}</div>
         </div>
-        <div class="counters-stat-val" v-html="isFinite(Max.Value) ? FormatHTML(Max.Value) : '-'"></div>
+        <div class="counters-stat-val" v-html="(Max.Time!=0) ? FormatHTML(Max.Value) : '-'"></div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
-  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
-  import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
-  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { analyzer: { type: Object }, serie: { type: String, required: true }, data3S: { type: Object }, data1M: { type: Object }, dataGraph: { type: Object } },
@@ -58,7 +53,7 @@
     },
     updated: function() {
       this.$emit('update:height', this.$el.clientHeight);
-    },    
+    },
     computed: {
       Max: function() {
         var Max = { Value: -Infinity, Time: 0, Count: 0 };
@@ -92,9 +87,6 @@
       }
     },
     methods: {
-      FormatTime: function(val) { return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss'); },
-      FormatDateTime: function(val) { return moment(val).tz(this.analyzer.TimeZone).format('hh:mm:ss - DD/MM/YYYY'); },
-      FormatAggregation: function(val) { return 'From ' + oZm.GetAggregLongName(val) + ' aggregation'; },
       FormatHTML: function(val) {
         var Units = oZm.GetBestUnits(val);
         return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'ACTIVE_POWER') ? 'W' : 'VAr');

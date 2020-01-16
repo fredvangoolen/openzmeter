@@ -1,12 +1,12 @@
 <template>
-  <div class="btn-group">
+  <div class="btn-group" v-if="value!=null">
     <button type="button" class="btn btn-default btn-xs" :class="{ active: value[name] }" v-for="name in options" :key="name" @click="Toogle(name, $event)">{{ name }}</button>
   </div>
 </template>
 
 <script>
   export default {
-    props: { value: { type: Object, required: true }, options: { type: Array, required: true }, storage: { type: String, default: null } },
+    props: { value: Object, options: Array, storage: String },
     data() {
       return { };
     },

@@ -31,10 +31,10 @@
 <script>
   import Vuetable from 'vuetable-2';
   import Spinner from 'Components/Spinner.vue';
-  import DeviceVirtual from './DeviceVirtual.vue';
-  import DeviceV1 from './DeviceV1.vue';
-  import DeviceV2 from './DeviceV2.vue';
-  import DeviceRemote from './DeviceRemote.vue';
+  import DeviceVirtual from './Devices/Virtual.vue';
+  import DeviceV1 from './Devices/V1.vue';
+  import DeviceV2 from './Devices/V2.vue';
+  import DeviceRemote from './Devices/Remote.vue';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {

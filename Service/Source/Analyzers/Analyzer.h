@@ -16,7 +16,7 @@ using namespace std;
 class Analyzer {
   public :
     enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
-    enum AnalyzerRights { READ = 0x01, WRITE = 0x02, CONFIG = 0x04 };
+    enum AnalyzerRights { READ, WRITE, CONFIG };
   protected :
     RWLocks     pMembersLocks;            //Locks for configurations
     uint64_t    pLastSave;                //Timestamp of last save or communication
@@ -25,6 +25,11 @@ class Analyzer {
   protected :
     Analyzer(const string &id);
     bool CheckRights(HTTPRequest &req, const uint neededAccess);
+  public :
+    void GetPermissions(HTTPRequest &req);
+    void AddPermission(HTTPRequest &req);
+    void SetPermission(HTTPRequest &req);
+    void DelPermission(HTTPRequest &req);
   public :
     virtual void GetAnalyzer(HTTPRequest &req) = 0;
     virtual void SetAnalyzer(HTTPRequest &req) = 0;
@@ -47,7 +52,7 @@ class Analyzer {
     virtual void SetAlarm(HTTPRequest &req) = 0;
     virtual void AddAlarm(HTTPRequest &req) = 0;
     virtual void DelAlarm(HTTPRequest &req) = 0;
-  public :    
+  public :
     virtual ~Analyzer();
     string Serial();
     json   GetJSONShortDescriptor();

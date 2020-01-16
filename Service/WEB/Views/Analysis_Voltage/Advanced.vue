@@ -1,10 +1,10 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ MouseOver ? 'Paused while over graph' : Time }}</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ MouseOver ? '[PAUSED]' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
         <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases storage="DetailsPhaseMulti" :analyzer="analyzer" :multi="true" :current="true" :value="phases" @input="$emit('update:phases', $event)"></toolbar-phases>
+          <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
           <toolbar-options storage="DetailOptions" :options="['Current', 'Log']" v-model="Options"></toolbar-options>
           <div class="btn-group">
             <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
@@ -13,7 +13,7 @@
         </div>
       </div>
     <div class="panel-body">
-      <spinner v-if="data.Voltage==undefined"></spinner>
+      <spinner v-if="data==null"></spinner>
       <graph :options="GraphOptions" v-on:mouseOver="MouseOver=$event"></graph>
     </div>
   </div>
@@ -21,23 +21,64 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { analyzer: { type: Object, required: true }, data: { type: Object, required: true }, phases: { type: Array, required: true }, paused: { type: Boolean, required: true } },
+    props: { analyzer: Object, data: Object, paused: Boolean },
     data() {
-      return { MouseOver: false, Options: {} };
+      return { MouseOver: false, Options: {}, Phases: [] };
     },
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
-      Time: function() { return (this.data == null) ?  'Loading data...' : 'Last update at ' + moment(this.data.Sampletime).format('HH:mm:ss.SSS'); },
       GraphOptions: function() {
+        if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return {};
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
         var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
         var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
-
+        var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
+        for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
+        for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
+        for(var n in CurrentNames) Opt.series[CurrentNames[n]] = { axis: 'y2' };
+        Opt.strokeWidth = 0.5;
+        Opt.gridLineColor = "#BBB";
+        Opt.gridLinePattern = [4, 4];
+        Opt.fillGraph = true;
+        Opt.interactionModel = Graph.FixedRangeInteractionModel(this);
+        Opt.selectMode = 'euclidian';
+        Opt.legend = 'follow';
+        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.plugins = [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ];
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 34;
+        //Opt.axes.y.valueRange = [Y1Range[0] + this.VOffset, Y1Range[1] + this.VOffset],
+        Opt.axes.y.strokeWidth = VoltageStyle.Width;
+        Opt.axes.y.valueFormatter = (x) => { return oZm.Round2(x - this.VOffset) + '<em class="x-small">' + (this.Log ? 'dB' : 'V') + '</em>'; };
+        Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.VOffset); } : Dygraph.numericTicks;
+        Opt.axes.y.axisLabelFormatter = (x) => { return oZm.Round2(x); };
+        Opt.axes.y2.drawAxis = this.Options['Current'];
+        Opt.axes.y2.pixelsPerLabel = 15;
+        Opt.axes.y2.axisLabelWidth = this.Options['Current'] ? 34 : 0;
+        //Opt.axes.y2.valueRange = [Y2Range[0] + this.COffset, Y2Range[1] + this.COffset];
+        Opt.axes.y2.strokeWidth = CurrentStyle.Width;
+        Opt.axes.y2.valueFormatter = (x) => { return oZm.Round2(x - this.COffset) + ' <em class="x-small">' + (this.Options['Log'] ? 'dB' : 'A') + '</em>'; };
+        Opt.axes.y2.ticker = (this.Log || this.ShowCurrent === false) ? function(min, max) { return (this.ShowCurrent === true) ? Graph.DBTicks(min, max, this.COffset) : []; }.bind(this) : Dygraph.numericTicks;
+        Opt.axes.y2.axisLabelFormatter = (x) => { return oZm.Round2(x - this.COffset); };
+//        Opt.axes.x.drawGrid: true,
+        Opt.axes.x.valueFormatter = (y) => { return Math.round(y / 10 * this.analyzer.NominalFreq) + '<em class="small"> Hz</em>'; };
+        Opt.axes.x.axisLabelFormatter = (y) => {
+                   y = (y / 10 * this.analyzer.NominalFreq);
+                   if(y >= 1000) {
+                     y = y / 1000;
+                     if((y % 1) !== 0) return "";
+                     return y + '<em class="small"> kHz</em>';
+                   } else {
+                     if((y % 1) !== 0) return "";
+                     return y + '<em class="small"> Hz</em>';
+                   }
+                 };
+        Opt.labels = ['Bin'].concat(VoltageNames).concat(CurrentNames);
+        Opt.colors = VoltageStyle.Colors.concat(CurrentStyle.Colors);
 
         for(var i in this.data) {
 //          var Row = [i];
@@ -63,85 +104,28 @@
 
 
 
-
-
-
-        var Opt = {};
-        Opt.visibility = [];
-        Opt.series = {};
-        for(var n in VoltageNames) Opt.visibility.push(this.phases[n]);
-        for(var n in CurrentNames) Opt.visibility.push(this.phases[n] && this.Options['Current']);
-        for(var n in CurrentNames) Opt.series[CurrentNames[n]] = { axis: 'y2' };
-        Opt.plugins = [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ];
-        Opt.interactionModel = Graph.FixedRangeInteractionModel(this);
-        Opt.selectMode = 'euclidian';
-        Opt.strokeWidth = 0.5;
-        Opt.gridLineColor = "#BBB";
-        Opt.gridLinePattern = [4, 4];
-        Opt.fillGraph = true;
-        Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
-        Opt.showRangeSelector = false;
-        Opt.axes = { y: {}, y2: {}, x: {} };
-        Opt.axes.y.pixelsPerLabel = 15;
-        Opt.axes.y.axisLabelWidth = 34;
-        //Opt.axes.y.valueRange = [Y1Range[0] + this.VOffset, Y1Range[1] + this.VOffset],
-        Opt.axes.y.strokeWidth = VoltageStyle.Width;
-        Opt.axes.y.valueFormatter = (x) => { return oZm.Round2(x - this.VOffset) + '<em class="x-small">' + (this.Log ? 'dB' : 'V') + '</em>'; };
-        Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.VOffset); } : Dygraph.numericTicks;
-        Opt.axes.y.axisLabelFormatter = (x) => { return oZm.Round2(x); };
-        Opt.axes.y2.drawAxis = this.Options['Current'];
-        Opt.axes.y2.pixelsPerLabel = 15;
-        Opt.axes.y2.axisLabelWidth = this.Options['Current'] ? 34 : 0;
-        //Opt.axes.y2.valueRange = [Y2Range[0] + this.COffset, Y2Range[1] + this.COffset];
-        Opt.axes.y2.strokeWidth = CurrentStyle.Width;
-        Opt.axes.y2.valueFormatter = (x) => { return oZm.Round2(x - this.COffset) + ' <em class="x-small">' + (this.Options['Log'] ? 'dB' : 'A') + '</em>'; };
-        Opt.axes.y2.ticker = (this.Log || this.ShowCurrent === false) ? function(min, max) { return (this.ShowCurrent === true) ? Graph.DBTicks(min, max, this.COffset) : []; }.bind(this) : Dygraph.numericTicks;
-        Opt.axes.y2.axisLabelFormatter = (x) => { return oZm.Round2(x - this.COffset); };
-//        Opt.axes.x.drawGrid: true,
-        Opt.axes.x.valueFormatter = (y) => { return Math.round(y / 10 * Analyzer.NominalFreq) + '<em class="small"> Hz</em>'; };
-        Opt.axes.x.axisLabelFormatter = function (y) {
-                   y = (y / 10 * Analyzer.NominalFreq);
-                   if(y >= 1000) {
-                     y = y / 1000;
-                     if((y % 1) !== 0) return "";
-                     return y + '<em class="small"> kHz</em>';
-                   } else {
-                     if((y % 1) !== 0) return "";
-                     return y + '<em class="small"> Hz</em>';
-                   }
-                 };
-        Opt.labels = ['Bin'].concat(VoltageNames).concat(CurrentNames);
-        Opt.colors = VoltageStyle.Colors.concat(CurrentStyle.Colors);
-        Opt.file = [];
-
-
-
-
-        for(var i = 0; i < result.Voltage_FFT[0].length; i++) {
-          var Row = [];
-          for(var n = 0; n < result.Voltage_FFT.length; n++) Row.push(result.Voltage_FFT[n][i]);
-          for(var n = 0; n < result.Current_FFT.length; n++) Row.push(result.Current_FFT[n][i]);
-          this.Data.push(Row);
+        for(var i = 0; i < this.data.Voltage_FFT[0].length; i++) {
+          var Row = [i];
+          for(var n = 0; n < this.data.Voltage_FFT.length; n++) Row.push(this.data.Voltage_FFT[n][i]);
+          for(var n = 0; n < this.data.Current_FFT.length; n++) Row.push(this.data.Current_FFT[n][i]);
+          Opt.file.push(Row);
         }
         return Opt;
       }
     },
     created: function() {
-      this.MaxCurrent = 0;
-      this.Data = null;
-      this.Phases = null;
-      this.ShowCurrent = null;
-      this.Log = null;
-      this.VOffset = 0;
-      this.COffset = 0;
+//      this.MaxCurrent = 0;
+//      this.Data = null;
+//      this.Log = null;
+//      this.VOffset = 0;
+//      this.COffset = 0;
     },
     methods: {
-      Redraw: function() {
-        this.$nextTick(function() {
-          this.$refs.graph.Redraw('100%', '300');
-        });
-      },
+//      Redraw: function() {
+//        this.$nextTick(function() {
+//          this.$refs.graph.Redraw('100%', '300');
+//        });
+//      },
 //      SetPhases: function(phases) {
 //        this.$refs.phases.SetPhases(phases);
 //        this.Phases = phases;

@@ -1,7 +1,34 @@
 const openZmeter = {
   install: function(Vue, options) {
-    Vue.prototype.SayEdu = () => {
-      console.log("edu");
+    Vue.prototype.MatrixColsRange = (values, cols, options) => {
+      var UpperRange = -Infinity;
+      var LowerRange = +Infinity;
+      for(var i in values) {
+        for(var n in cols) {
+          if((values[i][n] == null) || (cols[n] == false)) continue;
+          if(values[i][n] > UpperRange) UpperRange = values[i][n];
+          if(values[i][n] < LowerRange) LowerRange = values[i][n];
+        }
+      }
+      if(options != null) {
+        if((UpperRange == -Infinity) && (options.defMax != null)) UpperRange = options.defMax;
+        if((LowerRange == Infinity) && (options.defMin != null)) LowerRange = options.defMin;
+
+
+      }
+      return [LowerRange, UpperRange];
+    },
+    Vue.prototype.Round = (val, decimals, html) => {
+      if((val == null) || (isFinite(val) == false)) return '~';
+      if(decimals == null) decimals = 2;
+      if(html == null) html = false;
+      var Exponent = Math.pow(10, decimals);
+      val = Math.round(val * Exponent);
+      var Integer = Math.trunc(val / Exponent);
+      var Fraction = Math.abs(val % Exponent);
+      Fraction = Fraction.toString();
+      while(Fraction.length < decimals) Fraction = '0' + Fraction;
+      return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + (html ? "<span style='font-size:80%'>." + Fraction + '</span>' : Fraction);
     }
   }
 };
@@ -22,10 +49,10 @@ export function RangeCalc(range) {
   return { Period: 86400000, To: 0 };
 }
 export function RoundHTML(val, decimals) {
-  if(val == null) {
+  if((val == null) || (isFinite(val) == false)) {
     return '~';
   } else {
-    if(decimals === undefined) decimals = 2;
+    if(decimals == null) decimals = 2;
     var Exponent = Math.pow(10, decimals);
     val = Math.round(val * Exponent);
     var Integer = Math.trunc(val / Exponent);

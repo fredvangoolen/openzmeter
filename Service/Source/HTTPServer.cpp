@@ -128,12 +128,12 @@ ssize_t HTTPRequest::WriteFunction(void *cls, uint64_t pos, char *buf, size_t ma
     Request->pDeflateObj.avail_out = max;
     deflate(&Request->pDeflateObj, Z_FINISH);
     if(Request->pDeflateObj.avail_out != max) {
-      return (max - Request->pDeflateObj.avail_out); 
+      return (max - Request->pDeflateObj.avail_out);
     } else {
       return MHD_CONTENT_READER_END_OF_STREAM;
     }
   } else {
-    if(max > (Request->pPostData.size() - pos)) max = Request->pPostData.size() - pos; 
+    if(max > (Request->pPostData.size() - pos)) max = Request->pPostData.size() - pos;
     if(max == 0) return MHD_CONTENT_READER_END_OF_STREAM;
     memcpy(buf, &Request->pPostData[pos], max);
     return max;
@@ -181,10 +181,11 @@ HTTPServer::HTTPServer() {
   pDaemon = NULL;
   uint16_t Port = 8080;
   json Config = ConfigManager::ReadConfig("/HTTPServer");
+  RegisterCallback("getFunctions", GetFunctionsCallback);
   if(!Config.is_object()) Config = json::object();
   if(Config["Port"].is_number_unsigned()) Port = Config["Port"];
   if(Config["RelativePath"].is_string()) pRelativePath = Config["RelativePath"];
-  pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, Port, NULL, NULL, 
+  pDaemon = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION, Port, NULL, NULL,
                              &HandleClient, NULL,
                              MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int)60,
                              MHD_OPTION_NOTIFY_COMPLETED, &HandleComplete, NULL,
@@ -192,7 +193,7 @@ HTTPServer::HTTPServer() {
   Config = json::object();
   Config["Port"] = Port;
   Config["RelativePath"] = pRelativePath;
-  ConfigManager::WriteConfig("/HTTPServer", Config); 
+  ConfigManager::WriteConfig("/HTTPServer", Config);
   if(pDaemon == NULL) {
     LOGFile::Error("HTTP port (%hu) already in use\n", Port);
   } else {
@@ -221,6 +222,13 @@ void HTTPServer::UnregisterCallback(const string &handleName) {
     break;
   }
   pLock.WriteUnlock();
+}
+void HTTPServer::GetFunctionsCallback(HTTPRequest &req) {
+  json Response = json::array();
+  pLock.ReadLock();
+  for(HTTPCallback &Callback : pCallbacks) Response.push_back(Callback.HandleName);
+  pLock.ReadUnlock();
+  req.FromJSON(Response);
 }
 void HTTPServer::RemoveExpiredSessions(Database &db) const {
   if(Tools::GetTime() < 1296000000) return;
@@ -324,7 +332,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
             Response["Result"] = false;
           }
           Request->FromJSON(Response);
-        }  
+        }
       } else {
         if(Request->UserName().empty()) {
           Request->FromString("Unauthorided access to API", MHD_HTTP_UNAUTHORIZED);
@@ -350,7 +358,7 @@ int HTTPServer::HandleClient(void *cls, struct MHD_Connection *connection, const
       MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_TYPE, Request->MimeType().c_str());
       MHD_add_response_header(Response, MHD_HTTP_HEADER_CONTENT_ENCODING, Request->Deflate() ? "deflate" : "");
       int Return = MHD_queue_response(connection, Request->ResultCode(), Response);
-      MHD_destroy_response(Response);        
+      MHD_destroy_response(Response);
       return Return;
     }
   }

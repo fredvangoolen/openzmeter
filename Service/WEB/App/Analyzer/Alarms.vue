@@ -1,13 +1,13 @@
 <template>
-  <dlg ref="Dialog">
+  <dlg :loading="ShowSpinner">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Alarms</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-on:click="Add"><img :src="require('Imgs/plus.png')" alt="Add alarm"></button>
-        <button type="button" class="btn btn-default btn-xs" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="Add alarm"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
-    <vuetable ref="table" :fields="columns" :api-mode="false" class="table small table-striped">
+    <vuetable ref="table" :fields="columns" :api-mode="false" :data="Alarms" class="table small table-striped">
       <template slot="actions" slot-scope="props">
         <div class="btn-group">
           <button type="button" class="btn btn-default btn-xs" v-on:click="Edit(props.rowData)">Edit</button>
@@ -21,10 +21,10 @@
 <script>
   import vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
-  import Dlg from 'Components/Dialog.vue';
   export default {
+    props: { analyzer: Object },
     data() {
-      return { Analyzer: null,
+      return { Alarms: [], ShowSpinner: true,
         columns: [
           { name: 'Name', title: 'Name' },
           { name: 'UserName', title: 'User' },
@@ -33,42 +33,44 @@
         ]
       };
     },
-    updated: function(){
+    updated: function() {
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
-    },    
-    methods: {
-      Show: function(analyzer) {
-        this.Analyzer = analyzer;
-        this.$refs.Dialog.Show();
+    },
+    created: function() {
+      this.GetAlarms();
+    },
+    watch: {
+      analyzer: function() {
         this.GetAlarms();
-      },
+      }
+    },
+    methods: {
       GetAlarms: function() {
-        this.$refs.Dialog.ShowSpinner = true;
-        $.ajax({ url: "getAlarms", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer }),
+        this.ShowSpinner = true;
+        if(this.analyzer == null) return;
+        this.$http.post('getAlarms', { Analyzer: this.analyzer.Analyzer }).then(
+          (result) => {
+            if(result.status == 200) this.Alarms = result.data;
+            this.ShowSpinner = false;
+          }
+        );
+      },
+      Edit: function(row) {
+        $.ajax({ url: "getAlarm", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, AlarmID: row.AlarmID }),
           success: (result) => {
-            this.$refs.table.setData({ data: result });
+            this.$refs.Dialog.Close();
+            this.$parent.$refs.Alarm.Show(this.Analyzer, result);
           },
           complete: () => {
             this.$refs.Dialog.ShowSpinner = false;
           }
         });
       },
-      Edit: function(row) {
-        $.ajax({ url: "getAlarm", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, AlarmID: row.AlarmID }), 
-          success: (result) => {
-            this.$refs.Dialog.Close();
-            this.$parent.$refs.Alarm.Show(this.Analyzer, result);
-          },
-          complete: () => {
-            this.$refs.Dialog.ShowSpinner = false;              
-          }
-        });
-      },
       Delete: function(row) {
         if(confirm("Delete '" + row.Name + "' alarm?")) {
           this.$refs.Dialog.ShowSpinner = true;
-          $.ajax({ url: "delAlarm", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ AlarmID: row.AlarmID, Analyzer: this.Analyzer.Analyzer }), 
-            success: () => { 
+          $.ajax({ url: "delAlarm", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ AlarmID: row.AlarmID, Analyzer: this.Analyzer.Analyzer }),
+            success: () => {
               this.GetAlarms();
             },
             Error: () => {
@@ -91,7 +93,7 @@
         if(val === 2) return 'High';
       }
     },
-    components: { vuetable, Dlg }
+    components: { vuetable }
   }
 </script>
 

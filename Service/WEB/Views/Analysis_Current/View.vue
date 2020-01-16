@@ -16,7 +16,7 @@
             <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :height.sync="Height"></counters>
-              <current class="col-md-6 col-lg-8 col-xl-9" :phases="Phases" :analyzer="analyzer" :data="GraphData"></current>
+              <current class="col-md-6 col-lg-8 col-xl-9" :phases="Phases" :analyzer="analyzer" :data="DataGraph"></current>
             </div>
           </div>
         </div>
@@ -24,10 +24,10 @@
       <div class="col-lg-12">
         <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Parameters']" storage="CurrentDetailTab" v-model="ActiveTab"></detail-tabs>
         <waveform v-if="ActiveTab=='Waveform'" :data="NowData" :analyzer="analyzer" :paused.sync="Paused" :phases.sync="PhasesMulti"></waveform>
-        <!--harmonics v-if="ActiveTab=='Harmonics'"></harmonics>
-        <evolution v-if="ActiveTab=='Evolution'"></evolution>
+        <harmonics v-if="ActiveTab=='Harmonics'" :data="DataCubism" :analyzer="analyzer"></harmonics>
+        <evolution v-if="ActiveTab=='Evolution'" :data="DataCubism" :analyzer="analyzer"></evolution>
         <advanced v-if="ActiveTab=='Advanced'"></advanced>
-        <parameters v-if="ActiveTab=='Parameters'"></parameters-->
+        <parameters v-if="ActiveTab=='Parameters'" :data="DataCubism" :analyzer="analyzer" :paused.sync="Paused"></parameters>
         </div>
     </div>
   </div>
@@ -49,8 +49,8 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { ShowSpinner: false, ActiveTab: '', Aggreg: '', Range: null, GraphData: {}, GraphTimer: null, Phases: [], Height: 300,
-               NowData: {}, NowTimer: null, CubismData: {}, CubismTimer: null, PhasesMulti: [], PhaseSingle: 0, Paused: false };
+      return { ShowSpinner: false, ActiveTab: '', Aggreg: '', Range: null, DataGraph: {}, TimerGraph: null, Phases: null, Height: 300,
+               DataNow: {}, TimerNow: null, DataCubism: {}, TimerCubism: null, Paused: false };
     },
     created: function() {
       this.UpdateNowValues();
@@ -58,11 +58,10 @@
       this.UpdateCubismValues();
     },
     beforeDestroy: function() {
-      if(this.NowTimer != null) clearTimeout(this.NowTimer);
-      if(this.GraphTimer != null) clearTimeout(this.GraphTimer);
-      if(this.CubismTimer != null) clearTimeout(this.CubismTimer);
+      if(this.TimerNow != null) clearTimeout(this.TimerNow);
+      if(this.TimerGraph != null) clearTimeout(this.TimerGraph);
+      if(this.TimerCubism != null) clearTimeout(this.TimerCubism);
     },
-
     watch: {
       analyzer: function(val) {
         this.UpdateNowValues();
@@ -72,16 +71,22 @@
     },
     methods: {
       UpdateNowValues: function() {
-        if(this.NowTimer != null) clearTimeout(this.NowTimer);
-        if(this.analyzer != null) this.$http.post('getSeriesNow', { Series: ['CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI'], Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            this.NowData = (result.status == 200) ? Object.freeze(result.data) : null;
-            this.NowTimer = setTimeout(() => { this.UpdateNowValues(); }, 2000);
-          }
+        if(this.TimerNow != null) clearTimeout(this.TimerNow);
+        if(this.analyzer == null) return;
+        this.analyzer.GetSeriesNow(['CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI'],
+          (working) => {},
+          (result) => { this.DataNow = Object.freeze(result); },
+          (timeout) => { if(timeout != null) this.TimerNow = setTimeout(() => { this.UpdateNowValues(); }, timeout); }
         );
       },
       UpdateCubismValues: function() {
-
+        if(this.TimerCubism != null) clearTimeout(this.TimerCubism);
+        if(this.analyzer == null) return;
+        this.analyzer.GetSeriesRange('1M', 'LastDay', this.DataCubism, ['CURRENT_HARMONICS', 'POWER_FACTOR', 'CURRENT_THD', 'PHI'],
+          (working) => {},
+          (result) => { this.DataCubism = Object.freeze(result); },
+          (timeout) => { if(timeout != null) this.TimerCubism = setTimeout( () => { this.UpdateCubismValues(); }, timeout); }
+        );
       },
       UpdateGraphValues: function() {
 

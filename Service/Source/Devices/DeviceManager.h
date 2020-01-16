@@ -11,7 +11,7 @@
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceManager final {
-  private :  
+  private :
     static vector<Device*>  pDevices;         //Initiated by devices, cleared on destroy
     static RWLocks          pDevicesLock;     //Control access to critical sections
   public :
@@ -43,7 +43,11 @@ class DeviceManager final {
     static void GetAlarmCallback(HTTPRequest &req);
     static void SetAlarmCallback(HTTPRequest &req);
     static void AddAlarmCallback(HTTPRequest &req);
-    static void DelAlarmCallback(HTTPRequest &req);    
+    static void DelAlarmCallback(HTTPRequest &req);
+    static void GetPermissionsCallback(HTTPRequest &req);
+    static void AddPermissionCallback(HTTPRequest &req);
+    static void SetPermissionCallback(HTTPRequest &req);
+    static void DelPermissionCallback(HTTPRequest &req);
   public :
     DeviceManager();
     ~DeviceManager();

@@ -2,7 +2,12 @@
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
       <div class="huge-small pull-left">Tariffs</div>
-      <button type="button" class="pull-right btn btn-default btn-xs" data-toggle="tooltip" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
+      <div class="pull-right input-group input-group-xs" style="width:200px">
+        <input type="text" class="form-control" placeholder="Filter..." disabled>
+        <span class="input-group-btn">
+          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
+        </span>
+      </div>
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>

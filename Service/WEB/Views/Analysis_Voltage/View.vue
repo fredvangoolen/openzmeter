@@ -8,28 +8,28 @@
             <div class="header-buttons clearfix" ref="Toolbar">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
-              <!--toolbar-phases variable="VoltageViewPhases" type="VOLTAGE" :multi="true" v-on:PhasesChanged="PhasesChanged"></toolbar-phases>
-              <toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools-->
+              <toolbar-phases storage="VoltageViewPhases" :analyzer="analyzer" :current="false" :multi="true" v-model="Phases"></toolbar-phases>
+              <!--toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools-->
             </div>
           </div>
           <div class="panel-body">
             <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" :height.sync="Height"></counters>
-              <voltage class="col-md-6 col-lg-8 col-xl-9" :phases="Phases" :analyzer="analyzer" :data="GraphData"></voltage>
+              <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :data10M="Data10M" :dataGraph="DataGraph" :height.sync="Height"></counters>
+              <voltage class="col-md-6 col-lg-8 col-xl-9" :phases="Phases" :analyzer="analyzer" :data="DataGraph" :height="Height"></voltage>
             </div>
           </div>
         </div>
       </div>
       <div class="col-lg-12">
         <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events']" storage="VoltageDetailTab" v-model="ActiveTab"></detail-tabs>
-          <waveform v-if="ActiveTab=='Waveform'" :data="NowData" :analyzer="analyzer" :paused.sync="Paused" :phases.sync="PhasesMulti"></waveform>
-          <!--harmonics v-if="ActiveTab=='Harmonics'" :data="NowData" :analyzer="analyzer" :paused.sync="Paused" :phases.sync="PhasesMulti"></harmonics>
-          <evolution v-if="ActiveTab=='Evolution'" :data="CubismData" :analyzer="analyzer" :paused.sync="Paused" :phase.sync="PhaseSingle"></evolution-->
-          <advanced v-if="ActiveTab=='Advanced'" :data="NowData" :analyzer="analyzer" :paused.sync="Paused" :phases.sync="PhasesMulti"></advanced>
-          <!--parameters v-if="ActiveTab=='Parameters'" :data="CubismData" :analyzer="analyzer" :paused.sync="Paused" :phase.sync="PhaseSingle"></parameters>
-          <phasors v-if="ActiveTab=='Phasors'" :data="NowData" :analyzer="analyzer" :paused.sync="Paused"></phasors>
-          <events v-if="ActiveTab=='Events'" :analyzer="analyzer" :range="Range"></events-->
+          <waveform v-if="ActiveTab=='Waveform'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></waveform>
+          <harmonics v-if="ActiveTab=='Harmonics'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
+          <evolution v-if="ActiveTab=='Evolution'" :data="DataCubism" :analyzer="analyzer"></evolution>
+          <advanced v-if="ActiveTab=='Advanced'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></advanced>
+          <parameters v-if="ActiveTab=='Parameters'" :data="DataCubism" :analyzer="analyzer" :paused.sync="Paused"></parameters>
+          <phasors v-if="ActiveTab=='Phasors'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></phasors>
+          <events v-if="ActiveTab=='Events'" :analyzer="analyzer" :range="Range"></events>
       </div>
     </div>
   </div>
@@ -53,53 +53,73 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { ShowSpinner: false, ActiveTab: '', Aggreg: '', Range: null, GraphData: {}, GraphTimer: null, Phases: [], Height: 300,
-               NowData: {}, NowTimer: null, CubismData: {}, CubismTimer: null, PhasesMulti: [], PhaseSingle: 0, Paused: false };
+      return { ShowSpinner: false, ActiveTab: '', Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false,
+               DataGraph: null, ControlGraph: null, DataNow: null, ControlNow: null, DataCubism: null, ControlCubism: null, Data10M: null, Control10M: null };
     },
     created: function() {
       this.UpdateNowValues();
+      this.Update10MValues();
       this.UpdateGraphValues();
       this.UpdateCubismValues();
     },
     beforeDestroy: function() {
-      if(this.NowTimer != null) clearTimeout(this.NowTimer);
-      if(this.GraphTimer != null) clearTimeout(this.GraphTimer);
-      if(this.CubismTimer != null) clearTimeout(this.CubismTimer);
+      this.CancelTransfer(this.ControlGraph);
+      this.CancelTransfer(this.ControlNow);
+      this.CancelTransfer(this.Control10M);
+      this.CancelTransfer(this.ControlCubism);
     },
     watch: {
       analyzer: function(val) {
         this.UpdateNowValues();
+        this.Update10MValues();
         this.UpdateGraphValues();
         this.UpdateCubismValues();
-      }
+      },
+      Aggreg: function() {  this.UpdateGraphValues(); },
+      Range: function() { this.UpdateGraphValues(); }
     },
     methods: {
+      CancelTransfer: function(transfer) {
+        if(transfer == null) transfer = { Timer: null, CancelFunc: null };
+        if(transfer.Timer != null) clearTimeout(transfer.Timer);
+        if(transfer.CancelFunc != null) transfer.CancelFunc();
+        return transfer;
+      },
       UpdateNowValues: function() {
-        if(this.NowTimer != null) clearTimeout(this.NowTimer);
-        if(this.analyzer != null) this.$http.post('getSeriesNow', { Series: ['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'VOLTAGE_PHASE', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            this.NowData = (result.status == 200) ? Object.freeze(result.data) : null;
-            this.NowTimer = setTimeout(() => { this.UpdateNowValues(); }, 2000);
-          }
+        this.ControlNow = this.CancelTransfer(this.ControlNow);
+        if(this.analyzer == null) return;
+        this.ControlNow.CancelFunc = this.analyzer.GetSeriesNow(['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'VOLTAGE_PHASE', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'],
+          (working) => {},
+          (result) => { this.DataNow = Object.freeze(result); },
+          (timeout) => { this.ControlNow.Timer = setTimeout(() => { this.UpdateNowValues(); }, timeout); }
+        );
+      },
+      Update10MValues: function() {
+        this.Control10M = this.CancelTransfer(this.Control10M);
+        if(this.analyzer == null) return;
+        this.Control10M.CancelFunc = this.analyzer.GetSeriesLast('10M', ['VOLTAGE'],
+          (working) => {},
+          (result) => { this.Data10M = Object.freeze(result); },
+          (timeout) => { this.Control10M.Timer = setTimeout(() => { this.Update10MValues(); }, timeout); }
         );
       },
       UpdateCubismValues: function() {
-
+        this.ControlCubism = this.CancelTransfer(this.ControlCubism);
+        if(this.analyzer == null) return;
+        this.ControlCubism.CancelFunc = this.analyzer.GetSeriesRange('1M', 'LastDay', this.DataCubism, ['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'],
+          (working) => {},
+          (result) => { this.DataCubism = Object.freeze(result); },
+          (timeout) => { this.ControlCubism.Timer = setTimeout( () => { this.UpdateCubismValues(); }, timeout); }
+        );
       },
       UpdateGraphValues: function() {
-        return;
-        if(this.$root.SelectedAnalyzer === null) return;
-        this.Ajax = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Period: 86400000, To: 0, LastSample: this.LastSample, Series: ['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.Analyzer }),
-          success: function(result) {
-            this.$refs.evolution.SetData(result);
-            this.$refs.parameters.SetData(result);
-            this.LastSample = oZm.LastSampletime(result, this.LastSample);
-          }.bind(this),
-          complete: function() {
-            if(this.UpdateGraphs1MTimer !== null) clearTimeout(this.UpdateGraphs1MTimer);
-            this.UpdateGraphs1MTimer = setTimeout(this.UpdateGraphValues, 30000);
-          }.bind(this)
-        });
+        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
+        if((this.Aggreg == null) || (this.Phases == null) || (this.Range == null) || (this.analyzer == null)) return;
+        this.ControlGraph.CancelFunc = this.analyzer.GetSeriesRange(this.Aggreg, this.Range, this.DataGraph, ['VOLTAGE'],
+          (working) => { this.ShowSpinner = working; },
+          (result) => { this.DataGraph = Object.freeze(result); },
+          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
+        );
       },
     },
     components: { Voltage, Counters, Waveform, Advanced, Events, Evolution, Harmonics, Parameters, Phasors }

@@ -75,7 +75,7 @@
     },
     methods: {
       SetAnalyzer: function() {
-        this.AnalyzerSelected = (this.$root.SelectedAnalyzer !== null); 
+        this.AnalyzerSelected = (this.$root.SelectedAnalyzer !== null);
       }
     }
   }
@@ -112,14 +112,14 @@
     line-height: 24px;
     padding-top: 10px;
   }
-  .item:hover, .submenu a:hover {
+  .item:hover, .submenu a:hover, .submenu a.active {
     background: #616161;
     color: #BDBDBD
   }
-  .item.active, .submenu a.active {
+  /*.item.active, .submenu a.active {
     color: #FAFAFA;
     background: #474544;
-  }
+  }*/
   .submenu {
     display: block;
     padding: 0px;

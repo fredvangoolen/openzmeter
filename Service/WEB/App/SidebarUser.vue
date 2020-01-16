@@ -1,11 +1,11 @@
 <template>
   <div class="this" v-bind:class="{ expanded: expanded }">
     <img class="icon" :src="require('Imgs/user32.png')">
-    <div class="name">{{ UserName }}</div>
     <div class="btn-group">
       <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" v-on:click="Edit"><img :src="require('Imgs/user_edit.png')"></button>
       <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" v-on:click="Logout"><img :src="require('Imgs/user_go.png')"></button>
     </div>
+    <div class="name">{{ UserName }}</div>
     <user-logout ref="logout"></user-logout>
     <user-edit v-if="ShowUser" ref="userEdit"></user-edit>
     <offline ref="offline"></offline>
@@ -90,11 +90,12 @@
   }
   .name {
     width: 192px;
-    padding-left: 5px;
+    padding-left: 2px;
     line-height: 24px;
     padding-top: 4px;
   }
   .btn-group {
     margin-top: 4px;
+    margin-left: 2px;
   }
 </style>
