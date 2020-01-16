@@ -1,24 +1,24 @@
 <template>
-  <div ref="panel" class="panel" :class="SerieProps.CSS_Class">
+  <div ref="panel" class="panel" :class="(serie=='VOLTAGE') ? 'panel-voltage' : (serie=='CURRENT') ? 'panel-current' : (serie=='ACTIVE_POWER') ? 'panel-active-power' : 'panel-frequency'">
     <div class="panel-heading">
-      <div class="huge header-text">{{ SerieProps.Title }}</div>
+      <div class="huge header-text">{{ (serie=='VOLTAGE') ? 'Voltage' : (serie=='CURRENT') ? 'Current' : (serie=='ACTIVE_POWER') ? 'Active Power' : 'Frequency' }}</div>
       <div class="header-buttons">
         <div style="margin-top: -3px">
           <div style="display: inline-block; font-size: 24px; padding-right: 4px; vertical-align: top"><span v-html="LastValue"></span> <em class="huge-small-unit">{{ UnitsScale }}{{ SerieProps.Units }}</em>
-            <div style="font-size: 14px; line-height: 14px">{{ Aggregation }}</div>
+            <div style="font-size: 14px; line-height: 14px" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggregation_Source) }}</div>
           </div>
           <div v-if="PhasesValue.length > 1" style="display: inline-block; border-left: 1px solid #FFF; padding-left: 2px; line-height: 12px; font-size: 12px; vertical-align: top"><div v-for="val in PhasesValue">{{ val }}</div></div>
        </div>
       </div>
     </div>
     <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <graph ref="Chart" :options="GraphOptions"></graph>
+      <spinner v-if="data==null"></spinner>
+      <graph ref="Chart" :options="GraphOptions" :height="200"></graph>
     </div>
     <div class="panel-footer clearfix">
       <router-link :to="SerieProps.Link" style="line-height: 22px"><span class="pull-left">View Details</span></router-link>
       <div class="pull-right" ref="Toolbar">
-        <toolbar-phases :analyzer="analyzer" v-on:PhasesChanged="SetPhases" v-if="serie != 'FREQUENCY'" :variable="'Dashboard' + serie" :type="(serie == 'CURRENT') ? 'CURRENT' : 'VOLTAGE'" :multi="true"></toolbar-phases>
+        <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'FREQUENCY'" :variable="'Dashboard_' + serie" :current="serie=='CURRENT'" :multi="true"></toolbar-phases>
         <!--toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" v-on:ExportClick="ExportClick" ref="tools"></toolbar-tools-->
       </div>
     </div>
@@ -28,34 +28,65 @@
 <script>
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
+  import Graph from 'Components/Graph.vue';
   import 'JS/dygraph-crosshair.js';
   export default {
     props: { serie: String, analyzer: Object, data: Object },
     data() {
-      return { ShowSpinner: true, PhasesValue:[], LastValue: null, UnitsScale: '', SerieProps: {}, Aggregation: 'Loading data...' };
+      return { ShowSpinner: true, PhasesValue: [], LastValue:'', Phases: null, UnitsScale: '', SerieProps: {} };
     },
     computed: {
       GraphOptions: function() {
-        //      this.GraphOptions = {
-//        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, legend: 'follow',
-//        plugins: [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ], xAxisHeight: 12, legendFormatter: Graph.LegendFormatter_Follow
+        var Opt = {};
+        Opt.strokeWidth = 0.5;
+        Opt.stepPlot = true;
+        Opt.drawGapEdgePoints = true;
+        Opt.connectSeparatedPoints = false;
+        Opt.fillGraph = false;
+        Opt.legend = 'follow';
+        Opt.labels = ['Time'].concat(this.SerieProps.Names(this.analyzer));
+        Opt.colors = oZm.SerieStyle(this.SerieProps, this.analyzer, 0).Colors;
+        Opt.selectMode = 'euclidian';
+        Opt.plugins = [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ];
+        Opt.xAxisHeight = 12;
+//        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+//        Opt.visibility = this.Phases;
+//        Opt.dateWindow = [this.data.From, this.data.To];
 
-                var Analyzer = this.$root.SelectedAnalyzer;
-        var Range = this.SerieProps.Range(this.Data, this.Phases);
-        var Options = {
-          visibility: this.Phases, dateWindow: this.DateWindow, file: this.Data, valueRange: Range, selectMode: 'euclidian',
-          labels: ['Time'].concat(this.SerieProps.Names(this.analyzer)),
-          colors: oZm.SerieStyle(this.SerieProps, this.analyzer, 0).Colors,
-          axes: {
-            y: { pixelsPerLabel: 15, axisLabelWidth: 30,
-                 valueFormatter: (x) => { var Result = oZm.FormatSerieValue(x, this.SerieProps); return Result.ValuePlain + ' <em class="x-small">' + Result.Units + '</em>'; },
-                 axisLabelFormatter: (x) => { return oZm.FormatSerieValue(x, this.SerieProps, oZm.GetBestUnits(Math.max(Math.abs(Range[0]), Math.abs(Range[1])))).ValuePlain; }
-               },
-            x: { valueFormatter: function (x) { return moment(x).format('hh:mm:ss'); }, axisLabelFormatter: function (x) { return moment(x).format('hh:mm'); } }
+        //, file: this.Data, valueRange: Range,
+        Opt.axes = { x: {}, y: {} };
+
+//                var Analyzer = this.$root.SelectedAnalyzer;
+//        var Range = this.SerieProps.Range(this.Data, this.Phases);
+//        var Options = {
+
+
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 30;
+        Opt.axes.y.valueFormatter = (x) => { var Result = oZm.FormatSerieValue(x, this.SerieProps); return Result.ValuePlain + ' <em class="x-small">' + Result.Units + '</em>'; };
+        Opt.axes.y.axisLabelFormatter = (x) => { return oZm.FormatSerieValue(x, this.SerieProps, oZm.GetBestUnits(Math.max(Math.abs(Range[0]), Math.abs(Range[1])))).ValuePlain; };
+        Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatTime(x); };
+        Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatTime(x); };
+        Opt.file = [];
+        if(this.data != null) {
+          for(var n in this.data.Sampletime) {
+            var Row = [this.data.Sampletime[n]];
+            if(this.serie == 'VOLTAGE') {
+              for(var i in this.data.Voltage[n]) Row.push(this.data.Voltage[n][i]);
+            } else if(this.serie == 'CURRENT') {
+              for(var i in this.data.Current[n]) Row.push(this.data.Current[n][i]);
+            } else if(this.serie == 'ACTIVE_POWER') {
+              for(var i in this.data.Active_Power[n]) Row.push(this.data.Active_Power[n][i]);
+            } else if(this.serie == 'FREQUENCY') {
+              Row.push(this.data.Frequency[n]);
+            }
+            Opt.file.push(Row);
           }
-        };
-        return {};
+        } else {
 
+        }
+
+        return Opt;
       }
     },
 
@@ -73,12 +104,12 @@
 //            this.$parent.Sync = true;
 //          }
 //        }
-        if(this.$root.SelectedAnalyzer === null) return;
+//        if(this.$root.SelectedAnalyzer === null) return;
         $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '3S', Series: [this.serie], To: 0, LastSample: this.LastSample, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Period: 7200000 }),
           success: (result) => {
-            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
-            this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
-            var LastSample = result[this.SerieProps.Serie].slice(-1)[0];
+//            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
+//            this.Data = oZm.GraphDataAppend(result, this.SerieProps.Serie, this.Data);
+//            var LastSample = result[this.SerieProps.Serie].slice(-1)[0];
             if(Array.isArray(LastSample) === false) {
               this.LastValue = oZm.FormatSerieValue(LastSample, this.SerieProps).ValueHTML;
               this.PhasesValue = [];
@@ -98,24 +129,23 @@
                 return oZm.FormatSerieValue(n, this.SerieProps, this.UnitsScale).ValuePlain;
               });
             }
-            this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
-            this.DateWindow = [result['From'], result['To']];
-            this.LastSample = oZm.LastSampletime(result, this.LastSample);
-            if(this.Data.length > 0) this.CalcOptions();
-            this.ShowSpinner = false;
+//            this.DateWindow = [result['From'], result['To']];
+//            this.LastSample = oZm.LastSampletime(result, this.LastSample);
+//            if(this.Data.length > 0) this.CalcOptions();
+//            this.ShowSpinner = false;
           },
-          complete: () => {
-            this.UpdateGraphTimer = setTimeout(this.UpdateGraph, 5000);
-          },
-          error: () => {
-            this.ShowSpinner = true;
-          }
+//          complete: () => {
+//            this.UpdateGraphTimer = setTimeout(this.UpdateGraph, 5000);
+//          },
+//          error: () => {
+//            this.ShowSpinner = true;
+//          }
         });
       },
-      SetPhases(phases) {
-        this.Phases = phases;
-        if(this.Data.length > 0) this.CalcOptions();
-      },
+//      SetPhases(phases) {
+//        this.Phases = phases;
+//        if(this.Data.length > 0) this.CalcOptions();
+//      },
       MaximizeClick() {
         this.$refs.tools.Maximize(this.SerieProps.Title, this.$refs.Chart.Graph, this.$refs.Toolbar);
       },
@@ -135,11 +165,11 @@
 //      }
     },
     created: function() {
-      this.Data = [];
-      this.DateWindow = [0, 0];
-      this.LastSample = 0;
-      this.UpdateGraphTimer = null;
-      this.Phases = null;
+//      this.Data = [];
+//      this.DateWindow = [0, 0];
+//      this.LastSample = 0;
+//      this.UpdateGraphTimer = null;
+//      this.Phases = null;
       this.SerieProps = oZm.Series[this.serie];
     },
 //    beforeDestroy: function() {

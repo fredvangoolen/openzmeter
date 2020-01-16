@@ -1,88 +1,73 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Aggregation }}</div>
-        <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases variable="DetailsPhaseSingle" ref="phases" v-on:PhasesChanged="$parent.PhasesChangedSingle"></toolbar-phases>
-          <toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTime(data.Sampletime) }}</div>
+        <div class="header-buttons">
+          <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
+          <div class="btn-group">
+            <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools-->
+          </div>
         </div>
       </div>
     <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <cubism v-for="(serie, index) in Series" :serie="'HARMONICS'" :key="serie" :index="index" ref="rows"></cubism>
+      <spinner v-if="data==null"></spinner>
+      <cubism ref="g" v-for="(serie, index) in Names" :key="index" :index="index" :data="Data" :title="serie" :format="Formatter"></cubism>
     </div>
   </div>
 </template>
 
 <script>
-  import Cubism from 'Components/Cubism.vue';
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
   import Dygraph from 'JS/dygraph.js';
   export default {
+    props: { analyzer: Object, data: Object },
     data() {
-      return { Aggregation: 'Loading data...', ShowSpinner: true, Time: 'Loading data...', Series: oZm.Series['HARMONICS'].Names, Phase: null };
+      return { Phase: null, Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'] };
     },
-    methods: {
-      Redraw() {
-        this.$nextTick(function() {    
-          for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
-          window.dispatchEvent(new Event('resize'));
-        });
-      },
-      SetData: function(result) {
-        if(result['Sampletime'] === null) return;
-        if(result['Sampletime'].length === 0) return;
-        if(this.Data === null) this.Data = [];
-        this.DateWindow = [result['From'], result['To']];
-        this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
-        this.Data = oZm.GraphDataAppend(result, 'Voltage_Harmonics', this.Data);
-        this.CalcOptions();
-        this.ShowSpinner = false; 
-      },
-      CalcOptions: function() {
-        if((this.$root.SelectedAnalyzer === null) || (this.Data === null) || (this.Phase === null)) return;
-        for(var n = 0; n < this.Series.length; n++) {
-          var Data = [];    
-          for(var i = 0; i < this.Data.length; i++) Data.push([this.Data[i][0], 20 * Math.log10(Math.max(0.000000001, this.Data[i][this.Phase + 1][n]))]);
-          this.$refs.rows[n].SetData({ dateWindow: this.DateWindow, file: Data});
+    computed: {
+      Data: function() {
+        if((this.data == null) || (this.analyzer == null) || (this.Phase == null)) return null;
+        var Series = {};
+        Series.Sampletime = this.data.Sampletime;
+        Series.From = this.data.From;
+        Series.To = this.data.To;
+        Series.TimeZone = this.analyzer.TimeZone;
+        for(var n in this.Names) {
+          var Serie = [];
+          for(var i in this.data.Voltage_Harmonics) Serie.push(20 * Math.log10(Math.max(0.001, this.data.Voltage_Harmonics[i][this.Phase][n])));
+          Series[this.Names[n]] = Serie;
         }
-      },
-      SetPhases: function(phase) {
-        this.$refs.phases.SetPhases(phase);
-        this.Phase = phase;
-        this.CalcOptions();
-      },
-      ExportClick: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        var Header = ['Date/Time'];
-        var Data = [];
-        for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
-          for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length; n++) Header.push( oZm.Series['HARMONICS'].Names[i] + '(' + oZm.Series['VOLTAGE'].Names(Analyzer)[n] + ')');
-        }
-        Data.push(Header);
-        for(var i = 0; i < this.Data.length; i++) {
-          var Row = [moment(this.Data[i][0]).format('HH:mm:ss')];
-          for(var j = 0; j < oZm.Series['HARMONICS'].Names.length; j++) {
-            for(var k = 0; k < oZm.Series['VOLTAGE'].Names(Analyzer).length; k++) Row.push(this.Data[i][k + 1][j]);
-          }
-          Data.push(Row);
-        }
-        this.$refs.tools.SaveCVS('VoltageHarmonicsEvolution.csv', Data);
+        return Series;
       }
     },
-    created: function() {
-      this.DateWindow = [0, 0];
-      this.Data = null;
+    methods: {
+      Formatter: function(val) {
+        return this.Round(val, 2, true) + ' dB';
+      },
+      ExportClick: function() {
+//        if(this.$root.SelectedAnalyzer === null) return;
+//        var Analyzer = this.$root.SelectedAnalyzer;
+//        var Header = ['Date/Time'];
+//        var Data = [];
+//        for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
+//          for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length; n++) Header.push( oZm.Series['HARMONICS'].Names[i] + '(' + oZm.Series['VOLTAGE'].Names(Analyzer)[n] + ')');
+//        }
+//        Data.push(Header);
+//        for(var i = 0; i < this.Data.length; i++) {
+//          var Row = [moment(this.Data[i][0]).format('HH:mm:ss')];
+//          for(var j = 0; j < oZm.Series['HARMONICS'].Names.length; j++) {
+//            for(var k = 0; k < oZm.Series['VOLTAGE'].Names(Analyzer).length; k++) Row.push(this.Data[i][k + 1][j]);
+//          }
+//          Data.push(Row);
+//        }
+//        this.$refs.tools.SaveCVS('VoltageHarmonicsEvolution.csv', Data);
+      }
     },
     mounted: function() {
       var Graphs = [];
-      for(var i = 0; i < this.Series.length; i++) Graphs.push(this.$refs.rows[i].Graph);
+      for(var i in this.$refs['g']) Graphs.push(this.$refs['g'][i].Graph);
       Dygraph.synchronize(Graphs, { range: false, zoom: false });
-    },
-    components: { Cubism, ToolbarPhases, ToolbarTools }
+    }
   }
 </script>

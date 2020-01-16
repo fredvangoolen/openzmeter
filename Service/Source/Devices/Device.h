@@ -59,7 +59,11 @@ class Device {
     bool GetAlarm(HTTPRequest &req);
     bool SetAlarm(HTTPRequest &req);
     bool AddAlarm(HTTPRequest &req);
-    bool DelAlarm(HTTPRequest &req);  
+    bool DelAlarm(HTTPRequest &req);
+    bool GetPermissions(HTTPRequest &req);
+    bool AddPermission(HTTPRequest &req);
+    bool SetPermission(HTTPRequest &req);
+    bool DelPermission(HTTPRequest &req);
   public :
     virtual ~Device();
 };

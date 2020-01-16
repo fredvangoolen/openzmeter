@@ -120,7 +120,7 @@ bool Device::GetSeriesRange(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
   pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);  
+  Analyzer *Tmp = FindAnalyzer(Serial);
   if(Tmp != NULL) Tmp->GetSeriesRange(req);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
@@ -129,7 +129,7 @@ bool Device::GetEvents(HTTPRequest &req) {
   json Params = req.GetParams();
   string Serial = Params["Analyzer"];
   pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);  
+  Analyzer *Tmp = FindAnalyzer(Serial);
   if(Tmp != NULL) Tmp->GetEvents(req);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
@@ -266,6 +266,42 @@ bool Device::DelAlarm(HTTPRequest &req) {
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
   if(Tmp != NULL) Tmp->DelAlarm(req);
+  pMembersLock.ReadUnlock();
+  return (Tmp != NULL);
+}
+bool Device::GetPermissions(HTTPRequest &req) {
+  json Params = req.GetParams();
+  string Serial = Params["Analyzer"];
+  pMembersLock.ReadLock();
+  Analyzer *Tmp = FindAnalyzer(Serial);
+  if(Tmp != NULL) Tmp->GetPermissions(req);
+  pMembersLock.ReadUnlock();
+  return (Tmp != NULL);
+}
+bool Device::AddPermission(HTTPRequest &req) {
+  json Params = req.GetParams();
+  string Serial = Params["Analyzer"];
+  pMembersLock.ReadLock();
+  Analyzer *Tmp = FindAnalyzer(Serial);
+  if(Tmp != NULL) Tmp->AddPermission(req);
+  pMembersLock.ReadUnlock();
+  return (Tmp != NULL);
+}
+bool Device::SetPermission(HTTPRequest &req) {
+  json Params = req.GetParams();
+  string Serial = Params["Analyzer"];
+  pMembersLock.ReadLock();
+  Analyzer *Tmp = FindAnalyzer(Serial);
+  if(Tmp != NULL) Tmp->SetPermission(req);
+  pMembersLock.ReadUnlock();
+  return (Tmp != NULL);
+}
+bool Device::DelPermission(HTTPRequest &req) {
+  json Params = req.GetParams();
+  string Serial = Params["Analyzer"];
+  pMembersLock.ReadLock();
+  Analyzer *Tmp = FindAnalyzer(Serial);
+  if(Tmp != NULL) Tmp->DelPermission(req);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }

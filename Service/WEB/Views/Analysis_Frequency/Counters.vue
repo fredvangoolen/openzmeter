@@ -12,21 +12,21 @@
         <div class="line">
           <div class="float-left">
             <div class="counters-stat-type">Min value:</div>
-            <div class="counters-stat-time">{{ isFinite(Min.Value) ? analyzer.FormatDateTime(Min.Time) : '-' }}<span v-if="Min.Count > 1">(and {{ Min.Count }} times more)</span></div>
+            <div class="counters-stat-time">{{ (Min.Time!=0) ? analyzer.FormatDateTime(Min.Time) : '-' }}<span v-if="Min.Count > 1">(and {{ Min.Count }} times more)</span></div>
           </div>
-          <div class="counters-stat-val" v-html="isFinite(Min.Value) ? FormatHTML(Min.Value) + ' Hz' : '-'"></div>
+          <div class="counters-stat-val" v-html="(Min.Time!=0) ? FormatHTML(Min.Value) + ' Hz' : '-'"></div>
         </div>
         <div class="line line-border">
           <div class="float-left">
             <div class="counters-stat-type">Max value:</div>
-            <div class="counters-stat-time">{{ isFinite(Max.Value) ? analyzer.FormatDateTime(Max.Time) : '-'}}<span v-if="Max.Count > 1">(and {{ Max.Count }} times more)</span></div>
+            <div class="counters-stat-time">{{ (Max.Time!=0) ? analyzer.FormatDateTime(Max.Time) : '-'}}<span v-if="Max.Count > 1">(and {{ Max.Count }} times more)</span></div>
           </div>
-          <div class="counters-stat-val" v-html="isFinite(Max.Value) ? FormatHTML(Max.Value) + ' Hz' : '-'"></div>
+          <div class="counters-stat-val" v-html="(Max.Time!=0) ? FormatHTML(Max.Value) + ' Hz' : '-'"></div>
         </div>
         <div class="line line-border">
           <div class="float-left">
             <div class="counters-stat-type">Average value:</div>
-            <div class="counters-stat-time">From {{ isFinite(Avg.Value) ? Avg.Count : '-' }} samples</div>
+            <div class="counters-stat-time">From {{ Avg.Count }} samples</div>
           </div>
           <div class="counters-stat-val" v-html="isFinite(Avg.Value) ? FormatHTML(Avg.Value) + ' Hz' : '-'"></div>
         </div>
@@ -89,7 +89,7 @@
           Avg += this.dataGraph.Frequency[x];
           Count++;
         }
-        Std.Value = Math.sqrt((Std.Value / Count) - Math.pow(Avg / Count, 2))
+        Std.Value = Math.sqrt((Std.Value / Count) - Math.pow(Avg / Count, 2));
         Std.Percent = Std.Percent / Count * 100;
         return Std;
       },

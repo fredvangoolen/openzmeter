@@ -263,7 +263,9 @@
       options: function(val, prev) {
         if((prev.axes != undefined) && (val.axes != undefined) && (prev.axes.y2 != undefined) && (val.axes.y2 != undefined) && (prev.axes.y2.drawAxis != undefined) && (val.axes.y2.drawAxis != undefined)) {
           if(prev.axes.y2.drawAxis != val.axes.y2.drawAxis) this.Graph.updateOptions({ showRangeSelector: true}, false);
+          val.showRangeSelector = false;
         }
+        if(val.file.length == 0) val.file.push(Array(val.labels.length).fill(0));
         this.Graph.updateOptions(val);
       },
       height: function(val) {

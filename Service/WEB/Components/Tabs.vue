@@ -1,6 +1,6 @@
 <template>
   <ul class="nav nav-tabs">
-    <li v-for="tab in tabs" :class="{ active: (tab == value) }" :key="tab"><a data-toggle="tab">{{ tab }}</a></li>
+    <li v-for="tab in tabs" :class="{ active: (tab==value) }" :key="tab"><a data-toggle="tab">{{ tab }}</a></li>
   </ul>
 </template>
 
@@ -8,24 +8,26 @@
   import scrollingTabs from 'jquery-bootstrap-scrolling-tabs';
   import 'jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.css';
   export default {
-    props: ['value', 'tabs', 'storage'],
+    props: {value: String, tabs: Array, storage: String },
     data() {
       return { };
     },
     watch: {
       value: function(val) {
-        if(this.storage != undefined) localStorage.setItem(this.storage, val);
+        if(this.storage != null) localStorage.setItem(this.storage, val);
       }
     },
-    mounted: function() {
-      $(this.$el).scrollingTabs({ enableSwiping: true, tabClickHandler: this.TabChange });
-      if(this.storage != undefined) {
+    created: function() {
+      if(this.storage != null) {
         var Find = this.tabs.indexOf(localStorage.getItem(this.storage));
         this.$emit('input', (Find == -1) ? this.tabs[0] : this.tabs[Find]);
       } else {
         var Find = this.tabs.indexOf(this.value);
         this.$emit('input', (Find == -1) ? this.tabs[0] : this.tabs[Find]);
       }
+    },
+    updated: function() {
+      $(this.$el).scrollingTabs({ enableSwiping: true, tabClickHandler: this.TabChange });
     },
     beforeDestroy: function() {
       $(this.$el).scrollingTabs('destroy');
@@ -39,4 +41,16 @@
 </script>
 
 <style scoped>
+  .glyphicon-chevron-left {
+    background-image: url(../Imgs/resultset_previous.png);
+    width: 16px !important;
+    height: 16px !important;
+    display: inline-block;
+  }
+  .glyphicon-chevron-right {
+    background-image: url(../Imgs/resultset_next.png);
+    width: 16px !important;
+    height: 16px !important;
+    display: inline-block;
+  }
 </style>

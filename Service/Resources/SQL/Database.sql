@@ -29,12 +29,13 @@ CREATE TABLE IF NOT EXISTS tariffs(
   enddate      bigint            NOT NULL
 ) WITH (OIDS=FALSE);
 
-CREATE TABLE IF NOT EXISTS permisions(
+CREATE TABLE IF NOT EXISTS permissions(
   username   character varying NOT NULL REFERENCES users(username) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,
   serial     character varying NOT NULL,
   read       boolean           NOT NULL,
   write      boolean           NOT NULL,
-  config     boolean           NOT NULL
+  config     boolean           NOT NULL,
+  CONSTRAINT user_serial UNIQUE(username, serial)
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS news(

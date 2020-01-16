@@ -9,7 +9,7 @@
 
 <script>
   export default {
-    props: { analyzer: { type: Object, required: true }, storage: { type: String, default: null }, multi: { type: Boolean, default: false }, current: { type: Boolean, dafault: false }, value: { type: Array } },
+    props: { analyzer: Object, storage: String, multi: Boolean, current: Boolean, value: [Number, Array] },
     data() {
       return { Active: [] };
     },
@@ -18,16 +18,22 @@
       if(this.storage != null) {
         var Mode = this.analyzer.Mode + '_' + ((this.multi == true) ? 'Multi' : 'Single') + '_' + ((this.current == true) ? 'Current' : 'Voltage');
         var Stored = JSON.parse(localStorage.getItem(this.storage));
-        if((Stored != undefined) && (Stored[Mode] != undefined)) {
+        if((Stored != null) && (Stored[Mode] != null)) {
           if(Array.isArray(Stored[Mode]) == true) {
-           this.Active = Stored[Mode];
+            this.Active = Stored[Mode];
           } else {
             this.Active[Stored[Mode]] = true;
           }
         } else {
           this.Active[0] = true;
         }
-        this.$emit('input', this.Active.slice(0));
+        if(this.multi == true) {
+          this.$emit('input', this.Active.slice(0));
+        } else {
+          for(var n in this.Active) {
+            if(this.Active[n] == true) this.$emit('input', parseInt(n));
+          }
+        }
       }
     },
     watch: {
@@ -61,7 +67,7 @@
           this.$emit('input', this.Active.slice(0));
         } else {
           for(var n in this.Active) {
-            if(this.Active[n] == true) this.$emit('input', n);
+            if(this.Active[n] == true) this.$emit('input', parseInt(n));
           }
         }
       },

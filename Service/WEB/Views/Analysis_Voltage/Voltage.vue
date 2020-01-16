@@ -15,7 +15,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: {type: Object, required: true }, data: { type: Object, required: true }, phases: { type: Array, required: true } },
+    props: { analyzer: Object, data: Object, phases: Array },
     data() {
       return { };
     },

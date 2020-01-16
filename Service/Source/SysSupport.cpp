@@ -66,7 +66,7 @@ void SysSupport::DelUserCallback(HTTPRequest &req) {
 }
 SysSupport::SysSupport() {
   HTTPServer::RegisterCallback("getNews",   GetNewsCallback);
-  HTTPServer::RegisterCallback("getUsers",  GetUsersCallback);  
+  HTTPServer::RegisterCallback("getUsers",  GetUsersCallback);
   HTTPServer::RegisterCallback("getUser",   GetUserCallback);
   HTTPServer::RegisterCallback("setUser",   SetUserCallback);
   HTTPServer::RegisterCallback("addUser",   AddUserCallback);
@@ -122,7 +122,7 @@ SysSupport::~SysSupport() {
   HTTPServer::UnregisterCallback("getUser");
   HTTPServer::UnregisterCallback("setUser");
   HTTPServer::UnregisterCallback("addUser");
-  HTTPServer::UnregisterCallback("delUser");  
+  HTTPServer::UnregisterCallback("delUser");
   #ifdef OPENWRT
     HTTPServer::UnregisterCallback("getBluetooth");
     HTTPServer::UnregisterCallback("setBluetooth");
@@ -144,22 +144,22 @@ json SysSupport::GetSystemStatusJSON() {
   json Result = json::object();
   pSystemStatus.Lock.ReadLock();
   Result["Updates"] = pSystemStatus.Updates;
-  Result["Events"] = pSystemStatus.Events;      
-  Result["UpTime"] = pSystemStatus.UpTime;      
-  Result["Swap_Total"] = pSystemStatus.Swap_Total;      
-  Result["Swap_Usage"] = pSystemStatus.Swap_Usage;      
-  Result["CPU_Usage"] = pSystemStatus.CPU_Usage;      
-  Result["Disk_Total"] = pSystemStatus.Disk_Total;      
-  Result["Disk_Usage"] = pSystemStatus.Disk_Usage;      
-  Result["RAM_Total"] = pSystemStatus.RAM_Total;      
-  Result["RAM_Usage"] = pSystemStatus.RAM_Usage;      
-  Result["Temperature"] = pSystemStatus.Temperature;      
-  Result["WIFI_Network"] = pSystemStatus.WIFI_Network;      
-  Result["WIFI_Power"] = pSystemStatus.WIFI_Power;      
-  Result["BT_Network"] = pSystemStatus.BT_Network;      
-  Result["Time_IsSet"] = pSystemStatus.Time_IsSet;      
-  Result["Battery_Volt"] = pSystemStatus.Battery_Volt;      
-  Result["Battery_Level"] = pSystemStatus.Battery_Level;      
+  Result["Events"] = pSystemStatus.Events;
+  Result["UpTime"] = pSystemStatus.UpTime;
+  Result["Swap_Total"] = pSystemStatus.Swap_Total;
+  Result["Swap_Usage"] = pSystemStatus.Swap_Usage;
+  Result["CPU_Usage"] = pSystemStatus.CPU_Usage;
+  Result["Disk_Total"] = pSystemStatus.Disk_Total;
+  Result["Disk_Usage"] = pSystemStatus.Disk_Usage;
+  Result["RAM_Total"] = pSystemStatus.RAM_Total;
+  Result["RAM_Usage"] = pSystemStatus.RAM_Usage;
+  Result["Temperature"] = pSystemStatus.Temperature;
+  Result["WIFI_Network"] = pSystemStatus.WIFI_Network;
+  Result["WIFI_Power"] = pSystemStatus.WIFI_Power;
+  Result["BT_Network"] = pSystemStatus.BT_Network;
+  Result["Time_IsSet"] = pSystemStatus.Time_IsSet;
+  Result["Battery_Volt"] = pSystemStatus.Battery_Volt;
+  Result["Battery_Level"] = pSystemStatus.Battery_Level;
   pSystemStatus.Lock.ReadUnlock();
   return Result;
 }
@@ -571,7 +571,7 @@ void SysSupport::SetSystemActions(const string &action) {
     Response["Status"] = true;
     if(pBTEnabled == true) Response["Status"] = StartBT();
     if(pBTEnabled == false) Response["Status"] = StopBT();
-    return req.FromJSON(Response); 
+    return req.FromJSON(Response);
   }
   void SysSupport::ScanWIFICallback(HTTPRequest& req) {
     json Params = req.GetParams();
@@ -596,9 +596,9 @@ void SysSupport::SetSystemActions(const string &action) {
             AP["Quality"] = (int)(Current * 100.0 / Max);
           }
           Result.push_back(AP);
-        }    
+        }
       }
-    }  
+    }
     pthread_mutex_unlock(&pBTMutex);
     return req.FromJSON(Result);
   }
@@ -802,7 +802,7 @@ void SysSupport::SetSystemActions(const string &action) {
           Result["Status"] = false;
           LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
         }
-      } 
+      }
     }
     pthread_mutex_unlock(&pBTMutex);
     return req.FromJSON(Result);
@@ -838,7 +838,7 @@ void SysSupport::PeriodicTask() {
       }
     }
   #else
-    if(Action.empty() == false) LOGFile::Info("Received '%s' action\n", Action.c_str());  
+    if(Action.empty() == false) LOGFile::Info("Received '%s' action\n", Action.c_str());
   #endif
 }
 //----------------------------------------------------------------------------------------------------------------------

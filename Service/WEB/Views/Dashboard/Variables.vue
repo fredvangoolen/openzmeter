@@ -16,13 +16,10 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import Spinner from 'Components/Spinner.vue';
-  import Cubism from 'Components/Cubism.vue';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
   import Dygraph from 'JS/dygraph.js';
   import 'JS/dygraph-synchronizer.js';
   export default {
-    props: { analyzer: { type: Object }, data: Object },
+    props: { analyzer: { type: Object }, data: Object, dataNow: Object },
     data() {
       return {
         LastSample: 0, Phase: null, DateWindow: [0, 0], Data: {}, Timer: null, TimerNow: null, NowValues: [],
@@ -34,10 +31,10 @@
       MouseOver: function(val) {
         this.mouseOverCount = this.mouseOverCount + ((val === true) ? +1 : -1);
       },
-      SetPhases: function(phase) {
-        this.Phase = phase;
-        this.CalcOptions();
-      },
+//      SetPhases: function(phase) {
+//        this.Phase = phase;
+//        this.CalcOptions();
+//      },
       CalcOptions: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         for(var n = 0; n < this.Series.length; n++) {
@@ -95,18 +92,17 @@
       for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
-    beforeDestroy: function() {
-      if(this.Timer !== null) clearTimeout(this.Timer);
-      if(this.TimerNow !== null) clearTimeout(this.TimerNow);
-    },
+//    beforeDestroy: function() {
+//      if(this.Timer !== null) clearTimeout(this.Timer);
+//      if(this.TimerNow !== null) clearTimeout(this.TimerNow);
+//    },
     mounted: function() {
       var Graphs = [];
       for(var i = 0; i < this.Series.length; i++) Graphs.push(this.$refs.rows[i].Graph);
       Dygraph.synchronize(Graphs, { range: false, zoom: false });
       if(this.$root.SelectedAnalyzer !== null) this.UpdateBars();
       if(this.$root.SelectedAnalyzer !== null) this.UpdateNow();
-    },
-    components: { Cubism, Spinner, ToolbarPhases }
+    }
   }
 </script>
 

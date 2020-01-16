@@ -64,7 +64,7 @@
         for(var j = 0; j < this.Phases.length; j++) {
           if(this.Phases[j] === true) PhasesCount++;
         }
-        for(var i = 0; i < this.Data.Voltage_Samples[0].length; i++) {
+        for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
           var Row = [i];
           var Sum = 0;
           for(var j = 0; j < this.Phases.length; j++) {

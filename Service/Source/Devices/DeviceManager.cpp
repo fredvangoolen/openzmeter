@@ -42,6 +42,10 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("setAlarm",            SetAlarmCallback);
   HTTPServer::RegisterCallback("addAlarm",            AddAlarmCallback);
   HTTPServer::RegisterCallback("delAlarm",            DelAlarmCallback);
+  HTTPServer::RegisterCallback("getPermissions",      GetPermissionsCallback);
+  HTTPServer::RegisterCallback("addPermission",       AddPermissionCallback);
+  HTTPServer::RegisterCallback("setPermission",       SetPermissionCallback);
+  HTTPServer::RegisterCallback("delPermission",       DelPermissionCallback);
 }
 DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("getDevices");
@@ -71,6 +75,10 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("setAlarm");
   HTTPServer::UnregisterCallback("addAlarm");
   HTTPServer::UnregisterCallback("delAlarm");
+  HTTPServer::UnregisterCallback("getPermissions");
+  HTTPServer::UnregisterCallback("addPermission");
+  HTTPServer::UnregisterCallback("setPermission");
+  HTTPServer::UnregisterCallback("delPermission");
   LOGFile::Info("Stopping devices...\n");
   pDevicesLock.WriteLock();
   while(pDevices.size() > 0) {
@@ -140,7 +148,7 @@ void DeviceManager::StartDeviceCallback(HTTPRequest &req) {
   req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
   pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
-    if(Dev->Serial() != Serial) continue; 
+    if(Dev->Serial() != Serial) continue;
     Dev->StartDevice(req);
     break;
   }
@@ -170,7 +178,7 @@ void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
     for(Device *Dev : pDevices) {
       json Analyzers = Dev->GetJSONAllAnalyzerDescriptors();
       for(auto Analyzer : Analyzers) {
-        Analyzer["Read"] = true;        
+        Analyzer["Read"] = true;
         Analyzer["Write"] = true;
         Analyzer["Config"] = true;
       }
@@ -240,7 +248,7 @@ void DeviceManager::GetSeriesNowCallback(HTTPRequest &req) {
     if(Dev->GetSeriesNow(req) == true) break;
   }
   pDevicesLock.ReadUnlock();
-  
+
 }
 void DeviceManager::GetSeriesRangeCallback(HTTPRequest &req) {
   json Params = req.GetParams();
@@ -422,6 +430,46 @@ void DeviceManager::DelAlarmCallback(HTTPRequest &req) {
   pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
     if(Dev->DelAlarm(req) == true) break;
+  }
+  pDevicesLock.ReadUnlock();
+}
+void DeviceManager::GetPermissionsCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) {
+    if(Dev->GetPermissions(req) == true) break;
+  }
+  pDevicesLock.ReadUnlock();
+}
+void DeviceManager::AddPermissionCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string() || !Params["User"].is_string() || !Params["Read"].is_boolean() || !Params["Write"].is_boolean() || !Params["Configure"].is_boolean()) return req.FromString("'Analyzer', 'User', 'Read', 'Write' and 'Configure' params are requiered", MHD_HTTP_BAD_REQUEST);
+  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) {
+    if(Dev->AddPermission(req) == true) break;
+  }
+  pDevicesLock.ReadUnlock();
+}
+void DeviceManager::SetPermissionCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string() || !Params["User"].is_string() || !Params["Read"].is_boolean() || !Params["Write"].is_boolean() || !Params["Configure"].is_boolean()) return req.FromString("'Analyzer', 'User', 'Read', 'Write' and 'Configure' params are requiered", MHD_HTTP_BAD_REQUEST);
+  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) {
+    if(Dev->SetPermission(req) == true) break;
+  }
+  pDevicesLock.ReadUnlock();
+}
+void DeviceManager::DelPermissionCallback(HTTPRequest &req) {
+  json Params = req.GetParams();
+  if(!Params["Analyzer"].is_string() || !Params["User"].is_string()) return req.FromString("'Analyzer' and 'User' params are requiered", MHD_HTTP_BAD_REQUEST);
+  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) {
+    if(Dev->DelPermission(req) == true) break;
   }
   pDevicesLock.ReadUnlock();
 }

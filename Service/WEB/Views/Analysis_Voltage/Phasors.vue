@@ -1,14 +1,16 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ MouseOver ? '[PAUSED]' : '' }}</div>
       <div class="header-buttons" ref="Toolbar">
-        <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick"></toolbar-tools>
+        <div class="btn-group">
+        </div>
+        <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick"></toolbar-tools-->
       </div>
     </div>
     <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <div class="row">
+      <spinner v-if="data==null"></spinner>
+      <div class="row" v-if="(analyzer.Mode=='3PHASE') || (analyzer.Mode=='3PHASE+N')">
         <div class="col-xs-12 col-md-4 panel-body">
           <table>
             <tr><td class="border-bottom">Positive sequence</td></tr>
@@ -51,7 +53,6 @@
             </tr>
           </table>
         </div>
-        
         <div class="col-sm-12 col-md-8 col-lg-6 panel-body">
           <table>
             <tr><td class="border-bottom">Voltage and current phase angle</td></tr>
@@ -72,17 +73,17 @@
   import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
   import vuetable from 'vuetable-2';
   import Complex from 'complex';
   import 'CSS/table-responsive.css';
   export default {
+    props: { analyzer: Object, data: Object },
     data: function() {
-      return { ShowWarning: true,  ShowSpinner: true, Time: 'Loading data...',
+      return {
       Columns: [
           {name: 'Phase', title: 'Phase'},
           {name: 'Channel', title: 'Channel'},
-          {name: 'Angle', title: 'Angle'}, 
+          {name: 'Angle', title: 'Angle'},
           {name: 'SecAngle', title: ''},
           {name: 'Value', title: 'Value'}
         ]
@@ -127,7 +128,7 @@
           canvas.beginPath();
           for(var n = 1; n < 11; n++) {
             canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(120 * (Math.log(n * 10) / Math.log(120))) - g.toDomXCoord(0), 0, 2 * Math.PI);
-          }    
+          }
           canvas.stroke();
         }
       };
@@ -186,7 +187,7 @@
             ctx.textAlign = "right";
             ctx.fillText(Phases[(i - 1) / 2], -3, 0);
             ctx.fill();
-            ctx.restore();  
+            ctx.restore();
           }
           if(((e.dygraph.file_[i][0] % 2) === 0) && ((e.dygraph.file_.length === (i + 1)) || ((e.dygraph.file_[i + 1][0] % 2) === 0))) {
             //Value legend
@@ -196,7 +197,7 @@
             ctx.beginPath();
             ctx.textAlign = "right";
             ctx.font = "bold 12px sans";
-            ctx.fillStyle = "#333"; 
+            ctx.fillStyle = "#333";
             ctx.fillText((e.dygraph.file_.length === 1) ? 'ALL' : Phases[(e.dygraph.file_[i][0]) / 2], -15, -5);
             ctx.fill();
             ctx.restore();
@@ -261,7 +262,7 @@
       },
       SetData(result) {
         var Analyzer = this.$root.SelectedAnalyzer;
-        this.ShowWarning = (oZm.ArrayAbsMax(result.Current) < Analyzer.MinCurrent); 
+        this.ShowWarning = (oZm.ArrayAbsMax(result.Current) < Analyzer.MinCurrent);
         this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
         var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
         this.Data = [];
@@ -300,7 +301,7 @@
         this.ShowSpinner = false;
       }
     },
-    components: { ToolbarTools, Graph, vuetable }
+    components: { Graph, vuetable }
   }
 </script>
 
@@ -318,7 +319,7 @@
     .table >>> th:nth-child(1)  {
       width: 40px;
       text-align: center;
-    }  
+    }
     .table >>> th:nth-child(2)  {
       width: 50px;
       text-align: center;
