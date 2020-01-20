@@ -20,7 +20,7 @@
         </template>
       </vuetable>
     </div>
-    <user-edit v-if="false"></user-edit>
+    <user-edit v-if="ShowDialog" :user="User"></user-edit>
   </div>
 </template>
 
@@ -33,7 +33,7 @@
     data() {
       return { Users: [], ShowSpinner: true, ShowDialog: false, Enabled: false, User: null,
         Columns: [
-          {name: 'UserName', title: 'User name' },
+          {name: 'User', title: 'User name' },
           {name: 'Name', title: 'Name' },
           {name: 'TimeZone', title: 'Time zone' },
           {name: 'E-Mail', title: 'EMail' },
@@ -63,7 +63,7 @@
       Edit: function(user, evt) {
         $(evt.target).blur();
         this.ShowSpinner = true;
-        this.$http.post('getUser', { User: user.Name }).then(
+        this.$http.post('getUser', { User: user.User }).then(
           (result) => {
             this.User = result.data;
             this.ShowDialog = true;
