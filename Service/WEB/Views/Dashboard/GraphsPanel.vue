@@ -13,13 +13,17 @@
     </div>
     <div class="panel-body">
       <spinner v-if="data==null"></spinner>
-      <graph ref="Chart" :options="GraphOptions" :height="200"></graph>
+      <graph ref="Chart" :options="GraphOptions" :height="150"></graph>
     </div>
     <div class="panel-footer clearfix">
       <router-link :to="SerieProps.Link" style="line-height: 22px"><span class="pull-left">View Details</span></router-link>
       <div class="pull-right" ref="Toolbar">
         <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'FREQUENCY'" :variable="'Dashboard_' + serie" :current="serie=='CURRENT'" :multi="true"></toolbar-phases>
+        <div class="btn-group">
+          <button-export></button-export>
+          <button-expand></button-expand>
         <!--toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" v-on:ExportClick="ExportClick" ref="tools"></toolbar-tools-->
+        </div>
       </div>
     </div>
   </div>
@@ -37,7 +41,7 @@
     },
     computed: {
       GraphOptions: function() {
-        var Opt = {};
+        var Opt = { file: [], axes: { x: {}, y: {} }};
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -54,7 +58,6 @@
 //        Opt.dateWindow = [this.data.From, this.data.To];
 
         //, file: this.Data, valueRange: Range,
-        Opt.axes = { x: {}, y: {} };
 
 //                var Analyzer = this.$root.SelectedAnalyzer;
 //        var Range = this.SerieProps.Range(this.Data, this.Phases);
@@ -67,7 +70,6 @@
         Opt.axes.y.axisLabelFormatter = (x) => { return oZm.FormatSerieValue(x, this.SerieProps, oZm.GetBestUnits(Math.max(Math.abs(Range[0]), Math.abs(Range[1])))).ValuePlain; };
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatTime(x); };
         Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatTime(x); };
-        Opt.file = [];
         if(this.data != null) {
           for(var n in this.data.Sampletime) {
             var Row = [this.data.Sampletime[n]];
@@ -82,10 +84,7 @@
             }
             Opt.file.push(Row);
           }
-        } else {
-
         }
-
         return Opt;
       }
     },

@@ -24,6 +24,12 @@ const openZmeter = {
       }
       return [LowerRange, UpperRange];
     },
+    Vue.prototype.BestUnits = (val) => {
+      return (Math.abs(val) > 1000000) ? 'M' : (Math.abs(val) > 1000) ? 'k' : '';
+    },
+    Vue.prototype.ScaleUnits = (val, units) => {
+      return (units == 'M') ? val / 1000000 : (units == 'k') ? val / 1000 : val;
+    },
     Vue.prototype.Round = (val, decimals, html) => {
       if((val == null) || (isFinite(val) == false)) return '~';
       if(decimals == null) decimals = 2;
