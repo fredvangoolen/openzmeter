@@ -63,7 +63,7 @@
         Opt.axes.x.valueFormatter = (x) => { return this.Round((x * 1000) / this.analyzer.SampleRate, 2, true) + ' ms'; };
         Opt.labels = ['Sample'].concat(CurrentNames).concat(VoltageNames);
         Opt.colors = CurrentStyle.Colors.concat(VoltageStyle.Colors);
-        if(this.data.Current_Samples != null) {
+        if(this.data != null) {
           for(var i = 0; i < this.data.Current_Samples[0].length; i++) {
             var Row = [i];
             for(var n = 0; n < this.data.Current_Samples.length; n++) Row.push(this.data.Current_Samples[n][i]);
@@ -75,7 +75,7 @@
       },
       Export: function() {
         var Rows = [['Sample'].concat(oZm.Series['CURRENT'].Names(this.analyzer).concat(oZm.Series['VOLTAGE'].Names(this.analyzer)))];
-        if(this.data.Voltage_Samples != null) {
+        if(this.data != null) {
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [i];
             for(var n = 0; n < this.data.Current_Samples.length; n++) Row.push(this.data.Current_Samples[n][i]);

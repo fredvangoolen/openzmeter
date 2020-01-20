@@ -1,5 +1,5 @@
 <template>
-  <div class="panel panel-other">
+  <div class="panel panel-other" v-show="Enabled">
     <div class="panel-heading">
       <div class="huge-small header-text">Users</div>
       <div class="pull-right input-group input-group-xs" style="width:200px">
@@ -31,13 +31,13 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { Users: [], ShowSpinner: true, ShowDialog: false, Driver: null,
+      return { Users: [], ShowSpinner: true, ShowDialog: false, Enabled: false, User: null,
         Columns: [
-          {name: 'UserName', title: 'User name'},
-          {name: 'Name', title: 'Name'},
-          {name: 'TimeZone', title: 'Time zone'},
-          {name: 'E-Mail', title: 'EMail'},
-          {name: '__slot:actions', title: ''}
+          {name: 'UserName', title: 'User name' },
+          {name: 'Name', title: 'Name' },
+          {name: 'TimeZone', title: 'Time zone' },
+          {name: 'E-Mail', title: 'EMail' },
+          {name: '__slot:actions', title: '' }
         ]
       };
     },
@@ -49,6 +49,7 @@
         this.ShowSpinner = true;
         this.$http.post('getUsers', {}).then(
           (result) => {
+            this.Enabled = true;
             this.Users = result.data;
             this.ShowSpinner = false;
           },
@@ -56,19 +57,21 @@
         );
       },
       Add: function() {
-
+        this.User = null;
+        this.ShowDialog = true;
       },
       Edit: function(user, evt) {
         $(evt.target).blur();
         this.ShowSpinner = true;
-        $.ajax({ url: "getUser", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
-          success: (result) => {
-            this.$refs.userEdit.Show(result);
+        this.$http.post('getUser', { User: user.Name }).then(
+          (result) => {
+            this.User = result.data;
+            this.ShowDialog = true;
           },
-          complete: () => {
+          (fail) => {
             this.ShowSpinner = false;
           }
-        });
+        );
       },
       Save: function () {
         this.$refs.settings.ShowSpinner = true;

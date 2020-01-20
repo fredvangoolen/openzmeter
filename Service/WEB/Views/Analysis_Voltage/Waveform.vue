@@ -3,20 +3,22 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ MouseOver ? '[PAUSED]' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
-      <div class="header-buttons" ref="Toolbar">
+      <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
-        <toolbar-options storage="DetailOptions" :options="['Current']" v-model="Options"></toolbar-options>
+        <toolbar-options storage="DetailsOptions" :options="['Current']" v-model="Options"></toolbar-options>
         <div class="btn-group">
           <button-export file="Waveform" :rows="Export"></button-export>
+          <button-expand :expanded.sync="Expanded"></button-expand>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
           <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools-->
         </div>
-      </div>
+      </portal>
     </div>
-    <div class="panel-body">
+    <portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
-      <graph :options="GraphOptions" v-on:mouseOver="MouseOver=$event"></graph>
-    </div>
+      <graph :options="GraphOptions" v-on:mouseOver="MouseOver=$event" :height="Expanded?DialogHeight:300"></graph>
+    </portal>
+    <dlg-fs v-if="Expanded" title="Waveform" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
 
@@ -27,12 +29,12 @@
   export default {
     props: { analyzer: Object, data: Object, paused: Boolean },
     data() {
-      return { MouseOver: false, Options: null, Phases: null };
+      return { MouseOver: false, Options: null, Phases: null, Expanded: false, DialogHeight: 300 };
     },
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
-        if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return {};
+        if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return null;
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
         var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);

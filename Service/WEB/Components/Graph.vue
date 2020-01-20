@@ -257,14 +257,16 @@
     },
     props: { options: Object, height: Number },
     data() {
-      return {};
+      return { };
     },
     watch: {
       options: function(val, prev) {
-        if((prev.axes != undefined) && (val.axes != undefined) && (prev.axes.y2 != undefined) && (val.axes.y2 != undefined) && (prev.axes.y2.drawAxis != undefined) && (val.axes.y2.drawAxis != undefined)) {
-          if(prev.axes.y2.drawAxis != val.axes.y2.drawAxis) this.Graph.updateOptions({ showRangeSelector: true}, false);
+        if(this.Graph == null) return;
+//        if((prev != null) && (prev.axes != null) && (val.axes != null) && (prev.axes.y2 != null) && (val.axes.y2 != null) && (prev.axes.y2.drawAxis != null) && (val.axes.y2.drawAxis != null)) {
+//          if(prev.axes.y2.drawAxis != val.axes.y2.drawAxis)
+          this.Graph.updateOptions({ showRangeSelector: true}, false);
           val.showRangeSelector = false;
-        }
+//        }
         if(val.file.length == 0) val.file.push(Array(val.labels.length).fill(0));
         this.Graph.updateOptions(val);
       },
@@ -275,54 +277,61 @@
       }
     },
     methods: {
-      SetOptions: function(options) {
-        this.Options = Object.assign({}, this.Options, options);
-        if(this.Graph === null) return;
-        if(this.AllowUpdate == true) {
-          this.Graph.updateOptions(this.Options);
-        } else {
-          this.OptionsChanged = true;
-        }
-      },
-      SetData: function(data) {
-        this.Options = Object.assign({}, this.Options, { file: data });
-        if(this.Graph === null) return;
-        if(this.AllowUpdate == true) {
-          this.Graph.updateOptions(this.Options);
-        } else {
-          this.OptionsChanged = true;
-        }
-      },
-      Redraw: function(w, h) {
-        $(this.Graph.graphDiv).parent().removeAttr('style');
-        if((w !== undefined) && (h !== undefined)) this.Graph.resize(w, h);
-        this.Graph.resize();
-      },
+//      SetOptions: function(options) {
+//        this.Options = Object.assign({}, this.Options, options);
+//        if(this.Graph === null) return;
+//        if(this.AllowUpdate == true) {
+//          this.Graph.updateOptions(this.Options);
+//        } else {
+//          this.OptionsChanged = true;
+//        }
+//      },
+//      SetData: function(data) {
+//        this.Options = Object.assign({}, this.Options, { file: data });
+//        if(this.Graph === null) return;
+//        if(this.AllowUpdate == true) {
+//          this.Graph.updateOptions(this.Options);
+//        } else {
+//          this.OptionsChanged = true;
+//        }
+//      },
+//      Redraw: function(w, h) {
+//        $(this.Graph.graphDiv).parent().removeAttr('style');
+//        if((w !== undefined) && (h !== undefined)) this.Graph.resize(w, h);
+//        this.Graph.resize();
+//      },
       HoverIn() {
-        this.AllowUpdate = false;
+//        this.AllowUpdate = false;
         this.$emit('mouseOver', true);
       },
       HoverOut() {
-        this.AllowUpdate = true;
+//        this.AllowUpdate = true;
         this.$emit('mouseOver', false);
-        if(this.OptionsChanged == true) {
-          this.Graph.updateOptions(this.options);
-          this.OptionsChanged = false;
-        }
+//        if(this.OptionsChanged == true) {
+//          this.Graph.updateOptions(this.options);
+//          this.OptionsChanged = false;
+//        }
       },
     },
     created: function() {
       this.Graph = null;
-      this.AllowUpdate = true;
-      this.Options = Object.assign({ highlightCallback: this.HoverIn, unhighlightCallback: this.HoverOut, strokeWidth: 0.5, gridLineColor: "rgba(0, 0, 0, 0.1)", gridLinePattern: [4, 4], labels: ['Index', 'Value'], interactionModel: {} }, this.options);
+//      this.AllowUpdate = true;
+//      this.Options = Object.assign({ highlightCallback: this.HoverIn, unhighlightCallback: this.HoverOut, strokeWidth: 0.5, gridLineColor: "rgba(0, 0, 0, 0.1)", gridLinePattern: [4, 4], labels: ['Index', 'Value'], interactionModel: {} }, this.options);
     },
     mounted: function() {
-      var Data = [[0, 0]];
-      if(this.Options.labels !== undefined) Data = [new Array(this.Options.labels.length).fill(0.0)];
-      this.Graph = new Dygraph(this.$el, Data, this.Options);
-              $(this.Graph.graphDiv).parent().removeAttr('style');
+      var Options = Object.assign({ file: [[0, 0]], labels: ['A', 'B']}, this.options);
+
+//      var Options = (this.options == null) ? {} : this.options;
+//      console.log(this.options);
+//      var Data = [[0, 0]];
+//      if(this.Options.labels !== undefined) Data = [new Array(this.Options.labels.length).fill(0.0)];
+//      if(File.length == 0) File.push(Array(Options.labels.length).fill(0));
+      this.Graph = new Dygraph(this.$el, Options.file, Options);
+      this.$nextTick(() => {
+        $(this.Graph.graphDiv).parent().removeAttr('style');
         this.Graph.resize('100%', this.height);
         this.Graph.resize();
+      });
     },
     beforeDestroy: function() {
       if(this.Graph == null) this.Graph.destroy();
