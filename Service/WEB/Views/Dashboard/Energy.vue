@@ -171,47 +171,8 @@
 </script>
 
 <style scoped>
-  .dashboard-energy .header-text {
-    font-size: 24px;
-    line-height: 16px;
-  }
   .header-text {
     font-size: 24px;
     line-height: 16px;
-  }
-  .counters-title {
-    float: left;
-    text-align: left;
-    font-size: 16px;
-  }
-  .counters-aggreg {
-    float: right;
-    text-align: right;
-    font-size: 12px;
-  }
-  .counters-main-val {
-    font-size: 36px
-  }
-  .counters-stat-type {
-    text-align: left;
-    font-weight: bold;
-  }
-  .counters-stat-time {
-    font-size: 12px;
-    text-align: left;
-  }
-  .counters-stat-val {
-    font-size: 28px;
-    line-height: 37px;
-    float: right;
-  }
-  .current-value {
-    font-size: 36px;
-  }
-  .line {
-    clear: both;
-  }
-  .line-border {
-    border-top: 1px solid #c7c7e6;
   }
 </style>
