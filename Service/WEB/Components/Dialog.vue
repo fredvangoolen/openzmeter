@@ -22,8 +22,7 @@
 
 <script>
   export default {
-    name: 'Dlg',
-    props: { loading: { type: Boolean, default: false } },
+    props: { loading: Boolean },
     data: function() {
       return { };
     },
@@ -38,6 +37,9 @@
 </script>
 
 <style scoped>
+  .modal-header {
+    padding: 3px 5px;
+  }
   .modal-dialog {
     z-index: 1100;
     color: #333;
@@ -45,7 +47,7 @@
   }
   @media only screen and (max-width: 768px) {
   .modal-dialog {
-    margin-top:120px !important;
+     margin-top:120px !important;
+    }
   }
-}
 </style>

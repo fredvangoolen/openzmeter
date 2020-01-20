@@ -26,8 +26,8 @@
     methods: {
       Toogle: function(name, evt) {
         $(evt.target).blur();
-        var Conf = this.value;
-        Conf[name] = !Conf[name];
+        var Conf = Object.assign({}, this.value);
+        Conf[name] = !Conf[name]
         this.$emit('input', Conf);
       }
     }

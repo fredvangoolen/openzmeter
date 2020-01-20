@@ -79,12 +79,6 @@
       Range: function() { this.UpdateGraphValues(); }
     },
     methods: {
-      CancelTransfer: function(transfer) {
-        if(transfer == null) transfer = { Timer: null, CancelFunc: null };
-        if(transfer.Timer != null) clearTimeout(transfer.Timer);
-        if(transfer.CancelFunc != null) transfer.CancelFunc();
-        return transfer;
-      },
       UpdateNowValues: function() {
         this.ControlNow = this.CancelTransfer(this.ControlNow);
         if(this.analyzer == null) return;

@@ -44,7 +44,7 @@
       <div class="line line-border">
         <div class="float-left">
           <div class="counters-stat-type">Std deviation:</div>
-          <div class="counters-stat-time" v-html="isFinite(Std.Percent) ? FormatHTML(Std.Percent) : '-'"></div>
+          <div class="counters-stat-time" v-html="isFinite(Std.Percent) ? Round(Std.Percent, 2, true) + ' % within range' : '-'"></div>
         </div>
         <div class="counters-stat-val" :class="{ 'counters-stat-val2': (Std.Value.length > 1) }">
           <div v-for="(phase, idx) in Std.Value" :key="idx" v-html="isFinite(phase) ? FormatHTML(phase) : '-'"></div></div>
@@ -54,10 +54,9 @@
 </template>
 
 <script>
-  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: Object, data10M: Object, dataGraph: null },
+    props: { analyzer: Object, data10M: Object, dataGraph: Object },
     data () {
       return { };
     },
@@ -126,10 +125,8 @@
           }
           Count++;
         }
-        for(var p in this.dataGraph.Voltage[x]) {
-          Std.Value[p] = Math.sqrt((Std.Value[p] / Count) - Math.pow(Avg[p] / Count, 2));
-          Std.Percent = Std.Percent / (Count * 100 * Std.Value.length);
-        }
+        for(var p in this.dataGraph.Voltage[x]) Std.Value[p] = Math.sqrt((Std.Value[p] / Count) - Math.pow(Avg[p] / Count, 2));
+        Std.Percent = (Std.Percent * 100) / (Count * Std.Value.length);
         return Std;
       }
     },

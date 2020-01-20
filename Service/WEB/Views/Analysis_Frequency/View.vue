@@ -18,8 +18,8 @@
           <div class="panel-body">
             <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :dataNow="NowData" :dataGraph="GraphData" :height.sync="Height"></counters>
-              <frequency class="col-md-6 col-lg-8 col-xl-9" :analyzer="analyzer" :data="GraphData" :height="Height"></frequency>
+              <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :dataNow="DataNow" :dataGraph="DataGraph" :height.sync="Height"></counters>
+              <frequency class="col-md-6 col-lg-8 col-xl-9" :analyzer="analyzer" :data="DataGraph" :height="Height"></frequency>
             </div>
           </div>
         </div>
@@ -39,7 +39,8 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Aggreg: null, ShowSpinner: true, NowData: null, GraphData: null, NowTimer: null, GraphTimer: null, Range: null, Height: 300 };
+      return { Aggreg: null, ShowSpinner: true, Range: null, Height: 300,
+               DataNow: null, ControlNow: null, DataGraph: null, ControlGraph: null };
       },
     watch: {
       analyzer: function() { this.UpdateNowValues(); this.UpdateGraphValues(); },
@@ -48,9 +49,9 @@
     },
     computed: {
       ExportData: function() {
-        if(this.GraphData == null) return [];
+        if(this.DataGraph == null) return [];
         var Rows = [['Time', 'Frequency']];
-        for(var n in this.GraphData.Sampletime) Rows.push([this.GraphData.Sampletime[n], this.GraphData.Frequency[n]]);
+        for(var n in this.DataGraph.Sampletime) Rows.push([this.DataGraph.Sampletime[n], this.DataGraph.Frequency[n]]);
         return Rows;
       }
     },
@@ -59,8 +60,8 @@
       this.UpdateGraphValues();
     },
     beforeDestroy: function() {
-      if(this.NowTimer != null) clearTimeout(this.NowTimer);
-      if(this.GraphTimer != null) clearTimeout(this.GraphTimer);
+      this.CancelTransfer(this.ControlNow);
+      this.CancelTransfer(this.ControlGraph);
     },
     methods: {
       MaximizeClick: function() {
@@ -71,44 +72,22 @@
         $(window).bind('resize', this.ResizeHandler.bind(this));
       },
       UpdateNowValues: function() {
-        if(this.NowTimer != null) clearTimeout(this.NowTimer);
+        this.ControlNow = this.CancelTransfer(this.ControlNow);
         if(this.analyzer == null) return;
-        this.analyzer.GetSeriesLast('3S', ['FREQUENCY'],
+        this.ControlNow.CancelFunc = this.analyzer.GetSeriesLast('3S', ['FREQUENCY'],
           (working) => {},
-          (result) => { this.NowData = result; },
-          (timeout) => { this.NowTimer = setTimeout( () => { this.UpdateNowValues(); }, timeout); }
+          (result) => { this.DataNow = result; },
+          (timeout) => { this.ControlNow.Timer = setTimeout( () => { this.UpdateNowValues(); }, timeout); }
         );
       },
       UpdateGraphValues: function() {
-        if(this.GraphTimer != null) clearTimeout(this.GraphTimer);
+        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
         if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
-        this.analyzer.GetSeriesRange(this.Aggreg, this.Range, this.GraphData, ['FREQUENCY'],
+        this.ControlGraph.CancelFunc = this.analyzer.GetSeriesRange(this.Aggreg, this.Range, this.DataGraph, ['FREQUENCY'],
           (working) => { this.ShowSpinner = working; },
-          (result) => { this.GraphData = Object.freeze(result); },
-          (timeout) => { if(timeout != null) this.GraphTimer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
+          (result) => { this.DataGraph = Object.freeze(result); },
+          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
         );
-//        if(this.GraphData == null) this.GraphData = { LastSample: 0 };
-//        if(this.GraphData.LastSample == 0) this.ShowSpinner = true;
-//        this.$http.post('getSeries', { Aggreg: this.Aggreg, Series: ['FREQUENCY'], To: Window.To, Period: Window.Period, LastSample: 0, Analyzer: this.analyzer.Analyzer }).then(
-//          (result) => {
-//            this.GraphData = oZm.MergeSeriesResult(result.data, this.GraphData);
-//            this.ShowSpinner = false;
-//            if((result.data['Sampletime'] === null) || (result.data['Sampletime'].length === 0)) return;
-//            this.GraphData = oZm.GraphDataAppend(result.data, 'Frequency', this.GraphData);
-//            lastsample = oZm.LastSampletime(result, lastsample);
-//            this.$refs.graph.SetOptions( { dateWindow: [result.From, result.To], file: this.Data, valueRange: oZm.Series['FREQUENCY'].Range(this.Data, [true]) } );
-//            this.UpdateCounters(result['Aggregation_Source'], result.From, result.To);
-//          }
-//        );
-//          complete: function() {
-//            this.ShowSpinner = false;
-//            this.$refs.period.UpdateCompleted(lastsample);
-//          }.bind(this),
-//          error: function(response) {
-//            if(response.status === 400) this.$refs.aggregation.AggregationFail();
-//            this.ShowSpinner = true;
-//          }.bind(this)
-//        });
       }
     },
     components: { Frequency, Counters }

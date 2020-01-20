@@ -1,5 +1,11 @@
 const openZmeter = {
   install: function(Vue, options) {
+    Vue.prototype.CancelTransfer = (transfer) => {
+      if(transfer == null) transfer = { Timer: null, CancelFunc: null };
+      if(transfer.Timer != null) clearTimeout(transfer.Timer);
+      if(transfer.CancelFunc != null) transfer.CancelFunc();
+      return transfer;
+    },
     Vue.prototype.MatrixColsRange = (values, cols, options) => {
       var UpperRange = -Infinity;
       var LowerRange = +Infinity;

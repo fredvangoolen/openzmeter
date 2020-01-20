@@ -33,6 +33,8 @@ Vue.component('Cubism', Cubism);
 Vue.component('Spinner', Spinner);
 import Dlg from 'Components/Dialog.vue';
 Vue.component('Dlg', Dlg);
+import DlgFs from 'Components/DialogFullscreen.vue';
+Vue.component('DlgFs', DlgFs);
 import Graph from 'Components/Graph.vue';
 Vue.component('Graph', Graph);
 import OptionPicker from 'Components/OptionPicker.vue';
