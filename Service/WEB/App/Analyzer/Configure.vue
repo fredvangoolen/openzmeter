@@ -17,9 +17,13 @@
         <label class="control-label">Mode</label>
         <input type="text" class="form-control" disabled="" :value="analyzer.Mode">
       </div>
-      <div class="col-xs-12">
+      <div class="col-xs-12 col-sm-7">
         <label class="control-label">Display name</label>
         <input type="text" class="form-control" v-model="analyzer.Name" required>
+      </div>
+      <div class="col-xs-12 col-sm-5">
+        <label class="control-label">Time zone</label>
+        <option-picker :options="TimeZones" v-model="analyzer.TimeZone" :big="true"></option-picker>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Nominal voltage</label>
@@ -40,59 +44,46 @@
       </div>
       <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12">
-        <label class="control-label">Contract ID</label>
-        <input type="text" class="form-control" v-model="analyzer.Contract">
+        <table>
+          <tr><td><strong>Tag name</strong></td><td class="text-right"><strong>Value</strong></td></tr>
+          <tr v-for="(tag, idx) in Tags" :key="idx">
+            <td>
+              <div class="input-group input-group-xs">
+                <span class="input-group-btn"><button class="btn btn-default" type="button" @click="Tags.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button></span>
+                <input type="text" class="form-control" v-model="tag.name">
+              </div>
+            </td>
+            <td>
+              <div class="input-group input-group-xs">
+                <input type="text" class="form-control rounded" v-model="tag.value">
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2"><button type="button" class="btn btn-default btn-xs" style="width:100%" v-on:click="Tags.push({ name: 'Unnamed tag', Value: 'none'})"><img :src="require('Imgs/plus.png')"> New tag</button></td>
+          </tr>
+        </table>
       </div>
-      <div class="col-xs-12 col-sm-9">
-        <label class="control-label">Time zone</label>
-        <option-picker :options="TimeZones" v-model="analyzer.TimeZone" :big="true"></option-picker>
-      </div>
-      <div class="col-xs-12 col-sm-3">
-        <label class="control-label">ZIP Code</label>
-        <input type="text" class="form-control" v-model="analyzer.ZipCode">
-      </div>
-      <div class="col-xs-12 col-sm-12">
-        <label class="control-label">Location</label>
-        <div style="display: flex">
-          <div class="input-group" style="flex-grow: 50">
-            <input-spin ref="latitude" prepend="º Lat" :decimals="7" :min="-180" :max="180" :increment="0.01" v-model="analyzer.GeoPosition[0]"></input-spin>
-          </div>
-          <div class="input-group" style="flex-grow: 50; margin: 0px 5px">
-            <input-spin ref="longitude" prepend="º Lon" :decimals="7" :min="-180" :max="180" :increment="0.01" v-model="analyzer.GeoPosition[1]"></input-spin>
-          </div>
-          <button class="btn btn-default" v-on:click="GetLocation" title="Get current location"><img :src="require('Imgs/pin.png')"></button>
-        </div>
-      </div>
-
-
-
-      <!--div class="col-xs-12">
-        <label class="control-label" style="line-height: 22px">Enable event</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="value.EventsEnabled"></toggle>
-      </div>
-      <div class="col-xs-12">
-        <label class="control-label" style="line-height: 22px">Enable alarms</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="value.AlarmsEnabled"></toggle>
-      </div>
-      <div class="col-xs-12">
-        <label class="control-label" style="line-height: 22px">Enable rates</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="value.RatesEnabled"></toggle>
-      </div>
-      <div class="col-xs-12">
-        <label class="control-label" style="line-height: 22px">Enable remote</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="value.RemoteEnabled"></toggle>
-      </div-->
     </div>
   </dlg>
 </template>
 
 <script>
+  import Vuetable from 'vuetable-2';
   import InputSpin from 'Components/InputSpin.vue';
   import moment from 'moment';
   export default {
     props: { analyzer: Object },
     data() {
-      return { ShowSpinner: false, Error: ''};
+      return { ShowSpinner: false, Error: '', Tags: [{name: 'bliu', value: 'blau'}],
+      Columns: [
+          {name: 'Name', title: 'Name'},
+          {name: '__slot:power', title: 'Power mode'},
+          {name: '__slot:reactive', title: 'Reactive mode'},
+          {name: '__slot:color', title: 'Colour'}
+        ]
+      }
+      ;
     },
     computed: {
       TimeZones: function() {
@@ -128,6 +119,18 @@
         );
       }
     },
-    components: { InputSpin }
+    components: { InputSpin, Vuetable }
   }
 </script>
+
+<style scoped>
+  table, .input-group {
+    width: 100%;
+  }
+  table tr td {
+    padding: 1px 3px;
+  }
+  .rounded {
+    border-radius: 4px !important;
+  }
+</style>
