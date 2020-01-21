@@ -15,7 +15,7 @@
   import moment from 'moment';
   import 'moment-timezone';
   export default {
-    props: { analyzer: { type: Object }, expanded: Boolean },
+    props: { analyzer: Object, expanded: Boolean },
     data() {
       return { ShowDialog: false, EventsCount: 0 };
     },

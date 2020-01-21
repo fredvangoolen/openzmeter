@@ -20,7 +20,7 @@
       <div class="pull-right" ref="Toolbar">
         <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'FREQUENCY'" :variable="'Dashboard_' + serie" :current="serie=='CURRENT'" :multi="true"></toolbar-phases>
         <div class="btn-group">
-          <button-export></button-export>
+          <button-export :rows="[]" ></button-export>
           <button-expand></button-expand>
         <!--toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" v-on:ExportClick="ExportClick" ref="tools"></toolbar-tools-->
         </div>

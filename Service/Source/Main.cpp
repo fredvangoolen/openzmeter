@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
   signal(SIGALRM, SIG_IGN);
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
-  
+
   string ConfigFileName = "/etc/openZmeter.conf";
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
@@ -78,6 +78,8 @@ int main(int argc, char** argv) {
   DeviceManager DeviceManager;
   /* Create WEB service */
   HTTPServer HTTPServer;
+
+  LOGFile::Error("INICIADOOO-------------------\n");
   uint32_t Iter = 0;
   while(!Terminate) {
     SysSupport::PeriodicTask();

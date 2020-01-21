@@ -2,8 +2,8 @@
   <div id="app">
     <div class="sidenav-overlay"/>
     <topbar :analyzer="Analyzer" :value="Values"></topbar>
-    <sidebar :analyzer.sync="Analyzer"></sidebar>
-    <router-view :analyzer="Analyzer" id="contents"></router-view>
+    <sidebar :analyzer.sync="Analyzer" :user.sync="User"></sidebar>
+    <router-view :analyzer="Analyzer" :user="User" id="contents"></router-view>
     <portal-target name="dialogs" :multiple="true"></portal-target>
   </div>
 </template>
@@ -16,7 +16,7 @@
   import Graph from 'Components/Graph.vue';
   export default {
     data: function() {
-      return { Analyzer: null, Values: {} };
+      return { Analyzer: null, User: null, Values: {} };
     },
     components: { Topbar,  Sidebar }
   }
@@ -44,7 +44,7 @@
       left: 48px;
     }
   }
-    .sidenav-overlay {
+  .sidenav-overlay {
     background: #000;
     opacity: 0.5;
     display:none;
