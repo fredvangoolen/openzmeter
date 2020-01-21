@@ -48,7 +48,7 @@ void SysSupport::GetUserCallback(HTTPRequest &req) {
   string UserName = req.UserName();
   if(Params.contains("UserName") && Params["UserName"].is_string()) UserName = Params["UserName"];
   if((req.UserName() != "admin") || (req.UserName() != UserName)) return req.FromString("", MHD_HTTP_FORBIDDEN);
-  req.ExecSentenceAsyncResult("SELECT json_build_object('UserName', username, 'Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'TimeZone', time_zone) AS result FROM users WHERE username = " + req.Bind(UserName));
+  req.ExecSentenceAsyncResult("SELECT json_build_object('User', username, 'Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'TimeZone', time_zone) AS result FROM users WHERE username = " + req.Bind(UserName));
   if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
   req.FromString(req.ResultString("result"), MHD_HTTP_OK);
 }

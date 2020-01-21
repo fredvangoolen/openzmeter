@@ -1,13 +1,13 @@
 <template>
-  <div class="this" v-bind:class="{ expanded: expanded }">
+  <div class="this" :class="{ expanded: expanded }">
     <img class="icon" :src="require('Imgs/user32.png')">
     <div class="btn-group">
-      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" v-on:click="Edit"><img :src="require('Imgs/user_edit.png')"></button>
-      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" v-on:click="Logout"><img :src="require('Imgs/user_go.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" @click="Edit"><img :src="require('Imgs/user_edit.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" @click="window.location.href='Logout'"><img :src="require('Imgs/user_go.png')"></button>
     </div>
-    <div class="name">{{ UserName }}</div>
+    <div class="name">{{ (user==null) ? '-' : user.Name }}</div>
     <user-logout ref="logout"></user-logout>
-    <user-edit v-if="ShowUser" ref="userEdit"></user-edit>
+    <user-edit v-if="ShowDialog" :user="user"></user-edit>
     <offline ref="offline"></offline>
   </div>
 </template>
@@ -17,13 +17,33 @@
   import UserEdit from './User/Dialog.vue';
   import Offline from './User/Offline.vue';
   export default {
-    props: { expanded: Boolean },
+    props: { user: null, expanded: Boolean },
     data() {
-      return { UserName: '', ShowUser: false };
+      return { ShowDialog: false };
+    },
+    created: function() {
+      if(localStorage.getItem("UserName") == null) {
+        window.location.href='Logout';
+        return;
+      }
+      this.$http.post('getUser', { User: localStorage.getItem("UserName") }).then(
+        (result) => { this.SetUser(result.data); },
+        (fail) => { window.location.href='Logout'; }
+      );
     },
     methods: {
-      Logout: function() {
-        window.location.href = 'Logout';
+      SetUser: function(user) {
+        if(user != null) {
+//          analyzer.GetSeriesRange = this.GetSeriesRange.bind(this);
+//          analyzer.GetPricesRange = this.GetPricesRange.bind(this);
+//          analyzer.GetSeriesLast = this.GetSeriesLast.bind(this);
+//          analyzer.GetSeriesNow = this.GetSeriesNow.bind(this);
+//          analyzer.FormatAggregation = this.FormatAggregation.bind(this);
+//          analyzer.FormatTime = this.FormatTime.bind(this);
+//          analyzer.FormatTimeMS = this.FormatTimeMS.bind(this);
+//          analyzer.FormatDateTime = this.FormatDateTime.bind(this);
+        }
+        this.$emit('update:user', user);
       },
       Edit: function() {
         $.ajax({ url: "getUser", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
@@ -53,17 +73,18 @@
 //        });
 //      }
     },
-    created: function() {
-      if(localStorage.getItem('UserName') === undefined) {
-        window.location.href = 'Logout';
-      } else {
-        this.UserName = localStorage.getItem('UserName');
-      }
-      this.Timer = null;
-    },
-    mounted: function() {
+//    created: function() {
+//      if(localStorage.getItem('UserName') == null) {
+//        window.location.href = 'Logout';
+//      } else {
+//
+//        this.UserName = localStorage.getItem('UserName');
+//      }
+//      this.Timer = null;
+//    },
+//    mounted: function() {
 //      this.PingServer();
-    },
+//    },
     components: { UserLogout, UserEdit, Offline }
   }
 </script>

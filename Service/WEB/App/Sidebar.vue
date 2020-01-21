@@ -2,7 +2,7 @@
   <div class="navbar-nav" v-on:mouseenter="MouseOver = true" v-on:mouseleave="MouseOver = false" v-bind:class="{ expanded: MouseOver }">
     <div class="menu-wrapper">
       <sidebar-analyzer :analyzer="analyzer" @update:analyzer="$emit('update:analyzer', $event)" :expanded="MouseOver"></sidebar-analyzer>
-      <sidebar-user :expanded="MouseOver"></sidebar-user>
+      <sidebar-user :user="user" @update:user="$emit('update:user', $event)" :expanded="MouseOver"></sidebar-user>
       <sidebar-menu :expanded="MouseOver"></sidebar-menu>
     </div>
     <sidebar-news v-if="false"></sidebar-news>
@@ -15,8 +15,10 @@ import SidebarAnalyzer from './SidebarAnalyzer.vue';
 import SidebarMenu from './SidebarMenu.vue';
 import SidebarNews from './SidebarNews.vue';
 export default {
-  props: { analyzer: { type: Object } },
-  data() { return { MouseOver: false }; },
+  props: { analyzer: Object, user: Object },
+  data() {
+    return { MouseOver: false };
+  },
   mounted: function() {
 //    $('.navbar-toggle').click(function (e) {
 //      $('.navbar-nav').toggleClass('show');

@@ -95,7 +95,7 @@
       }
     },
     mounted: function() {
-      var Graphs = [this.$refs['g0'].Graph, this.$refs['g1'].Graph, this.$refs['g2'].Graph];
+      var Graphs = [this.$refs.g0.Graph, this.$refs.g1.Graph, this.$refs.g2.Graph];
       Dygraph.synchronize(Graphs, { range: false, zoom: false });
     }
   }
