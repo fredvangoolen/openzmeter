@@ -6,7 +6,6 @@
 
 <script>
   import Graph from 'Components/Graph.vue';
-//  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
@@ -16,7 +15,7 @@
     },
     computed: {
       GraphOptions: function() {
-        var Opt = {};
+        var Opt = { file: [], axes: { y: {}, x: {} } };
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -31,7 +30,6 @@
         Opt.legendFormatter = Graph.LegendFormatter_Follow;
         //underlayCallback: this.DrawPeriods,
         Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
-        Opt.axes = { y: {}, x: {} };
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = function (x) { var Result = oZm.Series['ACTIVE_ENERGY'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },

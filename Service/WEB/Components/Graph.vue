@@ -319,14 +319,17 @@
 //      this.Options = Object.assign({ highlightCallback: this.HoverIn, unhighlightCallback: this.HoverOut, strokeWidth: 0.5, gridLineColor: "rgba(0, 0, 0, 0.1)", gridLinePattern: [4, 4], labels: ['Index', 'Value'], interactionModel: {} }, this.options);
     },
     mounted: function() {
-      var Options = Object.assign({ file: [[0, 0]], labels: ['A', 'B']}, this.options);
-
+//      var Options = Object.assign({ file: [[0, 0]], labels: ['A', 'B']}, this.options);
 //      var Options = (this.options == null) ? {} : this.options;
 //      console.log(this.options);
-//      var Data = [[0, 0]];
-//      if(this.Options.labels !== undefined) Data = [new Array(this.Options.labels.length).fill(0.0)];
-//      if(File.length == 0) File.push(Array(Options.labels.length).fill(0));
-      this.Graph = new Dygraph(this.$el, Options.file, Options);
+      var Data = [];
+//      if(this.options.labels !== undefined) Data = [new Array(this.Options.labels.length).fill(0.0)];
+      if(this.options.file.length == 0) {
+        Data.push(Array(this.options.labels.length).fill(0));
+      } else {
+        Data = this.options.file;
+      }
+      this.Graph = new Dygraph(this.$el, Data, this.options);
       this.$nextTick(() => {
         $(this.Graph.graphDiv).parent().removeAttr('style');
         this.Graph.resize('100%', this.height);

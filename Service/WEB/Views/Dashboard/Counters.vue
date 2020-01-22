@@ -32,6 +32,9 @@
     data: function() {
       return {};
     },
+    updated: function() {
+      this.$emit('update:height', this.$el.clientHeight);
+    },
     computed: {
       Max: function() {
         return { Value: 0, Time:0};
@@ -40,7 +43,8 @@
         return { Value: 0, Time:0, Budget: 0 };
       }
     },
-          UpdateCounters: function(aggreg) {
+
+    UpdateCounters: function(aggreg) {
         this.TimeStatsFrom = moment(this.$refs.period.DateWindow[0]).format('DD/MM/YYYY HH:mm:ss');
         this.TimeStatsTo = moment(this.$refs.period.DateWindow[1]).format('DD/MM/YYYY HH:mm:ss');
         var AccumSamples = 0, AccumValue = 0.0, MaxValue = -Infinity, MaxCount = 0, MaxTime = null, Cost = 0.0;

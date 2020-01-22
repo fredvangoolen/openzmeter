@@ -63,9 +63,6 @@
 //        this.EventsCount = 0;
 //        this.GetEvents();
       },
-
-
-
       GetSeriesRange: function(aggreg, range, prev, series, working, outs, timeout) {
         var Cancelled = false;
         var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
@@ -91,11 +88,7 @@
             if(Array.isArray(prev[serie]) == false) continue;
             if(Out[serie] == undefined) Out[serie] = [];
             for(var pos in prev.Sampletime) {
-              if((prev.Sampletime[pos] >= ReqRange[0]) && (prev.Sampletime[pos] <= ReqRange[1])) {
-                Out[serie].push(prev[serie][pos]);
-              } else {
-//                console.log("sample discard");
-              }
+              if((prev.Sampletime[pos] >= ReqRange[0]) && (prev.Sampletime[pos] <= ReqRange[1])) Out[serie].push(prev[serie][pos]);
             }
           }
           Out.From = prev.From;
@@ -119,6 +112,7 @@
         }
         Promise.all(Promises).then(
           (result) => {
+            clearTimeout(Timer);
             if(Cancelled == true) return;
             for(var req in result) {
               if(result[req].data.From == ReqRange[0]) {
@@ -136,7 +130,6 @@
             Out.To = ReqRange[1]
             Out.From = ReqRange[0];
             if(outs != null) outs(Out);
-            clearTimeout(Timer);
             if(working != null) working(false);
             if(timeout != null) timeout(Period / 2);
           },
@@ -149,7 +142,7 @@
       },
       GetPricesRange: function(aggreg, range, prev, working, outs, timeout) {
         var Cancelled = false;
-        var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
+        var Timer = setTimeout(() => { console.log("Timeout!"); if(working != null) working(true); }, 500);
         var ReqRange = null;
         var Now = moment().tz(this.analyzer.TimeZone);
         if(range == 'LastDay') ReqRange = [Now.valueOf() - 86400000, Now.valueOf()];
@@ -194,6 +187,7 @@
         }
         Promise.all(Promises).then(
           (result) => {
+            clearTimeout(Timer);
             if(Cancelled == true) return;
             for(var req in result) {
               if(result[req].data.From == ReqRange[0]) {
@@ -210,16 +204,15 @@
             }
             Out.To = ReqRange[1]
             Out.From = ReqRange[0];
-            clearTimeout(Timer);
             if(outs != null) outs(Out);
             if(working != null) working(false);
-            if(timeout != null) timeout(Period / 2);
+            if(timeout != null) timeout((aggreg == '15M') ? 900000 : 3600000);
           },
           (fail) => {
             if(Cancelled == true) return;
             if(outs != null) outs(Out);
             if(working != null) working(false);
-            if(timeout != null) timeout(Period / 2);
+            if(timeout != null) timeout((aggreg == '15M') ? 900000 : 3600000);
           }
         );
         return () => { Cancelled = true };
@@ -230,6 +223,7 @@
         var Period = (aggreg == '3S') ? 6000 : (aggreg == '1M') ? 120000 : (aggreg == '10M') ? 1200000 : (aggreg == '15M') ? 1800000 : 7200000;
         this.$http.post('getSeries', { Series: series, To: 0, Aggreg: aggreg, Period: Period, LastSample: 0, Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
+            clearTimeout(Timer);
             if(Cancelled == true) return;
             if(result.data.Sampletime.length > 0) {
               var Result = {};
@@ -241,7 +235,6 @@
             } else {
               if(outs != null) outs(null);
             }
-            clearTimeout(Timer);
             if(working != null) working(false);
             if(timeout != null) timeout(Period / 2);
           },
@@ -257,9 +250,9 @@
         var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
         this.$http.post('getSeriesNow', { Series: series, Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
+            clearTimeout(Timer);
             if(Cancelled == true) return;
             if(outs != null) outs((result.status == 200) ? result.data : null);
-            clearTimeout(Timer);
             if(working != null) working(false);
             if(timeout != null) timeout(1000);
           },

@@ -75,7 +75,7 @@ import StatsCosts from 'Views/Stats_Costs/View.vue';
 import StatsHeatmap from 'Views/Stats_Heatmap/View.vue';
 import StatsDistribution from 'Views/Stats_Distribution/View.vue';
 import Settings from 'Views/Settings/View.vue';
-import Help from 'Views/Help/Help.vue';
+import Help from 'Views/Help/View.vue';
 import PageNotFound from 'Views/PageNotFound.vue';
 
 const AppRouter = new Router({
