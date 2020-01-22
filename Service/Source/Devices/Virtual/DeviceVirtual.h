@@ -21,7 +21,7 @@ class DeviceVirtual final : public Device {
     float                           pCurrent;
     float                           pCurrentPhase;
     float                           pFrequency;
-  private : 
+  private :
     static bool  GetInstances();
     static void *Capture_Thread(void *args);
     static json  CheckConfig(const json &config);
@@ -29,8 +29,8 @@ class DeviceVirtual final : public Device {
     DeviceVirtual();
     bool StartDevice() override;
     bool StopDevice() override;
-    void GetDevice(HTTPRequest &req) override;
-    void SetDevice(HTTPRequest &req) override;
+    void GetDevice(const json &params, Response &response) override;
+    void SetDevice(const json &params, Response &response) override;
   public :
     ~DeviceVirtual() override;
 };

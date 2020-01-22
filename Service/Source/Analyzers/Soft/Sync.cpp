@@ -61,7 +61,7 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
       This->pLocks.ReadUnlock();
       auto Response = HTTPClient->Post(Path.c_str(), Header, Content.dump(), "application/json", true);
       This->pLocks.WriteLock();
-      if((Response != nullptr) && (Response->status == MHD_HTTP_OK)) {
+      if((Response != nullptr) && (Response->status == HTTP_OK)) {
         json Content = json::parse(Response->body, NULL, false);
         if(!Content.is_discarded() && Content.is_object() && Content["Result"].is_boolean() && (Content["Result"] == true)) {
           if(Response->has_header("Set-Cookie") == false) {
@@ -96,7 +96,7 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
       LOGFile::Debug("Analyzer '%s'request pending queries to server\n", This->pParent->pSerial.c_str());
       auto Response = HTTPClient->Post(Path.c_str(), Header, Content.dump(), "application/json", true);
       This->pLocks.WriteLock();
-      if((Response != nullptr) && (Response->status == MHD_HTTP_OK)) {
+      if((Response != nullptr) && (Response->status == HTTP_OK)) {
         json Content = json::parse(Response->body, NULL, false);
         if(!Content.is_discarded() && Content.is_array()) {
           LOGFile::Debug("Analyzer '%s' receive %u queries from remote server\n", This->pParent->pSerial.c_str(), Content.size());
@@ -121,23 +121,23 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
           }
         }
         This->pLocks.WriteUnlock();
-      } else if((Response != nullptr) && (Response->status == MHD_HTTP_UNAUTHORIZED)) {
+      } else if((Response != nullptr) && (Response->status == HTTP_UNAUTHORIZED)) {
         This->pCookie = "";
         This->pLocks.WriteUnlock();
         LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pParent->pSerial.c_str());
         usleep(1000000);
-      } else if((Response != nullptr) && (Response->status == MHD_HTTP_NO_CONTENT)) {
+      } else if((Response != nullptr) && (Response->status == HTTP_NO_CONTENT)) {
         This->pLocks.WriteUnlock();
         LOGFile::Debug("No pending queries in remote server for analyzar '%s'\n", This->pParent->pSerial.c_str());
-      } else if((Response != nullptr) && (Response->status == MHD_HTTP_METHOD_NOT_ALLOWED)) {
+      } else if((Response != nullptr) && (Response->status == HTTP_METHOD_NOT_ALLOWED)) {
         This->pLocks.WriteUnlock();
         LOGFile::Debug("Device remote is not enabled on remote server\n");
         usleep(1000000);
-      } else if((Response != nullptr) && (Response->status == MHD_HTTP_BAD_REQUEST)) {
+      } else if((Response != nullptr) && (Response->status == HTTP_BAD_REQUEST)) {
         This->pLocks.WriteUnlock();
         LOGFile::Debug("Analyzer '%s' is not authorized in remote server\n", This->pParent->pSerial.c_str());
         usleep(1000000);
-      } else if((Response != nullptr) && (Response->status == MHD_HTTP_SERVICE_UNAVAILABLE)) {
+      } else if((Response != nullptr) && (Response->status == HTTP_SERVICE_UNAVAILABLE)) {
         This->pLocks.WriteUnlock();
         LOGFile::Debug("Analyzer '%s' send request while remote server already have one\n", This->pParent->pSerial.c_str());
         usleep(1000000);
@@ -154,67 +154,68 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
 void *AnalyzerSoft::Sync::Request_Thread(void *args) {
   Request_t *This = (Request_t*)args;
   This->Params["UserName"] = "admin";
-  string ParamsText = This->Params.dump();
-  size_t ParamsSize = ParamsText.size();
+//  string ParamsText = This->Params.dump();
+//  size_t ParamsSize = ParamsText.size();
   LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
-  HTTPRequest Request(ParamsText.c_str(), false);
+//  HTTPRequest Request(ParamsText.c_str());
 //  Request.AppendParams(ParamsText.c_str(), &ParamsSize);
 //  Request.ProcessParams(true);
+  Response Resp;
   if(This->Method == "getAnalyzer") {
-    This->Analyzer->GetAnalyzer(Request);
+    This->Analyzer->GetAnalyzer(This->Params, Resp);
   } else if(This->Method == "setAnalyzer") {
-    This->Analyzer->SetAnalyzer(Request);
+    This->Analyzer->SetAnalyzer(This->Params, Resp);
   } else if(This->Method == "getSeries") {
-    This->Analyzer->GetSeries(Request);
+    This->Analyzer->GetSeries(This->Params, Resp);
   } else if(This->Method == "getSeriesNow") {
-    This->Analyzer->GetSeriesNow(Request);
+    This->Analyzer->GetSeriesNow(This->Params, Resp);
   } else if(This->Method == "getSeriesRange") {
-    This->Analyzer->GetSeriesRange(Request);
+    This->Analyzer->GetSeriesRange(This->Params, Resp);
   } else if(This->Method == "getEvents") {
-    This->Analyzer->GetEvents(Request);
+    This->Analyzer->GetEvents(This->Params, Resp);
   } else if(This->Method == "getEvent") {
-    This->Analyzer->GetEvent(Request);
+    This->Analyzer->GetEvent(This->Params, Resp);
   } else if(This->Method == "setEvent") {
-    This->Analyzer->SetEvent(Request);
+    This->Analyzer->SetEvent(This->Params, Resp);
   } else if(This->Method == "delEvent") {
-    This->Analyzer->DelEvent(Request);
+    This->Analyzer->DelEvent(This->Params, Resp);
   } else if(This->Method == "getRates") {
-    This->Analyzer->GetRates(Request);
+    This->Analyzer->GetRates(This->Params, Resp);
   } else if(This->Method == "getRate") {
-    This->Analyzer->GetRate(Request);
+    This->Analyzer->GetRate(This->Params, Resp);
   } else if(This->Method == "setRate") {
-    This->Analyzer->SetRate(Request);
+    This->Analyzer->SetRate(This->Params, Resp);
   } else if(This->Method == "delRate") {
-    This->Analyzer->DelRate(Request);
+    This->Analyzer->DelRate(This->Params, Resp);
   } else if(This->Method == "addRate") {
-    This->Analyzer->AddRate(Request);
+    This->Analyzer->AddRate(This->Params, Resp);
   } else if(This->Method == "getPrices") {
-    This->Analyzer->GetPrices(Request);
+    This->Analyzer->GetPrices(This->Params, Resp);
   } else if(This->Method == "testAlarm") {
-    This->Analyzer->TestAlarm(Request);
+    This->Analyzer->TestAlarm(This->Params, Resp);
   } else if(This->Method == "getAlarms") {
-    This->Analyzer->GetAlarms(Request);
+    This->Analyzer->GetAlarms(This->Params, Resp);
   } else if(This->Method == "getAlarm") {
-    This->Analyzer->GetAlarm(Request);
+    This->Analyzer->GetAlarm(This->Params, Resp);
   } else if(This->Method == "setAlarm") {
-    This->Analyzer->SetAlarm(Request);
+    This->Analyzer->SetAlarm(This->Params, Resp);
   } else if(This->Method == "addAlarm") {
-    This->Analyzer->AddAlarm(Request);
+    This->Analyzer->AddAlarm(This->Params, Resp);
   } else if(This->Method == "delAlarm") {
-    This->Analyzer->DelAlarm(Request);
+    This->Analyzer->DelAlarm(This->Params, Resp);
   }
   json Content = json::object();
-  Content["Code"] = Request.pResultCode;
+  Content["Code"] = Resp.status;
   Content["Sequence"] = This->Sequence;
   Content["Analyzer"] = This->Analyzer->pSerial;
-  Content["Response"] = Request.pPostData;
+  Content["Response"] = Resp.body;
   This->Sync->pLocks.ReadLock();
   Headers Header = {{"Accept", "application/json"}, {"Connection", "keep-alive"}, {"Cookie", This->Sync->pCookie}};
   string  Path   = This->Sync->pPath + "/setRemote";
   Client HTTPClient(This->Sync->pServer.c_str(), This->Sync->pPort);
   This->Sync->pLocks.ReadUnlock();
   auto Response = HTTPClient.Post(Path.c_str(), Header, Content.dump(), "application/json", true);
-  if((Response != nullptr) && (Response->status == MHD_HTTP_OK)) {
+  if((Response != nullptr) && (Response->status == HTTP_OK)) {
     LOGFile::Debug("Remote request '%s' for analyzer '%s' completed\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
   } else {
     LOGFile::Error("Remote request '%s' for analyzer '%s' failed\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());

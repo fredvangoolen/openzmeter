@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS sessions(
   username  character varying REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
   timestamp bigint NOT NULL
 ) WITH (OIDS=FALSE);
+DELETE FROM sessions WHERE username = NULL;
+ALTER TABLE sessions ALTER COLUMN username SET NOT NULL;
 CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (timestamp);
 
 CREATE TABLE IF NOT EXISTS tariffs(

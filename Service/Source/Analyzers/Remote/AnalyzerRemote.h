@@ -16,8 +16,8 @@ class AnalyzerRemote : public Analyzer {
     } Query_t;
     typedef struct {
       HTTPRequest    *Request;
-              
-      ProviderLocks   Locks;    
+
+      ProviderLocks   Locks;
     } Request_t;
   private :
     pthread_t        pThread;
@@ -25,31 +25,31 @@ class AnalyzerRemote : public Analyzer {
     list<Query_t*>   pQueries;
     ProviderLocks    *pRequestLocks;
   private :
-    void  HandleRequest(string url, HTTPRequest &req);
-    void  GetAnalyzer(HTTPRequest &req);
-    void  SetAnalyzer(HTTPRequest &req);
-    void  GetSeries(HTTPRequest &req);
-    void  GetSeriesNow(HTTPRequest &req);
-    void  GetSeriesRange(HTTPRequest &req);
-    void  GetEvents(HTTPRequest &req);
-    void  GetEvent(HTTPRequest &req);
-    void  SetEvent(HTTPRequest &req);
-    void  DelEvent(HTTPRequest &req);
-    void  GetRates(HTTPRequest &req);
-    void  GetRate(HTTPRequest &req);
-    void  SetRate(HTTPRequest &req);
-    void  DelRate(HTTPRequest &req);
-    void  AddRate(HTTPRequest &req);
-    void  GetPrices(HTTPRequest &req);
-    void  TestAlarm(HTTPRequest &req);
-    void  GetAlarms(HTTPRequest &req);
-    void  GetAlarm(HTTPRequest &req);
-    void  SetAlarm(HTTPRequest &req);
-    void  AddAlarm(HTTPRequest &req);
-    void  DelAlarm(HTTPRequest &req);
+    void  HandleRequest(string url, const json &params, Response &response);
+    void  GetAnalyzer(const json &params, Response &response);
+    void  SetAnalyzer(const json &params, Response &response);
+    void  GetSeries(const json &params, Response &response);
+    void  GetSeriesNow(const json &params, Response &response);
+    void  GetSeriesRange(const json &params, Response &response);
+    void  GetEvents(const json &params, Response &response);
+    void  GetEvent(const json &params, Response &response);
+    void  SetEvent(const json &params, Response &response);
+    void  DelEvent(const json &params, Response &response);
+    void  GetRates(const json &params, Response &response);
+    void  GetRate(const json &params, Response &response);
+    void  SetRate(const json &params, Response &response);
+    void  DelRate(const json &params, Response &response);
+    void  AddRate(const json &params, Response &response);
+    void  GetPrices(const json &params, Response &response);
+    void  TestAlarm(const json &params, Response &response);
+    void  GetAlarms(const json &params, Response &response);
+    void  GetAlarm(const json &params, Response &response);
+    void  SetAlarm(const json &params, Response &response);
+    void  AddAlarm(const json &params, Response &response);
+    void  DelAlarm(const json &params, Response &response);
   public :
     AnalyzerRemote(string id);
     ~AnalyzerRemote();
-    void  SetRemote(HTTPRequest &req);
-    void  GetRemote(HTTPRequest &req);
+    void  SetRemote(const json &params, Response &response);
+    void  GetRemote(const json &params, Response &response);
 };

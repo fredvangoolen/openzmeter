@@ -47,9 +47,9 @@ class DeviceV2_01 final : public Device {
         int      Submit(libusb_device_handle *deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout);
         void     Setup(libusb_device_handle *deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout);
         uint32_t BufferSize();
-    };   
+    };
   private :
-    static bool                  pRegistered;    
+    static bool                  pRegistered;
   private :
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
@@ -87,8 +87,8 @@ class DeviceV2_01 final : public Device {
     DeviceV2_01(const string &serial);
     bool StartDevice() override;
     bool StopDevice() override;
-    void GetDevice(HTTPRequest &req) override;
-    void SetDevice(HTTPRequest &req) override;
+    void GetDevice(const json &params, Response &response) override;
+    void SetDevice(const json &params, Response &response) override;
     void BuffersAppend();
   public :
     ~DeviceV2_01();

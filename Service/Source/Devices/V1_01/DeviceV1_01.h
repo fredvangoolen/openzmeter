@@ -58,7 +58,7 @@ class DeviceV1_01 final : public Device {
     deque<Sample_t>              pAverageValues;           //Average wave value of last second
     RWLocks                      pAverageLocks;            //Lock access to average values
     vector<Transfer>             pTransfers;
-  private : 
+  private :
     static bool  GetInstances();
     static void *Capture_Thread(void *args);
     static void  ReadCallback(struct libusb_transfer *transfer);
@@ -68,8 +68,8 @@ class DeviceV1_01 final : public Device {
     DeviceV1_01(const string &serial);
     bool StartDevice() override;
     bool StopDevice() override;
-    void GetDevice(HTTPRequest &req) override;
-    void SetDevice(HTTPRequest &req) override;
+    void GetDevice(const json &params, Response &response) override;
+    void SetDevice(const json &params, Response &response) override;
     bool BuffersAppend(float voltageSample, float currentSample);
   public :
     ~DeviceV1_01();

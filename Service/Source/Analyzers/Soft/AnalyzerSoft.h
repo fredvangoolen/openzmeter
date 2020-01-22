@@ -1,7 +1,18 @@
-/* ================================== zMeter ===========================================================================
- * File:     CaptureInterface.h
- * Author:   Eduardo Viciana (12 de abril de 2017)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <pthread.h>
 #include <inttypes.h>
@@ -121,30 +132,30 @@ class AnalyzerSoft final : public Analyzer {
     void  InitAggreg(Params_t &params, AggregType type);
     void  SaveAggreg(Params_t &params);
   private :
-    void  GetAnalyzer(HTTPRequest &req) override;
-    void  SetAnalyzer(HTTPRequest &req) override;
-    void  GetSeries(HTTPRequest &req) override;
-    void  GetSeriesNow(HTTPRequest &req) override;
-    void  GetSeriesRange(HTTPRequest &req) override;
+    void  GetAnalyzer(const json &params, Response &response) override;
+    void  SetAnalyzer(const json &params, Response &response) override;
+    void  GetSeries(const json &params, Response &response) override;
+    void  GetSeriesNow(const json &params, Response &response) override;
+    void  GetSeriesRange(const json &params, Response &response) override;
   private : //Events related API
-    void  GetEvents(HTTPRequest &req) override;
-    void  GetEvent(HTTPRequest &req) override;
-    void  SetEvent(HTTPRequest &req) override;
-    void  DelEvent(HTTPRequest &req) override;
+    void  GetEvents(const json &params, Response &response) override;
+    void  GetEvent(const json &params, Response &response) override;
+    void  SetEvent(const json &params, Response &response) override;
+    void  DelEvent(const json &params, Response &response) override;
   private : //Rates related API
-    void  GetRates(HTTPRequest &req) override;
-    void  GetRate(HTTPRequest &req) override;
-    void  SetRate(HTTPRequest &req) override;
-    void  DelRate(HTTPRequest &req) override;
-    void  AddRate(HTTPRequest &req) override;
-    void  GetPrices(HTTPRequest &req) override;
+    void  GetRates(const json &params, Response &response) override;
+    void  GetRate(const json &params, Response &response) override;
+    void  SetRate(const json &params, Response &response) override;
+    void  DelRate(const json &params, Response &response) override;
+    void  AddRate(const json &params, Response &response) override;
+    void  GetPrices(const json &params, Response &response) override;
   private : //Alarms related API
-    void  TestAlarm(HTTPRequest &req) override;
-    void  GetAlarms(HTTPRequest &req) override;
-    void  GetAlarm(HTTPRequest &req) override;
-    void  SetAlarm(HTTPRequest &req) override;
-    void  AddAlarm(HTTPRequest &req) override;
-    void  DelAlarm(HTTPRequest &req) override;
+    void  TestAlarm(const json &params, Response &response) override;
+    void  GetAlarms(const json &params, Response &response) override;
+    void  GetAlarm(const json &params, Response &response) override;
+    void  SetAlarm(const json &params, Response &response) override;
+    void  AddAlarm(const json &params, Response &response) override;
+    void  DelAlarm(const json &params, Response &response) override;
   public :
     static json CheckConfig(const json &config);
   public :

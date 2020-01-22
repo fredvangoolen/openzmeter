@@ -60,15 +60,17 @@ json Device::GetJSONAllAnalyzerDescriptors() {
   pMembersLock.ReadUnlock();
   return Response;
 }
-void Device::StartDevice(HTTPRequest &req) {
+void Device::StartDevice(const json &params, Response &response) {
   json Response = json::object();
   Response["Status"] = StartDevice();
-  req.FromJSON(Response);
+  response.set_content(Response.dump(), "application/json");
+  response.status = HTTP_OK;
 }
-void Device::StopDevice(HTTPRequest &req) {
+void Device::StopDevice(const json &params, Response &response) {
   json Response = json::object();
   Response["Status"] = StopDevice();
-  req.FromJSON(Response);
+  response.set_content(Response.dump(), "application/json");
+  response.status = HTTP_OK;
 }
 Analyzer *Device::FindAnalyzer(const string &serial) {
   pMembersLock.ReadLock();
@@ -80,228 +82,203 @@ Analyzer *Device::FindAnalyzer(const string &serial) {
   pMembersLock.ReadUnlock();
   return NULL;
 }
-bool Device::GetAnalyzer(HTTPRequest& req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetAnalyzer(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetAnalyzer(req);
+  if(Tmp != NULL) Tmp->GetAnalyzer(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::SetAnalyzer(HTTPRequest& req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::SetAnalyzer(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->SetAnalyzer(req);
+  if(Tmp != NULL) Tmp->SetAnalyzer(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::GetSeries(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetSeries(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetSeries(req);
+  if(Tmp != NULL) Tmp->GetSeries(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::GetSeriesNow(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetSeriesNow(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetSeriesNow(req);
+  if(Tmp != NULL) Tmp->GetSeriesNow(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::GetSeriesRange(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetSeriesRange(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetSeriesRange(req);
+  if(Tmp != NULL) Tmp->GetSeriesRange(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::GetEvents(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetEvents(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetEvents(req);
+  if(Tmp != NULL) Tmp->GetEvents(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::GetEvent(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetEvent(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetEvent(req);
+  if(Tmp != NULL) Tmp->GetEvent(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::SetEvent(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::SetEvent(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->SetEvent(req);
+  if(Tmp != NULL) Tmp->SetEvent(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::DelEvent(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::DelEvent(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->DelEvent(req);
+  if(Tmp != NULL) Tmp->DelEvent(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::GetRates(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetRates(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetRates(req);
+  if(Tmp != NULL) Tmp->GetRates(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::GetRate(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetRate(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetRate(req);
+  if(Tmp != NULL) Tmp->GetRate(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::SetRate(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::SetRate(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->SetRate(req);
+  if(Tmp != NULL) Tmp->SetRate(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::DelRate(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::DelRate(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->DelRate(req);
+  if(Tmp != NULL) Tmp->DelRate(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::AddRate(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::AddRate(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->AddRate(req);
+  if(Tmp != NULL) Tmp->AddRate(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::GetPrices(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetPrices(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetPrices(req);
+  if(Tmp != NULL) Tmp->GetPrices(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::TestAlarm(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::TestAlarm(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->TestAlarm(req);
+  if(Tmp != NULL) Tmp->TestAlarm(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::GetAlarms(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetAlarms(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetAlarms(req);
+  if(Tmp != NULL) Tmp->GetAlarms(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::GetAlarm(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetAlarm(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetAlarm(req);
+  if(Tmp != NULL) Tmp->GetAlarm(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::SetAlarm(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::SetAlarm(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->SetAlarm(req);
+  if(Tmp != NULL) Tmp->SetAlarm(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::AddAlarm(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::AddAlarm(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->AddAlarm(req);
+  if(Tmp != NULL) Tmp->AddAlarm(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::DelAlarm(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::DelAlarm(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->DelAlarm(req);
+  if(Tmp != NULL) Tmp->DelAlarm(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::GetPermissions(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::GetPermissions(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetPermissions(req);
+  if(Tmp != NULL) Tmp->GetPermissions(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::AddPermission(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::AddPermission(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->AddPermission(req);
+  if(Tmp != NULL) Tmp->AddPermission(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::SetPermission(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::SetPermission(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->SetPermission(req);
+  if(Tmp != NULL) Tmp->SetPermission(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }
-bool Device::DelPermission(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
+bool Device::DelPermission(const json &params, Response &response) {
+  string Serial = params["Analyzer"];
   pMembersLock.ReadLock();
   Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->DelPermission(req);
+  if(Tmp != NULL) Tmp->DelPermission(params, response);
   pMembersLock.ReadUnlock();
   return (Tmp != NULL);
 }

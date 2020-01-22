@@ -1,3 +1,18 @@
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #include "Events.h"
 #include "Database.h"
 #include "AnalyzerSoft.h"
@@ -214,7 +229,7 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
                 if(Cycle.RMS[ch] > it->PeakValue[ch]) it->PeakValue[ch] = Cycle.RMS[ch];
               }
             }
-          }          
+          }
           if(it->State == EVT_RUNNING) {
             it->Duration += CycleLen;
             if(it->Type != EVT_RVC) This->pParent->pAggreg10C.Flag = true;
@@ -223,7 +238,7 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
           }
           it++;
         }
-      }      
+      }
       //Insert current cycle samples in prev data buffers and in running events than need its
       for(uint n = 0; n < CycleLen; n++) {
         vector<float> Sample;
@@ -249,7 +264,7 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
           it->SamplesRMS_B.push_back(Cycle.RMS);
           if(it->SamplesRMS_B.size() > RequiredRMS) it->SamplesRMS_B.pop_front();
         }
-      }      
+      }
       Pos = Pos + CycleLen;
       This->pPrevStationary = Stationary;
     }
@@ -257,50 +272,62 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
   }
   return NULL;
 }
-void AnalyzerSoft::Events::GetEvents(HTTPRequest &req) {
-  json Params = req.GetParams();
-  uint64_t To = Params["To"];
-  uint64_t Period = Params["Period"];
-  uint64_t LastSample = Params["LastSample"];
+void AnalyzerSoft::Events::GetEvents(const json &params, Response &response) {
+  uint64_t To = params["To"];
+  uint64_t Period = params["Period"];
+  uint64_t LastSample = params["LastSample"];
   if(To == 0) To = Tools::GetTime();
   uint64_t From = To - Period;
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
-  req.ExecSentenceAsyncResult("SELECT json_build_object('From', " + req.Bind(From) + ", 'To', " + req.Bind(To) + ", 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
+  Database DB(pParent->pSerial);
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('From', " + DB.Bind(From) + ", 'To', " + DB.Bind(To) + ", 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
                               "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
                               "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
-                              "FROM events WHERE starttime > " + req.Bind(LastSample) + " AND starttime >= " + req.Bind(From) + " AND starttime <= " + req.Bind(To));
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
-}
-void AnalyzerSoft::Events::GetEvent(HTTPRequest &req) {
-  json Params = req.GetParams();
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
-  if((Params["Samples"] != "RMS") && (Params["Samples"] != "RAW")) return req.FromString("'Samples' params must be 'RMS' or 'RAW'", MHD_HTTP_BAD_REQUEST);
-  uint64_t ID = Params["StartTime"];
-  string Type = Params["Type"];
-  string Samples = Params["Samples"];
-  if(Samples == "RAW") {
-    req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', samples1, 'Samples', samples2, 'Post_Samples', samples3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+                              "FROM events WHERE starttime > " + DB.Bind(LastSample) + " AND starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
+  if(!DB.FecthRow()) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
   } else {
-    req.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', rms1, 'Samples', rms2, 'Post_Samples', rms3) AS evt FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
+    response.set_content(DB.ResultString("evt"), "application/json");
+    response.status = HTTP_OK;
   }
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("evt"), MHD_HTTP_OK);
 }
-void AnalyzerSoft::Events::SetEvent(HTTPRequest &req) {
-  json Params = req.GetParams();
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
-  uint64_t ID = Params["StartTime"];
-  string Type = Params["Type"];
-  string Notes = Params["Notes"];
-  bool Result = req.ExecSentenceNoResult("UPDATE events SET Notes = " + req.Bind(Notes) + " WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
-  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+void AnalyzerSoft::Events::GetEvent(const json &params, Response &response) {
+  Database DB(pParent->pSerial);
+  if((params["Samples"] != "RMS") && (params["Samples"] != "RAW")) {
+    response.set_content("'Samples' params must be 'RMS' or 'RAW'", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  uint64_t ID = params["StartTime"];
+  string Type = params["Type"];
+  string Samples = params["Samples"];
+  if(Samples == "RAW") {
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', samples1, 'Samples', samples2, 'Post_Samples', samples3) AS evt FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
+  } else {
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', rms1, 'Samples', rms2, 'Post_Samples', rms3) AS evt FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
+  }
+  if(!DB.FecthRow()) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("evt"), "application/json");
+    response.status = HTTP_OK;
+  }
 }
-void AnalyzerSoft::Events::DelEvent(HTTPRequest &req) {
-  json Params = req.GetParams();
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pParent->pSerial));
-  uint64_t ID = Params["StartTime"];
-  string Type = Params["Type"];
-  bool Result = req.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + req.Bind(ID) + " AND evttype = " + req.Bind(Type));
-  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+void AnalyzerSoft::Events::SetEvent(const json &params, Response &response) {
+  Database DB(pParent->pSerial);
+  uint64_t ID    = params["StartTime"];
+  string   Type  = params["Type"];
+  string   Notes = params["Notes"];
+  bool Result = DB.ExecSentenceNoResult("UPDATE events SET Notes = " + DB.Bind(Notes) + " WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
+  response.set_content("", "text/plain");
+  response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
+}
+void AnalyzerSoft::Events::DelEvent(const json &params, Response &response) {
+  Database DB(pParent->pSerial);
+  uint64_t ID = params["StartTime"];
+  string Type = params["Type"];
+  bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
+  response.set_content("", "text/plain");
+  response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
 }
