@@ -17,11 +17,11 @@ class TariffEnergyPlugin;
 class Tariff final {
   friend class TariffList;
   private :
-    static void GetTariffsCallback(HTTPRequest &req);
-    static void GetTariffCallback(HTTPRequest &req);
-    static void SetTariffCallback(HTTPRequest &req);
-    static void DelTariffCallback(HTTPRequest &req);
-    static void AddTariffCallback(HTTPRequest &req);
+    static void GetTariffsCallback(const json &params, Response &response);
+    static void GetTariffCallback(const json &params, Response &response);
+    static void SetTariffCallback(const json &params, Response &response);
+    static void DelTariffCallback(const json &params, Response &response);
+    static void AddTariffCallback(const json &params, Response &response);
   public :
     typedef struct {
       float    Active;
@@ -46,7 +46,7 @@ class Tariff final {
     typedef struct {
       string   Name;
       uint64_t StartDate;
-      uint64_t EndDate;    
+      uint64_t EndDate;
     } Holiday_t;
     typedef struct {
       string  Type;

@@ -1,7 +1,18 @@
-/* ================================== zMeter ===========================================================================
- * File:     CaptureInterface.cpp
- * Author:   Eduardo Viciana (12 de abril de 2017)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
@@ -69,7 +80,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   if(pAlarms != NULL) delete pAlarms;
   if(pEventsDetector != NULL) delete pEventsDetector;
   pMembersLocks.WriteUnlock();
-  pTerminate = true;  
+  pTerminate = true;
   pAnalyzerWorkerLocks.Abort(&pAnalyzerThread);
   if(pDelayCurrent != NULL) free(pDelayCurrent);
   if(pDelayVoltage != NULL) free(pDelayVoltage);
@@ -99,13 +110,13 @@ void AnalyzerSoft::Configure(const json &options) {
   }
   bool RatesEnabled = options["RatesEnabled"];
   if((RatesEnabled == true) && (pRates != NULL)) {
-    delete pRates;  
+    delete pRates;
   } else if((RatesEnabled == true) && (pRates == NULL)) {
     pRates = new AnalyzerSoft::Rates(this);
   }
   bool AlarmsEnabled = options["AlarmsEnabled"];
   if((AlarmsEnabled == true) && (pAlarms != NULL)) {
-    delete pAlarms;  
+    delete pAlarms;
   } else if((AlarmsEnabled == true) && (pAlarms == NULL)) {
     pAlarms = new AnalyzerSoft::Alarms(this, options["Alarms"]);
   }
@@ -584,8 +595,8 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = Alarms::CheckConfig(config["Alarms"]);
   return ConfigOUT;
 }
-void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
   json Response = CheckConfig(ConfigManager::ReadConfig(pConfigPath));
   pMembersLocks.ReadLock();
   Response["Analyzer"] = pSerial;
@@ -594,122 +605,144 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   Response["SampleRate"] = pSamplerate;
   Response.erase("Alarms");
   if(pSync != NULL) Response["RemoteLogged"] = pSync->Logged();
-  req.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + req.Bind(pSerial));
-  if(req.FecthRow()) Response["Size"] = req.ResultUInt64("size");
+  Database DB;
+  DB.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + DB.Bind(pSerial));
+  if(DB.FecthRow()) Response["Size"] = DB.ResultUInt64("size");
   pMembersLocks.ReadUnlock();
-  req.FromJSON(Response);
+  response.set_content(Response.dump(), "application/json");
+  response.status = HTTP_OK;
 }
-void AnalyzerSoft::SetAnalyzer(HTTPRequest &req) {
-  if(CheckRights(req, CONFIG) == false) return;
-  json Config = CheckConfig(req.GetParams());
+void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
+  if(CheckRights(params, response, CONFIG) == false) return;
+  json Config = CheckConfig(params);
   Config.erase("Alarms");
   ConfigManager::WriteConfig(pConfigPath, Config);
   pMembersLocks.WriteLock();
   Configure(ConfigManager::ReadConfig(pConfigPath));
   pMembersLocks.WriteUnlock();
-  req.FromString("", MHD_HTTP_OK);
+  response.set_content("", "text/plain");
+  response.status = HTTP_OK;
 }
-void AnalyzerSoft::GetSeries(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  json Params = req.GetParams();
+void AnalyzerSoft::GetSeries(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
   //Insert defaults
-  uint64_t To = Params["To"];
-  uint64_t Period = Params["Period"];
-  uint64_t LastSample = Params["LastSample"];
+  uint64_t To = params["To"];
+  uint64_t Period = params["Period"];
+  uint64_t LastSample = params["LastSample"];
   if(To == 0) To = Tools::GetTime();
   uint64_t From = To - Period;
   uint32_t PeriodSeconds = 200;
-  string Aggreg = Params["Aggreg"];
+  string Aggreg = params["Aggreg"];
   if(Aggreg == "3S") PeriodSeconds = 3000;
   if(Aggreg == "1M") PeriodSeconds = 60000;
   if(Aggreg == "10M") PeriodSeconds = 600000;
   if(Aggreg == "15M") PeriodSeconds = 900000;
   if(Aggreg == "1H") PeriodSeconds = 3600000;
-  if((Period / PeriodSeconds) > 100000) return req.FromString("Returned period to large for this aggregation level", MHD_HTTP_BAD_REQUEST);
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
-  string Query = "SELECT ROW_TO_JSON(Result) AS result FROM ( SELECT " + req.Bind(From) + " AS " + req.BindID("From") + ", " + req.Bind(To) +" AS " + req.BindID("To") + ", ";
-  Query += req.Bind((To - From) / PeriodSeconds) + " AS " + req.BindID("MaxSamples") + ", " + req.Bind(Aggreg) + " AS " + req.BindID("Aggregation_Source") + ", ";
-  for(uint i = 0; i < Params["Series"].size(); i++) {
-    if(!Params["Series"][i].is_string()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
-    string Serie = Params["Series"][i];
+  if((Period / PeriodSeconds) > 100000) {
+    response.set_content("Returned period to large for this aggregation level", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  Database DB(pSerial);
+//  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial));
+  string Query = "SELECT ROW_TO_JSON(Result) AS result FROM ( SELECT " + DB.Bind(From) + " AS " + DB.BindID("From") + ", " + DB.Bind(To) +" AS " + DB.BindID("To") + ", ";
+  Query += DB.Bind((To - From) / PeriodSeconds) + " AS " + DB.BindID("MaxSamples") + ", " + DB.Bind(Aggreg) + " AS " + DB.BindID("Aggregation_Source") + ", ";
+  for(uint i = 0; i < params["Series"].size(); i++) {
+    if(!params["Series"][i].is_string()) {
+      response.set_content("Series must be an array of valid serie names", "text/plain");
+      response.status = HTTP_BAD_REQUEST;
+      return;
+    }
+    string Serie = params["Series"][i];
     if((Serie == "FREQUENCY") && ((Aggreg == "10C") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
-      Query += "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS " + req.BindID("Frequency") + ", ";
+      Query += "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Frequency") + ", ";
     } else if((Serie == "FLAG") && ((Aggreg == "10C") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
-      Query += "COALESCE(ARRAY_AGG(flag ORDER BY sampletime ASC), '{}') AS " + req.BindID("Flag") + ", ";
+      Query += "COALESCE(ARRAY_AGG(flag ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Flag") + ", ";
     } else if((Serie == "VOLTAGE") && ((Aggreg == "10C") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
-      Query += "COALESCE(ARRAY_AGG(rms_v ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage") + ", ";
-    } else if((Serie == "CURRENT") && ((Aggreg == "10C") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {      
-      Query += "COALESCE(ARRAY_AGG(rms_i ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current") + ", ";
+      Query += "COALESCE(ARRAY_AGG(rms_v ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage") + ", ";
+    } else if((Serie == "CURRENT") && ((Aggreg == "10C") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
+      Query += "COALESCE(ARRAY_AGG(rms_i ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Current") + ", ";
     } else if((Serie == "ACTIVE_POWER") && ((Aggreg == "10C") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {
       if(Aggreg == "1M") {
         vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-        Query += "COALESCE(ARRAY_AGG(COALESCE(active_power, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Active_Power") + ", ";
+        Query += "COALESCE(ARRAY_AGG(COALESCE(active_power, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Active_Power") + ", ";
       } else {
-        Query += "COALESCE(ARRAY_AGG(active_power ORDER BY sampletime ASC), '{}') AS " + req.BindID("Active_Power") + ", ";
+        Query += "COALESCE(ARRAY_AGG(active_power ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Active_Power") + ", ";
       }
-    } else if((Serie == "REACTIVE_POWER") && ((Aggreg == "10C") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {      
+    } else if((Serie == "REACTIVE_POWER") && ((Aggreg == "10C") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {
       if(Aggreg == "1M") {
         vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-        Query += "COALESCE(ARRAY_AGG(COALESCE(reactive_power, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Reactive_Power") + ", ";
+        Query += "COALESCE(ARRAY_AGG(COALESCE(reactive_power, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Reactive_Power") + ", ";
       } else {
-        Query += "COALESCE(ARRAY_AGG(reactive_power ORDER BY sampletime ASC), '{}') AS " + req.BindID("Reactive_Power") + ", ";
+        Query += "COALESCE(ARRAY_AGG(reactive_power ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Reactive_Power") + ", ";
       }
     } else if((Serie == "POWER_FACTOR") && ((Aggreg == "10C") || (Aggreg == "1M"))) {
       vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-      Query += "COALESCE(ARRAY_AGG(COALESCE(power_factor, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Power_Factor") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(power_factor, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Power_Factor") + ", ";
     } else if((Serie == "VOLTAGE_THD") && ((Aggreg == "10C") || (Aggreg == "1M"))) {
       vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-      Query += "COALESCE(ARRAY_AGG(COALESCE(thd_v, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_THD") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(thd_v, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_THD") + ", ";
     } else if((Serie == "CURRENT_THD") && (((Aggreg == "10C") || Aggreg == "1M"))) {
       vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, NAN);
-      Query += "COALESCE(ARRAY_AGG(COALESCE(thd_i, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current_THD") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(thd_i, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Current_THD") + ", ";
     } else if((Serie == "PHI") && ((Aggreg == "10C") || (Aggreg == "1M"))) {
       vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-      Query += "COALESCE(ARRAY_AGG(COALESCE(phi, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Phi") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(phi, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Phi") + ", ";
     } else if((Serie == "VOLTAGE_HARMONICS") && (Aggreg == "1M")) {
       vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
-      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_v, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_v, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_Harmonics") + ", ";
     } else if((Serie == "CURRENT_HARMONICS") && (Aggreg ==  "1M")) {
       vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(50, NAN));
-      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_i, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Current_Harmonics") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_i, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Current_Harmonics") + ", ";
     } else if((Serie == "POWER_HARMONICS") && (Aggreg == "1M")) {
       vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
-      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_p, " + req.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + req.BindID("Power_Harmonics") + ", ";      
-    } else if((Serie == "VOLTAGE_STATS") && (Aggreg ==  "1H")) {   
-      Query += "COALESCE(ARRAY_AGG(stat_voltage ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Stats") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_p, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Power_Harmonics") + ", ";
+    } else if((Serie == "VOLTAGE_STATS") && (Aggreg ==  "1H")) {
+      Query += "COALESCE(ARRAY_AGG(stat_voltage ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_Stats") + ", ";
     } else if((Serie == "FREQUENCY_STATS") && (Aggreg ==  "1H")) {
-      Query += "COALESCE(ARRAY_AGG(stat_frequency ORDER BY sampletime ASC), '{}') AS " + req.BindID("Frequency_Stats") + ", ";
+      Query += "COALESCE(ARRAY_AGG(stat_frequency ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Frequency_Stats") + ", ";
     } else if((Serie == "VOLTAGE_THD_STATS") && (Aggreg ==  "1H")) {
-      Query += "COALESCE(ARRAY_AGG(stat_thd ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_THD_Stats") + ", ";
+      Query += "COALESCE(ARRAY_AGG(stat_thd ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_THD_Stats") + ", ";
     } else if((Serie == "VOLTAGE_HARMONICS_STATS") && (Aggreg ==  "1H")) {
-      Query += "COALESCE(ARRAY_AGG(stat_harmonics ORDER BY sampletime ASC), '{}') AS " + req.BindID("Voltage_Harmonics_Stats") + ", ";
+      Query += "COALESCE(ARRAY_AGG(stat_harmonics ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_Harmonics_Stats") + ", ";
     } else {
-      return req.FromString("Invalid serie in selected aggregation", MHD_HTTP_BAD_REQUEST);
+      response.set_content("Invalid serie in selected aggregation", "text/plain");
+      response.status = HTTP_BAD_REQUEST;
+      return;
     }
   }
-  Query += "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS " + req.BindID("Sampletime") + " FROM ";
-  if(Params["Aggreg"] == "1M") {
+  Query += "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Sampletime") + " FROM ";
+  if(params["Aggreg"] == "1M") {
     Query += "(SELECT * FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m) AS Tmp";
   } else {
     Query += "aggreg_" + Aggreg;
   }
-  Query += " WHERE sampletime > " + req.Bind(LastSample) + " AND sampletime >= " + req.Bind(From) + " AND sampletime <= " + req.Bind(To) + ") AS result";
-  req.ExecSentenceAsyncResult(Query);
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
+  Query += " WHERE sampletime > " + DB.Bind(LastSample) + " AND sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To) + ") AS result";
+  DB.ExecSentenceAsyncResult(Query);
+  if(!DB.FecthRow()) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("Result"), "application/json");
+    response.status = HTTP_OK;
+  }
 }
-void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  json Params = req.GetParams();
-  if(pNowDataLock.ConsumerWait(5000) == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
+  if(pNowDataLock.ConsumerWait(5000) == false) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  }
   json Result = json::object();
   Result["Sampletime"] = pAggreg10C.Timestamp;
-  for(uint i = 0; i < Params["Series"].size(); i++) {
-    if(!Params["Series"][i].is_string()) {
+  for(uint i = 0; i < params["Series"].size(); i++) {
+    if(!params["Series"][i].is_string()) {
       pNowDataLock.ConsumerEnds();
-      return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+      response.set_content("Series must be an array of valid serie names", "text/plain");
+      response.status = HTTP_BAD_REQUEST;
+      return;
     }
-    string Serie = Params["Series"][i];
+    string Serie = params["Series"][i];
     if(Serie == "FREQUENCY") {
       Result["Frequency"] = pAggreg10C.Frequency;
     } else if(Serie == "FLAG") {
@@ -769,7 +802,7 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
       for(uint n = 0; n < pAggreg10C.Power_Harmonics.size(); n++) {
         json Ch = json::array();
         for(uint i = 0; i < pAggreg10C.Power_Harmonics[n].size(); i++) Ch.push_back(pAggreg10C.Power_Harmonics[n][i]);
-        Result["Power_Harmonics"].push_back(Ch);        
+        Result["Power_Harmonics"].push_back(Ch);
       }
     } else if(Serie == "VOLTAGE_FFT") {
       Result["Voltage_FFT"] = json::array();
@@ -793,178 +826,202 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
       Result["Sys_Stats"] = SysSupport::GetSystemStatusJSON();
     } else {
       pNowDataLock.ConsumerEnds();
-      return req.FromString("Unknown serie name", MHD_HTTP_BAD_REQUEST);
+      response.set_content("Unknown serie name", "text/plain");
+      response.status = HTTP_BAD_REQUEST;
+      return;
     }
   }
   pNowDataLock.ConsumerEnds();
-  req.FromJSON(Result);
+  response.set_content(Result.dump(), "application/json");
+  response.status = HTTP_OK;
 }
-void AnalyzerSoft::GetSeriesRange(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  json Params = req.GetParams();
-  string Aggreg = Params["Aggreg"];
-  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(pSerial) + ", 'public'");
-  req.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ");
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("ranges"), MHD_HTTP_OK);
+void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
+  string Aggreg = params["Aggreg"];
+  Database DB;
+  DB.ExecSentenceNoResult("SET search_path TO " + DB.Bind(pSerial) + ", 'public'");
+  DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ");
+  if(!DB.FecthRow()) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("ranges"), "application/json");
+    response.status = HTTP_OK;
+  }
 }
-void AnalyzerSoft::GetEvents(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+void AnalyzerSoft::GetEvents(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
   pMembersLocks.ReadLock();
   if(pEventsDetector != NULL) {
-    pEventsDetector->GetEvents(req);
+    pEventsDetector->GetEvents(params, response);
   } else {
-    req.FromString("Events detection disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Events detection disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::GetEvent(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+void AnalyzerSoft::GetEvent(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
   pMembersLocks.ReadLock();
   if(pEventsDetector != NULL) {
-    pEventsDetector->GetEvent(req);
+    pEventsDetector->GetEvent(params, response);
   } else {
-    req.FromString("Events detection disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Events detection disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::SetEvent(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
+void AnalyzerSoft::SetEvent(const json &params, Response &response) {
+  if(CheckRights(params, response, WRITE | CONFIG) == false) return;
   pMembersLocks.ReadLock();
   if(pEventsDetector != NULL) {
-    pEventsDetector->SetEvent(req);
+    pEventsDetector->SetEvent(params, response);
   } else {
-    req.FromString("Events detection disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Events detection disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::DelEvent(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
+void AnalyzerSoft::DelEvent(const json &params, Response &response) {
+  if(CheckRights(params, response, WRITE | CONFIG) == false) return;
   pMembersLocks.ReadLock();
   if(pEventsDetector != NULL) {
-    pEventsDetector->DelEvent(req);
+    pEventsDetector->DelEvent(params, response);
   } else {
-    req.FromString("Events detection disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Events detection disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::GetRates(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+void AnalyzerSoft::GetRates(const json &params, Response &response) {
+  if(CheckRights(params, response, READ | WRITE | CONFIG) == false) return;
   pMembersLocks.ReadLock();
   if(pRates != NULL) {
-    pRates->GetRates(req);
+    pRates->GetRates(params, response);
   } else {
-    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Rates disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::GetRate(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+void AnalyzerSoft::GetRate(const json &params, Response &response) {
+  if(CheckRights(params, response, READ | WRITE | CONFIG) == false) return;
   pMembersLocks.ReadLock();
   if(pRates != NULL) {
-    pRates->GetRate(req);
+    pRates->GetRate(params, response);
   } else {
-    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Rates disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
-  pMembersLocks.ReadUnlock();  
+  pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::SetRate(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
+void AnalyzerSoft::SetRate(const json &params, Response &response) {
+  if(CheckRights(params, response, WRITE | CONFIG) == false) return;
   pMembersLocks.ReadLock();
   if(pRates != NULL) {
-    pRates->SetRate(req);
+    pRates->SetRate(params, response);
   } else {
-    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Rates disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::DelRate(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
+void AnalyzerSoft::DelRate(const json &params, Response &response) {
+  if(CheckRights(params, response, WRITE | CONFIG) == false) return;
   pMembersLocks.ReadLock();
   if(pRates != NULL) {
-    pRates->DelRate(req);
+    pRates->DelRate(params, response);
   } else {
-    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Rates disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
-  pMembersLocks.ReadUnlock();  
+  pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::AddRate(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
+void AnalyzerSoft::AddRate(const json &params, Response &response) {
+  if(CheckRights(params, response, WRITE | CONFIG) == false) return;
   pMembersLocks.ReadLock();
   if(pRates != NULL) {
-    pRates->AddRate(req);
+    pRates->AddRate(params, response);
   } else {
-    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Rates disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
-  pMembersLocks.ReadUnlock();    
+  pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::GetPrices(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
+void AnalyzerSoft::GetPrices(const json &params, Response &response) {
+  if(CheckRights(params, response, READ | WRITE | CONFIG) == false) return;
   pMembersLocks.ReadLock();
   if(pRates != NULL) {
-    pRates->GetPrices(req);
+    pRates->GetPrices(params, response);
   } else {
-    req.FromString("Rates disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Rates disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::TestAlarm(HTTPRequest &req) {
-  if(CheckRights(req, READ) == false) return;
+void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
   pMembersLocks.ReadLock();
   if(pAlarms != NULL) {
-    pAlarms->TestAlarm(req);
+    pAlarms->TestAlarm(params, response);
   } else {
-    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Alarms disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::GetAlarms(HTTPRequest &req) {
-  if(CheckRights(req, READ) == false) return;
+void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
   pMembersLocks.ReadLock();
   if(pAlarms != NULL) {
-    pAlarms->GetAlarms(req);
+    pAlarms->GetAlarms(params, response);
   } else {
-    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
-  }
-  pMembersLocks.ReadUnlock();  
-}
-void AnalyzerSoft::GetAlarm(HTTPRequest &req) {
-  if(CheckRights(req, READ) == false) return;
-  pMembersLocks.ReadLock();
-  if(pAlarms != NULL) {
-    pAlarms->GetAlarm(req);
-  } else {
-    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Alarms disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::SetAlarm(HTTPRequest &req) {
-  if(CheckRights(req, READ) == false) return;
+void AnalyzerSoft::GetAlarm(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
   pMembersLocks.ReadLock();
   if(pAlarms != NULL) {
-    pAlarms->SetAlarm(req);
+    pAlarms->GetAlarm(params, response);
   } else {
-    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Alarms disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::AddAlarm(HTTPRequest &req) {
-  if(CheckRights(req, READ) == false) return;
+void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
   pMembersLocks.ReadLock();
   if(pAlarms != NULL) {
-    pAlarms->AddAlarm(req);
+    pAlarms->SetAlarm(params, response);
   } else {
-    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Alarms disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }
-void AnalyzerSoft::DelAlarm(HTTPRequest &req) {
-  if(CheckRights(req, READ) == false) return;
+void AnalyzerSoft::AddAlarm(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
   pMembersLocks.ReadLock();
   if(pAlarms != NULL) {
-    pAlarms->DelAlarm(req);
+    pAlarms->AddAlarm(params, response);
   } else {
-    req.FromString("Alarms disabled", MHD_HTTP_SERVICE_UNAVAILABLE);
+    response.set_content("Alarms disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
+  }
+  pMembersLocks.ReadUnlock();
+}
+void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
+  if(CheckRights(params, response, READ) == false) return;
+  pMembersLocks.ReadLock();
+  if(pAlarms != NULL) {
+    pAlarms->DelAlarm(params, response);
+  } else {
+    response.set_content("Alarms disabled", "text/plain");
+    response.status = HTTP_SERVICE_UNAVAILABLE;
   }
   pMembersLocks.ReadUnlock();
 }

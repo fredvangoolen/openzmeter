@@ -57,7 +57,7 @@ bool DeviceV1_01::GetInstances() {
       libusb_close(Dev_Handle);
       continue;
     }
-    if(strcmp(String, DEVICEV1_01_PRODSTRING) != 0) continue;    
+    if(strcmp(String, DEVICEV1_01_PRODSTRING) != 0) continue;
     if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iSerialNumber, (unsigned char*)String, sizeof(String)) < 0) {
       LOGFile::Error("Can not load USB string...\n");
       libusb_close(Dev_Handle);
@@ -85,7 +85,7 @@ json DeviceV1_01::CheckConfig(const json &config) {
     if(config.contains("VoltageOffset") && config["VoltageOffset"].is_number() && (config["VoltageOffset"] >= -20.0) && (config["VoltageOffset"] <= 20.0)) ConfigOUT["VoltageOffset"] = config["VoltageOffset"];
     if(config.contains("CurrentGain") && config["CurrentGain"].is_number() && (config["CurrentGain"] >= -10.0) && (config["CurrentGain"] <= 10.0)) ConfigOUT["CurrentGain"] = config["CurrentGain"];
     if(config.contains("CurrentOffset") && config["CurrentOffset"].is_number() && (config["CurrentOffset"] >= -1.0) && (config["CurrentOffset"] <= 1.0)) ConfigOUT["CurrentOffset"] = config["CurrentOffset"];
-    if(config.contains("CurrentInvert") && config["CurrentInvert"].is_boolean()) ConfigOUT["CurrentInvert"] = config["CurrentInvert"];    
+    if(config.contains("CurrentInvert") && config["CurrentInvert"].is_boolean()) ConfigOUT["CurrentInvert"] = config["CurrentInvert"];
     if(config.contains("AutoStart") && config["AutoStart"].is_boolean()) ConfigOUT["AutoStart"] = config["AutoStart"];
     if(config.contains("Analyzer") && config["Analyzer"].is_object()) ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(config["Analyzer"]);
   }
@@ -219,29 +219,29 @@ void *DeviceV1_01::Capture_Thread(void *args) {
       if(Result < 0) {
         LOGFile::Error("libusb_get_string_descriptor_ascii returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
-        This->pDeviceHandle = NULL; 
+        This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
         continue;
       }
       if(This->pSerial != Serial) {
         libusb_close(This->pDeviceHandle);
-        This->pDeviceHandle = NULL; 
+        This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
         continue;
-      }        
+      }
       Result = libusb_kernel_driver_active(This->pDeviceHandle, 0);
       if(Result < LIBUSB_SUCCESS) {
         LOGFile::Error("libusb_kernel_driver_active returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
-        This->pDeviceHandle = NULL; 
+        This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
         continue;
-      } else if(Result == 1) { 
+      } else if(Result == 1) {
         Result = libusb_detach_kernel_driver(This->pDeviceHandle, 0);
         if(Result < LIBUSB_SUCCESS) {
           LOGFile::Error("libusb_detach_kernel_driver returns %d\n", Result);
           libusb_close(This->pDeviceHandle);
-          This->pDeviceHandle = NULL; 
+          This->pDeviceHandle = NULL;
           This->pNewDevice = NULL;
           continue;
         } else {
@@ -252,7 +252,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
       if(Result != LIBUSB_SUCCESS) {
         LOGFile::Error("libusb_claim_interface returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
-        This->pDeviceHandle = NULL; 
+        This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
         continue;
       } else {
@@ -265,7 +265,7 @@ void *DeviceV1_01::Capture_Thread(void *args) {
       if(Result != LIBUSB_SUCCESS) {
         LOGFile::Error("libusb_submit_transfer returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
-        This->pDeviceHandle = NULL; 
+        This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
         continue;
       }
@@ -296,7 +296,7 @@ void DeviceV1_01::ReadCallback(struct libusb_transfer *transfer) {
       }
     }
   }
-  if(This->pTerminate == false) { 
+  if(This->pTerminate == false) {
     libusb_submit_transfer(transfer);
   } else {
     This->pSubmittedTransfers--;
@@ -308,7 +308,7 @@ int DeviceV1_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *
     This->pNewDevice = dev;
   } else if(event == LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT) {
     if(This->pDeviceHandle != NULL) {
-      libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);	
+      libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);
       if(dev == CurrentDev) {
         LOGFile::Info("DeviceV1.01 with serial '%s' disconnected\n", This->pSerial.c_str());
         libusb_close(This->pDeviceHandle);
@@ -318,7 +318,7 @@ int DeviceV1_01::PlugCallback(struct libusb_context *ctx, struct libusb_device *
   }
   return 0;
 }
-void DeviceV1_01::GetDevice(HTTPRequest &req) {
+void DeviceV1_01::GetDevice(const json &params, Response &response) {
   pMembersLock.ReadLock();
   json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
   Config.erase("Analyzer");
@@ -335,19 +335,20 @@ void DeviceV1_01::GetDevice(HTTPRequest &req) {
   Config["Wave_Average"]["Current"] = Avg.Current / pAverageValues.size();
   pAverageLocks.ReadUnlock();
   pMembersLock.ReadUnlock();
-  req.FromJSON(Config);
+  response.set_content(Config.dump(), "application/json");
+  response.status = HTTP_OK;
 }
-void DeviceV1_01::SetDevice(HTTPRequest &req) {
+void DeviceV1_01::SetDevice(const json &params, Response &response) {
   pMembersLock.ReadLock();
   DeviceState State = pState;
   pMembersLock.ReadUnlock();
   StopDevice();
-  json Params = req.GetParams();
-  json Config = CheckConfig(Params);
+  json Config = CheckConfig(params);
   json Orig = ConfigManager::ReadConfig("/Devices/" + pSerial);
   Config["Analyzer"] = Orig["Analyzer"];
   ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
-  req.FromString("", ((State == RUNNING) ? StartDevice() : true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  response.set_content("", "text/plain");
+  response.status = ((State == RUNNING) ? StartDevice() : true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
 }
 bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
 //  static int File = 0;
@@ -355,7 +356,7 @@ bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
 //  char Tmp[100];
 //  sprintf(Tmp, "%f, %f\n", voltageSample, currentSample);
 //  write(File, Tmp, strlen(Tmp));
-  
+
 //  if(pBuffer.full()) return false;
   Sample_t Sample = { pDelay.front(), currentSample };
   if(pBuffer.size() > (DEVICEV1_01_SAMPLEFREQ * DEVICEV1_01_BUFFERSECONDS)) {
@@ -420,7 +421,7 @@ bool DeviceV1_01::BuffersAppend(float voltageSample, float currentSample) {
     if(Params.Flag == true) {
       Beep = 50;
       if(Toogle == true) Voltage = 0x0000;
-      Toogle = !Toogle;  
+      Toogle = !Toogle;
     }
     uint8_t Write[5] = {(uint8_t)(Current & 0xFF), (uint8_t)(Current >> 8), (uint8_t)(Voltage & 0xFF), (uint8_t)(Voltage >> 8), Beep};
     libusb_control_transfer(This->pDeviceHandle, LIBUSB_ENDPOINT_OUT | LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE, 0xFF, 0x0000, 0x0000, Write, sizeof(Write), 0);

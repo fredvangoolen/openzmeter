@@ -9,10 +9,10 @@ class AnalyzerSoft::Rates final {
   public:
     Rates(AnalyzerSoft *parent);
     ~Rates();
-    void  GetRates(HTTPRequest &req);
-    void  GetRate(HTTPRequest &req);
-    void  SetRate(HTTPRequest &req);
-    void  DelRate(HTTPRequest &req);
-    void  AddRate(HTTPRequest &req);
-    void  GetPrices(HTTPRequest &req);
+    void  GetRates(const json &params, Response &response);
+    void  GetRate(const json &params, Response &response);
+    void  SetRate(const json &params, Response &response);
+    void  DelRate(const json &params, Response &response);
+    void  AddRate(const json &params, Response &response);
+    void  GetPrices(const json &params, Response &response);
 };

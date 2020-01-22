@@ -24,34 +24,34 @@ class Analyzer {
     string      pName;                    //Analyzer description
   protected :
     Analyzer(const string &id);
-    bool CheckRights(HTTPRequest &req, const uint neededAccess);
+    bool CheckRights(const json &params, Response &response, const uint neededAccess);
   public :
-    void GetPermissions(HTTPRequest &req);
-    void AddPermission(HTTPRequest &req);
-    void SetPermission(HTTPRequest &req);
-    void DelPermission(HTTPRequest &req);
+    void GetPermissions(const json &params, Response &response);
+    void AddPermission(const json &params, Response &response);
+    void SetPermission(const json &params, Response &response);
+    void DelPermission(const json &params, Response &response);
   public :
-    virtual void GetAnalyzer(HTTPRequest &req) = 0;
-    virtual void SetAnalyzer(HTTPRequest &req) = 0;
-    virtual void GetSeries(HTTPRequest &req) = 0;
-    virtual void GetSeriesNow(HTTPRequest &req) = 0;
-    virtual void GetSeriesRange(HTTPRequest &req) = 0;
-    virtual void GetEvents(HTTPRequest &req) = 0;
-    virtual void GetEvent(HTTPRequest &req) = 0;
-    virtual void SetEvent(HTTPRequest &req) = 0;
-    virtual void DelEvent(HTTPRequest &req) = 0;
-    virtual void GetRates(HTTPRequest &req) = 0;
-    virtual void GetRate(HTTPRequest &req) = 0;
-    virtual void SetRate(HTTPRequest &req) = 0;
-    virtual void DelRate(HTTPRequest &req) = 0;
-    virtual void AddRate(HTTPRequest &req) = 0;
-    virtual void GetPrices(HTTPRequest &req) = 0;
-    virtual void TestAlarm(HTTPRequest &req) = 0;
-    virtual void GetAlarms(HTTPRequest &req) = 0;
-    virtual void GetAlarm(HTTPRequest &req) = 0;
-    virtual void SetAlarm(HTTPRequest &req) = 0;
-    virtual void AddAlarm(HTTPRequest &req) = 0;
-    virtual void DelAlarm(HTTPRequest &req) = 0;
+    virtual void GetAnalyzer(const json &params, Response &response) = 0;
+    virtual void SetAnalyzer(const json &params, Response &response) = 0;
+    virtual void GetSeries(const json &params, Response &response) = 0;
+    virtual void GetSeriesNow(const json &params, Response &response) = 0;
+    virtual void GetSeriesRange(const json &params, Response &response) = 0;
+    virtual void GetEvents(const json &params, Response &response) = 0;
+    virtual void GetEvent(const json &params, Response &response) = 0;
+    virtual void SetEvent(const json &params, Response &response) = 0;
+    virtual void DelEvent(const json &params, Response &response) = 0;
+    virtual void GetRates(const json &params, Response &response) = 0;
+    virtual void GetRate(const json &params, Response &response) = 0;
+    virtual void SetRate(const json &params, Response &response) = 0;
+    virtual void DelRate(const json &params, Response &response) = 0;
+    virtual void AddRate(const json &params, Response &response) = 0;
+    virtual void GetPrices(const json &params, Response &response) = 0;
+    virtual void TestAlarm(const json &params, Response &response) = 0;
+    virtual void GetAlarms(const json &params, Response &response) = 0;
+    virtual void GetAlarm(const json &params, Response &response) = 0;
+    virtual void SetAlarm(const json &params, Response &response) = 0;
+    virtual void AddAlarm(const json &params, Response &response) = 0;
+    virtual void DelAlarm(const json &params, Response &response) = 0;
   public :
     virtual ~Analyzer();
     string Serial();

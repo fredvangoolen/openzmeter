@@ -24,44 +24,74 @@ RWLocks                        SysSupport::pActionsLock;
   uint64_t                     SysSupport::pLastTask_5S = 0;
 #endif
 //----------------------------------------------------------------------------------------------------------------------
-void SysSupport::GetNewsCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(Params["NewsTime"].is_number()) {
-    uint64_t Time = Params["NewsTime"];
-    req.ExecSentenceAsyncResult("SELECT json_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) as result FROM news WHERE newstime = " + req.Bind(Time));
+void SysSupport::GetNewsCallback(const json &params, Response &response) {
+  Database DB;
+  if(params["NewsTime"].is_number()) {
+    uint64_t Time = params["NewsTime"];
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) as result FROM news WHERE newstime = " + DB.Bind(Time));
   } else {
-    req.ExecSentenceAsyncResult("SELECT json_build_object('Version', '" __BUILD__ "', 'News', COALESCE(array_agg(newstime ORDER BY newstime ASC), '{}')) AS result from news");
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('Version', '" __BUILD__ "', 'News', COALESCE(array_agg(newstime ORDER BY newstime ASC), '{}')) AS result from news");
   }
-  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
+  if(DB.FecthRow() == false) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("result"), "application/json");
+    response.status = HTTP_OK;
+  }
 }
-void SysSupport::GetUsersCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
+void SysSupport::GetUsersCallback(const json &params, Response &response) {
   //only 'admin' user can get this information
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-  req.ExecSentenceAsyncResult("SELECT to_json(array_agg(json_build_object('UserName', username, 'Name', name, 'EMail', email, 'TimeZone', time_zone))) AS result FROM users");
-  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
+  string UserName = params["UserName"];
+  if(UserName != "admin") {
+    response.set_content("", "text/plain");
+    response.status = HTTP_FORBIDDEN;
+    return;
+  }
+  Database DB;
+  DB.ExecSentenceAsyncResult("SELECT to_json(array_agg(json_build_object('UserName', username, 'Name', name, 'EMail', email, 'TimeZone', time_zone))) AS result FROM users");
+  if(DB.FecthRow() == false) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("result"), "application/json");
+    response.status = HTTP_OK;
+  }
 }
-void SysSupport::GetUserCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string UserName = req.UserName();
-  if(Params.contains("UserName") && Params["UserName"].is_string()) UserName = Params["UserName"];
-  if((req.UserName() != "admin") || (req.UserName() != UserName)) return req.FromString("", MHD_HTTP_FORBIDDEN);
-  req.ExecSentenceAsyncResult("SELECT json_build_object('User', username, 'Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'TimeZone', time_zone) AS result FROM users WHERE username = " + req.Bind(UserName));
-  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
+void SysSupport::GetUserCallback(const json &params, Response &response) {
+  string UserName = params["UserName"];
+  string User = params["User"];
+//  if(params.contains("UserName") && params["UserName"].is_string()) UserName = Params["UserName"];
+  Database DB;
+  if((UserName != "admin") || (UserName != User)) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_FORBIDDEN;
+    return;
+  }
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('User', username, 'Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'TimeZone', time_zone) AS result FROM users WHERE username = " + DB.Bind(User));
+  if(DB.FecthRow() == false) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("result"), "application/json");
+    response.status = HTTP_OK;
+  }
 }
-void SysSupport::SetUserCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
+void SysSupport::SetUserCallback(const json &params, Response &response) {
+  Database DB;
   //req.ExecSentenceAsyncResult("UPDATE users SET name = ", 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'Country_Code', country_code) AS result FROM users WHERE username = " + req.Bind(req.UserName()));
-  if(req.FecthRow() == false) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("result"), MHD_HTTP_OK);
+  if(DB.FecthRow() == false) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("result"), "application/json");
+    response.status = HTTP_OK;
+  }
 }
-void SysSupport::AddUserCallback(HTTPRequest &req) {
+void SysSupport::AddUserCallback(const json &params, Response &response) {
 
 }
-void SysSupport::DelUserCallback(HTTPRequest &req) {
+void SysSupport::DelUserCallback(const json &params, Response &response) {
 
 }
 SysSupport::SysSupport() {
@@ -517,7 +547,7 @@ void SysSupport::SetSystemActions(const string &action) {
     pSystemStatus.Lock.WriteUnlock();
     pUpdatesLock.WriteUnlock();
   }
-  void SysSupport::GetUpdatesCallback(HTTPRequest &req) {
+  void SysSupport::GetUpdatesCallback(const json &params, Response &response) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
@@ -535,7 +565,7 @@ void SysSupport::SetSystemActions(const string &action) {
     pUpdatesLock.ReadUnlock();
     req.FromJSON(Response);
   }
-  void SysSupport::UpgradeCallback(HTTPRequest &req) {
+  void SysSupport::UpgradeCallback(const json &params, Response &response) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
@@ -546,7 +576,7 @@ void SysSupport::SetSystemActions(const string &action) {
     PeriodicTask_1H();
     req.FromJSON(Response);
   }
-  void SysSupport::GetBluetoothCallback(HTTPRequest &req) {
+  void SysSupport::GetBluetoothCallback(const json &params, Response &response) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
@@ -556,7 +586,7 @@ void SysSupport::SetSystemActions(const string &action) {
     pthread_mutex_unlock(&pBTMutex);
     req.FromJSON(Config);
   }
-  void SysSupport::SetBluetoothCallback(HTTPRequest &req) {
+  void SysSupport::SetBluetoothCallback(const json &params, Response &response) {
     json Params = req.GetParams();
     //only 'admin' user can get this information
     if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);

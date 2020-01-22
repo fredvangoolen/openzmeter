@@ -99,81 +99,126 @@ bool DeviceManager::AddDevice(Device *dev) {
   pDevicesLock.WriteUnlock();
   return Result;
 }
-void DeviceManager::GetDevicesCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
+void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
   //only 'admin' user can get this information
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
+  string UserName = params["UserName"];
+  if(UserName != "admin") {
+    response.set_content("", "text/plain");
+    response.status = HTTP_FORBIDDEN;
+    return;
+  }
   json Response = json::array();
   pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) Response.push_back(Dev->GetJSONDescriptor());
   pDevicesLock.ReadUnlock();
-  req.FromJSON(Response);
+  response.set_content(Response.dump(), "application/json");
+  response.status = HTTP_OK;
 }
-void DeviceManager::GetDeviceCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
+void DeviceManager::GetDeviceCallback(const json &params, Response &response) {
   //only 'admin' user can get this information
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-  if(Params["Serial"].is_string() == false) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
-  string Serial = Params["Serial"];
-  req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
+  string UserName = params["UserName"];
+  if(UserName != "admin") {
+    response.set_content("", "text/plain");
+    response.status = HTTP_FORBIDDEN;
+    return;
+  }
+  if(!params["Serial"].is_string()) {
+    response.set_content("'Serial' param is requiered", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  string Serial = params["Serial"];
   pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
     if(Dev->Serial() != Serial) continue;
-    Dev->GetDevice(req);
-    break;
+    Dev->GetDevice(params, response);
+    pDevicesLock.ReadUnlock();
+    return;
   }
   pDevicesLock.ReadUnlock();
+  response.set_content("Device not found", "text/plain");
+  response.status = HTTP_BAD_REQUEST;
 }
-void DeviceManager::SetDeviceCallback(HTTPRequest& req) {
-  json Params = req.GetParams();
+void DeviceManager::SetDeviceCallback(const json &params, Response &response) {
   //only 'admin' user can do this action
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-  if(!Params["Serial"].is_string()) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
-  string Serial = Params["Serial"];
-  req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
+  string UserName = params["UserName"];
+  if(UserName != "admin") {
+    response.set_content("", "text/plain");
+    response.status = HTTP_FORBIDDEN;
+    return;
+  }
+  if(!params["Serial"].is_string()) {
+    response.set_content("'Serial' param is requiered", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  string Serial = params["Serial"];
   pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
     if(Dev->Serial() != Serial) continue;
-    Dev->SetDevice(req);
-    break;
+    Dev->SetDevice(params, response);
+    pDevicesLock.ReadUnlock();
+    return;
   }
   pDevicesLock.ReadUnlock();
+  response.set_content("Device not found", "text/plain");
+  response.status = HTTP_BAD_REQUEST;
 }
-void DeviceManager::StartDeviceCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
+void DeviceManager::StartDeviceCallback(const json &params, Response &response) {
   //only 'admin' user can do this action
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-  if(!Params["Serial"].is_string()) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
-  string Serial = Params["Serial"];
-  req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
+  string UserName = params["UserName"];
+  if(UserName != "admin") {
+    response.set_content("", "text/plain");
+    response.status = HTTP_FORBIDDEN;
+    return;
+  }
+  if(!params["Serial"].is_string()) {
+    response.set_content("'Serial' param is requiered", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  string Serial = params["Serial"];
   pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
     if(Dev->Serial() != Serial) continue;
-    Dev->StartDevice(req);
-    break;
+    Dev->StartDevice(params, response);
+    pDevicesLock.ReadUnlock();
+    return;
   }
   pDevicesLock.ReadUnlock();
+  response.set_content("Device not found", "text/plain");
+  response.status = HTTP_BAD_REQUEST;
 }
-void DeviceManager::StopDeviceCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
+void DeviceManager::StopDeviceCallback(const json &params, Response &response) {
   //only 'admin' user can do this action
-  if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-  if(!Params["Serial"].is_string()) return req.FromString("'Serial' param is requiered", MHD_HTTP_BAD_REQUEST);
-  string Serial = Params["Serial"];
-  req.FromString("Device not found", MHD_HTTP_BAD_REQUEST);
+  string UserName = params["UserName"];
+  if(UserName != "admin") {
+    response.set_content("", "text/plain");
+    response.status = HTTP_FORBIDDEN;
+    return;
+  }
+  if(!params["Serial"].is_string()) {
+    response.set_content("'Serial' param is requiered", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  string Serial = params["Serial"];
   pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
     if(Dev->Serial() != Serial) continue;
-    Dev->StopDevice(req);
-    break;
+    Dev->StopDevice(params, response);
+    pDevicesLock.ReadUnlock();
+    return;
   }
   pDevicesLock.ReadUnlock();
+  response.set_content("Device not found", "text/plain");
+  response.status = HTTP_BAD_REQUEST;
 }
-void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
+void DeviceManager::GetAnalyzersCallback(const json &params, Response &response) {
   //All users can do this action, for admin all analyzers are returned, for other users only analyzers with any priviledge are returned
-  json Params = req.GetParams();
   json Response = json::array();
-  if(req.UserName() == "admin") {
+  string UserName = params["UserName"];
+  if(UserName == "admin") {
     pDevicesLock.ReadLock();
     for(Device *Dev : pDevices) {
       json Analyzers = Dev->GetJSONAllAnalyzerDescriptors();
@@ -186,290 +231,336 @@ void DeviceManager::GetAnalyzersCallback(HTTPRequest &req) {
     }
     pDevicesLock.ReadUnlock();
   } else {
-    req.ExecSentenceAsyncResult("SELECT serial, read, write, config FROM permisions WHERE username = " + req.Bind(req.UserName()));
-    while(req.FecthRow()) {
-      string Serial = req.ResultString("serial");
+    Database DB;
+    DB.ExecSentenceAsyncResult("SELECT serial, read, write, config FROM permisions WHERE username = " + DB.Bind(UserName));
+    while(DB.FecthRow()) {
+      string Serial = DB.ResultString("serial");
       pDevicesLock.ReadUnlock();
       for(Device *Dev : pDevices) {
         json Analyzer = Dev->GetJSONAnalyzerDescriptor(Serial);
         if(!Analyzer.is_object()) continue;
-        Analyzer["Read"] = (req.ResultString("read") == "t");
-        Analyzer["Write"] = (req.ResultString("write") == "t");
-        Analyzer["Config"] = (req.ResultString("config") == "t");
+        Analyzer["Read"] = (DB.ResultString("read") == "t");
+        Analyzer["Write"] = (DB.ResultString("write") == "t");
+        Analyzer["Config"] = (DB.ResultString("config") == "t");
         Response.push_back(Analyzer);
         break;
       }
       pDevicesLock.ReadUnlock();
     }
   }
-  req.FromJSON(Response);
+  response.set_content(Response.dump(), "application/json");
+  response.status = HTTP_OK;
 }
-void DeviceManager::GetAnalyzerCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+void DeviceManager::CallDeviceFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response)) {
+  if(!params["Analyzer"].is_string()) {
+    response.set_content("'Analyzer' param is requiered", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  bool Found = false;
   pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
-    if(Dev->GetAnalyzer(req) == true) break;
+    if((Dev->*method)(params, response) == true) {
+      Found = true;
+      break;
+    }
   }
   pDevicesLock.ReadUnlock();
+  if(Found == false) {
+    response.set_content("Analyzer not found", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+  }
 }
-void DeviceManager::SetAnalyzerCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["MaxCurrent"].is_number() || !Params["MinCurrent"].is_number() || !Params["Name"].is_string() || !Params["NominalFreq"].is_number() || !Params["NominalVoltage"].is_number()) return req.FromString("'MaxCurrent', 'MinCurrent', 'Name', 'NominalFreq' and 'NominalVoltage' param is requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->SetAnalyzer(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::GetAnalyzerCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetAnalyzer);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetAnalyzer(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::GetSeriesCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' param are requiered", MHD_HTTP_BAD_REQUEST);
-  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "10C") && (Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '10C', 3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-  if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->GetSeries(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::SetAnalyzerCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::SetAnalyzer);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["MaxCurrent"].is_number() || !Params["MinCurrent"].is_number() || !Params["Name"].is_string() || !Params["NominalFreq"].is_number() || !Params["NominalVoltage"].is_number()) return req.FromString("'MaxCurrent', 'MinCurrent', 'Name', 'NominalFreq' and 'NominalVoltage' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->SetAnalyzer(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::GetSeriesNowCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->GetSeriesNow(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
-
+void DeviceManager::GetSeriesCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetSeries);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' param are requiered", MHD_HTTP_BAD_REQUEST);
+//  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "10C") && (Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '10C', 3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetSeries(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::GetSeriesRangeCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '10C', 3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->GetSeriesRange(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::GetSeriesNowCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetSeriesNow);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetSeriesNow(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::GetEventsCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' params are requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->GetEvents(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::GetSeriesRangeCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetSeriesRange);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '10C', 3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetSeriesRange(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::GetEventCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string() || !Params["Samples"].is_string()) return req.FromString("'Analyzer', 'StartTime', 'Type' and 'Samples' params are requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->GetEvent(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::GetEventsCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetEvents);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetEvents(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::SetEventCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string() || !Params["Notes"].is_string()) return req.FromString("'Analyzer', 'StartTime', 'Type' and 'Notes' params are requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->SetEvent(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::GetEventCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetEvent);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string() || !Params["Samples"].is_string()) return req.FromString("'Analyzer', 'StartTime', 'Type' and 'Samples' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetEvent(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::DelEventCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string()) return req.FromString("'Analyzer', 'StartTime' and 'Type' params are requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->DelEvent(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::SetEventCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::SetEvent);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string() || !Params["Notes"].is_string()) return req.FromString("'Analyzer', 'StartTime', 'Type' and 'Notes' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->SetEvent(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::GetRatesCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->GetRates(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::DelEventCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::DelEvent);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string()) return req.FromString("'Analyzer', 'StartTime' and 'Type' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->DelEvent(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::GetRateCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["RateID"].is_number()) return req.FromString("'RateID' param is requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->GetRate(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::GetRatesCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetRates);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetRates(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::SetRateCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["RateID"].is_number() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["Config"].is_object() || !Params["Template"].is_object()) return req.FromString("'RateID', StartDate', 'EndDate', 'Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->SetRate(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::GetRateCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetRate);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["RateID"].is_number()) return req.FromString("'RateID' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetRate(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::DelRateCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string() || !Params["RateID"].is_number()) return req.FromString("'Analyzer' and 'RateID0 params are requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->DelRate(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::SetRateCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::SetRate);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["RateID"].is_number() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["Config"].is_object() || !Params["Template"].is_object()) return req.FromString("'RateID', StartDate', 'EndDate', 'Config', 'Template' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->SetRate(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::AddRateCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) return req.FromString("'StartDate', 'EndDate' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->AddRate(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::DelRateCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::DelRate);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string() || !Params["RateID"].is_number()) return req.FromString("'Analyzer' and 'RateID0 params are requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->DelRate(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::GetPricesCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  if(!Params["To"].is_number_unsigned() || !Params["Period"].is_number_unsigned() || !Params["LastSample"].is_number_unsigned()) return req.FromString("'To', 'Period' and 'LastSample' must be a numbers", MHD_HTTP_BAD_REQUEST);
-  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->GetPrices(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::AddRateCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::AddRate);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string()) return req.FromString("'StartDate', 'EndDate' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->AddRate(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::TestAlarmCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string() || !Params["Expression"].is_string()) return req.FromString("'Analyzer' and 'Expression' params are requiered", MHD_HTTP_BAD_REQUEST);
-  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->TestAlarm(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::GetPricesCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetPrices);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  if(!Params["To"].is_number_unsigned() || !Params["Period"].is_number_unsigned() || !Params["LastSample"].is_number_unsigned()) return req.FromString("'To', 'Period' and 'LastSample' must be a numbers", MHD_HTTP_BAD_REQUEST);
+//  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetPrices(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::GetAlarmsCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' params are requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->GetAlarms(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::TestAlarmCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::TestAlarm);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string() || !Params["Expression"].is_string()) return req.FromString("'Analyzer' and 'Expression' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->TestAlarm(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::GetAlarmCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned()) return req.FromString("'Analyzer' and 'AlarmID' params are requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->GetAlarm(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::GetAlarmsCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetAlarms);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetAlarms(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::SetAlarmCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned() || !Params["Name"].is_string() || !Params["Priority"].is_number_unsigned() || !Params["Expression"].is_string() || !Params["Aggreg"].is_string() || !Params["Message"].is_string() || !Params["Samples"].is_number_unsigned() || !Params["Window"].is_number_unsigned()) return req.FromString("'Analyzer', 'AlarmID', 'Name', 'Priority', 'Expression', 'Aggreg', 'Message', 'Samples' and 'Window' params are requiered", MHD_HTTP_BAD_REQUEST);
-  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->SetAlarm(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::GetAlarmCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetAlarm);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned()) return req.FromString("'Analyzer' and 'AlarmID' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetAlarm(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::AddAlarmCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string() || !Params["Name"].is_string() || !Params["Priority"].is_number_unsigned() || !Params["Expression"].is_string() || !Params["Aggreg"].is_string() || !Params["Message"].is_string() || !Params["Samples"].is_number_unsigned() || !Params["Window"].is_number_unsigned()) return req.FromString("'Analyzer', 'Name', 'Priority', 'Expression', 'Aggreg', 'Message', 'Samples' and 'Window' params are requiered", MHD_HTTP_BAD_REQUEST);
-  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->AddAlarm(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::SetAlarmCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::SetAlarm);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned() || !Params["Name"].is_string() || !Params["Priority"].is_number_unsigned() || !Params["Expression"].is_string() || !Params["Aggreg"].is_string() || !Params["Message"].is_string() || !Params["Samples"].is_number_unsigned() || !Params["Window"].is_number_unsigned()) return req.FromString("'Analyzer', 'AlarmID', 'Name', 'Priority', 'Expression', 'Aggreg', 'Message', 'Samples' and 'Window' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->SetAlarm(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::DelAlarmCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned()) return req.FromString("'Analyzer' and 'AlarmID' params are requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->DelAlarm(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::AddAlarmCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::AddAlarm);
+//  json Params = req.GetParams();
+//  if(!Params["Analyzer"].is_string() || !Params["Name"].is_string() || !Params["Priority"].is_number_unsigned() || !Params["Expression"].is_string() || !Params["Aggreg"].is_string() || !Params["Message"].is_string() || !Params["Samples"].is_number_unsigned() || !Params["Window"].is_number_unsigned()) return req.FromString("'Analyzer', 'Name', 'Priority', 'Expression', 'Aggreg', 'Message', 'Samples' and 'Window' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->AddAlarm(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::GetPermissionsCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->GetPermissions(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::DelAlarmCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::DelAlarm);
+//  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned()) return req.FromString("'Analyzer' and 'AlarmID' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->DelAlarm(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::AddPermissionCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string() || !Params["User"].is_string() || !Params["Read"].is_boolean() || !Params["Write"].is_boolean() || !Params["Configure"].is_boolean()) return req.FromString("'Analyzer', 'User', 'Read', 'Write' and 'Configure' params are requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->AddPermission(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::GetPermissionsCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetPermissions);
+//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->GetPermissions(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::SetPermissionCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string() || !Params["User"].is_string() || !Params["Read"].is_boolean() || !Params["Write"].is_boolean() || !Params["Configure"].is_boolean()) return req.FromString("'Analyzer', 'User', 'Read', 'Write' and 'Configure' params are requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->SetPermission(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::AddPermissionCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::AddPermission);
+//  if(!Params["Analyzer"].is_string() || !Params["User"].is_string() || !Params["Read"].is_boolean() || !Params["Write"].is_boolean() || !Params["Configure"].is_boolean()) return req.FromString("'Analyzer', 'User', 'Read', 'Write' and 'Configure' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->AddPermission(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }
-void DeviceManager::DelPermissionCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Analyzer"].is_string() || !Params["User"].is_string()) return req.FromString("'Analyzer' and 'User' params are requiered", MHD_HTTP_BAD_REQUEST);
-  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->DelPermission(req) == true) break;
-  }
-  pDevicesLock.ReadUnlock();
+void DeviceManager::SetPermissionCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::SetPermission);
+//  if(!params["Analyzer"].is_string() || !params["User"].is_string() || !params["Read"].is_boolean() || !params["Write"].is_boolean() || !params["Configure"].is_boolean()) return req.FromString("'Analyzer', 'User', 'Read', 'Write' and 'Configure' params are requiered", MHD_HTTP_BAD_REQUEST);
+//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->SetPermission(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
+}
+void DeviceManager::DelPermissionCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::DelPermission);
+//  if(!params["Analyzer"].is_string() || !params["User"].is_string()) {
+//    response.set_content("'Analyzer' and 'User' params are requiered", "text/plain");
+//    response.status = MHD_HTTP_BAD_REQUEST;
+//    return;
+//  }
+//  response.set_content("Analyzer not found", "text/plain");
+//  response.status = MHD_HTTP_BAD_REQUEST;
+//  pDevicesLock.ReadLock();
+//  for(Device *Dev : pDevices) {
+//    if(Dev->DelPermission(req) == true) break;
+//  }
+//  pDevicesLock.ReadUnlock();
 }

@@ -6,7 +6,7 @@
   #include <iwlib.h>
   #include <dbus/dbus.h>
 #else
-  
+
 #endif
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
@@ -15,10 +15,8 @@ class SysSupport {
   public :
     typedef struct {
       RWLocks            Lock;            //Lock before access struct
-      
       bool               Updates;         //System have uninstalled updates
       bool               Events;          //Running events
-      
       uint64_t           UpTime;          //Uptime in seconds
       uint64_t           Swap_Total;      //Total swap memory in bytes
       float              Swap_Usage;      //Swap usage in percentage
@@ -28,15 +26,13 @@ class SysSupport {
       uint64_t           RAM_Total;       //Total RAM memory in bytes
       float              RAM_Usage;       //RAM usage in percentage
       float              Temperature;     //System temperature
-      
       string             WIFI_Network;    //Current WIFI network or empty for non connected
       float              WIFI_Power;      //Current WIFI signal if connected
       string             BT_Network;      //BT network or empty if disabled
       bool               Time_IsSet;      //If system time is set (manualy or with NTP comunication)
-      
       float              Battery_Volt;    //Battery voltage
       float              Battery_Level;   //Battery percentage
-      
+
     } SystemStatus_t;
   private :
     #ifdef OPENWRT
@@ -67,22 +63,22 @@ class SysSupport {
     #endif
   private :
     static bool Register();
-    static void GetNewsCallback(HTTPRequest &req);
-    static void GetUsersCallback(HTTPRequest &req);
-    static void GetUserCallback(HTTPRequest &req);
-    static void SetUserCallback(HTTPRequest &req);
-    static void AddUserCallback(HTTPRequest &req);
-    static void DelUserCallback(HTTPRequest &req);
+    static void GetNewsCallback(const json &params, Response &response);
+    static void GetUsersCallback(const json &params, Response &response);
+    static void GetUserCallback(const json &params, Response &response);
+    static void SetUserCallback(const json &params, Response &response);
+    static void AddUserCallback(const json &params, Response &response);
+    static void DelUserCallback(const json &params, Response &response);
     #ifdef OPENWRT
-      static void     GetBluetoothCallback(HTTPRequest &req);
-      static void     SetBluetoothCallback(HTTPRequest &req);
-      static void     GetWIFICallback(HTTPRequest &req);
-      static void     SetWIFICallback(HTTPRequest &req);
-      static void     ScanWIFICallback(HTTPRequest &req);
-      static void     GetNTPCallback(HTTPRequest &req);
-      static void     SetNTPCallback(HTTPRequest &req);
-      static void     GetUpdatesCallback(HTTPRequest &req);
-      static void     UpgradeCallback(HTTPRequest &req);
+      static void     GetBluetoothCallback(const json &params, Response &response);
+      static void     SetBluetoothCallback(const json &params, Response &response);
+      static void     GetWIFICallback(const json &params, Response &response);
+      static void     SetWIFICallback(const json &params, Response &response);
+      static void     ScanWIFICallback(const json &params, Response &response);
+      static void     GetNTPCallback(const json &params, Response &response);
+      static void     SetNTPCallback(const json &params, Response &response);
+      static void     GetUpdatesCallback(const json &params, Response &response);
+      static void     UpgradeCallback(const json &params, Response &response);
       static string   Run(string command, int *resultCode = NULL);
       static bool     StartBT();
       static bool     StopBT();

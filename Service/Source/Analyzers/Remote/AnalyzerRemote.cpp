@@ -66,7 +66,7 @@ void AnalyzerRemote::GetRemote(HTTPRequest& req) {
     }
   }
 }
-void AnalyzerRemote::SetRemote(HTTPRequest &req) {
+void AnalyzerRemote::SetRemote(const json &params, Response &response) {
   json Params = req.GetParams();
   if(!Params["Code"].is_number() || !Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' and 'Code' param are required", MHD_HTTP_BAD_REQUEST);
   uint64_t Sequence = Params["Sequence"];
@@ -83,7 +83,7 @@ void AnalyzerRemote::SetRemote(HTTPRequest &req) {
   }
   pMembersLocks.WriteUnlock();
 }
-void AnalyzerRemote::HandleRequest(string url, HTTPRequest &req) {
+void AnalyzerRemote::HandleRequest(string url, const json &params, Response &response) {
   Query_t Query;
   Query.Sequence = 0;
   Query.Method = url;
@@ -101,87 +101,87 @@ void AnalyzerRemote::HandleRequest(string url, HTTPRequest &req) {
   }
   pMembersLocks.WriteUnlock();
 }
-void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;  
+void AnalyzerRemote::GetAnalyzer(const json &params, Response &response) {
+  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getAnalyzer", req);
 }
-void AnalyzerRemote::SetAnalyzer(HTTPRequest &req) {
+void AnalyzerRemote::SetAnalyzer(const json &params, Response &response) {
   if(CheckRights(req, CONFIG) == false) return;
   HandleRequest("setAnalyzer", req);
 }
-void AnalyzerRemote::GetSeries(HTTPRequest &req) {
+void AnalyzerRemote::GetSeries(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getSeries", req);
 }
-void AnalyzerRemote::GetSeriesNow(HTTPRequest &req) {
+void AnalyzerRemote::GetSeriesNow(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getSeriesNow", req);
 }
-void AnalyzerRemote::GetSeriesRange(HTTPRequest &req) {
+void AnalyzerRemote::GetSeriesRange(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getSeriesRange", req);
 }
-void AnalyzerRemote::GetEvents(HTTPRequest &req) {
+void AnalyzerRemote::GetEvents(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getEvents", req);
 }
-void AnalyzerRemote::GetEvent(HTTPRequest &req) {
+void AnalyzerRemote::GetEvent(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getEvent", req);
 }
-void AnalyzerRemote::SetEvent(HTTPRequest &req) {
+void AnalyzerRemote::SetEvent(const json &params, Response &response) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
   HandleRequest("setEvent", req);
 }
-void AnalyzerRemote::DelEvent(HTTPRequest &req) {
+void AnalyzerRemote::DelEvent(const json &params, Response &response) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
   HandleRequest("delEvent", req);
 }
-void AnalyzerRemote::GetRates(HTTPRequest &req) {
+void AnalyzerRemote::GetRates(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getRates", req);
 }
-void AnalyzerRemote::GetRate(HTTPRequest &req) {
+void AnalyzerRemote::GetRate(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getRate", req);
 }
-void AnalyzerRemote::SetRate(HTTPRequest &req) {
+void AnalyzerRemote::SetRate(const json &params, Response &response) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
   HandleRequest("setRate", req);
 }
-void AnalyzerRemote::DelRate(HTTPRequest &req) {
+void AnalyzerRemote::DelRate(const json &params, Response &response) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
   HandleRequest("delRate", req);
 }
-void AnalyzerRemote::AddRate(HTTPRequest &req) {
+void AnalyzerRemote::AddRate(const json &params, Response &response) {
   if(CheckRights(req, WRITE | CONFIG) == false) return;
   HandleRequest("addRate", req);
 }
-void AnalyzerRemote::GetPrices(HTTPRequest &req) {
+void AnalyzerRemote::GetPrices(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getPrices", req);
 }
-void AnalyzerRemote::TestAlarm(HTTPRequest &req) {
+void AnalyzerRemote::TestAlarm(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("testAlarm", req);
 }
-void AnalyzerRemote::GetAlarms(HTTPRequest &req) {
+void AnalyzerRemote::GetAlarms(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getAlarms", req);
 }
-void AnalyzerRemote::GetAlarm(HTTPRequest &req) {
+void AnalyzerRemote::GetAlarm(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("getAlarm", req);
 }
-void AnalyzerRemote::SetAlarm(HTTPRequest &req) {
+void AnalyzerRemote::SetAlarm(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("setAlarm", req);
 }
-void AnalyzerRemote::AddAlarm(HTTPRequest &req) {
+void AnalyzerRemote::AddAlarm(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("addAlarm", req);
 }
-void AnalyzerRemote::DelAlarm(HTTPRequest &req) {
+void AnalyzerRemote::DelAlarm(const json &params, Response &response) {
   if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
   HandleRequest("delAlarm", req);
 }
@@ -193,7 +193,7 @@ void AnalyzerRemote::DelAlarm(HTTPRequest &req) {
   //Si ha cambiado el modo tengo que asegurarme que las muestras que hay son coherentes, si no la web fallara!
 //}
 //void AnalyzerRemote::GetParams(Params_t &params, bool frequency, bool flag, bool rms_v, bool rms_i, bool active_power, bool reactive_power, bool active_energy,
-//                                     bool reactive_energy, bool apparent_power, bool power_factor, bool thd_v, bool thd_i, bool phi, bool voltage_harmonics, 
+//                                     bool reactive_energy, bool apparent_power, bool power_factor, bool thd_v, bool thd_i, bool phi, bool voltage_harmonics,
 //                                     bool current_harmonics, bool fft_v, bool fft_i, bool voltage, bool current) {
 //
 //}
@@ -205,9 +205,9 @@ void AnalyzerRemote::DelAlarm(HTTPRequest &req) {
 //    Params_t Params;
 //    if(strcmp("aggreg_3s", Table) == 0) Params.Type = AGGREG_3S;
 //    if(Tools::JSONUInt64(json, "sampletime", &Params.Timestamp) == false) return false;                                                 //sampletime
-//    if(Tools::JSONArrayFloat(json, "rms_v", &Params.RMS_V[0], (pMode == PHASE1) ? 1 : 3) == false) return false;                            //rms_v 
-//    if(Tools::JSONArrayFloat(json, "rms_i", &Params.RMS_I[0], (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4) == false) return false;    //rms_i 
-//    if(Tools::JSONArrayFloat(json, "active_power", &Params.Active_Power[0], (pMode == PHASE1) ? 1 : 3) == false) return false;              //active_power 
+//    if(Tools::JSONArrayFloat(json, "rms_v", &Params.RMS_V[0], (pMode == PHASE1) ? 1 : 3) == false) return false;                            //rms_v
+//    if(Tools::JSONArrayFloat(json, "rms_i", &Params.RMS_I[0], (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4) == false) return false;    //rms_i
+//    if(Tools::JSONArrayFloat(json, "active_power", &Params.Active_Power[0], (pMode == PHASE1) ? 1 : 3) == false) return false;              //active_power
 //    if(Tools::JSONArrayFloat(json, "active_energy", &Params.Active_Energy[0], (pMode == PHASE1) ? 1 : 3) == false) return false;            //active_energy
 //  BindArrayFloat(params->Reactive_Power, (pMode == PHASE1) ? 1 : 3);                                         //reactive_power
 //  BindArrayFloat(params->Reactive_Energy, (pMode == PHASE1) ? 1 : 3);                                        //reactive_energy
@@ -238,9 +238,9 @@ void AnalyzerRemote::DelAlarm(HTTPRequest &req) {
 //    ExecSentence();
 //  }
 
-    
-    
-//    
+
+
+//
 //    db->PrepareSentence("INSERT INTO aggreg_3s SELECT * from json_populate_record(null::\"aggreg_3s\", ?)");
 //    db->BindSingleString(json_object_to_json_string(reader));
 //    if(db->ExecSentence() == false) {
@@ -255,10 +255,10 @@ void AnalyzerRemote::DelAlarm(HTTPRequest &req) {
 //    }
 //    SaveAggreg(Params);
 //    LOGFile::Debug("Storing 3S aggregation\n");
-//  } 
-  
-  
-  
+//  }
+
+
+
 
 //  char *Table = NULL;
 //  if((json_object_object_get_ex(json, "Table", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Table = (char*)json_object_get_string(Find);
@@ -269,29 +269,29 @@ void AnalyzerRemote::DelAlarm(HTTPRequest &req) {
 //    db->PrepareSentence("INSERT INTO SELECT * from json_populate_record(null::\"aggreg_3s\", ?)");
 //    db->BindSingleString(json_object_to_json_string(json));
 //    return db->ExecSentence();
-//  }  
-  
-//  
+//  }
+
+//
 //  if((json_object_object_get_ex(config, "aggreg", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
 //    if(ReadJSONFloatArray(Find, pVoltageGain, 3) == false) {
 //      LOGFile::Error("CaptureV2: Voltage gain must have 3 double values\n");
 //      return;
 //    }
 //  }
-//  
+//
 //    if(json_object_array_length(object) != len) return false;
 //  for(int i = 0; i < len; i++) {
 //    if(json_object_get_type(json_object_array_get_idx(object, i)) != json_type_double) return false;
 //    dst[i] = json_object_get_double(json_object_array_get_idx(object, i));
 //  }
 //  return true;
-//  
-//  
-//  
-//  
-//  
-//  
-//  
+//
+//
+//
+//
+//
+//
+//
 //        AggregType Type;                          //Tipo de agregacion
 //      uint64_t   Timestamp;                     //Timestamp de la muestra inicial
 //      uint32_t   Samples;                       //Muestras que han formado esta agregacion
@@ -311,7 +311,7 @@ void AnalyzerRemote::DelAlarm(HTTPRequest &req) {
 //      float      CurrentHarmonics[4][50];       //Armonicos del canal de corriente
 //      float      Phi[3];                        //Angulo de Phi
 //    } Params_t;
-  
+
 //  return true;
 //
 //}

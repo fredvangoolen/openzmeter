@@ -70,8 +70,10 @@ int main(int argc, char** argv) {
   /* Create database tables */
   LOGFile::Debug("Creating database tables\n");
   Database::EnablePool();
-  Database DB("public");
-  if(DB.ExecResource("SQL/Database.sql") == false) LOGFile::Error("Database is damaged, manual repair is nedded\n");
+  {
+    Database DB("public");
+    if(DB.ExecResource("SQL/Database.sql") == false) LOGFile::Error("Database is damaged, manual repair is nedded\n");
+  }
   /* Create system manager */
   SysSupport SystemManager;
   /* Create devices interface */
@@ -79,11 +81,11 @@ int main(int argc, char** argv) {
   /* Create WEB service */
   HTTPServer HTTPServer;
 
-  LOGFile::Error("INICIADOOO-------------------\n");
+//  LOGFile::Error("INICIADOOO-------------------\n");
   uint32_t Iter = 0;
   while(!Terminate) {
     SysSupport::PeriodicTask();
-    if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions(DB);
+    if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
     if((Iter % 600) == 0) Database::RemoveExpiredSessions();
     Iter++;
     usleep(1000000);

@@ -1,14 +1,24 @@
-/* ================================== zMeter ===========================================================================
- * File:     FFT.cpp
- * Author:   Eduardo Viciana (30 de mayo de 2018)
- * ------------------------------------------------------------------------------------------------------------------ */
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
+#include "FFT.h"
 #include <fftw3.h>
 #include <sys/types.h>
-#include "FFT.h"
 #include <errno.h>
 #include <string.h>
 #include <math.h>
-#include <zlib.h>
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t AnalyzerSoft::FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -55,13 +65,13 @@ void AnalyzerSoft::FFT::Wait() {
 }
 float AnalyzerSoft::FFT::CalcAngle(const complex<float> &a, const complex<float> &b) {
   float Tmp;
-  if((a.real() == 0) && (a.imag() == 0)) 
+  if((a.real() == 0) && (a.imag() == 0))
     Tmp = 0;
   else if(a.real() < 0)
     Tmp = atan(a.imag() / a.real());
   else
     Tmp = atan(a.imag() / a.real()) + M_PI;
-  if((b.real() == 0) && (b.imag() == 0)) 
+  if((b.real() == 0) && (b.imag() == 0))
     Tmp = Tmp;
   else if(b.real() < 0)
     Tmp = Tmp - atan(b.imag() / b.real());
