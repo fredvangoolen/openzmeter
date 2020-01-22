@@ -60,7 +60,7 @@
     },
     watch: {
       analyzer: function() { this.UpdateNowValues(); this.UpdateGraphValues(); },
-      Aggreg: function() {  this.UpdateGraphValues(); },
+      Aggreg: function(val, prev) { if(prev != null) this.UpdateGraphValues(); },
       Range: function() { this.UpdateGraphValues(); }
     },
     computed: {
