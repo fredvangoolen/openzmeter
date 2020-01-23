@@ -15,9 +15,10 @@ class DeviceManager final {
     static vector<Device*>  pDevices;         //Initiated by devices, cleared on destroy
     static RWLocks          pDevicesLock;     //Control access to critical sections
   public :
-    static bool AddDevice(Device *dev);
+    static void AddDevice(Device *dev);
   private :
-    static void CallDeviceFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response));
+    static void CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response));
+    static void CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response));
     static void GetDevicesCallback(const json &params, Response &response);
     static void GetDeviceCallback(const json &params, Response &response);
     static void SetDeviceCallback(const json &params, Response &response);

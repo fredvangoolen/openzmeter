@@ -19,8 +19,10 @@ const openZmeter = {
       if(options != null) {
         if((UpperRange == -Infinity) && (options.defMax != null)) UpperRange = options.defMax;
         if((LowerRange == Infinity) && (options.defMin != null)) LowerRange = options.defMin;
-
-
+        if((UpperRange > 0) && (options.upperPercent != null)) UpperRange = UpperRange * (1.0 + options.upperPercent);
+        if((LowerRange < 0) && (options.lowerPercent != null)) LowerRange = LowerRange * (1.0 + options.lowerPercent);
+        if((UpperRange > 0) && (options.minUpperWidth != null)) UpperRange = Math.max(UpperRange, options.minUpperWidth);
+        if((LowerRange < 0) && (options.minLowerWidth != null)) LowerRange = Math.min(LowerRange, options.minLowerWidth);
       }
       return [LowerRange, UpperRange];
     },

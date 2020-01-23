@@ -55,12 +55,11 @@
   import Variables from './Variables.vue';
   import moment from 'moment';
   import 'JS/dygraph-synchronizer.js';
-  import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
     props: { analyzer: { type: Object } },
     data () {
-      return { Aggreg: null, Range: null, ShowSpinner: false, Height: 300,
+      return { Aggreg: null, Range: null, ShowSpinner: false, Height: 200,
                DataNow: null, ControlNow: null, Data3S: null, Control3S: null, Data1M: null, Control1M: null, DataGraph: null, ControlGraph: null };
     },
     watch: {
@@ -133,7 +132,6 @@
       UpdateGraphValues: function() {
         this.ControlGraph = this.CancelTransfer(this.ControlGraph);
         if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
-        console.log("Pidiendo precios");
         this.ControlGraph.CancelFunc = this.analyzer.GetPricesRange(this.Aggreg, this.Range, this.DataGraph,
           (working) => { this.ShowSpinner = working; },
           (result) => { this.DataGraph = Object.freeze(result); },

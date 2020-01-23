@@ -12,7 +12,6 @@ class DeviceVirtual final : public Device {
   private :
     static bool                     pRegistered;
   private :
-//    pthread_mutex_t                 pMutex;
     pthread_t                       pThread;
     bool                            pTerminate;
     Analyzer::AnalyzerMode          pMode;

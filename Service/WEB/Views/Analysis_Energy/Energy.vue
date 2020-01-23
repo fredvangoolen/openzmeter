@@ -16,7 +16,7 @@
     },
     computed: {
       GraphOptions: function() {
-        var Opt = {};
+        var Opt = { file: [], axes: { y: {}, x: {} } };
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -32,7 +32,6 @@
         Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
         Opt.labels = (this.serie == 'ACTIVE_ENERGY') ? ['Time', 'Active Energy'] : ['Time', 'Reactive Energy'];
         Opt.colors = [oZm.Series[this.serie].Color];
-        Opt.axes = { y: {}, x: {} };
         Opt.axes.x.axisLabelFormatter = (x) => { return moment(x).tz(this.analyzer.TimeZone).format('DD/MM/YYYY [<br/>] HH:mm:ss'); };
         Opt.axes.x.valueFormatter = (x) => { return moment(x).tz(this.analyzer.TimeZone).format('DD/MM/YYYY - HH:mm:ss'); };
         Opt.axes.y.pixelsPerLabel = 15;
@@ -44,12 +43,9 @@
           Opt.axes.y.valueFormatter = (x) => {  var Result = oZm.Series['REACTIVE_ENERGY'].FormatValue(x); return Result.Value + ' ' + Result.Units; };
           Opt.axes.y.axisLabelFormatter = (x) => { var Result = oZm.Series['REACTIVE_ENERGY'].FormatValue(x); return Result.Value;  };
         }
-        Opt.file = [];
         if(this.data != null) {
           var Divisor = (this.data.Aggregation_Source == '15M') ? 4 : 1;
           for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data[(this.serie == 'ACTIVE_ENERGY') ? 'Active_Power' : 'Reactive_Power'][n] / Divisor]);
-        } else {
-          Opt.file.push([0, 0]);
         }
         return Opt;
       }

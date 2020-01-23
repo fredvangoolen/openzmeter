@@ -39,7 +39,7 @@ AnalyzerSoft::Events::~Events() {
   pWorkerLocks.Abort(&pEventThread);
 }
 void AnalyzerSoft::Events::SaveEvent(Event_t &evt) {
-  Database DB(pParent->Serial());
+  Database DB(pParent->Serial);
   string Type = (evt.Type == EVT_RVC) ? "RVC" : (evt.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (evt.Type == EVT_DIP) ? "DIP" : "SWELL";
   vector<vector<float> > RMS = vector<vector< float> >(evt.Reference.size(), vector<float>());
   vector<vector<float> > RAW = vector<vector< float> >(evt.Reference.size(), vector<float>());
@@ -91,7 +91,7 @@ void AnalyzerSoft::Events::InitEvent(const EventType type, const vector<float> &
   if(type != EVT_RVC) {
     for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); ) {
       if((it->Type == EVT_RVC) && (it->State == EVT_RUNNING)) {
-        Database DB(pParent->Serial());
+        Database DB(pParent->Serial);
         DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(it->Start) + " AND evttype = 'RVC'");
         pEvents.erase(it++);
       } else {
@@ -278,7 +278,7 @@ void AnalyzerSoft::Events::GetEvents(const json &params, Response &response) {
   uint64_t LastSample = params["LastSample"];
   if(To == 0) To = Tools::GetTime();
   uint64_t From = To - Period;
-  Database DB(pParent->pSerial);
+  Database DB(pParent->Serial);
   DB.ExecSentenceAsyncResult("SELECT json_build_object('From', " + DB.Bind(From) + ", 'To', " + DB.Bind(To) + ", 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
                               "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
                               "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
@@ -292,7 +292,7 @@ void AnalyzerSoft::Events::GetEvents(const json &params, Response &response) {
   }
 }
 void AnalyzerSoft::Events::GetEvent(const json &params, Response &response) {
-  Database DB(pParent->pSerial);
+  Database DB(pParent->Serial);
   if((params["Samples"] != "RMS") && (params["Samples"] != "RAW")) {
     response.set_content("'Samples' params must be 'RMS' or 'RAW'", "text/plain");
     response.status = HTTP_BAD_REQUEST;
@@ -315,7 +315,7 @@ void AnalyzerSoft::Events::GetEvent(const json &params, Response &response) {
   }
 }
 void AnalyzerSoft::Events::SetEvent(const json &params, Response &response) {
-  Database DB(pParent->pSerial);
+  Database DB(pParent->Serial);
   uint64_t ID    = params["StartTime"];
   string   Type  = params["Type"];
   string   Notes = params["Notes"];
@@ -324,7 +324,7 @@ void AnalyzerSoft::Events::SetEvent(const json &params, Response &response) {
   response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
 }
 void AnalyzerSoft::Events::DelEvent(const json &params, Response &response) {
-  Database DB(pParent->pSerial);
+  Database DB(pParent->Serial);
   uint64_t ID = params["StartTime"];
   string Type = params["Type"];
   bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));

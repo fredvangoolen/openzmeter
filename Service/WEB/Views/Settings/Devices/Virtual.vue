@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
+    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="error!=''">{{ error }}</div>
     <div class="row">
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Start on boot</label>
@@ -41,10 +41,9 @@
   import InputSpin from 'Components/InputSpin.vue';
   import Toggle from 'Components/Toggle.vue';
   export default {
-    props: { value: { type: Object, default: {}} },
+    props: { value: Object, error: String },
     data() {
-      return { Error: '' };
-    },
-    components: { Toggle, OptionPicker, InputSpin }
+      return { };
+    }
   }
 </script>

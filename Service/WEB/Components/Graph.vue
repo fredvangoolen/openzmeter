@@ -337,7 +337,7 @@
       });
     },
     beforeDestroy: function() {
-      if(this.Graph == null) this.Graph.destroy();
+      if(this.Graph != null) this.Graph.destroy();
     }
   }
 

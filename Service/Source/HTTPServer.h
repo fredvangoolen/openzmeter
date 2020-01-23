@@ -28,6 +28,9 @@ class HTTPCallback {
     Func_t  Function;
   public :
     HTTPCallback(const string &handle, Func_t function);
+  public :
+    static void FillResponse(Response &response, const string &body, const char *mime, const int status);
+    static void FillResponse(Response &response, const char *body, const size_t size, const char *mime, const int status);
 };
 //----------------------------------------------------------------------------------------------------------------------
 class URL {
@@ -54,7 +57,6 @@ class HTTPServer final {
     static void *Listen_Thread(void *params);
     static void  HandleGet(const Request &request, Response &response);
     static void  HandlePost(const Request &request, Response &response);
-    static void  GetFunctionsCallback(const json &params, Response &response);
   public :
     static void RegisterCallback(const string &handleName, const HTTPCallback::Func_t function);
     static void UnregisterCallback(const string &handleName);

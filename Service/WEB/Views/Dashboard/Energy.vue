@@ -9,9 +9,9 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: Object, height: { type: Number } },
+    props: { analyzer: Object, height: Number, data: Object },
     data() {
-      return { ShowSpinner: true, CountersAggregation: 'Loading data...' };
+      return { ShowSpinner: true };
     },
     computed: {
       GraphOptions: function() {
@@ -28,18 +28,19 @@
         Opt.colors = [oZm.Series['ACTIVE_ENERGY'].Color];
         Opt.xAxisHeight = 24;
         Opt.legendFormatter = Graph.LegendFormatter_Follow;
-        //underlayCallback: this.DrawPeriods,
+        underlayCallback: this.DrawPeriods,
         Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
-        Opt.axes.y.valueFormatter = function (x) { var Result = oZm.Series['ACTIVE_ENERGY'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
-        Opt.axes.y.axisLabelFormatter = function (x) {
-                 if(this.axes_[0].valueRange === undefined) return "";
-                 var Units = oZm.GetBestUnits(Math.max(Math.abs(this.axes_[0].valueRange[0]), Math.abs(this.axes_[0].valueRange[1])));
-                 return oZm.Round2(oZm.ScaleToUnits(x, Units)); }
+        Opt.axes.y.valueFormatter = (x) => { var Units = this.BestUnits(x); return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + Units + 'Wh'; },
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return (g.axes_[0].valueRange == null) ? '' : this.Round(this.ScaleUnits(x, this.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), 2, true); }
         Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
-
+        if(this.data != null) {
+          var Divisor = (this.data.Aggregation_Source == '15M') ? 4 : 1;
+          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data.Active_Power[n] / Divisor]);
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, upperPercent: 0.1, lowerPercent: 0.1, minUpperWidth: 10, minLowerWidth: 10 });
+        }
         return Opt;
       }
     },
@@ -50,24 +51,11 @@
       this.Graph = null;
       this.Data = [];
     },
-    mounted: function() {
-      $(window).bind('resize', this.ResizeHandler.bind(this));
-      window.dispatchEvent(new Event('resize'));
-    },
+//    mounted: function() {
+//      $(window).bind('resize', this.ResizeHandler.bind(this));
+//      window.dispatchEvent(new Event('resize'));
+//    },
     methods: {
-      AggregationChanged: function(aggreg) {
-        this.$refs.period.SetAggregation(aggreg);
-      },
-      ResizeHandler: function() {
-        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', $(this.$refs.counters).height());
-      },
-      MaximizeClick: function() {
-        $(window).unbind('resize', this.ResizeHandler);
-        this.$refs.tools.Maximize('Energy consumption', this.$refs.graph.Graph, this.$refs.Toolbar);
-      },
-      MinimizeClick: function() {
-        $(window).bind('resize', this.ResizeHandler.bind(this));
-      },
       ExportClick: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;

@@ -18,18 +18,13 @@ class Analyzer {
     enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
     enum AnalyzerRights { READ, WRITE, CONFIG };
   protected :
-    RWLocks     pMembersLocks;            //Locks for configurations
-    uint64_t    pLastSave;                //Timestamp of last save or communication
-    string      pSerial;                  //Serial number
-    string      pName;                    //Analyzer description
+    RWLocks      pMembersLocks;            //Locks for configurations
+    uint64_t     pLastSave;                //Timestamp of last save or communication
+    string       pName;                    //Analyzer description
+  public :
+    const string Serial;                   //Serial number
   protected :
     Analyzer(const string &id);
-    bool CheckRights(const json &params, Response &response, const uint neededAccess);
-  public :
-    void GetPermissions(const json &params, Response &response);
-    void AddPermission(const json &params, Response &response);
-    void SetPermission(const json &params, Response &response);
-    void DelPermission(const json &params, Response &response);
   public :
     virtual void GetAnalyzer(const json &params, Response &response) = 0;
     virtual void SetAnalyzer(const json &params, Response &response) = 0;
@@ -54,6 +49,10 @@ class Analyzer {
     virtual void DelAlarm(const json &params, Response &response) = 0;
   public :
     virtual ~Analyzer();
-    string Serial();
-    json   GetJSONShortDescriptor();
+    json     GetJSONDescriptor();
+    bool     CheckRights(const string &user, const AnalyzerRights neededAccess);
+    void     GetPermissions(const json &params, Response &response);
+    void     AddPermission(const json &params, Response &response);
+    void     SetPermission(const json &params, Response &response);
+    void     DelPermission(const json &params, Response &response);
 };

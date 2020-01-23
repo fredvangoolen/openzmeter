@@ -152,7 +152,7 @@ void AnalyzerSoft::Alarms::TestAlarm(const json &params, Response &response) {
   Result["Variables"].push_back(NominalFreq);
   string   Aggreg     = params["Aggreg"];
   string   Expression = params["Expression"];
-  Database DB(pParent->pSerial);
+  Database DB(pParent->Serial);
   if(Aggreg == "3S") {
     DB.ExecSentenceAsyncResult("SELECT json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag, 'Active_Power', active_power, 'Reactive_Power', reactive_power) as result FROM aggreg_3s ORDER BY sampletime DESC LIMIT 1");
     Result["Aggregation_Source"] = "3S";
