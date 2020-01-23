@@ -25,24 +25,24 @@ import ButtonPause from 'Components/ButtonPause.vue';
 Vue.component('ButtonPause', ButtonPause);
 import ColorBar from 'Components/ColorBar.vue';
 Vue.component('ColorBar', ColorBar);
-import Spinner from 'Components/Spinner.vue';
-
 import Cubism from 'Components/Cubism.vue';
 Vue.component('Cubism', Cubism);
-
-Vue.component('Spinner', Spinner);
 import Dlg from 'Components/Dialog.vue';
 Vue.component('Dlg', Dlg);
 import DlgFs from 'Components/DialogFullscreen.vue';
 Vue.component('DlgFs', DlgFs);
 import Graph from 'Components/Graph.vue';
 Vue.component('Graph', Graph);
+import InputSpin from 'Components/InputSpin.vue';
+Vue.component('InputSpin', InputSpin);
+
 import OptionPicker from 'Components/OptionPicker.vue';
 Vue.component('OptionPicker', OptionPicker);
 import ProgressBar from 'Components/ProgressBar.vue';
 Vue.component('ProgressBar', ProgressBar);
 
-
+import Spinner from 'Components/Spinner.vue';
+Vue.component('Spinner', Spinner);
 import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
 Vue.component('ToolbarAggregation', ToolbarAggregation);
 //import ToolbarTools from 'Components/ToolbarTools.vue';

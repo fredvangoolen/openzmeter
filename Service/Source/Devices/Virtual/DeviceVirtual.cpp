@@ -53,9 +53,9 @@ bool DeviceVirtual::StartDevice() {
     return false;
   }
   LOGFile::Info("Loading 'Virtual' driver configuration\n");
-  json Config = CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial));
+  json Config = CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial));
   bool AutoStart = Config["AutoStart"];
-  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
+  ConfigManager::WriteConfig("/Devices/" + Serial, Config);
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     if(AutoStart == false) {
@@ -73,7 +73,7 @@ bool DeviceVirtual::StartDevice() {
   pTerminate    = false;
   pState        = STOPPED;
   string ModeString = Config["Mode"];
-  pAnalyzers.push_back(new AnalyzerSoft(pSerial + "_" + ModeString, pMode, "/Devices/" + pSerial + "/Analyzer", pSampleRate));
+  pAnalyzers.push_back(new AnalyzerSoft(Serial + "_" + ModeString, pMode, "/Devices/" + Serial + "/Analyzer", pSampleRate));
   if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   } else {
@@ -102,7 +102,7 @@ bool DeviceVirtual::StopDevice() {
   return true;
 }
 void DeviceVirtual::GetDevice(const json &params, Response &response) {
-  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
   Config.erase("Analyzer");
   response.set_content(Config.dump(), "application/json");
   response.status = HTTP_OK;
@@ -113,7 +113,7 @@ void DeviceVirtual::SetDevice(const json &params, Response &response) {
   pMembersLock.ReadUnlock();
   StopDevice();
   json Config = CheckConfig(params);
-  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
+  ConfigManager::WriteConfig("/Devices/" + Serial, Config);
   json Response = json::object();
   Response["Result"] = (State == RUNNING) ? StartDevice() : true;
   response.set_content(Response.dump(), "application/json");
@@ -158,4 +158,3 @@ void *DeviceVirtual::Capture_Thread(void *args) {
   }
   return NULL;
 }
-//======================================================================================================================

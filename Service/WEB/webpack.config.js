@@ -13,7 +13,7 @@ module.exports = {
   plugins: [
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new VueLoaderPlugin(),
-//    new BundleAnalyzerPlugin({}),
+    new BundleAnalyzerPlugin({}),
     new webpack.ProvidePlugin({
     $: "jquery",
     jQuery: "jquery",

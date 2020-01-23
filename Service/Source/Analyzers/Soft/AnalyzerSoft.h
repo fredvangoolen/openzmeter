@@ -137,19 +137,16 @@ class AnalyzerSoft final : public Analyzer {
     void  GetSeries(const json &params, Response &response) override;
     void  GetSeriesNow(const json &params, Response &response) override;
     void  GetSeriesRange(const json &params, Response &response) override;
-  private : //Events related API
     void  GetEvents(const json &params, Response &response) override;
     void  GetEvent(const json &params, Response &response) override;
     void  SetEvent(const json &params, Response &response) override;
     void  DelEvent(const json &params, Response &response) override;
-  private : //Rates related API
     void  GetRates(const json &params, Response &response) override;
     void  GetRate(const json &params, Response &response) override;
     void  SetRate(const json &params, Response &response) override;
     void  DelRate(const json &params, Response &response) override;
     void  AddRate(const json &params, Response &response) override;
     void  GetPrices(const json &params, Response &response) override;
-  private : //Alarms related API
     void  TestAlarm(const json &params, Response &response) override;
     void  GetAlarms(const json &params, Response &response) override;
     void  GetAlarm(const json &params, Response &response) override;

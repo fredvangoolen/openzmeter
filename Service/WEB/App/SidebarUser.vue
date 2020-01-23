@@ -117,6 +117,18 @@
   }
   .btn-group {
     margin-top: 4px;
-    margin-left: 2px;
+    margin-left: -2px;
+  }
+  .btn-group > .btn {
+    background: #444;
+    border-color: #333;
+    padding: 6px 6px 7px 6px;
+    margin-top: -5px;
+    border-radius: 0px;
+    margin-left: -1px;
+  }
+  .btn-group > .btn:hover {
+    background: #555;
+    border-color: #333;
   }
 </style>

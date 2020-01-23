@@ -15,30 +15,27 @@ using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class Device {
   public :
-    enum DeviceState { UNCONFIGURED, STOPPED, RUNNING };
-  protected :
+//    enum DeviceState { UNCONFIGURED, STOPPED, RUNNING };
+  private :
     RWLocks           pMembersLock;       //Lock to properties
     vector<Analyzer*> pAnalyzers;         //Analyzers list
-    DeviceState       pState;             //Device state
-    string            pSerial;            //Device serial
-    string            pDriver;            //Driver name
-    string            pName;              //Driver description
+//    DeviceState       pState;             //Device state
   public :
-    virtual bool StartDevice() = 0;
-    virtual bool StopDevice() = 0;
-    virtual void GetDevice(const json &params, Response &response) = 0;
-    virtual void SetDevice(const json &params, Response &response) = 0;
+    const string      Serial;             //Device serial
+    const string      Driver;             //Driver name
+    const string      Name;               //Driver description
   private :
-    Analyzer *FindAnalyzer(const string &serial);
+    bool CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response));
   protected :
     Device(const string &serial, const string &driver, const string &name);
+    void AddAnalyzer(Analyzer *analyzer);
+    void ClearAnalyzers();
+    void SetOnline();
   public :
-    string Serial();
     json GetJSONDescriptor();
-    json GetJSONAnalyzerDescriptor(const string &serial);
-    json GetJSONAllAnalyzerDescriptors();
-    void StartDevice(const json &params, Response &response);
-    void StopDevice(const json &params, Response &response);
+    json GetJSONAnalyzers(const string &user);
+//    void StartDevice(const json &params, Response &response);
+//    void StopDevice(const json &params, Response &response);
     bool GetAnalyzer(const json &params, Response &response);
     bool SetAnalyzer(const json &params, Response &response);
     bool GetSeries(const json &params, Response &response);
@@ -66,4 +63,8 @@ class Device {
     bool DelPermission(const json &params, Response &response);
   public :
     virtual ~Device();
+//    virtual bool StartDevice() = 0;
+//    virtual bool StopDevice() = 0;
+    virtual void GetDevice(const json &params, Response &response) = 0;
+    virtual void SetDevice(const json &params, Response &response) = 0;
 };

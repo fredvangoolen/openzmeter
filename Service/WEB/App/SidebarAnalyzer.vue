@@ -315,11 +315,12 @@
     background-color: #474544;
     color: #FAFAFA;
     width: 304px;
-    height: 32px;
+    height: 33px;
     display: flex;
     margin-left: 0;
     transition: margin-left 0.2s ease-in-out;
     border-bottom: 1px solid #333;
+    border-top: 1px solid #333;
   }
   .this.expanded {
     margin-left: -48px;
@@ -338,10 +339,22 @@
   }
   .btn-group {
     margin-top: 4px;
-    margin-left: 2px;
+    margin-left: -2px;
   }
   .blink_img {
     animation: blinker_img 1s linear infinite;
+  }
+  .btn-group > .btn {
+    background: #444;
+    border-color: #333;
+    padding: 6px 6px 7px 6px;
+    margin-top: -5px;
+    border-radius: 0px;
+    margin-left: -1px;
+  }
+  .btn-group > .btn:hover {
+    background: #555;
+    border-color: #333;
   }
   @keyframes blinker_img {
     20% { opacity: 0.2; }

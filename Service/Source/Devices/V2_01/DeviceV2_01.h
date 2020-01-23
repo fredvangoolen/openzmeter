@@ -58,7 +58,6 @@ class DeviceV2_01 final : public Device {
     int16_t                     *pBuffer;                  //Read buffer
     uint32_t                     pBufferTail;              //pBuffer read pos
     uint32_t                     pBufferHead;              //pBuffer write pos
-    //deque<Sample_t>              pBuffer;                  //Read buffer
     float                        pVoltageGain[3];          //Ganancia de tension
     float                        pCurrentGain[4];          //Ganancia de corriente
     float                        pVoltageOffset[3];        //Offset de tension

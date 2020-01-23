@@ -195,10 +195,10 @@ bool  DeviceV2_01::StartDevice() {
     pMembersLock.WriteUnlock();
     return false;
   }
-  LOGFile::Info("Loading 'V2.01' driver configuration for serial '%s'\n", pSerial.c_str());
-  json Config = CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial));
+  LOGFile::Info("Loading 'V2.01' driver configuration for serial '%s'\n", Serial.c_str());
+  json Config = CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial));
   bool AutoStart = Config["AutoStart"];
-  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
+  ConfigManager::WriteConfig("/Devices/" + Serial, Config);
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     if(AutoStart == false) {
@@ -206,7 +206,7 @@ bool  DeviceV2_01::StartDevice() {
       return true;
     }
   }
-  LOGFile::Info("Starting 'V2.01' driver for serial '%s'\n", pSerial.c_str());
+  LOGFile::Info("Starting 'V2.01' driver for serial '%s'\n", Serial.c_str());
   for(unsigned Ch = 0; Ch < 3; Ch++) {
     pVoltageGain[Ch] = Config["VoltageGain"][Ch];
     pVoltageOffset[Ch] = Config["VoltageOffset"][Ch];
@@ -220,7 +220,7 @@ bool  DeviceV2_01::StartDevice() {
   for(auto Tmp : Config["Outputs"]) {
     Analyzer_t AnalyzerSetup;
     AnalyzerSetup.Mode = (Tmp["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Tmp["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
-    string Name = pSerial;
+    string Name = Serial;
     if(AnalyzerSetup.Mode == Analyzer::PHASE1) {
       string Voltage = Tmp["Voltage"];
       AnalyzerSetup.Voltage[0] = (Voltage[2] - '1');
@@ -244,7 +244,7 @@ bool  DeviceV2_01::StartDevice() {
       AnalyzerSetup.VoltageChannels = Tmp["Voltage"].size();
       Name += (AnalyzerSetup.Mode == Analyzer::PHASE3) ? "_3P" : "_3PN";
     }
-    AnalyzerSetup.Parent = new AnalyzerSoft(Name, AnalyzerSetup.Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzersSetup.size()) + "/Analyzer", DEVICEV2_01_SAMPLEFREQ);
+    AnalyzerSetup.Parent = new AnalyzerSoft(Name, AnalyzerSetup.Mode, "/Devices/" + Serial + "/Outputs/" + to_string(pAnalyzersSetup.size()) + "/Analyzer", DEVICEV2_01_SAMPLEFREQ);
     pAnalyzersSetup.push_back(AnalyzerSetup);
     pAnalyzers.push_back(AnalyzerSetup.Parent);
   }
@@ -284,7 +284,7 @@ bool  DeviceV2_01::StopDevice() {
     pMembersLock.WriteUnlock();
     return false;
   }
-  LOGFile::Info("Stopping 'V2.01' driver for serial '%s'\n", pSerial.c_str());
+  LOGFile::Info("Stopping 'V2.01' driver for serial '%s'\n", Serial.c_str());
   pTerminate = true;
   pthread_join(pCaptureThread, NULL);
   while(pAnalyzers.size() > 0) {
@@ -348,7 +348,7 @@ void *DeviceV2_01::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-      if(This->pSerial != Serial) {
+      if(This->Serial != Serial) {
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
@@ -370,7 +370,7 @@ void *DeviceV2_01::Capture_Thread(void *args) {
           This->pNewDevice = NULL;
           continue;
         } else {
-          LOGFile::Info("Kernel driver dettached for DeviceV2.01 with serial '%s'\n", This->pSerial.c_str());
+          LOGFile::Info("Kernel driver dettached for DeviceV2.01 with serial '%s'\n", This->Serial.c_str());
         }
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 0);
@@ -381,7 +381,7 @@ void *DeviceV2_01::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       } else {
-        LOGFile::Info("Claimed interface 0 for DeviceV2 with serial '%s'\n", This->pSerial.c_str());
+        LOGFile::Info("Claimed interface 0 for DeviceV2 with serial '%s'\n", This->Serial.c_str());
       }
       This->pSignalTransfer.Setup(This->pDeviceHandle, DEVICEV2_01_ENDPOINT_OUT, ReadCallback, -1);
       for(Transfer &Tmp : This->pTransfers) {
@@ -395,7 +395,7 @@ void *DeviceV2_01::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-      LOGFile::Info("Capture started on DeviceV2.01 with serial '%s'\n", This->pSerial.c_str());
+      LOGFile::Info("Capture started on DeviceV2.01 with serial '%s'\n", This->Serial.c_str());
       This->pNewDevice = NULL;
       LastSignalSend = 0;
       This->pLastSignalRecv = 0;
@@ -468,7 +468,7 @@ int   DeviceV2_01::PlugCallback(struct libusb_context *ctx, struct libusb_device
     if(This->pDeviceHandle != NULL) {
       libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);
       if(dev == CurrentDev) {
-        LOGFile::Info("DeviceV2.01 with serial '%s' disconnected\n", This->pSerial.c_str());
+        LOGFile::Info("DeviceV2.01 with serial '%s' disconnected\n", This->Serial.c_str());
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
       }
@@ -478,7 +478,7 @@ int   DeviceV2_01::PlugCallback(struct libusb_context *ctx, struct libusb_device
 }
 void  DeviceV2_01::GetDevice(const json &params, Response &response) {
   pMembersLock.ReadLock();
-  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
   pAverageLocks.ReadLock();
   Config["Wave_Average"] = json::object();
@@ -502,12 +502,12 @@ void  DeviceV2_01::SetDevice(const json &params, Response &response) {
   pMembersLock.ReadUnlock();
   StopDevice();
   json Config = CheckConfig(params);
-  json Orig = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  json Orig = ConfigManager::ReadConfig("/Devices/" + Serial);
   for(unsigned n = 0; n < Config["Outputs"].size(); n++) {
     if(n >= Orig["Outputs"].size()) break;
     if(Config["Outputs"][n]["Mode"] == Orig["Outputs"][n]["Mode"]) Config["Outputs"][n] == Orig["Outputs"][n];
   }
-  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
+  ConfigManager::WriteConfig("/Devices/" + Serial, Config);
   json Response = json::object();
   response.set_content("", "text/plain");
   response.status = ((State == RUNNING) ? StartDevice() : true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
@@ -529,7 +529,7 @@ void  DeviceV2_01::BuffersAppend() {
   } else {
     pBufferHead = 0;
     pBufferTail = 0;
-    LOGFile::Error("Capture buffer overflow in device '%s'\n", pSerial.c_str());
+    LOGFile::Error("Capture buffer overflow in device '%s'\n", Serial.c_str());
   }
   for(auto &Tmp : pAnalyzersSetup) {
     if(Tmp.Parent->IsFinished() == false) return;

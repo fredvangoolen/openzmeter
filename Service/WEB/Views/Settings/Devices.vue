@@ -23,7 +23,7 @@
           <button type="button" class="btn btn-default btn-xs" v-on:click="SettingsVisible = false"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </template>
-      <component :is="Driver" v-model="Settings"></component>
+      <component :is="Driver" v-model="Settings" :error="Error"></component>
     </dlg>
   </div>
 </template>
@@ -39,7 +39,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return {Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null,
+      return { Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null, Error: '',
         Columns: [
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},

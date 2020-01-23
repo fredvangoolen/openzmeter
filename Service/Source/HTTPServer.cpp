@@ -15,7 +15,16 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-HTTPCallback::HTTPCallback(const string& handle, Func_t function) : HandleName(handle), Function(function) {};
+HTTPCallback::HTTPCallback(const string& handle, Func_t function) : HandleName(handle), Function(function) {
+};
+void HTTPCallback::FillResponse(Response &response, const string &body, const char *mime, const int status) {
+  response.set_content(body, mime);
+  response.status = status;
+}
+void HTTPCallback::FillResponse(Response &response, const char *body, const size_t size, const char *mime, const int status) {
+  response.set_content(body, size, mime);
+  response.status = status;
+}
 //----------------------------------------------------------------------------------------------------------------------
 vector<HTTPCallback> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
 RWLocks                                                  HTTPServer::pLock = RWLocks();
@@ -57,7 +66,6 @@ HTTPServer::HTTPServer() {
   pPort   = 8080;
   pThread = 0;
   json Config = ConfigManager::ReadConfig("/HTTPServer");
-  RegisterCallback("getFunctions", GetFunctionsCallback);
   if(!Config.is_object()) Config = json::object();
   if(Config["Port"].is_number_unsigned()) pPort = Config["Port"];
   if(Config["RelativePath"].is_string()) pRelativePath = Config["RelativePath"];
@@ -105,23 +113,22 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   string URL = string(request.path).erase(0, pRelativePath.size());
   LOGFile::Debug("HTTP GET '%s'\n", URL.c_str());
   size_t Size = 0;
-  char *Tmp = (char*)ResourceLoader::GetFile(string("WEB/") + URL, &Size);
+  const char *Tmp = (const char*)ResourceLoader::GetFile(string("WEB/") + URL, &Size);
   if(Size != 0) {
     size_t FileNameLen = URL.length();
     if((FileNameLen >= 3) && (URL.compare(FileNameLen - 3, 3, ".js")) == 0) {
-      response.set_content(Tmp, Size, "text/javascript");
+      return HTTPCallback::FillResponse(response, Tmp, Size, "text/javascript", HTTP_OK);
     } else if((FileNameLen >= 4) && (URL.compare(FileNameLen - 4, 4, ".png"))  == 0) {
-      response.set_content(Tmp, Size, "image/png");
+      return HTTPCallback::FillResponse(response, Tmp, Size, "image/png", HTTP_OK);
     } else if((FileNameLen >= 4) && (URL.compare(FileNameLen - 4, 4, ".ico"))  == 0) {
-      response.set_content(Tmp, Size, "image/x-icon");
+      return HTTPCallback::FillResponse(response, Tmp, Size, "image/x-icon", HTTP_OK);
     } else if((FileNameLen >= 5) && (URL.compare(FileNameLen - 5, 5, ".html")) == 0) {
-      response.set_content(Tmp, Size, "text/html");
-    } else {
-      response.set_content(Tmp, Size, "application/octet-stream");
-      LOGFile::Debug("No mimetype defined for request '%s'\n", URL.c_str());
+      return HTTPCallback::FillResponse(response, Tmp, Size, "text/html", HTTP_OK);
+    } else if((FileNameLen >= 5) && (URL.compare(FileNameLen - 5, 5, ".json")) == 0) {
+      return HTTPCallback::FillResponse(response, Tmp, Size, "application/json", HTTP_OK);
     }
-    response.status = 200;
-    return;
+    LOGFile::Debug("No mimetype defined for request '%s'\n", URL.c_str());
+    return HTTPCallback::FillResponse(response, Tmp, Size, "application/octet-stream", HTTP_OK);
   }
   string UserName;
   if(request.has_header("Cookie")) {
@@ -140,16 +147,13 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
       string Find = "{{ RELATIVE_PATH }}";
       Len = Login.find(Find, 0);
       if(Len != string::npos) Login = Login.replace(Len, Find.size(), pRelativePath);
-      response.set_content(Login, "text/html");
-      response.status = HTTP_OK;
+      return HTTPCallback::FillResponse(response, Login, "text/html", HTTP_OK);
     } else {
-      response.set_redirect(pRelativePath.c_str());
+      return response.set_redirect(pRelativePath.c_str());
     }
-    return;
   }
   if(UserName == "") {
-    response.set_redirect("Login");
-    return;
+    return response.set_redirect("Login");
   } else {
     size_t Len;
     const char *Content = (const char *)ResourceLoader::GetFile("WEB/Index.html", &Len);
@@ -161,24 +165,17 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
     Find = "{{ RELATIVE_PATH }}";
     Len = Index.find(Find, 0);
     if(Len != string::npos) Index = Index.replace(Len, Find.size(), pRelativePath);
-    response.set_content(Index, "text/html");
-    response.status = HTTP_OK;
-    return;
+    return HTTPCallback::FillResponse(response, Index, "text/html", HTTP_OK);
   }
 }
 void HTTPServer::HandlePost(const Request &request, Response &response) {
   string URL = string(request.path).erase(0, pRelativePath.size());
   LOGFile::Debug("HTTP POST '%s'\n", URL.c_str());
   json Params = json::parse(request.body, NULL, false);
-  if(Params.is_discarded()) {
-    response.set_content("Malformed JSON params", "text/plain");
-    response.status = HTTP_BAD_REQUEST;
-    return;
-  }
+  if(Params.is_discarded()) return HTTPCallback::FillResponse(response, "Malformed JSON params", "text/plain", HTTP_BAD_REQUEST);
   if(URL == "LogIn") {
     if((Params["Password"].is_string() == false) || (Params["Username"].is_string() == false)) {
-      response.set_content("'Password' and 'Username' params requiered", "text/plain");
-      response.status = HTTP_BAD_REQUEST;
+      return HTTPCallback::FillResponse(response, "'Password' and 'Username' params requiered", "text/plain", HTTP_BAD_REQUEST);
     } else {
       Database DB;
       json     Response        = json::object();
@@ -196,10 +193,8 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
       } else {
         Response["Result"] = false;
       }
-      response.set_content(Response.dump(), "application/json");
-      response.status = HTTP_OK;
+      return HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
     }
-    return;
   }
   if(URL == "LogOut") {
     if(request.has_header("Cookie")) {
@@ -209,8 +204,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
         DB.ExecSentenceNoResult("DELETE FROM sessions WHERE id = " + DB.Bind(Cookie));
       }
     }
-    response.set_redirect(string(pRelativePath + "Login").c_str());
-    return;
+    return response.set_redirect(string(pRelativePath + "Login").c_str());
   }
   if(request.has_header("Cookie")) {
     Params.erase("UserName");
@@ -223,11 +217,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
   } else if(request.has_header("REMOTE_ADDR")) {
     if(request.get_header_value("REMOTE_ADDR") != "127.0.0.1") Params.erase("UserName");
   }
-  if(Params.contains("UserName") == false) {
-    response.set_content("Unauthorided access to API", "text/plain");
-    response.status = HTTP_UNAUTHORIZED;
-    return;
-  }
+  if(Params.contains("UserName") == false) return HTTPCallback::FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
   pLock.ReadLock();
   for(HTTPCallback &Callback : pCallbacks) {
     if(Callback.HandleName != URL) continue;
@@ -236,16 +226,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
     return;
   }
   pLock.ReadUnlock();
-  response.set_content("Method not found", "text/plain");
-  response.status = HTTP_METHOD_NOT_ALLOWED;
-}
-void HTTPServer::GetFunctionsCallback(const json &params, Response &response) {
-  json Response = json::array();
-  pLock.ReadLock();
-  for(HTTPCallback &Callback : pCallbacks) Response.push_back(Callback.HandleName);
-  pLock.ReadUnlock();
-  response.set_content(Response.dump(), "application/json");
-  response.status = HTTP_OK;
+  HTTPCallback::FillResponse(response, "Method not found", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
 void HTTPServer::RemoveExpiredSessions() const {
   if(Tools::GetTime() < 1296000000) return;
