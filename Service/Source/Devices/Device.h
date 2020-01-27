@@ -1,7 +1,18 @@
-/* ================================== zMeter ===========================================================================
- * File:     CaptureInterface.h
- * Author:   Eduardo Viciana (12 de abril de 2017)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <vector>
 #include <pthread.h>
@@ -14,12 +25,9 @@ using namespace std;
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class Device {
-  public :
-//    enum DeviceState { UNCONFIGURED, STOPPED, RUNNING };
   private :
-    RWLocks           pMembersLock;       //Lock to properties
+    pthread_rwlock_t  pAnalyzersLock;     //Analyzer list lock
     vector<Analyzer*> pAnalyzers;         //Analyzers list
-//    DeviceState       pState;             //Device state
   public :
     const string      Serial;             //Device serial
     const string      Driver;             //Driver name
@@ -30,12 +38,9 @@ class Device {
     Device(const string &serial, const string &driver, const string &name);
     void AddAnalyzer(Analyzer *analyzer);
     void ClearAnalyzers();
-    void SetOnline();
   public :
     json GetJSONDescriptor();
     json GetJSONAnalyzers(const string &user);
-//    void StartDevice(const json &params, Response &response);
-//    void StopDevice(const json &params, Response &response);
     bool GetAnalyzer(const json &params, Response &response);
     bool SetAnalyzer(const json &params, Response &response);
     bool GetSeries(const json &params, Response &response);
@@ -63,8 +68,6 @@ class Device {
     bool DelPermission(const json &params, Response &response);
   public :
     virtual ~Device();
-//    virtual bool StartDevice() = 0;
-//    virtual bool StopDevice() = 0;
     virtual void GetDevice(const json &params, Response &response) = 0;
     virtual void SetDevice(const json &params, Response &response) = 0;
 };

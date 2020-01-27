@@ -19,6 +19,7 @@
 #include <deque>
 #include <list>
 #include "Analyzer.h"
+#include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoft final : public Analyzer {
   private :
@@ -26,10 +27,8 @@ class AnalyzerSoft final : public Analyzer {
     static const uint8_t ZEROCROSSING_SECONDS      = 10;        //Used seconds to calc frequency
   private :
     class Events;
-    class FFT;
     class Sync;
     class Alarms;
-    class Rates;
   public :
       enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
   private :
@@ -93,7 +92,7 @@ class AnalyzerSoft final : public Analyzer {
   private :  //Config params (Writed in configure, readed in other places)
     Events                    *pEventsDetector;          //Events detector
     Sync                      *pSync;                    //Synchronization object
-    Rates                     *pRates;                   //Rate control object
+//    Rates                     *pRates;                   //Rate control object
     Alarms                    *pAlarms;                  //Alarms control object
     bool                       pSave10c;                 //Save 10 cycles aggregation to database
     float                      pNominalVoltage;          //Analyzer nominal voltage

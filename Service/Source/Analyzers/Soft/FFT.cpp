@@ -21,9 +21,9 @@
 #include <math.h>
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-pthread_mutex_t AnalyzerSoft::FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t FFT::pPlannerMutex = PTHREAD_MUTEX_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerSoft::FFT::FFT(const string &name) {
+FFT::FFT(const string &name) {
   pTerminate = false;
   if(pthread_create(&pThread, NULL, FFT_Thread, (void*)this) != 0) {
     pThread = 0;
@@ -32,18 +32,18 @@ AnalyzerSoft::FFT::FFT(const string &name) {
   }
   pthread_setname_np(pThread, name.c_str());
 }
-AnalyzerSoft::FFT::~FFT() {
+FFT::~FFT() {
   pTerminate = true;
   pWorkerLocks.Abort(&pThread);
 }
-void AnalyzerSoft::FFT::Start(vector<float> &in) {
+void FFT::Start(vector<float> &in) {
   pInput = &in;
   pWorkerLocks.WakeWorker();
 }
-float AnalyzerSoft::FFT::BinPower(const uint idx) {
+float FFT::BinPower(const uint idx) {
   return sqrt(norm(Output[idx])) / M_SQRT2 * 2.0;
 }
-void *AnalyzerSoft::FFT::FFT_Thread(void *args) {
+void *FFT::FFT_Thread(void *args) {
   FFT *This = (FFT*)args;
   while(This->pTerminate == false) {
     if(This->pWorkerLocks.WorkerWaitTask() == false) return NULL;
@@ -60,10 +60,10 @@ void *AnalyzerSoft::FFT::FFT_Thread(void *args) {
   }
   return NULL;
 }
-void AnalyzerSoft::FFT::Wait() {
+void FFT::Wait() {
   pWorkerLocks.WaitWorker();
 }
-float AnalyzerSoft::FFT::CalcAngle(const complex<float> &a, const complex<float> &b) {
+float FFT::CalcAngle(const complex<float> &a, const complex<float> &b) {
   float Tmp;
   if((a.real() == 0) && (a.imag() == 0))
     Tmp = 0;

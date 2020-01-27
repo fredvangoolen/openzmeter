@@ -324,6 +324,8 @@
 //      console.log(this.options);
       var Data = [];
 //      if(this.options.labels !== undefined) Data = [new Array(this.Options.labels.length).fill(0.0)];
+      if(this.options.labels == null) this.options.labels = ['A', 'B'];
+      if(this.options.file == null) this.options.file = [];
       if(this.options.file.length == 0) {
         Data.push(Array(this.options.labels.length).fill(0));
       } else {

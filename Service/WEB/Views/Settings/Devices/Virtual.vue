@@ -3,8 +3,8 @@
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="error!=''">{{ error }}</div>
     <div class="row">
       <div class="col-xs-12">
-        <label class="control-label" style="line-height: 22px">Start on boot</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="value.AutoStart"></toggle>
+        <label class="control-label" style="line-height: 22px">Enabled</label>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="value.Enabled"></toggle>
         <hr style="margin: 5px 0px 5px 0px"/>
       </div>
       <div class="col-xs-12 col-sm-6">

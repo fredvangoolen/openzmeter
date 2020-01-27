@@ -34,12 +34,12 @@
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
-        if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return null;
+        if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return { };
+        var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
         var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
         var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
-        var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
         for(var n in CurrentNames) Opt.series[CurrentNames[n]] = { axis: 'y2' };
@@ -50,14 +50,12 @@
         Opt.legendFormatter = Graph.LegendFormatter_Follow;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
-       // Opt.axes.y.valueRange = oZm.Series['VOLTAGE_SAMPLES'].Range(this.Data, VoltagePhases);
-        Opt.axes.y.strokeWidth = VoltageStyle.Width;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 2, true) + ' V'; };
         Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x, 2, true); };
-        Opt.axes.y2.drawAxis = this.Options['Current'];
+        Opt.axes.y.strokeWidth = VoltageStyle.Width;
         Opt.axes.y2.pixelsPerLabel = 15;
+        Opt.axes.y2.drawAxis = this.Options['Current'];
         Opt.axes.y2.axisLabelWidth = this.Options['Current'] ? 34 : 0;
-//        Opt.axes.y2.valueRange = Y2Range;
         Opt.axes.y2.strokeWidth = CurrentStyle.Width;
         Opt.axes.y2.valueFormatter = (x) => { return this.Round(x, 2, true) + ' A'; };
         Opt.axes.y2.axisLabelFormatter = this.Options['Current'] ? (x) => { return this.Round(x, 2, true); } : (x)  => { return ''};
@@ -72,6 +70,11 @@
             for(var n = 0; n < this.data.Current_Samples.length; n++) Row.push(this.data.Current_Samples[n][i]);
             Opt.file.push(Row);
           }
+          var V = [false], I = [false];
+          for(var n in VoltageNames) { V.push(this.Phases[n]); I.push(false); }
+          for(var n in CurrentNames) { I.push(this.Phases[n]); V.push(false); }
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, V, { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
+          Opt.axes.y2.valueRange = this.MatrixColsRange(Opt.file, I, { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
         }
         return Opt;
       },

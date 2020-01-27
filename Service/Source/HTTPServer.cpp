@@ -113,6 +113,15 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   string URL = string(request.path).erase(0, pRelativePath.size());
   LOGFile::Debug("HTTP GET '%s'\n", URL.c_str());
   size_t Size = 0;
+  if(URL == "API.yaml") {
+    size_t Len;
+    const char *Content = (const char *)ResourceLoader::GetFile("WEB/API.yaml", &Len);
+    string API = string(Content, Len);
+    string Find = "{{ RELATIVE_PATH }}";
+    Len = API.find(Find, 0);
+    if(Len != string::npos) API = API.replace(Len, Find.size(), pRelativePath);
+    return HTTPCallback::FillResponse(response, API, "application/yaml", HTTP_OK);
+  }
   const char *Tmp = (const char*)ResourceLoader::GetFile(string("WEB/") + URL, &Size);
   if(Size != 0) {
     size_t FileNameLen = URL.length();

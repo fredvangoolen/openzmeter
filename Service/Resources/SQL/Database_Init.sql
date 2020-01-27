@@ -1,3 +1,5 @@
+--NOT USED, SHOULD BE MOVED TO INSTALLATION SCRIPT
+
 DO $do$ BEGIN
   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'openzmeter') THEN
     CREATE ROLE openzmeter LOGIN PASSWORD 'openzmeter';

@@ -4,7 +4,7 @@
       <div class="pull-left"><h4 class="modal-title">User</h4></div>
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes" v-on:click="Save"><img :src="require('Imgs/diskette.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
       </div>
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" v-bind:class="{ active: View=='Main' }" data-toggle="tooltip" title="Main configuration" v-on:click="View='Main'">Main</button>
@@ -79,16 +79,16 @@
         </div>
       </div>
       Alarms notifications priority
-      
+
       phase names<br>
       colors -> one color per param, decrement brightness for each phase
       colors -> one color per phase, thiker main variable and thin line for secondari
-      
-      
+
+
     </div>
   </dlg>
 </template>
-  
+
 <script>
   import Dlg from 'Components/Dialog.vue';
   import OptionPicker from 'Components/OptionPicker.vue';
@@ -102,12 +102,9 @@
         this.$set(this, 'User', user);
         this.$refs.Dialog.Show();
       },
-      Back: function() {
-        this.$refs.Dialog.Close();
-      },
       Save: function() {
         this.$refs.Dialog.ShowSpinner = true;
-        
+
       },
       LoadImage: function() {
         this.$refs.avatar.LoadImage();
