@@ -10,7 +10,6 @@
           <button-export file="Waveform" :rows="Export"></button-export>
           <button-expand :expanded.sync="Expanded"></button-expand>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
-          <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools-->
         </div>
       </portal>
     </div>

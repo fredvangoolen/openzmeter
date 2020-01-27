@@ -190,7 +190,7 @@
       return Ticks;
     },
     multiColumnBarPlotter: function(e) {
-      if(e.seriesIndex !== 0) return;
+      if(e.seriesIndex != 0) return;
       var g = e.dygraph;
       g.UndoHighlight = { cx: [], cy: [] };
       var ctx = e.drawingContext;
@@ -268,7 +268,7 @@
           val.showRangeSelector = false;
 //        }
         if(val.file.length == 0) val.file.push(Array(val.labels.length).fill(0));
-        this.Graph.updateOptions(val);
+        this.$nextTick(() => { this.Graph.updateOptions(val); });
       },
       height: function(val) {
         $(this.Graph.graphDiv).parent().removeAttr('style');
