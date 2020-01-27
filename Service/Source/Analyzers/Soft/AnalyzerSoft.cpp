@@ -28,7 +28,6 @@
 #include "Events.h"
 #include "FFT.h"
 #include "Sync.h"
-#include "Alarms.h"
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
@@ -40,27 +39,24 @@ const vector<float> AnalyzerSoft::THDRanges        = { 0, 0.5, 1, 1.5, 2, 2.5, 3
 const vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
 const vector<float> AnalyzerSoft::UnbalanceRanges  = {0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.50, 1.75, 2.0, 2.25, 2.50, 2.75, 3.0, 3.25, 3.50, 3.75, 4.0, 4.25, 4.50, 4.75, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, INFINITY};
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id) {
+AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((pMode == PHASE1) ? 1 : 3), pCurrentChannels((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4), pMode(mode) {
   LOGFile::Debug("Creating AnalyzerSoft database tables\n");
   Database DB(id);
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
   DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Tools::GetTime() - 86400000));   //Delete 1 day old
   DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(Tools::GetTime() - 3600000));       //Delete 1 hour old
-  pMode            = mode;
-  pVoltageChannels = (pMode == PHASE1) ? 1 : 3;
-  pCurrentChannels = (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4;
-  pConfigPath      = optionPath;
-  pSamplerate      = samplerate;
+  pDelayCurrent    = NULL;
+  pDelayVoltage    = NULL;
+
   pCycleLen        = 0;
   pTerminate       = false;
   pVoltageSamples  = vector<vector<float> >(pVoltageChannels, vector<float>());
   pCurrentSamples  = vector<vector<float> >(pCurrentChannels, vector<float>());
-  pEventsDetector  = NULL;
-  pSync            = NULL;
+//  pEventsDetector  = NULL;
+//  pSync            = NULL;
 //  pRates           = NULL;
-  pAlarms          = NULL;
-  pDelayCurrent    = NULL;
-  pDelayVoltage    = NULL;
+//  pAlarms          = NULL;
+
   pBlockCycles.reserve(20);
   InitAggreg(pAggreg10C, AGGREG_10C);
   for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFT[i] = new FFT("FFT_V" + to_string(i));
@@ -74,86 +70,18 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   }
 }
 AnalyzerSoft::~AnalyzerSoft() {
-  pMembersLocks.WriteLock();
-  if(pSync != NULL) delete pSync;
+//  pMembersLocks.WriteLock();
+//  if(pSync != NULL) delete pSync;
 //  if(pRates != NULL) delete pRates;
-  if(pAlarms != NULL) delete pAlarms;
-  if(pEventsDetector != NULL) delete pEventsDetector;
-  pMembersLocks.WriteUnlock();
+//  if(pAlarms != NULL) delete pAlarms;
+//  if(pEventsDetector != NULL) delete pEventsDetector;
+//  pMembersLocks.WriteUnlock();
   pTerminate = true;
   pAnalyzerWorkerLocks.Abort(&pAnalyzerThread);
   if(pDelayCurrent != NULL) free(pDelayCurrent);
   if(pDelayVoltage != NULL) free(pDelayVoltage);
   for(unsigned n = 0; n < pVoltageChannels; n++) delete pVoltageFFT[n];
   for(unsigned n = 0; n < pCurrentChannels; n++) delete pCurrentFFT[n];
-}
-void AnalyzerSoft::Configure(const json &options) {
-  pName             = options["Name"];
-  pNominalVoltage   = options["NominalVoltage"];
-  pNominalFrequency = options["NominalFreq"];
-  pMaxCurrent       = options["MaxCurrent"];
-  pMinCurrent       = options["MinCurrent"];
-  pTimeZone         = options["TimeZone"];
-  pContract         = options["Contract"];
-  pZipCode          = options["ZipCode"];
-  pGeo              = options["GeoPosition"].get<vector<float> >();
-  pSave10c          = options["Save10C"];
-  pMaxSamples       = (pNominalFrequency == 0.0) ? pSamplerate * 0.2 : ceil((15.0 * pSamplerate) / pNominalFrequency);
-  for(unsigned i = 0; i < pVoltageChannels; i++) pVoltageSamples[i].reserve(pMaxSamples);
-  for(unsigned i = 0; i < pCurrentChannels; i++) pCurrentSamples[i].reserve(pMaxSamples);
-  bool EventsEnabled = options["EventsEnabled"];
-  if((EventsEnabled == false) && (pEventsDetector != NULL)) {
-    delete pEventsDetector;
-    pEventsDetector = NULL;
-  } else if((EventsEnabled == true) && (pEventsDetector == NULL)) {
-    pEventsDetector = new AnalyzerSoft::Events(this);
-  }
-//  bool RatesEnabled = options["RatesEnabled"];
-//  if((RatesEnabled == true) && (pRates != NULL)) {
-//    delete pRates;
-//  } else if((RatesEnabled == true) && (pRates == NULL)) {
-//    pRates = new AnalyzerSoft::Rates(this);
-//  }
-  bool AlarmsEnabled = options["AlarmsEnabled"];
-  if((AlarmsEnabled == true) && (pAlarms != NULL)) {
-    delete pAlarms;
-  } else if((AlarmsEnabled == true) && (pAlarms == NULL)) {
-    pAlarms = new AnalyzerSoft::Alarms(this, options["Alarms"]);
-  }
-  bool SyncEnabled = options["RemoteEnabled"];
-  if((SyncEnabled == false) && (pSync != NULL)) {
-    delete pSync;
-    pSync = NULL;
-  } else if(SyncEnabled == true) {
-    string Server = options["RemoteServer"];
-    string User = options["RemoteUser"];
-    string Pass = options["RemotePass"];
-    if(pSync == NULL) pSync = new Sync(this);
-    pSync->Configure(Server, User, Pass);
-  }
-  //Calc peak filter coefficients for nominal frequency
-  if(pNominalFrequency != 0.0) {
-    for(unsigned n = 0; n < ZEROCROSSING_FILTERSTAGES; n++) {
-      float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
-      float alpha = sin(w0) / 2.0;
-      pFilters[n].A0 = alpha / (1.0 + alpha);
-      pFilters[n].A1 = 0.0;
-      pFilters[n].A2 = -alpha / (1.0 + alpha);
-      pFilters[n].B1 = (-2.0 * cos(w0)) / (1.0 + alpha);
-      pFilters[n].B2 = (1.0 - alpha) / (1.0 + alpha);
-      memset(pFilters[n].ChannelsZ1, 0, sizeof(Filter_t::ChannelsZ1));
-      memset(pFilters[n].ChannelsZ2, 0, sizeof(Filter_t::ChannelsZ2));
-    }
-    pDelayCurrentSize = ((pSamplerate / pNominalFrequency) / 2.0) * ZEROCROSSING_FILTERSTAGES + 2;
-    pDelayVoltageSize = pDelayCurrentSize;
-  } else {
-    pDelayCurrentSize = 1;
-    pDelayVoltageSize = 1;
-  }
-  pDelayCurrentPos = 0;
-  pDelayCurrent = (float*)realloc(pDelayCurrent, sizeof(float) * pDelayCurrentSize * pCurrentChannels);
-  pDelayVoltagePos = 0;
-  pDelayVoltage = (float*)realloc(pDelayVoltage, sizeof(float) * pDelayVoltageSize * pVoltageChannels);
 }
 bool AnalyzerSoft::BufferAppend(const float *voltageSamples, const float *currentSamples) {
   pMembersLocks.ReadLock();
@@ -199,6 +127,119 @@ bool AnalyzerSoft::BufferAppend(const float *voltageSamples, const float *curren
 }
 bool AnalyzerSoft::IsFinished() {
   return pAnalyzerWorkerLocks.IsWorking();
+}
+json AnalyzerSoft::CheckConfig(const json &config) {
+  json ConfigOUT = json::object();
+  ConfigOUT["Name"] = "Unnamed analyzer";
+  ConfigOUT["NominalVoltage"] = 230.0;
+  ConfigOUT["NominalFreq"] = 50.0;
+  ConfigOUT["MaxCurrent"] = 35.0;
+  ConfigOUT["MinCurrent"] = 0.1;
+  ConfigOUT["TimeZone"] = "UTC";
+  ConfigOUT["Contract"] = "";
+  ConfigOUT["ZipCode"] = "";
+  ConfigOUT["GeoPosition"] = json::parse("[0, 0]");
+  ConfigOUT["RemoteEnabled"] = false;
+  ConfigOUT["RemoteServer"] = "";
+  ConfigOUT["RemoteUser"] = "";
+  ConfigOUT["RemotePass"] = "";
+  ConfigOUT["Save10C"] = false;
+  ConfigOUT["EventsEnabled"] = false;
+//  ConfigOUT["RatesEnabled"] = false;
+  ConfigOUT["AlarmsEnabled"] = false;
+  ConfigOUT["Alarms"] = json::array();
+  if(!config.is_object()) return ConfigOUT;
+  if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
+  if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
+  if(config.contains("NominalFreq") && config["NominalFreq"].is_number() && (config["NominalFreq"] >= 0) && (config["NominalFreq"] <= 400)) ConfigOUT["NominalFreq"] = config["NominalFreq"];
+  if(config.contains("MaxCurrent") && config["MaxCurrent"].is_number() && (config["MaxCurrent"] >= 1) && (config["MaxCurrent"] <= 100000)) ConfigOUT["MaxCurrent"] = config["MaxCurrent"];
+  if(config.contains("MinCurrent") && config["MinCurrent"].is_number() && (config["MinCurrent"] >= 0.01) && (config["MinCurrent"] <= 100)) ConfigOUT["MinCurrent"] = config["MinCurrent"];
+  if(config.contains("TimeZone") && config["TimeZone"].is_string()) {
+    time_zone TimeZone;
+    string TZ = config["TimeZone"];
+    if(cctz::load_time_zone(TZ, &TimeZone) == true) ConfigOUT["TimeZone"] = TZ;
+  }
+  if(config.contains("Contract") && config["Contract"].is_string()) ConfigOUT["Contract"] = config["Contract"];
+  if(config.contains("ZipCode") && config["ZipCode"].is_string()) ConfigOUT["ZipCode"] = config["ZipCode"];
+  if(config.contains("GeoPosition") && config["GeoPosition"].is_array() && (config["GeoPosition"].size() == 2) && config["GeoPosition"][0].is_number() && config["GeoPosition"][1].is_number()) ConfigOUT["GeoPosition"] = config["GeoPosition"];
+  if(config.contains("RemoteEnabled") && config["RemoteEnabled"].is_boolean()) ConfigOUT["RemoteEnabled"] = config["RemoteEnabled"];
+  if(config.contains("RemoteServer") && config["RemoteServer"].is_string()) ConfigOUT["RemoteServer"] = config["RemoteServer"];
+  if(config.contains("RemoteUser") && config["RemoteUser"].is_string()) ConfigOUT["RemoteUser"] = config["RemoteUser"];
+  if(config.contains("RemotePass") && config["RemotePass"].is_string()) ConfigOUT["RemotePass"] = config["RemotePass"];
+  if(config.contains("Save10C") && config["Save10C"].is_boolean()) ConfigOUT["Save10C"] = config["Save10C"];
+  if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
+//  if(config.contains("RatesEnabled") && config["RatesEnabled"].is_boolean()) ConfigOUT["RatesEnabled"] = config["RatesEnabled"];
+  if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
+//  if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = Alarms::CheckConfig(config["Alarms"]);
+  return ConfigOUT;
+}
+void AnalyzerSoft::Configure(const json &options) {
+  SetName(options["Name"]);
+  pNominalVoltage   = options["NominalVoltage"];
+  pNominalFrequency = options["NominalFreq"];
+  pMaxCurrent       = options["MaxCurrent"];
+  pMinCurrent       = options["MinCurrent"];
+  pTimeZone         = options["TimeZone"];
+  pContract         = options["Contract"];
+  pZipCode          = options["ZipCode"];
+  pGeo              = options["GeoPosition"].get<vector<float> >();
+  pSave10c          = options["Save10C"];
+  pMaxSamples       = (pNominalFrequency == 0.0) ? pSamplerate * 0.2 : ceil((15.0 * pSamplerate) / pNominalFrequency);
+  for(unsigned i = 0; i < pVoltageChannels; i++) pVoltageSamples[i].reserve(pMaxSamples);
+  for(unsigned i = 0; i < pCurrentChannels; i++) pCurrentSamples[i].reserve(pMaxSamples);
+  bool EventsEnabled = options["EventsEnabled"];
+//  if((EventsEnabled == false) && (pEventsDetector != NULL)) {
+//    delete pEventsDetector;
+//    pEventsDetector = NULL;
+//  } else if((EventsEnabled == true) && (pEventsDetector == NULL)) {
+//    pEventsDetector = new AnalyzerSoft::Events(this);
+//  }
+//  bool RatesEnabled = options["RatesEnabled"];
+//  if((RatesEnabled == true) && (pRates != NULL)) {
+//    delete pRates;
+//  } else if((RatesEnabled == true) && (pRates == NULL)) {
+//    pRates = new AnalyzerSoft::Rates(this);
+//  }
+//  bool AlarmsEnabled = options["AlarmsEnabled"];
+//  if((AlarmsEnabled == true) && (pAlarms != NULL)) {
+//    delete pAlarms;
+//  } else if((AlarmsEnabled == true) && (pAlarms == NULL)) {
+//    pAlarms = new AnalyzerSoft::Alarms(this, options["Alarms"]);
+//  }
+  bool SyncEnabled = options["RemoteEnabled"];
+//  if((SyncEnabled == false) && (pSync != NULL)) {
+//    delete pSync;
+//    pSync = NULL;
+//  } else if(SyncEnabled == true) {
+//    string Server = options["RemoteServer"];
+//    string User = options["RemoteUser"];
+//    string Pass = options["RemotePass"];
+//    if(pSync == NULL) pSync = new Sync(this);
+//    pSync->Configure(Server, User, Pass);
+//  }
+  //Calc peak filter coefficients for nominal frequency
+  if(pNominalFrequency != 0.0) {
+    for(unsigned n = 0; n < ZEROCROSSING_FILTERSTAGES; n++) {
+      float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
+      float alpha = sin(w0) / 2.0;
+      pFilters[n].A0 = alpha / (1.0 + alpha);
+      pFilters[n].A1 = 0.0;
+      pFilters[n].A2 = -alpha / (1.0 + alpha);
+      pFilters[n].B1 = (-2.0 * cos(w0)) / (1.0 + alpha);
+      pFilters[n].B2 = (1.0 - alpha) / (1.0 + alpha);
+      memset(pFilters[n].ChannelsZ1, 0, sizeof(Filter_t::ChannelsZ1));
+      memset(pFilters[n].ChannelsZ2, 0, sizeof(Filter_t::ChannelsZ2));
+    }
+    pDelayCurrentSize = ((pSamplerate / pNominalFrequency) / 2.0) * ZEROCROSSING_FILTERSTAGES + 2;
+    pDelayVoltageSize = pDelayCurrentSize;
+  } else {
+    pDelayCurrentSize = 1;
+    pDelayVoltageSize = 1;
+  }
+  pDelayCurrentPos = 0;
+  pDelayCurrent = (float*)realloc(pDelayCurrent, sizeof(float) * pDelayCurrentSize * pCurrentChannels);
+  pDelayVoltagePos = 0;
+  pDelayVoltage = (float*)realloc(pDelayVoltage, sizeof(float) * pDelayVoltageSize * pVoltageChannels);
 }
 void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
   params.Type = type;
@@ -322,30 +363,7 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
     DB.ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ", " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ", " + DB.Bind(params.StatsVoltage) + ", " + DB.Bind(params.StatsFrequency) + ", " + DB.Bind(params.StatsTHD) + ", " + DB.Bind(params.StatsHarmonics) + ", " + DB.Bind(params.StatsUnbalance) + ")");
   if(params.Type == AGGREG_1M) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(params.Timestamp - 86400000));   //Delete 1 day old
   if((params.Type == AGGREG_1M) && (pSave10c == true)) DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(params.Timestamp - 3600000));     //Delete 1 hour old
-  //TEST
-//  json Result;
-//  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
-//    Result["Voltage"] = params.Voltage;
-//    Result["Current"] = params.Current;
-//    Result["Frequency"] = params.Frequency;
-//    Result["Flag"] = params.Flag;
-//  }
-//  if((params.Type == AGGREG_3S) || (params.Type == AGGREG_15M) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_1H)) {
-//    Result["Active_Power"] = params.Active_Power;
-//    Result["Reactive_Power"] = params.Reactive_Power;
-//  }
-//  if(params.Type == AGGREG_1M) {
-//    Result["Power_Factor"] = params.Power_Factor;
-//    Result["Voltage_THD"] = params.Voltage_THD;
-//    Result["Current_THD"] = params.Current_THD;
-//    Result["Phi"] = params.Phi;
-//    Result["Voltage_Harmonics"] = params.Voltage_Harmonics;
-//    Result["Current_Harmonics"] = params.Current_Harmonics;
-//  }
-//  Result["Aggregation"] = (params.Type == AGGREG_3S) ? "3S" : (params.Type == AGGREG_1M) ? "1M" : (params.Type == AGGREG_10M) ? "10M" : (params.Type == AGGREG_15M) ? "15M": "1H";
-//  Result["Sampletime"] = params.Timestamp;
-//  Tools::SendUDP(Result);
-  pLastSave = Tools::GetTime();
+  SetOnline();
 }
 float AnalyzerSoft::CalcChange(const float in, const float reference) {
   return ((in - reference) / reference) * 100;
@@ -370,7 +388,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
     This->pAggreg10C.Timestamp = Start;
     //Init FFTs and event detection threads
     This->pMembersLocks.ReadLock();
-    if(This->pEventsDetector != NULL) This->pEventsDetector->Start();
+//    if(This->pEventsDetector != NULL) This->pEventsDetector->Start();
     for(uint i = 0; i < This->pVoltageChannels; i++) This->pVoltageFFT[i]->Start(This->pVoltageSamples[i]);
     for(uint i = 0; i < This->pCurrentChannels; i++) This->pCurrentFFT[i]->Start(This->pCurrentSamples[i]);
     if(This->pNominalFrequency != 0) {
@@ -451,12 +469,12 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
         This->pAggreg10C.Current_THD[3] = (This->pAggreg10C.Current_THD[3] / This->pAggreg10C.Current_Harmonics[3][0]) * 100.0;
       }
     }
-    if(This->pEventsDetector != NULL) This->pEventsDetector->Wait();
+//    if(This->pEventsDetector != NULL) This->pEventsDetector->Wait();
     //Save results
     if(((Sequence % 15) == 0) && (PrevTimestamp != 0)) {
       LOGFile::Debug("Storing 3S aggregation\n");
       This->NormalizeAggreg(Aggreg3S);
-      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg3S);
+//      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg3S);
       if(Aggreg3S.Flag == false) {
         float Variation = This->CalcChange(Aggreg3S.Frequency, This->pNominalFrequency);
         for(uint Range = 0; Range < 40; Range++) {
@@ -464,7 +482,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
         }
       }
       This->SaveAggreg(Aggreg3S);
-      if(This->pAlarms != NULL) This->pAlarms->Wait();
+//      if(This->pAlarms != NULL) This->pAlarms->Wait();
       This->InitAggreg(Aggreg3S, AGGREG_3S);
     }
     This->AccumulateAggreg(Aggreg3S, This->pAggreg10C);
@@ -472,9 +490,9 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       LOGFile::Debug("Storing 1M aggregation\n");
       Aggreg1M.Timestamp = Aggreg1M.Timestamp / 60000 * 60000 + 59999;
       This->NormalizeAggreg(Aggreg1M);
-      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg1M);
+//      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg1M);
       This->SaveAggreg(Aggreg1M);
-      if(This->pAlarms != NULL) This->pAlarms->Wait();
+//      if(This->pAlarms != NULL) This->pAlarms->Wait();
       This->InitAggreg(Aggreg1M, AGGREG_1M);
     }
     This->AccumulateAggreg(Aggreg1M, This->pAggreg10C);
@@ -482,7 +500,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       LOGFile::Debug("Storing 10M aggregation\n");
       Aggreg10M.Timestamp = Aggreg10M.Timestamp / 600000 * 600000 + 599999;
       This->NormalizeAggreg(Aggreg10M);
-      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg10M);
+//      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg10M);
       if(Aggreg10M.Flag == false) {
         for(uint i = 0; i < Aggreg10M.Voltage.size(); i++) {
           float Variation = This->CalcChange(Aggreg10M.Voltage[i], This->pNominalVoltage);
@@ -508,7 +526,7 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
         }
       }
       This->SaveAggreg(Aggreg10M);
-      if(This->pAlarms != NULL) This->pAlarms->Wait();
+//      if(This->pAlarms != NULL) This->pAlarms->Wait();
       This->InitAggreg(Aggreg10M, AGGREG_10M);
     }
     This->pMembersLocks.ReadUnlock();
@@ -518,9 +536,9 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       LOGFile::Debug("Storing 15M aggregation\n");
       Aggreg15M.Timestamp = Aggreg15M.Timestamp / 900000 * 900000 + 899999;
       This->NormalizeAggreg(Aggreg15M);
-      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg15M);
+//      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg15M);
       This->SaveAggreg(Aggreg15M);
-      if(This->pAlarms != NULL) This->pAlarms->Wait();
+//      if(This->pAlarms != NULL) This->pAlarms->Wait();
       This->InitAggreg(Aggreg15M, AGGREG_15M);
     }
     This->AccumulateAggreg(Aggreg15M, This->pAggreg10C);
@@ -528,9 +546,9 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
       LOGFile::Debug("Storing 1H aggregation\n");
       Aggreg1H.Timestamp = Aggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
       This->NormalizeAggreg(Aggreg1H);
-      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg1H);
+//      if(This->pAlarms != NULL) This->pAlarms->Start(Aggreg1H);
       This->SaveAggreg(Aggreg1H);
-      if(This->pAlarms != NULL) This->pAlarms->Wait();
+//      if(This->pAlarms != NULL) This->pAlarms->Wait();
       This->InitAggreg(Aggreg1H, AGGREG_1H);
     }
     This->AccumulateAggreg(Aggreg1H, This->pAggreg10C);
@@ -550,62 +568,17 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
   }
   return NULL;
 }
-json AnalyzerSoft::CheckConfig(const json &config) {
-  json ConfigOUT = json::object();
-  ConfigOUT["Name"] = "Unnamed analyzer";
-  ConfigOUT["NominalVoltage"] = 230.0;
-  ConfigOUT["NominalFreq"] = 50.0;
-  ConfigOUT["MaxCurrent"] = 35.0;
-  ConfigOUT["MinCurrent"] = 0.1;
-  ConfigOUT["TimeZone"] = "UTC";
-  ConfigOUT["Contract"] = "";
-  ConfigOUT["ZipCode"] = "";
-  ConfigOUT["GeoPosition"] = json::parse("[0, 0]");
-  ConfigOUT["RemoteEnabled"] = false;
-  ConfigOUT["RemoteServer"] = "";
-  ConfigOUT["RemoteUser"] = "";
-  ConfigOUT["RemotePass"] = "";
-  ConfigOUT["Save10C"] = false;
-  ConfigOUT["EventsEnabled"] = false;
-//  ConfigOUT["RatesEnabled"] = false;
-  ConfigOUT["AlarmsEnabled"] = false;
-  ConfigOUT["Alarms"] = json::array();
-  if(!config.is_object()) return ConfigOUT;
-  if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
-  if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
-  if(config.contains("NominalFreq") && config["NominalFreq"].is_number() && (config["NominalFreq"] >= 0) && (config["NominalFreq"] <= 400)) ConfigOUT["NominalFreq"] = config["NominalFreq"];
-  if(config.contains("MaxCurrent") && config["MaxCurrent"].is_number() && (config["MaxCurrent"] >= 1) && (config["MaxCurrent"] <= 100000)) ConfigOUT["MaxCurrent"] = config["MaxCurrent"];
-  if(config.contains("MinCurrent") && config["MinCurrent"].is_number() && (config["MinCurrent"] >= 0.01) && (config["MinCurrent"] <= 100)) ConfigOUT["MinCurrent"] = config["MinCurrent"];
-  if(config.contains("TimeZone") && config["TimeZone"].is_string()) {
-    time_zone TimeZone;
-    string TZ = config["TimeZone"];
-    if(cctz::load_time_zone(TZ, &TimeZone) == true) ConfigOUT["TimeZone"] = TZ;
-  }
-  if(config.contains("Contract") && config["Contract"].is_string()) ConfigOUT["Contract"] = config["Contract"];
-  if(config.contains("ZipCode") && config["ZipCode"].is_string()) ConfigOUT["ZipCode"] = config["ZipCode"];
-  if(config.contains("GeoPosition") && config["GeoPosition"].is_array() && (config["GeoPosition"].size() == 2) && config["GeoPosition"][0].is_number() && config["GeoPosition"][1].is_number()) ConfigOUT["GeoPosition"] = config["GeoPosition"];
-  if(config.contains("RemoteEnabled") && config["RemoteEnabled"].is_boolean()) ConfigOUT["RemoteEnabled"] = config["RemoteEnabled"];
-  if(config.contains("RemoteServer") && config["RemoteServer"].is_string()) ConfigOUT["RemoteServer"] = config["RemoteServer"];
-  if(config.contains("RemoteUser") && config["RemoteUser"].is_string()) ConfigOUT["RemoteUser"] = config["RemoteUser"];
-  if(config.contains("RemotePass") && config["RemotePass"].is_string()) ConfigOUT["RemotePass"] = config["RemotePass"];
-  if(config.contains("Save10C") && config["Save10C"].is_boolean()) ConfigOUT["Save10C"] = config["Save10C"];
-  if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
-//  if(config.contains("RatesEnabled") && config["RatesEnabled"].is_boolean()) ConfigOUT["RatesEnabled"] = config["RatesEnabled"];
-  if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
-  if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = Alarms::CheckConfig(config["Alarms"]);
-  return ConfigOUT;
-}
 //----------------------------------------------------------------------------------------------------------------------
 void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Response = CheckConfig(ConfigManager::ReadConfig(pConfigPath));
   Response["Analyzer"] = Serial;
   pMembersLocks.ReadLock();
-  Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
+//  Response["Online"] = IsOnline();
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"] = pSamplerate;
   Response.erase("Alarms");
-  if(pSync != NULL) Response["RemoteLogged"] = pSync->Logged();
+//  if(pSync != NULL) Response["RemoteLogged"] = pSync->Logged();
   pMembersLocks.ReadUnlock();
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + DB.Bind(Serial));
@@ -614,15 +587,7 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
 }
 void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  json Params = req.GetParams();
-//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
 //  if(!Params["MaxCurrent"].is_number() || !Params["MinCurrent"].is_number() || !Params["Name"].is_string() || !Params["NominalFreq"].is_number() || !Params["NominalVoltage"].is_number()) return req.FromString("'MaxCurrent', 'MinCurrent', 'Name', 'NominalFreq' and 'NominalVoltage' param is requiered", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->SetAnalyzer(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
 
   json Config = CheckConfig(params);
   Config.erase("Alarms");
@@ -888,12 +853,12 @@ void AnalyzerSoft::GetEvents(const json &params, Response &response) {
 //  }
 //  pDevicesLock.ReadUnlock();
   pMembersLocks.ReadLock();
-  if(pEventsDetector != NULL) {
-    pEventsDetector->GetEvents(params, response);
-  } else {
-    response.set_content("Events detection disabled", "text/plain");
-    response.status = HTTP_SERVICE_UNAVAILABLE;
-  }
+//  if(pEventsDetector != NULL) {
+//    pEventsDetector->GetEvents(params, response);
+//  } else {
+//    response.set_content("Events detection disabled", "text/plain");
+//    response.status = HTTP_SERVICE_UNAVAILABLE;
+//  }
   pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::GetEvent(const json &params, Response &response) {
@@ -907,14 +872,14 @@ void AnalyzerSoft::GetEvent(const json &params, Response &response) {
 //    if(Dev->GetEvent(req) == true) break;
 //  }
 //  pDevicesLock.ReadUnlock();
-  pMembersLocks.ReadLock();
-  if(pEventsDetector != NULL) {
-    pEventsDetector->GetEvent(params, response);
-  } else {
-    response.set_content("Events detection disabled", "text/plain");
-    response.status = HTTP_SERVICE_UNAVAILABLE;
-  }
-  pMembersLocks.ReadUnlock();
+//  pMembersLocks.ReadLock();
+//  if(pEventsDetector != NULL) {
+//    pEventsDetector->GetEvent(params, response);
+//  } else {
+//    response.set_content("Events detection disabled", "text/plain");
+//    response.status = HTTP_SERVICE_UNAVAILABLE;
+//  }
+//  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::SetEvent(const json &params, Response &response) {
 //  if(CheckRights(params, response, WRITE | CONFIG) == false) return;
@@ -927,14 +892,14 @@ void AnalyzerSoft::SetEvent(const json &params, Response &response) {
 //    if(Dev->SetEvent(req) == true) break;
 //  }
 //  pDevicesLock.ReadUnlock();
-  pMembersLocks.ReadLock();
-  if(pEventsDetector != NULL) {
-    pEventsDetector->SetEvent(params, response);
-  } else {
-    response.set_content("Events detection disabled", "text/plain");
-    response.status = HTTP_SERVICE_UNAVAILABLE;
-  }
-  pMembersLocks.ReadUnlock();
+//  pMembersLocks.ReadLock();
+//  if(pEventsDetector != NULL) {
+//    pEventsDetector->SetEvent(params, response);
+//  } else {
+//    response.set_content("Events detection disabled", "text/plain");
+//    response.status = HTTP_SERVICE_UNAVAILABLE;
+//  }
+//  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::DelEvent(const json &params, Response &response) {
 //  if(CheckRights(params, response, WRITE | CONFIG) == false) return;
@@ -947,14 +912,14 @@ void AnalyzerSoft::DelEvent(const json &params, Response &response) {
 //    if(Dev->DelEvent(req) == true) break;
 //  }
 //  pDevicesLock.ReadUnlock();
-  pMembersLocks.ReadLock();
-  if(pEventsDetector != NULL) {
-    pEventsDetector->DelEvent(params, response);
-  } else {
-    response.set_content("Events detection disabled", "text/plain");
-    response.status = HTTP_SERVICE_UNAVAILABLE;
-  }
-  pMembersLocks.ReadUnlock();
+//  pMembersLocks.ReadLock();
+//  if(pEventsDetector != NULL) {
+//    pEventsDetector->DelEvent(params, response);
+//  } else {
+//    response.set_content("Events detection disabled", "text/plain");
+//    response.status = HTTP_SERVICE_UNAVAILABLE;
+//  }
+//  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::GetRates(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -1124,33 +1089,23 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
 //    if(Dev->TestAlarm(req) == true) break;
 //  }
 //  pDevicesLock.ReadUnlock();
-  pMembersLocks.ReadLock();
-  if(pAlarms != NULL) {
-    pAlarms->TestAlarm(params, response);
-  } else {
+//  pMembersLocks.ReadLock();
+//  if(pAlarms != NULL) {
+//    pAlarms->TestAlarm(params, response);
+//  } else {
     response.set_content("Alarms disabled", "text/plain");
     response.status = HTTP_SERVICE_UNAVAILABLE;
-  }
-  pMembersLocks.ReadUnlock();
+//  }
+//  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
-//  if(CheckRights(params, response, READ) == false) return;
-//  json Params = req.GetParams();
-//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' params are requiered", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->GetAlarms(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
-  pMembersLocks.ReadLock();
-  if(pAlarms != NULL) {
-    pAlarms->GetAlarms(params, response);
-  } else {
-    response.set_content("Alarms disabled", "text/plain");
-    response.status = HTTP_SERVICE_UNAVAILABLE;
-  }
-  pMembersLocks.ReadUnlock();
+//  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+//  json Result = json::array();
+//  for(auto Alarm : pAlarms) Result.push_back(Alarm.GetShortDescriptor());
+//  pMemberLocks.ReadUnlock();
+  response.set_content("Result", "text/plain");
+  response.status = HTTP_BAD_REQUEST;
+//  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::GetAlarm(const json &params, Response &response) {
 //  if(CheckRights(params, response, READ) == false) return;
@@ -1162,14 +1117,14 @@ void AnalyzerSoft::GetAlarm(const json &params, Response &response) {
 //    if(Dev->GetAlarm(req) == true) break;
 //  }
 //  pDevicesLock.ReadUnlock();
-  pMembersLocks.ReadLock();
-  if(pAlarms != NULL) {
-    pAlarms->GetAlarm(params, response);
-  } else {
+//  pMembersLocks.ReadLock();
+//  if(pAlarms != NULL) {
+//    pAlarms->GetAlarm(params, response);
+//  } else {
     response.set_content("Alarms disabled", "text/plain");
     response.status = HTTP_SERVICE_UNAVAILABLE;
-  }
-  pMembersLocks.ReadUnlock();
+//  }
+//  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
 //  if(CheckRights(params, response, READ) == false) return;
@@ -1182,14 +1137,14 @@ void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
 //    if(Dev->SetAlarm(req) == true) break;
 //  }
 //  pDevicesLock.ReadUnlock();
-  pMembersLocks.ReadLock();
-  if(pAlarms != NULL) {
-    pAlarms->SetAlarm(params, response);
-  } else {
+//  pMembersLocks.ReadLock();
+//  if(pAlarms != NULL) {
+//    pAlarms->SetAlarm(params, response);
+//  } else {
     response.set_content("Alarms disabled", "text/plain");
     response.status = HTTP_SERVICE_UNAVAILABLE;
-  }
-  pMembersLocks.ReadUnlock();
+//  }
+//  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::AddAlarm(const json &params, Response &response) {
 //  if(CheckRights(params, response, READ) == false) return;
@@ -1202,14 +1157,25 @@ void AnalyzerSoft::AddAlarm(const json &params, Response &response) {
 //    if(Dev->AddAlarm(req) == true) break;
 //  }
 //  pDevicesLock.ReadUnlock();
-  pMembersLocks.ReadLock();
-  if(pAlarms != NULL) {
-    pAlarms->AddAlarm(params, response);
-  } else {
-    response.set_content("Alarms disabled", "text/plain");
-    response.status = HTTP_SERVICE_UNAVAILABLE;
-  }
-  pMembersLocks.ReadUnlock();
+//  pMembersLocks.ReadLock();
+//  if(pAlarms != NULL) {
+//    pAlarms->AddAlarm(params, response);
+//  } else {
+//    response.set_content("Alarms disabled", "text/plain");
+//    response.status = HTTP_SERVICE_UNAVAILABLE;
+//  }
+//  pMembersLocks.ReadUnlock();
+//    pMemberLocks.WriteLock();
+//  pAlarms.emplace_back(pLastAlarmID++, Alarm::CheckConfig(params));
+//  pMemberLocks.WriteUnlock();
+//  json Config = ConfigManager::ReadConfig(pParent->pConfigPath);
+//  Config["Alarms"] = json::array();
+//  pMemberLocks.ReadLock();
+//  for(auto &Alarm : pAlarms) Config["Alarms"].push_back(Alarm.GetFullDescriptor());
+//  pMemberLocks.ReadUnlock();
+//  ConfigManager::WriteConfig(pParent->pConfigPath, Config);
+  response.set_content("", "text/plain");
+  response.status = HTTP_OK;
 }
 void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
 //  if(CheckRights(params, response, READ) == false) return;
@@ -1220,12 +1186,31 @@ void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
 //    if(Dev->DelAlarm(req) == true) break;
 //  }
 //  pDevicesLock.ReadUnlock();
-  pMembersLocks.ReadLock();
-  if(pAlarms != NULL) {
-    pAlarms->DelAlarm(params, response);
-  } else {
-    response.set_content("Alarms disabled", "text/plain");
-    response.status = HTTP_SERVICE_UNAVAILABLE;
-  }
-  pMembersLocks.ReadUnlock();
+//  pMembersLocks.ReadLock();
+//  if(pAlarms != NULL) {
+//    pAlarms->DelAlarm(params, response);
+//  } else {
+//    response.set_content("Alarms disabled", "text/plain");
+//    response.status = HTTP_SERVICE_UNAVAILABLE;
+//  }
+//  pMembersLocks.ReadUnlock();
+//  uint64_t AlarmID = params["AlarmID"];
+//  pMemberLocks.WriteLock();
+//  for(auto it = pAlarms.begin(); it != pAlarms.end(); it++) {
+//    if(it->GetID() != AlarmID) continue;
+//    pAlarms.erase(it);
+//    pMemberLocks.WriteUnlock();
+//    json Config = ConfigManager::ReadConfig(pParent->pConfigPath);
+//    Config["Alarms"] = json::array();
+//    pMemberLocks.ReadLock();
+//    for(auto &Alarm : pAlarms) Config["Alarms"].push_back(Alarm.GetFullDescriptor());
+//    pMemberLocks.ReadUnlock();
+//    ConfigManager::WriteConfig(pParent->pConfigPath, Config);
+//    response.set_content("", "text/plain");
+//    response.status = HTTP_OK;
+//    return;
+//  }
+//  pMemberLocks.WriteUnlock();
+  response.set_content("AlarmID not found", "text/plain");
+  response.status = HTTP_BAD_REQUEST;
 }

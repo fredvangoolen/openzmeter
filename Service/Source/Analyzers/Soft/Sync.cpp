@@ -91,7 +91,7 @@ void *AnalyzerSoft::Sync::Sync_Thread(void *args) {
       json   Content = json::object();
       Headers Header = {{"Accept", "application/json"}, {"Connection", "keep-alive"}, {"Cookie", This->pCookie}};
       Content["Analyzer"] = This->pParent->Serial;
-      Content["Name"] = This->pParent->pName;
+      Content["Name"] = This->pParent->GetName();
       This->pLocks.ReadUnlock();
       LOGFile::Debug("Analyzer '%s'request pending queries to server\n", This->pParent->Serial.c_str());
       auto Response = HTTPClient->Post(Path.c_str(), Header, Content.dump(), "application/json", true);

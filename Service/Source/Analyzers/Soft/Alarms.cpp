@@ -231,14 +231,6 @@ void AnalyzerSoft::Alarms::TestAlarm(const json &params, Response &response) {
   response.set_content(Result.dump(), "application/json");
   response.status = HTTP_OK;
 }
-void AnalyzerSoft::Alarms::GetAlarms(const json &params, Response &response) {
-  pMemberLocks.ReadLock();
-  json Result = json::array();
-  for(auto Alarm : pAlarms) Result.push_back(Alarm.GetShortDescriptor());
-  pMemberLocks.ReadUnlock();
-  response.set_content(Result, "text/plain");
-  response.status = HTTP_BAD_REQUEST;
-}
 void AnalyzerSoft::Alarms::GetAlarm(const json &params, Response &response) {
   uint32_t AlarmID = params["AlarmID"];
   pMemberLocks.ReadLock();
@@ -264,40 +256,6 @@ void AnalyzerSoft::Alarms::SetAlarm(const json &params, Response &response) {
     Config["Alarms"] = json::array();
     pMemberLocks.ReadLock();
     for(auto Alarm : pAlarms) Config["Alarms"].push_back(Alarm.GetFullDescriptor());
-    pMemberLocks.ReadUnlock();
-    ConfigManager::WriteConfig(pParent->pConfigPath, Config);
-    response.set_content("", "text/plain");
-    response.status = HTTP_OK;
-    return;
-  }
-  pMemberLocks.WriteUnlock();
-  response.set_content("AlarmID not found", "text/plain");
-  response.status = HTTP_BAD_REQUEST;
-}
-void AnalyzerSoft::Alarms::AddAlarm(const json &params, Response &response) {
-  pMemberLocks.WriteLock();
-  pAlarms.emplace_back(pLastAlarmID++, Alarm::CheckConfig(params));
-  pMemberLocks.WriteUnlock();
-  json Config = ConfigManager::ReadConfig(pParent->pConfigPath);
-  Config["Alarms"] = json::array();
-  pMemberLocks.ReadLock();
-  for(auto &Alarm : pAlarms) Config["Alarms"].push_back(Alarm.GetFullDescriptor());
-  pMemberLocks.ReadUnlock();
-  ConfigManager::WriteConfig(pParent->pConfigPath, Config);
-  response.set_content("", "text/plain");
-  response.status = HTTP_OK;
-}
-void AnalyzerSoft::Alarms::DelAlarm(const json &params, Response &response) {
-  uint64_t AlarmID = params["AlarmID"];
-  pMemberLocks.WriteLock();
-  for(auto it = pAlarms.begin(); it != pAlarms.end(); it++) {
-    if(it->GetID() != AlarmID) continue;
-    pAlarms.erase(it);
-    pMemberLocks.WriteUnlock();
-    json Config = ConfigManager::ReadConfig(pParent->pConfigPath);
-    Config["Alarms"] = json::array();
-    pMemberLocks.ReadLock();
-    for(auto &Alarm : pAlarms) Config["Alarms"].push_back(Alarm.GetFullDescriptor());
     pMemberLocks.ReadUnlock();
     ConfigManager::WriteConfig(pParent->pConfigPath, Config);
     response.set_content("", "text/plain");
