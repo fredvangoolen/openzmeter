@@ -17,14 +17,18 @@ class Analyzer {
   public :
     enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
     enum AnalyzerRights { READ, WRITE, CONFIG };
-  protected :
-    RWLocks      pMembersLocks;            //Locks for configurations
-    uint64_t     pLastSave;                //Timestamp of last save or communication
-    string       pName;                    //Analyzer description
+  private :
+    pthread_rwlock_t  pMembersLocks;            //Locks for configurations
+    uint64_t          pLastSave;                //Timestamp of last save or communication
+    string            pName;                    //Analyzer description
   public :
-    const string Serial;                   //Serial number
+    const string Serial;                        //Serial number
   protected :
     Analyzer(const string &id);
+    string GetName();
+    void   SetName(const string &name);
+    void   SetOnline();
+    bool   IsOnline();
   public :
     virtual void GetAnalyzer(const json &params, Response &response) = 0;
     virtual void SetAnalyzer(const json &params, Response &response) = 0;

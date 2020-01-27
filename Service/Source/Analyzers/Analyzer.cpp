@@ -11,17 +11,40 @@
 Analyzer::Analyzer(const string &id) : Serial(id) {
   pName     = "Unnamed analyzer";
   pLastSave = 0;
+  pMembersLocks = PTHREAD_RWLOCK_INITIALIZER;
 }
 Analyzer::~Analyzer() {
 }
 json Analyzer::GetJSONDescriptor() {
   json Response = json::object();
-  pMembersLocks.ReadLock();
   Response["Analyzer"] = Serial;
+  pthread_rwlock_rdlock(&pMembersLocks);
   Response["Name"] = pName;
   Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
-  pMembersLocks.ReadUnlock();
+  pthread_rwlock_unlock(&pMembersLocks);
   return Response;
+}
+string Analyzer::GetName() {
+  pthread_rwlock_rdlock(&pMembersLocks);
+  string Name = pName;
+  pthread_rwlock_unlock(&pMembersLocks);
+  return Name;
+}
+void Analyzer::SetName(const string &name) {
+  pthread_rwlock_wrlock(&pMembersLocks);
+  pName = name;
+  pthread_rwlock_unlock(&pMembersLocks);
+}
+void Analyzer::SetOnline() {
+  pthread_rwlock_wrlock(&pMembersLocks);
+  pLastSave = Tools::GetTime();
+  pthread_rwlock_unlock(&pMembersLocks);
+}
+bool Analyzer::IsOnline() {
+  pthread_rwlock_rdlock(&pMembersLocks);
+  bool Online = ((Tools::GetTime() - pLastSave) < 20000);
+  pthread_rwlock_unlock(&pMembersLocks);
+  return Online;
 }
 bool Analyzer::CheckRights(const string &user, const AnalyzerRights neededAccess) {
   if(user == "admin") return true;
@@ -32,15 +55,6 @@ bool Analyzer::CheckRights(const string &user, const AnalyzerRights neededAccess
 }
 void Analyzer::GetPermissions(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-
- //  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->GetPermissions(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
-
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('User', username, 'Read', read, 'Write', write, 'Configure', config))), '[]') AS result FROM permisions WHERE serial = " + DB.Bind(Serial));
   if(DB.FecthRow() == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
@@ -48,13 +62,6 @@ void Analyzer::GetPermissions(const json &params, Response &response) {
 }
 void Analyzer::AddPermission(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  if(!Params["Analyzer"].is_string() || !Params["User"].is_string() || !Params["Read"].is_boolean() || !Params["Write"].is_boolean() || !Params["Configure"].is_boolean()) return req.FromString("'Analyzer', 'User', 'Read', 'Write' and 'Configure' params are requiered", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->AddPermission(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
   Database DB;
   string User   = params["User"];
   bool   Read   = params["Read"];
@@ -65,13 +72,6 @@ void Analyzer::AddPermission(const json &params, Response &response) {
 }
 void Analyzer::SetPermission(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  if(!params["Analyzer"].is_string() || !params["User"].is_string() || !params["Read"].is_boolean() || !params["Write"].is_boolean() || !params["Configure"].is_boolean()) return req.FromString("'Analyzer', 'User', 'Read', 'Write' and 'Configure' params are requiered", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->SetPermission(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
   Database DB;
   string User   = params["User"];
   bool   Read   = params["Read"];
@@ -82,18 +82,6 @@ void Analyzer::SetPermission(const json &params, Response &response) {
 }
 void Analyzer::DelPermission(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  //  if(!params["Analyzer"].is_string() || !params["User"].is_string()) {
-//    response.set_content("'Analyzer' and 'User' params are requiered", "text/plain");
-//    response.status = MHD_HTTP_BAD_REQUEST;
-//    return;
-//  }
-//  response.set_content("Analyzer not found", "text/plain");
-//  response.status = MHD_HTTP_BAD_REQUEST;
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->DelPermission(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
   Database DB;
   string User   = params["User"];
   bool   Result = DB.ExecSentenceNoResult("DELETE FROM permisions WHERE userename = " + DB.Bind(User) + " AND serial = " + DB.Bind(Serial));

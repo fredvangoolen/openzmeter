@@ -38,18 +38,14 @@ import Graph from 'Components/Graph.vue';
 Vue.component('Graph', Graph);
 import InputSpin from 'Components/InputSpin.vue';
 Vue.component('InputSpin', InputSpin);
-
 import OptionPicker from 'Components/OptionPicker.vue';
 Vue.component('OptionPicker', OptionPicker);
 import ProgressBar from 'Components/ProgressBar.vue';
 Vue.component('ProgressBar', ProgressBar);
-
 import Spinner from 'Components/Spinner.vue';
 Vue.component('Spinner', Spinner);
 import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
 Vue.component('ToolbarAggregation', ToolbarAggregation);
-//import ToolbarTools from 'Components/ToolbarTools.vue';
-//Vue.component('ToolbarTools', ToolbarTools);
 import ToolbarYears from 'Components/ToolbarYears.vue';
 Vue.component('ToolbarYears', ToolbarYears);
 import ToolbarPeriod from 'Components/ToolbarPeriod.vue';

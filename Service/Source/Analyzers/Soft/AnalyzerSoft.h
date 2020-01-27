@@ -18,25 +18,27 @@
 #include <inttypes.h>
 #include <deque>
 #include <list>
+#include "muParser/muParser.h"
 #include "Analyzer.h"
 #include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
+using namespace mu;
+//----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoft final : public Analyzer {
   private :
-    static const uint8_t ZEROCROSSING_FILTERSTAGES =  5;
+    static const uint8_t ZEROCROSSING_FILTERSTAGES =  5;        //Filter stages for zerocrossing
     static const uint8_t ZEROCROSSING_SECONDS      = 10;        //Used seconds to calc frequency
   private :
     class Events;
     class Sync;
-    class Alarms;
   public :
       enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
   private :
     typedef struct {
       AggregType                     Type;                 //Aggregation type
-      float                          Frequency;            //Frecuencia
-      float                          Unbalance;            //Unbalance only in 3phase
-      bool                           Flag;                 //Periodo marcado
+      float                          Frequency;            //Frecuency
+      float                          Unbalance;            //Unbalance (only in 3phase)
+      bool                           Flag;                 //Flagged period
       uint64_t                       Timestamp;            //Aggregation timestampt
       uint16_t                       Voltage_Inputs;       //Valid RMS_V samples in aggregation
       uint16_t                       Frequency_Inputs;     //Valid Freq samples in aggregation
@@ -71,29 +73,46 @@ class AnalyzerSoft final : public Analyzer {
       float   ChannelsZ1[3];
       float   ChannelsZ2[3];
     } Filter_t;
+    typedef struct {
+      RWLocks            pMemberLocks;             //Locks access to members
+      uint32_t           pAlarmID;
+      string             Name;
+      uint8_t            Priority;
+      string             Message;
+      uint32_t           Samples;
+      uint32_t           Window;
+      AggregType         Aggreg;
+      Parser             Evaluator;
+      queue<bool>        Results;
+    } Alarm_t;
   private :
     static const vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
     static const vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
     static const vector<float>  THDRanges;         //Rangos de distorsion harmonica para estadisticas
     static const vector<float>  UnbalanceRanges;   //Unbalance ranges
     static const vector<float>  HarmonicsAllowed;  //Rangos permitidos para cada harmonico
+  private :
+    const float                pSamplerate;              //Velocidad de muestreo
+    const string               pConfigPath;              //Path to configuration
+    const uint8_t              pVoltageChannels;         //Voltage channels
+    const uint8_t              pCurrentChannels;         //Current channels
+    const AnalyzerMode         pMode;                    //Operation mode
   private : //Variables not changed after initialization or not need locking
     bool                       pTerminate;               //Marca para finalizar proceso
-    float                      pSamplerate;              //Velocidad de muestreo
-    string                     pConfigPath;              //Path to configuration
+
+
     uint32_t                   pCycleLen;                //Current cycle len
     pthread_t                  pAnalyzerThread;          //Hilo de ejecucion
     float                      pLastSamples[3];          //Filter samples backup
-    AnalyzerMode               pMode;                    //Operation mode
+
     WorkerLocks                pAnalyzerWorkerLocks;     //Handle analyzer thread
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
-    uint8_t                    pVoltageChannels;         //Voltage channels
-    uint8_t                    pCurrentChannels;         //Current channels
   private :  //Config params (Writed in configure, readed in other places)
-    Events                    *pEventsDetector;          //Events detector
-    Sync                      *pSync;                    //Synchronization object
+    RWLocks                    pMembersLocks;
+//    Events                    *pEventsDetector;          //Events detector
+//    Sync                      *pSync;                    //Synchronization object
 //    Rates                     *pRates;                   //Rate control object
-    Alarms                    *pAlarms;                  //Alarms control object
+    vector<Alarm_t>            pAlarms;                  //Alarms control object
     bool                       pSave10c;                 //Save 10 cycles aggregation to database
     float                      pNominalVoltage;          //Analyzer nominal voltage
     float                      pNominalFrequency;        //Analyzer nominal frequency
@@ -121,14 +140,14 @@ class AnalyzerSoft final : public Analyzer {
     Params_t                   pAggreg10C;               //Agregacion de 10 ciclos
   private :
     static void  *Analyzer_Thread(void *args);
-    static float CalcChange(const float in, const float reference);
-    static void  AccumulateAggreg(Params_t &src, const Params_t &dst);
-    static float AccumulateSUM(const float val1, const float val2);
-    static float AccumulateRMS(const float val1, const float val2);
-    static void  NormalizeAggreg(Params_t &src);
   private :
     void  Configure(const json &options);
     void  InitAggreg(Params_t &params, AggregType type);
+    void  AccumulateAggreg(Params_t &src, const Params_t &dst);
+    void  NormalizeAggreg(Params_t &src);
+    float AccumulateSUM(const float val1, const float val2);
+    float AccumulateRMS(const float val1, const float val2);
+    float CalcChange(const float in, const float reference);
     void  SaveAggreg(Params_t &params);
   private :
     void  GetAnalyzer(const json &params, Response &response) override;
