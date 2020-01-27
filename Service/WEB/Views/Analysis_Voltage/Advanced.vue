@@ -3,19 +3,21 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ MouseOver ? '[PAUSED]' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
-        <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
-          <toolbar-options storage="DetailOptions" :options="['Current', 'Log']" v-model="Options"></toolbar-options>
-          <div class="btn-group">
-            <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
-            <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools-->
-          </div>
+      <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
+        <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
+        <toolbar-options storage="DetailOptions" :options="['Current', 'Log']" v-model="Options"></toolbar-options>
+        <div class="btn-group">
+          <button-export file="FFT" :rows="Export"></button-export>
+          <button-expand :expanded.sync="Expanded"></button-expand>
+          <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
         </div>
-      </div>
-    <div class="panel-body">
-      <spinner v-if="data==null"></spinner>
-      <graph :options="GraphOptions" v-on:mouseOver="MouseOver=$event"></graph>
+      </portal>
     </div>
+    <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+      <spinner v-if="data==null"></spinner>
+      <graph :options="GraphOptions" v-on:mouseOver="MouseOver=$event" :height="Expanded?DialogHeight:300"></graph>
+    </portal>
+    <dlg-fs v-if="Expanded" title="Advanced" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
 
@@ -26,7 +28,7 @@
   export default {
     props: { analyzer: Object, data: Object, paused: Boolean },
     data() {
-      return { MouseOver: false, Options: {}, Phases: [] };
+      return { MouseOver: false, Options: {}, Phases: [], DialogHeight: 300, Expanded: false };
     },
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
@@ -111,32 +113,9 @@
           Opt.file.push(Row);
         }
         return Opt;
-      }
-    },
-    created: function() {
-//      this.MaxCurrent = 0;
-//      this.Data = null;
-//      this.Log = null;
-//      this.VOffset = 0;
-//      this.COffset = 0;
-    },
-    methods: {
-//      Redraw: function() {
-//        this.$nextTick(function() {
-//          this.$refs.graph.Redraw('100%', '300');
-//        });
-//      },
-//      SetPhases: function(phases) {
-//        this.$refs.phases.SetPhases(phases);
-//        this.Phases = phases;
-//        this.CalcOptions();
-//      },
-//      SetOption: function(option, val) {
-///        if(option === 'Current') this.ShowCurrent = val;
-//        if(option === 'Log') this.Log = val;
-//        this.CalcOptions();
-//      },
-      ExportClick: function() {
+      },
+      Export: function() {
+        return [];
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
         var Data = [];
@@ -159,16 +138,8 @@
           Data.push(Row);
         }
         this.$refs.tools.SaveCVS('FFT.csv', Data);
-      },
-      MaximizeClick: function() {
-        this.$refs.tools.Maximize('Advanced', this.$refs.graph.Graph, this.$refs.Toolbar);
-      },
-      WindowChange: function() {},
-      WindowRestore: function() {
-        this.$refs.graph.SetOptions( {dateWindow: [0, this.Data.length]} );
       }
-    },
-    components: { Graph }
+    }
   }
 </script>
 
