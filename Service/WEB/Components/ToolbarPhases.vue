@@ -1,9 +1,9 @@
 <template>
   <div class="btn-group" v-if="analyzer.Mode != '1PHASE'">
-    <button type="button" @click="Toggle(0)" :class="{ active: (Active[0]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase R"><img :src="require('Imgs/phase_r.png')"></button>
-    <button type="button" @click="Toggle(1)" :class="{ active: (Active[1]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase S"><img :src="require('Imgs/phase_s.png')"></button>
-    <button type="button" @click="Toggle(2)" :class="{ active: (Active[2]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase T"><img :src="require('Imgs/phase_t.png')"></button>
-    <button type="button" @click="Toggle(3)" :class="{ active: (Active[3]==true) }" v-if="(analyzer.Mode=='3PHASE+N') && (current==true)" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase N"><img :src="require('Imgs/phase_n.png')"></button>
+    <button type="button" @click="Toggle(0)" :class="{ active: (Active[0]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[0]"><img :src="PhaseImgs[0]"></button>
+    <button type="button" @click="Toggle(1)" :class="{ active: (Active[1]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[1]"><img :src="PhaseImgs[1]"></button>
+    <button type="button" @click="Toggle(2)" :class="{ active: (Active[2]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[2]"><img :src="PhaseImgs[2]"></button>
+    <button type="button" @click="Toggle(3)" :class="{ active: (Active[3]==true) }" v-if="(analyzer.Mode=='3PHASE+N') && (current==true)" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[3]"><img :src="PhaseImgs[3]"></button>
   </div>
 </template>
 
@@ -11,7 +11,7 @@
   export default {
     props: { analyzer: Object, storage: String, multi: Boolean, current: Boolean, value: [Number, Array] },
     data() {
-      return { Active: [] };
+      return { Active: [], BaseImg: null };
     },
     created: function() {
       this.Active = Array((this.analyzer.Mode == '1PHASE') ? 1 : (this.analyzer.Mode == '3PHASE') ? 3 : (this.current == true) ? 4 : 3). fill(false);
@@ -35,6 +35,9 @@
           }
         }
       }
+      var Img = new Image();
+      Img.onload = () => { this.BaseImg = Img; }
+      Img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAYFJREFUeNpitGvfxgAFiUA8D8q+B8TKDEQAJijNB9L868uH3Q/3LAkDspWA+DgxBrCAyf//FzMwMjKcaI3KAPKeMXNwx8rYBC4GsvmB+CNhFzAy+n24d6ke6J17QPzj3tbZ6/7/+/cFaHANMV5IADEuza6YChMEGvLt1+d3e/7/+xtC0ID/f/9k//768RBQ01tkiZ8fXm9iZGZRIGgAUJHJr09vt6NLXJhRvA7KtCAYBu/vXNiALgF00UdQOPz99d0Zj97/jEDCGIgvAjX8QVfx+9unAyzsXNxAV5piMcAPiDeyADWexeW8Xx/fbGeVVOrAJvfv969QYCBfYcLnv7OTcuZAmd4Y7mdli/n2+skKvAaAYgYYDp///fmdiSYFNvD81PyZTISi6dOja91MLKwgDZxwwf//J/7++gkU9W8IGnBxZtk0KPMRKM0C8RpgylW+vX5yIXJmwuuNe9vmBAKZIqCwA+LgN1ePFb25evQiA9REYgA7EOsg8e/AMhlAgAEALeSdj/i4f7oAAAAASUVORK5CYII=";;
     },
     watch: {
       value: function(val) {
@@ -45,7 +48,7 @@
         if(this.storage != null) localStorage.setItem(this.storage, JSON.stringify(Stored));
         if(this.multi == false) {
           this.Active.fill(false);
-          this.Active[val] = true;
+          this.$set(this.Active, val, true);
         } else {
           this.Active = val;
         }
@@ -54,23 +57,42 @@
         this.Active = Array((this.analyzer.Mode == '1PHASE') ? 1 : (this.analyzer.Mode == '3PHASE') ? 3 : (this.current == true) ? 4 : 3). fill(false);
       }
     },
+    computed: {
+      PhaseImgs: function() {
+        var Imgs = [];
+        for(var n in this.analyzer.PhaseNames) {
+          var elem = document.createElement('canvas');
+          elem.width = 16;
+          elem.height = 16;
+          var ctx = elem.getContext('2d');
+          if(this.BaseImg != null) ctx.drawImage(this.BaseImg, 0, 0, 16, 16);
+          ctx.font = "bold 12px Titillium Web";
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.shadowBlur = 2;
+          ctx.shadowColor = "rgba(0,0,0,0.5)";
+          ctx.fillText(this.analyzer.PhaseNames[n], 0, 15);
+          Imgs.push(ctx.canvas.toDataURL());
+        }
+        return Imgs;
+      }
+    },
     methods: {
       Toggle: function(val) {
-        this.Active[val] = !this.Active[val];
-        var Set = 0;
-        for(var n in this.Active) {
-          if((Set > 0) && (this.multi == false)) this.Active[n] = false;
-          if(this.Active[n] == true) Set++;
-        }
-        if(Set == 0) this.Active[0] = true;
-        if(this.multi === true) {
-          this.$emit('input', this.Active.slice(0));
+        if(this.multi == false) {
+          this.Active.fill(false);
+          this.Active[val] = true;
+          this.$emit('input', parseInt(val));
         } else {
+          this.Active[val] = !this.Active[val];
+          var Set = 0;
           for(var n in this.Active) {
-            if(this.Active[n] == true) this.$emit('input', parseInt(n));
+            if(this.Active[n] == true) Set++;
           }
+          if(Set == 0) this.Active[0] = true;
+          this.$emit('input', this.Active.slice(0));
         }
-      },
+      }
     }
   }
 </script>

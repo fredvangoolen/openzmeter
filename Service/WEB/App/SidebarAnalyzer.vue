@@ -43,6 +43,7 @@
     methods: {
       SetAnalyzer: function(analyzer) {
         if(analyzer != null) {
+          analyzer.PhaseNames = ['R', 'S', 'T', 'N'];
           analyzer.GetSeriesRange = this.GetSeriesRange.bind(this);
           analyzer.GetPricesRange = this.GetPricesRange.bind(this);
           analyzer.GetSeriesLast = this.GetSeriesLast.bind(this);

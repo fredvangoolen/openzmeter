@@ -11,6 +11,9 @@ import VueResource from 'vue-resource';
 Vue.use(VueResource);
 import PortalVue from 'portal-vue';
 Vue.use(PortalVue);
+//Other tools ----------------------------------------------------------------------------------------------------------
+import { blur } from 'auto-blur';
+addEventListener('click', evt => blur(evt));
 //OZM tools ------------------------------------------------------------------------------------------------------------
 import openZmeter from 'JS/openZmeter.js';
 Vue.use(openZmeter);
