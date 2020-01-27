@@ -19,10 +19,9 @@
 #include <stdint.h>
 #include <pthread.h>
 #include "Tools.h"
-#include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
-class AnalyzerSoft::FFT final {
+class FFT final {
   public :
     vector<complex<float> > Output;                //Datos de salida
   private :

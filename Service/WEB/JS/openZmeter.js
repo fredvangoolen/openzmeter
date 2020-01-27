@@ -19,10 +19,15 @@ const openZmeter = {
       if(options != null) {
         if((UpperRange == -Infinity) && (options.defMax != null)) UpperRange = options.defMax;
         if((LowerRange == Infinity) && (options.defMin != null)) LowerRange = options.defMin;
-        if((UpperRange > 0) && (options.upperPercent != null)) UpperRange = UpperRange * (1.0 + options.upperPercent);
-        if((LowerRange < 0) && (options.lowerPercent != null)) LowerRange = LowerRange * (1.0 + options.lowerPercent);
+        if((UpperRange > 0) && (options.upperPercent != null)) UpperRange += Math.abs(UpperRange * options.upperPercent);
+        if((LowerRange < 0) && (options.lowerPercent != null)) LowerRange -= Math.abs(LowerRange * options.lowerPercent);
         if((UpperRange > 0) && (options.minUpperWidth != null)) UpperRange = Math.max(UpperRange, options.minUpperWidth);
         if((LowerRange < 0) && (options.minLowerWidth != null)) LowerRange = Math.min(LowerRange, options.minLowerWidth);
+        if(options.percent != null) { UpperRange += Math.abs(UpperRange * options.percent); LowerRange -= Math.abs(LowerRange * options.percent); }
+        if(options.minWidth != null) {
+          UpperRange += Math.max((options.minWidth - (UpperRange - LowerRange)) / 2, 0);
+          LowerRange -= Math.max((options.minWidth - (UpperRange - LowerRange)) / 2, 0);
+        }
       }
       return [LowerRange, UpperRange];
     },

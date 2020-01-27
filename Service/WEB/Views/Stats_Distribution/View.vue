@@ -39,7 +39,7 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Range: [0, 1], Year: 0, Data: {}, ShowSpinner: true, CalendarRows: [], MonthRows: [], WeekRows: [] };
+      return { Range: [0, 1], Year: null, Data: null, ShowSpinner: true, CalendarRows: [], MonthRows: [], WeekRows: [] };
     },
     watch: {
       Year: function(val) {

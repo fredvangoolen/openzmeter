@@ -17,11 +17,11 @@
   export default {
     props: { analyzer: Object, data: Object, phases: Array, height: Number },
     data() {
-      return { Options: {} };
+      return { };
     },
     computed: {
       GraphOptions: function(val) {
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
         var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
         var Opt = { file: [], axes: { x: {}, y: {} } };
         Opt.strokeWidth = 0.5;
@@ -46,9 +46,8 @@
         Opt.labels = ['Time'].concat(VoltageNames);
         Opt.colors = VoltageStyle.Colors;
         if(this.data != null) {
-          for(var n in this.data.Sampletime) {
-            Opt.file.push([this.data.Sampletime[n]].concat(this.data.Voltage[n]));
-          }
+          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n]].concat(this.data.Voltage[n]));
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 10 });
         }
         return Opt;
       }

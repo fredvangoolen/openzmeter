@@ -5,12 +5,10 @@
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
+      <vuetable ref="table" :fields="Columns" :data="Devices" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
-            <button class="btn btn-xs btn-danger" v-if="props.rowData.Status === 'RUNNING'" @click="Stop(props.rowData.Serial, $event)">Stop</button>
-            <button class="btn btn-xs btn-success" v-if="props.rowData.Status !== 'RUNNING'" @click="Start(props.rowData.Serial, $event)">Start</button>
-            <button class="btn btn-xs btn-default" @click="Configure(props.rowData, $event)">Configure</button>
+            <button class="btn btn-xs btn-default" @click="Configure(props.rowData)">Configure</button>
           </div>
         </template>
       </vuetable>
@@ -45,7 +43,6 @@
           {name: 'Name', title: 'Name'},
           {name: 'Serial', title: 'Serial'},
           {name: 'Analyzers', title: 'Analyzers'},
-          {name: 'Status', title: 'Status'},
           {name: '__slot:actions', title: ''}
         ]
       };
@@ -53,72 +50,46 @@
     methods: {
       LoadTable: function () {
         this.ShowSpinner = true;
-        $.ajax({url: "getDevices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({}),
-          success: function (result) {
-            var TableData = {data: result};
-            this.$refs.table.setData(TableData);
+        this.$http.post('getDevices', {}).then(
+          (result) => {
+            this.Devices = result.data;
             this.ShowSpinner = false;
-          }.bind(this)
-        });
-      },
-      Stop: function (id, evt) {
-        $(evt.target).blur();
-        this.ShowSpinner = true;
-        $.ajax({url: "stopDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({Serial: id}),
-          success: (result) => {
-            this.LoadTable();
-            this.$root.$children[0].$refs.sidebar.$refs.analyzer.CheckAnalyzer();
           },
-          complete: () => {
-            this.ShowSpinner = false;
-          }
-        });
+          () => {}
+        );
       },
-      Start: function (id, evt) {
-        $(evt.target).blur();
-        this.ShowSpinner = true;
-        $.ajax({url: "startDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({Serial: id}),
-          success: (result) => {
-            this.LoadTable();
-            this.$root.$children[0].$refs.sidebar.$refs.analyzer.CheckAnalyzer();
-          },
-          complete: () => {
-            this.ShowSpinner = false;
-          }
-        });
-      },
-      Configure: function (id, evt) {
-        $(evt.target).blur();
+      Configure: function (id) {
         this.ShowSpinner = true;
         if(id.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
         if(id.Driver === 'V1.00') this.Driver = 'DeviceV1';
         if(id.Driver === 'V1.01') this.Driver = 'DeviceV1';
         if(id.Driver === 'V2.01') this.Driver = 'DeviceV2';
         if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
-        $.ajax({url: "getDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({Serial: id.Serial}),
-          success: (result) => {
-            this.Settings = result;
+        this.$http.post('getDevice', { Serial: id.Serial } ).then(
+          (result) => {
+            this.Settings = result.data;
             this.Settings.Serial = id.Serial;
             this.SettingsVisible = true;
+            this.ShowSpinner = false;
           },
-          complete: () => {
+          (fail) => {
             this.ShowSpinner = false;
           }
-        });
+        );
       },
       Save: function () {
         this.SettingsLoading = true;
-        $.ajax({url: "setDevice", timeout: 20000, type: "POST", contentType: 'application/json', data: JSON.stringify(this.Settings),
-          success: (result) => {
+        this.$http.post('setDevice', this.Settings).then(
+          (result) => {
             this.SettingsLoading = false;
             this.SettingsVisible = false;
             this.LoadTable();
           },
-          error: () => {
+          (fail) => {
             this.Settings.Error = 'Failed to save device settings!';
             setTimeout(() => { this.Settings.Error = null; }, 1000);
           }
-        });
+        );
       }
     },
     mounted: function () {
@@ -127,7 +98,7 @@
     updated: function () {
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: {Vuetable, Spinner, DeviceVirtual, DeviceV1, DeviceV2, DeviceRemote}
+    components: {Vuetable, DeviceVirtual, DeviceV1, DeviceV2, DeviceRemote}
   }
 </script>
 

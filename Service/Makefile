@@ -43,13 +43,8 @@ else
 	CFLAGS  += -Os -Wall -fopt-info-vec -s -flto -ftree-vectorize
 	LDFLAGS += -flto
 endif
-ifeq ($(DEVICE_V1_00), true)
-	EXECUTABLE_SOURCE += Source/Devices/V1_00/DeviceV1_00.cpp
-	ANALYZER_SOFT = true
-	LDFLAGS += -lusb-1.0
-endif
-ifeq ($(DEVICE_V1_01), true)
-	EXECUTABLE_SOURCE += Source/Devices/V1_01/DeviceV1_01.cpp
+ifeq ($(DEVICE_V1), true)
+	EXECUTABLE_SOURCE += Source/Devices/V1/DeviceV1.cpp
 	ANALYZER_SOFT = true
 	LDFLAGS += -lusb-1.0
 endif
@@ -67,7 +62,7 @@ ifeq ($(DEVICE_REMOTE), true)
 	CFLAGS += -I Source/Analyzers/Remote
 endif
 ifeq ($(ANALYZER_SOFT), true)
-	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/Soft/FFT.cpp Source/Analyzers/Soft/Events.cpp Source/Analyzers/Soft/Sync.cpp Source/Analyzers/Soft/Alarms.cpp Source/Analyzers/Soft/Rates.cpp
+	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/Soft/FFT.cpp Source/Analyzers/Soft/Events.cpp Source/Analyzers/Soft/Sync.cpp Source/Analyzers/Soft/Alarms.cpp
 	CFLAGS += -I Source/Analyzers/Soft
 	LDFLAGS += -lfftw3f
 endif

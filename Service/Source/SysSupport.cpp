@@ -43,20 +43,17 @@ void SysSupport::GetNewsCallback(const json &params, Response &response) {
 void SysSupport::GetUsersCallback(const json &params, Response &response) {
   //only 'admin' user can get this information
   string UserName = params["UserName"];
-  if(UserName != "admin") {
-    response.set_content("", "text/plain");
-    response.status = HTTP_FORBIDDEN;
-    return;
-  }
+  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Filter") == false) || (params["Filter"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Filter' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Limit") == false) || (params["Limit"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'Limit' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Offset") == false) || (params["Offset"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'Offset' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  string   Filter = params["Filter"];
+  uint32_t Limit  = params["Limit"];
+  uint32_t Offset  = params["Offset"];
   Database DB;
-  DB.ExecSentenceAsyncResult("SELECT to_json(array_agg(json_build_object('UserName', username, 'Name', name, 'EMail', email, 'TimeZone', time_zone))) AS result FROM users");
-  if(DB.FecthRow() == false) {
-    response.set_content("", "text/plain");
-    response.status = HTTP_INTERNAL_SERVER_ERROR;
-  } else {
-    response.set_content(DB.ResultString("result"), "application/json");
-    response.status = HTTP_OK;
-  }
+  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(t1.user)), '[]') AS result FROM (SELECT json_build_object('User', username, 'Name', name, 'EMail', email, 'TimeZone', time_zone) AS user FROM users WHERE position(" + DB.Bind(Filter) + " in username) > 0 ORDER BY username ASC LIMIT " + DB.Bind(Limit) + " OFFSET " + DB.Bind(Offset) + ") t1");
+  if(DB.FecthRow() == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPCallback::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
 void SysSupport::GetUserCallback(const json &params, Response &response) {
   string UserName = params["UserName"];

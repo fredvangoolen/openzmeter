@@ -43,7 +43,7 @@ void RWLocks::WriteUnlock() {
   pthread_mutex_lock(&pMutex);
   pWriters--;
   pActiveWriter = false;
-  if(pWriters > 0) 
+  if(pWriters > 0)
     pthread_cond_signal(&pWritersCondition);
   else
     pthread_cond_broadcast(&pReadersCondition);
@@ -191,7 +191,7 @@ void WorkerLocks::WaitWorker() {
   while(pWorking == true) {
     if(pTerminate == true) return;
     pthread_cond_wait(&pCond, &pMutex);
-  } 
+  }
   pthread_mutex_unlock(&pMutex);
 }
 bool WorkerLocks::IsWorking() {
@@ -241,7 +241,8 @@ bool ConfigManager::WriteConfig(const string &path, const json &val) {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  pInstance->pConfig[json::json_pointer(path)].merge_patch(val);
+  //pInstance->pConfig[json::json_pointer(path)].merge_patch(val);
+  pInstance->pConfig[json::json_pointer(path)] = val;
   if(pInstance->pFile < 0) {
     pthread_mutex_unlock(&pMutex);
     return false;

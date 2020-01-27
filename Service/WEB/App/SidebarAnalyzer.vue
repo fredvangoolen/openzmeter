@@ -172,10 +172,10 @@
         var Promises = [];
         if((prev == null) || (prev.From == undefined) || (ReqRange[0] < prev.From)) {
           var ToTime = ((prev == null) || (prev.From == undefined)) ? ReqRange[1] : prev.From - 1;
-          Promises.push(this.$http.post('getPrices', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ToTime, Period: ToTime - ReqRange[0] }));
+          Promises.push(this.$http.post('getPrices', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ToTime, From: ReqRange[0] }));
         }
         if((prev != null) && (prev.To != undefined) && (ReqRange[1] > prev.To)) {
-          Promises.push(this.$http.post('getPrices', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ReqRange[1], Period: ReqRange[1] - prev.To - 1 }));
+          Promises.push(this.$http.post('getPrices', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ReqRange[1], From: prev.To - 1 }));
         }
         if(Promises.length == 0) {
           Out.To = ReqRange[1]
@@ -183,7 +183,7 @@
           clearTimeout(Timer);
           if(outs != null) outs(Out);
           if(working != null) working(false);
-          if(timeout != null) timeout(Period / 2);
+          if(timeout != null) timeout((aggreg == '15M') ? 900000 : 3600000);
         }
         Promise.all(Promises).then(
           (result) => {

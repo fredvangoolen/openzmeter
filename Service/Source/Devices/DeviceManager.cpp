@@ -1,24 +1,36 @@
-/* ================================== zMeter ===========================================================================
- * File:     DeviceInterface.cpp
- * Author:   Eduardo Viciana (12 de abril de 2017)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #include <string.h>
 #include <math.h>
 #include "DeviceManager.h"
 #include "HTTPServer.h"
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
-vector<Device*> __attribute__((init_priority(200))) DeviceManager::pDevices;
-RWLocks         DeviceManager::pDevicesLock;
+vector<vector<Device*> (*)()> __attribute__((init_priority(200))) DeviceManager::pDrivers;
+vector<Device*>  DeviceManager::pDevices;
+pthread_rwlock_t DeviceManager::pDevicesLock =PTHREAD_RWLOCK_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) Dev->StartDevice();
-  pDevicesLock.ReadUnlock();
+  pthread_rwlock_wrlock(&pDevicesLock);
+  for(auto Func : pDrivers) {
+    for(auto Dev : Func()) pDevices.push_back(Dev);
+  }
+  pthread_rwlock_unlock(&pDevicesLock);
   HTTPServer::RegisterCallback("getDevices",          GetDevicesCallback);
   HTTPServer::RegisterCallback("getDevice",           GetDeviceCallback);
-  HTTPServer::RegisterCallback("stopDevice",          StopDeviceCallback);
-  HTTPServer::RegisterCallback("startDevice",         StartDeviceCallback);
   HTTPServer::RegisterCallback("setDevice",           SetDeviceCallback);
   HTTPServer::RegisterCallback("getAnalyzers",        GetAnalyzersCallback);
   HTTPServer::RegisterCallback("getAnalyzer",         GetAnalyzerCallback);
@@ -50,8 +62,6 @@ DeviceManager::DeviceManager() {
 DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("getDevices");
   HTTPServer::UnregisterCallback("getDevice");
-  HTTPServer::UnregisterCallback("stopDevice");
-  HTTPServer::UnregisterCallback("startDevice");
   HTTPServer::UnregisterCallback("setDevice");
   HTTPServer::UnregisterCallback("getAnalyzers");
   HTTPServer::UnregisterCallback("getAnalyzer");
@@ -80,38 +90,26 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("setPermission");
   HTTPServer::UnregisterCallback("delPermission");
   LOGFile::Info("Stopping devices...\n");
-  pDevicesLock.WriteLock();
+  pthread_rwlock_wrlock(&pDevicesLock);
   while(pDevices.size() > 0) {
     Device *Dev = pDevices.back();
     pDevices.pop_back();
     delete Dev;
   }
-  pDevicesLock.WriteUnlock();
+  pthread_rwlock_unlock(&pDevicesLock);
 }
-void DeviceManager::AddDevice(Device *dev) {
-  pDevicesLock.WriteLock();
-  pDevices.push_back(dev);
-  pDevicesLock.WriteUnlock();
-}
-void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
-  //only 'admin' user can get this information
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Response = json::array();
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) Response.push_back(Dev->GetJSONDescriptor());
-  pDevicesLock.ReadUnlock();
-  HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+void DeviceManager::AddDriver(vector<Device*> (*func)()) {
+  pDrivers.push_back(func);
 }
 void DeviceManager::CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response)) {
   if(!params["Analyzer"].is_string()) return HTTPCallback::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
+  pthread_rwlock_rdlock(&pDevicesLock);
   for(Device *Dev : pDevices) {
     if((Dev->*method)(params, response) == false) continue;
-    pDevicesLock.ReadUnlock();
+    pthread_rwlock_unlock(&pDevicesLock);
     return;
   }
-  pDevicesLock.ReadUnlock();
+  pthread_rwlock_unlock(&pDevicesLock);
   HTTPCallback::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
 }
 void DeviceManager::CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response)) {
@@ -119,15 +117,25 @@ void DeviceManager::CallDeviceFunction(const json &params, Response &response, v
   string Serial   = params["Serial"];
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pDevicesLock.ReadLock();
+  pthread_rwlock_rdlock(&pDevicesLock);
   for(Device *Dev : pDevices) {
     if(Dev->Serial != Serial) continue;
     (Dev->*method)(params, response);
-    pDevicesLock.ReadUnlock();
+    pthread_rwlock_unlock(&pDevicesLock);
     return;
   }
-  pDevicesLock.ReadUnlock();
+  pthread_rwlock_unlock(&pDevicesLock);
   HTTPCallback::FillResponse(response, "Device not found", "text/plain", HTTP_BAD_REQUEST);
+}
+void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
+  //only 'admin' user can get this information
+  string UserName = params["UserName"];
+  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  json Response = json::array();
+  pthread_rwlock_rdlock(&pDevicesLock);
+  for(Device *Dev : pDevices) Response.push_back(Dev->GetJSONDescriptor());
+  pthread_rwlock_unlock(&pDevicesLock);
+  HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void DeviceManager::GetDeviceCallback(const json &params, Response &response) {
   CallDeviceFunction(params, response, &Device::GetDevice);
@@ -135,21 +143,21 @@ void DeviceManager::GetDeviceCallback(const json &params, Response &response) {
 void DeviceManager::SetDeviceCallback(const json &params, Response &response) {
   CallDeviceFunction(params, response, &Device::SetDevice);
 }
-void DeviceManager::StartDeviceCallback(const json &params, Response &response) {
-  CallDeviceFunction(params, response, &Device::StartDevice);
-}
-void DeviceManager::StopDeviceCallback(const json &params, Response &response) {
-  CallDeviceFunction(params, response, &Device::StopDevice);
-}
+//void DeviceManager::StartDeviceCallback(const json &params, Response &response) {
+//  CallDeviceFunction(params, response, &Device::StartDevice);
+//}
+//void DeviceManager::StopDeviceCallback(const json &params, Response &response) {
+//  CallDeviceFunction(params, response, &Device::StopDevice);
+//}
 void DeviceManager::GetAnalyzersCallback(const json &params, Response &response) {
   json Response = json::array();
   string UserName = params["UserName"];
-  pDevicesLock.ReadLock();
+  pthread_rwlock_rdlock(&pDevicesLock);
   for(Device *Dev : pDevices) {
     json Analyzers = Dev->GetJSONAnalyzers(UserName);
     Response.insert(Response.end(), Analyzers.begin(), Analyzers.end());
   }
-  pDevicesLock.ReadUnlock();
+  pthread_rwlock_unlock(&pDevicesLock);
   HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void DeviceManager::GetAnalyzerCallback(const json &params, Response &response) {
