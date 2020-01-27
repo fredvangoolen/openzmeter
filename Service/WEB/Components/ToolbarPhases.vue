@@ -37,7 +37,7 @@
       }
       var Img = new Image();
       Img.onload = () => { this.BaseImg = Img; }
-      Img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAYFJREFUeNpitGvfxgAFiUA8D8q+B8TKDEQAJijNB9L868uH3Q/3LAkDspWA+DgxBrCAyf//FzMwMjKcaI3KAPKeMXNwx8rYBC4GsvmB+CNhFzAy+n24d6ke6J17QPzj3tbZ6/7/+/cFaHANMV5IADEuza6YChMEGvLt1+d3e/7/+xtC0ID/f/9k//768RBQ01tkiZ8fXm9iZGZRIGgAUJHJr09vt6NLXJhRvA7KtCAYBu/vXNiALgF00UdQOPz99d0Zj97/jEDCGIgvAjX8QVfx+9unAyzsXNxAV5piMcAPiDeyADWexeW8Xx/fbGeVVOrAJvfv969QYCBfYcLnv7OTcuZAmd4Y7mdli/n2+skKvAaAYgYYDp///fmdiSYFNvD81PyZTISi6dOja91MLKwgDZxwwf//J/7++gkU9W8IGnBxZtk0KPMRKM0C8RpgylW+vX5yIXJmwuuNe9vmBAKZIqCwA+LgN1ePFb25evQiA9REYgA7EOsg8e/AMhlAgAEALeSdj/i4f7oAAAAASUVORK5CYII=";;
+      Img.src = require('Imgs/draw_wave16.png');
     },
     watch: {
       value: function(val) {
