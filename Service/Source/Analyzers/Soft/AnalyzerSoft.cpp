@@ -25,13 +25,21 @@
 #include "AnalyzerSoft.h"
 #include "Tools.h"
 #include "SysSupport.h"
-#include "Events.h"
+//#include "Events.h"
 #include "FFT.h"
-#include "Sync.h"
+//#include "Sync.h"
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace cctz;
+//----------------------------------------------------------------------------------------------------------------------
+#define EVENT_RVC                        5.0
+#define EVENT_DIP_SWELL                 10.0        //Variacion en % para generar subida o bajada
+#define EVENT_INTERRUPTION              90.0        //Bajada en % para generar interrupcion
+#define EVENT_INTERRUPTION_HYSTERESIS   40.0        //Interruption hysteresis
+#define EVENT_HYSTERESIS                02.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
+#define EVENT_RAWENVELOPETIME            0.5        //Time in seconds before and after event to store RAW samples
+#define EVENT_RMSENVELOPETIME           10.0        //Time in seconds before and after event to store RMS samples
 //----------------------------------------------------------------------------------------------------------------------
 const vector<float> AnalyzerSoft::FrequencyRanges  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
 const vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
@@ -132,7 +140,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Name"] = "Unnamed analyzer";
   ConfigOUT["NominalVoltage"] = 230.0;
-  ConfigOUT["NominalFreq"] = 50.0;
+  ConfigOUT["NominalFrequency"] = 50.0;
   ConfigOUT["MaxCurrent"] = 35.0;
   ConfigOUT["MinCurrent"] = 0.1;
   ConfigOUT["TimeZone"] = "UTC";
@@ -151,7 +159,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   if(!config.is_object()) return ConfigOUT;
   if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
   if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
-  if(config.contains("NominalFreq") && config["NominalFreq"].is_number() && (config["NominalFreq"] >= 0) && (config["NominalFreq"] <= 400)) ConfigOUT["NominalFreq"] = config["NominalFreq"];
+  if(config.contains("NominalFrequency") && config["NominalFrequency"].is_number() && (config["NominalFrequency"] >= 0) && (config["NominalFrequency"] <= 400)) ConfigOUT["NominalFrequency"] = config["NominalFrequency"];
   if(config.contains("MaxCurrent") && config["MaxCurrent"].is_number() && (config["MaxCurrent"] >= 1) && (config["MaxCurrent"] <= 100000)) ConfigOUT["MaxCurrent"] = config["MaxCurrent"];
   if(config.contains("MinCurrent") && config["MinCurrent"].is_number() && (config["MinCurrent"] >= 0.01) && (config["MinCurrent"] <= 100)) ConfigOUT["MinCurrent"] = config["MinCurrent"];
   if(config.contains("TimeZone") && config["TimeZone"].is_string()) {
@@ -176,7 +184,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
 void AnalyzerSoft::Configure(const json &options) {
   SetName(options["Name"]);
   pNominalVoltage   = options["NominalVoltage"];
-  pNominalFrequency = options["NominalFreq"];
+  pNominalFrequency = options["NominalFrequency"];
   pMaxCurrent       = options["MaxCurrent"];
   pMinCurrent       = options["MinCurrent"];
   pTimeZone         = options["TimeZone"];
@@ -283,6 +291,42 @@ void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
     params.Apparent_Power = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
   }
 }
+void AnalyzerSoft::InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos) {
+  Event_t Event;
+  Event.Type = type;
+  Event.Duration = 0;
+  Event.State = EVT_RUNNING;
+  Event.Reference = reference;
+  Event.PeakValue = reference;
+  Event.ChangeValue = reference;
+  Event.SamplesRAW_A = deque<vector<float> >();
+  Event.SamplesRMS_A = deque<vector<float> >();
+  Event.SamplesRAW_B = deque<vector<float> >();
+  Event.SamplesRMS_B = deque<vector<float> >();
+  for(deque<EventCycle_t>::reverse_iterator it = pPrevCycles.rbegin(); it != pPrevCycles.rend(); it++) {
+    Event.SamplesRMS_A.push_front(it->RMS);
+    if(Event.SamplesRMS_A.size() == (pNominalFrequency * 2 * EVENT_RMSENVELOPETIME)) break;
+  }
+  for(deque<vector<float> >::reverse_iterator it = pPrevSamples.rbegin(); it != pPrevSamples.rend(); it++) {
+    Event.SamplesRAW_A.push_front(*it);
+    if(Event.SamplesRAW_A.size() == (EVENT_RAWENVELOPETIME * pSamplerate)) break;
+  }
+  //A new event destroy any running RVC
+  if(type != EVT_RVC) {
+    for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); ) {
+      if((it->Type == EVT_RVC) && (it->State == EVT_RUNNING)) {
+        Database DB(Serial);
+        DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(it->Start) + " AND evttype = 'RVC'");
+        pEvents.erase(it++);
+      } else {
+        it++;
+      }
+    }
+  }
+  Event.Start = pAggreg10C.Timestamp + (uint32_t)((pos * 1000) / pSamplerate);
+  SaveEvent(Event);
+  pEvents.push_back(Event);
+}
 void AnalyzerSoft::AccumulateAggreg(Params_t &dst, const Params_t &src) {
   dst.Timestamp = src.Timestamp;
   for(uint i = 0; i < dst.Voltage.size(); i++) dst.Voltage[i] = AccumulateRMS(dst.Voltage[i], src.Voltage[i]);
@@ -347,6 +391,12 @@ float AnalyzerSoft::AccumulateRMS(const float val1, const float val2) {
   if(!isnan(val1) && isnan(val2))  return val1;
   return val1 + pow(val2, 2.0);
 }
+bool AnalyzerSoft::FindRunningEvent(const uint32_t mask) {
+  for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); it++) {
+    if((it->Type & mask) && (it->State == EVT_RUNNING)) return true;
+  }
+  return false;
+}
 void AnalyzerSoft::SaveAggreg(Params_t &params) {
   Database DB(Serial);
   if(params.Type == AGGREG_10C)
@@ -365,6 +415,36 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
   if((params.Type == AGGREG_1M) && (pSave10c == true)) DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(params.Timestamp - 3600000));     //Delete 1 hour old
   SetOnline();
 }
+void AnalyzerSoft::SaveEvent(Event_t &evt) {
+  Database DB(Serial);
+  string Type = (evt.Type == EVT_RVC) ? "RVC" : (evt.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (evt.Type == EVT_DIP) ? "DIP" : "SWELL";
+  vector<vector<float> > RMS = vector<vector< float> >(evt.Reference.size(), vector<float>());
+  vector<vector<float> > RAW = vector<vector< float> >(evt.Reference.size(), vector<float>());
+  for(deque<vector<float> >::iterator it = evt.SamplesRMS_A.begin(); it != evt.SamplesRMS_A.end(); it++) {
+    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
+  }
+  for(deque<vector<float> >::iterator it = evt.SamplesRMS_B.begin(); it != evt.SamplesRMS_B.end(); it++) {
+    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
+  }
+  for(deque<vector<float> >::iterator it = evt.SamplesRAW_A.begin(); it != evt.SamplesRAW_A.end(); it++) {
+    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
+  }
+  for(deque<vector<float> >::iterator it = evt.SamplesRAW_B.begin(); it != evt.SamplesRAW_B.end(); it++) {
+    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
+  }
+  if(evt.State == EVT_RUNNING) {
+    DB.ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, finished, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + DB.Bind(evt.Start) + ", 0, " + DB.Bind(pSamplerate) + ", false, " + DB.Bind(Type) + ", " + DB.Bind(evt.Reference) + ", " + DB.Bind(evt.PeakValue) + ", " + DB.Bind(evt.ChangeValue) + ", '', " + DB.Bind(RAW) + ", " + DB.Bind(RMS) + ")");
+  } else if(evt.State == EVT_CLOSING) {
+    DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", duration = " + DB.Bind(evt.Duration) + ", peak = " + DB.Bind(evt.PeakValue) + ", change = " + DB.Bind(evt.ChangeValue) + ", samples2 = " + DB.Bind(RAW) + ", rms2 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
+  } else {
+    DB.ExecSentenceNoResult("UPDATE events SET finished = TRUE, samples3 = " + DB.Bind(RAW) + ", rms3 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
+  }
+  evt.SamplesRAW_A = deque<vector<float> >();
+  evt.SamplesRMS_A = deque<vector<float> >();
+  evt.SamplesRAW_B = deque<vector<float> >();
+  evt.SamplesRMS_B = deque<vector<float> >();
+}
+
 float AnalyzerSoft::CalcChange(const float in, const float reference) {
   return ((in - reference) / reference) * 100;
 }
@@ -571,15 +651,15 @@ void *AnalyzerSoft::Analyzer_Thread(void *args) {
 //----------------------------------------------------------------------------------------------------------------------
 void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Response = CheckConfig(ConfigManager::ReadConfig(pConfigPath));
-  Response["Analyzer"] = Serial;
-  pMembersLocks.ReadLock();
-//  Response["Online"] = IsOnline();
+  json Response = ConfigManager::ReadConfig(pConfigPath);
+//  Response["Analyzer"] = Serial;
+//  pMembersLocks.ReadLock();
+  Response["Online"] = IsOnline();
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"] = pSamplerate;
   Response.erase("Alarms");
 //  if(pSync != NULL) Response["RemoteLogged"] = pSync->Logged();
-  pMembersLocks.ReadUnlock();
+//  pMembersLocks.ReadUnlock();
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + DB.Bind(Serial));
   if(DB.FecthRow()) Response["Size"] = DB.ResultUInt64("size");
@@ -587,16 +667,16 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
 }
 void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  if(!Params["MaxCurrent"].is_number() || !Params["MinCurrent"].is_number() || !Params["Name"].is_string() || !Params["NominalFreq"].is_number() || !Params["NominalVoltage"].is_number()) return req.FromString("'MaxCurrent', 'MinCurrent', 'Name', 'NominalFreq' and 'NominalVoltage' param is requiered", MHD_HTTP_BAD_REQUEST);
-
+  if((params.contains("MaxCurrent") == false) || (params["MaxCurrent"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'MaxCurrent' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("MinCurrent") == false) || (params["MinCurrent"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'MinCurrent' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("NominalFrequency") == false) || (params["NominalFrequency"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'NominalFrequency' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("NominalVoltage") == false) || (params["NominalVoltage"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'NominalVoltage' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   json Config = CheckConfig(params);
-  Config.erase("Alarms");
+  Config["Alarms"] = ConfigManager::ReadConfig(pConfigPath + "/Alarms");
   ConfigManager::WriteConfig(pConfigPath, Config);
-  pMembersLocks.WriteLock();
   Configure(ConfigManager::ReadConfig(pConfigPath));
-  pMembersLocks.WriteUnlock();
-  response.set_content("", "text/plain");
-  response.status = HTTP_OK;
+  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void AnalyzerSoft::GetSeries(const json &params, Response &response) {
 //  if(CheckRights(params, response, READ) == false) return;
@@ -860,6 +940,23 @@ void AnalyzerSoft::GetEvents(const json &params, Response &response) {
 //    response.status = HTTP_SERVICE_UNAVAILABLE;
 //  }
   pMembersLocks.ReadUnlock();
+    uint64_t To = params["To"];
+  uint64_t Period = params["Period"];
+  uint64_t LastSample = params["LastSample"];
+  if(To == 0) To = Tools::GetTime();
+  uint64_t From = To - Period;
+  Database DB(Serial);
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('From', " + DB.Bind(From) + ", 'To', " + DB.Bind(To) + ", 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
+                              "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
+                              "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
+                              "FROM events WHERE starttime > " + DB.Bind(LastSample) + " AND starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
+  if(!DB.FecthRow()) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("evt"), "application/json");
+    response.status = HTTP_OK;
+  }
 }
 void AnalyzerSoft::GetEvent(const json &params, Response &response) {
 //  if(CheckRights(params, response, READ) == false) return;
@@ -880,6 +977,27 @@ void AnalyzerSoft::GetEvent(const json &params, Response &response) {
 //    response.status = HTTP_SERVICE_UNAVAILABLE;
 //  }
 //  pMembersLocks.ReadUnlock();
+  Database DB(Serial);
+  if((params["Samples"] != "RMS") && (params["Samples"] != "RAW")) {
+    response.set_content("'Samples' params must be 'RMS' or 'RAW'", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  uint64_t ID = params["StartTime"];
+  string Type = params["Type"];
+  string Samples = params["Samples"];
+  if(Samples == "RAW") {
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', samples1, 'Samples', samples2, 'Post_Samples', samples3) AS evt FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
+  } else {
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', rms1, 'Samples', rms2, 'Post_Samples', rms3) AS evt FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
+  }
+  if(!DB.FecthRow()) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("evt"), "application/json");
+    response.status = HTTP_OK;
+  }
 }
 void AnalyzerSoft::SetEvent(const json &params, Response &response) {
 //  if(CheckRights(params, response, WRITE | CONFIG) == false) return;
@@ -900,6 +1018,13 @@ void AnalyzerSoft::SetEvent(const json &params, Response &response) {
 //    response.status = HTTP_SERVICE_UNAVAILABLE;
 //  }
 //  pMembersLocks.ReadUnlock();
+  Database DB(Serial);
+  uint64_t ID    = params["StartTime"];
+  string   Type  = params["Type"];
+  string   Notes = params["Notes"];
+  bool Result = DB.ExecSentenceNoResult("UPDATE events SET Notes = " + DB.Bind(Notes) + " WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
+  response.set_content("", "text/plain");
+  response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
 }
 void AnalyzerSoft::DelEvent(const json &params, Response &response) {
 //  if(CheckRights(params, response, WRITE | CONFIG) == false) return;
@@ -920,6 +1045,12 @@ void AnalyzerSoft::DelEvent(const json &params, Response &response) {
 //    response.status = HTTP_SERVICE_UNAVAILABLE;
 //  }
 //  pMembersLocks.ReadUnlock();
+  Database DB(Serial);
+  uint64_t ID = params["StartTime"];
+  string Type = params["Type"];
+  bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
+  response.set_content("", "text/plain");
+  response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
 }
 void AnalyzerSoft::GetRates(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

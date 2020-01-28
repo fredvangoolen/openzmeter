@@ -17,16 +17,16 @@
 #include "Database.h"
 #include "AnalyzerSoft.h"
 AnalyzerSoft::Events::Events(AnalyzerSoft *parent) {
-  pParent         = parent;
-  pTerminate      = false;
-  pEventThread    = 0;
-  pPrevStationary = false;
-  if(pthread_create(&pEventThread, NULL, Events_Thread, (void*)this) != 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    pEventThread = 0;
-    return;
-  }
-  pthread_setname_np(pEventThread, "EventsDet");
+//  pParent         = parent;
+//  pTerminate      = false;
+//  pEventThread    = 0;
+//  pPrevStationary = false;
+//  if(pthread_create(&pEventThread, NULL, Events_Thread, (void*)this) != 0) {
+//    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    pEventThread = 0;
+//    return;
+//  }
+//  pthread_setname_np(pEventThread, "EventsDet");
 }
 void AnalyzerSoft::Events::Start() {
   pWorkerLocks.WakeWorker();
@@ -38,77 +38,8 @@ AnalyzerSoft::Events::~Events() {
   pTerminate = true;
   pWorkerLocks.Abort(&pEventThread);
 }
-void AnalyzerSoft::Events::SaveEvent(Event_t &evt) {
-  Database DB(pParent->Serial);
-  string Type = (evt.Type == EVT_RVC) ? "RVC" : (evt.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (evt.Type == EVT_DIP) ? "DIP" : "SWELL";
-  vector<vector<float> > RMS = vector<vector< float> >(evt.Reference.size(), vector<float>());
-  vector<vector<float> > RAW = vector<vector< float> >(evt.Reference.size(), vector<float>());
-  for(deque<vector<float> >::iterator it = evt.SamplesRMS_A.begin(); it != evt.SamplesRMS_A.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
-  }
-  for(deque<vector<float> >::iterator it = evt.SamplesRMS_B.begin(); it != evt.SamplesRMS_B.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
-  }
-  for(deque<vector<float> >::iterator it = evt.SamplesRAW_A.begin(); it != evt.SamplesRAW_A.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
-  }
-  for(deque<vector<float> >::iterator it = evt.SamplesRAW_B.begin(); it != evt.SamplesRAW_B.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
-  }
-  if(evt.State == EVT_RUNNING) {
-    DB.ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, finished, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + DB.Bind(evt.Start) + ", 0, " + DB.Bind(pParent->pSamplerate) + ", false, " + DB.Bind(Type) + ", " + DB.Bind(evt.Reference) + ", " + DB.Bind(evt.PeakValue) + ", " + DB.Bind(evt.ChangeValue) + ", '', " + DB.Bind(RAW) + ", " + DB.Bind(RMS) + ")");
-  } else if(evt.State == EVT_CLOSING) {
-    DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", duration = " + DB.Bind(evt.Duration) + ", peak = " + DB.Bind(evt.PeakValue) + ", change = " + DB.Bind(evt.ChangeValue) + ", samples2 = " + DB.Bind(RAW) + ", rms2 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
-  } else {
-    DB.ExecSentenceNoResult("UPDATE events SET finished = TRUE, samples3 = " + DB.Bind(RAW) + ", rms3 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
-  }
-  evt.SamplesRAW_A = deque<vector<float> >();
-  evt.SamplesRMS_A = deque<vector<float> >();
-  evt.SamplesRAW_B = deque<vector<float> >();
-  evt.SamplesRMS_B = deque<vector<float> >();
-}
-void AnalyzerSoft::Events::InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos) {
-  Event_t Event;
-  Event.Type = type;
-  Event.Duration = 0;
-  Event.State = EVT_RUNNING;
-  Event.Reference = reference;
-  Event.PeakValue = reference;
-  Event.ChangeValue = reference;
-  Event.SamplesRAW_A = deque<vector<float> >();
-  Event.SamplesRMS_A = deque<vector<float> >();
-  Event.SamplesRAW_B = deque<vector<float> >();
-  Event.SamplesRMS_B = deque<vector<float> >();
-  for(deque<EventCycle_t>::reverse_iterator it = pPrevCycles.rbegin(); it != pPrevCycles.rend(); it++) {
-    Event.SamplesRMS_A.push_front(it->RMS);
-    if(Event.SamplesRMS_A.size() == (pParent->pNominalFrequency * 2 * EVENT_RMSENVELOPETIME)) break;
-  }
-  for(deque<vector<float> >::reverse_iterator it = pPrevSamples.rbegin(); it != pPrevSamples.rend(); it++) {
-    Event.SamplesRAW_A.push_front(*it);
-    if(Event.SamplesRAW_A.size() == (EVENT_RAWENVELOPETIME * pParent->pSamplerate)) break;
-  }
-  //A new event destroy any running RVC
-  if(type != EVT_RVC) {
-    for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); ) {
-      if((it->Type == EVT_RVC) && (it->State == EVT_RUNNING)) {
-        Database DB(pParent->Serial);
-        DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(it->Start) + " AND evttype = 'RVC'");
-        pEvents.erase(it++);
-      } else {
-        it++;
-      }
-    }
-  }
-  Event.Start = pParent->pAggreg10C.Timestamp + (uint32_t)((pos * 1000) / pParent->pSamplerate);
-  SaveEvent(Event);
-  pEvents.push_back(Event);
-}
-bool AnalyzerSoft::Events::FindRunningEvent(const uint32_t mask) {
-  for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); it++) {
-    if((it->Type & mask) && (it->State == EVT_RUNNING)) return true;
-  }
-  return false;
-}
+
+
 void *AnalyzerSoft::Events::Events_Thread(void* args) {
   Events *This = (Events*)args;
   uint32_t RequiredRAW = This->pParent->pSamplerate * EVENT_RAWENVELOPETIME;
@@ -272,62 +203,4 @@ void *AnalyzerSoft::Events::Events_Thread(void* args) {
   }
   return NULL;
 }
-void AnalyzerSoft::Events::GetEvents(const json &params, Response &response) {
-  uint64_t To = params["To"];
-  uint64_t Period = params["Period"];
-  uint64_t LastSample = params["LastSample"];
-  if(To == 0) To = Tools::GetTime();
-  uint64_t From = To - Period;
-  Database DB(pParent->Serial);
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('From', " + DB.Bind(From) + ", 'To', " + DB.Bind(To) + ", 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
-                              "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
-                              "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
-                              "FROM events WHERE starttime > " + DB.Bind(LastSample) + " AND starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
-  if(!DB.FecthRow()) {
-    response.set_content("", "text/plain");
-    response.status = HTTP_INTERNAL_SERVER_ERROR;
-  } else {
-    response.set_content(DB.ResultString("evt"), "application/json");
-    response.status = HTTP_OK;
-  }
-}
-void AnalyzerSoft::Events::GetEvent(const json &params, Response &response) {
-  Database DB(pParent->Serial);
-  if((params["Samples"] != "RMS") && (params["Samples"] != "RAW")) {
-    response.set_content("'Samples' params must be 'RMS' or 'RAW'", "text/plain");
-    response.status = HTTP_BAD_REQUEST;
-    return;
-  }
-  uint64_t ID = params["StartTime"];
-  string Type = params["Type"];
-  string Samples = params["Samples"];
-  if(Samples == "RAW") {
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', samples1, 'Samples', samples2, 'Post_Samples', samples3) AS evt FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
-  } else {
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', rms1, 'Samples', rms2, 'Post_Samples', rms3) AS evt FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
-  }
-  if(!DB.FecthRow()) {
-    response.set_content("", "text/plain");
-    response.status = HTTP_INTERNAL_SERVER_ERROR;
-  } else {
-    response.set_content(DB.ResultString("evt"), "application/json");
-    response.status = HTTP_OK;
-  }
-}
-void AnalyzerSoft::Events::SetEvent(const json &params, Response &response) {
-  Database DB(pParent->Serial);
-  uint64_t ID    = params["StartTime"];
-  string   Type  = params["Type"];
-  string   Notes = params["Notes"];
-  bool Result = DB.ExecSentenceNoResult("UPDATE events SET Notes = " + DB.Bind(Notes) + " WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
-  response.set_content("", "text/plain");
-  response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
-}
-void AnalyzerSoft::Events::DelEvent(const json &params, Response &response) {
-  Database DB(pParent->Serial);
-  uint64_t ID = params["StartTime"];
-  string Type = params["Type"];
-  bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
-  response.set_content("", "text/plain");
-  response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
-}
+

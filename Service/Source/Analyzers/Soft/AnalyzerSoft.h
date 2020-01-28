@@ -28,11 +28,10 @@ class AnalyzerSoft final : public Analyzer {
   private :
     static const uint8_t ZEROCROSSING_FILTERSTAGES =  5;        //Filter stages for zerocrossing
     static const uint8_t ZEROCROSSING_SECONDS      = 10;        //Used seconds to calc frequency
-  private :
-    class Events;
-    class Sync;
   public :
-      enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
+    enum AggregType { UNINITIALIZED, AGGREG_10C, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
+    enum EventType  { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
+    enum EventState { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
   private :
     typedef struct {
       AggregType                     Type;                 //Aggregation type
@@ -85,6 +84,23 @@ class AnalyzerSoft final : public Analyzer {
       Parser             Evaluator;
       queue<bool>        Results;
     } Alarm_t;
+    typedef struct {
+      vector<float> RMS;
+      uint64_t      Timestamp;
+    } EventCycle_t;
+    typedef struct {
+      enum EventType                 Type;                 //Running event type
+      EventState                     State;                //Events state
+      uint64_t                       Start;                //Event start timestamp
+      uint64_t                       Duration;             //Event duration in samples
+      vector<float>                  Reference;            //Voltage reference for event (Stationary for RVC, nominal for others)
+      vector<float>                  PeakValue;            //max/min voltage variation along event
+      vector<float>                  ChangeValue;          //diference voltage of event
+      deque<vector<float> >          SamplesRAW_A;         //
+      deque<vector<float> >          SamplesRMS_A;         //
+      deque<vector<float> >          SamplesRAW_B;         //
+      deque<vector<float> >          SamplesRMS_B;         //
+    } Event_t;
   private :
     static const vector<float>  FrequencyRanges;   //Rangos de frecuencias para estadisticas
     static const vector<float>  VoltageRanges;     //Rangos de tensiones para estadisticas
@@ -99,19 +115,30 @@ class AnalyzerSoft final : public Analyzer {
     const AnalyzerMode         pMode;                    //Operation mode
   private : //Variables not changed after initialization or not need locking
     bool                       pTerminate;               //Marca para finalizar proceso
+    pthread_t                  pAnalyzerThread;          //Hilo de ejecucion
+    WorkerLocks                pAnalyzerWorker;          //Handle analyzer thread
+    pthread_t                  pEventsThread;            //Hilo de ejecucion
+    WorkerLocks                pEventsWorker;            //Control access to events detection thread
+    pthread_t                  pAlarmsThread;            //Hilo de ejecucion
+    WorkerLocks                pAlarmsWorker;            //Control access to alarms detection thread
+
+
+
+    deque<vector<float> >      pPrevSamples;             //Previous samples
+    deque<EventCycle_t>        pPrevCycles;              //Previous cycles
+    bool                       pPrevStationary;          //Steady state flag
+    list<Event_t>              pEvents;                  //Running events
 
 
     uint32_t                   pCycleLen;                //Current cycle len
-    pthread_t                  pAnalyzerThread;          //Hilo de ejecucion
     float                      pLastSamples[3];          //Filter samples backup
 
-    WorkerLocks                pAnalyzerWorkerLocks;     //Handle analyzer thread
+
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private :  //Config params (Writed in configure, readed in other places)
     RWLocks                    pMembersLocks;
 //    Events                    *pEventsDetector;          //Events detector
 //    Sync                      *pSync;                    //Synchronization object
-//    Rates                     *pRates;                   //Rate control object
     vector<Alarm_t>            pAlarms;                  //Alarms control object
     bool                       pSave10c;                 //Save 10 cycles aggregation to database
     float                      pNominalVoltage;          //Analyzer nominal voltage
@@ -143,12 +170,17 @@ class AnalyzerSoft final : public Analyzer {
   private :
     void  Configure(const json &options);
     void  InitAggreg(Params_t &params, AggregType type);
+    void  InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
     void  AccumulateAggreg(Params_t &src, const Params_t &dst);
     void  NormalizeAggreg(Params_t &src);
     float AccumulateSUM(const float val1, const float val2);
     float AccumulateRMS(const float val1, const float val2);
     float CalcChange(const float in, const float reference);
+    bool  FindRunningEvent(const uint32_t mask);
     void  SaveAggreg(Params_t &params);
+    void  SaveEvent(Event_t &evt);
+
+
   private :
     void  GetAnalyzer(const json &params, Response &response) override;
     void  SetAnalyzer(const json &params, Response &response) override;
