@@ -28,6 +28,7 @@
       } else {
         this.$http.post('getAnalyzer', { Analyzer: localStorage.getItem("Analyzer") }).then(
           (result) => {
+            result.data.Analyzer = localStorage.getItem("Analyzer");
             this.SetAnalyzer(result.data);
           },
           (fail) => {

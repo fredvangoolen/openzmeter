@@ -9,6 +9,72 @@
 #include <unistd.h>
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
+Worker::Worker(const string &name, void *param, void (*callback)(void*, void*)) {
+  pWorking       = false;
+  pTerminate     = false;
+  pCond          = PTHREAD_COND_INITIALIZER;
+  pMutex         = PTHREAD_MUTEX_INITIALIZER;
+  pCreationParam = param;
+  pRunParam      = NULL;
+  pCallback      = callback;
+  if(pthread_create(&pThread, NULL, Thread, (void*)this) != 0) {
+    pThread = 0;
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return;
+  }
+  pthread_setname_np(pThread, name.c_str());
+}
+Worker::~Worker() {
+  pTerminate = true;
+  pthread_cond_signal(&pCond);
+  if(pThread == 0) return;
+  if(pthread_join(pThread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
+}
+void Worker::Run(void *param) {
+  pthread_mutex_lock(&pMutex);
+  if(pTerminate == true) {
+    pthread_mutex_unlock(&pMutex);
+    return;
+  }
+  pWorking = true;
+  pRunParam = param;
+  pthread_mutex_unlock(&pMutex);
+  pthread_cond_signal(&pCond);
+}
+bool Worker::IsWorking() {
+  bool Result;
+  pthread_mutex_lock(&pMutex);
+  Result = pWorking;
+  pthread_mutex_unlock(&pMutex);
+  return Result;
+}
+void *Worker::Thread(void *args) {
+  Worker *This = (Worker*)args;
+  while(This->pTerminate == false) {
+    pthread_mutex_lock(&This->pMutex);
+    while(This->pWorking == false) {
+      if(This->pTerminate == true) {
+        This->pWorking = false;
+        pthread_mutex_unlock(&This->pMutex);
+        return NULL;
+      }
+      pthread_cond_wait(&This->pCond, &This->pMutex);
+    }
+    pthread_mutex_unlock(&This->pMutex);
+    This->pCallback(This->pCreationParam, This->pRunParam);
+    pthread_mutex_lock(&This->pMutex);
+    This->pWorking = false;
+    pthread_mutex_unlock(&This->pMutex);
+    pthread_cond_signal(&This->pCond);
+  }
+  return NULL;
+}
+void Worker::Wait() {
+  pthread_mutex_lock(&pMutex);
+  while(pWorking == true) pthread_cond_wait(&pCond, &pMutex);
+  pthread_mutex_unlock(&pMutex);
+}
+//----------------------------------------------------------------------------------------------------------------------
 RWLocks::RWLocks() {
   pMutex = PTHREAD_MUTEX_INITIALIZER;
   pReadersCondition = PTHREAD_COND_INITIALIZER;

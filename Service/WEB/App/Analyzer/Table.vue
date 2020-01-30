@@ -83,10 +83,11 @@
       },
       Select: function(analyzer) {
         this.ShowSpinner = true;
+        localStorage.setItem('Analyzer', analyzer);
         this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
             if(result.status == 200) {
-              localStorage.setItem('Analyzer', result.data.Analyzer);
+              result.data.Analyzer = analyzer;
               this.$emit('update:analyzer', result.data);
               this.$emit('close');
             }
