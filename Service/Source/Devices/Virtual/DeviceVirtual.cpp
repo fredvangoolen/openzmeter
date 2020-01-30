@@ -104,7 +104,7 @@ void *DeviceVirtual::Capture_Thread(void *args) {
   while(!This->pTerminate) {
     float Voltage[3], Current[4];
     uint64_t Sampletime = Tools::GetTime();
-    if((This->pAnalyzer->IsFinished() == true) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
+    if((This->pAnalyzer->IsWorking() == false) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
       Voltage[0] = (This->pFrequency > 0.0) ? This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency) : This->pVoltage;
       Current[0] = (This->pFrequency > 0.0) ? This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples + Phase) / This->pSampleRate * This->pFrequency) : This->pCurrent;
       if((This->pMode == Analyzer::PHASE3) || (This->pMode == Analyzer::PHASE3N)) {

@@ -15,7 +15,6 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <queue>
-#include "muParser/muParser.h"
 #include "HTTPServer.h"
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -30,8 +29,8 @@ class AnalyzerSoft::Alarms final {
     vector<Alarm>              pAlarms;                  //Alarms list
     RWLocks                    pMemberLocks;             //Synchronization locks
     AnalyzerSoft::Params_t    *pParams;                  //Params to evaluate alarms
-    pthread_t                  pAlarmThread;             //Hilo de ejecucion
     bool                       pTerminate;               //Terminate flag
+    pthread_t                  pAlarmThread;             //Hilo de ejecucion
     WorkerLocks                pWorkerLocks;             //Control access to event detection thread
   public :
     static json  CheckConfig(const json &config);

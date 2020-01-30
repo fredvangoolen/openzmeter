@@ -11,9 +11,28 @@
 using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
+class Worker final {
+  private :
+    void           *pCreationParam;
+    void           *pRunParam;
+    bool            pWorking;
+    bool            pTerminate;
+    pthread_t       pThread;
+    pthread_mutex_t pMutex;
+    pthread_cond_t  pCond;
+    void          (*pCallback)(void*, void*);
+  private :
+    static void *Thread(void *args);
+  public :
+    Worker(const string &name, void *param, void (*callback)(void*, void*));
+    ~Worker();
+    bool IsWorking();
+    void Run(void *param);
+    void Wait();
+};
 class RWLocks final {
   //Multiple read access allowed, exclusive access for writing
-  private : 
+  private :
     pthread_mutex_t  pMutex;
     pthread_cond_t   pReadersCondition;
     pthread_cond_t   pWritersCondition;
@@ -30,7 +49,7 @@ class RWLocks final {
 //----------------------------------------------------------------------------------------------------------------------
 class InstanceLocks final {
   //Hold destructor until no references to object
-  private : 
+  private :
     pthread_mutex_t  pMutex;
     pthread_cond_t   pCond;
     uint32_t         pReferences;

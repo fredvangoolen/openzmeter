@@ -46,7 +46,7 @@ class URL {
 //----------------------------------------------------------------------------------------------------------------------
 class HTTPServer final {
   private :
-    static RWLocks              pLock;            //Control access to pCallbacks vector
+    static pthread_rwlock_t     pLock;            //Control access to pCallbacks vector
     static vector<HTTPCallback> pCallbacks;       //List of callbacks URLs
     static string               pRelativePath;    //Relative path of server
   private:

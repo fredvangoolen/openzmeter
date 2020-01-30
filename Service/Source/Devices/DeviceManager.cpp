@@ -102,7 +102,7 @@ void DeviceManager::AddDriver(vector<Device*> (*func)()) {
   pDrivers.push_back(func);
 }
 void DeviceManager::CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response)) {
-  if(!params["Analyzer"].is_string()) return HTTPCallback::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   pthread_rwlock_rdlock(&pDevicesLock);
   for(Device *Dev : pDevices) {
     if((Dev->*method)(params, response) == false) continue;
@@ -113,7 +113,7 @@ void DeviceManager::CallAnalyzerFunction(const json &params, Response &response,
   HTTPCallback::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
 }
 void DeviceManager::CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response)) {
-  if(!params["Serial"].is_string()) return HTTPCallback::FillResponse(response, "'Serial' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Serial") == false) || (params["Serial"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Serial' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string Serial   = params["Serial"];
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
