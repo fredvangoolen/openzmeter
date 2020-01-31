@@ -1,6 +1,6 @@
 #Enable/Disable device plugins (set to true or false) ------------------------------------------------------------------
 DEVICE_V1      = false
-DEVICE_V2      = false
+DEVICE_V2      = true
 DEVICE_VIRTUAL = true
 DEVICE_REMOTE  = false
 
@@ -10,7 +10,6 @@ OS_TARGET = DEBIAN
 #Enable/Disable tariff plugins (set to true or false) ------------------------------------------------------------------
 TARIFF_ESP  = true
 TARIFF_NONE = true
-
 
 # Build options --------------------------------------------------------------------------------------------------------
 DEBUG   = true

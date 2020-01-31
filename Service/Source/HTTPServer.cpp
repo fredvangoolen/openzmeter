@@ -182,7 +182,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
   LOGFile::Debug("HTTP POST '%s'\n", URL.c_str());
   json Params = json::parse(request.body, NULL, false);
   if(Params.is_discarded()) return HTTPCallback::FillResponse(response, "Malformed JSON params", "text/plain", HTTP_BAD_REQUEST);
-  if(URL == "LogIn") {
+  if(URL == "logIn") {
     if((Params["Password"].is_string() == false) || (Params["Username"].is_string() == false)) {
       return HTTPCallback::FillResponse(response, "'Password' and 'Username' params requiered", "text/plain", HTTP_BAD_REQUEST);
     } else {
@@ -205,7 +205,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
       return HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
     }
   }
-  if(URL == "LogOut") {
+  if(URL == "logOut") {
     if(request.has_header("Cookie")) {
       string Cookie = request.get_header_value("Cookie").substr(8);
       if(Cookie != "") {

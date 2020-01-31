@@ -46,21 +46,21 @@
       <div class="col-xs-12">
         <table>
           <tr><td><strong>Tag name</strong></td><td class="text-right"><strong>Value</strong></td></tr>
-          <tr v-for="(tag, idx) in Tags" :key="idx">
+          <tr v-for="(tag, idx) in analyzer.Tags" :key="idx">
             <td>
               <div class="input-group input-group-xs">
-                <span class="input-group-btn"><button class="btn btn-default" type="button" @click="Tags.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button></span>
-                <input type="text" class="form-control" v-model="tag.name">
+                <span class="input-group-btn"><button class="btn btn-default" type="button" @click="analyzer.Tags.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button></span>
+                <input type="text" class="form-control" v-model="tag.Name">
               </div>
             </td>
             <td>
               <div class="input-group input-group-xs">
-                <input type="text" class="form-control rounded" v-model="tag.value">
+                <input type="text" class="form-control rounded" v-model="tag.Value">
               </div>
             </td>
           </tr>
           <tr>
-            <td colspan="2"><button type="button" class="btn btn-default btn-xs" style="width:100%" v-on:click="Tags.push({ name: 'Unnamed tag', Value: 'none'})"><img :src="require('Imgs/plus.png')"> New tag</button></td>
+            <td colspan="2"><button type="button" class="btn btn-default btn-xs" style="width:100%" @click="analyzer.Tags.push({ Name: 'Unnamed tag', Value: 'none'})"><img :src="require('Imgs/plus.png')"> New tag</button></td>
           </tr>
         </table>
       </div>

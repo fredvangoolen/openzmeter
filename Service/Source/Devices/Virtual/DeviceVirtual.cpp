@@ -31,7 +31,6 @@ vector<Device*> DeviceVirtual::GetInstances() {
 }
 DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of real capture device for testing") {
   pThread = 0;
-  pConfigLock = PTHREAD_RWLOCK_INITIALIZER;
   LOGFile::Info("Loading 'Virtual' driver configuration\n");
   Configure(ConfigManager::ReadConfig("/Devices/" + Serial));
 }
@@ -59,12 +58,11 @@ void DeviceVirtual::Configure(const json &config) {
     if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
   }
   ConfigManager::WriteConfig("/Devices/" + Serial, ConfigOUT);
-  pthread_rwlock_wrlock(&pConfigLock);
   if(pThread != 0) {
     pTerminate = true;
     pthread_join(pThread, NULL);
     ClearAnalyzers();
-    pThread   = 0;
+    pThread = 0;
   }
   pVoltage          = ConfigOUT["Voltage"];
   pFrequency        = ConfigOUT["Frequency"];
@@ -73,9 +71,10 @@ void DeviceVirtual::Configure(const json &config) {
   pCurrentPhase     = ConfigOUT["CurrentPhase"];
   pMode             = (ConfigOUT["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (ConfigOUT["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
   string ModeString = ConfigOUT["Mode"];
+  pAnalyzer         = new AnalyzerSoft(Serial + "_" + ModeString, pMode, "/Devices/" + Serial + "/Analyzer", pSampleRate);
   bool Enabled      = ConfigOUT["Enabled"];
+  AddAnalyzer(pAnalyzer);
   if(Enabled == true) {
-    pAnalyzer  = new AnalyzerSoft(Serial + "_" + ModeString, pMode, "/Devices/" + Serial + "/Analyzer", pSampleRate);
     pTerminate = false;
     if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -83,9 +82,7 @@ void DeviceVirtual::Configure(const json &config) {
     } else {
       pthread_setname_np(pThread, "DeviceVirtual");
     }
-    AddAnalyzer(pAnalyzer);
   }
-  pthread_rwlock_unlock(&pConfigLock);
 }
 void DeviceVirtual::GetDevice(const json &params, Response &response) {
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);

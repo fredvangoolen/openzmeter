@@ -3,8 +3,11 @@
     <dlg :loading="ShowSpinner" v-if="View==null">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Analyzers</h4></div>
-        <div class="pull-right">
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <div class="pull-right input-group input-group-xs" style="width:200px">
+          <input type="text" class="form-control" placeholder="Filter..." v-model="Filter">
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          </span>
         </div>
       </template>
       <div class="alert alert-danger text-center" v-if="Analyzers.length == 0" style="margin-bottom: 5px; padding: 5px">
@@ -14,16 +17,16 @@
       <vuetable key="analyzers" :fields="Columns" :data="Analyzers" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-success btn-xs" v-bind:disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" @click="Select(props.rowData.Analyzer)">Select</button>
+            <button type="button" class="btn btn-success btn-xs" :disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" @click="Select(props.rowData.Analyzer)">Select</button>
             <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
             <ul class="dropdown-menu pull-right">
-              <li><a v-on:click="Alarms(props.rowData)">Alarms</a></li>
-              <li><a v-on:click="Configure(props.rowData)">Configure</a></li>
-              <li><a v-on:click="Permissions(props.rowData)">Permissions</a></li>
-              <li><a v-on:click="Rates(props.rowData)">Rates</a></li>
-              <li><a v-on:click="Remote(props.rowData)">Remote access</a></li>
+              <li><a @click="Alarms(props.rowData.Analyzer)">Alarms</a></li>
+              <li><a @click="Configure(props.rowData.Analyzer)">Configure</a></li>
+              <li><a @click="Permissions(props.rowData.Analyzer)">Permissions</a></li>
+              <li><a @click="Rates(props.rowData.Analyzer)">Rates</a></li>
+              <li><a @click="Remote(props.rowData.Analyzer)">Remote access</a></li>
               <li role="separator" class="divider"></li>
-              <li><a v-on:click="Maintenance(props.rowData)">Maintenance</a></li>
+              <li><a @click="Maintenance(props.rowData.Analyzer)">Maintenance</a></li>
             </ul>
           </div>
         </template>
@@ -56,7 +59,7 @@
   export default {
     props: { analyzer: Object, view: String },
     data() {
-      return { View: null, Analyzers: [], ShowSpinner: false, Analyzer: null,
+      return { View: null, Analyzers: [], ShowSpinner: false, Analyzer: null, Filter: '',
         Columns: [
           {name: 'Online', title: 'Online', callback: this.OnlineStatus},
           {name: 'Name', title: 'Description'},
@@ -69,15 +72,18 @@
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     mounted: function() {
-      this.ShowSpinner = true;
-      $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
-        success: (result) => {
-          this.Analyzers = result;
-          this.ShowSpinner = false;
-        }
-      });
+      this.GetAnalyzers();
     },
     methods: {
+      GetAnalyzers: function() {
+        this.ShowSpinner = true;
+        $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
+          success: (result) => {
+            this.Analyzers = result;
+            this.ShowSpinner = false;
+          }
+        });
+      },
       OnlineStatus: function(value) {
         return (value === true) ? '&#9635;' : '&#9633;';
       },
@@ -98,13 +104,15 @@
       CloseSelect: function(analyzer) {
         this.View = null;
         if(analyzer == null) return;
+        this.GetAnalyzers();
         if(analyzer.Analyzer == this.analyzer.Analyzer) this.$emit('update:analyzer', analyzer);
       },
       Configure: function(analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
             if(result.status == 200) {
+              result.data.Analyzer = analyzer;
               this.Analyzer = result.data;
               this.View = 'Configure';
             }
@@ -114,9 +122,10 @@
       },
       Rates: function(analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
             if(result.status == 200) {
+              result.data.Analyzer = analyzer;
               this.Analyzer = result.data;
               this.View = 'Rates';
             }
@@ -126,9 +135,10 @@
       },
       Alarms: function(analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
             if(result.status == 200) {
+              result.data.Analyzer = analyzer;
               this.Analyzer = result.data;
               this.View = 'Alarms';
             }
@@ -138,9 +148,10 @@
       },
       Remote: function(analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
             if(result.status == 200) {
+              result.data.Analyzer = analyzer;
               this.Analyzer = result.data;
               this.View = 'Remote';
             }
@@ -150,9 +161,10 @@
       },
       Permissions: function(analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
             if(result.status == 200) {
+              result.data.Analyzer = analyzer;
               this.Analyzer = result.data;
               this.View = 'Permissions';
             }
@@ -162,9 +174,10 @@
       },
       Maintenance: function(analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer.Analyzer }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
             if(result.status == 200) {
+              result.data.Analyzer = analyzer;
               this.Analyzer = result.data;
               this.View = 'Maintenance';
             }

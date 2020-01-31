@@ -30,10 +30,10 @@
       <div class="col-lg-6 col-md-12">
         <graphs serie="CURRENT" :analyzer="analyzer" :data="Data3S"></graphs>
       </div>
-      <div v-bind:class="{'col-lg-6': (analyzer.NominalFreq > 0.0)}" class="col-md-12">
+      <div v-bind:class="{'col-lg-6': (analyzer.NominalFrequency > 0.0)}" class="col-md-12">
         <graphs serie="ACTIVE_POWER" :analyzer="analyzer" :data="Data3S"></graphs>
       </div>
-      <div class="col-lg-6 col-md-12" v-if="analyzer.NominalFreq > 0.0">
+      <div class="col-lg-6 col-md-12" v-if="analyzer.NominalFrequency > 0.0">
         <graphs serie="FREQUENCY" :analyzer="analyzer" :data="Data3S"></graphs>
       </div>
     </div>

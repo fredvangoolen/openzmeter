@@ -25,7 +25,6 @@ class DeviceVirtual final : public Device {
   private :
     pthread_t                       pThread;
     AnalyzerSoft                   *pAnalyzer;
-    pthread_rwlock_t                pConfigLock;
     bool                            pTerminate;
     Analyzer::AnalyzerMode          pMode;
     float                           pSampleRate;
