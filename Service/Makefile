@@ -48,8 +48,8 @@ ifeq ($(DEVICE_V1), true)
 	ANALYZER_SOFT = true
 	LDFLAGS += -lusb-1.0
 endif
-ifeq ($(DEVICE_V2_01), true)
-	EXECUTABLE_SOURCE += Source/Devices/V2_01/DeviceV2_01.cpp
+ifeq ($(DEVICE_V2), true)
+	EXECUTABLE_SOURCE += Source/Devices/V2/DeviceV2.cpp
 	ANALYZER_SOFT = true
 	LDFLAGS += -lusb-1.0
 endif

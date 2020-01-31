@@ -7,7 +7,7 @@
           <div style="display: inline-block; font-size: 24px; padding-right: 4px; vertical-align: top"><span v-html="LastValue"></span> <em class="huge-small-unit">{{ UnitsScale }}{{ SerieProps.Units }}</em>
             <div style="font-size: 14px; line-height: 14px" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggregation_Source) }}</div>
           </div>
-          <div v-if="PhasesValue.length > 1" style="display: inline-block; border-left: 1px solid #FFF; padding-left: 2px; line-height: 12px; font-size: 12px; vertical-align: top"><div v-for="val in PhasesValue">{{ val }}</div></div>
+          <div v-if="PhasesValue.length > 1" style="display: inline-block; border-left: 1px solid #FFF; padding-left: 2px; line-height: 12px; font-size: 12px; vertical-align: top"><div v-for="(val, idx) in PhasesValue" :key="idx">{{ val }}</div></div>
        </div>
       </div>
     </div>
@@ -22,7 +22,6 @@
         <div class="btn-group">
           <button-export :rows="[]" ></button-export>
           <button-expand></button-expand>
-        <!--toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" v-on:ExportClick="ExportClick" ref="tools"></toolbar-tools-->
         </div>
       </div>
     </div>
@@ -53,17 +52,8 @@
         Opt.selectMode = 'euclidian';
         Opt.plugins = [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ];
         Opt.xAxisHeight = 12;
-//        Opt.legendFormatter = Graph.LegendFormatter_Follow;
-//        Opt.visibility = this.Phases;
-//        Opt.dateWindow = [this.data.From, this.data.To];
-
-        //, file: this.Data, valueRange: Range,
-
-//                var Analyzer = this.$root.SelectedAnalyzer;
-//        var Range = this.SerieProps.Range(this.Data, this.Phases);
-//        var Options = {
-
-
+        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        if(this.Phases != null) Opt.visibility =  this.Phases;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30;
         Opt.axes.y.valueFormatter = (x) => { var Result = oZm.FormatSerieValue(x, this.SerieProps); return Result.ValuePlain + ' <em class="x-small">' + Result.Units + '</em>'; };
@@ -71,6 +61,7 @@
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatTime(x); };
         Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatTime(x); };
         if(this.data != null) {
+          Opt.dateWindow = [this.data.From, this.data.To];
           for(var n in this.data.Sampletime) {
             var Row = [this.data.Sampletime[n]];
             if(this.serie == 'VOLTAGE') {
@@ -88,7 +79,6 @@
         return Opt;
       }
     },
-
     methods: {
       UpdateGraph() {
 //        if(this.$parent.Sync == false) {

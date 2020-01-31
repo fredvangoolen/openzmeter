@@ -545,9 +545,8 @@ void SysSupport::SetSystemActions(const string &action) {
     pUpdatesLock.WriteUnlock();
   }
   void SysSupport::GetUpdatesCallback(const json &params, Response &response) {
-    json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     json Response = json::object();
     Response["LastCheck"] = pLastTask_1H;
     Response["Updates"] = json::array();
@@ -563,9 +562,8 @@ void SysSupport::SetSystemActions(const string &action) {
     req.FromJSON(Response);
   }
   void SysSupport::UpgradeCallback(const json &params, Response &response) {
-    json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     json Response = json::object();
     int ResultCode = 0;
     string Result = Run("opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade --force-depends", &ResultCode);
@@ -574,9 +572,8 @@ void SysSupport::SetSystemActions(const string &action) {
     req.FromJSON(Response);
   }
   void SysSupport::GetBluetoothCallback(const json &params, Response &response) {
-    json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     json Config = ConfigManager::ReadConfig("/Bluetooth");
     pthread_mutex_lock(&pBTMutex);
     Config["Name"] = pBTServerName;
@@ -584,9 +581,8 @@ void SysSupport::SetSystemActions(const string &action) {
     req.FromJSON(Config);
   }
   void SysSupport::SetBluetoothCallback(const json &params, Response &response) {
-    json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     if(Params["Enabled"].is_boolean()) pBTEnabled = Params["Enabled"];
     json Config;
     pthread_mutex_lock(&pBTMutex);
@@ -804,35 +800,34 @@ void SysSupport::SetSystemActions(const string &action) {
     return req.FromJSON(Result);
   }
   void SysSupport::SetNTPCallback(HTTPRequest& req) {
-    json Params = req.GetParams();
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     pthread_mutex_lock(&pBTMutex);
     json Result;
     Result["Status"] = true;
     int ErrorCode = 0;
-    if(Params["Enabled"].is_boolean() && Params["Server"].is_string()) {
-      bool Enabled = Params["Enabled"];
-      string Server = Params["Server"];
-      Run("ubus call uci set '{\"config\":\"system\", \"section\":\"ntp\", \"values\":{\"enabled\":\"" + string((Enabled == true) ? "1" : "0") + "\", \"server\":\"" + Server + "\"}}'", &ErrorCode);
-      if(ErrorCode != 0) Result["Status"] = false;
-      Run("uci commit", &ErrorCode);
-      if(ErrorCode != 0) Result["Status"] = false;
-      Run("reload_config", &ErrorCode);
-      if(ErrorCode != 0) Result["Status"] = false;
-      if((Params["Enabled"] == false) && Params["Time"].is_number_unsigned()) {
-        uint64_t Time = Params["Time"];
-        timeval TimeVal;
-        TimeVal.tv_sec  = Time / 1000;
-        TimeVal.tv_usec = Time % 1000;
-        if(settimeofday(&TimeVal, NULL) != 0) {
-          Result["Status"] = false;
-          LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-        }
+    if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPCallback::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if((params.contains("Server") == false) || (params["Server"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Server' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    bool Enabled  = params["Enabled"];
+    string Server = params["Server"];
+    Run("ubus call uci set '{\"config\":\"system\", \"section\":\"ntp\", \"values\":{\"enabled\":\"" + string((Enabled == true) ? "1" : "0") + "\", \"server\":\"" + Server + "\"}}'", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+    Run("uci commit", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+    Run("reload_config", &ErrorCode);
+    if(ErrorCode != 0) Result["Status"] = false;
+    if((Params["Enabled"] == false) && Params["Time"].is_number_unsigned()) {
+      uint64_t Time = Params["Time"];
+      timeval TimeVal;
+      TimeVal.tv_sec  = Time / 1000;
+      TimeVal.tv_usec = Time % 1000;
+      if(settimeofday(&TimeVal, NULL) != 0) {
+        Result["Status"] = false;
+        LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
       }
     }
     pthread_mutex_unlock(&pBTMutex);
-    return req.FromJSON(Result);
+    HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
   }
 #endif
 void SysSupport::PeriodicTask() {

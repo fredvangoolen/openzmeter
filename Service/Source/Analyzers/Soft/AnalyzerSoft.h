@@ -148,7 +148,8 @@ class AnalyzerSoft final : public Analyzer {
     Worker                    *pAnalyzerWorker;          //Analyzer worker
     Worker                    *pVoltageFFTWorker[3];     //Voltage FFT worker
     Worker                    *pCurrentFFTWorker[4];     //Current FFT worker
-
+    Worker                    *pAlarmsWorker;            //Alarms detection worker
+    Worker                    *pEventsWorker;            //Events detector
 
 
 
@@ -163,7 +164,6 @@ class AnalyzerSoft final : public Analyzer {
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private :  //Config params (Writed in configure, readed in other places)
 //    RWLocks                    pMembersLocks;
-//    Events                    *pEventsDetector;          //Events detector
 //    Sync                      *pSync;                    //Synchronization object
     vector<Alarm_t>            pAlarms;                  //Alarms control object
     bool                       pSave200MS;                 //Save 10 cycles aggregation to database
@@ -183,6 +183,7 @@ class AnalyzerSoft final : public Analyzer {
     static void  Analyzer_Func(void *creation, void *run);
     static void  Events_Func(void *creation, void *run);
     static void  FFT_Func(void *creation, void *run);
+    static void  Alarms_Func(void *creation, void *run);
     static float CalcChange(const float in, const float reference);
     static float CalcAngle(const float *a, const float *b);
     static float BinPower(const float *a);
