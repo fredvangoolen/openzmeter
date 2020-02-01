@@ -74,7 +74,7 @@ import StatsCosts from 'Views/Stats_Costs/View.vue';
 import StatsHeatmap from 'Views/Stats_Heatmap/View.vue';
 import StatsDistribution from 'Views/Stats_Distribution/View.vue';
 import Settings from 'Views/Settings/View.vue';
-import Help from 'Views/Help/View.vue';
+import About from 'Views/About/View.vue';
 import PageNotFound from 'Views/PageNotFound.vue';
 
 const AppRouter = new Router({
@@ -96,7 +96,7 @@ const AppRouter = new Router({
     { path: '/Stats/Heatmap', component: StatsHeatmap },
     { path: '/Stats/Distribution', component: StatsDistribution },
     { path: '/Settings', component: Settings },
-    { path: '/Help', component: Help },
+    { path: '/About', component: About },
     { path: '*', component: PageNotFound }
   ]
 });

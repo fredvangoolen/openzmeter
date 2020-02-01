@@ -163,7 +163,6 @@ class AnalyzerSoft final : public Analyzer {
 
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private :  //Config params (Writed in configure, readed in other places)
-//    RWLocks                    pMembersLocks;
 //    Sync                      *pSync;                    //Synchronization object
     vector<Alarm_t>            pAlarms;                  //Alarms control object
     bool                       pSave200MS;                 //Save 10 cycles aggregation to database

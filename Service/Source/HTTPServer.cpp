@@ -113,15 +113,6 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   string URL = string(request.path).erase(0, pRelativePath.size());
   LOGFile::Debug("HTTP GET '%s'\n", URL.c_str());
   size_t Size = 0;
-  if(URL == "API.yaml") {
-    size_t Len;
-    const char *Content = (const char *)ResourceLoader::GetFile("WEB/API.yaml", &Len);
-    string API = string(Content, Len);
-    string Find = "{{ RELATIVE_PATH }}";
-    Len = API.find(Find, 0);
-    if(Len != string::npos) API = API.replace(Len, Find.size(), pRelativePath);
-    return HTTPCallback::FillResponse(response, API, "application/yaml", HTTP_OK);
-  }
   const char *Tmp = (const char*)ResourceLoader::GetFile(string("WEB/") + URL, &Size);
   if(Size != 0) {
     size_t FileNameLen = URL.length();
@@ -135,6 +126,8 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
       return HTTPCallback::FillResponse(response, Tmp, Size, "text/html", HTTP_OK);
     } else if((FileNameLen >= 5) && (URL.compare(FileNameLen - 5, 5, ".json")) == 0) {
       return HTTPCallback::FillResponse(response, Tmp, Size, "application/json", HTTP_OK);
+    } else if((FileNameLen >= 5) && (URL.compare(FileNameLen - 3, 3, ".md")) == 0) {
+      return HTTPCallback::FillResponse(response, Tmp, Size, "text/markdown", HTTP_OK);
     }
     LOGFile::Debug("No mimetype defined for request '%s'\n", URL.c_str());
     return HTTPCallback::FillResponse(response, Tmp, Size, "application/octet-stream", HTTP_OK);

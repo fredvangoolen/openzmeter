@@ -5,8 +5,8 @@
     <div class="row" v-if="View=='Inputs'">
       <div class="col-xs-12" style="margin-top:5px;">
         <label class="control-label" style="line-height: 22px">Start on boot</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="value.AutoStart"></toggle>
-      </div>          
+        <toggle class="float-right" onText="Yes" offText="No" v-model="value.Enabled"></toggle>
+      </div>
       <div class="col-xs-12">
         <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Device inputs can be calibrated to compensate components derating over time.</div>
       </div>
@@ -19,7 +19,7 @@
             <td></td>
             <td class="text-right"><strong>Multiplier</strong> <img :src="require('Imgs/help16.png')" data-toggle="tooltip" title="Multiply read value by a number to adjust input across voltage sensing transformer or for apply calibrations."></td>
           </tr>
-          <tr v-for="index in [0, 1, 2]">
+          <tr v-for="index in [0, 1, 2]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
             <td><input-spin :min="-200" :max="200" v-model="value.VoltageOffset[index]" :increment="0.01"></input-spin></td>
             <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetVoltageOffset(index)" v-bind:disabled="value.Wave_Average.Voltage[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(-value.Wave_Average.Voltage[index], 2)"><img :src="require('Imgs/wand.png')"></button></td>
@@ -27,8 +27,8 @@
           </tr>
         </table>
         <table>
-          <tr><td colspan="5" class="border-bottom">Current channels</td></tr>
-          <tr><td colspan="5">
+          <tr><td colspan="4" class="border-bottom">Current channels</td></tr>
+          <tr><td colspan="4">
             <label class="control-label" style="line-height: 22px">Full scale mode</label>
             <toggle class="float-right toggle-gain" onText="333mV" onStyle="primary" offText="625mV" offStyle="primary" v-model="value.HighGain"></toggle>
           </td></tr>
@@ -38,7 +38,7 @@
             <td></td>
             <td class="text-right"><strong>Multiplier</strong></td>
           </tr>
-          <tr v-for="index in [0, 1, 2, 3]">
+          <tr v-for="index in [0, 1, 2, 3]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
             <td><input-spin :min="-200" :max="200" v-model="value.CurrentOffset[index]" :increment="0.01"></input-spin></td>
             <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + Round(-value.Wave_Average.Current[index], 2)"><img :src="require('Imgs/wand.png')"></button></td>
@@ -53,7 +53,7 @@
           <label class="control-label" style="line-height: 22px; min-width: 180px">Outputs configuration model</label>
           <option-picker :options="[ {name: '3PHASE+N', value: '3PHASE+N'}, {name: '3PHASE', value: '3PHASE'}, {name: '3PHASE + 1PHASE', value: '3PHASE + 1PHASE'}, {name: '1PHASE', value: '1PHASE'}, {name: '1PHASE + 1PHASE', value: '1PHASE + 1PHASE'}, {name: '1PHASE + 1PHASE + 1PHASE', value: '1PHASE + 1PHASE + 1PHASE'}, {name: '1PHASE + 1PHASE + 1PHASE + 1PHASE', value: '1PHASE + 1PHASE + 1PHASE + 1PHASE'}]" v-model="OutputMode"></option-picker>
         </div>
-      </div>          
+      </div>
       <div class="col-xs-12">
         <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Current channels can not be used twice<br/>Voltage channels can not be used twice in same analyzer</div>
       </div>
@@ -121,7 +121,7 @@
         </div>
       </div>
     </div>
-  </div>      
+  </div>
 </template>
 
 <script>

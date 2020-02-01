@@ -63,7 +63,6 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pCurrentFFT     = NULL;
   pAlarmsWorker   = NULL;
   pEventsWorker   = NULL;
-  pSequence       = 0;
   pPrevTimestamp  = 0;
   InitAggreg(pAggreg200MS, AGGREG_200MS);
   InitAggreg(pAggreg3S, AGGREG_3S);
@@ -72,7 +71,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   InitAggreg(pAggreg15M, AGGREG_15M);
   InitAggreg(pAggreg1H, AGGREG_1H);
   for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFTWorker[i] = new Worker("FFT_V" + to_string(i), this, &FFT_Func);
-  for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFTWorker[i] = new Worker("FFT_C" + to_string(i), this, &FFT_Func);
+  for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFTWorker[i] = new Worker("FFT_I" + to_string(i), this, &FFT_Func);
   Configure(CheckConfig(ConfigManager::ReadConfig(optionPath)));
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", this, &Analyzer_Func);
 }
@@ -123,9 +122,19 @@ bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
     for(uint8_t i = 0; i < pVoltageChannels; i++) pLastSamples[i] = voltageSamples[i];
   }
   if((pBlockSamples == pMaxSamples) || ((pNominalFrequency == 50.0) && (pBlockCyclesCount == 20)) || ((pNominalFrequency == 60.0) && (pBlockCyclesCount == 24))) {
-    pAnalyzerWorker->Run(&pAggreg200MS);
-    pthread_mutex_unlock(&pAnalyzerLock);
-    return true;
+    if(pSequence == 0) {
+      InitAggreg(pAggreg200MS, AGGREG_200MS);
+      pBlockSamples     = 0;
+      pBlockCyclesCount = 0;
+      pSequence ++;
+      memset(pBlockCycles, 0, sizeof(pBlockCycles));
+      pthread_mutex_unlock(&pAnalyzerLock);
+      return false;
+    } else {
+      pAnalyzerWorker->Run(&pAggreg200MS);
+      pthread_mutex_unlock(&pAnalyzerLock);
+      return true;
+    }
   }
   pthread_mutex_unlock(&pAnalyzerLock);
   return false;
@@ -197,9 +206,11 @@ void AnalyzerSoft::Configure(const json &options) {
   } else if(pNominalFrequency == 60.0) {
     pMaxSamples = (12.0 * pSamplerate * 1.15) / pNominalFrequency;
   }
-  memset(pBlockCycles, 0, sizeof(pBlockCycles));
+  pSequence         = 0;
   pBlockSamples     = 0;
   pBlockCyclesCount = 0;
+  InitAggreg(pAggreg200MS, AGGREG_200MS);
+  memset(pBlockCycles, 0, sizeof(pBlockCycles));
   pVoltageSamples   = (float*)realloc(pVoltageSamples, sizeof(float) * pVoltageChannels * pMaxSamples);
   pCurrentSamples   = (float*)realloc(pCurrentSamples, sizeof(float) * pCurrentChannels * pMaxSamples);
   pVoltageFFT       = (float*)realloc(pVoltageFFT, sizeof(float) * 2 * pVoltageChannels * ((pMaxSamples / 2) + 1));
@@ -238,7 +249,7 @@ void AnalyzerSoft::Configure(const json &options) {
     delete pEventsWorker;
     pEventsWorker = NULL;
   } else if((EventsEnabled == true) && (pEventsWorker == NULL)) {
-    pEventsWorker = new Worker("EventsDet", NULL, &Events_Func);
+    pEventsWorker = new Worker("EventsDet", this, &Events_Func);
   }
   bool AlarmsEnabled = options["AlarmsEnabled"];
   if((AlarmsEnabled == true) && (pAlarmsWorker != NULL)) {

@@ -29,7 +29,7 @@
         </div>
         <div class="pull-right page-count">Last check<br/>{{ FormatDate(News.LastCheck) }}</div>
       </template>
-      <vuetable ref="table" :data="Updates.Updates" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>                  
+      <vuetable ref="table" :data="Updates.Updates" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
     </dlg>
   </div>
 </template>
@@ -54,7 +54,7 @@
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     created: function() {
-      $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
+      $.ajax({ url: "getNews", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
         success: (result) => {
           result.NewsPos = -1;
           if(isNaN(parseInt(localStorage.getItem('LastLogin'))) === true) localStorage.setItem('LastLogin', 0);
@@ -108,7 +108,7 @@
           success: () => {
             this.Updating = false;
             this.FetchUpdates();
-          },  
+          },
           error: () => {
             this.Updating = false;
           }
@@ -158,7 +158,7 @@
   .blink_img {
     animation: blinker_img 1s linear infinite;
   }
-  @keyframes blinker_img {  
+  @keyframes blinker_img {
     20% { opacity: 0.2; }
   }
 </style>

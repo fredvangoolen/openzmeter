@@ -31,14 +31,13 @@ vector<Device*> DeviceVirtual::GetInstances() {
 }
 DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of real capture device for testing") {
   pThread = 0;
-  LOGFile::Info("Loading 'Virtual' driver configuration\n");
-  Configure(ConfigManager::ReadConfig("/Devices/" + Serial));
+  Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial)));
 }
 DeviceVirtual::~DeviceVirtual() {
   pTerminate = true;
   pthread_join(pThread, NULL);
 }
-void DeviceVirtual::Configure(const json &config) {
+json DeviceVirtual::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Voltage"] = 230.0;
   ConfigOUT["Frequency"] = 50.0;
@@ -47,7 +46,7 @@ void DeviceVirtual::Configure(const json &config) {
   ConfigOUT["CurrentPhase"] = 0.0;
   ConfigOUT["Mode"] = "1PHASE";
   ConfigOUT["Enabled"] = false;
-  ConfigOUT["Analyzer"] = ConfigManager::ReadConfig("/Devices/" + Serial + "/Analyzer");
+  ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(json::object());
   if(config.is_object()) {
     if(config.contains("Voltage") && config["Voltage"].is_number() && (config["Voltage"] >= 10) && (config["Voltage"] <= 1000)) ConfigOUT["Voltage"] = config["Voltage"];
     if(config.contains("Frequency") && config["Frequency"].is_number() && (((config["Frequency"] >= 10) && (config["Frequency"] <= 100)) || (config["Frequency"] == 0.0))) ConfigOUT["Frequency"] = config["Frequency"];
@@ -56,28 +55,33 @@ void DeviceVirtual::Configure(const json &config) {
     if(config.contains("CurrentPhase") && config["CurrentPhase"].is_number() && (config["CurrentPhase"] >= -180.0) && (config["CurrentPhase"] <= 180.0)) ConfigOUT["CurrentPhase"] = config["CurrentPhase"];
     if(config.contains("Mode") && config["Mode"].is_string() && ((config["Mode"] == "1PHASE") || (config["Mode"] == "3PHASE") || (config["Mode"] == "3PHASE+N"))) ConfigOUT["Mode"] = config["Mode"];
     if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
+    if(config.contains("Analyzer") && config["Analyzer"].is_object()) ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(config["Analyzer"]);
   }
-  ConfigManager::WriteConfig("/Devices/" + Serial, ConfigOUT);
+  return ConfigOUT;
+}
+void DeviceVirtual::Configure(const json &config) {
+  ConfigManager::WriteConfig("/Devices/" + Serial, config);
   if(pThread != 0) {
     pTerminate = true;
     pthread_join(pThread, NULL);
     ClearAnalyzers();
     pThread = 0;
   }
-  pVoltage          = ConfigOUT["Voltage"];
-  pFrequency        = ConfigOUT["Frequency"];
-  pSampleRate       = ConfigOUT["SampleRate"];
-  pCurrent          = ConfigOUT["Current"];
-  pCurrentPhase     = ConfigOUT["CurrentPhase"];
-  pMode             = (ConfigOUT["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (ConfigOUT["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
-  string ModeString = ConfigOUT["Mode"];
+  pVoltage          = config["Voltage"];
+  pFrequency        = config["Frequency"];
+  pSampleRate       = config["SampleRate"];
+  pCurrent          = config["Current"];
+  pCurrentPhase     = config["CurrentPhase"];
+  pMode             = (config["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (config["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
+  string ModeString = config["Mode"];
   pAnalyzer         = new AnalyzerSoft(Serial + "_" + ModeString, pMode, "/Devices/" + Serial + "/Analyzer", pSampleRate);
-  bool Enabled      = ConfigOUT["Enabled"];
+  bool Enabled      = config["Enabled"];
   AddAnalyzer(pAnalyzer);
   if(Enabled == true) {
     pTerminate = false;
     if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      ClearAnalyzers();
       pThread = 0;
     } else {
       pthread_setname_np(pThread, "DeviceVirtual");
@@ -90,7 +94,9 @@ void DeviceVirtual::GetDevice(const json &params, Response &response) {
   HTTPCallback::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void DeviceVirtual::SetDevice(const json &params, Response &response) {
-  Configure(params);
+  json Config = params;
+  Config["Analyzer"] = ConfigManager::ReadConfig("/Devices/" + Serial + "/Analyzer");
+  Configure(Config);
   HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void *DeviceVirtual::Capture_Thread(void *args) {

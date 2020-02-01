@@ -36,6 +36,7 @@ class DeviceVirtual final : public Device {
     static bool            Register();
     static vector<Device*> GetInstances();
     static void           *Capture_Thread(void *args);
+    static json            CheckConfig(const json &config);
   private :
     DeviceVirtual();
     void Configure(const json &config);
