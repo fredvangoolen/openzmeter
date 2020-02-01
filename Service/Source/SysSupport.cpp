@@ -57,39 +57,71 @@ void SysSupport::GetUsersCallback(const json &params, Response &response) {
 }
 void SysSupport::GetUserCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPCallback::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string User = params["User"];
-//  if(params.contains("UserName") && params["UserName"].is_string()) UserName = Params["UserName"];
+  if((UserName != "admin") && (UserName != User)) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
-  if((UserName != "admin") || (UserName != User)) {
-    response.set_content("", "text/plain");
-    response.status = HTTP_FORBIDDEN;
-    return;
-  }
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('User', username, 'Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'TimeZone', time_zone) AS result FROM users WHERE username = " + DB.Bind(User));
-  if(DB.FecthRow() == false) {
-    response.set_content("", "text/plain");
-    response.status = HTTP_INTERNAL_SERVER_ERROR;
-  } else {
-    response.set_content(DB.ResultString("result"), "application/json");
-    response.status = HTTP_OK;
-  }
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('User', username, 'Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'Telegram', telegram, 'TimeZone', time_zone) AS result FROM users WHERE username = " + DB.Bind(User));
+  if(DB.FecthRow() == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPCallback::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
 void SysSupport::SetUserCallback(const json &params, Response &response) {
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPCallback::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Address") == false) || (params["Address"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Address' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Company") == false) || (params["Company"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Company' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Photo") == false) || (params["Photo"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Photo' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Email") == false) || (params["Email"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Email' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Telegram") == false) || (params["Telegram"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Telegram' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPCallback::FillResponse(response, "'TimeZone' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  string UserName = params["UserName"];
+  string User = params["User"];
+  string Name = params["Name"];
+  string Address = params["Address"];
+  string Company = params["Company"];
+  string Photo = params["Photo"];
+  string Email = params["Email"];
+  string Telegram = params["Telegram"];
+  string TimeZone = params["TimeZone"];
+  if((UserName != "admin") || (UserName != User)) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
-  //req.ExecSentenceAsyncResult("UPDATE users SET name = ", 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'TelegramID', telegram, 'Country_Code', country_code) AS result FROM users WHERE username = " + req.Bind(req.UserName()));
-  if(DB.FecthRow() == false) {
-    response.set_content("", "text/plain");
-    response.status = HTTP_INTERNAL_SERVER_ERROR;
-  } else {
-    response.set_content(DB.ResultString("result"), "application/json");
-    response.status = HTTP_OK;
-  }
+  bool Result = DB.ExecSentenceAsyncResult("UPDATE users SET name = " + DB.Bind(User) + ", address = " + DB.Bind(Address) + ", company = " + DB.Bind(Company) +  ", photo = " + DB.Bind(Photo) + ", email = " + DB.Bind(Email) + ", telegram = " + DB.Bind(Telegram) + ", time_zone = " + DB.Bind(TimeZone) + " WHERE username = " + DB.Bind(User));
+  if(Result == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void SysSupport::AddUserCallback(const json &params, Response &response) {
-
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPCallback::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Address") == false) || (params["Address"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Address' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Company") == false) || (params["Company"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Company' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Photo") == false) || (params["Photo"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Photo' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Email") == false) || (params["Email"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Email' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Telegram") == false) || (params["Telegram"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Telegram' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPCallback::FillResponse(response, "'TimeZone' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  string UserName = params["UserName"];
+  string User = params["User"];
+  string Name = params["Name"];
+  string Address = params["Address"];
+  string Company = params["Company"];
+  string Photo = params["Photo"];
+  string Email = params["Email"];
+  string Telegram = params["Telegram"];
+  string TimeZone = params["TimeZone"];
+  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  Database DB;
+  bool Result = DB.ExecSentenceAsyncResult("INSERT INTO users(username, name, address, company, photo, email, telegram, time_zone) VALUES(" + DB.Bind(User) + ", " + DB.Bind(Address) + ", " + DB.Bind(Company) +  ", " + DB.Bind(Photo) + ", " + DB.Bind(Email) + ", " + DB.Bind(Telegram) + ", " + DB.Bind(TimeZone) + ")");
+  if(Result == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void SysSupport::DelUserCallback(const json &params, Response &response) {
-
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPCallback::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  string UserName = params["UserName"];
+  string User = params["User"];
+  if((UserName != "admin") || (User == "admin")) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  Database DB;
+  bool Result = DB.ExecSentenceAsyncResult("DELETE FROM users WHERE name = " + DB.Bind(User));
+  if(Result == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 SysSupport::SysSupport() {
   HTTPServer::RegisterCallback("getNews",   GetNewsCallback);
@@ -559,7 +591,7 @@ void SysSupport::SetSystemActions(const string &action) {
       Response["Updates"].push_back(Update);
     }
     pUpdatesLock.ReadUnlock();
-    req.FromJSON(Response);
+    HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
   }
   void SysSupport::UpgradeCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
@@ -569,7 +601,8 @@ void SysSupport::SetSystemActions(const string &action) {
     string Result = Run("opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade --force-depends", &ResultCode);
     Response["Result"] = (ResultCode == 0);
     PeriodicTask_1H();
-    req.FromJSON(Response);
+    //req.FromJSON(Response);
+    HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
   }
   void SysSupport::GetBluetoothCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
@@ -578,12 +611,12 @@ void SysSupport::SetSystemActions(const string &action) {
     pthread_mutex_lock(&pBTMutex);
     Config["Name"] = pBTServerName;
     pthread_mutex_unlock(&pBTMutex);
-    req.FromJSON(Config);
+    HTTPCallback::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
   }
   void SysSupport::SetBluetoothCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
     if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-    if(Params["Enabled"].is_boolean()) pBTEnabled = Params["Enabled"];
+    if(params["Enabled"].is_boolean()) pBTEnabled = params["Enabled"];
     json Config;
     pthread_mutex_lock(&pBTMutex);
     Config["Enabled"] = pBTEnabled;
@@ -594,12 +627,11 @@ void SysSupport::SetSystemActions(const string &action) {
     Response["Status"] = true;
     if(pBTEnabled == true) Response["Status"] = StartBT();
     if(pBTEnabled == false) Response["Status"] = StopBT();
-    return req.FromJSON(Response);
+    HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
   }
-  void SysSupport::ScanWIFICallback(HTTPRequest& req) {
-    json Params = req.GetParams();
+  void SysSupport::ScanWIFICallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     pthread_mutex_lock(&pBTMutex);
     json Result = json::array();
     string CommandStr = Run("ubus call iwinfo scan '{\"device\":\"" + pInterfaceWIFI + "\"}'");
@@ -607,7 +639,7 @@ void SysSupport::SetSystemActions(const string &action) {
       json Tmp = json::parse(CommandStr, NULL, false);
       if(Tmp.is_discarded()) {
         pthread_mutex_unlock(&pBTMutex);
-        return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
       }
       if(Tmp.is_object() && Tmp["results"].is_array()) {
         for(uint Pos = 0; Pos < Tmp["results"].size(); Pos++) {
@@ -623,27 +655,26 @@ void SysSupport::SetSystemActions(const string &action) {
       }
     }
     pthread_mutex_unlock(&pBTMutex);
-    return req.FromJSON(Result);
+    HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
   }
-  void SysSupport::GetWIFICallback(HTTPRequest& req) {
-    json Params = req.GetParams();
+  void SysSupport::GetWIFICallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
-    if(!Params["Type"].is_string() || ((Params["Type"] != "CURRENT") && (Params["Type"] != "CONFIG"))) return req.FromString("'Type' param is requiered to be 'CURRENT' or 'CONFIG'", MHD_HTTP_BAD_REQUEST);
+    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+    if(!params["Type"].is_string() || ((params["Type"] != "CURRENT") && (params["Type"] != "CONFIG"))) return HTTPCallback::FillResponse(response, "'Type' param is requiered to be 'CURRENT' or 'CONFIG'", "text/plain", HTTP_BAD_REQUEST);
     pthread_mutex_lock(&pBTMutex);
     json Result = json::object();
-    if(Params["Type"] == "CURRENT") {
+    if(params["Type"] == "CURRENT") {
       string CommandStr = Run("ubus call network.device status '{\"name\":\"" + pInterfaceWIFI + "\"}'");
       if(CommandStr.empty() == false) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
           pthread_mutex_unlock(&pBTMutex);
-          return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+          return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object() && Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
         if(Result["Enabled"] == false) {
           pthread_mutex_unlock(&pBTMutex);
-          return req.FromJSON(Result);
+//          return req.FromJSON(Result);
         }
       }
       CommandStr = Run("ubus call network.interface." + pNetworkWIFI + " status");
@@ -651,13 +682,13 @@ void SysSupport::SetSystemActions(const string &action) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if (Tmp.is_discarded()) {
           pthread_mutex_unlock(&pBTMutex);
-          return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+          return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
           if(Tmp["up"].is_boolean()) Result["Connected"] = Tmp["up"];
           if(Result["Connected"] == false) {
             pthread_mutex_unlock(&pBTMutex);
-            return req.FromJSON(Result);
+//            return req.FromJSON(Result);
           }
           if(Tmp["dns-server"].is_array()) Result["DNS"] = Tmp["dns-server"];
           if(Tmp["ipv4-address"].is_array() && Tmp["ipv4-address"][0].is_object() && Tmp["ipv4-address"][0]["address"].is_string()) Result["IP"] = Tmp["ipv4-address"][0]["address"];
@@ -670,7 +701,7 @@ void SysSupport::SetSystemActions(const string &action) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
           pthread_mutex_unlock(&pBTMutex);
-          return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+          return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
           if(Tmp["ssid"].is_string()) Result["ESSID"] = Tmp["ssid"];
@@ -687,7 +718,7 @@ void SysSupport::SetSystemActions(const string &action) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
           pthread_mutex_unlock(&pBTMutex);
-          return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+          return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
           if(Tmp["values"].is_object()) {
@@ -706,7 +737,7 @@ void SysSupport::SetSystemActions(const string &action) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
           pthread_mutex_unlock(&pBTMutex);
-          return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+          return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
           if(Tmp["values"].is_object()) {
@@ -720,62 +751,60 @@ void SysSupport::SetSystemActions(const string &action) {
       }
     }
     pthread_mutex_unlock(&pBTMutex);
-    return req.FromJSON(Result);
+    HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
   }
-  void SysSupport::SetWIFICallback(HTTPRequest& req) {
-    json Params = req.GetParams();
+  void SysSupport::SetWIFICallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     pthread_mutex_lock(&pBTMutex);
     json Result;
     Result["Status"] = true;
     int ErrorCode = 0;
-    if(Params["Enabled"].is_boolean()) {
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"enabled\":\"" + (Params["Enabled"] ? "1" : "0") + "\"}}'", &ErrorCode);
+    if(params["Enabled"].is_boolean()) {
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"enabled\":\"" + (params["Enabled"] ? "1" : "0") + "\"}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
-    if(Params["IPMode"].is_string() && ((Params["IPMode"] == "DHCP") || (Params["IPMode"] == "STATIC"))) {
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"proto\":\"" + ((Params["IPMode"] == "DHCP") ? "dhcp" : "static") + "\"}}'", &ErrorCode);
+    if(params["IPMode"].is_string() && ((params["IPMode"] == "DHCP") || (params["IPMode"] == "STATIC"))) {
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"proto\":\"" + ((params["IPMode"] == "DHCP") ? "dhcp" : "static") + "\"}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
-    if(Params["IP"].is_string()) {
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"ipaddr\":" + Params["IP"].dump() + "}}'", &ErrorCode);
+    if(params["IP"].is_string()) {
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"ipaddr\":" + params["IP"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
-    if(Params["Netmask"].is_string()) {
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"netmask\":" + Params["Netmask"].dump() + "}}'", &ErrorCode);
+    if(params["Netmask"].is_string()) {
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"netmask\":" + params["Netmask"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
-    if(Params["Gateway"].is_string()) {
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"gateway\":" + Params["Gateway"].dump() + "}}'", &ErrorCode);
+    if(params["Gateway"].is_string()) {
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"gateway\":" + params["Gateway"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
-    if(Params["DNS"].is_array()) {
-      if(Params["DNS"].size() == 0) Params["DNS"] = "";
-      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"dns\":" + Params["DNS"].dump() + "}}'", &ErrorCode);
+    if(params["DNS"].is_array()) {
+//      if(params["DNS"].size() == 0) params["DNS"] = "";
+      Run("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"dns\":" + params["DNS"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
-    if(Params["ESSID"].is_string()) {
-      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"ssid\":" + Params["ESSID"].dump() + "}}'", &ErrorCode);
+    if(params["ESSID"].is_string()) {
+      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"ssid\":" + params["ESSID"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
-    if(Params["KeyMode"].is_string() && ((Params["KeyMode"] == "NONE") || (Params["KeyMode"] == "WEP") || (Params["KeyMode"] == "WPA") || (Params["KeyMode"] == "WPA2"))) {
-      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"encryption\":\"" + ((Params["KeyMode"] == "NONE") ? "none" : (Params["KeyMode"] == "WEP") ? "wep" : (Params["KeyMode"] == "WPA") ? "psk" : "psk2") + "\"}}'", &ErrorCode);
+    if(params["KeyMode"].is_string() && ((params["KeyMode"] == "NONE") || (params["KeyMode"] == "WEP") || (params["KeyMode"] == "WPA") || (params["KeyMode"] == "WPA2"))) {
+      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"encryption\":\"" + ((params["KeyMode"] == "NONE") ? "none" : (params["KeyMode"] == "WEP") ? "wep" : (params["KeyMode"] == "WPA") ? "psk" : "psk2") + "\"}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
-    if(Params["Key"].is_string()) {
-      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"key\":" + Params["Key"].dump() + "}}'", &ErrorCode);
+    if(params["Key"].is_string()) {
+      Run("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"key\":" + params["Key"].dump() + "}}'", &ErrorCode);
       if(ErrorCode != 0) Result["Status"] = false;
     }
     Run("uci commit && ubus call network reload", &ErrorCode);
     if(ErrorCode != 0) Result["Status"] = false;
     pthread_mutex_unlock(&pBTMutex);
-    return req.FromJSON(Result);
+    HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
   }
-  void SysSupport::GetNTPCallback(HTTPRequest& req) {
-    json Params = req.GetParams();
+  void SysSupport::GetNTPCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(req.UserName() != "admin") return req.FromString("", MHD_HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     pthread_mutex_lock(&pBTMutex);
     json Result = json::object();
     string CommandStr = Run("ubus call uci get '{\"config\":\"system\", \"section\":\"ntp\"}'");
@@ -783,7 +812,7 @@ void SysSupport::SetSystemActions(const string &action) {
       json Tmp = json::parse(CommandStr, NULL, false);
       if(Tmp.is_discarded()) {
         pthread_mutex_unlock(&pBTMutex);
-        return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
+        return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
       }
       if(Tmp.is_object()) {
         if(Tmp["values"].is_object()) {
@@ -797,27 +826,23 @@ void SysSupport::SetSystemActions(const string &action) {
     }
     Result["Time"] = Tools::GetTime();
     pthread_mutex_unlock(&pBTMutex);
-    return req.FromJSON(Result);
+    HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
   }
-  void SysSupport::SetNTPCallback(HTTPRequest& req) {
+  void SysSupport::SetNTPCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
     if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     pthread_mutex_lock(&pBTMutex);
     json Result;
-    Result["Status"] = true;
     int ErrorCode = 0;
     if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPCallback::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
     if((params.contains("Server") == false) || (params["Server"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Server' param is requiered", "text/plain", HTTP_BAD_REQUEST);
     bool Enabled  = params["Enabled"];
     string Server = params["Server"];
     Run("ubus call uci set '{\"config\":\"system\", \"section\":\"ntp\", \"values\":{\"enabled\":\"" + string((Enabled == true) ? "1" : "0") + "\", \"server\":\"" + Server + "\"}}'", &ErrorCode);
-    if(ErrorCode != 0) Result["Status"] = false;
-    Run("uci commit", &ErrorCode);
-    if(ErrorCode != 0) Result["Status"] = false;
-    Run("reload_config", &ErrorCode);
-    if(ErrorCode != 0) Result["Status"] = false;
-    if((Params["Enabled"] == false) && Params["Time"].is_number_unsigned()) {
-      uint64_t Time = Params["Time"];
+    if(ErrorCode == 0) Run("uci commit", &ErrorCode);
+    if(ErrorCode == 0) Run("reload_config", &ErrorCode);
+    if((params["Enabled"] == false) && params["Time"].is_number()) {
+      uint64_t Time = params["Time"];
       timeval TimeVal;
       TimeVal.tv_sec  = Time / 1000;
       TimeVal.tv_usec = Time % 1000;

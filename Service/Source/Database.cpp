@@ -158,7 +158,7 @@ bool Database::ExecResource(const string &file) {
   return ExecSentenceNoResult(Script);
 }
 bool Database::ExecSentenceNoResult(const string &sql) {
-  printf("%s\n", sql.c_str());
+//  printf("%s\n", sql.c_str());
   if(pDBConn == NULL) return false;
   ClearAsync();
   PGresult *Result = PQexec(pDBConn, sql.c_str());

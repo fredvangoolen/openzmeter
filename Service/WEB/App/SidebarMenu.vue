@@ -44,9 +44,9 @@
       <img class="icon" :src="require('Imgs/cog.png')">
       <div class="name">Settings</div>
     </router-link>
-    <router-link to="/Help" class="item">
+    <router-link to="/About" class="item">
       <img class="icon" :src="require('Imgs/help.png')">
-      <div class="name">Help</div>
+      <div class="name">About</div>
     </router-link>
 
 

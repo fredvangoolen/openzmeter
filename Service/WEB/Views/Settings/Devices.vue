@@ -61,9 +61,8 @@
       Configure: function (id) {
         this.ShowSpinner = true;
         if(id.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
-        if(id.Driver === 'V1.00') this.Driver = 'DeviceV1';
-        if(id.Driver === 'V1.01') this.Driver = 'DeviceV1';
-        if(id.Driver === 'V2.01') this.Driver = 'DeviceV2';
+        if(id.Driver === 'V1') this.Driver = 'DeviceV1';
+        if(id.Driver === 'V2') this.Driver = 'DeviceV2';
         if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
         this.$http.post('getDevice', { Serial: id.Serial } ).then(
           (result) => {

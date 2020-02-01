@@ -1,5 +1,5 @@
 <template>
-  <dlg>
+  <dlg :loading="ShowSpinner">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">User</h4></div>
       <div class="pull-right btn-group">
@@ -95,16 +95,14 @@
   export default {
     props: { user: Object },
     data: function() {
-      return { View: 'Main', TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ) };
+      return { View: 'Main', TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false };
     },
     methods: {
-      LoadUser: function(user) {
-        this.$set(this, 'User', user);
-        this.$refs.Dialog.Show();
-      },
       Save: function() {
-        this.$refs.Dialog.ShowSpinner = true;
-
+        this.ShowSpinner = true;
+        this.$http.post('setUser', this.user).then(
+          (result) => { this.ShowSpinner = false; }
+        );
       },
       LoadImage: function() {
         this.$refs.avatar.LoadImage();
