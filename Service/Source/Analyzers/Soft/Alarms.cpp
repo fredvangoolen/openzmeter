@@ -21,33 +21,6 @@ AnalyzerSoft::Alarms::Alarm::Alarm(const uint32_t id, const json &config) {
   pAlarmID = id;
   Configure(config);
 }
-json AnalyzerSoft::Alarms::Alarm::GetShortDescriptor() {
-  json Tmp = json::object();
-  pMemberLocks.ReadLock();
-  Tmp["AlarmID"] = pAlarmID;
-  Tmp["Name"] = pName;
-  Tmp["Priority"] = pPriority;
-  pMemberLocks.ReadUnlock();
-  return Tmp;
-}
-json AnalyzerSoft::Alarms::Alarm::GetFullDescriptor() {
-  json Tmp = json::object();
-  pMemberLocks.ReadLock();
-  Tmp["AlarmID"]     = pAlarmID;
-  Tmp["Name"]        = pName;
-  Tmp["Priority"]    = pPriority;
-  string Expresion   = pEvaluator.GetExpr();
-  Tmp["Expression"]  = Expresion.erase(Expresion.find_last_not_of(" \n\r\t")+1);
-  Tmp["Aggreg"]      = (pType == AnalyzerSoft::AGGREG_3S) ? "3S" : (pType == AnalyzerSoft::AGGREG_1M) ? "1M" : (pType == AnalyzerSoft::AGGREG_10M) ? "10M" : (pType == AnalyzerSoft::AGGREG_15M) ? "15M" : "1H";
-  Tmp["Message"]     = pMessage;
-  Tmp["Samples"]     = pSamples;
-  Tmp["Window"]      = pWindow;
-  pMemberLocks.ReadUnlock();
-  return Tmp;
-}
-uint64_t AnalyzerSoft::Alarms::Alarm::GetID() {
-  return pAlarmID;
-}
 void AnalyzerSoft::Alarms::Alarm::Configure(const json &config) {
   pMemberLocks.WriteLock();
   pName = config["Name"];
@@ -230,20 +203,6 @@ void AnalyzerSoft::Alarms::TestAlarm(const json &params, Response &response) {
   }
   response.set_content(Result.dump(), "application/json");
   response.status = HTTP_OK;
-}
-void AnalyzerSoft::Alarms::GetAlarm(const json &params, Response &response) {
-  uint32_t AlarmID = params["AlarmID"];
-  pMemberLocks.ReadLock();
-  for(auto &Alarm : pAlarms) {
-    if(Alarm.GetID() != AlarmID) continue;
-    response.set_content(Alarm.GetFullDescriptor().dump(), "aaplication/json");
-    response.status = HTTP_OK;
-    pMemberLocks.ReadUnlock();
-    return;
-  }
-  pMemberLocks.ReadUnlock();
-  response.set_content("AlarmID not found", "text/plain");
-  response.status = HTTP_BAD_REQUEST;
 }
 void AnalyzerSoft::Alarms::SetAlarm(const json &params, Response &response) {
   json Result = json::object();

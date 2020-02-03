@@ -19,6 +19,7 @@
 </template>
 
 <script>
+  import * as oZm from 'JS/openZmeter.js';
   import vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
   export default {
