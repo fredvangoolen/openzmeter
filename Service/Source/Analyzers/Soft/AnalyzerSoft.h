@@ -189,15 +189,20 @@ class AnalyzerSoft final : public Analyzer {
     static float CalcChange(const float in, const float reference);
     static float CalcAngle(const float *a, const float *b);
     static float BinPower(const float *a);
+    static json  CheckAlarmConfig(const json &config);
+    static void  InitAlarm(Alarm_t &alarm, const json &config);
+    static json  GetAlarmJSON(const Alarm_t &alarm);
   private :
     void  Configure(const json &options);
     void  InitAggreg(Params_t &params, AggregType type);
-    void  InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
     void  AccumulateAggreg(Params_t &src, const Params_t &dst);
     void  NormalizeAggreg(Params_t &src);
-    bool  FindRunningEvent(const uint32_t mask);
     void  SaveAggreg(Params_t &params);
+    void  InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
+    bool  FindRunningEvent(const uint32_t mask);
     void  SaveEvent(Event_t &evt);
+    void  SaveAlarmsConf();
+
 
 
   private :
