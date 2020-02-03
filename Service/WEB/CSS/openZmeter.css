@@ -101,7 +101,6 @@ table.dataTable thead .sorting:after {
 body {
   background-color: #F1F1F1;
   overflow-x: hidden;
-  background-image: url(../Imgs/Background.png);
 }
 img {
   margin-top: -1px;

@@ -45,11 +45,6 @@
     created: function() {
       this.GetPermissions();
     },
-    watch: {
-      analyzer: function() {
-        this.GetPermissions();
-      }
-    },
     methods: {
       BooleanFormat: function(value) {
         return (value === true) ? '&#9635;' : '&#9633;';

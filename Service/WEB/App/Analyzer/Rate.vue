@@ -31,7 +31,7 @@
       <div class="col-xs-12">
         <table>
           <tr><td></td><td><strong>Contracted power <em>(kW)</em></strong></td><td><strong>Power costs <em>(€/kW/day)</em></strong></td><td><strong>Energy costs <em>(€/kWh)</em></strong></td></tr>
-          <tr v-for="(period, idx) in rate.Config.Periods">
+          <tr v-for="(period, idx) in rate.Config.Periods" :key="idx">
             <td><strong>P{{idx + 1}}</strong></td>
             <td><div class="input-group input-group-xs"><input type="text" class="form-control" v-on:change="PeriodItemChanged($event, 'Contracted_Power', idx)" :value="Round6(period.Contracted_Power / 1000)"></div></td>
             <td><div class="input-group input-group-xs"><input type="text" class="form-control" v-on:change="PeriodItemChanged($event, 'Power_Cost', idx)" :value="Round6(period.Power_Cost * 1000)"></div></td>
@@ -44,7 +44,7 @@
       <div class="col-xs-12">
         <table>
           <tr><td><strong>Concept</strong></td><td><strong>Type</strong></td><td class="text-right"><strong>Value</strong></td></tr>
-          <tr v-for="(tax, idx) in rate.Config.Taxs">
+          <tr v-for="(tax, idx) in rate.Config.Taxs" :key="idx">
             <td>
               <div class="input-group input-group-xs">
                 <span class="input-group-btn"><button class="btn btn-default" type="button" v-on:click="Rate.Config.Taxs.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button></span>

@@ -82,8 +82,7 @@
           {name: '__slot:reactive', title: 'Reactive mode'},
           {name: '__slot:color', title: 'Colour'}
         ]
-      }
-      ;
+      };
     },
     computed: {
       TimeZones: function() {
