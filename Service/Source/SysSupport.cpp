@@ -51,7 +51,7 @@ void SysSupport::GetUsersCallback(const json &params, Response &response) {
   uint32_t Limit  = params["Limit"];
   uint32_t Offset  = params["Offset"];
   Database DB;
-  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(t1.user)), '[]') AS result FROM (SELECT json_build_object('User', username, 'Name', name, 'EMail', email, 'TimeZone', time_zone) AS user FROM users WHERE position(" + DB.Bind(Filter) + " in username) > 0 ORDER BY username ASC LIMIT " + DB.Bind(Limit) + " OFFSET " + DB.Bind(Offset) + ") t1");
+  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(t1.user)), '[]') AS result FROM (SELECT json_build_object('User', username, 'Name', name, 'Email', email, 'TimeZone', time_zone) AS user FROM users WHERE position(" + DB.Bind(Filter) + " in username) > 0 ORDER BY username ASC LIMIT " + DB.Bind(Limit) + " OFFSET " + DB.Bind(Offset) + ") t1");
   if(DB.FecthRow() == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPCallback::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
@@ -61,7 +61,7 @@ void SysSupport::GetUserCallback(const json &params, Response &response) {
   string User = params["User"];
   if((UserName != "admin") && (UserName != User)) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('User', username, 'Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'EMail', email, 'Telegram', telegram, 'TimeZone', time_zone) AS result FROM users WHERE username = " + DB.Bind(User));
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('User', username, 'Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'Email', email, 'Telegram', telegram, 'TimeZone', time_zone) AS result FROM users WHERE username = " + DB.Bind(User));
   if(DB.FecthRow() == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPCallback::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
@@ -83,9 +83,9 @@ void SysSupport::SetUserCallback(const json &params, Response &response) {
   string Email = params["Email"];
   string Telegram = params["Telegram"];
   string TimeZone = params["TimeZone"];
-  if((UserName != "admin") || (UserName != User)) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((UserName != "admin") && (UserName != User)) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
-  bool Result = DB.ExecSentenceAsyncResult("UPDATE users SET name = " + DB.Bind(User) + ", address = " + DB.Bind(Address) + ", company = " + DB.Bind(Company) +  ", photo = " + DB.Bind(Photo) + ", email = " + DB.Bind(Email) + ", telegram = " + DB.Bind(Telegram) + ", time_zone = " + DB.Bind(TimeZone) + " WHERE username = " + DB.Bind(User));
+  bool Result = DB.ExecSentenceAsyncResult("UPDATE users SET name = " + DB.Bind(Name) + ", address = " + DB.Bind(Address) + ", company = " + DB.Bind(Company) +  ", photo = " + DB.Bind(Photo) + ", email = " + DB.Bind(Email) + ", telegram = " + DB.Bind(Telegram) + ", time_zone = " + DB.Bind(TimeZone) + " WHERE username = " + DB.Bind(User));
   if(Result == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
 }
@@ -109,7 +109,7 @@ void SysSupport::AddUserCallback(const json &params, Response &response) {
   string TimeZone = params["TimeZone"];
   if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
-  bool Result = DB.ExecSentenceAsyncResult("INSERT INTO users(username, name, address, company, photo, email, telegram, time_zone) VALUES(" + DB.Bind(User) + ", " + DB.Bind(Address) + ", " + DB.Bind(Company) +  ", " + DB.Bind(Photo) + ", " + DB.Bind(Email) + ", " + DB.Bind(Telegram) + ", " + DB.Bind(TimeZone) + ")");
+  bool Result = DB.ExecSentenceAsyncResult("INSERT INTO users(username, name, address, company, photo, email, telegram, time_zone) VALUES(" + DB.Bind(User) + ", " + DB.Bind(Name) + ", " + DB.Bind(Address) + ", " + DB.Bind(Company) +  ", " + DB.Bind(Photo) + ", " + DB.Bind(Email) + ", " + DB.Bind(Telegram) + ", " + DB.Bind(TimeZone) + ")");
   if(Result == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
 }
@@ -117,7 +117,7 @@ void SysSupport::DelUserCallback(const json &params, Response &response) {
   if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPCallback::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string UserName = params["UserName"];
   string User = params["User"];
-  if((UserName != "admin") || (User == "admin")) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
   bool Result = DB.ExecSentenceAsyncResult("DELETE FROM users WHERE name = " + DB.Bind(User));
   if(Result == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);

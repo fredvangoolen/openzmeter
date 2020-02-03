@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTime(data.Sampletime) }}</div>
+      <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggregation_Source) : '-' }} aggregation {{ Paused ? '(Paused)' : '' }}</div>
         <div class="header-buttons">
           <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
           <div class="btn-group">
@@ -32,6 +32,7 @@
         Series.Sampletime = this.data.Sampletime;
         Series.From = this.data.From;
         Series.To = this.data.To;
+        Series.LastSampletime = (this.data.Sampletime.length > 0) ? this.data.Sampletime.slice(-1)[0] : null;
         Series.TimeZone = this.analyzer.TimeZone;
         for(var n in this.Names) {
           var Serie = [];

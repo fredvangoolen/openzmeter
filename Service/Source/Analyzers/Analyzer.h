@@ -47,6 +47,7 @@ class Analyzer {
     virtual void GetPrices(const json &params, Response &response) = 0;
     virtual void TestAlarm(const json &params, Response &response) = 0;
     virtual void GetAlarms(const json &params, Response &response) = 0;
+    virtual void GetAlarmsLog(const json &params, Response &response) = 0;
     virtual void GetAlarm(const json &params, Response &response) = 0;
     virtual void SetAlarm(const json &params, Response &response) = 0;
     virtual void AddAlarm(const json &params, Response &response) = 0;

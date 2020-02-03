@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ MouseOver ? '[PAUSED]' : '' }}</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
         <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
           <toolbar-phases storage="DetailPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
@@ -14,37 +14,34 @@
         </portal>
       </div>
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">
-      <spinner :class="{ 'hide': !ShowSpinner }"></spinner>
-      <graph :options="GraphOptions" v-on:mouseOver="MouseOver=$event" :height="Expanded?DialogHeight:300"></graph>
+      <spinner v-if="data==null"></spinner>
+      <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+        <graph :options="GraphOptions" :paused="MouseOver" :height="Expanded?DialogHeight:300"></graph>
+      </div>
     </portal>
     <dlg-fs v-if="Expanded" title="Harmonics" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'moment';
   import chroma from 'chroma-js';
   import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
-  import ToolbarOptions from 'Components/ToolbarOptions.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     props: { analyzer: Object, data: Object, paused: Boolean },
     data() {
-      return { ShowSpinner: true, MouseOver: false, Options: null, Phases: null, VOffset: 0, COffset: 0, Expanded: false, DialogHeight: 300 };
+      return { MouseOver: false, Options: null, Phases: null, VOffset: 0, COffset: 0, Expanded: false, DialogHeight: 300 };
     },
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
-      Time: function() { return (this.data == null) ?  'Loading data...' : 'Last update at ' + moment(this.data.Sampletime).format('HH:mm:ss.SSS'); },
       GraphOptions: function() {
         if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return { };
+        var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
         for(var c in CurrentStyle.Colors) CurrentStyle.Colors[c] = chroma(CurrentStyle.Colors[c]).darken();
         var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
         var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
-        var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
         for(var n in CurrentNames) Opt.series[CurrentNames[n]] = { axis: 'y2' };
@@ -58,15 +55,15 @@
         Opt.legendFormatter = Graph.LegendFormatter_Follow;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
+        Opt.axes.y.valueFormatter = (x) => { return this.Round(x - this.VOffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'V'); };
+        Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x - this.VOffset, 2, true); };
         Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.VOffset); } : Dygraph.numericTicks;
-        Opt.axes.y.valueFormatter = (x) => { return oZm.Round2(x - this.VOffset) + ' ' + (this.Options['Log'] ? 'dB' : 'V'); };
-        Opt.axes.y.axisLabelFormatter = (x) => { return oZm.Round2(x - this.VOffset); };
-        Opt.axes.y2.drawAxis = this.Options['Current'];
         Opt.axes.y2.pixelsPerLabel = 15;
+        Opt.axes.y2.drawAxis = this.Options['Current'];
         Opt.axes.y2.axisLabelWidth = this.Options['Current'] ? 34 : 0;
-        Opt.axes.y2.valueFormatter = (x) => { return oZm.Round2(x - this.COffset) + ' ' + (this.Log ? 'dB' : 'A'); };
+        Opt.axes.y2.valueFormatter = (x) => { return this.Round(x - this.COffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'A'); };
+        Opt.axes.y2.axisLabelFormatter = (x) => { return this.Round(x - this.COffset, 2, true); };
         Opt.axes.y2.ticker = this.Options['Current'] ? this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.COffset) } : Dygraph.numericTicks : () => { return []; };
-        Opt.axes.y2.axisLabelFormatter = (x) => { return oZm.Round2(x - this.COffset); };
         Opt.axes.x.drawGrid = false;
         Opt.axes.x.ticker = Graph.OddHarmonicsTicks;
         Opt.axes.x.axisLabelFormatter = (x) => { return oZm.Series['HARMONICS'].Names[x]; };
@@ -80,8 +77,8 @@
             for(var n = 0; n < this.data.Voltage_Harmonics.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics[n][i]))) : this.BinPower(this.data.Voltage_Harmonics[n][i]));
             for(var n = 0; n < this.data.Current_Harmonics.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics[n][i]))) : this.BinPower(this.data.Current_Harmonics[n][i]));
             Opt.file.push(Row);
-            Opt.dateWindow = [Opt.file[0][0] - 0.5, 50.5];
           }
+          Opt.dateWindow = [Opt.file[0][0] - 0.5, 50.5];
           var V = [false], I = [false];
           for(var n in VoltageNames) { V.push(this.Phases[n]); I.push(false); }
           for(var n in CurrentNames) { I.push(this.Phases[n]); V.push(false); }
@@ -99,36 +96,38 @@
             }
           }
         }
-        this.ShowSpinner = false;
         return Opt;
       },
       Export: function() {
-        return [];
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
         var Data = [];
+        if(this.data == null) return Data;
         var Header = ['Harmonic'];
-        for(var i = 0; i < oZm.Series['VOLTAGE'].Names(Analyzer).length; i++) {
-          Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i]);
-          Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i] + ' (dB)');
-          Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i] + ' (Complex)');
+        for(var i = 0; i < oZm.Series['VOLTAGE'].Names(this.analyzer).length; i++) {
+          Header.push(oZm.Series['VOLTAGE'].Names(this.analyzer)[i]);
+          Header.push(oZm.Series['VOLTAGE'].Names(this.analyzer)[i] + ' (dB)');
+          Header.push(oZm.Series['VOLTAGE'].Names(this.analyzer)[i] + ' (Complex)');
         }
-        for(var i = 0; i < oZm.Series['CURRENT'].Names(Analyzer).length; i++) {
-          Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i]);
-          Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i] + ' (dB)');
-          Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i] + ' (Complex)');
+        for(var i = 0; i < oZm.Series['CURRENT'].Names(this.analyzer).length; i++) {
+          Header.push(oZm.Series['CURRENT'].Names(this.analyzer)[i]);
+          Header.push(oZm.Series['CURRENT'].Names(this.analyzer)[i] + ' (dB)');
+          Header.push(oZm.Series['CURRENT'].Names(this.analyzer)[i] + ' (Complex)');
         }
         Data.push(Header);
-        for(i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
+        for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
           var Row = [oZm.Series['HARMONICS'].Names[i]];
-          for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length + oZm.Series['CURRENT'].Names(Analyzer).length; n++) {
-            Row.push(this.BinPower(this.Data[i][n]));
-            Row.push(20.0 * Math.log10(Math.max(0.000000001, this.BinPower(this.Data[i][n]))));
-            Row.push(String(this.Data[i][n][0]) + ((this.Data[i][n][1] > 0) ? '+' + this.Data[i][n][1] : this.Data[i][n][1]) + 'i');
+          for(var n = 0; n < oZm.Series['VOLTAGE'].Names(this.analyzer).length; n++) {
+            Row.push(this.BinPower(this.data.Voltage_Harmonics[n][i]));
+            Row.push(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics[n][i]))));
+            Row.push(String(this.data.Voltage_Harmonics[n][i][0]) + ((this.data.Voltage_Harmonics[n][i][1] > 0) ? '+' + this.data.Voltage_Harmonics[n][i][1] : this.data.Voltage_Harmonics[n][i][1]) + 'i');
+          }
+          for(var n = 0; n < oZm.Series['CURRENT'].Names(this.analyzer).length; n++) {
+            Row.push(this.BinPower(this.data.Current_Harmonics[n][i]));
+            Row.push(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics[n][i]))));
+            Row.push(String(this.data.Current_Harmonics[n][i][0]) + ((this.data.Current_Harmonics[n][i][1] > 0) ? '+' + this.data.Current_Harmonics[n][i][1] : this.data.Current_Harmonics[n][i][1]) + 'i');
           }
           Data.push(Row);
         }
-        this.$refs.tools.SaveCVS('Harmonics.csv', Data);
+        return Data;
       }
     }
   }

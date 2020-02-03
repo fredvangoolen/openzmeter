@@ -11,8 +11,8 @@
       <vuetable :fields="Columns" :api-mode="false" :data="Permissions" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-default btn-xs" v-on:click="Edit(props.rowData)">Edit</button>
-            <button type="button" class="btn btn-danger btn-xs" v-on:click="Delete(props.rowData)">Delete</button>
+            <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowData)">Edit</button>
+            <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData)">Delete</button>
           </div>
         </template>
       </vuetable>
@@ -31,10 +31,10 @@
     data() {
       return { View: null, Permissions: [], ShowSpinner: true,
         Columns: [
-          {name: 'UserName', title: 'User Name'},
-          {name: 'View', title: 'View', callback: 'DateFormat'},
-          {name: ''},
-          {name: 'EndDate', title: 'End date', callback: 'DateFormat'},
+          {name: 'User', title: 'User Name'},
+          {name: 'Read', title: 'Read', callback: this.BooleanFormat },
+          {name: 'Write', title: 'Write', callback: this.BooleanFormat },
+          {name: 'Configure', title: 'Configure', callback: this.BooleanFormat },
           {name: '__slot:actions', title: ''}
         ]
       };
@@ -51,6 +51,9 @@
       }
     },
     methods: {
+      BooleanFormat: function(value) {
+        return (value === true) ? '&#9635;' : '&#9633;';
+      },
       GetPermissions: function() {
         this.View = null;
         this.ShowSpinner = true;
@@ -58,9 +61,10 @@
         if(this.analyzer == null) return;
         this.$http.post('getPermissions', { Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
-            if(result.status == 200) this.Permissions = result.data;
+            this.Permissions = result.data;
             this.ShowSpinner = false;
-          }
+          },
+          (fail) => {}
         );
       },
       Add: function() {
@@ -68,8 +72,8 @@
         this.View = 'Permission';
       },
       Edit: function(row) {
-        this.Show = false;
-        this.$parent.$refs.Tariff.Load(this.Serial, row.RateID);
+        this.Permission = row;
+        this.View = 'Permission';
       },
       Delete: function(row) {
         //Elimino
@@ -84,17 +88,17 @@
 
 <style scoped>
   @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
-      width: 100px;
+    .table >>> th:nth-child(2), .table >>> th:nth-child(3), .table >>> th:nth-child(4) {
+      width: 70px;
       text-align: center;
     }
-    .table >>> td:nth-child(2), .table >>> td:nth-child(3) {
+    .table >>> td:nth-child(2), .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
       text-align: center;
     }
-    .table >>> th:nth-child(4) {
+    .table >>> th:nth-child(5) {
       width: 94px;
     }
-    .table >>> td:nth-child(4) {
+    .table >>> td:nth-child(5) {
       text-align: right;
     }
   }

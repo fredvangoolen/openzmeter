@@ -9,7 +9,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
 EXECUTABLE_SOURCE = Source/Tools.cpp Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/SysSupport.cpp Source/Devices/DeviceManager.cpp Source/Devices/Device.cpp Source/Analyzers/Analyzer.cpp Source/Tariffs/Tariff.cpp
-CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs
+CFLAGS += -Wno-psabi -Wall -std=c++11 -no-pie -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs
 LDFLAGS += -lstdc++ -lpq -lz -lpthread
 
 #Add libs (cctz, nlohmann, muparser, httplib)
@@ -40,8 +40,8 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -g3 -ggdb -fstack-protector-all -fstack-check
 else
-	CFLAGS  += -Os -Wall -fopt-info-vec -s -flto -ftree-vectorize
-	LDFLAGS += -flto
+	CFLAGS  += -O2 -Wall -s -flto -ftree-vectorize
+	LDFLAGS += -flto -no-pie
 endif
 ifeq ($(DEVICE_V1), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1/DeviceV1.cpp
@@ -102,6 +102,7 @@ $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 $(EXECUTABLE_TARGET): $(RESOURCES_TARGET) $(EXECUTABLE_OBJS)
 	@echo "Linking target" $(TARGET_EXEC)
 	@$(CC)  $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
+	@objcopy --remove-section=.comment --remove-section=.note $(EXECUTABLE_TARGET)
 
 Tmp/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)

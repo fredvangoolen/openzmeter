@@ -12,8 +12,8 @@ TARIFF_ESP  = true
 TARIFF_NONE = true
 
 # Build options --------------------------------------------------------------------------------------------------------
-DEBUG   = true
+DEBUG   = false
 CC      = g++
 LD      = ld
-CFLAGS += -I /usr/include/postgresql
+CFLAGS += -I /usr/include/postgresql -march=native -funsafe-math-optimizations
 

@@ -47,6 +47,7 @@ const vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1
 const vector<float> AnalyzerSoft::UnbalanceRanges  = {0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.50, 1.75, 2.0, 2.25, 2.50, 2.75, 3.0, 3.25, 3.50, 3.75, 4.0, 4.25, 4.50, 4.75, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, INFINITY};
 //----------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t     AnalyzerSoft::pFFTMutex = PTHREAD_MUTEX_INITIALIZER;
+uint32_t            AnalyzerSoft::pAlarmsID = 0;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pMode(mode) {
   LOGFile::Debug("Creating AnalyzerSoft database tables\n");
@@ -55,6 +56,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Tools::GetTime() - 86400000));   //Delete 1 day old
   DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(Tools::GetTime() - 3600000));       //Delete 1 hour old
   pAnalyzerLock   = PTHREAD_MUTEX_INITIALIZER;
+  pAlarmsLock     = PTHREAD_RWLOCK_INITIALIZER;
   pDelayVoltage   = NULL;
   pDelayCurrent   = NULL;
   pVoltageSamples = NULL;
@@ -1435,13 +1437,23 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
 //  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
-//  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  json Result = json::array();
-//  for(auto Alarm : pAlarms) Result.push_back(Alarm.GetShortDescriptor());
-//  pMemberLocks.ReadUnlock();
-  response.set_content("Result", "text/plain");
-  response.status = HTTP_BAD_REQUEST;
-//  pMembersLocks.ReadUnlock();
+  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  json Result = json::array();
+  pthread_rwlock_rdlock(&pAlarmsLock);
+  for(auto Alarm : pAlarms) {
+    json Tmp = json::object();
+    Tmp["AlarmID"] = Alarm.AlarmID;
+    Tmp["Name"] = Alarm.Name;
+    Tmp["Priority"] = Alarm.Priority;
+    Result.push_back(Tmp);
+  }
+  pthread_rwlock_unlock(&pAlarmsLock);
+  HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::GetAlarmsLog(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  json Result = json::array();
+  HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetAlarm(const json &params, Response &response) {
 //  if(CheckRights(params, response, READ) == false) return;
@@ -1483,70 +1495,59 @@ void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
 //  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::AddAlarm(const json &params, Response &response) {
-//  if(CheckRights(params, response, READ) == false) return;
- //  json Params = req.GetParams();
-//  if(!Params["Analyzer"].is_string() || !Params["Name"].is_string() || !Params["Priority"].is_number_unsigned() || !Params["Expression"].is_string() || !Params["Aggreg"].is_string() || !Params["Message"].is_string() || !Params["Samples"].is_number_unsigned() || !Params["Window"].is_number_unsigned()) return req.FromString("'Analyzer', 'Name', 'Priority', 'Expression', 'Aggreg', 'Message', 'Samples' and 'Window' params are requiered", MHD_HTTP_BAD_REQUEST);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Priority") == false) || (params["Priority"].is_number() == false)) return HTTPCallback::FillResponse(response, "'Priority' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Samples") == false) || (params["Samples"].is_number() == false)) return HTTPCallback::FillResponse(response, "'Samples' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Window") == false) || (params["Window"].is_number() == false)) return HTTPCallback::FillResponse(response, "'Window' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  Alarm_t Alarm;
+  //Cargo y compruebo rangos
+  pthread_rwlock_wrlock(&pAlarmsLock);
+  Alarm.AlarmID = pAlarmsID++;
+  pAlarms.push_back(Alarm);
+  json Config = json::array();
+  for(auto &Alarm : pAlarms) {
+    json Tmp = json::object();
+    string Expresion   = Alarm.Evaluator.GetExpr();
+    Tmp["Name"]         = Alarm.Name;
+    Tmp["Priority"]    = Alarm.Priority;
+    Tmp["Expression"]  = Expresion.erase(Expresion.find_last_not_of(" \n\r\t")+1);
+    Tmp["Aggreg"]      = (Alarm.Aggreg == AnalyzerSoft::AGGREG_3S) ? "3S" : (Alarm.Aggreg == AnalyzerSoft::AGGREG_1M) ? "1M" : (Alarm.Aggreg == AnalyzerSoft::AGGREG_10M) ? "10M" : (Alarm.Aggreg == AnalyzerSoft::AGGREG_15M) ? "15M" : "1H";
+    Tmp["Samples"]     = Alarm.Samples;
+    Tmp["Window"]      = Alarm.Window;
+    Config["Alarms"].push_back(Tmp);
+  }
+  ConfigManager::WriteConfig(pConfigPath + "/Alarms", Config);
 //  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->AddAlarm(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
-//  pMembersLocks.ReadLock();
-//  if(pAlarms != NULL) {
-//    pAlarms->AddAlarm(params, response);
-//  } else {
-//    response.set_content("Alarms disabled", "text/plain");
-//    response.status = HTTP_SERVICE_UNAVAILABLE;
-//  }
-//  pMembersLocks.ReadUnlock();
-//    pMemberLocks.WriteLock();
-//  pAlarms.emplace_back(pLastAlarmID++, Alarm::CheckConfig(params));
-//  pMemberLocks.WriteUnlock();
-//  json Config = ConfigManager::ReadConfig(pParent->pConfigPath);
-//  Config["Alarms"] = json::array();
-//  pMemberLocks.ReadLock();
-//  for(auto &Alarm : pAlarms) Config["Alarms"].push_back(Alarm.GetFullDescriptor());
-//  pMemberLocks.ReadUnlock();
-//  ConfigManager::WriteConfig(pParent->pConfigPath, Config);
-  response.set_content("", "text/plain");
-  response.status = HTTP_OK;
+  pthread_rwlock_unlock(&pAlarmsLock);
+  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
-//  if(CheckRights(params, response, READ) == false) return;
- //  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned()) return req.FromString("'Analyzer' and 'AlarmID' params are requiered", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->DelAlarm(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
-//  pMembersLocks.ReadLock();
-//  if(pAlarms != NULL) {
-//    pAlarms->DelAlarm(params, response);
-//  } else {
-//    response.set_content("Alarms disabled", "text/plain");
-//    response.status = HTTP_SERVICE_UNAVAILABLE;
-//  }
-//  pMembersLocks.ReadUnlock();
-//  uint64_t AlarmID = params["AlarmID"];
-//  pMemberLocks.WriteLock();
-//  for(auto it = pAlarms.begin(); it != pAlarms.end(); it++) {
-//    if(it->GetID() != AlarmID) continue;
-//    pAlarms.erase(it);
-//    pMemberLocks.WriteUnlock();
-//    json Config = ConfigManager::ReadConfig(pParent->pConfigPath);
-//    Config["Alarms"] = json::array();
-//    pMemberLocks.ReadLock();
-//    for(auto &Alarm : pAlarms) Config["Alarms"].push_back(Alarm.GetFullDescriptor());
-//    pMemberLocks.ReadUnlock();
-//    ConfigManager::WriteConfig(pParent->pConfigPath, Config);
-//    response.set_content("", "text/plain");
-//    response.status = HTTP_OK;
-//    return;
-//  }
-//  pMemberLocks.WriteUnlock();
-  response.set_content("AlarmID not found", "text/plain");
-  response.status = HTTP_BAD_REQUEST;
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("AlarmID") == false) || (params["AlarmID"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  uint32_t AlarmID = params["AlarmId"];
+  pthread_rwlock_wrlock(&pAlarmsLock);
+  for(auto it = pAlarms.begin(); it != pAlarms.end(); it++) {
+    if(it->AlarmID != AlarmID) continue;
+    pAlarms.erase(it);
+    json Config = json::array();
+    for(auto &Alarm : pAlarms) {
+      json Tmp = json::object();
+      string Expresion   = Alarm.Evaluator.GetExpr();
+      Tmp["Name"]         = Alarm.Name;
+      Tmp["Priority"]    = Alarm.Priority;
+      Tmp["Expression"]  = Expresion.erase(Expresion.find_last_not_of(" \n\r\t")+1);
+      Tmp["Aggreg"]      = (Alarm.Aggreg == AnalyzerSoft::AGGREG_3S) ? "3S" : (Alarm.Aggreg == AnalyzerSoft::AGGREG_1M) ? "1M" : (Alarm.Aggreg == AnalyzerSoft::AGGREG_10M) ? "10M" : (Alarm.Aggreg == AnalyzerSoft::AGGREG_15M) ? "15M" : "1H";
+      Tmp["Samples"]     = Alarm.Samples;
+      Tmp["Window"]      = Alarm.Window;
+      Config["Alarms"].push_back(Tmp);
+    }
+    ConfigManager::WriteConfig(pConfigPath + "/Alarms", Config);
+    pthread_rwlock_unlock(&pAlarmsLock);
+    HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+  }
+  pthread_rwlock_unlock(&pAlarmsLock);
+  HTTPCallback::FillResponse(response, "AlarmID not found", "text/plain", HTTP_BAD_REQUEST);
 }

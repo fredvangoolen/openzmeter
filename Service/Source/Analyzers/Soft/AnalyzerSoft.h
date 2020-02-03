@@ -26,8 +26,8 @@ using namespace mu;
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoft final : public Analyzer {
   private :
-    static const uint8_t FILTERSTAGES =  5;        //Filter stages for zerocrossing
-    static const uint8_t ZEROCROSSING_SECONDS      = 10;        //Used seconds to calc frequency
+    static const uint8_t FILTERSTAGES         =  5;        //Filter stages for zerocrossing
+    static const uint8_t ZEROCROSSING_SECONDS = 10;        //Used seconds to calc frequency
   public :
     enum AggregType  { UNINITIALIZED, AGGREG_200MS, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
     enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
@@ -75,11 +75,9 @@ class AnalyzerSoft final : public Analyzer {
       float   ChannelsZ2[3];
     } Filter_t;
     typedef struct {
-      RWLocks            pMemberLocks;             //Locks access to members
-      uint32_t           pAlarmID;
+      uint32_t           AlarmID;
       string             Name;
       uint8_t            Priority;
-      string             Message;
       uint32_t           Samples;
       uint32_t           Window;
       AggregType         Aggreg;
@@ -105,6 +103,7 @@ class AnalyzerSoft final : public Analyzer {
     } Event_t;
   private :
     static pthread_mutex_t      pFFTMutex;               //Planer mutex
+    static uint32_t             pAlarmsID;               //Last assigned AlarmID
   private :
     static const vector<float>  FrequencyRanges;         //Rangos de frecuencias para estadisticas
     static const vector<float>  VoltageRanges;           //Rangos de tensiones para estadisticas
@@ -150,13 +149,17 @@ class AnalyzerSoft final : public Analyzer {
     Worker                    *pCurrentFFTWorker[4];     //Current FFT worker
     Worker                    *pAlarmsWorker;            //Alarms detection worker
     Worker                    *pEventsWorker;            //Events detector
+  private : //Alarms related (should be locked)
+    pthread_rwlock_t           pAlarmsLock;              //Control access
+    vector<Alarm_t>            pAlarms;                  //Alarms control object
+  private : //Events related (only acceded inside analyzer thread)
+    list<Event_t>              pEvents;                  //Running events
 
 
 
     deque<vector<float> >      pPrevSamples;             //Previous samples
     deque<EventCycle_t>        pPrevCycles;              //Previous cycles
     bool                       pPrevStationary;          //Steady state flag
-    list<Event_t>              pEvents;                  //Running events
 
 
 
@@ -164,7 +167,7 @@ class AnalyzerSoft final : public Analyzer {
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private :  //Config params (Writed in configure, readed in other places)
 //    Sync                      *pSync;                    //Synchronization object
-    vector<Alarm_t>            pAlarms;                  //Alarms control object
+
     bool                       pSave200MS;                 //Save 10 cycles aggregation to database
     float                      pNominalVoltage;          //Analyzer nominal voltage
     float                      pNominalFrequency;        //Analyzer nominal frequency
@@ -215,6 +218,7 @@ class AnalyzerSoft final : public Analyzer {
     void  GetPrices(const json &params, Response &response) override;
     void  TestAlarm(const json &params, Response &response) override;
     void  GetAlarms(const json &params, Response &response) override;
+    void  GetAlarmsLog(const json &params, Response &response) override;
     void  GetAlarm(const json &params, Response &response) override;
     void  SetAlarm(const json &params, Response &response) override;
     void  AddAlarm(const json &params, Response &response) override;

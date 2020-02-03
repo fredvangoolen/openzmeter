@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ MouseOver ? '[PAUSED]' : '' }}</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
@@ -15,7 +15,9 @@
     </div>
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
-      <graph :options="GraphOptions" v-on:mouseOver="MouseOver=$event" :height="Expanded?DialogHeight:300"></graph>
+      <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+        <graph :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver"></graph>
+      </div>
     </portal>
     <dlg-fs v-if="Expanded" title="Waveform" :height.sync="DialogHeight"></dlg-fs>
   </div>
@@ -79,7 +81,7 @@
       },
       Export: function() {
         var Rows = [['Sample'].concat(oZm.Series['VOLTAGE'].Names(this.analyzer).concat(oZm.Series['CURRENT'].Names(this.analyzer)))];
-        if((this.data != null) && (this.data.Voltage_Samples != null)) {
+        if(this.data != null) {
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [i];
             for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.data.Voltage_Samples[n][i]);
@@ -89,17 +91,7 @@
         }
         return Rows;
       }
-    },
-    methods: {
-      MaximizeClick: function() {
-        this.$refs.tools.Maximize('Waveform', this.$refs.graph.Graph, this.$refs.Toolbar);
-      },
-      WindowChange: function() {},
-      WindowRestore: function() {
-        this.$refs.graph.SetOptions( {dateWindow: [0, this.Data.length]} );
-      }
-    },
-    components: { Graph }
+    }
   }
 </script>
 

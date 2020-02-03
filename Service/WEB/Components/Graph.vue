@@ -255,13 +255,13 @@
       var x_left = cx - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
       canvasContext.fillRect(x_left, cy, g.subbar_width, g.y_bottom - cy);
     },
-    props: { options: Object, height: Number },
+    props: { options: Object, height: Number, paused: Boolean },
     data() {
       return { };
     },
     watch: {
       options: function(val, prev) {
-        if(this.Graph == null) return;
+        if((this.Graph == null) || (this.paused == true)) return;
 //        if((prev != null) && (prev.axes != null) && (val.axes != null) && (prev.axes.y2 != null) && (val.axes.y2 != null) && (prev.axes.y2.drawAxis != null) && (val.axes.y2.drawAxis != null)) {
 //          if(prev.axes.y2.drawAxis != val.axes.y2.drawAxis)
           this.Graph.updateOptions({ showRangeSelector: true}, false);

@@ -85,6 +85,7 @@
             this.LoadTable();
           },
           (fail) => {
+            this.SettingsLoading = false;
             this.Settings.Error = 'Failed to save device settings!';
             setTimeout(() => { this.Settings.Error = null; }, 1000);
           }
