@@ -116,17 +116,19 @@ class AnalyzerSoft final : public Analyzer {
     const uint8_t              pVoltageChannels;         //Voltage channels
     const uint8_t              pCurrentChannels;         //Current channels
     const AnalyzerMode         pMode;                    //Operation mode
-  private : //Used in BufferAppend, Configure and Analyzer_Func
-    pthread_mutex_t            pAnalyzerLock;            //Locks access to analysis shared variables
-    float                      pLastSamples[3];          //Filter samples backup
-    Filter_t                   pFilters[FILTERSTAGES];   //Filter bank
-    float                     *pDelayVoltage;            //Delay buffer for samples
-    float                     *pDelayCurrent;            //Delay buffer for samples
-    uint16_t                   pDelaySize;               //Delay samples
-    uint16_t                   pDelayPos;                //Delay pos
+  private : //Used in BufferAppend, Configure and Analyzer_Func and some callbacks
+    pthread_rwlock_t           pAnalyzerLock;            //Locks access to analysis shared variables
+    bool                       pSave200MS;               //Save 10 cycles aggregation to database
+    float                      pNominalVoltage;          //Analyzer nominal voltage
+    float                      pNominalFrequency;        //Analyzer nominal frequency
+    float                      pMaxCurrent;              //Max current, over this value warnings are shown
+    float                      pMinCurrent;              //Min current, under this value some analysis are disabled
+    uint32_t                   pMaxSamples;              //Max block samples
+    string                     pTimeZone;                //Country code
+    uint64_t                   pSequence;                //Sequence number of analyzed blocks
+    uint16_t                   pBlockSamples;            //Number of samples in block
     uint16_t                   pBlockCyclesCount;        //Block cycles count
     uint16_t                   pBlockCycles[24];         //Max block sizes
-    uint16_t                   pBlockSamples;            //Number of samples in block
     float                     *pVoltageSamples;          //Voltage samples
     float                     *pCurrentSamples;          //Current samples
     uint16_t                   pFFTSamples;              //FFT result samples
@@ -134,8 +136,13 @@ class AnalyzerSoft final : public Analyzer {
     float                     *pCurrentFFT;              //FFT current output (complex)
     FFTChannel_t               pVoltageFFTChannels[3];   //FFT configuration channels
     FFTChannel_t               pCurrentFFTChannels[4];   //FFT configuration channels
+    float                      pLastSamples[3];          //Filter samples backup
+    Filter_t                   pFilters[FILTERSTAGES];   //Filter bank
+    float                     *pDelayVoltage;            //Delay buffer for samples
+    float                     *pDelayCurrent;            //Delay buffer for samples
+    uint16_t                   pDelaySize;               //Delay samples
+    uint16_t                   pDelayPos;                //Delay pos
   private : //Used only in Analyzer_Func
-    uint64_t                   pSequence;                //Sequence number of analyzed blocks
     uint64_t                   pPrevTimestamp;           //Previous block time
     Params_t                   pAggreg200MS;             //200ms aggregation
     Params_t                   pAggreg3S;                //3 seconds aggregation
@@ -168,16 +175,9 @@ class AnalyzerSoft final : public Analyzer {
   private :  //Config params (Writed in configure, readed in other places)
 //    Sync                      *pSync;                    //Synchronization object
 
-    bool                       pSave200MS;                 //Save 10 cycles aggregation to database
-    float                      pNominalVoltage;          //Analyzer nominal voltage
-    float                      pNominalFrequency;        //Analyzer nominal frequency
-    float                      pMaxCurrent;              //Max current, over this value warnings are shown
-    float                      pMinCurrent;              //Min current, under this value some analysis are disabled
-    uint32_t                   pMaxSamples;              //Max block samples
-    string                     pTimeZone;                //Country code
-    string                     pContract;                //Contract identifier
-    string                     pZipCode;                 //Installation zip code
-    vector<float>              pGeo;                     //GPS position
+//    string                     pContract;                //Contract identifier
+//    string                     pZipCode;                 //Installation zip code
+//    vector<float>              pGeo;                     //GPS position
   private :  //Analyzer params (write in thread OR append, read in SeriesNow)
     deque<uint32_t>            pCycles;                  //Prev cycles lenghts
 

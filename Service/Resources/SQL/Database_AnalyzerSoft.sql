@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS aggreg_3s (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS aggreg_1m (
-  sampletime bigint NOT NULL PRIMARY KEY, 
-  rms_v      real[] NOT NULL, 
+  sampletime bigint NOT NULL PRIMARY KEY,
+  rms_v      real[] NOT NULL,
   rms_i      real[] NOT NULL,
   freq       real,
   flag       boolean NOT NULL
@@ -48,21 +48,21 @@ ALTER TABLE aggreg_ext_1m ALTER COLUMN harmonics_p SET NOT NULL;
 ALTER TABLE aggreg_ext_1m ADD COLUMN IF NOT EXISTS unbalance real;
 
 CREATE TABLE IF NOT EXISTS aggreg_10m (
-  sampletime bigint NOT NULL PRIMARY KEY, 
-  rms_v      real[] NOT NULL, 
-  rms_i      real[] NOT NULL, 
-  freq       real, 
+  sampletime bigint NOT NULL PRIMARY KEY,
+  rms_v      real[] NOT NULL,
+  rms_i      real[] NOT NULL,
+  freq       real,
   flag       boolean NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS aggreg_15m (
-  sampletime     bigint NOT NULL PRIMARY KEY, 
-  active_power   real[] NOT NULL, 
+  sampletime     bigint NOT NULL PRIMARY KEY,
+  active_power   real[] NOT NULL,
   reactive_power real[] NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS aggreg_1h (
-  sampletime bigint NOT NULL PRIMARY KEY, 
+  sampletime bigint NOT NULL PRIMARY KEY,
   rms_v          real[]  NOT NULL,
   rms_i          real[]  NOT NULL,
   freq           real,
@@ -99,12 +99,12 @@ CREATE TABLE IF NOT EXISTS events (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS prices (
-  sampletime bigint NOT NULL PRIMARY KEY, 
+  sampletime bigint NOT NULL PRIMARY KEY,
   price real NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS rates(
-  rate      serial            NOT NULL PRIMARY KEY,  
+  rate      serial            NOT NULL PRIMARY KEY,
   name      character varying NOT NULL,
   startdate bigint            NOT NULL,
   enddate   bigint            NOT NULL,
@@ -113,7 +113,8 @@ CREATE TABLE IF NOT EXISTS rates(
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS alarms(
-  alarm         serial            NOT NULL PRIMARY KEY,  
+  alarmtime     bigint            NOT NULL PRIMARY KEY,
+
   username      character varying NOT NULL REFERENCES users(username) ON UPDATE CASCADE ON DELETE CASCADE,
   name          character varying NOT NULL,
   description   character varying NOT NULL,

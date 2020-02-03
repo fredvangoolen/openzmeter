@@ -38,9 +38,6 @@
     <analyzer-remote v-if="View=='Remote'" :analyzer="Analyzer" @close="View=null"></analyzer-remote>
     <analyzer-rates v-if="View=='Rates'" :analyzer="Analyzer" @close="View=null"></analyzer-rates>
     <analyzer-maintenance v-if="View=='Maintenance'" :analyzer="Analyzer" @close="View=null"></analyzer-maintenance>
-
-
-    <analyzer-alarm v-if="View== 'Alarm'" ref="Alarm"></analyzer-alarm>
   </div>
 </template>
 
@@ -51,7 +48,6 @@
   import AnalyzerRates from './Rates.vue';
   import AnalyzerMaintenance from './Maintenance.vue';
   import AnalyzerAlarms from './Alarms.vue';
-  import AnalyzerAlarm from './Alarm.vue';
   import AnalyzerRemote from './Remote.vue';
   import Vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
@@ -186,7 +182,7 @@
         );
       }
     },
-    components: { Vuetable, AnalyzerRemote, AnalyzerConfigure, AnalyzerRates, AnalyzerMaintenance, AnalyzerAlarms, AnalyzerAlarm, AnalyzerPermissions }
+    components: { Vuetable, AnalyzerRemote, AnalyzerConfigure, AnalyzerRates, AnalyzerMaintenance, AnalyzerAlarms, AnalyzerPermissions }
   }
 </script>
 

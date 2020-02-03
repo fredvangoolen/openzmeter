@@ -55,7 +55,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
   DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Tools::GetTime() - 86400000));   //Delete 1 day old
   DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(Tools::GetTime() - 3600000));       //Delete 1 hour old
-  pAnalyzerLock   = PTHREAD_MUTEX_INITIALIZER;
+  pAnalyzerLock   = PTHREAD_RWLOCK_INITIALIZER;
   pAlarmsLock     = PTHREAD_RWLOCK_INITIALIZER;
   pDelayVoltage   = NULL;
   pDelayCurrent   = NULL;
@@ -93,7 +93,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   }
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
-  pthread_mutex_lock(&pAnalyzerLock);
+  pthread_rwlock_rdlock(&pAnalyzerLock);
   if(pNominalFrequency == 0) {
     for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageSamples[i * pMaxSamples + pBlockSamples] = voltageSamples[i];
     for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentSamples[i * pMaxSamples + pBlockSamples] = currentSamples[i];
@@ -130,15 +130,15 @@ bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
       pBlockCyclesCount = 0;
       pSequence ++;
       memset(pBlockCycles, 0, sizeof(pBlockCycles));
-      pthread_mutex_unlock(&pAnalyzerLock);
+      pthread_rwlock_unlock(&pAnalyzerLock);
       return false;
     } else {
       pAnalyzerWorker->Run(&pAggreg200MS);
-      pthread_mutex_unlock(&pAnalyzerLock);
+      pthread_rwlock_unlock(&pAnalyzerLock);
       return true;
     }
   }
-  pthread_mutex_unlock(&pAnalyzerLock);
+  pthread_rwlock_unlock(&pAnalyzerLock);
   return false;
 }
 bool AnalyzerSoft::IsWorking() {
@@ -193,8 +193,8 @@ json AnalyzerSoft::CheckConfig(const json &config) {
 }
 void AnalyzerSoft::Configure(const json &options) {
   ConfigManager::WriteConfig(pConfigPath, options);
-  pthread_mutex_lock(&pAnalyzerLock);
   SetName(options["Name"]);
+  pthread_rwlock_wrlock(&pAnalyzerLock);
   pNominalVoltage   = options["NominalVoltage"];
   pNominalFrequency = options["NominalFrequency"];
   pMaxCurrent       = options["MaxCurrent"];
@@ -271,7 +271,7 @@ void AnalyzerSoft::Configure(const json &options) {
 //    if(pSync == NULL) pSync = new Sync(this);
 //    pSync->Configure(Server, User, Pass);
 //  }
-  pthread_mutex_unlock(&pAnalyzerLock);
+  pthread_rwlock_unlock(&pAnalyzerLock);
 }
 void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
   params.Type = type;
@@ -571,7 +571,7 @@ float AnalyzerSoft::BinPower(const float *a) {
 void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   AnalyzerSoft *This  = (AnalyzerSoft*)creation;
   Params_t     *Aggreg = (Params_t*)run;
-  pthread_mutex_lock(&This->pAnalyzerLock);
+  pthread_rwlock_rdlock(&This->pAnalyzerLock);
   uint64_t Start = Tools::GetTime();
   Aggreg->Timestamp = Start;
   Aggreg->AggregSamples = 1;
@@ -741,7 +741,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   memset(This->pBlockCycles, 0, sizeof(pBlockCycles));
   LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->Serial.c_str(), Tools::GetTime() - Start, This->pSequence);
   This->pSequence++;
-  pthread_mutex_unlock(&This->pAnalyzerLock);
+  pthread_rwlock_unlock(&This->pAnalyzerLock);
 }
 void AnalyzerSoft::Events_Func(void *creation, void *run) {
   AnalyzerSoft *This = (AnalyzerSoft*)creation;
@@ -1466,23 +1466,105 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
 }
 void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  //  json Params = req.GetParams();
-//  if(!Params["Analyzer"].is_string() || !Params["Expression"].is_string()) return req.FromString("'Analyzer' and 'Expression' params are requiered", MHD_HTTP_BAD_REQUEST);
-//  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->TestAlarm(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
-//  pMembersLocks.ReadLock();
-//  if(pAlarms != NULL) {
-//    pAlarms->TestAlarm(params, response);
-//  } else {
-    response.set_content("Alarms disabled", "text/plain");
-    response.status = HTTP_SERVICE_UNAVAILABLE;
-//  }
-//  pMembersLocks.ReadUnlock();
+  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  string Aggreg = params["Aggreg"];
+  if((Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPCallback::FillResponse(response, "'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
+  json Result = json::object();
+  Result["Variables"] = json::array();
+  pthread_rwlock_rdlock(&pAlarmsLock);
+  json NominalVoltage = json::object();
+  NominalVoltage["Name"] = "NominalVoltage";
+  NominalVoltage["Value"] = pNominalVoltage;
+  NominalVoltage["Units"] = "V";
+  Result["Variables"].push_back(NominalVoltage);
+  json NominalFreq = json::object();
+  NominalFreq["Name"] = "NominalFrequency";
+  NominalFreq["Value"] = pNominalFrequency;
+  NominalFreq["Units"] = "Hz";
+  Result["Variables"].push_back(NominalFreq);
+  pthread_rwlock_unlock(&pAlarmsLock);
+  Result["Aggregation_Source"] = Aggreg;
+  Database DB(Serial);
+  if(Aggreg == "3S") {
+    DB.ExecSentenceAsyncResult("SELECT COALESCE(json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag, 'Active_Power', active_power, 'Reactive_Power', reactive_power), '{}') as result FROM aggreg_3s ORDER BY sampletime DESC LIMIT 1");
+  } else if(Aggreg == "1M") {
+    DB.ExecSentenceAsyncResult("SELECT * FROM aggreg_3s ORDER BY sampletime ASC LIMIT 1");
+  }
+  if(DB.FecthRow() == false) {
+    Result["Error"] = "No data avaliable";
+    return HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_BAD_REQUEST);
+  }
+  json Query = DB.ResultJSON("result");
+  if(Query["Voltage"].is_array()) {
+    unsigned Phases = Query["Voltage"].size();
+    for(unsigned n = 0; n < Phases; n++) {
+      float Tmp = 0.0;
+      if(Query["Voltage"][n].is_number()) Tmp = Query["Voltage"][n];
+      json Voltage = json::object();
+      Voltage["Name"] = (Phases > 1) ? "Voltage_" + to_string(n + 1) : "Voltage";
+      Voltage["Value"] = Tmp;
+      Voltage["Units"] = "V";
+      Result["Variables"].push_back(Voltage);
+    }
+  }
+  if(Query["Current"].is_array()) {
+    unsigned Phases = Query["Current"].size();
+    for(unsigned n = 0; n < Phases; n++) {
+      float Tmp = 0.0;
+      if(Query["Current"][n].is_number()) Tmp = Query["Current"][n];
+      json Current = json::object();
+      Current["Name"] = (Phases > 1) ? "Current_" + to_string(n + 1) : "Current";
+      Current["Value"] = Tmp;
+      Current["Units"] = "A";
+      Result["Variables"].push_back(Current);
+    }
+  }
+  if(Query["Active_Power"].is_array()) {
+    unsigned Phases = Query["Active_Power"].size();
+    for(unsigned n = 0; n < Phases; n++) {
+      float Tmp = 0.0;
+      if(Query["Active_Power"][n].is_number()) Tmp = Query["Active_Power"][n];
+      json Active_Power = json::object();
+      Active_Power["Name"] = (Phases > 1) ? "Active_Power_" + to_string(n + 1) : "Active_Power";
+      Active_Power["Value"] = Tmp;
+      Active_Power["Units"] = "W";
+      Result["Variables"].push_back(Active_Power);
+    }
+  }
+  if(Query["Reactive_Power"].is_array()) {
+    unsigned Phases = Query["Reactive_Power"].size();
+    for(unsigned n = 0; n < Phases; n++) {
+      float Tmp = 0.0;
+      if(Query["Reactive_Power"][n].is_number()) Tmp = Query["Reactive_Power"][n];
+      json Reactive_Power = json::object();
+      Reactive_Power["Name"] = (Phases > 1) ? "Reactive_Power_" + to_string(n + 1) : "Reactive_Power";
+      Reactive_Power["Value"] = Tmp;
+      Reactive_Power["Units"] = "var";
+      Result["Variables"].push_back(Reactive_Power);
+    }
+  }
+  if(Query["Frequency"].is_number()) {
+    float Tmp = 0.0;
+    if(Query["Frequency"].is_number()) Tmp = Query["Frequency"];
+    json Frequency = json::object();
+    Frequency["Name"] = "Frequency";
+    Frequency["Value"] = Tmp;
+    Frequency["Units"] = "Hz";
+    Result["Variables"].push_back(Frequency);
+  }
+  if(params.contains("Expression") && params["Expression"].is_string()) {
+    string Expression = params["Expression"];
+    try {
+      Parser Exp;
+      for(auto &Var : Result["Variables"]) Exp.DefineConst(Var["Name"], Var["Value"]);
+      Exp.SetExpr(Expression);
+      float Tmp = Exp.Eval();
+      Result["Result"] = Tmp;
+    } catch (Parser::exception_type &e) {
+      Result["Error"] = e.GetMsg();
+    }
+  }
+  return HTTPCallback::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
