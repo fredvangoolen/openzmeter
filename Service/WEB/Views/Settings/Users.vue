@@ -20,7 +20,7 @@
         </template>
       </vuetable>
     </div>
-    <user-edit v-if="ShowDialog" :user="User" @close="ShowDialog=false"></user-edit>
+    <user-edit v-if="ShowDialog" :user="User" @close="LoadUsers"></user-edit>
   </div>
 </template>
 
@@ -51,6 +51,7 @@
     },
     methods: {
       LoadUsers: function () {
+        this.ShowDialog = false;
         this.ShowSpinner = true;
         this.$http.post('getUsers', { Limit: 10, Offset: 0, Filter: this.Filter }).then(
           (result) => {

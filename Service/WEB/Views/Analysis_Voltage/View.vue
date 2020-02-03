@@ -27,7 +27,7 @@
           <harmonics v-if="ActiveTab=='Harmonics'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
           <evolution v-if="ActiveTab=='Evolution'" :data="DataCubism" :analyzer="analyzer"></evolution>
           <advanced v-if="ActiveTab=='Advanced'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></advanced>
-          <parameters v-if="ActiveTab=='Parameters'" :data="DataCubism" :analyzer="analyzer" :paused.sync="Paused"></parameters>
+          <parameters v-if="ActiveTab=='Parameters'" :data="DataCubism" :dataNow="DataNow" :analyzer="analyzer" :paused.sync="Paused"></parameters>
           <phasors v-if="ActiveTab=='Phasors'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></phasors>
           <events v-if="ActiveTab=='Events'" :analyzer="analyzer" :range="Range"></events>
       </div>
@@ -84,7 +84,7 @@
         if(this.analyzer == null) return;
         this.ControlNow.CancelFunc = this.analyzer.GetSeriesNow(['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'VOLTAGE_PHASE', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'],
           (working) => {},
-          (result) => { this.DataNow = Object.freeze(result); },
+          (result) => { if(this.Paused == false) this.DataNow = Object.freeze(result); },
           (timeout) => { this.ControlNow.Timer = setTimeout(() => { this.UpdateNowValues(); }, timeout); }
         );
       },

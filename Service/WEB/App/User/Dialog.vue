@@ -11,6 +11,7 @@
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Preferences' }" data-toggle="tooltip" title="Preferences" v-on:click="View='Preferences'">Preferences</button>
       </div>
     </template>
+    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
     <div v-if="View=='Main'">
       <div class="row">
         <div class="col-xs-12 col-lg-4 col-sm-6">
@@ -59,7 +60,7 @@
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">E-Mail</label>
-          <input type="text" class="form-control" v-model="user.EMail">
+          <input type="text" class="form-control" v-model="user.Email">
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Time zone</label>
@@ -95,13 +96,21 @@
   export default {
     props: { user: Object },
     data: function() {
-      return { View: 'Main', TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false };
+      return { View: 'Main', TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false, Error: null };
     },
     methods: {
       Save: function() {
         this.ShowSpinner = true;
         this.$http.post('setUser', this.user).then(
-          (result) => { this.ShowSpinner = false; }
+          (result) => {
+            this.ShowSpinner = false;
+            this.$emit('close');
+          },
+          (fail) => {
+            this.ShowSpinner = false;
+            this.Error = 'Failed to save user!';
+            setTimeout(() => { this.Error = null; }, 1000);
+          }
         );
       },
       LoadImage: function() {

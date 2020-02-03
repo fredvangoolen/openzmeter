@@ -25,20 +25,20 @@
     </div>
     <div class="row">
       <div class="col-lg-6 col-md-12">
-        <graphs serie="VOLTAGE" :analyzer="analyzer" :data="Data3S"></graphs>
+        <graphs serie="VOLTAGE" :analyzer="analyzer" :data="Data3S" :paused="Paused3S!=0" @mouseOver="(val) => { Paused3S+= val; }"></graphs>
       </div>
       <div class="col-lg-6 col-md-12">
-        <graphs serie="CURRENT" :analyzer="analyzer" :data="Data3S"></graphs>
+        <graphs serie="CURRENT" :analyzer="analyzer" :data="Data3S" :paused="Paused3S!=0" @mouseOver="(val) => { Paused3S+= val; }"></graphs>
       </div>
       <div v-bind:class="{'col-lg-6': (analyzer.NominalFrequency > 0.0)}" class="col-md-12">
-        <graphs serie="ACTIVE_POWER" :analyzer="analyzer" :data="Data3S"></graphs>
+        <graphs serie="ACTIVE_POWER" :analyzer="analyzer" :data="Data3S" :paused="Paused3S!=0" @mouseOver="(val) => { Paused3S+= val; }"></graphs>
       </div>
       <div class="col-lg-6 col-md-12" v-if="analyzer.NominalFrequency > 0.0">
-        <graphs serie="FREQUENCY" :analyzer="analyzer" :data="Data3S"></graphs>
+        <graphs serie="FREQUENCY" :analyzer="analyzer" :data="Data3S" :paused="Paused3S!=0" @mouseOver="(val) => { Paused3S+= val; }"></graphs>
       </div>
     </div>
-    <div class="row" v-if="analyzer.NominalFreq > 0.0">
-      <div class="col-lg-12"><variables :analyzer="analyzer" :data="Data1M"></variables></div>
+    <div class="row" v-if="analyzer.NominalFrequency > 0.0">
+      <div class="col-lg-12"><variables :analyzer="analyzer" :data="Data1M" :dataNow="DataNow"></variables></div>
     </div>
   </div>
   <div v-else-if="analyzer == null">
@@ -59,7 +59,7 @@
   export default {
     props: { analyzer: { type: Object } },
     data () {
-      return { Aggreg: null, Range: null, ShowSpinner: false, Height: 200,
+      return { Aggreg: null, Range: null, ShowSpinner: false, Height: 200, Paused3S: 0,
                DataNow: null, ControlNow: null, Data3S: null, Control3S: null, Data1M: null, Control1M: null, DataGraph: null, ControlGraph: null };
     },
     watch: {

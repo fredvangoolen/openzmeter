@@ -1,5 +1,5 @@
 <template>
-  <div class="cubism-serie">
+  <div class="cubism-serie" @mouseenter="$emit('mouseOver', +1)" @mouseleave="$emit('mouseOver', -1)">
     <div class="graph" ref="graph" :class="{ first: (index==0) }"></div>
     <div class="legend" ref="legend"></div>
   </div>
@@ -11,12 +11,13 @@
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
   export default {
-    props: { index: Number, data: Object, title: String, format: Function, now: Number },
+    props: { index: Number, data: Object, title: String, format: Function, now: Object, paused: Boolean },
     data() {
       return { };
     },
     watch: {
       data: function(data) {
+        if((this.paused == true) || (this.Graph == null)) return;
         var Opt = { file: [] };
         var Range = 0;
         for(var n in data.Sampletime) {
@@ -29,12 +30,12 @@
         this.Graph.updateOptions(Opt);
       },
       now: function(label) {
-        if(this.Graph == null) return;
+        if((this.paused == true) || (this.Graph == null)) return;
         var Labels = this.Graph.user_attrs_.labels;
         if(label == null) {
           Labels[0] = 'Time';
         } else {
-          Labels[0] = this.format(label);
+          Labels[0] = (label[this.title] == null) ? '-' : this.format(label[this.title]);
         }
         this.Graph.updateOptions( { labels: Labels });
       },
@@ -80,12 +81,6 @@
             }
           }
         }
-      },
-      HoverIn() {
-        this.$emit('mouseOver', true);
-      },
-      HoverOut() {
-        this.$emit('mouseOver', false);
       }
     },
     created: function() {
@@ -102,8 +97,6 @@
       Opt.labels = ["Time", this.title];
       Opt.colors = ["#d9534f"];
       Opt.labelsDiv = this.$refs.legend;
-      Opt.highlightCallback = this.HoverIn;
-      Opt.unhighlightCallback = this.HoverOut;
       Opt.plugins = [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ];
       Opt.legendFormatter = (data) => {
         if(data.x == null) {

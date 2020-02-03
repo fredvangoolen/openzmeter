@@ -15,6 +15,7 @@
     watch: {
       value: function(val) {
         if(this.storage != null) localStorage.setItem(this.storage, val);
+        this.$nextTick(() => {$(this.$el).scrollingTabs({ enableSwiping: true, tabClickHandler: this.TabChange }); });
       }
     },
     created: function() {
@@ -25,9 +26,6 @@
         var Find = this.tabs.indexOf(this.value);
         this.$emit('input', (Find == -1) ? this.tabs[0] : this.tabs[Find]);
       }
-    },
-    updated: function() {
-      $(this.$el).scrollingTabs({ enableSwiping: true, tabClickHandler: this.TabChange });
     },
     beforeDestroy: function() {
       $(this.$el).scrollingTabs('destroy');

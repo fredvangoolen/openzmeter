@@ -2,12 +2,12 @@
   <div class="this" :class="{ expanded: expanded }">
     <img class="icon" :src="require('Imgs/user32.png')">
     <div class="btn-group">
-      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" @click="Edit"><img :src="require('Imgs/user_edit.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" @click="ShowDialog=true"><img :src="require('Imgs/user_edit.png')"></button>
       <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
     </div>
     <div class="name">{{ (user==null) ? '-' : user.Name }}</div>
     <user-logout ref="logout"></user-logout>
-    <user-edit v-if="ShowDialog" :user="user"></user-edit>
+    <user-edit v-if="ShowDialog" :user="user" @close="ShowDialog=false"></user-edit>
     <offline ref="offline"></offline>
   </div>
 </template>
@@ -24,73 +24,25 @@
     created: function() {
       if(localStorage.getItem("UserName") == null) {
         this.Logout();
-        return;
+      } else {
+        this.GetUser();
       }
-      this.$http.post('getUser', { User: localStorage.getItem("UserName") }).then(
-        (result) => { this.SetUser(result.data); },
-        (fail) => { this.Logout(); }
-      );
     },
     methods: {
+      GetUser: function() {
+        this.ShowDialog = false;
+        this.$http.post('getUser', { User: localStorage.getItem("UserName") }).then(
+          (result) => { this.$emit('update:user', result.data); },
+          (fail) => { this.Logout(); }
+        );
+      },
       Logout: function() {
         this.$http.post('logOut', {}).then(
           (result) => { location.reload(); },
           (fail) => { location.reload(); }
-        )
-      },
-      SetUser: function(user) {
-        if(user != null) {
-//          analyzer.GetSeriesRange = this.GetSeriesRange.bind(this);
-//          analyzer.GetPricesRange = this.GetPricesRange.bind(this);
-//          analyzer.GetSeriesLast = this.GetSeriesLast.bind(this);
-//          analyzer.GetSeriesNow = this.GetSeriesNow.bind(this);
-//          analyzer.FormatAggregation = this.FormatAggregation.bind(this);
-//          analyzer.FormatTime = this.FormatTime.bind(this);
-//          analyzer.FormatTimeMS = this.FormatTimeMS.bind(this);
-//          analyzer.FormatDateTime = this.FormatDateTime.bind(this);
-        }
-        this.$emit('update:user', user);
-      },
-      Edit: function() {
-        $.ajax({ url: "getUser", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
-          success: (result) => {
-            this.$refs.userEdit.LoadUser(result);
-          }
-        });
-      },
-//      PingServer: function() {
-//        $.ajax({ url: 'Ping', timeout: 5000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
-//          success: function() {
-//            this.$refs.logout.hide();
-//            this.$refs.offline.hide();
-//          }.bind(this),
-//          complete: function() {
-//            this.Timer = setTimeout(this.PingServer, 2000);
-//          }.bind(this),
-//          error: function(request) {
-//            if(request.status == 401) {
-//              this.$refs.logout.show();
-//              this.$refs.offline.hide();
-//            } else {
-//              this.$refs.offline.show();
-//              this.$refs.logout.hide();
-//            }
-//          }.bind(this)
-//        });
-//      }
+        );
+      }
     },
-//    created: function() {
-//      if(localStorage.getItem('UserName') == null) {
-//        window.location.href = 'Logout';
-//      } else {
-//
-//        this.UserName = localStorage.getItem('UserName');
-//      }
-//      this.Timer = null;
-//    },
-//    mounted: function() {
-//      this.PingServer();
-//    },
     components: { UserLogout, UserEdit, Offline }
   }
 </script>

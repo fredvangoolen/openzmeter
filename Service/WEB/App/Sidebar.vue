@@ -1,5 +1,5 @@
 <template>
-  <div class="navbar-nav" v-on:mouseenter="MouseOver = true" v-on:mouseleave="MouseOver = false" v-bind:class="{ expanded: MouseOver }">
+  <div class="navbar-nav" @mouseenter="MouseOver = true" @mouseleave="MouseOver = false" v-bind:class="{ expanded: MouseOver }">
     <div class="menu-wrapper">
       <sidebar-analyzer :analyzer="analyzer" @update:analyzer="$emit('update:analyzer', $event)" :expanded="MouseOver"></sidebar-analyzer>
       <sidebar-user :user="user" @update:user="$emit('update:user', $event)" :expanded="MouseOver"></sidebar-user>

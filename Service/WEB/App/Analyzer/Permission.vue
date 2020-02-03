@@ -3,8 +3,8 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Permission &raquo; Edit</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-bind:class="{ disabled: (Error != '') }" v-on:click="Save"><img :src="require('Imgs/diskette.png')" alt="Save permission"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" :class="{ disabled: (Error != '') }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save permission"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
@@ -58,7 +58,17 @@
         if(this.permission == null) {
           this.$http.post('addPermission', this.Permission).then(
             (result) => {
-              $emit('close');
+              this.$emit('close');
+            },
+            (fail) => {
+              this.Error = 'Can not add permission, maybe user does not exist or is already defined';
+              setTimeout(() => { this.Error = ''; }, 5000);
+            }
+          );
+        } else {
+          this.$http.post('setPermission', this.Permission).then(
+            (result) => {
+              this.$emit('close');
             },
             (fail) => {
               this.Error = 'Can not add permission, maybe user does not exist or is already defined';
