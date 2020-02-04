@@ -20,6 +20,10 @@
         if((this.paused == true) || (this.Graph == null)) return;
         var Opt = { file: [] };
         var Range = 0;
+        if(data.Sampletime == null) {
+          this.Graph.updateOptions({ file: [[0,0]] });
+          return;
+        }
         for(var n in data.Sampletime) {
           if(Math.abs(data[this.title][n]) > Range) Range = Math.abs(data[this.title][n]);
           Opt.file.push([data.Sampletime[n], data[this.title][n]]);
@@ -114,7 +118,7 @@
       Opt.axes.y.valueFormatter = (val) => { return this.format(val); };
       Opt.axes.x.valueFormatter = (x) => { return '<div class="x-axis">' + moment(x).format('HH:mm:ss') + '</div>'; };
       Opt.axes.x.axisLabelFormatter = (x, i) => {
-        if(this.index != 0) return null;
+        if((this.index != 0) || (this.data.TimeZone == null)) return null;
         var date = moment(x).tz(this.data.TimeZone);
         if((date.hours() === 0) && (date.minutes() === 0) && (date.seconds() === 0)) {
           return '<div class="timeline-day">' + moment(x).format('DD/MM') + '</div>';

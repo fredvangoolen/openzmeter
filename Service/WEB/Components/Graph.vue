@@ -262,12 +262,15 @@
     watch: {
       options: function(val, prev) {
         if((this.Graph == null) || (this.paused == true)) return;
-//        if((prev != null) && (prev.axes != null) && (val.axes != null) && (prev.axes.y2 != null) && (val.axes.y2 != null) && (prev.axes.y2.drawAxis != null) && (val.axes.y2.drawAxis != null)) {
-//          if(prev.axes.y2.drawAxis != val.axes.y2.drawAxis)
-          this.Graph.updateOptions({ showRangeSelector: true}, false);
-          val.showRangeSelector = false;
-//        }
-        if(val.file.length == 0) val.file.push(Array(val.labels.length).fill(0));
+        this.Graph.updateOptions({ showRangeSelector: true}, false);
+        val.showRangeSelector = false;
+        if(val.file.length == 0) {
+          if(val.labels != null) {
+          val.file.push(Array(val.labels.length).fill(0));
+          } else {
+            val.file.push([0,0]);
+          }
+        }
         this.$nextTick(() => { this.Graph.updateOptions(val); });
       },
       height: function(val) {

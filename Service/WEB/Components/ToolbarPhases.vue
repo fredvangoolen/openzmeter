@@ -14,30 +14,7 @@
       return { Active: [], BaseImg: null };
     },
     created: function() {
-      this.Active = Array((this.analyzer.Mode == '1PHASE') ? 1 : (this.analyzer.Mode == '3PHASE') ? 3 : (this.current == true) ? 4 : 3). fill(false);
-      if(this.storage != null) {
-        var Mode = this.analyzer.Mode + '_' + ((this.multi == true) ? 'Multi' : 'Single') + '_' + ((this.current == true) ? 'Current' : 'Voltage');
-        var Stored = JSON.parse(localStorage.getItem(this.storage));
-        if((Stored != null) && (Stored[Mode] != null)) {
-          if(Array.isArray(Stored[Mode]) == true) {
-            this.Active = Stored[Mode];
-          } else {
-            this.Active[Stored[Mode]] = true;
-          }
-        } else {
-          this.Active[0] = true;
-        }
-        if(this.multi == true) {
-          this.$emit('input', this.Active.slice(0));
-        } else {
-          for(var n in this.Active) {
-            if(this.Active[n] == true) this.$emit('input', parseInt(n));
-          }
-        }
-      }
-      var Img = new Image();
-      Img.onload = () => { this.BaseImg = Img; }
-      Img.src = require('Imgs/draw_wave16.png');
+      this.Configure();
     },
     watch: {
       value: function(val) {
@@ -54,7 +31,7 @@
         }
       },
       analyzer: function(val, old) {
-        this.Active = Array((this.analyzer.Mode == '1PHASE') ? 1 : (this.analyzer.Mode == '3PHASE') ? 3 : (this.current == true) ? 4 : 3). fill(false);
+        this.Configure();
       }
     },
     computed: {
@@ -78,6 +55,32 @@
       }
     },
     methods: {
+      Configure: function() {
+        this.Active = Array((this.analyzer.Mode == '1PHASE') ? 1 : (this.analyzer.Mode == '3PHASE') ? 3 : (this.current == true) ? 4 : 3). fill(false);
+        if(this.storage != null) {
+          var Mode = this.analyzer.Mode + '_' + ((this.multi == true) ? 'Multi' : 'Single') + '_' + ((this.current == true) ? 'Current' : 'Voltage');
+          var Stored = JSON.parse(localStorage.getItem(this.storage));
+          if((Stored != null) && (Stored[Mode] != null)) {
+            if(Array.isArray(Stored[Mode]) == true) {
+              this.Active = Stored[Mode];
+            } else {
+              this.Active[Stored[Mode]] = true;
+            }
+          } else {
+            this.Active[0] = true;
+          }
+          if(this.multi == true) {
+            this.$emit('input', this.Active.slice(0));
+          } else {
+            for(var n in this.Active) {
+              if(this.Active[n] == true) this.$emit('input', parseInt(n));
+            }
+          }
+        }
+        var Img = new Image();
+        Img.onload = () => { this.BaseImg = Img; }
+        Img.src = require('Imgs/draw_wave16.png');
+      },
       Toggle: function(val) {
         if(this.multi == false) {
           this.Active.fill(false);

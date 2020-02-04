@@ -63,8 +63,19 @@
                DataNow: null, ControlNow: null, Data3S: null, Control3S: null, Data1M: null, Control1M: null, DataGraph: null, ControlGraph: null };
     },
     watch: {
-      analyzer: function() { this.UpdateNowValues(); this.Update3SValues(); this.Update1MValues(); this.UpdateGraphValues(); },
-      Aggreg: function(val, prev) { if(prev != null) this.UpdateGraphValues(); },
+      analyzer: function() {
+        this.DataNow = null;
+        this.Data3S = null;
+        this.Data1M = null;
+        this.DataGraph = null;
+        this.UpdateNowValues();
+        this.Update3SValues();
+        this.Update1MValues();
+        this.UpdateGraphValues();
+      },
+      Aggreg: function(val, prev) {
+        if(prev != null) this.UpdateGraphValues();
+      },
       Range: function() { this.UpdateGraphValues(); }
     },
     computed: {
