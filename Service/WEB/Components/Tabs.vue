@@ -1,7 +1,9 @@
 <template>
-  <ul class="nav nav-tabs">
-    <li v-for="tab in tabs" :class="{ active: (tab==value) }" :key="tab"><a data-toggle="tab">{{ tab }}</a></li>
-  </ul>
+  <div>
+    <ul class="nav nav-tabs" ref="tabs">
+      <li v-for="tab in tabs" :class="{ active: (tab==value) }" :key="tab"><a data-toggle="tab">{{ tab }}</a></li>
+    </ul>
+  </div>
 </template>
 
 <script>
@@ -15,7 +17,6 @@
     watch: {
       value: function(val) {
         if(this.storage != null) localStorage.setItem(this.storage, val);
-        this.$nextTick(() => {$(this.$el).scrollingTabs({ enableSwiping: true, tabClickHandler: this.TabChange }); });
       }
     },
     created: function() {
@@ -26,9 +27,10 @@
         var Find = this.tabs.indexOf(this.value);
         this.$emit('input', (Find == -1) ? this.tabs[0] : this.tabs[Find]);
       }
+      this.$nextTick(() => {$(this.$refs.tabs).scrollingTabs({ enableSwiping: true, tabClickHandler: this.TabChange }); });
     },
     beforeDestroy: function() {
-      $(this.$el).scrollingTabs('destroy');
+      $(this.$refs.tabs).scrollingTabs('destroy');
     },
     methods: {
       TabChange: function(sender) {
@@ -39,6 +41,9 @@
 </script>
 
 <style scoped>
+  .nav {
+    border-bottom: none;
+  }
   .glyphicon-chevron-left {
     background-image: url(../Imgs/resultset_previous.png);
     width: 16px !important;

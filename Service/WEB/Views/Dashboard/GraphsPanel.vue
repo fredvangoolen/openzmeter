@@ -13,20 +13,23 @@
        </div>
       </div>
     </div>
-    <div class="panel-body" @mouseenter="$emit('update:paused', true)" @mouseleave="$emit('update:paused', false)">
+    <portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
-      <graph ref="Chart" :options="GraphOptions" :height="150" :paused="paused"></graph>
-    </div>
+      <div @mouseenter="$emit('update:paused', true)" @mouseleave="$emit('update:paused', false)">
+        <graph ref="Chart" :options="GraphOptions" :height="Expanded?DialogHeight:150" :paused="paused"></graph>
+      </div>
+    </portal>
     <div class="panel-footer clearfix">
       <router-link :to="SerieProps.Link" style="line-height: 22px"><span class="pull-left">View Details</span></router-link>
-      <div class="pull-right" ref="Toolbar">
+      <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'FREQUENCY'" :storage="'Dashboard_' + serie" :current="serie=='CURRENT'" :multi="true"></toolbar-phases>
         <div class="btn-group">
-          <button-export :rows="[]" ></button-export>
-          <button-expand></button-expand>
+          <button-export :rows="Export" :file="PanelTitle"></button-export>
+          <button-expand :expanded.sync="Expanded"></button-expand>
         </div>
-      </div>
+      </portal>
     </div>
+    <dlg-fs v-if="Expanded" :title="PanelTitle" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
 
@@ -38,7 +41,7 @@
   export default {
     props: { serie: String, analyzer: Object, data: Object, paused: Boolean },
     data() {
-      return { ShowSpinner: true, Phases: null };
+      return { ShowSpinner: true, Phases: null, Expanded: false, DialogHeight: 300 };
     },
     computed: {
       PanelClass: function() {
@@ -82,6 +85,7 @@
       GraphOptions: function() {
         var Opt = { file: [], axes: { x: {}, y: {} }};
         if((this.analyzer == null) || (this.data == null)) return Opt;
+        Opt.interactionModel = {};
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -129,6 +133,24 @@
           return oZm.FormatSerieValue(x, this.SerieProps, Units).ValuePlain;
         };
         return Opt;
+      },
+      Export: function() {
+        if((this.analyzer == null) || (this.data == null)) return [];
+        var Header = [['Time'].concat(this.SerieProps.Names(this.analyzer))];
+        for(var n in this.data.Sampletime) {
+          var Row = [this.data.Sampletime[n]];
+          if(this.serie == 'VOLTAGE') {
+            for(var i in this.data.Voltage[n]) Row.push(this.data.Voltage[n][i]);
+          } else if(this.serie == 'CURRENT') {
+            for(var i in this.data.Current[n]) Row.push(this.data.Current[n][i]);
+          } else if(this.serie == 'ACTIVE_POWER') {
+            for(var i in this.data.Active_Power[n]) Row.push(this.data.Active_Power[n][i]);
+          } else if(this.serie == 'FREQUENCY') {
+            Row.push(this.data.Frequency[n]);
+          }
+          Header.push(Row);
+        }
+        return Header;
       }
     },
     methods: {

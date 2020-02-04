@@ -88,9 +88,11 @@ vector<Device*> DeviceV2::GetInstances() {
   libusb_exit(Context);
   return Result;
 }
-DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device V2"), pSignalTransfer(this, 2) {
+DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device V2") {
+  pSignalTransfer.Init(this, 2);
   pBuffer       = (int16_t*)malloc(DEVICEV2_BUFFERSIZE * sizeof(uint16_t) * 7);
   pAverageLocks = PTHREAD_RWLOCK_INITIALIZER;
+  pConfigLock   = PTHREAD_MUTEX_INITIALIZER;
   pThread       = 0;
   pBufferHead   = 0;
   pBufferTail   = 0;
@@ -271,8 +273,7 @@ void DeviceV2::Configure(const json& config) {
 void *DeviceV2::Capture_Thread(void *args) {
   DeviceV2 *This           = (DeviceV2*)args;
   uint64_t  LastSignalSend = 0;
-  This->pTransfers.reserve(DEVICEV2_TRANSFERS);
-  for(auto n = 0; n < DEVICEV2_TRANSFERS; n++) This->pTransfers.emplace_back(This, 32768);
+  for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) This->pTransfers[n].Init(This, 32768);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
@@ -375,7 +376,6 @@ void *DeviceV2::Capture_Thread(void *args) {
   if(This->pDeviceHandle != 0) libusb_release_interface(This->pDeviceHandle, 0);
   if(This->pDeviceHandle != 0) libusb_close(This->pDeviceHandle);
   libusb_exit(This->pContext);
-  This->pTransfers.clear();
   return NULL;
 }
 void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
@@ -414,7 +414,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
       }
       This->pCapture[This->pCaptureSize] = Sample - 4096;
       if(This->pCaptureSize == 6) {
-        This->BuffersAppend();
+        This->BufferAppend();
         This->pCaptureSize = 0;
       } else {
         This->pCaptureSize++;
@@ -448,6 +448,7 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
   return 0;
 }
 void DeviceV2::GetDevice(const json &params, Response &response) {
+  pthread_mutex_lock(&pConfigLock);
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
   pthread_rwlock_rdlock(&pAverageLocks);
@@ -462,10 +463,11 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   Config["Wave_Average"]["Current"].push_back(pAverageValues[5]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
   pthread_rwlock_unlock(&pAverageLocks);
-  response.set_content(Config.dump(), "application/json");
-  response.status = HTTP_OK;
+  HTTPCallback::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
+  pthread_mutex_unlock(&pConfigLock);
 }
 void  DeviceV2::SetDevice(const json &params, Response &response) {
+  pthread_mutex_lock(&pConfigLock);
   json Config = params;
   json Orig = ConfigManager::ReadConfig("/Devices/" + Serial);
   if(Config.contains("Outputs") && Orig.contains("Outputs") && Config["Outputs"].is_array() && Orig["Outputs"].is_array()) {
@@ -475,8 +477,9 @@ void  DeviceV2::SetDevice(const json &params, Response &response) {
   }
   Configure(Config);
   HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+  pthread_mutex_unlock(&pConfigLock);
 }
-void  DeviceV2::BuffersAppend() {
+void  DeviceV2::BufferAppend() {
   for(uint8_t Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] = pRunAverageValues[Ch] + pCapture[Ch];
   pRunAverageCounter++;
   if(pRunAverageCounter == DEVICEV2_SAMPLEFREQ * 10) {
@@ -520,11 +523,14 @@ void  DeviceV2::BuffersAppend() {
   }
 }
 //----------------------------------------------------------------------------------------------------------------------
-DeviceV2::Transfer::Transfer(DeviceV2 *parent, uint32_t size) {
+DeviceV2::Transfer::Transfer() {
+  pBuffer = NULL;
+  pTransfer = libusb_alloc_transfer(0);
+}
+void DeviceV2::Transfer::Init(DeviceV2 *parent, uint32_t size) {
   pBufferSize = size;
   pParent = parent;
-  pBuffer = (uint8_t*)malloc(size);
-  pTransfer = libusb_alloc_transfer(0);
+  pBuffer = (uint8_t*)realloc(pBuffer, size);
 }
 DeviceV2::Transfer::~Transfer() {
   if(pBuffer != NULL) free(pBuffer);

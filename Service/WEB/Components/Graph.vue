@@ -262,8 +262,6 @@
     watch: {
       options: function(val, prev) {
         if((this.Graph == null) || (this.paused == true)) return;
-        this.Graph.updateOptions({ showRangeSelector: true}, false);
-        val.showRangeSelector = false;
         if(val.file.length == 0) {
           if(val.labels != null) {
             val.file.push(Array(val.labels.length).fill(0));
@@ -272,7 +270,11 @@
             val.file.push([0,0]);
           }
         }
-        this.$nextTick(() => { this.Graph.updateOptions(val); });
+        setTimeout(() => {
+          this.Graph.updateOptions({ showRangeSelector: true}, false);
+          val.showRangeSelector = false;
+          this.Graph.updateOptions(val);
+        }, 100);
       },
       height: function(val) {
         $(this.Graph.graphDiv).parent().removeAttr('style');
