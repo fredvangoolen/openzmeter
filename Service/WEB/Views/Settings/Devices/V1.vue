@@ -4,7 +4,7 @@
     <div class="row">
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Start on boot</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="value.AutoStart"></toggle>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="value.Enabled"></toggle>
         <hr style="margin: 5px 0px 5px 0px"/>
         <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Device inputs can be calibrated to compensate components derating over time.</div>
       </div>
@@ -28,7 +28,7 @@
           <div>
             <input-spin :min="-10" :max="10" v-model="value.CurrentGain" :increment="0.001" :decimals="3" prepend="%"></input-spin>
           </div>
-        </div>          
+        </div>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Current channel offset</label>

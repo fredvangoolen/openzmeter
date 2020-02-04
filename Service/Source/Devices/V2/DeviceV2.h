@@ -40,7 +40,8 @@ class DeviceV2 final : public Device {
         uint8_t         *pBuffer;
         uint32_t         pBufferSize;
       public :
-        Transfer(DeviceV2 *parent, uint32_t size);
+        Transfer();
+        void Init(DeviceV2 *parent, uint32_t size);
         ~Transfer();
         int      Submit();
         int      Submit(void *data, uint32_t size);
@@ -59,6 +60,7 @@ class DeviceV2 final : public Device {
     int16_t                     *pBuffer;                  //Read buffer
     uint32_t                     pBufferTail;              //pBuffer read pos
     uint32_t                     pBufferHead;              //pBuffer write pos
+    pthread_mutex_t              pConfigLock;              //Block configuration params
     float                        pVoltageGain[3];          //Ganancia de tension
     float                        pCurrentGain[4];          //Ganancia de corriente
     float                        pVoltageOffset[3];        //Offset de tension
@@ -75,7 +77,7 @@ class DeviceV2 final : public Device {
     pthread_rwlock_t             pAverageLocks;            //Lock access to average values
     uint64_t                     pLastSignalRecv;          //Last battery message recv
     bool                         pButtonAction;            //Last action readed
-    vector<Transfer>             pTransfers;
+    Transfer                     pTransfers[DEVICEV2_TRANSFERS];
     Transfer                     pSignalTransfer;
   private :
     static bool            Register();
@@ -89,7 +91,7 @@ class DeviceV2 final : public Device {
     void Configure(const json &config);
     void GetDevice(const json &params, Response &response) override;
     void SetDevice(const json &params, Response &response) override;
-    void BuffersAppend();
+    void BufferAppend();
   public :
     ~DeviceV2();
 };
