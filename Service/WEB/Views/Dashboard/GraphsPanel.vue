@@ -13,7 +13,7 @@
        </div>
       </div>
     </div>
-    <div class="panel-body" @mouseenter="$emit('mouseOver', +1)" @mouseleave="$emit('mouseOver', -1)">
+    <div class="panel-body" @mouseenter="$emit('update:paused', true)" @mouseleave="$emit('update:paused', false)">
       <spinner v-if="data==null"></spinner>
       <graph ref="Chart" :options="GraphOptions" :height="150" :paused="paused"></graph>
     </div>

@@ -10,14 +10,14 @@
         </div>
       </div>
     </div>
-    <div class="panel-body">
+    <div class="panel-body" @mouseenter="Paused=true" @mouseleave="Paused=false">
       <spinner v-if="data==null"></spinner>
-      <cubism :index="0" ref="g0" title="Active Power" :data="Data" :now="DataNow" :format="Formatter_Active_Power" :paused="Paused!=0" @mouseOver="(val) => { Paused+= val; }"></cubism>
-      <cubism :index="1" ref="g1" title="Reactive Power" :data="Data" :now="DataNow" :format="Formatter_Reactive_Power" :paused="Paused!=0" @mouseOver="(val) => { Paused+= val; }"></cubism>
-      <cubism :index="2" ref="g2" title="Power Factor" :data="Data" :now="DataNow" :format="Formatter_Power_Factor" :paused="Paused!=0" @mouseOver="(val) => { Paused+= val; }"></cubism>
-      <cubism :index="3" ref="g3" title="Phi" :data="Data" :now="DataNow" :format="Formatter_Phi" :paused="Paused!=0" @mouseOver="(val) => { Paused+= val; }"></cubism>
-      <cubism :index="4" ref="g4" title="Voltage THD" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="Paused!=0" @mouseOver="(val) => { Paused+= val; }"></cubism>
-      <cubism :index="5" ref="g5" title="Current THD" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="Paused!=0" @mouseOver="(val) => { Paused+= val; }"></cubism>
+      <cubism :index="0" ref="g0" title="Active Power" :data="Data" :now="DataNow" :format="Formatter_Active_Power" :paused="Paused"></cubism>
+      <cubism :index="1" ref="g1" title="Reactive Power" :data="Data" :now="DataNow" :format="Formatter_Reactive_Power" :paused="Paused"></cubism>
+      <cubism :index="2" ref="g2" title="Power Factor" :data="Data" :now="DataNow" :format="Formatter_Power_Factor" :paused="Paused"></cubism>
+      <cubism :index="3" ref="g3" title="Phi" :data="Data" :now="DataNow" :format="Formatter_Phi" :paused="Paused"></cubism>
+      <cubism :index="4" ref="g4" title="Voltage THD" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="Paused"></cubism>
+      <cubism :index="5" ref="g5" title="Current THD" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="Paused"></cubism>
     </div>
   </div>
 </template>

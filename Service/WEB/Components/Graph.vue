@@ -266,8 +266,9 @@
         val.showRangeSelector = false;
         if(val.file.length == 0) {
           if(val.labels != null) {
-          val.file.push(Array(val.labels.length).fill(0));
+            val.file.push(Array(val.labels.length).fill(0));
           } else {
+            val.labels = ['A', 'B'];
             val.file.push([0,0]);
           }
         }
