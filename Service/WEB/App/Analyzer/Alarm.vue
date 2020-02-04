@@ -44,7 +44,7 @@
         </div>
       </div>
       <div class="col-xs-12">
-        <div style="width:100%; height: 200px; overflow-y: auto">
+        <div style="width:100%; height: 200px; overflow-y: auto; margin-top: 5px">
           <vuetable ref="table" :fields="columns" :api-mode="false" :data="Values" class="table small table-striped">
             <template slot="actions" slot-scope="props">
               <div class="btn-group">

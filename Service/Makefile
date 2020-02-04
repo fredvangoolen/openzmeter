@@ -102,7 +102,6 @@ $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 $(EXECUTABLE_TARGET): $(RESOURCES_TARGET) $(EXECUTABLE_OBJS)
 	@echo "Linking target" $(TARGET_EXEC)
 	@$(CC)  $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
-	@objcopy --remove-section=.comment --remove-section=.note $(EXECUTABLE_TARGET)
 
 Tmp/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)

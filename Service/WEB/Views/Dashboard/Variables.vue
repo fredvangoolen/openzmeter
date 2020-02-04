@@ -33,8 +33,8 @@
     },
     computed: {
       Data: function() {
-        if((this.data == null) || (this.analyzer == null) || (this.Phase == null)) return null;
         var Series = { 'Active Power': [], 'Reactive Power': [], 'Power Factor': [], 'Phi': [], 'Voltage THD': [], 'Current THD': [] };
+        if((this.data == null) || (this.analyzer == null) || (this.Phase == null)) return Series;
         Series.Sampletime = this.data.Sampletime;
         Series.From = this.data.From;
         Series.To = this.data.To;
@@ -51,7 +51,7 @@
       },
       DataNow: function() {
         var Series = { 'Active Power': null, 'Reactive Power': null, 'Power Factor': null, 'Phi': null, 'Voltage THD': null, 'Current THD': null };
-        if(this.dataNow == null) return Series;
+        if((this.dataNow == null) || (this.analyzer == null) || (this.Phase == null)) return Series;
         Series['Active Power'] = this.dataNow.Active_Power[this.Phase];
         Series['Reactive Power'] = this.dataNow.Reactive_Power[this.Phase];
         Series['Power Factor'] = this.dataNow.Power_Factor[this.Phase];

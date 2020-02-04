@@ -81,6 +81,7 @@
       },
       GraphOptions: function() {
         var Opt = { file: [], axes: { x: {}, y: {} }};
+        if((this.analyzer == null) || (this.data == null)) return Opt;
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -97,45 +98,40 @@
         Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatTime(x); };
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30;
-        if(this.data != null) {
-          Opt.visibility =  this.Phases;
-          Opt.dateWindow = [this.data.From, this.data.To];
-          for(var n in this.data.Sampletime) {
-            var Row = [this.data.Sampletime[n]];
-            if(this.serie == 'VOLTAGE') {
-              for(var i in this.data.Voltage[n]) Row.push(this.data.Voltage[n][i]);
-            } else if(this.serie == 'CURRENT') {
-              for(var i in this.data.Current[n]) Row.push(this.data.Current[n][i]);
-            } else if(this.serie == 'ACTIVE_POWER') {
-              for(var i in this.data.Active_Power[n]) Row.push(this.data.Active_Power[n][i]);
-            } else if(this.serie == 'FREQUENCY') {
-              Row.push(this.data.Frequency[n]);
-            }
-            Opt.file.push(Row);
-          }
-          if((this.serie == 'VOLTAGE') || (this.serie == 'CURRENT')) {
-            Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
+        if(this.Phases != null) Opt.visibility =  this.Phases;
+        Opt.dateWindow = [this.data.From, this.data.To];
+        for(var n in this.data.Sampletime) {
+          var Row = [this.data.Sampletime[n]];
+          if(this.serie == 'VOLTAGE') {
+            for(var i in this.data.Voltage[n]) Row.push(this.data.Voltage[n][i]);
+          } else if(this.serie == 'CURRENT') {
+            for(var i in this.data.Current[n]) Row.push(this.data.Current[n][i]);
           } else if(this.serie == 'ACTIVE_POWER') {
-            Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
+            for(var i in this.data.Active_Power[n]) Row.push(this.data.Active_Power[n][i]);
           } else if(this.serie == 'FREQUENCY') {
-            Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, percent: 0.005, minWidth: 0.5 });
+            Row.push(this.data.Frequency[n]);
           }
-          var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
-          Opt.axes.y.valueFormatter = (x) => {
-            var Result = oZm.FormatSerieValue(x, this.SerieProps);
-            return Result.ValuePlain + ' ' + Result.Units;
-          };
-          Opt.axes.y.axisLabelFormatter = (x) => {
-            return oZm.FormatSerieValue(x, this.SerieProps, Units).ValuePlain;
-          };
+          Opt.file.push(Row);
         }
+        if((this.serie == 'VOLTAGE') || (this.serie == 'CURRENT')) {
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 5 });
+        } else if(this.serie == 'ACTIVE_POWER') {
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 10 });
+        } else if(this.serie == 'FREQUENCY') {
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, percent: 0.005, minWidth: 0.5 });
+        }
+        var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
+        Opt.axes.y.valueFormatter = (x) => {
+          var Result = oZm.FormatSerieValue(x, this.SerieProps);
+          return Result.ValuePlain + ' ' + Result.Units;
+        };
+        Opt.axes.y.axisLabelFormatter = (x) => {
+          return oZm.FormatSerieValue(x, this.SerieProps, Units).ValuePlain;
+        };
         return Opt;
       }
     },
     methods: {
-      bliu: function(val) {
-        console.log(val);
-      },
       ExportClick() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
