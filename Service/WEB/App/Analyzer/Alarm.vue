@@ -98,7 +98,7 @@
           },
           (fail) => {
             this.Error = fail.data.Error;
-            this.Values = result.data.Variables;
+            this.Values = fail.data.Variables;
             this.EvalResult = null;
           }
         );
@@ -108,7 +108,7 @@
         var caretPos = txt[0].selectionStart;
         var textAreaTxt = txt.val();
         $(txt).focus();
-        this.Alarm.Expression = textAreaTxt.substring(0, caretPos) + row.Name + textAreaTxt.substring(caretPos);
+        this.$set(this.Alarm, 'Expression', textAreaTxt.substring(0, caretPos) + row.Name + textAreaTxt.substring(caretPos));
       },
       Save: function() {
         this.$refs.Dialog.ShowSpinner = true;

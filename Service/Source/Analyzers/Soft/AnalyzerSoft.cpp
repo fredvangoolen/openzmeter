@@ -1488,60 +1488,46 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   if(Aggreg == "3S") {
     DB.ExecSentenceAsyncResult("SELECT COALESCE(json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag, 'Active_Power', active_power, 'Reactive_Power', reactive_power), '{}') as result FROM aggreg_3s ORDER BY sampletime DESC LIMIT 1");
   } else if(Aggreg == "1M") {
-    DB.ExecSentenceAsyncResult("SELECT * FROM aggreg_3s ORDER BY sampletime ASC LIMIT 1");
+    DB.ExecSentenceAsyncResult("SELECT COALESCE(json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag, 'Power_Factor', power_factor, 'Voltage_THD', thd_v, 'Current_THD', thd_i, 'Active_Power', active_power, 'Reactive_Power', reactive_power, 'Phi', phi), '{}') as result FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m ORDER BY sampletime DESC LIMIT 1");
+  } else if(Aggreg == "10M") {
+    DB.ExecSentenceAsyncResult("SELECT COALESCE(json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag), '{}') as result FROM aggreg_10m ORDER BY sampletime DESC LIMIT 1");
+  } else if(Aggreg == "15M") {
+    DB.ExecSentenceAsyncResult("SELECT COALESCE(json_build_object('Sampletime', sampletime, 'Active_Power', active_power, 'Reactive_Power', reactive_power), '{}') as result FROM aggreg_15m ORDER BY sampletime DESC LIMIT 1");
+  } else if(Aggreg == "1H") {
+    DB.ExecSentenceAsyncResult("SELECT COALESCE(json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag, 'Active_Power', active_power, 'Reactive_Power', reactive_power), '{}') as result FROM aggreg_1h ORDER BY sampletime DESC LIMIT 1");
   }
   if(DB.FecthRow() == false) {
     Result["Error"] = "No data avaliable";
     return HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_BAD_REQUEST);
   }
   json Query = DB.ResultJSON("result");
-  if(Query["Voltage"].is_array()) {
-    unsigned Phases = Query["Voltage"].size();
-    for(unsigned n = 0; n < Phases; n++) {
-      float Tmp = 0.0;
-      if(Query["Voltage"][n].is_number()) Tmp = Query["Voltage"][n];
-      json Voltage = json::object();
-      Voltage["Name"] = (Phases > 1) ? "Voltage_" + to_string(n + 1) : "Voltage";
-      Voltage["Value"] = Tmp;
-      Voltage["Units"] = "V";
-      Result["Variables"].push_back(Voltage);
+  auto AppendArray = [&Query, &Result](const string &serie, const string &units) {
+    for(unsigned n = 0; n < Query[serie].size(); n++) {
+      float  Tmp = 0.0;
+      string Name = serie;
+      if(Query[serie].size() > 1) Name = Name + "_" + to_string(n + 1);
+      if(Query[serie][n].is_number()) Tmp = Query[serie][n];
+      json Row = json::object();
+      Row["Name"] = Name;
+      Row["Value"] = Tmp;
+      Row["Units"] = units;
+      Result["Variables"].push_back(Row);
     }
+  };
+  if(Query["Sampletime"].is_number()) {
+    json Sampletime = json::object();
+    Sampletime["Name"] = "Sampletime";
+    Sampletime["Value"] = Query["Sampletime"];
+    Sampletime["Units"] = "ms";
+    Result["Variables"].push_back(Sampletime);
   }
-  if(Query["Current"].is_array()) {
-    unsigned Phases = Query["Current"].size();
-    for(unsigned n = 0; n < Phases; n++) {
-      float Tmp = 0.0;
-      if(Query["Current"][n].is_number()) Tmp = Query["Current"][n];
-      json Current = json::object();
-      Current["Name"] = (Phases > 1) ? "Current_" + to_string(n + 1) : "Current";
-      Current["Value"] = Tmp;
-      Current["Units"] = "A";
-      Result["Variables"].push_back(Current);
-    }
-  }
-  if(Query["Active_Power"].is_array()) {
-    unsigned Phases = Query["Active_Power"].size();
-    for(unsigned n = 0; n < Phases; n++) {
-      float Tmp = 0.0;
-      if(Query["Active_Power"][n].is_number()) Tmp = Query["Active_Power"][n];
-      json Active_Power = json::object();
-      Active_Power["Name"] = (Phases > 1) ? "Active_Power_" + to_string(n + 1) : "Active_Power";
-      Active_Power["Value"] = Tmp;
-      Active_Power["Units"] = "W";
-      Result["Variables"].push_back(Active_Power);
-    }
-  }
-  if(Query["Reactive_Power"].is_array()) {
-    unsigned Phases = Query["Reactive_Power"].size();
-    for(unsigned n = 0; n < Phases; n++) {
-      float Tmp = 0.0;
-      if(Query["Reactive_Power"][n].is_number()) Tmp = Query["Reactive_Power"][n];
-      json Reactive_Power = json::object();
-      Reactive_Power["Name"] = (Phases > 1) ? "Reactive_Power_" + to_string(n + 1) : "Reactive_Power";
-      Reactive_Power["Value"] = Tmp;
-      Reactive_Power["Units"] = "var";
-      Result["Variables"].push_back(Reactive_Power);
-    }
+  if(Query["Flag"].is_boolean()) {
+    bool Tmp = Query["Flag"];
+    json Flag = json::object();
+    Flag["Name"] = "Flag";
+    Flag["Value"] = Tmp ? 1 : 0;
+    Flag["Units"] = "";
+    Result["Variables"].push_back(Flag);
   }
   if(Query["Frequency"].is_number()) {
     float Tmp = 0.0;
@@ -1552,6 +1538,14 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
     Frequency["Units"] = "Hz";
     Result["Variables"].push_back(Frequency);
   }
+  if(Query["Voltage"].is_array()) AppendArray("Voltage", "V");
+  if(Query["Current"].is_array()) AppendArray("Current", "A");
+  if(Query["Active_Power"].is_array()) AppendArray("Active_Power", "W");
+  if(Query["Reactive_Power"].is_array()) AppendArray("Reactive_Power", "var");
+  if(Query["Power_Factor"].is_array()) AppendArray("Power_Factor", "");
+  if(Query["Voltage_THD"].is_array()) AppendArray("Voltage_THD", "%");
+  if(Query["Current_THD"].is_array()) AppendArray("Current_THD", "%");
+  if(Query["Phi"].is_array()) AppendArray("Phi", "°");
   if(params.contains("Expression") && params["Expression"].is_string()) {
     string Expression = params["Expression"];
     try {
@@ -1564,7 +1558,7 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
       Result["Error"] = e.GetMsg();
     }
   }
-  return HTTPCallback::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
+  return HTTPCallback::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
 }
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
