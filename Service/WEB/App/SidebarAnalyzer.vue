@@ -45,6 +45,7 @@
       SetAnalyzer: function(analyzer) {
         if(analyzer != null) {
           analyzer.PhaseNames = ['R', 'S', 'T', 'N'];
+//          analyzer.GetSeriesNames = this.GetSeriesNames.bind(this);
           analyzer.GetSeriesRange = this.GetSeriesRange.bind(this);
           analyzer.GetPricesRange = this.GetPricesRange.bind(this);
           analyzer.GetSeriesLast = this.GetSeriesLast.bind(this);
@@ -144,7 +145,7 @@
       },
       GetPricesRange: function(aggreg, range, prev, working, outs, timeout) {
         var Cancelled = false;
-        var Timer = setTimeout(() => { console.log("Timeout!"); if(working != null) working(true); }, 500);
+        var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
         var ReqRange = null;
         var Now = moment().tz(this.analyzer.TimeZone);
         if(range == 'LastDay') ReqRange = [Now.valueOf() - 86400000, Now.valueOf()];

@@ -3,14 +3,12 @@
     <div class="panel-heading">
       <div class="huge header-text">{{ PanelTitle }}</div>
       <div class="header-buttons">
-        <div style="margin-top: -3px">
-          <div style="display: inline-block; font-size: 24px; padding-right: 4px; vertical-align: top"><span v-html="LastValue.Value"></span> <span class="huge-small-unit">{{ LastValue.Units }}</span>
-            <div style="font-size: 14px; line-height: 14px" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggregation_Source) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
-          </div>
-          <div v-if="LastValue.Phases.length > 1" class="phases">
-            <div v-for="(val, idx) in LastValue.Phases" :key="idx" v-html="val"></div>
-          </div>
-       </div>
+        <div class="main-value"><span v-html="LastValue.Value"></span> <span class="huge-small-unit">{{ LastValue.Units }}</span>
+          <div class="aggreg-row" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggregation_Source) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
+        </div>
+        <div v-if="LastValue.Phases.length > 1" class="phases">
+          <div v-for="(val, idx) in LastValue.Phases" :key="idx" v-html="val"></div>
+        </div>
       </div>
     </div>
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">
@@ -20,7 +18,7 @@
       </div>
     </portal>
     <div class="panel-footer clearfix">
-      <router-link :to="SerieProps.Link" style="line-height: 22px"><span class="pull-left">View Details</span></router-link>
+      <router-link :to="SerieProps.Link"><span class="pull-left">View Details</span></router-link>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'FREQUENCY'" :storage="'Dashboard_' + serie" :current="serie=='CURRENT'" :multi="true"></toolbar-phases>
         <div class="btn-group">
@@ -173,6 +171,20 @@
     padding-left: 2px;
     line-height: 11px;
     font-size: 12px;
+    vertical-align: top;
+  }
+  .aggreg-row {
+    font-size: 14px;
+    line-height: 14px;
+    margin-top: -2px;
+  }
+  .panel-heading > .header-buttons {
+    margin-top: -3px;
+  }
+  .main-value {
+    display: inline-block;
+    font-size: 24px;
+    padding-right: 4px;
     vertical-align: top;
   }
 </style>

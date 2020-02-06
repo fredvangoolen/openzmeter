@@ -1,22 +1,25 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ MouseOver ? '[PAUSED]' : '' }}</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
-      <div class="header-buttons" ref="Toolbar">
+      <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
-        <toolbar-options storage="DetailOptions" :options="['Voltage']" v-model="Options"></toolbar-options>
+        <toolbar-options storage="DetailsOptions" :options="['Voltage']" v-model="Options"></toolbar-options>
         <div class="btn-group">
           <button-export file="Waveform" :rows="Export"></button-export>
+          <button-expand :expanded.sync="Expanded"></button-expand>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
-        <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools-->
         </div>
-      </div>
+      </portal>
     </div>
-    <div class="panel-body">
+    <portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
-      <graph :options="GraphOptions" v-on:mouseOver="MouseOver=$event"></graph>
-    </div>
+      <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+      <graph :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver"></graph>
+      </div>
+    </portal>
+    <dlg-fs v-if="Expanded" title="Waveform" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
 

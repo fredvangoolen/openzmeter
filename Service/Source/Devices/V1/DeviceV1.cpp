@@ -93,8 +93,8 @@ DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial
 }
 DeviceV1::~DeviceV1() {
   pTerminate = true;
-  pthread_join(pThread, NULL);
-  free(pBuffer);
+  if(pThread != 0) pthread_join(pThread, NULL);
+  if(pBuffer != NULL) free(pBuffer);
 }
 json DeviceV1::CheckConfig(const json &config) {
   json ConfigOUT = json::object();

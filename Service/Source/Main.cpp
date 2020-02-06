@@ -18,6 +18,7 @@ using namespace cctz;
 static bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
+  LOGFile::Info("Shutting down. Please wait while all task ends...\n");
   if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
 }
 void RunDaemon() {
