@@ -100,8 +100,8 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
 }
 DeviceV2::~DeviceV2() {
   pTerminate = true;
-  pthread_join(pThread, NULL);
-  free(pBuffer);
+  if(pThread != 0) pthread_join(pThread, NULL);
+  if(pBuffer != NULL) free(pBuffer);
 }
 json DeviceV2::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
