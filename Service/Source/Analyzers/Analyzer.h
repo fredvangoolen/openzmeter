@@ -18,7 +18,7 @@ class Analyzer {
     enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
     enum AnalyzerRights { READ, WRITE, CONFIG };
   private :
-    pthread_rwlock_t  pMembersLocks;            //Locks for configurations
+    RWLocks           pMembersLocks;            //Locks for configurations
     uint64_t          pLastSave;                //Timestamp of last save or communication
     string            pName;                    //Analyzer description
   public :

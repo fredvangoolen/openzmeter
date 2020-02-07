@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ MouseOver ? '[PAUSED]' : '' }}</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
       <div class="header-buttons" ref="Toolbar">
         <div class="btn-group">
         </div>
@@ -14,31 +14,19 @@
         <div class="col-xs-12 col-md-4 panel-body">
           <table>
             <tr><td class="border-bottom">Positive sequence</td></tr>
-            <tr>
-              <td ref="positiveContainer" class="graphDiv">
-                <graph ref="positive" class="graph" :options="GraphOptions"></graph>
-              </td>
-            </tr>
+            <tr><td class="graphDiv"><graph class="graph" :options="GraphOptionsPositive"></graph></td></tr>
           </table>
         </div>
         <div class="col-xs-12 col-md-4 panel-body">
           <table>
             <tr><td class="border-bottom">Negative sequence</td></tr>
-            <tr>
-              <td ref="negativeContainer" class="graphDiv">
-                <graph ref="negative" class="graph" :options="GraphOptions"></graph>
-              </td>
-            </tr>
+            <tr><td class="graphDiv"><graph class="graph" :options="GraphOptionsNegative"></graph></td></tr>
           </table>
         </div>
         <div class="col-xs-12 col-md-4 panel-body">
           <table>
             <tr><td class="border-bottom">Zero sequence</td></tr>
-            <tr>
-              <td ref="zeroContainer" class="graphDiv">
-                <graph ref="zero" class="graph" :options="GraphOptions"></graph>
-              </td>
-            </tr>
+            <tr><td class="graphDiv"><graph class="graph" :options="GraphOptionsZero"></graph></td></tr>
           </table>
         </div>
       </div>
@@ -77,17 +65,28 @@
   import Complex from 'complex';
   import 'CSS/table-responsive.css';
   export default {
-    props: { analyzer: Object, data: Object },
+    props: { analyzer: Object, data: Object, paused: Boolean },
     data: function() {
-      return {
-      Columns: [
-          {name: 'Phase', title: 'Phase'},
-          {name: 'Channel', title: 'Channel'},
-          {name: 'Angle', title: 'Angle'},
-          {name: 'SecAngle', title: ''},
-          {name: 'Value', title: 'Value'}
+      return { MouseOver: false,
+        Columns: [
+          { name: 'Phase', title: 'Phase' },
+          { name: 'Channel', title: 'Channel' },
+          { name: 'Angle', title: 'Angle' },
+          { name: 'SecAngle', title: '' },
+          { name: 'Value', title: 'Value' }
         ]
       };
+    },
+    computed: {
+      GraphOptionsPositive: function() {
+        return {};
+      },
+      GraphOptionsNegative: function() {
+        return {};
+      },
+      GraphOptionsZero: function() {
+        return {};
+      }
     },
     created: function() {
       this.Data = [];

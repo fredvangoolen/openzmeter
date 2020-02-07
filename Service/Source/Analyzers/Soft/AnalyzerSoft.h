@@ -118,7 +118,7 @@ class AnalyzerSoft final : public Analyzer {
     const uint8_t              pCurrentChannels;         //Current channels
     const AnalyzerMode         pMode;                    //Operation mode
   private : //Used in BufferAppend, Configure and Analyzer_Func and some callbacks
-    pthread_rwlock_t           pAnalyzerLock;            //Locks access to analysis shared variables
+    RWLocks                    pAnalyzerLock;            //Locks access to analysis shared variables
     bool                       pSave200MS;               //Save 10 cycles aggregation to database
     float                      pNominalVoltage;          //Analyzer nominal voltage
     float                      pNominalFrequency;        //Analyzer nominal frequency
@@ -158,27 +158,28 @@ class AnalyzerSoft final : public Analyzer {
     Worker                    *pAlarmsWorker;            //Alarms detection worker
     Worker                    *pEventsWorker;            //Events detector
   private : //Alarms related (should be locked)
-    pthread_rwlock_t           pAlarmsLock;              //Control access
+    RWLocks                    pAlarmsLock;              //Control access
     vector<Alarm_t>            pAlarms;                  //Alarms control object
   private : //Events related (only acceded inside analyzer thread)
     list<Event_t>              pEvents;                  //Running events
-
-
-
+    bool                       pPrevStationary;          //Steady state flag
     deque<vector<float> >      pPrevSamples;             //Previous samples
     deque<EventCycle_t>        pPrevCycles;              //Previous cycles
-    bool                       pPrevStationary;          //Steady state flag
+  private : //Used in Sync thread and in configure
+    bool                       pSyncTerminate;           //Terminate sync
+    pthread_t                  pSyncThread;              //Sync thread
+    string                     pSyncURL;                 //Sync server address
+    string                     pSyncUser;                //Sync server user
+    string                     pSyncPass;                //Sync server password
+    string                     pSyncCookie;              //Sync server auth cookie
+    RWLocks                    pSyncLocks;               //Sync locks
+    
 
 
 
 
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private :  //Config params (Writed in configure, readed in other places)
-//    Sync                      *pSync;                    //Synchronization object
-
-//    string                     pContract;                //Contract identifier
-//    string                     pZipCode;                 //Installation zip code
-//    vector<float>              pGeo;                     //GPS position
   private :  //Analyzer params (write in thread OR append, read in SeriesNow)
     deque<uint32_t>            pCycles;                  //Prev cycles lenghts
 
@@ -187,6 +188,7 @@ class AnalyzerSoft final : public Analyzer {
     static void  Events_Func(void *creation, void *run);
     static void  FFT_Func(void *creation, void *run);
     static void  Alarms_Func(void *creation, void *run);
+    static void *Sync_Func(void *params);
     static float CalcChange(const float in, const float reference);
     static float CalcAngle(const float *a, const float *b);
     static float BinPower(const float *a);

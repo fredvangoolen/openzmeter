@@ -1,7 +1,7 @@
 <template>
   <div class="panel" :class="PanelClass">
     <div class="panel-heading">
-      <div class="huge header-text">{{ PanelTitle }}</div>
+      <div class="header-text">{{ PanelTitle }}</div>
       <div class="header-buttons">
         <div class="main-value"><span v-html="LastValue.Value"></span> <span class="huge-small-unit">{{ LastValue.Units }}</span>
           <div class="aggreg-row" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggregation_Source) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
@@ -82,8 +82,8 @@
       },
       GraphOptions: function() {
         var Opt = { file: [], axes: { x: {}, y: {} }};
-        if((this.analyzer == null) || (this.data == null)) return Opt;
         Opt.interactionModel = {};
+        if((this.analyzer == null) || (this.data == null)) return Opt;
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -165,6 +165,10 @@
 </script>
 
 <style scoped>
+  .header-text {
+    font-size: 20px;
+    line-height: 24px;
+  }
   .phases {
     display: inline-block;
     border-left: 1px solid #FFF;

@@ -219,13 +219,13 @@ json SysSupport::GetSystemStatusJSON() {
   Result["Time_IsSet"] = pSystemStatus.Time_IsSet;
   Result["Battery_Volt"] = pSystemStatus.Battery_Volt;
   Result["Battery_Level"] = pSystemStatus.Battery_Level;
-  pSystemStatus.Lock.ReadUnlock();
+  pSystemStatus.Lock.Unlock();
   return Result;
 }
 void SysSupport::SetSystemActions(const string &action) {
   pActionsLock.WriteLock();
   pSystemActions.push(action);
-  pActionsLock.WriteUnlock();
+  pActionsLock.Unlock();
 }
 #ifdef OPENWRT
   string SysSupport::Run(string command, int *resultCode) {
@@ -449,26 +449,26 @@ void SysSupport::SetSystemActions(const string &action) {
       pSystemStatus.Swap_Total = 0;
       pSystemStatus.Swap_Usage = NAN;
       pSystemStatus.CPU_Usage = NAN;
-      pSystemStatus.Lock.WriteUnlock();
+      pSystemStatus.Lock.Unlock();
     } else {
       pSystemStatus.Lock.WriteLock();
       pSystemStatus.UpTime = Info.uptime;
       pSystemStatus.Swap_Total = (uint64_t)Info.totalswap * Info.mem_unit;
       pSystemStatus.Swap_Usage = ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap;
       pSystemStatus.CPU_Usage = ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0;
-      pSystemStatus.Lock.WriteUnlock();
+      pSystemStatus.Lock.Unlock();
     }
     if(statvfs("/", &Disk) != 0) {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
       pSystemStatus.Lock.WriteLock();
       pSystemStatus.Disk_Total = 0;
       pSystemStatus.Disk_Usage = NAN;
-      pSystemStatus.Lock.WriteUnlock();
+      pSystemStatus.Lock.Unlock();
     } else {
       pSystemStatus.Lock.WriteLock();
       pSystemStatus.Disk_Total = (uint64_t)Disk.f_blocks * Disk.f_frsize;
       pSystemStatus.Disk_Usage = ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks;
-      pSystemStatus.Lock.WriteUnlock();
+      pSystemStatus.Lock.Unlock();
     }
     char Buffer[8192];
     int TmpFile = open("/proc/meminfo", O_RDONLY);
@@ -479,12 +479,12 @@ void SysSupport::SetSystemActions(const string &action) {
       pSystemStatus.Lock.WriteLock();
       pSystemStatus.RAM_Total = ParseProcMem("MemTotal:", Buffer);
       pSystemStatus.RAM_Usage = ((ParseProcMem("MemTotal:", Buffer) -  ParseProcMem("MemFree:", Buffer) - ParseProcMem("Cached:", Buffer) - ParseProcMem("Buffers:", Buffer)) * 100.0) / + ParseProcMem("MemTotal:", Buffer);
-      pSystemStatus.Lock.WriteUnlock();
+      pSystemStatus.Lock.Unlock();
     } else {
       pSystemStatus.Lock.WriteLock();
       pSystemStatus.RAM_Total = 0;
       pSystemStatus.RAM_Usage = NAN;
-      pSystemStatus.Lock.WriteUnlock();
+      pSystemStatus.Lock.Unlock();
     }
     TmpFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
     if(TmpFile > 0) {
@@ -493,11 +493,11 @@ void SysSupport::SetSystemActions(const string &action) {
       Buffer[Len] = 0;
       pSystemStatus.Lock.WriteLock();
       pSystemStatus.Temperature = atoi(Buffer) / 1000.0;
-      pSystemStatus.Lock.WriteUnlock();
+      pSystemStatus.Lock.Unlock();
     } else {
       pSystemStatus.Lock.WriteLock();
       pSystemStatus.Temperature = NAN;
-      pSystemStatus.Lock.WriteUnlock();
+      pSystemStatus.Lock.Unlock();
     }
     string CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
     if(CommandStr.empty() == false) {
@@ -506,18 +506,18 @@ void SysSupport::SetSystemActions(const string &action) {
         pSystemStatus.Lock.WriteLock();
         pSystemStatus.WIFI_Network = "";
         pSystemStatus.WIFI_Power = NAN;
-        pSystemStatus.Lock.WriteUnlock();
+        pSystemStatus.Lock.Unlock();
       } else if(Tmp.is_object() && Tmp["ssid"].is_string() && Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
         pSystemStatus.Lock.WriteLock();
         pSystemStatus.WIFI_Network = Tmp["ssid"];
         float Current = Tmp["quality"], Max = Tmp["quality_max"];
         pSystemStatus.WIFI_Power = Current * 100.0 / Max;
-        pSystemStatus.Lock.WriteUnlock();
+        pSystemStatus.Lock.Unlock();
       }
     }
     pSystemStatus.Lock.WriteLock();
     pSystemStatus.BT_Network = (pBTEnabled == true) ? pBTServerName : "";
-    pSystemStatus.Lock.WriteUnlock();
+    pSystemStatus.Lock.Unlock();
   }
   void SysSupport::PeriodicTask_1M() {
     pLastTask_1M = Tools::GetTime();
@@ -532,24 +532,24 @@ void SysSupport::SetSystemActions(const string &action) {
           CommandStr = Run("ntpd -n -q -p " + Server, &Code);
           pSystemStatus.Lock.WriteLock();
           pSystemStatus.Time_IsSet = (Code == 0);
-          pSystemStatus.Lock.WriteUnlock();
+          pSystemStatus.Lock.Unlock();
         } else {
           pSystemStatus.Lock.WriteLock();
           pSystemStatus.Time_IsSet = (Tools::GetTime() > 946684800000);
-          pSystemStatus.Lock.WriteUnlock();
+          pSystemStatus.Lock.Unlock();
         }
         return;
       }
     }
     pSystemStatus.Lock.WriteLock();
     pSystemStatus.Time_IsSet = false;
-    pSystemStatus.Lock.WriteUnlock();
+    pSystemStatus.Lock.Unlock();
   }
   void SysSupport::PeriodicTask_1H() {
     pLastTask_1H = Tools::GetTime();
     pUpdatesLock.WriteLock();
     pUpdates.clear();
-    pUpdatesLock.WriteUnlock();
+    pUpdatesLock.Unlock();
     int ResultCode = 0;
     string Result = Run("opkg update", &ResultCode);
     if(ResultCode != 0) return;
@@ -573,8 +573,8 @@ void SysSupport::SetSystemActions(const string &action) {
     }
     pSystemStatus.Lock.WriteLock();
     pSystemStatus.Updates = (pUpdates.size() > 0);
-    pSystemStatus.Lock.WriteUnlock();
-    pUpdatesLock.WriteUnlock();
+    pSystemStatus.Lock.Unlock();
+    pUpdatesLock.Unlock();
   }
   void SysSupport::GetUpdatesCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
@@ -590,7 +590,7 @@ void SysSupport::SetSystemActions(const string &action) {
       Update["To"] = pUpdates[n].To;
       Response["Updates"].push_back(Update);
     }
-    pUpdatesLock.ReadUnlock();
+    pUpdatesLock.Unlock();
     HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
   }
   void SysSupport::UpgradeCallback(const json &params, Response &response) {
@@ -862,7 +862,7 @@ void SysSupport::PeriodicTask() {
     Action = pSystemActions.front();
     pSystemActions.pop();
   }
-  pActionsLock.WriteUnlock();
+  pActionsLock.Unlock();
   if(Action.empty() == false) LOGFile::Debug("Action '%s' picked from list\n", Action.c_str());
   #ifdef OPENWRT
     HandleAgentBT();

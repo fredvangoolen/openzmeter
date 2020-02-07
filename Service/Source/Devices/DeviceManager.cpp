@@ -21,14 +21,14 @@
 //----------------------------------------------------------------------------------------------------------------------
 vector<vector<Device*> (*)()> __attribute__((init_priority(200))) DeviceManager::pDrivers;
 vector<Device*>  DeviceManager::pDevices;
-pthread_rwlock_t DeviceManager::pDevicesLock = PTHREAD_RWLOCK_INITIALIZER;
+RWLocks          DeviceManager::pDevicesLock;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
-  pthread_rwlock_wrlock(&pDevicesLock);
+  pDevicesLock.WriteLock();
   for(auto Func : pDrivers) {
     for(auto Dev : Func()) pDevices.push_back(Dev);
   }
-  pthread_rwlock_unlock(&pDevicesLock);
+  pDevicesLock.Unlock();
   HTTPServer::RegisterCallback("getDevices",          GetDevicesCallback);
   HTTPServer::RegisterCallback("getDevice",           GetDeviceCallback);
   HTTPServer::RegisterCallback("setDevice",           SetDeviceCallback);
@@ -90,26 +90,26 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("setPermission");
   HTTPServer::UnregisterCallback("delPermission");
   LOGFile::Info("Stopping devices...\n");
-  pthread_rwlock_wrlock(&pDevicesLock);
+  pDevicesLock.WriteLock();
   while(pDevices.size() > 0) {
     Device *Dev = pDevices.back();
     pDevices.pop_back();
     delete Dev;
   }
-  pthread_rwlock_unlock(&pDevicesLock);
+  pDevicesLock.Unlock();
 }
 void DeviceManager::AddDriver(vector<Device*> (*func)()) {
   pDrivers.push_back(func);
 }
 void DeviceManager::CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response)) {
   if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  pthread_rwlock_rdlock(&pDevicesLock);
+  pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
     if((Dev->*method)(params, response) == false) continue;
-    pthread_rwlock_unlock(&pDevicesLock);
+    pDevicesLock.Unlock();
     return;
   }
-  pthread_rwlock_unlock(&pDevicesLock);
+  pDevicesLock.Unlock();
   HTTPCallback::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
 }
 void DeviceManager::CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response)) {
@@ -117,14 +117,14 @@ void DeviceManager::CallDeviceFunction(const json &params, Response &response, v
   string Serial   = params["Serial"];
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pthread_rwlock_rdlock(&pDevicesLock);
+  pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
     if(Dev->Serial != Serial) continue;
     (Dev->*method)(params, response);
-    pthread_rwlock_unlock(&pDevicesLock);
+    pDevicesLock.Unlock();
     return;
   }
-  pthread_rwlock_unlock(&pDevicesLock);
+  pDevicesLock.Unlock();
   HTTPCallback::FillResponse(response, "Device not found", "text/plain", HTTP_BAD_REQUEST);
 }
 void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
@@ -132,9 +132,9 @@ void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Response = json::array();
-  pthread_rwlock_rdlock(&pDevicesLock);
+  pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) Response.push_back(Dev->GetJSONDescriptor());
-  pthread_rwlock_unlock(&pDevicesLock);
+  pDevicesLock.Unlock();
   HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void DeviceManager::GetDeviceCallback(const json &params, Response &response) {
@@ -152,12 +152,12 @@ void DeviceManager::SetDeviceCallback(const json &params, Response &response) {
 void DeviceManager::GetAnalyzersCallback(const json &params, Response &response) {
   json Response = json::array();
   string UserName = params["UserName"];
-  pthread_rwlock_rdlock(&pDevicesLock);
+  pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
     json Analyzers = Dev->GetJSONAnalyzers(UserName);
     Response.insert(Response.end(), Analyzers.begin(), Analyzers.end());
   }
-  pthread_rwlock_unlock(&pDevicesLock);
+  pDevicesLock.Unlock();
   HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void DeviceManager::GetAnalyzerCallback(const json &params, Response &response) {

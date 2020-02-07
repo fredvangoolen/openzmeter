@@ -24,8 +24,8 @@ using namespace std;
 class DeviceManager final {
   private :
     static vector<vector<Device*> (*)()> pDrivers;
-    static vector<Device*>                             pDevices;         //Initiated by devices, cleared on destroy
-    static pthread_rwlock_t                            pDevicesLock;     //Control access to critical sections
+    static vector<Device*>               pDevices;         //Initiated by devices, cleared on destroy
+    static RWLocks                       pDevicesLock;     //Control access to critical sections
   private :
     static void CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response));
     static void CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response));

@@ -137,7 +137,7 @@ export default {
     position: relative;
     background-color: #474544;
     width: 100%;
-    z-index: 90;
+    z-index: 95;
     height: 56px;
   }
   .navbar-toggle {
@@ -149,6 +149,7 @@ export default {
     border: 1px solid #333;
     background-color: transparent;
     display: block;
+    z-index: 100;
   }
   .navbar-toggle img {
     margin: 2px 0px;
@@ -200,7 +201,7 @@ export default {
     padding-top: 2px;
     border-bottom: 1px solid #c9c9c9;
     position: relative;
-    z-index: 95;
+    z-index: 90;
     top: 0px;
   }
   @media(min-width:640px) {

@@ -27,7 +27,7 @@ void HTTPCallback::FillResponse(Response &response, const char *body, const size
 }
 //----------------------------------------------------------------------------------------------------------------------
 vector<HTTPCallback> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
-pthread_rwlock_t                                         HTTPServer::pLock = PTHREAD_RWLOCK_INITIALIZER;
+RWLocks                                                  HTTPServer::pLock;
 string                                                   HTTPServer::pRelativePath = "/";
 //----------------------------------------------------------------------------------------------------------------------
 URL::URL(const string &url) {
@@ -90,24 +90,24 @@ void *HTTPServer::Listen_Thread(void *params) {
   return NULL;
 }
 void HTTPServer::RegisterCallback(const string &handleName, const HTTPCallback::Func_t function) {
-  pthread_rwlock_wrlock(&pLock);
+  pLock.WriteLock();
   for(HTTPCallback &Callback : pCallbacks) {
     if(Callback.HandleName != handleName) continue;
     Callback.Function = function;
-    pthread_rwlock_unlock(&pLock);
+    pLock.Unlock();
     return;
   }
   pCallbacks.emplace_back(handleName, function);
-  pthread_rwlock_unlock(&pLock);
+  pLock.Unlock();
 }
 void HTTPServer::UnregisterCallback(const string &handleName) {
-  pthread_rwlock_wrlock(&pLock);
+  pLock.WriteLock();
   for(auto it = pCallbacks.begin(); it < pCallbacks.end(); it++) {
     if(it->HandleName != handleName) continue;
-    pthread_rwlock_unlock(&pLock);
+    pLock.Unlock();
     return;
   }
-  pthread_rwlock_unlock(&pLock);
+  pLock.Unlock();
 }
 void HTTPServer::HandleGet(const Request &request, Response &response) {
   string URL = string(request.path).erase(0, pRelativePath.size());
@@ -220,14 +220,14 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
     if(request.get_header_value("REMOTE_ADDR") != "127.0.0.1") Params.erase("UserName");
   }
   if(Params.contains("UserName") == false) return HTTPCallback::FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
-  pthread_rwlock_rdlock(&pLock);
+  pLock.ReadLock();
   for(HTTPCallback &Callback : pCallbacks) {
     if(Callback.HandleName != URL) continue;
     Callback.Function(Params, response);
-    pthread_rwlock_unlock(&pLock);
+    pLock.Unlock();
     return;
   }
-  pthread_rwlock_unlock(&pLock);
+  pLock.Unlock();
   HTTPCallback::FillResponse(response, "Method not found", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
 void HTTPServer::RemoveExpiredSessions() const {

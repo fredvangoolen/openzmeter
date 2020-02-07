@@ -44,7 +44,7 @@
 
 <style scoped>
   .modal-header {
-    padding: 3px 5px;
+    padding: 4px 5px 2px 5px;
   }
   .pull-right {
     margin-top: 1px;

@@ -26,7 +26,7 @@ using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class Device {
   private :
-    pthread_rwlock_t  pAnalyzersLock;     //Analyzer list lock
+    RWLocks           pAnalyzersLock;     //Analyzer list lock
     vector<Analyzer*> pAnalyzers;         //Analyzers list
   public :
     const string      Serial;             //Device serial

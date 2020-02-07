@@ -79,42 +79,62 @@ RWLocks::RWLocks() {
   pMutex = PTHREAD_MUTEX_INITIALIZER;
   pReadersCondition = PTHREAD_COND_INITIALIZER;
   pWritersCondition = PTHREAD_COND_INITIALIZER;
-  pWriters = 0;
-  pReaders = 0;
-  pActiveWriter = false;
+  pWriters          = 0;
+  pReaders          = 0;
+  pWriter           = false;
+}
+RWLocks::~RWLocks() {
+  pthread_mutex_destroy(&pMutex);
+  pthread_cond_destroy(&pReadersCondition);
+  pthread_cond_destroy(&pWritersCondition);
 }
 void RWLocks::ReadLock() {
   pthread_mutex_lock(&pMutex);
-  while(pWriters != 0) pthread_cond_wait(&pReadersCondition, &pMutex);
+  while((pWriters > 0) || (pWriter == true)) pthread_cond_wait(&pReadersCondition, &pMutex);
   pReaders++;
   if(pReaders > 10) {
     printf("%d lectores\n", pReaders);
   }
   pthread_mutex_unlock(&pMutex);
 }
-void RWLocks::ReadUnlock() {
-  pthread_mutex_lock(&pMutex);
-  pReaders--;
-  pthread_mutex_unlock(&pMutex);
-  pthread_cond_signal(&pWritersCondition);
-}
 void RWLocks::WriteLock() {
   pthread_mutex_lock(&pMutex);
   pWriters++;
-  while((pReaders != 0) || (pActiveWriter != false)) pthread_cond_wait(&pWritersCondition, &pMutex);
-  pActiveWriter = true;
-  pthread_mutex_unlock(&pMutex);
-}
-void RWLocks::WriteUnlock() {
-  pthread_mutex_lock(&pMutex);
+  while((pReaders > 0) || (pWriter == true)) pthread_cond_wait(&pWritersCondition, &pMutex);
   pWriters--;
-  pActiveWriter = false;
-  if(pWriters > 0)
-    pthread_cond_signal(&pWritersCondition);
-  else
-    pthread_cond_broadcast(&pReadersCondition);
+  pWriter = true;
   pthread_mutex_unlock(&pMutex);
 }
+void RWLocks::Unlock() {
+  pthread_mutex_lock(&pMutex);
+  if(pWriter == true) {
+    pWriter = false;
+  } else {
+    pReaders--;
+  }
+  if(pWriters > 0) {
+    pthread_cond_signal(&pWritersCondition);
+  } else if(pReaders > 0) {
+    pthread_cond_broadcast(&pReadersCondition);
+  }
+  pthread_mutex_unlock(&pMutex);
+}
+//void RWLocks::ReadUnlock() {
+//  pthread_mutex_lock(&pMutex);
+//  pReaders--;
+//  if((pReaders == 0) && (pWritersWaiting > 0)) pthread_cond_signal(&pWritersCondition);
+//  pthread_mutex_unlock(&pMutex);
+//}
+//void RWLocks::WriteUnlock() {
+//  pthread_mutex_lock(&pMutex);
+//  pWriters--;
+//  pActiveWriter = false;
+//  if(pWriters > 0)
+//    pthread_cond_signal(&pWritersCondition);
+//  else
+//    pthread_cond_broadcast(&pReadersCondition);
+//  pthread_mutex_unlock(&pMutex);
+//}
 //----------------------------------------------------------------------------------------------------------------------
 ProviderLocks::ProviderLocks() {
   pWaitingThreads      = 0;
