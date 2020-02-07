@@ -20,54 +20,53 @@
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
 Device::Device(const string &serial, const string &driver, const string &name) : Serial(serial), Driver(driver), Name(name) {
-  pAnalyzersLock = PTHREAD_RWLOCK_INITIALIZER;
 }
 Device::~Device() {
   ClearAnalyzers();
 }
 void Device::AddAnalyzer(Analyzer *analyzer) {
-  pthread_rwlock_wrlock(&pAnalyzersLock);
+  pAnalyzersLock.WriteLock();
   pAnalyzers.push_back(analyzer);
-  pthread_rwlock_unlock(&pAnalyzersLock);
+  pAnalyzersLock.Unlock();
 }
 void Device::ClearAnalyzers() {
-  pthread_rwlock_wrlock(&pAnalyzersLock);
+  pAnalyzersLock.WriteLock();
   while(pAnalyzers.size() > 0) {
     Analyzer *Tmp = pAnalyzers.back();
     pAnalyzers.pop_back();
     delete Tmp;
   }
-  pthread_rwlock_unlock(&pAnalyzersLock);
+  pAnalyzersLock.Unlock();
 }
 json Device::GetJSONDescriptor() {
   json Device = json::object();
   Device["Driver"]    = Driver;
   Device["Name"]      = Name;
   Device["Serial"]    = Serial;
-  pthread_rwlock_rdlock(&pAnalyzersLock);
+  pAnalyzersLock.ReadLock();
   Device["Analyzers"] = pAnalyzers.size();
-  pthread_rwlock_unlock(&pAnalyzersLock);
+  pAnalyzersLock.Unlock();
   return Device;
 }
 json Device::GetJSONAnalyzers(const string &user) {
   json Result = json::array();
-  pthread_rwlock_rdlock(&pAnalyzersLock);
+  pAnalyzersLock.ReadLock();
   for(Analyzer *Tmp : pAnalyzers) {
     if(Tmp->CheckRights(user, Analyzer::READ)) Result.push_back(Tmp->GetJSONDescriptor());
   }
-  pthread_rwlock_unlock(&pAnalyzersLock);
+  pAnalyzersLock.Unlock();
   return Result;
 }
 bool Device::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
   string Serial = params["Analyzer"];
-  pthread_rwlock_rdlock(&pAnalyzersLock);
+  pAnalyzersLock.ReadLock();
   for(Analyzer *Tmp : pAnalyzers) {
     if(Tmp->Serial != Serial) continue;
     (Tmp->*method)(params, response);
-    pthread_rwlock_unlock(&pAnalyzersLock);
+    pAnalyzersLock.Unlock();
     return true;
   }
-  pthread_rwlock_unlock(&pAnalyzersLock);
+  pAnalyzersLock.Unlock();
   return false;
 }
 bool Device::GetAnalyzer(const json &params, Response &response) {

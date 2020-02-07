@@ -26,9 +26,7 @@
     data: function() {
       return { };
     },
-
     mounted: function() {
-//      this.$root.$el.append(this.$el);
       this.$nextTick(() => {
         $(this.$refs.dialog).modal('show');
       });
@@ -38,7 +36,7 @@
 
 <style scoped>
   .modal-header {
-    padding: 3px 5px;
+    padding: 4px 5px 2px 5px;
   }
   .modal-dialog {
     z-index: 1100;

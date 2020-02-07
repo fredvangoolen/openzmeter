@@ -91,7 +91,6 @@ vector<Device*> DeviceV2::GetInstances() {
 DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device V2") {
   pSignalTransfer.Init(this, 2);
   pBuffer       = (int16_t*)malloc(DEVICEV2_BUFFERSIZE * sizeof(uint16_t) * 7);
-  pAverageLocks = PTHREAD_RWLOCK_INITIALIZER;
   pConfigLock   = PTHREAD_MUTEX_INITIALIZER;
   pThread       = 0;
   pBufferHead   = 0;
@@ -290,7 +289,7 @@ void *DeviceV2::Capture_Thread(void *args) {
       if(SysStatus->Events == true) Status = (Status & 0xC01C) | 0x0021;                //Stat=RED and short BEEP
       if(SysStatus->WIFI_Network.empty() == false) Status = (Status & 0xFFF3) | 0x000C; //Wifi=GREEN
       if(SysStatus->BT_Network.empty() == false) Status = (Status & 0xFFEF) | 0x0010;   //Bt=BLUE
-      SysStatus->Lock.ReadUnlock();
+      SysStatus->Lock.Unlock();
       Status |= (This->pHighGain == true) ? 0x4000 : 0x0000;
       This->pSignalTransfer.Submit(&Status, sizeof(Status));
       This->pSubmittedTransfers++;
@@ -395,7 +394,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
           if(SysStatus->Battery_Level > 100.0) SysStatus->Battery_Level = 100.0;
 //          Status["Charging"] = (Sample & 0x0002) ? true: false;
 //          Status["Powered"] = (Sample & 0x0001) ? true: false;
-          SysStatus->Lock.WriteUnlock();
+          SysStatus->Lock.Unlock();
           uint8_t Action = (Sample & 0x0300) >> 8;
           if((Action == CLICK) && (This->pButtonAction == false)) {
             SysSupport::SetSystemActions("ToogleBluetooth");
@@ -451,7 +450,7 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   pthread_mutex_lock(&pConfigLock);
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
-  pthread_rwlock_rdlock(&pAverageLocks);
+  pAverageLocks.ReadLock();
   Config["Wave_Average"] = json::object();
   Config["Wave_Average"]["Voltage"] = json::array();
   Config["Wave_Average"]["Voltage"].push_back(pAverageValues[0]);
@@ -462,7 +461,7 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   Config["Wave_Average"]["Current"].push_back(pAverageValues[4]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[5]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
-  pthread_rwlock_unlock(&pAverageLocks);
+  pAverageLocks.Unlock();
   HTTPCallback::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
   pthread_mutex_unlock(&pConfigLock);
 }
@@ -483,9 +482,9 @@ void  DeviceV2::BufferAppend() {
   for(uint8_t Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] = pRunAverageValues[Ch] + pCapture[Ch];
   pRunAverageCounter++;
   if(pRunAverageCounter == DEVICEV2_SAMPLEFREQ * 10) {
-    pthread_rwlock_wrlock(&pAverageLocks);
+    pAverageLocks.WriteLock();
     for(uint8_t Ch = 0; Ch < 7; Ch++) pAverageValues[Ch] = pRunAverageValues[Ch] / (DEVICEV2_SAMPLEFREQ * 10.0);
-    pthread_rwlock_unlock(&pAverageLocks);
+    pAverageLocks.Unlock();
     memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
     pRunAverageCounter = 0;
   }

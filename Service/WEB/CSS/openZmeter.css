@@ -131,14 +131,12 @@ img {
 }
 @media(max-width:768px) {
   .header-text {
-    text-align: center;
     display: block;
-    padding-bottom: 10px;
+    padding-bottom: 4px;
   }
   .header-buttons {
     border-top: 1px solid rgba(255,255,255,0.5);
     float: none;
-    text-align: center;
     padding-top: 4px;
   }
 }

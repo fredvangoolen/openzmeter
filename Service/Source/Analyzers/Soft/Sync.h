@@ -21,14 +21,6 @@ class AnalyzerSoft::Sync final {
       AnalyzerSoft       *Analyzer;
     } Request_t;
   private :
-    AnalyzerSoft   *pParent;
-    string          pServer;
-    string          pPath;
-    uint16_t        pPort;
-    string          pUser;
-    string          pPass;
-    pthread_t       pThread;
-    bool            pTerminate;
     string          pCookie;
     RWLocks         pLocks;
     uint32_t        pThreadsCount;            //Keep threads count

@@ -11,39 +11,38 @@
 Analyzer::Analyzer(const string &id) : Serial(id) {
   pName     = "Unnamed analyzer";
   pLastSave = 0;
-  pMembersLocks = PTHREAD_RWLOCK_INITIALIZER;
 }
 Analyzer::~Analyzer() {
 }
 json Analyzer::GetJSONDescriptor() {
   json Response = json::object();
   Response["Analyzer"] = Serial;
-  pthread_rwlock_rdlock(&pMembersLocks);
+  pMembersLocks.ReadLock();
   Response["Name"] = pName;
   Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
-  pthread_rwlock_unlock(&pMembersLocks);
+  pMembersLocks.Unlock();
   return Response;
 }
 string Analyzer::GetName() {
-  pthread_rwlock_rdlock(&pMembersLocks);
+  pMembersLocks.ReadLock();
   string Name = pName;
-  pthread_rwlock_unlock(&pMembersLocks);
+  pMembersLocks.Unlock();
   return Name;
 }
 void Analyzer::SetName(const string &name) {
-  pthread_rwlock_wrlock(&pMembersLocks);
+  pMembersLocks.WriteLock();
   pName = name;
-  pthread_rwlock_unlock(&pMembersLocks);
+  pMembersLocks.Unlock();
 }
 void Analyzer::SetOnline() {
-  pthread_rwlock_wrlock(&pMembersLocks);
+  pMembersLocks.WriteLock();
   pLastSave = Tools::GetTime();
-  pthread_rwlock_unlock(&pMembersLocks);
+  pMembersLocks.Unlock();
 }
 bool Analyzer::IsOnline() {
-  pthread_rwlock_rdlock(&pMembersLocks);
+  pMembersLocks.ReadLock();
   bool Online = ((Tools::GetTime() - pLastSave) < 20000);
-  pthread_rwlock_unlock(&pMembersLocks);
+  pMembersLocks.Unlock();
   return Online;
 }
 bool Analyzer::CheckRights(const string &user, const AnalyzerRights neededAccess) {

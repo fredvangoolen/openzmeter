@@ -42,7 +42,7 @@ DeviceRemote::~DeviceRemote() {
 bool DeviceRemote::StartDevice() {
   pMembersLock.WriteLock();
   if(pState == RUNNING) {
-    pMembersLock.WriteUnlock();
+    pMembersLock.Unlock();
     return false;
   }
   LOGFile::Info("Loading 'Remote' driver configuration\n");
@@ -52,7 +52,7 @@ bool DeviceRemote::StartDevice() {
   if(pState == UNCONFIGURED) {
     pState = STOPPED;
     if(AutoStart == false) {
-      pMembersLock.WriteUnlock();
+      pMembersLock.Unlock();
       return true;
     }
   }
@@ -66,13 +66,13 @@ bool DeviceRemote::StartDevice() {
   pState = RUNNING;
   HTTPServer::RegisterCallback("setRemote",  SetRemoteCallback);
   HTTPServer::RegisterCallback("getRemote",  GetRemoteCallback);
-  pMembersLock.WriteUnlock();
+  pMembersLock.Unlock();
   return (pState == RUNNING);
 }
 bool DeviceRemote::StopDevice() {
   pMembersLock.WriteLock();
   if(pState != RUNNING) {
-    pMembersLock.WriteUnlock();
+    pMembersLock.Unlock();
     return false;
   }
   LOGFile::Info("Stopping 'Remote' driver...\n");
@@ -84,7 +84,7 @@ bool DeviceRemote::StopDevice() {
     delete Analyzer;
   }
   pState = STOPPED;
-  pMembersLock.WriteUnlock();
+  pMembersLock.Unlock();
   return true;
 }
 void DeviceRemote::GetDevice(HTTPRequest &req) {

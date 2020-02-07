@@ -56,8 +56,6 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
   DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Tools::GetTime() - 86400000));   //Delete 1 day old
   DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(Tools::GetTime() - 3600000));       //Delete 1 hour old
-  pAnalyzerLock   = PTHREAD_RWLOCK_INITIALIZER;
-  pAlarmsLock     = PTHREAD_RWLOCK_INITIALIZER;
   pDelayVoltage   = NULL;
   pDelayCurrent   = NULL;
   pVoltageSamples = NULL;
@@ -67,6 +65,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAlarmsWorker   = NULL;
   pEventsWorker   = NULL;
   pPrevTimestamp  = 0;
+  pSyncThread     = 0;
   InitAggreg(pAggreg200MS, AGGREG_200MS);
   InitAggreg(pAggreg3S, AGGREG_3S);
   InitAggreg(pAggreg1M, AGGREG_1M);
@@ -94,6 +93,10 @@ AnalyzerSoft::~AnalyzerSoft() {
   for(uint8_t n = 0; n < pCurrentChannels; n++) {
     if(pCurrentFFTWorker[n] != NULL) delete pCurrentFFTWorker[n];
   }
+  if(pSyncThread != 0) {
+    pSyncTerminate = true;
+    pthread_join(pSyncThread, NULL);
+  }
   pthread_mutex_lock(&pFFTMutex);
   if(pFFTRunning == 0) {
     LOGFile::Debug("Clearing FFT cached plans\n");
@@ -102,7 +105,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   pthread_mutex_unlock(&pFFTMutex);
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
-  pthread_rwlock_rdlock(&pAnalyzerLock);
+  pAnalyzerLock.ReadLock();
   if(pNominalFrequency == 0) {
     for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageSamples[i * pMaxSamples + pBlockSamples] = voltageSamples[i];
     for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentSamples[i * pMaxSamples + pBlockSamples] = currentSamples[i];
@@ -139,15 +142,15 @@ bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
       pBlockCyclesCount = 0;
       pSequence ++;
       memset(pBlockCycles, 0, sizeof(pBlockCycles));
-      pthread_rwlock_unlock(&pAnalyzerLock);
+      pAnalyzerLock.Unlock();
       return false;
     } else {
       pAnalyzerWorker->Run(&pAggreg200MS);
-      pthread_rwlock_unlock(&pAnalyzerLock);
+      pAnalyzerLock.Unlock();
       return true;
     }
   }
-  pthread_rwlock_unlock(&pAnalyzerLock);
+  pAnalyzerLock.Unlock();
   return false;
 }
 bool AnalyzerSoft::IsWorking() {
@@ -203,7 +206,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
 void AnalyzerSoft::Configure(const json &options) {
   ConfigManager::WriteConfig(pConfigPath, options);
   SetName(options["Name"]);
-  pthread_rwlock_wrlock(&pAnalyzerLock);
+  pAnalyzerLock.WriteLock();
   pNominalVoltage   = options["NominalVoltage"];
   pNominalFrequency = options["NominalFrequency"];
   pMaxCurrent       = options["MaxCurrent"];
@@ -260,6 +263,7 @@ void AnalyzerSoft::Configure(const json &options) {
     delete pEventsWorker;
     pEventsWorker = NULL;
   } else if((EventsEnabled == true) && (pEventsWorker == NULL)) {
+    pPrevStationary = false;
     pEventsWorker = new Worker("EventsDet", this, &Events_Func);
   }
   bool AlarmsEnabled = options["AlarmsEnabled"];
@@ -269,18 +273,24 @@ void AnalyzerSoft::Configure(const json &options) {
   } else if((AlarmsEnabled == true) && (pAlarmsWorker == NULL)) {
     pAlarmsWorker = new Worker("AlarmsDet", this, &Alarms_Func);
   }
+  pSyncTerminate = true;
+  pthread_join(pSyncThread, NULL);
+  pSyncThread = 0;
   bool SyncEnabled = options["RemoteEnabled"];
-//  if((SyncEnabled == false) && (pSync != NULL)) {
-//    delete pSync;
-//    pSync = NULL;
-//  } else if(SyncEnabled == true) {
-//    string Server = options["RemoteServer"];
-//    string User = options["RemoteUser"];
-//    string Pass = options["RemotePass"];
-//    if(pSync == NULL) pSync = new Sync(this);
-//    pSync->Configure(Server, User, Pass);
-//  }
-  pthread_rwlock_unlock(&pAnalyzerLock);
+  if(SyncEnabled == true) {
+    pSyncURL       = options["RemoteServer"];
+    pSyncUser      = options["RemoteUser"];
+    pSyncPass      = options["RemotePass"];
+    pSyncTerminate = false;
+    pSyncCookie    = "";
+    if(pthread_create(&pSyncThread, NULL, Sync_Func, this) != 0) {
+      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      pSyncThread = 0;
+    } else {
+      pthread_setname_np(pSyncThread, "RemoteSync");
+    }
+  }
+  pAnalyzerLock.Unlock();
 }
 void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
   params.Type = type;
@@ -580,7 +590,7 @@ float AnalyzerSoft::BinPower(const float *a) {
 void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   AnalyzerSoft *This  = (AnalyzerSoft*)creation;
   Params_t     *Aggreg = (Params_t*)run;
-  pthread_rwlock_rdlock(&This->pAnalyzerLock);
+  This->pAnalyzerLock.ReadLock();
   uint64_t Start = Tools::GetTime();
   Aggreg->Timestamp = Start;
   Aggreg->AggregSamples = 1;
@@ -742,7 +752,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
   SysStatus->Lock.WriteLock();
   SysStatus->Events = This->pAggreg200MS.Flag;
-  SysStatus->Lock.WriteUnlock();
+  SysStatus->Lock.Unlock();
   This->pNowDataLock.ProviderWait();
   This->InitAggreg(This->pAggreg200MS, AGGREG_200MS);
   This->pBlockSamples     = 0;
@@ -750,7 +760,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   memset(This->pBlockCycles, 0, sizeof(pBlockCycles));
   LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->Serial.c_str(), Tools::GetTime() - Start, This->pSequence);
   This->pSequence++;
-  pthread_rwlock_unlock(&This->pAnalyzerLock);
+  This->pAnalyzerLock.Unlock();
 }
 void AnalyzerSoft::Events_Func(void *creation, void *run) {
   AnalyzerSoft *This = (AnalyzerSoft*)creation;
@@ -925,6 +935,114 @@ void AnalyzerSoft::FFT_Func(void *creation, void *run) {
   for(uint16_t i = 0; i < (2 * This->pFFTSamples); i++) Ch->OutPtr[i] = Ch->OutPtr[i] / This->pBlockSamples;
 }
 void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
+
+}
+void *AnalyzerSoft::Sync_Func(void *params) {
+  AnalyzerSoft *This = (analyzerSoft*)params;
+  Client *HTTPClient = NULL;
+  while(This->pTerminate == false) {
+    This->pLocks.ReadLock();
+    if(This->pCookie.empty()) {
+      Headers Header  = {{"Accept", "application/json"}, {"Connection", "keep-alive"}};
+      string  Path    = This->pPath + "/LogIn";
+      json    Content = json::object();
+      Content["Username"] = This->pUser;
+      Content["Password"] = This->pPass;
+      Content["UpdateLastLogin"] = false;
+      if(HTTPClient != NULL) delete HTTPClient;
+      HTTPClient = new Client(This->pServer.c_str(), This->pPort, 30);
+      This->pLocks.ReadUnlock();
+      auto Response = HTTPClient->Post(Path.c_str(), Header, Content.dump(), "application/json", true);
+      This->pLocks.WriteLock();
+      if((Response != nullptr) && (Response->status == HTTP_OK)) {
+        json Content = json::parse(Response->body, NULL, false);
+        if(!Content.is_discarded() && Content.is_object() && Content["Result"].is_boolean() && (Content["Result"] == true)) {
+          if(Response->has_header("Set-Cookie") == false) {
+            This->pCookie = "";
+          } else {
+            string Cookie = Response->get_header_value("Set-Cookie");
+            This->pCookie = "";
+            for(unsigned n = 0; n < Cookie.length(); n++) {
+              if(Cookie[n] == ';') break;
+              This->pCookie += Cookie[n];
+            }
+          }
+          if(This->pCookie.empty() == false) LOGFile::Info("Analyzer '%s' logged on remote server\n", This->pParent->Serial.c_str());
+        }
+      } else {
+        This->pCookie = "";
+        LOGFile::Debug("Analyzer '%s' can not login on remote server\n", This->pParent->Serial.c_str());
+      }
+      if(This->pCookie.empty()) {
+        This->pLocks.WriteUnlock();
+        usleep(1000000);
+      } else {
+        This->pLocks.WriteUnlock();
+      }
+    } else {
+      string Path    = This->pPath + "/getRemote";
+      json   Content = json::object();
+      Headers Header = {{"Accept", "application/json"}, {"Connection", "keep-alive"}, {"Cookie", This->pCookie}};
+      Content["Analyzer"] = This->pParent->Serial;
+      Content["Name"] = This->pParent->GetName();
+      This->pLocks.ReadUnlock();
+      LOGFile::Debug("Analyzer '%s'request pending queries to server\n", This->pParent->Serial.c_str());
+      auto Response = HTTPClient->Post(Path.c_str(), Header, Content.dump(), "application/json", true);
+      This->pLocks.WriteLock();
+      if((Response != nullptr) && (Response->status == HTTP_OK)) {
+        json Content = json::parse(Response->body, NULL, false);
+        if(!Content.is_discarded() && Content.is_array()) {
+          LOGFile::Debug("Analyzer '%s' receive %u queries from remote server\n", This->pParent->Serial.c_str(), Content.size());
+          for(uint32_t n = 0; n < Content.size(); n++) {
+            if(Content[n].is_object() && Content[n]["Sequence"].is_number() && Content[n]["Method"].is_string() && Content[n]["Params"].is_object()) {
+              Request_t *Request = new Request_t;
+              Request->Method   = Content[n]["Method"];
+              Request->Params   = Content[n]["Params"];
+              Request->Sequence = Content[n]["Sequence"];
+              Request->Sync     = This;
+              Request->Analyzer = This->pParent;
+              pthread_t Thread = 0;
+              if(pthread_create(&Thread, NULL, Request_Thread, (void*)Request) != 0) {
+                LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+                delete Request;
+              } else {
+                pthread_setname_np(Thread, Request->Method.c_str());
+                This->pThreadsCount++;
+                pthread_detach(Thread);
+              }
+            }
+          }
+        }
+        This->pLocks.WriteUnlock();
+      } else if((Response != nullptr) && (Response->status == HTTP_UNAUTHORIZED)) {
+        This->pCookie = "";
+        This->pLocks.WriteUnlock();
+        LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pParent->Serial.c_str());
+        usleep(1000000);
+      } else if((Response != nullptr) && (Response->status == HTTP_NO_CONTENT)) {
+        This->pLocks.WriteUnlock();
+        LOGFile::Debug("No pending queries in remote server for analyzar '%s'\n", This->pParent->Serial.c_str());
+      } else if((Response != nullptr) && (Response->status == HTTP_METHOD_NOT_ALLOWED)) {
+        This->pLocks.WriteUnlock();
+        LOGFile::Debug("Device remote is not enabled on remote server\n");
+        usleep(1000000);
+      } else if((Response != nullptr) && (Response->status == HTTP_BAD_REQUEST)) {
+        This->pLocks.WriteUnlock();
+        LOGFile::Debug("Analyzer '%s' is not authorized in remote server\n", This->pParent->Serial.c_str());
+        usleep(1000000);
+      } else if((Response != nullptr) && (Response->status == HTTP_SERVICE_UNAVAILABLE)) {
+        This->pLocks.WriteUnlock();
+        LOGFile::Debug("Analyzer '%s' send request while remote server already have one\n", This->pParent->Serial.c_str());
+        usleep(1000000);
+      } else {
+        This->pLocks.WriteUnlock();
+        LOGFile::Debug("Failed request to remote server for analyzer '%s'\n", This->pParent->Serial.c_str());
+        usleep(1000000);
+      }
+    }
+  }
+  if(HTTPClient != NULL) delete HTTPClient;
+  return NULL;
 
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -1482,7 +1600,7 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   if((Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPCallback::FillResponse(response, "'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
   json Result = json::object();
   Result["Variables"] = json::array();
-  pthread_rwlock_rdlock(&pAlarmsLock);
+  pAnalyzerLock.ReadLock();
   json NominalVoltage = json::object();
   NominalVoltage["Name"] = "NominalVoltage";
   NominalVoltage["Value"] = pNominalVoltage;
@@ -1493,7 +1611,7 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   NominalFreq["Value"] = pNominalFrequency;
   NominalFreq["Units"] = "Hz";
   Result["Variables"].push_back(NominalFreq);
-  pthread_rwlock_unlock(&pAlarmsLock);
+  pAnalyzerLock.Unlock();
   Result["Aggregation_Source"] = Aggreg;
   Database DB(Serial);
   if(Aggreg == "3S") {
@@ -1574,7 +1692,7 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::array();
-  pthread_rwlock_rdlock(&pAlarmsLock);
+  pAlarmsLock.ReadLock();
   for(auto Alarm : pAlarms) {
     json Tmp = json::object();
     Tmp["AlarmID"] = Alarm.AlarmID;
@@ -1582,7 +1700,7 @@ void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
     Tmp["Priority"] = Alarm.Priority;
     Result.push_back(Tmp);
   }
-  pthread_rwlock_unlock(&pAlarmsLock);
+  pAlarmsLock.Unlock();
   HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetAlarmsLog(const json &params, Response &response) {
@@ -1594,14 +1712,14 @@ void AnalyzerSoft::GetAlarm(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("AlarmID") == false) || (params["AlarmID"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint32_t AlarmID = params["AlarmID"];
-  pthread_rwlock_rdlock(&pAlarmsLock);
+  pAlarmsLock.ReadLock();
   for(auto &Alarm : pAlarms) {
     if(Alarm.AlarmID != AlarmID) continue;
     HTTPCallback::FillResponse(response, GetAlarmJSON(Alarm).dump(), "aplication/json", HTTP_OK);
-    pthread_rwlock_unlock(&pAlarmsLock);
+    pAlarmsLock.Unlock();
     return;
   }
-  pthread_rwlock_unlock(&pAlarmsLock);
+  pAlarmsLock.Unlock();
   HTTPCallback::FillResponse(response, "AlarmID not found", "text/plain", HTTP_BAD_REQUEST);
 }
 void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
@@ -1628,25 +1746,25 @@ void AnalyzerSoft::AddAlarm(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Alarm_t Alarm;
   InitAlarm(Alarm, CheckAlarmConfig(params));
-  pthread_rwlock_wrlock(&pAlarmsLock);
+  pAlarmsLock.WriteLock();
   Alarm.AlarmID = pAlarmsID++;
   pAlarms.push_back(Alarm);
   SaveAlarmsConf();
-  pthread_rwlock_unlock(&pAlarmsLock);
+  pAlarmsLock.Unlock();
   HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("AlarmID") == false) || (params["AlarmID"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint32_t AlarmID = params["AlarmId"];
-  pthread_rwlock_wrlock(&pAlarmsLock);
+  pAlarmsLock.WriteLock();
   for(auto it = pAlarms.begin(); it != pAlarms.end(); it++) {
     if(it->AlarmID != AlarmID) continue;
     pAlarms.erase(it);
     SaveAlarmsConf();
-    pthread_rwlock_unlock(&pAlarmsLock);
+    pAlarmsLock.Unlock();
     HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
   }
-  pthread_rwlock_unlock(&pAlarmsLock);
+  pAlarmsLock.Unlock();
   HTTPCallback::FillResponse(response, "AlarmID not found", "text/plain", HTTP_BAD_REQUEST);
 }

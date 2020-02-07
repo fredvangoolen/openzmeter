@@ -39,13 +39,13 @@ class RWLocks final {
     pthread_cond_t   pWritersCondition;
     uint32_t         pReaders;
     uint32_t         pWriters;
-    bool             pActiveWriter;
+    bool             pWriter;
   public :
     RWLocks();
+    ~RWLocks();
     void ReadLock();
-    void ReadUnlock();
     void WriteLock();
-    void WriteUnlock();
+    void Unlock();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class WorkerLocks final {

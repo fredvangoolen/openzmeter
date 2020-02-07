@@ -155,10 +155,3 @@
     components: { Graph }
   }
 </script>
-
-<style scoped>
-  .header-text {
-    font-size: 24px;
-    line-height: 16px;
-  }
-</style>

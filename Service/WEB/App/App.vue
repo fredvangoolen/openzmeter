@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div class="sidenav-overlay" :class="{ 'overlay-enabled': Expanded }"></div>
+    <div class="sidenav-overlay" :class="{ 'overlay-enabled': Expanded }" @mouseenter="Expanded=false"></div>
     <topbar :analyzer="Analyzer" :expanded.sync="Expanded"></topbar>
     <sidebar :analyzer.sync="Analyzer" :user.sync="User" :expanded.sync="Expanded"></sidebar>
     <router-view :analyzer="Analyzer" :user="User" id="contents"></router-view>
@@ -43,18 +43,18 @@
     background: #000;
     opacity: 0.0;
     display: block;
-    height: 0;
-    left: 0;
+    height: 0px;
+    left: 0px;
     position: fixed;
-    top: 0;
+    top: 0px;
     width: 100%;
-    z-index: 99;
-    transition: height 0ms 400ms, opacity 400ms 0ms;
+    z-index: 95;
+    transition: height 0ms 200ms, opacity 200ms 0ms;
   }
   .overlay-enabled {
     height: 100%;
     opacity: 0.5;
-    transition: height 0ms 0ms, opacity 600ms 0ms;
+    transition: height 0ms 0ms, opacity 200ms 0ms;
   }
   @media (min-width: 1280px) {
     #contents {
