@@ -21,7 +21,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 vector<vector<Device*> (*)()> __attribute__((init_priority(200))) DeviceManager::pDrivers;
 vector<Device*>  DeviceManager::pDevices;
-pthread_rwlock_t DeviceManager::pDevicesLock =PTHREAD_RWLOCK_INITIALIZER;
+pthread_rwlock_t DeviceManager::pDevicesLock = PTHREAD_RWLOCK_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
   pthread_rwlock_wrlock(&pDevicesLock);

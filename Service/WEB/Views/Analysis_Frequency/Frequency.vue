@@ -26,7 +26,7 @@
         Opt.legendFormatter = Graph.LegendFormatter_Follow;
         Opt.labels = ['Time', 'Frequency'];
         Opt.interactionModel = Graph.ScrollableInteractionModel(this);
-        Opt.colors = [oZm.Series['FREQUENCY'].Color]
+        Opt.colors = [this.analyzer.Color.Frequency]
         Opt.xAxisHeight = 24;
         Opt.axes = {
           y: { pixelsPerLabel: 15, axisLabelWidth: 34,

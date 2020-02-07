@@ -104,6 +104,7 @@ class AnalyzerSoft final : public Analyzer {
   private :
     static pthread_mutex_t      pFFTMutex;               //Planer mutex
     static uint32_t             pAlarmsID;               //Last assigned AlarmID
+    static uint32_t             pFFTRunning;             //Currently running FFTs
   private :
     static const vector<float>  FrequencyRanges;         //Rangos de frecuencias para estadisticas
     static const vector<float>  VoltageRanges;           //Rangos de tensiones para estadisticas

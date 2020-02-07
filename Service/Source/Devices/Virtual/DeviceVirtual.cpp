@@ -31,11 +31,12 @@ vector<Device*> DeviceVirtual::GetInstances() {
 }
 DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of real capture device for testing") {
   pThread = 0;
+  pAnalyzer = NULL;
   Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial)));
 }
 DeviceVirtual::~DeviceVirtual() {
   pTerminate = true;
-  pthread_join(pThread, NULL);
+  if(pThread != 0) pthread_join(pThread, NULL);
 }
 json DeviceVirtual::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
@@ -64,9 +65,10 @@ void DeviceVirtual::Configure(const json &config) {
   if(pThread != 0) {
     pTerminate = true;
     pthread_join(pThread, NULL);
-    ClearAnalyzers();
     pThread = 0;
   }
+  ClearAnalyzers();
+  pAnalyzer         = NULL;
   pVoltage          = config["Voltage"];
   pFrequency        = config["Frequency"];
   pSampleRate       = config["SampleRate"];

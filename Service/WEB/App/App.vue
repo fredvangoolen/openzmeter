@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <div class="sidenav-overlay"/>
-    <topbar :analyzer="Analyzer" :value="Values"></topbar>
-    <sidebar :analyzer.sync="Analyzer" :user.sync="User"></sidebar>
+    <div class="sidenav-overlay" :class="{ 'overlay-enabled': Expanded }"></div>
+    <topbar :analyzer="Analyzer" :expanded.sync="Expanded"></topbar>
+    <sidebar :analyzer.sync="Analyzer" :user.sync="User" :expanded.sync="Expanded"></sidebar>
     <router-view :analyzer="Analyzer" :user="User" id="contents"></router-view>
     <portal-target name="dialogs" :multiple="true"></portal-target>
   </div>
@@ -16,7 +16,7 @@
   import Graph from 'Components/Graph.vue';
   export default {
     data: function() {
-      return { Analyzer: null, User: null, Values: {} };
+      return { Analyzer: null, User: null, Expanded: false };
     },
     components: { Topbar,  Sidebar }
   }
@@ -39,20 +39,30 @@
       top: 56px;
     }
   }
+  .sidenav-overlay {
+    background: #000;
+    opacity: 0.0;
+    display: block;
+    height: 0;
+    left: 0;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 99;
+    transition: height 0ms 400ms, opacity 400ms 0ms;
+  }
+  .overlay-enabled {
+    height: 100%;
+    opacity: 0.5;
+    transition: height 0ms 0ms, opacity 600ms 0ms;
+  }
   @media (min-width: 1280px) {
     #contents {
       left: 48px;
     }
+    .sidenav-overlay {
+      top: 56px;
+    }
   }
-  .sidenav-overlay {
-    background: #000;
-    opacity: 0.5;
-    display:none;
-    height:100%;
-    left:0;
-    position:fixed;
-    top:0;
-    width:100%;
-    z-index:99
-  }
+
 </style>

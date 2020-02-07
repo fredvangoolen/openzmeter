@@ -3,6 +3,7 @@
  * Author:   Eduardo Viciana (12 de abril de 2017)
  * -------------------------------------------------------------------------------------------------------------------*/
 #pragma once
+#include <termios.h>
 #include <string>
 #include <vector>
 #include <pthread.h>
@@ -45,27 +46,6 @@ class RWLocks final {
     void ReadUnlock();
     void WriteLock();
     void WriteUnlock();
-};
-//----------------------------------------------------------------------------------------------------------------------
-class InstanceLocks final {
-  //Hold destructor until no references to object
-  private :
-    pthread_mutex_t  pMutex;
-    pthread_cond_t   pCond;
-    uint32_t         pReferences;
-  public :
-    InstanceLocks();
-    void WaitInstances();
-//    void Reference();
-//    void Dereference();
-    class Allocator final {
-      private :
-        InstanceLocks *pParent;
-      public :
-        Allocator(InstanceLocks *parent);
-      private :
-        virtual ~Allocator();
-    };
 };
 //----------------------------------------------------------------------------------------------------------------------
 class WorkerLocks final {
@@ -164,7 +144,12 @@ class LOGFile {
 };
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
+  private :
+    static termios pConsoleAttr;
+  private :
+    static void ResetConsole();
   public :
+    static void      DisableEcho();
     static uint64_t  GetTime();
     static void      SendUDP(const json &obj);
 };
