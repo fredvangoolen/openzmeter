@@ -49,6 +49,7 @@ vector<Device*>  DeviceV1::GetInstances() {
     libusb_device_handle *Dev_Handle = NULL;
     if(libusb_open(Devs[i], &Dev_Handle) != LIBUSB_SUCCESS) {
       LOGFile::Error("Can not open USB device...\n");
+      continue;
     }
     char String[256];
     if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iManufacturer, (unsigned char*)String, sizeof(String)) < 0) {
@@ -121,10 +122,10 @@ void DeviceV1::Configure(const json& config) {
   if(pThread != 0) {
     pTerminate = true;
     pthread_join(pThread, NULL);
-    ClearAnalyzers();
-    pAnalyzer = NULL;
     pThread = 0;
   }
+  ClearAnalyzers();
+  pAnalyzer = NULL;
   pVoltageGain = config["VoltageGain"];
   pVoltageOffset = config["VoltageOffset"];
   pCurrentGain = config["CurrentGain"];
@@ -256,6 +257,7 @@ void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
   if(This->pTerminate == false) {
     libusb_submit_transfer(transfer);
   } else {
+    LOGFile::Debug("DeviceV1 with serial '%s' flushing buffers (%u pending)\n", This->Serial.c_str(), This->pSubmittedTransfers);
     This->pSubmittedTransfers--;
   }
 }

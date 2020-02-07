@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle"><img :src="require('Imgs/application_menu.png')"></button>
+      <button type="button" class="navbar-toggle" @mouseenter="$emit('update:expanded', true)" @click="$emit('update:expanded', true)"><img :src="require('Imgs/application_menu.png')"></button>
       <div class="navbar-brand">
         <img :src="require('Imgs/Logo.png')">
         <div data-toggle="tooltip" :title="'Uptime: ' + Uptime" v-if="Time != null"><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
@@ -12,14 +12,13 @@
         <div data-status="tooltip" :title="'Battery status: ' + BatteryStatus" v-if="BatteryLevel != null"><img :src="require('Imgs/battery.png')">{{ BatteryLevel }}</div-->
         <div v-if="Temp != null"><img :src="require('Imgs/temperature_normal.png')">{{ Temp }}</div>
       </div>
-
     </div>
     <div class="indicator-bar" v-if="analyzer != null" v-on:click="Grouped = !Grouped">
-      <topbar-indicator serie="VOLTAGE" :grouped="Grouped" :value="Values1.Voltage"></topbar-indicator>
-      <topbar-indicator serie="CURRENT" :grouped="Grouped" :value="Values1.Current"></topbar-indicator>
-      <topbar-indicator serie="ACTIVE_POWER" :grouped="Grouped" :value="Values1.Active_Power"></topbar-indicator>
-      <topbar-indicator serie="FREQUENCY" :value="Values1.Frequency" v-if="analyzer.NominalFreq > 0.0"></topbar-indicator>
-      <topbar-indicator serie="ACTIVE_ENERGY" :grouped="Grouped" :value="Values2.Active_Energy"></topbar-indicator>
+      <topbar-indicator :analyzer="analyzer" serie="Voltage" :grouped="Grouped" :value="Values1"></topbar-indicator>
+      <topbar-indicator :analyzer="analyzer" serie="Current" :grouped="Grouped" :value="Values1"></topbar-indicator>
+      <topbar-indicator :analyzer="analyzer" serie="Active_Power" :grouped="Grouped" :value="Values1"></topbar-indicator>
+      <topbar-indicator :analyzer="analyzer" serie="Frequency" :value="Values1" v-if="analyzer.NominalFrequency > 0.0"></topbar-indicator>
+      <topbar-indicator :analyzer="analyzer" serie="Active_Energy" :grouped="Grouped" :value="Values2"></topbar-indicator>
     </div>
   </div>
 </template>
@@ -29,7 +28,7 @@ import TopbarIndicator from './TopbarIndicator.vue';
 import moment from 'moment';
 import * as oZm from 'JS/openZmeter.js';
 export default {
-  props: { analyzer: { type: Object } },
+  props: { analyzer: Object, expanded: Boolean },
   data () {
     return { Values1: {}, Values2: {}, Grouped: false};
   },
@@ -91,26 +90,6 @@ export default {
       return null;
     }
   },
-  /*
-  watch: {
-    value: function(vals) {
-      if(vals['Sys_Stats'] != null) {
-
-          if(vals['Sys_Stats'].WIFI_Power != undefined) {
-            this.WIFIPower = Math.round(vals['Sys_Stats'].WIFI_Power) + '%';
-            this.WIFINetwork = vals['Sys_Stats'].WIFI_Network;
-          } else {
-            this.WIFIPower = null;
-          }
-          if(vals['Sys_Stats'].Battery_Level != undefined) {
-            this.BatteryLevel = Math.round(vals['Sys_Stats'].Battery_Level) + '%';
-            this.BatteryStatus = oZm.RoundPlain(vals['Sys_Stats'].Battery_Voltage, 2) + 'v';
-          } else {
-            this.BatteryLevel = null;
-          }
-        }
-    }
-  },*/
   methods: {
     UpdateIndicators1() {
       if(this.Timer1) clearInterval(this.Timer1);
@@ -162,21 +141,29 @@ export default {
     height: 56px;
   }
   .navbar-toggle {
-    display: block;
     padding: 6px 5px;
-    right: 0px;
+    left: 0px;
     position: absolute;
     margin: 3px;
     color: #FFF;
     border: 1px solid #333;
     background-color: transparent;
+    display: block;
   }
   .navbar-toggle img {
     margin: 2px 0px;
   }
+  .navbar-brand {
+    padding: 0px 6px;
+  }
   @media(min-width: 1280px) {
     .navbar-toggle {
       display: none;
+    }
+  }
+  @media(max-width: 1280px) {
+    .navbar-brand {
+      margin-left: 48px;
     }
   }
   .navbar-brand > img {
@@ -203,10 +190,6 @@ export default {
   .sys-stats img {
     margin-right: 1px;
   }
-  .navbar-brand {
-    text-align: left;
-    padding: 0px 6px;
-  }
   .indicator-bar {
     cursor: grabbing;
     background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
@@ -214,18 +197,17 @@ export default {
     font-size: 14px;
     color: #FFF;
     font-weight: 700;
-    padding: 2px;
+    padding-top: 2px;
     border-bottom: 1px solid #c9c9c9;
     position: relative;
     z-index: 95;
-    font-size: 18x;
     top: 0px;
   }
   @media(min-width:640px) {
     .indicator-bar {
       background-image: none;
       position: absolute;
-      right: 48px;
+      right: 2px;
       text-align: right;
       border: none;
     }

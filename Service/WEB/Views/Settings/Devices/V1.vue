@@ -3,7 +3,7 @@
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="value.Error != null">{{ value.Error }}</div>
     <div class="row">
       <div class="col-xs-12">
-        <label class="control-label" style="line-height: 22px">Start on boot</label>
+        <label class="control-label" style="line-height: 22px">Enabled</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="value.Enabled"></toggle>
         <hr style="margin: 5px 0px 5px 0px"/>
         <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Device inputs can be calibrated to compensate components derating over time.</div>

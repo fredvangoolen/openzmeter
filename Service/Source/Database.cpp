@@ -221,7 +221,7 @@ string Database::Bind(const float *params, const uint32_t lenA, const uint32_t l
   for(uint32_t i = 0; i < lenA; i++) {
     Result.append("{");
     for(uint32_t n = 0; n < lenB; n++) {
-      Result.append(isnan(params[i * lenA + n]) ? string("NULL") : to_string(params[i * lenA + n]));
+      Result.append(isnan(params[i * lenB + n]) ? string("NULL") : to_string(params[i * lenB + n]));
       Result.append((n < (lenB - 1)) ? ", " : "}");
     }
     if(i < (lenA - 1)) Result.append(", ");

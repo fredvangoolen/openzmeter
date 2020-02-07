@@ -11,7 +11,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class SysSupport {
+class SysSupport final {
   public :
     typedef struct {
       RWLocks            Lock;            //Lock before access struct
@@ -99,5 +99,5 @@ class SysSupport {
     static void            PeriodicTask();
   public:
     SysSupport();
-    virtual ~SysSupport();
+    ~SysSupport();
 };

@@ -52,7 +52,6 @@ bool Analyzer::CheckRights(const string &user, const AnalyzerRights neededAccess
   string Permision = (neededAccess == READ) ? "read" : (neededAccess == WRITE) ? "write" : "config";
   DB.ExecSentenceAsyncResult("SELECT " + Permision + " AS result FROM permissions WHERE username = " + DB.Bind(user) + " AND serial = " + DB.Bind(Serial));
   bool Result = ((DB.FecthRow() == true) && (DB.ResultString("result") == "t"));
-  printf("%s\n", DB.ResultString("result").c_str());
   return Result;
 }
 void Analyzer::GetPermissions(const json &params, Response &response) {

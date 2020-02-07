@@ -43,6 +43,6 @@ class DeviceVirtual final : public Device {
     void GetDevice(const json &params, Response &response) override;
     void SetDevice(const json &params, Response &response) override;
   public :
-    ~DeviceVirtual() override;
+    ~DeviceVirtual();
 };
 //----------------------------------------------------------------------------------------------------------------------

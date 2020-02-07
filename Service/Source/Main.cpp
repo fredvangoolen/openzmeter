@@ -19,7 +19,7 @@ static bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
   LOGFile::Info("Shutting down. Please wait while all task ends...\n");
-  if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
+  Terminate = true;
 }
 void RunDaemon() {
   LOGFile::Info("Move to background task\n");
@@ -40,6 +40,7 @@ void RunDaemon() {
   close(STDERR_FILENO);
 }
 int main(int argc, char** argv) {
+  Tools::DisableEcho();
   setbuf(stdout, NULL);
   signal(SIGPIPE, SIG_IGN);
   signal(SIGILL, SIG_IGN);
@@ -82,7 +83,6 @@ int main(int argc, char** argv) {
   /* Create WEB service */
   HTTPServer HTTPServer;
 
-//  LOGFile::Error("INICIADOOO-------------------\n");
   uint32_t Iter = 0;
   while(!Terminate) {
     SysSupport::PeriodicTask();

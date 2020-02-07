@@ -39,8 +39,8 @@
         var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
-        var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
-        var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
+        var VoltageNames = this.analyzer.PhaseNames.slice(0, this.analyzer.VoltageChannels).map((val) => { return 'Voltage' + ' (' + val + ')'});
+        var CurrentNames = this.analyzer.PhaseNames.slice(0, this.analyzer.CurrentChannels).map((val) => { return 'Current' + ' (' + val + ')'});
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
         for(var n in CurrentNames) Opt.series[CurrentNames[n]] = { axis: 'y2' };

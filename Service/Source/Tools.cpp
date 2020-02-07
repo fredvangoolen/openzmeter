@@ -116,43 +116,6 @@ void RWLocks::WriteUnlock() {
   pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
-InstanceLocks::InstanceLocks() {
-  pMutex = PTHREAD_MUTEX_INITIALIZER;
-  pCond = PTHREAD_COND_INITIALIZER;
-  pReferences = 0;
-}
-void InstanceLocks::WaitInstances() {
-  pthread_mutex_lock(&pMutex);
-  while(pReferences != 0) {
-    LOGFile::Debug("Waiting %d instances to terminate\n", this, pReferences);
-    pthread_cond_wait(&pCond, &pMutex);
-  }
-  pthread_mutex_unlock(&pMutex);
-}
-//void InstanceLocks::Reference() {
-//  pthread_mutex_lock(&pMutex);
-//  pReferences++;
-//  pthread_mutex_unlock(&pMutex);
-//}
-//void InstanceLocks::Dereference() {
-//  pthread_mutex_lock(&pMutex);
-//  pReferences--;
-//  if(pReferences == 0) pthread_cond_signal(&pCond);
-//  pthread_mutex_unlock(&pMutex);
-//}
-InstanceLocks::Allocator::Allocator(InstanceLocks *parent) {
-  pthread_mutex_lock(&parent->pMutex);
-  parent->pReferences++;
-  pParent = parent;
-  pthread_mutex_unlock(&parent->pMutex);
-}
-InstanceLocks::Allocator::~Allocator() {
-  pthread_mutex_lock(&pParent->pMutex);
-  pParent->pReferences--;
-  if(pParent->pReferences == 0) pthread_cond_signal(&pParent->pCond);
-  pthread_mutex_unlock(&pParent->pMutex);
-}
-//----------------------------------------------------------------------------------------------------------------------
 ProviderLocks::ProviderLocks() {
   pWaitingThreads      = 0;
   pDataReady           = false;
@@ -469,6 +432,22 @@ uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
   return NULL;
 }
 //----------------------------------------------------------------------------------------------------------------------
+termios Tools::pConsoleAttr;
+//----------------------------------------------------------------------------------------------------------------------
+void Tools::ResetConsole() {
+  tcsetattr (STDIN_FILENO, TCSANOW, &pConsoleAttr);
+}
+void Tools::DisableEcho() {
+  struct termios tattr;
+  if(!isatty(STDIN_FILENO)) return;
+  tcgetattr(STDIN_FILENO, &pConsoleAttr);
+  atexit(ResetConsole);
+  tcgetattr (STDIN_FILENO, &tattr);
+  tattr.c_lflag &= ~(ICANON | ECHO);
+  tattr.c_cc[VMIN] = 1;
+  tattr.c_cc[VTIME] = 0;
+  tcsetattr (STDIN_FILENO, TCSAFLUSH, &tattr);
+}
 uint64_t Tools::GetTime() {
   struct timeval Time;
   if(gettimeofday(&Time, NULL) != 0) {

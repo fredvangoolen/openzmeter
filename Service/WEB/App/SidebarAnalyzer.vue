@@ -45,6 +45,10 @@
       SetAnalyzer: function(analyzer) {
         if(analyzer != null) {
           analyzer.PhaseNames = ['R', 'S', 'T', 'N'];
+          analyzer.VoltageChannels = (analyzer.Mode == '1PHASE') ? 1 : 3;
+          analyzer.CurrentChannels = (analyzer.Mode == '1PHASE') ? 1 : (analyzer.Mode == '3PHASE') ? 3 : 4;
+          analyzer.Color = { Voltage: '#d9534f', Current: '#428bca', Active_Power: '#f0ad4e', Active_Energy: '#3d3d8b', Frequency: '#5cb85c' };
+          analyzer.Unit = { Voltage: 'V', Current: 'A', Active_Power: 'W', Active_Energy: 'Wh', Frequency: 'Hz'};
 //          analyzer.GetSeriesNames = this.GetSeriesNames.bind(this);
           analyzer.GetSeriesRange = this.GetSeriesRange.bind(this);
           analyzer.GetPricesRange = this.GetPricesRange.bind(this);

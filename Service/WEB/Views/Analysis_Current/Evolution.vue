@@ -1,14 +1,13 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTime(data.Sampletime) }}</div>
-        <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="true" v-model="Phase"></toolbar-phases>
-          <div class="btn-group">
-          </div>
-          <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools-->
+      <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggregation_Source) : '-' }} aggregation {{ Paused ? '(Paused)' : '' }}</div>
+      <div class="header-buttons">
+        <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="true" v-model="Phase"></toolbar-phases>
+        <div class="btn-group">
         </div>
       </div>
+    </div>
     <div class="panel-body">
       <spinner v-if="data==null"></spinner>
       <cubism ref="g" v-for="(serie, index) in Names" :key="index" :index="index" :data="Data" :title="serie" :format="Formatter"></cubism>

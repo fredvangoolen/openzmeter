@@ -3,16 +3,16 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
-        <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-          <toolbar-phases storage="DetailPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
-          <toolbar-options storage="DetailOptions" :options="['1st Harmonic', 'Current', 'Log']" v-model="Options"></toolbar-options>
-          <div class="btn-group">
-            <button-export file="Harmonics" :rows="Export"></button-export>
-            <button-expand :expanded.sync="Expanded"></button-expand>
-            <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
-          </div>
-        </portal>
-      </div>
+      <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
+        <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
+        <toolbar-options storage="DetailsOptions" :options="['1st Harmonic', 'Current', 'Log']" v-model="Options"></toolbar-options>
+        <div class="btn-group">
+          <button-export file="Harmonics" :rows="Export"></button-export>
+          <button-expand :expanded.sync="Expanded"></button-expand>
+          <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
+        </div>
+      </portal>
+    </div>
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
       <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
@@ -22,6 +22,7 @@
     <dlg-fs v-if="Expanded" title="Harmonics" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
+
 <script>
   import * as oZm from 'JS/openZmeter.js';
   import chroma from 'chroma-js';
@@ -67,7 +68,7 @@
         Opt.axes.x.drawGrid = false;
         Opt.axes.x.ticker = Graph.OddHarmonicsTicks;
         Opt.axes.x.axisLabelFormatter = (x) => { return oZm.Series['HARMONICS'].Names[x]; };
-        Opt.axes.x.valueFormatter = (y) => { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (this.analyzer.NominalFreq * (y + 1)) + '<em class="small"> Hz</em>)'; };
+        Opt.axes.x.valueFormatter = (y) => { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (this.analyzer.NominalFrequency * (y + 1)) + 'Hz)'; };
         Opt.labels = ['Harmonic'].concat(VoltageNames).concat(CurrentNames);
         Opt.colors = VoltageStyle.Colors.concat(CurrentStyle.Colors);
         if(this.data != null) {

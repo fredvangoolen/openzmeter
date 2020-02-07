@@ -1,9 +1,9 @@
 <template>
-  <div class="navbar-nav" @mouseenter="MouseOver = true" @mouseleave="MouseOver = false" v-bind:class="{ expanded: MouseOver }">
+  <div class="navbar-nav" @mouseenter="$emit('update:expanded', true)" @mouseleave="$emit('update:expanded', false)" :class="{ expanded: expanded }">
     <div class="menu-wrapper">
-      <sidebar-analyzer :analyzer="analyzer" @update:analyzer="$emit('update:analyzer', $event)" :expanded="MouseOver"></sidebar-analyzer>
-      <sidebar-user :user="user" @update:user="$emit('update:user', $event)" :expanded="MouseOver"></sidebar-user>
-      <sidebar-menu :expanded="MouseOver"></sidebar-menu>
+      <sidebar-analyzer :analyzer="analyzer" @update:analyzer="$emit('update:analyzer', $event)" :expanded="expanded"></sidebar-analyzer>
+      <sidebar-user :user="user" @update:user="$emit('update:user', $event)" :expanded="expanded"></sidebar-user>
+      <sidebar-menu :expanded="expanded"></sidebar-menu>
     </div>
     <sidebar-news v-if="false"></sidebar-news>
   </div>
@@ -15,9 +15,9 @@ import SidebarAnalyzer from './SidebarAnalyzer.vue';
 import SidebarMenu from './SidebarMenu.vue';
 import SidebarNews from './SidebarNews.vue';
 export default {
-  props: { analyzer: Object, user: Object },
+  props: { analyzer: Object, user: Object, expanded: Boolean },
   data() {
-    return { MouseOver: false };
+    return { };
   },
   mounted: function() {
 //    $('.navbar-toggle').click(function (e) {
@@ -80,7 +80,7 @@ export default {
    /* transform: translate(-262px,0);*/
     transition: transform .2s;
     top: 0px;
-    width: 48px;
+    width: 0px;
     transition: width 0.2s ease-in-out;
     z-index: 1000;
     margin: 0px;
@@ -90,6 +90,7 @@ export default {
       min-height: calc(100vh - 56px);
       transform: none;
       top: 56px;
+      width: 48px;
     }
     .menu-wrapper {
       min-height: calc(100vh - 48px - 56px);

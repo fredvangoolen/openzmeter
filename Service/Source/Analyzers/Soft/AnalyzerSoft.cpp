@@ -47,6 +47,7 @@ const vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1
 const vector<float> AnalyzerSoft::UnbalanceRanges  = {0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.50, 1.75, 2.0, 2.25, 2.50, 2.75, 3.0, 3.25, 3.50, 3.75, 4.0, 4.25, 4.50, 4.75, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, INFINITY};
 //----------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t     AnalyzerSoft::pFFTMutex = PTHREAD_MUTEX_INITIALIZER;
+uint32_t            AnalyzerSoft::pFFTRunning = 0;
 uint32_t            AnalyzerSoft::pAlarmsID = 0;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pMode(mode) {
@@ -78,7 +79,9 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", this, &Analyzer_Func);
 }
 AnalyzerSoft::~AnalyzerSoft() {
-  delete pAnalyzerWorker;
+  if(pAnalyzerWorker != NULL) delete pAnalyzerWorker;
+  if(pEventsWorker != NULL) delete pEventsWorker;
+  if(pAlarmsWorker != NULL) delete pAlarmsWorker;
   if(pDelayVoltage != NULL) free(pDelayVoltage);
   if(pDelayCurrent != NULL) free(pDelayCurrent);
   if(pVoltageSamples != NULL) free(pVoltageSamples);
@@ -91,6 +94,12 @@ AnalyzerSoft::~AnalyzerSoft() {
   for(uint8_t n = 0; n < pCurrentChannels; n++) {
     if(pCurrentFFTWorker[n] != NULL) delete pCurrentFFTWorker[n];
   }
+  pthread_mutex_lock(&pFFTMutex);
+  if(pFFTRunning == 0) {
+    LOGFile::Debug("Clearing FFT cached plans\n");
+    fftwf_cleanup();
+  }
+  pthread_mutex_unlock(&pFFTMutex);
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
   pthread_rwlock_rdlock(&pAnalyzerLock);
@@ -618,7 +627,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     for(uint16_t i = 0; i < This->pBlockSamples; i++) Aggreg->Current[j] += pow(Ch[i], 2.0);
     Aggreg->Current[j] = sqrt(Aggreg->Current[j] / This->pBlockSamples);
   }
-  for(unsigned j = 0; j < This->pVoltageChannels; j++) {
+  for(uint8_t j = 0; j < This->pVoltageChannels; j++) {
     This->pVoltageFFTWorker[j]->Wait();
     This->pCurrentFFTWorker[j]->Wait();
     for(uint8_t i = 0; i < 50; i++) {
@@ -906,10 +915,12 @@ void AnalyzerSoft::FFT_Func(void *creation, void *run) {
   FFTChannel_t *Ch = (FFTChannel_t*)run;
   pthread_mutex_lock(&pFFTMutex);
   fftwf_plan Plan = fftwf_plan_dft_r2c_1d(This->pBlockSamples, Ch->InPtr, (fftwf_complex*)Ch->OutPtr, FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
+  pFFTRunning++;
   pthread_mutex_unlock(&pFFTMutex);
   fftwf_execute_dft_r2c(Plan, Ch->InPtr, (fftwf_complex*)Ch->OutPtr);
   pthread_mutex_lock(&pFFTMutex);
   fftwf_destroy_plan(Plan);
+  pFFTRunning--;
   pthread_mutex_unlock(&pFFTMutex);
   for(uint16_t i = 0; i < (2 * This->pFFTSamples); i++) Ch->OutPtr[i] = Ch->OutPtr[i] / This->pBlockSamples;
 }
