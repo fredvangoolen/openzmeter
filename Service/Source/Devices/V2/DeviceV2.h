@@ -91,6 +91,7 @@ class DeviceV2 final : public Device {
     void Configure(const json &config);
     void GetDevice(const json &params, Response &response) override;
     void SetDevice(const json &params, Response &response) override;
+    void GetRemote(const json &params, Response &response) override;
     void BufferAppend();
   public :
     ~DeviceV2();

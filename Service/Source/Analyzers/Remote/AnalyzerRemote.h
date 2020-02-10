@@ -1,7 +1,18 @@
-/* ================================== zMeter ===========================================================================
- * File:     AnalyzerRemote.h
- * Author:   Eduardo Viciana (12 de abril de 2017)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <list>
 #include "HTTPServer.h"
@@ -9,23 +20,28 @@
 class AnalyzerRemote : public Analyzer {
   private :
     typedef struct {
-      uint64_t        Sequence;
-      string          Method;
-      HTTPRequest    *Request;
-      ProviderLocks   Locks;
-    } Query_t;
-    typedef struct {
-      HTTPRequest    *Request;
-
-      ProviderLocks   Locks;
+      bool          Sended;
+      const string *RequestMethod;
+      const json   *RequestParams;
+      Response     *Response;
+      ProviderLocks Locks;
     } Request_t;
+
+//    typedef struct {
+//      HTTPRequest    *Request;
+
+//      ProviderLocks   Locks;
+//    } Request_t;
   private :
-    pthread_t        pThread;
-    uint64_t         pQuerySequence;
-    list<Query_t*>   pQueries;
-    ProviderLocks    *pRequestLocks;
+    map<uint64_t, Request_t*> pPendingRequest;
+    map<uint64_t, Request_t*> pSendedRequest;
+    pthread_mutex_t           pLocks;
+    uint64_t                  pSequence;
   private :
-    void  HandleRequest(string url, const json &params, Response &response);
+    void  SetRequester();
+    void  ClearRequester();
+    void  HandleRequest(const string &url, const json &params, Response &response);
+    void  SetRemote(const json &params, Response &response);
     void  GetAnalyzer(const json &params, Response &response);
     void  SetAnalyzer(const json &params, Response &response);
     void  GetSeries(const json &params, Response &response);
@@ -50,6 +66,4 @@ class AnalyzerRemote : public Analyzer {
   public :
     AnalyzerRemote(string id);
     ~AnalyzerRemote();
-    void  SetRemote(const json &params, Response &response);
-    void  GetRemote(const json &params, Response &response);
 };

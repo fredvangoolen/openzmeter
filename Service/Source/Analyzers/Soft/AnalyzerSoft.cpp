@@ -65,7 +65,6 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAlarmsWorker   = NULL;
   pEventsWorker   = NULL;
   pPrevTimestamp  = 0;
-  pSyncThread     = 0;
   InitAggreg(pAggreg200MS, AGGREG_200MS);
   InitAggreg(pAggreg3S, AGGREG_3S);
   InitAggreg(pAggreg1M, AGGREG_1M);
@@ -92,10 +91,6 @@ AnalyzerSoft::~AnalyzerSoft() {
   }
   for(uint8_t n = 0; n < pCurrentChannels; n++) {
     if(pCurrentFFTWorker[n] != NULL) delete pCurrentFFTWorker[n];
-  }
-  if(pSyncThread != 0) {
-    pSyncTerminate = true;
-    pthread_join(pSyncThread, NULL);
   }
   pthread_mutex_lock(&pFFTMutex);
   if(pFFTRunning == 0) {
@@ -272,23 +267,6 @@ void AnalyzerSoft::Configure(const json &options) {
     pAlarmsWorker = NULL;
   } else if((AlarmsEnabled == true) && (pAlarmsWorker == NULL)) {
     pAlarmsWorker = new Worker("AlarmsDet", this, &Alarms_Func);
-  }
-  pSyncTerminate = true;
-  pthread_join(pSyncThread, NULL);
-  pSyncThread = 0;
-  bool SyncEnabled = options["RemoteEnabled"];
-  if(SyncEnabled == true) {
-    pSyncURL       = options["RemoteServer"];
-    pSyncUser      = options["RemoteUser"];
-    pSyncPass      = options["RemotePass"];
-    pSyncTerminate = false;
-    pSyncCookie    = "";
-    if(pthread_create(&pSyncThread, NULL, Sync_Func, this) != 0) {
-      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      pSyncThread = 0;
-    } else {
-      pthread_setname_np(pSyncThread, "RemoteSync");
-    }
   }
   pAnalyzerLock.Unlock();
 }
@@ -937,114 +915,6 @@ void AnalyzerSoft::FFT_Func(void *creation, void *run) {
 void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
 
 }
-void *AnalyzerSoft::Sync_Func(void *params) {
-  AnalyzerSoft *This = (analyzerSoft*)params;
-  Client *HTTPClient = NULL;
-  while(This->pTerminate == false) {
-    This->pLocks.ReadLock();
-    if(This->pCookie.empty()) {
-      Headers Header  = {{"Accept", "application/json"}, {"Connection", "keep-alive"}};
-      string  Path    = This->pPath + "/LogIn";
-      json    Content = json::object();
-      Content["Username"] = This->pUser;
-      Content["Password"] = This->pPass;
-      Content["UpdateLastLogin"] = false;
-      if(HTTPClient != NULL) delete HTTPClient;
-      HTTPClient = new Client(This->pServer.c_str(), This->pPort, 30);
-      This->pLocks.ReadUnlock();
-      auto Response = HTTPClient->Post(Path.c_str(), Header, Content.dump(), "application/json", true);
-      This->pLocks.WriteLock();
-      if((Response != nullptr) && (Response->status == HTTP_OK)) {
-        json Content = json::parse(Response->body, NULL, false);
-        if(!Content.is_discarded() && Content.is_object() && Content["Result"].is_boolean() && (Content["Result"] == true)) {
-          if(Response->has_header("Set-Cookie") == false) {
-            This->pCookie = "";
-          } else {
-            string Cookie = Response->get_header_value("Set-Cookie");
-            This->pCookie = "";
-            for(unsigned n = 0; n < Cookie.length(); n++) {
-              if(Cookie[n] == ';') break;
-              This->pCookie += Cookie[n];
-            }
-          }
-          if(This->pCookie.empty() == false) LOGFile::Info("Analyzer '%s' logged on remote server\n", This->pParent->Serial.c_str());
-        }
-      } else {
-        This->pCookie = "";
-        LOGFile::Debug("Analyzer '%s' can not login on remote server\n", This->pParent->Serial.c_str());
-      }
-      if(This->pCookie.empty()) {
-        This->pLocks.WriteUnlock();
-        usleep(1000000);
-      } else {
-        This->pLocks.WriteUnlock();
-      }
-    } else {
-      string Path    = This->pPath + "/getRemote";
-      json   Content = json::object();
-      Headers Header = {{"Accept", "application/json"}, {"Connection", "keep-alive"}, {"Cookie", This->pCookie}};
-      Content["Analyzer"] = This->pParent->Serial;
-      Content["Name"] = This->pParent->GetName();
-      This->pLocks.ReadUnlock();
-      LOGFile::Debug("Analyzer '%s'request pending queries to server\n", This->pParent->Serial.c_str());
-      auto Response = HTTPClient->Post(Path.c_str(), Header, Content.dump(), "application/json", true);
-      This->pLocks.WriteLock();
-      if((Response != nullptr) && (Response->status == HTTP_OK)) {
-        json Content = json::parse(Response->body, NULL, false);
-        if(!Content.is_discarded() && Content.is_array()) {
-          LOGFile::Debug("Analyzer '%s' receive %u queries from remote server\n", This->pParent->Serial.c_str(), Content.size());
-          for(uint32_t n = 0; n < Content.size(); n++) {
-            if(Content[n].is_object() && Content[n]["Sequence"].is_number() && Content[n]["Method"].is_string() && Content[n]["Params"].is_object()) {
-              Request_t *Request = new Request_t;
-              Request->Method   = Content[n]["Method"];
-              Request->Params   = Content[n]["Params"];
-              Request->Sequence = Content[n]["Sequence"];
-              Request->Sync     = This;
-              Request->Analyzer = This->pParent;
-              pthread_t Thread = 0;
-              if(pthread_create(&Thread, NULL, Request_Thread, (void*)Request) != 0) {
-                LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-                delete Request;
-              } else {
-                pthread_setname_np(Thread, Request->Method.c_str());
-                This->pThreadsCount++;
-                pthread_detach(Thread);
-              }
-            }
-          }
-        }
-        This->pLocks.WriteUnlock();
-      } else if((Response != nullptr) && (Response->status == HTTP_UNAUTHORIZED)) {
-        This->pCookie = "";
-        This->pLocks.WriteUnlock();
-        LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pParent->Serial.c_str());
-        usleep(1000000);
-      } else if((Response != nullptr) && (Response->status == HTTP_NO_CONTENT)) {
-        This->pLocks.WriteUnlock();
-        LOGFile::Debug("No pending queries in remote server for analyzar '%s'\n", This->pParent->Serial.c_str());
-      } else if((Response != nullptr) && (Response->status == HTTP_METHOD_NOT_ALLOWED)) {
-        This->pLocks.WriteUnlock();
-        LOGFile::Debug("Device remote is not enabled on remote server\n");
-        usleep(1000000);
-      } else if((Response != nullptr) && (Response->status == HTTP_BAD_REQUEST)) {
-        This->pLocks.WriteUnlock();
-        LOGFile::Debug("Analyzer '%s' is not authorized in remote server\n", This->pParent->Serial.c_str());
-        usleep(1000000);
-      } else if((Response != nullptr) && (Response->status == HTTP_SERVICE_UNAVAILABLE)) {
-        This->pLocks.WriteUnlock();
-        LOGFile::Debug("Analyzer '%s' send request while remote server already have one\n", This->pParent->Serial.c_str());
-        usleep(1000000);
-      } else {
-        This->pLocks.WriteUnlock();
-        LOGFile::Debug("Failed request to remote server for analyzer '%s'\n", This->pParent->Serial.c_str());
-        usleep(1000000);
-      }
-    }
-  }
-  if(HTTPClient != NULL) delete HTTPClient;
-  return NULL;
-
-}
 //----------------------------------------------------------------------------------------------------------------------
 void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -1053,8 +923,6 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"] = pSamplerate;
   Response.erase("Alarms");
-//  if(pSync != NULL) Response["RemoteLogged"] = pSync->Logged();
-//  pMembersLocks.ReadUnlock();
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + DB.Bind(Serial));
   if(DB.FecthRow()) Response["Size"] = DB.ResultUInt64("size");
@@ -1384,57 +1252,21 @@ void AnalyzerSoft::GetEvent(const json &params, Response &response) {
   }
 }
 void AnalyzerSoft::SetEvent(const json &params, Response &response) {
-//  if(CheckRights(params, response, WRITE | CONFIG) == false) return;
-//  json Params = req.GetParams();
-//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-//  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string() || !Params["Notes"].is_string()) return req.FromString("'Analyzer', 'StartTime', 'Type' and 'Notes' params are requiered", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->SetEvent(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
-//  pMembersLocks.ReadLock();
-//  if(pEventsDetector != NULL) {
-//    pEventsDetector->SetEvent(params, response);
-//  } else {
-//    response.set_content("Events detection disabled", "text/plain");
-//    response.status = HTTP_SERVICE_UNAVAILABLE;
-//  }
-//  pMembersLocks.ReadUnlock();
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB(Serial);
   uint64_t ID    = params["StartTime"];
   string   Type  = params["Type"];
   string   Notes = params["Notes"];
   bool Result = DB.ExecSentenceNoResult("UPDATE events SET Notes = " + DB.Bind(Notes) + " WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
-  response.set_content("", "text/plain");
-  response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
+  HTTPCallback::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::DelEvent(const json &params, Response &response) {
-//  if(CheckRights(params, response, WRITE | CONFIG) == false) return;
-  //  json Params = req.GetParams();
-//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-//  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string()) return req.FromString("'Analyzer', 'StartTime' and 'Type' params are requiered", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->DelEvent(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
-//  pMembersLocks.ReadLock();
-//  if(pEventsDetector != NULL) {
-//    pEventsDetector->DelEvent(params, response);
-//  } else {
-//    response.set_content("Events detection disabled", "text/plain");
-//    response.status = HTTP_SERVICE_UNAVAILABLE;
-//  }
-//  pMembersLocks.ReadUnlock();
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB(Serial);
   uint64_t ID = params["StartTime"];
   string Type = params["Type"];
   bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
-  response.set_content("", "text/plain");
-  response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
+  HTTPCallback::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::GetRates(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

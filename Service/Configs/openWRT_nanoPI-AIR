@@ -2,7 +2,7 @@
 DEVICE_V1      = true
 DEVICE_V2      = true
 DEVICE_VIRTUAL = true
-DEVICE_REMOTE  = false
+DEVICE_REMOTE  = true
 
 #Target OS (set to DEBIAN or OPENWRT) ----------------------------------------------------------------------------------
 OS_TARGET = OPENWRT

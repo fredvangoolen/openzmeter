@@ -1,11 +1,12 @@
 <template>
   <div class="panel" :class="PanelClass">
     <div class="panel-heading">
-      <div class="header-text">{{ PanelTitle }}</div>
+      <div class="header-text">
+        <div>{{ PanelTitle }}</div>
+        <div class="aggreg-row" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggregation_Source) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
+      </div>
       <div class="header-buttons">
-        <div class="main-value"><span v-html="LastValue.Value"></span> <span class="huge-small-unit">{{ LastValue.Units }}</span>
-          <div class="aggreg-row" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggregation_Source) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
-        </div>
+        <div class="main-value"><span v-html="LastValue.Value"></span> <span class="huge-small-unit">{{ LastValue.Units }}</span></div>
         <div v-if="LastValue.Phases.length > 1" class="phases">
           <div v-for="(val, idx) in LastValue.Phases" :key="idx" v-html="val"></div>
         </div>
@@ -180,7 +181,7 @@
   .aggreg-row {
     font-size: 14px;
     line-height: 14px;
-    margin-top: -2px;
+    margin-top: 2px;
   }
   .panel-heading > .header-buttons {
     margin-top: -3px;
