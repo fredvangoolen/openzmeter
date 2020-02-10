@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <vector>
+#include <set>
 #include <pthread.h>
 #include <nlohmann/json.hpp>
 #include "Analyzer.h"
@@ -26,12 +26,25 @@ using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class Device {
   private :
-    RWLocks           pAnalyzersLock;     //Analyzer list lock
-    vector<Analyzer*> pAnalyzers;         //Analyzers list
+    struct Comp {
+      using is_transparent = void;
+      bool operator()(const Analyzer *a1, const Analyzer *a2) const {
+        return a1->Serial < a2->Serial;
+      }
+      bool operator()(const string serial, const Analyzer *a) const {
+        return serial < a->Serial;
+      }
+      bool operator()(const Analyzer *a, const string &serial) const {
+        return a->Serial < serial;
+      }
+    };
+  private :
+    RWLocks                pAnalyzersLock;     //Analyzer list lock
+    set<Analyzer*, Comp>   pAnalyzers;         //Analyzers list
   public :
-    const string      Serial;             //Device serial
-    const string      Driver;             //Driver name
-    const string      Name;               //Driver description
+    const string           Serial;             //Device serial
+    const string           Driver;             //Driver name
+    const string           Name;               //Driver description
   private :
     bool CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response));
   protected :
@@ -41,6 +54,7 @@ class Device {
   public :
     json GetJSONDescriptor();
     json GetJSONAnalyzers(const string &user);
+    bool SetRemote(const json &params, Response &response);
     bool GetAnalyzer(const json &params, Response &response);
     bool SetAnalyzer(const json &params, Response &response);
     bool GetSeries(const json &params, Response &response);
@@ -70,4 +84,5 @@ class Device {
     virtual ~Device();
     virtual void GetDevice(const json &params, Response &response) = 0;
     virtual void SetDevice(const json &params, Response &response) = 0;
+    virtual void GetRemote(const json &params, Response &response) = 0;
 };

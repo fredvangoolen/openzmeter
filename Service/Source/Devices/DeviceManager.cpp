@@ -114,9 +114,7 @@ void DeviceManager::CallAnalyzerFunction(const json &params, Response &response,
 }
 void DeviceManager::CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response)) {
   if((params.contains("Serial") == false) || (params["Serial"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Serial' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string Serial   = params["Serial"];
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  string Serial = params["Serial"];
   pDevicesLock.ReadLock();
   for(Device *Dev : pDevices) {
     if(Dev->Serial != Serial) continue;
@@ -137,18 +135,29 @@ void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
   pDevicesLock.Unlock();
   HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
+void DeviceManager::SetDevicesCallback(const json &params, Response &response) {
+  bool EnableImport = true;
+  if(EnableImport == true) {
+    HTTPServer::RegisterCallback("setRemote",  SetRemoteCallback);
+    HTTPServer::RegisterCallback("getRemote",  GetRemoteCallback);
+  } else {
+    HTTPServer::UnregisterCallback("setRemote");
+    HTTPServer::UnregisterCallback("getRemote");
+    //Limpio tareas pendientes
+  }
+}
+void DeviceManager::GetRemoteCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetRemote);
+}
+void DeviceManager::SetRemoteCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::SetRemote);
+}
 void DeviceManager::GetDeviceCallback(const json &params, Response &response) {
   CallDeviceFunction(params, response, &Device::GetDevice);
 }
 void DeviceManager::SetDeviceCallback(const json &params, Response &response) {
   CallDeviceFunction(params, response, &Device::SetDevice);
 }
-//void DeviceManager::StartDeviceCallback(const json &params, Response &response) {
-//  CallDeviceFunction(params, response, &Device::StartDevice);
-//}
-//void DeviceManager::StopDeviceCallback(const json &params, Response &response) {
-//  CallDeviceFunction(params, response, &Device::StopDevice);
-//}
 void DeviceManager::GetAnalyzersCallback(const json &params, Response &response) {
   json Response = json::array();
   string UserName = params["UserName"];

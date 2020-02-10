@@ -27,9 +27,22 @@ class DeviceManager final {
     static vector<Device*>               pDevices;         //Initiated by devices, cleared on destroy
     static RWLocks                       pDevicesLock;     //Control access to critical sections
   private :
+    bool                       pTerminate;                 //Terminate sync
+    pthread_t                  pThread;                    //Sync thread
+    string                     pSyncURL;                   //Sync server address
+    string                     pSyncUser;                  //Sync server user
+    string                     pSyncPass;                  //Sync server password
+    string                     pSyncCookie;                //Sync server auth cookie
+    RWLocks                    pSyncLocks;                 //Sync locks
+  private :
+    static void *Sync_Func(void *params);
+  private :
     static void CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response));
     static void CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response));
     static void GetDevicesCallback(const json &params, Response &response);
+    static void SetDevicesCallback(const json &params, Response &response);
+    static void GetRemoteCallback(const json &params, Response &response);
+    static void SetRemoteCallback(const json &params, Response &response);
     static void GetDeviceCallback(const json &params, Response &response);
     static void SetDeviceCallback(const json &params, Response &response);
     static void GetAnalyzersCallback(const json &params, Response &response);

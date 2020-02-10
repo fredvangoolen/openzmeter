@@ -165,15 +165,7 @@ class AnalyzerSoft final : public Analyzer {
     bool                       pPrevStationary;          //Steady state flag
     deque<vector<float> >      pPrevSamples;             //Previous samples
     deque<EventCycle_t>        pPrevCycles;              //Previous cycles
-  private : //Used in Sync thread and in configure
-    bool                       pSyncTerminate;           //Terminate sync
-    pthread_t                  pSyncThread;              //Sync thread
-    string                     pSyncURL;                 //Sync server address
-    string                     pSyncUser;                //Sync server user
-    string                     pSyncPass;                //Sync server password
-    string                     pSyncCookie;              //Sync server auth cookie
-    RWLocks                    pSyncLocks;               //Sync locks
-    
+
 
 
 
@@ -188,7 +180,6 @@ class AnalyzerSoft final : public Analyzer {
     static void  Events_Func(void *creation, void *run);
     static void  FFT_Func(void *creation, void *run);
     static void  Alarms_Func(void *creation, void *run);
-    static void *Sync_Func(void *params);
     static float CalcChange(const float in, const float reference);
     static float CalcAngle(const float *a, const float *b);
     static float BinPower(const float *a);
@@ -209,6 +200,7 @@ class AnalyzerSoft final : public Analyzer {
 
 
   private :
+    void  SetRemote(const json &params, Response &response) override;
     void  GetAnalyzer(const json &params, Response &response) override;
     void  SetAnalyzer(const json &params, Response &response) override;
     void  GetSeries(const json &params, Response &response) override;

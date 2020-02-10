@@ -447,6 +447,8 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
   return 0;
 }
 void DeviceV2::GetDevice(const json &params, Response &response) {
+  string UserName = params["UserName"];
+  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pthread_mutex_lock(&pConfigLock);
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
@@ -466,6 +468,8 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   pthread_mutex_unlock(&pConfigLock);
 }
 void  DeviceV2::SetDevice(const json &params, Response &response) {
+  string UserName = params["UserName"];
+  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pthread_mutex_lock(&pConfigLock);
   json Config = params;
   json Orig = ConfigManager::ReadConfig("/Devices/" + Serial);
@@ -477,6 +481,9 @@ void  DeviceV2::SetDevice(const json &params, Response &response) {
   Configure(Config);
   HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
   pthread_mutex_unlock(&pConfigLock);
+}
+void DeviceV2::GetRemote(const json &params, Response &response) {
+  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
 void  DeviceV2::BufferAppend() {
   for(uint8_t Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] = pRunAverageValues[Ch] + pCapture[Ch];

@@ -26,15 +26,15 @@ Device::~Device() {
 }
 void Device::AddAnalyzer(Analyzer *analyzer) {
   pAnalyzersLock.WriteLock();
-  pAnalyzers.push_back(analyzer);
+  pAnalyzers.insert(analyzer);
   pAnalyzersLock.Unlock();
 }
 void Device::ClearAnalyzers() {
   pAnalyzersLock.WriteLock();
   while(pAnalyzers.size() > 0) {
-    Analyzer *Tmp = pAnalyzers.back();
-    pAnalyzers.pop_back();
-    delete Tmp;
+    auto Tmp = pAnalyzers.begin();
+    pAnalyzers.erase(Tmp);
+    delete *Tmp;
   }
   pAnalyzersLock.Unlock();
 }
@@ -51,7 +51,7 @@ json Device::GetJSONDescriptor() {
 json Device::GetJSONAnalyzers(const string &user) {
   json Result = json::array();
   pAnalyzersLock.ReadLock();
-  for(Analyzer *Tmp : pAnalyzers) {
+  for(auto &Tmp : pAnalyzers) {
     if(Tmp->CheckRights(user, Analyzer::READ)) Result.push_back(Tmp->GetJSONDescriptor());
   }
   pAnalyzersLock.Unlock();
@@ -60,14 +60,18 @@ json Device::GetJSONAnalyzers(const string &user) {
 bool Device::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
   string Serial = params["Analyzer"];
   pAnalyzersLock.ReadLock();
-  for(Analyzer *Tmp : pAnalyzers) {
-    if(Tmp->Serial != Serial) continue;
-    (Tmp->*method)(params, response);
+  auto Tmp = pAnalyzers.find(Serial);
+  if(Tmp == pAnalyzers.end()) {
+    pAnalyzersLock.Unlock();
+    return false;
+  } else {
+    ((*Tmp)->*method)(params, response);
     pAnalyzersLock.Unlock();
     return true;
   }
-  pAnalyzersLock.Unlock();
-  return false;
+}
+bool Device::SetRemote(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::SetRemote);
 }
 bool Device::GetAnalyzer(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetAnalyzer);
