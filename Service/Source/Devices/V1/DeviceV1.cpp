@@ -12,6 +12,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #include <pthread.h>
 #include "DeviceV1.h"
 #include "DeviceManager.h"
@@ -278,7 +279,7 @@ int DeviceV1::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
 }
 void DeviceV1::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pthread_mutex_lock(&pConfigLock);
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
   Config.erase("Analyzer");
@@ -287,22 +288,19 @@ void DeviceV1::GetDevice(const json &params, Response &response) {
   Config["Wave_Average"]["Voltage"] = pAverageValues[0];
   Config["Wave_Average"]["Current"] = pAverageValues[1];
   pAverageLocks.Unlock();
-  HTTPCallback::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
+  HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
   pthread_mutex_unlock(&pConfigLock);
 }
 void DeviceV1::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pthread_mutex_lock(&pConfigLock);
   json Config = params;
   json Orig = ConfigManager::ReadConfig("/Devices/" + Serial);
   Config["Analyzer"] = Orig["Analyzer"];
   Configure(Config);
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
   pthread_mutex_unlock(&pConfigLock);
-}
-void DeviceV1::GetRemote(const json &params, Response &response) {
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
 void DeviceV1::BufferAppend(int16_t *sample) {
   for(uint8_t Ch = 0; Ch < 2; Ch++) pRunAverageValues[Ch] = pRunAverageValues[Ch] + sample[Ch];

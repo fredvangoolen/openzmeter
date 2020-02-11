@@ -1,3 +1,18 @@
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #ifdef OPENWRT
   #include <sys/sysinfo.h>
   #include <sys/statvfs.h>
@@ -43,37 +58,37 @@ void SysSupport::GetNewsCallback(const json &params, Response &response) {
 void SysSupport::GetUsersCallback(const json &params, Response &response) {
   //only 'admin' user can get this information
   string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Filter") == false) || (params["Filter"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Filter' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Limit") == false) || (params["Limit"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'Limit' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Offset") == false) || (params["Offset"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'Offset' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Filter") == false) || (params["Filter"].is_string() == false)) return HTTPServer::FillResponse(response, "'Filter' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Limit") == false) || (params["Limit"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Limit' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Offset") == false) || (params["Offset"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Offset' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string   Filter = params["Filter"];
   uint32_t Limit  = params["Limit"];
   uint32_t Offset  = params["Offset"];
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(t1.user)), '[]') AS result FROM (SELECT json_build_object('User', username, 'Name', name, 'Email', email, 'TimeZone', time_zone) AS user FROM users WHERE position(" + DB.Bind(Filter) + " in username) > 0 ORDER BY username ASC LIMIT " + DB.Bind(Limit) + " OFFSET " + DB.Bind(Offset) + ") t1");
-  if(DB.FecthRow() == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPCallback::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
 void SysSupport::GetUserCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
-  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPCallback::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string User = params["User"];
-  if((UserName != "admin") && (UserName != User)) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((UserName != "admin") && (UserName != User)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT json_build_object('User', username, 'Name', name, 'Address', address, 'Company', company, 'Photo', photo, 'Email', email, 'Telegram', telegram, 'TimeZone', time_zone) AS result FROM users WHERE username = " + DB.Bind(User));
-  if(DB.FecthRow() == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPCallback::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
 void SysSupport::SetUserCallback(const json &params, Response &response) {
-  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPCallback::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Address") == false) || (params["Address"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Address' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Company") == false) || (params["Company"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Company' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Photo") == false) || (params["Photo"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Photo' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Email") == false) || (params["Email"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Email' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Telegram") == false) || (params["Telegram"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Telegram' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPCallback::FillResponse(response, "'TimeZone' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Address") == false) || (params["Address"].is_string() == false)) return HTTPServer::FillResponse(response, "'Address' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Company") == false) || (params["Company"].is_string() == false)) return HTTPServer::FillResponse(response, "'Company' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Photo") == false) || (params["Photo"].is_string() == false)) return HTTPServer::FillResponse(response, "'Photo' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Email") == false) || (params["Email"].is_string() == false)) return HTTPServer::FillResponse(response, "'Email' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Telegram") == false) || (params["Telegram"].is_string() == false)) return HTTPServer::FillResponse(response, "'Telegram' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPServer::FillResponse(response, "'TimeZone' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string UserName = params["UserName"];
   string User = params["User"];
   string Name = params["Name"];
@@ -83,21 +98,21 @@ void SysSupport::SetUserCallback(const json &params, Response &response) {
   string Email = params["Email"];
   string Telegram = params["Telegram"];
   string TimeZone = params["TimeZone"];
-  if((UserName != "admin") && (UserName != User)) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((UserName != "admin") && (UserName != User)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
   bool Result = DB.ExecSentenceAsyncResult("UPDATE users SET name = " + DB.Bind(Name) + ", address = " + DB.Bind(Address) + ", company = " + DB.Bind(Company) +  ", photo = " + DB.Bind(Photo) + ", email = " + DB.Bind(Email) + ", telegram = " + DB.Bind(Telegram) + ", time_zone = " + DB.Bind(TimeZone) + " WHERE username = " + DB.Bind(User));
-  if(Result == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+  if(Result == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void SysSupport::AddUserCallback(const json &params, Response &response) {
-  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPCallback::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Address") == false) || (params["Address"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Address' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Company") == false) || (params["Company"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Company' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Photo") == false) || (params["Photo"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Photo' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Email") == false) || (params["Email"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Email' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Telegram") == false) || (params["Telegram"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Telegram' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPCallback::FillResponse(response, "'TimeZone' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Address") == false) || (params["Address"].is_string() == false)) return HTTPServer::FillResponse(response, "'Address' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Company") == false) || (params["Company"].is_string() == false)) return HTTPServer::FillResponse(response, "'Company' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Photo") == false) || (params["Photo"].is_string() == false)) return HTTPServer::FillResponse(response, "'Photo' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Email") == false) || (params["Email"].is_string() == false)) return HTTPServer::FillResponse(response, "'Email' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Telegram") == false) || (params["Telegram"].is_string() == false)) return HTTPServer::FillResponse(response, "'Telegram' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPServer::FillResponse(response, "'TimeZone' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string UserName = params["UserName"];
   string User = params["User"];
   string Name = params["Name"];
@@ -107,21 +122,21 @@ void SysSupport::AddUserCallback(const json &params, Response &response) {
   string Email = params["Email"];
   string Telegram = params["Telegram"];
   string TimeZone = params["TimeZone"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
   bool Result = DB.ExecSentenceAsyncResult("INSERT INTO users(username, name, address, company, photo, email, telegram, time_zone) VALUES(" + DB.Bind(User) + ", " + DB.Bind(Name) + ", " + DB.Bind(Address) + ", " + DB.Bind(Company) +  ", " + DB.Bind(Photo) + ", " + DB.Bind(Email) + ", " + DB.Bind(Telegram) + ", " + DB.Bind(TimeZone) + ")");
-  if(Result == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+  if(Result == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void SysSupport::DelUserCallback(const json &params, Response &response) {
-  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPCallback::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string UserName = params["UserName"];
   string User = params["User"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
   bool Result = DB.ExecSentenceAsyncResult("DELETE FROM users WHERE name = " + DB.Bind(User));
-  if(Result == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+  if(Result == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 SysSupport::SysSupport() {
   HTTPServer::RegisterCallback("getNews",   GetNewsCallback);
@@ -578,7 +593,7 @@ void SysSupport::SetSystemActions(const string &action) {
   }
   void SysSupport::GetUpdatesCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     json Response = json::object();
     Response["LastCheck"] = pLastTask_1H;
     Response["Updates"] = json::array();
@@ -591,31 +606,31 @@ void SysSupport::SetSystemActions(const string &action) {
       Response["Updates"].push_back(Update);
     }
     pUpdatesLock.Unlock();
-    HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+    HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
   }
   void SysSupport::UpgradeCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     json Response = json::object();
     int ResultCode = 0;
     string Result = Run("opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade --force-depends", &ResultCode);
     Response["Result"] = (ResultCode == 0);
     PeriodicTask_1H();
     //req.FromJSON(Response);
-    HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+    HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
   }
   void SysSupport::GetBluetoothCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     json Config = ConfigManager::ReadConfig("/Bluetooth");
     pthread_mutex_lock(&pBTMutex);
     Config["Name"] = pBTServerName;
     pthread_mutex_unlock(&pBTMutex);
-    HTTPCallback::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
+    HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
   }
   void SysSupport::SetBluetoothCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     if(params["Enabled"].is_boolean()) pBTEnabled = params["Enabled"];
     json Config;
     pthread_mutex_lock(&pBTMutex);
@@ -627,11 +642,11 @@ void SysSupport::SetSystemActions(const string &action) {
     Response["Status"] = true;
     if(pBTEnabled == true) Response["Status"] = StartBT();
     if(pBTEnabled == false) Response["Status"] = StopBT();
-    HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+    HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
   }
   void SysSupport::ScanWIFICallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     pthread_mutex_lock(&pBTMutex);
     json Result = json::array();
     string CommandStr = Run("ubus call iwinfo scan '{\"device\":\"" + pInterfaceWIFI + "\"}'");
@@ -639,7 +654,7 @@ void SysSupport::SetSystemActions(const string &action) {
       json Tmp = json::parse(CommandStr, NULL, false);
       if(Tmp.is_discarded()) {
         pthread_mutex_unlock(&pBTMutex);
-        return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+        return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
       }
       if(Tmp.is_object() && Tmp["results"].is_array()) {
         for(uint Pos = 0; Pos < Tmp["results"].size(); Pos++) {
@@ -655,12 +670,12 @@ void SysSupport::SetSystemActions(const string &action) {
       }
     }
     pthread_mutex_unlock(&pBTMutex);
-    HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+    HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
   }
   void SysSupport::GetWIFICallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-    if(!params["Type"].is_string() || ((params["Type"] != "CURRENT") && (params["Type"] != "CONFIG"))) return HTTPCallback::FillResponse(response, "'Type' param is requiered to be 'CURRENT' or 'CONFIG'", "text/plain", HTTP_BAD_REQUEST);
+    if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+    if(!params["Type"].is_string() || ((params["Type"] != "CURRENT") && (params["Type"] != "CONFIG"))) return HTTPServer::FillResponse(response, "'Type' param is requiered to be 'CURRENT' or 'CONFIG'", "text/plain", HTTP_BAD_REQUEST);
     pthread_mutex_lock(&pBTMutex);
     json Result = json::object();
     if(params["Type"] == "CURRENT") {
@@ -669,7 +684,7 @@ void SysSupport::SetSystemActions(const string &action) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
           pthread_mutex_unlock(&pBTMutex);
-          return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+          return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object() && Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
         if(Result["Enabled"] == false) {
@@ -682,7 +697,7 @@ void SysSupport::SetSystemActions(const string &action) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if (Tmp.is_discarded()) {
           pthread_mutex_unlock(&pBTMutex);
-          return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+          return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
           if(Tmp["up"].is_boolean()) Result["Connected"] = Tmp["up"];
@@ -701,7 +716,7 @@ void SysSupport::SetSystemActions(const string &action) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
           pthread_mutex_unlock(&pBTMutex);
-          return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+          return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
           if(Tmp["ssid"].is_string()) Result["ESSID"] = Tmp["ssid"];
@@ -718,7 +733,7 @@ void SysSupport::SetSystemActions(const string &action) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
           pthread_mutex_unlock(&pBTMutex);
-          return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+          return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
           if(Tmp["values"].is_object()) {
@@ -737,7 +752,7 @@ void SysSupport::SetSystemActions(const string &action) {
         json Tmp = json::parse(CommandStr, NULL, false);
         if(Tmp.is_discarded()) {
           pthread_mutex_unlock(&pBTMutex);
-          return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+          return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
         }
         if(Tmp.is_object()) {
           if(Tmp["values"].is_object()) {
@@ -751,11 +766,11 @@ void SysSupport::SetSystemActions(const string &action) {
       }
     }
     pthread_mutex_unlock(&pBTMutex);
-    HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+    HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
   }
   void SysSupport::SetWIFICallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     pthread_mutex_lock(&pBTMutex);
     json Result;
     Result["Status"] = true;
@@ -800,11 +815,11 @@ void SysSupport::SetSystemActions(const string &action) {
     Run("uci commit && ubus call network reload", &ErrorCode);
     if(ErrorCode != 0) Result["Status"] = false;
     pthread_mutex_unlock(&pBTMutex);
-    HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+    HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
   }
   void SysSupport::GetNTPCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     pthread_mutex_lock(&pBTMutex);
     json Result = json::object();
     string CommandStr = Run("ubus call uci get '{\"config\":\"system\", \"section\":\"ntp\"}'");
@@ -812,7 +827,7 @@ void SysSupport::SetSystemActions(const string &action) {
       json Tmp = json::parse(CommandStr, NULL, false);
       if(Tmp.is_discarded()) {
         pthread_mutex_unlock(&pBTMutex);
-        return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+        return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
       }
       if(Tmp.is_object()) {
         if(Tmp["values"].is_object()) {
@@ -826,16 +841,16 @@ void SysSupport::SetSystemActions(const string &action) {
     }
     Result["Time"] = Tools::GetTime();
     pthread_mutex_unlock(&pBTMutex);
-    HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+    HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
   }
   void SysSupport::SetNTPCallback(const json &params, Response &response) {
     //only 'admin' user can get this information
-    if(params["UserName"] != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+    if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
     pthread_mutex_lock(&pBTMutex);
     json Result;
     int ErrorCode = 0;
-    if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPCallback::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    if((params.contains("Server") == false) || (params["Server"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Server' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if((params.contains("Server") == false) || (params["Server"].is_string() == false)) return HTTPServer::FillResponse(response, "'Server' param is requiered", "text/plain", HTTP_BAD_REQUEST);
     bool Enabled  = params["Enabled"];
     string Server = params["Server"];
     Run("ubus call uci set '{\"config\":\"system\", \"section\":\"ntp\", \"values\":{\"enabled\":\"" + string((Enabled == true) ? "1" : "0") + "\", \"server\":\"" + Server + "\"}}'", &ErrorCode);
@@ -852,7 +867,7 @@ void SysSupport::SetSystemActions(const string &action) {
       }
     }
     pthread_mutex_unlock(&pBTMutex);
-    HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+    HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
   }
 #endif
 void SysSupport::PeriodicTask() {

@@ -101,6 +101,19 @@ class AnalyzerSoft final : public Analyzer {
       deque<vector<float> >     SamplesRAW_B;            //
       deque<vector<float> >     SamplesRMS_B;            //
     } Event_t;
+    typedef struct {
+      pthread_mutex_t         *Mutex;                    //Export list locks
+      pthread_cond_t          *Cond;                     //Wakeup parent after last thread ends
+      uint32_t                *Count;                    //Count of running sync threads
+      uint16_t                 Port;
+      string                   Host;
+      string                   ResponsePath;
+      string                   Cookie;
+      string                   Method;
+      json                     Params;
+      uint64_t                 Sequence;
+      AnalyzerSoft            *Analyzer;
+    } Sync_t;
   private :
     static pthread_mutex_t      pFFTMutex;               //Planer mutex
     static uint32_t             pAlarmsID;               //Last assigned AlarmID
@@ -143,6 +156,9 @@ class AnalyzerSoft final : public Analyzer {
     float                     *pDelayCurrent;            //Delay buffer for samples
     uint16_t                   pDelaySize;               //Delay samples
     uint16_t                   pDelayPos;                //Delay pos
+    uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
+    uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
+    uint32_t                  *pFreqCycles;              //Frequency calc cycles lenghts
   private : //Used only in Analyzer_Func
     uint64_t                   pPrevTimestamp;           //Previous block time
     Params_t                   pAggreg200MS;             //200ms aggregation
@@ -165,21 +181,27 @@ class AnalyzerSoft final : public Analyzer {
     bool                       pPrevStationary;          //Steady state flag
     deque<vector<float> >      pPrevSamples;             //Previous samples
     deque<EventCycle_t>        pPrevCycles;              //Previous cycles
+  private : //Readed in thread, changed in configure
+    pthread_t                  pSyncThread;              //Export thread
+    volatile bool              pSyncTerminate;           //Export stop signal
+    string                     pSyncServer;              //Export server address
+    string                     pSyncUser;                //Export server user
+    string                     pSyncPass;                //Export server password
 
 
 
 
 
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
-  private :  //Config params (Writed in configure, readed in other places)
-  private :  //Analyzer params (write in thread OR append, read in SeriesNow)
-    deque<uint32_t>            pCycles;                  //Prev cycles lenghts
+    
 
   private :
     static void  Analyzer_Func(void *creation, void *run);
     static void  Events_Func(void *creation, void *run);
     static void  FFT_Func(void *creation, void *run);
     static void  Alarms_Func(void *creation, void *run);
+    static void *Sync_Thread(void *params);
+    static void *SyncResp_Thread(void *params);
     static float CalcChange(const float in, const float reference);
     static float CalcAngle(const float *a, const float *b);
     static float BinPower(const float *a);
@@ -200,7 +222,6 @@ class AnalyzerSoft final : public Analyzer {
 
 
   private :
-    void  SetRemote(const json &params, Response &response) override;
     void  GetAnalyzer(const json &params, Response &response) override;
     void  SetAnalyzer(const json &params, Response &response) override;
     void  GetSeries(const json &params, Response &response) override;

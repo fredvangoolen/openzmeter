@@ -8,44 +8,13 @@
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <div class="row">
-        <div class="col-xs-12 col-sm-6">
-          <div class="col-lg-12">
-            <label class="control-label" style="line-height: 22px">Device export</label>
-            <toggle class="float-right" onText="Yes" offText="No" v-model="Config.EnableClient"></toggle>
-            <div class="help">Export hardware devices to remote server. Only phisical devices are exported. This allow access your devices from public nectwork without expose then.</div>
+      <vuetable ref="table" :fields="Columns" :data="Devices" :api-mode="false" class="table small table-striped">
+        <template slot="actions" slot-scope="props">
+          <div class="btn-group" >
+            <button class="btn btn-xs btn-default" @click="Configure(props.rowData)">Configure</button>
           </div>
-          <div class="col-lg-12">
-            <label class="control-label">Remote URL</label>
-            <input type="text" class="form-control" v-model="Config.Server">
-          </div>
-          <div class="col-xs-12 col-sm-6">
-            <label class="control-label">User name</label>
-            <input type="text" class="form-control" v-model="Config.User">
-          </div>
-          <div class="col-xs-12 col-sm-6">
-            <label class="control-label">Password</label>
-            <input type="password" class="form-control" v-model="Config.Pass">
-          </div>
-        </div>
-        <div class="col-xs-12 col-sm-6">
-          <label class="control-label">Details</label>
-          <textarea rows="7" class="form-control" disabled>
-    Device IP  : 10.0.0.1
-    Clients IP : 10.0.0.2 - 10.0.0.254</textarea>
-        </div>
-        <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
-        <div class="col-xs-12">
-          <label class="control-label" style="line-height: 22px">Local devices</label>
-          <vuetable ref="table" :fields="Columns" :data="Config.Devices" :api-mode="false" class="table small table-striped">
-            <template slot="actions" slot-scope="props">
-              <div class="btn-group" >
-                <button class="btn btn-xs btn-default" @click="Configure(props.rowData)">Configure</button>
-              </div>
-            </template>
-          </vuetable>
-        </div>
-      </div>
+        </template>
+      </vuetable>
     </div>
     <dlg v-if="SettingsVisible" :loading="SettingsLoading">
       <template v-slot:header>
@@ -71,7 +40,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { Config: { Devices: [] }, ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null, Error: '',
+      return { Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null, Error: '',
         Config: {Enabled: true},
         Columns: [
           {name: 'Driver', title: 'Driver'},
@@ -87,14 +56,7 @@
         this.ShowSpinner = true;
         this.$http.post('getDevices', {}).then(
           (result) => {
-            this.Config = {};
-            this.Config.Devices = result.data;
-            this.Config.EnableClient = true;
-            this.Config.EnableServer = true;
-            this.Config.User = 'admin';
-            this.Config.Pass = 'admin';
-            this.Config.Server = 'http://openzmeter.com/myozm';
-//            this.Devices = result.data;
+            this.Devices = result.data;
             this.ShowSpinner = false;
           },
           (fail) => {}

@@ -56,15 +56,17 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
   DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Tools::GetTime() - 86400000));   //Delete 1 day old
   DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(Tools::GetTime() - 3600000));       //Delete 1 hour old
-  pDelayVoltage   = NULL;
-  pDelayCurrent   = NULL;
-  pVoltageSamples = NULL;
-  pCurrentSamples = NULL;
-  pVoltageFFT     = NULL;
-  pCurrentFFT     = NULL;
-  pAlarmsWorker   = NULL;
-  pEventsWorker   = NULL;
-  pPrevTimestamp  = 0;
+  pDelayVoltage     = NULL;
+  pDelayCurrent     = NULL;
+  pVoltageSamples   = NULL;
+  pCurrentSamples   = NULL;
+  pVoltageFFT       = NULL;
+  pCurrentFFT       = NULL;
+  pAlarmsWorker     = NULL;
+  pEventsWorker     = NULL;
+  pFreqCycles       = NULL;
+  pPrevTimestamp    = 0;
+  pSyncThread       = 0;
   InitAggreg(pAggreg200MS, AGGREG_200MS);
   InitAggreg(pAggreg3S, AGGREG_3S);
   InitAggreg(pAggreg1M, AGGREG_1M);
@@ -77,9 +79,12 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", this, &Analyzer_Func);
 }
 AnalyzerSoft::~AnalyzerSoft() {
+  pSyncTerminate = true;
+  if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
   if(pAnalyzerWorker != NULL) delete pAnalyzerWorker;
   if(pEventsWorker != NULL) delete pEventsWorker;
   if(pAlarmsWorker != NULL) delete pAlarmsWorker;
+  if(pFreqCycles != NULL) free(pFreqCycles);
   if(pDelayVoltage != NULL) free(pDelayVoltage);
   if(pDelayCurrent != NULL) free(pDelayCurrent);
   if(pVoltageSamples != NULL) free(pVoltageSamples);
@@ -209,17 +214,22 @@ void AnalyzerSoft::Configure(const json &options) {
   pTimeZone         = options["TimeZone"];
   pSave200MS        = options["Save200MS"];
   if(pNominalFrequency == 0.0) {
+    pFreqCyclesLen  = 1;
     pMaxSamples = pSamplerate * 0.2;
   } else if(pNominalFrequency == 50.0) {
+    pFreqCyclesLen  = ZEROCROSSING_SECONDS * 50;
     pMaxSamples = (10.0 * pSamplerate * 1.15) / pNominalFrequency;
   } else if(pNominalFrequency == 60.0) {
+    pFreqCyclesLen = ZEROCROSSING_SECONDS * 60;
     pMaxSamples = (12.0 * pSamplerate * 1.15) / pNominalFrequency;
   }
+  pFreqCyclesPos    = 0;
   pSequence         = 0;
   pBlockSamples     = 0;
   pBlockCyclesCount = 0;
   InitAggreg(pAggreg200MS, AGGREG_200MS);
   memset(pBlockCycles, 0, sizeof(pBlockCycles));
+  pFreqCycles       = (uint32_t*)realloc(pFreqCycles, pFreqCyclesLen * sizeof(uint32_t));
   pVoltageSamples   = (float*)realloc(pVoltageSamples, sizeof(float) * pVoltageChannels * pMaxSamples);
   pCurrentSamples   = (float*)realloc(pCurrentSamples, sizeof(float) * pCurrentChannels * pMaxSamples);
   pVoltageFFT       = (float*)realloc(pVoltageFFT, sizeof(float) * 2 * pVoltageChannels * ((pMaxSamples / 2) + 1));
@@ -267,6 +277,25 @@ void AnalyzerSoft::Configure(const json &options) {
     pAlarmsWorker = NULL;
   } else if((AlarmsEnabled == true) && (pAlarmsWorker == NULL)) {
     pAlarmsWorker = new Worker("AlarmsDet", this, &Alarms_Func);
+  }
+  bool ExportEnabled = options["RemoteEnabled"];
+  if(ExportEnabled == true) {
+    pSyncServer    = options["RemoteServer"];
+    pSyncUser      = options["RemoteUser"];
+    pSyncPass      = options["RemotePass"];
+    pSyncTerminate = false;
+    if(pSyncThread == 0) {
+      if(pthread_create(&pSyncThread, NULL, Sync_Thread, this) != 0) {
+        LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+        pSyncThread = 0;
+      } else {
+        pthread_setname_np(pSyncThread, "Sync");
+      }
+    }
+  } else if((ExportEnabled == false) && (pSyncThread != 0)) {
+    pSyncTerminate = true;
+    pthread_join(pSyncThread, NULL);
+    pSyncThread = 0;
   }
   pAnalyzerLock.Unlock();
 }
@@ -584,21 +613,19 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   }
   if(This->pNominalFrequency > 0) {
     for(uint8_t n = 0; n < This->pBlockCyclesCount; n++) {
-      This->pCycles.push_back(This->pBlockCycles[n]);
-      if(This->pCycles.size() > (ZEROCROSSING_SECONDS * This->pNominalFrequency)) This->pCycles.pop_front();
+      This->pFreqCycles[This->pFreqCyclesPos] = This->pBlockCycles[n];
+      This->pFreqCyclesPos = (This->pFreqCyclesPos + 1) % This->pFreqCyclesLen;
     }
-    uint32_t Samples = 0;
-//    uint16_t MinCycle = This->pSamplerate / (This->pNominalFrequency * 1.15 * 2.0);
-//    uint16_t MaxCycle = This->pSamplerate / (This->pNominalFrequency * 0.85 * 2.0);
-    for(uint i = 0; i < This->pCycles.size(); i++) {
-//      if((This->pCycles[i] < MinCycle) || (This->pCycles[i] > MaxCycle)) {
-//        Samples = 0;
-//        break;
-//      } else {
-        Samples += This->pCycles[i];
-//      }
+    uint32_t Samples  = 0;
+    uint16_t Cycles   = 0;
+    uint16_t MinCycle = This->pSamplerate / (This->pNominalFrequency * 1.15 * 2.0);
+    uint16_t MaxCycle = This->pSamplerate / (This->pNominalFrequency * 0.85 * 2.0);
+    for(uint16_t i = 0; i < This->pFreqCyclesLen; i++) {
+      if((This->pFreqCycles[i] < MinCycle) && (This->pFreqCycles[i] > MaxCycle)) break;
+      Samples += This->pFreqCycles[i];
+      Cycles++;
     }
-    Aggreg->Frequency = This->pCycles.size() / ((2.0 * Samples) / This->pSamplerate);
+    Aggreg->Frequency = (Cycles == This->pFreqCyclesLen) ? This->pFreqCyclesLen / ((2.0 * Samples) / This->pSamplerate) : NAN;
   }
   for(uint8_t j = 0; j < This->pVoltageChannels; j++) {
     float *ChV = &This->pVoltageSamples[j * This->pMaxSamples];
@@ -915,9 +942,181 @@ void AnalyzerSoft::FFT_Func(void *creation, void *run) {
 void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
 
 }
+void *AnalyzerSoft::Sync_Thread(void *params) {
+  AnalyzerSoft *This = (AnalyzerSoft*)params;
+  string Cookie, User, Pass, Server;
+  uint32_t ThreadsCount = 0;
+  pthread_mutex_t Mutex = PTHREAD_MUTEX_INITIALIZER;
+  pthread_cond_t  Cond  = PTHREAD_COND_INITIALIZER;
+  Client *HTTPClient = NULL;
+  while(This->pSyncTerminate == false) {
+    This->pAnalyzerLock.ReadLock();
+    if((This->pSyncUser != User) || (This->pSyncPass != Pass) || (This->pSyncServer != Server)) {
+      Cookie = "";
+      User   = This->pSyncUser;
+      Pass   = This->pSyncPass;
+      Server = This->pSyncServer;
+      if(HTTPClient != NULL) {
+        delete HTTPClient;
+        HTTPClient = NULL;
+      }
+    }
+    This->pAnalyzerLock.Unlock();
+    URL Url(Server);
+    if(Cookie == "") {
+      Headers Header  = {{"Accept", "application/json"}, {"Connection", "keep-alive"}};
+      json    Content = json::object();
+      Content["Username"] = User;
+      Content["Password"] = Pass;
+      Content["UpdateLastLogin"] = false;
+      if(HTTPClient == NULL) HTTPClient = new Client(Url.Host.c_str(), (Url.Port == "") ? 80 : atoi(Url.Port.c_str()) , 30);
+//      HTTPClient->set_read_timeout(1,0);
+      auto Response = HTTPClient->Post(string(Url.Path + "/LogIn").c_str(), Header, Content.dump(), "application/json", false);
+      if((Response != nullptr) && (Response->status == HTTP_OK)) {
+        json Content = json::parse(Response->body, NULL, false);
+        if((Response->has_header("Set-Cookie") == true) && (Content.is_discarded() == false) && Content.is_object() && Content["Result"].is_boolean() && (Content["Result"] == true)) {
+          string Tmp = Response->get_header_value("Set-Cookie");
+          for(uint8_t n = 0; (n < Tmp.length()) && (Tmp.length() < 100); n++) {
+            if(Tmp[n] == ';') break;
+            Cookie += Tmp[n];
+          }
+        }
+        if(Cookie != "") LOGFile::Info("Analyzer '%s' logged on remote server\n", This->Serial.c_str());
+      } else {
+        LOGFile::Debug("Analyzer '%s' can not login on remote server\n", This->Serial.c_str());
+      }
+      if(Cookie.empty()) usleep(1000000);
+    } else {
+      Headers Header = {{"Accept", "application/json"}, {"Connection", "keep-alive"}, {"Cookie", Cookie}};
+      json   Content = json::object();
+      Content["Analyzer"] = This->Serial;
+      Content["Name"] = This->GetName();
+      LOGFile::Debug("Analyzer '%s' request pending queries to server\n", This->Serial.c_str());
+      auto Response = HTTPClient->Post(string(Url.Path + "/getRemote").c_str(), Header, Content.dump(), "application/json", false);
+      if((Response != nullptr) && (Response->status == HTTP_OK)) {
+        json Content = json::parse(Response->body, NULL, false);
+        if(!Content.is_discarded() && Content.is_array()) {
+          LOGFile::Debug("Analyzer '%s' receive %u queries from remote server\n", This->Serial.c_str(), Content.size());
+          for(uint32_t n = 0; n < Content.size(); n++) {
+            if(Content[n].is_object() && Content[n]["Sequence"].is_number() && Content[n]["Method"].is_string() && Content[n]["Params"].is_object()) {
+              Sync_t *Request = (Sync_t*)calloc(1, sizeof(Request));
+              Request->Count        = &ThreadsCount;
+              Request->Mutex        = &Mutex;
+              Request->Cond         = &Cond;
+              Request->Cookie       = Cookie;
+              Request->Port         = (Url.Port == "") ? 80 : atoi(Url.Port.c_str());
+              Request->Host         = Url.Host;
+              Request->ResponsePath = Url.Path + "/setRemote";
+              Request->Analyzer     = This;
+              Request->Method       = Content[n]["Method"];
+              Request->Params       = Content[n]["Params"];
+              Request->Sequence     = Content[n]["Sequence"];
+              pthread_t Thread;
+              pthread_mutex_lock(&Mutex);
+              if(pthread_create(&Thread, NULL, SyncResp_Thread, (void*)Request) != 0) {
+                LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+                free(Request);
+              } else {
+                pthread_setname_np(Thread, "SyncWorker");
+                ThreadsCount++;
+                pthread_detach(Thread);
+              }
+              pthread_mutex_unlock(&Mutex);
+            }
+          }
+        }
+      } else if((Response != nullptr) && (Response->status == HTTP_UNAUTHORIZED)) {
+        Cookie = "";
+        LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->Serial.c_str());
+        usleep(1000000);
+      } else if((Response != nullptr) && (Response->status == HTTP_NO_CONTENT)) {
+        LOGFile::Debug("No pending queries in remote server for analyzer '%s'\n", This->Serial.c_str());
+      } else {
+        if(Response != nullptr) LOGFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)\n", This->Serial.c_str(), Response->status);
+        usleep(1000000);
+      }
+    }
+  }
+  pthread_mutex_lock(&Mutex);
+  while(ThreadsCount > 0) {
+    LOGFile::Debug("Analyzer '%s' flusing remote request (%d pending)\n", This->Serial.c_str(), ThreadsCount);
+    pthread_cond_wait(&Cond, &Mutex);
+  }
+  pthread_mutex_unlock(&Mutex);
+  if(HTTPClient != NULL) delete HTTPClient;
+  return NULL;
+}
+void *AnalyzerSoft::SyncResp_Thread(void *args) {
+  Sync_t *This = (Sync_t*)args;
+  This->Params["UserName"] = "admin";
+  LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
+  Response Resp;
+  if(This->Method == "getAnalyzer") {
+    This->Analyzer->GetAnalyzer(This->Params, Resp);
+  } else if(This->Method == "setAnalyzer") {
+    This->Analyzer->SetAnalyzer(This->Params, Resp);
+  } else if(This->Method == "getSeries") {
+    This->Analyzer->GetSeries(This->Params, Resp);
+  } else if(This->Method == "getSeriesNow") {
+    This->Analyzer->GetSeriesNow(This->Params, Resp);
+  } else if(This->Method == "getSeriesRange") {
+    This->Analyzer->GetSeriesRange(This->Params, Resp);
+  } else if(This->Method == "getEvents") {
+    This->Analyzer->GetEvents(This->Params, Resp);
+  } else if(This->Method == "getEvent") {
+    This->Analyzer->GetEvent(This->Params, Resp);
+  } else if(This->Method == "setEvent") {
+    This->Analyzer->SetEvent(This->Params, Resp);
+  } else if(This->Method == "delEvent") {
+    This->Analyzer->DelEvent(This->Params, Resp);
+  } else if(This->Method == "getRates") {
+    This->Analyzer->GetRates(This->Params, Resp);
+  } else if(This->Method == "getRate") {
+    This->Analyzer->GetRate(This->Params, Resp);
+  } else if(This->Method == "setRate") {
+    This->Analyzer->SetRate(This->Params, Resp);
+  } else if(This->Method == "delRate") {
+    This->Analyzer->DelRate(This->Params, Resp);
+  } else if(This->Method == "addRate") {
+    This->Analyzer->AddRate(This->Params, Resp);
+  } else if(This->Method == "getPrices") {
+    This->Analyzer->GetPrices(This->Params, Resp);
+  } else if(This->Method == "testAlarm") {
+    This->Analyzer->TestAlarm(This->Params, Resp);
+  } else if(This->Method == "getAlarms") {
+    This->Analyzer->GetAlarms(This->Params, Resp);
+  } else if(This->Method == "getAlarm") {
+    This->Analyzer->GetAlarm(This->Params, Resp);
+  } else if(This->Method == "setAlarm") {
+    This->Analyzer->SetAlarm(This->Params, Resp);
+  } else if(This->Method == "addAlarm") {
+    This->Analyzer->AddAlarm(This->Params, Resp);
+  } else if(This->Method == "delAlarm") {
+    This->Analyzer->DelAlarm(This->Params, Resp);
+  }
+  Headers Header  = {{"Accept", "application/json"}, {"Connection", "keep-alive"}, {"Cookie", This->Cookie}};
+  json    Content = json::object();
+  Content["Code"] = Resp.status;
+  Content["Sequence"] = This->Sequence;
+  Content["Analyzer"] = This->Analyzer->Serial;
+  Content["Response"] = Resp.body;
+  Client HTTPClient(This->Host.c_str(), This->Port);
+  auto Response = HTTPClient.Post(This->ResponsePath.c_str(), Header, Content.dump(), "application/json", true);
+  if((Response != nullptr) && (Response->status == HTTP_OK)) {
+    LOGFile::Debug("Remote request '%s' for analyzer '%s' completed\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
+  } else {
+    LOGFile::Error("Remote request '%s' for analyzer '%s' failed\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
+  }
+  pthread_mutex_lock(This->Mutex);
+  *This->Count = *This->Count - 1;
+  pthread_cond_signal(This->Cond);
+  pthread_mutex_unlock(This->Mutex);
+  free(This);
+  return NULL;
+}
 //----------------------------------------------------------------------------------------------------------------------
 void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Response = ConfigManager::ReadConfig(pConfigPath);
   Response["Online"] = IsOnline();
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
@@ -926,17 +1125,17 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + DB.Bind(Serial));
   if(DB.FecthRow()) Response["Size"] = DB.ResultUInt64("size");
-  HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = CheckConfig(params);
   Config["Alarms"] = ConfigManager::ReadConfig(pConfigPath + "/Alarms");
   Configure(Config);
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void AnalyzerSoft::GetSeries(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
 //  if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' param are requiered", MHD_HTTP_BAD_REQUEST);
 //  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "10C") && (Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '10C', 3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
 //  if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
@@ -1049,8 +1248,8 @@ void AnalyzerSoft::GetSeries(const json &params, Response &response) {
   }
 }
 void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPCallback::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if(pNowDataLock.ConsumerWait(5000) == false) {
     response.set_content("", "text/plain");
     response.status = HTTP_INTERNAL_SERVER_ERROR;
@@ -1060,7 +1259,7 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
   for(uint i = 0; i < params["Series"].size(); i++) {
     if(params["Series"][i].is_string() == false) {
       pNowDataLock.ConsumerEnds();
-      return HTTPCallback::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
     }
     string Serie = params["Series"][i];
     if(Serie == "FREQUENCY") {
@@ -1157,21 +1356,21 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
       Result["Sys_Stats"] = SysSupport::GetSystemStatusJSON();
     } else {
       pNowDataLock.ConsumerEnds();
-      return HTTPCallback::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);
+      return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);
     }
   }
   pNowDataLock.ConsumerEnds();
-  return HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  return HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string Aggreg = params["Aggreg"];
-  if((Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPCallback::FillResponse(response, "'Aggreg' param must be '10C', 3S', '1M', '10M', '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
+  if((Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' param must be '10C', 3S', '1M', '10M', '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
   Database DB(Serial);
   DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ");
-  if(!DB.FecthRow()) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPCallback::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
+  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetEvents(const json &params, Response &response) {
 //  if(CheckRights(params, response, READ) == false) return;
@@ -1252,95 +1451,95 @@ void AnalyzerSoft::GetEvent(const json &params, Response &response) {
   }
 }
 void AnalyzerSoft::SetEvent(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], WRITE) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB(Serial);
   uint64_t ID    = params["StartTime"];
   string   Type  = params["Type"];
   string   Notes = params["Notes"];
   bool Result = DB.ExecSentenceNoResult("UPDATE events SET Notes = " + DB.Bind(Notes) + " WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
-  HTTPCallback::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::DelEvent(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], WRITE) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB(Serial);
   uint64_t ID = params["StartTime"];
   string Type = params["Type"];
   bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
-  HTTPCallback::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::GetRates(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB(Serial);
   DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') AS result FROM rates");
-  if(DB.FecthRow() == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPCallback::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("RateID") == false) || (params["RateID"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("RateID") == false) || (params["RateID"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint32_t RateID = params["RateID"];
   Database DB(Serial);
   DB.ExecSentenceAsyncResult("SELECT JSON_BUILD_OBJECT('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) AS result FROM rates WHERE rate = " + DB.Bind(RateID));
-  if(DB.FecthRow() == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPCallback::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::SetRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("RateID") == false) || (params["RateID"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("StartDate") == false) || (params["StartDate"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'StartDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("EndDate") == false) || (params["EndDate"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'EndDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Config") == false) || (params["Config"].is_object() == false)) return HTTPCallback::FillResponse(response, "'Config' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPCallback::FillResponse(response, "'Template' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("RateID") == false) || (params["RateID"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("StartDate") == false) || (params["StartDate"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'StartDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("EndDate") == false) || (params["EndDate"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'EndDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Config") == false) || (params["Config"].is_object() == false)) return HTTPServer::FillResponse(response, "'Config' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint32_t RateID   = params["RateID"];
   uint64_t Start    = params["StartDate"];
   uint64_t End      = params["EndDate"];
   string   Name     = params["Name"];
   Tariff T(Start, End, pTimeZone);  //THREAD SAFE ISSUE!
-  if(T.SetTemplate(params["Template"]) == false) return HTTPCallback::FillResponse(response, "Invalid template", "text/plain", HTTP_BAD_REQUEST);
-  if(T.SetConfig(params["Config"]) == false) return HTTPCallback::FillResponse(response, "Invalid 'Config' format", "text/plain", HTTP_BAD_REQUEST);
+  if(T.SetTemplate(params["Template"]) == false) return HTTPServer::FillResponse(response, "Invalid template", "text/plain", HTTP_BAD_REQUEST);
+  if(T.SetConfig(params["Config"]) == false) return HTTPServer::FillResponse(response, "Invalid 'Config' format", "text/plain", HTTP_BAD_REQUEST);
   Database DB(Serial);
   bool Result = DB.ExecSentenceNoResult("UPDATE rates SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(T.GetTemplate().dump()) + ", config = " + DB.Bind(T.GetConfig().dump()) + ", startdate = " + DB.Bind(Start) + ", enddate = " + DB.Bind(End) + " WHERE rate = " + DB.Bind(RateID));
-  HTTPCallback::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::DelRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("RateID") == false) || (params["RateID"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("RateID") == false) || (params["RateID"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint32_t RateID = params["RateID"];
   Database DB(Serial);
   bool Result = DB.ExecSentenceNoResult("DELETE FROM rates WHERE rate = " + DB.Bind(RateID));
-  HTTPCallback::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::AddRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("StartDate") == false) || (params["StartDate"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'StartDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("EndDate") == false) || (params["EndDate"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'EndDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Config") == false) || (params["Config"].is_object() == false)) return HTTPCallback::FillResponse(response, "'Config' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPCallback::FillResponse(response, "'Template' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("StartDate") == false) || (params["StartDate"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'StartDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("EndDate") == false) || (params["EndDate"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'EndDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Config") == false) || (params["Config"].is_object() == false)) return HTTPServer::FillResponse(response, "'Config' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint64_t Start    = params["StartDate"];
   uint64_t End      = params["EndDate"];
   string   Name     = params["Name"];
   Tariff T(Start, End, pTimeZone);  //THREAD SAFE ISSUE!
-  if(T.SetTemplate(params["Template"]) == false) return HTTPCallback::FillResponse(response, "Invalid template", "text/plain", HTTP_BAD_REQUEST);
-  if(T.SetConfig(params["Config"]) == false) return HTTPCallback::FillResponse(response, "Invalid 'Config' format", "text/plain", HTTP_BAD_REQUEST);
+  if(T.SetTemplate(params["Template"]) == false) return HTTPServer::FillResponse(response, "Invalid template", "text/plain", HTTP_BAD_REQUEST);
+  if(T.SetConfig(params["Config"]) == false) return HTTPServer::FillResponse(response, "Invalid 'Config' format", "text/plain", HTTP_BAD_REQUEST);
   Database DB(Serial);
   bool Result = DB.ExecSentenceNoResult("INSERT INTO rates(startdate, enddate, config, template, name) VALUES (" + DB.Bind(Start) + ", " + DB.Bind(End) + ", " + DB.Bind(T.GetConfig().dump()) + ", " + DB.Bind(T.GetTemplate().dump()) + ", " + DB.Bind(Name) + ")");
-  HTTPCallback::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::GetPrices(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint64_t To         = params["To"];
   uint64_t From       = params["From"];
   string   Aggreg     = params["Aggreg"];
   json     Result     = json::object();
   uint64_t Now        = Tools::GetTime();
-  if(From > To) return HTTPCallback::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
-  if((Aggreg != "15M") && (Aggreg != "1H")) return HTTPCallback::FillResponse(response, "'Aggreg' param must be '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
-  if(((To - From) / ((Aggreg == "1H") ? 3600000 : 900000)) > 100000) return HTTPCallback::FillResponse(response, "Returned period to large for this aggregation level", "text/plain", HTTP_BAD_REQUEST);
+  if(From > To) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
+  if((Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' param must be '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
+  if(((To - From) / ((Aggreg == "1H") ? 3600000 : 900000)) > 100000) return HTTPServer::FillResponse(response, "Returned period to large for this aggregation level", "text/plain", HTTP_BAD_REQUEST);
   Result["To"]                 = To;
   Result["From"]               = From;
   Result["Aggregation_Source"] = Aggreg;
@@ -1426,10 +1625,10 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   response.status = HTTP_OK;
 }
 void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string Aggreg = params["Aggreg"];
-  if((Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPCallback::FillResponse(response, "'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
+  if((Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
   json Result = json::object();
   Result["Variables"] = json::array();
   pAnalyzerLock.ReadLock();
@@ -1459,7 +1658,7 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   }
   if(DB.FecthRow() == false) {
     Result["Error"] = "No data avaliable";
-    return HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_BAD_REQUEST);
+    return HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_BAD_REQUEST);
   }
   json Query = DB.ResultJSON("result");
   auto AppendArray = [&Query, &Result](const string &serie, const string &units) {
@@ -1519,10 +1718,10 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
       Result["Error"] = e.GetMsg();
     }
   }
-  return HTTPCallback::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
+  return HTTPServer::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
 }
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::array();
   pAlarmsLock.ReadLock();
   for(auto Alarm : pAlarms) {
@@ -1533,29 +1732,29 @@ void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
     Result.push_back(Tmp);
   }
   pAlarmsLock.Unlock();
-  HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetAlarmsLog(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::array();
-  HTTPCallback::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("AlarmID") == false) || (params["AlarmID"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("AlarmID") == false) || (params["AlarmID"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint32_t AlarmID = params["AlarmID"];
   pAlarmsLock.ReadLock();
   for(auto &Alarm : pAlarms) {
     if(Alarm.AlarmID != AlarmID) continue;
-    HTTPCallback::FillResponse(response, GetAlarmJSON(Alarm).dump(), "aplication/json", HTTP_OK);
+    HTTPServer::FillResponse(response, GetAlarmJSON(Alarm).dump(), "aplication/json", HTTP_OK);
     pAlarmsLock.Unlock();
     return;
   }
   pAlarmsLock.Unlock();
-  HTTPCallback::FillResponse(response, "AlarmID not found", "text/plain", HTTP_BAD_REQUEST);
+  HTTPServer::FillResponse(response, "AlarmID not found", "text/plain", HTTP_BAD_REQUEST);
 }
 void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
 //  json Params = req.GetParams();
 //  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned() || !Params["Name"].is_string() || !Params["Priority"].is_number_unsigned() || !Params["Expression"].is_string() || !Params["Aggreg"].is_string() || !Params["Message"].is_string() || !Params["Samples"].is_number_unsigned() || !Params["Window"].is_number_unsigned()) return req.FromString("'Analyzer', 'AlarmID', 'Name', 'Priority', 'Expression', 'Aggreg', 'Message', 'Samples' and 'Window' params are requiered", MHD_HTTP_BAD_REQUEST);
 //  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
@@ -1575,7 +1774,7 @@ void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
 //  pMembersLocks.ReadUnlock();
 }
 void AnalyzerSoft::AddAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Alarm_t Alarm;
   InitAlarm(Alarm, CheckAlarmConfig(params));
   pAlarmsLock.WriteLock();
@@ -1583,11 +1782,11 @@ void AnalyzerSoft::AddAlarm(const json &params, Response &response) {
   pAlarms.push_back(Alarm);
   SaveAlarmsConf();
   pAlarmsLock.Unlock();
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("AlarmID") == false) || (params["AlarmID"].is_number_unsigned() == false)) return HTTPCallback::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("AlarmID") == false) || (params["AlarmID"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint32_t AlarmID = params["AlarmId"];
   pAlarmsLock.WriteLock();
   for(auto it = pAlarms.begin(); it != pAlarms.end(); it++) {
@@ -1595,8 +1794,8 @@ void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
     pAlarms.erase(it);
     SaveAlarmsConf();
     pAlarmsLock.Unlock();
-    HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+    HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
   }
   pAlarmsLock.Unlock();
-  HTTPCallback::FillResponse(response, "AlarmID not found", "text/plain", HTTP_BAD_REQUEST);
+  HTTPServer::FillResponse(response, "AlarmID not found", "text/plain", HTTP_BAD_REQUEST);
 }

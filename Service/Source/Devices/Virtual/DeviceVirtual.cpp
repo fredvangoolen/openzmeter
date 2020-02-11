@@ -92,21 +92,18 @@ void DeviceVirtual::Configure(const json &config) {
 }
 void DeviceVirtual::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
   Config.erase("Analyzer");
-  HTTPCallback::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
+  HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void DeviceVirtual::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = params;
   Config["Analyzer"] = ConfigManager::ReadConfig("/Devices/" + Serial + "/Analyzer");
   Configure(Config);
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
-}
-void DeviceVirtual::GetRemote(const json &params, Response &response) {
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void *DeviceVirtual::Capture_Thread(void *args) {
   DeviceVirtual *This = (DeviceVirtual*)args;

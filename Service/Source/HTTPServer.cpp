@@ -1,7 +1,18 @@
-/* ================================== zMeter ===========================================================================
- * File:     HTTPServer.cpp
- * Eduardo Viciana (2020)
- * ------------------------------------------------------------------------------------------------------------------ */
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #include <string>
 #include <fstream>
 #include <sys/types.h>
@@ -15,20 +26,9 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-HTTPCallback::HTTPCallback(const string& handle, Func_t function) : HandleName(handle), Function(function) {
-};
-void HTTPCallback::FillResponse(Response &response, const string &body, const char *mime, const int status) {
-  response.set_content(body, mime);
-  response.status = status;
-}
-void HTTPCallback::FillResponse(Response &response, const char *body, const size_t size, const char *mime, const int status) {
-  response.set_content(body, size, mime);
-  response.status = status;
-}
-//----------------------------------------------------------------------------------------------------------------------
-vector<HTTPCallback> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
-RWLocks                                                  HTTPServer::pLock;
-string                                                   HTTPServer::pRelativePath = "/";
+map<string, HTTPServer::Func_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
+RWLocks                                                             HTTPServer::pLock;
+string                                                              HTTPServer::pRelativePath = "/";
 //----------------------------------------------------------------------------------------------------------------------
 URL::URL(const string &url) {
   typedef string::const_iterator iterator_t;
@@ -89,24 +89,33 @@ void *HTTPServer::Listen_Thread(void *params) {
   if(This->pServer->listen("0.0.0.0", This->pPort) == false) LOGFile::Error("HTTP port (%hu) already in use\n", This->pPort);
   return NULL;
 }
-void HTTPServer::RegisterCallback(const string &handleName, const HTTPCallback::Func_t function) {
+void HTTPServer::FillResponse(Response &response, const string &body, const char *mime, const int status) {
+  response.set_content(body, mime);
+  response.status = status;
+}
+void HTTPServer::FillResponse(Response &response, const char *body, const size_t size, const char *mime, const int status) {
+  response.set_content(body, size, mime);
+  response.status = status;
+}
+void HTTPServer::RegisterCallback(const string &handleName, const Func_t function) {
   pLock.WriteLock();
-  for(HTTPCallback &Callback : pCallbacks) {
-    if(Callback.HandleName != handleName) continue;
-    Callback.Function = function;
-    pLock.Unlock();
-    return;
-  }
-  pCallbacks.emplace_back(handleName, function);
+//  for(HTTPCallback &Callback : pCallbacks) {
+//    if(Callback.HandleName != handleName) continue;
+//    Callback.Function = function;
+//    pLock.Unlock();
+//    return;
+//  }
+  pCallbacks.insert({handleName, function});
   pLock.Unlock();
 }
 void HTTPServer::UnregisterCallback(const string &handleName) {
   pLock.WriteLock();
-  for(auto it = pCallbacks.begin(); it < pCallbacks.end(); it++) {
-    if(it->HandleName != handleName) continue;
-    pLock.Unlock();
-    return;
-  }
+  pCallbacks.erase(handleName);
+//  for(auto it = pCallbacks.begin(); it < pCallbacks.end(); it++) {
+//    if(it->HandleName != handleName) continue;
+//    pLock.Unlock();
+//    return;
+//  }
   pLock.Unlock();
 }
 void HTTPServer::HandleGet(const Request &request, Response &response) {
@@ -117,20 +126,20 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   if(Size != 0) {
     size_t FileNameLen = URL.length();
     if((FileNameLen >= 3) && (URL.compare(FileNameLen - 3, 3, ".js")) == 0) {
-      return HTTPCallback::FillResponse(response, Tmp, Size, "text/javascript", HTTP_OK);
+      return FillResponse(response, Tmp, Size, "text/javascript", HTTP_OK);
     } else if((FileNameLen >= 4) && (URL.compare(FileNameLen - 4, 4, ".png"))  == 0) {
-      return HTTPCallback::FillResponse(response, Tmp, Size, "image/png", HTTP_OK);
+      return FillResponse(response, Tmp, Size, "image/png", HTTP_OK);
     } else if((FileNameLen >= 4) && (URL.compare(FileNameLen - 4, 4, ".ico"))  == 0) {
-      return HTTPCallback::FillResponse(response, Tmp, Size, "image/x-icon", HTTP_OK);
+      return FillResponse(response, Tmp, Size, "image/x-icon", HTTP_OK);
     } else if((FileNameLen >= 5) && (URL.compare(FileNameLen - 5, 5, ".html")) == 0) {
-      return HTTPCallback::FillResponse(response, Tmp, Size, "text/html", HTTP_OK);
+      return FillResponse(response, Tmp, Size, "text/html", HTTP_OK);
     } else if((FileNameLen >= 5) && (URL.compare(FileNameLen - 5, 5, ".json")) == 0) {
-      return HTTPCallback::FillResponse(response, Tmp, Size, "application/json", HTTP_OK);
+      return FillResponse(response, Tmp, Size, "application/json", HTTP_OK);
     } else if((FileNameLen >= 5) && (URL.compare(FileNameLen - 3, 3, ".md")) == 0) {
-      return HTTPCallback::FillResponse(response, Tmp, Size, "text/markdown", HTTP_OK);
+      return FillResponse(response, Tmp, Size, "text/markdown", HTTP_OK);
     }
     LOGFile::Debug("No mimetype defined for request '%s'\n", URL.c_str());
-    return HTTPCallback::FillResponse(response, Tmp, Size, "application/octet-stream", HTTP_OK);
+    return FillResponse(response, Tmp, Size, "application/octet-stream", HTTP_OK);
   }
   string UserName;
   if(request.has_header("Cookie")) {
@@ -149,7 +158,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
       string Find = "{{ RELATIVE_PATH }}";
       Len = Login.find(Find, 0);
       if(Len != string::npos) Login = Login.replace(Len, Find.size(), pRelativePath);
-      return HTTPCallback::FillResponse(response, Login, "text/html", HTTP_OK);
+      return FillResponse(response, Login, "text/html", HTTP_OK);
     } else {
       return response.set_redirect(pRelativePath.c_str());
     }
@@ -167,17 +176,17 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
     Find = "{{ RELATIVE_PATH }}";
     Len = Index.find(Find, 0);
     if(Len != string::npos) Index = Index.replace(Len, Find.size(), pRelativePath);
-    return HTTPCallback::FillResponse(response, Index, "text/html", HTTP_OK);
+    return FillResponse(response, Index, "text/html", HTTP_OK);
   }
 }
 void HTTPServer::HandlePost(const Request &request, Response &response) {
   string URL = string(request.path).erase(0, pRelativePath.size());
   LOGFile::Debug("HTTP POST '%s'\n", URL.c_str());
   json Params = json::parse(request.body, NULL, false);
-  if(Params.is_discarded()) return HTTPCallback::FillResponse(response, "Malformed JSON params", "text/plain", HTTP_BAD_REQUEST);
+  if(Params.is_discarded()) return FillResponse(response, "Malformed JSON params", "text/plain", HTTP_BAD_REQUEST);
   if(URL == "logIn") {
     if((Params["Password"].is_string() == false) || (Params["Username"].is_string() == false)) {
-      return HTTPCallback::FillResponse(response, "'Password' and 'Username' params requiered", "text/plain", HTTP_BAD_REQUEST);
+      return FillResponse(response, "'Password' and 'Username' params requiered", "text/plain", HTTP_BAD_REQUEST);
     } else {
       Database DB;
       json     Response        = json::object();
@@ -195,7 +204,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
       } else {
         Response["Result"] = false;
       }
-      return HTTPCallback::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+      return FillResponse(response, Response.dump(), "application/json", HTTP_OK);
     }
   }
   if(URL == "logOut") {
@@ -219,16 +228,16 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
   } else if(request.has_header("REMOTE_ADDR")) {
     if(request.get_header_value("REMOTE_ADDR") != "127.0.0.1") Params.erase("UserName");
   }
-  if(Params.contains("UserName") == false) return HTTPCallback::FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
+  if(Params.contains("UserName") == false) return FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
   pLock.ReadLock();
-  for(HTTPCallback &Callback : pCallbacks) {
-    if(Callback.HandleName != URL) continue;
-    Callback.Function(Params, response);
+  auto Callback = pCallbacks.find(URL);
+  if(Callback != pCallbacks.end()) {
+    Callback->second(Params, response);
     pLock.Unlock();
     return;
   }
   pLock.Unlock();
-  HTTPCallback::FillResponse(response, "Method not found", "text/plain", HTTP_METHOD_NOT_ALLOWED);
+  FillResponse(response, "Method not found", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
 void HTTPServer::RemoveExpiredSessions() const {
   if(Tools::GetTime() < 1296000000) return;

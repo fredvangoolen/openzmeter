@@ -25,7 +25,7 @@ class DeviceVirtual final : public Device {
   private :
     pthread_t                       pThread;
     AnalyzerSoft                   *pAnalyzer;
-    bool                            pTerminate;
+    volatile bool                   pTerminate;
     Analyzer::AnalyzerMode          pMode;
     float                           pSampleRate;
     float                           pVoltage;
@@ -42,7 +42,6 @@ class DeviceVirtual final : public Device {
     void Configure(const json &config);
     void GetDevice(const json &params, Response &response) override;
     void SetDevice(const json &params, Response &response) override;
-    void GetRemote(const json &params, Response &response) override;
   public :
     ~DeviceVirtual();
 };

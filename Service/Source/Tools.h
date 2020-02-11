@@ -1,7 +1,18 @@
-/* ================================== zMeter ===========================================================================
- * File:     Tools.h
- * Author:   Eduardo Viciana (12 de abril de 2017)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <termios.h>
 #include <string>
@@ -17,7 +28,7 @@ class Worker final {
     void           *pCreationParam;
     void           *pRunParam;
     bool            pWorking;
-    bool            pTerminate;
+    volatile bool   pTerminate;
     pthread_t       pThread;
     pthread_mutex_t pMutex;
     pthread_cond_t  pCond;
@@ -52,7 +63,7 @@ class WorkerLocks final {
   //Worker locks until signal to wakeup, caller can wait worker to ends
   private :
     bool            pWorking;
-    bool            pTerminate;
+    volatile bool   pTerminate;
     pthread_mutex_t pMutex;
     pthread_cond_t  pCond;
   public :
@@ -72,7 +83,7 @@ class ProviderLocks {
     pthread_mutex_t  pWaitingThreadsMutex;
     pthread_cond_t   pWaitingThreadsCond;
     bool             pDataReady;
-    bool             pTerminate;
+    volatile bool    pTerminate;
     pthread_mutex_t  pDataReadyMutex;
     pthread_cond_t   pDataReadyCond;
   public :

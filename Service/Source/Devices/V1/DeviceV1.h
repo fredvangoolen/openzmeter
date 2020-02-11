@@ -1,3 +1,18 @@
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <libusb-1.0/libusb.h>
 #include <deque>
@@ -38,7 +53,7 @@ class DeviceV1 final : public Device {
     bool                         pEnabled;                 //Enable device
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pThread;                  //Descriptor del hilo de captura
-    bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
+    volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
     int16_t                     *pBuffer;                  //Read buffer
     uint32_t                     pBufferTail;              //pBuffer read pos
     uint32_t                     pBufferHead;              //pBuffer write pos
@@ -72,7 +87,6 @@ class DeviceV1 final : public Device {
     void Configure(const json &config);
     void GetDevice(const json &params, Response &response) override;
     void SetDevice(const json &params, Response &response) override;
-    void GetRemote(const json &params, Response &response) override;
     void BufferAppend(int16_t *sample);
   public :
     ~DeviceV1();
