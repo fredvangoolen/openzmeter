@@ -19,7 +19,7 @@
 #include "AnalyzerRemote.h"
 AnalyzerRemote::AnalyzerRemote(string id) : Analyzer(id) {
   SetName("Never seen");
-  pPendingRequestLocks = PTHREAD_MUTEX_INITIALIZER;
+  pLocks = PTHREAD_MUTEX_INITIALIZER;
 }
 AnalyzerRemote::~AnalyzerRemote() {
 //  pMembersLocks.WriteLock();
@@ -27,7 +27,7 @@ AnalyzerRemote::~AnalyzerRemote() {
 //  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) (*it)->Locks.Abort();
 //  pMembersLocks.WriteUnlock();
 }
-void AnalyzerRemote::GetRemote(const json &params, Response &response) {
+//void AnalyzerRemote::GetRemote(const json &params, Response &response) {
 //  json Params = req.GetParams();
 //  json Response = json::array();
 //  pMembersLocks.WriteLock();
@@ -75,29 +75,18 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
 //      pMembersLocks.WriteUnlock();
 //    }
 //  }
-}
-void AnalyzerRemote::SetRemote(const json &params, Response &response) {
-//  json Params = req.GetParams();
-//  if(!Params["Code"].is_number() || !Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' and 'Code' param are required", MHD_HTTP_BAD_REQUEST);
-//  uint64_t Sequence = Params["Sequence"];
-//  uint16_t Code = Params["Code"];
-//  pMembersLocks.WriteLock();
-//  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-//    if((*it)->Sequence != Sequence) continue;
-//    Query_t *Query = (*it);
-//    pQueries.erase(it);
-//    pMembersLocks.WriteUnlock();
-//    Query->Request->FromString(Params["Response"], Code);
-//    Query->Locks.ProviderWrite();
-//    return;
-//  }
-//  pMembersLocks.WriteUnlock();
-}
+//}
+//void AnalyzerRemote::GetRemoteCallback(const json &params, Response &response) {
+ // CallDeviceFunction(params, response, &Device::GetRemote);
+//}
+//void DeviceManager::SetRemoteCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Device::SetRemote);
+//}
 void AnalyzerRemote::HandleRequest(const string &url, const json &params, Response &response) {
   Request_t Request;
   Request.RequestMethod = &url;
   Request.RequestParams = &params;
-  Request.Response      = &response;
+  Request.Resp          = &response;
   Request.Sended        = false;
   pthread_mutex_lock(&pLocks);
   uint64_t Sequence = pSequence++;
@@ -124,86 +113,86 @@ void AnalyzerRemote::HandleRequest(const string &url, const json &params, Respon
 
 }
 void AnalyzerRemote::GetAnalyzer(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getAnalyzer", params, response);
 }
 void AnalyzerRemote::SetAnalyzer(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("setAnalyzer", params, response);
 }
 void AnalyzerRemote::GetSeries(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getSeries", params, response);
 }
 void AnalyzerRemote::GetSeriesNow(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getSeriesNow", params, response);
 }
 void AnalyzerRemote::GetSeriesRange(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getSeriesRange", params, response);
 }
 void AnalyzerRemote::GetEvents(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getEvents", params, response);
 }
 void AnalyzerRemote::GetEvent(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getEvent", params, response);
 }
 void AnalyzerRemote::SetEvent(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], WRITE) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("setEvent", params, response);
 }
 void AnalyzerRemote::DelEvent(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], WRITE) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("delEvent", params, response);
 }
 void AnalyzerRemote::GetRates(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getRates", params, response);
 }
 void AnalyzerRemote::GetRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getRate", params, response);
 }
 void AnalyzerRemote::SetRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("setRate", params, response);
 }
 void AnalyzerRemote::DelRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("delRate", params, response);
 }
 void AnalyzerRemote::AddRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("addRate", params, response);
 }
 void AnalyzerRemote::GetPrices(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getPrices", params, response);
 }
 void AnalyzerRemote::TestAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("testAlarm", params, response);
 }
 void AnalyzerRemote::GetAlarms(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getAlarms", params, response);
 }
 void AnalyzerRemote::GetAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getAlarm", params, response);
 }
 void AnalyzerRemote::SetAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("setAlarm", params, response);
 }
 void AnalyzerRemote::AddAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("addAlarm", params, response);
 }
 void AnalyzerRemote::DelAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("delAlarm", params, response);
 }

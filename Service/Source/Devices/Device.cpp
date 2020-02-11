@@ -70,9 +70,6 @@ bool Device::CallAnalyzerFunction(const json &params, Response &response, void (
     return true;
   }
 }
-bool Device::SetRemote(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::SetRemote);
-}
 bool Device::GetAnalyzer(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetAnalyzer);
 }

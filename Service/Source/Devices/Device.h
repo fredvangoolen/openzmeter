@@ -54,7 +54,6 @@ class Device {
   public :
     json GetJSONDescriptor();
     json GetJSONAnalyzers(const string &user);
-    bool SetRemote(const json &params, Response &response);
     bool GetAnalyzer(const json &params, Response &response);
     bool SetAnalyzer(const json &params, Response &response);
     bool GetSeries(const json &params, Response &response);
@@ -84,5 +83,4 @@ class Device {
     virtual ~Device();
     virtual void GetDevice(const json &params, Response &response) = 0;
     virtual void SetDevice(const json &params, Response &response) = 0;
-    virtual void GetRemote(const json &params, Response &response) = 0;
 };

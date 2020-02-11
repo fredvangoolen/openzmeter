@@ -104,22 +104,22 @@ void DeviceRemote::Configure(const json &config) {
 //}
 void DeviceRemote::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
-  HTTPCallback::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
+  HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void DeviceRemote::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Configure(params);
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
-void DeviceRemote::GetRemote(const json &params, Response &response) {
-  if((params.contains("Analyzers") == false) || (params["Analyzers"].is_array() == false)) return HTTPCallback::FillResponse(response, "'Analyzers' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  for(auto Analyzer : params["Analyzers"]) {
-    if(Analyzer.is_object() == false) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
-    if((Analyzer.contains("Serial") == false) || (Analyzer["Serial"].is_string() == false)) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
-    if((Analyzer.contains("Name") == false) || (Analyzer["Name"].is_string() == false)) return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
+//void DeviceRemote::GetRemote(const json &params, Response &response) {
+//  if((params.contains("Analyzers") == false) || (params["Analyzers"].is_array() == false)) return HTTPServer::FillResponse(response, "'Analyzers' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//  for(auto Analyzer : params["Analyzers"]) {
+//    if(Analyzer.is_object() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
+//    if((Analyzer.contains("Serial") == false) || (Analyzer["Serial"].is_string() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
+//    if((Analyzer.contains("Name") == false) || (Analyzer["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
 
 
     //Busco analyzer si tiene algo lo cojo y relleno campos
@@ -144,15 +144,15 @@ void DeviceRemote::GetRemote(const json &params, Response &response) {
 //  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
 
 
-  }
+  //}
 
 
 
 
 
-}
-void DeviceRemote::SetRemote(const json &params, Response &response) {
-if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPCallback::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//S}
+//void DeviceRemote::SetRemote(const json &params, Response &response) {
+//if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
 //  json Params = req.GetParams();
 //  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
 //  pInstance->SetRemote(req);
@@ -167,4 +167,4 @@ if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == 
 //  }
 //  pMembersLock.ReadUnlock();
 //  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-}
+//}

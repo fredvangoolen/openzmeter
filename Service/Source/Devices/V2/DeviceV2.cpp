@@ -12,6 +12,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #include <termios.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -448,7 +449,7 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
 }
 void DeviceV2::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pthread_mutex_lock(&pConfigLock);
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
@@ -464,12 +465,12 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   Config["Wave_Average"]["Current"].push_back(pAverageValues[5]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
   pAverageLocks.Unlock();
-  HTTPCallback::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
+  HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
   pthread_mutex_unlock(&pConfigLock);
 }
 void  DeviceV2::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPCallback::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pthread_mutex_lock(&pConfigLock);
   json Config = params;
   json Orig = ConfigManager::ReadConfig("/Devices/" + Serial);
@@ -479,11 +480,8 @@ void  DeviceV2::SetDevice(const json &params, Response &response) {
     }
   }
   Configure(Config);
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_OK);
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
   pthread_mutex_unlock(&pConfigLock);
-}
-void DeviceV2::GetRemote(const json &params, Response &response) {
-  HTTPCallback::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
 void  DeviceV2::BufferAppend() {
   for(uint8_t Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] = pRunAverageValues[Ch] + pCapture[Ch];

@@ -17,13 +17,14 @@
 #include <list>
 #include "HTTPServer.h"
 #include "Analyzer.h"
+
 class AnalyzerRemote : public Analyzer {
   private :
     typedef struct {
       bool          Sended;
       const string *RequestMethod;
       const json   *RequestParams;
-      Response     *Response;
+      Response     *Resp;
       ProviderLocks Locks;
     } Request_t;
 
