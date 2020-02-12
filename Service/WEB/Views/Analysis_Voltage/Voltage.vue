@@ -5,11 +5,6 @@
 </template>
 
 <script>
-  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
-  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
-  import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
   import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
@@ -53,26 +48,12 @@
       }
     },
     methods: {
-      MaximizeClick: function() {
-        $(window).unbind('resize', this.ResizeHandler);
-        this.$refs.tools.Maximize('Voltage', this.$refs.graph.Graph, this.$refs.Toolbar);
-      },
-      MinimizeClick: function() {
-        $(window).bind('resize', this.ResizeHandler.bind(this));
-      },
       ExportClick: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
         this.$refs.tools.SaveCVS('Voltage.csv', [['Time'].concat(oZm.Series['VOLTAGE'].Names(Analyzer))].concat(this.Data));
       },
-      WindowRestore: function() {
-        this.$refs.period.PopState();
-      },
-      WindowChange: function(minDate, maxDate) {
-        this.$refs.period.SetCustom(minDate, maxDate, true);
-      }
-    },
-    components: { Graph }
+    }
   }
 </script>
 

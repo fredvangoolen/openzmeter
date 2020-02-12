@@ -1,0 +1,140 @@
+<template>
+  <div>
+    <dlg :loading="ShowSpinner" v-if="View==null">
+      <template v-slot:header>
+        <div class="pull-left"><h4 class="modal-title">Tariffs template</h4></div>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" @click="Save" :class="{disabled: (Error != '')}"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="View='Periods'">Periods</button>
+          <button type="button" class="btn btn-default btn-xs" @click="View='Seasons'">Seasons</button>
+          <button type="button" class="btn btn-default btn-xs" @click="View='Holidays'">Holidays</button>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        </div>
+      </template>
+      <div class="alert alert-danger text-center" v-if="Error!=null">{{ Error }}</div>
+      <div class="alert alert-success text-center" v-if="Error==null">Tariff contains {{ tariff.Template.Seasons.length }}  seasons, a total of {{ tariff.Template.Periods.length }}  day periods and {{ tariff.Template.Holidays.length }} holidays</div>
+      <div class="row">
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">Name</label>
+          <input type="text" class="form-control" v-model="tariff.Name"></div>
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">Time zone</label>
+          <option-picker :options="TimeZones" v-model="tariff.TimeZone" :big="true"></option-picker>
+        </div>
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">Start date</label>
+          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: tariff.TimeZone }" v-model="tariff.StartDate" :big="true"></date-picker>
+        </div>
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">End date</label>
+          <date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: tariff.TimeZone }" v-model="tariff.EndDate" :big="true"></date-picker>
+        </div>
+        <div class="col-xs-12"><label class="control-label">Description</label><textarea class="form-control" rows="5" v-model="tariff.Template.Description" style="resize: none"></textarea></div>
+        <div class="col-xs-12 col-sm-6">
+          <div class="btn-group period-dropdown-group">
+            <div class="input-group">
+              <span class="input-group-addon" style="width: 100%"><strong>Weekends as</strong></span>
+              <div class="input-group-btn">
+                <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false"><span style="display: inline-block;width: 80px;">{{ (tariff.Template.WeekendPeriod == null) ? 'Don\'t apply' : 'P' + (tariff.Template.WeekendPeriod+1) }}</span><span class="caret"></span></button>
+                <ul class="dropdown-menu pull-right">
+                  <li v-for="(period, index) in tariff.Template.Periods" :key="index" :class="{active: tariff.Template.WeekendPeriod == index}"><a @click="SetWeekEndPeriod(index)">P{{ index + 1 }}</a></li>
+                  <li role="separator" class="divider"></li>
+                  <li :class="{active: tariff.Template.WeekendPeriod == null}"><a @click="SetWeekEndPeriod(null)">Don't apply</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-xs-12 col-sm-6">
+          <div class="btn-group period-dropdown-group">
+            <div class="input-group">
+              <span class="input-group-addon" style="width: 100%"><strong>Holidays as</strong></span>
+                <div class="input-group-btn">
+                  <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false"><span style="display: inline-block;width: 80px;">{{ (tariff.Template.HolidayPeriod == null) ? 'Don\'t apply' : 'P' + (tariff.Template.HolidayPeriod+1) }}</span><span class="caret"></span></button>
+                  <ul class="dropdown-menu pull-right">
+                    <li v-for="(period, index) in tariff.Template.Periods" :key="index" :class="{active: tariff.Template.HolidayPeriod == index}"><a @click="SetHolidayPeriod(index)">P{{ index + 1 }}</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li :class="{active: tariff.Template.HolidayPeriod == null}"><a @click="SetHolidayPeriod(null)">Don't apply</a></li>
+                  </ul>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </dlg>
+    <edit-periods :tariff="tariff" v-if="View=='Periods'" @close="View=null"></edit-periods>
+    <edit-seasons :tariff="tariff" v-if="View=='Seasons'" @close="View=null"></edit-seasons>
+    <edit-holidays :tariff="tariff" v-if="View=='Holidays'" @close="View=null"></edit-holidays>
+  </div>
+</template>
+
+<script>
+  import EditPeriods from './Periods.vue';
+  import EditSeasons from './Seasons.vue';
+  import EditHolidays from './Holidays.vue';
+  import moment from 'moment';
+  export default {
+    props: { tariff: Object },
+    data: function() {
+      return { View: null, TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false, Error: null };
+    },
+    methods: {
+      Show: function(tariff) {
+        this.$set(this, 'Tariff', tariff);
+        this.ShowDialog = true;
+        this.$nextTick(() => {
+          $(this.$el).modal('show');
+          this.$refs.Main.Load(this.Tariff);
+        });
+      },
+      Save: function() {
+        $.ajax({ url: (this.Tariff.TariffID === undefined) ? 'addTariff' : 'setTariff', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify(this.Tariff),
+          success: function() {
+            this.Close();
+            this.$parent.GetTariffs();
+          }.bind(this),
+          error: function() {
+            this.$refs.Main.Error = 'Failed to save tariff!';
+            setTimeout(function() { this.$refs.Main.Error = ''; }.bind(this), 1000);
+          }.bind(this)
+        });
+      },
+      Check: function(tariff) {
+        $('#divTariffSuccess, #divTariffError').addClass('hide');
+        $('#btnTariffSave').addClass('disabled');
+        var FindSeason = function(date) {
+          for(var i = 0; i < tariff.Template.Seasons.length; i++) { if(tariff.Template.Seasons[i].StartDate === date) return i; }
+          return null;
+        };
+        for(var i = 0; i < tariff.Template.Seasons.length; i++) {
+          for(var h = 0; h < 24; h++) {
+            if((tariff.Template.Seasons[i].DayPeriods[h] < 0) || (tariff.Template.Seasons[i].DayPeriods[h] >= tariff.Template.Periods.length)) return 'Periods in season "' + tariff.Template.Seasons[i].Name + '" out of range!';
+          }
+        }
+        var Used = tariff.Template.Seasons.length;
+        var Date = tariff.StartDate;
+        while(Used > 0) {
+          var Find = FindSeason(Date);
+          if(Find === null) break;
+          Date = tariff.Template.Seasons[Find].EndDate;
+          Used = Used - 1;
+          if(Used > 0) Date = Date + 1;
+        }
+        if((Used > 0) || (Date !== tariff.EndDate)) return 'Defined tariff period is not correctly covered by defined seasons!';
+        this.Tariff = tariff;
+        return '';
+      }
+    },
+    components: { EditPeriods, EditSeasons, EditHolidays }
+  }
+</script>
+
+<style scoped>
+  .period-dropdown-group {
+    margin-top: 8px;width: 100%
+  }
+  div .alert {
+    margin-bottom: 5px;
+    padding: 5px
+  }
+</style>

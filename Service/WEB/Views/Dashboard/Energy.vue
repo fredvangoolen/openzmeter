@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <graph :options="GraphOptions" :height="height"></graph>
+  <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+    <graph :options="GraphOptions" :height="height" :paused="MouseOver" :range.sync="range"></graph>
   </div>
 </template>
 
@@ -9,9 +9,9 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: Object, height: Number, data: Object },
+    props: { analyzer: Object, height: Number, data: Object, range: [String, Array] },
     data() {
-      return { ShowSpinner: true };
+      return { ShowSpinner: true, MouseOver: false };
     },
     computed: {
       GraphOptions: function() {
@@ -26,7 +26,7 @@
         Opt.labels = ['Time', 'Energy'];
         Opt.interactionModel = Graph.ScrollableInteractionModel(this);
         Opt.colors = [oZm.Series['ACTIVE_ENERGY'].Color];
-        Opt.xAxisHeight = 24;
+        Opt.xAxisHeight = 20;
         Opt.legendFormatter = Graph.LegendFormatter_Follow;
         underlayCallback: this.DrawPeriods,
         Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
@@ -142,10 +142,10 @@
         canvas.clip();
       },
       WindowRestore: function() {
-        this.$refs.period.PopState();
+//        this.$refs.period.PopState();
       },
       WindowChange: function(minDate, maxDate) {
-        this.$refs.period.SetCustom(minDate, maxDate, true);
+        //this.$refs.period.SetCustom(minDate, maxDate, true);
       },
 
     },

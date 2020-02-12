@@ -162,17 +162,20 @@
   }
   .cubism-serie {
     position: relative;
+    cursor: crosshair;
   }
   .cubism-serie > .graph {
     height: 50px !important;
     width: 100% !important;
+  }
+  .cubism-serie {
+    user-select: none;
   }
   .cubism-serie:first-child > .graph {
     margin-top: 16px;
     border-top: 1px solid #BBB;
   }
   .cubism-serie > .legend {
-    pointer-events: none;
     position: absolute;
     top: -2px;
     text-align: left;
@@ -180,6 +183,10 @@
   }
   .cubism-serie .timeline {
     margin-top: -63px;
+    font-size: 10px;
+    color: black;
+    line-height: 10px;
+    pointer-events: none;
   }
   .cubism-serie .timeline-day {
     margin-top: -63px;

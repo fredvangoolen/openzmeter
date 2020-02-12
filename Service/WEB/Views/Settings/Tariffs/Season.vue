@@ -16,15 +16,15 @@
         <div class="col-xs-12">
           <label class="control-label">Hourly rates</label>
           <div class="row">
-            <div class="col-xs-3" v-for="(period, hour) in Tariff.Template.Seasons[Index].DayPeriods">
+            <div class="col-xs-3" v-for="(period, hour) in tariff.Template.Seasons[Index].DayPeriods" :key="hour">
               <div class="btn-group" style="width: 100%; margin-bottom: 2px; box-sizing: content-box">
-                <div class="input-group input-group-xs">    
+                <div class="input-group input-group-xs">
                   <span class="input-group-addon">{{ ("0" + hour).slice(-2) }}</span>
                   <div class="input-group-btn">
                     <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" style="width: 100%"><span style="display: inline-block; width: 30px;">P{{ period + 1 }}</span><span class="caret"></span></button>
                     <ul class="dropdown-menu pull-right">
-                      <li v-for="(p, index) in Tariff.Template.Periods" v-bind:class="{ active: Tariff.Template.Seasons[Index].DayPeriods[hour] == index }"><a v-on:click="SetHourPeriod(hour, index)">P{{ index + 1 }}</a></li>
-                    </ul>    
+                      <li v-for="(p, index) in Tariff.Template.Periods" :class="{ active: tariff.Template.Seasons[Index].DayPeriods[hour] == index }"><a v-on:click="SetHourPeriod(hour, index)">P{{ index + 1 }}</a></li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -33,7 +33,7 @@
         </div>
       </div>
     </div>
-  </div> 
+  </div>
 </template>
 
 <script>
@@ -48,7 +48,7 @@
         this.Index = index;
         for(var i = 0; i < tariff.Template.Seasons[index].DayPeriods.length; i++) {
           if(tariff.Template.Seasons[index].DayPeriods[i] >= tariff.Template.Periods.length) tariff.Template.Seasons[index].DayPeriods[i] = 0;
-        }    
+        }
         this.Tariff = tariff;
         this.Show = true;
         this.$nextTick(function() {

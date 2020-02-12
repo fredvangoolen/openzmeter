@@ -116,8 +116,3 @@
     components: { DatePicker, OptionPicker }
   }
 </script>
-<style scoped>
-  .period-dropdown-group {
-    margin-top: 8px;width: 100%
-  }
-</style>

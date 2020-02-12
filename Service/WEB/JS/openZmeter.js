@@ -47,7 +47,7 @@ const openZmeter = {
       var Fraction = Math.abs(val % Exponent);
       Fraction = Fraction.toString();
       while(Fraction.length < decimals) Fraction = '0' + Fraction;
-      return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + (html ? "<span style='font-size:80%'>." + Fraction + '</span>' : Fraction);
+      return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + (html ? "<span style='font-size:80%'>." + Fraction + '</span>' : '.' + Fraction);
     },
     Vue.prototype.BinPower = (complex) => {
       return Math.sqrt(Math.pow(complex[0], 2.0) + Math.pow(complex[1], 2.0));

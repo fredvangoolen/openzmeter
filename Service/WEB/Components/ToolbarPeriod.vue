@@ -51,7 +51,7 @@
     },
     watch: {
       value: function(val) {
-        if(this.storage != null) localStorage.setItem(this.storage, val);
+        if(this.storage != null) localStorage.setItem(this.storage, JSON.stringify(val));
       }
     },
 //    beforeDestroy: function () {
@@ -59,7 +59,7 @@
 //    },
     created: function () {
       if(this.storage != null) {
-        var Stored = localStorage.getItem(this.storage);
+        var Stored = JSON.parse(localStorage.getItem(this.storage));
         if(this.value != Stored) this.$emit('input', Stored);
       } else if(this.value == null) {
         this.$emit('input', 'Day');

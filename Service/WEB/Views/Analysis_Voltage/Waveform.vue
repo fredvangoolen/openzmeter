@@ -63,12 +63,12 @@
         Opt.axes.y2.strokeWidth = CurrentStyle.Width;
         Opt.axes.y2.valueFormatter = (x) => { return this.Round(x, 2, true) + ' A'; };
         Opt.axes.y2.axisLabelFormatter = this.Options['Current'] ? (x) => { return this.Round(x, 2, true); } : (x)  => { return ''};
-        Opt.axes.x.ticker = (min, max) => { return Graph.WaveTimeTicks(max, this.analyzer); };
+        Opt.axes.x.ticker = (min, max) => { return Graph.WaveTimeTicks(max, this.analyzer, this); };
         Opt.axes.x.valueFormatter = (x) => { return this.Round((x * 1000) / this.analyzer.SampleRate, 2, true) + ' ms'; };
         Opt.labels = ['Sample'].concat(VoltageNames).concat(CurrentNames);
         Opt.colors = VoltageStyle.Colors.concat(CurrentStyle.Colors);
         if(this.data != null) {
-          Opt.file = []; 
+          Opt.file = [];
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [i];
             for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.data.Voltage_Samples[n][i]);

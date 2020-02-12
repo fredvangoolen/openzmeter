@@ -5,13 +5,13 @@
         <div class="panel panel-active-energy">
           <div class="panel-heading">
             <div class="huge header-text">Active Energy</div>
-            <div class="header-buttons clearfix" ref="ToolbarActive">
+            <div class="header-buttons clearfix">
               <toolbar-aggregation storage="AggregationEnergy" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
-
+                <button-export file="Energy" :rows="[]"></button-export>
+                <button-expand :expanded.sync="ExpandedActive"></button-expand>
               </div>
-              <!--toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClickActive" v-on:MaximizeClick="MaximizeActiveClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools-->
             </div>
           </div>
           <div class="panel-body">
@@ -27,9 +27,9 @@
         <div class="panel panel-reactive-energy">
           <div class="panel-heading">
             <div class="header-text">Fund. Reactive Energy</div>
-            <div class="pull-right btn-group" ref="ToolbarReactive">
-
-              <!--toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClickReactive" v-on:MaximizeClick="MaximizeReactiveClick" v-on:MinimizeClick="MinimizeClick" ref="reactiveTools"></toolbar-tools-->
+            <div class="pull-right btn-group">
+              <button-export file="Energy" :rows="[]"></button-export>
+              <button-expand :expanded.sync="ExpandedReactive"></button-expand>
             </div>
           </div>
           <div class="panel-body">
@@ -56,7 +56,8 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Aggreg: null, ShowSpinner: true, Data15M: null, Data1H: null, GraphData: null, NowTimer: null, GraphTimer: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300 };
+      return { Aggreg: null, ShowSpinner: true, ExpandedActive: false, ExpandedReactive: false,
+      Data15M: null, Data1H: null, GraphData: null, NowTimer: null, GraphTimer: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300 };
     },
     watch: {
       analyzer: function() { this.UpdateNowValues(); this.UpdateGraphValues(); },

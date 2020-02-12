@@ -5,23 +5,29 @@
         <div class="panel panel-active-energy">
           <div class="panel-heading">
             <div class="huge header-text">Energy consumption</div>
-            <div class="header-buttons clearfix" ref="Toolbar">
+            <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="AggregationEnergy" v-model="Aggreg" :options="['15M', '1H']"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
+                <button-export file="Energy" :rows="[]"></button-export>
+                <button-expand :expanded.sync="Expanded"></button-expand>
               </div>
-              <!--toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools-->
-            </div>
+            </portal>
           </div>
           <div class="panel-body">
             <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
             <div class="row">
               <counters class="col-md-5 col-lg-4 col-xl-3" :analyzer="analyzer" :height.sync="Height" :data="DataGraph"></counters>
-              <energy class="col-md-7 col-lg-8 col-xl-9" :analyzer="analyzer" :height="Height" :data="DataGraph"></energy>
+              <div class="col-md-7 col-lg-8 col-xl-9">
+                <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+                  <energy :analyzer="analyzer" :height="Expanded?DialogHeight:Height-10" :data="DataGraph" :range.sync="Range"></energy>
+                </portal>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <dlg-fs v-if="Expanded" title="Energy consumption" :height.sync="DialogHeight"></dlg-fs>
     </div>
     <div class="row">
       <div class="col-lg-6 col-md-12">
@@ -59,7 +65,7 @@
   export default {
     props: { analyzer: { type: Object } },
     data () {
-      return { Aggreg: null, Range: null, ShowSpinner: false, Height: 200, Paused3S: false,
+      return { Aggreg: null, Range: null, ShowSpinner: false, Height: 200, Paused3S: false, Expanded: false, DialogHeight: 200,
                DataNow: null, ControlNow: null, Data3S: null, Control3S: null, Data1M: null, Control1M: null, DataGraph: null, ControlGraph: null };
     },
     watch: {
@@ -76,7 +82,7 @@
       Aggreg: function(val, prev) {
         if(prev != null) this.UpdateGraphValues();
       },
-      Range: function() { this.UpdateGraphValues(); }
+      Range: function() { this.ShowSpinner= true; console.log(this.Range); this.UpdateGraphValues(); }
     },
     computed: {
       ExportData: function() {
@@ -124,22 +130,6 @@
           (timeout) => { this.Control1M.Timer = setTimeout( () => { this.Update1MValues(); }, timeout); }
         );
       },
-      UpdateCounters: function() {
-        return;
-//        if(this.CounterTimer != null) clearTimeout(this.CounterTimer);
-//        if(this.analyzer == null) return;
-//        this.analyzer.GetSeriesLast('3S', ['ACTIVE_POWER', 'REACTIVE_POWER'],
-//          (working) => {},
-//          (result) => { this.Data3S = result; },
-//          (timeout) => {
-//            this.analyzer.GetSeriesLast('1M', ['ACTIVE_POWER', 'REACTIVE_POWER'],
-//              (working) => {},
-//              (result) => { this.Data1M = result; },
-//              (timeout) => { this.CounterTimer = setTimeout(() => { this.UpdateCounters(); }, 3000); }
-//            );
-//          }
-//        );
-      },
       UpdateGraphValues: function() {
         this.ControlGraph = this.CancelTransfer(this.ControlGraph);
         if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
@@ -150,7 +140,6 @@
         );
       }
     },
-
     components: { Energy, Counters, Graphs, Variables }
   }
 </script>

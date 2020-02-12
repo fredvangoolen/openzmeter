@@ -1,11 +1,11 @@
 <template>
   <div class="btn-group">
     <div class="input-group input-group-xs">
-      <span class="form-control"><div class="colorbox" v-bind:style="{backgroundColor: Selected}"></div></span>
+      <span class="form-control"><div class="colorbox" :style="{backgroundColor: value }"></div></span>
       <div class="input-group-btn">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" v-bind:style="{ columns: columns }">
-          <li v-for="color in colors" v-bind:class="{ active: (Selected == color)}"><a @click="ColorClick(color, $event)"><div class="colorli" v-bind:style="{backgroundColor: color}"></div></a></li>
+        <ul class="dropdown-menu pull-right" :style="{ columns: columns }">
+          <li v-for="(color, idx) in colors" :class="{ active: (value == color)}" :key="idx"><a @click="$emit('input', color)"><div class="colorli" :style="{backgroundColor: color}"></div></a></li>
         </ul>
       </div>
     </div>
@@ -14,19 +14,9 @@
 
 <script>
   export default {
-    props: ['colors', 'selected', 'columns'],
+    props: { 'colors': Array, value: String, columns: Number },
     data() {
-      return { Selected: '#FFFFFF' };
-    },
-    methods: {
-      ColorClick(color, evt) {
-        event.preventDefault();
-        this.Selected = color;
-        this.$emit('ColorChanged', color);
-      }
-    }, 
-    created: function() {
-      if(this.selected !== undefined) this.Selected = this.selected;
+      return { };
     }
   }
 </script>

@@ -8,8 +8,11 @@
             <div class="header-buttons clearfix" ref="Toolbar">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
-              <toolbar-phases storage="CurrentViewPhases" :analyzer="analyzer" :current="true" :multi="true" v-model="Phases"></toolbar-phases>
-              <!--toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools-->
+              <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="true" :multi="true" v-model="Phases"></toolbar-phases>
+              <div class="btn-group">
+                <button-export file="Current" :rows="[]"></button-export>
+                <button-expand :expanded.sync="Expanded"></button-expand>
+              </div>
             </div>
           </div>
           <div class="panel-body">
@@ -49,7 +52,7 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { ShowSpinner: false, ActiveTab: '', Aggreg: '', Range: null, Phases: null, Height: 300, Paused: false,
+      return { ShowSpinner: false, ActiveTab: '', Aggreg: '', Range: null, Phases: null, Height: 300, Paused: false, Expanded: false,
               DataGraph: null, ControlGraph: null, DataNow: null, ControlNow: null, DataCubism: null, ControlCubism: null, Data1M: null, Control1M: null, Data3S: null, Control3S: null };
     },
     created: function() {
@@ -79,7 +82,6 @@
     },
     methods: {
       UpdateNowValues: function() {
-        if(this.TimerNow != null) clearTimeout(this.TimerNow);
         this.ControlNow = this.CancelTransfer(this.ControlNow);
         if(this.analyzer == null) return;
         this.ControlNow.CancelFunc = this.analyzer.GetSeriesNow(['CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI'],

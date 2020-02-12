@@ -6,8 +6,10 @@
   import Dygraph from 'JS/dygraph.js';
   import chroma from 'chroma-js';
   import * as oZm from 'JS/openZmeter.js';
+  import Vue from 'vue';
+  const This = Vue.prototype;
   function mouseDown(event, g, context) {
-    if(this.StopAutoupdate) this.StopAutoupdate();
+    console.log("mouseDown");
     context.initializeMouseDown(event, g, context);
     if(event.altKey || event.shiftKey) {
       Dygraph.startZoom(event, g, context);
@@ -16,6 +18,7 @@
     }
   }
   function mouseMove(event, g, context) {
+    console.log("mouseMove");
     context.is2DPan = false;
     if(context.isPanning) {
       Dygraph.movePan(event, g, context);
@@ -24,12 +27,14 @@
     }
   }
   function mouseUp(event, g, context) {
+    console.log("mouseUp");
     if(context.isPanning) {
       Dygraph.endPan(event, g, context);
-      if(context.regionWidth > 0) this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
+
+//      if(context.regionWidth > 0) this.$emit('update:range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
     } else if (context.isZooming) {
       Dygraph.endZoom(event, g, context);
-      if(context.regionWidth > 0) this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
+//      if(context.regionWidth > 0) this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
     }
   }
   function mouseWheelZoom(event, g, context) {
@@ -172,23 +177,34 @@
   export default {
     WaveTimeTicks: function(max, analyzer) {
       var ticks = [];
-      for(var i = 0; i <= Math.floor(max / analyzer.SampleRate * analyzer.NominalFreq); i++) {
-        ticks.push({ v: i * analyzer.SampleRate / analyzer.NominalFreq, label: oZm.Round2(i / analyzer.NominalFreq * 1000) });
+      for(var i = 0; i <= Math.floor(max / analyzer.SampleRate * analyzer.NominalFrequency); i++) {
+        ticks.push({ v: i * analyzer.SampleRate / analyzer.NominalFrequency, label: This.Round(i / analyzer.NominalFrequency * 1000, 2, true) });
       }
       return ticks;
     },
     DBTicks: function(min, max, offset) {
       var ticks = [];
       for(var i = Math.floor(min - offset); i < Math.ceil(max - offset); i++) {
-        if((i % 10) === 0) ticks.push({ v: i + offset, label: i });
+        if((i % 10) == 0) ticks.push({ v: i + offset, label: i });
       }
       return ticks;
     },
-    OddHarmonicsTicks: function () {
+    OddHarmonicsTicks: function(analyzer) {
       var Ticks = [];
-      for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i = i + 2) Ticks.push({ v: i, label: oZm.Series['HARMONICS'].Names[i] });
+      for(var i = 0; i < analyzer.HarmonicsNames.length; i = i + 2) Ticks.push({ v: i, label: analyzer.HarmonicsNames[i] });
       return Ticks;
     },
+    LegendFormatter_Follow: function(data) {
+      if(data.x === undefined || data.x === null) return "";
+      var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
+      for(var i = 0; i < data.series.length; i++)  {
+        if(data.series[i].isVisible) {
+          Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
+        }
+      }
+      return Result;
+    },
+
     multiColumnBarPlotter: function(e) {
       if(e.seriesIndex != 0) return;
       var g = e.dygraph;
@@ -215,23 +231,14 @@
         }
       }
     },
-    LegendFormatter_Follow: function(data) {
-      if(data.x === undefined || data.x === null) return "";
-      var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
-      for(var i = 0; i < data.series.length; i++)  {
-        if(data.series[i].isVisible) {
-          Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
-        }
-      }
-      return Result;
-    },
+
     //interactions models
     FixedRangeInteractionModel: function(parent) {
-      return { mousedown: mouseDown.bind(parent), mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
+      return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp, dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
                 touchstart: touchStart, touchmove: touchMove, touchend: touchEnd.bind(parent) };
     },
     ScrollableInteractionModel: function(parent) {
-      return { mousedown: mouseDown.bind(parent), mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
+      return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
                 touchstart: touchStart.bind(parent), touchmove: touchMove, touchend: touchEnd.bind(parent) };
     },
     MouseUpEvt: function(event, g, contex) {
@@ -242,7 +249,7 @@
       var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;
       var VisibleSerie = serieIndex;
       for(var n = 0; n < serieIndex; n++) {
-        if(g.user_attrs_.visibility[n] === false) VisibleSerie--;
+        if(g.user_attrs_.visibility[n] == false) VisibleSerie--;
       }
       if(g.UndoHighlight.cx !== undefined && g.UndoHighlight.cx[serieIndex] !== undefined) {
         var x_left = g.UndoHighlight.cx[serieIndex] - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
@@ -251,96 +258,66 @@
       g.UndoHighlight.cx[serieIndex]=cx;
       g.UndoHighlight.cy[serieIndex]=cy;
       canvasContext.fillStyle = chroma(color).brighten(2);
-
       var x_left = cx - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
       canvasContext.fillRect(x_left, cy, g.subbar_width, g.y_bottom - cy);
     },
-    props: { options: Object, height: Number, paused: Boolean },
+    props: { options: Object, height: Number, width: Number, paused: Boolean, window: Array },
     data() {
       return { };
     },
     watch: {
-      options: function(val, prev) {
-        if((this.Graph == null) || (this.paused == true)) return;
-        if(val.file.length == 0) {
-          if(val.labels != null) {
-            val.file.push(Array(val.labels.length).fill(0));
-          } else {
-            val.labels = ['A', 'B'];
-            val.file.push([0,0]);
-          }
-        }
-        setTimeout(() => {
+      paused: function(val) {
+        if((val == false) && (this.PausedOptions != null) && (this.Graph != null)) {
+          if(this.PausedOptions.labels == null) this.PausedOptions.labels = ['A', 'B'];
+          if(this.PausedOptions.file == null) this.PausedOptions.file = [];
+          if(this.PausedOptions.file.length == 0) this.PausedOptions.file.push(Array(val.labels.length).fill(0));
           this.Graph.updateOptions({ showRangeSelector: true}, false);
-          val.showRangeSelector = false;
-          this.Graph.updateOptions(val);
-        }, 100);
+          this.PausedOptions.showRangeSelector = false;
+          this.Graph.updateOptions(this.PausedOptions);
+          this.PausedOptions = null;
+        }
+      },
+      options: function(val, prev) {
+        if(val.labels == null) val.labels = ['A', 'B'];
+        if(val.file == null) val.file = [];
+        if(val.file.length == 0) val.file.push(Array(val.labels.length).fill(0));
+        if((this.Graph == null) || ((this.paused == true) && (this.Graph.file_.length > 1))) {
+          this.PausedOptions = val;
+          return;
+        }
+        this.Graph.updateOptions({ showRangeSelector: true}, false);
+        val.showRangeSelector = false;
+        this.Graph.updateOptions(val);
+
       },
       height: function(val) {
+        if(this.Graph == null) return;
         $(this.Graph.graphDiv).parent().removeAttr('style');
-        this.Graph.resize('100%', val);
+        this.Graph.resize((this.width == null) ? '100%' : this.width, val);
         this.Graph.resize();
+      },
+      width: function(val) {
+        if(this.Graph == null) return;
+        $(this.Graph.graphDiv).parent().removeAttr('style');
+        this.Graph.resize((this.width == null) ? '100%' : this.width, this.height);
+        this.Graph.resize();
+        console.log('resize', this.width, ' x ', this.height);
+
       }
-    },
-    methods: {
-//      SetOptions: function(options) {
-//        this.Options = Object.assign({}, this.Options, options);
-//        if(this.Graph === null) return;
-//        if(this.AllowUpdate == true) {
-//          this.Graph.updateOptions(this.Options);
-//        } else {
-//          this.OptionsChanged = true;
-//        }
-//      },
-//      SetData: function(data) {
-//        this.Options = Object.assign({}, this.Options, { file: data });
-//        if(this.Graph === null) return;
-//        if(this.AllowUpdate == true) {
-//          this.Graph.updateOptions(this.Options);
-//        } else {
-//          this.OptionsChanged = true;
-//        }
-//      },
-//      Redraw: function(w, h) {
-//        $(this.Graph.graphDiv).parent().removeAttr('style');
-//        if((w !== undefined) && (h !== undefined)) this.Graph.resize(w, h);
-//        this.Graph.resize();
-//      },
-      HoverIn() {
-//        this.AllowUpdate = false;
-        this.$emit('mouseOver', true);
-      },
-      HoverOut() {
-//        this.AllowUpdate = true;
-        this.$emit('mouseOver', false);
-//        if(this.OptionsChanged == true) {
-//          this.Graph.updateOptions(this.options);
-//          this.OptionsChanged = false;
-//        }
-      },
     },
     created: function() {
       this.Graph = null;
-//      this.AllowUpdate = true;
-//      this.Options = Object.assign({ highlightCallback: this.HoverIn, unhighlightCallback: this.HoverOut, strokeWidth: 0.5, gridLineColor: "rgba(0, 0, 0, 0.1)", gridLinePattern: [4, 4], labels: ['Index', 'Value'], interactionModel: {} }, this.options);
+      this.PausedOptions = null;
     },
     mounted: function() {
-//      var Options = Object.assign({ file: [[0, 0]], labels: ['A', 'B']}, this.options);
-//      var Options = (this.options == null) ? {} : this.options;
-//      console.log(this.options);
       var Data = [];
-//      if(this.options.labels !== undefined) Data = [new Array(this.Options.labels.length).fill(0.0)];
       if(this.options.labels == null) this.options.labels = ['A', 'B'];
       if(this.options.file == null) this.options.file = [];
-      if(this.options.file.length == 0) {
-        Data.push(Array(this.options.labels.length).fill(0));
-      } else {
-        Data = this.options.file;
-      }
-      this.Graph = new Dygraph(this.$el, Data, this.options);
+      if(this.options.file.length == 0) this.options.file.push(Array(this.options.labels.length).fill(0));
+      this.Graph = new Dygraph(this.$el, this.options.file, this.options);
       this.$nextTick(() => {
         $(this.Graph.graphDiv).parent().removeAttr('style');
-        this.Graph.resize('100%', this.height);
+        this.Graph.resize((this.width == null) ? '100%' : this.width, this.height);
         this.Graph.resize();
       });
     },
@@ -356,5 +333,46 @@
     width: 100%;
     user-select: none;
     cursor: crosshair;
+  }
+  .chart >>> .dygraph-legend-title {
+    color: #FFF;
+    font-size: 10px;
+    font-weight: bold;
+  }
+  .chart >>> .dygraph-axis-label {
+    font-size: 11px;
+    color: black;
+    line-height: 10px;
+  }
+  .chart >>> .dygraph-legend {
+    position: absolute;
+    color: #FFF !important;
+    font-size: 11px;
+    z-index: 10;
+    width: 160px;
+    background-color: #474543 !important;
+    border: 1px solid #212121;
+    border-radius: 3px;
+    line-height: 13px;
+    text-align: center;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .chart >>> .dygraph-legend-line {
+    display: inline-block;
+    position: relative;
+    bottom: .5ex;
+    padding-left: 1em;
+    height: 1px;
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+  }
+  .chart >>> .dygraph-legend-dash {
+    display: inline-block;
+    position: relative;
+    bottom: .5ex;
+    height: 1px;
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
   }
 </style>
