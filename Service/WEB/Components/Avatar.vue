@@ -7,8 +7,7 @@
 
 <script>
   export default {
-    name: 'Avatar',
-    props: ['value'],
+    props: {value: String },
     data() {
       return { ImageData: null };
     },
@@ -20,7 +19,7 @@
         this.$refs.ImageChooser.click();
       },
       FileChanged: function(files) {
-        files = files.target.files;    
+        files = files.target.files;
         var reader = new FileReader();
         reader.readAsDataURL(files[0]);
         reader.onload = (event) => {
@@ -62,8 +61,3 @@
     }
   }
 </script>
-
-<style scoped>
-  
-  
-</style>

@@ -8,8 +8,11 @@
             <div class="header-buttons clearfix" ref="Toolbar">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
-              <toolbar-phases storage="VoltageViewPhases" :analyzer="analyzer" :current="false" :multi="true" v-model="Phases"></toolbar-phases>
-              <!--toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools-->
+              <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="false" :multi="true" v-model="Phases"></toolbar-phases>
+              <div class="btn-group">
+                <button-export file="Voltage" :rows="[]"></button-export>
+                <button-expand :expanded.sync="Expanded"></button-expand>
+              </div>
             </div>
           </div>
           <div class="panel-body">
@@ -53,7 +56,7 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { ShowSpinner: false, ActiveTab: '', Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false,
+      return { ShowSpinner: false, ActiveTab: '', Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false,
                DataGraph: null, ControlGraph: null, DataNow: null, ControlNow: null, DataCubism: null, ControlCubism: null, Data10M: null, Control10M: null };
     },
     created: function() {

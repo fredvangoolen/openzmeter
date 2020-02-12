@@ -8,18 +8,18 @@
 <script>
   import moment from 'moment';
   import datetimepicker from 'JS/bootstrap-datetimepicker.min.js';
-  import 'CSS/bootstrap-datetimepicker.min.css'  
+  import 'CSS/bootstrap-datetimepicker.min.css'
   export default {
-    props: {options: { type: Object, default: {}}, big: {type: Boolean, default: true}, timezone: {type: String, default: 'UTC'}, disabled: {type: Boolean, default: false}, date: { type: Object, default: null}},
+    props: { options: Object, big: Boolean, disabled: Boolean, value: Number },
     data() {
-      return { Date: 0 };
+      return { };
     },
     watch: {
       disabled: function(val) {
-        if(this.disabled === true) 
+        if(this.disabled === true)
           this.Disable();
-        else 
-          this.Enable();  
+        else
+          this.Enable();
       },
       date: function(val) {
         this.SetDate(val);
@@ -41,14 +41,10 @@
     },
     mounted: function() {
       $(this.$el).datetimepicker(this.options);
-      if(this.disabled === true) 
-        this.Disable();
-      else 
-        this.Enable();
-      if(this.date != null) $(this.$el).data("DateTimePicker").options({ date: this.date });
+      if(this.disabled == true) $(this.$el).data("DateTimePicker").disable();
+      if(this.value != null) $(this.$el).data("DateTimePicker").options({ date: moment(this.value) });
       $(this.$el).on('dp.change', (e) => {
-        if(this.Date != e.date.valueOf()) this.$emit('change', e.date);
-        this.Date = e.date.valueOf();
+        if(this.Date != e.date.valueOf()) this.$emit('input', e.date.valueOf());
       });
     }
   }

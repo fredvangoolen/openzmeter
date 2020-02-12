@@ -9,7 +9,8 @@
               <toolbar-aggregation storage="AggregationEnergy" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
-                <!--toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClickActive" v-on:MaximizeClick="MaximizeActiveClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools-->
+                <button-export file="Power" :rows="[]"></button-export>
+                <button-expand :expanded.sync="ExpandedActive"></button-expand>
               </div>
             </div>
           </div>
@@ -28,7 +29,8 @@
             <div class="header-text">Fund. Reactive Power</div>
             <div class="header-buttons clearfix" ref="ToolbarReactive">
             <div class="btn-group">
-              <!--toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClickReactive" v-on:MaximizeClick="MaximizeReactiveClick" v-on:MinimizeClick="MinimizeClick" ref="reactiveTools"></toolbar-tools-->
+              <button-export file="Power" :rows="[]"></button-export>
+              <button-expand :expanded.sync="ExpandedActive"></button-expand>
             </div>
             </div>
           </div>

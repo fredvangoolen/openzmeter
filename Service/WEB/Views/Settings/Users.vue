@@ -78,27 +78,6 @@
             this.ShowSpinner = false;
           }
         );
-      },
-      Save: function () {
-        this.$refs.settings.ShowSpinner = true;
-        $.ajax({url: "setDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify(this.$refs.settings.Settings),
-          success: (result) => {
-            this.$refs.settings.ShowSpinner = false;
-            this.Close();
-            this.LoadTable();
-          },
-          error: () => {
-            this.$refs.settings.Error = 'Failed to save device settings!';
-            setTimeout(() => {
-              this.$refs.settings.Error = '';
-            }, 1000);
-          }
-        });
-      },
-      Close: function () {
-        $(this.$refs.dialog).modal('hide');
-        this.$root.$el.removeChild(this.$refs.dialog);
-        this.ShowDialog = false;
       }
     },
     updated: function () {

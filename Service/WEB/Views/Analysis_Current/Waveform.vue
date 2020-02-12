@@ -35,20 +35,23 @@
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
-        var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
+        var Opt = { };
         Opt.plugins = [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ];
         Opt.interactionModel = Graph.FixedRangeInteractionModel(this);
+        Opt.drawAxesAtZero = true;
+        Opt.legend = 'follow';
+        Opt.legendFormatter = Graph.LegendFormatter_Follow;
         if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return Opt;
+        Opt.visibility = [];
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, ((this.Options['Voltage'] == true) ? 1 : 0));
         var VoltageNames = this.analyzer.PhaseNames.slice(0, this.analyzer.VoltageChannels).map((val) => { return 'Voltage' + ' (' + val + ')'});
         var CurrentNames = this.analyzer.PhaseNames.slice(0, this.analyzer.CurrentChannels).map((val) => { return 'Current' + ' (' + val + ')'});
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n]);
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n] && this.Options['Voltage']);
+        Opt.series = {};
         for(var n in VoltageNames) Opt.series[VoltageNames[n]] = { axis: 'y2' };
-        Opt.drawAxesAtZero = true;
-        Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.axes = { y: {}, y2: {}, x: {} };
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 2, true) + ' A'; };
@@ -65,6 +68,7 @@
         Opt.labels = ['Sample'].concat(CurrentNames).concat(VoltageNames);
         Opt.colors = CurrentStyle.Colors.concat(VoltageStyle.Colors);
         if(this.data != null) {
+          Opt.file = [];
           for(var i = 0; i < this.data.Current_Samples[0].length; i++) {
             var Row = [i];
             for(var n = 0; n < this.data.Current_Samples.length; n++) Row.push(this.data.Current_Samples[n][i]);

@@ -20,12 +20,12 @@
               <div class="rounded-panel">
                 <div class="popover-title"><strong>Profile image</strong>
                   <div class="pull-right btn-group">
-                    <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Browse image" @click="LoadImage" v-if="user.Photo==''"><img :src="require('Imgs/folder_explorer.png')"></button>
-                    <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Remove image" @click="ClearImage" v-if="user.Photo!=''"><img :src="require('Imgs/cross.png')"></button>
+                    <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Browse image" @click="LoadImage" v-if="User.Photo==''"><img :src="require('Imgs/folder_explorer.png')"></button>
+                    <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Remove image" @click="ClearImage" v-if="User.Photo!=''"><img :src="require('Imgs/cross.png')"></button>
                   </div>
                 </div>
                 <div class="popover-content" style="text-align: center">
-                  <avatar ref="avatar" v-model="user.Photo"></avatar>
+                  <avatar v-model="User.Photo"></avatar>
                 </div>
               </div>
             </div>
@@ -36,7 +36,7 @@
             <div class="col-xs-12">
               <label class="control-label">Username</label>
               <div class="input-group">
-                <input type="text" class="form-control" v-model="user.User" disabled>
+                <input type="text" class="form-control" v-model="User.User" :disabled="user!=null">
                 <span class="input-group-btn">
                   <button class="btn btn-default" data-toggle="tooltip" title="Change password" type="button"><img :src="require('Imgs/key.png')"></button>
                 </span>
@@ -44,11 +44,11 @@
             </div>
             <div class="col-xs-12">
               <label class="control-label">Full name</label>
-              <input type="text" class="form-control" v-model="user.Name">
+              <input type="text" class="form-control" v-model="User.Name">
             </div>
             <div class="col-xs-12">
               <label class="control-label">Address</label>
-              <input type="text" class="form-control" v-model="user.Address">
+              <input type="text" class="form-control" v-model="User.Address">
             </div>
           </div>
         </div>
@@ -56,19 +56,19 @@
       <div class="row">
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Telegram ID</label>
-          <input type="text" class="form-control" v-model="user.TelegramID">
+          <input type="text" class="form-control" v-model="User.Telegram">
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">E-Mail</label>
-          <input type="text" class="form-control" v-model="user.Email">
+          <input type="text" class="form-control" v-model="User.Email">
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Time zone</label>
-          <option-picker :options="TimeZones" v-model="user.TimeZone" :big="true"></option-picker>
+          <option-picker :options="TimeZones" v-model="User.TimeZone" :big="true"></option-picker>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Company</label>
-          <input type="text" class="form-control" v-model="user.Company">
+          <input type="text" class="form-control" v-model="User.Company">
         </div>
       </div>
     </div>
@@ -76,7 +76,7 @@
       <div class="row">
         <div class="col-xs-12">
           <label class="control-label" data-toggle="tooltip" title="Notify alarms with selected priority or higher">Alarms priority</label>
-          <option-picker :options="['LOW', 'NORMAL', 'HIGH']" :selected="user.TimeZone" v-on:change="user.TimeZone=$event" :big="true"></option-picker>
+          <option-picker :options="['LOW', 'NORMAL', 'HIGH']" v-model="User.TimeZone" :big="true"></option-picker>
         </div>
       </div>
       Alarms notifications priority
@@ -96,12 +96,16 @@
   export default {
     props: { user: Object },
     data: function() {
-      return { View: 'Main', TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false, Error: null };
+      return { View: 'Main', User: null, TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false, Error: null };
+    },
+    created: function() {
+      this.User = (this.user == null) ? { User: 'login_name', Name: 'Full name', Email: 'example@example.com', Telegram: '0', Address: 'user address', Photo: '', Company: 'Company name', TimeZone: 'UTC'} : this.user;
     },
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setUser', this.user).then(
+        console.log(this.User);
+        this.$http.post((this.user == null) ? 'addUser' : 'setUser', this.User).then(
           (result) => {
             this.ShowSpinner = false;
             this.$emit('close');

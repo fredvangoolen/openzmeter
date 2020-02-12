@@ -331,51 +331,7 @@ div.scrtabs-tab-container + div.panel {
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-.dygraph-axis-label {
-  font-size: 11px;
-  color: black;
-  line-height: 10px;
-}
-.dygraph-legend {
-  position: absolute;
-  color: #FFF !important;
-  font-size: 12px;
-  z-index: 10;
-  width: 140px;
-  background-color: #474543 !important;
-  border: 1px solid #212121;
-  border-radius: 3px;
-  line-height: 13px;
-  text-align: center;
-  overflow: hidden;
-  pointer-events: none;
-}
-.dygraph-legend-title {
-  color: #FFF;
-  font-size: 10px;
-  font-weight: bold;
-}
-/* styles for a solid line in the legend */
-.dygraph-legend-line {
-  display: inline-block;
-  position: relative;
-  bottom: .5ex;
-  padding-left: 1em;
-  height: 1px;
-  border-bottom-width: 2px;
-  border-bottom-style: solid;
-  /* border-bottom-color is set based on the series color */
-}
 
-/* styles for a dashed line in the legend, e.g. when strokePattern is set */
-.dygraph-legend-dash {
-  display: inline-block;
-  position: relative;
-  bottom: .5ex;
-  height: 1px;
-  border-bottom-width: 2px;
-  border-bottom-style: solid;
-}
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 .nav-tabs>li>a {
