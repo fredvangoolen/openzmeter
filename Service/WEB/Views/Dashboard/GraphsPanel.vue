@@ -188,7 +188,8 @@
   }
   .main-value {
     display: inline-block;
-    font-size: 24px;
+    font-size: 33px;
+    line-height: 48px;
     padding-right: 4px;
     vertical-align: top;
   }

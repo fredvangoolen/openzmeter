@@ -44,6 +44,8 @@ import InputSpin from 'Components/InputSpin.vue';
 Vue.component('InputSpin', InputSpin);
 import OptionPicker from 'Components/OptionPicker.vue';
 Vue.component('OptionPicker', OptionPicker);
+import Password from 'Components/Password.vue';
+Vue.component('Password', Password);
 import ProgressBar from 'Components/ProgressBar.vue';
 Vue.component('ProgressBar', ProgressBar);
 import Spinner from 'Components/Spinner.vue';

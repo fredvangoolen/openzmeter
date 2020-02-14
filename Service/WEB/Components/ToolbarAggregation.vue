@@ -4,9 +4,9 @@
       <div class="input-group input-group-xs">
         <span class="input-group-addon"><img :src="require('Imgs/clock_15.png')"></span>
         <div class="input-group-btn">
-          <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">{{ Selected.name }}<span class="caret"></span></button>
+          <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">{{ Selected }}<span class="caret"></span></button>
           <ul class="dropdown-menu pull-left">
-            <li v-for="(option, idx) in Options" v-bind:class="{active: (value == option.value)}" :key="idx"><a v-on:click="$emit('input', option.value)">{{ option.name }}</a></li>
+            <li v-for="(option, idx) in Options" :class="{active: (value == option.value)}" :key="idx"><a v-on:click="$emit('input', option.value)">{{ option.name }}</a></li>
           </ul>
         </div>
       </div>
@@ -32,9 +32,9 @@
 
 <script>
   export default {
-    props: { value: { type: String }, options: { type: Array, required: true }, storage: { type: String, default: null } },
+    props: { value: String, options: Array, storage: String },
     data() {
-      return { Options: [], showDialog: false, Selected: {} };
+      return { Options: [], showDialog: false };
     },
     created: function() {
       if(this.options.includes('3S'))  this.Options.push({value: '3S',  name: '3 seconds'});
@@ -51,14 +51,16 @@
         }
       }
     },
+    computed: {
+      Selected: function() {
+        for(var idx in this.Options) {
+          if(this.Options[idx].value == this.value) return this.Options[idx].name;
+        }
+      }
+    },
     watch: {
       value: function(val) {
         if((this.storage != null) && (val != '')) localStorage.setItem(this.storage, val);
-        for(var idx in this.Options) {
-          if(this.Options[idx].value !== val) continue;
-          this.Selected = this.Options[idx];
-          return;
-        }
       }
     },
     methods: {

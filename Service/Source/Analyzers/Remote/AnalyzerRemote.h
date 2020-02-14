@@ -60,10 +60,6 @@ class AnalyzerRemote : public Analyzer {
     void  GetPrices(const json &params, Response &response);
     void  TestAlarm(const json &params, Response &response);
     void  GetAlarms(const json &params, Response &response);
-    void  GetAlarm(const json &params, Response &response);
-    void  SetAlarm(const json &params, Response &response);
-    void  AddAlarm(const json &params, Response &response);
-    void  DelAlarm(const json &params, Response &response);
   public :
     AnalyzerRemote(string id);
     ~AnalyzerRemote();

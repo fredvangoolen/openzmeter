@@ -51,10 +51,6 @@ class DeviceManager final {
     static void GetPricesCallback(const json &params, Response &response);
     static void TestAlarmCallback(const json &params, Response &response);
     static void GetAlarmsCallback(const json &params, Response &response);
-    static void GetAlarmCallback(const json &params, Response &response);
-    static void SetAlarmCallback(const json &params, Response &response);
-    static void AddAlarmCallback(const json &params, Response &response);
-    static void DelAlarmCallback(const json &params, Response &response);
     static void GetPermissionsCallback(const json &params, Response &response);
     static void AddPermissionCallback(const json &params, Response &response);
     static void SetPermissionCallback(const json &params, Response &response);

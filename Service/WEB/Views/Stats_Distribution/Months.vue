@@ -1,6 +1,11 @@
 <template>
   <div class="panel panel-other">
-    <div class="panel-heading">By month<div class="pull-right">{{ Units }}Wh</div></div>
+    <div class="panel-heading">By month
+      <div class="pull-right">
+        {{ Units }}Wh
+        <button-export file="Distribution" :rows="Export" style="margin-top: -4px"></button-export>
+      </div>
+    </div>
     <div class="panel-body">
       <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Months" class="table small table-striped"></vuetable>
     </div>
@@ -14,9 +19,9 @@
   import * as oZm from 'JS/openZmeter.js';
   var Names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   export default {
-    props: { data: { type: Object, required: true }, analyzer: { type: Object, required: true}, export: { type: Array, default: [] } },
+    props: { data: Object, analyzer: Object },
     data: function() {
-      return { Units: '', Columns: [], Months: [], Periods: [] };
+      return { Units: '', Columns: [], Months: [], Periods: [], Export: [] };
     },
     watch: {
       data: function() { this.SetData(); }
@@ -42,7 +47,7 @@
         this.Columns = [ { name: 'Month', title: 'Month' } ];
         for(var Period in this.Periods) this.Columns.push({ name: this.Periods[Period], title: this.Periods[Period] });
         this.$nextTick(() => { this.$refs.table.normalizeFields(); });
-        var Export = [['Month'].concat(this.Periods)];
+        this.Export = [['Month'].concat(this.Periods)];
         for(var Month in this.Months) {
           var Row = [Names[Month]];
           for(var Period in this.Months[Month]) {
@@ -50,9 +55,8 @@
             Row.push(this.Months[Month][Period]);
           }
           this.Months[Month].Month = Names[Month];
-          Export.push(Row);
+          this.Export.push(Row);
         }
-        this.$emit('update:export', Export);
       }
     },
     updated: function(){

@@ -41,15 +41,7 @@ AnalyzerSoft::Alarms::~Alarms() {
   pAlarms.clear();
   pMemberLocks.WriteUnlock();
 }
-json AnalyzerSoft::Alarms::CheckConfig(const json &config) {
-  json ConfigOUT = json::array();
-  if(!config.is_array()) return ConfigOUT;
-  for(auto Tmp : config) {
-    if(!Tmp.is_object()) continue;
-    ConfigOUT.push_back(Alarm::CheckConfig(Tmp));
-  }
-  return ConfigOUT;
-}
+
 void AnalyzerSoft::Alarms::Start(AnalyzerSoft::Params_t &aggreg) {
   pParams = &aggreg;
   pWorkerLocks.WakeWorker();

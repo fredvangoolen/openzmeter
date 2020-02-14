@@ -93,11 +93,6 @@
       this.View = 'Basic';
     },
     methods: {
-      GetLocation: function() {
-        navigator.geolocation.getCurrentPosition((val) => {
-          this.value.GeoPosition = [val.coords.latitude, val.coords.longitude];
-        });
-      },
       Save: function() {
         this.ShowSpinner = true;
         this.$http.post('setAnalyzer', this.analyzer).then(

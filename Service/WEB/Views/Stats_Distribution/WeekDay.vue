@@ -1,6 +1,11 @@
 <template>
   <div class="panel panel-other">
-    <div class="panel-heading">By week day<div class="float-right">{{ Units }}Wh</div></div>
+    <div class="panel-heading">By week day
+      <div class="float-right">
+        {{ Units }}Wh
+        <button-export file="Distribution" :rows="Export" style="margin-top: -4px"></button-export>
+      </div>
+    </div>
     <div class="panel-body">
       <vuetable ref="table" :fields="Columns" :data="Days" :api-mode="false" class="table small table-striped"></vuetable>
     </div>
@@ -14,9 +19,9 @@
   import * as oZm from 'JS/openZmeter.js';
   var Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   export default {
-    props: { data: { type: Object, required: true }, analyzer: { type: Object, required: true}, export: { type: Array, default: [] } },
+    props: { data: Object, analyzer: Object },
     data() {
-      return { Columns: [], Units: '', Days: [], Periods: [] };
+      return { Columns: [], Units: '', Days: [], Periods: [], Export: [] };
     },
     watch: {
       data: function() {
@@ -27,15 +32,6 @@
       if(this.data != null) this.SetData();
     },
     methods: {
-      GetData: function(data) {
-        data.push(['Week day'].concat(this.Periods));
-        for(var day in this.Days) {
-          var Row = [this.Days[day].Day];
-          for(var period in this.Periods) Row.push(this.Days[day][this.Periods[period]]);
-          data.push(Row);
-        }
-        return data;
-      },
       SetData: function() {
         this.Days = [];
         this.Periods = [];
@@ -53,7 +49,7 @@
         this.Columns = [ { name: 'Day', title: 'Day' } ];
         for(var Period in this.Periods) this.Columns.push({ name: this.Periods[Period], title: this.Periods[Period] });
         this.$nextTick(() => { this.$refs.table.normalizeFields(); });
-        var Export = [['Week day'].concat(this.Periods)];
+        this.Export = [['Week day'].concat(this.Periods)];
         for(var Day in this.Days) {
           var Row = [Names[Day]];
           for(var Period in this.Days[Day]) {
@@ -61,9 +57,8 @@
             Row.push(this.Days[Day][Period]);
           }
           this.Days[Day].Day = Names[Day];
-          Export.push(Row);
+          this.Export.push(Row);
         }
-        this.$emit('update:export', Export);
       }
     },
     updated: function(){

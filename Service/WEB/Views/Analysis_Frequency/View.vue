@@ -5,26 +5,30 @@
         <div class="panel panel-frequency">
           <div class="panel-heading">
             <div class="huge header-text">Frequency</div>
-            <div class="header-buttons clearfix" ref="Toolbar">
+            <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
-                <button-export :rows="ExportData" file="Frequency"></button-export>
-                <button-expand></button-expand>
-                <!--toolbar-tools variable="To" :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools-->
+                <button-export :rows="Export" file="Frequency"></button-export>
+                <button-expand :expanded.sync="Expanded"></button-expand>
               </div>
-            </div>
+            </portal>
           </div>
           <div class="panel-body">
             <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :dataNow="DataNow" :dataGraph="DataGraph" :height.sync="Height"></counters>
-              <frequency class="col-md-6 col-lg-8 col-xl-9" :analyzer="analyzer" :data="DataGraph" :height="Height"></frequency>
+              <div class="col-md-6 col-lg-8 col-xl-9">
+                <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+                  <frequency :analyzer="analyzer" :data="DataGraph" :height="Expanded?DialogHeight:Height"></frequency>
+                </portal>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <dlg-fs v-if="Expanded" title="Frequency" :height.sync="DialogHeight"></dlg-fs>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">
@@ -39,7 +43,7 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Aggreg: null, ShowSpinner: true, Range: null, Height: 300,
+      return { Aggreg: null, ShowSpinner: true, Range: null, Height: 300, Expanded: false, DialogHeight: 300,
                DataNow: null, ControlNow: null, DataGraph: null, ControlGraph: null };
       },
     watch: {
@@ -48,7 +52,7 @@
       Range: function() { this.UpdateGraphValues(); }
     },
     computed: {
-      ExportData: function() {
+      Export: function() {
         if(this.DataGraph == null) return [];
         var Rows = [['Time', 'Frequency']];
         for(var n in this.DataGraph.Sampletime) Rows.push([this.DataGraph.Sampletime[n], this.DataGraph.Frequency[n]]);
@@ -64,13 +68,6 @@
       this.CancelTransfer(this.ControlGraph);
     },
     methods: {
-      MaximizeClick: function() {
-        $(window).unbind('resize', this.ResizeHandler);
-        this.$refs.tools.Maximize('Energy consumption', this.$refs.graph.Graph, this.$refs.Toolbar);
-      },
-      MinimizeClick: function() {
-        $(window).bind('resize', this.ResizeHandler.bind(this));
-      },
       UpdateNowValues: function() {
         this.ControlNow = this.CancelTransfer(this.ControlNow);
         if(this.analyzer == null) return;

@@ -210,6 +210,7 @@ export default {
       position: absolute;
       right: 2px;
       text-align: right;
+      z-index: 95;
       border: none;
     }
   }

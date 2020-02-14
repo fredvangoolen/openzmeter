@@ -81,6 +81,7 @@ class SysSupport final {
     static void GetNewsCallback(const json &params, Response &response);
     static void GetUsersCallback(const json &params, Response &response);
     static void GetUserCallback(const json &params, Response &response);
+    static void SetUserPasswordCallback(const json &params, Response &response);
     static void SetUserCallback(const json &params, Response &response);
     static void AddUserCallback(const json &params, Response &response);
     static void DelUserCallback(const json &params, Response &response);

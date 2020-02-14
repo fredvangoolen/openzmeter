@@ -20,7 +20,7 @@
             <button type="button" class="btn btn-success btn-xs" :disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" @click="Select(props.rowData.Analyzer)">Select</button>
             <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
             <ul class="dropdown-menu pull-right">
-              <li><a @click="Alarms(props.rowData.Analyzer)">Alarms</a></li>
+              <li><a @click="Alarms(props.rowData.Analyzer)">Alarms and events</a></li>
               <li><a @click="Configure(props.rowData.Analyzer)">Configure</a></li>
               <li><a @click="Permissions(props.rowData.Analyzer)">Permissions</a></li>
               <li><a @click="Rates(props.rowData.Analyzer)">Rates</a></li>
@@ -131,7 +131,7 @@
       },
       Alarms: function(analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer , Alarms: true }).then(
           (result) => {
             if(result.status == 200) {
               result.data.Analyzer = analyzer;

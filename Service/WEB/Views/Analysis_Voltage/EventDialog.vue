@@ -27,7 +27,6 @@
   import Dygraph from 'JS/dygraph.js';
   import * as oZm from 'JS/openZmeter.js';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
     data: function() {
       return { ShowDialog: false, ViewMode: 'RMS', ShowSpinner: false };
@@ -149,7 +148,7 @@
                     canvas.moveTo(g.toDomXCoord(EndCount - EventWidth / 2), g.toDomYCoord(-HighEnd));
                     canvas.lineTo(g.toDomXCoord(EndCount + StartCount / 8), g.toDomYCoord(-HighEnd));
                     canvas.stroke();
-                    canvas.save();            
+                    canvas.save();
                     canvas.translate(g.toDomXCoord(StartCount - StartCount / 8), g.toDomYCoord(HighStart) - 8);
                     canvas.fillText(this.Event.Type + " enter", 0 , 0, g.height_);
                     canvas.restore();
@@ -199,7 +198,7 @@
                     }
                   }
                   if(this.ViewMode==='RMS') {
-                    canvas.save();            
+                    canvas.save();
                     canvas.translate(g.toDomXCoord(StartCount - StartCount / 8), g.toDomYCoord(HighStart) - 8);
                     canvas.fillText("RVC enter", 0 , 0, g.height_);
                     canvas.restore();
@@ -238,7 +237,7 @@
                 window.dispatchEvent(new Event('resize'));
               });
             }.bind(this)
-        }); 
+        });
       },
       ExportClick: function() {
         var Analyzer = this.$root.SelectedAnalyzer;
@@ -258,6 +257,6 @@
         this.$refs.graph.SetOptions( {dateWindow: [0, this.Data.length]} );
       }
     },
-    components: { Graph, ToolbarPhases, ToolbarTools }
-  };  
+    components: { Graph, ToolbarPhases }
+  };
 </script>
