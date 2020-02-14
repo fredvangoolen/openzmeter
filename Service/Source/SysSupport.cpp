@@ -17,6 +17,9 @@
   #include <sys/sysinfo.h>
   #include <sys/statvfs.h>
 #endif
+#ifndef __BUILD__
+  #define __BUILD__ "UNKNOWN"
+#endif
 #include "SysSupport.h"
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -101,8 +104,25 @@ void SysSupport::SetUserCallback(const json &params, Response &response) {
   if((UserName != "admin") && (UserName != User)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
   bool Result = DB.ExecSentenceNoResult("UPDATE users SET name = " + DB.Bind(Name) + ", address = " + DB.Bind(Address) + ", company = " + DB.Bind(Company) +  ", photo = " + DB.Bind(Photo) + ", email = " + DB.Bind(Email) + ", telegram = " + DB.Bind(Telegram) + ", time_zone = " + DB.Bind(TimeZone) + " WHERE username = " + DB.Bind(User));
-  if(Result == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
+  HTTPServer::FillResponse(response, "", "text/plain", (Result == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
+}
+void SysSupport::SetUserPasswordCallback(const json &params, Response &response) {
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Password") == false) || (params["Password"].is_string() == false)) return HTTPServer::FillResponse(response, "'Password' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  string UserName = params["UserName"];
+  string User = params["User"];
+  string Password = params["Password"];
+  if((UserName != "admin") && (UserName != User)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  Database DB;
+  if(UserName == User) {
+    if((params.contains("PrevPassword") == false) || (params["PrevPassword"].is_string() == false)) return HTTPServer::FillResponse(response, "'PrevPassword' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    string PrevPassword = params["PrevPassword"];
+    DB.ExecSentenceAsyncResult("UPDATE users SET password = MD5(" + DB.Bind(Password) + ") WHERE username = " + DB.Bind(User) + " AND password = MD5(" + DB.Bind(PrevPassword) + ") RETURNING username");
+    return HTTPServer::FillResponse(response, "", "text/plain", (DB.FecthRow() == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
+  } else {
+    DB.ExecSentenceAsyncResult("UPDATE users SET password = MD5(" + DB.Bind(Password) + ") WHERE username = " + DB.Bind(User) + ") RETURNING username");
+    return HTTPServer::FillResponse(response, "", "text/plain", (DB.FecthRow() == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
+  }
 }
 void SysSupport::AddUserCallback(const json &params, Response &response) {
   if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -113,9 +133,10 @@ void SysSupport::AddUserCallback(const json &params, Response &response) {
   if((params.contains("Email") == false) || (params["Email"].is_string() == false)) return HTTPServer::FillResponse(response, "'Email' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Telegram") == false) || (params["Telegram"].is_string() == false)) return HTTPServer::FillResponse(response, "'Telegram' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPServer::FillResponse(response, "'TimeZone' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-//  if((params.contains("Password") == false) || (params["Password"].is_string() == false)) return HTTPServer::FillResponse(response, "'Password' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Password") == false) || (params["Password"].is_string() == false)) return HTTPServer::FillResponse(response, "'Password' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string UserName = params["UserName"];
   string User = params["User"];
+  string Password = params["Password"];
   string Name = params["Name"];
   string Address = params["Address"];
   string Company = params["Company"];
@@ -125,9 +146,8 @@ void SysSupport::AddUserCallback(const json &params, Response &response) {
   string TimeZone = params["TimeZone"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
-  bool Result = DB.ExecSentenceNoResult("INSERT INTO users(username, name, address, company, photo, email, telegram, time_zone) VALUES(" + DB.Bind(User) + ", " + DB.Bind(Name) + ", " + DB.Bind(Address) + ", " + DB.Bind(Company) +  ", " + DB.Bind(Photo) + ", " + DB.Bind(Email) + ", " + DB.Bind(Telegram) + ", " + DB.Bind(TimeZone) + ")");
-  if(Result == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
+  bool Result = DB.ExecSentenceNoResult("INSERT INTO users(username, password, lastlogin, name, address, company, photo, email, telegram, time_zone) VALUES(" + DB.Bind(User) + ", MD5(" + DB.Bind(Password) + "), 0, " + DB.Bind(Name) + ", " + DB.Bind(Address) + ", " + DB.Bind(Company) +  ", " + DB.Bind(Photo) + ", " + DB.Bind(Email) + ", " + DB.Bind(Telegram) + ", " + DB.Bind(TimeZone) + ")");
+  HTTPServer::FillResponse(response, "", "text/plain", (Result == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
 void SysSupport::DelUserCallback(const json &params, Response &response) {
   if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -136,16 +156,16 @@ void SysSupport::DelUserCallback(const json &params, Response &response) {
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
   bool Result = DB.ExecSentenceNoResult("DELETE FROM users WHERE name = " + DB.Bind(User));
-  if(Result == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
+  HTTPServer::FillResponse(response, "", "text/plain", (Result == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
 SysSupport::SysSupport() {
-  HTTPServer::RegisterCallback("getNews",   GetNewsCallback);
-  HTTPServer::RegisterCallback("getUsers",  GetUsersCallback);
-  HTTPServer::RegisterCallback("getUser",   GetUserCallback);
-  HTTPServer::RegisterCallback("setUser",   SetUserCallback);
-  HTTPServer::RegisterCallback("addUser",   AddUserCallback);
-  HTTPServer::RegisterCallback("delUser",   DelUserCallback);
+  HTTPServer::RegisterCallback("getNews",         GetNewsCallback);
+  HTTPServer::RegisterCallback("getUsers",        GetUsersCallback);
+  HTTPServer::RegisterCallback("getUser",         GetUserCallback);
+  HTTPServer::RegisterCallback("setUser",         SetUserCallback);
+  HTTPServer::RegisterCallback("setUserPassword", SetUserPasswordCallback);
+  HTTPServer::RegisterCallback("addUser",         AddUserCallback);
+  HTTPServer::RegisterCallback("delUser",         DelUserCallback);
   #ifdef OPENWRT
     json Config = ConfigManager::ReadConfig("/Bluetooth");
     DBusError Error;
@@ -196,6 +216,7 @@ SysSupport::~SysSupport() {
   HTTPServer::UnregisterCallback("getUsers");
   HTTPServer::UnregisterCallback("getUser");
   HTTPServer::UnregisterCallback("setUser");
+  HTTPServer::UnregisterCallback("setUserPassword");
   HTTPServer::UnregisterCallback("addUser");
   HTTPServer::UnregisterCallback("delUser");
   #ifdef OPENWRT

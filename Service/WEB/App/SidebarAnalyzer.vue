@@ -50,7 +50,7 @@
           analyzer.Color = { Voltage: '#d9534f', Current: '#428bca', Active_Power: '#f0ad4e', Active_Energy: '#3d3d8b', Frequency: '#5cb85c' };
           analyzer.Unit = { Voltage: 'V', Current: 'A', Active_Power: 'W', Active_Energy: 'Wh', Frequency: 'Hz'};
           analyzer.HarmonicsNames = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
-//          analyzer.GetSeriesNames = this.GetSeriesNames.bind(this);
+          analyzer.GetSeriesNames = this.GetSeriesNames.bind(this);
           analyzer.GetSeriesRange = this.GetSeriesRange.bind(this);
           analyzer.GetPricesRange = this.GetPricesRange.bind(this);
           analyzer.GetSeriesLast = this.GetSeriesLast.bind(this);
@@ -70,6 +70,12 @@
 //        this.LastSample = 0;
 //        this.EventsCount = 0;
 //        this.GetEvents();
+      },
+      GetSeriesNames: function(serie, len) {
+        if(len == 1) return [serie];
+        var Result = [];
+        for(var n = 0; n < len; n++) Result.push(serie + ' (' + this.analyzer.PhaseNames[n] + ')');
+        return Result;
       },
       GetSeriesRange: function(aggreg, range, prev, series, working, outs, timeout) {
         var Cancelled = false;

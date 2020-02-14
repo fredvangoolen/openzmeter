@@ -50,10 +50,6 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("getPrices",           GetPricesCallback);
   HTTPServer::RegisterCallback("testAlarm",           TestAlarmCallback);
   HTTPServer::RegisterCallback("getAlarms",           GetAlarmsCallback);
-  HTTPServer::RegisterCallback("getAlarm",            GetAlarmCallback);
-  HTTPServer::RegisterCallback("setAlarm",            SetAlarmCallback);
-  HTTPServer::RegisterCallback("addAlarm",            AddAlarmCallback);
-  HTTPServer::RegisterCallback("delAlarm",            DelAlarmCallback);
   HTTPServer::RegisterCallback("getPermissions",      GetPermissionsCallback);
   HTTPServer::RegisterCallback("addPermission",       AddPermissionCallback);
   HTTPServer::RegisterCallback("setPermission",       SetPermissionCallback);
@@ -81,10 +77,6 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("getPrices");
   HTTPServer::UnregisterCallback("testAlarm");
   HTTPServer::UnregisterCallback("getAlarms");
-  HTTPServer::UnregisterCallback("getAlarm");
-  HTTPServer::UnregisterCallback("setAlarm");
-  HTTPServer::UnregisterCallback("addAlarm");
-  HTTPServer::UnregisterCallback("delAlarm");
   HTTPServer::UnregisterCallback("getPermissions");
   HTTPServer::UnregisterCallback("addPermission");
   HTTPServer::UnregisterCallback("setPermission");
@@ -202,18 +194,6 @@ void DeviceManager::TestAlarmCallback(const json &params, Response &response) {
 }
 void DeviceManager::GetAlarmsCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetAlarms);
-}
-void DeviceManager::GetAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetAlarm);
-}
-void DeviceManager::SetAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::SetAlarm);
-}
-void DeviceManager::AddAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::AddAlarm);
-}
-void DeviceManager::DelAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::DelAlarm);
 }
 void DeviceManager::GetPermissionsCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetPermissions);

@@ -71,10 +71,6 @@ class Device {
     bool GetPrices(const json &params, Response &response);
     bool TestAlarm(const json &params, Response &response);
     bool GetAlarms(const json &params, Response &response);
-    bool GetAlarm(const json &params, Response &response);
-    bool SetAlarm(const json &params, Response &response);
-    bool AddAlarm(const json &params, Response &response);
-    bool DelAlarm(const json &params, Response &response);
     bool GetPermissions(const json &params, Response &response);
     bool AddPermission(const json &params, Response &response);
     bool SetPermission(const json &params, Response &response);

@@ -8,15 +8,14 @@
             <div class="header-buttons clearfix">
               <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="1H" storage="StatsYear"></toolbar-years>
               <div class="btn-group">
-                <button-export></button-export>
+                <button-export file="Cost" :rows="Export"></button-export>
               </div>
-              <toolbar-tools ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
             </div>
           </div>
           <div class="panel-body">
             <spinner v-if="ShowSpinner"></spinner>
-            <summary-graph :value="Bills"></summary-graph>
-            <bill v-for="(bill, idx) in Bills" :bill="bill" :currency="Currency" ref="bills" :key="idx"></bill>
+            <summary-graph :data="Bills" :analyzer="analyzer"></summary-graph>
+            <bill v-for="(bill, idx) in Bills" :bill="bill" :currency="Currency" :key="idx"></bill>
           </div>
         </div>
       </div>
@@ -29,7 +28,7 @@
   import Bill from './Bill.vue';
   import moment from 'moment';
   export default {
-    props: { analyzer: { type: Object } },
+    props: { analyzer: Object },
     data: function() {
       return { Year: null, ShowSpinner: true, Bills: null, Currency: '€' };
     },
@@ -37,25 +36,26 @@
       Year: function(val) {
         this.ShowSpinner = true;
         this.Bills = null;
-        var To = moment().year(val).endOf('year').valueOf();
-        var Period = To - moment().year(val).startOf('year').valueOf();
-        this.$http.post("getPrices", { Period: Period, To: To, Aggreg: '1H', LastSample: 0, Analyzer: this.analyzer.Analyzer }).then(
+        var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
+        var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
+        this.$http.post('getPrices', { From: From, To: To, Aggreg: '1H', Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
             this.ShowSpinner = false;
             this.Bills = result.data.Bills.filter(function(value) { return value.Complete === true; });
           }
         );
-      }
+      },
     },
-    methods: {
-      ExportClick: function() {
+    computed: {
+      Export: function() {
         var Data = [];
-        for(var i = 0; i < this.$refs.bills.length; i++) {
-          Data = this.$refs.bills[i].GetData(Data);
-          Data.push([]);
-          Data.push([]);
-        }
-        this.$refs.tools.SaveCVS('Cost.csv', Data);
+//        for(var i = 0; i < this.$refs.bills.length; i++) {
+//          Data = this.$refs.bills[i].GetData(Data);
+//          Data.push([]);
+//          Data.push([]);
+//        }
+//        this.$refs.tools.SaveCVS('Cost.csv', Data);
+        return Data;
       }
     },
     components: { SummaryGraph, Bill }

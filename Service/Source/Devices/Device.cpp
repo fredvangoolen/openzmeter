@@ -121,18 +121,6 @@ bool Device::TestAlarm(const json &params, Response &response) {
 bool Device::GetAlarms(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetAlarms);
 }
-bool Device::GetAlarm(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetAlarm);
-}
-bool Device::SetAlarm(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::SetAlarm);
-}
-bool Device::AddAlarm(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::AddAlarm);
-}
-bool Device::DelAlarm(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::DelAlarm);
-}
 bool Device::GetPermissions(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetPermissions);
 }

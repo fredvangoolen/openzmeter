@@ -9,7 +9,7 @@
               <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
               <toolbar-years storage="StatsYear" v-model="Year" :analyzer="analyzer" aggreg="1H"></toolbar-years>
               <div class="btn-group">
-                <button-export file="Distribution" :rows="CalendarRows.concat(['']).concat(MonthRows).concat(['']).concat(WeekRows)"></button-export>
+                <button-export file="Distribution" :rows="CalendarRows"></button-export>
               </div>
             </div>
           </div>
@@ -46,8 +46,8 @@
         this.ShowSpinner = true;
         this.Data = {};
         var To = moment.tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
-        var Period = To - moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post("getPrices", { Period: Period, To: To, Aggreg: '1H', LastSample: 0, Series: ['ACTIVE_POWER'], Analyzer: this.analyzer.Analyzer }).then(
+        var From = moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
+        this.$http.post("getPrices", { From: From, To: To, Aggreg: '1H', Series: ['ACTIVE_POWER'], Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
             this.ShowSpinner = false;
             this.Data = result.data;

@@ -5,20 +5,24 @@
         <div class="panel panel-active-energy">
           <div class="panel-heading">
             <div class="huge header-text">Active Energy</div>
-            <div class="header-buttons clearfix">
+            <portal to="fs-toolbar" :disabled="!ExpandedActive" class="header-buttons">
               <toolbar-aggregation storage="AggregationEnergy" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
-                <button-export file="Energy" :rows="[]"></button-export>
+                <button-export file="Energy" :rows="Export"></button-export>
                 <button-expand :expanded.sync="ExpandedActive"></button-expand>
               </div>
-            </div>
+            </portal>
           </div>
           <div class="panel-body">
             <spinner v-if="ShowSpinner"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_ENERGY" :analyzer="analyzer" :data15M="Data15M" :data1H="Data1H" :dataGraph="GraphData" :height.sync="ActiveHeight"></counters>
-              <energy class="col-md-6 col-lg-8 col-xl-9" serie="ACTIVE_ENERGY" :analyzer="analyzer" :data="GraphData" :height="ActiveHeight"></energy>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_ENERGY" :analyzer="analyzer" :data15M="Data15M" :data1H="Data1H" :dataGraph="DataGraph" :height.sync="ActiveHeight"></counters>
+              <div class="col-md-6 col-lg-8 col-xl-9">
+                <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
+                  <energy serie="ACTIVE_ENERGY" :analyzer="analyzer" :data="DataGraph" :height="ExpandedActive?DialogHeight:ActiveHeight"></energy>
+                </portal>
+              </div>
             </div>
           </div>
         </div>
@@ -27,21 +31,29 @@
         <div class="panel panel-reactive-energy">
           <div class="panel-heading">
             <div class="header-text">Fund. Reactive Energy</div>
-            <div class="pull-right btn-group">
-              <button-export file="Energy" :rows="[]"></button-export>
-              <button-expand :expanded.sync="ExpandedReactive"></button-expand>
-            </div>
+            <portal to="fs-toolbar" :disabled="!ExpandedReactive" class="header-buttons">
+              <div class="btn-group">
+                <button-export file="Energy" :rows="Export"></button-export>
+                <button-expand :expanded.sync="ExpandedReactive"></button-expand>
+              </div>
+            </portal>
           </div>
           <div class="panel-body">
             <spinner v-if="ShowSpinner"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_ENERGY" :analyzer="analyzer" :data15M="Data15M" :data1H="Data1H" :dataGraph="GraphData" :height.sync="ReactiveHeight"></counters>
-              <energy class="col-md-6 col-lg-8 col-xl-9" serie="REACTIVE_ENERGY" :analyzer="analyzer" :data="GraphData" :height="ReactiveHeight"></energy>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_ENERGY" :analyzer="analyzer" :data15M="Data15M" :data1H="Data1H" :dataGraph="DataGraph" :height.sync="ReactiveHeight"></counters>
+              <div class="col-md-6 col-lg-8 col-xl-9">
+                <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
+                  <energy serie="REACTIVE_ENERGY" :analyzer="analyzer" :data="DataGraph" :height="ExpandedReactive?DialogHeight:ReactiveHeight"></energy>
+                </portal>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <dlg-fs v-if="ExpandedActive" title="Active Energy" :height.sync="DialogHeight"></dlg-fs>
+    <dlg-fs v-if="ExpandedReactive" title="Reactive Energy" :height.sync="DialogHeight"></dlg-fs>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">
@@ -56,50 +68,60 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Aggreg: null, ShowSpinner: true, ExpandedActive: false, ExpandedReactive: false,
-      Data15M: null, Data1H: null, GraphData: null, NowTimer: null, GraphTimer: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300 };
+      return { Aggreg: null, ShowSpinner: true, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300,
+               Data15M: null, Control15M: null, Data1H: null, Control1H: null, DataGraph: null, ControlGraph: null };
     },
     watch: {
-      analyzer: function() { this.UpdateNowValues(); this.UpdateGraphValues(); },
-      Aggreg: function(val, prev) { if(prev != null) this.UpdateGraphValues(); },
+      analyzer: function() { this.Update15MValues(); this.Update1HValues(); this.UpdateGraphValues(); },
+      Aggreg: function() { this.UpdateGraphValues(); },
       Range: function() { this.UpdateGraphValues(); }
     },
     computed: {
-      ExportData: function() {
-        return [];
+      Export: function() {
+        var Data = [['Time', 'Active energy', 'Reactive energy']];
+        if(this.DataGraph != null) {
+          var Div = (this.DataGraph.Aggregation_Source == '1H') ? 1 : 4;
+          for(var n in this.DataGraph.Sampletime) Data.push([this.DataGraph.Sampletime[n], this.DataGraph.Active_Power[n] / Div, this.DataGraph.Reactive_Power[n] / Div]);
+        }
+        return Data;
       }
     },
     created: function() {
-      this.UpdateNowValues();
+      this.Update15MValues();
+      this.Update1HValues();
       this.UpdateGraphValues();
     },
     beforeDestroy: function() {
-      if(this.NowTimer != null) clearTimeout(this.NowTimer);
-      if(this.GraphTimer != null) clearTimeout(this.GraphTimer);
+      this.CancelTransfer(this.Control15M);
+      this.CancelTransfer(this.Control1H);
+      this.CancelTransfer(this.ControlGraph);
     },
     methods: {
-      UpdateNowValues: function() {
-        if(this.NowTimer != null) clearTimeout(this.NowTimer);
+      Update15MValues: function() {
+        this.Control15M = this.CancelTransfer(this.Control15M);
         if(this.analyzer == null) return;
-        this.analyzer.GetSeriesLast('1H', ['ACTIVE_POWER', 'REACTIVE_POWER'],
+        this.Control15M.CancelFunc = this.analyzer.GetSeriesLast('15M', ['ACTIVE_POWER', 'REACTIVE_POWER'],
+          (working) => {},
+          (result) => { this.Data15M = result; },
+          (timeout) => { this.Control15M.Timer = setTimeout(() => { this.Update15MValues(); }, timeout); }
+        );
+      },
+      Update1HValues: function() {
+        this.Control1H = this.CancelTransfer(this.Control1H);
+        if(this.analyzer == null) return;
+        this.Control1H.CancelFunc = this.analyzer.GetSeriesLast('1H', ['ACTIVE_POWER', 'REACTIVE_POWER'],
           (working) => {},
           (result) => { this.Data1H = result; },
-          (timeout) => {
-            this.analyzer.GetSeriesLast('15M', ['ACTIVE_POWER', 'REACTIVE_POWER'],
-              (working) => {},
-              (result) => { this.Data15M = result; },
-              (timeout) => { this.NowTimer = setTimeout(() => { this.UpdateNowValues(); }, 10000); }
-            );
-          }
+          (timeout) => { this.Control1H.Timer = setTimeout(() => { this.Update1HValues(); }, timeout); }
         );
       },
       UpdateGraphValues: function() {
-        if(this.GraphTimer != null) clearTimeout(this.GraphTimer);
+        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
         if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
-        this.analyzer.GetPricesRange(this.Aggreg, this.Range, this.GraphData,
+        this.ControlGraph.CancelFunc = this.analyzer.GetPricesRange(this.Aggreg, this.Range, this.DataGraph,
           (working) => { this.ShowSpinner = working; },
-          (result) => { this.GraphData = Object.freeze(result); },
-          (timeout) => { if(timeout != null) this.GraphTimer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
+          (result) => { this.DataGraph = Object.freeze(result); },
+          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
         );
 
 //        if(lastsample === 0) {

@@ -61,9 +61,26 @@
         return Series;
       },
       Export: function() {
-        var Header = ['Sample'];
-
-        return [['Sample']];
+        if((this.data == null) || (this.analyzer == null)) return [];
+        var Header = ['Sample']
+          .concat(this.analyzer.GetSeriesNames('Active Power', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.GetSeriesNames('Reactive Power', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.GetSeriesNames('Power Factor', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.GetSeriesNames('Voltage THD', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.GetSeriesNames('Current THD', this.analyzer.VoltageChannels));
+        var Data = [Header];
+        for(var n in this.data.Sampletime) {
+          var Row = [this.data.Sampletime[n]];
+          for(var i in this.data.Active_Power[n]) Row.push(this.data.Active_Power[n][i]);
+          for(var i in this.data.Reactive_Power[n]) Row.push(this.data.Reactive_Power[n][i]);
+          for(var i in this.data.Power_Factor[n]) Row.push(this.data.Power_Factor[n][i]);
+          for(var i in this.data.Phi[n]) Row.push(this.data.Phi[n][i]);
+          for(var i in this.data.Voltage_THD[n]) Row.push(this.data.Voltage_THD[n][i]);
+          for(var i in this.data.Current_THD[n]) Row.push(this.data.Current_THD[n][i]);
+          Data.push(Row);
+        }
+        return Data;
       }
     },
     methods: {

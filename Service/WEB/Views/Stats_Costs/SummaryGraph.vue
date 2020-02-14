@@ -1,5 +1,5 @@
 <template>
-  <graph :options="GraphOptions" ref="graph"></graph>
+  <graph :options="GraphOptions" :height="200"></graph>
 </template>
 
 <script>
@@ -7,50 +7,45 @@
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
   export default {
-    props: { value: Array },
+    props: { data: Array, analyzer: Object },
     data () {
-      return { };
+      return { Labels: [] };
     },
-    created: function() {
-      this.Labels = [];
-      this.GraphOptions = {
-        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', 
-        xAxisHeight: 18, legendFormatter: Graph.LegendFormatter_Follow, plotter: Graph.multiColumnBarPlotter, labels: ['Time', 'Cost'], colors: [oZm.Series['ACTIVE_ENERGY'].Color], includeZero: true,
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 30,
-               valueFormatter: function (x) { return oZm.Round2(x) + ' <em class="x-small">' + '€' + '</em>'; },
-               axisLabelFormatter: function (x) { return oZm.Round2(x); }
-             },
-          x: { valueFormatter: function (x) { return this.Labels[x]; }.bind(this), 
-               axisLabelFormatter: function (x) { return this.Labels[x]; }.bind(this) 
-             }
+    computed: {
+      GraphOptions: function() {
+        var Opt = { axes: { x: {}, y: {} } };
+        Opt.strokeWidth = 0.5,
+        Opt.stepPlot = true;
+        Opt.drawGapEdgePoints = true;
+        Opt.connectSeparatedPoints = false;
+        Opt.fillGraph = false;
+        Opt.gridLineColor = "#BBB";
+        Opt.gridLinePattern = [4, 4];
+        Opt.legend = 'follow';
+        Opt.xAxisHeight = 18;
+        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.plotter = Graph.multiColumnBarPlotter;
+        Opt.labels = ['Time', 'Cost'];
+        Opt.colors = [oZm.Series['ACTIVE_ENERGY'].Color];
+        Opt.includeZero = true;
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 30,
+        Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 2, true) + ' €'; };
+        Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x, 2, true); };
+        Opt.axes.x.valueFormatter = (x) => { return this.Labels[x]; };
+        Opt.axes.x.axisLabelFormatter = (x) => { return this.Labels[x]; };
+        if(this.data != null) {
+          Opt.file = [];
+          this.Labels = [];
+          var MonthsNames = moment.months();
+          for(var i in this.data) {
+            this.Labels.push(MonthsNames[moment.tz(this.data[i].To, this.analyzer.TimeZone).month()]);
+            Opt.file.push([parseInt(i), (this.data[i].Complete == true) ? this.data[i].Total : null]);
+          }
+          Opt.dateWindow = [-0.5, this.data.length - 0.5];
         }
-      };
-    },
-    mounted: function() {
-      if(this.value != null) this.SetData();
-    },
-    watch: {
-      value: function(val) {
-        this.$refs.graph.SetOptions( { dateWindow: [-0.5, 0.5], file: [[0, 0]] } );
-        if(val != null) this.SetData();
+        return Opt;
       }
-    },
-    methods: {
-      ResizeHandler: function() {
-        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', '300px');
-      },
-      SetData: function() {
-        var Summary = [];
-        var MonthsNames = moment.months();
-        for(var i = 0; i < this.value.length; i++) {
-          this.Labels.push(MonthsNames[moment(this.value[i].To).month()]);
-          Summary.push([i, (this.value[i].Complete === true) ? this.value[i].Total : null]);
-        }
-        this.$refs.graph.SetOptions( { dateWindow: [-0.5, this.value.length - 0.5], file: Summary } );
-        this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
-      }
-    },
-    components: { Graph }
+    }
   }
 </script>

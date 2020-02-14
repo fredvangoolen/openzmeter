@@ -1,5 +1,5 @@
 <template>
-  <div class="panel panel-other">
+  <div class="panel panel-other" v-show="Enabled">
     <div class="panel-heading">
       <div class="huge-small header-text">Device manager</div>
       <div class="pull-right btn-group">
@@ -40,8 +40,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null, Error: '',
-        Config: {Enabled: true},
+      return { Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null, Error: '', Enable: false,
         Columns: [
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},
@@ -56,6 +55,7 @@
         this.ShowSpinner = true;
         this.$http.post('getDevices', {}).then(
           (result) => {
+            this.Enabled = true;
             this.Devices = result.data;
             this.ShowSpinner = false;
           },

@@ -5,20 +5,24 @@
         <div class="panel panel-active-power">
           <div class="panel-heading">
             <div class="huge header-text">Active Power</div>
-            <div class="header-buttons clearfix" ref="ToolbarActive">
+            <portal to="fs-toolbar" :disabled="!ExpandedActive" class="header-buttons">
               <toolbar-aggregation storage="AggregationEnergy" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
-                <button-export file="Power" :rows="[]"></button-export>
+                <button-export file="Power" :rows="Export"></button-export>
                 <button-expand :expanded.sync="ExpandedActive"></button-expand>
               </div>
-            </div>
+            </portal>
           </div>
           <div class="panel-body">
             <spinner v-if="ShowSpinner"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_POWER" :analyzer="analyzer" :data3S="Data3S" :data1M="Data1M" :dataGraph="GraphData" :height.sync="ActiveHeight"></counters>
-              <power class="col-md-6 col-lg-8 col-xl-9" serie="ACTIVE_POWER" :analyzer="analyzer" :data="GraphData" :height="ActiveHeight"></power>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_POWER" :analyzer="analyzer" :data3S="Data3S" :data1M="Data1M" :dataGraph="DataGraph" :height.sync="ActiveHeight"></counters>
+              <div class="col-md-6 col-lg-8 col-xl-9">
+                <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
+                  <power serie="ACTIVE_POWER" :analyzer="analyzer" :data="DataGraph" :height="ActiveHeight"></power>
+                </portal>
+              </div>
             </div>
           </div>
         </div>
@@ -27,31 +31,37 @@
         <div class="panel panel-reactive-power">
           <div class="panel-heading">
             <div class="header-text">Fund. Reactive Power</div>
-            <div class="header-buttons clearfix" ref="ToolbarReactive">
-            <div class="btn-group">
-              <button-export file="Power" :rows="[]"></button-export>
-              <button-expand :expanded.sync="ExpandedActive"></button-expand>
-            </div>
-            </div>
+            <portal to="fs-toolbar" :disabled="!ExpandedReactive" class="header-buttons">
+              <div class="btn-group">
+                <button-export file="Power" :rows="Export"></button-export>
+                <button-expand :expanded.sync="ExpandedReactive"></button-expand>
+              </div>
+            </portal>
           </div>
           <div class="panel-body">
             <spinner v-if="ShowSpinner"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_POWER" :analyzer="analyzer" :data3S="Data3S" :data1M="Data1M" :dataGraph="GraphData" :height.sync="ReactiveHeight"></counters>
-              <power class="col-md-6 col-lg-8 col-xl-9" serie="REACTIVE_POWER" :analyzer="analyzer" :data="GraphData" :height="ReactiveHeight"></power>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_POWER" :analyzer="analyzer" :data3S="Data3S" :data1M="Data1M" :dataGraph="DataGraph" :height.sync="ReactiveHeight"></counters>
+              <div class="col-md-6 col-lg-8 col-xl-9">
+                <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
+                  <power serie="REACTIVE_POWER" :analyzer="analyzer" :data="DataGraph" :height="ReactiveHeight"></power>
+                </portal>
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <div class="col-lg-12">
+        <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Distribution', 'Parameters']" storage="PowerDetailTab" v-model="ActiveTab"></detail-tabs>
+        <waveform v-if="ActiveTab=='Waveform'" :analyzer="analyzer"></waveform>
+        <harmonics v-if="ActiveTab=='Harmonics'" :analyzer="analyzer"></harmonics>
+        <evolution v-if="ActiveTab=='Evolution'" :analyzer="analyzer"></evolution>
+        <distribution v-if="ActiveTab=='Distribution'" :analyzer="analyzer"></distribution>
+        <parameters v-if="ActiveTab=='Parameters'" :analyzer="analyzer"></parameters>
+      </div>
     </div>
-    <div class="col-lg-12">
-      <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Distribution', 'Parameters']" storage="PowerDetailTab" v-model="ActiveTab"></detail-tabs>
-      <waveform v-if="ActiveTab=='Waveform'" :analyzer="analyzer"></waveform>
-      <harmonics v-if="ActiveTab=='Harmonics'" :analyzer="analyzer"></harmonics>
-      <evolution v-if="ActiveTab=='Evolution'" :analyzer="analyzer"></evolution>
-      <distribution v-if="ActiveTab=='Distribution'" :analyzer="analyzer"></distribution>
-      <parameters v-if="ActiveTab=='Parameters'" :analyzer="analyzer"></parameters>
-    </div>
+    <dlg-fs v-if="ExpandedActive" title="Active Power" :height.sync="DialogHeight"></dlg-fs>
+    <dlg-fs v-if="ExpandedReactive" title="Reactive Power" :height.sync="DialogHeight"></dlg-fs>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">
@@ -71,75 +81,78 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Aggreg: null, ShowSpinner: true, ActiveTab: null,
-               Data3S: null, Data1M: null, GraphData: null, NowData: null, CubismData: null,
-               CounterTimer: null, NowTimer: null, CubismTimer: null, GraphTimer: null,
-               Range: null, ActiveHeight: 300, ReactiveHeight: 300 };
+      return { Aggreg: null, ShowSpinner: true, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300, ActiveTab: null,
+               DataNow: null, ControlNow: null, Data3S: null, Control3S: null, Data1M: null, Control1M: null,
+               DataGraph: null, ControlGraph: null, DataCubism: null, ControlCubism: null };
     },
     watch: {
-      analyzer: function() { this.UpdateNowValues(); this.UpdateCounters(); this.UpdateCubism(); this.UpdateGraphValues(); },
+      analyzer: function() { this.UpdateNowValues(); this.Update3SValues(); this.Update1MValues(); this.UpdateCubismValues(); this.UpdateGraphValues(); },
       Aggreg: function() {  this.UpdateGraphValues(); },
       Range: function() { this.UpdateGraphValues(); }
     },
     computed: {
-      ExportData: function() {
+      Export: function() {
         return [];
       }
     },
     created: function() {
       this.UpdateNowValues();
+      this.Update3SValues();
+      this.Update1MValues();
+      this.UpdateCubismValues();
       this.UpdateGraphValues();
-      this.UpdateCounters();
-      this.UpdateCubism();
     },
     beforeDestroy: function() {
-      if(this.NowTimer != null) clearTimeout(this.NowTimer);
-      if(this.CounterTimer != null) clearTimeout(this.CounterTimer);
-      if(this.GraphTimer != null) clearTimeout(this.GraphTimer);
-      if(this.CubismTimer != null) clearTimeout(this.CubismTimer);
+      this.CancelTransfer(this.ControlNow);
+      this.CancelTransfer(this.Control3S);
+      this.CancelTransfer(this.Control1M);
+      this.CancelTransfer(this.ControlCubism);
+      this.CancelTransfer(this.ControlGraph);
     },
     methods: {
-      UpdateCubism: function() {
-        if(this.CubismTimer != null) clearTimeout(this.CubismTimer);
-        if(this.analyzer == null) return;
-        this.analyzer.GetSeriesRange('1M', 'Day', this.CubismData, ['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'],
-          (working) => {},
-          (result) => { this.CubismData = Object.freeze(result); },
-          (timeout) => { if(timeout != null) this.CubismTimer = setTimeout( () => { this.UpdateCubism(); }, timeout); }
-        );
-      },
       UpdateNowValues: function() {
-        if(this.NowTimer != null) clearTimeout(this.NowTimer);
+        this.ControlNow = this.CancelTransfer(this.ControlNow);
         if(this.analyzer == null) return;
-        this.$http.post('getSeriesNow', { Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'POWER_HARMONICS', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'], Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            this.NowData = (result.status == 200) ? Object.freeze(result.data) : null;
-            this.NowTimer = setTimeout(() => { this.UpdateNowValues(); }, 2000);
-          }
+        this.ControlNow.CancelFunc = this.analyzer.GetSeriesNow(['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'POWER_HARMONICS', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'],
+          (working) => {},
+          (result) => { this.DataNow = result; },
+          (timeout) => { this.ControlNow.Timer = setTimeout(() => { this.UpdateNowValues(); }, timeout); }
         );
       },
-      UpdateCounters: function() {
-        if(this.CounterTimer != null) clearTimeout(this.CounterTimer);
+      Update3SValues: function() {
+        this.Control3S = this.CancelTransfer(this.Control3S);
         if(this.analyzer == null) return;
-        this.analyzer.GetSeriesLast('3S', ['ACTIVE_POWER', 'REACTIVE_POWER'],
+        this.Control3S.CancelFunc = this.analyzer.GetSeriesLast('3S', ['ACTIVE_POWER', 'REACTIVE_POWER'],
           (working) => {},
           (result) => { this.Data3S = result; },
-          (timeout) => {
-            this.analyzer.GetSeriesLast('1M', ['ACTIVE_POWER', 'REACTIVE_POWER'],
-              (working) => {},
-              (result) => { this.Data1M = result; },
-              (timeout) => { this.CounterTimer = setTimeout(() => { this.UpdateCounters(); }, 3000); }
-            );
-          }
+          (timeout) => { this.Control3S.Timer = setTimeout(() => { this.Update3SValues(); }, timeout); }
+        );
+      },
+      Update1MValues: function() {
+        this.Control1M = this.CancelTransfer(this.Control1M);
+        if(this.analyzer == null) return;
+        this.Control1M.CancelFunc = this.analyzer.GetSeriesLast('1M', ['ACTIVE_POWER', 'REACTIVE_POWER'],
+          (working) => {},
+          (result) => { this.Data1M = result; },
+          (timeout) => { this.Control1M.Timer = setTimeout(() => { this.Update1MValues(); }, timeout); }
+        );
+      },
+      UpdateCubismValues: function() {
+        this.ControlCubism = this.CancelTransfer(this.ControlCubism);
+        if(this.analyzer == null) return;
+        this.ControlCubism.CancelFunc = this.analyzer.GetSeriesRange('1M', 'Day', this.CubismData, ['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'],
+          (working) => {},
+          (result) => { this.CubismData = Object.freeze(result); },
+          (timeout) => { this.ControlCubism.Timer = setTimeout( () => { this.UpdateCubismValues(); }, timeout); }
         );
       },
       UpdateGraphValues: function() {
-        if(this.GraphTimer != null) clearTimeout(this.GraphTimer);
+        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
         if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
-        this.analyzer.GetPricesRange(this.Aggreg, this.Range, this.GraphData,
+        this.ControlGraph.CancelFunc = this.analyzer.GetPricesRange(this.Aggreg, this.Range, this.DataGraph,
           (working) => { this.ShowSpinner = working; },
-          (result) => { this.GraphData = Object.freeze(result); },
-          (timeout) => { if(timeout != null) this.GraphTimer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
+          (result) => { this.DataGraph = Object.freeze(result); },
+          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
         );
       }
     },

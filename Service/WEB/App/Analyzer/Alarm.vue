@@ -3,13 +3,11 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Alarms &raquo; Edit</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" :class="{ disabled: (Error != '') }" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save alarm"></button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Expression' }" @click="Evaluate">Expression</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Alarm)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
     <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="(EvalResult!=null)&&(View=='Expression')&&(Error==null)">Expresion evaluated to: <span v-html="Round(EvalResult, 2, true)"></span><br/>Alarm is {{ (EvalResult==0.0) ? 'NOT' : '' }} triggered</div>
     <div class="row" v-if="View=='Main'">
       <div class="col-xs-12">
@@ -66,9 +64,9 @@
   import OptionPicker from 'Components/OptionPicker.vue';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: Object, alarm: Object },
+    props: { analyzer: Object, index: Number },
     data: function() {
-      return { ShowSpinner: false, Error: null, Alarm: null, Values: [], EvalResult: null, View: 'Main', Priorities: ['LOW', 'NORMAL', 'HIGH'],
+      return { ShowSpinner: false, Alarm: null, Values: [], EvalResult: null, View: 'Main', Priorities: ['LOW', 'NORMAL', 'HIGH'],
         columns: [
           { name: 'Name', title: 'Variable' },
           { name: 'Value', title: 'Value', callback: this.ValueFormat },
@@ -78,15 +76,11 @@
       };
     },
     created: function() {
-      if(this.alarm == null) {
-        this.Alarm = { Name: 'Unnamed alarm', Priority: 1, Aggreg: '1M', Samples: 10, Window: 20 };
-      } else {
-        this.Alarm = Object.assign({ }, this.alarm);
-      }
+      this.Alarm = Object.assign({}, this.analyzer.Alarms[this.index]);
     },
     methods: {
       ValueFormat: function(val) {
-        return oZm.Round2Plain(val, 2);
+        return this.Round(val, 2, false);
       },
       Evaluate: function() {
         this.View = 'Expression';
@@ -109,20 +103,6 @@
         var textAreaTxt = txt.val();
         $(txt).focus();
         this.$set(this.Alarm, 'Expression', textAreaTxt.substring(0, caretPos) + row.Name + textAreaTxt.substring(caretPos));
-      },
-      Save: function() {
-        this.$refs.Dialog.ShowSpinner = true;
-        $.ajax({ url: (this.Alarm.AlarmID === undefined) ? "addAlarm" : "setAlarm", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify( Object.assign({ Analyzer: this.Analyzer.Analyzer }, this.Alarm) ),
-          success: () => {
-            this.$refs.Dialog.ShowSpinner = false;
-            this.Back();
-          },
-          error: () => {
-            this.$refs.Dialog.ShowSpinner = false;
-            this.Error = 'Failed to save alarm to analyzer!';
-            setTimeout(() => { this.Error = ''; }, 1000);
-          }
-        });
       }
     },
     components: { vuetable }

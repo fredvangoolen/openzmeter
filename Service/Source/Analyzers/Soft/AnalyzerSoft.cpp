@@ -200,7 +200,25 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   if(config.contains("Save200MS") && config["Save200MS"].is_boolean()) ConfigOUT["Save200MS"] = config["Save200MS"];
   if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
   if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
-//  if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = Alarms::CheckConfig(config["Alarms"]);
+  if(config.contains("Alarms") && config["Alarms"].is_array()) {
+    for(auto configAlarm : config["Alarms"]) {
+      json Alarm = json::object();
+      Alarm["Name"] = "Unnamed alarm";
+      Alarm["Priority"] = 0;
+      Alarm["Expression"] = "";
+      Alarm["Aggreg"] = "3S";
+      Alarm["Samples"] = 1;
+      Alarm["Window"] = 10;
+      if(configAlarm.contains("Name") && configAlarm["Name"].is_string()) Alarm["Name"] = configAlarm["Name"];
+      if(configAlarm.contains("Priority") && configAlarm["Priority"].is_number_unsigned() && configAlarm["Priority"] < 3) Alarm["Priority"] = configAlarm["Priority"];
+      if(configAlarm.contains("Expression") && configAlarm["Expression"].is_string()) Alarm["Expression"] = configAlarm["Expression"];
+      if(configAlarm.contains("Aggreg") && configAlarm["Aggreg"].is_string() && ((configAlarm["Aggreg"] == "3S") || (configAlarm["Aggreg"] == "1M") || (configAlarm["Aggreg"] == "10M") || (configAlarm["Aggreg"] == "15M") || (configAlarm["Aggreg"] == "1H"))) Alarm["Aggreg"] = configAlarm["Aggreg"];
+      if(configAlarm.contains("Samples") && configAlarm["Samples"].is_number_unsigned() && configAlarm["Samples"] < 1000) Alarm["Samples"] = configAlarm["Samples"];
+      if(configAlarm.contains("Window") && configAlarm["Window"].is_number_unsigned()) Alarm["Window"] = configAlarm["Window"];
+      if(Alarm["Window"] < Alarm["Samples"]) Alarm["Window"] = Alarm["Samples"];
+      ConfigOUT["Alarms"].push_back(Alarm);
+    }
+  }
   return ConfigOUT;
 }
 void AnalyzerSoft::Configure(const json &options) {
@@ -521,24 +539,24 @@ void AnalyzerSoft::SaveEvent(Event_t &evt) {
   evt.SamplesRAW_B = deque<vector<float> >();
   evt.SamplesRMS_B = deque<vector<float> >();
 }
-json AnalyzerSoft::GetAlarmJSON(const Alarm_t &alarm) {
-  json Alarm = json::object();
-  string Expresion     = alarm.Evaluator.GetExpr();
-  Alarm["Name"]        = alarm.Name;
-  Alarm["Priority"]    = alarm.Priority;
-  Alarm["Expression"]  = Expresion.erase(Expresion.find_last_not_of(" \n\r\t")+1);
-  Alarm["Aggreg"]      = (alarm.Aggreg == AnalyzerSoft::AGGREG_3S) ? "3S" : (alarm.Aggreg == AnalyzerSoft::AGGREG_1M) ? "1M" : (alarm.Aggreg == AnalyzerSoft::AGGREG_10M) ? "10M" : (alarm.Aggreg == AnalyzerSoft::AGGREG_15M) ? "15M" : "1H";
-  Alarm["Samples"]     = alarm.Samples;
-  Alarm["Window"]      = alarm.Window;
-  return Alarm;
-}
-void AnalyzerSoft::SaveAlarmsConf() {
-  json Config = json::array();
-  for(auto &Alarm : pAlarms) {
-    Config["Alarms"].push_back(GetAlarmJSON(Alarm));
-  }
-  ConfigManager::WriteConfig(pConfigPath + "/Alarms", Config);
-}
+//json AnalyzerSoft::GetAlarmJSON(const Alarm_t &alarm) {
+//  json Alarm = json::object();
+//  string Expresion     = alarm.Evaluator.GetExpr();
+//  Alarm["Name"]        = alarm.Name;
+//  Alarm["Priority"]    = alarm.Priority;
+//  Alarm["Expression"]  = Expresion.erase(Expresion.find_last_not_of(" \n\r\t")+1);
+//  Alarm["Aggreg"]      = (alarm.Aggreg == AnalyzerSoft::AGGREG_3S) ? "3S" : (alarm.Aggreg == AnalyzerSoft::AGGREG_1M) ? "1M" : (alarm.Aggreg == AnalyzerSoft::AGGREG_10M) ? "10M" : (alarm.Aggreg == AnalyzerSoft::AGGREG_15M) ? "15M" : "1H";
+//  Alarm["Samples"]     = alarm.Samples;
+//  Alarm["Window"]      = alarm.Window;
+//  return Alarm;
+//}
+//void AnalyzerSoft::SaveAlarmsConf() {
+//  json Config = json::array();
+//  for(auto &Alarm : pAlarms) {
+//    Config["Alarms"].push_back(GetAlarmJSON(Alarm));
+//  }
+//  ConfigManager::WriteConfig(pConfigPath + "/Alarms", Config);
+//}
 void AnalyzerSoft::InitAlarm(Alarm_t &alarm, const json &config) {
   alarm.Name = config["Name"];
   alarm.Priority = config["Priority"];
@@ -551,23 +569,6 @@ void AnalyzerSoft::InitAlarm(Alarm_t &alarm, const json &config) {
   alarm.Samples = config["Samples"];
   alarm.Window = config["Window"];
   alarm.Results = queue<bool>();
-}
-json AnalyzerSoft::CheckAlarmConfig(const json &config) {
-  json ConfigOUT = json::object();
-  ConfigOUT["Name"] = "Unnamed alarm";
-  ConfigOUT["Priority"] = 0;
-  ConfigOUT["Expression"] = "";
-  ConfigOUT["Aggreg"] = "3S";
-  ConfigOUT["Samples"] = 1;
-  ConfigOUT["Window"] = 10;
-  if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
-  if(config.contains("Priority") && config["Priority"].is_number_unsigned() && config["Priority"] < 3) ConfigOUT["Priority"] = config["Priority"];
-  if(config.contains("Expression") && config["Expression"].is_string()) ConfigOUT["Expression"] = config["Expression"];
-  if(config.contains("Aggreg") && config["Aggreg"].is_string() && ((config["Aggreg"] == "3S") || (config["Aggreg"] == "1M") || (config["Aggreg"] == "10M") || (config["Aggreg"] == "15M") || (config["Aggreg"] == "1H"))) ConfigOUT["Aggreg"] = config["Aggreg"];
-  if(config.contains("Samples") && config["Samples"].is_number_unsigned() && config["Samples"] < 1000) ConfigOUT["Samples"] = config["Samples"];
-  if(config.contains("Window") && config["Window"].is_number_unsigned()) ConfigOUT["Window"] = config["Window"];
-  if(ConfigOUT["Window"] < ConfigOUT["Samples"]) ConfigOUT["Window"] = ConfigOUT["Samples"];
-  return ConfigOUT;
 }
 float AnalyzerSoft::CalcChange(const float in, const float reference) {
   return ((in - reference) / reference) * 100;
@@ -964,13 +965,13 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
     This->pAnalyzerLock.Unlock();
     URL Url(Server);
     if(Cookie == "") {
-      Headers Header  = {{"Accept", "application/json"}, {"Connection", "keep-alive"}};
+      Headers Header  = {{"Accept", "application/json"}};
       json    Content = json::object();
       Content["Username"] = User;
       Content["Password"] = Pass;
       Content["UpdateLastLogin"] = false;
       if(HTTPClient == NULL) HTTPClient = new Client(Url.Host.c_str(), (Url.Port == "") ? 80 : atoi(Url.Port.c_str()) , 30);
-//      HTTPClient->set_read_timeout(1,0);
+      HTTPClient->set_read_timeout(50, 0);
       auto Response = HTTPClient->Post(string(Url.Path + "/LogIn").c_str(), Header, Content.dump(), "application/json", false);
       if((Response != nullptr) && (Response->status == HTTP_OK)) {
         json Content = json::parse(Response->body, NULL, false);
@@ -981,13 +982,15 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
             Cookie += Tmp[n];
           }
         }
-        if(Cookie != "") LOGFile::Info("Analyzer '%s' logged on remote server\n", This->Serial.c_str());
+      }
+      if(Cookie != "") {
+        LOGFile::Debug("Analyzer '%s' logged on remote server\n", This->Serial.c_str());
       } else {
         LOGFile::Debug("Analyzer '%s' can not login on remote server\n", This->Serial.c_str());
+        usleep(1000000);
       }
-      if(Cookie.empty()) usleep(1000000);
     } else {
-      Headers Header = {{"Accept", "application/json"}, {"Connection", "keep-alive"}, {"Cookie", Cookie}};
+      Headers Header  = {{"Accept", "application/json"}, {"Cookie", Cookie}};
       json   Content = json::object();
       Content["Analyzer"] = This->Serial;
       Content["Name"] = This->GetName();
@@ -999,7 +1002,7 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
           LOGFile::Debug("Analyzer '%s' receive %u queries from remote server\n", This->Serial.c_str(), Content.size());
           for(uint32_t n = 0; n < Content.size(); n++) {
             if(Content[n].is_object() && Content[n]["Sequence"].is_number() && Content[n]["Method"].is_string() && Content[n]["Params"].is_object()) {
-              Sync_t *Request = (Sync_t*)calloc(1, sizeof(Request));
+              Sync_t *Request = (Sync_t*)calloc(1, sizeof(Sync_t));
               Request->Count        = &ThreadsCount;
               Request->Mutex        = &Mutex;
               Request->Cond         = &Cond;
@@ -1032,7 +1035,10 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
       } else if((Response != nullptr) && (Response->status == HTTP_NO_CONTENT)) {
         LOGFile::Debug("No pending queries in remote server for analyzer '%s'\n", This->Serial.c_str());
       } else {
-        if(Response != nullptr) LOGFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)\n", This->Serial.c_str(), Response->status);
+        if(Response != nullptr)
+          LOGFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)\n", This->Serial.c_str(), Response->status);
+        else
+          LOGFile::Debug("Failed request to remote server in analyzer '%s' (can not connect)\n", This->Serial.c_str());
         usleep(1000000);
       }
     }
@@ -1085,27 +1091,22 @@ void *AnalyzerSoft::SyncResp_Thread(void *args) {
     This->Analyzer->TestAlarm(This->Params, Resp);
   } else if(This->Method == "getAlarms") {
     This->Analyzer->GetAlarms(This->Params, Resp);
-  } else if(This->Method == "getAlarm") {
-    This->Analyzer->GetAlarm(This->Params, Resp);
-  } else if(This->Method == "setAlarm") {
-    This->Analyzer->SetAlarm(This->Params, Resp);
-  } else if(This->Method == "addAlarm") {
-    This->Analyzer->AddAlarm(This->Params, Resp);
-  } else if(This->Method == "delAlarm") {
-    This->Analyzer->DelAlarm(This->Params, Resp);
   }
-  Headers Header  = {{"Accept", "application/json"}, {"Connection", "keep-alive"}, {"Cookie", This->Cookie}};
+  Headers Header  = {{"Accept", "application/json"}, {"Cookie", This->Cookie}};
   json    Content = json::object();
   Content["Code"] = Resp.status;
   Content["Sequence"] = This->Sequence;
   Content["Analyzer"] = This->Analyzer->Serial;
   Content["Response"] = Resp.body;
   Client HTTPClient(This->Host.c_str(), This->Port);
-  auto Response = HTTPClient.Post(This->ResponsePath.c_str(), Header, Content.dump(), "application/json", true);
+  auto Response = HTTPClient.Post(This->ResponsePath.c_str(), Header, Content.dump(), "application/json", false);
   if((Response != nullptr) && (Response->status == HTTP_OK)) {
     LOGFile::Debug("Remote request '%s' for analyzer '%s' completed\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
   } else {
-    LOGFile::Error("Remote request '%s' for analyzer '%s' failed\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
+    if(Response != nullptr)
+      LOGFile::Error("Remote request '%s' for analyzer '%s' failed (ERROR: %d)\n", This->Method.c_str(), This->Analyzer->Serial.c_str(), Response->status);
+    else
+      LOGFile::Error("Remote request '%s' for analyzer '%s' failed (can not connect)\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
   }
   pthread_mutex_lock(This->Mutex);
   *This->Count = *This->Count - 1;
@@ -1121,7 +1122,7 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   Response["Online"] = IsOnline();
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"] = pSamplerate;
-  Response.erase("Alarms");
+  if((params.contains("Alarms") == false) || (params["Alarms"].is_boolean() == false) || (params["Alarms"] == false)) Response.erase("Alarms");
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + DB.Bind(Serial));
   if(DB.FecthRow()) Response["Size"] = DB.ResultUInt64("size");
@@ -1129,9 +1130,9 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
 }
 void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = CheckConfig(params);
-  Config["Alarms"] = ConfigManager::ReadConfig(pConfigPath + "/Alarms");
-  Configure(Config);
+  json Config = params;
+  if((Config.contains("Alarms") == false) || (Config["alarms"].is_array() == false)) Config["Alarms"] = ConfigManager::ReadConfig(pConfigPath + "/Alarms");
+  Configure(CheckConfig(Config));
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void AnalyzerSoft::GetSeries(const json &params, Response &response) {
@@ -1723,79 +1724,5 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::array();
-  pAlarmsLock.ReadLock();
-  for(auto Alarm : pAlarms) {
-    json Tmp = json::object();
-    Tmp["AlarmID"] = Alarm.AlarmID;
-    Tmp["Name"] = Alarm.Name;
-    Tmp["Priority"] = Alarm.Priority;
-    Result.push_back(Tmp);
-  }
-  pAlarmsLock.Unlock();
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
-}
-void AnalyzerSoft::GetAlarmsLog(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Result = json::array();
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
-}
-void AnalyzerSoft::GetAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("AlarmID") == false) || (params["AlarmID"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint32_t AlarmID = params["AlarmID"];
-  pAlarmsLock.ReadLock();
-  for(auto &Alarm : pAlarms) {
-    if(Alarm.AlarmID != AlarmID) continue;
-    HTTPServer::FillResponse(response, GetAlarmJSON(Alarm).dump(), "aplication/json", HTTP_OK);
-    pAlarmsLock.Unlock();
-    return;
-  }
-  pAlarmsLock.Unlock();
-  HTTPServer::FillResponse(response, "AlarmID not found", "text/plain", HTTP_BAD_REQUEST);
-}
-void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  json Params = req.GetParams();
-//  if(!Params["Analyzer"].is_string() || !Params["AlarmID"].is_number_unsigned() || !Params["Name"].is_string() || !Params["Priority"].is_number_unsigned() || !Params["Expression"].is_string() || !Params["Aggreg"].is_string() || !Params["Message"].is_string() || !Params["Samples"].is_number_unsigned() || !Params["Window"].is_number_unsigned()) return req.FromString("'Analyzer', 'AlarmID', 'Name', 'Priority', 'Expression', 'Aggreg', 'Message', 'Samples' and 'Window' params are requiered", MHD_HTTP_BAD_REQUEST);
-//  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->SetAlarm(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
-//  pMembersLocks.ReadLock();
-//  if(pAlarms != NULL) {
-//    pAlarms->SetAlarm(params, response);
-//  } else {
-    response.set_content("Alarms disabled", "text/plain");
-    response.status = HTTP_SERVICE_UNAVAILABLE;
-//  }
-//  pMembersLocks.ReadUnlock();
-}
-void AnalyzerSoft::AddAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Alarm_t Alarm;
-  InitAlarm(Alarm, CheckAlarmConfig(params));
-  pAlarmsLock.WriteLock();
-  Alarm.AlarmID = pAlarmsID++;
-  pAlarms.push_back(Alarm);
-  SaveAlarmsConf();
-  pAlarmsLock.Unlock();
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
-}
-void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("AlarmID") == false) || (params["AlarmID"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint32_t AlarmID = params["AlarmId"];
-  pAlarmsLock.WriteLock();
-  for(auto it = pAlarms.begin(); it != pAlarms.end(); it++) {
-    if(it->AlarmID != AlarmID) continue;
-    pAlarms.erase(it);
-    SaveAlarmsConf();
-    pAlarmsLock.Unlock();
-    HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
-  }
-  pAlarmsLock.Unlock();
-  HTTPServer::FillResponse(response, "AlarmID not found", "text/plain", HTTP_BAD_REQUEST);
 }

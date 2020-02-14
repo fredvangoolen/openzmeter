@@ -84,7 +84,7 @@ endif
 $(WEB_TARGET): $(WEB_SOURCE)
 	@echo "Building WEB interface"
 	@if [ ! -d "WEB/node_modules" ]; then cd WEB; npm install; fi
-	@cd WEB; npm install; npm run --silent build
+	@cd WEB; npm run --silent build
 
 $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 	@echo  "Building resource file"

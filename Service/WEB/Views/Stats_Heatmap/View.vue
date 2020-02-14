@@ -15,7 +15,7 @@
             </div>
           </div>
           <div class="panel-body" style="min-height: 300px">
-            <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+            <spinner :class="{ 'hide': !ShowSpinner }"></spinner>
             <heatmap-table :data="Data" :aggreg="Aggreg" :analyzer="analyzer" :range.sync="Range" :export.sync="Export"></heatmap-table>
           </div>
         </div>
@@ -44,7 +44,7 @@
         this.Data = null;
         var To = moment.tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
         var Period = To - moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post("getSeries", { Period: Period, To: To, Aggreg: '15M', LastSample: 0, Series: ['ACTIVE_POWER'], Analyzer: this.analyzer.Analyzer }).then(
+        this.$http.post('getSeries', { Period: Period, To: To, Aggreg: '15M', LastSample: 0, Series: ['ACTIVE_POWER'], Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
             this.ShowSpinner = false;
             this.Data = result.data;

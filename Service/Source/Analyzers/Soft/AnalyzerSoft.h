@@ -174,7 +174,7 @@ class AnalyzerSoft final : public Analyzer {
     Worker                    *pAlarmsWorker;            //Alarms detection worker
     Worker                    *pEventsWorker;            //Events detector
   private : //Alarms related (should be locked)
-    RWLocks                    pAlarmsLock;              //Control access
+//    RWLocks                    pAlarmsLock;              //Control access
     vector<Alarm_t>            pAlarms;                  //Alarms control object
   private : //Events related (only acceded inside analyzer thread)
     list<Event_t>              pEvents;                  //Running events
@@ -193,7 +193,7 @@ class AnalyzerSoft final : public Analyzer {
 
 
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
-    
+
 
   private :
     static void  Analyzer_Func(void *creation, void *run);
@@ -205,9 +205,8 @@ class AnalyzerSoft final : public Analyzer {
     static float CalcChange(const float in, const float reference);
     static float CalcAngle(const float *a, const float *b);
     static float BinPower(const float *a);
-    static json  CheckAlarmConfig(const json &config);
     static void  InitAlarm(Alarm_t &alarm, const json &config);
-    static json  GetAlarmJSON(const Alarm_t &alarm);
+//    static json  GetAlarmJSON(const Alarm_t &alarm);
   private :
     void  Configure(const json &options);
     void  InitAggreg(Params_t &params, AggregType type);
@@ -217,7 +216,7 @@ class AnalyzerSoft final : public Analyzer {
     void  InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
     bool  FindRunningEvent(const uint32_t mask);
     void  SaveEvent(Event_t &evt);
-    void  SaveAlarmsConf();
+//    void  SaveAlarmsConf();
 
 
 
@@ -239,11 +238,6 @@ class AnalyzerSoft final : public Analyzer {
     void  GetPrices(const json &params, Response &response) override;
     void  TestAlarm(const json &params, Response &response) override;
     void  GetAlarms(const json &params, Response &response) override;
-    void  GetAlarmsLog(const json &params, Response &response) override;
-    void  GetAlarm(const json &params, Response &response) override;
-    void  SetAlarm(const json &params, Response &response) override;
-    void  AddAlarm(const json &params, Response &response) override;
-    void  DelAlarm(const json &params, Response &response) override;
   public :
     static json CheckConfig(const json &config);
   public :
