@@ -22,7 +22,7 @@
           <tr v-for="index in [0, 1, 2]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
             <td><input-spin :min="-200" :max="200" v-model="value.VoltageOffset[index]" :increment="0.01"></input-spin></td>
-            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetVoltageOffset(index)" v-bind:disabled="value.Wave_Average.Voltage[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(-value.Wave_Average.Voltage[index], 2)"><img :src="require('Imgs/wand.png')"></button></td>
+            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" @click="SetVoltageOffset(index)" :disabled="value.Wave_Average.Voltage[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(-value.Wave_Average.Voltage[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
             <td><input-spin :min="0.1" :max="1000" v-model="value.VoltageGain[index]" :increment="0.001" :decimals="3" prepend="V/V"></input-spin></td>
           </tr>
         </table>
@@ -41,7 +41,7 @@
           <tr v-for="index in [0, 1, 2, 3]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
             <td><input-spin :min="-200" :max="200" v-model="value.CurrentOffset[index]" :increment="0.01"></input-spin></td>
-            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" v-on:click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + Round(-value.Wave_Average.Current[index], 2)"><img :src="require('Imgs/wand.png')"></button></td>
+            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" @click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + Round(-value.Wave_Average.Current[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
             <td><input-spin :min="0.00001" :max="20" v-model="value.CurrentGain[index]" :increment="0.00001" :decimals="5" prepend="A/mV"></input-spin></td>
           </tr>
         </table>
@@ -58,7 +58,7 @@
         <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Current channels can not be used twice<br/>Voltage channels can not be used twice in same analyzer</div>
       </div>
       <div class="col-xs-12">
-        <div class="output-table" v-for="item in value.Outputs">
+        <div class="output-table" v-for="(item, idx) in value.Outputs" :key="idx">
           <table v-if="item.Mode == '3PHASE+N'">
             <tr><td colspan="7" class="border-bottom">3PHASE+N<span class="serial-number">{{ value.Serial }}_3PN</span></td></tr>
             <tr>
@@ -125,14 +125,8 @@
 </template>
 
 <script>
-  import Vue from 'vue';
-  import * as oZm from 'JS/openZmeter.js';
-  import OptionPicker from 'Components/OptionPicker.vue';
-  import InputSpin from 'Components/InputSpin.vue';
-  import Toggle from 'Components/Toggle.vue';
-  import DetailTabs from 'Components/Tabs.vue';
   export default {
-    props: ['value'],
+    props: { value: Object },
     data() {
       return { View: 'Inputs', ShowSpinner: false, Error: '', OutputMode: null };
     },
@@ -176,7 +170,6 @@
       }
     },
     methods: {
-      Round: oZm.RoundPlain,
       SetCurrentOffset: function(index) {
         this.$set(this.value.CurrentOffset, index, -this.value.Wave_Average.Current[index]);
         this.value.Wave_Average.Current[index] = 0.0;
@@ -185,12 +178,14 @@
         this.$set(this.value.VoltageOffset, index, -this.value.Wave_Average.Voltage[index]);
         this.value.Wave_Average.Voltage[index] = 0.0;
       }
-    },
-    components: { InputSpin, Toggle, OptionPicker }
+    }
   }
 </script>
 
 <style scoped>
+  .row {
+    border-top: 1px solid #474544;
+  }
   table {
      width: 100%;
      border-radius: 6px;

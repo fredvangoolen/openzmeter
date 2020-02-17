@@ -38,7 +38,8 @@ class Device {
         return a->Serial < serial;
       }
     };
-  private :
+  protected :
+    bool                   pEnabled;           //Enable flag
     RWLocks                pAnalyzersLock;     //Analyzer list lock
     set<Analyzer*, Comp>   pAnalyzers;         //Analyzers list
   public :
@@ -79,4 +80,7 @@ class Device {
     virtual ~Device();
     virtual void GetDevice(const json &params, Response &response) = 0;
     virtual void SetDevice(const json &params, Response &response) = 0;
+    virtual void GetRemote(const json &params, Response &response);
+    virtual void SetRemote(const json &params, Response &response);
+
 };

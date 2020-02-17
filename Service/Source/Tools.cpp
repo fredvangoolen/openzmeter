@@ -130,22 +130,6 @@ void RWLocks::Unlock() {
   }
   pthread_mutex_unlock(&pMutex);
 }
-//void RWLocks::ReadUnlock() {
-//  pthread_mutex_lock(&pMutex);
-//  pReaders--;
-//  if((pReaders == 0) && (pWritersWaiting > 0)) pthread_cond_signal(&pWritersCondition);
-//  pthread_mutex_unlock(&pMutex);
-//}
-//void RWLocks::WriteUnlock() {
-//  pthread_mutex_lock(&pMutex);
-//  pWriters--;
-//  pActiveWriter = false;
-//  if(pWriters > 0)
-//    pthread_cond_signal(&pWritersCondition);
-//  else
-//    pthread_cond_broadcast(&pReadersCondition);
-//  pthread_mutex_unlock(&pMutex);
-//}
 //----------------------------------------------------------------------------------------------------------------------
 ProviderLocks::ProviderLocks() {
   pWaitingThreads      = 0;

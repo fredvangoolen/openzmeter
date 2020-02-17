@@ -14,53 +14,62 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <list>
+#include <set>
 #include "HTTPServer.h"
 #include "Analyzer.h"
-
+// ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerRemote : public Analyzer {
   private :
     typedef struct {
-      bool          Sended;
-      const string *RequestMethod;
-      const json   *RequestParams;
-      Response     *Resp;
-      ProviderLocks Locks;
+      uint64_t        Sequence;
+      json            Request;
+      json            Response;
+      pthread_cond_t  Cond;
     } Request_t;
-
-//    typedef struct {
-//      HTTPRequest    *Request;
-
-//      ProviderLocks   Locks;
-//    } Request_t;
   private :
-    map<uint64_t, Request_t*> pPendingRequest;
-    map<uint64_t, Request_t*> pSendedRequest;
-    pthread_mutex_t           pLocks;
-    uint64_t                  pSequence;
+    struct Comp {
+      using is_transparent = void;
+      bool operator()(const Request_t *a1, const Request_t *a2) const {
+        return a1->Sequence < a2->Sequence;
+      }
+      bool operator()(const uint64_t seq, const Request_t *a) const {
+        return seq < a->Sequence;
+      }
+      bool operator()(const Request_t *a, const uint64_t seq) const {
+        return a->Sequence < seq;
+      }
+    };
   private :
-    void  SetRequester();
-    void  ClearRequester();
+    volatile bool           pTerminate;
+    pthread_mutex_t         pMutex;
+    pthread_cond_t          pProducerCond;
+    pthread_cond_t          pConsumerCond;
+    Request_t              *pProducerRequest;
+    bool                    pConsumerReady;
+    set<Request_t*, Comp>   pRequestList;
+    uint64_t                pSequence;
+  private :
     void  HandleRequest(const string &url, const json &params, Response &response);
-    void  SetRemote(const json &params, Response &response);
-    void  GetAnalyzer(const json &params, Response &response);
-    void  SetAnalyzer(const json &params, Response &response);
-    void  GetSeries(const json &params, Response &response);
-    void  GetSeriesNow(const json &params, Response &response);
-    void  GetSeriesRange(const json &params, Response &response);
-    void  GetEvents(const json &params, Response &response);
-    void  GetEvent(const json &params, Response &response);
-    void  SetEvent(const json &params, Response &response);
-    void  DelEvent(const json &params, Response &response);
-    void  GetRates(const json &params, Response &response);
-    void  GetRate(const json &params, Response &response);
-    void  SetRate(const json &params, Response &response);
-    void  DelRate(const json &params, Response &response);
-    void  AddRate(const json &params, Response &response);
-    void  GetPrices(const json &params, Response &response);
-    void  TestAlarm(const json &params, Response &response);
-    void  GetAlarms(const json &params, Response &response);
+    void  GetAnalyzer(const json &params, Response &response) override;
+    void  SetAnalyzer(const json &params, Response &response) override;
+    void  GetSeries(const json &params, Response &response) override;
+    void  GetSeriesNow(const json &params, Response &response) override;
+    void  GetSeriesRange(const json &params, Response &response) override;
+    void  GetEvents(const json &params, Response &response) override;
+    void  GetEvent(const json &params, Response &response) override;
+    void  SetEvent(const json &params, Response &response) override;
+    void  DelEvent(const json &params, Response &response) override;
+    void  GetRates(const json &params, Response &response) override;
+    void  GetRate(const json &params, Response &response) override;
+    void  SetRate(const json &params, Response &response) override;
+    void  DelRate(const json &params, Response &response) override;
+    void  AddRate(const json &params, Response &response) override;
+    void  GetPrices(const json &params, Response &response) override;
+    void  TestAlarm(const json &params, Response &response) override;
+    void  GetAlarms(const json &params, Response &response) override;
+    void  GetRemote(const json &params, Response &response) override;
+    void  SetRemote(const json &params, Response &response) override;
   public :
-    AnalyzerRemote(string id);
+    AnalyzerRemote(const string &id);
     ~AnalyzerRemote();
 };

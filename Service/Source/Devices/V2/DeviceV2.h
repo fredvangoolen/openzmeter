@@ -65,7 +65,6 @@ class DeviceV2 final : public Device {
   private :
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pThread;                  //Descriptor del hilo de captura
-    bool                         pEnabled;                 //Enable device to analyzers
     volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
     vector<Analyzer_t>           pAnalyzersSetup;          //Listado de analyzadores
     int16_t                     *pBuffer;                  //Read buffer

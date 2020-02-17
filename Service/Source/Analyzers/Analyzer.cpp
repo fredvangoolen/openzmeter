@@ -98,20 +98,3 @@ void Analyzer::DelPermission(const json &params, Response &response) {
   bool   Result = DB.ExecSentenceNoResult("DELETE FROM permissions WHERE userename = " + DB.Bind(User) + " AND serial = " + DB.Bind(Serial));
   HTTPServer::FillResponse(response, "", "application/json", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
-//void AnalyzerRemote::SetRemote(const json &params, Response &response) {
-//  json Params = req.GetParams();
-//  if(!Params["Code"].is_number() || !Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' and 'Code' param are required", MHD_HTTP_BAD_REQUEST);
-//  uint64_t Sequence = Params["Sequence"];
-//  uint16_t Code = Params["Code"];
-//  pMembersLocks.WriteLock();
-//  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-//    if((*it)->Sequence != Sequence) continue;
-//    Query_t *Query = (*it);
-//    pQueries.erase(it);
-//    pMembersLocks.WriteUnlock();
-//    Query->Request->FromString(Params["Response"], Code);
-//    Query->Locks.ProviderWrite();
-//    return;
-//  }
-//  pMembersLocks.WriteUnlock();
-//}

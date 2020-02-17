@@ -33,6 +33,8 @@ class DeviceManager final {
     static void SetDevicesCallback(const json &params, Response &response);
     static void GetDeviceCallback(const json &params, Response &response);
     static void SetDeviceCallback(const json &params, Response &response);
+    static void GetRemoteCallback(const json &params, Response &response);
+    static void SetRemoteCallback(const json &params, Response &response);
     static void GetAnalyzersCallback(const json &params, Response &response);
     static void GetAnalyzerCallback(const json &params, Response &response);
     static void SetAnalyzerCallback(const json &params, Response &response);

@@ -34,14 +34,15 @@ using namespace std;
 #define HTTP_METHOD_NOT_ALLOWED    405
 #define HTTP_INTERNAL_SERVER_ERROR 500
 #define HTTP_SERVICE_UNAVAILABLE   503
+#define HTTP_GATEWAY_TIMEOUT       504
 //----------------------------------------------------------------------------------------------------------------------
 class URL {
   public :
-    string Protocol;
-    string Host;
-    string Path;
-    string Query;
-    string Port;
+    string   Protocol;
+    string   Host;
+    string   Path;
+    string   Query;
+    uint16_t Port;
   public :
     URL(const string &url);
 };

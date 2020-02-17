@@ -55,7 +55,8 @@ URL::URL(const string &url) {
   if((hostEnd != uriEnd) && ((&*(hostEnd))[0] == ':')) {
     hostEnd++;
     iterator_t portEnd = (pathStart != uriEnd) ? pathStart : queryStart;
-    Port = string(hostEnd, portEnd);
+    string PortText = string(hostEnd, portEnd);
+    Port = (PortText == "") ? 80 : atoi(PortText.c_str());
   }
   if(pathStart != uriEnd) Path = string(pathStart, queryStart);
   if(queryStart != uriEnd) Query = string(queryStart, url.end());

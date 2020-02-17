@@ -20,13 +20,15 @@
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
 Device::Device(const string &serial, const string &driver, const string &name) : Serial(serial), Driver(driver), Name(name) {
+  pEnabled = false;
 }
 Device::~Device() {
   ClearAnalyzers();
 }
 void Device::AddAnalyzer(Analyzer *analyzer) {
   pAnalyzersLock.WriteLock();
-  pAnalyzers.insert(analyzer);
+  auto Tmp = pAnalyzers.insert(analyzer);
+  if(Tmp.second == false) delete analyzer;
   pAnalyzersLock.Unlock();
 }
 void Device::ClearAnalyzers() {
@@ -43,6 +45,7 @@ json Device::GetJSONDescriptor() {
   Device["Driver"]    = Driver;
   Device["Name"]      = Name;
   Device["Serial"]    = Serial;
+  Device["Enabled"]   = pEnabled;
   pAnalyzersLock.ReadLock();
   Device["Analyzers"] = pAnalyzers.size();
   pAnalyzersLock.Unlock();
@@ -56,6 +59,12 @@ json Device::GetJSONAnalyzers(const string &user) {
   }
   pAnalyzersLock.Unlock();
   return Result;
+}
+void Device::GetRemote(const json &params, Response &response) {
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
+}
+void Device::SetRemote(const json &params, Response &response) {
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
 }
 bool Device::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
   string Serial = params["Analyzer"];
