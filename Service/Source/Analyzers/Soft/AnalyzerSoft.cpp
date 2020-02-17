@@ -949,7 +949,7 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
   uint32_t ThreadsCount = 0;
   pthread_mutex_t Mutex = PTHREAD_MUTEX_INITIALIZER;
   pthread_cond_t  Cond  = PTHREAD_COND_INITIALIZER;
-  Client *HTTPClient = NULL;
+//  LOGFile::Warning("Initiated sync funtion for analyzer\n");
   while(This->pSyncTerminate == false) {
     This->pAnalyzerLock.ReadLock();
     if((This->pSyncUser != User) || (This->pSyncPass != Pass) || (This->pSyncServer != Server)) {
@@ -957,22 +957,18 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
       User   = This->pSyncUser;
       Pass   = This->pSyncPass;
       Server = This->pSyncServer;
-      if(HTTPClient != NULL) {
-        delete HTTPClient;
-        HTTPClient = NULL;
-      }
     }
     This->pAnalyzerLock.Unlock();
     URL Url(Server);
+    Client HTTPClient(Url.Host, Url.Port);
+    HTTPClient.set_compress(true);
     if(Cookie == "") {
       Headers Header  = {{"Accept", "application/json"}};
       json    Content = json::object();
       Content["Username"] = User;
       Content["Password"] = Pass;
       Content["UpdateLastLogin"] = false;
-      if(HTTPClient == NULL) HTTPClient = new Client(Url.Host.c_str(), (Url.Port == "") ? 80 : atoi(Url.Port.c_str()) , 30);
-      HTTPClient->set_read_timeout(50, 0);
-      auto Response = HTTPClient->Post(string(Url.Path + "/LogIn").c_str(), Header, Content.dump(), "application/json", false);
+      auto Response = HTTPClient.Post(string(Url.Path + "/logIn").c_str(), Header, Content.dump(), "application/json");
       if((Response != nullptr) && (Response->status == HTTP_OK)) {
         json Content = json::parse(Response->body, NULL, false);
         if((Response->has_header("Set-Cookie") == true) && (Content.is_discarded() == false) && Content.is_object() && Content["Result"].is_boolean() && (Content["Result"] == true)) {
@@ -990,57 +986,64 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
         usleep(1000000);
       }
     } else {
-      Headers Header  = {{"Accept", "application/json"}, {"Cookie", Cookie}};
       json   Content = json::object();
+      Content["Serial"] = "REMOTE";
       Content["Analyzer"] = This->Serial;
       Content["Name"] = This->GetName();
-      LOGFile::Debug("Analyzer '%s' request pending queries to server\n", This->Serial.c_str());
-      auto Response = HTTPClient->Post(string(Url.Path + "/getRemote").c_str(), Header, Content.dump(), "application/json", false);
-      if((Response != nullptr) && (Response->status == HTTP_OK)) {
-        json Content = json::parse(Response->body, NULL, false);
-        if(!Content.is_discarded() && Content.is_array()) {
-          LOGFile::Debug("Analyzer '%s' receive %u queries from remote server\n", This->Serial.c_str(), Content.size());
-          for(uint32_t n = 0; n < Content.size(); n++) {
-            if(Content[n].is_object() && Content[n]["Sequence"].is_number() && Content[n]["Method"].is_string() && Content[n]["Params"].is_object()) {
-              Sync_t *Request = (Sync_t*)calloc(1, sizeof(Sync_t));
-              Request->Count        = &ThreadsCount;
-              Request->Mutex        = &Mutex;
-              Request->Cond         = &Cond;
-              Request->Cookie       = Cookie;
-              Request->Port         = (Url.Port == "") ? 80 : atoi(Url.Port.c_str());
-              Request->Host         = Url.Host;
-              Request->ResponsePath = Url.Path + "/setRemote";
-              Request->Analyzer     = This;
-              Request->Method       = Content[n]["Method"];
-              Request->Params       = Content[n]["Params"];
-              Request->Sequence     = Content[n]["Sequence"];
-              pthread_t Thread;
-              pthread_mutex_lock(&Mutex);
-              if(pthread_create(&Thread, NULL, SyncResp_Thread, (void*)Request) != 0) {
-                LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-                free(Request);
-              } else {
-                pthread_setname_np(Thread, "SyncWorker");
-                ThreadsCount++;
-                pthread_detach(Thread);
-              }
-              pthread_mutex_unlock(&Mutex);
-            }
-          }
+      Request Req;
+      Req.method = "POST";
+      Req.path = Url.Path + "/getRemote";
+      Req.headers =  {{"Accept", "application/json"}, {"Cookie", Cookie}, { "Accept", "text/event-stream" }, {"Content-Type", "application/json"}};
+      Req.body = Content.dump();
+      Req.progress = nullptr;
+      Req.response_handler = [&](const Response &response) -> bool {
+        if(This->pSyncTerminate == true) return false;
+        if(response.status == HTTP_UNAUTHORIZED) {
+          Cookie = "";
+          LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->Serial.c_str());
+          usleep(1000000);
+          return false;
+        } else if(response.status == HTTP_OK) {
+          return true;
+        } else {
+          LOGFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)\n", This->Serial.c_str(), response.status);
+          usleep(1000000);
+          return false;
         }
-      } else if((Response != nullptr) && (Response->status == HTTP_UNAUTHORIZED)) {
-        Cookie = "";
-        LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->Serial.c_str());
-        usleep(1000000);
-      } else if((Response != nullptr) && (Response->status == HTTP_NO_CONTENT)) {
-        LOGFile::Debug("No pending queries in remote server for analyzer '%s'\n", This->Serial.c_str());
-      } else {
-        if(Response != nullptr)
-          LOGFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)\n", This->Serial.c_str(), Response->status);
-        else
-          LOGFile::Debug("Failed request to remote server in analyzer '%s' (can not connect)\n", This->Serial.c_str());
-        usleep(1000000);
-      }
+      };
+      Req.content_receiver = [&](const char *data, uint64_t len) -> bool {
+        if(This->pSyncTerminate == true) return false;
+        if((len <= 5) || (strncmp("data:", data, 5) != 0)) return false;
+        string Msg(&data[5], len - 5);
+        json Content = json::parse(Msg, NULL, false);
+        if((Content.is_discarded() == true) || (Content.is_object() == false)) return true;
+        LOGFile::Debug("Analyzer '%s' receive querie from remote server\n", This->Serial.c_str());
+        if((Content["Sequence"].is_number() == false) || (Content["Method"].is_string() == false) || (Content["Params"].is_object() == false)) return false;
+        Sync_t *Request = (Sync_t*)calloc(1, sizeof(Sync_t));
+        Request->Count        = &ThreadsCount;
+        Request->Mutex        = &Mutex;
+        Request->Cond         = &Cond;
+        Request->Cookie       = Cookie;
+        Request->Server       = Server;
+        Request->Analyzer     = This;
+        Request->Method       = Content["Method"];
+        Request->Params       = Content["Params"];
+        Request->Sequence     = Content["Sequence"];
+        pthread_t Thread;
+        pthread_mutex_lock(&Mutex);
+        if(pthread_create(&Thread, NULL, Sync_RespThread, (void*)Request) != 0) {
+          LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+          free(Request);
+        } else {
+          pthread_setname_np(Thread, "SyncWorker");
+          ThreadsCount++;
+          pthread_detach(Thread);
+        }
+        pthread_mutex_unlock(&Mutex);
+        return true;
+      };
+      auto Res = std::make_shared<Response>();
+      if(HTTPClient.send(Req, *Res) == false) usleep(1000000);
     }
   }
   pthread_mutex_lock(&Mutex);
@@ -1049,10 +1052,9 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
     pthread_cond_wait(&Cond, &Mutex);
   }
   pthread_mutex_unlock(&Mutex);
-  if(HTTPClient != NULL) delete HTTPClient;
   return NULL;
 }
-void *AnalyzerSoft::SyncResp_Thread(void *args) {
+void *AnalyzerSoft::Sync_RespThread(void *args) {
   Sync_t *This = (Sync_t*)args;
   This->Params["UserName"] = "admin";
   LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
@@ -1092,14 +1094,17 @@ void *AnalyzerSoft::SyncResp_Thread(void *args) {
   } else if(This->Method == "getAlarms") {
     This->Analyzer->GetAlarms(This->Params, Resp);
   }
+  URL Url(This->Server);
   Headers Header  = {{"Accept", "application/json"}, {"Cookie", This->Cookie}};
   json    Content = json::object();
   Content["Code"] = Resp.status;
   Content["Sequence"] = This->Sequence;
+  Content["Serial"] = "REMOTE";
   Content["Analyzer"] = This->Analyzer->Serial;
   Content["Response"] = Resp.body;
-  Client HTTPClient(This->Host.c_str(), This->Port);
-  auto Response = HTTPClient.Post(This->ResponsePath.c_str(), Header, Content.dump(), "application/json", false);
+  Content["Mime"] = Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type") : "text/plain";
+  Client HTTPClient(Url.Host.c_str(), Url.Port);
+  auto Response = HTTPClient.Post(string(Url.Path + "/setRemote").c_str(), Header, Content.dump(), "application/json");
   if((Response != nullptr) && (Response->status == HTTP_OK)) {
     LOGFile::Debug("Remote request '%s' for analyzer '%s' completed\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
   } else {
@@ -1725,4 +1730,10 @@ void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::array();
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::GetRemote(const json &params, Response &response) {
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
+}
+void AnalyzerSoft::SetRemote(const json &params, Response &response) {
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }

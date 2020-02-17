@@ -32,6 +32,8 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("getDevices",          GetDevicesCallback);
   HTTPServer::RegisterCallback("getDevice",           GetDeviceCallback);
   HTTPServer::RegisterCallback("setDevice",           SetDeviceCallback);
+  HTTPServer::RegisterCallback("setRemote",           SetRemoteCallback);
+  HTTPServer::RegisterCallback("getRemote",           GetRemoteCallback);
   HTTPServer::RegisterCallback("getAnalyzers",        GetAnalyzersCallback);
   HTTPServer::RegisterCallback("getAnalyzer",         GetAnalyzerCallback);
   HTTPServer::RegisterCallback("setAnalyzer",         SetAnalyzerCallback);
@@ -59,6 +61,8 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("getDevices");
   HTTPServer::UnregisterCallback("getDevice");
   HTTPServer::UnregisterCallback("setDevice");
+  HTTPServer::UnregisterCallback("setRemote");
+  HTTPServer::UnregisterCallback("getRemote");
   HTTPServer::UnregisterCallback("getAnalyzers");
   HTTPServer::UnregisterCallback("getAnalyzer");
   HTTPServer::UnregisterCallback("setAnalyzer");
@@ -132,6 +136,12 @@ void DeviceManager::GetDeviceCallback(const json &params, Response &response) {
 }
 void DeviceManager::SetDeviceCallback(const json &params, Response &response) {
   CallDeviceFunction(params, response, &Device::SetDevice);
+}
+void DeviceManager::GetRemoteCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::GetRemote);
+}
+void DeviceManager::SetRemoteCallback(const json &params, Response &response) {
+  CallDeviceFunction(params, response, &Device::SetRemote);
 }
 void DeviceManager::GetAnalyzersCallback(const json &params, Response &response) {
   json Response = json::array();

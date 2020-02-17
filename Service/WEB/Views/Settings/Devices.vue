@@ -45,12 +45,16 @@
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},
           {name: 'Serial', title: 'Serial'},
+          {name: 'Enabled', title: 'Enabled', callback: this.EnabledStatus},
           {name: 'Analyzers', title: 'Analyzers'},
           {name: '__slot:actions', title: ''}
         ]
       };
     },
     methods: {
+      EnabledStatus: function(value) {
+        return (value === true) ? '&#9635;' : '&#9633;';
+      },
       LoadTable: function () {
         this.ShowSpinner = true;
         this.$http.post('getDevices', {}).then(
@@ -137,7 +141,7 @@
       text-align: center;
     }
     .table >>> th:nth-child(6) {
-      width: 120px;
+      width: 80px;
     }
   }
   .help {

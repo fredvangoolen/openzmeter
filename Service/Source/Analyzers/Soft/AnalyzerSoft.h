@@ -19,10 +19,11 @@
 #include <deque>
 #include <list>
 #include "muParser/muParser.h"
+#include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
-//#include "FFT.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
+using namespace httplib;
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoft final : public Analyzer {
   private :
@@ -32,6 +33,7 @@ class AnalyzerSoft final : public Analyzer {
     enum AggregType  { UNINITIALIZED, AGGREG_200MS, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
     enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
     enum EventState  { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
+    enum SyncState   { NOT_LOGGED, LOGGED, CONNECTED, TERMINATE };
    private :
     typedef struct {
       AggregType                     Type;                   //Aggregation type
@@ -105,9 +107,7 @@ class AnalyzerSoft final : public Analyzer {
       pthread_mutex_t         *Mutex;                    //Export list locks
       pthread_cond_t          *Cond;                     //Wakeup parent after last thread ends
       uint32_t                *Count;                    //Count of running sync threads
-      uint16_t                 Port;
-      string                   Host;
-      string                   ResponsePath;
+      string                   Server;
       string                   Cookie;
       string                   Method;
       json                     Params;
@@ -183,7 +183,7 @@ class AnalyzerSoft final : public Analyzer {
     deque<EventCycle_t>        pPrevCycles;              //Previous cycles
   private : //Readed in thread, changed in configure
     pthread_t                  pSyncThread;              //Export thread
-    volatile bool              pSyncTerminate;           //Export stop signal
+    volatile bool              pSyncTerminate;           //Sync status
     string                     pSyncServer;              //Export server address
     string                     pSyncUser;                //Export server user
     string                     pSyncPass;                //Export server password
@@ -201,12 +201,12 @@ class AnalyzerSoft final : public Analyzer {
     static void  FFT_Func(void *creation, void *run);
     static void  Alarms_Func(void *creation, void *run);
     static void *Sync_Thread(void *params);
-    static void *SyncResp_Thread(void *params);
+    static void *Sync_RespThread(void *params);
     static float CalcChange(const float in, const float reference);
     static float CalcAngle(const float *a, const float *b);
     static float BinPower(const float *a);
     static void  InitAlarm(Alarm_t &alarm, const json &config);
-//    static json  GetAlarmJSON(const Alarm_t &alarm);
+
   private :
     void  Configure(const json &options);
     void  InitAggreg(Params_t &params, AggregType type);
@@ -216,10 +216,6 @@ class AnalyzerSoft final : public Analyzer {
     void  InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
     bool  FindRunningEvent(const uint32_t mask);
     void  SaveEvent(Event_t &evt);
-//    void  SaveAlarmsConf();
-
-
-
   private :
     void  GetAnalyzer(const json &params, Response &response) override;
     void  SetAnalyzer(const json &params, Response &response) override;
@@ -238,6 +234,8 @@ class AnalyzerSoft final : public Analyzer {
     void  GetPrices(const json &params, Response &response) override;
     void  TestAlarm(const json &params, Response &response) override;
     void  GetAlarms(const json &params, Response &response) override;
+    void  GetRemote(const json &params, Response &response) override;
+    void  SetRemote(const json &params, Response &response) override;
   public :
     static json CheckConfig(const json &config);
   public :

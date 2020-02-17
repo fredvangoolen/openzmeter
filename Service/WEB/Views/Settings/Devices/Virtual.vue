@@ -36,10 +36,6 @@
 </template>
 
 <script>
-  import * as oZm from 'JS/openZmeter.js';
-  import OptionPicker from 'Components/OptionPicker.vue';
-  import InputSpin from 'Components/InputSpin.vue';
-  import Toggle from 'Components/Toggle.vue';
   export default {
     props: { value: Object, error: String },
     data() {

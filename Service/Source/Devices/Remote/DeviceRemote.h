@@ -25,20 +25,16 @@ class DeviceRemote final : public Device {
   private :
     static bool            pRegistered;
   private :
-    RWLocks                pLocks;
-    bool                   pEnabled;
-  private :
     static bool            Register();
     static vector<Device*> GetInstances();
     static json            CheckConfig(const json &config);
-  private :
-    static void GetRemoteCallback(const json &params, Response &response);
-    static void SetRemoteCallback(const json &params, Response &response);
   private :
     DeviceRemote();
     void Configure(const json &config);
     void GetDevice(const json &params, Response &response) override;
     void SetDevice(const json &params, Response &response) override;
+    void GetRemote(const json &params, Response &response) override;
+    void SetRemote(const json &params, Response &response) override;
   public :
     ~DeviceRemote();
 };

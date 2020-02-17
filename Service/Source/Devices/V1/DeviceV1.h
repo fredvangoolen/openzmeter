@@ -50,7 +50,6 @@ class DeviceV1 final : public Device {
   private :
     static bool                  pRegistered;
   private :
-    bool                         pEnabled;                 //Enable device
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pThread;                  //Descriptor del hilo de captura
     volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes

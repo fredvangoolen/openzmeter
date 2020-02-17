@@ -58,6 +58,8 @@ class Analyzer {
     virtual void GetPrices(const json &params, Response &response) = 0;
     virtual void TestAlarm(const json &params, Response &response) = 0;
     virtual void GetAlarms(const json &params, Response &response) = 0;
+    virtual void GetRemote(const json &params, Response &response) = 0;
+    virtual void SetRemote(const json &params, Response &response) = 0;
   public :
     virtual ~Analyzer();
     json     GetJSONDescriptor();

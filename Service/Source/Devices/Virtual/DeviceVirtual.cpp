@@ -77,9 +77,9 @@ void DeviceVirtual::Configure(const json &config) {
   pMode             = (config["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (config["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
   string ModeString = config["Mode"];
   pAnalyzer         = new AnalyzerSoft(Serial + "_" + ModeString, pMode, "/Devices/" + Serial + "/Analyzer", pSampleRate);
-  bool Enabled      = config["Enabled"];
+  pEnabled          = config["Enabled"];
   AddAnalyzer(pAnalyzer);
-  if(Enabled == true) {
+  if(pEnabled == true) {
     pTerminate = false;
     if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
