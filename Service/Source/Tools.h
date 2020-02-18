@@ -97,11 +97,9 @@ class ProviderLocks {
 //----------------------------------------------------------------------------------------------------------------------
 class ConfigManager {
   private :
-    static ConfigManager    *pInstance;
     static pthread_mutex_t   pMutex;
-  private :
-    int   pFile;
-    json  pConfig;
+    static int               pFile;
+    static json              pConfig;
   public :
     ConfigManager(string name);
     virtual ~ConfigManager();
@@ -137,12 +135,10 @@ class LOGFile {
   private :
     static pthread_mutex_t  pMutex;
     static bool             pConsole;
-    static LOGFile         *pInstance;
+    static FILE            *pFile;
+    static Type             pLevel;
   private :
     static void Msg(Type type, const char *msg, va_list params);
-  private :
-    FILE   *pFile;
-    Type    pLevel;
   public :
     LOGFile();
     virtual ~LOGFile();

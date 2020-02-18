@@ -246,17 +246,14 @@ bool WorkerLocks::IsWorking() {
   return Result;
 }
 //----------------------------------------------------------------------------------------------------------------------
-ConfigManager   *ConfigManager::pInstance = NULL;
-pthread_mutex_t  ConfigManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
+int             ConfigManager::pFile = 0;
+pthread_mutex_t ConfigManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
 ConfigManager::ConfigManager(string name) {
   pthread_mutex_lock(&pMutex);
-  if(pInstance != NULL) {
-    delete pInstance;
-    pInstance = NULL;
-  }
   pFile = open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
   if(pFile < 0) {
     LOGFile::Error("Can not open config file (%s)\n", strerror(errno));
+    pFile = 0;
     pthread_mutex_unlock(&pMutex);
     return;
   }
@@ -269,36 +266,30 @@ ConfigManager::ConfigManager(string name) {
   } while(Len > 0);
   pConfig = json::parse(Read, NULL, false);
   if(pConfig.is_discarded()) pConfig = json::object();
-  pInstance = this;
   pthread_mutex_unlock(&pMutex);
 }
 ConfigManager::~ConfigManager() {
   pthread_mutex_lock(&pMutex);
-  close(pFile);
-  pInstance = NULL;
+  if(pFile != 0) close(pFile);
+  pFile = 0;
   pthread_mutex_unlock(&pMutex);
 }
 bool ConfigManager::WriteConfig(const string &path, const json &val) {
   pthread_mutex_lock(&pMutex);
   LOGFile::Debug("Saving '%s' settings\n", path.c_str());
-  if(pInstance == NULL) {
+  if(pFile == 0) {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  //pInstance->pConfig[json::json_pointer(path)].merge_patch(val);
-  pInstance->pConfig[json::json_pointer(path)] = val;
-  if(pInstance->pFile < 0) {
-    pthread_mutex_unlock(&pMutex);
-    return false;
-  }
-  lseek(pInstance->pFile, 0, SEEK_SET);
-  string Write = pInstance->pConfig.dump(2);
-  if(write(pInstance->pFile, Write.c_str(), Write.size()) < 0) {
+  pConfig[json::json_pointer(path)] = val;
+  lseek(pFile, 0, SEEK_SET);
+  string Write = pConfig.dump(2);
+  if(write(pFile, Write.c_str(), Write.size()) < 0) {
     LOGFile::Error("Can not write configuration to file (%s)\n", strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  if(ftruncate(pInstance->pFile, Write.size()) < 0 ) {
+  if(ftruncate(pFile, Write.size()) < 0 ) {
     LOGFile::Error("Can not write configuration to file (%s)\n", strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
@@ -309,11 +300,11 @@ bool ConfigManager::WriteConfig(const string &path, const json &val) {
 json ConfigManager::ReadConfig(const string &path) {
   pthread_mutex_lock(&pMutex);
   LOGFile::Debug("Reading '%s' settings\n", path.c_str());
-  if((pInstance == NULL) || (pInstance->pConfig.is_object() == false)) {
+  if((pFile == 0) || (pConfig.is_object() == false)) {
     pthread_mutex_unlock(&pMutex);
     return nullptr;
   }
-  json Result = pInstance->pConfig[json::json_pointer(path)];
+  json Result = pConfig[json::json_pointer(path)];
   pthread_mutex_unlock(&pMutex);
   return Result;
 }
@@ -334,10 +325,12 @@ PIDFile::~PIDFile() {
   if(!pFile.empty()) remove(pFile.c_str());
 }
 //----------------------------------------------------------------------------------------------------------------------
-LOGFile        *LOGFile::pInstance = NULL;
+FILE           *LOGFile::pFile     = NULL;
+LOGFile::Type   LOGFile::pLevel    = LOGFile::DEBUG;
 bool            LOGFile::pConsole  = true;
 pthread_mutex_t LOGFile::pMutex    = PTHREAD_MUTEX_INITIALIZER;
 LOGFile::LOGFile() {
+  pthread_mutex_lock(&pMutex);
   string Name = "/var/log/openZmeter.log";
   pLevel = DEBUG;
   json Config = ConfigManager::ReadConfig("/Log");
@@ -355,14 +348,10 @@ LOGFile::LOGFile() {
     if(!pFile) pFile = fopen(Name.c_str(), "wt");
     if(pFile == NULL) LOGFile::Warning("Can not create or open log file (%s)\n", strerror(errno));
   }
-  pthread_mutex_lock(&pMutex);
-  if(pInstance != NULL) delete pInstance;
-  pInstance = this;
   pthread_mutex_unlock(&pMutex);
 }
 LOGFile::~LOGFile() {
   pthread_mutex_lock(&pMutex);
-  pInstance = NULL;
   if(pFile != NULL) fclose(pFile);
   pthread_mutex_unlock(&pMutex);
 }
@@ -412,9 +401,7 @@ void LOGFile::Msg(Type type, const char *msg, va_list params) {
     }
   }
   if(pConsole == true) fflush(stdout);
-  if(pInstance != NULL) {
-    if((type < pInstance->pLevel) && (pInstance->pFile != NULL)) fprintf(pInstance->pFile, "[%s]  %s", DateStr, MsgStr);
-  }
+  if((type < pLevel) && (pFile != NULL)) fprintf(pFile, "[%s]  %s", DateStr, MsgStr);
   pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
