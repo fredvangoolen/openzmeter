@@ -42,6 +42,92 @@ RWLocks                        SysSupport::pActionsLock;
   uint64_t                     SysSupport::pLastTask_5S = 0;
 #endif
 //----------------------------------------------------------------------------------------------------------------------
+SysSupport::SysSupport() {
+  HTTPServer::RegisterCallback("getNews",         GetNewsCallback);
+  HTTPServer::RegisterCallback("getUsers",        GetUsersCallback);
+  HTTPServer::RegisterCallback("getUser",         GetUserCallback);
+  HTTPServer::RegisterCallback("setUser",         SetUserCallback);
+  HTTPServer::RegisterCallback("setUserPassword", SetUserPasswordCallback);
+  HTTPServer::RegisterCallback("addUser",         AddUserCallback);
+  HTTPServer::RegisterCallback("delUser",         DelUserCallback);
+  pTerminate = false;
+
+  #ifdef OPENWRT
+    HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback);
+    HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback);
+    HTTPServer::RegisterCallback("scanWIFI",     ScanWIFICallback);
+    HTTPServer::RegisterCallback("getWIFI",      GetWIFICallback);
+    HTTPServer::RegisterCallback("setWIFI",      SetWIFICallback);
+    HTTPServer::RegisterCallback("getNTP",       GetNTPCallback);
+    HTTPServer::RegisterCallback("setNTP",       SetNTPCallback);
+    HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
+    HTTPServer::RegisterCallback("upgrade",      UpgradeCallback);
+
+    json Config = ConfigManager::ReadConfig("/Bluetooth");
+    DBusError Error;
+    dbus_error_init(&Error);
+    pDBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
+    if(dbus_error_is_set(&Error)) {
+      LOGFile::Error("Can not open DBus connection (%s)\n", Error.message);
+      dbus_error_free(&Error);
+      pDBus = NULL;
+      return;
+    }
+    if(Config.is_object() == true) {
+      if(Config["Enabled"].is_boolean()) pBluetooth_Enabled = Config["Enabled"];
+      if(Config["Bridge"].is_string()) pBTBridgeName = Config["Bridge"];
+    }
+    Config = json::object();
+    Config["Enabled"] = pBTEnabled;
+    Config["Bridge"] = pBTBridgeName;
+    ConfigManager::WriteConfig("/Bluetooth", Config);
+    Config = ConfigManager::ReadConfig("/WIFI");
+    pInterfaceWIFI = "wlan0";
+    pNetworkWIFI = "lan";
+    pWirelessWIFI = "default_radio";
+    if(Config.is_object() == true) {
+      if(Config["Interface"].is_string()) pInterfaceWIFI = Config["Interface"];
+      if(Config["Network"].is_string()) pNetworkWIFI = Config["Network"];
+      if(Config["Config"].is_string()) pWirelessWIFI = Config["Config"];
+    }
+    Config = json::object();
+    Config["Interface"] = pInterfaceWIFI;
+    Config["Network"] = pNetworkWIFI;
+    Config["Config"] = pWirelessWIFI;
+    ConfigManager::WriteConfig("/WIFI", Config);
+    if(pBTEnabled) StartBT();
+
+  #endif
+}
+SysSupport::~SysSupport() {
+  HTTPServer::UnregisterCallback("getNews");
+  HTTPServer::UnregisterCallback("getUsers");
+  HTTPServer::UnregisterCallback("getUser");
+  HTTPServer::UnregisterCallback("setUser");
+  HTTPServer::UnregisterCallback("setUserPassword");
+  HTTPServer::UnregisterCallback("addUser");
+  HTTPServer::UnregisterCallback("delUser");
+  #ifdef OPENWRT
+    HTTPServer::UnregisterCallback("getBluetooth");
+    HTTPServer::UnregisterCallback("setBluetooth");
+    HTTPServer::UnregisterCallback("scanWIFI");
+    HTTPServer::UnregisterCallback("getWIFI");
+    HTTPServer::UnregisterCallback("setWIFI");
+    HTTPServer::UnregisterCallback("getNTP");
+    HTTPServer::UnregisterCallback("setNTP");
+    HTTPServer::UnregisterCallback("getUpdates");
+    HTTPServer::UnregisterCallback("upgrade");
+    StopBT();
+    if(pDBus) dbus_connection_unref(pDBus);
+  #endif
+}
+//----------------------------------------------------------------------------------------------------------------------
+#ifdef OPENWRT
+void *SysSupport::Bluetooth_Thread(void *params) {
+  
+}
+
+
 void SysSupport::GetNewsCallback(const json &params, Response &response) {
   Database DB;
   if(params["NewsTime"].is_number()) {
@@ -157,81 +243,6 @@ void SysSupport::DelUserCallback(const json &params, Response &response) {
   Database DB;
   bool Result = DB.ExecSentenceNoResult("DELETE FROM users WHERE name = " + DB.Bind(User));
   HTTPServer::FillResponse(response, "", "text/plain", (Result == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
-}
-SysSupport::SysSupport() {
-  HTTPServer::RegisterCallback("getNews",         GetNewsCallback);
-  HTTPServer::RegisterCallback("getUsers",        GetUsersCallback);
-  HTTPServer::RegisterCallback("getUser",         GetUserCallback);
-  HTTPServer::RegisterCallback("setUser",         SetUserCallback);
-  HTTPServer::RegisterCallback("setUserPassword", SetUserPasswordCallback);
-  HTTPServer::RegisterCallback("addUser",         AddUserCallback);
-  HTTPServer::RegisterCallback("delUser",         DelUserCallback);
-  #ifdef OPENWRT
-    json Config = ConfigManager::ReadConfig("/Bluetooth");
-    DBusError Error;
-    dbus_error_init(&Error);
-    pDBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
-    if(dbus_error_is_set(&Error)) {
-      LOGFile::Error("Can not open DBus connection (%s)\n", Error.message);
-      dbus_error_free(&Error);
-      pDBus = NULL;
-      return;
-    }
-    if(Config.is_object() == true) {
-      if(Config["Enabled"].is_boolean()) pBTEnabled = Config["Enabled"];
-      if(Config["Bridge"].is_string()) pBTBridgeName = Config["Bridge"];
-    }
-    Config = json::object();
-    Config["Enabled"] = pBTEnabled;
-    Config["Bridge"] = pBTBridgeName;
-    ConfigManager::WriteConfig("/Bluetooth", Config);
-    Config = ConfigManager::ReadConfig("/WIFI");
-    pInterfaceWIFI = "wlan0";
-    pNetworkWIFI = "lan";
-    pWirelessWIFI = "default_radio";
-    if(Config.is_object() == true) {
-      if(Config["Interface"].is_string()) pInterfaceWIFI = Config["Interface"];
-      if(Config["Network"].is_string()) pNetworkWIFI = Config["Network"];
-      if(Config["Config"].is_string()) pWirelessWIFI = Config["Config"];
-    }
-    Config = json::object();
-    Config["Interface"] = pInterfaceWIFI;
-    Config["Network"] = pNetworkWIFI;
-    Config["Config"] = pWirelessWIFI;
-    ConfigManager::WriteConfig("/WIFI", Config);
-    if(pBTEnabled) StartBT();
-    HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback);
-    HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback);
-    HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
-    HTTPServer::RegisterCallback("getWIFI",  GetWIFICallback);
-    HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
-    HTTPServer::RegisterCallback("getNTP", GetNTPCallback);
-    HTTPServer::RegisterCallback("setNTP", SetNTPCallback);
-    HTTPServer::RegisterCallback("getUpdates", GetUpdatesCallback);
-    HTTPServer::RegisterCallback("upgrade", UpgradeCallback);
-  #endif
-}
-SysSupport::~SysSupport() {
-  HTTPServer::UnregisterCallback("getNews");
-  HTTPServer::UnregisterCallback("getUsers");
-  HTTPServer::UnregisterCallback("getUser");
-  HTTPServer::UnregisterCallback("setUser");
-  HTTPServer::UnregisterCallback("setUserPassword");
-  HTTPServer::UnregisterCallback("addUser");
-  HTTPServer::UnregisterCallback("delUser");
-  #ifdef OPENWRT
-    HTTPServer::UnregisterCallback("getBluetooth");
-    HTTPServer::UnregisterCallback("setBluetooth");
-    HTTPServer::UnregisterCallback("scanWIFI");
-    HTTPServer::UnregisterCallback("getWIFI");
-    HTTPServer::UnregisterCallback("setWIFI");
-    HTTPServer::UnregisterCallback("getNTP");
-    HTTPServer::UnregisterCallback("setNTP");
-    HTTPServer::UnregisterCallback("getUpdates");
-    HTTPServer::UnregisterCallback("upgrade");
-    StopBT();
-    if(pDBus) dbus_connection_unref(pDBus);
-  #endif
 }
 SysSupport::SystemStatus_t *SysSupport::GetSystemStatus() {
   return &pSystemStatus;
