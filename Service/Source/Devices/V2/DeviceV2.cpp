@@ -281,16 +281,16 @@ void *DeviceV2::Capture_Thread(void *args) {
     if(This->pTerminate == true) continue;
     if((This->pDeviceHandle != NULL) && (LastSignalSend < (Tools::GetTime() - 500))) {
       uint16_t Status = 0x0006; //Stat=GREEN y Wifi=RED
-      SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
-      SysStatus->Lock.ReadLock();
-      if(SysStatus->RAM_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;              //Stat=YELLOW
-      if(SysStatus->CPU_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;              //Stat=YELLOW
-      if(SysStatus->Disk_Usage > 90.0) Status = (Status & 0xFFFC) | 0x0003;             //Stat=YELLOW
-      if(SysStatus->Time_IsSet == false) Status = (Status & 0xFFFC) | 0x0001;           //Stat=RED
-      if(SysStatus->Events == true) Status = (Status & 0xC01C) | 0x0021;                //Stat=RED and short BEEP
-      if(SysStatus->WIFI_Network.empty() == false) Status = (Status & 0xFFF3) | 0x000C; //Wifi=GREEN
-      if(SysStatus->BT_Network.empty() == false) Status = (Status & 0xFFEF) | 0x0010;   //Bt=BLUE
-      SysStatus->Lock.Unlock();
+//      SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
+//      SysStatus->Lock.ReadLock();
+//      if(SysStatus->RAM_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;              //Stat=YELLOW
+//      if(SysStatus->CPU_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;              //Stat=YELLOW
+//      if(SysStatus->Disk_Usage > 90.0) Status = (Status & 0xFFFC) | 0x0003;             //Stat=YELLOW
+//      if(SysStatus->Time_IsSet == false) Status = (Status & 0xFFFC) | 0x0001;           //Stat=RED
+//      if(SysStatus->Events == true) Status = (Status & 0xC01C) | 0x0021;                //Stat=RED and short BEEP
+//      if(SysStatus->WIFI_Network.empty() == false) Status = (Status & 0xFFF3) | 0x000C; //Wifi=GREEN
+//      if(SysStatus->BT_Network.empty() == false) Status = (Status & 0xFFEF) | 0x0010;   //Bt=BLUE
+//      SysStatus->Lock.Unlock();
       Status |= (This->pHighGain == true) ? 0x4000 : 0x0000;
       This->pSignalTransfer.Submit(&Status, sizeof(Status));
       This->pSubmittedTransfers++;
@@ -388,19 +388,19 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
       uint16_t Sample = (Samples[Pos] & 0x1FFF);
       if(Seq == 7) {
         if(This->pLastSignalRecv < (Time - 500)) {
-          SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
-          SysStatus->Lock.WriteLock();
-          SysStatus->Battery_Volt = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
-          SysStatus->Battery_Level  = (SysStatus->Battery_Volt - 2.96) * 80.65;
-          if(SysStatus->Battery_Level > 100.0) SysStatus->Battery_Level = 100.0;
+//          SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
+//          SysStatus->Lock.WriteLock();
+//          SysStatus->Battery_Volt = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
+//          SysStatus->Battery_Level  = (SysStatus->Battery_Volt - 2.96) * 80.65;
+//          if(SysStatus->Battery_Level > 100.0) SysStatus->Battery_Level = 100.0;
 //          Status["Charging"] = (Sample & 0x0002) ? true: false;
 //          Status["Powered"] = (Sample & 0x0001) ? true: false;
-          SysStatus->Lock.Unlock();
+//          SysStatus->Lock.Unlock();
           uint8_t Action = (Sample & 0x0300) >> 8;
           if((Action == CLICK) && (This->pButtonAction == false)) {
-            SysSupport::SetSystemActions("ToogleBluetooth");
+            SysSupport::AddSystemAction("ToogleBluetooth");
           } else if((Action == LONG_CLICK) && (This->pButtonAction == false)) {
-            SysSupport::SetSystemActions("PowerOff");
+            SysSupport::AddSystemAction("PowerOff");
           }
           This->pButtonAction = (Action == NONE);
           This->pLastSignalRecv = Time;

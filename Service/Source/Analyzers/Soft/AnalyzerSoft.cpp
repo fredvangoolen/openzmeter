@@ -755,10 +755,10 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   This->AccumulateAggreg(This->pAggreg1H, This->pAggreg200MS);
   This->pPrevTimestamp = This->pAggreg200MS.Timestamp;
   if(This->pSave200MS) This->SaveAggreg(This->pAggreg200MS);
-  SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
-  SysStatus->Lock.WriteLock();
-  SysStatus->Events = This->pAggreg200MS.Flag;
-  SysStatus->Lock.Unlock();
+//  SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
+//  SysStatus->Lock.WriteLock();
+//  SysStatus->Events = This->pAggreg200MS.Flag;
+//  SysStatus->Lock.Unlock();
   This->pNowDataLock.ProviderWait();
   This->InitAggreg(This->pAggreg200MS, AGGREG_200MS);
   This->pBlockSamples     = 0;
