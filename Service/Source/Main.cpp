@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 
   uint32_t Iter = 0;
   while(!Terminate) {
-    SysSupport::PeriodicTask();
+//    SysSupport::PeriodicTask();
     if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
     if((Iter % 600) == 0) Database::RemoveExpiredSessions();
     Iter++;

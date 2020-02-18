@@ -246,8 +246,10 @@ bool WorkerLocks::IsWorking() {
   return Result;
 }
 //----------------------------------------------------------------------------------------------------------------------
-int             ConfigManager::pFile = 0;
-pthread_mutex_t ConfigManager::pMutex = PTHREAD_MUTEX_INITIALIZER;
+int             ConfigManager::pFile   = 0;
+pthread_mutex_t ConfigManager::pMutex  = PTHREAD_MUTEX_INITIALIZER;
+json            ConfigManager::pConfig = nullptr;
+//----------------------------------------------------------------------------------------------------------------------
 ConfigManager::ConfigManager(string name) {
   pthread_mutex_lock(&pMutex);
   pFile = open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
