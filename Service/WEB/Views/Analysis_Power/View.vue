@@ -140,9 +140,9 @@
       UpdateCubismValues: function() {
         this.ControlCubism = this.CancelTransfer(this.ControlCubism);
         if(this.analyzer == null) return;
-        this.ControlCubism.CancelFunc = this.analyzer.GetSeriesRange('1M', 'Day', this.CubismData, ['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'],
+        this.ControlCubism.CancelFunc = this.analyzer.GetSeriesRange('1M', 'LastDay', this.CubismData, ['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'],
           (working) => {},
-          (result) => { this.CubismData = Object.freeze(result); },
+          (result) => { this.DataCubism = Object.freeze(result); },
           (timeout) => { this.ControlCubism.Timer = setTimeout( () => { this.UpdateCubismValues(); }, timeout); }
         );
       },
