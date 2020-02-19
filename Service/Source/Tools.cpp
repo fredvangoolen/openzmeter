@@ -246,16 +246,16 @@ bool WorkerLocks::IsWorking() {
   return Result;
 }
 //----------------------------------------------------------------------------------------------------------------------
-int             ConfigManager::pFile   = 0;
+int             ConfigManager::pFile   = -1;
 pthread_mutex_t ConfigManager::pMutex  = PTHREAD_MUTEX_INITIALIZER;
 json            ConfigManager::pConfig = nullptr;
 //----------------------------------------------------------------------------------------------------------------------
-ConfigManager::ConfigManager(string name) {
+ConfigManager::ConfigManager(const string &name) {
   pthread_mutex_lock(&pMutex);
   pFile = open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
   if(pFile < 0) {
     LOGFile::Error("Can not open config file (%s)\n", strerror(errno));
-    pFile = 0;
+    pFile = -1;
     pthread_mutex_unlock(&pMutex);
     return;
   }
@@ -272,14 +272,14 @@ ConfigManager::ConfigManager(string name) {
 }
 ConfigManager::~ConfigManager() {
   pthread_mutex_lock(&pMutex);
-  if(pFile != 0) close(pFile);
-  pFile = 0;
+  if(pFile != -1) close(pFile);
+  pFile = -1;
   pthread_mutex_unlock(&pMutex);
 }
 bool ConfigManager::WriteConfig(const string &path, const json &val) {
   pthread_mutex_lock(&pMutex);
   LOGFile::Debug("Saving '%s' settings\n", path.c_str());
-  if(pFile == 0) {
+  if(pFile == -1) {
     pthread_mutex_unlock(&pMutex);
     return false;
   }
@@ -302,7 +302,7 @@ bool ConfigManager::WriteConfig(const string &path, const json &val) {
 json ConfigManager::ReadConfig(const string &path) {
   pthread_mutex_lock(&pMutex);
   LOGFile::Debug("Reading '%s' settings\n", path.c_str());
-  if((pFile == 0) || (pConfig.is_object() == false)) {
+  if((pFile == -1) || (pConfig.is_object() == false)) {
     pthread_mutex_unlock(&pMutex);
     return nullptr;
   }
