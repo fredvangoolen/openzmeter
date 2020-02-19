@@ -40,7 +40,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null, Error: '', Enable: false,
+      return { Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null, Error: '', Enabled: false,
         Columns: [
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},

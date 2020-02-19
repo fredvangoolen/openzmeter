@@ -39,9 +39,3 @@ CREATE TABLE IF NOT EXISTS permissions(
   config     boolean           NOT NULL,
   CONSTRAINT user_serial UNIQUE(username, serial)
 ) WITH (OIDS=FALSE);
-
-CREATE TABLE IF NOT EXISTS news(
-  newstime  bigint            NOT NULL PRIMARY KEY,
-  header    character varying NOT NULL,
-  contents  text              NOT NULL
-) WITH (OIDS=FALSE);

@@ -53,7 +53,7 @@
       </div>
       <div class="col-lg-12">
         <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Distribution', 'Parameters']" storage="PowerDetailTab" v-model="ActiveTab"></detail-tabs>
-        <waveform v-if="ActiveTab=='Waveform'" :analyzer="analyzer"></waveform>
+        <waveform v-if="ActiveTab=='Waveform'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></waveform>
         <harmonics v-if="ActiveTab=='Harmonics'" :analyzer="analyzer"></harmonics>
         <evolution v-if="ActiveTab=='Evolution'" :analyzer="analyzer"></evolution>
         <distribution v-if="ActiveTab=='Distribution'" :analyzer="analyzer"></distribution>
@@ -81,7 +81,7 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Aggreg: null, ShowSpinner: true, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300, ActiveTab: null,
+      return { Aggreg: null, ShowSpinner: true, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300, ActiveTab: null, Paused: false,
                DataNow: null, ControlNow: null, Data3S: null, Control3S: null, Data1M: null, Control1M: null,
                DataGraph: null, ControlGraph: null, DataCubism: null, ControlCubism: null };
     },
@@ -115,7 +115,7 @@
         if(this.analyzer == null) return;
         this.ControlNow.CancelFunc = this.analyzer.GetSeriesNow(['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'POWER_HARMONICS', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'],
           (working) => {},
-          (result) => { this.DataNow = result; },
+          (result) => { if(this.Paused == false) this.DataNow = Object.freeze(result); },
           (timeout) => { this.ControlNow.Timer = setTimeout(() => { this.UpdateNowValues(); }, timeout); }
         );
       },
@@ -164,5 +164,9 @@
   .header-text {
     font-size: 20px;
     line-height: 24px;
+  }
+  .panel-other {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
   }
 </style>
