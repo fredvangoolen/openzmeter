@@ -6,7 +6,7 @@
         <span class="input-group-addon input-group-addon-toogle">
           <toggle v-model="Config.Enabled" @change="Changes=true"></toggle>
         </span>
-        <input type="text" class="form-control" v-model="Config.Server" :disabled="!Config.Enabled">
+        <input type="text" class="form-control" v-model="Config.Server" @input="Changes=true" :disabled="!Config.Enabled">
         <span class="input-group-btn" v-if="Changes">
           <button class="btn btn-default" @click="Save" data-toggle="tooltip" title="Save changes (If set to disabled, current client date is taken)"><img :src="require('Imgs/diskette.png')"></button>
         </span>

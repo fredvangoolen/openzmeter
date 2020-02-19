@@ -97,12 +97,12 @@
 
       </div>
     </dlg>
-    <password :user.sync="User" v-if="ShowDialog" @close="ShowDialog=false"></password>
+    <pass-dlg :user.sync="User" v-if="ShowDialog" @close="ShowDialog=false"></pass-dlg>
   </div>
 </template>
 
 <script>
-  import Password from './Password.vue';
+  import PassDlg from './Password.vue';
   import moment from 'moment';
   export default {
     props: { user: Object },
@@ -110,7 +110,7 @@
       return { ShowDialog: false, View: 'Main', User: null, TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false, Error: null };
     },
     created: function() {
-      this.User = (this.user == null) ? { User: 'login_name', Name: 'Full name', Email: 'example@example.com', Telegram: '0', Address: 'user address', Photo: '', Company: 'Company name', TimeZone: 'UTC'} : this.user;
+      this.User = (this.user == null) ? { User: 'login_name', Name: 'Full name', Email: 'example@example.com', Telegram: '0', Address: 'user address', Photo: '', Company: 'Company name', TimeZone: 'UTC', Password: ''} : this.user;
     },
     methods: {
       Save: function() {
@@ -134,7 +134,7 @@
         this.$refs.avatar.ClearImage();
       }
     },
-    components: { Password }
+    components: { PassDlg }
   }
 </script>
 
