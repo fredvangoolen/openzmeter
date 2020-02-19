@@ -13,7 +13,6 @@
 import SidebarUser from './SidebarUser.vue';
 import SidebarAnalyzer from './SidebarAnalyzer.vue';
 import SidebarMenu from './SidebarMenu.vue';
-import SidebarNews from './SidebarNews.vue';
 export default {
   props: { analyzer: Object, user: Object, expanded: Boolean },
   data() {
@@ -51,7 +50,7 @@ export default {
 //      $('[data-sidenav-overlay]').fadeOut('fast');
 //    }
   },
-  components: { SidebarUser, SidebarAnalyzer, SidebarMenu, SidebarNews }
+  components: { SidebarUser, SidebarAnalyzer, SidebarMenu }
 }
 </script>
 
