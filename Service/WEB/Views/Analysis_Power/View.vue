@@ -54,10 +54,10 @@
       <div class="col-lg-12">
         <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Distribution', 'Parameters']" storage="PowerDetailTab" v-model="ActiveTab"></detail-tabs>
         <waveform v-if="ActiveTab=='Waveform'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></waveform>
-        <harmonics v-if="ActiveTab=='Harmonics'" :analyzer="analyzer"></harmonics>
-        <evolution v-if="ActiveTab=='Evolution'" :analyzer="analyzer"></evolution>
+        <harmonics v-if="ActiveTab=='Harmonics'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
+        <evolution v-if="ActiveTab=='Evolution'" :data="DataCubism" :analyzer="analyzer"></evolution>
         <distribution v-if="ActiveTab=='Distribution'" :analyzer="analyzer"></distribution>
-        <parameters v-if="ActiveTab=='Parameters'" :analyzer="analyzer"></parameters>
+        <parameters v-if="ActiveTab=='Parameters'" :data="DataCubism" :dataNow="DataNow" :analyzer="analyzer" :paused.sync="Paused"></parameters>
       </div>
     </div>
     <dlg-fs v-if="ExpandedActive" title="Active Power" :height.sync="DialogHeight"></dlg-fs>

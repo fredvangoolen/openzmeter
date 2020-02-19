@@ -1,122 +1,85 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ MouseOver ? 'Paused while over graph' : Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
-        <div class="header-buttons" ref="Toolbar">
-          <toolbar-phases storage="DetailsPhaseMulti" :multi="true" :analyzer="analyzer" v-model="Phases"></toolbar-phases>
-          <toolbar-options storage="DetailOptions" :options="['1st Harmonic']" v-model="Options"></toolbar-options>
-          <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools-->
-        </div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
+      <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
+        <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
+          <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
+          <toolbar-options storage="DetailsOptions" :options="['1st Harmonic']" v-model="Options"></toolbar-options>
+          <div class="btn-group">
+            <button-export file="Harmonics" :rows="Export"></button-export>
+            <button-expand :expanded.sync="Expanded"></button-expand>
+            <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
+          </div>
+        </portal>
       </div>
-    <div class="panel-body">
+    <portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
-      <graph ref="graph" :options="{}" v-on:mouseOver="MouseOver=$event"></graph>
-    </div>
+      <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+        <graph :options="GraphOptions" :paused="MouseOver" :height="Expanded?DialogHeight:300"></graph>
+      </div>
+    </portal>
+    <dlg-fs v-if="Expanded" title="Harmonics" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
+
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { analyzer: { type: Object }, data: { type: Object } },
+    props: { analyzer: Object, data: Object, paused: Boolean },
     data() {
-      return { ShowWarning: true, MouseOver: false, Time: 'Loading data...', Phases: null, Options: {} };
+      return { MouseOver: false, Options: null, Phases: null, Expanded: false, DialogHeight: 300 };
     },
-    methods: {
-      Redraw: function() {
-        this.$nextTick(function() {
-          this.$refs.graph.Redraw('100%', '300');
-        });
-      },
-      SetPhases: function(phases) {
-        this.$refs.phases.SetPhases(phases);
-        this.Phases = phases;
-        this.CalcOptions();
-      },
-      SetOption: function(option, val) {
-        if(option === '1st Harmonic') this.First = val;
-        this.CalcOptions();
-      },
-      SetData(result) {
-        this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
-        this.Data = [];
-        for(var i = 0; i < 50; i++) {
-          var Row = [];
-          for(var n = 0; n < result.Power_Harmonics.length; n++) Row.push(result.Power_Harmonics[n][i]);
-          this.Data.push(Row);
-        }
-        this.MaxCurrent = oZm.ArrayAbsMax(result.Current);
-        this.CalcOptions();
-        this.ShowSpinner = false;
-      },
-      CalcOptions() {
-        if((this.$root.SelectedAnalyzer === null) || (this.Phases === null) || (this.First === null) || (this.Data === null)) return;
-        var Analyzer = this.$root.SelectedAnalyzer, Series = {}, ToShow = [];
-        this.ShowWarning = (this.MaxCurrent < Analyzer.MinCurrent);
-        for(var i = this.First ? 0 : 1; i < this.Data.length; i++) {
-          var Row = [i];
-          for(var n = 0; n < this.Data[i].length; n++) Row.push(this.Data[i][n]);
-          ToShow.push(Row);
-        }
-        var Y1Range = oZm.Series['ACTIVE_POWER'].Range(ToShow, this.Phases);
-        var Options = {
-          strokeWidth: 0.5, gridLineColor: "#BBB", gridLinePattern: [4, 4], interactionModel: { }, plotter: Graph.multiColumnBarPlotter, visibility: this.Phases,
-          dateWindow: [ToShow[0][0] - 0.5, ToShow[ToShow.length - 1][0] + 0.5], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, showRangeSelector: false,
-          drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,
-          labels: ['Harmonic'].concat(oZm.Series['ACTIVE_POWER'].Names(Analyzer)), series: Series,
-          colors: oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, 0).Colors.concat(oZm.SerieStyle(oZm.Series['CURRENT'], Analyzer, 0).Colors),
-          axes: {
-            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: [Y1Range[0] + this.VOffset, Y1Range[1] + this.VOffset],
-                 valueFormatter: function(x) { return oZm.Round2(x) + '<em class="x-small">W</em>'; }.bind(this),
-                 axisLabelFormatter: function (x) { return oZm.Round2(x); }.bind(this)
-               },
-            x: { drawGrid: false, ticker: Graph.OddHarmonicsTicks, axisLabelFormatter: function (x) { return oZm.Series['HARMONICS'].Names[x]; },
-                 valueFormatter: function(y) { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (Analyzer.NominalFreq * (y + 1)) + '<em class="small"> Hz</em>)'; }
-               }
-          },
-          file: ToShow
-        };
-        this.$refs.graph.SetOptions({ showRangeSelector: true});
-        this.$refs.graph.SetOptions(Options);
-      },
-      ExportClick: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        var Data = [];
-        var Header = ['Harmonic'];
-        for(var i = 0; i < oZm.Series['VOLTAGE'].Names(Analyzer).length; i++) {
-          Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i]);
-          Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i] + ' (dB)');
-          Header.push(oZm.Series['VOLTAGE'].Names(Analyzer)[i] + ' (Complex)');
-        }
-        for(var i = 0; i < oZm.Series['CURRENT'].Names(Analyzer).length; i++) {
-          Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i]);
-          Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i] + ' (dB)');
-          Header.push(oZm.Series['CURRENT'].Names(Analyzer)[i] + ' (Complex)');
-        }
-        Data.push(Header);
-        for(i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
-          var Row = [oZm.Series['HARMONICS'].Names[i]];
-          for(var n = 0; n < oZm.Series['VOLTAGE'].Names(Analyzer).length + oZm.Series['CURRENT'].Names(Analyzer).length; n++) {
-            Row.push(this.BinPower(this.Data[i][n]));
-            Row.push(20.0 * Math.log10(Math.max(0.000000001, this.BinPower(this.Data[i][n]))));
-            Row.push(String(this.Data[i][n][0]) + ((this.Data[i][n][1] > 0) ? '+' + this.Data[i][n][1] : this.Data[i][n][1]) + 'i');
+    computed: {
+      RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
+      GraphOptions: function() {
+        if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return { };
+        var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
+        Opt.visibility = this.Phases;
+        Opt.strokeWidth = 0.5;
+        Opt.gridLineColor = "#BBB";
+        Opt.gridLinePattern = [4, 4];
+        Opt.interactionModel = { };
+        Opt.plotter = Graph.multiColumnBarPlotter;
+        Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
+        Opt.legend = 'follow';
+        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 34;
+        Opt.axes.y.valueFormatter = (x) => { var Units = this.BestUnits(x); return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + Units + 'W'; },
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return (g.axes_[0].valueRange == null) ? '' : this.Round(this.ScaleUnits(x, this.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), 2, true); }
+        Opt.axes.x.drawGrid = false;
+        Opt.axes.x.ticker = () => { return Graph.OddHarmonicsTicks(this.analyzer); };
+        Opt.axes.x.axisLabelFormatter = (x) => { return oZm.Series['HARMONICS'].Names[x]; };
+        Opt.axes.x.valueFormatter = (y) => { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (this.analyzer.NominalFrequency * (y + 1)) + 'Hz)'; };
+        Opt.labels = ['Harmonic'].concat(this.analyzer.GetSeriesNames('Power', this.analyzer.VoltageChannels));
+        Opt.colors = VoltageStyle.Colors;
+        if(this.data != null) {
+          for(var i = 0; i < 50; i++) {
+            if((this.Options['1st Harmonic'] == false) && (i == 0)) continue;
+            var Row = [i];
+            for(var n = 0; n < this.data.Power_Harmonics.length; n++) Row.push(this.data.Power_Harmonics[n][i]);
+            Opt.file.push(Row);
           }
+          Opt.dateWindow = [Opt.file[0][0] - 0.5, 50.5];
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 10 });
+        }
+        return Opt;
+      },
+      Export: function() {
+        if((this.data == null) || (this.analyzer == null)) return [];
+        var Header = ['Harmonic'].concat(this.analyzer.GetSeriesNames('Power', this.analyzer.VoltageChannels));
+        var Data = [Header];
+        for(var i = 0; i < this.data.Power_Harmonics[0].length; i++) {
+          var Row = [this.analyzer.HarmonicsNames[i]];
+          for(var n = 0; n < this.data.Power_Harmonics.length; n++) Row.push(this.data.Power_Harmonics[n][i]);
           Data.push(Row);
         }
-        this.$refs.tools.SaveCVS('Harmonics.csv', Data);
-      },
-      MaximizeClick: function() {
-        this.$refs.tools.Maximize('Harmonics', this.$refs.graph.Graph, this.$refs.Toolbar);
+        return Object.freeze(Data);
       }
-    },
-    created: function() {
-      this.MaxCurrent = 0;
-      this.Data = null;
-      this.Phases = null;
-      this.First = null;
     }
   }
 </script>
