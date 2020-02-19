@@ -189,6 +189,7 @@ void *SysSupport::Actions_Thread(void *params) {
       pSystemActions.pop();
     }
     pthread_mutex_unlock(&pSystemActionMutex);
+    #ifdef OPENWRT
     if(Action != "") LOGFile::Info("Received '%s' action\n", Action.c_str());
     if(Action == "PowerOff") {
       Run("poweroff");
@@ -201,6 +202,7 @@ void *SysSupport::Actions_Thread(void *params) {
       pSysStatLock.Unlock();
       ConfigManager::WriteConfig("/Bluetooth", Config);
     }
+    #endif
   }
 }
 #ifdef OPENWRT

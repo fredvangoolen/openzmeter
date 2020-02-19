@@ -101,7 +101,7 @@ class ConfigManager {
     static int               pFile;
     static json              pConfig;
   public :
-    ConfigManager(string name);
+    ConfigManager(const string &name);
     virtual ~ConfigManager();
   public :
     static json ReadConfig(const string &path);
