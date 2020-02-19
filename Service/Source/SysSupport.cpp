@@ -60,7 +60,7 @@ string           SysSupport::pWirelessWIFI  = "default_radio";
 #endif
 //----------------------------------------------------------------------------------------------------------------------
 SysSupport::SysSupport() {
-  HTTPServer::RegisterCallback("getNews",         GetNewsCallback);
+  HTTPServer::RegisterCallback("getVersion",      GetVersionCallback);
   HTTPServer::RegisterCallback("getUsers",        GetUsersCallback);
   HTTPServer::RegisterCallback("getUser",         GetUserCallback);
   HTTPServer::RegisterCallback("setUser",         SetUserCallback);
@@ -115,11 +115,11 @@ SysSupport::SysSupport() {
   Config["Config"] = pWirelessWIFI;
   ConfigManager::WriteConfig("/WIFI", Config);
   HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
-  HTTPServer::RegisterCallback("upgrade",      UpgradeCallback);
+  HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
   #endif
 }
 SysSupport::~SysSupport() {
-  HTTPServer::UnregisterCallback("getNews");
+  HTTPServer::UnregisterCallback("getVersion");
   HTTPServer::UnregisterCallback("getUsers");
   HTTPServer::UnregisterCallback("getUser");
   HTTPServer::UnregisterCallback("setUser");
@@ -139,7 +139,7 @@ SysSupport::~SysSupport() {
   HTTPServer::UnregisterCallback("getNTP");
   HTTPServer::UnregisterCallback("setNTP");
   HTTPServer::UnregisterCallback("getUpdates");
-  HTTPServer::UnregisterCallback("upgrade");
+  HTTPServer::UnregisterCallback("setUpgrade");
   if(pStatsThread != 0) pthread_join(pStatsThread, NULL);
   if(pBTThread != 0) pthread_join(pBTThread, NULL);
   pStatsThread = 0;
@@ -463,21 +463,24 @@ uint64_t SysSupport::ParseProcMem(const char *name, const char *buff) {
 }
 #endif
 //----------------------------------------------------------------------------------------------------------------------
-void SysSupport::GetNewsCallback(const json &params, Response &response) {
-  Database DB;
-  if(params["NewsTime"].is_number()) {
-    uint64_t Time = params["NewsTime"];
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) as result FROM news WHERE newstime = " + DB.Bind(Time));
-  } else {
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('Version', '" __BUILD__ "', 'News', COALESCE(array_agg(newstime ORDER BY newstime ASC), '{}')) AS result from news");
-  }
-  if(DB.FecthRow() == false) {
-    response.set_content("", "text/plain");
-    response.status = HTTP_INTERNAL_SERVER_ERROR;
-  } else {
-    response.set_content(DB.ResultString("result"), "application/json");
-    response.status = HTTP_OK;
-  }
+void SysSupport::GetVersionCallback(const json &params, Response &response) {
+  json Result = json::object();
+  Result["Version"] = __BUILD__;
+  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+//  Database DB;
+//  if(params["NewsTime"].is_number()) {
+//    uint64_t Time = params["NewsTime"];
+//    DB.ExecSentenceAsyncResult("SELECT json_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) as result FROM news WHERE newstime = " + DB.Bind(Time));
+//  } else {
+//    DB.ExecSentenceAsyncResult("SELECT json_build_object('Version', '" __BUILD__ "', 'News', COALESCE(array_agg(newstime ORDER BY newstime ASC), '{}')) AS result from news");
+//  }
+//  if(DB.FecthRow() == false) {
+//    response.set_content("", "text/plain");
+//    response.status = HTTP_INTERNAL_SERVER_ERROR;
+//  } else {
+//    response.set_content(DB.ResultString("result"), "application/json");
+//    response.status = HTTP_OK;
+//  }
 }
 void SysSupport::GetUsersCallback(const json &params, Response &response) {
   //only 'admin' user can get this information
@@ -583,13 +586,13 @@ void SysSupport::DelUserCallback(const json &params, Response &response) {
 void SysSupport::GetUpdatesCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   int ResultCode = 0;
-  string Result = Run("opkg update", &ResultCode);
+  if(params.contains("Force") && params["Force"].is_boolean() && (params["Force"] == true)) {
+    Run("opkg update", &ResultCode);
+    if(ResultCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  }
+  string Result = Run("opkg list-upgradable", &ResultCode);
   if(ResultCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  Result = Run("opkg list-upgradable", &ResultCode);
-  if(ResultCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  json Response = json::object();
-  Response["LastCheck"] = Tools::GetTime();
-  Response["Updates"] = json::array();
+  json Response = json::array();
   size_t Pos = 0;
   while(Pos < Result.size()) {
     json Update = json::object();
@@ -603,11 +606,11 @@ void SysSupport::GetUpdatesCallback(const json &params, Response &response) {
     if(Pos2 == string::npos) Pos2 = Result.size();
     Update["To"] = Result.substr(Pos, Pos2 - Pos);
     Pos = Pos2 + 1;
-    Response["Updates"].push_back(Update);
+    Response.push_back(Update);
   }
   HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
-void SysSupport::UpgradeCallback(const json &params, Response &response) {
+void SysSupport::SetUpgradeCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Package") == false) || (params["Package"].is_string() == false)) return HTTPServer::FillResponse(response, "'Package' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string Package = params["Package"];

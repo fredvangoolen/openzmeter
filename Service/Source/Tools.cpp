@@ -332,7 +332,6 @@ LOGFile::Type   LOGFile::pLevel    = LOGFile::DEBUG;
 bool            LOGFile::pConsole  = true;
 pthread_mutex_t LOGFile::pMutex    = PTHREAD_MUTEX_INITIALIZER;
 LOGFile::LOGFile() {
-  pthread_mutex_lock(&pMutex);
   string Name = "/var/log/openZmeter.log";
   pLevel = DEBUG;
   json Config = ConfigManager::ReadConfig("/Log");
@@ -350,7 +349,6 @@ LOGFile::LOGFile() {
     if(!pFile) pFile = fopen(Name.c_str(), "wt");
     if(pFile == NULL) LOGFile::Warning("Can not create or open log file (%s)\n", strerror(errno));
   }
-  pthread_mutex_unlock(&pMutex);
 }
 LOGFile::~LOGFile() {
   pthread_mutex_lock(&pMutex);

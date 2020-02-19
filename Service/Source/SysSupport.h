@@ -27,14 +27,6 @@
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class SysSupport final {
-  private :
-    #ifdef OPENWRT
-//    typedef struct {
-//      string Package;
-//      string From;
-//      string To;
-//    } Update_t;
-    #endif
   private :  //System actions variables
     static queue<string>      pSystemActions;
     static pthread_mutex_t    pSystemActionMutex;
@@ -70,7 +62,6 @@ class SysSupport final {
     static string      pBTBridgeName;   //bluetooth bridge name
     static pthread_t   pBTThread;       //bluetooth manager thread
     static pthread_t   pStatsThread;    //sys mem, cpu, etc thread
-
 //      static DBusConnection  *pDBus;
 //      static pthread_mutex_t  pBTMutex;
 
@@ -87,7 +78,7 @@ class SysSupport final {
 //      static uint64_t         pLastTask_1M;
   #endif
   private :
-    static void GetNewsCallback(const json &params, Response &response);
+    static void GetVersionCallback(const json &params, Response &response);
     static void GetUsersCallback(const json &params, Response &response);
     static void GetUserCallback(const json &params, Response &response);
     static void SetUserPasswordCallback(const json &params, Response &response);
@@ -114,7 +105,7 @@ class SysSupport final {
     static void     GetNTPCallback(const json &params, Response &response);
     static void     SetNTPCallback(const json &params, Response &response);
     static void     GetUpdatesCallback(const json &params, Response &response);
-    static void     UpgradeCallback(const json &params, Response &response);
+    static void     SetUpgradeCallback(const json &params, Response &response);
 //      static void     PeriodicTask_5S();
 //      static void     PeriodicTask_1M();
 //      static void     PeriodicTask_1H();
