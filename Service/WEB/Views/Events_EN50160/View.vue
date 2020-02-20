@@ -7,7 +7,7 @@
             <span class="header-text">EN50160</span>
             <div class="header-buttons clearfix">
               <toolbar-weeks :weeks="Weeks" v-on:WeekChanged="WeekChange"></toolbar-weeks>
-              <toolbar-years v-on:YearChanged="YearChanged" aggreg="1H"></toolbar-years>
+              <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="1H" storage="StatsYear"></toolbar-years>
             </div>
           </div>
           <counters ref="counters"></counters>
@@ -23,24 +23,42 @@
 </template>
 
 <script>
-  import ToolbarYears from 'Components/ToolbarYears.vue';
-  import ToolbarWeeks from 'Components/ToolbarWeeks.vue';
-  import ProgressBar from 'Components/ProgressBar.vue';
-  import Spinner from 'Components/Spinner.vue';
   import moment from 'moment';
   import Frequency from './Frequency.vue';
   import Voltage from './Voltage.vue';
   import Counters from './Counters.vue';
   import Thd from './THD.vue';
   export default {
-    props: { analyzer: { type: Object } },
+    props: { analyzer: Object },
     data: function() {
-      return { ShowSpinner: true, Weeks: [] };
+      return { Year: null, Data: null, Events: null, Weeks: [] };
+    },
+    watch: {
+      Year: function(val) {
+        this.Events = null;
+        this.Data = null;
+        this.Weeks = [];
+        var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
+        var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
+        this.$http.post('getSeries', { From: From, To: To, Aggreg: '1H', Series: ['FREQUENCY_STATS', 'VOLTAGE_STATS', 'VOLTAGE_THD_STATS', 'VOLTAGE_HARMONICS_STATS'], Analyzer: this.analyzer.Analyzer } ).then(
+          (result) => {
+            this.Data = result.data;
+            this.ProcessYear();
+          },
+          (fail) => { }
+        );
+        this.$http.post('getEvents', { From: From, To: To, Analyzer: this.analyzer.Analyzer } ).then(
+          (result) => {
+            this.Events = result.data;
+            this.ProcessYear();
+          },
+          (fail) => { }
+        );
+      }
     },
     created: function() {
-      this.Year = null;
       this.Events = null;
-      this.Data = null;      
+      this.Data = null;
       this.Frequencies = [ -Math.INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, Math.INFINITY ];
       this.Voltages    = [-Math.INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, Math.INFINITY];
       this.THDs        = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, Math.INFINITY];
@@ -79,7 +97,7 @@
         return (Max * 100.0) / Analyzer.NominalVoltage;
       },
       ProcessYear: function() {
-        if((this.Events === null) || (this.Data === null)) return;
+        if((this.Events == null) || (this.Data == null)) return;
         var Analyzer = this.$root.SelectedAnalyzer;
         this.Weeks = [];
         if(this.Weeks[0] === undefined) this.InitWeek(0, moment().year(this.Year).startOf('year').valueOf(), moment().year(this.Year).endOf('year').valueOf());
@@ -143,35 +161,13 @@
         this.Events = null;
         for(var Week in this.Weeks) {
           if((this.Weeks[Week].FrequencySamples == 0) || (this.Weeks[Week].VoltageSamples == 0) || (this.Weeks[Week].THDSamples == 0) || (this.Weeks[Week].HarmonicsSamples == 0)) continue;
-            var InRange = (((this.Weeks[Week].FrequencyIN / this.Weeks[Week].FrequencySamples) * 100.0 >= 99.5) && 
-                            ((this.Weeks[Week].VoltageIN / this.Weeks[Week].VoltageSamples) * 100.0 >= 95.0) && 
+            var InRange = (((this.Weeks[Week].FrequencyIN / this.Weeks[Week].FrequencySamples) * 100.0 >= 99.5) &&
+                            ((this.Weeks[Week].VoltageIN / this.Weeks[Week].VoltageSamples) * 100.0 >= 95.0) &&
                             ((this.Weeks[Week].THDIN / this.Weeks[Week].VoltageSamples) * 100.0 >= 100.0) &&
                             ((this.Weeks[Week].HarmonicsIN / this.Weeks[Week].HarmonicsSamples) * 100.0 >= 95.0));
             this.Weeks[Week].Warning = !InRange;
         }
         this.ShowSpinner = false;
-      },
-      YearChanged: function(year) {
-        this.Year = year;
-        this.ShowSpinner = true;
-        this.Events = null;
-        this.Data = null;
-        this.Weeks = [];
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        var Year = moment().year(year);
-        $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), Aggreg: '1H', LastSample: 0, Series: ['FREQUENCY_STATS', 'VOLTAGE_STATS', 'VOLTAGE_THD_STATS', 'VOLTAGE_HARMONICS_STATS'], Analyzer: Analyzer.Analyzer } ),
-          success: function(result) {
-            this.Data = result;
-            this.ProcessYear();
-         }.bind(this)
-       });
-        $.ajax({ url: "getEvents", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), LastSample: 0, Analyzer: Analyzer.Analyzer } ),
-          success: function(result) {
-            this.Events = result;
-            this.ProcessYear();
-          }.bind(this)
-        });
       },
       WeekChange: function(week) {
         this.$refs.frequency.SetData(this.Weeks[week], this.Frequencies);
@@ -180,7 +176,7 @@
         this.$refs.counters.SetData(this.Weeks[week]);
       }
     },
-    components: { ToolbarYears, ProgressBar, ToolbarWeeks, Spinner, Frequency, Voltage, Thd, Counters }
+    components: { Frequency, Voltage, Thd, Counters }
 }
 </script>
 

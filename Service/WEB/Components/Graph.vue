@@ -9,7 +9,6 @@
   import Vue from 'vue';
   const This = Vue.prototype;
   function mouseDown(event, g, context) {
-    console.log("mouseDown");
     context.initializeMouseDown(event, g, context);
     if(event.altKey || event.shiftKey) {
       Dygraph.startZoom(event, g, context);
@@ -18,7 +17,6 @@
     }
   }
   function mouseMove(event, g, context) {
-    console.log("mouseMove");
     context.is2DPan = false;
     if(context.isPanning) {
       Dygraph.movePan(event, g, context);
@@ -27,19 +25,19 @@
     }
   }
   function mouseUp(event, g, context) {
-    console.log("mouseUp");
     if(context.isPanning) {
       Dygraph.endPan(event, g, context);
-
-//      if(context.regionWidth > 0) this.$emit('update:range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
+      if(context.regionWidth > 0) this.$emit('range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
+      //console.log([Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
+      //if(context.regionWidth > 0) this.$emit('update:range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
     } else if (context.isZooming) {
       Dygraph.endZoom(event, g, context);
-//      if(context.regionWidth > 0) this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
+      if(context.regionWidth > 0) this.$emit('range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
     }
   }
   function mouseWheelZoom(event, g, context) {
     if(!event.shiftKey) return;
-    if(this.StopAutoupdate) this.StopAutoupdate();
+//    if(this.StopAutoupdate) this.StopAutoupdate();
     var normal = event.detail ? event.detail * -1 : event.wheelDelta / 40;
     var percentage = normal / 50;
     if (!event.offsetX) event.offsetX = event.layerX - event.target.offsetLeft;
@@ -55,7 +53,10 @@
     context.MouseWheelTimer = setTimeout( function() { this.WindowChange(Axis[0] + (Axis[1] - Axis[0]) * percentage * xPct, Axis[1] - (Axis[1] - Axis[0]) * percentage * (1 - xPct)); }.bind(this), 500);
   }
   function MouseDblClick(event, g, context) {
-    this.WindowRestore();
+    g.updateOptions({
+    dateWindow: null
+  });
+  //  this.WindowRestore();
   }
   function touchStart(event, g, context) {
     if(this && this.StopAutoupdate) this.StopAutoupdate();
@@ -174,6 +175,17 @@
       }
       this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
     }
+        function ScrollableInteractionModel(parent) {
+      return { mousedown: mouseDown.bind(parent),
+               mousemove: mouseMove.bind(parent),
+               mouseup: mouseUp.bind(parent),
+               dblclick: MouseDblClick.bind(parent),
+               mousewheel : mouseWheelZoom.bind(parent),
+               touchstart: touchStart.bind(parent),
+               touchmove: touchMove.bind(parent),
+               touchend: touchEnd.bind(parent)
+      };
+    }
   export default {
     WaveTimeTicks: function(max, analyzer) {
       var ticks = [];
@@ -204,7 +216,6 @@
       }
       return Result;
     },
-
     multiColumnBarPlotter: function(e) {
       if(e.seriesIndex != 0) return;
       var g = e.dygraph;
@@ -237,14 +248,22 @@
       return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp, dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
                 touchstart: touchStart, touchmove: touchMove, touchend: touchEnd.bind(parent) };
     },
-    ScrollableInteractionModel: function(parent) {
-      return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
-                touchstart: touchStart.bind(parent), touchmove: touchMove, touchend: touchEnd.bind(parent) };
-    },
-    MouseUpEvt: function(event, g, contex) {
-        oZm.mouseUp(event, g, contex);
-        if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-    },
+
+
+//    MouseUpEvt: function(event, g, contex) {
+//        oZm.mouseUp(event, g, contex);
+//        if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
+//    },
+
+
+
+
+
+
+
+
+
+
     DrawHighlightBarChartCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {
       var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;
       var VisibleSerie = serieIndex;
@@ -301,8 +320,6 @@
         $(this.Graph.graphDiv).parent().removeAttr('style');
         this.Graph.resize((this.width == null) ? '100%' : this.width, this.height);
         this.Graph.resize();
-        console.log('resize', this.width, ' x ', this.height);
-
       }
     },
     created: function() {
@@ -311,6 +328,7 @@
     },
     mounted: function() {
       var Data = [];
+      if(this.options.interactionModel == 'SCROLLABLE_MODEL') this.options.interactionModel = ScrollableInteractionModel(this);
       if(this.options.labels == null) this.options.labels = ['A', 'B'];
       if(this.options.file == null) this.options.file = [];
       if(this.options.file.length == 0) this.options.file.push(Array(this.options.labels.length).fill(0));

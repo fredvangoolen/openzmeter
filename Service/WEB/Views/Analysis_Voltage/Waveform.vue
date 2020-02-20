@@ -80,6 +80,7 @@
           for(var n in CurrentNames) { I.push(this.Phases[n]); V.push(false); }
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, V, { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
           Opt.axes.y2.valueRange = this.MatrixColsRange(Opt.file, I, { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
+          Opt.dateWindow = [0, Opt.file.length];
         }
         return Opt;
       },

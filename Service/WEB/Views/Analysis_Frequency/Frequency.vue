@@ -1,6 +1,6 @@
 <template>
   <div>
-    <graph :options="GraphOptions" :height="height" @range="$emit('range', $event)"></graph>
+    <graph ref="graph" :options="GraphOptions" :height="height" @range="$emit('range', $event)"></graph>
   </div>
 </template>
 
@@ -14,7 +14,8 @@
     },
     computed: {
       GraphOptions: function() {
-        var Opt = {};
+        var Opt = { axes: { x: {}, y: {} }, file: [] };
+        Opt.panEdgeFraction = 1;
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -25,23 +26,18 @@
         Opt.legend = 'follow';
         Opt.legendFormatter = Graph.LegendFormatter_Follow;
         Opt.labels = ['Time', 'Frequency'];
-        Opt.interactionModel = Graph.ScrollableInteractionModel(this);
+        Opt.interactionModel = 'SCROLLABLE_MODEL';
         Opt.colors = [this.analyzer.Color.Frequency]
         Opt.xAxisHeight = 24;
-        Opt.axes = {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: (x) => { return oZm.Round3(x) + ' <em class="x-small">Hz</em>'; },
-               axisLabelFormatter: (x) => { return oZm.Round3(x); }
-             },
-          x: { axisLabelFormatter: (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); },
-               valueFormatter: (x) => { return this.analyzer.FormatDateTime(x); }
-             }
-        };
-        Opt.file = [];
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 34;
+        Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 3, false) + ' Hz'; };
+        Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x, 3, false); };
+        Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
+        Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
+//        Opt.axes.y.valueRange = [49, 51];
         if(this.data != null) {
           for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data.Frequency[n]]);
-        } else {
-          Opt.file.push([0, 0]);
         }
         return Opt;
       }

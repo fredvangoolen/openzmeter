@@ -407,7 +407,7 @@ module.exports = exports["default"];
  */
 
 /**
- * @fileoverview DataHandler implementation for the combination 
+ * @fileoverview DataHandler implementation for the combination
  * of error bars and fractions options.
  * @author David Eberlein (david.eberlein@ch.sauter-bc.com)
  */
@@ -527,7 +527,7 @@ module.exports = exports["default"];
  */
 
 /**
- * @fileoverview DataHandler base implementation for the "bar" 
+ * @fileoverview DataHandler base implementation for the "bar"
  * data formats. This implementation must be extended and the
  * extractSeries and rollingAverage must be implemented.
  * @author David Eberlein (david.eberlein@ch.sauter-bc.com)
@@ -564,13 +564,13 @@ BarsHandler.prototype = new _datahandler2['default']();
 //   (I get closure compiler errors if this isn't here.)
 /**
  * @override
- * @param {!Array.<Array>} rawData The raw data passed into dygraphs where 
+ * @param {!Array.<Array>} rawData The raw data passed into dygraphs where
  *     rawData[i] = [x,ySeries1,...,ySeriesN].
  * @param {!number} seriesIndex Index of the series to extract. All other
  *     series should be ignored.
  * @param {!DygraphOptions} options Dygraph options.
  * @return {Array.<[!number,?number,?]>} The series in the unified data format
- *     where series[i] = [x,y,{extras}]. 
+ *     where series[i] = [x,y,{extras}].
  */
 BarsHandler.prototype.extractSeries = function (rawData, seriesIndex, options) {
   // Not implemented here must be extended
@@ -578,7 +578,7 @@ BarsHandler.prototype.extractSeries = function (rawData, seriesIndex, options) {
 
 /**
  * @override
- * @param {!Array.<[!number,?number,?]>} series The series in the unified 
+ * @param {!Array.<[!number,?number,?]>} series The series in the unified
  *          data format where series[i] = [x,y,{extras}].
  * @param {!number} rollPeriod The number of points over which to average the data
  * @param {!DygraphOptions} options The dygraph options.
@@ -2011,7 +2011,7 @@ var DEFAULT_ATTRS = {
   showInRangeSelector: null,
 
   selectMode: 'closest-x',
-  
+
   // The ordering here ensures that central lines always appear above any
   // fill bars/error bars.
   plotter: [_dygraphCanvas2['default']._fillPlotter, _dygraphCanvas2['default']._errorPlotter, _dygraphCanvas2['default']._linePlotter],
@@ -6987,7 +6987,7 @@ var points=this.layout_.points;if(points === undefined || points === null)return
       this.findClosestRow(canvasx, searchSeries),
       highlightSeries
       );
-   
+
    }var callback=this.getFunctionOption("highlightCallback");if(callback && selectionChanged){callback.call(this,event,this.lastx_,this.selPoints_,this.lastRow_,this.highlightSet_);}}; /**
  * Fetch left offset from the specified set index or if not passed, the
  * first defined boundaryIds record (see bug #236).

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="analyzer != null">
+  <div v-if="analyzer!=null">
     <div class="row">
       <div class="col-lg-12">
         <div class="panel panel-frequency">
@@ -15,12 +15,12 @@
             </portal>
           </div>
           <div class="panel-body">
-            <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+            <spinner v-if="ShowSpinner"></spinner>
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :dataNow="DataNow" :dataGraph="DataGraph" :height.sync="Height"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
-                  <frequency :analyzer="analyzer" :data="DataGraph" :height="Expanded?DialogHeight:Height"></frequency>
+                  <frequency :analyzer="analyzer" :data="DataGraph" :height="Expanded?DialogHeight:Height" @range="Range=$event"></frequency>
                 </portal>
               </div>
             </div>
@@ -41,15 +41,18 @@
   import Frequency from './Frequency.vue';
   import Counters from './Counters.vue';
   export default {
-    props: { analyzer: { type: Object } },
+    props: { analyzer: Object },
     data: function() {
-      return { Aggreg: null, ShowSpinner: true, Range: null, Height: 300, Expanded: false, DialogHeight: 300,
+      return { Aggreg: null, ShowSpinner: true, Range: null, Range2:null, Height: 300, Expanded: false, DialogHeight: 300,
                DataNow: null, ControlNow: null, DataGraph: null, ControlGraph: null };
       },
     watch: {
       analyzer: function() { this.UpdateNowValues(); this.UpdateGraphValues(); },
       Aggreg: function() {  this.UpdateGraphValues(); },
-      Range: function() { this.UpdateGraphValues(); }
+      Range: function() { this.UpdateGraphValues(); },
+      Range2: function(val) {
+        console.log(val);
+      }
     },
     computed: {
       Export: function() {
