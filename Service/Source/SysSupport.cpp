@@ -215,7 +215,7 @@ void *SysSupport::Bluetooth_Thread(void *params) {
     dbus_error_free(&Error);
     return NULL;
   }
-  while(true){
+  while(true) {
     pSysStatLock.ReadLock();
     bool   PrevEnable = pBT_Enabled;
     bool   Enable     = (pTerminate == false) ? pBTEnable : false;

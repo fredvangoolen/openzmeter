@@ -949,7 +949,6 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
   uint32_t ThreadsCount = 0;
   pthread_mutex_t Mutex = PTHREAD_MUTEX_INITIALIZER;
   pthread_cond_t  Cond  = PTHREAD_COND_INITIALIZER;
-//  LOGFile::Warning("Initiated sync funtion for analyzer\n");
   while(This->pSyncTerminate == false) {
     This->pAnalyzerLock.ReadLock();
     if((This->pSyncUser != User) || (This->pSyncPass != Pass) || (This->pSyncServer != Server)) {
@@ -1379,41 +1378,19 @@ void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
   HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetEvents(const json &params, Response &response) {
-//  if(CheckRights(params, response, READ) == false) return;
-//  json Params = req.GetParams();
-//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-//  if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' params are requiered", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->GetEvents(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
-//  pMembersLocks.ReadLock();
-//  if(pEventsDetector != NULL) {
-//    pEventsDetector->GetEvents(params, response);
-//  } else {
-//    response.set_content("Events detection disabled", "text/plain");
-//    response.status = HTTP_SERVICE_UNAVAILABLE;
-//  }
-//  pMembersLocks.ReadUnlock();
-    uint64_t To = params["To"];
-  uint64_t Period = params["Period"];
-  uint64_t LastSample = params["LastSample"];
-  if(To == 0) To = Tools::GetTime();
-  uint64_t From = To - Period;
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  uint64_t To = params["To"];
+  uint64_t From = params["From"];
   Database DB(Serial);
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('From', " + DB.Bind(From) + ", 'To', " + DB.Bind(To) + ", 'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
+  DB.ExecSentenceAsyncResult("SELECT json_build_object("
+                              "'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
                               "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
                               "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
-                              "FROM events WHERE starttime > " + DB.Bind(LastSample) + " AND starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
-  if(!DB.FecthRow()) {
-    response.set_content("", "text/plain");
-    response.status = HTTP_INTERNAL_SERVER_ERROR;
-  } else {
-    response.set_content(DB.ResultString("evt"), "application/json");
-    response.status = HTTP_OK;
-  }
+                              "FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
+  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("evt"), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetEvent(const json &params, Response &response) {
 //  if(CheckRights(params, response, READ) == false) return;

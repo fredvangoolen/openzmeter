@@ -13,7 +13,7 @@
             </div>
           </div>
           <div class="panel-body">
-            <spinner v-if="ShowSpinner"></spinner>
+            <spinner v-if="Bills==null"></spinner>
             <summary-graph :data="Bills" :analyzer="analyzer"></summary-graph>
             <bill v-for="(bill, idx) in Bills" :bill="bill" :currency="Currency" :key="idx"></bill>
           </div>
@@ -30,21 +30,20 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Year: null, ShowSpinner: true, Bills: null, Currency: '€' };
+      return { Year: null, Bills: null, Currency: '€' };
     },
     watch: {
       Year: function(val) {
-        this.ShowSpinner = true;
         this.Bills = null;
         var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
         var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
         this.$http.post('getPrices', { From: From, To: To, Aggreg: '1H', Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
-            this.ShowSpinner = false;
             this.Bills = result.data.Bills.filter(function(value) { return value.Complete === true; });
-          }
+          },
+          (fail) => {}
         );
-      },
+      }
     },
     computed: {
       Export: function() {
