@@ -1,6 +1,7 @@
 <template>
-  <div class="panel-body"> 
-    <graph ref="graph" :options="GraphOptions"></graph>
+  <div class="panel-body">
+    <spinner v-if="data==null"></spinner>
+    <graph :options="GraphOptions"></graph>
   </div>
 </template>
 
@@ -8,112 +9,111 @@
   import Graph from 'Components/Graph.vue';
   import * as oZm from 'JS/openZmeter.js';
   export default {
+    props: { data: Object, analyzer: Object },
     data: function() {
-      return {};
+      return { };
     },
-    created: function() {
-      this.GraphOptions = { strokeWidth: 0, labels: ["Duration", "Variation"], legend: 'follow', drawPoints: true, pointSize: 3, highlightCircleSize: 6, colors: ["#d9534f"], dateWindow: [1, 20000], valueRange: [0, 200], selectMode: 'euclidian',
-        interactionModel: {},
-        underlayCallback: function(canvas, area, g) {
-          canvas.save();
-          var w = g.toDomXCoord(20000) - g.toDomXCoord(1);
-          var c = g.toDomXCoord(1);
-          var k = (w - c) / (2000 - 1);
-          canvas.lineWidth = 1;
-          canvas.fillStyle = '#bde2bd';
-          canvas.fillRect(c, 0, area.w, area.h);
-          canvas.beginPath();
-          canvas.moveTo(c + (w * Math.log10(1)) / Math.log10(20000), g.toDomYCoord(100));
-          canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(100));
-          canvas.stroke();
-          canvas.lineWidth = 1;
-          canvas.beginPath();
-          canvas.moveTo(c + (w * Math.log10(1)) / Math.log10(20000), g.toDomYCoord(200));
-          canvas.lineTo(c + (w * Math.log10(3)) / Math.log10(20000), g.toDomYCoord(140));
-          canvas.lineTo(c + (w * Math.log10(3)) / Math.log10(20000), g.toDomYCoord(120));
-          canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(120));
-          canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(110));
-          canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(110));
-          canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(200));
-          canvas.fillStyle = '#f3cbca';
-          canvas.fill();
-          canvas.beginPath();
-          canvas.moveTo(c + (w * Math.log10(1)) / Math.log10(20000), g.toDomYCoord(200));
-          canvas.lineTo(c + (w * Math.log10(3)) / Math.log10(20000), g.toDomYCoord(140));
-          canvas.lineTo(c + (w * Math.log10(3)) / Math.log10(20000), g.toDomYCoord(120));
-          canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(120));
-          canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(110));
-          canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(110));
-          canvas.strokeStyle = '#000';
-          canvas.stroke();
-          canvas.beginPath();
-          canvas.moveTo(c + (w * Math.log10(20)) / Math.log10(20000), g.toDomYCoord(0));
-          canvas.lineTo(c + (w * Math.log10(20)) / Math.log10(20000), g.toDomYCoord(70));
-          canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(70));
-          canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(80));
-          canvas.lineTo(c + (w * Math.log10(10000)) / Math.log10(20000), g.toDomYCoord(80));
-          canvas.lineTo(c + (w * Math.log10(10000)) / Math.log10(20000), g.toDomYCoord(90));
-          canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(90));
-          canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(0));
-          canvas.fillStyle = '#f3cbca';
-          canvas.fill();
-          canvas.beginPath();
-          canvas.moveTo(c + (w * Math.log10(20)) / Math.log10(20000), g.toDomYCoord(0));
-          canvas.lineTo(c + (w * Math.log10(20)) / Math.log10(20000), g.toDomYCoord(70));
-          canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(70));
-          canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(80));
-          canvas.lineTo(c + (w * Math.log10(10000)) / Math.log10(20000), g.toDomYCoord(80));
-          canvas.lineTo(c + (w * Math.log10(10000)) / Math.log10(20000), g.toDomYCoord(90));
-          canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(90));
-          canvas.stroke();
-          canvas.font = "16px sans-serif";
-          canvas.fillStyle = "#333";
-          canvas.textAlign = 'right';
-          canvas.fillText("No damage region",  c + w - 5 , g.toDomYCoord(0) - 5);
-          canvas.fillText("Prohibited region", c + w - 5 , 14);      
-          canvas.textAlign = "left";
-          canvas.fillText("No interruption region", c + 5 , g.toDomYCoord(0) - 5);
-          canvas.restore();
-        },
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 24,
-               valueFormatter: function (x) { return oZm.Round2(x) + '%'; },
-               axisLabelFormatter: function (x) { return x + '%'; }
-             },
-          x: { pixelsPerLabel: 34, axisLabelWidth: 34, logscale: true,
-               valueFormatter: function (x) { return (x < 1000) ? oZm.Round2(x) + 'ms' : oZm.Round2(x / 1000) + 's'; },
-               axisLabelFormatter: function (x) { return (x < 1000) ? x + 'ms' : (x / 1000) + 's'; }
-             }
+    computed: {
+      GraphOptions: function() {
+        var Opt = { axes: { x: {}, y: {} }, file: [[0, 0]] };
+        Opt.strokeWidth = 0;
+        Opt.labels = ["Duration", "Variation"];
+        Opt.legend = 'follow';
+        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.drawPoints = true;
+        Opt.pointSize = 3;
+        Opt.gridLineColor = "#BBB";
+        Opt.gridLinePattern = [4, 4];
+        Opt.highlightCircleSize = 6;
+        Opt.colors = ["#d9534f"];
+        Opt.dateWindow = [1, 20000];
+        Opt.valueRange = [0, 200];
+        Opt.selectMode = 'euclidian';
+        Opt.interactionModel = {};
+        Opt.underlayCallback = this.Underlay;
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 24;
+        Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 2, false) + '%'; };
+        Opt.axes.y.axisLabelFormatter = (x) => { return x + '%'; };
+        Opt.axes.x.pixelsPerLabel = 34;
+        Opt.axes.x.axisLabelWidth = 34;
+        Opt.axes.x.logscale = true;
+        Opt.axes.x.valueFormatter = (x) => { return (x < 1000) ? oZm.Round2(x) + 'ms' : oZm.Round2(x / 1000) + 's'; };
+        Opt.axes.x.axisLabelFormatter = (x) => { return (x < 1000) ? x + 'ms' : (x / 1000) + 's'; };
+        if(this.data != null) {
+          for(var i in this.data.StartTime) Opt.file.push([(this.data.Duration[i] / this.data.SampleRate[i]) * 1000.0, 100 + this.MaxDiff(this.data.Peak[i])]);
         }
-      };
-    },
-    mounted: function() {
-      $(window).on('resize', this.ResizeHandler.bind(this));
-      window.dispatchEvent(new Event('resize'));
-    },
-    beforeDestroy: function() {
-      $(window).off('resize', this.ResizeHandler.bind(this));
+        return Opt;
+      }
     },
     methods: {
-      ResizeHandler: function() {
-        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', 400);
+      Underlay: function(canvas, area, g) {
+        canvas.save();
+        var w = g.toDomXCoord(20000) - g.toDomXCoord(1);
+        var c = g.toDomXCoord(1);
+        var k = (w - c) / (2000 - 1);
+        canvas.lineWidth = 1;
+        canvas.fillStyle = '#bde2bd';
+        canvas.fillRect(c, 0, area.w, area.h);
+        canvas.beginPath();
+        canvas.moveTo(c + (w * Math.log10(1)) / Math.log10(20000), g.toDomYCoord(100));
+        canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(100));
+        canvas.stroke();
+        canvas.lineWidth = 1;
+        canvas.beginPath();
+        canvas.moveTo(c + (w * Math.log10(1)) / Math.log10(20000), g.toDomYCoord(200));
+        canvas.lineTo(c + (w * Math.log10(3)) / Math.log10(20000), g.toDomYCoord(140));
+        canvas.lineTo(c + (w * Math.log10(3)) / Math.log10(20000), g.toDomYCoord(120));
+        canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(120));
+        canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(110));
+        canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(110));
+        canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(200));
+        canvas.fillStyle = '#f3cbca';
+        canvas.fill();
+        canvas.beginPath();
+        canvas.moveTo(c + (w * Math.log10(1)) / Math.log10(20000), g.toDomYCoord(200));
+        canvas.lineTo(c + (w * Math.log10(3)) / Math.log10(20000), g.toDomYCoord(140));
+        canvas.lineTo(c + (w * Math.log10(3)) / Math.log10(20000), g.toDomYCoord(120));
+        canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(120));
+        canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(110));
+        canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(110));
+        canvas.strokeStyle = '#000';
+        canvas.stroke();
+        canvas.beginPath();
+        canvas.moveTo(c + (w * Math.log10(20)) / Math.log10(20000), g.toDomYCoord(0));
+        canvas.lineTo(c + (w * Math.log10(20)) / Math.log10(20000), g.toDomYCoord(70));
+        canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(70));
+        canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(80));
+        canvas.lineTo(c + (w * Math.log10(10000)) / Math.log10(20000), g.toDomYCoord(80));
+        canvas.lineTo(c + (w * Math.log10(10000)) / Math.log10(20000), g.toDomYCoord(90));
+        canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(90));
+        canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(0));
+        canvas.fillStyle = '#f3cbca';
+        canvas.fill();
+        canvas.beginPath();
+        canvas.moveTo(c + (w * Math.log10(20)) / Math.log10(20000), g.toDomYCoord(0));
+        canvas.lineTo(c + (w * Math.log10(20)) / Math.log10(20000), g.toDomYCoord(70));
+        canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(70));
+        canvas.lineTo(c + (w * Math.log10(500)) / Math.log10(20000), g.toDomYCoord(80));
+        canvas.lineTo(c + (w * Math.log10(10000)) / Math.log10(20000), g.toDomYCoord(80));
+        canvas.lineTo(c + (w * Math.log10(10000)) / Math.log10(20000), g.toDomYCoord(90));
+        canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(90));
+        canvas.stroke();
+        canvas.font = "16px sans-serif";
+        canvas.fillStyle = "#333";
+        canvas.textAlign = 'right';
+        canvas.fillText("No damage region",  c + w - 5 , g.toDomYCoord(0) - 5);
+        canvas.fillText("Prohibited region", c + w - 5 , 14);
+        canvas.textAlign = "left";
+        canvas.fillText("No interruption region", c + 5 , g.toDomYCoord(0) - 5);
+        canvas.restore();
       },
       MaxDiff: function(a) {
-        if(this.$root.SelectedAnalyzer === null) return 0;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        var Max = a[0] - Analyzer.NominalVoltage;
+        var Max = a[0] - this.analyzer.NominalVoltage;
         for(var n = 1; n < a.length; n++) {
-          if(Math.abs(a[n] - Analyzer.NominalVoltage) > Math.abs(Max)) Max = a[n] - Analyzer.NominalVoltage;
+          if(Math.abs(a[n] - this.analyzer.NominalVoltage) > Math.abs(Max)) Max = a[n] - this.analyzer.NominalVoltage;
         }
-        return (Max * 100.0) / Analyzer.NominalVoltage;
-      },
-      SetData: function(start, end, events) {
-        var ByITIC = [[0, 0]];
-        for(var i = 0; i < events.StartTime.length; i++) {
-          if((events.StartTime[i] < start) || (events.StartTime[i] > end)) continue;
-          ByITIC.push([(events.Duration[i] / events.SampleRate[i]) * 1000.0, 100 + this.MaxDiff(events.Peak[i])]);
-        }
-        this.$refs.graph.SetOptions({ file: ByITIC });
+        return (Max * 100.0) / this.analyzer.NominalVoltage;
       }
     },
     components: { Graph }

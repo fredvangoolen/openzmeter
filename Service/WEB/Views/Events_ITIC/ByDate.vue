@@ -1,8 +1,9 @@
 <template>
-  <div class="panel panel-other"> 
+  <div class="panel panel-other">
     <div class="panel-heading">By date</div>
     <div class="panel-body">
-      <graph ref="graph" :options="GraphOptions"></graph>
+      <spinner v-if="data==null"></spinner>
+      <graph :options="GraphOptions"></graph>
     </div>
   </div>
 </template>
@@ -11,47 +12,49 @@
   import Graph from 'Components/Graph.vue';
   import moment from 'moment';
   export default {
+    props: { data: Object, analyzer: Object },
     data: function() {
-      return {};
+      return { };
     },
-    created : function() {
-      this.Dates = [];
-      this.GraphOptions = { strokeWidth: 0.5, labels: ["Duration", "Events"], legend: 'follow', plotter: Graph.multiColumnBarPlotter, colors: ["#DF842A"], interactionModel: {},
-        drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 16,
-               valueFormatter: function (x) { return x; },
-               axisLabelFormatter: function (x) { return ((x % 1) !== 0) ? "" : x; }
-             },
-          x: {  pixelsPerLabel: 26,
-                valueFormatter: (x) => { return ((x < 0) || (x >= this.Dates.length)) ? "" : moment.months()[moment(this.Dates[x][1]).month()]; },
-                axisLabelFormatter: (x) => { return ((x < 0) || (x >= this.Dates.length) || (Number.isInteger(x) === false)) ? "" : moment.monthsShort()[moment(this.Dates[x][1]).month()]; }
-             }
+    created: function() {
+      this.Months = moment.months();
+    },
+    computed: {
+      GraphOptions: function() {
+        var Opt = { axes: { x: {}, y: {} }, file: [] };
+        Opt.strokeWidth = 0.5;
+        Opt.showRangeSelector = false;
+        Opt.labels = ["Type", "Events"];
+        Opt.legend = 'follow';
+        Opt.plotter = Graph.multiColumnBarPlotter;
+        Opt.gridLineColor = "#BBB";
+        Opt.gridLinePattern = [4, 4];
+        Opt.colors = ["#DF842A"];
+        Opt.interactionModel = {};
+        Opt.dateWindow = [-0.5, this.Months.length - 0.5];
+        Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 24;
+        Opt.axes.y.valueFormatter = (x) => { return x; };
+        Opt.axes.y.axisLabelFormatter = (x) => { return ((x % 1) != 0) ? "" : x; };
+        Opt.axes.x.pixelsPerLabel = 26;
+        Opt.axes.x.valueFormatter = (x) => { return (((x % 1) == 0) && (x >= 0) && (x < this.Months.length)) ? this.Months[x] : ''; };
+        Opt.axes.x.axisLabelFormatter = (x) => { return (((x % 1) == 0) && (x >= 0) && (x < this.Months.length)) ? this.Months[x] : ''; };
+        for(var i = 0; i < this.Months.length; i++) Opt.file.push([i, 0]);
+        if(this.data != null) {
+          for(var i in this.data.StartTime) {
+            var Month = moment(this.data.StartTime[i]).tz(this.analyzer.TimeZone).month();
+            Opt.file[Month][1] = Opt.file[Month][1] + 1;
+          }
         }
-      };
+        return Object.seal(Opt);
+      }
     },
     methods: {
-      GenerateMonths: function(min, max) {
-        var Start = new Date(min), End = new Date(max);
-        Start = new Date(Start.getFullYear(), Start.getMonth(), 1);
-        this.Dates = [];
-        while(Start <= End) {
-          this.Dates.push([new Date(Start.getFullYear(), Start.getMonth(), 1).getTime(),new Date(Start.getFullYear(), Start.getMonth() + 1, 0).getTime(), (Start.getMonth() + 1) + '/' + Start.getFullYear()]);
-          Start.setMonth(Start.getMonth() + 1);
-        }
-      },
-      GenerateDays: function(min, max) {
-        var Start = new Date(min), End = new Date(max);
-        this.Dates = [];
-        while(Start <= End) {
-          Dates.push([new Date(Start.getFullYear(), Start.getMonth(), Start.getDate()).getTime(),new Date(Start.getFullYear(), Start.getMonth(), Start.getDate() + 1).getTime(), Start.getDate() + '/' + (Start.getMonth() + 1)]);
-          Start.setDate(Start.getDate() + 1);
-        }
-      },
       SetData: function(start, end, events) {
         var ByDate = [];
         this.GenerateMonths(start, end);
-        if(this.Dates.length < 3) this.GenerateDays(start, end);
+        //if(this.Dates.length < 3) this.GenerateDays(start, end);
         for(var i = 0; i < this.Dates.length; i++) ByDate.push([i, 0]);
         for(var i = 0; i < events.StartTime.length; i++) {
           if((events.StartTime[i] < start) || (events.StartTime[i] > end)) continue;

@@ -90,8 +90,9 @@ module.exports = {
   devtool: '#eval-source-map'
 };
 
-if (process.env.NODE_ENV === 'production') {
+if(process.env.NODE_ENV === 'production') {
   module.exports.devtool = '#source-map';
+  module.exports.resolve.alias['vue$'] =  'vue/dist/vue.min.js';
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({
       'process.env': {
