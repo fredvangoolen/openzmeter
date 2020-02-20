@@ -107,7 +107,7 @@ export default {
     },
     UpdateIndicators2() {
       if(this.Timer2) clearInterval(this.Timer2);
-      this.Query2 = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: '15M', To: moment().endOf('day').valueOf(), Period: 86400000 }),
+      this.Query2 = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['ACTIVE_POWER'], LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: '15M', To: moment().endOf('day').valueOf(), From: moment().startOf('day').valueOf() }),
         success: (result) => {
           var Energy;
           if(result['Active_Power'].length > 0) Energy = Array(result['Active_Power'][0].length).fill(0);

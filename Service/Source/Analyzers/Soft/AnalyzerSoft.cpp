@@ -1141,43 +1141,26 @@ void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
 }
 void AnalyzerSoft::GetSeries(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  if(!Params["To"].is_number() || !Params["Period"].is_number() || !Params["LastSample"].is_number()) return req.FromString("'To', 'Period' and 'LastSample' param are requiered", MHD_HTTP_BAD_REQUEST);
-//  if((!Params["Aggreg"].is_string()) || ((Params["Aggreg"] != "10C") && (Params["Aggreg"] != "3S") && (Params["Aggreg"] != "1M") && (Params["Aggreg"] != "10M") && (Params["Aggreg"] != "15M") && (Params["Aggreg"] != "1H"))) return req.FromString("'Aggreg' need to be '10C', 3S', '1M', '10M', '15M' or '1H'", MHD_HTTP_BAD_REQUEST);
-//  if(!Params["Series"].is_array()) return req.FromString("Series must be an array of valid serie names", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->GetSeries(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
-  //Insert defaults
+  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false) || ((params["Aggreg"] != "10C") && (params["Aggreg"] != "3S") && (params["Aggreg"] != "1M") && (params["Aggreg"] != "10M") && (params["Aggreg"] != "15M") && (params["Aggreg"] != "1H"))) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint64_t To = params["To"];
-  uint64_t Period = params["Period"];
-  uint64_t LastSample = params["LastSample"];
-  if(To == 0) To = Tools::GetTime();
-  uint64_t From = To - Period;
-  uint32_t PeriodSeconds = 200;
+  uint64_t From = params["From"];
   string Aggreg = params["Aggreg"];
+  uint32_t PeriodSeconds = 200;
+  if(From > To) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
   if(Aggreg == "3S") PeriodSeconds = 3000;
   if(Aggreg == "1M") PeriodSeconds = 60000;
   if(Aggreg == "10M") PeriodSeconds = 600000;
   if(Aggreg == "15M") PeriodSeconds = 900000;
   if(Aggreg == "1H") PeriodSeconds = 3600000;
-  if((Period / PeriodSeconds) > 100000) {
-    response.set_content("Returned period to large for this aggregation level", "text/plain");
-    response.status = HTTP_BAD_REQUEST;
-    return;
-  }
+  if(((To - From) / PeriodSeconds) > 100000) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
   Database DB(Serial);
-//  req.ExecSentenceNoResult("SET search_path TO " + req.Bind(Serial));
   string Query = "SELECT ROW_TO_JSON(Result) AS result FROM ( SELECT " + DB.Bind(From) + " AS " + DB.BindID("From") + ", " + DB.Bind(To) +" AS " + DB.BindID("To") + ", ";
   Query += DB.Bind((To - From) / PeriodSeconds) + " AS " + DB.BindID("MaxSamples") + ", " + DB.Bind(Aggreg) + " AS " + DB.BindID("Aggregation_Source") + ", ";
   for(uint i = 0; i < params["Series"].size(); i++) {
-    if(!params["Series"][i].is_string()) {
-      response.set_content("Series must be an array of valid serie names", "text/plain");
-      response.status = HTTP_BAD_REQUEST;
-      return;
-    }
+    if(!params["Series"][i].is_string()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
     string Serie = params["Series"][i];
     if((Serie == "FREQUENCY") && ((Aggreg == "10C") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
       Query += "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Frequency") + ", ";
@@ -1231,9 +1214,7 @@ void AnalyzerSoft::GetSeries(const json &params, Response &response) {
     } else if((Serie == "VOLTAGE_HARMONICS_STATS") && (Aggreg ==  "1H")) {
       Query += "COALESCE(ARRAY_AGG(stat_harmonics ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_Harmonics_Stats") + ", ";
     } else {
-      response.set_content("Invalid serie in selected aggregation", "text/plain");
-      response.status = HTTP_BAD_REQUEST;
-      return;
+      return HTTPServer::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
     }
   }
   Query += "COALESCE(ARRAY_AGG(sampletime ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Sampletime") + " FROM ";
@@ -1242,15 +1223,10 @@ void AnalyzerSoft::GetSeries(const json &params, Response &response) {
   } else {
     Query += "aggreg_" + Aggreg;
   }
-  Query += " WHERE sampletime > " + DB.Bind(LastSample) + " AND sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To) + ") AS result";
+  Query += " WHERE sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To) + ") AS result";
   DB.ExecSentenceAsyncResult(Query);
-  if(!DB.FecthRow()) {
-    response.set_content("", "text/plain");
-    response.status = HTTP_INTERNAL_SERVER_ERROR;
-  } else {
-    response.set_content(DB.ResultString("Result"), "application/json");
-    response.status = HTTP_OK;
-  }
+  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -1384,7 +1360,7 @@ void AnalyzerSoft::GetEvents(const json &params, Response &response) {
   uint64_t To = params["To"];
   uint64_t From = params["From"];
   Database DB(Serial);
-  DB.ExecSentenceAsyncResult("SELECT json_build_object("
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('From', " + DB.Bind(From) + ", 'To', " + DB.Bind(To) + ", "
                               "'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), 'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
                               "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), 'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), 'Finished', COALESCE(ARRAY_AGG(finished ORDER BY starttime ASC), '{}'), "
                               "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), 'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), 'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), 'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "

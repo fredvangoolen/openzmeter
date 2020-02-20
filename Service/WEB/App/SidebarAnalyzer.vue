@@ -111,10 +111,10 @@
         var Promises = [];
         if((prev == null) || (prev.From == undefined) || (ReqRange[0] < prev.From)) {
           var ToTime = ((prev == null) || (prev.From == undefined)) ? ReqRange[1] : prev.From - 1;
-          Promises.push(this.$http.post('getSeries', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ToTime, Period: ToTime - ReqRange[0], Series: series }));
+          Promises.push(this.$http.post('getSeries', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ToTime, From: ReqRange[0], Series: series }));
         }
         if((prev != null) && (prev.To != undefined) && (ReqRange[1] > prev.To)) {
-          Promises.push(this.$http.post('getSeries', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ReqRange[1], Period: ReqRange[1] - prev.To - 1, Series: series }));
+          Promises.push(this.$http.post('getSeries', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ReqRange[1], From: prev.To - 1, Series: series }));
         }
         if(Promises.length == 0) {
           Out.To = ReqRange[1]
@@ -236,7 +236,7 @@
         var Cancelled = false;
         var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
         var Period = (aggreg == '3S') ? 6000 : (aggreg == '1M') ? 120000 : (aggreg == '10M') ? 1200000 : (aggreg == '15M') ? 1800000 : 7200000;
-        this.$http.post('getSeries', { Series: series, To: 0, Aggreg: aggreg, Period: Period, LastSample: 0, Analyzer: this.analyzer.Analyzer }).then(
+        this.$http.post('getSeries', { Series: series, To: moment().valueOf(), Aggreg: aggreg, From: moment().valueOf() - Period, Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
             clearTimeout(Timer);
             if(Cancelled == true) return;

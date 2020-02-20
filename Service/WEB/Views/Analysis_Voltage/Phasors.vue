@@ -284,7 +284,6 @@
       },
       Resize: function() {
         this.PhasorHeight = Math.min(600, this.$refs.PhasorContainer.clientWidth - 30);
-        console.log(this.PhasorHeight);
 return;
 
         this.$nextTick(function() {
