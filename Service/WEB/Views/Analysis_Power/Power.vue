@@ -6,17 +6,16 @@
 
 <script>
   import Graph from 'Components/Graph.vue';
-  import moment from 'moment';
-  import 'moment-timezone';
-  import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { data: { type: Object }, serie: { type: String }, height: { type: Number, default: 300 }, analyzer: { type: Object } },
+    props: { data: Object, serie: String, height: Number, analyzer: Object },
     data () {
       return { };
     },
     computed: {
       GraphOptions: function() {
-        var Opt = {};
+        var Opt = { file: [], axes: { y: {}, x: {} } };
+        Opt.showRangeSelector = false;
+        Opt.panEdgeFraction = 1;
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -25,32 +24,26 @@
         Opt.gridLineColor = "#BBB";
         Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
-        Opt.interactionModel = Graph.ScrollableInteractionModel(this);
-        Opt.underlayCallback = this.DrawPeriods;
-        Opt.labels = (this.serie == 'ACTIVE_POWER') ? ['Time', 'Active Power'] : ['Time', 'Reactive Power'];
-        Opt.colors = [oZm.Series[this.serie].Color];
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
+//        Opt.underlayCallback = this.DrawPeriods;
+        Opt.labels = (this.serie == 'Active_Power') ? ['Time', 'Active Power'] : ['Time', 'Reactive Power'];
+        Opt.colors = [this.analyzer.Color[this.serie]];
         Opt.xAxisHeight = 24;
         Opt.selectMode = 'euclidian';
-        Opt.axes = { y: {}, x: {} };
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
-        if(this.serie == 'ACTIVE_POWER') {
-          Opt.axes.y.valueFormatter = (x) => { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' ' + Result.Units; };
-          Opt.axes.y.axisLabelFormatter = (x) => { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value; };
-        } else {
-          Opt.axes.y.valueFormatter = (x) => {  var Result = oZm.Series['REACTIVE_POWER'].FormatValue(x); return Result.Value + ' ' + Result.Units; },
-          Opt.axes.y.axisLabelFormatter = (x) => { var Result = oZm.Series['REACTIVE_POWER'].FormatValue(x); return Result.Value;  }
-        }
-        Opt.axes.x.axisLabelFormatter = (x) => { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); };
-        Opt.axes.x.valueFormatter = (x) => { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); };
-        Opt.file = [];
+        Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
+        Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
+        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, (this.serie == 'Active_Power') ? ' W' : 'var', 2, true);  };
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         if(this.data != null) {
-          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data[(this.serie == 'ACTIVE_POWER') ? 'Active_Power' : 'Reactive_Power'][n]]);
-        } else {
-          Opt.file.push([0, 0]);
+          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data[(this.serie == 'Active_Power') ? 'Active_Power' : 'Reactive_Power'][n]]);
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { incZero: 10 });
+          Opt.dateWindow = [this.data.From, this.data.To];
         }
-        return Opt;
+        return Object.seal(Opt);
       }
     },
     created: function() {
@@ -59,26 +52,14 @@
       this.ActiveData = [];
       this.ReactiveData = [];
     },
-//    mounted: function() {
-//      $(window).on('resize', this.ResizeHandler.bind(this));
-//       window.dispatchEvent(new Event('resize'));
-//      this.NowValue();
-//    },
-//    beforeDestroy: function() {
-//      $(window).off('resize', this.ResizeHandler);
-//      clearInterval(this.NowTimer);
-//    },
     methods: {
-//      SetAnalyzer: function() {
-//        this.NowValue();
-//      },
       DrawPeriods: function(canvas, area, g) {
         canvas.strokeStyle = '#777';
         canvas.lineWidth = 2;
         canvas.beginPath();
         canvas.moveTo(area.x, 0);
         canvas.lineTo(area.x, 13);
-        canvas.stroke();  
+        canvas.stroke();
         for(var i = 0; i < this.Periods.length; i++) {
           var Left = g.toDomXCoord(this.Periods[i].From);
           var Right = g.toDomXCoord(this.Periods[i].To);
@@ -115,29 +96,6 @@
         canvas.rect(area.x, area.y + 13, area.w, area.h);
         canvas.clip();
       },
-      AggregationChanged: function(aggreg) {
-        this.$refs.period.SetAggregation(aggreg);
-      },
-      ResizeHandler: function() {
-        if(typeof this.$refs.graphActive !== 'undefined') this.$refs.graphActive.Redraw('100%', $(this.$refs.activeCounters.$el).height());
-        if(typeof this.$refs.graphReactive !== 'undefined') this.$refs.graphReactive.Redraw('100%', $(this.$refs.reactiveCounters.$el).height());
-      },
-      MaximizeActiveClick: function() {
-        $(window).unbind('resize', this.ResizeHandler);
-        this.$refs.tools.Maximize('Active Power', this.$refs.graphActive.Graph, this.$refs.ToolbarActive);
-      },
-      MaximizeReactiveClick: function() {
-        $(window).unbind('resize', this.ResizeHandler);
-        this.$refs.reactiveTools.Maximize('Fund. Reactive Power', this.$refs.graphReactive.Graph, this.$refs.ToolbarReactive);
-      },
-      MinimizeClick: function() {
-        $(window).bind('resize', this.ResizeHandler.bind(this));
-      },
-      ExportClickActive: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        this.$refs.tools.SaveCVS('Active_Power.csv', [['Time'].concat(oZm.Series['ACTIVE_POWER'].Names(Analyzer))].concat(this.ActiveData));
-      },
       ExportClickReactive: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
@@ -151,7 +109,7 @@
           this.ShowSpinner = true;
         }
         var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }), 
+        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }),
           success: function(result) {
             if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
             this.ActiveData = oZm.GraphDataAppend(result, 'Active_Power', this.ActiveData);
@@ -192,15 +150,7 @@
             this.ShowSpinner = true;
           }.bind(this)
         });
-      },
-      WindowRestore: function() {
-        this.$refs.period.PopState();
-      },
-      WindowChange: function(minDate, maxDate) {
-        this.$refs.period.SetCustom(minDate, maxDate, true);
       }
-    },
-    components: { Graph }
+    }
   }
 </script>
-

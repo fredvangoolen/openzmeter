@@ -35,8 +35,8 @@ void Device::ClearAnalyzers() {
   pAnalyzersLock.WriteLock();
   while(pAnalyzers.size() > 0) {
     auto Tmp = pAnalyzers.begin();
-    pAnalyzers.erase(Tmp);
     delete *Tmp;
+    pAnalyzers.erase(Tmp);
   }
   pAnalyzersLock.Unlock();
 }

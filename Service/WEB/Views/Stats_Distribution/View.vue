@@ -19,8 +19,12 @@
           </div>
         </div>
       </div>
-      <div class="col-md-12 col-lg-6" v-if="!ShowSpinner"><months :data="Data" :analyzer="analyzer" :export.sync="MonthRows"></months></div>
-      <div class="col-md-12 col-lg-6" v-if="!ShowSpinner"><week-day :data="Data" :analyzer="analyzer" :export.sync="WeekRows"></week-day></div>
+      <div class="col-md-12 col-lg-6" v-if="!ShowSpinner">
+        <months :data="Data" :analyzer="analyzer"></months>
+      </div>
+      <div class="col-md-12 col-lg-6" v-if="!ShowSpinner">
+        <week-day :data="Data" :analyzer="analyzer"></week-day>
+      </div>
     </div>
   </div>
   <div v-else-if="analyzer == null">
@@ -39,7 +43,7 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Range: [0, 1], Year: null, Data: null, ShowSpinner: true, CalendarRows: [], MonthRows: [], WeekRows: [] };
+      return { Range: [0, 1], Year: null, Data: null, ShowSpinner: true, CalendarRows: [] };
     },
     watch: {
       Year: function(val) {

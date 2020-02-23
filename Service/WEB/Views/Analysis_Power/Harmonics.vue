@@ -25,7 +25,6 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
   export default {
     props: { analyzer: Object, data: Object, paused: Boolean },
@@ -35,24 +34,24 @@
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
-        if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return { };
-        var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
+        var Opt = { series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
-        Opt.visibility = this.Phases;
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.strokeWidth = 0.5;
         Opt.gridLineColor = "#BBB";
         Opt.gridLinePattern = [4, 4];
         Opt.interactionModel = { };
-        Opt.plotter = Graph.multiColumnBarPlotter;
-        Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
-        Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.plotter = Graph.Plotters.MultiBar;
+        Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
+        if((this.Phases == null) || (this.Options == null)) return { };
+        Opt.visibility = this.Phases;
         Opt.axes.y.valueFormatter = (x) => { var Units = this.BestUnits(x); return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + Units + 'W'; };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return (g.axes_[0].valueRange == null) ? '' : this.Round(this.ScaleUnits(x, this.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), 2, true); }
         Opt.axes.x.drawGrid = false;
-        Opt.axes.x.ticker = () => { return Graph.OddHarmonicsTicks(this.analyzer); };
+        Opt.axes.x.ticker = () => { return Graph.Tickers.OddHarmonicsTicks(this.analyzer); };
         Opt.axes.x.axisLabelFormatter = (x) => { return oZm.Series['HARMONICS'].Names[x]; };
         Opt.axes.x.valueFormatter = (y) => { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (this.analyzer.NominalFrequency * (y + 1)) + 'Hz)'; };
         Opt.labels = ['Harmonic'].concat(this.analyzer.GetSeriesNames('Power', this.analyzer.VoltageChannels));

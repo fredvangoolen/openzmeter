@@ -16,7 +16,7 @@
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
       <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
-        <graph :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver"></graph>
+        <graph :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver" :analyzer="analyzer"></graph>
       </div>
     </portal>
     <dlg-fs v-if="Expanded" title="Waveform" :height.sync="DialogHeight"></dlg-fs>
@@ -35,13 +35,16 @@
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
-        var Opt = { };
-        Opt.plugins = [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ];
-        Opt.interactionModel = Graph.FixedRangeInteractionModel(this);
+        var Opt = {file: [], axes: { y: {}, y2: {}, x: {} } };
+        Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
+        Opt.interactionModel = Graph.InteractionModels.Fixed(this);
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.drawAxesAtZero = true;
         Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
-        if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return Opt;
+        Opt.showRangeSelector = false;
+        Opt.axes.x.ticker = (min, max) => { return Graph.Tickers.WaveTimeTicks(max, this.analyzer); };
+        if((this.Phases == null) || (this.Options == null)) return Opt;
         Opt.visibility = [];
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
@@ -63,7 +66,6 @@
         Opt.axes.y2.strokeWidth = CurrentStyle.Width;
         Opt.axes.y2.valueFormatter = (x) => { return this.Round(x, 2, true) + ' A'; };
         Opt.axes.y2.axisLabelFormatter = this.Options['Current'] ? (x) => { return this.Round(x, 2, true); } : (x)  => { return ''};
-        Opt.axes.x.ticker = (min, max) => { return Graph.WaveTimeTicks(max, this.analyzer, this); };
         Opt.axes.x.valueFormatter = (x) => { return this.Round((x * 1000) / this.analyzer.SampleRate, 2, true) + ' ms'; };
         Opt.labels = ['Sample'].concat(VoltageNames).concat(CurrentNames);
         Opt.colors = VoltageStyle.Colors.concat(CurrentStyle.Colors);
@@ -82,7 +84,7 @@
           Opt.axes.y2.valueRange = this.MatrixColsRange(Opt.file, I, { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
           Opt.dateWindow = [0, Opt.file.length];
         }
-        return Opt;
+        return Object.seal(Opt);
       },
       Export: function() {
         var Rows = [['Sample'].concat(oZm.Series['VOLTAGE'].Names(this.analyzer).concat(oZm.Series['CURRENT'].Names(this.analyzer)))];

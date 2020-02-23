@@ -34,7 +34,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import HeatmapTable from './HeatmapTable.vue';
   export default {
-    props: { analyzer: { type: Object } },
+    props: { analyzer: Object },
     data: function() {
       return { Aggreg: '1H', Range: [0, 1], Data: {}, Year: 0, ShowSpinner: true, Export: [] };
     },
@@ -43,12 +43,13 @@
         this.ShowSpinner = true;
         this.Data = null;
         var To = moment.tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
-        var Period = To - moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getSeries', { Period: Period, To: To, Aggreg: '15M', LastSample: 0, Series: ['ACTIVE_POWER'], Analyzer: this.analyzer.Analyzer }).then(
+        var From = moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
+        this.$http.post('getSeries', { From: From, To: To, Aggreg: '15M', Series: ['ACTIVE_POWER'], Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
             this.ShowSpinner = false;
             this.Data = result.data;
-          }
+          },
+          (fail) => {}
         );
       }
     },

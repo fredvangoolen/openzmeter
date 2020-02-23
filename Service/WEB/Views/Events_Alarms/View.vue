@@ -1,21 +1,22 @@
 <template>
-  <div class="row">
-    <div class="col-lg-12">
-      <div class="panel panel-other">
-        <div class="panel-heading">
-          <span class="header-text">Disturbances</span>
-          <div class="header-buttons clearfix" ref="Toolbar">
-            <toolbar-period variable="Period" v-on:PeriodChanged="GetEvents" ref="period"></toolbar-period>
+  <div v-if="analyzer!=null">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="panel panel-other">
+          <div class="panel-heading">
+            <span class="header-text">Alarms</span>
           </div>
-        </div>
-        <div class="panel-body">
-          <spinner v-if="ShowSpinner"></spinner>
-          <div id="disturbances_chart"></div>
+          <div class="panel-body">
+            <spinner v-if="ShowSpinner"></spinner>
+            Alarms log not yet ready
+          </div>
         </div>
       </div>
     </div>
-    <div class="col-lg-12">
-      <events-table ref="table" v-on:UpdateComplete="UpdateComplete"></events-table>
+  </div>
+  <div v-else-if="analyzer == null">
+    <div class="alert alert-danger text-center">
+      <p>No selected analyzer</p>
     </div>
   </div>
 </template>
@@ -31,7 +32,7 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { ShowSpinner: true };
+      return { ShowSpinner: false };
     },
     created: function() {
       this.TimeLine = null;
