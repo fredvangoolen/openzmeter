@@ -28,13 +28,12 @@
     if(context.isPanning) {
       Dygraph.endPan(event, g, context);
       if(context.regionWidth > 0) this.$emit('range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
-      //console.log([Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
-      //if(context.regionWidth > 0) this.$emit('update:range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
     } else if (context.isZooming) {
       Dygraph.endZoom(event, g, context);
       if(context.regionWidth > 0) this.$emit('range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
     }
   }
+
   function mouseWheelZoom(event, g, context) {
     if(!event.shiftKey) return;
 //    if(this.StopAutoupdate) this.StopAutoupdate();
@@ -175,113 +174,134 @@
       }
       this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
     }
-        function ScrollableInteractionModel(parent) {
-      return { mousedown: mouseDown.bind(parent),
-               mousemove: mouseMove.bind(parent),
-               mouseup: mouseUp.bind(parent),
-               dblclick: MouseDblClick.bind(parent),
-               mousewheel : mouseWheelZoom.bind(parent),
-               touchstart: touchStart.bind(parent),
-               touchmove: touchMove.bind(parent),
-               touchend: touchEnd.bind(parent)
-      };
-    }
   export default {
-    WaveTimeTicks: function(max, analyzer) {
-      var ticks = [];
-      for(var i = 0; i <= Math.floor(max / analyzer.SampleRate * analyzer.NominalFrequency); i++) {
-        ticks.push({ v: i * analyzer.SampleRate / analyzer.NominalFrequency, label: This.Round(i / analyzer.NominalFrequency * 1000, 2, true) });
-      }
-      return ticks;
-    },
-    DBTicks: function(min, max, offset) {
-      var ticks = [];
-      for(var i = Math.floor(min - offset); i < Math.ceil(max - offset); i++) {
-        if((i % 10) == 0) ticks.push({ v: i + offset, label: i });
-      }
-      return ticks;
-    },
-    OddHarmonicsTicks: function(analyzer) {
-      var Ticks = [];
-      for(var i = 0; i < analyzer.HarmonicsNames.length; i = i + 2) Ticks.push({ v: i, label: analyzer.HarmonicsNames[i] });
-      return Ticks;
-    },
-    LegendFormatter_Follow: function(data) {
-      if(data.x === undefined || data.x === null) return "";
-      var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
-      for(var i = 0; i < data.series.length; i++)  {
-        if(data.series[i].isVisible) {
-          Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
+    Tickers: {
+      Default: function(a, b, pixels, opts, dygraph, vals) {
+        return Dygraph.numericTicks(a, b, pixels, opts, dygraph, vals);
+      },
+      DBTicks: function(min, max, offset) {
+        var ticks = [];
+        for(var i = Math.floor(min - offset); i < Math.ceil(max - offset); i++) {
+          if((i % 10) == 0) ticks.push({ v: i + offset, label: i });
         }
+        return ticks;
+      },
+      OddHarmonicsTicks: function(analyzer) {
+        var Ticks = [];
+        for(var i = 0; i < analyzer.HarmonicsNames.length; i = i + 2) Ticks.push({ v: i, label: analyzer.HarmonicsNames[i] });
+        return Ticks;
+      },
+      WaveTimeTicks: function(max, analyzer) {
+        var ticks = [];
+        for(var i = 0; i <= Math.floor(max / analyzer.SampleRate * analyzer.NominalFrequency); i++) ticks.push({ v: i * analyzer.SampleRate / analyzer.NominalFrequency, label: This.Round(i / analyzer.NominalFrequency * 1000, 2, false) });
+        return ticks;
       }
-      return Result;
     },
-    multiColumnBarPlotter: function(e) {
-      if(e.seriesIndex != 0) return;
-      var g = e.dygraph;
-      g.UndoHighlight = { cx: [], cy: [] };
-      var ctx = e.drawingContext;
-      var sets = e.allSeriesPoints;
-      g.SeriesCount = sets.length;
-      var y_bottom = e.dygraph.toDomYCoord(0);
-      g.y_bottom = y_bottom;
-      var min_sep = Infinity;
-      for(var j = 0; j < sets.length; j++) {
-        for(var i = 1; i < sets[j].length; i++) min_sep = Math.min(sets[j][i].canvasx - sets[j][i - 1].canvasx, min_sep);
-      }
-      var bar_width = Math.floor(2.5 / 3 * min_sep);
-      g.subbar_width = bar_width / sets.length;
-      if(g.subbar_width < 2) g.subbar_width = 2;
-      for(var j = 0; j < sets.length; j++) {
-        ctx.strokeStyle = g.getColors()[j];
-        ctx.fillStyle = g.getColors()[j];
-        for(var i = 0; i < sets[j].length; i++) {
-          var p = sets[j][i];
-          var x_left = p.canvasx - (g.subbar_width * sets.length / 2) + j * g.subbar_width;
-          ctx.fillRect(x_left, p.canvasy, g.subbar_width, y_bottom - p.canvasy);
+    Formatters: {
+      Legend_Follow: function(data) {
+        if(data.x === undefined || data.x === null) return "";
+        var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
+        for(var i = 0; i < data.series.length; i++)  {
+          if(data.series[i].isVisible) {
+            Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
+          }
         }
+        return Result;
+      },
+      Y_UnitScale: function(x, units, dec, html) {
+        if(dec == null) dec = 2;
+        if(units == null) units = '';
+        if(html == null) html = false;
+        return This.Round(This.ScaleUnits(x, This.BestUnits(x)), dec, html) + units;
+      },
+      Y_UnitScaleFull: function(x, gran, opts, g, units, dec, html) {
+        if(dec == null) dec = 2;
+        if(units == null) units = '';
+        if(html == null) html = false;
+        return (g.axes_[0].valueRange == null) ? '' : This.Round(This.ScaleUnits(x, This.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), dec, html) + units;
       }
     },
-
-    //interactions models
-    FixedRangeInteractionModel: function(parent) {
-      return { mousedown: mouseDown, mousemove: mouseMove, mouseup: mouseUp, dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
-                touchstart: touchStart, touchmove: touchMove, touchend: touchEnd.bind(parent) };
-    },
-
-
-//    MouseUpEvt: function(event, g, contex) {
-//        oZm.mouseUp(event, g, contex);
-//        if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-//    },
-
-
-
-
-
-
-
-
-
-
-    DrawHighlightBarChartCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {
-      var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;
-      var VisibleSerie = serieIndex;
-      for(var n = 0; n < serieIndex; n++) {
-        if(g.user_attrs_.visibility[n] == false) VisibleSerie--;
+    Plugins: {
+      Vertical_Crosshair: function() {
+        return new Dygraph.Plugins.Crosshair( { direction: "vertical" } );
       }
-      if(g.UndoHighlight.cx !== undefined && g.UndoHighlight.cx[serieIndex] !== undefined) {
-        var x_left = g.UndoHighlight.cx[serieIndex] - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
-        canvasContext.fillRect(x_left, g.UndoHighlight.cy[serieIndex], g.subbar_width, g.y_bottom - g.UndoHighlight.cy[serieIndex]);
-      }
-      g.UndoHighlight.cx[serieIndex]=cx;
-      g.UndoHighlight.cy[serieIndex]=cy;
-      canvasContext.fillStyle = chroma(color).brighten(2);
-      var x_left = cx - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
-      canvasContext.fillRect(x_left, cy, g.subbar_width, g.y_bottom - cy);
     },
-    props: { options: Object, height: Number, width: Number, paused: Boolean, window: Array },
-    data() {
+    Callbacks: {
+      Underlay_DrawBorder: function(ctx, area, dygraph) {
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(area.x, area.y, area.w, area.h);
+      },
+      DrawHighlightPoint_HighlightBar: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {
+        var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;
+        var VisibleSerie = serieIndex;
+        for(var n = 0; n < serieIndex; n++) {
+          if(g.user_attrs_.visibility[n] == false) VisibleSerie--;
+        }
+        if(g.UndoHighlight.cx != undefined && g.UndoHighlight.cx[serieIndex] != undefined) {
+          var x_left = g.UndoHighlight.cx[serieIndex] - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
+          canvasContext.fillRect(x_left, g.UndoHighlight.cy[serieIndex], g.subbar_width, g.y_bottom - g.UndoHighlight.cy[serieIndex]);
+        }
+        g.UndoHighlight.cx[serieIndex]=cx;
+        g.UndoHighlight.cy[serieIndex]=cy;
+        canvasContext.fillStyle = chroma(color).brighten(2);
+        var x_left = cx - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
+        canvasContext.fillRect(x_left, cy, g.subbar_width, g.y_bottom - cy);
+      }
+    },
+    Plotters: {
+      MultiBar: function(e) {
+        if(e.seriesIndex != 0) return;
+        var g = e.dygraph;
+        g.UndoHighlight = { cx: [], cy: [] };
+        var ctx = e.drawingContext;
+        var sets = e.allSeriesPoints;
+        g.SeriesCount = sets.length;
+        var y_bottom = e.dygraph.toDomYCoord(0);
+        g.y_bottom = y_bottom;
+        var min_sep = Infinity;
+        for(var j = 0; j < sets.length; j++) {
+          for(var i = 1; i < sets[j].length; i++) min_sep = Math.min(sets[j][i].canvasx - sets[j][i - 1].canvasx, min_sep);
+        }
+        var bar_width = Math.floor(2.5 / 3 * min_sep);
+        g.subbar_width = bar_width / sets.length;
+        if(g.subbar_width < 2) g.subbar_width = 2;
+        for(var j = 0; j < sets.length; j++) {
+          ctx.strokeStyle = g.getColors()[j];
+          ctx.fillStyle = g.getColors()[j];
+          for(var i = 0; i < sets[j].length; i++) {
+            var p = sets[j][i];
+            var x_left = p.canvasx - (g.subbar_width * sets.length / 2) + j * g.subbar_width;
+            ctx.fillRect(x_left, p.canvasy, g.subbar_width, y_bottom - p.canvasy);
+          }
+        }
+      },
+    },
+    InteractionModels: {
+      Scrollable: function(parent) {
+        return { mousedown: mouseDown.bind(parent),
+                 mousemove: mouseMove.bind(parent),
+                 mouseup: mouseUp.bind(parent),
+                 /*dblclick: MouseDblClick,
+                 mousewheel: mouseWheelZoom,
+                 touchstart: touchStart,
+                 touchmove: touchMove,
+                 touchend: touchEnd*/
+        };
+      },
+      Fixed: function() {
+        return { mousedown: mouseDown.bind(parent),
+                 mousemove: mouseMove.bind(parent),
+                 mouseup: mouseUp.bind(parent),
+/*                 dblclick: MouseDblClick,
+                 mousewheel : mouseWheelZoom,
+                 touchstart: touchStart,
+                 touchmove: touchMove,
+                 touchend: touchEnd*/
+        };
+      },
+    },
+    props: { options: Object, height: Number, width: Number, paused: Boolean, window: Array, analyzer: null },
+    data: function() {
       return { };
     },
     watch: {
@@ -307,7 +327,6 @@
         this.Graph.updateOptions({ showRangeSelector: true}, false);
         val.showRangeSelector = false;
         this.Graph.updateOptions(val);
-
       },
       height: function(val) {
         if(this.Graph == null) return;
@@ -322,13 +341,28 @@
         this.Graph.resize();
       }
     },
+    methods: {
+//      ProccessParams: function() {
+//        if(this.options.interactionModel == 'SCROLLABLE_MODEL') this.options.interactionModel = this.ScrollableInteractionModel();
+//        if(this.options.interactionModel == 'FIXED_MODEL') this.options.interactionModel = this.FixedRangeInteractionModel();
+//        if(this.options.interactionModel == 'NONE') this.options.interactionModel = {};
+//        for(var i in this.options.plugins) {
+//          if(this.options.plugins[i] == 'VERTICAL_CROSSHAIR') this.options.plugins[i] = new Dygraph.Plugins.Crosshair( { direction: "vertical" } );
+//        }
+//        if(this.options.legendFormatter == 'FOLLOW') this.options.legendFormatter = this.LegendFormatter_Follow;
+//        if(this.options.plotter == 'BAR_PLOTTER') this.options.plotter = this.multiColumnBarPlotter;
+//        if(this.options.drawHighlightPointCallback == 'BAR_HIGHLIGHT') this.options.drawHighlightPointCallback = this.DrawHighlightBar;
+//        if(this.options.underlayCallback == 'BORDER') this.options.underlayCallback = this.DrawBorder;
+//        if(this.options.axes.x.ticker == 'WAVE_TIME') this.options.axes.x.ticker = this.WaveTimeTicks;
+//        if(this.options.axes.x.ticker == 'ODD_HARMONICS') this.options.axes.x.ticker = OddHarmonicsTicks;
+//      },
+    },
     created: function() {
       this.Graph = null;
       this.PausedOptions = null;
     },
     mounted: function() {
       var Data = [];
-      if(this.options.interactionModel == 'SCROLLABLE_MODEL') this.options.interactionModel = ScrollableInteractionModel(this);
       if(this.options.labels == null) this.options.labels = ['A', 'B'];
       if(this.options.file == null) this.options.file = [];
       if(this.options.file.length == 0) this.options.file.push(Array(this.options.labels.length).fill(0));
@@ -343,7 +377,6 @@
       if(this.Graph != null) this.Graph.destroy();
     }
   }
-
 </script>
 
 <style scoped>

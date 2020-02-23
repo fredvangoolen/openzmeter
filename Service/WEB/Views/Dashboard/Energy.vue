@@ -22,13 +22,15 @@
         Opt.connectSeparatedPoints = false;
         Opt.fillGraph = true;
         Opt.legend = 'follow';
-        Opt.plotter = Graph.multiColumnBarPlotter;
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
+        Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
+        Opt.plotter = Graph.Plotters.MultiBar;
         Opt.labels = ['Time', 'Energy'];
-        Opt.interactionModel = Graph.ScrollableInteractionModel(this);
+
         Opt.colors = [oZm.Series['ACTIVE_ENERGY'].Color];
         Opt.xAxisHeight = 20;
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
-        underlayCallback: this.DrawPeriods,
+        //underlayCallback: this.DrawPeriods,
         Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
@@ -40,6 +42,7 @@
           var Divisor = (this.data.Aggregation_Source == '15M') ? 4 : 1;
           for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data.Active_Power[n] / Divisor]);
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, upperPercent: 0.1, lowerPercent: 0.1, minUpperWidth: 10, minLowerWidth: 10 });
+          Opt.dateWindow = [this.data.From, this.data.To];
         }
         return Opt;
       }

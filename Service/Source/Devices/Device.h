@@ -31,7 +31,7 @@ class Device {
       bool operator()(const Analyzer *a1, const Analyzer *a2) const {
         return a1->Serial < a2->Serial;
       }
-      bool operator()(const string serial, const Analyzer *a) const {
+      bool operator()(const string &serial, const Analyzer *a) const {
         return serial < a->Serial;
       }
       bool operator()(const Analyzer *a, const string &serial) const {

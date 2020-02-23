@@ -14,6 +14,7 @@
 
 <script>
   import moment from 'moment';
+  import 'moment-timezone';
   import vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
@@ -38,13 +39,16 @@
         var Max = 0.0;
         for(var i in this.data.Active_Power) {
           var Day = moment(this.data.Sampletime[i]).day();
-          if(this.Days[Day] === undefined) this.Days[Day] = {};
-          var Period = (this.data.Period_Name[i] === null) ? 'NONE' : this.data.Period_Name[i];
-          if(this.Periods.includes(Period) === false) this.Periods.push(Period);
-          if(this.data.Active_Power[i] !== null) this.Days[Day][Period] = (this.Days[Day][Period] == undefined) ? this.data.Active_Power[i] : this.Days[Day][Period] + this.data.Active_Power[i];
-          Max = Math.max(Max, Math.abs(this.Days[Day][Period]));
+          if(this.Days[Day] == null) this.Days[Day] = {};
+          var Period = (this.data.Period_Name[i] == null) ? 'NONE' : this.data.Period_Name[i];
+          if(this.Periods.includes(Period) == false) this.Periods.push(Period);
+          if(this.data.Active_Power[i] != null) this.Days[Day][Period] = (this.Days[Day][Period] == undefined) ? this.data.Active_Power[i] : this.Days[Day][Period] + this.data.Active_Power[i];
         }
-        this.Units = oZm.GetBestUnits(Max);
+        var Max = 0;
+        for(var Day in this.Days) {
+          for(var Period in this.Days[Day]) Max = Math.max(Max, this.Days[Day][Period]);
+        }
+        this.Units = this.BestUnits(Max);
         this.Periods = this.Periods.sort();
         this.Columns = [ { name: 'Day', title: 'Day' } ];
         for(var Period in this.Periods) this.Columns.push({ name: this.Periods[Period], title: this.Periods[Period] });
@@ -53,8 +57,8 @@
         for(var Day in this.Days) {
           var Row = [Names[Day]];
           for(var Period in this.Days[Day]) {
-            this.Days[Day][Period] = (this.Days[Day][Period] === null) ? '-' : oZm.Round2Plain(oZm.ScaleToUnits(this.Days[Day][Period], this.Units));
             Row.push(this.Days[Day][Period]);
+            this.Days[Day][Period] = (this.Days[Day][Period] == null) ? '-' : this.Round(this.ScaleUnits(this.Days[Day][Period], this.Units), 2, true);
           }
           this.Days[Day].Day = Names[Day];
           this.Export.push(Row);

@@ -4,7 +4,6 @@
 
 <script>
   import Graph from 'Components/Graph.vue';
-  import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
   export default {
     props: { data: Array, analyzer: Object },
@@ -23,10 +22,10 @@
         Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
         Opt.xAxisHeight = 18;
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
-        Opt.plotter = Graph.multiColumnBarPlotter;
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+//        Opt.plotter = Graph.multiColumnBarPlotter;
         Opt.labels = ['Time', 'Cost'];
-        Opt.colors = [oZm.Series['ACTIVE_ENERGY'].Color];
+        Opt.colors = [this.analyzer.Color['Active_Energy']];
         Opt.includeZero = true;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30,

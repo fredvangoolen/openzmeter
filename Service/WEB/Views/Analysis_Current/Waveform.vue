@@ -25,7 +25,6 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
   export default {
     props: { analyzer: Object, data: Object, paused: Boolean },
@@ -36,11 +35,11 @@
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
         var Opt = { };
-        Opt.plugins = [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ];
-        Opt.interactionModel = Graph.FixedRangeInteractionModel(this);
+        Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
+        Opt.interactionModel = Graph.InteractionModels.Fixed(this);
         Opt.drawAxesAtZero = true;
         Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return Opt;
         Opt.visibility = [];
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
@@ -63,7 +62,7 @@
         Opt.axes.y2.strokeWidth = VoltageStyle.Width;
         Opt.axes.y2.valueFormatter = (x) => { return this.Round(x, 2, true) + ' V'; };
         Opt.axes.y2.axisLabelFormatter = this.Options['Voltage'] ? (x) => { return this.Round(x, 2, true); } : (x)  => { return ''};
-        Opt.axes.x.ticker = (min, max) => { return Graph.WaveTimeTicks(max, this.analyzer); };
+        Opt.axes.x.ticker = (min, max) => { return Graph.Tickers.WaveTimeTicks(max, this.analyzer); };
         Opt.axes.x.valueFormatter = (x) => { return this.Round((x * 1000) / this.analyzer.SampleRate, 2, true) + ' ms'; };
         Opt.labels = ['Sample'].concat(CurrentNames).concat(VoltageNames);
         Opt.colors = CurrentStyle.Colors.concat(VoltageStyle.Colors);

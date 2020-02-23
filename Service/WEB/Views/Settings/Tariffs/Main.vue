@@ -12,34 +12,34 @@
         </div>
       </template>
       <div class="alert alert-danger text-center" v-if="Error!=null">{{ Error }}</div>
-      <div class="alert alert-success text-center" v-if="Error==null">Tariff contains {{ tariff.Template.Seasons.length }}  seasons, a total of {{ tariff.Template.Periods.length }}  day periods and {{ tariff.Template.Holidays.length }} holidays</div>
+      <div class="alert alert-success text-center" v-if="Error==null">Tariff contains {{ Tariff.Template.Seasons.length }}  seasons, a total of {{ Tariff.Template.Periods.length }}  day periods and {{ Tariff.Template.Holidays.length }} holidays</div>
       <div class="row">
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Name</label>
-          <input type="text" class="form-control" v-model="tariff.Name"></div>
+          <input type="text" class="form-control" v-model="Tariff.Name"></div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Time zone</label>
-          <option-picker :options="TimeZones" v-model="tariff.TimeZone" :big="true"></option-picker>
+          <option-picker :options="TimeZones" v-model="Tariff.TimeZone" :big="true"></option-picker>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Start date</label>
-          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: tariff.TimeZone }" v-model="tariff.StartDate" :big="true"></date-picker>
+          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-model="Tariff.StartDate" :big="true"></date-picker>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">End date</label>
-          <date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: tariff.TimeZone }" v-model="tariff.EndDate" :big="true"></date-picker>
+          <date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-model="Tariff.EndDate" :big="true"></date-picker>
         </div>
-        <div class="col-xs-12"><label class="control-label">Description</label><textarea class="form-control" rows="5" v-model="tariff.Template.Description" style="resize: none"></textarea></div>
+        <div class="col-xs-12"><label class="control-label">Description</label><textarea class="form-control" rows="5" v-model="Tariff.Template.Description" style="resize: none"></textarea></div>
         <div class="col-xs-12 col-sm-6">
           <div class="btn-group period-dropdown-group">
             <div class="input-group">
               <span class="input-group-addon" style="width: 100%"><strong>Weekends as</strong></span>
               <div class="input-group-btn">
-                <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false"><span style="display: inline-block;width: 80px;">{{ (tariff.Template.WeekendPeriod == null) ? 'Don\'t apply' : 'P' + (tariff.Template.WeekendPeriod+1) }}</span><span class="caret"></span></button>
+                <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false"><span style="display: inline-block;width: 80px;">{{ (Tariff.Template.WeekendPeriod == null) ? 'Don\'t apply' : 'P' + (Tariff.Template.WeekendPeriod+1) }}</span><span class="caret"></span></button>
                 <ul class="dropdown-menu pull-right">
-                  <li v-for="(period, index) in tariff.Template.Periods" :key="index" :class="{active: tariff.Template.WeekendPeriod == index}"><a @click="SetWeekEndPeriod(index)">P{{ index + 1 }}</a></li>
+                  <li v-for="(period, index) in Tariff.Template.Periods" :key="index" :class="{active: Tariff.Template.WeekendPeriod == index}"><a @click="SetWeekEndPeriod(index)">P{{ index + 1 }}</a></li>
                   <li role="separator" class="divider"></li>
-                  <li :class="{active: tariff.Template.WeekendPeriod == null}"><a @click="SetWeekEndPeriod(null)">Don't apply</a></li>
+                  <li :class="{active: Tariff.Template.WeekendPeriod == null}"><a @click="SetWeekEndPeriod(null)">Don't apply</a></li>
                 </ul>
               </div>
             </div>
@@ -50,11 +50,11 @@
             <div class="input-group">
               <span class="input-group-addon" style="width: 100%"><strong>Holidays as</strong></span>
                 <div class="input-group-btn">
-                  <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false"><span style="display: inline-block;width: 80px;">{{ (tariff.Template.HolidayPeriod == null) ? 'Don\'t apply' : 'P' + (tariff.Template.HolidayPeriod+1) }}</span><span class="caret"></span></button>
+                  <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false"><span style="display: inline-block;width: 80px;">{{ (Tariff.Template.HolidayPeriod == null) ? 'Don\'t apply' : 'P' + (Tariff.Template.HolidayPeriod+1) }}</span><span class="caret"></span></button>
                   <ul class="dropdown-menu pull-right">
-                    <li v-for="(period, index) in tariff.Template.Periods" :key="index" :class="{active: tariff.Template.HolidayPeriod == index}"><a @click="SetHolidayPeriod(index)">P{{ index + 1 }}</a></li>
+                    <li v-for="(period, index) in Tariff.Template.Periods" :key="index" :class="{active: Tariff.Template.HolidayPeriod == index}"><a @click="SetHolidayPeriod(index)">P{{ index + 1 }}</a></li>
                     <li role="separator" class="divider"></li>
-                    <li :class="{active: tariff.Template.HolidayPeriod == null}"><a @click="SetHolidayPeriod(null)">Don't apply</a></li>
+                    <li :class="{active: Tariff.Template.HolidayPeriod == null}"><a @click="SetHolidayPeriod(null)">Don't apply</a></li>
                   </ul>
                 </div>
             </div>
@@ -62,9 +62,9 @@
         </div>
       </div>
     </dlg>
-    <edit-periods :tariff="tariff" v-if="View=='Periods'" @close="View=null"></edit-periods>
-    <edit-seasons :tariff="tariff" v-if="View=='Seasons'" @close="View=null"></edit-seasons>
-    <edit-holidays :tariff="tariff" v-if="View=='Holidays'" @close="View=null"></edit-holidays>
+    <edit-periods :tariff="Tariff" v-if="View=='Periods'" @close="View=null"></edit-periods>
+    <edit-seasons :tariff="Tariff" v-if="View=='Seasons'" @close="View=null"></edit-seasons>
+    <edit-holidays :tariff="Tariff" v-if="View=='Holidays'" @close="View=null"></edit-holidays>
   </div>
 </template>
 
@@ -76,7 +76,27 @@
   export default {
     props: { tariff: Object },
     data: function() {
-      return { View: null, TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false, Error: null };
+      return { Tariff: null, View: null, TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false, Error: null };
+    },
+    created: function() {
+      if(this.tariff == null) {
+        this.Tariff = {
+          TimeZone: moment.tz.guess(),
+          StartDate: moment().startOf('year').valueOf(),
+          EndDate: moment().endOf('year').valueOf(),
+          Name: 'No name',
+          Template: {
+            Description: 'Add tariff description here',
+            Seasons: [],
+            Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE', Color: '#fffff0' } ],
+            Holidays: [],
+            WeekendPeriod: null,
+            HolidayPeriod: null
+          }
+        };
+      } else {
+        this.Tariff = Object.assign({}, this.tariff);
+      }
     },
     methods: {
       Show: function(tariff) {

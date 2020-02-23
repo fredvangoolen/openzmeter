@@ -1,60 +1,60 @@
 <template>
-  <button type="button" class="btn btn-default btn-xs" @click="$emit('update:expanded', !expanded)" data-toggle="tooltip" :title="expanded?'Minimize graph' : 'Maximize graph'">
-    <img v-if="!expanded" :src="require('Imgs/arrow_out.png')">
-    <img v-if="expanded" :src="require('Imgs/arrow_in.png')">
+  <button type="button" class="btn btn-default btn-xs" @click="$emit('input', !value)" data-toggle="tooltip" :title="value?'Minimize graph' : 'Maximize graph'">
+    <img v-if="!value" :src="require('Imgs/arrow_out.png')">
+    <img v-if="value" :src="require('Imgs/arrow_in.png')">
   </button>
 </template>
 
 <script>
   export default {
-    props: { expanded: Boolean },
+    props: { value: Boolean },
     data() {
       return { };
     },
     methods: {
-      PlayClick: function() {
-        this.Pause = false;
-        $(this.$el).children('button').blur();
-        this.$emit('PlayStatus', false);
-      },
-      SetPlayStatus(stat) {
-        this.Pause = stat;
-      },
-      PauseClick: function() {
-        this.Pause = true;
-        $(this.$el).children('button').blur();
-        this.$emit('PlayStatus', true);
-      },
-      ResizeHandler: function() {
-        $(this.Graph.graphDiv).parent().removeAttr('style');
-        this.Graph.resize($(this.$refs.MaximizeDialog).width() - 50, $(this.$refs.MaximizeDialog).height() - 80);
-      },
-      MinimizeClick: function() {
-        $(window).unbind('resize', this.ResizeHandler);
-        $(this.PrevToolbar).append(this.Toolbar);
-        $(this.PrevGraph).append(this.Graph.graphDiv);
-        $(this.$refs.MaximizeDialog).modal('hide');
-        this.ShowMaximized = false;
-        this.$emit('MinimizeClick');
-        window.dispatchEvent(new Event('resize'));
-      },
-      Maximize: function(title, graph, toolbar) {
-        this.Title = title;
-        this.ShowMaximized = true;
-        this.PrevToolbar = toolbar;
-        this.PrevGraph = $(graph.graphDiv).parent();
-        this.Toolbar = $(toolbar).children();
-        this.Graph = graph;
-        this.GraphObj = graph;
-        this.$nextTick(function() {
-          $(this.$refs.MaximizeDialog).modal('show');
-          this.$root.$el.append(this.$refs.MaximizeDialog);
-          $(this.$refs.Toolbar).append(this.Toolbar);
-          $(this.$refs.Graph).append(this.Graph.graphDiv);
-          $(window).bind('resize', this.ResizeHandler);
-          this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
-        });
-      },
+//      PlayClick: function() {
+//        this.Pause = false;
+//        $(this.$el).children('button').blur();
+//        this.$emit('PlayStatus', false);
+//      },
+//      SetPlayStatus(stat) {
+//        this.Pause = stat;
+//      },
+//      PauseClick: function() {
+//        this.Pause = true;
+//        $(this.$el).children('button').blur();
+//        this.$emit('PlayStatus', true);
+//      },
+//      ResizeHandler: function() {
+//        $(this.Graph.graphDiv).parent().removeAttr('style');
+//        this.Graph.resize($(this.$refs.MaximizeDialog).width() - 50, $(this.$refs.MaximizeDialog).height() - 80);
+//      },
+//      MinimizeClick: function() {
+//        $(window).unbind('resize', this.ResizeHandler);
+//        $(this.PrevToolbar).append(this.Toolbar);
+//        $(this.PrevGraph).append(this.Graph.graphDiv);
+//        $(this.$refs.MaximizeDialog).modal('hide');
+//        this.ShowMaximized = false;
+//        this.$emit('MinimizeClick');
+//        window.dispatchEvent(new Event('resize'));
+//      },
+//      Maximize: function(title, graph, toolbar) {
+//        this.Title = title;
+//        this.ShowMaximized = true;
+//        this.PrevToolbar = toolbar;
+//        this.PrevGraph = $(graph.graphDiv).parent();
+//        this.Toolbar = $(toolbar).children();
+//        this.Graph = graph;
+//        this.GraphObj = graph;
+//        this.$nextTick(function() {
+//          $(this.$refs.MaximizeDialog).modal('show');
+//          this.$root.$el.append(this.$refs.MaximizeDialog);
+//          $(this.$refs.Toolbar).append(this.Toolbar);
+//          $(this.$refs.Graph).append(this.Graph.graphDiv);
+//          $(window).bind('resize', this.ResizeHandler);
+//          this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
+//        });
+//      },
 //      SaveCVS: function(filename, rows) {
 //        var processRow = function (row) {
 //          var finalVal = '';

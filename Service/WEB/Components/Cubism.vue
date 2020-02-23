@@ -8,7 +8,6 @@
 <script>
   import Dygraph from 'JS/dygraph.js';
   import 'JS/dygraph-crosshair.js';
-  import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
   export default {
     props: { index: Number, data: Object, title: String, format: Function, now: Object, paused: Boolean },
@@ -45,6 +44,10 @@
       },
     },
     methods: {
+      DrawBorder: function(ctx, area, dygraph) {
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(area.x, area.y, area.w, area.h);
+      },
       Plotter: function(e) {
         var ctx = e.drawingContext;
         var area = e.plotArea;
@@ -102,6 +105,7 @@
       Opt.colors = ["#d9534f"];
       Opt.labelsDiv = this.$refs.legend;
       Opt.plugins = [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ];
+      Opt.underlayCallback = this.DrawBorder;
       Opt.legendFormatter = (data) => {
         if(data.x == null) {
           var Value = '<span class="inactive-label">' + data.series[0].label + '</span>';
@@ -129,7 +133,7 @@
       this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], Opt);
     },
     beforeDestroy: function() {
-      this.Graph.destroy();
+      if(this.Graph != null) this.Graph.destroy();
     }
   }
 </script>
@@ -137,7 +141,7 @@
 <style>
   .cubism-serie .first {
     margin-top: 16px;
-    border-top: 1px solid #BBB;
+/*    border-top: 1px solid #BBB;*/
   }
   .cubism-serie .x-axis {
     font-size: 10px;
@@ -163,6 +167,7 @@
   .cubism-serie {
     position: relative;
     cursor: crosshair;
+    margin-top: -1px;
   }
   .cubism-serie > .graph {
     height: 50px !important;
@@ -173,7 +178,7 @@
   }
   .cubism-serie:first-child > .graph {
     margin-top: 16px;
-    border-top: 1px solid #BBB;
+/*    border-top: 1px solid #BBB;*/
   }
   .cubism-serie > .legend {
     position: absolute;

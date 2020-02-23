@@ -10,7 +10,7 @@
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
                 <button-export file="Energy" :rows="Export"></button-export>
-                <button-expand :expanded.sync="ExpandedActive"></button-expand>
+                <button-expand v-model="ExpandedActive"></button-expand>
               </div>
             </portal>
           </div>
@@ -20,7 +20,7 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_ENERGY" :analyzer="analyzer" :data15M="Data15M" :data1H="Data1H" :dataGraph="DataGraph" :height.sync="ActiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
-                  <energy serie="ACTIVE_ENERGY" :analyzer="analyzer" :data="DataGraph" :height="ExpandedActive?DialogHeight:ActiveHeight"></energy>
+                  <energy serie="Active_Energy" :analyzer="analyzer" :data="DataGraph" :height="ExpandedActive?DialogHeight:ActiveHeight"></energy>
                 </portal>
               </div>
             </div>
@@ -34,7 +34,7 @@
             <portal to="fs-toolbar" :disabled="!ExpandedReactive" class="header-buttons">
               <div class="btn-group">
                 <button-export file="Energy" :rows="Export"></button-export>
-                <button-expand :expanded.sync="ExpandedReactive"></button-expand>
+                <button-expand v-model="ExpandedReactive"></button-expand>
               </div>
             </portal>
           </div>
@@ -44,7 +44,7 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_ENERGY" :analyzer="analyzer" :data15M="Data15M" :data1H="Data1H" :dataGraph="DataGraph" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
-                  <energy serie="REACTIVE_ENERGY" :analyzer="analyzer" :data="DataGraph" :height="ExpandedReactive?DialogHeight:ReactiveHeight"></energy>
+                  <energy serie="Reactive_Energy" :analyzer="analyzer" :data="DataGraph" :height="ExpandedReactive?DialogHeight:ReactiveHeight"></energy>
                 </portal>
               </div>
             </div>
@@ -72,9 +72,9 @@
                Data15M: null, Control15M: null, Data1H: null, Control1H: null, DataGraph: null, ControlGraph: null };
     },
     watch: {
-      analyzer: function() { this.Update15MValues(); this.Update1HValues(); this.UpdateGraphValues(); },
-      Aggreg: function() { this.UpdateGraphValues(); },
-      Range: function() { this.UpdateGraphValues(); }
+      analyzer: function() { this.Update15MValues(true); this.Update1HValues(true); this.UpdateGraphValues(true); },
+      Aggreg: function() { this.UpdateGraphValues(true); },
+      Range: function() { this.UpdateGraphValues(false); }
     },
     computed: {
       Export: function() {
@@ -87,9 +87,9 @@
       }
     },
     created: function() {
-      this.Update15MValues();
-      this.Update1HValues();
-      this.UpdateGraphValues();
+      this.Update15MValues(true);
+      this.Update1HValues(true);
+      this.UpdateGraphValues(true);
     },
     beforeDestroy: function() {
       this.CancelTransfer(this.Control15M);
@@ -97,31 +97,34 @@
       this.CancelTransfer(this.ControlGraph);
     },
     methods: {
-      Update15MValues: function() {
+      Update15MValues: function(clear) {
+        if(clear == true) this.Data15M = null;
         this.Control15M = this.CancelTransfer(this.Control15M);
         if(this.analyzer == null) return;
         this.Control15M.CancelFunc = this.analyzer.GetSeriesLast('15M', ['ACTIVE_POWER', 'REACTIVE_POWER'],
           (working) => {},
-          (result) => { this.Data15M = result; },
-          (timeout) => { this.Control15M.Timer = setTimeout(() => { this.Update15MValues(); }, timeout); }
+          (result) => { this.Data15M = Object.seal(result); },
+          (timeout) => { this.Control15M.Timer = setTimeout(() => { this.Update15MValues(false); }, timeout); }
         );
       },
-      Update1HValues: function() {
+      Update1HValues: function(clear) {
+        if(clear == true) this.DataH = null;
         this.Control1H = this.CancelTransfer(this.Control1H);
         if(this.analyzer == null) return;
         this.Control1H.CancelFunc = this.analyzer.GetSeriesLast('1H', ['ACTIVE_POWER', 'REACTIVE_POWER'],
           (working) => {},
-          (result) => { this.Data1H = result; },
-          (timeout) => { this.Control1H.Timer = setTimeout(() => { this.Update1HValues(); }, timeout); }
+          (result) => { this.Data1H = Object.seal(result); },
+          (timeout) => { this.Control1H.Timer = setTimeout(() => { this.Update1HValues(false); }, timeout); }
         );
       },
-      UpdateGraphValues: function() {
+      UpdateGraphValues: function(clear) {
+        if(clear == true) this.DataGraph = null;
         this.ControlGraph = this.CancelTransfer(this.ControlGraph);
         if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
         this.ControlGraph.CancelFunc = this.analyzer.GetPricesRange(this.Aggreg, this.Range, this.DataGraph,
           (working) => { this.ShowSpinner = working; },
-          (result) => { this.DataGraph = Object.freeze(result); },
-          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
+          (result) => { this.DataGraph = Object.seal(result); },
+          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(false); }, timeout); }
         );
 
 //        if(lastsample === 0) {
@@ -160,18 +163,12 @@
 //              }
 //              this.Periods = this.Periods.filter(period => (period.To > result.from) || (period.From < result.to) ).sort(function(a, b) { if(a.To < b.To) return -1; if(a.To > b.To) return 1; return 0; });
 //            }
-//            this.$refs.graphActive.SetOptions( { dateWindow: [result.From, result.To], file: this.ActiveData, valueRange: oZm.Series['ACTIVE_ENERGY'].Range(this.ActiveData, [true]) } );
-//            this.$refs.graphReactive.SetOptions( { dateWindow: [result.From, result.To], file: this.ReactiveData, valueRange: oZm.Series['REACTIVE_ENERGY'].Range(this.ReactiveData, [true]) } );
-//            this.$refs.activeCounters.SetStats([result.From, result.To], this.ActiveData, result["Aggregation_Source"]);
-//            this.$refs.reactiveCounters.SetStats([result.From, result.To], this.ReactiveData, result["Aggregation_Source"]);
 //          }.bind(this),
 //          complete: function() {
 //            this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
 //            this.ShowSpinner = false;
-//            this.$refs.period.UpdateCompleted(lastsample);
 //          }.bind(this),
 //          error: function(response) {
-//            if(response.status === 400) this.$refs.aggregation.AggregationFail();
 //            this.ShowSpinner = true;
 //          }.bind(this)
 //        });

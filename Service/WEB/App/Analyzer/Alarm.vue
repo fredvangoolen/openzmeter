@@ -59,10 +59,6 @@
 <script>
   import vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
-  import Dlg from 'Components/Dialog.vue';
-  import InputSpin from 'Components/InputSpin.vue';
-  import OptionPicker from 'Components/OptionPicker.vue';
-  import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { analyzer: Object, index: Number },
     data: function() {

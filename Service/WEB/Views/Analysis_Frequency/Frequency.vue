@@ -1,14 +1,13 @@
 <template>
   <div>
-    <graph ref="graph" :options="GraphOptions" :height="height" @range="$emit('range', $event)"></graph>
+    <graph :options="GraphOptions" :height="height"></graph>
   </div>
 </template>
 
 <script>
   import Graph from 'Components/Graph.vue';
-  import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: Object, data: Object, height: { type: Number, default: 300 } },
+    props: { analyzer: Object, data: Object, height: Number },
     data() {
       return { };
     },
@@ -24,10 +23,13 @@
         Opt.gridLineColor = '#BBB';
         Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.selectMode = 'euclidian';
+        Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.labels = ['Time', 'Frequency'];
-        Opt.interactionModel = 'SCROLLABLE_MODEL';
-        Opt.colors = [this.analyzer.Color.Frequency]
+        Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
+        Opt.colors = [this.analyzer.Color.Frequency];
         Opt.xAxisHeight = 24;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
@@ -35,26 +37,12 @@
         Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x, 3, false); };
         Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
-//        Opt.axes.y.valueRange = [49, 51];
         if(this.data != null) {
           for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data.Frequency[n]]);
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.05 });
+          Opt.dateWindow = [this.data.From, this.data.To];
         }
         return Opt;
-      }
-    },
-    methods: {
-      MaximizeClick: function() {
-        $(window).unbind('resize', this.ResizeHandler);
-        this.$refs.tools.Maximize('Energy consumption', this.$refs.graph.Graph, this.$refs.Toolbar);
-      },
-      MinimizeClick: function() {
-        $(window).bind('resize', this.ResizeHandler.bind(this));
-      },
-      WindowRestore: function() {
-        this.$refs.period.PopState();
-      },
-      WindowChange: function(minDate, maxDate) {
-        this.$refs.period.SetCustom(minDate, maxDate, true);
       }
     }
   }
