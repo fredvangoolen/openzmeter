@@ -82,30 +82,14 @@
           (fail) => {}
         );
       },
-//      Add: function() {
-//        this.$refs.EditDialog.Show( {
-//          TimeZone: moment.tz.guess(),
-//          StartDate: moment().startOf('year').valueOf(),
-//          EndDate: moment().endOf('year').valueOf(),
-//          Name: 'No name',
-//          Template: {
-//            Description: 'Add tariff description here',
-//            Seasons: [],
-//            Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE', Color: '#fffff0' } ],
-//            Holidays: [],
-//            WeekendPeriod: null,
-//            HolidayPeriod: null
-//          }
-//        });
-//      },
-      Delete: function(tariff, evt) {
+      Delete: function(tariff) {
         if(confirm("Delete '" + tariff.Name + "' tariff?")){
-          $(evt.target).blur();
-          $.ajax({ url: "delTariff", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify({ TariffID: tariff.TariffID }),
-            success: function(result) {
-              this.GetTariffs();
-            }.bind(this)
-          });
+          this.$http.post('delTariff', { TariffID: tariff.TariffID }).then(
+            (result) => {
+              this.LoadTariffs();
+            },
+            (fail) => {}
+          );
         }
       }
     },

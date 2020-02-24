@@ -297,7 +297,6 @@ void AnalyzerSoft::Configure(const json &options) {
     pAlarmsWorker = new Worker("AlarmsDet", this, &Alarms_Func);
   }
   bool ExportEnabled = options["RemoteEnabled"];
-  pAnalyzerLock.Unlock();
   if(ExportEnabled == true) {
     pSyncServer    = options["RemoteServer"];
     pSyncUser      = options["RemoteUser"];
@@ -316,6 +315,7 @@ void AnalyzerSoft::Configure(const json &options) {
     pthread_join(pSyncThread, NULL);
     pSyncThread = 0;
   }
+  pAnalyzerLock.Unlock();
 }
 void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
   params.Type = type;
@@ -950,7 +950,10 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
   pthread_mutex_t Mutex = PTHREAD_MUTEX_INITIALIZER;
   pthread_cond_t  Cond  = PTHREAD_COND_INITIALIZER;
   while(This->pSyncTerminate == false) {
-    This->pAnalyzerLock.ReadLock();
+    if(This->pAnalyzerLock.TryReadLock() == false) {
+      usleep(100000);
+      continue;
+    }
     if((This->pSyncUser != User) || (This->pSyncPass != Pass) || (This->pSyncServer != Server)) {
       Cookie = "";
       User   = This->pSyncUser;
@@ -1105,6 +1108,7 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
   Content["Response"] = Resp.body;
   Content["Mime"] = Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type") : "text/plain";
   Client HTTPClient(Url.Host.c_str(), Url.Port);
+  HTTPClient.set_compress(true);
   auto Response = HTTPClient.Post(string(Url.Path + "/setRemote").c_str(), Header, Content.dump(), "application/json");
   if((Response != nullptr) && (Response->status == HTTP_OK)) {
     LOGFile::Debug("Remote request '%s' for analyzer '%s' completed\n", This->Method.c_str(), This->Analyzer->Serial.c_str());

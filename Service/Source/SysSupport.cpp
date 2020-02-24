@@ -585,7 +585,7 @@ void SysSupport::DelUserCallback(const json &params, Response &response) {
   string User = params["User"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
-  bool Result = DB.ExecSentenceNoResult("DELETE FROM users WHERE name = " + DB.Bind(User));
+  bool Result = DB.ExecSentenceNoResult("DELETE FROM users WHERE username = " + DB.Bind(User));
   HTTPServer::FillResponse(response, "", "text/plain", (Result == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
 #ifdef OPENWRT

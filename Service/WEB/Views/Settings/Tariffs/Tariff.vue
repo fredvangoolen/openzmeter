@@ -4,7 +4,7 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Tariffs template</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="Save" :class="{disabled: (Error != '')}"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="Save" :class="{disabled: (Error!=null)}"><img :src="require('Imgs/diskette.png')"></button>
           <button type="button" class="btn btn-default btn-xs" @click="View='Periods'">Periods</button>
           <button type="button" class="btn btn-default btn-xs" @click="View='Seasons'">Seasons</button>
           <button type="button" class="btn btn-default btn-xs" @click="View='Holidays'">Holidays</button>
@@ -108,16 +108,15 @@
         });
       },
       Save: function() {
-        $.ajax({ url: (this.Tariff.TariffID === undefined) ? 'addTariff' : 'setTariff', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify(this.Tariff),
-          success: function() {
-            this.Close();
-            this.$parent.GetTariffs();
-          }.bind(this),
-          error: function() {
-            this.$refs.Main.Error = 'Failed to save tariff!';
-            setTimeout(function() { this.$refs.Main.Error = ''; }.bind(this), 1000);
-          }.bind(this)
-        });
+        this.$http.post((this.Tariff.TariffID == null) ? 'addTariff' : 'setTariff', this.Tariff).then(
+          (result) => {
+            this.$emit('close');
+          },
+          (fail) => {
+            this.Error = 'Failed to save tariff!';
+            setTimeout(() => { this.Error = null; }, 1000);
+          }
+        );
       },
       Check: function(tariff) {
         $('#divTariffSuccess, #divTariffError').addClass('hide');

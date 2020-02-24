@@ -5,7 +5,7 @@
       <div class="input-group-btn" ref="button">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" ><span class="caret"></span></button>
         <ul class="dropdown-menu pull-right">
-          <li v-for="option in options" v-bind:class="{ active: (value == option.value) }"><a @click="$emit('input', option.value)">{{ option.name }}</a></li>
+          <li v-for="option in options" :class="{ active: (value == option.value) }"><a @click="$emit('input', option.value)">{{ option.name }}</a></li>
         </ul>
       </div>
     </div>
@@ -14,7 +14,7 @@
 
 <script>
   export default {
-    props: { options: { type: Array, default: [] }, value: { type: [Boolean, String, Number], default: null }, big: { type: Boolean, default: false } },
+    props: { options: Array, value: [Boolean, String, Number], big: Boolean },
     data() {
       return { Selected: {} };
     },

@@ -1,29 +1,35 @@
 <template>
-  <div class="modal-content" v-if="Show">
-    <div class="modal-header">
+  <dlg>
+    <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Holidays &raquo; Holiday</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+      </div>
+    </template>
+    <div class="row">
+      <div class="col-xs-12">
+        <label class="control-label">Name</label>
+        <input type="text" class="form-control" v-model="tariff.Template.Holidays[index].Name">
+      </div>
+      <div class="col-xs-12 col-sm-6">
+        <label class="control-label">From</label>
+        <date-picker :big="true" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: tariff.TimeZone }" v-model="tariff.Template.Holidays[index].StartDate"></date-picker>
+      </div>
+      <div class="col-xs-12 col-sm-6">
+        <label class="control-label">To</label>
+        <date-picker :big="true" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: tariff.TimeZone }" v-model="tariff.Template.Holidays[index].EndDate"></date-picker>
       </div>
     </div>
-    <div class="modal-body">
-      <div class="row">
-        <div class="col-xs-12">
-          <label class="control-label">Name</label><input type="text" class="form-control" ref="Name" @change="SetName">
-        </div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:change="SetStartDate"></date-picker></div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Tariff.TimeZone }" v-on:change="SetEndDate"></date-picker></div>
-      </div>
-    </div>
-  </div> 
+  </dlg>
 </template>
 
 <script>
   import moment from 'moment';
   import DatePicker from 'Components/DatePicker.vue';
   export default {
+    props: { tariff: Object, index: Number },
     data() {
-      return { Show: false, Tariff: {}, Index: 0 };
+      return { };
     },
     methods: {
       Load: function(tariff, index) {
