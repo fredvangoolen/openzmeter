@@ -84,7 +84,7 @@ class DeviceV2 final : public Device {
     int32_t                      pRunAverageValues[7];     //Average wave value of last second
     uint32_t                     pRunAverageCounter;       //Somple count for average
     float                        pAverageValues[7];        //Average wave value of last second
-    pthread_mutex_t              pAverageLocks;            //Lock access to average values
+    RWLocks                      pAverageLocks;            //Lock access to average values
     uint64_t                     pLastSignalRecv;          //Last battery message recv
     bool                         pButtonAction;            //Last action readed
     Transfer                     pTransfers[DEVICEV2_TRANSFERS];

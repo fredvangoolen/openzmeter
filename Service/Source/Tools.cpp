@@ -191,59 +191,6 @@ void ProviderLocks::ConsumerEnds() {
   pthread_mutex_unlock(&pWaitingThreadsMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
-WorkerLocks::WorkerLocks() {
-  pWorking = false;
-  pTerminate = false;
-  pCond = PTHREAD_COND_INITIALIZER;
-  pMutex = PTHREAD_MUTEX_INITIALIZER;
-}
-void WorkerLocks::Abort(pthread_t &thread) {
-  pTerminate = true;
-  pthread_cond_signal(&pCond);
-  if(pthread_join(&thread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
-}
-void WorkerLocks::WakeWorker() {
-  pthread_mutex_lock(&pMutex);
-  if(pTerminate == true) return;
-  pWorking = true;
-  pthread_mutex_unlock(&pMutex);
-  pthread_cond_signal(&pCond);
-}
-bool WorkerLocks::WorkerWaitTask() {
-  pthread_mutex_lock(&pMutex);
-  while(pWorking == false) {
-    if(pTerminate == true) {
-      pTerminate = false;
-      pthread_mutex_unlock(&pMutex);
-      return false;
-    }
-    pthread_cond_wait(&pCond, &pMutex);
-  }
-  pthread_mutex_unlock(&pMutex);
-  return true;
-}
-void WorkerLocks::WorkerEndsTask() {
-  pthread_mutex_lock(&pMutex);
-  pWorking = false;
-  pthread_mutex_unlock(&pMutex);
-  pthread_cond_signal(&pCond);
-}
-void WorkerLocks::WaitWorker() {
-  pthread_mutex_lock(&pMutex);
-  while(pWorking == true) {
-    if(pTerminate == true) return;
-    pthread_cond_wait(&pCond, &pMutex);
-  }
-  pthread_mutex_unlock(&pMutex);
-}
-bool WorkerLocks::IsWorking() {
-  bool Result;
-  pthread_mutex_lock(&pMutex);
-  Result = (pWorking == false);
-  pthread_mutex_unlock(&pMutex);
-  return Result;
-}
-//----------------------------------------------------------------------------------------------------------------------
 int             ConfigManager::pFile   = -1;
 pthread_mutex_t ConfigManager::pMutex  = PTHREAD_MUTEX_INITIALIZER;
 json            ConfigManager::pConfig = nullptr;

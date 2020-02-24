@@ -211,7 +211,7 @@ void DeviceV2::Configure(const json& config) {
     string Name = Serial;
     if(AnalyzerSetup.Mode == Analyzer::PHASE1) {
       string Voltage = Tmp["Voltage"];
-      pAnalyzerSetup[pAnalyzerSetupSize].Voltage[0] = (Voltage[2] - '1');
+      AnalyzerSetup.Voltage[0] = (Voltage[2] - '1');
       string Current = Tmp["Current"];
       AnalyzerSetup.Current[0] = Current[3] - '1' + 3;
       AnalyzerSetup.CurrentInvert[0] = (Current[0] == '+') ? 1.0 : -1.0;
@@ -221,15 +221,15 @@ void DeviceV2::Configure(const json& config) {
     } else {
       for(unsigned Ch = 0; Ch < Tmp["Voltage"].size(); Ch++) {
         string Voltage = Tmp["Voltage"][Ch];
-        pAnalyzerSetup[pAnalyzerSetupSize].Voltage[Ch] = (Voltage[2] - '1');
+        AnalyzerSetup.Voltage[Ch] = (Voltage[2] - '1');
       }
       for(unsigned Ch = 0; Ch < Tmp["Current"].size(); Ch++) {
         string Current =  Tmp["Current"][Ch];
         AnalyzerSetup.Current[Ch] = Current[3] - '1' + 3;
         AnalyzerSetup.CurrentInvert[Ch] = (Current[0] == '+') ? 1.0 : -1.0;
       }
-      pAnalyzerSetup[pAnalyzerSetupSize].CurrentChannels = Tmp["Current"].size();
-      pAnalyzerSetup[pAnalyzerSetupSize].VoltageChannels = Tmp["Voltage"].size();
+      AnalyzerSetup.CurrentChannels = Tmp["Current"].size();
+      AnalyzerSetup.VoltageChannels = Tmp["Voltage"].size();
       Name += (AnalyzerSetup.Mode == Analyzer::PHASE3) ? "_3P" : "_3PN";
     }
     AnalyzerSetup.Parent = new AnalyzerSoft(Name, AnalyzerSetup.Mode, "/Devices/" + Serial + "/Outputs/" + to_string(pAnalyzersSetup.size()) + "/Analyzer", DEVICEV2_SAMPLEFREQ);
@@ -453,15 +453,12 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   pthread_mutex_lock(&pConfigLock);
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
-  float AverageValues[7];
-  pthread_mutex_lock(&pAverageLocks);
-  for(uint32_t n = 0; n < 7; n++) AverafeValues[n] = pAverageValues[n];
-  pthread_mutex_unlock(&pAverageLocks);
+  pAverageLocks.ReadLock();
   Config["Wave_Average"] = json::object();
   Config["Wave_Average"]["Voltage"] = json::array();
-  Config["Wave_Average"]["Voltage"].push_back(AverageValues[0]);
-  Config["Wave_Average"]["Voltage"].push_back(AverageValues[1]);
-  Config["Wave_Average"]["Voltage"].push_back(AverageValues[2]);
+  Config["Wave_Average"]["Voltage"].push_back(pAverageValues[0]);
+  Config["Wave_Average"]["Voltage"].push_back(pAverageValues[1]);
+  Config["Wave_Average"]["Voltage"].push_back(pAverageValues[2]);
   Config["Wave_Average"]["Current"] = json::array();
   Config["Wave_Average"]["Current"].push_back(pAverageValues[3]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[4]);
@@ -521,7 +518,7 @@ void  DeviceV2::BufferAppend() {
     Values[4] = ((float)Ptr[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
     Values[5] = ((float)Ptr[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
     Values[6] = ((float)Ptr[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
-    for(uint32_t n = 0; n < pAnalyzerSetupSize; n++) {
+    for(auto &Tmp : pAnalyzersSetup) {
       float Voltage[3], Current[4];
       for(unsigned Ch = 0; Ch < Tmp.VoltageChannels; Ch++) Voltage[Ch] = Values[Tmp.Voltage[Ch]];
       for(unsigned Ch = 0; Ch < Tmp.CurrentChannels; Ch++) Current[Ch] = Values[Tmp.Current[Ch]] * Tmp.CurrentInvert[Ch];
