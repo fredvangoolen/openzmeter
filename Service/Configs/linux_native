@@ -1,10 +1,6 @@
 #Enable/Disable device plugins (set to true or false) ------------------------------------------------------------------
 DEVICE_V1      = true
-<<<<<<< HEAD
-DEVICE_V2_01   = true
-=======
 DEVICE_V2      = true
->>>>>>> web_cleanup
 DEVICE_VIRTUAL = true
 DEVICE_REMOTE  = true
 
