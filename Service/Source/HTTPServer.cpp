@@ -37,11 +37,13 @@ URL::URL(const string &url) {
   iterator_t queryStart = std::find(url.begin(), uriEnd, '?');
   iterator_t protocolStart = url.begin();
   iterator_t protocolEnd = std::find(protocolStart, uriEnd, ':');
+  Port = 80;
   if(protocolEnd != uriEnd) {
     std::string prot = &*(protocolEnd);
     if((prot.length() > 3) && (prot.substr(0, 3) == "://")) {
       Protocol = string(protocolStart, protocolEnd);
       protocolEnd += 3;
+      if(Protocol == "https") Port = 443;
     } else {
       protocolEnd = url.begin();
     }
@@ -100,24 +102,21 @@ void HTTPServer::FillResponse(Response &response, const char *body, const size_t
 }
 void HTTPServer::RegisterCallback(const string &handleName, const Func_t function) {
   pLock.WriteLock();
-//  for(HTTPCallback &Callback : pCallbacks) {
-//    if(Callback.HandleName != handleName) continue;
-//    Callback.Function = function;
-//    pLock.Unlock();
-//    return;
-//  }
   pCallbacks.insert({handleName, function});
   pLock.Unlock();
 }
 void HTTPServer::UnregisterCallback(const string &handleName) {
   pLock.WriteLock();
   pCallbacks.erase(handleName);
-//  for(auto it = pCallbacks.begin(); it < pCallbacks.end(); it++) {
-//    if(it->HandleName != handleName) continue;
-//    pLock.Unlock();
-//    return;
-//  }
   pLock.Unlock();
+}
+string HTTPServer::ParseCookie(const string &cookie) {
+  string CookieNum = "";
+  auto Begin = cookie.find("SESSION=");
+  if(Begin != string::npos) {
+    CookieNum = cookie.substr(Begin + 8, cookie.find(';', Begin));
+  }
+  return CookieNum;
 }
 void HTTPServer::HandleGet(const Request &request, Response &response) {
   string URL = string(request.path).erase(0, pRelativePath.size());
@@ -144,7 +143,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   }
   string UserName;
   if(request.has_header("Cookie")) {
-    string Cookie = request.get_header_value("Cookie").substr(8);
+    string Cookie = ParseCookie(request.get_header_value("Cookie"));
     if(Cookie != "") {
       Database DB;
       DB.ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + DB.Bind(Cookie));
@@ -210,7 +209,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
   }
   if(URL == "logOut") {
     if(request.has_header("Cookie")) {
-      string Cookie = request.get_header_value("Cookie").substr(8);
+      string Cookie = ParseCookie(request.get_header_value("Cookie"));
       if(Cookie != "") {
         Database DB;
         DB.ExecSentenceNoResult("DELETE FROM sessions WHERE id = " + DB.Bind(Cookie));
@@ -220,7 +219,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
   }
   if(request.has_header("Cookie")) {
     Params.erase("UserName");
-    string Cookie = request.get_header_value("Cookie").substr(8);
+    string Cookie = ParseCookie(request.get_header_value("Cookie"));
     if(Cookie != "") {
       Database DB;
       DB.ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + DB.Bind(Cookie));

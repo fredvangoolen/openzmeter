@@ -281,6 +281,7 @@ void AnalyzerSoft::Configure(const json &options) {
       pDelayCurrent = NULL;
     }
   }
+  bool AlarmsEnabled = options["AlarmsEnabled"];
   bool EventsEnabled = options["EventsEnabled"];
   if((EventsEnabled == false) && (pEventsWorker != NULL)) {
     delete pEventsWorker;
@@ -289,7 +290,6 @@ void AnalyzerSoft::Configure(const json &options) {
     pPrevStationary = false;
     pEventsWorker = new Worker("EventsDet", this, &Events_Func);
   }
-  bool AlarmsEnabled = options["AlarmsEnabled"];
   if((AlarmsEnabled == true) && (pAlarmsWorker != NULL)) {
     delete pAlarmsWorker;
     pAlarmsWorker = NULL;
@@ -297,6 +297,7 @@ void AnalyzerSoft::Configure(const json &options) {
     pAlarmsWorker = new Worker("AlarmsDet", this, &Alarms_Func);
   }
   bool ExportEnabled = options["RemoteEnabled"];
+  pAnalyzerLock.Unlock();
   if(ExportEnabled == true) {
     pSyncServer    = options["RemoteServer"];
     pSyncUser      = options["RemoteUser"];
@@ -315,7 +316,6 @@ void AnalyzerSoft::Configure(const json &options) {
     pthread_join(pSyncThread, NULL);
     pSyncThread = 0;
   }
-  pAnalyzerLock.Unlock();
 }
 void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
   params.Type = type;
@@ -961,6 +961,8 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
     URL Url(Server);
     Client HTTPClient(Url.Host, Url.Port);
     HTTPClient.set_compress(true);
+    HTTPClient.set_read_timeout(3, 0);
+    HTTPClient.set_timeout_sec(5);
     if(Cookie == "") {
       Headers Header  = {{"Accept", "application/json"}};
       json    Content = json::object();
