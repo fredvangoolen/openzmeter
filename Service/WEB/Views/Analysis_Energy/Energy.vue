@@ -27,7 +27,7 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.plotter = Graph.Plotters.MultiBar;
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
-        Opt.drawHighlightPointCallback = Graph.Callbacks.drawHighlightPoint_HighlightBar;
+        Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.labels = (this.serie == 'Active_Energy') ? ['Time', 'Active Energy'] : ['Time', 'Reactive Energy'];
         Opt.colors = [this.analyzer.Color[this.serie]];

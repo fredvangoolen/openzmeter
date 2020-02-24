@@ -1,17 +1,16 @@
 <template>
-  <div class="modal-content" v-if="Show">
-    <div class="modal-header">
-      <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Holidays</h4></div>
-      <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="New holiday"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
-      </div>
-    </div>
-    <div class="modal-body">
+  <div>
+    <dlg v-if="View==null">
+      <template v-slot:header>
+        <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Holidays</h4></div>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="New holiday"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+        </div>
+      </template>
       <div class="row">
         <div class="col-xs-12">
-          <spinner v-if="ShowSpinner"></spinner>
-          <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
+          <vuetable ref="table" :fields="Columns" :api-mode="false" :data="tariff.Template.Holidays" class="table small table-striped">
             <template slot="actions" slot-scope="props">
               <div class="btn-group" style="width:100%">
                 <button class="btn btn-xs btn-default" @click="Edit(props.rowIndex, $event)">Edit</button>
@@ -21,23 +20,24 @@
           </vuetable>
         </div>
       </div>
-    </div>
-  </div> 
+    </dlg>
+  </div>
 </template>
 
 <script>
   import Vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
-  import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
+  import Holiday from './Holiday.vue';
   export default {
+    props: { tariff: Object },
     data() {
-      return { Show: false, Tariff: null, ShowSpinner: true,
+      return { View: null,
         Columns: [
           {name: 'Name', title: 'Name'},
           {name: 'StartDate', title: 'Start date', callback: 'DateFormat'},
-          {name: 'EndDate', title: 'End date', callback: 'DateFormat'}, 
+          {name: 'EndDate', title: 'End date', callback: 'DateFormat'},
           {name: '__slot:actions', title: ''}
         ]
       };
@@ -47,8 +47,7 @@
         return moment.tz(val, this.Tariff.TimeZone).format('DD/MM/YYYY');
       },
       FillTable: function() {
-        this.$refs.table.setData({ data: this.Tariff.Template.Holidays });   
-        this.ShowSpinner = false;     
+        this.$refs.table.setData({ data: this.Tariff.Template.Holidays });
       },
       Load: function(tariff) {
         this.Show = true;
