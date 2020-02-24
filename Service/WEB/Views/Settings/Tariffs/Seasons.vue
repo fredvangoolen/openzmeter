@@ -23,19 +23,20 @@
         </div>
       </div>
     </dlg>
+    <season v-if="View=='Season'"></season>
   </div>
 </template>
 
 <script>
   import Vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
-  import Spinner from 'Components/Spinner.vue';
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
+  import Season from './Season.vue';
   export default {
     props: { tariff: Object },
     data() {
-      return {
+      return { View: null,
         Columns: [
           {name: 'Name', title: 'Name' },
           {name: 'StartDate', title: 'Start date', callback: 'DateFormat' },
@@ -69,7 +70,7 @@
     updated: function(){
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: { Vuetable }
+    components: { Vuetable, Season }
   }
 </script>
 

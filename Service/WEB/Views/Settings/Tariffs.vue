@@ -20,14 +20,14 @@
         </template>
       </vuetable>
     </div>
-    <tariff-edit v-if="ShowDialog" :tariff="Tariff" @close="LoadTariffs"></tariff-edit>
+    <tariff v-if="ShowDialog" :tariff="Tariff" @close="LoadTariffs"></tariff>
   </div>
 </template>
 
 <script>
   import Vuetable from 'vuetable-2';
   import moment from 'moment';
-  import TariffEdit from './Tariffs/Main.vue';
+  import Tariff from './Tariffs/Tariff.vue';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
@@ -112,7 +112,7 @@
     updated: function(){
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: { Vuetable, TariffEdit }
+    components: { Vuetable, Tariff }
   }
 </script>
 

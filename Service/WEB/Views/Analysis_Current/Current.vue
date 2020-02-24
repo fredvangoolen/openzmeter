@@ -28,7 +28,7 @@
         Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
         Opt.legendFormatter = Graph.LegendFormatter_Follow;
-        Opt.interactionModel = Graph.ScrollableInteractionModel(this);
+        Opt.interactionModel = 'SCROLLABLE_MODEL';
         Opt.xAxisHeight = 24;
         Opt.selectMode = 'euclidian';
         Opt.visibility = this.phases;

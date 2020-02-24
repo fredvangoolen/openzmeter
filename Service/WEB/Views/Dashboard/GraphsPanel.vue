@@ -84,7 +84,9 @@
       GraphOptions: function() {
         var Opt = { file: [], axes: { x: {}, y: {} }};
         Opt.interactionModel = {};
-        if((this.analyzer == null) || (this.data == null)) return Opt;
+        Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -94,14 +96,13 @@
         Opt.labels = ['Time'].concat(this.SerieProps.Names(this.analyzer));
         Opt.colors = oZm.SerieStyle(this.SerieProps, this.analyzer, 0).Colors;
         Opt.selectMode = 'euclidian';
-        Opt.plugins = [ new Dygraph.Plugins.Crosshair({ direction: "vertical" }) ];
         Opt.xAxisHeight = 12;
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatTime(x); };
         Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatTime(x); };
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30;
         if(this.Phases != null) Opt.visibility =  this.Phases;
+        if((this.data == null)) return Opt;
         Opt.dateWindow = [this.data.From, this.data.To];
         for(var n in this.data.Sampletime) {
           var Row = [this.data.Sampletime[n]];
