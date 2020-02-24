@@ -247,31 +247,6 @@ string Database::Bind(const vector<float> &params) const {
   }
   return Result;
 }
-<<<<<<< HEAD
-string Database::Bind(const float *param, uint32_t size) const {
-  string Result = "'{";
-  for(unsigned i = 0; i < size; i++) {
-    Result.append(isfinite(param[i]) ? to_string(param[i]) : string("NULL"));
-    Result.append((i < (size - 1)) ? ", " : "}'");
-  }
-  return Result;
-}
-string Database::Bind(const float *param, uint32_t sizeA, uint32_t sizeB) const {
-  string Result = "'{";
-  for(uint32_t i = 0; i < sizeA; i++) {
-    Result.append("{");
-    const float *Ptr = &param[i * sizeB];
-    for(uint32_t n = 0; n < sizeB; n++) {
-      Result.append(isfinite(Ptr[n]) ? to_string(Ptr[n]) : string("NULL"));
-      if(n < (sizeB - 1)) Result.append(", ");
-    }
-    Result.append("}");
-    if(i < (sizeA - 1)) Result.append(", ");
-  }
-  Result.append("}'");
-  return Result;
-}
-=======
 string Database::Bind(const float *params, const uint32_t len) const {
   string Result = "'{";
   for(uint32_t i = 0; i < len; i++) {
@@ -280,7 +255,6 @@ string Database::Bind(const float *params, const uint32_t len) const {
   }
   return Result;
 }
->>>>>>> web_cleanup
 string Database::Bind(const bool param) const {
   return (param == true) ? "true" : "false";
 }

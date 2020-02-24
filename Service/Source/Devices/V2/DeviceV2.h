@@ -19,19 +19,6 @@
 #include "Device.h"
 #include "AnalyzerSoft.h"
 //----------------------------------------------------------------------------------------------------------------------
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.h
-#define DEVICEV2_01_VID             0x0483                          //Product ID
-#define DEVICEV2_01_PID             0x7270                          //Device ID
-#define DEVICEV2_01_VERSION         0x0201                          //Device version
-#define DEVICEV2_01_MANSTRING       "zRed"                          //Manufacturer string
-#define DEVICEV2_01_PRODSTRING      "openZmeter - Capture device"   //Product string
-#define DEVICEV2_01_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
-#define DEVICEV2_01_ENDPOINT_OUT      0x02                          //Endpoint de escritura de datos
-#define DEVICEV2_01_SAMPLEFREQ    24000.00                          //Frequencia de muestreo
-#define DEVICEV2_01_TRANSFERS           32                          //Numero de transferencias a encolar
-#define DEVICEV2_01_BUFFERSIZE  0x00040000
-#define DEVICEV2_01_CONTROL_SETSTATUS 0x20
-=======
 #define DEVICEV2_VID             0x0483                          //Product ID
 #define DEVICEV2_PID             0x7270                          //Device ID
 #define DEVICEV2_VERSION         0x0201                          //Device version
@@ -43,7 +30,6 @@
 #define DEVICEV2_TRANSFERS           16                          //Numero de transferencias a encolar
 #define DEVICEV2_BUFFERSIZE    0x040000
 #define DEVICEV2_CONTROL_SETSTATUS 0x20
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.h
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2 final : public Device {
   private :
@@ -78,15 +64,6 @@ class DeviceV2 final : public Device {
     static bool                  pRegistered;
   private :
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.h
-    pthread_t                    pCaptureThread;           //Descriptor del hilo de captura
-    bool                         pTerminate;               //Marca que deben detenerse los trabajos pendientes
-    Analyzer_t                  *pAnalyzersSetup;          //Listado de analyzadores
-    uint32_t                    *pAnalyzerSetupSize;       //Number of analyzers
-    int16_t                     *pBuffer;                  //Read buffer
-    uint32_t                     pBufferTail;              //pBuffer read pos
-    uint32_t                     pBufferHead;              //pBuffer write pos
-=======
     pthread_t                    pThread;                  //Descriptor del hilo de captura
     volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
     vector<Analyzer_t>           pAnalyzersSetup;          //Listado de analyzadores
@@ -94,7 +71,6 @@ class DeviceV2 final : public Device {
     uint32_t                     pBufferTail;              //pBuffer read pos
     uint32_t                     pBufferHead;              //pBuffer write pos
     pthread_mutex_t              pConfigLock;              //Block configuration params
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.h
     float                        pVoltageGain[3];          //Ganancia de tension
     float                        pCurrentGain[4];          //Ganancia de corriente
     float                        pVoltageOffset[3];        //Offset de tension

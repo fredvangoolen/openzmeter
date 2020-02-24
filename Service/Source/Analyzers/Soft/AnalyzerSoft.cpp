@@ -493,9 +493,6 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
     DB.Bind(params.Active_Power, pVoltageChannels) + ", " +
     DB.Bind(params.Reactive_Power, pVoltageChannels) + ")");
   else if(params.Type == AGGREG_1H)
-<<<<<<< HEAD
-    DB.ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) VALUES(" + DB.Bind(params.Timestamp) + ", " + DB.Bind(params.Voltage) + ", " + DB.Bind(params.Current) + ", " + DB.Bind(params.Frequency) + ", " + DB.Bind(params.Flag) + ", " + DB.Bind(params.Active_Power) + ", " + DB.Bind(params.Reactive_Power) + ", " + DB.Bind(params.StatsVoltage) + ", " + DB.Bind(params.StatsFrequency) + ", " + DB.Bind(params.StatsTHD) + ", " + DB.Bind(params.StatsHarmonics) + ", " + DB.Bind(params.StatsUnbalance) + ")");
-=======
     DB.ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) VALUES(" +
     DB.Bind(params.Timestamp) + ", " +
     DB.Bind(params.Voltage, pVoltageChannels) + ", " +
@@ -509,7 +506,6 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
     DB.Bind(params.StatsTHD) + ", " +
     DB.Bind(params.StatsHarmonics) + ", " +
     DB.Bind(params.StatsUnbalance) + ")");
->>>>>>> web_cleanup
   if(params.Type == AGGREG_1M) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(params.Timestamp - 86400000));   //Delete 1 day old
   if((params.Type == AGGREG_1M) && (pSave200MS == true)) DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(params.Timestamp - 3600000));     //Delete 1 hour old
   SetOnline();
@@ -1057,38 +1053,6 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
   pthread_mutex_unlock(&Mutex);
   return NULL;
 }
-<<<<<<< HEAD
-json AnalyzerSoft::CheckConfig(const json &config) {
-  json ConfigOUT = json::object();
-  ConfigOUT["Name"] = "Unnamed analyzer";
-  ConfigOUT["NominalVoltage"] = 230.0;
-  ConfigOUT["NominalFreq"] = 50.0;
-  ConfigOUT["MaxCurrent"] = 35.0;
-  ConfigOUT["MinCurrent"] = 0.1;
-  ConfigOUT["TimeZone"] = "UTC";
-  ConfigOUT["Contract"] = "";
-  ConfigOUT["ZipCode"] = "";
-  ConfigOUT["GeoPosition"] = json::parse("[0, 0]");
-  ConfigOUT["RemoteEnabled"] = false;
-  ConfigOUT["RemoteServer"] = "";
-  ConfigOUT["RemoteUser"] = "";
-  ConfigOUT["RemotePass"] = "";
-  ConfigOUT["Save10C"] = false;
-  ConfigOUT["EventsEnabled"] = true;
-  ConfigOUT["RatesEnabled"] = true;
-  ConfigOUT["AlarmsEnabled"] = false;
-  ConfigOUT["Alarms"] = json::array();
-  if(!config.is_object()) return ConfigOUT;
-  if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
-  if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
-  if(config.contains("NominalFreq") && config["NominalFreq"].is_number() && (config["NominalFreq"] >= 0) && (config["NominalFreq"] <= 400)) ConfigOUT["NominalFreq"] = config["NominalFreq"];
-  if(config.contains("MaxCurrent") && config["MaxCurrent"].is_number() && (config["MaxCurrent"] >= 1) && (config["MaxCurrent"] <= 100000)) ConfigOUT["MaxCurrent"] = config["MaxCurrent"];
-  if(config.contains("MinCurrent") && config["MinCurrent"].is_number() && (config["MinCurrent"] >= 0.01) && (config["MinCurrent"] <= 100)) ConfigOUT["MinCurrent"] = config["MinCurrent"];
-  if(config.contains("TimeZone") && config["TimeZone"].is_string()) {
-    time_zone TimeZone;
-    string TZ = config["TimeZone"];
-    if(cctz::load_time_zone(TZ, &TimeZone) == true) ConfigOUT["TimeZone"] = TZ;
-=======
 void *AnalyzerSoft::Sync_RespThread(void *args) {
   Sync_t *This = (Sync_t*)args;
   This->Params["UserName"] = "admin";
@@ -1128,7 +1092,6 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
     This->Analyzer->TestAlarm(This->Params, Resp);
   } else if(This->Method == "getAlarms") {
     This->Analyzer->GetAlarms(This->Params, Resp);
->>>>>>> web_cleanup
   }
   URL Url(This->Server);
   Headers Header  = {{"Accept", "application/json"}, {"Cookie", This->Cookie}};

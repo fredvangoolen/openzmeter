@@ -14,28 +14,10 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include <pthread.h>
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <poll.h>
-#include <fcntl.h>
-#include <math.h>
-#include <sys/ioctl.h>
-#include <sys/time.h>
-=======
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
 #include "DeviceV1.h"
 #include "DeviceManager.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-bool DeviceV1::pRegistered = DeviceV1::GetInstances();
-// Funciones ===========================================================================================================
-bool DeviceV1::GetInstances() {
-=======
 bool DeviceV1::pRegistered = DeviceV1::Register();
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceV1::Register() {
@@ -44,7 +26,6 @@ bool DeviceV1::Register() {
 }
 vector<Device*>  DeviceV1::GetInstances() {
   vector<Device*> Result;
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
   libusb_context *Context;
   if(libusb_init(&Context) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
@@ -90,20 +71,13 @@ vector<Device*>  DeviceV1::GetInstances() {
       continue;
     }
     libusb_close(Dev_Handle);
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-    LOGFile::Info("Adding 'V1.01' device driver instance with serial '%s'\n", String);
-    DeviceManager::AddDevice(new DeviceV1(String, HWVersion));
-=======
     LOGFile::Info("Adding 'V1' device driver instance with serial '%s'\n", String);
     Result.push_back(new DeviceV1(String, HWVersion));
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
   }
   libusb_free_device_list(Devs, Count);
   libusb_exit(Context);
   return Result;
 }
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-=======
 DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial, "V1", "Capture device V1") {
   pBuffer       = (int16_t*)malloc(DEVICEV1_BUFFERSIZE * sizeof(uint16_t) * 2);
   pConfigLock   = PTHREAD_MUTEX_INITIALIZER;
@@ -123,7 +97,6 @@ DeviceV1::~DeviceV1() {
   if(pThread != 0) pthread_join(pThread, NULL);
   if(pBuffer != NULL) free(pBuffer);
 }
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
 json DeviceV1::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["VoltageGain"] = 0.0;
@@ -144,63 +117,6 @@ json DeviceV1::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial, "V1", "Capture device V1") {
-  pHWVersion     = version;
-  pVoltageMult   = (version == 0x0100) ? 0.0106834716796 : 0.0142446289062;
-  pVoltageGain   = 0.0;
-  pCurrentGain   = 0.0;
-  pVoltageOffset = 0.0;
-  pCurrentOffset = 0.0;
-  pCurrentInvert = false;
-}
-DeviceV1::~DeviceV1() {
-  StopDevice();
-}
-DeviceV1::Transfer::Transfer(DeviceV1 *parent, uint32_t size) {
-  pBufferSize = size;
-  pParent = parent;
-  pBuffer = (uint8_t*)malloc(size);
-  pTransfer = libusb_alloc_transfer(0);
-}
-DeviceV1::Transfer::~Transfer() {
-  if(pBuffer != NULL) free(pBuffer);
-  if(pTransfer != NULL) libusb_free_transfer(pTransfer);
-}
-int DeviceV1::Transfer::Submit() {
-  return libusb_submit_transfer(pTransfer);
-}
-int DeviceV1::Transfer::Submit(libusb_device_handle* deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout) {
-  libusb_fill_bulk_transfer(pTransfer, deviceHandle, endpoint, pBuffer, pBufferSize, callback, pParent, timeout);
-  return Submit();
-}
-bool DeviceV1::StartDevice() {
-  pMembersLock.WriteLock();
-  if(pState == RUNNING) {
-    pMembersLock.WriteUnlock();
-    return false;
-  }
-  LOGFile::Info("Loading 'V1.01' driver configuration for serial '%s'\n", pSerial.c_str());
-  json Config = CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial));
-  bool AutoStart = Config["AutoStart"];
-  ConfigManager::WriteConfig("/Devices/" + pSerial, Config);
-  if(pState == UNCONFIGURED) {
-    pState = STOPPED;
-    if(AutoStart == false) {
-      pMembersLock.WriteUnlock();
-      return true;
-    }
-  }
-  LOGFile::Info("Starting 'V1' driver for serial '%s'\n", pSerial.c_str());
-  pVoltageGain = Config["VoltageGain"];
-  pVoltageOffset = Config["VoltageOffset"];
-  pCurrentGain = Config["CurrentGain"];
-  pCurrentOffset = Config["CurrentOffset"];
-  pCurrentInvert = Config["CurrentInvert"];
-  pDelay = deque<float>(2, 0.0);
-  pTerminate = false;
-  pAnalyzers.push_back(new AnalyzerSoft(pSerial, Analyzer::PHASE1, "/Devices/" + pSerial + "/Analyzer", DEVICEV1_SAMPLEFREQ));
-=======
 void DeviceV1::Configure(const json& config) {
   ConfigManager::WriteConfig("/Devices/" + Serial, config);
   if(pThread != 0) {
@@ -221,7 +137,6 @@ void DeviceV1::Configure(const json& config) {
   pTerminate = false;
   pAnalyzer = new AnalyzerSoft(Serial, Analyzer::PHASE1, "/Devices/" + Serial + "/Analyzer", DEVICEV1_SAMPLEFREQ);
   AddAnalyzer(pAnalyzer);
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
   if(libusb_init(&pContext) < 0) {
     LOGFile::Error("Can not open libUSB...\n");
   } else {
@@ -243,34 +158,9 @@ void DeviceV1::Configure(const json& config) {
     }
   }
 }
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-bool DeviceV1::StopDevice() {
-  pMembersLock.WriteLock();
-  if(pState != RUNNING) {
-    pMembersLock.WriteUnlock();
-    return false;
-  }
-  LOGFile::Info("Stopping 'V1' driver for serial '%s'\n", pSerial.c_str());
-  pTerminate = true;
-  pthread_join(pCaptureThread, NULL);
-  while(pAnalyzers.size() > 0) {
-    Analyzer *Analyzer = pAnalyzers.back();
-    pAnalyzers.pop_back();
-    delete Analyzer;
-  }
-  pState = STOPPED;
-  pMembersLock.WriteUnlock();
-  return true;
-}
-void *DeviceV1::Capture_Thread(void *args) {
-  DeviceV1 *This = (DeviceV1*)args;
-  This->pTransfers.reserve(DEVICEV1_TRANSFERS);
-  for(auto n = 0; n < DEVICEV1_TRANSFERS; n++) This->pTransfers.emplace_back(This, 8192);
-=======
 void *DeviceV1::Capture_Thread(void *args) {
   DeviceV1 *This = (DeviceV1*)args;
   for(uint8_t n = 0; n < DEVICEV1_TRANSFERS; n++) This->pTransfers[n].Init(This, 32768);
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
@@ -323,11 +213,7 @@ void *DeviceV1::Capture_Thread(void *args) {
           This->pNewDevice = NULL;
           continue;
         } else {
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-          LOGFile::Info("Kernel driver dettached for DeviceV1 with serial '%s'\n", This->pSerial.c_str());
-=======
           LOGFile::Info("Kernel driver dettached for DeviceV1 with serial '%s'\n", This->Serial.c_str());
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
         }
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 0);
@@ -338,11 +224,7 @@ void *DeviceV1::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       } else {
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-        LOGFile::Info("Claimed interface 0 for DeviceV1 with serial %s\n", This->pSerial.c_str());
-=======
         LOGFile::Info("Claimed interface 0 for DeviceV1 with serial %s\n", This->Serial.c_str());
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
       }
       for(Transfer &Tmp : This->pTransfers) {
         Result |= Tmp.Submit(This->pDeviceHandle, DEVICEV1_ENDPOINT_IN, ReadCallback, 1000);
@@ -355,11 +237,7 @@ void *DeviceV1::Capture_Thread(void *args) {
         This->pNewDevice = NULL;
         continue;
       }
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-      LOGFile::Info("Capture started on DeviceV1 with serial '%s'\n", This->pSerial.c_str());
-=======
       LOGFile::Info("Capture started on DeviceV1 with serial '%s'\n", This->Serial.c_str());
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
       This->pNewDevice = NULL;
     }
   }
@@ -371,23 +249,9 @@ void *DeviceV1::Capture_Thread(void *args) {
 void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
   DeviceV1 *This = (DeviceV1*)transfer->user_data;
   if((transfer->endpoint == DEVICEV1_ENDPOINT_IN) && (transfer->status == LIBUSB_TRANSFER_COMPLETED)) {
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-    for(int Block = 0; Block < (transfer->actual_length / 64); Block++) {
-      int16_t *Pkg   = (int16_t*)&transfer->buffer[64 * Block];
-      for(uint8_t Count = 0; Count < 16; Count++) {
-        if(Pkg[Count * 2 + 0] == -32768) continue;
-        float Voltage = ((Pkg[Count * 2 + 0] * This->pVoltageMult) * (1.0 + (This->pVoltageGain / 100.0))) + This->pVoltageOffset;
-        float Current = ((Pkg[Count * 2 + 1] * 0.0015625000000) * (1.0 + (This->pCurrentGain / 100.0)) * (This->pCurrentInvert ? -1.0 : 1.0)) + This->pCurrentOffset;
-        if(This->BuffersAppend(Voltage, Current) == false) {
-          LOGFile::Error("Capture buffer overflow! Posible lost of samples\n");
-          break;
-        }
-      }
-=======
     int16_t *Samples = (int16_t*)transfer->buffer;
     for(int Pos = 0; Pos < (transfer->actual_length / 2); Pos = Pos +2) {
       if(Samples[Pos] != -32768) This->BufferAppend(&Samples[Pos]);
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
     }
   }
   if(This->pTerminate == false) {
@@ -413,17 +277,11 @@ int DeviceV1::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
   }
   return 0;
 }
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-void DeviceV1::GetDevice(HTTPRequest &req) {
-  pMembersLock.ReadLock();
-  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
-=======
 void DeviceV1::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pthread_mutex_lock(&pConfigLock);
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
   Config.erase("Analyzer");
   pAverageLocks.ReadLock();
   Config["Wave_Average"] = json::object();
@@ -433,31 +291,17 @@ void DeviceV1::GetDevice(const json &params, Response &response) {
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
   pthread_mutex_unlock(&pConfigLock);
 }
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-void DeviceV1::SetDevice(HTTPRequest &req) {
-  pMembersLock.ReadLock();
-  DeviceState State = pState;
-  pMembersLock.ReadUnlock();
-  StopDevice();
-  json Params = req.GetParams();
-  json Config = CheckConfig(Params);
-  json Orig = ConfigManager::ReadConfig("/Devices/" + pSerial);
-=======
 void DeviceV1::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pthread_mutex_lock(&pConfigLock);
   json Config = params;
   json Orig = ConfigManager::ReadConfig("/Devices/" + Serial);
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
   Config["Analyzer"] = Orig["Analyzer"];
   Configure(Config);
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
   pthread_mutex_unlock(&pConfigLock);
 }
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-bool DeviceV1::BuffersAppend(float voltageSample, float currentSample) {
-=======
 void DeviceV1::BufferAppend(int16_t *sample) {
   for(uint8_t Ch = 0; Ch < 2; Ch++) pRunAverageValues[Ch] = pRunAverageValues[Ch] + sample[Ch];
   pRunAverageCounter++;
@@ -489,7 +333,6 @@ void DeviceV1::BufferAppend(int16_t *sample) {
     pVoltageDelayPos = (pVoltageDelayPos + 1) % DEVICEV1_VOLTAGEDELAY;
     if(pAnalyzer->BufferAppend(&Voltage, &Current) == true) AnalyzerRun = true;
   }
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
 //  static int File = 0;
 //  if(File == 0) File = open("Samples.raw", O_CREAT | O_WRONLY);
 //  char Tmp[100];
@@ -497,32 +340,6 @@ void DeviceV1::BufferAppend(int16_t *sample) {
 //  write(File, Tmp, strlen(Tmp));
 
 //  if(pBuffer.full()) return false;
-<<<<<<< HEAD:Service/Source/Devices/V1/DeviceV1.cpp
-  Sample_t Sample = { pDelay.front(), currentSample };
-  if(pBuffer.size() > (DEVICEV1_SAMPLEFREQ * DEVICEV1_BUFFERSECONDS)) {
-    pBuffer.clear();
-    LOGFile::Error("Cleared input buffer on device '%s'\n", pSerial.c_str());
-  }
-  pBuffer.push_back(Sample);
-  pDelay.pop_front();
-  pDelay.push_back(voltageSample);
-  pAverageLocks.WriteLock();
-  pAverageValues.push_back(Sample);
-  if(pAverageValues.size() > DEVICEV1_SAMPLEFREQ) pAverageValues.pop_front();
-  pAverageLocks.WriteUnlock();
-  AnalyzerSoft *Analyzer = (AnalyzerSoft*)pAnalyzers[0];
-  if(Analyzer->IsFinished() == false) return true;
-  bool Started = false;
-  while((pBuffer.empty() == false) && (Started == false)) {
-    Sample = pBuffer.front();
-    pBuffer.pop_front();
-//    vector<float> Voltage = {Sample.Voltage};
-//    vector<float> Current = {Sample.Current};
-    if(Analyzer->BufferAppend(&Sample.Voltage, &Sample.Current) == true) Started = true;
-  }
-  return true;
-=======
->>>>>>> web_cleanup:Service/Source/Devices/V1/DeviceV1.cpp
 }
 
 //void *DeviceV1_01::Sig_Thread(void* args) {

@@ -186,48 +186,6 @@ json DeviceV2::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.cpp
-DeviceV2_01::DeviceV2_01(const string &serial) : Device(serial, "V2.01", "Capture device V2.01"), pSignalTransfer(this, 2) {
-  pBuffer     = (int16_t*)malloc(DEVICEV2_01_BUFFERSIZE * sizeof(uint16_t) * 7);
-  pBufferHead = 0;
-  pBufferTail = 0;
-  //tengo que construir el thread de captura aqui, para que se manejen los botones y los leds aunque el driver no este "iniciado"
-}
-DeviceV2_01::~DeviceV2_01() {
-  StopDevice();
-  free(pBuffer);
-}
-DeviceV2_01::Transfer::Transfer(DeviceV2_01 *parent, uint32_t size) {
-  pBufferSize = size;
-  pParent = parent;
-  pBuffer = (uint8_t*)malloc(size);
-  pTransfer = libusb_alloc_transfer(0);
-}
-DeviceV2_01::Transfer::~Transfer() {
-  if(pBuffer != NULL) free(pBuffer);
-  if(pTransfer != NULL) libusb_free_transfer(pTransfer);
-}
-int DeviceV2_01::Transfer::Submit() {
-  return libusb_submit_transfer(pTransfer);
-}
-int DeviceV2_01::Transfer::Submit(libusb_device_handle *deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout) {
-  Setup(deviceHandle, endpoint, callback, timeout);
-  return Submit();
-}
-void DeviceV2_01::Transfer::Setup(libusb_device_handle *deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout) {
-  libusb_fill_bulk_transfer(pTransfer, deviceHandle, endpoint, pBuffer, pBufferSize, callback, pParent, timeout);
-}
-int DeviceV2_01::Transfer::Submit(void *data, uint32_t size) {
-  memcpy(pBuffer, data, size);
-  libusb_submit_transfer(pTransfer);
-  return Submit();
-}
-bool  DeviceV2_01::StartDevice() {
-  pMembersLock.WriteLock();
-  if(pState == RUNNING) {
-    pMembersLock.WriteUnlock();
-    return false;
-=======
 void DeviceV2::Configure(const json& config) {
   ConfigManager::WriteConfig("/Devices/" + Serial, config);
   if(pThread != 0) {
@@ -236,7 +194,6 @@ void DeviceV2::Configure(const json& config) {
     pAnalyzersSetup.clear();
     ClearAnalyzers();
     pThread = 0;
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.cpp
   }
   for(unsigned Ch = 0; Ch < 3; Ch++) {
     pVoltageGain[Ch] = config["VoltageGain"][Ch];
@@ -246,16 +203,6 @@ void DeviceV2::Configure(const json& config) {
     pCurrentGain[Ch] = config["CurrentGain"][Ch];
     pCurrentOffset[Ch] = config["CurrentOffset"][Ch];
   }
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.cpp
-  pHighGain = Config["HighGain"];
-  pTerminate = false;
-  pAnalyzerSetupSize = 0;
-  pAnalyzerSetup = (Analyzers_t*)malloc(Config["Outputs"].size() * sizeof(Analyzer_t));
-  for(auto Tmp : Config["Outputs"]) {
-    pAnalyzerSetup[pAnalyzerSetupSize].Mode = (Tmp["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Tmp["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
-    string Name = pSerial;
-    if(pAnalyzerSetup[pAnalyzerSetupSize].Mode == Analyzer::PHASE1) {
-=======
   pHighGain = config["HighGain"];
   pEnabled = config["Enabled"];
   for(auto Tmp : config["Outputs"]) {
@@ -263,21 +210,13 @@ void DeviceV2::Configure(const json& config) {
     AnalyzerSetup.Mode = (Tmp["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Tmp["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
     string Name = Serial;
     if(AnalyzerSetup.Mode == Analyzer::PHASE1) {
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.cpp
       string Voltage = Tmp["Voltage"];
       pAnalyzerSetup[pAnalyzerSetupSize].Voltage[0] = (Voltage[2] - '1');
       string Current = Tmp["Current"];
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.cpp
-      pAnalyzerSetup[pAnalyzerSetupSize].Current[0] = Current[3] - '1' + 3;
-      pAnalyzerSetup[pAnalyzerSetupSize].CurrentInvert[0] = (Current[0] == '+') ? 1.0 : -1.0;
-      pAnalyzerSetup[pAnalyzerSetupSize].CurrentChannels = 1;
-      pAnalyzerSetup[pAnalyzerSetupSize].VoltageChannels = 1;
-=======
       AnalyzerSetup.Current[0] = Current[3] - '1' + 3;
       AnalyzerSetup.CurrentInvert[0] = (Current[0] == '+') ? 1.0 : -1.0;
       AnalyzerSetup.CurrentChannels = 1;
       AnalyzerSetup.VoltageChannels = 1;
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.cpp
       Name += "_1P_CH" + to_string(Current[3] - '1');
     } else {
       for(unsigned Ch = 0; Ch < Tmp["Voltage"].size(); Ch++) {
@@ -286,27 +225,16 @@ void DeviceV2::Configure(const json& config) {
       }
       for(unsigned Ch = 0; Ch < Tmp["Current"].size(); Ch++) {
         string Current =  Tmp["Current"][Ch];
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.cpp
-        pAnalyzerSetup[pAnalyzerSetupSize].Current[Ch] = Current[3] - '1' + 3;
-        pAnalyzerSetup[pAnalyzerSetupSize].CurrentInvert[Ch] = (Current[0] == '+') ? 1.0 : -1.0;        
-=======
         AnalyzerSetup.Current[Ch] = Current[3] - '1' + 3;
         AnalyzerSetup.CurrentInvert[Ch] = (Current[0] == '+') ? 1.0 : -1.0;
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.cpp
       }
       pAnalyzerSetup[pAnalyzerSetupSize].CurrentChannels = Tmp["Current"].size();
       pAnalyzerSetup[pAnalyzerSetupSize].VoltageChannels = Tmp["Voltage"].size();
       Name += (AnalyzerSetup.Mode == Analyzer::PHASE3) ? "_3P" : "_3PN";
     }
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.cpp
-    pAnalyzerSetup[pAnalyzerSetupSize].Parent = new AnalyzerSoft(Name, AnalyzerSetup.Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzersSetupSize) + "/Analyzer", DEVICEV2_01_SAMPLEFREQ);
-    pAnalyzers.push_back(pAnalyzerSetup[pAnalyzerSetupSize].Parent);
-    pAnalyzersSetupSize++;
-=======
     AnalyzerSetup.Parent = new AnalyzerSoft(Name, AnalyzerSetup.Mode, "/Devices/" + Serial + "/Outputs/" + to_string(pAnalyzersSetup.size()) + "/Analyzer", DEVICEV2_SAMPLEFREQ);
     pAnalyzersSetup.push_back(AnalyzerSetup);
     AddAnalyzer(AnalyzerSetup.Parent);
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.cpp
   }
   pTerminate = false;
   if(libusb_init(&pContext) < 0) {
@@ -353,18 +281,6 @@ void *DeviceV2::Capture_Thread(void *args) {
     if(This->pTerminate == true) continue;
     if((This->pDeviceHandle != NULL) && (LastSignalSend < (Tools::GetTime() - 500))) {
       uint16_t Status = 0x0006; //Stat=GREEN y Wifi=RED
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.cpp
-      SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
-      SysStatus->Lock.ReadLock();
-      if(SysStatus->RAM_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;              //Stat=YELLOW
-      if(SysStatus->CPU_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;              //Stat=YELLOW
-      if(SysStatus->Disk_Usage > 90.0) Status = (Status & 0xFFFC) | 0x0003;             //Stat=YELLOW
-      if(SysStatus->Time_IsSet == false) Status = (Status & 0xFFFC) | 0x0001;           //Stat=RED
-      if(SysStatus->Events == true) Status = (Status & 0xC01C) | 0x0021;                //Stat=RED and short BEEP
-      if(SysStatus->WIFI_Network.empty() == false) Status = (Status & 0xFFF3) | 0x0008; //Wifi=GREEN
-      if(SysStatus->BT_Network.empty() == false) Status = (Status & 0xFFEF) | 0x0010;   //Bt=BLUE
-      SysStatus->Lock.ReadUnlock();
-=======
 //      SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
 //      SysStatus->Lock.ReadLock();
 //      if(SysStatus->RAM_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;              //Stat=YELLOW
@@ -375,7 +291,6 @@ void *DeviceV2::Capture_Thread(void *args) {
 //      if(SysStatus->WIFI_Network.empty() == false) Status = (Status & 0xFFF3) | 0x000C; //Wifi=GREEN
 //      if(SysStatus->BT_Network.empty() == false) Status = (Status & 0xFFEF) | 0x0010;   //Bt=BLUE
 //      SysStatus->Lock.Unlock();
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.cpp
       Status |= (This->pHighGain == true) ? 0x4000 : 0x0000;
       This->pSignalTransfer.Submit(&Status, sizeof(Status));
       This->pSubmittedTransfers++;
@@ -532,16 +447,11 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
   }
   return 0;
 }
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.cpp
-void  DeviceV2_01::GetDevice(HTTPRequest &req) {
-  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
-=======
 void DeviceV2::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pthread_mutex_lock(&pConfigLock);
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.cpp
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
   float AverageValues[7];
   pthread_mutex_lock(&pAverageLocks);
@@ -553,13 +463,6 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   Config["Wave_Average"]["Voltage"].push_back(AverageValues[1]);
   Config["Wave_Average"]["Voltage"].push_back(AverageValues[2]);
   Config["Wave_Average"]["Current"] = json::array();
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.cpp
-  Config["Wave_Average"]["Current"].push_back(AverageValues[3]);
-  Config["Wave_Average"]["Current"].push_back(AverageValues[4]);
-  Config["Wave_Average"]["Current"].push_back(AverageValues[5]);
-  Config["Wave_Average"]["Current"].push_back(AverageValues[6]);
-  req.FromJSON(Config);
-=======
   Config["Wave_Average"]["Current"].push_back(pAverageValues[3]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[4]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[5]);
@@ -567,7 +470,6 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   pAverageLocks.Unlock();
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
   pthread_mutex_unlock(&pConfigLock);
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.cpp
 }
 void  DeviceV2::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
@@ -604,13 +506,8 @@ void  DeviceV2::BufferAppend() {
     pBufferTail = 0;
     LOGFile::Error("Capture buffer overflow in device '%s'\n", Serial.c_str());
   }
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.cpp
-  for(uint32_t n = 0; n < pAnalyzersSetupSize; n++) {
-    if(pAnalyzerSetup[n].Parent->IsFinished() == false) return;
-=======
   for(auto &Tmp : pAnalyzersSetup) {
     if(Tmp.Parent->IsWorking() == true) return;
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.cpp
   }
   bool AnalyzerRun = false;
   while((pBufferTail != pBufferHead) && (AnalyzerRun == false)) {
@@ -626,15 +523,9 @@ void  DeviceV2::BufferAppend() {
     Values[6] = ((float)Ptr[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
     for(uint32_t n = 0; n < pAnalyzerSetupSize; n++) {
       float Voltage[3], Current[4];
-<<<<<<< HEAD:Service/Source/Devices/V2_01/DeviceV2_01.cpp
-      for(unsigned Ch = 0; Ch < Tmp.VoltageChannels; Ch++) Voltage[Ch] = Values[pAnalyzerSetup[n].Voltage[Ch]];
-      for(unsigned Ch = 0; Ch < Tmp.CurrentChannels; Ch++) Current[Ch] = Values[pAnalyzerSetup[n].Current[Ch]] * Tmp.CurrentInvert[Ch];
-      if(pAnalyzerSetup[n].Parent->BufferAppend(Voltage, Current) == true) AnalyzerRun = true;
-=======
       for(unsigned Ch = 0; Ch < Tmp.VoltageChannels; Ch++) Voltage[Ch] = Values[Tmp.Voltage[Ch]];
       for(unsigned Ch = 0; Ch < Tmp.CurrentChannels; Ch++) Current[Ch] = Values[Tmp.Current[Ch]] * Tmp.CurrentInvert[Ch];
       if(Tmp.Parent->BufferAppend(Voltage, Current) == true) AnalyzerRun = true;
->>>>>>> web_cleanup:Service/Source/Devices/V2/DeviceV2.cpp
     }
   }
 }
