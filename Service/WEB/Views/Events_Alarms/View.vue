@@ -5,16 +5,31 @@
         <div class="panel panel-other">
           <div class="panel-heading">
             <span class="header-text">Alarms</span>
+            <div class="pull-right input-group input-group-xs" style="width:200px">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add user"><img :src="require('Imgs/resultset_previous.png')"></button>
+              </span>
+              <input type="text" class="form-control" placeholder="Filter..." v-model="Filter">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add user"><img :src="require('Imgs/resultset_next.png')"></button>
+              </span>
+            </div>
           </div>
-          <div class="panel-body">
+          <div class="panel-body" style="min-height: 100px">
             <spinner v-if="ShowSpinner"></spinner>
-            Alarms log not yet ready
+            <vuetable ref="table" :fields="Columns" :data="Alarms" :api-mode="false" class="table small table-striped">
+              <template slot="actions" slot-scope="props">
+                <div class="btn-group" >
+                  <button class="btn btn-xs btn-danger" @click="Delete(props.rowData)">Delete</button>
+                </div>
+              </template>
+            </vuetable>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div v-else-if="analyzer == null">
+  <div v-else-if="analyzer==null">
     <div class="alert alert-danger text-center">
       <p>No selected analyzer</p>
     </div>
@@ -22,98 +37,46 @@
 </template>
 
 <script>
-  import vis from 'JS/vis.js';
-  import 'CSS/vis.css';
-  import 'CSS/jquery.qtip.css';
-  import qtip from 'JS/jquery.qtip.js';
-  import Spinner from 'Components/Spinner.vue';
-  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
-  import EventsTable from '../Analysis_Voltage/Events.vue';
+  import Vuetable from 'vuetable-2';
   export default {
-    props: { analyzer: { type: Object } },
+    props: { analyzer: Object },
     data: function() {
-      return { ShowSpinner: false };
+      return { ShowSpinner: true, Filter: '', Alarms: [],
+      Columns: [
+          {name: 'User', title: 'User name' },
+          {name: 'Name', title: 'Name' },
+          {name: 'TimeZone', title: 'Time zone' },
+          {name: 'E-Mail', title: 'EMail' },
+          {name: '__slot:actions', title: '' }
+        ] };
     },
-    created: function() {
-      this.TimeLine = null;
-      console.log(this. $route);
+    created: function () {
+      if(this.analyzer != null) this.LoadAlarms();
     },
-    mounted: function() {
-      this.TimeLine = new vis.Timeline(document.getElementById('disturbances_chart'), null, {
-        stack: false,
-        editable: false,
-        margin: { item: 10, axis: 5 },
-        orientation: 'top'
-      });
-      this.TimeLine.on('rangechanged', this.WindowChange.bind(this));
-      var Groups = new vis.DataSet([
-        { id: 1, content: 'Dips'},
-        { id: 2, content: 'Swells'},
-        { id: 3, content: 'Interruptions'},
-        { id: 4, content: 'RVC'},
-        { id: 5, content: 'Glitchs'}
-      ]);
-      this.TimeLine.setGroups(Groups);
-      this.$refs.period.SetAggregation('1H');
-      this.TimeLine.setItems([]);
-      $(document).on("mouseover", '.vis-item', this.OnMouseOver);
-    },
-    methods: {
-      WindowChange: function(evt) {
-        if(evt.byUser === false) return;
-        this.$refs.period.SetCustom(evt.start.getTime(), evt.end.getTime(), false);
+    watch: {
+      Filter: function() {
+        this.LoadAlarms();
       },
-      UpdateComplete: function() {
-        this.$refs.period.UpdateCompleted(this.$refs.table.LastSample);
-        var TimeLineDataset = new vis.DataSet();
-        for(var i = 0; i < this.$refs.table.Events.length; i++) {
-          var Item = {
-            id: i,
-            start: this.$refs.table.Events[i].StartTime,
-            content: '<table>' +
-                     '<tr><td><strong>Time</strong></td><td> : ' + this.$refs.table.Events[i].Date + '</td></tr>' +
-                     '<tr><td><strong>Duration</strong></td><td> : ' + this.$refs.table.Events[i].Duration + '</td></tr>' +
-                     '<tr><td><strong>ΔU<sub>max</sub></strong></td><td> : ' + this.$refs.table.Events[i].Change + ' V</td></tr>' +
-                     '<tr><td><strong>% ΔU<sub>max</sub></strong></td><td> : ' + this.$refs.table.Events[i].Percent + '%</td></tr>' +
-                     '</table>'
-          };
-          if(this.$refs.table.Events[i].Type == 'INTERRUPTION') {
-            Item.className = 'red';
-            Item.group = 3;
-          } else if(this.$refs.table.Events[i].Type == 'SWELL') {
-            Item.className = 'blue';
-            Item.group = 2;
-          } else if(this.$refs.table.Events[i].Type == 'DIP') {
-            Item.className = 'blue';
-            Item.group = 1;
-          } else if(this.$refs.table.Events[i].Type == 'RVC') {
-            Item.className = 'blue';
-            Item.group = 4;
-          }
-          TimeLineDataset.add(Item);
-        }
-        this.TimeLine.setItems(TimeLineDataset);
-        this.TimeLine.setWindow(this.$refs.table.DateWindow[0], this.$refs.table.DateWindow[1]);
-        this.ShowSpinner = false;
-      },
-      GetEvents: function(to, period, lastsample) {
-        if(lastsample === 0) this.ShowSpinner = true;
-        this.TimeLine.setWindow(to - period, to);
-        this.$refs.table.GetEvents(to, period, lastsample);
-      },
-      OnMouseOver: function($e) {
-        $($e.target).qtip({
-          overwrite: false,
-            content: {
-              text: $('.vis-item-content', $e.target).html()
-            },
-            position: { my: 'top left', at: 'bottom left' },
-            style: { classes: 'qtip-bootstrap' }
-        });
-        $($e.target).qtip().show();
+      analyzer: function() {
+        this.LoadAlarms();
       }
     },
-    components: { Spinner, ToolbarPeriod, EventsTable }
+    methods: {
+      LoadAlarms: function () {
+        this.ShowSpinner = true;
+        this.$http.post('getAlarms', { Limit: 10, Offset: 0, Filter: this.Filter, Analyzer: this.analyzer.Analyzer }).then(
+          (result) => {
+            this.Alarms = result.data;
+            this.ShowSpinner = false;
+          },
+          (fail) => {}
+        );
+      },
+      Delete: function(row) {
+
+      }
+    },
+    components: { Vuetable }
   }
 </script>
 

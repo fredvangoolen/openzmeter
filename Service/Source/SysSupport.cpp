@@ -220,6 +220,10 @@ void *SysSupport::Bluetooth_Thread(void *params) {
     bool   PrevEnable = pBT_Enabled;
     bool   Enable     = (pTerminate == false) ? pBTEnable : false;
     if((pTerminate == true) && (PrevEnable == false)) return NULL;
+    if(pTerminate == true) {
+      printf("PrevEnabled: %s, Enabled: %s\n", PrevEnable ? "true" : "false", Enable ? "true" : "false");
+
+    }
     pSysStatLock.Unlock();
     usleep(100000);
     if((PrevEnable == false) && (Enable == true)) {
