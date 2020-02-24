@@ -1,22 +1,4 @@
-<template>
-  <div>
-    <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Distribution', 'Parameters']" storage="PowerDetailTab" v-model="ActiveTab"></detail-tabs>
-    <waveform ref="waveform" v-bind:class="{ hide: (ActiveTab != 'Waveform') }"></waveform>
-    <harmonics ref="harmonics" v-bind:class="{ hide: (ActiveTab != 'Harmonics') }"></harmonics>
-    <evolution ref="evolution" v-bind:class="{ hide: (ActiveTab != 'Evolution') }"></evolution>
-    <distribution ref="distribution" v-bind:class="{ hide: (ActiveTab != 'Distribution') }"></distribution>
-    <parameters ref="parameters" v-bind:class="{ hide: (ActiveTab != 'Parameters') }"></parameters>
-  </div>
-</template>
-
 <script>
-  import moment from 'JS/moment.js';
-  import * as oZm from 'JS/openZmeter.js';
-  import Parameters from './Parameters.vue';
-  import Waveform from './Waveform.vue';
-  import Harmonics from './Harmonics.vue';
-  import Evolution from './Evolution.vue';
-  import Distribution from './Distribution.vue';
   export default {
     data () {
       return { ActiveTab: '' };
@@ -28,24 +10,24 @@
       this.UpdateGraphsNowTimer = null;
       this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
-    mounted: function() {
-      if(this.$root.SelectedAnalyzer !== null) {
-        this.UpdateGraphs1M();
-        this.UpdateGraphsNow();
-      }
-    },
-    beforeDestroy: function() {
-      if(this.UpdateGraphs1MTimer !== null) clearTimeout(this.UpdateGraphs1MTimer);
-      if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);
-    },
+//    mounted: function() {
+//      if(this.$root.SelectedAnalyzer !== null) {
+//        this.UpdateGraphs1M();
+//        this.UpdateGraphsNow();
+//      }
+//    },
+//    beforeDestroy: function() {
+//      if(this.UpdateGraphs1MTimer !== null) clearTimeout(this.UpdateGraphs1MTimer);
+//      if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);
+//    },
     watch: {
-      ActiveTab: function(val) {
-        if(val === 'Waveform') this.$refs.waveform.Redraw();
-        if(val === 'Harmonics') this.$refs.harmonics.Redraw();
-        if(val === 'Evolution') this.$refs.evolution.Redraw();
-        if(val === 'Distribution') this.$refs.distribution.Redraw();
-        if(val === 'Parameters') this.$refs.parameters.Redraw();        
-      }
+//      ActiveTab: function(val) {
+//        if(val === 'Waveform') this.$refs.waveform.Redraw();
+//        if(val === 'Harmonics') this.$refs.harmonics.Redraw();
+//        if(val === 'Evolution') this.$refs.evolution.Redraw();
+//        if(val === 'Distribution') this.$refs.distribution.Redraw();
+//        if(val === 'Parameters') this.$refs.parameters.Redraw();
+//      }
     },
     methods: {
       PlayStatusChanged: function(stat) {
@@ -64,21 +46,21 @@
       PhasesChangedMulti: function(phases) {
         this.$refs.waveform.SetPhases(phases);
         this.$refs.harmonics.SetPhases(phases);
-      },      
-      SetAnalyzer() {
-        this.LastSample = 0;
-        this.UpdateGraphs1M();
-        this.UpdateGraphsNow();
       },
+//      SetAnalyzer() {
+//        this.LastSample = 0;
+//        this.UpdateGraphs1M();
+//        this.UpdateGraphsNow();
+//      },
       UpdateGraphs1M() {
         if(this.$root.SelectedAnalyzer === null) return;
         this.Ajax = $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: '1M', Period: 86400000, To: 0, LastSample: this.LastSample, Series: ['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.Analyzer }),
           success: function(result) {
-            result['Apparent_Power'] = [];        
+            result['Apparent_Power'] = [];
             for(var n = 0; n < result['Sampletime'].length; n++) result['Apparent_Power'].push(result['Voltage'][n].map( function(val, index) { return val * result['Current'][n][index]; }));
             this.$refs.evolution.SetData(result);
             this.$refs.parameters.SetData(result);
-            this.LastSample = oZm.LastSampletime(result, this.LastSample);  
+            this.LastSample = oZm.LastSampletime(result, this.LastSample);
           }.bind(this),
           complete: function() {
             if(this.UpdateGraphs1MTimer !== null) clearTimeout(this.UpdateGraphs1MTimer);
@@ -86,23 +68,9 @@
           }.bind(this)
         });
       },
-      UpdateGraphsNow() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeriesNow', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'POWER_HARMONICS', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'], Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
-          success: function(result) {
-            this.$refs.waveform.SetData(result);
-            this.$refs.harmonics.SetData(result);
-            this.$refs.distribution.SetData(result);
-            this.$refs.parameters.SetDataNow(result);
-          }.bind(this),
-          complete: function() {
-            if(this.UpdateGraphsNowTimer !== null) clearTimeout(this.UpdateGraphsNowTimer);
-            this.UpdateGraphsNowTimer = setTimeout(this.UpdateGraphsNow, 1000);
-          }.bind(this)
-        });
-      }
+
     },
-    components: { Distribution, Waveform, Harmonics, Evolution, Parameters }
+//    components: { Distribution, Waveform, Harmonics, Evolution, Parameters }
   }
 </script>
 

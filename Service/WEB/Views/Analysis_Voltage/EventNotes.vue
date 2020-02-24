@@ -26,7 +26,6 @@
 </template>
 
 <script>
-  import Spinner from 'Components/Spinner.vue';
   export default {
     data: function() {
       return { ShowDialog: false, ShowSpinner: false, Error: '', Event: { Notes: '' }, EventOrig: null };
@@ -75,8 +74,7 @@
         $(this.$el).modal('hide');
         this.ShowDialog = false;
       }
-    },
-    components: { Spinner }
+    }
   };  
 </script>
 

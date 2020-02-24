@@ -1,8 +1,18 @@
-/* ================================== zMeter ==================================
- * File:     Main.cpp
- * Author:   Pedro Sanchez (3 de marzo de 2015)
- * Modified: Eduardo Viciana (20 de marzo de 2017)
- * ---------------------------------------------------------------------------- */
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
@@ -15,10 +25,11 @@
 #include "SysSupport.h"
 //---------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
-static bool Terminate = false;
+volatile bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
-  if((signal == SIGINT) || (signal == SIGTERM)) Terminate = true;
+  LOGFile::Info("Shutting down. Please wait while all task ends...\n");
+  Terminate = true;
 }
 void RunDaemon() {
   LOGFile::Info("Move to background task\n");
@@ -39,13 +50,14 @@ void RunDaemon() {
   close(STDERR_FILENO);
 }
 int main(int argc, char** argv) {
+  Tools::DisableEcho();
   setbuf(stdout, NULL);
   signal(SIGPIPE, SIG_IGN);
   signal(SIGILL, SIG_IGN);
   signal(SIGALRM, SIG_IGN);
   signal(SIGINT, SignalHandler);
   signal(SIGTERM, SignalHandler);
-  
+
   string ConfigFileName = "/etc/openZmeter.conf";
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
@@ -70,18 +82,21 @@ int main(int argc, char** argv) {
   /* Create database tables */
   LOGFile::Debug("Creating database tables\n");
   Database::EnablePool();
-  Database DB("public");
-  if(DB.ExecResource("SQL/Database.sql") == false) LOGFile::Error("Database is damaged, manual repair is nedded\n");
+  {
+    Database DB("public");
+    if(DB.ExecResource("SQL/Database.sql") == false) LOGFile::Error("Database is damaged, manual repair is nedded\n");
+  }
   /* Create system manager */
   SysSupport SystemManager;
   /* Create devices interface */
   DeviceManager DeviceManager;
   /* Create WEB service */
   HTTPServer HTTPServer;
+
   uint32_t Iter = 0;
   while(!Terminate) {
-    SysSupport::PeriodicTask();
-    if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions(DB);
+//    SysSupport::PeriodicTask();
+    if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
     if((Iter % 600) == 0) Database::RemoveExpiredSessions();
     Iter++;
     usleep(1000000);

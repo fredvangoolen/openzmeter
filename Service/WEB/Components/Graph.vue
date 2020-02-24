@@ -4,10 +4,11 @@
 
 <script>
   import Dygraph from 'JS/dygraph.js';
-  import chroma from 'JS/chroma.js';
+  import chroma from 'chroma-js';
   import * as oZm from 'JS/openZmeter.js';
+  import Vue from 'vue';
+  const This = Vue.prototype;
   function mouseDown(event, g, context) {
-    if(this.StopAutoupdate) this.StopAutoupdate();
     context.initializeMouseDown(event, g, context);
     if(event.altKey || event.shiftKey) {
       Dygraph.startZoom(event, g, context);
@@ -26,15 +27,16 @@
   function mouseUp(event, g, context) {
     if(context.isPanning) {
       Dygraph.endPan(event, g, context);
-      if(context.regionWidth > 0) this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
+      if(context.regionWidth > 0) this.$emit('range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
     } else if (context.isZooming) {
       Dygraph.endZoom(event, g, context);
-      if(context.regionWidth > 0) this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
+      if(context.regionWidth > 0) this.$emit('range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
     }
   }
+
   function mouseWheelZoom(event, g, context) {
     if(!event.shiftKey) return;
-    if(this.StopAutoupdate) this.StopAutoupdate();
+//    if(this.StopAutoupdate) this.StopAutoupdate();
     var normal = event.detail ? event.detail * -1 : event.wheelDelta / 40;
     var percentage = normal / 50;
     if (!event.offsetX) event.offsetX = event.layerX - event.target.offsetLeft;
@@ -47,10 +49,13 @@
     event.preventDefault();
     event.stopPropagation();
     clearInterval(context.MouseWheelTimer);
-    context.MouseWheelTimer = setTimeout( function() { this.WindowChange(Axis[0] + (Axis[1] - Axis[0]) * percentage * xPct, Axis[1] - (Axis[1] - Axis[0]) * percentage * (1 - xPct)); }.bind(this), 500);  
+    context.MouseWheelTimer = setTimeout( function() { this.WindowChange(Axis[0] + (Axis[1] - Axis[0]) * percentage * xPct, Axis[1] - (Axis[1] - Axis[0]) * percentage * (1 - xPct)); }.bind(this), 500);
   }
   function MouseDblClick(event, g, context) {
-    this.WindowRestore();
+    g.updateOptions({
+    dateWindow: null
+  });
+  //  this.WindowRestore();
   }
   function touchStart(event, g, context) {
     if(this && this.StopAutoupdate) this.StopAutoupdate();
@@ -170,145 +175,255 @@
       this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
     }
   export default {
-    WaveTimeTicks: function(max, analyzer) {
-      var ticks = [];
-      for(var i = 0; i <= Math.floor(max / analyzer.SampleRate * analyzer.NominalFreq); i++) {
-        ticks.push({ v: i * analyzer.SampleRate / analyzer.NominalFreq, label: oZm.Round2(i / analyzer.NominalFreq * 1000) });
-      }
-      return ticks;
-    },
-    DBTicks: function(min, max, offset) {
-      var ticks = [];
-      for(var i = Math.floor(min - offset); i < Math.ceil(max - offset); i++) {
-        if((i % 10) === 0) ticks.push({ v: i + offset, label: i });
-      }
-      return ticks;
-    },
-    OddHarmonicsTicks: function () {
-      var Ticks = [];
-      for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i = i + 2) Ticks.push({ v: i, label: oZm.Series['HARMONICS'].Names[i] });
-      return Ticks;
-    },
-    multiColumnBarPlotter: function(e) {
-      if(e.seriesIndex !== 0) return;
-      var g = e.dygraph;
-      g.UndoHighlight = { cx: [], cy: [] };
-      var ctx = e.drawingContext;
-      var sets = e.allSeriesPoints;
-      g.SeriesCount = sets.length;
-      var y_bottom = e.dygraph.toDomYCoord(0);
-      g.y_bottom = y_bottom;
-      var min_sep = Infinity;
-      for(var j = 0; j < sets.length; j++) {
-        for(var i = 1; i < sets[j].length; i++) min_sep = Math.min(sets[j][i].canvasx - sets[j][i - 1].canvasx, min_sep);
-      }
-      var bar_width = Math.floor(2.5 / 3 * min_sep);
-      g.subbar_width = bar_width / sets.length;
-      if(g.subbar_width < 2) g.subbar_width = 2;
-      for(var j = 0; j < sets.length; j++) {
-        ctx.strokeStyle = g.getColors()[j];
-        ctx.fillStyle = g.getColors()[j];
-        for(var i = 0; i < sets[j].length; i++) {
-          var p = sets[j][i];
-          var x_left = p.canvasx - (g.subbar_width * sets.length / 2) + j * g.subbar_width;
-          ctx.fillRect(x_left, p.canvasy, g.subbar_width, y_bottom - p.canvasy);
+    Tickers: {
+      Default: function(a, b, pixels, opts, dygraph, vals) {
+        return Dygraph.numericTicks(a, b, pixels, opts, dygraph, vals);
+      },
+      DBTicks: function(min, max, offset) {
+        var ticks = [];
+        for(var i = Math.floor(min - offset); i < Math.ceil(max - offset); i++) {
+          if((i % 10) == 0) ticks.push({ v: i + offset, label: i });
         }
+        return ticks;
+      },
+      OddHarmonicsTicks: function(analyzer) {
+        var Ticks = [];
+        for(var i = 0; i < analyzer.HarmonicsNames.length; i = i + 2) Ticks.push({ v: i, label: analyzer.HarmonicsNames[i] });
+        return Ticks;
+      },
+      WaveTimeTicks: function(max, analyzer) {
+        var ticks = [];
+        for(var i = 0; i <= Math.floor(max / analyzer.SampleRate * analyzer.NominalFrequency); i++) ticks.push({ v: i * analyzer.SampleRate / analyzer.NominalFrequency, label: This.Round(i / analyzer.NominalFrequency * 1000, 2, false) });
+        return ticks;
       }
     },
-    LegendFormatter_Follow: function(data) {
-      if(data.x === undefined || data.x === null) return "";
-      var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
-      for(var i = 0; i < data.series.length; i++)  {
-        if(data.series[i].isVisible) {
-          Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
+    Formatters: {
+      Legend_Follow: function(data) {
+        if(data.x === undefined || data.x === null) return "";
+        var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
+        for(var i = 0; i < data.series.length; i++)  {
+          if(data.series[i].isVisible) {
+            Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
+          }
         }
+        return Result;
+      },
+      Y_UnitScale: function(x, units, dec, html) {
+        if(dec == null) dec = 2;
+        if(units == null) units = '';
+        if(html == null) html = false;
+        return This.Round(This.ScaleUnits(x, This.BestUnits(x)), dec, html) + units;
+      },
+      Y_UnitScaleFull: function(x, gran, opts, g, units, dec, html) {
+        if(dec == null) dec = 2;
+        if(units == null) units = '';
+        if(html == null) html = false;
+        return (g.axes_[0].valueRange == null) ? '' : This.Round(This.ScaleUnits(x, This.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), dec, html) + units;
       }
-      return Result;
     },
-    //interactions models
-    FixedRangeInteractionModel: function(parent) {
-      return { mousedown: mouseDown.bind(parent), mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
-                touchstart: touchStart, touchmove: touchMove, touchend: touchEnd.bind(parent) };
-    },
-    ScrollableInteractionModel: function(parent) {
-      return { mousedown: mouseDown.bind(parent), mousemove: mouseMove, mouseup: mouseUp.bind(parent), dblclick: MouseDblClick.bind(parent), mousewheel : mouseWheelZoom.bind(parent),
-                touchstart: touchStart.bind(parent), touchmove: touchMove, touchend: touchEnd.bind(parent) };
-    },
-    MouseUpEvt: function(event, g, contex) {
-        oZm.mouseUp(event, g, contex);
-        if((contex.isPanning) && (contex.regionWidth > 0)) this.ZoomEvt(g.dateWindow_[0], g.dateWindow_[1]);
-    },
-    DrawHighlightBarChartCallback: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {
-      var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;
-      var VisibleSerie = serieIndex;
-      for(var n = 0; n < serieIndex; n++) {
-        if(g.user_attrs_.visibility[n] === false) VisibleSerie--;
+    Plugins: {
+      Vertical_Crosshair: function() {
+        return new Dygraph.Plugins.Crosshair( { direction: "vertical" } );
       }
-      if(g.UndoHighlight.cx !== undefined && g.UndoHighlight.cx[serieIndex] !== undefined) {
-        var x_left = g.UndoHighlight.cx[serieIndex] - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
-        canvasContext.fillRect(x_left, g.UndoHighlight.cy[serieIndex], g.subbar_width, g.y_bottom - g.UndoHighlight.cy[serieIndex]);
+    },
+    Callbacks: {
+      Underlay_DrawBorder: function(ctx, area, dygraph) {
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(area.x, area.y, area.w, area.h);
+      },
+      DrawHighlightPoint_HighlightBar: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {
+        var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;
+        var VisibleSerie = serieIndex;
+        for(var n = 0; n < serieIndex; n++) {
+          if(g.user_attrs_.visibility[n] == false) VisibleSerie--;
+        }
+        if(g.UndoHighlight.cx != undefined && g.UndoHighlight.cx[serieIndex] != undefined) {
+          var x_left = g.UndoHighlight.cx[serieIndex] - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
+          canvasContext.fillRect(x_left, g.UndoHighlight.cy[serieIndex], g.subbar_width, g.y_bottom - g.UndoHighlight.cy[serieIndex]);
+        }
+        g.UndoHighlight.cx[serieIndex]=cx;
+        g.UndoHighlight.cy[serieIndex]=cy;
+        canvasContext.fillStyle = chroma(color).brighten(2);
+        var x_left = cx - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
+        canvasContext.fillRect(x_left, cy, g.subbar_width, g.y_bottom - cy);
       }
-      g.UndoHighlight.cx[serieIndex]=cx;
-      g.UndoHighlight.cy[serieIndex]=cy;
-      canvasContext.fillStyle = chroma(color).brighten(2);
-      
-      var x_left = cx - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
-      canvasContext.fillRect(x_left, cy, g.subbar_width, g.y_bottom - cy);
     },
-    props: ['options'],
-    data() {
-      return {};
-    },
-    methods: {
-      SetOptions: function(options) {
-        this.Options = Object.assign({}, this.Options, options);
-        if(this.Graph === null) return;
-        if(this.AllowUpdate == true) {
-          this.Graph.updateOptions(this.Options);
-        } else {
-          this.OptionsChanged = true;
+    Plotters: {
+      MultiBar: function(e) {
+        if(e.seriesIndex != 0) return;
+        var g = e.dygraph;
+        g.UndoHighlight = { cx: [], cy: [] };
+        var ctx = e.drawingContext;
+        var sets = e.allSeriesPoints;
+        g.SeriesCount = sets.length;
+        var y_bottom = e.dygraph.toDomYCoord(0);
+        g.y_bottom = y_bottom;
+        var min_sep = Infinity;
+        for(var j = 0; j < sets.length; j++) {
+          for(var i = 1; i < sets[j].length; i++) min_sep = Math.min(sets[j][i].canvasx - sets[j][i - 1].canvasx, min_sep);
+        }
+        var bar_width = Math.floor(2.5 / 3 * min_sep);
+        g.subbar_width = bar_width / sets.length;
+        if(g.subbar_width < 2) g.subbar_width = 2;
+        for(var j = 0; j < sets.length; j++) {
+          ctx.strokeStyle = g.getColors()[j];
+          ctx.fillStyle = g.getColors()[j];
+          for(var i = 0; i < sets[j].length; i++) {
+            var p = sets[j][i];
+            var x_left = p.canvasx - (g.subbar_width * sets.length / 2) + j * g.subbar_width;
+            ctx.fillRect(x_left, p.canvasy, g.subbar_width, y_bottom - p.canvasy);
+          }
         }
       },
-      SetData: function(data) {
-        this.Options = Object.assign({}, this.Options, { file: data });
-        if(this.Graph === null) return;
-        if(this.AllowUpdate == true) {
-          this.Graph.updateOptions(this.Options);
-        } else {
-          this.OptionsChanged = true;
+    },
+    InteractionModels: {
+      Scrollable: function(parent) {
+        return { mousedown: mouseDown.bind(parent),
+                 mousemove: mouseMove.bind(parent),
+                 mouseup: mouseUp.bind(parent),
+                 /*dblclick: MouseDblClick,
+                 mousewheel: mouseWheelZoom,
+                 touchstart: touchStart,
+                 touchmove: touchMove,
+                 touchend: touchEnd*/
+        };
+      },
+      Fixed: function() {
+        return { mousedown: mouseDown.bind(parent),
+                 mousemove: mouseMove.bind(parent),
+                 mouseup: mouseUp.bind(parent),
+/*                 dblclick: MouseDblClick,
+                 mousewheel : mouseWheelZoom,
+                 touchstart: touchStart,
+                 touchmove: touchMove,
+                 touchend: touchEnd*/
+        };
+      },
+    },
+    props: { options: Object, height: Number, width: Number, paused: Boolean, window: Array, analyzer: null },
+    data: function() {
+      return { };
+    },
+    watch: {
+      paused: function(val) {
+        if((val == false) && (this.PausedOptions != null) && (this.Graph != null)) {
+          if(this.PausedOptions.labels == null) this.PausedOptions.labels = ['A', 'B'];
+          if(this.PausedOptions.file == null) this.PausedOptions.file = [];
+          if(this.PausedOptions.file.length == 0) this.PausedOptions.file.push(Array(val.labels.length).fill(0));
+          this.Graph.updateOptions({ showRangeSelector: true}, false);
+          this.PausedOptions.showRangeSelector = false;
+          this.Graph.updateOptions(this.PausedOptions);
+          this.PausedOptions = null;
         }
       },
-      Redraw: function(w, h) {
+      options: function(val, prev) {
+        if(val.labels == null) val.labels = ['A', 'B'];
+        if(val.file == null) val.file = [];
+        if(val.file.length == 0) val.file.push(Array(val.labels.length).fill(0));
+        if((this.Graph == null) || ((this.paused == true) && (this.Graph.file_.length > 1))) {
+          this.PausedOptions = val;
+          return;
+        }
+        this.Graph.updateOptions({ showRangeSelector: true}, false);
+        val.showRangeSelector = false;
+        this.Graph.updateOptions(val);
+      },
+      height: function(val) {
+        if(this.Graph == null) return;
         $(this.Graph.graphDiv).parent().removeAttr('style');
-        if((w !== undefined) && (h !== undefined)) this.Graph.resize(w, h);
+        this.Graph.resize((this.width == null) ? '100%' : this.width, val);
         this.Graph.resize();
       },
-      HoverIn() {
-        this.AllowUpdate = false;
-        this.$emit('mouseOver', true);
-      },
-      HoverOut() {
-        this.AllowUpdate = true;
-        this.$emit('mouseOver', false);
-        if(this.OptionsChanged == true) {
-          this.Graph.updateOptions(this.options);
-          this.OptionsChanged = false;
-        }
-      },
+      width: function(val) {
+        if(this.Graph == null) return;
+        $(this.Graph.graphDiv).parent().removeAttr('style');
+        this.Graph.resize((this.width == null) ? '100%' : this.width, this.height);
+        this.Graph.resize();
+      }
+    },
+    methods: {
+//      ProccessParams: function() {
+//        if(this.options.interactionModel == 'SCROLLABLE_MODEL') this.options.interactionModel = this.ScrollableInteractionModel();
+//        if(this.options.interactionModel == 'FIXED_MODEL') this.options.interactionModel = this.FixedRangeInteractionModel();
+//        if(this.options.interactionModel == 'NONE') this.options.interactionModel = {};
+//        for(var i in this.options.plugins) {
+//          if(this.options.plugins[i] == 'VERTICAL_CROSSHAIR') this.options.plugins[i] = new Dygraph.Plugins.Crosshair( { direction: "vertical" } );
+//        }
+//        if(this.options.legendFormatter == 'FOLLOW') this.options.legendFormatter = this.LegendFormatter_Follow;
+//        if(this.options.plotter == 'BAR_PLOTTER') this.options.plotter = this.multiColumnBarPlotter;
+//        if(this.options.drawHighlightPointCallback == 'BAR_HIGHLIGHT') this.options.drawHighlightPointCallback = this.DrawHighlightBar;
+//        if(this.options.underlayCallback == 'BORDER') this.options.underlayCallback = this.DrawBorder;
+//        if(this.options.axes.x.ticker == 'WAVE_TIME') this.options.axes.x.ticker = this.WaveTimeTicks;
+//        if(this.options.axes.x.ticker == 'ODD_HARMONICS') this.options.axes.x.ticker = OddHarmonicsTicks;
+//      },
     },
     created: function() {
       this.Graph = null;
-      this.AllowUpdate = true;
-      this.Options = Object.assign({ highlightCallback: this.HoverIn, unhighlightCallback: this.HoverOut, strokeWidth: 0.5, gridLineColor: "rgba(0, 0, 0, 0.1)", gridLinePattern: [4, 4], labels: ['Index', 'Value'], interactionModel: {} }, this.options);
+      this.PausedOptions = null;
     },
     mounted: function() {
-      var Data = [[0, 0]];
-      if(this.Options.labels !== undefined) Data = [new Array(this.Options.labels.length).fill(0.0)];
-      this.Graph = new Dygraph(this.$el, Data, this.Options);
+      var Data = [];
+      if(this.options.labels == null) this.options.labels = ['A', 'B'];
+      if(this.options.file == null) this.options.file = [];
+      if(this.options.file.length == 0) this.options.file.push(Array(this.options.labels.length).fill(0));
+      this.Graph = new Dygraph(this.$el, this.options.file, this.options);
+      this.$nextTick(() => {
+        $(this.Graph.graphDiv).parent().removeAttr('style');
+        this.Graph.resize((this.width == null) ? '100%' : this.width, this.height);
+        this.Graph.resize();
+      });
     },
     beforeDestroy: function() {
-      this.Graph.destroy();
+      if(this.Graph != null) this.Graph.destroy();
     }
   }
-  
 </script>
+
+<style scoped>
+  .chart {
+    width: 100%;
+    user-select: none;
+    cursor: crosshair;
+  }
+  .chart >>> .dygraph-legend-title {
+    color: #FFF;
+    font-size: 10px;
+    font-weight: bold;
+  }
+  .chart >>> .dygraph-axis-label {
+    font-size: 11px;
+    color: black;
+    line-height: 10px;
+  }
+  .chart >>> .dygraph-legend {
+    position: absolute;
+    color: #FFF !important;
+    font-size: 11px;
+    z-index: 10;
+    width: 160px;
+    background-color: #474543 !important;
+    border: 1px solid #212121;
+    border-radius: 3px;
+    line-height: 13px;
+    text-align: center;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .chart >>> .dygraph-legend-line {
+    display: inline-block;
+    position: relative;
+    bottom: .5ex;
+    padding-left: 1em;
+    height: 1px;
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+  }
+  .chart >>> .dygraph-legend-dash {
+    display: inline-block;
+    position: relative;
+    bottom: .5ex;
+    height: 1px;
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+  }
+</style>

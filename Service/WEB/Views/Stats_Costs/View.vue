@@ -1,69 +1,74 @@
 <template>
-  <div id="wrapper">
+  <div v-if="analyzer != null">
     <div class="row">
       <div class="col-lg-12">
         <div class="panel panel-active-energy">
           <div class="panel-heading">
             <span class="header-text">Energy costs</span>
             <div class="header-buttons clearfix">
-              <toolbar-years @YearChanged="YearChanged" aggreg="1H"></toolbar-years>
-              <toolbar-tools ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
+              <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="1H" storage="StatsYear"></toolbar-years>
+              <div class="btn-group">
+                <button-export file="Cost" :rows="Export"></button-export>
+              </div>
             </div>
           </div>
           <div class="panel-body">
-            <spinner v-if="ShowSpinner"></spinner>
-            <summary-graph ref="summary"></summary-graph>
-            <bill v-for="bill in Bills" :bill="bill" :currency="Currency" ref="bills" v-bind:key="bill.From"></bill>
+            <spinner v-if="Bills==null"></spinner>
+            <summary-graph :data="Bills" :analyzer="analyzer"></summary-graph>
+            <bill v-for="(bill, idx) in Bills" :bill="bill" :currency="Currency" :key="idx"></bill>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <div v-else-if="analyzer == null">
+    <div class="alert alert-danger text-center">
+      <p>No selected analyzer</p>
+    </div>
+  </div>
 </template>
 
 <script>
-  import ToolbarYears from 'Components/ToolbarYears.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
-  import Spinner from 'Components/Spinner.vue';
   import SummaryGraph from './SummaryGraph.vue';
   import Bill from './Bill.vue';
-  import moment from 'JS/moment.js';
-  import * as oZm from 'JS/openZmeter.js';
+  import moment from 'moment';
   export default {
-    data () {
-      return { ShowSpinner: true, Bills: [], Currency: '€' };
+    props: { analyzer: Object },
+    data: function() {
+      return { Year: null, Bills: null, Currency: '€' };
     },
-    methods: {
-      YearChanged: function(year) {
-        this.ShowSpinner = true;
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        var Year = moment().year(year);
-        $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), Aggreg: '1H', LastSample: 0, Analyzer: Analyzer.Analyzer } ),
-          success: function(result) {
-            this.Bills = result.Bills.filter(function(value) { return value.Complete === true; });
-            this.$refs.summary.SetData(result.Bills);
-            this.ShowSpinner = false;
-          }.bind(this)
-        });
-      },
-      ExportClick: function() {
-        var Data = [];
-        for(var i = 0; i < this.$refs.bills.length; i++) {
-          Data = this.$refs.bills[i].GetData(Data);
-          Data.push([]);
-          Data.push([]);
-        }
-        this.$refs.tools.SaveCVS('Cost.csv', Data);
+    watch: {
+      Year: function(val) {
+        this.Bills = null;
+        var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
+        var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
+        this.$http.post('getPrices', { From: From, To: To, Aggreg: '1H', Analyzer: this.analyzer.Analyzer }).then(
+          (result) => {
+            this.Bills = result.data.Bills.filter(function(value) { return value.Complete === true; });
+          },
+          (fail) => {}
+        );
       }
     },
-    components: { ToolbarYears, ToolbarTools, Spinner, SummaryGraph, Bill }
+    computed: {
+      Export: function() {
+        var Data = [];
+//        for(var i = 0; i < this.$refs.bills.length; i++) {
+//          Data = this.$refs.bills[i].GetData(Data);
+//          Data.push([]);
+//          Data.push([]);
+//        }
+//        this.$refs.tools.SaveCVS('Cost.csv', Data);
+        return Data;
+      }
+    },
+    components: { SummaryGraph, Bill }
   }
 </script>
 
 <style scoped>
   .header-text {
-    font-size: 24px;
-    line-height: 16px;
+    font-size: 20px;
+    line-height: 24px;
   }
 </style>

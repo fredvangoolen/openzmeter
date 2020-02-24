@@ -1,19 +1,19 @@
 <template>
   <div ref="panel" class="panel panel-other">
-    <div class="panel-heading">{{ BillMonth(bill.To) }} <span style="font-size:12px">({{ BillRange(bill.From, bill.To) }})</span>
-      <div class="float-right" v-html="TotalBill(bill)"></div>
+    <div class="panel-heading">{{ BillMonth }} <span>({{ FormatDate(bill.From) }} - {{ FormatDate(bill.To) }})</span>
+      <div class="float-right"><span v-html="Round2HTML(bill.Total)"></span> {{ currency }}</div>
     </div>
     <div class="panel-body">
       <table>
         <tr class="period-name">
           <td colspan="2">Periods</td>
         </tr>
-        <tr v-for="(period, idx) in bill.Periods">
+        <tr v-for="(period, idx) in bill.Periods" :key="idx">
           <td class="padding-table">
             <table>
               <tr class="period-name2">
                 <td>P{{ idx + 1}}</td>
-                <td class="total" colspan="2">{{ Round2(TotalPeriod(period)) }} {{ currency }}</td>
+                <td class="total" colspan="2">{{ TotalPeriod(period) }} {{ currency }}</td>
               </tr>
               <tr>
                 <td>Energy consumed ({{ Round2(period.Energy.Consumed / 1000.0) }}kWh x {{ Round6(period.Energy.Cost * 1000) }} {{ currency }})</td>
@@ -38,9 +38,9 @@
       <table v-if="bill.Taxes.length > 0">
         <tr class="period-name">
           <td>Other concepts and taxes</td>
-          <td class="total">{{ Round2(TotalTaxes()) }} {{ currency }}</td>
+          <td class="total">{{ TotalTaxes }} {{ currency }}</td>
         </tr>
-        <tr v-for="tax in bill.Taxes">
+        <tr v-for="(tax, idx) in bill.Taxes" :key="idx">
           <td>{{ tax.Name }}</td>
           <td class="total">{{ Round2(tax.Total) }} {{ currency }}</td></tr>
       </table>
@@ -50,17 +50,30 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   export default {
     props: ['bill', 'currency'],
     data: function() {
-      return { ShowSpinner: true };
+      return { };
+    },
+    computed: {
+      TotalTaxes: function() {
+        var Total = 0.0;
+        for(var i = 0; i < this.bill.Taxes.length; i++) Total += this.bill.Taxes[i].Total;
+        return this.Round2(Total);
+      },
+      BillMonth: function() {
+        var MonthsNames = moment.months();
+        return MonthsNames[moment(this.bill.To).month()];
+      },
     },
     methods: {
       Round2: oZm.Round2Plain,
       Round6: oZm.Round6Plain,
+      Round2HTML: function(val) { return oZm.RoundHTML(val, 2); },
+      FormatDate: function(val) { return moment(val).format('DD/MM/YYYY'); },
       GetData: function(rows) {
-        rows.push([this.BillMonth(this.bill.To), this.BillRange(this.bill.From, this.bill.To), this.bill.Total]);
+        rows.push([this.BillMonth, this.FormatDate(this.bill.From) + ' - ' + this.FormatDate(this.bill.To), this.bill.Total]);
         rows.push(['Periods']);
         for(var p = 0; p < this.bill.Periods.length; p++) {
           rows.push(['P' + (p + 1), '', this.TotalPeriod(this.bill.Periods[p])]);
@@ -69,28 +82,13 @@
           rows.push(['', 'Power contracted (' + this.Round2(this.bill.Periods[p].Power.Contracted / 1000.0) + 'kW x ' + this.Round6(this.bill.Periods[p].Power.Cost * 1000) + ' x ' + this.bill.Periods[p].Power.Days + 'days)', this.bill.Periods[p].Power.Contracted * this.bill.Periods[p].Power.Cost * this.bill.Periods[p].Power.Days]);
           if(this.bill.Periods[p].Power.Other != '') rows.push(['', this.bill.Periods[p].Power.Other, this.bill.Periods[p].Power.OtherCost]);
         }
-        rows.push(['Other concepts and taxes', '', this.TotalTaxes()]);
+        rows.push(['Other concepts and taxes', '', this.TotalTaxes]);
         for(var t = 0; t < this.bill.Taxes.length; t++) rows.push(['', this.bill.Taxes[t].Name, this.bill.Taxes[t].Total]);
         return rows;
       },
-      TotalBill: function(bill) {
-        return oZm.Round2(bill.Total) + '<em> ' + this.currency + '</em>';
-      },
       TotalPeriod: function(period) {
-        return period.Energy.Cost * period.Energy.Consumed + period.Energy.OtherCosts + period.Power.Cost * period.Power.Contracted * period.Power.Days + period.Power.OtherCosts;
+        return this.Round2(period.Energy.Cost * period.Energy.Consumed + period.Energy.OtherCosts + period.Power.Cost * period.Power.Contracted * period.Power.Days + period.Power.OtherCosts);
       },
-      TotalTaxes: function() {
-        var Total = 0.0;
-        for(var i = 0; i < this.bill.Taxes.length; i++) Total += this.bill.Taxes[i].Total;
-        return Total;
-      },
-      BillMonth: function(val) {
-        var MonthsNames = moment.months();
-        return MonthsNames[moment(val).month()];
-      },
-      BillRange: function(from, to) {
-        return moment(from).format('DD/MM/YYYY') + ' - ' + moment(to).format('DD/MM/YYYY');
-      }
     }
   }
 </script>
@@ -101,7 +99,10 @@
   }
   .panel-heading {
     font-weight: bold;
-    font-size: 16px;      
+    font-size: 16px;
+  }
+  .panel-heading > span {
+    font-size: 12px;
   }
   .period-name {
     font-weight: bold;

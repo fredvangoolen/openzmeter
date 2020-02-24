@@ -1,8 +1,20 @@
-/* ================================== zMeter ===========================================================================
- * File:     Tools.h
- * Author:   Eduardo Viciana (12 de abril de 2017)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #pragma once
+#include <termios.h>
 #include <string>
 #include <vector>
 #include <pthread.h>
@@ -11,59 +23,40 @@
 using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
+class Worker final {
+  private :
+    void           *pCreationParam;
+    void           *pRunParam;
+    bool            pWorking;
+    volatile bool   pTerminate;
+    pthread_t       pThread;
+    pthread_mutex_t pMutex;
+    pthread_cond_t  pCond;
+    void          (*pCallback)(void*, void*);
+  private :
+    static void *Thread(void *args);
+  public :
+    Worker(const string &name, void *param, void (*callback)(void*, void*));
+    ~Worker();
+    bool IsWorking();
+    void Run(void *param);
+    void Wait();
+};
 class RWLocks final {
   //Multiple read access allowed, exclusive access for writing
-  private : 
+  private :
     pthread_mutex_t  pMutex;
     pthread_cond_t   pReadersCondition;
     pthread_cond_t   pWritersCondition;
     uint32_t         pReaders;
     uint32_t         pWriters;
-    bool             pActiveWriter;
+    bool             pWriter;
   public :
     RWLocks();
+    ~RWLocks();
     void ReadLock();
-    void ReadUnlock();
     void WriteLock();
-    void WriteUnlock();
-};
-//----------------------------------------------------------------------------------------------------------------------
-class InstanceLocks final {
-  //Hold destructor until no references to object
-  private : 
-    pthread_mutex_t  pMutex;
-    pthread_cond_t   pCond;
-    uint32_t         pReferences;
-  public :
-    InstanceLocks();
-    void WaitInstances();
-//    void Reference();
-//    void Dereference();
-    class Allocator final {
-      private :
-        InstanceLocks *pParent;
-      public :
-        Allocator(InstanceLocks *parent);
-      private :
-        virtual ~Allocator();
-    };
-};
-//----------------------------------------------------------------------------------------------------------------------
-class WorkerLocks final {
-  //Worker locks until signal to wakeup, caller can wait worker to ends
-  private :
-    bool            pWorking;
-    bool            pTerminate;
-    pthread_mutex_t pMutex;
-    pthread_cond_t  pCond;
-  public :
-    WorkerLocks();
-    void Abort(pthread_t *thread);
-    bool WorkerWaitTask();
-    void WorkerEndsTask();
-    void WakeWorker();
-    void WaitWorker();
-    bool IsWorking();
+    void Unlock();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class ProviderLocks {
@@ -73,7 +66,7 @@ class ProviderLocks {
     pthread_mutex_t  pWaitingThreadsMutex;
     pthread_cond_t   pWaitingThreadsCond;
     bool             pDataReady;
-    bool             pTerminate;
+    volatile bool    pTerminate;
     pthread_mutex_t  pDataReadyMutex;
     pthread_cond_t   pDataReadyCond;
   public :
@@ -87,13 +80,11 @@ class ProviderLocks {
 //----------------------------------------------------------------------------------------------------------------------
 class ConfigManager {
   private :
-    static ConfigManager    *pInstance;
     static pthread_mutex_t   pMutex;
-  private :
-    int   pFile;
-    json  pConfig;
+    static int               pFile;
+    static json              pConfig;
   public :
-    ConfigManager(string name);
+    ConfigManager(const string &name);
     virtual ~ConfigManager();
   public :
     static json ReadConfig(const string &path);
@@ -127,12 +118,10 @@ class LOGFile {
   private :
     static pthread_mutex_t  pMutex;
     static bool             pConsole;
-    static LOGFile         *pInstance;
+    static FILE            *pFile;
+    static Type             pLevel;
   private :
     static void Msg(Type type, const char *msg, va_list params);
-  private :
-    FILE   *pFile;
-    Type    pLevel;
   public :
     LOGFile();
     virtual ~LOGFile();
@@ -145,7 +134,12 @@ class LOGFile {
 };
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
+  private :
+    static termios pConsoleAttr;
+  private :
+    static void ResetConsole();
   public :
+    static void      DisableEcho();
     static uint64_t  GetTime();
     static void      SendUDP(const json &obj);
 };

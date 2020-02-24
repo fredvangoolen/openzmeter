@@ -2,6 +2,7 @@ var path = require('path');
 var webpack = require('webpack');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 module.exports = {
   entry: './main.js',
   output: {
@@ -10,7 +11,9 @@ module.exports = {
     filename: 'openZmeter.js'
   },
   plugins: [
+    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new VueLoaderPlugin(),
+//    new BundleAnalyzerPlugin({}),
     new webpack.ProvidePlugin({
     $: "jquery",
     jQuery: "jquery",
@@ -51,7 +54,7 @@ module.exports = {
         exclude: /node_modules/
       },
       {
-        test: /\.(png|svg|woff2|ttf|eot|woff)$/,  
+        test: /\.(png|svg|woff2|ttf|eot|woff)$/,
         use: [{
             loader: 'url-loader',
             options: {
@@ -87,8 +90,9 @@ module.exports = {
   devtool: '#eval-source-map'
 };
 
-if (process.env.NODE_ENV === 'production') {
+if(process.env.NODE_ENV === 'production') {
   module.exports.devtool = '#source-map';
+  module.exports.resolve.alias['vue$'] =  'vue/dist/vue.min.js';
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({
       'process.env': {

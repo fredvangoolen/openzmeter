@@ -6,73 +6,71 @@
           <div class="panel-heading">
             <span class="header-text">ITIC Curve (CBEMA)</span>
             <div class="header-buttons">
-              <toolbar-years v-on:YearChanged="YearChanged" aggreg="1H"></toolbar-years>
+              <toolbar-years :analyzer="analyzer" v-model="Year" storage="StatYear" aggreg="1H"></toolbar-years>
+              <div class="btn-group">
+                <button-export file="Events" :rows="Export"></button-export>
+              </div>
             </div>
           </div>
           <div class="panel-body">
-            <spinner v-if="ShowSpinner"></spinner>
-            <curve ref="itic"></curve>
+            <spinner v-if="Data==null"></spinner>
+            <curve :data="Data" :analyzer="analyzer"></curve>
           </div>
         </div>
       </div>
     </div>
     <div class="row">
-      <div class="col-xs-12 col-md-6"><spinner v-if="ShowSpinner"></spinner><by-date ref="date"></by-date></div>
-      <div class="col-xs-12 col-md-6"><spinner v-if="ShowSpinner"></spinner><by-type ref="type"></by-type></div>
-      <div class="col-xs-12 col-md-6"><spinner v-if="ShowSpinner"></spinner><by-rms ref="rms"></by-rms></div>
-      <div class="col-xs-12 col-md-6"><spinner v-if="ShowSpinner"></spinner><by-duration ref="duration"></by-duration></div>
+      <div class="col-xs-12 col-md-6">
+        <by-date :data="Data" :analyzer="analyzer"></by-date>
+      </div>
+      <div class="col-xs-12 col-md-6">
+        <by-type :data="Data" :analyzer="analyzer"></by-type>
+      </div>
+      <div class="col-xs-12 col-md-6">
+        <by-rms :data="Data" :analyzer="analyzer"></by-rms>
+      </div>
+      <div class="col-xs-12 col-md-6">
+        <by-duration :data="Data" :analyzer="analyzer"></by-duration>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-  import ToolbarYears from 'Components/ToolbarYears.vue';
-  import Spinner from 'Components/Spinner.vue';
   import Curve from './Curve.vue';
   import ByDate from './ByDate.vue';
   import ByType from './ByType.vue';
   import ByRms from './ByRMS.vue';
   import ByDuration from './ByDuration.vue';
   import Graph from 'Components/Graph.vue';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   export default {
+    props: { analyzer: Object },
     data: function() {
-      return { ShowSpinner: true };
+      return { Year: null, Data: null };
     },
-    created: function() {
-      
-    },
-        beforeRouteEnter (to, from, next) {
-      console.log(to, from);
-      next();
-    // called before the route that renders this component is confirmed.
-    // does NOT have access to `this` component instance,
-    // because it has not been created yet when this guard is called!
-    },
-    methods: {
-      ProcessRange: function(start, end) {
-        this.$refs.date.SetData(start, end, this.Events);
-        this.$refs.type.SetData(start, end, this.Events);
-        this.$refs.rms.SetData(start, end, this.Events);
-        this.$refs.duration.SetData(start, end, this.Events);
-        this.$refs.itic.SetData(start, end, this.Events);
-        this.ShowSpinner = false;
-      },
-      YearChanged: function(year) {
-        this.Year = year;
-        this.ShowSpinner = true;
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        var Year = moment().year(year);
-        $.ajax({ url: "getEvents", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Period: Year.endOf('year').valueOf() - Year.startOf('year').valueOf(), To: Year.endOf('year').valueOf(), LastSample: 0, Analyzer: Analyzer.Analyzer } ),
-          success: function(result) {
-            this.Events = result;
-            this.ProcessRange(Year.startOf('year').valueOf(), Year.endOf('year').valueOf());
-          }.bind(this)
-        });
+    watch: {
+      Year: function(val) {
+        this.Data = null;
+        var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
+        var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
+        this.$http.post('getEvents', { From: From, To: To, Analyzer: this.analyzer.Analyzer }).then(
+          (result) => {
+            this.Data = result.data;
+          },
+          (fail) => {}
+        );
       }
     },
-    components: { Spinner, ToolbarYears, Graph, Curve, ByDate, ByType, ByRms, ByDuration }
+    computed: {
+      Export: function() {
+        if(this.Data == null) return [];
+        var Data =  [['Start', 'Type', 'Duration', 'Notes']];
+        for(var i in this.Data.StartTime) Data.push([this.Data.StartTime[i], this.Data.Type[i], this.Data.Duration[i] / this.Data.SampleRate[i], this.Data.Notes[i]]);
+        return Data;
+      }
+    },
+    components: { Curve, ByDate, ByType, ByRms, ByDuration }
   }
 </script>
 

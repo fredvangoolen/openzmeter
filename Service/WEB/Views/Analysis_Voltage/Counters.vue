@@ -2,168 +2,148 @@
   <div>
     <div class="subpanel clearfix">
       <div class="counters-title">Last value:</div>
-      <div class="counters-aggreg">From 10 minutes aggregation<br>{{ Time10M }}</div>
+      <div class="counters-aggreg" v-if="data10M!=null">From 10 minutes aggregation<br>{{ analyzer.FormatTime(data10M.Sampletime) }}</div>
       <div class="clearfix"></div>
       <div>
-        <div class="current-value" v-html="CurrentValue10M"></div>
-        <div class="counters-phases" v-html="CurrentValue10MPhases" v-if="CurrentValue10MPhases != ''"></div>
+        <div class="current-value" v-html="(data10M!=null) ? FormatRMS(data10M) : '-'"></div>
+        <div class="counters-phases" v-if="(data10M!=null)&&(data10M.Voltage.length>1)">
+          <div v-for="(phase, idx) in FormatPhases(data10M)" :key="idx" v-html="phase"></div>
+        </div>
       </div>
     </div>
     <div class="subpanel clearfix">
       <div class="counters-title">Period stats:</div>
-      <div class="counters-aggreg">{{ CountersAggregation }}<br>From {{ TimeStatsFrom }} to {{ TimeStatsTo }}</div>
+      <div class="counters-aggreg" v-if="dataGraph!=null">From {{ analyzer.FormatAggregation(dataGraph.Aggregation_Source) }} aggregation<br>From {{ analyzer.FormatDateTime(dataGraph.From) }} to {{ analyzer.FormatDateTime(dataGraph.To) }}</div>
       <div class="line">
         <div class="float-left">
           <div class="counters-stat-type">Min value:</div>
-          <div class="counters-stat-time">{{ MinTime }}</div>
+          <div class="counters-stat-time">{{ (Min.Time!=0) ? analyzer.FormatDateTime(Min.Time) : '-' }}<span v-if="Min.Count > 1">(and {{ Min.Count }} times more)</span></div>
         </div>
-        <div class="counters-stat-val" v-bind:class="{ 'counters-stat-val2': (MinArray.length > 1) }"><div v-for="phase in MinArray" v-html="phase"></div></div>
+        <div class="counters-stat-val" :class="{ 'counters-stat-val2': (Min.Value.length > 1) }">
+          <div v-for="(phase, idx) in Min.Value" :key="idx" v-html="isFinite(phase) ? FormatHTML(phase) : '-'"></div>
+        </div>
       </div>
       <div class="line line-border">
         <div class="float-left">
           <div class="counters-stat-type">Max value:</div>
-          <div class="counters-stat-time">{{ MaxTime }}</div>
+          <div class="counters-stat-time">{{ (Max.Time!=0) ? analyzer.FormatDateTime(Max.Time) : '-' }}<span v-if="Max.Count > 1">(and {{ Max.Count }} times more)</span></div>
         </div>
-        <div class="counters-stat-val" v-bind:class="{ 'counters-stat-val2': (MinArray.length > 1) }"><div v-for="phase in MaxArray" v-html="phase"></div></div>
+        <div class="counters-stat-val" :class="{ 'counters-stat-val2': (Max.Value.length>1) }">
+          <div v-for="(phase, idx) in Max.Value" :key="idx" v-html="isFinite(phase) ? FormatHTML(phase) : '-'"></div>
+        </div>
       </div>
       <div class="line line-border">
         <div class="float-left">
           <div class="counters-stat-type">Average value:</div>
-          <div class="counters-stat-time">From {{ AvgSamples }} samples</div>
+          <div class="counters-stat-time">From {{ Avg.Count }} samples</div>
         </div>
-        <div class="counters-stat-val" v-bind:class="{ 'counters-stat-val2': (AvgArray.length > 1) }"><div v-for="phase in AvgArray" v-html="phase"></div></div>
+        <div class="counters-stat-val" :class="{ 'counters-stat-val2': (Avg.Value.length > 1) }">
+          <div v-for="(phase, idx) in Avg.Value" :key="idx" v-html="isFinite(phase) ? FormatHTML(phase) : '-'"></div>
+        </div>
       </div>
       <div class="line line-border">
         <div class="float-left">
           <div class="counters-stat-type">Std deviation:</div>
-          <div class="counters-stat-time" v-html="StdPercent"></div>
+          <div class="counters-stat-time" v-html="isFinite(Std.Percent) ? Round(Std.Percent, 2, true) + ' % within range' : '-'"></div>
         </div>
-        <div class="counters-stat-val" v-bind:class="{ 'counters-stat-val2': (AvgArray.length > 1) }"><div v-for="phase in StdArray" v-html="phase"></div></div>
+        <div class="counters-stat-val" :class="{ 'counters-stat-val2': (Std.Value.length > 1) }">
+          <div v-for="(phase, idx) in Std.Value" :key="idx" v-html="isFinite(phase) ? FormatHTML(phase) : '-'"></div></div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
-  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
-  import Spinner from 'Components/Spinner.vue';
-  import Graph from 'Components/Graph.vue';
-  import moment from 'JS/moment.js';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: ['variable'],
+    props: { analyzer: Object, data10M: Object, dataGraph: Object },
     data () {
-      return { CountersAggregation: 'Loading data...', MinTime: '', MinArray: [], MaxTime: '', MaxArray: [],
-                AvgSamples: '', AvgArray: [], StdPercent: '', StdArray: [],
-                Time10M: '', CurrentValue10M: null, CurrentValue10MPhases: '',
-                TimeStatsFrom: '...', TimeStatsTo: '...'
-              };
+      return { };
     },
-    created: function() {
-      this.NowTimer = null;
-      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
+    updated: function() {
+      this.$emit('update:height', this.$el.clientHeight);
     },
-    mounted: function() {
-      this.NowValue();
-    },
-    beforeDestroy: function() {
-      clearInterval(this.NowTimer);
+    computed: {
+      Min: function() {
+        var Val = +Infinity;
+        var Min = { Value: [], Time: 0, Count: 0 };
+        if(this.dataGraph == null) return Min;
+        for(var x in this.dataGraph.Sampletime) {
+          for(var p in this.dataGraph.Voltage[x]) {
+            if(this.dataGraph.Voltage[x][p] == null) continue;
+            if(this.dataGraph.Voltage[x][p] < Val) {
+              Val = this.dataGraph.Voltage[x][p];
+              Min = { Value: this.dataGraph.Voltage[x], Time: this.dataGraph.Sampletime[x], Count: 0 };
+            } else if(this.dataGraph.Voltage[x][p] == Val) {
+              Min.Count++;
+            }
+          }
+        }
+        return Min;
+      },
+      Max: function() {
+        var Val = -Infinity;
+        var Max = { Value: [], Time: 0, Count: 0 };
+        if(this.dataGraph == null) return Max;
+        for(var x in this.dataGraph.Sampletime) {
+          for(var p in this.dataGraph.Voltage[x]) {
+            if(this.dataGraph.Voltage[x][p] == null) continue;
+            if(this.dataGraph.Voltage[x][p] > Val) {
+              Val = this.dataGraph.Voltage[x][p];
+              Max = { Value: this.dataGraph.Voltage[x], Time: this.dataGraph.Sampletime[x], Count: 0 };
+            } else if(this.dataGraph.Voltage[x][p] == Val) {
+              Max.Count++;
+            }
+          }
+        }
+        return Max;
+      },
+      Avg: function() {
+        var Avg = { Value: [], Count: 0 };
+        if(this.dataGraph == null) return Avg;
+        for(var x in this.dataGraph.Sampletime) {
+          if(Avg.Value.length == 0) Avg.Value = Array(this.dataGraph.Voltage[x].length).fill(0);
+          for(var p in this.dataGraph.Voltage[x]) Avg.Value[p] = Avg.Value[p] + this.dataGraph.Voltage[x][p];
+          Avg.Count++;
+        }
+        for(var p in this.dataGraph.Voltage[x]) Avg.Value[p] = Avg.Value[p] / Avg.Count;
+        return Avg;
+      },
+      Std: function() {
+        var Std = { Value: [], Percent: 0 };
+        var Avg = [], Count = 0;
+        if(this.dataGraph == null) return Std;
+        for(var x in this.dataGraph.Sampletime) {
+          if(Std.Value.length == 0) {
+            Avg = Array(this.dataGraph.Voltage[x].length).fill(0);
+            Std.Value = Array(this.dataGraph.Voltage[x].length).fill(0);
+          }
+          for(var p in this.dataGraph.Voltage[x]) {
+            if((this.dataGraph.Voltage[x][p] > this.analyzer.NominalVoltage * 0.9) && (this.dataGraph.Voltage[x][p] < this.analyzer.NominalVoltage * 1.1)) Std.Percent++;
+            Std.Value[p] += Math.pow(this.dataGraph.Voltage[x][p], 2.0);
+            Avg[p] += this.dataGraph.Voltage[x][p];
+          }
+          Count++;
+        }
+        for(var p in this.dataGraph.Voltage[x]) Std.Value[p] = Math.sqrt((Std.Value[p] / Count) - Math.pow(Avg[p] / Count, 2));
+        Std.Percent = (Std.Percent * 100) / (Count * Std.Value.length);
+        return Std;
+      }
     },
     methods: {
-      SetAnalyzer: function() {
-        clearInterval(this.NowTimer);
-        this.NowValue();
+      FormatHTML: function(val) {
+        var Units = oZm.GetBestUnits(val);
+        return this.Round(oZm.ScaleToUnits(val, Units), 2, true) + ' ' + Units + 'V';
       },
-      NowValue: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Series: ['VOLTAGE'], To: 0, Aggreg: '10M', Period: 1200000, LastSample: 0, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
-          success: (result) => {
-            this.CurrentValue10M = 'No data';
-            this.CurrentValue10MPhases = '';
-            this.Time10M = '';
-            if(result['Sampletime'].length !== 0) {
-              var Pos = result['Sampletime'].length - 1;
-              this.Time10M = 'At ' + moment(result.Sampletime[Pos]).format('HH:mm:ss');
-              if(result['Voltage'][Pos] !== null) {
-                this.CurrentValue10MPhases = '';
-                if(result['Voltage'][Pos].length > 1) {
-                  for(var n = 0; n < result['Voltage'][Pos].length; n++) {
-                    this.CurrentValue10MPhases += oZm.FormatSerieValue(result['Voltage'][Pos][n], oZm.Series['VOLTAGE']).ValueHTML +'<br>';
-                  }
-                }
-                this.CurrentValue10M = 0.0;
-                for(var n = 0; n < result['Voltage'][Pos].length; n++) this.CurrentValue10M += Math.pow(result['Voltage'][Pos][n], 2.0);
-                this.CurrentValue10M = oZm.FormatSerieValue(Math.sqrt(this.CurrentValue10M / result['Voltage'][Pos].length), oZm.Series['VOLTAGE']).ValueHTML + ' V';
-              }
-            }
-          },
-          complete: () => {
-            clearTimeout(this.NowTimer);
-            this.NowTimer = setTimeout(this.NowValue.bind(this), 5000);
-            this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
-          }, 
-          error: () => {
-            this.CurrentValue10M = 'No data';
-            this.Time10M = '';
-          }
-        });
+      FormatRMS: function(val) {
+        var Sum = 0;
+        for(var n in val.Voltage) Sum = Sum + Math.pow(val.Voltage[n], 2.0);
+        return this.FormatHTML(Math.sqrt(Sum / val.Voltage.length));
       },
-      SetStats: function(datewindow, data, aggreg) {
-        this.CountersAggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';
-        this.TimeStatsFrom = moment(datewindow[0]).format('DD/MM/YYYY HH:mm:ss');
-        this.TimeStatsTo = moment(datewindow[1]).format('DD/MM/YYYY HH:mm:ss');
-        var MinValue = +Infinity, MaxValue = -Infinity, MinCount = 0, MaxCount = 0, MinTime = null, MaxTime = null, StdPercent = 0, AvgSamples = 0, MinArray, MaxArray;
-        var AvgArray = Array(data[0].length).fill(0), StdArray = Array(data[0].length).fill(0);
-        for(var x = 0; x < data.length; x++) {
-          for(var p = 1; p < data[x].length; p++) {
-            if(data[x][p] === null) data[x][p] = 0;
-            if(data[x][p] < MinValue) {
-              MinArray = data[x].slice(1);
-              MinValue = data[x][p];
-              MinCount = 0;
-              MinTime = data[x][0];
-            } else if(data[x][p] === MinValue) {
-              MinCount++;
-            }
-            if(data[x][p] > MaxValue) {
-              MaxArray = data[x].slice(1);
-              MaxValue = data[x][p];
-              MaxCount = 0;
-              MaxTime = data[x][0];
-            } else if(data[x][p] === MaxValue) {
-              MaxCount++;
-            }
-            AvgArray[p - 1] = AvgArray[p - 1] + data[x][p];
-            StdArray[p - 1] = StdArray[p - 1] + Math.pow(data[x][p], 2.0); 
-          }
-          var InRange = true;
-          for(var p = 1; p < data[x].length; p++) {
-            if((data[x][p] > 240) || (data[x][1] < 220)) InRange = false;
-          }
-          if(InRange === true) StdPercent++;
-          AvgSamples++;
-        }
-        this.AvgSamples = AvgSamples;
-        this.MinTime = moment(MinTime).format("hh:mm:ss - DD/MM/YYYY") + ((MinCount > 1) ? ' (and ' + MinCount + ' times more)' : '');
-        this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
-        this.StdPercent = oZm.Round2(StdPercent / AvgSamples * 100) + '% within range';    
-        this.MinArray = [];
-        this.MaxArray = [];
-        this.StdArray = [];
-        this.AvgArray = [];
-        for(var p = 0; p < MinArray.length; p++) {
-          var Val = oZm.FormatSerieValue(MinArray[p], oZm.Series['VOLTAGE']);
-          this.MinArray.push(Val.ValueHTML + ' ' + Val.Units);
-          Val = oZm.FormatSerieValue(MaxArray[p], oZm.Series['VOLTAGE']);
-          this.MaxArray.push(Val.ValueHTML + ' ' + Val.Units);
-          Val = oZm.FormatSerieValue(AvgArray[p] / AvgSamples, oZm.Series['VOLTAGE']);
-          this.AvgArray.push(Val.ValueHTML + ' ' + Val.Units);
-          Val = oZm.FormatSerieValue(Math.sqrt((StdArray[p] / AvgSamples) - Math.pow(AvgArray[p] / AvgSamples, 2)), oZm.Series['VOLTAGE']);
-          this.StdArray.push(Val.ValueHTML + ' ' + Val.Units);
-        }
-        this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
+      FormatPhases: function(val) {
+        var Return = [];
+        for(var n in val.Voltage.length) Return.push(this.FormatHTML(val.Voltage[n]));
+        return Return;
       }
     }
   }

@@ -3,9 +3,9 @@
     <div class="input-group input-group-xs">
       <span class="input-group-addon"><img :src="require('Imgs/outlook_calendar_work_week.png')"></span>
       <div class="input-group-btn">
-        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><span>{{ SelectedText }}</span><span class="caret"></span></button>
+        <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><span>{{ (value == null) ? 'No data' : value.toString() }}</span><span class="caret"></span></button>
         <ul class="dropdown-menu pull-right">
-          <li v-for="year in Years" v-bind:class="{ active: (year == SelectedText) }"><a @click="YearClick(year, $event)">{{ year }}</a></li>
+          <li v-for="year in Years" :key="year" v-bind:class="{ active: (year == value) }"><a @click="$emit('input', parseInt(year))">{{ year }}</a></li>
         </ul>
       </div>
     </div>
@@ -13,41 +13,51 @@
 </template> 
 
 <script>
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   export default {
-    props: { 'aggreg': String },
+    props: { storage: { type: String, default: null}, value: { type: Number, default: null }, aggreg: { type: String, default: '15M' }, analyzer: { type: Object } },
     data() {
-      return { SelectedText: 'No data', Years: [] };
-    },
-    methods: {
-      YearClick: function(year, event) {
-        event.preventDefault();
-        this.SelectedText = year;
-        this.$emit('YearChanged', year);
-      },
-      AnalyzerChanged: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Years = [];
-        $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Aggreg: this.aggreg, Analyzer: this.$root.SelectedAnalyzer.Analyzer }), 
-          success: function(result) {
-            for(var year = moment(result['From']).year(); year <= moment(result['To']).year(); year++) Years.push(year);
-            this.Years = Years.reverse();
-            if(Years.length > 0) {
-              this.SelectedText = Years[0];
-              this.$emit('YearChanged', Years[0]);
-            } else {
-              this.SelectedText = 'No data';
-              this.$emit('YearChanged', null);
-            }
-          }.bind(this)
-        }); 
-      }
+      return { Years: [] };
     },
     created: function() {
-      this.$root.$on('AnalyzerChanged', this.AnalyzerChanged);
+      if(this.analyzer !== null) this.GetYears();
     },
-    mounted: function() {
-      this.AnalyzerChanged();
+    watch: {
+      analyzer: function(val) {
+        this.Years = [];
+        this.$emit('input', null);
+        if(val !== null) this.GetYears();
+      },
+      value: function(val) {
+        if((this.storage != null) && (val != null)) localStorage.setItem(this.storage, val);
+      }
+    },
+    methods: {
+      GetYears: function() {
+        var Years = [];
+        this.$http.post("getSeriesRange", { Aggreg: this.aggreg, Analyzer: this.analyzer.Analyzer }).then( 
+          (result) => {
+            var StartYear = moment(result.data.From).year();
+            var EndYear = moment(result.data.To).year();
+            for(var year = StartYear; year <= EndYear; year++) Years.push(year);
+            this.Years = Years.reverse();
+            var Stored = null;
+            if(this.storage != null) {
+              Stored = parseInt(localStorage.getItem(this.storage));
+              if(isNaN(Stored) == true) Stored = null;
+            }
+            if(Years.length > 0) {
+              if((Stored >= StartYear) && (Stored <= EndYear)) {
+                this.$emit('input', Stored);
+              } else {
+                this.$emit('input', parseInt(Years[0]));
+              }
+            } else {
+              this.$emit('input', null);
+            }
+          }
+        ); 
+      }
     }
   }
 </script>
