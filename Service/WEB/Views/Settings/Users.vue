@@ -66,7 +66,18 @@
         this.User = null;
         this.ShowDialog = true;
       },
-      Edit: function(user, evt) {
+      Delete: function(user) {
+        this.ShowSpinner = true;
+        this.$http.post('delUser', { User: user.User }).then(
+          (result) => {
+            this.LoadUsers();
+          },
+          (fail) => {
+            this.ShowSpinner = false;
+          }
+        );
+      },
+      Edit: function(user) {
         this.ShowSpinner = true;
         this.$http.post('getUser', { User: user.User }).then(
           (result) => {

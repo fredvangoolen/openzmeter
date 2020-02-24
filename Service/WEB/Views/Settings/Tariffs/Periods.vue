@@ -16,10 +16,10 @@
             <color-picker v-model="props.rowData.Color" :columns="2" :colors="['#fffff0', '#ffecd6', '#ffd8bc', '#ffc4a2', '#ffae88', '#ff986c', '#ff7f50', '#f0ffff', '#d4f2f1', '#b7e5e2', '#98d8d3', '#78ccc5', '#55bfb8', '#20b2aa']"></color-picker>
           </template>
           <template slot="power" slot-scope="props">
-            <option-picker v-model="props.rowData.PowerMode" :options="['NONE', 'ESP_3.x', 'ESP_6.x (P1)', 'ESP_6.x (P2)', 'ESP_6.x (P3, P4, P5)', 'ESP_6.x (P6)']"></option-picker>
+            <option-picker v-model="props.rowData.PowerMode" :options="[ {name: 'NONE', value: 'NONE'}, {name: 'ESP_3.x', value: 'ESP_3.x'}, {name: 'ESP_6.x (P1)', value: 'ESP_6.x (P1)'}, {name: 'ESP_6.x (P2)', value: 'ESP_6.x (P2)'}, {name: 'ESP_6.x (P3, P4, P5)', value: 'ESP_6.x (P3, P4, P5)'}, {name:'ESP_6.x (P6)', value:'ESP_6.x (P6)'}]"></option-picker>
           </template>
           <template slot="reactive" slot-scope="props">
-            <option-picker v-model="props.rowData.ReactiveMode" :options="['NONE', 'ESP']"></option-picker>
+            <option-picker v-model="props.rowData.ReactiveMode" :options="[ {name: 'NONE', value: 'NONE'}, {name: 'ESP', value: 'ESP'} ]"></option-picker>
           </template>
         </vuetable>
       </div>

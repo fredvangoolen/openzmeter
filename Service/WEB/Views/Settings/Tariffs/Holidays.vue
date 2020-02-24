@@ -5,7 +5,7 @@
         <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Holidays</h4></div>
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="New holiday"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
         </div>
       </template>
       <div class="row">
@@ -21,6 +21,7 @@
         </div>
       </div>
     </dlg>
+    <holiday v-if="View=='Holiday'" :tariff="tariff" :index="Index" @close="View=null"></holiday>
   </div>
 </template>
 
@@ -36,51 +37,49 @@
       return { View: null,
         Columns: [
           {name: 'Name', title: 'Name'},
-          {name: 'StartDate', title: 'Start date', callback: 'DateFormat'},
-          {name: 'EndDate', title: 'End date', callback: 'DateFormat'},
+          {name: 'StartDate', title: 'Start date', callback: this.DateFormat },
+          {name: 'EndDate', title: 'End date', callback: this.DateFormat },
           {name: '__slot:actions', title: ''}
         ]
       };
     },
     methods: {
       DateFormat: function(val) {
-        return moment.tz(val, this.Tariff.TimeZone).format('DD/MM/YYYY');
+        return moment.tz(val, this.tariff.TimeZone).format('DD/MM/YYYY');
       },
-      FillTable: function() {
-        this.$refs.table.setData({ data: this.Tariff.Template.Holidays });
-      },
-      Load: function(tariff) {
-        this.Show = true;
-        this.Tariff = tariff;
-        this.ShowSpinner = true;
-        this.$nextTick(function() {
-          this.FillTable();
-        });
-      },
+//      FillTable: function() {
+//        this.$refs.table.setData({ data: this.Tariff.Template.Holidays });
+//      },
+//      Load: function(tariff) {
+//        this.Show = true;
+//        this.Tariff = tariff;
+//        this.ShowSpinner = true;
+//        this.$nextTick(function() {
+//          this.FillTable();
+//        });
+//      },
       Delete: function(index) {
-        if(confirm("Delete '"+this.Tariff.Template.Holidays[index].Name +"' holidays?")){
-          this.Tariff.Template.Holidays.splice(index, 1);
-          this.FillTable();
-        }
+        if(confirm("Delete '" + this.tariff.Template.Holidays[index].Name + "' holidays?")) this.tariff.Template.Holidays.splice(index, 1);
       },
       Add: function() {
-        this.Tariff.Template.Holidays.push({ StartDate: this.Tariff.StartDate, EndDate: this.Tariff.EndDate, Name: 'Unnamed holiday' });
-        this.Show = false;
-        this.$parent.$refs.Holiday.Load(this.Tariff, this.Tariff.Template.Holidays.length - 1);
+        this.tariff.Template.Holidays.push({ StartDate: this.tariff.StartDate, EndDate: this.tariff.EndDate, Name: 'Unnamed holiday' });
+//        this.Show = false;
+//        this.$parent.$refs.Holiday.Load(this.Tariff, this.Tariff.Template.Holidays.length - 1);
       },
       Edit: function(index) {
-        this.Show = false;
-        this.$parent.$refs.Holiday.Load(this.Tariff, index);
+        this.Index = index;
+        this.View = 'Holiday';
+//        this.$parent.$refs.Holiday.Load(this.Tariff, index);
       },
-      Back: function() {
-        this.Show = false;
-        this.$parent.$refs.Main.Load(this.Tariff);
-      }
+//      Back: function() {
+//        this.Show = false;
+//        this.$parent.$refs.Main.Load(this.Tariff);
+//      }
     },
     updated: function(){
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: { Vuetable }
+    components: { Vuetable, Holiday }
   }
 </script>
 

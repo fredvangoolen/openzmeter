@@ -23,7 +23,7 @@
         </div>
       </div>
     </dlg>
-    <season v-if="View=='Season'"></season>
+    <season v-if="View=='Season'" :tariff="tariff" :index="Index" @close="View=null"></season>
   </div>
 </template>
 
@@ -36,11 +36,11 @@
   export default {
     props: { tariff: Object },
     data() {
-      return { View: null,
+      return { View: null, Index: null,
         Columns: [
           {name: 'Name', title: 'Name' },
-          {name: 'StartDate', title: 'Start date', callback: 'DateFormat' },
-          {name: 'EndDate', title: 'End date', callback: 'DateFormat' },
+          {name: 'StartDate', title: 'Start date', callback: this.DateFormat },
+          {name: 'EndDate', title: 'End date', callback: this.DateFormat },
           {name: '__slot:actions', title: '' }
         ]
       };
@@ -52,19 +52,17 @@
       Duplicate: function(index) {
         var Row = Object.assign({}, this.tariff.Template.Seasons[index]);
         Row.Name = Row.Name + "_Copy";
-        var Row = this.tariff.Template.Seasons.push(Row);
-        this.Show = false;
-        this.$parent.$refs.Season.Load(this.Tariff, this.Tariff.Template.Seasons.length - 1);
+        this.tariff.Template.Seasons.push(Row);
       },
       Delete: function(index) {
         if(confirm("Delete '" + this.tariff.Template.Seasons[index].Name + "' season?")) this.tariff.Template.Seasons.splice(index, 1);
       },
       Add: function() {
-        this.tariff.Template.Seasons.push({ StartDate: this.Tariff.StartDate, EndDate: this.Tariff.EndDate, DayPeriods: new Array(24).fill(0), Name: 'Unnamed season' });
+        this.tariff.Template.Seasons.push({ StartDate: this.tariff.StartDate, EndDate: this.tariff.EndDate, DayPeriods: new Array(24).fill(0), Name: 'Unnamed season' });
       },
       Edit: function(index) {
-        this.Show = false;
-        this.$parent.$refs.Season.Load(this.Tariff, index);
+        this.Index = index;
+        this.View = 'Season';
       }
     },
     updated: function(){

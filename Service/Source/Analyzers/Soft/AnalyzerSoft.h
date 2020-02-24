@@ -183,7 +183,7 @@ class AnalyzerSoft final : public Analyzer {
     deque<EventCycle_t>        pPrevCycles;              //Previous cycles
   private : //Readed in thread, changed in configure
     pthread_t                  pSyncThread;              //Export thread
-    volatile bool              pSyncTerminate;           //Sync status
+    bool                       pSyncTerminate;           //Sync status
     string                     pSyncServer;              //Export server address
     string                     pSyncUser;                //Export server user
     string                     pSyncPass;                //Export server password

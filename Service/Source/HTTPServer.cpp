@@ -113,9 +113,7 @@ void HTTPServer::UnregisterCallback(const string &handleName) {
 string HTTPServer::ParseCookie(const string &cookie) {
   string CookieNum = "";
   auto Begin = cookie.find("SESSION=");
-  if(Begin != string::npos) {
-    CookieNum = cookie.substr(Begin + 8, cookie.find(';', Begin));
-  }
+  if(Begin != string::npos) CookieNum = cookie.substr(Begin + 8, cookie.find(';', Begin) - Begin - 8);
   return CookieNum;
 }
 void HTTPServer::HandleGet(const Request &request, Response &response) {

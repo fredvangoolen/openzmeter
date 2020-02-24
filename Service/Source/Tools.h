@@ -55,6 +55,7 @@ class RWLocks final {
     RWLocks();
     ~RWLocks();
     void ReadLock();
+    bool TryReadLock();
     void WriteLock();
     void Unlock();
 };

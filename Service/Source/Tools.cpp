@@ -108,6 +108,20 @@ void RWLocks::ReadLock() {
   }
   pthread_mutex_unlock(&pMutex);
 }
+bool RWLocks::TryReadLock() {
+  pthread_mutex_lock(&pMutex);
+  if((pWriters > 0) || (pWriter == true)) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  while((pWriters > 0) || (pWriter == true)) pthread_cond_wait(&pReadersCondition, &pMutex);
+  pReaders++;
+  if(pReaders > 10) {
+    printf("%d lectores\n", pReaders);
+  }
+  pthread_mutex_unlock(&pMutex);
+  return true;
+}
 void RWLocks::WriteLock() {
   pthread_mutex_lock(&pMutex);
   pWriters++;
