@@ -10,7 +10,6 @@
   import moment from 'moment';
   import 'moment-timezone';
   import chroma from 'chroma-js';
-  import * as oZm from 'JS/openZmeter.js';
   ;(function($) {
     $.fn.calendar.dates['custom'] = {
       days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -65,9 +64,9 @@
             $(element).prop({'data-toggle': 'tooltip', 'title': 'No data'} );
           } else {
             var Color = ColorScale((this.Days[Day] - Min) / (Max - Min));
-            var Units = oZm.GetBestUnits(this.Days[Day]);
+            var Units = this.BestUnits(this.Days[Day]);
             $(element).css({ background: Color, color: chroma(Color).luminance() > 0.5 ? '#000' : '#FFF', border: '1px solid ' + chroma(Color).darker(0.1)});
-            $(element).prop({'data-toggle': 'tooltip', 'title': oZm.RoundPlain(oZm.ScaleToUnits(this.Days[Day], Units), 2) + ' ' + Units + 'Wh'} );
+            $(element).prop({'data-toggle': 'tooltip', 'title': this.Round(this.ScaleUnits(this.Days[Day], Units), 2, false) + ' ' + Units + 'Wh'} );
           }
         });
       }

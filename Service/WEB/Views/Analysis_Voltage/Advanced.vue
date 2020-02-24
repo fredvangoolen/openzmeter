@@ -16,7 +16,7 @@
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
       <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
-        <graph :options="GraphOptions" :paused="MouseOver" :height="Expanded?DialogHeight:300"></graph>
+        <graph :options="GraphOptions" :paused="MouseOver" :height="Expanded?DialogHeight:300" :analyzer="analyzer"></graph>
       </div>
     </portal>
     <dlg-fs v-if="Expanded" title="Advanced" :height.sync="DialogHeight"></dlg-fs>
@@ -35,8 +35,13 @@
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
-        if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return { };
-        var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
+        var Opt = { series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
+        Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
+        Opt.interactionModel = Graph.InteractionModels.Fixed(this);
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrayBorder;
+        if((this.Phases == null) || (this.Options == null)) return Opt;
+        Opt.visibility = [];
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
         var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
@@ -46,10 +51,7 @@
         for(var n in CurrentNames) Opt.series[CurrentNames[n]] = { axis: 'y2' };
         Opt.gridLineColor = "#BBB";
         Opt.gridLinePattern = [4, 4];
-        Opt.plugins = [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ];
-        Opt.interactionModel = Graph.FixedRangeInteractionModel(this);
         Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x - this.VOffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'V'); };

@@ -50,10 +50,10 @@
         Opt.gridLineColor = "#BBB";
         Opt.gridLinePattern = [4, 4];
         Opt.interactionModel = { };
-        Opt.plotter = Graph.multiColumnBarPlotter;
-        Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
-        Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.plotter = Graph.Plotters.MultiBar;
+        Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
+        Opt.legenDFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x - this.COffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'A'); };
@@ -66,7 +66,7 @@
         Opt.axes.y2.axisLabelFormatter = (x) => { return this.Round(x - this.COffset, 2, true); };
         Opt.axes.y2.ticker = this.Options['Voltage'] ? this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.COffset) } : Dygraph.numericTicks : () => { return []; };
         Opt.axes.x.drawGrid = false;
-        Opt.axes.x.ticker = () => { return Graph.OddHarmonicsTicks(this.analyzer); };
+        Opt.axes.x.ticker = () => { return Graph.Tickers.OddHarmonicsTicks(this.analyzer); };
         Opt.axes.x.axisLabelFormatter = (x) => { return oZm.Series['HARMONICS'].Names[x]; };
         Opt.axes.x.valueFormatter = (y) => { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (this.analyzer.NominalFrequency * (y + 1)) + 'Hz)'; };
         Opt.labels = ['Harmonic'].concat(CurrentNames).concat(VoltageNames);

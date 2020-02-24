@@ -25,7 +25,6 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
   export default {
     props: { analyzer: Object, data: Object, paused: Boolean },
@@ -35,27 +34,29 @@
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
-        if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return { };
-        var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
+        var Opt = { series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
+        Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
+        Opt.interactionModel = Graph.InteractionModels.Fixed(this);
+        Opt.gridLineColor = "#BBB";
+        Opt.gridLinePattern = [4, 4];
+        Opt.legend = 'follow';
+        Opt.selectMode = 'euclidian';
+        Opt.fillGraph = true;
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        if((this.Phases == null) || (this.Options == null)) return Opt;
+        Opt.visibility = [];
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
         var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
         var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n]);
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n] && this.Options['Voltage']);
-
         for(var n in VoltageNames) Opt.series[VoltageNames[n]] = { axis: 'y2' };
-        Opt.gridLineColor = "#BBB";
-        Opt.gridLinePattern = [4, 4];
-        Opt.plugins = [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ];
-        Opt.interactionModel = Graph.FixedRangeInteractionModel(this);
-        Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x - this.VOffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'V'); };
         Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x - this.VOffset, 2, true); };
-        Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.VOffset); } : Dygraph.numericTicks;
+        Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.Tickers.DBTicks(min, max, this.VOffset); } : Graph.Tickers.Default;
         Opt.axes.y.strokeWidth = VoltageStyle.Width;
         Opt.axes.y2.strokeWidth = CurrentStyle.Width;
         Opt.axes.y2.pixelsPerLabel = 15;
@@ -63,10 +64,9 @@
         Opt.axes.y2.axisLabelWidth = this.Options['Current'] ? 34 : 0;
         Opt.axes.y2.valueFormatter = (x) => { return this.Round(x - this.COffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'A'); };
         Opt.axes.y2.axisLabelFormatter = (x) => { return this.Round(x - this.COffset, 2, true); };
-        Opt.axes.y2.ticker = this.Options['Current'] ? this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.COffset) } : Dygraph.numericTicks : () => { return []; };
+        Opt.axes.y2.ticker = this.Options['Current'] ? this.Options['Log'] ? (min, max) => { return Graph.Tickers.DBTicks(min, max, this.COffset) } : Graph.Tickers.Default : () => { return []; };
         Opt.axes.x.drawGrid = false;
-        Opt.fillGraph = true;
-        Opt.selectMode = 'euclidian';
+
         Opt.axes.x.axisLabelFormatter = (y) => {
           y = (y / 10 * this.analyzer.NominalFrequency);
           if(y >= 1000) {
@@ -105,7 +105,9 @@
         }
         return Opt;
       },
-
+      Export: function() {
+        return [];
+      }
     },
     methods: {
       Redraw: function() {

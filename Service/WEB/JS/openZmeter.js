@@ -17,8 +17,26 @@ const openZmeter = {
         }
       }
       if(options != null) {
+        //This mode, enabled a minimum of 0 value, a min width of rmsRange and a margin of 10%
+        if(options.rmsRange != null) {
+          if((UpperRange == -Infinity) || (LowerRange == Infinity)) return [0, options.rmsRange];
+          var Width = Math.max((UpperRange - LowerRange) * 0.1, options.rmsRange / 2.0);
+          return [Math.max(0, LowerRange - Width), Math.max(UpperRange + Width)];
+        }
+        if(options.incZero != null) {
+          if((UpperRange == -Infinity) || (LowerRange == Infinity)) return [0, options.incZero];
+          if(LowerRange > 0) LowerRange = 0;
+          if(UpperRange < 0) UpperRange = 0;
+          var Width = Math.max((UpperRange - LowerRange) * 0.1, options.incZero / 2.0);
+          return [(LowerRange < 0) ? LowerRange - Width : LowerRange, (UpperRange > 0) ? UpperRange + Width : UpperRange];
+        }
+
+
         if((UpperRange == -Infinity) && (options.defMax != null)) UpperRange = options.defMax;
         if((LowerRange == Infinity) && (options.defMin != null)) LowerRange = options.defMin;
+
+
+
         if((UpperRange > 0) && (options.upperPercent != null)) UpperRange += Math.abs(UpperRange * options.upperPercent);
         if((LowerRange < 0) && (options.lowerPercent != null)) LowerRange -= Math.abs(LowerRange * options.lowerPercent);
         if((UpperRange > 0) && (options.minUpperWidth != null)) UpperRange = Math.max(UpperRange, options.minUpperWidth);
@@ -48,6 +66,11 @@ const openZmeter = {
       Fraction = Fraction.toString();
       while(Fraction.length < decimals) Fraction = '0' + Fraction;
       return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + (html ? "<span style='font-size:80%'>." + Fraction + '</span>' : '.' + Fraction);
+    },
+    Vue.prototype.ArrayAbsMax = (array) => {
+      var Max = 0;
+      for(var i in array) Max = Math.max(Max, Array.isArray(array[i]) ? ArrayMax(array[i]) : Math.abs(array[i]));
+      return Max;
     },
     Vue.prototype.BinPower = (complex) => {
       return Math.sqrt(Math.pow(complex[0], 2.0) + Math.pow(complex[1], 2.0));

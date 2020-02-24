@@ -36,8 +36,17 @@
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
-        if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return { };
-        var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
+        var Opt = { series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
+        Opt.strokeWidth = 0.5;
+        Opt.gridLineColor = "#BBB";
+        Opt.gridLinePattern = [4, 4];
+        Opt.interactionModel = { };
+        Opt.plotter = Graph.Plotters.MultiBar;
+        Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
+        Opt.legend = 'follow';
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        if((this.Phases == null) || (this.Options == null)) return { };
+        Opt.visibility = [];
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
         for(var c in CurrentStyle.Colors) CurrentStyle.Colors[c] = chroma(CurrentStyle.Colors[c]).darken();
@@ -46,27 +55,19 @@
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
         for(var n in CurrentNames) Opt.series[CurrentNames[n]] = { axis: 'y2' };
-        Opt.strokeWidth = 0.5;
-        Opt.gridLineColor = "#BBB";
-        Opt.gridLinePattern = [4, 4];
-        Opt.interactionModel = { };
-        Opt.plotter = Graph.multiColumnBarPlotter;
-        Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
-        Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x - this.VOffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'V'); };
         Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x - this.VOffset, 2, true); };
-        Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.VOffset); } : Dygraph.numericTicks;
+        Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.Tickers.DBTicks(min, max, this.VOffset); } : Graph.Tickers.Default;
         Opt.axes.y2.pixelsPerLabel = 15;
         Opt.axes.y2.drawAxis = this.Options['Current'];
         Opt.axes.y2.axisLabelWidth = this.Options['Current'] ? 34 : 0;
         Opt.axes.y2.valueFormatter = (x) => { return this.Round(x - this.COffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'A'); };
         Opt.axes.y2.axisLabelFormatter = (x) => { return this.Round(x - this.COffset, 2, true); };
-        Opt.axes.y2.ticker = this.Options['Current'] ? this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.COffset) } : Dygraph.numericTicks : () => { return []; };
+        Opt.axes.y2.ticker = this.Options['Current'] ? this.Options['Log'] ? (min, max) => { return Graph.Tickers.DBTicks(min, max, this.COffset) } : Graph.Tickers.Default : () => { return []; };
         Opt.axes.x.drawGrid = false;
-        Opt.axes.x.ticker = () => { return Graph.OddHarmonicsTicks(this.analyzer); };
+        Opt.axes.x.ticker = () => { return Graph.Tickers.OddHarmonicsTicks(this.analyzer); };
         Opt.axes.x.axisLabelFormatter = (x) => { return oZm.Series['HARMONICS'].Names[x]; };
         Opt.axes.x.valueFormatter = (y) => { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (this.analyzer.NominalFrequency * (y + 1)) + 'Hz)'; };
         Opt.labels = ['Harmonic'].concat(VoltageNames).concat(CurrentNames);

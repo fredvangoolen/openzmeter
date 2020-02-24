@@ -10,7 +10,7 @@
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
                 <button-export :rows="Export" file="Frequency"></button-export>
-                <button-expand :expanded.sync="Expanded"></button-expand>
+                <button-expand v-model="Expanded"></button-expand>
               </div>
             </portal>
           </div>
@@ -47,12 +47,9 @@
                DataNow: null, ControlNow: null, DataGraph: null, ControlGraph: null };
       },
     watch: {
-      analyzer: function() { this.UpdateNowValues(); this.UpdateGraphValues(); },
-      Aggreg: function() {  this.UpdateGraphValues(); },
-      Range: function() { this.UpdateGraphValues(); },
-      Range2: function(val) {
-        console.log(val);
-      }
+      analyzer: function() { this.UpdateNowValues(true); this.UpdateGraphValues(true); },
+      Aggreg: function() {  this.UpdateGraphValues(true); },
+      Range: function() { this.UpdateGraphValues(false); },
     },
     computed: {
       Export: function() {
@@ -63,30 +60,32 @@
       }
     },
     created: function() {
-      this.UpdateNowValues();
-      this.UpdateGraphValues();
+      this.UpdateNowValues(true);
+      this.UpdateGraphValues(true);
     },
     beforeDestroy: function() {
       this.CancelTransfer(this.ControlNow);
       this.CancelTransfer(this.ControlGraph);
     },
     methods: {
-      UpdateNowValues: function() {
+      UpdateNowValues: function(clear) {
+        if(clear == true) this.DataNow = null;
         this.ControlNow = this.CancelTransfer(this.ControlNow);
         if(this.analyzer == null) return;
         this.ControlNow.CancelFunc = this.analyzer.GetSeriesLast('3S', ['FREQUENCY'],
           (working) => {},
-          (result) => { this.DataNow = result; },
-          (timeout) => { this.ControlNow.Timer = setTimeout( () => { this.UpdateNowValues(); }, timeout); }
+          (result) => { this.DataNow = Object.seal(result); },
+          (timeout) => { this.ControlNow.Timer = setTimeout( () => { this.UpdateNowValues(false); }, timeout); }
         );
       },
-      UpdateGraphValues: function() {
+      UpdateGraphValues: function(clear) {
+        if(clear == true) this.DataGraph = null;
         this.ControlGraph = this.CancelTransfer(this.ControlGraph);
         if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
         this.ControlGraph.CancelFunc = this.analyzer.GetSeriesRange(this.Aggreg, this.Range, this.DataGraph, ['FREQUENCY'],
           (working) => { this.ShowSpinner = working; },
-          (result) => { this.DataGraph = Object.freeze(result); },
-          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
+          (result) => { this.DataGraph = Object.seal(result); },
+          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(false); }, timeout); }
         );
       }
     },

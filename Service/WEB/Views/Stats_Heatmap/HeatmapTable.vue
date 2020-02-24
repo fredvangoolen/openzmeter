@@ -116,8 +116,8 @@
             } else {
               this.Days[i].Cells[n].Color = ColorScale((this.Days[i].Cells[n].Value - Min) / (Max - Min));
               this.Days[i].Cells[n].BorderColor = chroma(this.Days[i].Cells[n].Color).darken(0.1);
-              var Units = oZm.GetBestUnits(this.Days[i].Cells[n].Value);
-              this.Days[i].Cells[n].Text = oZm.RoundPlain(oZm.ScaleToUnits(this.Days[i].Cells[n].Value, Units), 2) + ' ' + Units + 'Wh';
+              var Units = this.BestUnits(this.Days[i].Cells[n].Value);
+              this.Days[i].Cells[n].Text = this.Round(this.ScaleUnits(this.Days[i].Cells[n].Value, Units), 2, false) + ' ' + Units + 'Wh';
 
             }
           }
