@@ -59,23 +59,6 @@ class RWLocks final {
     void Unlock();
 };
 //----------------------------------------------------------------------------------------------------------------------
-class WorkerLocks final {
-  //Worker locks until signal to wakeup, caller can wait worker to ends
-  private :
-    bool            pWorking;
-    volatile bool   pTerminate;
-    pthread_mutex_t pMutex;
-    pthread_cond_t  pCond;
-  public :
-    WorkerLocks();
-    void Abort(pthread_t &thread);
-    bool WorkerWaitTask();
-    void WorkerEndsTask();
-    void WakeWorker();
-    void WaitWorker();
-    bool IsWorking();
-};
-//----------------------------------------------------------------------------------------------------------------------
 class ProviderLocks {
   //Provider wait until all consumers ends, consumers wait until provider write
   private :
