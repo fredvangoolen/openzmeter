@@ -1,7 +1,18 @@
-/* ================================== zMeter ===========================================================================
- * File:     DB.cpp
- * Author:   Eduardo Viciana (12 de abril de 2017)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #include <stdlib.h>
 #include <sys/types.h>
 #include <string.h>
@@ -13,11 +24,33 @@
 //----------------------------------------------------------------------------------------------------------------------
 string                             Database::pConnectionString;
 queue<Database::PoolConnection_t>  Database::pConnectionPool;
-pthread_mutex_t                    Database::pMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t                    Database::pMutex       = PTHREAD_MUTEX_INITIALIZER;
 bool                               Database::pPoolEnabled = false;
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(const string &schema) {
-  if(pConnectionString.empty() == true) ReadConfig();
+  if(pConnectionString.empty() == true) {
+    json Config = ConfigManager::ReadConfig("/Database");
+    uint16_t Port     = 5432;
+    string   Hostname = "localhost";
+    string   DataBase = "openzmeter";
+    string   Username = "openzmeter";
+    string   Password = "openzmeter";
+    if(Config.is_object()) {
+      if(Config["Hostname"].is_string())      Hostname = Config["Hostname"];
+      if(Config["Port"].is_number_unsigned()) Port     = Config["Port"];
+      if(Config["Database"].is_string())      DataBase = Config["Database"];
+      if(Config["Username"].is_string())      Username = Config["Username"];
+      if(Config["Password"].is_string())      Password = Config["Password"];
+    }
+    Config = json::object();
+    Config["Hostname"] = Hostname;
+    Config["Port"]     = Port;
+    Config["Database"] = DataBase;
+    Config["Username"] = Username;
+    Config["Password"] = Password;
+    ConfigManager::WriteConfig("/Database", Config);
+    pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase + " sslmode=allow";
+  }
   pSchema    = schema;
   pResult    = NULL;
   pDBConn    = NULL;
@@ -25,20 +58,20 @@ Database::Database(const string &schema) {
   pthread_mutex_lock(&pMutex);
   if(pPoolEnabled == true) {
     if(pConnectionPool.size() > 0) {
-      pDBConn = pConnectionPool.front().Connection;
+      pDBConn    = pConnectionPool.front().Connection;
       pUsageTime = pConnectionPool.front().UsageTime;
-      pLastTime = Tools::GetTime();
-      pFreeTime = pConnectionPool.front().FreeTime + (pLastTime - pConnectionPool.front().LastTime);
+      pLastTime  = Tools::GetTime();
+      pFreeTime  = pConnectionPool.front().FreeTime + (pLastTime - pConnectionPool.front().LastTime);
       pConnectionPool.pop();
     }
   }
   pthread_mutex_unlock(&pMutex);
   if(pDBConn == NULL) {
-    New = true;
+    New        = true;
     pUsageTime = 0;
-    pFreeTime = 0;
-    pLastTime = Tools::GetTime();
-    pDBConn = PQconnectdb(pConnectionString.c_str());
+    pFreeTime  = 0;
+    pLastTime  = Tools::GetTime();
+    pDBConn    = PQconnectdb(pConnectionString.c_str());
   }
   if(PQstatus(pDBConn) != CONNECTION_OK) {
     char *Save;
@@ -76,9 +109,6 @@ void Database::DisablePool() {
   pPoolEnabled = false;
   pthread_mutex_unlock(&pMutex);
 }
-string Database::GetSchema() const {
-  return pSchema;
-}
 void Database::RemoveExpiredSessions() {
   pthread_mutex_lock(&pMutex);
   uint64_t Time = Tools::GetTime();
@@ -99,9 +129,9 @@ Database::~Database() {
     pthread_mutex_lock(&pMutex);
     if(pPoolEnabled == true) {
       PoolConnection_t Connection;
-      Connection.FreeTime = pFreeTime;
-      Connection.LastTime = Tools::GetTime();
-      Connection.UsageTime = pUsageTime + (Connection.LastTime - pLastTime);
+      Connection.FreeTime   = pFreeTime;
+      Connection.LastTime   = Tools::GetTime();
+      Connection.UsageTime  = pUsageTime + (Connection.LastTime - pLastTime);
       Connection.Connection = pDBConn;
       pConnectionPool.push(Connection);
     } else {
@@ -110,47 +140,8 @@ Database::~Database() {
     pthread_mutex_unlock(&pMutex);
   }
 }
-void Database::ReadConfig() {
-  json Config = ConfigManager::ReadConfig("/Database");
-  uint16_t Port     = 5432;
-  string   Hostname = "localhost";
-  string   DataBase = "openzmeter";
-  string   Username = "openzmeter";
-  string   Password = "openzmeter";
-  if(Config.is_object()) {
-    if(Config["Hostname"].is_string())      Hostname = Config["Hostname"];
-    if(Config["Port"].is_number_unsigned()) Port     = Config["Port"];
-    if(Config["Database"].is_string())      DataBase = Config["Database"];
-    if(Config["Username"].is_string())      Username = Config["Username"];
-    if(Config["Password"].is_string())      Password = Config["Password"];
-  } else {
-    LOGFile::Info("No database configuration found. Trying to create one with default settings\n");
-    //there no database configuration in config file, this is the first run of application after installing, try to add default user, and create empty database
-    PGconn *DBConn = PQconnectdb("host=localhost user=postgres dbname=postgres");
-      if(PQstatus(DBConn) == CONNECTION_OK) {
-      size_t Len;
-      char *Script = (char*)ResourceLoader::GetFile("SQL/Database_Init.sql", &Len);
-      Script[Len - 1] = 0;
-      PGresult *Result = PQexec(DBConn, Script);
-      if(PQresultStatus(Result) != PGRES_COMMAND_OK) LOGFile::Error("Unable to create default user and database, create it manually\n");
-      PQclear(Result);
-      PQfinish(DBConn);
-    } else {
-      char *Save;
-      LOGFile::Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(DBConn), "\r\n", &Save));
-    }
-  }
-  Config = json::object();
-  Config["Hostname"] = Hostname;
-  Config["Port"] = Port;;
-  Config["Database"] = DataBase;
-  Config["Username"] = Username;
-  Config["Password"] = Password;
-  ConfigManager::WriteConfig("/Database", Config);
-  pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase + " sslmode=allow";
-}
 bool Database::FecthRow() {
-  if(pResult != NULL) PQclear(pResult);  
+  if(pResult != NULL) PQclear(pResult);
   pResult = PQgetResult(pDBConn);
   if(PQresultStatus(pResult) != PGRES_SINGLE_TUPLE) {
     char *Save;
@@ -167,6 +158,7 @@ bool Database::ExecResource(const string &file) {
   return ExecSentenceNoResult(Script);
 }
 bool Database::ExecSentenceNoResult(const string &sql) {
+//  printf("%s\n", sql.c_str());
   if(pDBConn == NULL) return false;
   ClearAsync();
   PGresult *Result = PQexec(pDBConn, sql.c_str());
@@ -178,7 +170,7 @@ bool Database::ExecSentenceNoResult(const string &sql) {
     return false;
   } else {
     PQclear(Result);
-    return true;  
+    return true;
   }
 }
 bool Database::ExecSentenceAsyncResult(const string &sql) {
@@ -199,7 +191,7 @@ bool Database::ExecSentenceAsyncResult(const string &sql) {
 void Database::ClearAsync() {
   if(pResult == NULL) return;
   do {
-    PQclear(pResult);  
+    PQclear(pResult);
     pResult = PQgetResult(pDBConn);
   } while(pResult != NULL);
 }
@@ -226,6 +218,19 @@ string Database::Bind(const vector< vector<float> > &params) const {
   Result.append("}'");
   return Result;
 }
+string Database::Bind(const float *params, const uint32_t lenA, const uint32_t lenB) const {
+  string Result = "'{";
+  for(uint32_t i = 0; i < lenA; i++) {
+    Result.append("{");
+    for(uint32_t n = 0; n < lenB; n++) {
+      Result.append(isnan(params[i * lenB + n]) ? string("NULL") : to_string(params[i * lenB + n]));
+      Result.append((n < (lenB - 1)) ? ", " : "}");
+    }
+    if(i < (lenA - 1)) Result.append(", ");
+  }
+  Result.append("}'");
+  return Result;
+}
 string Database::Bind(const vector<uint16_t> &params) const {
   string Result = "'{";
   for(uint i = 0; i < params.size(); i++) {
@@ -242,27 +247,12 @@ string Database::Bind(const vector<float> &params) const {
   }
   return Result;
 }
-string Database::Bind(const float *param, uint32_t size) const {
+string Database::Bind(const float *params, const uint32_t len) const {
   string Result = "'{";
-  for(unsigned i = 0; i < size; i++) {
-    Result.append(isfinite(param[i]) ? to_string(param[i]) : string("NULL"));
-    Result.append((i < (size - 1)) ? ", " : "}'");
+  for(uint32_t i = 0; i < len; i++) {
+    Result.append(isnan(params[i]) ? string("NULL") : to_string(params[i]));
+    Result.append((i < (len - 1)) ? ", " : "}'");
   }
-  return Result;
-}
-string Database::Bind(const float *param, uint32_t sizeA, uint32_t sizeB) const {
-  string Result = "'{";
-  for(uint32_t i = 0; i < sizeA; i++) {
-    Result.append("{");
-    const float *Ptr = &param[i * sizeB];
-    for(uint32_t n = 0; n < sizeB; n++) {
-      Result.append(isfinite(Ptr[n]) ? to_string(Ptr[n]) : string("NULL"));
-      if(n < (sizeB - 1)) Result.append(", ");
-    }
-    Result.append("}");
-    if(i < (sizeA - 1)) Result.append(", ");
-  }
-  Result.append("}'");
   return Result;
 }
 string Database::Bind(const bool param) const {

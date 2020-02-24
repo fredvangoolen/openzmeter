@@ -1,17 +1,23 @@
 <template>
-  <dlg ref="Dialog">
+  <dlg>
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Maintenance</h4></div>
       <div class="pull-right btn-group" v-if="View == 'Main'">
-        <button type="button" class="btn btn-default btn-xs" v-on:click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </template>
-    <input type="file" name="name" style="display: none;" ref="filename" v-on:change="FileSet" accept="application/gzip, .gz"/>
+    <input type="file" name="name" style="display: none;" ref="filename" @change="FileSet" accept="application/gzip, .gz"/>
     <div v-if="View == 'Main'">
-      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Analyzer data takes currently <strong>{{ DBSize }}</strong></div>
+      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Analyzer data takes currently <strong>{{ FormatBinary(analyzer.Size) }}</strong></div>
       <div class="row">
-        <div class="col-xs-12 col-sm-6"><label class="control-label">From</label><date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:change="SetStartDate"></date-picker></div>
-        <div class="col-xs-12 col-sm-6"><label class="control-label">To</label><date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: Analyzer.TimeZone }" v-on:change="SetEndDate"></date-picker></div>
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">From</label>
+          <date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" @change="SetStartDate"></date-picker>
+        </div>
+        <div class="col-xs-12 col-sm-6">
+          <label class="control-label">To</label>
+          <date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" @change="SetEndDate"></date-picker>
+        </div>
       </div>
       <hr style="margin-top: 10px; margin-bottom: 10px;"/>
       <div class="row" style="margin-top:5px; margin-bottom: 5px">
@@ -38,7 +44,7 @@
 </template>
 
 <script>
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import DatePicker from 'Components/DatePicker.vue';
   import ProgressBar from 'Components/ProgressBar.vue';
   import * as oZm from 'JS/openZmeter.js';
@@ -47,22 +53,26 @@
   import FileSaver from 'JS/FileSaver.js';
   import Pako from 'JS/pako.js';
   export default {
+    props: { analyzer: Object },
     data() {
-      return { Analyzer: null, DBSize: '', DateText: '', Progress: 0, View: '', SizeText: '', Range: 0 };
+      return { DBSize: '', DateText: '', Progress: 0, View: 'Main', SizeText: '', Range: 0 };
     },
     methods: {
-      Show: function (analyzer) {
-        this.Analyzer = analyzer;
-        this.DBSize = oZm.GetBestUnitsBin(analyzer.Size);
-        this.StartDate = moment.tz(this.Analyzer.TimeZone).startOf('year').valueOf();
-        this.EndDate = moment.tz(this.Analyzer.TimeZone).endOf('year').valueOf();
-        this.View = 'Main';
-        this.$refs.Dialog.Show();
-        this.$nextTick(function () {
-          this.$refs.StartDate.SetDate(this.StartDate);
-          this.$refs.EndDate.SetDate(this.EndDate);
-        });
+      FormatBinary: function(val) {
+        return oZm.GetBestUnitsBin(val);
       },
+//      Show: function (analyzer) {
+
+//        this.DBSize = oZm.GetBestUnitsBin(analyzer.Size);
+//        this.StartDate = moment.tz(this.Analyzer.TimeZone).startOf('year').valueOf();
+//        this.EndDate = moment.tz(this.Analyzer.TimeZone).endOf('year').valueOf();
+//        this.View = 'Main';
+//        this.$refs.Dialog.Show();
+//        this.$nextTick(function () {
+//          this.$refs.StartDate.SetDate(this.StartDate);
+//          this.$refs.EndDate.SetDate(this.EndDate);
+//        });
+//      },
       SetStartDate: function(date) {
         this.StartDate = date.startOf('day').valueOf();
       },
@@ -150,8 +160,8 @@
             alert("ERRORRRRRR")
           }
         });
-          
-          
+
+
         };
         FetchFunc('3S', Series3S);
       },

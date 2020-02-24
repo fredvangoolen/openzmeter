@@ -1,271 +1,144 @@
-/* ================================== zMeter ===========================================================================
- * File:     DeviceInterface.cpp
- * Author:   Eduardo Viciana (12 de abril de 2017)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #include <string.h>
 #include <math.h>
 #include "Device.h"
 #include "HTTPServer.h"
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
-Device::Device(const string &serial, const string &driver, const string &name) {
-  pMembersLock.WriteLock();
-  pState = UNCONFIGURED;
-  pSerial = serial;
-  pDriver = driver;
-  pName = name;
-  pMembersLock.WriteUnlock();
+Device::Device(const string &serial, const string &driver, const string &name) : Serial(serial), Driver(driver), Name(name) {
+  pEnabled = false;
 }
 Device::~Device() {
-  pMembersLock.WriteLock();
-  while(pAnalyzers.size() > 0) {
-    Analyzer *Analyzer = pAnalyzers.back();
-    pAnalyzers.pop_back();
-    delete Analyzer;
-  }
-  pMembersLock.WriteUnlock();
+  ClearAnalyzers();
 }
-string Device::Serial() {
-  pMembersLock.ReadLock();
-  string Serial = pSerial;
-  pMembersLock.ReadUnlock();
-  return Serial;
+void Device::AddAnalyzer(Analyzer *analyzer) {
+  pAnalyzersLock.WriteLock();
+  auto Tmp = pAnalyzers.insert(analyzer);
+  if(Tmp.second == false) delete analyzer;
+  pAnalyzersLock.Unlock();
+}
+void Device::ClearAnalyzers() {
+  pAnalyzersLock.WriteLock();
+  while(pAnalyzers.size() > 0) {
+    auto Tmp = pAnalyzers.begin();
+    delete *Tmp;
+    pAnalyzers.erase(Tmp);
+  }
+  pAnalyzersLock.Unlock();
 }
 json Device::GetJSONDescriptor() {
   json Device = json::object();
-  pMembersLock.ReadLock();
-  Device["Driver"] = pDriver;
-  Device["Name"] = pName;
-  Device["Serial"] = pSerial;
+  Device["Driver"]    = Driver;
+  Device["Name"]      = Name;
+  Device["Serial"]    = Serial;
+  Device["Enabled"]   = pEnabled;
+  pAnalyzersLock.ReadLock();
   Device["Analyzers"] = pAnalyzers.size();
-  Device["Status"] = (pState == Device::UNCONFIGURED) ? "UNCONFIGURED" : (pState == Device::STOPPED) ? "STOPPED" : "RUNNING";
-  pMembersLock.ReadUnlock();
+  pAnalyzersLock.Unlock();
   return Device;
 }
-json Device::GetJSONAnalyzerDescriptor(const string &serial) {
-  json Response = nullptr;
-  pMembersLock.ReadLock();
-  for(Analyzer *Tmp : pAnalyzers) {
-    if(Tmp->Serial() != serial) continue;
-    Response = Tmp->GetJSONShortDescriptor();
-    break;
+json Device::GetJSONAnalyzers(const string &user) {
+  json Result = json::array();
+  pAnalyzersLock.ReadLock();
+  for(auto &Tmp : pAnalyzers) {
+    if(Tmp->CheckRights(user, Analyzer::READ)) Result.push_back(Tmp->GetJSONDescriptor());
   }
-  pMembersLock.ReadUnlock();
-  return Response;
+  pAnalyzersLock.Unlock();
+  return Result;
 }
-json Device::GetJSONAllAnalyzerDescriptors() {
-  json Response = json::array();
-  pMembersLock.ReadLock();
-  for(Analyzer *Tmp : pAnalyzers) Response.push_back(Tmp->GetJSONShortDescriptor());
-  pMembersLock.ReadUnlock();
-  return Response;
+void Device::GetRemote(const json &params, Response &response) {
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
 }
-void Device::StartDevice(HTTPRequest &req) {
-  json Response = json::object();
-  Response["Status"] = StartDevice();
-  req.FromJSON(Response);
+void Device::SetRemote(const json &params, Response &response) {
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
 }
-void Device::StopDevice(HTTPRequest &req) {
-  json Response = json::object();
-  Response["Status"] = StopDevice();
-  req.FromJSON(Response);
-}
-Analyzer *Device::FindAnalyzer(const string &serial) {
-  pMembersLock.ReadLock();
-  for(Analyzer *Tmp : pAnalyzers) {
-    if(Tmp->Serial() != serial) continue;
-    pMembersLock.ReadUnlock();
-    return Tmp;
+bool Device::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
+  string Serial = params["Analyzer"];
+  pAnalyzersLock.ReadLock();
+  auto Tmp = pAnalyzers.find(Serial);
+  if(Tmp == pAnalyzers.end()) {
+    pAnalyzersLock.Unlock();
+    return false;
+  } else {
+    ((*Tmp)->*method)(params, response);
+    pAnalyzersLock.Unlock();
+    return true;
   }
-  pMembersLock.ReadUnlock();
-  return NULL;
 }
-bool Device::GetAnalyzer(HTTPRequest& req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetAnalyzer(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::GetAnalyzer(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetAnalyzer);
 }
-bool Device::SetAnalyzer(HTTPRequest& req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->SetAnalyzer(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::SetAnalyzer(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::SetAnalyzer);
 }
-bool Device::GetSeries(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetSeries(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::GetSeries(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetSeries);
 }
-bool Device::GetSeriesNow(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetSeriesNow(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::GetSeriesNow(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetSeriesNow);
 }
-bool Device::GetSeriesRange(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);  
-  if(Tmp != NULL) Tmp->GetSeriesRange(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::GetSeriesRange(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetSeriesRange);
 }
-bool Device::GetEvents(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);  
-  if(Tmp != NULL) Tmp->GetEvents(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::GetEvents(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetEvents);
 }
-bool Device::GetEvent(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetEvent(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::GetEvent(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetEvent);
 }
-bool Device::SetEvent(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->SetEvent(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::SetEvent(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::SetEvent);
 }
-bool Device::DelEvent(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->DelEvent(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::DelEvent(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::DelEvent);
 }
-bool Device::GetRates(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetRates(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::GetRates(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetRates);
 }
-bool Device::GetRate(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetRate(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::GetRate(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetRate);
 }
-bool Device::SetRate(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->SetRate(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::SetRate(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::SetRate);
 }
-bool Device::DelRate(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->DelRate(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::DelRate(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::DelRate);
 }
-bool Device::AddRate(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->AddRate(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::AddRate(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::AddRate);
 }
-bool Device::GetPrices(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetPrices(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::GetPrices(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetPrices);
 }
-bool Device::TestAlarm(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->TestAlarm(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::TestAlarm(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::TestAlarm);
 }
-bool Device::GetAlarms(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetAlarms(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::GetAlarms(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetAlarms);
 }
-bool Device::GetAlarm(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->GetAlarm(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::GetPermissions(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetPermissions);
 }
-bool Device::SetAlarm(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->SetAlarm(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::AddPermission(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::AddPermission);
 }
-bool Device::AddAlarm(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->AddAlarm(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::SetPermission(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::SetPermission);
 }
-bool Device::DelAlarm(HTTPRequest &req) {
-  json Params = req.GetParams();
-  string Serial = Params["Analyzer"];
-  pMembersLock.ReadLock();
-  Analyzer *Tmp = FindAnalyzer(Serial);
-  if(Tmp != NULL) Tmp->DelAlarm(req);
-  pMembersLock.ReadUnlock();
-  return (Tmp != NULL);
+bool Device::DelPermission(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::DelPermission);
 }

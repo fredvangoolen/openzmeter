@@ -39,14 +39,9 @@ class AnalyzerSoft::Events final {
     float                     *pPrevSamples;             //Previous samples
     uint32_t                   pPrevSamplesPos;          //Previous samples write position
     uint32_t                   pPrevSamplesSize;         //Privious samples buffer size
-    
     float                     *pPrevCycles;              //Previous cycles
     uint32_t                   pPrevCyclesPos;           //Previous cycles write position
     uint32_t                   pPrevCyclesSize;          //Privious cycles buffer size
-    
-    //deque<vector<float> >        pPrevCycles;              //Previous cycles
-    
-    
     bool                       pPrevStationary;          //Steady state flag
     list<Event_t>              pEvents;                  //Running events
     bool                       pTerminate;               //Signal to terminate

@@ -1,58 +1,64 @@
 <template>
-  <nav class="navbar-nav">
+  <div class="navbar-nav" @mouseenter="$emit('update:expanded', true)" @mouseleave="$emit('update:expanded', false)" :class="{ expanded: expanded }">
     <div class="menu-wrapper">
-      <sidebar-analyzer ref="analyzer"></sidebar-analyzer>
-      <sidebar-user></sidebar-user>
-      <sidebar-menu></sidebar-menu>
+      <sidebar-analyzer :analyzer="analyzer" @update:analyzer="$emit('update:analyzer', $event)" :expanded="expanded"></sidebar-analyzer>
+      <sidebar-user :user="user" @update:user="$emit('update:user', $event)" :expanded="expanded"></sidebar-user>
+      <sidebar-menu :expanded="expanded"></sidebar-menu>
     </div>
-    <sidebar-news></sidebar-news>
-  </nav>
+    <sidebar-news v-if="false"></sidebar-news>
+  </div>
 </template>
 
 <script>
 import SidebarUser from './SidebarUser.vue';
 import SidebarAnalyzer from './SidebarAnalyzer.vue';
 import SidebarMenu from './SidebarMenu.vue';
-import SidebarNews from './SidebarNews.vue';
 export default {
-  data() { return {} },
+  props: { analyzer: Object, user: Object, expanded: Boolean },
+  data() {
+    return { };
+  },
   mounted: function() {
-    $('.navbar-toggle').click(function (e) {
-      $('.navbar-nav').toggleClass('show');
-      if($('.navbar-nav').hasClass('show')) {
-        this.showOverlay();
-      } else {
-        this.hideOverlay();
-      }
-    }.bind(this));
-    $('.link').click(function (e){
-      $(e.target).parent().parent().parent().find("[data-sidenav-dropdown]:visible").not($(e.target).parent().parent()).slideUp("fast");
-      $('.navbar-nav').toggleClass('show');
-      this.hideOverlay();
-    }.bind(this));
-    $('body').on('click', '.sidenav-overlay', this.hideOverlay);
+//    $('.navbar-toggle').click(function (e) {
+//      $('.navbar-nav').toggleClass('show');
+//      if($('.navbar-nav').hasClass('show')) {
+//        this.showOverlay();
+//      } else {
+//        this.hideOverlay();
+//      }
+//    }.bind(this));
+//    $('.link').click(function (e){
+//      $(e.target).parent().parent().parent().find("[data-sidenav-dropdown]:visible").not($(e.target).parent().parent()).slideUp("fast");
+//      $('.navbar-nav').toggleClass('show');
+//      this.hideOverlay();
+//    }.bind(this));
+//    $('body').on('click', '.sidenav-overlay', this.hideOverlay);
   },
   methods: {
-    showOverlay: function () {
-      $('body').toggleClass('sidenav-no-scroll');
-      var overlay = $('[data-sidenav-overlay]');
-      if(overlay[0] === undefined) {
-        overlay = $('<div data-sidenav-overlay class="sidenav-overlay"/>');
-        $('body').append(overlay);
-      }
-      overlay.fadeToggle('fast');
-    },
-    hideOverlay: function () {
-      $('body').removeClass('sidenav-no-scroll');
-      $('.navbar-nav').removeClass('show');
-      $('[data-sidenav-overlay]').fadeOut('fast');
-    }
+//    showOverlay: function () {
+//      $('body').toggleClass('sidenav-no-scroll');
+//      var overlay = $('[data-sidenav-overlay]');
+//      if(overlay[0] === undefined) {
+//        overlay = $('<div data-sidenav-overlay class="sidenav-overlay"/>');
+//        $('body').append(overlay);
+//      }
+//      overlay.fadeToggle('fast');
+//    },
+//    hideOverlay: function () {
+//      $('body').removeClass('sidenav-no-scroll');
+//      $('.navbar-nav').removeClass('show');
+//      $('[data-sidenav-overlay]').fadeOut('fast');
+//    }
   },
-  components: { SidebarUser, SidebarAnalyzer, SidebarMenu, SidebarNews }
+  components: { SidebarUser, SidebarAnalyzer, SidebarMenu }
 }
-</script> 
+</script>
 
-<style>
+<style scoped>
+  .navbar-nav.expanded {
+    width: 256px;
+    transition: width 0.2s  ease-in-out;
+  }
   .navbar-nav.show {
     transform: translate(0, 0);
   }
@@ -70,11 +76,11 @@ export default {
     min-height: 100%;
     left: 0;
     position: fixed;
-    overflow: auto;
-    transform: translate(-262px,0);
-    transition: transform .3s;
-    top: 0;
-    width: 256px;
+   /* transform: translate(-262px,0);*/
+    transition: transform .2s;
+    top: 0px;
+    width: 0px;
+    transition: width 0.2s ease-in-out;
     z-index: 1000;
     margin: 0px;
   }
@@ -83,12 +89,13 @@ export default {
       min-height: calc(100vh - 56px);
       transform: none;
       top: 56px;
+      width: 48px;
     }
     .menu-wrapper {
       min-height: calc(100vh - 48px - 56px);
     }
   }
-  .sidenav-header {
+/*  .sidenav-header {
     padding: 3px 6px;
     color: #DDD;
     font-size: 16px;
@@ -117,7 +124,7 @@ export default {
     width:100%;
     z-index:99
   }
-  .sidenav-no-scroll { 
+  .sidenav-no-scroll {
     overflow: hidden!important
-  }
+  }*/
 </style>

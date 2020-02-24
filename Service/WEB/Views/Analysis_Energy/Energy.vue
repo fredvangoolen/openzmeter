@@ -6,8 +6,11 @@
 
 <script>
   import Graph from 'Components/Graph.vue';
+<<<<<<< HEAD
   import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
+=======
+>>>>>>> eda5f001a831b33a1f525854c29e15e34550c1e4
   export default {
     props: { data: { type: Object }, serie: { type: String }, height: { type: Number, default: 300 }, analyzer: { type: Object } },
     data() {
@@ -15,7 +18,12 @@
     },
     computed: {
       GraphOptions: function() {
+<<<<<<< HEAD
         var Opt = {};
+=======
+        var Opt = { file: [], axes: { y: {}, x: {} } };
+        Opt.panEdgeFraction = 1;
+>>>>>>> eda5f001a831b33a1f525854c29e15e34550c1e4
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -24,6 +32,7 @@
         Opt.gridLineColor = "#BBB";
         Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
+<<<<<<< HEAD
         Opt.legendFormatter = Graph.LegendFormatter_Follow;
         Opt.plotter = Graph.multiColumnBarPlotter;
         Opt.interactionModel = Graph.ScrollableInteractionModel(this);
@@ -51,6 +60,30 @@
           Opt.file.push([0, 0]);
         }
 
+=======
+        Opt.drawAxesAtZero = true;
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.plotter = Graph.Plotters.MultiBar;
+        Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
+        Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
+        Opt.labels = (this.serie == 'Active_Energy') ? ['Time', 'Active Energy'] : ['Time', 'Reactive Energy'];
+        Opt.colors = [this.analyzer.Color[this.serie]];
+        Opt.xAxisHeight = 24;
+        Opt.selectMode = 'euclidian';
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 34;
+        Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
+        Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
+        Opt.axes.y.valueFormatter = (x) => { return this.Round(this.ScaleUnits(x, this.BestUnits(x)), 2, false) + ((this.serie == 'Active_Energy') ? ' Wh' : 'VArh');  };
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return (g.axes_[0].valueRange == null) ? '' : this.Round(this.ScaleUnits(x, this.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), 2, true); };
+        if(this.data != null) {
+          var Div = (this.data.Aggregation_Source == '1H') ? 1.0 : 4.0;
+          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data[(this.serie == 'Active_Energy') ? 'Active_Power' : 'Reactive_Power'][n] / Div]);
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { incZero: 10 });
+          Opt.dateWindow = [this.data.From, this.data.To];
+        }
+>>>>>>> eda5f001a831b33a1f525854c29e15e34550c1e4
         return Opt;
       }
     },
@@ -60,6 +93,7 @@
       this.ActiveData = [];
       this.ReactiveData = [];
       this.NowTimer = null;
+<<<<<<< HEAD
     },
 //    mounted: function() {
 //      $(window).on('resize', this.ResizeHandler.bind(this));
@@ -110,5 +144,8 @@
       }
     },
     components: { Graph }
+=======
+    }
+>>>>>>> eda5f001a831b33a1f525854c29e15e34550c1e4
   }
 </script>

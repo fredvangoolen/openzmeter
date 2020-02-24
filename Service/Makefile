@@ -8,16 +8,16 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
-EXECUTABLE_SOURCE = Source/Tools.cpp Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/SysSupport.cpp Source/Devices/DeviceManager.cpp Source/Devices/Device.cpp Source/Analyzers/Analyzer.cpp Source/Tariffs/Tariff.cpp 
-CFLAGS += -Wno-psabi -Wall -std=c++11 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs 
-LDFLAGS += -lstdc++ -lpq -lmicrohttpd -lz -lpthread
+EXECUTABLE_SOURCE = Source/Tools.cpp Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/SysSupport.cpp Source/Devices/DeviceManager.cpp Source/Devices/Device.cpp Source/Analyzers/Analyzer.cpp Source/Tariffs/Tariff.cpp
+CFLAGS += -Wno-psabi -Wall -std=c++14 -no-pie -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs
+LDFLAGS += -lstdc++ -lpq -lz -lpthread
 
-#Add libs (cctz, nlohmann, muparser)
+#Add libs (cctz, nlohmann, muparser, httplib)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
 EXECUTABLE_SOURCE += $(shell find Libs/muParser -name "*.cpp" ! -type d -print)
 BUILD_DATE ?= $(shell date +%Y%m%d.%H%M)
 BUILD_NAME ?= "custom"
-CFLAGS += -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" -I Libs -I Source/Support
+CFLAGS += -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" -I Libs -I Source/Support -DCPPHTTPLIB_ZLIB_SUPPORT
 CC ?= gcc
 LD ?= ld
 EXECUTABLE_OBJS	+= $(EXECUTABLE_SOURCE:%=Tmp/%.o)
@@ -40,16 +40,16 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -g3 -ggdb -fstack-protector-all -fstack-check
 else
-	CFLAGS  += -Os -Wall -fopt-info-vec -s -flto -ftree-vectorize
-	LDFLAGS += -flto
+	CFLAGS  += -O2 -Wall -s -flto -ftree-vectorize
+	LDFLAGS += -flto -no-pie
 endif
 ifeq ($(DEVICE_V1), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1/DeviceV1.cpp
 	ANALYZER_SOFT = true
 	LDFLAGS += -lusb-1.0
 endif
-ifeq ($(DEVICE_V2_01), true)
-	EXECUTABLE_SOURCE += Source/Devices/V2_01/DeviceV2_01.cpp
+ifeq ($(DEVICE_V2), true)
+	EXECUTABLE_SOURCE += Source/Devices/V2/DeviceV2.cpp
 	ANALYZER_SOFT = true
 	LDFLAGS += -lusb-1.0
 endif
@@ -62,7 +62,7 @@ ifeq ($(DEVICE_REMOTE), true)
 	CFLAGS += -I Source/Analyzers/Remote
 endif
 ifeq ($(ANALYZER_SOFT), true)
-	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp Source/Analyzers/Soft/FFT.cpp Source/Analyzers/Soft/Events.cpp Source/Analyzers/Soft/Sync.cpp Source/Analyzers/Soft/Alarms.cpp Source/Analyzers/Soft/Rates.cpp
+	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp
 	CFLAGS += -I Source/Analyzers/Soft
 	LDFLAGS += -lfftw3f
 endif
@@ -84,7 +84,7 @@ endif
 $(WEB_TARGET): $(WEB_SOURCE)
 	@echo "Building WEB interface"
 	@if [ ! -d "WEB/node_modules" ]; then cd WEB; npm install; fi
-	@cd WEB; npm install; npm run --silent build
+	@cd WEB; npm run --silent build
 
 $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 	@echo  "Building resource file"

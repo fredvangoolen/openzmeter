@@ -1,7 +1,18 @@
-/* ================================== zMeter ===========================================================================
- * File:     PricesInterface.cpp
- * Author:   Eduardo Viciana (septiembre 2018)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #include <string.h>
 #include <errno.h>
 #include "Tariff.h"
@@ -20,7 +31,7 @@ bool TariffList::PushTariff(const json &tariff) {
   if((Tmp->SetTemplate(tariff["Template"]) == false) || (Tmp->SetConfig(tariff["Config"]) == false)) {
     delete Tmp;
     return false;
-  } 
+  }
   pList.push_back(Tmp);
   return true;
 }
@@ -82,50 +93,91 @@ bool Tariff::RegisterCallbacks() {
   HTTPServer::RegisterCallback("addTariff",  AddTariffCallback);
   return true;
 }
-void Tariff::GetTariffsCallback(HTTPRequest &req) {
-  req.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('TariffID', tariff, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'TimeZone', time_zone))), '[]') as result FROM tariffs");
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
+void Tariff::GetTariffsCallback(const json &params, Response &response) {
+  Database DB;
+  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('TariffID', tariff, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'TimeZone', time_zone))), '[]') as result FROM tariffs");
+  if(!DB.FecthRow()) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("Result"), "application/json");
+    response.status = HTTP_OK;
+  }
 }
-void Tariff::GetTariffCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["TariffID"].is_number()) return req.FromString("'TariffID' param is required", MHD_HTTP_BAD_REQUEST);  
-  uint32_t TariffID = Params["TariffID"];
-  req.ExecSentenceAsyncResult("SELECT json_build_object('TariffID', tariff, 'Name', name, 'UserName', username, 'StartDate', startdate, 'EndDate', enddate, 'TimeZone', time_zone, 'Template', template) as result FROM tariffs WHERE tariff = " + req.Bind(TariffID));
-  if(!req.FecthRow()) return req.FromString("", MHD_HTTP_INTERNAL_SERVER_ERROR);
-  req.FromString(req.ResultString("Result"), MHD_HTTP_OK);
+void Tariff::GetTariffCallback(const json &params, Response &response) {
+  if(!params["TariffID"].is_number()) {
+    response.set_content("'TariffID' param is required", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  uint32_t TariffID = params["TariffID"];
+  Database DB;
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('TariffID', tariff, 'Name', name, 'UserName', username, 'StartDate', startdate, 'EndDate', enddate, 'TimeZone', time_zone, 'Template', template) as result FROM tariffs WHERE tariff = " + DB.Bind(TariffID));
+  if(!DB.FecthRow()) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("Result"), "application/json");
+    response.status = HTTP_OK;
+  }
 }
-void Tariff::SetTariffCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["TariffID"].is_number() || !Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["TimeZone"].is_string()) return req.FromString("'TariffID', 'Template', StartDate', 'EndDate', 'TimeZone' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
-  uint64_t Start    = Params["StartDate"];
-  uint64_t End      = Params["EndDate"];
-  string   Name     = Params["Name"];
-  string   TimeZone = Params["TimeZone"];
-  uint32_t TariffID = Params["TariffID"];
+void Tariff::SetTariffCallback(const json &params, Response &response) {
+  if(!params["TariffID"].is_number() || !params["Template"].is_object() || !params["StartDate"].is_number_unsigned() || !params["EndDate"].is_number_unsigned() || !params["Name"].is_string() || !params["TimeZone"].is_string()) {
+    response.set_content("'TariffID', 'Template', StartDate', 'EndDate', 'TimeZone' and 'Name' params required", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  uint64_t Start    = params["StartDate"];
+  uint64_t End      = params["EndDate"];
+  string   Name     = params["Name"];
+  string   TimeZone = params["TimeZone"];
+  uint32_t TariffID = params["TariffID"];
+  string   UserName = params["UserName"];
   Tariff T(Start, End, TimeZone);
-  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid template", MHD_HTTP_BAD_REQUEST);
-  bool Result = req.ExecSentenceNoResult("UPDATE tariffs SET name = " + req.Bind(Name) + ", time_zone = " + req.Bind(TimeZone) + ", template = " + req.Bind(T.GetTemplate().dump()) + ", startdate = " + req.Bind(Start) + ", enddate = " + req.Bind(End) + " WHERE tariff = " + req.Bind(TariffID) + ((req.UserName() != "admin") ? " AND username = " + req.Bind(req.UserName()) : ""));
-  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  if(T.SetTemplate(params["Template"]) == false) {
+    response.set_content("Invalid template", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  Database DB;
+  bool Result = DB.ExecSentenceNoResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", time_zone = " + DB.Bind(TimeZone) + ", template = " + DB.Bind(T.GetTemplate().dump()) + ", startdate = " + DB.Bind(Start) + ", enddate = " + DB.Bind(End) + " WHERE tariff = " + DB.Bind(TariffID) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : ""));
+  response.set_content("", "text/plain");
+  response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
 }
-void Tariff::DelTariffCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["TariffID"].is_number()) return req.FromString("'TariffID' param required", MHD_HTTP_BAD_REQUEST);
-  uint32_t TariffID = Params["TariffID"];
-  bool Result = req.ExecSentenceNoResult("DELETE FROM tariffs WHERE tariff = " + req.Bind(TariffID) + ((req.UserName() != "admin") ? " AND username = " + req.Bind(req.UserName()) : ""));
-  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+void Tariff::DelTariffCallback(const json &params, Response &response) {
+  if(!params["TariffID"].is_number()) {
+    response.set_content("'TariffID' param required", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  Database DB;
+  uint32_t TariffID = params["TariffID"];
+  string   UserName = params["UserName"];
+  bool Result = DB.ExecSentenceNoResult("DELETE FROM tariffs WHERE tariff = " + DB.Bind(TariffID) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : ""));
+  response.set_content("", "text/plain");
+  response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
 }
-void Tariff::AddTariffCallback(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Template"].is_object() || !Params["StartDate"].is_number_unsigned() || !Params["EndDate"].is_number_unsigned() || !Params["Name"].is_string() || !Params["TimeZone"].is_string()) return req.FromString("'Template', StartDate', 'EndDate', 'TimeZone' and 'Name' params required", MHD_HTTP_BAD_REQUEST);
-  uint64_t Start    = Params["StartDate"];
-  uint64_t End      = Params["EndDate"];
-  string   Name     = Params["Name"];
-  string   TimeZone = Params["TimeZone"];
+void Tariff::AddTariffCallback(const json &params, Response &response) {
+  if(!params["Template"].is_object() || !params["StartDate"].is_number_unsigned() || !params["EndDate"].is_number_unsigned() || !params["Name"].is_string() || !params["TimeZone"].is_string()) {
+    response.set_content("'Template', StartDate', 'EndDate', 'TimeZone' and 'Name' params required", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  string   UserName = params["UserName"];
+  uint64_t Start    = params["StartDate"];
+  uint64_t End      = params["EndDate"];
+  string   Name     = params["Name"];
+  string   TimeZone = params["TimeZone"];
   Tariff T(Start, End, TimeZone);
-  if(T.SetTemplate(Params["Template"]) == false) return req.FromString("Invalid template", MHD_HTTP_BAD_REQUEST);
-  bool Result = req.ExecSentenceNoResult("INSERT into tariffs(name, username, time_zone, template, startdate, enddate) VALUES(" + req.Bind(Name) + ", " + req.Bind(req.UserName()) + ", " + req.Bind(TimeZone) + ", " + req.Bind(T.GetTemplate().dump()) + ", " + req.Bind(Start) + ", " + req.Bind(End) + ")");
-  req.FromString((Result == true) ? "{}" : "", (Result == true) ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR);
+  if(T.SetTemplate(params["Template"]) == false) {
+    response.set_content("Invalid template", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+  } else {
+    Database DB;
+    bool Result = DB.ExecSentenceNoResult("INSERT into tariffs(name, username, time_zone, template, startdate, enddate) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(UserName) + ", " + DB.Bind(TimeZone) + ", " + DB.Bind(T.GetTemplate().dump()) + ", " + DB.Bind(Start) + ", " + DB.Bind(End) + ")");
+    response.set_content("", "text/plain");
+    response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
+  }
 }
 uint8_t Tariff::FindPeriod(uint64_t timestamp) {
   uint8_t Period = UINT8_MAX;
@@ -155,7 +207,7 @@ bool Tariff::SetTemplate(json t) {
     if(!t["Periods"][n]["PowerMode"].is_string()) return false;
     string Tmp = t["Periods"][n]["PowerMode"];
     if(TariffPowerPlugin::Contains(Tmp) == false) return false;
-    Period.PowerModule  = TariffPowerPlugin::Instance(Tmp);        
+    Period.PowerModule  = TariffPowerPlugin::Instance(Tmp);
     if(!t["Periods"][n]["ReactiveMode"].is_string()) return false;
     Tmp = t["Periods"][n]["ReactiveMode"];
     if(TariffEnergyPlugin::Contains(Tmp) == false) return false;
@@ -204,7 +256,7 @@ bool Tariff::SetTemplate(json t) {
     if((Holiday.StartDate % 900000) != 0) return false;
     if((Holiday.EndDate % 900000) != 899999) return false;
     if((Holiday.EndDate <= Holiday.StartDate) || (Holiday.EndDate > pEndDate)) return false;
-    pHolidays.push_back(Holiday);    
+    pHolidays.push_back(Holiday);
   }
   if(!t["Description"].is_string()) return false;
   pDescription = t["Description"];
@@ -252,7 +304,7 @@ json Tariff::GetTemplate() {
     Holiday["Name"] = pHolidays[n].Name;
     Holiday["StartDate"] = pHolidays[n].StartDate;
     Holiday["EndDate"] = pHolidays[n].EndDate;
-    T["Holidays"].push_back(Holiday);    
+    T["Holidays"].push_back(Holiday);
   }
   T["Description"] = pDescription;
   T["HolidayPeriod"] = nullptr;
