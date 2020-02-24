@@ -29,6 +29,7 @@
   import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
   import EventsTable from '../Analysis_Voltage/Events.vue';
   export default {
+    props: { analyzer: { type: Object } },
     data: function() {
       return { ShowSpinner: true };
     },

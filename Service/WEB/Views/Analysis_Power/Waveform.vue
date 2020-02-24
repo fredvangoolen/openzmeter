@@ -1,138 +1,104 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ MouseOver ? 'Paused while over graph' : Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
-      <div class="header-buttons" ref="Toolbar">
-        <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="$parent.PhasesChangedMulti" type="VOLTAGE"></toolbar-phases>
-        <toolbar-options variable="DetailOptions" :options="['Voltage/Current']" ref="options" v-on:OptionChanged="SetOption"></toolbar-options>
-        <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'MAXIMIZE', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="Redraw"></toolbar-tools>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
+      <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
+      <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
+        <toolbar-phases storage="DetailsPhases" :multi="false" :analyzer="analyzer" v-model="Phase"></toolbar-phases>
+        <div class="btn-group">
+          <button-export file="Waveform" :rows="Export"></button-export>
+          <button-expand v-model="Expanded"></button-expand>
+          <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
+        </div>
+      </portal>
+    </div>
+    <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+      <spinner v-if="data==null"></spinner>
+      <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+        <graph :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver"></graph>
       </div>
-    </div>
-    <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <graph ref="graph" :options="GraphOptions" v-on:mouseOver="MouseOver=$event"></graph>
-    </div>
+    </portal>
+    <dlg-fs v-if="Expanded" title="Waveform" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
 
 <script>
-  import * as oZm from 'JS/openZmeter.js';
-  import moment from 'JS/moment.js';
-  import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
   export default {
+    props: { analyzer: Object, data: Object, paused: Boolean },
     data() {
-      return { ShowWarning: true, MouseOver: false, ShowSpinner: true, Time: 'Loading data...', GraphOptions: { drawAxesAtZero: true, interactionModel: Graph.FixedRangeInteractionModel(this), plugins: [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ] }
-      };
+      return { MouseOver: false, Phase: null, Expanded: false, DialogHeight: 300, CurrentMult: 1.0 };
     },
-    methods: {
-      Redraw: function() {
-        this.$nextTick(function() {
-          this.$refs.graph.Redraw('100%', '300');
-        });
-      },
-      SetPhases: function(phases) {
-        this.$refs.phases.SetPhases(phases);
-        this.Phases = phases;
-        var PhasesCount = 0;
-        for(var j = 0; j < this.Phases.length; j++) {
-          if(this.Phases[j] === true) PhasesCount++;
-        }
-        this.$refs.options.SetEnable(PhasesCount === 1);
-        this.CalcOptions();
-      },
-      SetOption: function(option, val) {
-        if(option === 'Voltage/Current') this.ShowVoltageCurrent = val;
-        this.CalcOptions();
-      },
-      SetData: function(result) {
-        this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
-        this.Data = result;
-        this.CalcOptions();
-        this.ShowSpinner = false;
-      },
-      CalcOptions: function() {
-        if((this.$root.SelectedAnalyzer === null) || (this.Phases === null) || (this.Data === null)) return;
-        var Analyzer = this.$root.SelectedAnalyzer, Series = { 'Voltage': {axis: 'y2'}, 'Current': {axis: 'y2'}, 'Power': { fillGraph: true }};
-        this.ShowWarning = (this.Data.Current[this.Phase] < Analyzer.MinCurrent); 
-        var ToShow = [];
-        var PhasesCount = 0;
-        for(var j = 0; j < this.Phases.length; j++) {
-          if(this.Phases[j] === true) PhasesCount++;
-        }        
-        for(var i = 0; i < this.Data.Voltage_Samples[0].length; i++) {
-          var Row = [i];
-          var Sum = 0;
-          for(var j = 0; j < this.Phases.length; j++) {
-            if(this.Phases[j] === true) Sum = Sum + this.Data.Voltage_Samples[j][i] * this.Data.Current_Samples[j][i];
-            if((this.ShowVoltageCurrent === true) && (PhasesCount === 1) && (this.Phases[j] === true)) Row = Row.concat([this.Data.Voltage_Samples[j][i], this.Data.Current_Samples[j][i]]);
+    computed: {
+      RmsCurrent: function() { return (this.data == null) ? 0.0 : this.ArrayAbsMax(this.data.Current); },
+      GraphOptions: function() {
+        var Opt = {file: [], axes: { y: {}, y2: {}, x: {} } };
+        Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
+        Opt.interactionModel = Graph.InteractionModels.Fixed(this);
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
+        Opt.drawAxesAtZero = true;
+        Opt.legend = 'follow';
+        Opt.showRangeSelector = false;
+        Opt.strokeWidth = 0.5;
+        Opt.series = { 'Voltage': { axis: 'y2' }, 'Current': { axis: 'y2' }, 'Power': { fillGraph: true }, 'Power SUM': { axis: 'y', strokeWidth: 2 } };
+        Opt.labels = ['Sample', 'Voltage', 'Current', 'Power'].concat(this.analyzer.VoltageChannels > 1 ? ['Power SUM'] : []);
+        Opt.colors = [this.analyzer.Color.Voltage, this.analyzer.Color.Current, this.analyzer.Color.Active_Power].concat(this.analyzer.VoltageChannels > 1 ? [this.analyzer.Color.Active_Power] : []);
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 34;
+        Opt.axes.y2.pixelsPerLabel = 15;
+        Opt.axes.y2.axisLabelWidth = 72;
+        Opt.axes.x.ticker = (min, max) => { return Graph.Tickers.WaveTimeTicks(max, this.analyzer); };
+        Opt.axes.x.valueFormatter = (x) => { return this.Round((x * 1000) / this.analyzer.SampleRate, 2, false) + ' ms'; };
+        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, 'W', 2, true);  };
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
+        Opt.axes.y2.valueFormatter = (x, opts, seriesName) => { return this.Round((seriesName == 'Voltage') ? x : (x / this.CurrentMult), 2, false) + ((seriesName == 'Voltage') ? ' V' : ' A'); };
+        Opt.axes.y2.axisLabelFormatter = (x) => { return '<div style="display: inline-block; text-align: right; width: 36px; color: ' + this.analyzer.Color['Voltage'] + ' ">' + this.Round(x, 2, false) + '</div><div style="display: inline-block; text-align: right; width: 36px; color: ' + this.analyzer.Color['Current'] + ' ">' + this.Round(x / this.CurrentMult, 2, false) + '</div>'; };
+        if((this.Phase != null) && (this.data != null)) {
+          for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
+            var Row = [i, this.data.Voltage_Samples[this.Phase][i], this.data.Current_Samples[this.Phase][i]];
+            Row.push(Row[1] * Row[2]);
+            if(this.analyzer.VoltageChannels > 1) {
+              var Sum = 0;
+              for(var j = 0; j < this.analyzer.VoltageChannels; j++) Sum = Sum + this.data.Voltage_Samples[j][i] * this.data.Current_Samples[j][i];
+              Row.push(Sum);
+            }
+            Opt.file.push(Row);
           }
-          ToShow.push(Row.concat([Sum]));
-        }
-        var Y1Range = oZm.Series['VOLTAGE_SAMPLES'].Range(ToShow, ((this.ShowVoltageCurrent === true) && (PhasesCount === 1)) ? [false, false, true] : [true]);
-        if(Y1Range[0] > 0) Y1Range[0] = 0;
-        if((this.ShowVoltageCurrent === true) && (PhasesCount === 1)) {
-          var VoltageRange = oZm.Series['VOLTAGE_SAMPLES'].Range(ToShow, [true, false, false]);    
-          var CurrentRange = oZm.Series['VOLTAGE_SAMPLES'].Range(ToShow, [false, true, false]);
+          var VoltageRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
+          var CurrentRange = this.MatrixColsRange(Opt.file, [false, false, true], { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
           var MaxVoltage = Math.max(Math.abs(VoltageRange[0]), Math.abs(VoltageRange[1]));
           var MaxCurrent = Math.max(Math.abs(CurrentRange[0]), Math.abs(CurrentRange[1]));
-          var MaxY1      = Math.max(Math.abs(Y1Range[0]), Math.abs(Y1Range[1]));
-          Y1Range      = [-MaxY1, MaxY1];
-          VoltageRange = [-MaxVoltage, MaxVoltage];
           this.CurrentMult = MaxVoltage / MaxCurrent;
-          for(var i = 0; i < ToShow.length; i++) ToShow[i][2] = ToShow[i][2] * this.CurrentMult;
+          for(var i = 0; i < Opt.file.length; i++) Opt.file[i][2] = Opt.file[i][2] * this.CurrentMult;
+          var PowerRange = this.MatrixColsRange(Opt.file, [false, false, false, true, true], { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
+          var MaxY1      = Math.max(Math.abs(PowerRange[0]), Math.abs(PowerRange[1]));
+          Opt.axes.y.valueRange = [-MaxY1, MaxY1];
+          Opt.axes.y2.valueRange = [-MaxVoltage, MaxVoltage];
         }
-        var Options = {
-          legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, series: Series, labels: ((this.ShowVoltageCurrent === true) && (PhasesCount === 1)) ? ['Sample', 'Voltage', 'Current', 'Power'] : ['Sample', 'Power'], 
-          colors: ((this.ShowVoltageCurrent === true) && (PhasesCount === 1)) ? [oZm.Series['VOLTAGE'].Color, oZm.Series['CURRENT'].Color, oZm.Series['ACTIVE_POWER'].Color] : [oZm.Series['ACTIVE_POWER'].Color], 
-          showRangeSelector: false,
-          axes: {
-            y: { pixelsPerLabel: 15, axisLabelWidth: 34, valueRange: Y1Range,
-               valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
-               axisLabelFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value; }
-            },
-            y2: { pixelsPerLabel: 15, axisLabelWidth: 72, valueRange: VoltageRange,
-                  valueFormatter: function (x, opts, seriesName) {
-                    return oZm.Round2((seriesName == 'Voltage') ? x : (x / this.CurrentMult)) + ((seriesName == 'Voltage') ? ' V' : ' A'); 
-                  }.bind(this),
-                  axisLabelFormatter: function (x) { 
-                    return '<div style="display: inline-block; text-align: right; width: 36px; color: ' + oZm.Series['VOLTAGE'].Color + ' ">' + oZm.Round2(x) + '</div><div style="display: inline-block; text-align: right; width: 36px; color: ' + oZm.Series['CURRENT'].Color + ' ">' + oZm.Round2(x / this.CurrentMult) + '</div>'; }.bind(this)
-            },
-            x: { ticker: function(min, max) { return Graph.WaveTimeTicks(max, Analyzer); },
-                 valueFormatter: function (x) { return oZm.Round2((x * 1000) / Analyzer.SampleRate) + ' <em class="x-small">ms</em>'; }
-               }
-          },
-          file: ToShow
-        };
-        this.$refs.graph.SetOptions({ showRangeSelector: true}); 
-        this.$refs.graph.SetOptions(Options);
+        return Object.seal(Opt);
       },
-      ExportClick: function() {
-        var ToShow = [];
-        for(var i = 0; i < this.Data.Voltage_Samples[0].length; i++) ToShow.push([i, this.Data.Voltage_Samples[this.Phase][i], this.Data.Current_Samples[this.Phase][i], this.Data.Voltage_Samples[this.Phase][i] * this.Data.Current_Samples[this.Phase][i]]);
-        this.$refs.tools.SaveCVS('PowerWaveform.csv', [['Time', 'VOLTAGE', 'CURRENT', 'INSTANTANEOUS POWER']].concat(ToShow));
-      },
-      MaximizeClick: function() {
-        this.$refs.tools.Maximize('Waveform', this.$refs.graph.Graph, this.$refs.Toolbar);
-      },
-      WindowChange: function() {},
-      WindowRestore: function() {
-        this.$refs.graph.SetOptions( {dateWindow: [0, this.Data.length]} );
+      Export: function() {
+        if((this.data == null) || (this.analyzer == null)) return [];
+        var Header = ['Sample']
+          .concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.GetSeriesNames('Current', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.GetSeriesNames('Power', this.analyzer.VoltageChannels));
+        var Data = [Header];
+        for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
+          var Row = [i];
+          for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.data.Voltage_Samples[n][i]);
+          for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.data.Current_Samples[n][i]);
+          for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.data.Voltage_Samples[n][i] * this.data.Current_Samples[n][i]);
+          Data.push(Row);
+        }
+        return Object.seal(Data);
       }
-    },
-    created: function() {
-      this.CurrentMult = 1.0;
-      this.Data = null;
-      this.Phases = null;
-      this.ShowVoltageCurrent = false;
-    },
-    components: { ToolbarPhases, ToolbarTools, Graph }
+    }
   }
 </script>
 
-<style scoped>  
+<style scoped>
   .header-text {
     font-size: 14px;
   }

@@ -1,7 +1,18 @@
-/* ================================== zMeter ===========================================================================
- * File:     Tariff.h
- * Author:   Eduardo Viciana (septiembre 2018)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <queue>
 #include <cctz/time_zone.h>
@@ -17,11 +28,11 @@ class TariffEnergyPlugin;
 class Tariff final {
   friend class TariffList;
   private :
-    static void GetTariffsCallback(HTTPRequest &req);
-    static void GetTariffCallback(HTTPRequest &req);
-    static void SetTariffCallback(HTTPRequest &req);
-    static void DelTariffCallback(HTTPRequest &req);
-    static void AddTariffCallback(HTTPRequest &req);
+    static void GetTariffsCallback(const json &params, Response &response);
+    static void GetTariffCallback(const json &params, Response &response);
+    static void SetTariffCallback(const json &params, Response &response);
+    static void DelTariffCallback(const json &params, Response &response);
+    static void AddTariffCallback(const json &params, Response &response);
   public :
     typedef struct {
       float    Active;
@@ -46,7 +57,7 @@ class Tariff final {
     typedef struct {
       string   Name;
       uint64_t StartDate;
-      uint64_t EndDate;    
+      uint64_t EndDate;
     } Holiday_t;
     typedef struct {
       string  Type;

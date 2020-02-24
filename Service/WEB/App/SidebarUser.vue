@@ -1,14 +1,13 @@
 <template>
-  <div>
-    <div class="sidenav-header clearfix">
-      <div>{{ UserName }}</div>
-      <div class="btn-group pull-right">
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" v-on:click="Edit"><img :src="require('Imgs/user_edit.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" v-on:click="Logout"><img :src="require('Imgs/user_go.png')"></button>
-      </div>
+  <div class="this" :class="{ expanded: expanded }">
+    <img class="icon" :src="require('Imgs/user32.png')">
+    <div class="btn-group">
+      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" @click="ShowDialog=true"><img :src="require('Imgs/user_edit.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
     </div>
+    <div class="name">{{ (user==null) ? '-' : user.Name }}</div>
     <user-logout ref="logout"></user-logout>
-    <user-edit v-if="ShowUser" ref="userEdit"></user-edit>
+    <user-edit v-if="ShowDialog" :user="user" @close="ShowDialog=false"></user-edit>
     <offline ref="offline"></offline>
   </div>
 </template>
@@ -18,61 +17,76 @@
   import UserEdit from './User/Dialog.vue';
   import Offline from './User/Offline.vue';
   export default {
+    props: { user: null, expanded: Boolean },
     data() {
-      return { UserName: '', ShowUser: false };
-    },
-    methods: {
-      Logout: function() {
-        window.location.href = 'Logout';
-      },
-      Edit: function() {
-        $.ajax({ url: "getUser", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: (result) => {
-            this.$refs.userEdit.LoadUser(result);
-          }
-        });
-      },
-//      PingServer: function() {
-//        $.ajax({ url: 'Ping', timeout: 5000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
-//          success: function() {
-//            this.$refs.logout.hide();
-//            this.$refs.offline.hide();
-//          }.bind(this),
-//          complete: function() {
-//            this.Timer = setTimeout(this.PingServer, 2000);
-//          }.bind(this),
-//          error: function(request) {
-//            if(request.status == 401) {
-//              this.$refs.logout.show();
-//              this.$refs.offline.hide();
-//            } else {
-//              this.$refs.offline.show();
-//              this.$refs.logout.hide();
-//            }
-//          }.bind(this)
-//        });
-//      }
+      return { ShowDialog: false };
     },
     created: function() {
-      if(localStorage.getItem('UserName') === undefined) {
-        window.location.href = 'Logout';
+      if(localStorage.getItem("UserName") == null) {
+        this.Logout();
       } else {
-        this.UserName = localStorage.getItem('UserName');
+        this.GetUser();
       }
-      this.Timer = null;
     },
-    mounted: function() {
-//      this.PingServer();
+    methods: {
+      GetUser: function() {
+        this.ShowDialog = false;
+        this.$http.post('getUser', { User: localStorage.getItem("UserName") }).then(
+          (result) => { this.$emit('update:user', result.data); },
+          (fail) => { this.Logout(); }
+        );
+      },
+      Logout: function() {
+        this.$http.post('logOut', {}).then(
+          (result) => { location.reload(); },
+          (fail) => { location.reload(); }
+        );
+      }
     },
     components: { UserLogout, UserEdit, Offline }
   }
 </script>
-  
-<style>
-  .sidenav-header > div:first-child {
-    width: 180px;
-  }
-  .sidenav-header {
+
+<style scoped>
+  .this {
     background-color: #474544;
+    color: #FAFAFA;
+    width: 304px;
+    height: 32px;
+    display: flex;
+    margin-left: 0;
+    transition: margin-left 0.2s ease-in-out;
+    border-bottom: 1px solid #333;
+  }
+  .this.expanded {
+    margin-left: -48px;
+    transition: margin-left 0.2s ease-in-out;
+  }
+  .icon {
+    height: 24px;
+    width: 24px;
+    margin: 4px 12px;
+  }
+  .name {
+    width: 192px;
+    padding-left: 2px;
+    line-height: 24px;
+    padding-top: 4px;
+  }
+  .btn-group {
+    margin-top: 4px;
+    margin-left: -2px;
+  }
+  .btn-group > .btn {
+    background: #444;
+    border-color: #333;
+    padding: 6px 6px 7px 6px;
+    margin-top: -5px;
+    border-radius: 0px;
+    margin-left: -1px;
+  }
+  .btn-group > .btn:hover {
+    background: #555;
+    border-color: #333;
   }
 </style>

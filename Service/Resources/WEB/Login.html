@@ -10,7 +10,7 @@
       * {
         box-sizing: border-box;
         font-family: sans-serif;
-      }      
+      }
       body, html {
         display: table;
         position: absolute;
@@ -20,13 +20,13 @@
         background-image: none;
         overflow: hidden;
         margin: 0px;
-      }   
+      }
       .card {
         max-width: 350px;
         background-color: #F7F7F7;
         padding: 40px 40px 10px 40px;
         margin: auto;
-      }  
+      }
       .container {
         display: table-cell;
         vertical-align: middle;
@@ -152,7 +152,7 @@
       function SendLogin() {
         addClass(document.getElementById('button'), 'disabled');
         var Request = new XMLHttpRequest();
-        Request.open("POST", 'LogIn', true);
+        Request.open("POST", 'logIn', true);
         Request.setRequestHeader("Content-Type", "application/json");
         Request.onreadystatechange = function () {
           if(Request.readyState === 4) {
@@ -161,14 +161,14 @@
               if(Response.Result === true) {
                 localStorage.setItem('LastLogin', Response.LastLogin);
                 localStorage.setItem('UserName', document.getElementById('username').value);
-                setTimeout(function() { 
+                setTimeout(function() {
                   location.reload();
                 }, 500);
               } else {
                 removeClass(document.getElementById('error'), 'hide');
                 addClass(document.getElementById('filler'), 'hide');
                 localStorage.removeItem('UserName');
-                setTimeout(function() { 
+                setTimeout(function() {
                   addClass(document.getElementById('error'), 'hide');
                   removeClass(document.getElementById('filler'), 'hide');
                   removeClass(document.getElementById('button'), 'disabled');

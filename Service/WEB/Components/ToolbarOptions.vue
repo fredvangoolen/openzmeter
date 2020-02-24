@@ -1,59 +1,43 @@
 <template>
-  <div class="btn-group">
-    <button type="button" class="btn btn-default btn-xs" v-bind:disabled="isDisabled" v-bind:class="{ active: Conf[name] }" v-for="(name, index) in options" @click="Toogle(index, name)">{{ name }}</button>
+  <div class="btn-group" v-if="value!=null">
+    <button type="button" class="btn btn-default btn-xs" :class="{ active: value[name] }" v-for="name in options" :key="name" @click="Toogle(name, $event)">{{ name }}</button>
   </div>
-</template> 
+</template>
 
 <script>
   export default {
-    props: { options: Array, variable: String },
+    props: { value: Object, options: Array, storage: String },
     data() {
-      return { Conf: {}, isDisabled: false };
+      return { };
     },
-    methods: {
-      SetEnable: function(value) {
-        this.isDisabled = !value;
-      },
-      Toogle(index, name) {
-        this.Conf[name] = !this.Conf[name];
-        this.Conf = Object.assign({}, this.Conf);
-        localStorage.setItem(this.variable, JSON.stringify(this.Conf));
-        this.$emit('OptionChanged', name, this.Conf[name]);
-        $(this.$el).children('button').blur();
-      },
-      SelChanged() {
-        var Set = 0;
-        for(var n = 0; n < this.Phases.length; n++) {
-          if((Set > 0) && (this.multi === false)) this.Phases[n] = false;
-          if(this.Phases[n] === true) Set++;
-        }
-        if(Set === 0) this.Phases[0] = true;
-        this.PhasesR = (this.Phases[0] === true);
-        this.PhasesS = (this.Phases[1] === true);
-        this.PhasesT = (this.Phases[2] === true);
-        this.PhasesN = (this.Phases[3] === true);
-        localStorage.setItem(this.variable + '_' + this.Mode, JSON.stringify(this.Phases));
-        this.$emit('PhasesChanged', this.Phases);
+    watch: {
+      value: function(val) {
+        if(this.storage != null) localStorage.setItem(this.storage, JSON.stringify(val));
       }
     },
     created: function() {
-      var Conf = JSON.parse(localStorage.getItem(this.variable));
-      if(Conf === null) Conf = {};
-      for(var n = 0; n < this.options.length; n++) {
-        if(Conf.hasOwnProperty(this.options[n]) === false) continue;
-        this.Conf[this.options[n]] = (Conf[this.options[n]] === true) ? true : false;
+      var Conf = (this.storage != null) ? JSON.parse(localStorage.getItem(this.storage)) : {};
+      if(Conf == undefined) Conf = {};
+      for(var n in this.options) {
+        if(Conf[this.options[n]] == undefined) Conf[this.options[n]] = false;
       }
+      this.$emit('input', Conf);
     },
-    mounted: function() {
-      for(var n = 0; n < this.options.length; n++) this.$emit('OptionChanged', this.options[n], this.Conf[this.options[n]]); 
+    methods: {
+      Toogle: function(name, evt) {
+        $(evt.target).blur();
+        var Conf = Object.assign({}, this.value);
+        Conf[name] = !Conf[name]
+        this.$emit('input', Conf);
+      }
     }
   }
 </script>
-  
-<style>
-  .btn-default:active:hover, 
-  .btn-default.active:hover, 
-  .btn-default:active:focus, 
+
+<style scoped>
+  .btn-default:active:hover,
+  .btn-default.active:hover,
+  .btn-default:active:focus,
   .btn-default.active:focus {
     background-color: #ADC5D9;
   }

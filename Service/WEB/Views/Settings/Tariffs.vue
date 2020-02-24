@@ -1,88 +1,107 @@
 <template>
-  <div class="panel panel-other">
+  <div class="panel panel-other" v-show="Enabled">
     <div class="panel-heading clearfix">
       <div class="huge-small pull-left">Tariffs</div>
-      <button type="button" class="pull-right btn btn-default btn-xs" data-toggle="tooltip" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
+      <div class="pull-right input-group input-group-xs" style="width:200px">
+        <input type="text" class="form-control" placeholder="Filter..." disabled>
+        <span class="input-group-btn">
+          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
+        </span>
+      </div>
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
+      <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Tariffs" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="Edit(props.rowData, $event)">Edit</button>
-            <button class="btn btn-xs btn-danger" @click="Delete(props.rowData, $event)">Delete</button>
+            <button class="btn btn-xs btn-default" @click="Edit(props.rowData)">Edit</button>
+            <button class="btn btn-xs btn-danger" @click="Delete(props.rowData)">Delete</button>
           </div>
         </template>
       </vuetable>
     </div>
-    <tariffs-edit ref="EditDialog"></tariffs-edit>
+    <tariff v-if="ShowDialog" :tariff="Tariff" @close="LoadTariffs"></tariff>
   </div>
 </template>
 
 <script>
   import Vuetable from 'vuetable-2';
-  import moment from 'JS/moment.js';
-  import TariffsEdit from './TariffsEdit.vue';
-  import Spinner from 'Components/Spinner.vue';
+  import moment from 'moment';
+  import Tariff from './Tariffs/Tariff.vue';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return {ShowSpinner: true,
+      return { ShowSpinner: true, Tariffs: [], ShowDialog: false, Filter: '', Enabled: false, Tariff: null,
         Columns: [
-          {name: 'TimeZone', title: 'Time zone'},
-          {name: 'Name', title: 'Name'},
-          {name: 'StartDate', title: 'Start date'},
-          {name: 'EndDate', title: 'End date'},
-          {name: '__slot:actions', title: ''}
+          { name: 'TimeZone', title: 'Time zone' },
+          { name: 'Name', title: 'Name' },
+          { name: 'StartDate', title: 'Start date' },
+          { name: 'EndDate', title: 'End date' },
+          { name: '__slot:actions', title: '' }
         ]
       };
     },
+    created: function() {
+      this.LoadTariffs();
+    },
+    watch: {
+      Filter: function() {
+        this.LoadTariffs();
+      }
+    },
     methods: {
-      GetTariffs: function() {
-        $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), 
-          success: function(result) {
-            for(var n = 0; n < result.length; n++) {
-              result[n].StartDate = moment.tz(result[n].StartDate, result[n].TimeZone).format('DD/MM/YYYY');
-              result[n].EndDate   = moment.tz(result[n].EndDate,   result[n].TimeZone).format('DD/MM/YYYY');
-            }
-            this.$refs.table.setData({ data: result });
-            this.ShowSpinner = false;
-          }.bind(this)
-        });
-      },
-      Edit: function(tariff, evt) {
-        $(evt.target).blur();
+      LoadTariffs: function() {
+        this.ShowDialog = false;
         this.ShowSpinner = true;
-        $.ajax({ url: "getTariff", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ TariffID: tariff.TariffID }),
-          success: (result) => {
-            this.$refs.EditDialog.Show(result);
-          },
-          complete: () => {
+        this.$http.post('getTariffs', { Limit: 10, Offset: 0, Filter: this.Filter }).then(
+          (result) => {
+            this.Enabled = true;
+            this.Tariffs = result.data;
             this.ShowSpinner = false;
-          }
-        });
+            for(var n in this.Tariffs) {
+              this.Tariffs[n].StartDate = moment.tz(this.Tariffs[n].StartDate, this.Tariffs[n].TimeZone).format('DD/MM/YYYY');
+              this.Tariffs[n].EndDate   = moment.tz(this.Tariffs[n].EndDate,   this.Tariffs[n].TimeZone).format('DD/MM/YYYY');
+            }
+          },
+          (fail) => {}
+        );
       },
       Add: function() {
-        this.$refs.EditDialog.Show( { 
-          TimeZone: moment.tz.guess(),
-          StartDate: moment().startOf('year').valueOf(),
-          EndDate: moment().endOf('year').valueOf(),
-          Name: 'No name', 
-          Template: {
-            Description: 'Add tariff description here',
-            Seasons: [], 
-            Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE', Color: '#fffff0' } ], 
-            Holidays: [],
-            WeekendPeriod: null,
-            HolidayPeriod: null
-          } 
-        });
+        this.Tariff = null;
+        this.ShowDialog = true;
       },
+      Edit: function(tariff) {
+        this.ShowSpinner = true;
+        this.$http.post('getTariff', { TariffID: tariff.TariffID }).then(
+          (result) => {
+            this.Tariff = result.data;
+            this.ShowDialog = true;
+            this.ShowSpinner = false;
+          },
+          (fail) => {}
+        );
+      },
+//      Add: function() {
+//        this.$refs.EditDialog.Show( {
+//          TimeZone: moment.tz.guess(),
+//          StartDate: moment().startOf('year').valueOf(),
+//          EndDate: moment().endOf('year').valueOf(),
+//          Name: 'No name',
+//          Template: {
+//            Description: 'Add tariff description here',
+//            Seasons: [],
+//            Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE', Color: '#fffff0' } ],
+//            Holidays: [],
+//            WeekendPeriod: null,
+//            HolidayPeriod: null
+//          }
+//        });
+//      },
       Delete: function(tariff, evt) {
         if(confirm("Delete '" + tariff.Name + "' tariff?")){
           $(evt.target).blur();
-          $.ajax({ url: "delTariff", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify({ TariffID: tariff.TariffID }), 
+          $.ajax({ url: "delTariff", timeout: 20000, type: "POST", dataType: "text", contentType: 'application/json', data: JSON.stringify({ TariffID: tariff.TariffID }),
             success: function(result) {
               this.GetTariffs();
             }.bind(this)
@@ -90,14 +109,10 @@
         }
       }
     },
-    mounted: function() {
-      this.ShowSpinner = true;
-      this.GetTariffs();
-    },
     updated: function(){
-        oZm.createCaptionsForResponsiveTable(this.$refs.table);
+      oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: { Spinner, Vuetable, TariffsEdit }
+    components: { Vuetable, Tariff }
   }
 </script>
 
