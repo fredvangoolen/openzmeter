@@ -1,63 +1,52 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
+      <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <div class="header-buttons" ref="Toolbar">
-        <toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick"></toolbar-tools>
+        <div class="btn-group">
+          <button-pause></button-pause>
+          <button-export file="Phasors" :rows="[]"></button-export>
+        </div>
       </div>
     </div>
     <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <div class="row">
+      <spinner v-if="data==null"></spinner>
+      <div class="row" v-if="(analyzer.Mode=='3PHASE') || (analyzer.Mode=='3PHASE+N')">
         <div class="col-xs-12 col-md-4 panel-body">
           <table>
             <tr><td class="border-bottom">Positive sequence</td></tr>
-            <tr>
-              <td ref="positiveContainer" class="graphDiv">
-                <graph ref="positive" class="graph" :options="GraphOptions"></graph>
-              </td>
-            </tr>
+            <tr><td class="graphDiv"><graph class="graph" :options="GraphOptionsPositive"></graph></td></tr>
           </table>
         </div>
         <div class="col-xs-12 col-md-4 panel-body">
           <table>
             <tr><td class="border-bottom">Negative sequence</td></tr>
-            <tr>
-              <td ref="negativeContainer" class="graphDiv">
-                <graph ref="negative" class="graph" :options="GraphOptions"></graph>
-              </td>
-            </tr>
+            <tr><td class="graphDiv"><graph class="graph" :options="GraphOptionsNegative"></graph></td></tr>
           </table>
         </div>
         <div class="col-xs-12 col-md-4 panel-body">
           <table>
             <tr><td class="border-bottom">Zero sequence</td></tr>
-            <tr>
-              <td ref="zeroContainer" class="graphDiv">
-                <graph ref="zero" class="graph" :options="GraphOptions"></graph>
-              </td>
-            </tr>
+            <tr><td class="graphDiv"><graph class="graph" :options="GraphOptionsZero"></graph></td></tr>
           </table>
         </div>
       </div>
       <div class="row">
-        <div class="col-sm-12 col-md-8 col-lg-6 panel-body">
+        <div class="col-sm-12 col-md-8 col-lg-6 panel-body" ref="PhasorContainer">
           <table>
             <tr><td class="border-bottom">Phasor view</td></tr>
-            <tr>
-              <td ref="graphContainer" class="graphDiv">
-                <graph ref="graph" class="graph" :options="GraphOptions"></graph>
-              </td>
-            </tr>
+            <tr><td class="graphDiv">
+              <graph class="graph" :options="GraphOptionsPhasors" :height="PhasorHeight" :width="PhasorHeight"></graph>
+            </td></tr>
           </table>
         </div>
-        
-        <div class="col-sm-12 col-md-8 col-lg-6 panel-body">
+        <div class="col-sm-12 col-md-4 col-lg-6 panel-body">
           <table>
             <tr><td class="border-bottom">Voltage and current phase angle</td></tr>
             <tr>
-              <td ref="graphContainer">
-                <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
+              <td>
+                <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Phasors" class="table small table-striped"></vuetable>
               </td>
             </tr>
           </table>
@@ -69,84 +58,133 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
-  import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
   import vuetable from 'vuetable-2';
   import Complex from 'complex';
   import 'CSS/table-responsive.css';
   export default {
+    props: { analyzer: Object, data: Object, paused: Boolean },
     data: function() {
-      return { ShowWarning: true,  ShowSpinner: true, Time: 'Loading data...',
-      Columns: [
-          {name: 'Phase', title: 'Phase'},
-          {name: 'Channel', title: 'Channel'},
-          {name: 'Angle', title: 'Angle'}, 
-          {name: 'SecAngle', title: ''},
-          {name: 'Value', title: 'Value'}
+      return { MouseOver: false, PhasorHeight: 200, Phasors: [],
+        Columns: [
+          { name: 'Phase', title: 'Phase' },
+          { name: 'Channel', title: 'Channel' },
+          { name: 'Angle', title: 'Angle' },
+          { name: 'SecAngle', title: '' },
+          { name: 'Value', title: 'Value' }
         ]
       };
     },
+    computed: {
+      RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
+      CommonOptions: function() {
+        var Opt = { axes: { x: {}, y: {} } };
+        Opt.highlightCircleSize = 0;
+        Opt.interactionModel = { };
+        Opt.legend = 'never';
+        Opt.plotter = this.Plotter;
+        Opt.xAxisHeight = 0.1;
+        Opt.xLabelHeight = 0.1,
+        Opt.gridLinePattern = [4, 4];
+        Opt.strokeWidth = 0.5;
+        Opt.gridLineColor = "rgba(0, 0, 0, 0.1)";
+        Opt.labels = ['Index', 'Phase', 'Magnitude'];
+        Opt.colors = ['#d9534f', '#428bca'];
+        Opt.valueRange = [-120, 120];
+        Opt.dateWindow = [-120, 120];
+        Opt.axes.y.drawAxis = false;
+        Opt.axes.y.drawGrid = false;
+        Opt.axes.y.axisLabelWidth = 0.1;
+        Opt.axes.y.axisLineColor = "#FFF";
+        Opt.axes.x.drawAxis = false;
+        Opt.axes.x.drawGrid = false;
+        Opt.axes.x.axisLabelWidth = 0.1;
+        Opt.axes.x.axisLineColor = "#FFF";
+        Opt.underlayCallback = this.Underlay;
+        return Opt;
+      },
+      GraphOptionsPositive: function() {
+        var Opt = {};
+        Object.assign(Opt, this.CommonOptions);
+        return Opt;
+      },
+      GraphOptionsNegative: function() {
+        return {};
+      },
+      GraphOptionsZero: function() {
+        return {};
+      },
+      GraphOptionsPhasors: function() {
+        var Opt = {};
+        if(this.data != null) {
+//        var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
+        Opt.file = [];
+        this.Phasors = [];
+        for(var i in this.data.Voltage) {
+          Opt.file.push([i * 2, this.data.Voltage_Phase[i], this.data.Voltage[i]]);
+          Opt.file.push([i * 2 + 1, this.data.Voltage_Phase[i] + this.data.Phi[i], this.data.Current[i]]);
+//          this.Data.push([Phases[i], "Voltage", result.Voltage_Phase[i], result['Voltage'][i]]);
+//          this.Data.push([Phases[i], "Current", result.Voltage_Phase[i] + result.Phi[i], result['Current'][i]]);
+          this.Phasors.push( { Phase: this.analyzer.PhaseNames[i], Channel: "Voltage", Angle: this.Round(this.data.Voltage_Phase[i], 2, true) + '°', Value: this.Round(this.data.Voltage[i], 2, true) + ' V' } );
+          this.Phasors.push( { Phase: this.analyzer.PhaseNames[i], Channel: "Current", Angle: this.Round(((this.data.Phi[i] == null) || (this.data.Voltage_Phase[i] == null)) ? null : this.data.Voltage_Phase[i] + this.data.Phi[i], 2, true) + '°', SecAngle: '(' + this.Round(this.data.Phi[i], 2, true) + '°)', Value: this.Round(this.data.Current[i], 2, true) + ' A'} );
+        }
+ }
+        Object.assign(Opt, this.CommonOptions);
+        return Opt;
+      }
+    },
     created: function() {
       this.Data = [];
-      this.GraphOptions = {
-        highlightCircleSize: 0,  interactionModel: { }, legend: 'never', plotter: this.Plotter, xAxisHeight: 0.1, xLabelHeight: 0.1,
-        labels: ['Index', 'Phase', 'Magnitude'], colors: ['#d9534f', '#428bca'], valueRange: [-120, 120], dateWindow: [-120, 120],
-        axes: {
-          y: { drawAxis: false, drawGrid: false, axisLabelWidth: 0.1, axisLineColor: "#FFF" },
-          x: { drawAxis: false, drawGrid: false, axisLabelWidth: 0.1, axisLineColor: "#FFF" }
-        },
-        underlayCallback: function(canvas, area, g) {
-          if((area.h <= 0) || (area.w <= 0)) return;
-          //x-axis
-          canvas.strokeStyle = '#000';
-          canvas.setLineDash([]);
-          canvas.lineWidth = 0.5;
-          canvas.beginPath();
-          canvas.moveTo(g.toDomXCoord(-115), g.toDomYCoord(0));
-          canvas.lineTo(g.toDomXCoord(115), g.toDomYCoord(0));
-          canvas.stroke();
-          //y-axis
-          canvas.strokeStyle = '#000';
-          canvas.setLineDash([]);
-          canvas.lineWidth = 0.5;
-          canvas.beginPath();
-          canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(-115));
-          canvas.lineTo(g.toDomXCoord(0), g.toDomYCoord(115));
-          canvas.stroke();
-          canvas.lineWidth = 1;
-          canvas.setLineDash(g.user_attrs_.gridLinePattern);
-          canvas.strokeStyle = g.user_attrs_.gridLineColor;
-          canvas.beginPath();
-          for(var n = 0; n < 2 * Math.PI; n = n + Math.PI / 6) {
-            canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(0));
-            canvas.lineTo(g.toDomXCoord(120 * Math.cos(n)), g.toDomYCoord(120 * Math.sin(n)));
-          }
-          canvas.stroke();
-          canvas.beginPath();
-          for(var n = 1; n < 11; n++) {
-            canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(120 * (Math.log(n * 10) / Math.log(120))) - g.toDomXCoord(0), 0, 2 * Math.PI);
-          }    
-          canvas.stroke();
-        }
-      };
     },
     mounted: function() {
-      $(window).on('resize', this.Redraw.bind(this));
+      window.addEventListener('resize', this.Resize);
+      window.dispatchEvent(new Event('resize'));
     },
     updated: function(){
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     beforeDestroy: function() {
-      $(window).off('resize', this.Redraw);
+      window.removeEventListener('resize', this.Resize)
     },
     methods: {
+      Underlay: function(canvas, area, g) {
+        if((area.h <= 0) || (area.w <= 0)) return;
+        //x-axis
+        canvas.strokeStyle = '#000';
+        canvas.setLineDash([]);
+        canvas.lineWidth = 0.5;
+        canvas.beginPath();
+        canvas.moveTo(g.toDomXCoord(-115), g.toDomYCoord(0));
+        canvas.lineTo(g.toDomXCoord(115), g.toDomYCoord(0));
+        canvas.stroke();
+        //y-axis
+        canvas.strokeStyle = '#000';
+        canvas.setLineDash([]);
+        canvas.lineWidth = 0.5;
+        canvas.beginPath();
+        canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(-115));
+        canvas.lineTo(g.toDomXCoord(0), g.toDomYCoord(115));
+        canvas.stroke();
+        canvas.lineWidth = 1;
+        canvas.setLineDash(g.user_attrs_.gridLinePattern);
+        canvas.strokeStyle = g.user_attrs_.gridLineColor;
+        canvas.beginPath();
+        for(var n = 0; n < 2 * Math.PI; n = n + Math.PI / 6) {
+          canvas.moveTo(g.toDomXCoord(0), g.toDomYCoord(0));
+          canvas.lineTo(g.toDomXCoord(120 * Math.cos(n)), g.toDomYCoord(120 * Math.sin(n)));
+        }
+        canvas.stroke();
+        canvas.beginPath();
+        for(var n = 1; n < 11; n++) {
+          canvas.arc(g.toDomXCoord(0), g.toDomYCoord(0), g.toDomXCoord(120 * (Math.log(n * 10) / Math.log(120))) - g.toDomXCoord(0), 0, 2 * Math.PI);
+        }
+        canvas.stroke();
+      },
       Plotter: function(e) {
-        var Analyzer = this.$root.SelectedAnalyzer;
-        if((Analyzer === null) || (e.seriesIndex !== 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0) || (e.dygraph.file_.length === 0) || (e.dygraph.file_[0].length !== 3)) return;
-        var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
+        if((this.analyzer === null) || (e.seriesIndex !== 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0) || (e.dygraph.file_.length === 0) || (e.dygraph.file_[0].length !== 3)) return;
+        var Phases = (oZm.Series['VOLTAGE'].Names(this.analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
         var ctx = e.drawingContext;
         var MaxCurrent = 0;
         for(var i = 0; i < e.points.length; i++) {
@@ -154,7 +192,7 @@
         }
         for(var i = 0; i < e.points.length; i++) {
           if(isNaN(e.allSeriesPoints[1][i].yval)) continue;
-          var Module = Math.log(e.allSeriesPoints[1][i].yval) / (((e.dygraph.file_[i][0] % 2) == 0) ? Math.log(Analyzer.NominalVoltage) : Math.log(Analyzer.MaxCurrent)) * 100.0;
+          var Module = Math.log(e.allSeriesPoints[1][i].yval) / (((e.dygraph.file_[i][0] % 2) == 0) ? Math.log(this.analyzer.NominalVoltage) : Math.log(this.analyzer.MaxCurrent)) * 100.0;
           Module = Math.max(10, Module);
           if(e.dygraph.file_[i][0] % 2) {
             var StartAngle = (e.dygraph.file_[i - 1][1] < e.dygraph.file_[i][1]) ? e.dygraph.file_[i][1] * Math.PI / 180.0 : e.dygraph.file_[i - 1][1] * Math.PI / 180.0;
@@ -187,7 +225,7 @@
             ctx.textAlign = "right";
             ctx.fillText(Phases[(i - 1) / 2], -3, 0);
             ctx.fill();
-            ctx.restore();  
+            ctx.restore();
           }
           if(((e.dygraph.file_[i][0] % 2) === 0) && ((e.dygraph.file_.length === (i + 1)) || ((e.dygraph.file_[i + 1][0] % 2) === 0))) {
             //Value legend
@@ -197,7 +235,7 @@
             ctx.beginPath();
             ctx.textAlign = "right";
             ctx.font = "bold 12px sans";
-            ctx.fillStyle = "#333"; 
+            ctx.fillStyle = "#333";
             ctx.fillText((e.dygraph.file_.length === 1) ? 'ALL' : Phases[(e.dygraph.file_[i][0]) / 2], -15, -5);
             ctx.fill();
             ctx.restore();
@@ -244,25 +282,29 @@
           ctx.restore();
         }
       },
-      Redraw: function() {
+      Resize: function() {
+        this.PhasorHeight = Math.min(600, this.$refs.PhasorContainer.clientWidth - 30);
+return;
+
         this.$nextTick(function() {
-          if((this.$refs === undefined) || (this.$refs.graphContainer === undefined)) return;
+
+        if((this.$refs === undefined) || (this.$refs.graphContainer === undefined)) return;
           var Width = this.$refs.graphContainer.clientWidth - 30;
           if(Width > 600) Width = 600;
-          this.$refs.graph.Redraw(Width, Width);
+//          this.$refs.graph.Redraw(Width, Width);
           Width = this.$refs.positiveContainer.clientWidth - 30;
           if(Width > 600) Width = 600;
-          this.$refs.positive.Redraw(Width, Width);
-          this.$refs.negative.Redraw(Width, Width);
-          this.$refs.zero.Redraw(Width, Width);
+//          this.$refs.positive.Redraw(Width, Width);
+//          this.$refs.negative.Redraw(Width, Width);
+//          this.$refs.zero.Redraw(Width, Width);
         });
       },
       ExportClick: function() {
         this.$refs.tools.SaveCVS('Phasors.csv', [['Phase', 'Channel', 'Angle', 'Value']].concat(this.Data));
       },
-      SetData(result) {
+/*      SetData(result) {
         var Analyzer = this.$root.SelectedAnalyzer;
-        this.ShowWarning = (oZm.ArrayAbsMax(result.Current) < Analyzer.MinCurrent); 
+        this.ShowWarning = (oZm.ArrayAbsMax(result.Current) < Analyzer.MinCurrent);
         this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
         var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
         this.Data = [];
@@ -299,9 +341,9 @@
         this.$refs.graph.SetOptions({ file: Vectors });
         this.$refs.table.setData( { data: Table });
         this.ShowSpinner = false;
-      }
+      }*/
     },
-    components: { Spinner, ToolbarTools, Graph, vuetable }
+    components: { Graph, vuetable }
   }
 </script>
 
@@ -319,7 +361,7 @@
     .table >>> th:nth-child(1)  {
       width: 40px;
       text-align: center;
-    }  
+    }
     .table >>> th:nth-child(2)  {
       width: 50px;
       text-align: center;

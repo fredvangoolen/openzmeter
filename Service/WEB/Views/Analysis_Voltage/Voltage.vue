@@ -1,121 +1,59 @@
 <template>
-  <div class="panel panel-voltage">
-    <div class="panel-heading">
-      <div class="header-text">Voltage</div>
-      <div class="header-buttons clearfix" ref="Toolbar">
-        <toolbar-aggregation variable="Aggregation" :options="['3S', '1M', '10M', '1H']" v-on:AggregationChanged="AggregationChanged" ref="aggregation"></toolbar-aggregation>
-        <toolbar-period variable="Period" v-on:PeriodChanged="UpdateGraph" ref="period"></toolbar-period>
-        <toolbar-phases variable="VoltageViewPhases" type="VOLTAGE" :multi="true" v-on:PhasesChanged="PhasesChanged"></toolbar-phases>
-        <toolbar-tools :options="['EXPORT', 'MAXIMIZE']" v-on:ExportClick="ExportClick" v-on:MaximizeClick="MaximizeClick" v-on:MinimizeClick="MinimizeClick" ref="tools"></toolbar-tools>
-      </div>
-    </div>
-    <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <div class="row">
-        <counters class="col-md-6 col-lg-4 col-xl-3" ref="counters"></counters>
-        <div class="col-md-6 col-lg-8 col-xl-9">
-          <graph ref="graph" :options="GraphOptions"></graph>
-        </div>
-      </div>
-    </div>
+  <div>
+    <graph :options="GraphOptions" :height="height"></graph>
   </div>
 </template>
 
 <script>
-  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
-  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
-  import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
-  import Counters from './Counters.vue';
-  import moment from 'JS/moment.js';
+  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
+    props: { analyzer: Object, data: Object, phases: Array, height: Number },
     data() {
-      return { ShowSpinner: true };
+      return { };
     },
-    created: function() {
-      this.Data = [];
-      this.GraphOptions = {
-        strokeWidth: 0.5, stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, gridLineColor: "#BBB", gridLinePattern: [4, 4], legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow,
-        interactionModel: Graph.ScrollableInteractionModel(this), xAxisHeight: 24, selectMode: 'euclidian',
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { var Result = oZm.FormatSerieValue(x, oZm.Series['VOLTAGE']); return Result.ValueHTML + ' <em class="x-small">' + Result.Units + '</em>'; },
-               axisLabelFormatter: function (x) { return oZm.FormatSerieValue(x, oZm.Series['VOLTAGE']).ValueHTML; }
-             },
-          x: { axisLabelFormatter: function(x) { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); },
-               valueFormatter: function (x) { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); }
-             }
+    computed: {
+      GraphOptions: function(val) {
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
+        var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
+        var Opt = { file: [], axes: { x: {}, y: {} } };
+        Opt.strokeWidth = 0.5;
+        Opt.stepPlot = true;
+        Opt.drawGapEdgePoints = true;
+        Opt.connectSeparatedPoints = false;
+        Opt.fillGraph = false;
+        Opt.gridLineColor = "#BBB";
+        Opt.gridLinePattern = [4, 4];
+        Opt.legend = 'follow';
+        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.interactionModel = 'SCROLLABLE_MODEL';
+        Opt.xAxisHeight = 24;
+        Opt.selectMode = 'euclidian';
+        Opt.visibility = this.phases;
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 34;
+        Opt.axes.y.valueFormatter = (x) => { var Result = oZm.FormatSerieValue(x, oZm.Series['VOLTAGE']); return Result.ValueHTML + ' <em class="x-small">' + Result.Units + '</em>'; };
+        Opt.axes.y.axisLabelFormatter = (x) => { return oZm.FormatSerieValue(x, oZm.Series['VOLTAGE']).ValueHTML; };
+        Opt.axes.x.axisLabelFormatter = (x) => { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); };
+        Opt.axes.x.valueFormatter = (x) => { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); };
+        Opt.labels = ['Time'].concat(VoltageNames);
+        Opt.colors = VoltageStyle.Colors;
+        if(this.data != null) {
+          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n]].concat(this.data.Voltage[n]));
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 10 });
         }
-      };
-    },
-    mounted: function() {
-      $(window).on('resize', this.ResizeHandler.bind(this));
-      window.dispatchEvent(new Event('resize'));
-    },
-    beforeDestroy: function() {
-      $(window).off('resize', this.ResizeHandler);
+        return Opt;
+      }
     },
     methods: {
-      AggregationChanged(aggreg) {
-        this.$refs.period.SetAggregation(aggreg);
-      },
-      ResizeHandler: function() {
-        if(typeof this.$refs.graph !== 'undefined') this.$refs.graph.Redraw('100%', $(this.$refs.counters.$el).height());
-      },
-      MaximizeClick: function() {
-        $(window).unbind('resize', this.ResizeHandler);
-        this.$refs.tools.Maximize('Voltage', this.$refs.graph.Graph, this.$refs.Toolbar);
-      },
-      MinimizeClick: function() {
-        $(window).bind('resize', this.ResizeHandler.bind(this));
-      },
-      PhasesChanged(phases) {
-        this.Phases = phases;
-        this.$refs.graph.SetOptions( { visibility: this.Phases } );
-      },
       ExportClick: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
         this.$refs.tools.SaveCVS('Voltage.csv', [['Time'].concat(oZm.Series['VOLTAGE'].Names(Analyzer))].concat(this.Data));
       },
-      UpdateGraph: function(to, period, lastsample, aggreg) {
-        if(lastsample === 0) {
-          this.Data = [];
-          this.ShowSpinner = true;
-        }
-        this.$parent.$refs.details.$refs.events.GetEvents(to, period, lastsample);
-        var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, Series: ['VOLTAGE'], To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }), 
-          success: function(result) {
-            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
-            this.Data = oZm.GraphDataAppend(result, 'Voltage', this.Data);
-            lastsample = oZm.LastSampletime(result, lastsample);
-            this.$refs.graph.SetOptions({ dateWindow: [result.From, result.To], file: this.Data, valueRange: oZm.Series['VOLTAGE'].Range(this.Data, this.Phases), 
-                                          labels: ['Time'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.SerieStyle(oZm.Series['VOLTAGE'], Analyzer, 0).Colors } );
-            this.$refs.counters.SetStats([result.From, result.To], this.Data, result["Aggregation_Source"]);
-          }.bind(this),
-          complete: function() {
-            this.ShowSpinner = false;
-            this.$refs.period.Updating = false;
-          }.bind(this),
-          error: function(response) {
-            if(response.status === 400) this.$refs.aggregation.AggregationFail();
-            this.ShowSpinner = true;
-          }.bind(this)
-        });
-      },
-      WindowRestore: function() {
-        this.$refs.period.PopState();
-      },
-      WindowChange: function(minDate, maxDate) {
-        this.$refs.period.SetCustom(minDate, maxDate, true);
-      }
-    },
-    components: { Spinner, ToolbarAggregation, ToolbarPeriod, ToolbarPhases, ToolbarTools, Counters, Graph }
+    }
   }
 </script>
 

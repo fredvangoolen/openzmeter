@@ -7,9 +7,9 @@
 
 <script>
   import calendar from 'JS/bootstrap-year-calendar.js';
-  import moment from 'JS/moment.js';
-  import chroma from 'JS/chroma.js';
-  import * as oZm from 'JS/openZmeter.js';
+  import moment from 'moment';
+  import 'moment-timezone';
+  import chroma from 'chroma-js';
   ;(function($) {
     $.fn.calendar.dates['custom'] = {
       days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -22,67 +22,70 @@
     };
   } (jQuery));
   export default {
+    props: { data: Object, analyzer: Object, year: Number, export: Array },
     data: function() {
-      return {};
-    },
-    created: function() {
-      this.Calendar = null;
-      this.Days = null;
-      this.Year = null;
+      return { };
     },
     mounted: function() {
       this.Calendar = $(this.$refs.calendar).calendar({ language: "custom" });
+      if(this.year != null) this.Calendar.setYear(this.year);
+      if(this.data != null) this.SetData();
+    },
+    watch: {
+      year: function(year) { this.Calendar.setYear(year); },
+      data: function() { this.SetData(); }
     },
     methods: {
-      GetData: function(data) {
-        data.push(['Day', 'Energy']);
-        for(var day in this.Days) data.push([moment().year(this.Year).dayOfYear(day).format('DD/MM/YYYY'), this.Days[day]]);
-        return data;
-      },
-      SetData: function(result) {
-        this.Year = moment(result.Sampletime[0]).year();
-        if(result['Active_Power'].length !== 0) this.Calendar.setYear(this.Year);
+      SetData: function() {
         this.Days = [];
-        for(var i = 0; i < result['Active_Power'].length; i++) {
-          var Day = moment(result.Sampletime[i]).dayOfYear();
-          if(this.Days[Day] === undefined) this.Days[Day] = null;
-          if(result['Active_Power'][i] !== null) this.Days[Day] = (this.Days[Day] === null) ? result['Active_Power'][i] : this.Days[Day] + result['Active_Power'][i];
+        for(var i in this.data['Active_Power']) {
+          var Day = moment(this.data.Sampletime[i]).tz(this.analyzer.TimeZone).dayOfYear();
+          if(this.data.Active_Power[i] != null) this.Days[Day] = (this.Days[Day] === undefined) ? this.data.Active_Power[i] / 4.0 : this.Days[Day] + this.data.Active_Power[i] / 4.0;
         }
-        var ColorScale = chroma.scale(['#000000', '#0000FF', '#FF0000', '#FFFF00']).domain([0, 1]);
+        var ColorScale = chroma.bezier(['#00429d', '#96ffea', '#ffffe0', '#ff005e', '#93003a']);
         var Max = -Infinity;
         var Min =  Infinity;
+        var Export = [['Day', 'Energy']];
         for(var Day in this.Days) {
-          if(this.Days[Day] !== null) {
-            Max = Math.max(Max, this.Days[Day]);
-            Min = Math.min(Min, this.Days[Day]);
-          }
+          if(this.Days[Day] == undefined) continue;
+          Max = Math.max(Max, this.Days[Day]);
+          Min = Math.min(Min, this.Days[Day]);
+          Export.push([moment().year(this.year).dayOfYear(Day).format('DD/MM/YYYY'), this.Days[Day]]);
         }
-        var Units = oZm.GetBestUnits(Math.max(Math.abs(Min), Math.abs(Max)));
-        this.$emit('RangeChanged', oZm.ScaleToUnits(Min, Units), oZm.ScaleToUnits(Max, Units), Units);
-        this.Calendar.setCustomDayRenderer(function(element, date) {
+        if(Min == Infinity) Min = 0;
+        if(Max == -Infinity) Max = 1;
+        this.$emit('update:range', [Min, Max]);
+        this.$emit('update:export', Export);
+        this.Calendar.setCustomDayRenderer((element, date) => {
           var Day = moment(date).dayOfYear();
-          if(this.Days[Day] === null) {
-            $(element).css({ 'color': '#BBB' });
+          if((this.Days[Day] == undefined) || (this.Days[Day] == 0)) {
+            var Color = "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAJElEQVQImT2JsQ0AMAyDyP832q+QIWqZEJDEx6gA0JZr9/mmLvBPKENuQmcdAAAAAElFTkSuQmCC')";
+            $(element).css({ color: '#BBB',  border: '1px solid #EEE', background: Color });
             $(element).prop({'data-toggle': 'tooltip', 'title': 'No data'} );
           } else {
-            var Energy = this.Days[Day];
-            var Color = ColorScale((Energy - Min) / (Max - Min));
-            $(element).css({ 'background-color': Color, 'color': chroma(Color).luminance() > 0.5 ? '#000' : '#FFF', 'border': '1px solid #fff'});
-            $(element).prop({'data-toggle': 'tooltip', 'title': oZm.Round2Plain(oZm.ScaleToUnits(Energy, Units)) + ' ' + Units + 'Wh'} );
+            var Color = ColorScale((this.Days[Day] - Min) / (Max - Min));
+            var Units = this.BestUnits(this.Days[Day]);
+            $(element).css({ background: Color, color: chroma(Color).luminance() > 0.5 ? '#000' : '#FFF', border: '1px solid ' + chroma(Color).darker(0.1)});
+            $(element).prop({'data-toggle': 'tooltip', 'title': this.Round(this.ScaleUnits(this.Days[Day], Units), 2, false) + ' ' + Units + 'Wh'} );
           }
-        }.bind(this));
+        });
       }
     }
   }
 </script>
 
 <style scoped>
+  .calendar >>> table {
+    border-collapse: separate !important;
+    border-spacing: 2px !important;
+  }
   .calendar >>> .day-content {
     font-size: 12px;
     text-align: center;
-    width: 35px;
+    width: 32px;
     height: 26px;
     padding: 3px !important;
+    border-radius: 3px;
   }
   .calendar >>> .month-title, .calendar >>> .day-header {
     text-align: center;
@@ -90,6 +93,5 @@
   .calendar >>> .month thead {
     background: #EEE;
     border: 1px solid #DDD;
-    border-radius: 3px;
   }
 </style>

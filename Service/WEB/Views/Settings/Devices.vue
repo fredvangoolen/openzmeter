@@ -1,16 +1,17 @@
 <template>
-  <div class="panel panel-other">
+  <div class="panel panel-other" v-show="Enabled">
     <div class="panel-heading">
-      <div class="huge-small header-text">Input devices</div>
+      <div class="huge-small header-text">Device manager</div>
+      <div class="pull-right btn-group">
+        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes"><img :src="require('Imgs/diskette.png')"> Save</button>
+      </div>
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" class="table small table-striped">
+      <vuetable ref="table" :fields="Columns" :data="Devices" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
-            <button class="btn btn-xs btn-danger" v-if="props.rowData.Status === 'RUNNING'" @click="Stop(props.rowData.Serial, $event)">Stop</button>
-            <button class="btn btn-xs btn-success" v-if="props.rowData.Status !== 'RUNNING'" @click="Start(props.rowData.Serial, $event)">Start</button>
-            <button class="btn btn-xs btn-default" @click="Configure(props.rowData, $event)">Configure</button>
+            <button class="btn btn-xs btn-default" @click="Configure(props.rowData)">Configure</button>
           </div>
         </template>
       </vuetable>
@@ -23,7 +24,7 @@
           <button type="button" class="btn btn-default btn-xs" v-on:click="SettingsVisible = false"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </template>
-      <component :is="Driver" v-model="Settings"></component>
+      <component :is="Driver" v-model="Settings" :error="Error"></component>
     </dlg>
   </div>
 </template>
@@ -31,93 +32,76 @@
 <script>
   import Vuetable from 'vuetable-2';
   import Spinner from 'Components/Spinner.vue';
-  import DeviceVirtual from './DeviceVirtual.vue';
-  import DeviceV1 from './DeviceV1.vue';
-  import DeviceV2 from './DeviceV2.vue';
-  import DeviceRemote from './DeviceRemote.vue';
+  import DeviceVirtual from './Devices/Virtual.vue';
+  import DeviceV1 from './Devices/V1.vue';
+  import DeviceV2 from './Devices/V2.vue';
+  import DeviceRemote from './Devices/Remote.vue';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return {Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null,
+      return { Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null, Error: '', Enabled: false,
         Columns: [
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},
           {name: 'Serial', title: 'Serial'},
+          {name: 'Enabled', title: 'Enabled', callback: this.EnabledStatus},
           {name: 'Analyzers', title: 'Analyzers'},
-          {name: 'Status', title: 'Status'},
           {name: '__slot:actions', title: ''}
         ]
       };
     },
     methods: {
+      EnabledStatus: function(value) {
+        return (value === true) ? '&#9635;' : '&#9633;';
+      },
       LoadTable: function () {
         this.ShowSpinner = true;
-        $.ajax({url: "getDevices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({}),
-          success: function (result) {
-            var TableData = {data: result};
-            this.$refs.table.setData(TableData);
+        this.$http.post('getDevices', {}).then(
+          (result) => {
+            this.Enabled = true;
+            this.Devices = result.data;
             this.ShowSpinner = false;
-          }.bind(this)
-        });
-      },
-      Stop: function (id, evt) {
-        $(evt.target).blur();
-        this.ShowSpinner = true;
-        $.ajax({url: "stopDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({Serial: id}),
-          success: (result) => {
-            this.LoadTable();
-            this.$root.$children[0].$refs.sidebar.$refs.analyzer.CheckAnalyzer();
           },
-          complete: () => {
-            this.ShowSpinner = false;
-          }
-        });
+          (fail) => {}
+        );
       },
-      Start: function (id, evt) {
-        $(evt.target).blur();
-        this.ShowSpinner = true;
-        $.ajax({url: "startDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({Serial: id}),
-          success: (result) => {
-            this.LoadTable();
-            this.$root.$children[0].$refs.sidebar.$refs.analyzer.CheckAnalyzer();
-          },
-          complete: () => {
-            this.ShowSpinner = false;
-          }
-        });
-      },
-      Configure: function (id, evt) {
-        $(evt.target).blur();
+      Configure: function (id) {
         this.ShowSpinner = true;
         if(id.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
         if(id.Driver === 'V1') this.Driver = 'DeviceV1';
+<<<<<<< HEAD
         if(id.Driver === 'V2.01') this.Driver = 'DeviceV2';
+=======
+        if(id.Driver === 'V2') this.Driver = 'DeviceV2';
+>>>>>>> web_cleanup
         if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
-        $.ajax({url: "getDevice", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({Serial: id.Serial}),
-          success: (result) => {
-            this.Settings = result;
+        this.$http.post('getDevice', { Serial: id.Serial } ).then(
+          (result) => {
+            this.Settings = result.data;
             this.Settings.Serial = id.Serial;
             this.SettingsVisible = true;
+            this.ShowSpinner = false;
           },
-          complete: () => {
+          (fail) => {
             this.ShowSpinner = false;
           }
-        });
+        );
       },
       Save: function () {
         this.SettingsLoading = true;
-        $.ajax({url: "setDevice", timeout: 20000, type: "POST", contentType: 'application/json', data: JSON.stringify(this.Settings),
-          success: (result) => {
+        this.$http.post('setDevice', this.Settings).then(
+          (result) => {
             this.SettingsLoading = false;
             this.SettingsVisible = false;
             this.LoadTable();
           },
-          error: () => {
+          (fail) => {
+            this.SettingsLoading = false;
             this.Settings.Error = 'Failed to save device settings!';
             setTimeout(() => { this.Settings.Error = null; }, 1000);
           }
-        });
+        );
       }
     },
     mounted: function () {
@@ -126,7 +110,7 @@
     updated: function () {
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: {Vuetable, Spinner, DeviceVirtual, DeviceV1, DeviceV2, DeviceRemote}
+    components: {Vuetable, DeviceVirtual, DeviceV1, DeviceV2, DeviceRemote}
   }
 </script>
 
@@ -161,20 +145,15 @@
       text-align: center;
     }
     .table >>> th:nth-child(6) {
-      width: 120px;
+      width: 80px;
     }
   }
-  .modal-dialog {
-    z-index: 1100;
-    color: #333;
-    font-size: 14px;
+  .help {
+    font-size: 80%;
   }
-  .checkbox {
-    margin-top: 1px;
-    margin-bottom: 0px;
-    margin-right: 4px;
-  }
-  .modal-body {
-    min-height: 100px;
+  textarea {
+    resize: none;
+    font-family: monospace;
+    font-size: 12px;
   }
 </style>

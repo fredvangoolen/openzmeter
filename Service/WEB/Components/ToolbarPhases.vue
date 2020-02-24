@@ -1,95 +1,108 @@
 <template>
-  <div class="btn-group" v-if="Mode != '1PHASE'">
-    <button type="button" @click="Toogle(0)" v-bind:class="{ active: PhasesR }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase R"><img :src="require('Imgs/phase_r.png')"></button>
-    <button type="button" @click="Toogle(1)" v-bind:class="{ active: PhasesS }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase S"><img :src="require('Imgs/phase_s.png')"></button>
-    <button type="button" @click="Toogle(2)" v-bind:class="{ active: PhasesT }" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase T"><img :src="require('Imgs/phase_t.png')"></button>
-    <button type="button" @click="Toogle(3)" v-bind:class="{ active: PhasesN }" v-if="(Mode == '3PHASE+N') && (type == 'CURRENT')" class="btn btn-default btn-xs" data-toggle="tooltip" title="Show phase N"><img :src="require('Imgs/phase_n.png')"></button>
+  <div class="btn-group" v-if="analyzer.Mode != '1PHASE'">
+    <button type="button" @click="Toggle(0)" :class="{ active: (Active[0]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[0]"><img :src="PhaseImgs[0]"></button>
+    <button type="button" @click="Toggle(1)" :class="{ active: (Active[1]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[1]"><img :src="PhaseImgs[1]"></button>
+    <button type="button" @click="Toggle(2)" :class="{ active: (Active[2]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[2]"><img :src="PhaseImgs[2]"></button>
+    <button type="button" @click="Toggle(3)" :class="{ active: (Active[3]==true) }" v-if="(analyzer.Mode=='3PHASE+N') && (current==true)" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[3]"><img :src="PhaseImgs[3]"></button>
   </div>
-</template> 
+</template>
 
 <script>
   export default {
-    props: { variable: String, multi: Boolean, type: String },
+    props: { analyzer: Object, storage: String, multi: Boolean, current: Boolean, value: [Number, Array] },
     data() {
-      return { Phases: [], PhasesR: false, PhasesS: false, PhasesT: false, PhasesN: false, Mode: '1PHASE' };
+      return { Active: [], BaseImg: null };
+    },
+    created: function() {
+      this.Configure();
+    },
+    watch: {
+      value: function(val) {
+        var Mode = this.analyzer.Mode + '_' + ((this.multi == true) ? 'Multi' : 'Single') + '_' + ((this.current == true) ? 'Current' : 'Voltage');
+        var Stored = JSON.parse(localStorage.getItem(this.storage));
+        if(Stored == null) Stored = {};
+        Stored[Mode] = val;
+        if(this.storage != null) localStorage.setItem(this.storage, JSON.stringify(Stored));
+        if(this.multi == false) {
+          this.Active.fill(false);
+          this.$set(this.Active, val, true);
+        } else {
+          this.Active = val;
+        }
+      },
+      analyzer: function(val, old) {
+        this.Configure();
+      }
+    },
+    computed: {
+      PhaseImgs: function() {
+        var Imgs = [];
+        for(var n in this.analyzer.PhaseNames) {
+          var elem = document.createElement('canvas');
+          elem.width = 16;
+          elem.height = 16;
+          var ctx = elem.getContext('2d');
+          if(this.BaseImg != null) ctx.drawImage(this.BaseImg, 0, 0, 16, 16);
+          ctx.font = "bold 12px Titillium Web";
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.shadowBlur = 2;
+          ctx.shadowColor = "rgba(0,0,0,0.4)";
+          ctx.fillText(this.analyzer.PhaseNames[n], 0, 15);
+          Imgs.push(ctx.canvas.toDataURL());
+        }
+        return Imgs;
+      }
     },
     methods: {
-      Toogle(pos) {
-        $(this.$el).children()[pos].blur();
-        if(this.multi === false) this.Phases.fill(false);
-        this.Phases[pos] = !this.Phases[pos];
-        this.SelChanged();
-      },
-      AnalyzerChanged() {
-        var Len = 0;
-        if(this.$root.SelectedAnalyzer === null) return;
-        this.Mode = (this.$root.SelectedAnalyzer === null) ? '1PHASE' : this.$root.SelectedAnalyzer.Mode;
-        this.Phases = JSON.parse(localStorage.getItem(this.variable + '_' + this.Mode));
-        if(Array.isArray(this.Phases) === false) this.Phases = [];
-        if(this.Mode === '1PHASE') {
-          Len = 1;
-        } else if(this.Mode === '3PHASE') {
-          Len = 3;
-        } else if(this.Mode === '3PHASE+N') {
-          Len = (this.type === 'CURRENT') ? 4 : 3;
-        }
-        while(this.Phases.length < Len) this.Phases.push(false);
-        this.Phases = this.Phases.slice(0, Len);
-        for(var n = 0; n < this.Phases.length; n++) {
-          if(typeof this.Phases[n] !== "boolean") this.Phases[n] = false;
-        }
-        this.SelChanged();
-      },
-      SetPhases: function(phases) {
-        if(Array.isArray(phases) === false) {
-          this.Phases.fill(false);
-          this.Phases[phases] = true;
-        } else {  
-          this.Phases = phases;
-        }
-        if(this.Phases.length > 0) this.PhasesR = this.Phases[0];
-        if(this.Phases.length > 1) this.PhasesS = this.Phases[1];
-        if(this.Phases.length > 2) this.PhasesT = this.Phases[2];
-        if(this.Phases.length > 3) this.PhasesN = this.Phases[3];
-      },
-      SelChanged() {
-        var Set = 0;
-        for(var n = 0; n < this.Phases.length; n++) {
-          if((Set > 0) && (this.multi === false)) this.Phases[n] = false;
-          if(this.Phases[n] === true) Set++;
-        }
-        if(Set === 0) this.Phases[0] = true;
-        this.PhasesR = (this.Phases[0] === true);
-        this.PhasesS = (this.Phases[1] === true);
-        this.PhasesT = (this.Phases[2] === true);
-        this.PhasesN = (this.Phases[3] === true);
-        localStorage.setItem(this.variable + '_' + this.Mode, JSON.stringify(this.Phases));
-        if(this.multi === true) {
-          this.$emit('PhasesChanged', this.Phases);
-        } else {
-          for(var n = 0; n < this.Phases.length; n++) {
-            if(this.Phases[n] === true) {
-              this.$emit('PhasesChanged', n);
-              break;
+      Configure: function() {
+        this.Active = Array((this.analyzer.Mode == '1PHASE') ? 1 : (this.analyzer.Mode == '3PHASE') ? 3 : (this.current == true) ? 4 : 3). fill(false);
+        if(this.storage != null) {
+          var Mode = this.analyzer.Mode + '_' + ((this.multi == true) ? 'Multi' : 'Single') + '_' + ((this.current == true) ? 'Current' : 'Voltage');
+          var Stored = JSON.parse(localStorage.getItem(this.storage));
+          if((Stored != null) && (Stored[Mode] != null)) {
+            if(Array.isArray(Stored[Mode]) == true) {
+              this.Active = Stored[Mode];
+            } else {
+              this.Active[Stored[Mode]] = true;
+            }
+          } else {
+            this.Active[0] = true;
+          }
+          if(this.multi == true) {
+            this.$emit('input', this.Active.slice(0));
+          } else {
+            for(var n in this.Active) {
+              if(this.Active[n] == true) this.$emit('input', parseInt(n));
             }
           }
         }
+        var Img = new Image();
+        Img.onload = () => { this.BaseImg = Img; }
+        Img.src = require('Imgs/draw_wave16.png');
+      },
+      Toggle: function(val) {
+        if(this.multi == false) {
+          this.Active.fill(false);
+          this.Active[val] = true;
+          this.$emit('input', parseInt(val));
+        } else {
+          this.Active[val] = !this.Active[val];
+          var Set = 0;
+          for(var n in this.Active) {
+            if(this.Active[n] == true) Set++;
+          }
+          if(Set == 0) this.Active[0] = true;
+          this.$emit('input', this.Active.slice(0));
+        }
       }
-    },
-    created: function() {
-      this.$root.$on('AnalyzerChanged', this.AnalyzerChanged);
-    },
-    mounted: function() {
-      this.AnalyzerChanged();
     }
   }
 </script>
-  
+
 <style>
-  .btn-default:active:hover, 
-  .btn-default.active:hover, 
-  .btn-default:active:focus, 
-  .btn-default.active:focus {
+  .btn-default:active:hover,
+  .btn-default.active:hover {
     background-color: #ADC5D9;
   }
 </style>

@@ -1,11 +1,103 @@
-import chroma from 'JS/chroma.js';
+const openZmeter = {
+  install: function(Vue, options) {
+    Vue.prototype.CancelTransfer = (transfer) => {
+      if(transfer == null) transfer = { Timer: null, CancelFunc: null };
+      if(transfer.Timer != null) clearTimeout(transfer.Timer);
+      if(transfer.CancelFunc != null) transfer.CancelFunc();
+      return transfer;
+    },
+    Vue.prototype.MatrixColsRange = (values, cols, options) => {
+      var UpperRange = -Infinity;
+      var LowerRange = +Infinity;
+      for(var i in values) {
+        for(var n in cols) {
+          if((values[i][n] == null) || (cols[n] == false)) continue;
+          if(values[i][n] > UpperRange) UpperRange = values[i][n];
+          if(values[i][n] < LowerRange) LowerRange = values[i][n];
+        }
+      }
+      if(options != null) {
+        //This mode, enabled a minimum of 0 value, a min width of rmsRange and a margin of 10%
+        if(options.rmsRange != null) {
+          if((UpperRange == -Infinity) || (LowerRange == Infinity)) return [0, options.rmsRange];
+          var Width = Math.max((UpperRange - LowerRange) * 0.1, options.rmsRange / 2.0);
+          return [Math.max(0, LowerRange - Width), Math.max(UpperRange + Width)];
+        }
+        if(options.incZero != null) {
+          if((UpperRange == -Infinity) || (LowerRange == Infinity)) return [0, options.incZero];
+          if(LowerRange > 0) LowerRange = 0;
+          if(UpperRange < 0) UpperRange = 0;
+          var Width = Math.max((UpperRange - LowerRange) * 0.1, options.incZero / 2.0);
+          return [(LowerRange < 0) ? LowerRange - Width : LowerRange, (UpperRange > 0) ? UpperRange + Width : UpperRange];
+        }
+
+
+        if((UpperRange == -Infinity) && (options.defMax != null)) UpperRange = options.defMax;
+        if((LowerRange == Infinity) && (options.defMin != null)) LowerRange = options.defMin;
+
+
+
+        if((UpperRange > 0) && (options.upperPercent != null)) UpperRange += Math.abs(UpperRange * options.upperPercent);
+        if((LowerRange < 0) && (options.lowerPercent != null)) LowerRange -= Math.abs(LowerRange * options.lowerPercent);
+        if((UpperRange > 0) && (options.minUpperWidth != null)) UpperRange = Math.max(UpperRange, options.minUpperWidth);
+        if((LowerRange < 0) && (options.minLowerWidth != null)) LowerRange = Math.min(LowerRange, options.minLowerWidth);
+        if(options.percent != null) { UpperRange += Math.abs(UpperRange * options.percent); LowerRange -= Math.abs(LowerRange * options.percent); }
+        if(options.minWidth != null) {
+          UpperRange += Math.max((options.minWidth - (UpperRange - LowerRange)) / 2, 0);
+          LowerRange -= Math.max((options.minWidth - (UpperRange - LowerRange)) / 2, 0);
+        }
+      }
+      return [LowerRange, UpperRange];
+    },
+    Vue.prototype.BestUnits = (val) => {
+      return (Math.abs(val) > 1000000) ? 'M' : (Math.abs(val) > 1000) ? 'k' : '';
+    },
+    Vue.prototype.ScaleUnits = (val, units) => {
+      return (units == 'M') ? val / 1000000 : (units == 'k') ? val / 1000 : val;
+    },
+    Vue.prototype.Round = (val, decimals, html) => {
+      if((val == null) || (isFinite(val) == false)) return '~';
+      if(decimals == null) decimals = 2;
+      if(html == null) html = false;
+      var Exponent = Math.pow(10, decimals);
+      val = Math.round(val * Exponent);
+      var Integer = Math.trunc(val / Exponent);
+      var Fraction = Math.abs(val % Exponent);
+      Fraction = Fraction.toString();
+      while(Fraction.length < decimals) Fraction = '0' + Fraction;
+      return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + (html ? "<span style='font-size:80%'>." + Fraction + '</span>' : '.' + Fraction);
+    },
+    Vue.prototype.ArrayAbsMax = (array) => {
+      var Max = 0;
+      for(var i in array) Max = Math.max(Max, Array.isArray(array[i]) ? ArrayMax(array[i]) : Math.abs(array[i]));
+      return Max;
+    },
+    Vue.prototype.BinPower = (complex) => {
+      return Math.sqrt(Math.pow(complex[0], 2.0) + Math.pow(complex[1], 2.0));
+    }
+  }
+};
+export default openZmeter;
+
+import chroma from 'chroma-js';
 import Dygraph from 'JS/dygraph.js';
-import moment from 'JS/moment.js';
+import moment from 'moment';
+import Vue from 'vue';
+
+
+
+
+
+
+
+export function RangeCalc(range) {
+  return { Period: 86400000, To: 0 };
+}
 export function RoundHTML(val, decimals) {
-  if(val == null) {
+  if((val == null) || (isFinite(val) == false)) {
     return '~';
   } else {
-    if(decimals === undefined) decimals = 2;
+    if(decimals == null) decimals = 2;
     var Exponent = Math.pow(10, decimals);
     val = Math.round(val * Exponent);
     var Integer = Math.trunc(val / Exponent);
@@ -30,7 +122,7 @@ export function RoundPlain(val, decimals) {
   }
 }
 export function FormatSerieValue(val, serie, units) {
-  if(units === undefined) units = GetBestUnits(val); 
+  if(units === undefined) units = GetBestUnits(val);
   return { Units: units + serie.Units, ValuePlain: RoundPlain(ScaleToUnits(val, units), serie.Decimals), ValueHTML: RoundHTML(ScaleToUnits(val, units), serie.Decimals) };
 }
 export function SerieStyle(serie, analyzer, order) {
@@ -39,6 +131,26 @@ export function SerieStyle(serie, analyzer, order) {
   var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];
   return {Colors: Colors.slice(0, SerieLen), Width: (order == 0) ? 0.5 : 1.5 }
 }
+export function MergeSeriesResult(result, previous) {
+  var Out = Object.assign({}, previous);
+  if(Out == null) Out = {};
+  if(Out.LastSample == undefined) Out.LastSample = 0;
+  for(var serie in result) {
+    if(Array.isArray(result[serie]) == false) {
+      Out[serie] = result[serie];
+    } else {
+      if(Out[serie] == undefined) Out[serie] = [];
+      for(var pos in result.Sampletime) {
+        if(result.Sampletime[pos] > Out.LastSample) Out[serie].push(result[serie][pos]);
+        if(Out[serie].length > result.MaxSamples) Out[serie].shift();
+
+      }
+    }
+  }
+  if(Out.Sampletime.length > 0) Out.LastSample = Out.Sampletime.slice(-1)[0];
+  return Object.freeze(Out);
+}
+
 export var Series = {
   'VOLTAGE': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V',  Link: '/Analysis/Voltage', Color: '#d9534f', Decimals: 2,
     FormatValue: function(val, units) { return FormatSerieValue(val, this, units) },
@@ -64,7 +176,7 @@ export var Series = {
         LowerRange = LowerRange - 0.25;
       }
       if(LowerRange < 0) LowerRange = 0;
-      return [LowerRange, UpperRange];  
+      return [LowerRange, UpperRange];
     }
   },
   'CURRENT': { CSS_Class: 'panel-current', Title: 'Current', Serie: 'Current', Units: 'A', Link: '/Analysis/Current', Color: '#428bca', Decimals: 2,
@@ -91,10 +203,10 @@ export var Series = {
         LowerRange = LowerRange - 0.05;
       }
       if(LowerRange < 0) LowerRange = 0;
-      return [LowerRange, UpperRange];  
+      return [LowerRange, UpperRange];
     }
   },
-  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active Power', Serie: 'Active_Power', Units: 'W', Link: '/Analysis/Power', Color: '#f0ad4e', Decimals: 2, 
+  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active Power', Serie: 'Active_Power', Units: 'W', Link: '/Analysis/Power', Color: '#f0ad4e', Decimals: 2,
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'W', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; },
     Range: function(values, phases) {
@@ -114,7 +226,7 @@ export var Series = {
         UpperRange = UpperRange + Diff * 0.1;
         LowerRange = LowerRange - Diff * 0.1;
       }
-      return [LowerRange, UpperRange];  
+      return [LowerRange, UpperRange];
     }
   },
   'ACTIVE_ENERGY': { CSS_Class: 'panel-active-energy', Title: 'Active Energy', Serie: 'Active_Energy', Units: 'Wh', Color: '#3d3d8b', Decimals: 2,
@@ -195,41 +307,41 @@ export var Series = {
   'APPARENT_POWER': { CSS_Class: '', Title: 'Apparent Power', Serie: 'Apparent_Power', Units: 'va', Link: '/Analysis/Power', Color: '', Deciamls: 2,
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['S'] : ['S(R)', 'S(S)', 'S(T)']; },
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'va', Value: Round2(ScaleToUnits(val, Units)) }; },
-    rangeFunc: function() {} 
+    rangeFunc: function() {}
   },
-  'POWER_FACTOR': { CSS_Class: '', Title: 'Power Factor', Serie: 'Power_Factor', Units: '', Link: '', 
+  'POWER_FACTOR': { CSS_Class: '', Title: 'Power Factor', Serie: 'Power_Factor', Units: '', Link: '',
     FormatValue: function(val) { return { Units: '', Value: Round2(val) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)']; },
   },
-  'PHI': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '', 
+  'PHI': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '',
     FormatValue: function(val) { return { Units: ((val < 0) ? '° IND' : (val > 0) ? '° CAP' : '°'), Value: Round2(Math.abs(val)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['Phi'] : ['Phi(R)', 'Phi(S)', 'Phi(T)']; },
   },
-  'VOLTAGE_THD': { 
-    CSS_Class: '', 
-    Title: 'Voltage THD', 
-    Serie: 'Voltage_THD', 
-    Units: '%', 
-    Link:'', 
+  'VOLTAGE_THD': {
+    CSS_Class: '',
+    Title: 'Voltage THD',
+    Serie: 'Voltage_THD',
+    Units: '%',
+    Link:'',
     FormatValue: function(val) { return { Units: '%', Value: Round2(val * 100) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)']; },
   },
-  'CURRENT_THD': { 
-    CSS_Class: '', 
-    Title: 'Current THD', 
-    Serie: 'Current_THD', 
-    Units: '%', 
-    Link:'', 
+  'CURRENT_THD': {
+    CSS_Class: '',
+    Title: 'Current THD',
+    Serie: 'Current_THD',
+    Units: '%',
+    Link:'',
     FormatValue: function(val) { return { Units: '%', Value: Round2(val * 100) }; }
   },
   'HARMONICS': {
     FormatValue: function(val) { return { Units: 'dB', Value: Round2(val) }; },
-    Units: 'dB', 
+    Units: 'dB',
     Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th']
   },
   'HARMONICS_POWER': {
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'W', Value: Round2(ScaleToUnits(val, Units)) }; },
-    Units: 'W', 
+    Units: 'W',
     Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th']
   },
   'VOLTAGE_SAMPLES': {
@@ -248,7 +360,7 @@ export var Series = {
       var Diff = Math.max(10, (UpperRange - LowerRange) * 0.1);
       UpperRange = UpperRange + Diff;
       LowerRange = LowerRange - Diff;
-      return [LowerRange, UpperRange];  
+      return [LowerRange, UpperRange];
     }
   },
   'CURRENT_SAMPLES': {
@@ -267,7 +379,7 @@ export var Series = {
       var Diff = Math.max(1, (UpperRange - LowerRange) * 0.1);
       UpperRange = UpperRange + Diff;
       LowerRange = LowerRange - Diff;
-      return [LowerRange, UpperRange];  
+      return [LowerRange, UpperRange];
     }
   }
 
@@ -321,7 +433,7 @@ export function zoom(g, zoomInPercentage, xBias, yBias) {
 
 /**
  * Creates captions on stackable view (mobile devices) to create a card for each row.
- * @param {Table as vue object} tableVue 
+ * @param {Table as vue object} tableVue
  */
 export function createCaptionsForResponsiveTable (tableVue) {
   if(tableVue === undefined) return;
@@ -331,11 +443,11 @@ export function createCaptionsForResponsiveTable (tableVue) {
   for(var i = 0; i < headers.length; i++) {
     var current = headers[i];
     headertext.push(current.textContent.replace(/\r?\n|\r/,""));
-  } 
+  }
   for (var i = 0, row; row = tablebody.rows[i]; i++) {
     for (var j = 0, col; col = row.cells[j]; j++) {
       col.setAttribute("data-th", headertext[j]);
-    } 
+    }
   }
 }
 
@@ -354,9 +466,9 @@ export function createCaptionsForResponsiveTable (tableVue) {
 //  return (aggreg === '1H') ? 3600000 : (aggreg === '15M') ? 900000 : (aggreg === '10M') ? 600000 : (aggreg === '1M') ? 60000 : 3000;
 //}
 ///* Return full text from aggregation short name */
-export function GetAggregLongName(shortText) {
-  return (shortText === '1H') ? '1 hour' : (shortText === '15M') ? '15 minutes' : (shortText === '10M') ? '10 minutes' : (shortText === '1M') ? '1 minute' : (shortText === '3S') ? '3 seconds' : false;
-}
+//export function GetAggregLongName(shortText) {
+
+//}
 ///* Return short name from full aggregation text*/
 //function GetAggregShortName(longText) {
 //  return (longText === '1 hour') ? '1H' : (longText === '15 minutes') ? '15M' : (longText === '10 minutes') ? '10M' : (longText === '1 minute') ? '1M' : (longText === '3 seconds') ? '3S' : false;
@@ -445,7 +557,7 @@ export function GetAggregLongName(shortText) {
 //  $(Self.Opt.NowBtn).addClass('active');
 //  Self.GetSeries = function() {
 //    $(Self.Opt.NowBtn).addClass('disabled');
-//    Analyzer.GetSeriesNow(Self.Opt.Series, 
+//    Analyzer.GetSeriesNow(Self.Opt.Series,
 //      function(result) {
 //        for(var i in Self.Opt.Spinners) $(Self.Opt.Spinners[i]).hide();
 //        Self.Opt.OnSuccess(result);
@@ -466,7 +578,7 @@ export function GetAggregLongName(shortText) {
 //  this.Opt = Object.assign({Spinners: [], Series: '', Period: 86400000, Aggreg: '1M'}, opt);
 //  var Self = this;
 //  Self.GetSeries = function() {
-//    Analyzer.GetSeries(Self.Opt.Period, 0, Self.Opt.Aggreg, Self.LastSample, Self.Opt.Series, 
+//    Analyzer.GetSeries(Self.Opt.Period, 0, Self.Opt.Aggreg, Self.LastSample, Self.Opt.Series,
 //      function(result) {
 //        if(result['Sampletime'] === null) return;
 //        if(result['Sampletime'].length === 0) return;
@@ -508,8 +620,8 @@ export function GetAggregLongName(shortText) {
 //    if((isNaN(Data) === true) || (Data >= Items) || (Data < 0)) {
 //      localStorage.setItem(Self.Variable, 0);
 //      Data = 0;
-//    } 
-//    return Data;    
+//    }
+//    return Data;
 //  }
 //  $(divs + ' > div').hide();
 //  $(tab + ' > li:nth-child(' + (Self.GetSaved() + 1) + ')').addClass('active');
@@ -528,7 +640,7 @@ export function GraphDataAppend(result, serie, data) {
       for(var n = 0; n < data.length; n++) {
         if((data[n][0] >= result['From']) && (data[n][0] <= result['To'])) Out.push(data[n]);
       }
-      
+
      // ShiftArray(data, result['MaxSamples']);
     }
   }
@@ -582,7 +694,7 @@ export function LastSampletime(result, prev) {
 //    } else {
 //      State = State | Math.pow(2, Index);
 //    }
-//    if(unique == true) State = State & (Math.pow(2, Index));  
+//    if(unique == true) State = State & (Math.pow(2, Index));
 //    localStorage.setItem(variable, State);
 //  }
 //  var VisibleSeries = [];
@@ -608,7 +720,7 @@ export function LastSampletime(result, prev) {
 //    Visibles.push(1);
 //    VisibleSeries.push(true);
 //  }
-//  if(callback !== undefined) callback(VisibleSeries, Visibles);  
+//  if(callback !== undefined) callback(VisibleSeries, Visibles);
 //}
 ///* if called from a button update variable contents to reflect new selections. In all cases update graph visible series */
 //function GraphPhaseButtons(graph, buttongroup, variable, unique, rangechecker, sender) {
@@ -652,7 +764,7 @@ export function ArrayAbsMax(array) {
 //function ArrayGraphMax(array) {
 //  var Max = 0;
 //  for(var i = 0; i < array.length; i++) {
-//    for(var n = 1; n < array[i].length; n++) {      
+//    for(var n = 1; n < array[i].length; n++) {
 //      Max = Math.max(Max, Math.abs(array[i][n]));
 //    }
 //  }
@@ -669,10 +781,10 @@ export function ScaleArrayToUnits(array, units) {
 export function ScaleToUnits(val, units) {
   if(units === '') return val;
   if(units === 'k') {
-    return val / 1000;  
+    return val / 1000;
   } else if(units === 'M') {
-    return val / 1000000;  
-  }      
+    return val / 1000000;
+  }
 }
 ///* Find units for high values of energy */
 export function GetBestUnits(value) {
@@ -693,27 +805,27 @@ export function GetBestUnits(value) {
 //  for(var i = 0; i < graph.rawData_.length; i++) {
 //    if(accum === true) {
 //      var Value = 0;
-//      for(var n = 1; n < graph.rawData_[i].length; n++) {      
+//      for(var n = 1; n < graph.rawData_[i].length; n++) {
 //        if(graph.attrs_.visibility[n - 1] === true) Value = Value + graph.rawData_[i][n];
 //      }
 //      if(Value < Result.Min) {
-//        Result.Min = Value;  
+//        Result.Min = Value;
 //        Result.MinTime = graph.rawData_[i][0];
 //      }
 //      if(Value > Result.Max) {
-//        Result.Max = Value;  
+//        Result.Max = Value;
 //        Result.MaxTime = graph.rawData_[i][0];
 //      }
 //    } else {
-//      for(var n = 1; n < graph.rawData_[i].length; n++) {      
+//      for(var n = 1; n < graph.rawData_[i].length; n++) {
 //        if(graph.attrs_.visibility[n - 1] === true) {
 //          var Value = Value + graph.rawData_[i][n];
 //          if(Value < Result.Min) {
-//            Result.Min = Value;  
+//            Result.Min = Value;
 //            Result.MinTime = graph.rawData_[i][0];
 //          }
 //          if(Value > Result.Max) {
-//            Result.Max = Value;  
+//            Result.Max = Value;
 //            Result.MaxTime = graph.rawData_[i][0];
 //          }
 //        }
@@ -726,7 +838,7 @@ export function GetBestUnits(value) {
 export function ColorArray(base, items) {
   var Array = [];
   for(var i = 0; i < items; i++) {
-   Array.push(base); 
+   Array.push(base);
    base = chroma(base).darken();
   }
   return Array;
@@ -791,10 +903,10 @@ export function GetBestUnitsBin(value) {
 //
 ///* Formato rapido en multiplos de mil si es necesario */
 //function FormatKMG(value, unit, unitK, unitsM, unitsG) {
-//  if(value > 1000000000) return Round2(value / 1000000000) + unitG; 
-//  if(value > 1000000) return Round2(value / 1000000) + unitM; 
-//  if(value > 1000) return Round2(value / 1000) + unitK; 
-//  return Round2(value) + unit; 
+//  if(value > 1000000000) return Round2(value / 1000000000) + unitG;
+//  if(value > 1000000) return Round2(value / 1000000) + unitM;
+//  if(value > 1000) return Round2(value / 1000) + unitK;
+//  return Round2(value) + unit;
 //}
 //
 ///* Convierte un numero a cadena con dos decimales y muestra el valor en los huecos que se pasen */
@@ -877,7 +989,7 @@ export function Round6Plain(value) {
 //    $('#divAnalyzersTariff').removeClass('hide');
 //    $('#divAnalyzersTariffSpinner').removeClass('hide');
 //    Self.TableTariffs.clear();
-//    $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Analyzer: Self.GetSelected().ID } ), 
+//    $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify( { Analyzer: Self.GetSelected().ID } ),
 //      success: function(result) {
 //        for(var i = 0; i < result.length; i++) {
 //          var RowText = '<tr>' +
@@ -947,40 +1059,40 @@ export function Round6Plain(value) {
 //    if(Self.OnEditTariffCurrent !== null) {
 //      Data.push({id: "CURRENT", name: Self.OnEditTariffCurrent.Name + ' (Copy)', description: 'From ' + moment(Self.OnEditTariffCurrent.StartDate).format('DD/MM/YYYY') + ' to ' + moment(Self.OnEditTariffCurrent.EndDate).format('DD/MM/YYYY')});
 //      $("#inputAnalyzerTariffBase").attr('data-id', 'CURRENT');
-//      $("#inputAnalyzerTariffBase").val(Data[0].name);    
+//      $("#inputAnalyzerTariffBase").val(Data[0].name);
 //    } else {
 //      $("#inputAnalyzerTariffBase").attr('data-id', '');
 //      $("#inputAnalyzerTariffBase").val('');
 //    }
 //    $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", async: false, dataType: "json", contentType: 'application/json', data: JSON.stringify({ }), success: function(result) { for(var i = 0; i < result.length; i++) Data.push({ id: result[i].RateID, name: result[i].Name, description: 'From ' + moment(result[i].StartDate).format('DD/MM/YYYY') + ' to ' + moment(result[i].EndDate).format('DD/MM/YYYY')}); } });
 //    if(Self.OnEditTariffCurrent !== null) Self.TariffSelect('CURRENT');
-//    $("#inputAnalyzerTariffBase").bsSuggest( { hideOnSelect: true, effectiveFields: ['name', 'description'], showHeader: false, ignorecase: true, indexId: 0, indexKey: 1, data: { value: Data } } );    
+//    $("#inputAnalyzerTariffBase").bsSuggest( { hideOnSelect: true, effectiveFields: ['name', 'description'], showHeader: false, ignorecase: true, indexId: 0, indexKey: 1, data: { value: Data } } );
 //    $("#inputAnalyzerTariffBase").on('onSetSelectValue', function (e, keyword) { Self.TariffSelect(keyword.id); });
 //    $("#inputAnalyzerTariffBase").on('onUnsetSelectValue', function (e) { Self.TariffUnselect(); });
 //    $('#divAnalyzersTariffEditSpinner').addClass('hide');
 //    Self.TariffValidate();
 //  };
 //  Self.GetSeries = function(period, to, aggreg, lastsample, series, onSuccess, onCompletion, onError) {
-//    return $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, erro: onError, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Self.GetSelected().ID } ) }); 
+//    return $.ajax({ url: "getSeries", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, erro: onError, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, LastSample: lastsample, Series: series, Analyzer: Self.GetSelected().ID } ) });
 //  };
-//  Self.GetSeriesNow = function(series, onSuccess, onCompletion, onError) { 
-//    return $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Series: series, Analyzer: Self.GetSelected().ID } ) }); 
+//  Self.GetSeriesNow = function(series, onSuccess, onCompletion, onError) {
+//    return $.ajax({ url: "getSeriesNow", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Series: series, Analyzer: Self.GetSelected().ID } ) });
 //  };
-//  Self.GetSeriesRange = function(aggreg, onSuccess, onCompletion, onError) { 
-//    return $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify({ Aggreg: aggreg, Analyzer: Self.GetSelected().ID }) }); 
+//  Self.GetSeriesRange = function(aggreg, onSuccess, onCompletion, onError) {
+//    return $.ajax({ url: "getSeriesRange", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify({ Aggreg: aggreg, Analyzer: Self.GetSelected().ID }) });
 //  };
-//  Self.GetSeriesAggreg = function(period, to, aggreg, series, onSuccess, onCompletion, onError) { 
-//    return $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Self.GetSelected().ID } ) }); 
+//  Self.GetSeriesAggreg = function(period, to, aggreg, series, onSuccess, onCompletion, onError) {
+//    return $.ajax({ url: "getSeriesAggreg", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Period: period, To: to, Aggreg: aggreg, Series: series, Analyzer: Self.GetSelected().ID } ) });
 //  };
-//  Self.GetEvents = function(period, to, lastevent, onSuccess, onCompletion, onError) { 
-//    return $.ajax({ url: "getEvents", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Period: period, To: to, LastEvent: lastevent, Analyzer: Self.GetSelected().ID } ) }); 
+//  Self.GetEvents = function(period, to, lastevent, onSuccess, onCompletion, onError) {
+//    return $.ajax({ url: "getEvents", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Period: period, To: to, LastEvent: lastevent, Analyzer: Self.GetSelected().ID } ) });
 //  };
 //  Self.GetPrices = function(period, to, lastsample, onSuccess, onCompletion, onError) {
-//    return $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Period: period, To: to, LastSample: lastsample, Analyzer: Self.GetSelected().ID } ) }); 
+//    return $.ajax({ url: "getPrices", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', success: onSuccess, complete: onCompletion, error: onError, data: JSON.stringify( { Period: period, To: to, LastSample: lastsample, Analyzer: Self.GetSelected().ID } ) });
 //  };
 //  Self.GetIndicatorsB = function() {
 //    var Times = GetDayTimePeriod();
-//    Self.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, "sum(active_energy)", 
+//    Self.GetSeriesAggreg(Times.PrimaryPeriod, Times.PrimaryTo, Times.PreferedAggreg, "sum(active_energy)",
 //      function(result) {
 //        var Units = GetBestUnits(ArrayMax(result['sum_active_energy']));
 //        $('#IndicatorActiveEnergyUnits').text(Units + 'Wh');
@@ -1012,7 +1124,7 @@ export function Round6Plain(value) {
 //        if((result['RAM_Total'] != undefined) && (result['RAM_Total'] != undefined)) {
 //          Status.push(Math.round((result['RAM_Total'] - result['RAM_Free']) / result['RAM_Total'] * 100) + '%(RAM)');
 //        }
-//        if((result['Swap_Total'] != undefined) && (result['Swap_Free'] != undefined)) {      
+//        if((result['Swap_Total'] != undefined) && (result['Swap_Free'] != undefined)) {
 //          Status.push(Math.round((result['Swap_Total'] - result['Swap_Free']) / result['Swap_Total'] * 100) + '%(Swap)');
 //        }
 //        if(Status.length == 0) {
@@ -1032,14 +1144,14 @@ export function Round6Plain(value) {
 //  //      Units = GetBestUnits(result['Disk_Total']);
 //        $('#DiskPercent').css('width', (result['Disk_Total'] - result['Disk_Free']) / result['Disk_Total'] * 100 + '%');
 //  //      $('#DiskText').html(Round2((result['Disk_Total'] - result['Disk_Free']) / Units[0]) + '/' + Round2(result['Disk_Total'] / Units[0]) + '<em>&nbsp;' + Units[1] + '</em>');
-//        
+//
 //        $('#BatteryPercent').css('width', result['Battery_Percent'] + '%');
 //  //      $('#BatteryText').html(Round2(result['Battery_Percent']) + '%');
 //      },
 //      complete: function() {
 //        setTimeout(Self.GetSysStats, 5000);
 //      }
-//    });  
+//    });
 //  };
 //  Self.AvaliableAnalyzers = [];
 //  Self.CurrentAnalyzerIndex = parseInt(localStorage.getItem("SelAnalyzer"));
@@ -1051,7 +1163,7 @@ export function Round6Plain(value) {
 //  $('#tblAnalyzers').on('click', 'li:nth-child(1) > a', function(event) { event.preventDefault(); Self.Configure($(this).parents('div').attr('data-analyzer')); } );
 //  $('#tblAnalyzers').on('click', 'li:nth-child(2) > a', function(event) { event.preventDefault(); Self.ACL($(this).parents('div').attr('data-analyzer')); } );
 //  $('#tblAnalyzers').on('click', 'li:nth-child(3) > a', function(event) { event.preventDefault(); Self.Tariffs($(this).parents('div').attr('data-analyzer')); } );
-//  
+//
 //  $('#tblAnalyzers').on('click', 'li:nth-child(6) > a', function(event) { event.preventDefault(); Self.Maintenance($(this).parents('div').attr('data-analyzer')); } );
 //  $('#tblAnalyzersTariff').on('click', 'button:nth-child(1)', function(event) { Self.TariffEdit($(this).parents('td').attr('data-tariff')); } );
 //  $('#tblAnalyzersTariff').on('click', 'button:nth-child(2)', function(event) { Self.TariffDelete($(this).parents('td').attr('data-tariff')); } );
@@ -1062,15 +1174,15 @@ export function Round6Plain(value) {
 //}
 //// JS entry point for all page loading
 //if((localStorage.getItem('SelAnalyzer') === null) && (window.location.pathname !== '/Settings')) { window.location.href = 'Settings'; }
-//$.ajax( { url: 'Common.html', async: false, success: 
+//$.ajax( { url: 'Common.html', async: false, success:
 //  function(result) {
 //    var Template = $('<div></div>').append(result.trim());
-//    $('*[data-load-block]').each( function(index) { $(this).html(Template.children('#' + $(this).data('loadBlock')).html()); } );        
-//  } 
+//    $('*[data-load-block]').each( function(index) { $(this).html(Template.children('#' + $(this).data('loadBlock')).html()); } );
+//  }
 //});
 //$('.spinnerdiv').each(function(index, element) { new Spinner(SpinnerOpts).spin(element); });
 //$('[data-sidenav]').sidenav();
-//$('ul.sidenav-menu li a').filter( function() { return this.href === window.location.href; }).addClass('active').parent().parent().show().parent().children('a').addClass('active');            
+//$('ul.sidenav-menu li a').filter( function() { return this.href === window.location.href; }).addClass('active').parent().parent().show().parent().children('a').addClass('active');
 //var User = new User_Manager();
 //var Analyzer = new Analyzer_Manager();
 //
@@ -1155,7 +1267,7 @@ export function Round6Plain(value) {
 //  var LowerRange =  Infinity;
 //  for(i = 0; i < input.length; i++) {
 //    if(sum == true) {
-//      var Sum = 0; 
+//      var Sum = 0;
 //      for(n = 0; n < cols.length; n++) {
 //        if(input[i][cols[n]] === null) continue;
 //        Sum += input[i][cols[n]];
@@ -1191,7 +1303,7 @@ export function Round6Plain(value) {
 //  if((onlypositive === true) && (LowerRange < 0)) {
 //    LowerRange = 0;
 //  }
-//  return [LowerRange, UpperRange];  
+//  return [LowerRange, UpperRange];
 //}
 //
 ///* Divide por 1000 los valores de entrada de un array */

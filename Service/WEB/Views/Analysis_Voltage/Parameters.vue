@@ -1,97 +1,80 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Aggregation }}</div>
-      <div class="header-buttons" ref="Toolbar">
-        <toolbar-phases variable="DetailsPhaseSingle" ref="phases" v-on:PhasesChanged="$parent.PhasesChangedSingle"></toolbar-phases>
-        <toolbar-tools variable="To" ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
+      <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggregation_Source) : '-' }} aggregation {{ MouseOver ? '(Paused)' : '' }}</div>
+      <div class="header-buttons">
+        <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
+        <div class="btn-group">
+          <button-export file="Variables" :rows="Export"></button-export>
+        </div>
       </div>
     </div>
-    <div class="panel-body">
-      <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
-      <cubism v-for="(serie, index) in Series" :serie="serie" :key="serie" ref="rows" :index="index" v-on:mouseOver="MouseOver"></cubism>
+    <div class="panel-body" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+      <spinner v-if="data==null"></spinner>
+      <cubism :index="0" ref="g0" title="Power Factor" :data="Data" :now="DataNow" :format="Formatter_Power_Factor" :paused="MouseOver"></cubism>
+      <cubism :index="1" ref="g1" title="Voltage THD" :data="Data" :now="DataNow" :format="Formatter_Voltage_THD" :paused="MouseOver"></cubism>
+      <cubism :index="2" ref="g2" title="Phi" :data="Data" :now="DataNow" :format="Formatter_Phi" :paused="MouseOver"></cubism>
     </div>
   </div>
 </template>
 
 <script>
-  import Cubism from 'Components/Cubism.vue';
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'JS/moment.js';
-  import Spinner from 'Components/Spinner.vue';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
+  import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
   export default {
+    props: { analyzer: Object, data: Object, dataNow: Object },
     data() {
-      return { ShowSpinner: true, Aggregation: 'Loading data...', Series: ['POWER_FACTOR', 'VOLTAGE_THD', 'PHI'] };
+      return { Phase: null, MouseOver: false };
     },
-    methods: {
-      MouseOver: function(val) {
-        this.mouseOverCount = this.mouseOverCount + ((val === true) ? +1 : -1);
-      },
-      Redraw() {
-        this.$nextTick(function() {    
-          for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
-          window.dispatchEvent(new Event('resize'));
-        });
-      },
-      ExportClick: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        var Header = ['Date/Time'];
-        for(var i = 0; i < this.Series.length; i++) {
-          for(var n = 0; n < oZm.Series[this.Series[i]].Names(Analyzer).length; n++) Header.push(oZm.Series[this.Series[i]].Names(Analyzer)[n]);
+    computed: {
+      Data: function() {
+        if((this.data == null) || (this.analyzer == null) || (this.Phase == null)) return null;
+        var Series = { 'Power Factor': [], 'Voltage THD': [], 'Phi': [] };
+        Series.Sampletime = this.data.Sampletime;
+        Series.From = this.data.From;
+        Series.To = this.data.To;
+        Series.TimeZone = this.analyzer.TimeZone;
+        for(var i in this.data.Sampletime) {
+          Series['Power Factor'].push(this.data.Power_Factor[i][this.Phase]);
+          Series['Voltage THD'].push(this.data.Voltage_THD[i][this.Phase]);
+          Series['Phi'].push(this.data.Phi[i][this.Phase]);
         }
-        var Data = [];
-        for(var j = 0; j < this.Data[this.Series[0]].length; j++) {
-          var Row = [moment(this.Data[this.Series[0]][j][0]).format('HH:mm:ss')];
-          for(var i = 0; i < this.Series.length; i++) {
-            for(var n = 0; n < oZm.Series[this.Series[i]].Names(Analyzer).length; n++) Row.push(this.Data[this.Series[i]][j][n + 1]);
-          }
+        return Series;
+      },
+      DataNow: function() {
+        if((this.dataNow == null) || (this.analyzer == null) || (this.Phase == null)) return null;
+        var Series = { 'Power Factor': null, 'Voltage THD': null, 'Phi': null };
+        Series['Power Factor'] = this.dataNow.Power_Factor[this.Phase];
+        Series['Voltage THD'] = this.dataNow.Voltage_THD[this.Phase];
+        Series['Phi'] = this.dataNow.Phi[this.Phase];
+        return Series;
+      },
+      Export: function() {
+        if((this.data == null) || (this.analyzer == null)) return [];
+        var Header = ['Sample']
+          .concat(this.analyzer.GetSeriesNames('Power Factor', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.GetSeriesNames('Voltage THD', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels));
+        var Data = [Header];
+        for(var n in this.data.Sampletime) {
+          var Row = [this.data.Sampletime[n]];
+          for(var i in this.data.Power_Factor[n]) Row.push(this.data.Power_Factor[n][i]);
+          for(var i in this.data.Voltage_THD[n]) Row.push(this.data.Voltage_THD[n][i]);
+          for(var i in this.data.Phi[n]) Row.push(this.data.Phi[n][i]);
           Data.push(Row);
         }
-        this.$refs.tools.SaveCVS('VoltageParameters.csv', [Header].concat(Data));
-      },
-      SetPhases: function(phase) {
-        this.$refs.phases.SetPhases(phase);
-        this.Phase = phase;
-        this.CalcOptions();
-      },
-      SetData: function(result) {
-        if(result['Sampletime'] === null) return;
-        if(result['Sampletime'].length === 0) return;
-        if(this.Data === null) this.Data = [];
-        this.DateWindow = [result['From'], result['To']];
-        this.Aggregation = 'From ' + oZm.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
-        for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
-        if(this.mouseOverCount === 0) this.CalcOptions();
-        this.ShowSpinner = false; 
-      },
-      SetDataNow(result) {
-        if(this.mouseOverCount !== 0) return;
-        for(var n = 0; n < this.Series.length; n++) this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.Series[n]].Serie][this.Phase]);
-      },
-      CalcOptions() {
-        for(var n = 0; n < this.Series.length; n++) {
-          if(this.Data[this.Series[n]].length === 0) continue;
-          var Data = [];
-          for(var i = 0; i < this.Data[this.Series[n]].length; i++) Data.push([this.Data[this.Series[n]][i][0], this.Data[this.Series[n]][i][this.Phase + 1]]);
-          this.$refs.rows[n].SetData({ dateWindow: this.DateWindow, file: Data});
-        }
+        return Data;
       }
     },
-    created: function() {
-      this.mouseOverCount = 0;
-      this.Data = {};
-      this.Phase = null;
-      for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = [];
+    methods: {
+      Formatter_Power_Factor: function(val) { return this.Round(val, 2, true); },
+      Formatter_Voltage_THD: function(val) { return this.Round(val, 2, true) + ' %'; },
+      Formatter_Phi: function(val) { return this.Round(val, 2, true); }
     },
     mounted: function() {
-      var Graphs = [];
-      for(var i = 0; i < this.Series.length; i++) Graphs.push(this.$refs.rows[i].Graph);
+      var Graphs = [this.$refs.g0.Graph, this.$refs.g1.Graph, this.$refs.g2.Graph];
       Dygraph.synchronize(Graphs, { range: false, zoom: false });
-    },
-    components: { Cubism, Spinner, ToolbarPhases, ToolbarTools }
+    }
   }
 </script>

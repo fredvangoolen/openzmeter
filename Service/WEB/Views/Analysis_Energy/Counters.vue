@@ -1,119 +1,134 @@
 <template>
-  <div class="col-md-6 col-lg-4 col-xl-3" ref="counters">
-    <div class="subpanel">
+  <div>
+    <div class="subpanel clearfix">
       <div class="counters-title">Last value:</div>
-      <div class="counters-aggreg">From 15 minutes aggregation<br>{{ Time15M }}</div>
+      <div class="counters-aggreg" v-if="data15M!=null">From 15 minutes aggregation<br>{{ analyzer.FormatTime(data15M.Sampletime) }}</div>
       <div class="clearfix"></div>
-      <div class="current-value" v-html="CurrentValue15M"></div>
+      <div>
+        <div class="current-value" v-html="(data15M!=null) ? FormatSum(data15M) : '-'"></div>
+        <div class="counters-phases" v-if="(data15M!=null)&&(data15M.Active_Power.length>1)">
+          <div v-for="(phase, idx) in FormatPhases(data15M)" :key="idx" v-html="phase"></div>
+        </div>
+      </div>
     </div>
-    <div class="subpanel">
+    <div class="subpanel clearfix">
       <div class="counters-title">Last value:</div>
-      <div class="counters-aggreg">From 1 hour aggregation<br>{{ Time1H }}</div>
+      <div class="counters-aggreg" v-if="data1H!=null">From 1 hour aggregation<br>{{ analyzer.FormatTime(data1H.Sampletime) }}</div>
       <div class="clearfix"></div>
-      <div class="current-value" v-html="CurrentValue1H"></div>
+      <div>
+        <div class="current-value" v-html="(data1H!=null) ? FormatSum(data1H) : '-'"></div>
+        <div class="counters-phases" v-if="(data1H!=null)&&(data1H.Active_Power.length>1)">
+          <div v-for="(phase, idx) in FormatPhases(data1H)" :key="idx" v-html="phase"></div>
+        </div>
+      </div>
     </div>
     <div class="subpanel clearfix">
       <div class="counters-title">Period stats:</div>
-      <div class="counters-aggreg">{{ CountersAggregation }}</div>
-      <div class="line" v-bind:class="{'line-border-reactive': (variable == 'REACTIVE_ENERGY')}">
+      <div class="counters-aggreg" v-if="dataGraph!=null">From {{ analyzer.FormatAggregation(dataGraph.Aggregation_Source) }} aggregation<br>From {{ analyzer.FormatDateTime(dataGraph.From) }} to {{ analyzer.FormatDateTime(dataGraph.To) }}</div>
+      <div class="line">
         <div class="float-left">
           <div class="counters-stat-type">Max value:</div>
-          <div class="counters-stat-time">{{ MaxTime }}</div>
+          <div class="counters-stat-time">{{ isFinite(Max.Value) ? analyzer.FormatDateTime(Max.Time) : '-' }}</div>
         </div>
-        <div class="counters-stat-val" v-html="MaxValue"></div>
+        <div class="counters-stat-val" v-html="isFinite(Max.Value) ? FormatHTML(Max.Value) : '-'"></div>
       </div>
-      <div class="line line-border" v-bind:class="{'line-border-reactive': (variable == 'REACTIVE_ENERGY')}">
+      <div class="line line-border">
         <div class="float-left">
           <div class="counters-stat-type">Total in period:</div>
-          <div class="counters-stat-time">From {{ AccumSamples }} samples</div>
+          <div class="counters-stat-time">From {{ (Sum.Count > 0) ? Sum.Count : '-' }} samples</div>
         </div>
-        <div class="counters-stat-val" v-html="AccumValue"></div>
+        <div class="counters-stat-val" v-html="isFinite(Sum.Value) ? FormatHTML(Sum.Value) : '-'"></div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
-  import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
-  import ToolbarTools from 'Components/ToolbarTools.vue';
-  import Spinner from 'Components/Spinner.vue';
-  import Graph from 'Components/Graph.vue';
-  import moment from 'JS/moment.js';
+//  import moment from 'moment';
+//  import 'moment-timezone';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: ['variable'],
+    props: { analyzer: { type: Object}, serie: { type: String, required: true }, data15M: { type: Object }, data1H: { type: Object }, dataGraph: { type: Object } },
     data () {
-      return { CountersAggregation: 'Loading data...', MaxTime: '', MaxValue: '',
-                Time15M: '', CurrentValue15M: '', CurrentValue15MPhases: '', 
-                Time1H: '', CurrentValue1H: '', CurrentValue1HPhases: '', 
-                TimeStatsFrom: '...', TimeStatsTo: '...', AccumSamples: '', AccumValue: '?'
-              };
+      return { };
     },
-    methods: {
-      FormatPhases: function(values) {
-        var Return = '';
-        if(values.length > 1) {
-          for(var n = 0; n < values.length; n++) {
-            var Format = oZm.Series[this.variable].FormatValue(values[n]);
-            Return += Format.Value + '<em>' + Format.Units +'</em><br>';
-          }
+    updated: function() {
+      this.$emit('update:height', this.$el.clientHeight);
+    },
+    computed: {
+      Sum: function() {
+        var Sum = { Value: 0, Count: 0 };
+        if(this.dataGraph == null) return Sum;
+        var Divisor = (this.dataGraph.Aggregation_Source == '15M') ? 4 : 1;
+        for(var x in this.dataGraph.Sampletime) {
+          if((this.serie == 'ACTIVE_ENERGY') && (this.dataGraph.Active_Power[x] == null)) continue;
+          if((this.serie == 'REACTIVE_ENERGY') && (this.dataGraph.Reactive_Power[x] == null)) continue;
+          Sum.Count++;
+          Sum.Value += this.dataGraph[(this.serie == 'ACTIVE_ENERGY') ? 'Active_Power' : 'Reactive_Power'][x] / Divisor;
         }
-        return Return;
-      },
-      SumPhases: function(values) {
-        var Sum = 0;
-        for(var n = 0; n < values.length; n++) Sum += values[n];
         return Sum;
       },
-      FormatAggregBlock(result, quarter) {
-        var Variable = (this.variable == 'ACTIVE_ENERGY') ? 'ACTIVE_POWER' : 'REACTIVE_POWER';
-        if(result === null) return ['', 'No data', ''];
-        if(result['Sampletime'].length === 0) return ['', 'No data', ''];
-        var Pos = result['Sampletime'].length - 1;
-        var Time = 'At ' + moment(result.Sampletime[Pos]).format('HH:mm:ss');
-        var Value = 'No data';
-        var Phases = '';
-        if(result[oZm.Series[Variable].Serie][Pos] !== null) {
-          if(quarter) {
-            for(var n = 0; n < result[oZm.Series[Variable].Serie][Pos].length; n++) result[oZm.Series[Variable].Serie][Pos][n] = result[oZm.Series[Variable].Serie][Pos][n] / 4.0;
-          }
-          Phases = this.FormatPhases(result[oZm.Series[Variable].Serie][Pos]);
-          var Format = oZm.Series[this.variable].FormatValue(this.SumPhases(result[oZm.Series[Variable].Serie][Pos]));
-          Value = Format.Value + '<em>' + Format.Units +'</em>';
-        }
-        return [Time, Value, Phases];
-      },
-      Set15MValues: function(result) {
-        [this.Time15M, this.CurrentValue15M, this.CurrentValue15MPhases] = this.FormatAggregBlock(result, true);
-      },
-      Set1HValues: function(result) {
-        [this.Time1H, this.CurrentValue1H, this.CurrentValue1HPhases] = this.FormatAggregBlock(result);
-      },
-      SetStats: function(window, data, aggreg) {
-        this.CountersAggregation = 'From ' + oZm.GetAggregLongName(aggreg) + ' aggregation';
-        this.TimeStatsFrom = moment(window[0]).format('DD/MM/YYYY HH:mm:ss');
-        this.TimeStatsTo = moment(window[1]).format('DD/MM/YYYY HH:mm:ss');
-        var AccumValue = 0.0, MaxValue = -Infinity, AccumSamples = 0, MaxCount = 0, MaxTime = null;
-        for(var x = 0; x < data.length; x++) {
-          if(data[x][1] === null) continue;
-          AccumSamples++;
-          AccumValue += data[x][1];
-          if(data[x][1] > MaxValue) {
-            MaxValue = data[x][1];
-            MaxCount = 0;
-            MaxTime = data[x][0];
-          } else if(data[x][1] === MaxValue) {
-            MaxCount++;
+      Max: function() {
+        var Max = { Value: -Infinity, Time: 0, Count: 0 };
+        if(this.dataGraph == null) return Max;
+        var Divisor = (this.dataGraph.Aggregation_Source == '15M') ? 4 : 1;
+        for(var x in this.dataGraph.Sampletime) {
+          if((this.serie == 'ACTIVE_ENERGY') && (this.dataGraph.Active_Power[x] == null)) continue;
+          if((this.serie == 'REACTIVE_ENERGY') && (this.dataGraph.Reactive_Power[x] == null)) continue;
+          var Value = this.dataGraph[(this.serie == 'ACTIVE_ENERGY') ? 'Active_Power' : 'Reactive_Power'][x] / Divisor;
+          if(Value > Max.Value) {
+            Max = { Value: Value, Time: this.dataGraph.Sampletime[x], Count: 0 };
+          } else if(Value == Max.Value) {
+            Max.Count++;
           }
         }
-        this.AccumSamples = AccumSamples;
-        this.MaxTime = moment(MaxTime).format("hh:mm:ss - DD/MM/YYYY") + ((MaxCount > 1) ? ' (and ' + MaxCount + ' times more)' : '');
-        var Format = oZm.Series[this.variable].FormatValue(AccumValue);
-        this.AccumValue = Format.Value + ' <em>' + Format.Units +'</em>';
-        var Format = oZm.Series[this.variable].FormatValue(MaxValue);
-        this.MaxValue = Format.Value + ' <em>' + Format.Units +'</em>';
+        return Max;
       }
+    },
+    methods: {
+      FormatHTML: function(val) {
+        var Units = oZm.GetBestUnits(val);
+        return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'ACTIVE_ENERGY') ? 'Wh' : 'VArh');
+      },
+      FormatSum: function(val) {
+        var Val = (this.serie == 'ACTIVE_ENERGY') ? val.Active_Power : val.Reactive_Power;
+        var Div = (val.Aggregation_Source == '15M') ? 4 : 1;
+        var Sum = 0;
+        for(var n in Val) Sum = Sum + Val[n] / Div;
+        return this.FormatHTML(Sum);
+      },
+      FormatPhases: function(val) {
+        var Val = (this.serie == 'ACTIVE_ENERGY') ? val.Active_Power : val.Reactive_Power;
+        var Div = (val.Aggregation_Source == '15M') ? 4 : 1;
+        var Units = oZm.GetBestUnits(oZm.ArrayAbsMax(Val));
+        var Result = [];
+        for(var n in Val) Result.push(this.FormatHTML(Val[n] / Div));
+        return Result;
+      },
+//      FormatAggregBlock(result, quarter) {
+//        var Variable = (this.variable == 'ACTIVE_ENERGY') ? 'ACTIVE_POWER' : 'REACTIVE_POWER';
+//        if(result === null) return ['', 'No data', ''];
+//        if(result['Sampletime'].length === 0) return ['', 'No data', ''];
+//        var Pos = result['Sampletime'].length - 1;
+//        var Time = 'At ' + moment(result.Sampletime[Pos]).format('HH:mm:ss');
+//        var Value = 'No data';
+//        var Phases = '';
+//        if(result[oZm.Series[Variable].Serie][Pos] !== null) {
+//          if(quarter) {
+//            for(var n = 0; n < result[oZm.Series[Variable].Serie][Pos].length; n++) result[oZm.Series[Variable].Serie][Pos][n] = result[oZm.Series[Variable].Serie][Pos][n] / 4.0;
+//          }
+//          Phases = this.FormatPhases(result[oZm.Series[Variable].Serie][Pos]);
+//          var Format = oZm.Series[this.variable].FormatValue(this.SumPhases(result[oZm.Series[Variable].Serie][Pos]));
+//          Value = Format.Value + '<em>' + Format.Units +'</em>';
+//        }
+//        return [Time, Value, Phases];
+//      },
+//      Set15MValues: function(result) {
+//        [this.Time15M, this.CurrentValue15M, this.CurrentValue15MPhases] = this.FormatAggregBlock(result, true);
+//      },
+//      Set1HValues: function(result) {
+//        [this.Time1H, this.CurrentValue1H, this.CurrentValue1HPhases] = this.FormatAggregBlock(result);
+//      },
     }
   }
 </script>
@@ -126,8 +141,11 @@
     line-height: 12px;
     font-weight: bold;
     padding-left: 2px;
-    border-left: 1px solid #f0ad4e;
+    border-left: 1px solid #c7c7e6;
     margin-left: 5px;
+  }
+  .panel-reactive-energy .counters-phases {
+    border-left: 1px solid #acadd6;
   }
   .counters-title {
     float: left;
@@ -165,7 +183,7 @@
   .line-border {
     border-top: 1px solid #c7c7e6;
   }
-  .line-border-reactive {
+  .panel-reactive-energy .line-border {
     border-top: 1px solid #acadd6;
   }
 </style>
