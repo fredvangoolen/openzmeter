@@ -59,9 +59,10 @@ class HTTPServer final {
     pthread_t      pThread;
     Server        *pServer;
   private :
-    static void *Listen_Thread(void *params);
-    static void  HandleGet(const Request &request, Response &response);
-    static void  HandlePost(const Request &request, Response &response);
+    static void   *Listen_Thread(void *params);
+    static string ParseCookie(const string &cookie);
+    static void   HandleGet(const Request &request, Response &response);
+    static void   HandlePost(const Request &request, Response &response);
   public :
     static void RegisterCallback(const string &handleName, const Func_t function);
     static void UnregisterCallback(const string &handleName);
