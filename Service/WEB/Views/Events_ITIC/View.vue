@@ -56,7 +56,7 @@
         var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
         this.$http.post('getEvents', { From: From, To: To, Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
-            this.Data = result.data;
+            this.Data = Object.seal(result.data);
           },
           (fail) => {}
         );
@@ -67,7 +67,7 @@
         if(this.Data == null) return [];
         var Data =  [['Start', 'Type', 'Duration', 'Notes']];
         for(var i in this.Data.StartTime) Data.push([this.Data.StartTime[i], this.Data.Type[i], this.Data.Duration[i] / this.Data.SampleRate[i], this.Data.Notes[i]]);
-        return Data;
+        return Object.seal(Data);
       }
     },
     components: { Curve, ByDate, ByType, ByRms, ByDuration }

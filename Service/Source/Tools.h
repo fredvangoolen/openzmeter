@@ -115,7 +115,7 @@ class ResourceLoader {
 //----------------------------------------------------------------------------------------------------------------------
 class LOGFile {
   private :
-    enum Type {ERROR = 1, WARNING = 2, INFO = 3, DEBUG = 4};
+    enum Type {ERROR = 0, WARNING = 1, INFO = 2, DEBUG = 3};
   private :
     static pthread_mutex_t  pMutex;
     static bool             pConsole;
@@ -127,6 +127,7 @@ class LOGFile {
     LOGFile();
     virtual ~LOGFile();
   public :
+    static void CloseConsole();
     static void Info(const char *msg, ...);
     static void Warning(const char *msg, ...);
     static void Error(const char *msg, ...);

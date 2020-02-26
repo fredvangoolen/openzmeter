@@ -1,5 +1,137 @@
 const openZmeter = {
   install: function(Vue, options) {
+    Vue.prototype.CreateSeriesTransfer = (parent, series) => {
+      var Transfer = { This: parent, Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null, Aggreg: null, Range: null, Callback: null };
+      Transfer.Destroy = () => {
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+      };
+      Transfer.Update = (analyzer, aggreg, range, onData) => {
+        if((analyzer == null) || (aggreg == null) || (range == null)) return;
+        var Cancelled = false;
+        var Period    = (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
+        var Now       = moment().tz(analyzer.TimeZone);
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+        var ReqRange = null;
+        if(range == 'LastDay') 
+          ReqRange = [Now.valueOf() - 86400000, Now.valueOf()];
+        else if(range == 'LastWeek') 
+          ReqRange = [Now.valueOf() - 604800000, Now.valueOf()];
+        else if(range == 'LastMonth') 
+          ReqRange = [Now.valueOf() - 2592000000, Now.valueOf()];
+        else if(range == 'LastYear')
+          ReqRange = [Now.valueOf() - 31536000000, Now.valueOf()];
+        else if(range == 'Day') 
+          ReqRange = [Now.startOf('day').valueOf(), Now.endOf('day').valueOf()];
+        else if(range == 'Week') 
+          ReqRange = [Now.startOf('week').valueOf(), Now.endOf('week').valueOf()];
+        else if(range == 'Month') 
+          ReqRange = [Now.startOf('month').valueOf(), Now.endOf('month').valueOf()];
+        else if(range == 'Year') 
+          ReqRange = [Now.startOf('year').valueOf(), Now.endOf('year').valueOf()];
+        else if(Array.isArray(range)) 
+          ReqRange = range;
+        if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) onData(null);
+        if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = { };
+        Transfer.Data.Aggregation_Source = aggreg;
+        Transfer.Data.From = null;
+        Transfer.Data.To   = null;
+        Transfer.Analyzer  = analyzer;
+        Transfer.Aggreg    = aggreg;
+        Transfer.Callback  = onData;
+        Transfer.Range     = range;
+        if(Transfer.Data.Sampletime != null) {
+          var Pos = 0;
+          for(var n = 0; n < Transfer.Data.Sampletime.length; n++) {
+            if(Transfer.Data.Sampletime[n] < ReqRange[0]) 
+              Pos++;
+            else
+              break;
+          }
+          if(Pos != 0) {
+            for(var serie in Transfer.Data) {
+              if(Array.isArray(Transfer.Data[serie]) == true) Transfer.Data[serie].splice(0, Pos);
+            }
+          }
+          var Pos = 0;
+          for(var n = 0; n < Transfer.Data.Sampletime.length; n++) {
+            if(Transfer.Data.Sampletime[n] <= ReqRange[1]) 
+              Pos++;
+            else
+              break;
+          }
+          if(Pos != 0) {
+            for(var serie in Transfer.Data) {
+              if(Array.isArray(Transfer.Data[serie]) == true) Transfer.Data[serie].splice(Pos);
+            }
+          }
+          Transfer.Data.From = Transfer.Data.Sampletime[0];
+          Transfer.Data.To = Transfer.Data.Sampletime.slice(-1)[0];
+        }
+        var Promises = [];
+        if((Transfer.Data.From == null) || (Transfer.Data.To == null)) {
+          Promises.push(Transfer.This.$http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }));
+        } else {
+          if((ReqRange[0] < Transfer.Data.From) && (((Transfer.Data.From - 1) - ReqRange[0]) > Period)) Promises.push(Transfer.This.$http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: Transfer.Data.From - 1, Series: series }));
+          if((ReqRange[1] > Transfer.Data.To)  && ((ReqRange[1] - (Transfer.Data.To + 1)) > Period)) Promises.push(Transfer.This.$http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: Transfer.Data.To + 1, To: ReqRange[1], Series: series }));
+        }
+        if(Promises.length == 0) {
+          Transfer.Data.From = ReqRange[0];
+          Transfer.Data.To = ReqRange[1];
+          onData(Transfer.Data);
+          Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range, Transfer.Callback); }, 3000);
+          return;
+        }
+        Transfer.CancelFunc = () => { Cancelled = true; };
+        Promise.all(Promises).then(
+          (result) => {
+            if(Cancelled == true) {
+              console.log("Transferencia cancelada");
+              return;
+            }
+            for(var n in result) {
+              if(result[n].body.Sampletime.length == 0) continue;
+              var After = ((Transfer.Data.From != null) && (Transfer.Data.From > result[n].body.Sampletime[0]));
+              for(var serie in result[n].body) {
+                if(Array.isArray(result[n].body[serie]) == false) continue
+                if((Transfer.Data.From == null) || (Transfer.Data.To == null))
+                  Transfer.Data[serie] = result[n].body[serie];
+                else if(After == true)
+                  Transfer.Data[serie] = result[n].body[serie].concat(Transfer.Data[serie]);
+                else
+                  Transfer.Data[serie] = Transfer.Data[serie].concat(result[n].body[serie]);
+              }
+            }
+            if((Transfer.Data.From == null) || (Transfer.Data.To == null)) {
+              Object.seal(Transfer.Data);
+            }
+            Transfer.Data.From = ReqRange[0];
+            Transfer.Data.To = ReqRange[1];
+            onData(Transfer.Data);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range, Transfer.Callback); }, 3000);
+          },
+          (fail) => {
+            if(Cancelled == true) return;
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range, Transfer.Callback); }, 3000);
+          }
+        );
+      };
+      Object.seal(Transfer.Data);
+      return Transfer;
+    },
+
+
+
+
+
+
+
+
+
+
+
+
     Vue.prototype.CancelTransfer = (transfer) => {
       if(transfer == null) transfer = { Timer: null, CancelFunc: null };
       if(transfer.Timer != null) clearTimeout(transfer.Timer);

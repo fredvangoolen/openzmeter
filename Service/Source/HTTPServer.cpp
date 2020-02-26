@@ -85,6 +85,7 @@ HTTPServer::HTTPServer() {
 HTTPServer::~HTTPServer() {
   pServer->stop();
   if(pThread != 0) pthread_join(pThread, NULL);
+  delete pServer;
 }
 void *HTTPServer::Listen_Thread(void *params) {
   HTTPServer *This = (HTTPServer*)params;

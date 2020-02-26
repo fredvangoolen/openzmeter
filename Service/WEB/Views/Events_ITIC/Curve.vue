@@ -7,7 +7,6 @@
 
 <script>
   import Graph from 'Components/Graph.vue';
-  import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { data: Object, analyzer: Object },
     data: function() {
@@ -19,7 +18,7 @@
         Opt.strokeWidth = 0;
         Opt.labels = ["Duration", "Variation"];
         Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.drawPoints = true;
         Opt.pointSize = 3;
         Opt.gridLineColor = "#BBB";
@@ -38,12 +37,12 @@
         Opt.axes.x.pixelsPerLabel = 34;
         Opt.axes.x.axisLabelWidth = 34;
         Opt.axes.x.logscale = true;
-        Opt.axes.x.valueFormatter = (x) => { return (x < 1000) ? oZm.Round2(x) + 'ms' : oZm.Round2(x / 1000) + 's'; };
+        Opt.axes.x.valueFormatter = (x) => { return (x < 1000) ? this.Round(x, 2, false) + 'ms' : this.Round(x / 1000, 2, false) + 's'; };
         Opt.axes.x.axisLabelFormatter = (x) => { return (x < 1000) ? x + 'ms' : (x / 1000) + 's'; };
         if(this.data != null) {
           for(var i in this.data.StartTime) Opt.file.push([(this.data.Duration[i] / this.data.SampleRate[i]) * 1000.0, 100 + this.MaxDiff(this.data.Peak[i])]);
         }
-        return Opt;
+        return Object.seal(Opt);
       }
     },
     methods: {
@@ -99,7 +98,7 @@
         canvas.lineTo(c + (w * Math.log10(10000)) / Math.log10(20000), g.toDomYCoord(90));
         canvas.lineTo(c + (w * Math.log10(20000)) / Math.log10(20000), g.toDomYCoord(90));
         canvas.stroke();
-        canvas.font = "16px sans-serif";
+        canvas.font = "12px Titillium Web";
         canvas.fillStyle = "#333";
         canvas.textAlign = 'right';
         canvas.fillText("No damage region",  c + w - 5 , g.toDomYCoord(0) - 5);
@@ -107,6 +106,7 @@
         canvas.textAlign = "left";
         canvas.fillText("No interruption region", c + 5 , g.toDomYCoord(0) - 5);
         canvas.restore();
+        Graph.Callbacks.Underlay_DrawBorder(canvas, area, g);
       },
       MaxDiff: function(a) {
         var Max = a[0] - this.analyzer.NominalVoltage;

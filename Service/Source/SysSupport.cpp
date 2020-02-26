@@ -306,6 +306,7 @@ void *SysSupport::Bluetooth_Thread(void *params) {
     }
   }
   dbus_connection_unref(pDBus);
+  return NULL;
 }
 void *SysSupport::SysStat_Thread(void *params) {
   uint64_t NextUpdate = Tools::GetTime() + 5000;
