@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <graph :options="GraphOptions" :height="height"></graph>
+  <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+    <graph :options="GraphOptions" :height="height" :paused="MouseOver"></graph>
   </div>
 </template>
 
@@ -9,7 +9,7 @@
   export default {
     props: { analyzer: Object, data: Object, height: Number },
     data() {
-      return { };
+      return { MouseOver: false };
     },
     computed: {
       GraphOptions: function() {
@@ -17,6 +17,7 @@
         Opt.panEdgeFraction = 1;
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
+        Opt.showRangeSelector = false;
         Opt.drawGapEdgePoints = true;
         Opt.connectSeparatedPoints = false;
         Opt.fillGraph = false;
@@ -42,7 +43,7 @@
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.05 });
           Opt.dateWindow = [this.data.From, this.data.To];
         }
-        return Opt;
+        return Object.seal(Opt);
       }
     }
   }

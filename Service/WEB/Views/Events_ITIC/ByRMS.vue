@@ -25,13 +25,15 @@
         Opt.showRangeSelector = false;
         Opt.labels = ["Variation", "Events"];
         Opt.legend = 'follow';
-        Opt.plotter = Graph.multiColumnBarPlotter;
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.plotter = Graph.Plotters.MultiBar;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.gridLineColor = "#BBB";
         Opt.gridLinePattern = [4, 4];
         Opt.colors = ["#DF842A"];
         Opt.interactionModel = {};
         Opt.dateWindow = [-0.5, this.RMSs.length - 0.5];
-        Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
+        Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 24;
         Opt.axes.y.valueFormatter = (x) => { return x; };

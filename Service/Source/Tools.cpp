@@ -292,7 +292,6 @@ bool            LOGFile::pConsole  = true;
 pthread_mutex_t LOGFile::pMutex    = PTHREAD_MUTEX_INITIALIZER;
 LOGFile::LOGFile() {
   string Name = "/var/log/openZmeter.log";
-  pLevel = DEBUG;
   json Config = ConfigManager::ReadConfig("/Log");
   if(Config.is_object()) {
     if(Config["File"].is_string()) Name = Config["File"];
@@ -302,7 +301,6 @@ LOGFile::LOGFile() {
   Config["File"] = Name;
   Config["Level"] = pLevel;
   ConfigManager::WriteConfig("/Log", Config);
-  pFile = NULL;
   if(Name.empty() == false) {
     pFile = fopen(Name.c_str(), "at");
     if(!pFile) pFile = fopen(Name.c_str(), "wt");
@@ -338,6 +336,9 @@ void LOGFile::Error(const char* msg, ...) {
   Msg(ERROR, msg, args);
   va_end(args);
 }
+void LOGFile::CloseConsole() {
+  pConsole = false;
+}
 void LOGFile::Msg(Type type, const char *msg, va_list params) {
   time_t Now;
   struct tm *TimeStamp;
@@ -350,23 +351,23 @@ void LOGFile::Msg(Type type, const char *msg, va_list params) {
   vsnprintf(MsgStr, sizeof(MsgStr), msg, params);
   if(pConsole == true) {
     if(type == ERROR) {
-      if(printf("\033[1;31m%s\033[0m %s", DateStr, MsgStr) == 0) pConsole = false;
+      printf("\033[1;31m%s\033[0m %s", DateStr, MsgStr);
     } else if(type == WARNING) {
-      if(printf("\033[1;33m%s\033[0m %s", DateStr, MsgStr) == 0) pConsole = false;
+      printf("\033[1;33m%s\033[0m %s", DateStr, MsgStr);
     } else if(type == DEBUG) {
-      if(printf("\033[1;37m%s\033[0m %s", DateStr, MsgStr) == 0) pConsole = false;
+      printf("\033[1;37m%s\033[0m %s", DateStr, MsgStr);
     } else if(type == INFO) {
-      if(printf("\033[1;34m%s\033[0m %s", DateStr, MsgStr) == 0) pConsole = false;
+      printf("\033[1;34m%s\033[0m %s", DateStr, MsgStr);
     }
+    fflush(stdout);
   }
-  if(pConsole == true) fflush(stdout);
-  if((type < pLevel) && (pFile != NULL)) fprintf(pFile, "[%s]  %s", DateStr, MsgStr);
+  if((type <= pLevel) && (pFile != NULL)) fprintf(pFile, "[%s]  %s", DateStr, MsgStr);
   pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
 extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
-vector<ResourceLoader::File_t> ResourceLoader::pFiles;;
+vector<ResourceLoader::File_t> ResourceLoader::pFiles;
 uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
   *size = 0;
   if(pFiles.size() == 0) {

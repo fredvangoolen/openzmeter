@@ -15,7 +15,7 @@
             </portal>
           </div>
           <div class="panel-body">
-            <spinner v-if="ShowSpinner"></spinner>
+            <spinner v-if="DataGraph==null"></spinner>
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :dataNow="DataNow" :dataGraph="DataGraph" :height.sync="Height"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
@@ -43,13 +43,16 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Aggreg: null, ShowSpinner: true, Range: null, Range2:null, Height: 300, Expanded: false, DialogHeight: 300,
-               DataNow: null, ControlNow: null, DataGraph: null, ControlGraph: null };
+      return { Aggreg: null, Range: null, Height: 300, Expanded: false, DialogHeight: 300,
+               TransferGraph: this.CreateSeriesTransfer(this, ['FREQUENCY']),
+               DataNow: null, ControlNow: null, DataGraph: null, 
+               //ControlGraph: null 
+               };
       },
     watch: {
-      analyzer: function() { this.UpdateNowValues(true); this.UpdateGraphValues(true); },
-      Aggreg: function() {  this.UpdateGraphValues(true); },
-      Range: function() { this.UpdateGraphValues(false); },
+      analyzer: function() { this.UpdateNowValues(true); this.UpdateGraphValues(); },
+      Aggreg: function() {  this.UpdateGraphValues(); },
+      Range: function() { this.UpdateGraphValues(); },
     },
     computed: {
       Export: function() {
@@ -61,11 +64,12 @@
     },
     created: function() {
       this.UpdateNowValues(true);
-      this.UpdateGraphValues(true);
+      this.UpdateGraphValues();
     },
     beforeDestroy: function() {
       this.CancelTransfer(this.ControlNow);
-      this.CancelTransfer(this.ControlGraph);
+//      this.CancelTransfer(this.ControlGraph);
+      this.TransferGraph.Destroy();
     },
     methods: {
       UpdateNowValues: function(clear) {
@@ -73,20 +77,26 @@
         this.ControlNow = this.CancelTransfer(this.ControlNow);
         if(this.analyzer == null) return;
         this.ControlNow.CancelFunc = this.analyzer.GetSeriesLast('3S', ['FREQUENCY'],
-          (working) => {},
+          (working) => { },
           (result) => { this.DataNow = Object.seal(result); },
           (timeout) => { this.ControlNow.Timer = setTimeout( () => { this.UpdateNowValues(false); }, timeout); }
         );
       },
-      UpdateGraphValues: function(clear) {
-        if(clear == true) this.DataGraph = null;
-        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
-        if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
-        this.ControlGraph.CancelFunc = this.analyzer.GetSeriesRange(this.Aggreg, this.Range, this.DataGraph, ['FREQUENCY'],
-          (working) => { this.ShowSpinner = working; },
-          (result) => { this.DataGraph = Object.seal(result); },
-          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(false); }, timeout); }
+      UpdateGraphValues: function() {
+        console.log("Actualizando algun parametro");
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range,
+          (data) => { 
+            this.DataGraph = data; 
+          }
         );
+//        if(clear == true) this.DataGraph = null;
+//        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
+//        if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
+//        this.ControlGraph.CancelFunc = this.analyzer.GetSeriesRange(this.Aggreg, this.Range, this.DataGraph, ['FREQUENCY'],
+//          (working) => { this.ShowSpinner = working; },
+//          (result) => { this.DataGraph = Object.seal(result); },
+//          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(false); }, timeout); }
+//        );
       }
     },
     components: { Frequency, Counters }
