@@ -15,12 +15,12 @@
             </portal>
           </div>
           <div class="panel-body">
-            <spinner v-if="DataGraph==null"></spinner>
+            <spinner v-if="TransferGraph.Data==null"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :dataNow="DataNow" :dataGraph="DataGraph" :height.sync="Height"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :dataNow="TransferNow.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
-                  <frequency :analyzer="analyzer" :data="DataGraph" :height="Expanded?DialogHeight:Height" @range="Range=$event"></frequency>
+                  <frequency :analyzer="analyzer" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></frequency>
                 </portal>
               </div>
             </div>
@@ -45,59 +45,29 @@
     data: function() {
       return { Aggreg: null, Range: null, Height: 300, Expanded: false, DialogHeight: 300,
                TransferGraph: this.CreateSeriesTransfer(this, ['FREQUENCY']),
-               DataNow: null, ControlNow: null, DataGraph: null, 
-               //ControlGraph: null 
-               };
-      },
+               TransferNow: this.CreateSeriesTransfer(this, ['FREQUENCY']),
+      };
+    },
     watch: {
-      analyzer: function() { this.UpdateNowValues(true); this.UpdateGraphValues(); },
-      Aggreg: function() {  this.UpdateGraphValues(); },
-      Range: function() { this.UpdateGraphValues(); },
+      analyzer: function() { this.TransferNow.Update(this.analyzer, '3S', 'LastSamples'); this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range) },
+      Aggreg: function() { this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range); },
+      Range: function() { this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range); },
     },
     computed: {
       Export: function() {
-        if(this.DataGraph == null) return [];
+        if(this.TransferGraph.Data == null) return [];
         var Rows = [['Time', 'Frequency']];
-        for(var n in this.DataGraph.Sampletime) Rows.push([this.DataGraph.Sampletime[n], this.DataGraph.Frequency[n]]);
+        for(var n in this.TransferGraph.Data.Sampletime) Rows.push([this.TransferGraph.Data.Sampletime[n], this.TransferGraph.Data.Frequency[n]]);
         return Rows;
       }
     },
     created: function() {
-      this.UpdateNowValues(true);
-      this.UpdateGraphValues();
+      this.TransferNow.Update(this.analyzer, '3S', 'LastSamples');
+      this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
     },
     beforeDestroy: function() {
-      this.CancelTransfer(this.ControlNow);
-//      this.CancelTransfer(this.ControlGraph);
+      this.TransferNow.Destroy();
       this.TransferGraph.Destroy();
-    },
-    methods: {
-      UpdateNowValues: function(clear) {
-        if(clear == true) this.DataNow = null;
-        this.ControlNow = this.CancelTransfer(this.ControlNow);
-        if(this.analyzer == null) return;
-        this.ControlNow.CancelFunc = this.analyzer.GetSeriesLast('3S', ['FREQUENCY'],
-          (working) => { },
-          (result) => { this.DataNow = Object.seal(result); },
-          (timeout) => { this.ControlNow.Timer = setTimeout( () => { this.UpdateNowValues(false); }, timeout); }
-        );
-      },
-      UpdateGraphValues: function() {
-        console.log("Actualizando algun parametro");
-        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range,
-          (data) => { 
-            this.DataGraph = data; 
-          }
-        );
-//        if(clear == true) this.DataGraph = null;
-//        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
-//        if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
-//        this.ControlGraph.CancelFunc = this.analyzer.GetSeriesRange(this.Aggreg, this.Range, this.DataGraph, ['FREQUENCY'],
-//          (working) => { this.ShowSpinner = working; },
-//          (result) => { this.DataGraph = Object.seal(result); },
-//          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(false); }, timeout); }
-//        );
-      }
     },
     components: { Frequency, Counters }
   }
