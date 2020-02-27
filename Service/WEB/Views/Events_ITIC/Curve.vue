@@ -18,6 +18,7 @@
         Opt.strokeWidth = 0;
         Opt.labels = ["Duration", "Variation"];
         Opt.legend = 'follow';
+        Opt.showRangeSelector = false;
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.drawPoints = true;
         Opt.pointSize = 3;

@@ -54,7 +54,7 @@
         this.$http.post("getPrices", { From: From, To: To, Aggreg: '1H', Series: ['ACTIVE_POWER'], Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
             this.ShowSpinner = false;
-            this.Data = result.data;
+            this.Data = Object.seal(result.data);
           }
         );
       }

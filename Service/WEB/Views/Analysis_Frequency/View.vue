@@ -49,9 +49,16 @@
       };
     },
     watch: {
-      analyzer: function() { this.TransferNow.Update(this.analyzer, '3S', 'LastSamples'); this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range) },
-      Aggreg: function() { this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range); },
-      Range: function() { this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range); },
+      analyzer: function() { 
+        this.TransferNow.Update(this.analyzer, '3S', 'LastSamples'); 
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range) 
+      },
+      Aggreg: function(val, prev) { 
+        if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range); 
+      },
+      Range: function() { 
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range); 
+      },
     },
     computed: {
       Export: function() {

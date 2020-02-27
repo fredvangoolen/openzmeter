@@ -5,36 +5,42 @@
         <div class="panel panel-voltage">
           <div class="panel-heading">
             <div class="header-text">Voltage</div>
-            <div class="header-buttons clearfix" ref="Toolbar">
+            <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="false" :multi="true" v-model="Phases"></toolbar-phases>
               <div class="btn-group">
                 <button-export file="Voltage" :rows="[]"></button-export>
-                <button-expand :expanded.sync="Expanded"></button-expand>
+                <button-expand v-model="Expanded"></button-expand>
               </div>
-            </div>
+            </portal>
           </div>
           <div class="panel-body">
-            <spinner v-bind:class="{ 'hide': !ShowSpinner }"></spinner>
+            <spinner v-if="TransferGraph.Data==null"></spinner>            
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :data10M="Data10M" :dataGraph="DataGraph" :height.sync="Height"></counters>
-              <voltage class="col-md-6 col-lg-8 col-xl-9" :phases="Phases" :analyzer="analyzer" :data="DataGraph" :height="Height"></voltage>
+              <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :data10M="Transfer10M.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
+              <div class="col-md-6 col-lg-8 col-xl-9">
+                <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+                  <spinner v-if="Expanded && (TransferGraph.Data==null)"></spinner>
+                  <voltage :phases="Phases" :analyzer="analyzer" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></voltage>
+                </portal>
+              </div>
             </div>
           </div>
         </div>
       </div>
       <div class="col-lg-12">
         <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events']" storage="VoltageDetailTab" v-model="ActiveTab"></detail-tabs>
-          <waveform v-if="ActiveTab=='Waveform'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></waveform>
-          <harmonics v-if="ActiveTab=='Harmonics'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
-          <evolution v-if="ActiveTab=='Evolution'" :data="DataCubism" :analyzer="analyzer"></evolution>
-          <advanced v-if="ActiveTab=='Advanced'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></advanced>
-          <parameters v-if="ActiveTab=='Parameters'" :data="DataCubism" :dataNow="DataNow" :analyzer="analyzer" :paused.sync="Paused"></parameters>
-          <phasors v-if="ActiveTab=='Phasors'" :data="DataNow" :analyzer="analyzer" :paused.sync="Paused"></phasors>
+          <waveform v-if="ActiveTab=='Waveform'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></waveform>
+          <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
+          <evolution v-if="ActiveTab=='Evolution'" :data="TransferCubism.Data" :analyzer="analyzer"></evolution>
+          <advanced v-if="ActiveTab=='Advanced'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></advanced>
+          <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
+          <phasors v-if="ActiveTab=='Phasors'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></phasors>
           <events v-if="ActiveTab=='Events'" :analyzer="analyzer" :range="Range"></events>
       </div>
     </div>
+    <dlg-fs v-if="Expanded" title="Voltage" :height.sync="DialogHeight"></dlg-fs>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">
@@ -56,68 +62,38 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { ShowSpinner: false, ActiveTab: '', Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false,
-               DataGraph: null, ControlGraph: null, DataNow: null, ControlNow: null, DataCubism: null, ControlCubism: null, Data10M: null, Control10M: null };
+      return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
+               TransferGraph: this.CreateSeriesTransfer(this, ['VOLTAGE']),
+               TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'VOLTAGE_PHASE', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI']),
+               TransferCubism: this.CreateSeriesTransfer(this, ['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI']),
+               Transfer10M: this.CreateSeriesTransfer(this, ['VOLTAGE']) 
+      };
     },
     created: function() {
-      this.UpdateNowValues();
-      this.Update10MValues();
-      this.UpdateGraphValues();
-      this.UpdateCubismValues();
+      this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
+      this.TransferNow.UpdateNow(this.analyzer);
+      this.Transfer10M.Update(this.analyzer, '10M', 'LastSamples');
+      this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
     },
     beforeDestroy: function() {
-      this.CancelTransfer(this.ControlGraph);
-      this.CancelTransfer(this.ControlNow);
-      this.CancelTransfer(this.Control10M);
-      this.CancelTransfer(this.ControlCubism);
+      this.TransferGraph.Destroy();
+      this.TransferNow.Destroy();
+      this.Transfer10M.Destroy();
+      this.TransferCubism.Destroy();
     },
     watch: {
       analyzer: function(val) {
-        this.UpdateNowValues();
-        this.Update10MValues();
-        this.UpdateGraphValues();
-        this.UpdateCubismValues();
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
+        this.TransferNow.UpdateNow(this.analyzer);
+        this.Transfer10M.Update(this.analyzer, '10M', 'LastSamples');
+        this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
       },
-      Aggreg: function() {  this.UpdateGraphValues(); },
-      Range: function() { this.UpdateGraphValues(); }
-    },
-    methods: {
-      UpdateNowValues: function() {
-        this.ControlNow = this.CancelTransfer(this.ControlNow);
-        if(this.analyzer == null) return;
-        this.ControlNow.CancelFunc = this.analyzer.GetSeriesNow(['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'VOLTAGE_PHASE', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'],
-          (working) => {},
-          (result) => { if(this.Paused == false) this.DataNow = Object.freeze(result); },
-          (timeout) => { this.ControlNow.Timer = setTimeout(() => { this.UpdateNowValues(); }, timeout); }
-        );
+      Aggreg: function() { 
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
-      Update10MValues: function() {
-        this.Control10M = this.CancelTransfer(this.Control10M);
-        if(this.analyzer == null) return;
-        this.Control10M.CancelFunc = this.analyzer.GetSeriesLast('10M', ['VOLTAGE'],
-          (working) => {},
-          (result) => { this.Data10M = Object.freeze(result); },
-          (timeout) => { this.Control10M.Timer = setTimeout(() => { this.Update10MValues(); }, timeout); }
-        );
-      },
-      UpdateCubismValues: function() {
-        this.ControlCubism = this.CancelTransfer(this.ControlCubism);
-        if(this.analyzer == null) return;
-        this.ControlCubism.CancelFunc = this.analyzer.GetSeriesRange('1M', 'LastDay', this.DataCubism, ['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI'],
-          (working) => {},
-          (result) => { this.DataCubism = Object.freeze(result); },
-          (timeout) => { this.ControlCubism.Timer = setTimeout( () => { this.UpdateCubismValues(); }, timeout); }
-        );
-      },
-      UpdateGraphValues: function() {
-        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
-        if((this.Aggreg == null) || (this.Phases == null) || (this.Range == null) || (this.analyzer == null)) return;
-        this.ControlGraph.CancelFunc = this.analyzer.GetSeriesRange(this.Aggreg, this.Range, this.DataGraph, ['VOLTAGE'],
-          (working) => { this.ShowSpinner = working; },
-          (result) => { this.DataGraph = Object.freeze(result); },
-          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
-        );
-      },
+      Range: function(val, prev) { 
+        if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
+      }
     },
     components: { Voltage, Counters, Waveform, Advanced, Events, Evolution, Harmonics, Parameters, Phasors }
   }
