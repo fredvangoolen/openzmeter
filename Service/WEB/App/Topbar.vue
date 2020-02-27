@@ -14,10 +14,10 @@
       </div>
     </div>
     <div class="indicator-bar" v-if="analyzer != null" @click="Grouped = !Grouped">
-      <topbar-indicator :analyzer="analyzer" serie="Voltage" :grouped="Grouped" :value="Values1"></topbar-indicator>
-      <topbar-indicator :analyzer="analyzer" serie="Current" :grouped="Grouped" :value="Values1"></topbar-indicator>
-      <topbar-indicator :analyzer="analyzer" serie="Active_Power" :grouped="Grouped" :value="Values1"></topbar-indicator>
-      <topbar-indicator :analyzer="analyzer" serie="Frequency" :value="Values1" v-if="analyzer.NominalFrequency > 0.0"></topbar-indicator>
+      <topbar-indicator :analyzer="analyzer" serie="Voltage" :grouped="Grouped" :value="Transfer1.Data"></topbar-indicator>
+      <topbar-indicator :analyzer="analyzer" serie="Current" :grouped="Grouped" :value="Transfer1.Data"></topbar-indicator>
+      <topbar-indicator :analyzer="analyzer" serie="Active_Power" :grouped="Grouped" :value="Transfer1.Data"></topbar-indicator>
+      <topbar-indicator :analyzer="analyzer" serie="Frequency" :value="Transfer1.Data" v-if="analyzer.NominalFrequency > 0.0"></topbar-indicator>
       <topbar-indicator :analyzer="analyzer" serie="Active_Energy" :grouped="Grouped" :value="EnergyUsage"></topbar-indicator>
     </div>
   </div>
@@ -30,61 +30,56 @@
   export default {
     props: { analyzer: Object, expanded: Boolean },
     data () {
-      return { Values1: { }, Data: null, Grouped: false, ControlGroup1: null, ControlGroup2: null };
+      return { Grouped: false,
+               Transfer1: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS']), 
+               Transfer2: this.CreateSeriesTransfer(this, ['ACTIVE_POWER']) };
     },
     created: function() {
-      this.UpdateIndicators1(true);
-      this.UpdateIndicators2(true);
+      this.Transfer1.UpdateNow(this.analyzer);
+      this.Transfer2.Update(this.analyzer, '15M', 'Day');
     },
     beforeDestroy: function() {
-      this.CancelTransfer(this.ControlGroup1);
-      this.CancelTransfer(this.ControlGroup2);
+      this.Transfer1.Destroy();
+      this.Transfer2.Destroy();
     },
     watch: {
       analyzer: function(analyzer) { 
-        this.$nextTick(() => { this.UpdateIndicators1(true); this.UpdateIndicators2(true); }); 
+        this.$nextTick(() => {       
+          this.Transfer1.UpdateNow(this.analyzer);
+          this.Transfer2.Update(this.analyzer, '15M', 'Day'); 
+        }); 
       }
     },
     computed: {
       Uptime: function() {
-        if((this.Values1.Sys_Stats != undefined) && (this.Values1.Sys_Stats.UpTime != undefined)) return moment.duration(this.Values1.Sys_Stats.UpTime, "seconds").humanize();
-        return null;
+        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.UpTime != null)) ? moment.duration(this.Transfer1.Data.Sys_Stats.UpTime, "seconds").humanize() : null;
       },
       Time: function() {
-        if(this.Values1.Sampletime != null) return moment(this.Values1.Sampletime).format('HH:mm:ss');
-        return null;
+        return (this.Transfer1.Data != null) ? moment(this.Transfer1.Data.Sampletime).format('HH:mm:ss') : null;
       },
       SDTip: function() {
-        if((this.Values1.Sys_Stats != null) && (this.Values1.Sys_Stats.Disk_Total != null) && (this.Values1.Sys_Stats.Disk_Usage != null)) return oZm.GetBestUnitsBin(this.Values1.Sys_Stats.Disk_Total * this.Values1.Sys_Stats.Disk_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(this.Values1.Sys_Stats.Disk_Total);
-        return null;
+        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.Disk_Total != null) && (this.Transfer1.Data.Sys_Stats.Disk_Usage != null)) ? oZm.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.Disk_Total * this.Transfer1.Data.Sys_Stats.Disk_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.Disk_Total) : null;
       },
       SDUse: function() {
-        if((this.Values1.Sys_Stats != null) && (this.Values1.Sys_Stats.Disk_Usage != null)) return Math.round(this.Values1.Sys_Stats.Disk_Usage) + '%';
-        return null;
+        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.Disk_Usage != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.Disk_Usage) + '%' : null;
       },
       RAMTip: function() {
-        if((this.Values1.Sys_Stats != null) && (this.Values1.Sys_Stats.RAM_Total != null) && (this.Values1.Sys_Stats.RAM_Usage != null)) return oZm.GetBestUnitsBin(this.Values1.Sys_Stats.RAM_Total * this.Values1.Sys_Stats.RAM_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(this.Values1.Sys_Stats.RAM_Total);
-        return null;
+        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.RAM_Total != null) && (this.Transfer1.Data.Sys_Stats.RAM_Usage != null)) ? oZm.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.RAM_Total * this.Transfer1.Data.Sys_Stats.RAM_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.RAM_Total) : null;
       },
       RAMUse: function() {
-        if((this.Values1.Sys_Stats != null) && (this.Values1.Sys_Stats.RAM_Usage != null)) return Math.round(this.Values1.Sys_Stats.RAM_Usage) + '%';
-        return null;
+        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.RAM_Usage != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.RAM_Usage) + '%' : null;
       },
       CPUUse: function() {
-        if((this.Values1.Sys_Stats != null) && (this.Values1.Sys_Stats.CPU_Usage != null)) return Math.round(this.Values1.Sys_Stats.CPU_Usage) + '%';
-        return null;
+        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.CPU_Usage != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.CPU_Usage) + '%' : null;
       },
       Temp: function() {
-        if((this.Values1.Sys_Stats != null) && (this.Values1.Sys_Stats.Temperature != null)) return Math.round(this.Values1.Sys_Stats.Temperature) + '°';
-        return null;
+        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.Temperature != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.Temperature) + '°' : null;
       },
       WIFINetwork: function() {
-        if((this.Values1.Sys_Stats != null) && (this.Values1.Sys_Stats.WIFI_Network != null)) return this.Values1.Sys_Stats.WIFI_Network;
-        return null;
+        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.WIFI_Network != null)) ? this.Transfer1.Data.Sys_Stats.WIFI_Network : null;
       },
       WIFIPower: function() {
-        if((this.Values1.Sys_Stats != null) && (this.Values1.Sys_Stats.WIFI_Power != null)) return Math.round(this.Values1.Sys_Stats.WIFI_Power) + '%';
-        return null;
+        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.WIFI_Power != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.WIFI_Power) + '%' : null;
       },
       BatteryLevel: function() {
         return null;
@@ -94,38 +89,14 @@
       },
       EnergyUsage: function() {
         var Energy = Array(this.analyzer.VoltageChannels).fill(0);
-        if(this.Data == null) return { Active_Energy: Energy };
-        for(var n = 0; n < this.Data.Active_Power.length; n++) {
-          for(var p = 0; p < this.Data['Active_Power'][n].length; p++) {
-            if(this.Data['Active_Power'][n][p] === null) continue;
-            Energy[p] = Energy[p] + this.Data['Active_Power'][n][p] / 4.0;
+        if(this.Transfer2.Data == null) return { Active_Energy: Energy };
+        for(var n = 0; n < this.Transfer2.Data.Active_Power.length; n++) {
+          for(var p = 0; p < this.Transfer2.Data['Active_Power'][n].length; p++) {
+            if(this.Transfer2.Data['Active_Power'][n][p] === null) continue;
+            Energy[p] = Energy[p] + this.Transfer2.Data['Active_Power'][n][p] / 4.0;
           }
         }
         return { Active_Energy: Energy };
-      }
-    },
-    methods: {
-      UpdateIndicators1: function(clear) {
-        if(clear == true) this.Values1 = {};
-        this.ControlGroup1 = this.CancelTransfer(this.ControlGroup1);
-        if(this.analyzer == null) return;
-        this.ControlGroup1.CancelFunc = this.analyzer.GetSeriesNow(['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS'],
-          (working) => { },
-          (result) => { this.Values1 = Object.seal(result) },
-          (timeout) => { this.ControlGroup1.Timer = setTimeout( () => { this.UpdateIndicators1(false); }, timeout); }
-        );
-      },
-      UpdateIndicators2: function(clear) {
-        if(clear == true) this.Data = null;
-        this.ControlGroup2 = this.CancelTransfer(this.ControlGroup2);
-        if(this.analyzer == null) return;
-        var From = moment().tz(this.analyzer.TimeZone).startOf('day').valueOf();
-        var To = moment().tz(this.analyzer.TimeZone).endOf('day').valueOf();
-        this.ControlGroup1.CancelFunc = this.analyzer.GetSeriesRange('15M', [From, To], this.Data, ['ACTIVE_POWER'],
-          (working) => { },
-          (result) => { this.Data = Object.seal(result) },
-          (timeout) => { this.ControlGroup1.Timer = setTimeout( () => { this.UpdateIndicators2(false); }, timeout); }
-        );
       }
     },
     components: { TopbarIndicator }

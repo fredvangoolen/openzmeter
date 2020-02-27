@@ -260,25 +260,25 @@
         );
         return () => { Cancelled = true };
       },
-      GetSeriesNow: function(series, working, outs, timeout) {
-        var Cancelled = false;
-        var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
-        this.$http.post('getSeriesNow', { Series: series, Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            clearTimeout(Timer);
-            if(Cancelled == true) return;
-            if(outs != null) outs((result.status == 200) ? result.data : null);
-            if(working != null) working(false);
-            if(timeout != null) timeout(1000);
-          },
-          () => {
-            if(Cancelled == true) return;
-            if(outs != null) outs(null);
-            if(timeout != null) timeout(1000);
-          }
-        );
-        return () => { Cancelled = true };
-      },
+//      GetSeriesNow: function(series, working, outs, timeout) {
+//        var Cancelled = false;
+//        var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
+//        this.$http.post('getSeriesNow', { Series: series, Analyzer: this.analyzer.Analyzer }).then(
+//          (result) => {
+//            clearTimeout(Timer);
+//            if(Cancelled == true) return;
+//            if(outs != null) outs((result.status == 200) ? result.data : null);
+//            if(working != null) working(false);
+//            if(timeout != null) timeout(1000);
+//          },
+//          () => {
+//            if(Cancelled == true) return;
+//            if(outs != null) outs(null);
+//            if(timeout != null) timeout(1000);
+//          }
+//        );
+//        return () => { Cancelled = true };
+//      },
       FormatAggregation: function(val) {
         return (val == '1H') ? '1 hour' : (val == '15M') ? '15 minutes' : (val == '10M') ? '10 minutes' : (val == '1M') ? '1 minute' : (val == '3S') ? '3 seconds' : 'unknown';
       },
