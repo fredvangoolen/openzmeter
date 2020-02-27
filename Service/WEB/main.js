@@ -54,6 +54,8 @@ import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
 Vue.component('ToolbarAggregation', ToolbarAggregation);
 import ToolbarYears from 'Components/ToolbarYears.vue';
 Vue.component('ToolbarYears', ToolbarYears);
+import ToolbarPager from 'Components/ToolbarPager.vue';
+Vue.component('ToolbarPager', ToolbarPager);
 import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
 Vue.component('ToolbarPeriod', ToolbarPeriod);
 import ToolbarPhases from 'Components/ToolbarPhases.vue';

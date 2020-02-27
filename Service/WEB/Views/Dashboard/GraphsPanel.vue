@@ -24,7 +24,7 @@
         <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'FREQUENCY'" :storage="'Dashboard_' + serie" :current="serie=='CURRENT'" :multi="true"></toolbar-phases>
         <div class="btn-group">
           <button-export :rows="Export" :file="PanelTitle"></button-export>
-          <button-expand :expanded.sync="Expanded"></button-expand>
+          <button-expand v-model="Expanded"></button-expand>
         </div>
       </portal>
     </div>

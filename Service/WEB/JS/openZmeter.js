@@ -38,37 +38,123 @@ const openZmeter = {
           Transfer.LastData = Object.seal(LastData);
         }
       };
+      Transfer.CalcRange = (analyzer, range, aggreg) => {
+        var Now       = moment().tz(analyzer.TimeZone);
+        if(range == 'LastSamples') {
+          var Period    = (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
+          return [Now.valueOf() - Period * 2, Now.valueOf()];
+        } else if(range == 'LastHours')
+          return [Now.valueOf() - 7200000, Now.valueOf()];
+        else if(range == 'LastDay')
+          return [Now.valueOf() - 86400000, Now.valueOf()];
+        else if(range == 'LastWeek')
+          return [Now.valueOf() - 604800000, Now.valueOf()];
+        else if(range == 'LastMonth')
+          return [Now.valueOf() - 2592000000, Now.valueOf()];
+        else if(range == 'LastYear')
+          return [Now.valueOf() - 31536000000, Now.valueOf()];
+        else if(range == 'Day')
+          return [Now.startOf('day').valueOf(), Now.endOf('day').valueOf()];
+        else if(range == 'Week')
+          return [Now.startOf('week').valueOf(), Now.endOf('week').valueOf()];
+        else if(range == 'Month')
+          return [Now.startOf('month').valueOf(), Now.endOf('month').valueOf()];
+        else if(range == 'Year')
+          return [Now.startOf('year').valueOf(), Now.endOf('year').valueOf()];
+        else if(Array.isArray(range))
+          return range;
+      };
+      Transfer.UpdateEvents = (analyzer, range) => {
+        if((analyzer == null) || (range == null)) return;
+        var Cancelled = false;
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+        var ReqRange = Transfer.CalcRange(analyzer, range);
+        var Data = { };
+        if((Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer == analyzer.Analyzer)) Data = Object.assign(Data, Transfer.Data);
+        if((Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.Data = null;
+        Transfer.Analyzer  = analyzer;
+        Transfer.Range     = range;
+        Data.From   = null;
+        Data.To     = null;
+        if(Data.StartTime != null) {
+          var Pos = 0;
+          for(var n = 0; n < Data.StartTime.length; n++) {
+            if(Data.StartTime[n] < ReqRange[0])
+              Pos++;
+            else
+              break;
+          }
+          if(Pos != 0) {
+            for(var serie in Data) {
+              if(Array.isArray(Data[serie]) == true) Data[serie].splice(0, Pos);
+            }
+          }
+          var Pos = 0;
+          for(var n = 0; n < Data.StartTime.length; n++) {
+            if(Data.StartTime[n] <= ReqRange[1])
+              Pos++;
+            else
+              break;
+          }
+          if(Pos != 0) {
+            for(var serie in Data) {
+              if(Array.isArray(Data[serie]) == true) Data[serie].splice(Pos);
+            }
+          }
+          Data.From = Data.StartTime[0];
+          Data.To = Data.StartTime.slice(-1)[0];
+        }
+        var Promises = [];
+        if((Data.From == null) || (Data.To == null)) {
+          Promises.push(Transfer.This.$http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1] }));
+        } else {
+          if(ReqRange[0] < Data.From) Promises.push(Transfer.This.$http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Data.From - 1, Series: series }));
+          if(ReqRange[1] > Data.To) Promises.push(Transfer.This.$http.post('getEvents', { Analyzer: analyzer.Analyzer, From: Data.To + 1, To: ReqRange[1], Series: series }));
+        }
+        if(Promises.length == 0) {
+          Data.From = ReqRange[0];
+          Data.To = ReqRange[1];
+          Transfer.Data = Object.seal(Data);
+          Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
+          return;
+        }
+        Transfer.CancelFunc = () => { Cancelled = true; };
+        Promise.all(Promises).then(
+          (result) => {
+            if(Cancelled == true) return;
+            for(var n in result) {
+              if(result[n].body.StartTime.length == 0) continue;
+              var After = ((Data.From != null) && (Data.From > result[n].body.StartTime[0]));
+              for(var serie in result[n].body) {
+                if(Array.isArray(result[n].body[serie]) == false) continue
+                if((Data.From == null) || (Data.To == null))
+                  Data[serie] = result[n].body[serie];
+                else if(After == true)
+                  Data[serie] = result[n].body[serie].concat(Data[serie]);
+                else
+                  Data[serie] = Data[serie].concat(result[n].body[serie]);
+              }
+            }
+            Data.From = ReqRange[0];
+            Data.To = ReqRange[1];
+            Transfer.Data = Object.seal(Data);
+            Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
+          },
+          (fail) => {
+            if(Cancelled == true) return;
+            Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
+          }
+        );
+      };
       Transfer.Update = (analyzer, aggreg, range) => {
         if((analyzer == null) || (aggreg == null) || (range == null)) return;
         var Cancelled = false;
         var Period    = (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
-        var Now       = moment().tz(analyzer.TimeZone);
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
-        var ReqRange = null;
-        if(range == 'LastSamples')
-          ReqRange = [Now.valueOf() - Period * 2, Now.valueOf()];
-        else if(range == 'LastHours')
-          ReqRange = [Now.valueOf() - 7200000, Now.valueOf()];
-        else if(range == 'LastDay')
-          ReqRange = [Now.valueOf() - 86400000, Now.valueOf()];
-        else if(range == 'LastWeek')
-          ReqRange = [Now.valueOf() - 604800000, Now.valueOf()];
-        else if(range == 'LastMonth')
-          ReqRange = [Now.valueOf() - 2592000000, Now.valueOf()];
-        else if(range == 'LastYear')
-          ReqRange = [Now.valueOf() - 31536000000, Now.valueOf()];
-        else if(range == 'Day')
-          ReqRange = [Now.startOf('day').valueOf(), Now.endOf('day').valueOf()];
-        else if(range == 'Week')
-          ReqRange = [Now.startOf('week').valueOf(), Now.endOf('week').valueOf()];
-        else if(range == 'Month')
-          ReqRange = [Now.startOf('month').valueOf(), Now.endOf('month').valueOf()];
-        else if(range == 'Year')
-          ReqRange = [Now.startOf('year').valueOf(), Now.endOf('year').valueOf()];
-        else if(Array.isArray(range))
-          ReqRange = range;
-        var Data = {};
+        var ReqRange = Transfer.CalcRange(analyzer, range, aggreg);
+        var Data = { };
         if((Transfer.Aggreg == aggreg) && (Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer == analyzer.Analyzer)) Data = Object.assign(Data, Transfer.Data);
         if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetData(null);
         Transfer.Analyzer  = analyzer;
@@ -116,7 +202,7 @@ const openZmeter = {
           Data.From = ReqRange[0];
           Data.To = ReqRange[1];
           Transfer.SetData(Data);
-          Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range, Transfer.Callback); }, 3000);
+          Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 3000);
           return;
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
@@ -139,11 +225,11 @@ const openZmeter = {
             Data.From = ReqRange[0];
             Data.To = ReqRange[1];
             Transfer.SetData(Data);
-            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range, Transfer.Callback); }, 3000);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 3000);
           },
           (fail) => {
             if(Cancelled == true) return;
-            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range, Transfer.Callback); }, 3000);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 3000);
           }
         );
       };
