@@ -19,6 +19,8 @@
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
         var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
         var Opt = { file: [], axes: { x: {}, y: {} } };
+        Opt.panEdgeFraction = 1;
+        Opt.interactionModel = Graph.InteractionModels.Scrollable(this);        
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -27,8 +29,7 @@
         Opt.gridLineColor = "#BBB";
         Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
-        Opt.interactionModel = 'SCROLLABLE_MODEL';
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.xAxisHeight = 24;
         Opt.selectMode = 'euclidian';
         Opt.visibility = this.phases;

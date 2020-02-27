@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <graph :options="GraphOptions" :height="height"></graph>
+  <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+    <graph :options="GraphOptions" :height="height" :paused="MouseOver"></graph>
   </div>
 </template>
 
@@ -12,25 +12,27 @@
   export default {
     props: { analyzer: Object, data: Object, phases: Array, height: Number },
     data() {
-      return { };
+      return { MouseOver: false };
     },
     computed: {
       GraphOptions: function(val) {
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
         var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
         var Opt = { file: [], axes: { x: {}, y: {} } };
+        Opt.panEdgeFraction = 1;
+        Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
+        Opt.showRangeSelector = false;
         Opt.drawGapEdgePoints = true;
         Opt.connectSeparatedPoints = false;
         Opt.fillGraph = false;
         Opt.gridLineColor = "#BBB";
         Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.LegendFormatter_Follow;
-        Opt.interactionModel = 'SCROLLABLE_MODEL';
         Opt.xAxisHeight = 24;
         Opt.selectMode = 'euclidian';
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.visibility = this.phases;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
@@ -43,8 +45,9 @@
         if(this.data != null) {
           for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n]].concat(this.data.Voltage[n]));
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 10 });
+          Opt.dateWindow = [this.data.From, this.data.To];
         }
-        return Opt;
+        return Object.seal(Opt);
       }
     },
     methods: {

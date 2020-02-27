@@ -47,7 +47,7 @@
         this.$http.post('getSeries', { From: From, To: To, Aggreg: '15M', Series: ['ACTIVE_POWER'], Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
             this.ShowSpinner = false;
-            this.Data = result.data;
+            this.Data = Object.seal(result.data);
           },
           (fail) => {}
         );
