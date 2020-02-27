@@ -11,13 +11,12 @@ const openZmeter = {
         var Cancelled = false;
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
-        var Data = Object.assign({}, Transfer.Data);
-        if(Transfer.Analyzer.Analyzer != analyzer.Analyzer) Transfer.Data = null;
+        if((Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = null;
         Transfer.Analyzer  = analyzer;
         Transfer.CancelFunc = () => { Cancelled = true; };
         Transfer.This.$http.post('getSeriesNow', { Analyzer: analyzer.Analyzer, Series: series }).then(
           (result) => {
-            Transfer.Data = Object.seal(result[n].body);
+            Transfer.Data = Object.seal(result.body);
             Transfer.Timer = setTimeout(() => { Transfer.UpdateNow(Transfer.Analyzer); }, 1500);
           },
           (fail) => {
@@ -70,8 +69,8 @@ const openZmeter = {
         else if(Array.isArray(range))
           ReqRange = range;
         var Data = {};
-        if((Transfer.Aggreg == aggreg) && (Transfer.Analyzer.Analyzer == analyzer.Analyzer)) Data = Object.assign(Data, Transfer.Data);
-        if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetData(null);
+        if((Transfer.Aggreg == aggreg) && (Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer == analyzer.Analyzer)) Data = Object.assign(Data, Transfer.Data);
+        if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetData(null);
         Transfer.Analyzer  = analyzer;
         Transfer.Aggreg    = aggreg;
         Transfer.Range     = range;
