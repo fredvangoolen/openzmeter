@@ -1163,8 +1163,7 @@ void AnalyzerSoft::GetSeries(const json &params, Response &response) {
   if(Aggreg == "1H") PeriodSeconds = 3600000;
   if(((To - From) / PeriodSeconds) > 100000) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
   Database DB(Serial);
-  string Query = "SELECT ROW_TO_JSON(Result) AS result FROM ( SELECT " + DB.Bind(From) + " AS " + DB.BindID("From") + ", " + DB.Bind(To) +" AS " + DB.BindID("To") + ", ";
-  Query += DB.Bind((To - From) / PeriodSeconds) + " AS " + DB.BindID("MaxSamples") + ", " + DB.Bind(Aggreg) + " AS " + DB.BindID("Aggregation_Source") + ", ";
+  string Query = "SELECT ROW_TO_JSON(Result) AS result FROM ( SELECT ";
   for(uint i = 0; i < params["Series"].size(); i++) {
     if(!params["Series"][i].is_string()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_BAD_REQUEST);
     string Serie = params["Series"][i];

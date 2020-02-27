@@ -7,17 +7,18 @@
       <div class="input-group-btn">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">{{ SelectedText }}<span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" ref="periodTags">
+          <li :class="{active: (value == 'LastHours')}"><a @click="$emit('input', 'LastHours')">Last 2 hour</a></li>
           <li :class="{active: (value == 'LastDay')}"><a @click="$emit('input', 'LastDay')">Last 24 hours</a></li>
           <li :class="{active: (value == 'LastWeek')}"><a @click="$emit('input', 'LastWeek')">Last 7 days</a></li>
           <li :class="{active: (value == 'LastMonth')}"><a @click="$emit('input', 'LastMonth')">Last 30 days</a></li>
           <li :class="{active: (value == 'LastYear')}"><a @click="$emit('input', 'LastYear')">Last 365 days</a></li>
           <li role="separator" class="divider"></li>
-          <li v-bind:class="{active: (value == 'Day')}"><a @click="$emit('input', 'Day')">Today</a></li>
-          <li v-bind:class="{active: (value == 'Week')}"><a @click="$emit('input', 'Week')">This week</a></li>
-          <li v-bind:class="{active: (value == 'Month')}"><a @click="$emit('input', 'Month')">This month</a></li>
-          <li v-bind:class="{active: (value == 'Year')}"><a @click="$emit('input', 'Year')">This year</a></li>
+          <li :class="{active: (value == 'Day')}"><a @click="$emit('input', 'Day')">Today</a></li>
+          <li :class="{active: (value == 'Week')}"><a @click="$emit('input', 'Week')">This week</a></li>
+          <li :class="{active: (value == 'Month')}"><a @click="$emit('input', 'Month')">This month</a></li>
+          <li :class="{active: (value == 'Year')}"><a @click="$emit('input', 'Year')">This year</a></li>
           <li role="separator" class="divider"></li>
-          <li v-bind:class="{active: (typeof(value) == 'array')}"><a @click="EditPeriod()">Custom</a></li>
+          <li :class="{active: (Array.isArray(value))}"><a @click="EditPeriod()">Custom</a></li>
         </ul>
       </div>
       <div class="input-group-btn">
@@ -67,6 +68,7 @@
     },
     computed: {
       SelectedText: function() {
+        if(this.value == 'LastHours') return 'Last 2 hours';
         if(this.value == 'LastDay') return 'Last 24 hours';
         if(this.value == 'LastDay') return 'Last 24 hours';
         if(this.value == 'LastWeek') return 'Last 7 days';
