@@ -1,11 +1,19 @@
 <template>
-  <div>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
-    <detail-tabs :tabs="['Inputs', 'Outputs']" v-model="View"></detail-tabs>
+  <dlg :loading="Loading">
+    <template v-slot:header>
+      <div class="pull-left"><h4 class="modal-title">Device &raquo; {{ Settings.Serial }}</h4></div>
+      <div class="pull-right btn-group">
+        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Inputs' }" @click="View='Inputs'">Main</button>
+        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Outputs' }" @click="View='Outputs'">Periods</button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')"></button>
+      </div>
+    </template>
+    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
     <div class="row" v-if="View=='Inputs'">
       <div class="col-xs-12" style="margin-top:5px;">
         <label class="control-label" style="line-height: 22px">Start on boot</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="value.Enabled"></toggle>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.Enabled"></toggle>
       </div>
       <div class="col-xs-12">
         <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Device inputs can be calibrated to compensate components derating over time.</div>
@@ -21,16 +29,16 @@
           </tr>
           <tr v-for="index in [0, 1, 2]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
-            <td><input-spin :min="-200" :max="200" v-model="value.VoltageOffset[index]" :increment="0.01"></input-spin></td>
-            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" @click="SetVoltageOffset(index)" :disabled="value.Wave_Average.Voltage[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(-value.Wave_Average.Voltage[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
-            <td><input-spin :min="0.1" :max="1000" v-model="value.VoltageGain[index]" :increment="0.001" :decimals="3" prepend="V/V"></input-spin></td>
+            <td><input-spin :min="-200" :max="200" v-model="Settings.VoltageOffset[index]" :increment="0.01"></input-spin></td>
+            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" @click="SetVoltageOffset(index)" :disabled="Settings.Wave_Average.Voltage[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Voltage[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
+            <td><input-spin :min="0.1" :max="1000" v-model="Settings.VoltageGain[index]" :increment="0.001" :decimals="3" prepend="V/V"></input-spin></td>
           </tr>
         </table>
         <table>
           <tr><td colspan="4" class="border-bottom">Current channels</td></tr>
           <tr><td colspan="4">
             <label class="control-label" style="line-height: 22px">Full scale mode</label>
-            <toggle class="float-right toggle-gain" onText="333mV" onStyle="primary" offText="625mV" offStyle="primary" v-model="value.HighGain"></toggle>
+            <toggle class="float-right toggle-gain" onText="333mV" onStyle="primary" offText="625mV" offStyle="primary" v-model="Settings.HighGain"></toggle>
           </td></tr>
           <tr>
             <td></td>
@@ -40,9 +48,9 @@
           </tr>
           <tr v-for="index in [0, 1, 2, 3]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
-            <td><input-spin :min="-200" :max="200" v-model="value.CurrentOffset[index]" :increment="0.01"></input-spin></td>
-            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" @click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + Round(-value.Wave_Average.Current[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
-            <td><input-spin :min="0.00001" :max="20" v-model="value.CurrentGain[index]" :increment="0.00001" :decimals="5" prepend="A/mV"></input-spin></td>
+            <td><input-spin :min="-200" :max="200" v-model="Settings.CurrentOffset[index]" :increment="0.01"></input-spin></td>
+            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" @click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Current[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
+            <td><input-spin :min="0.00001" :max="20" v-model="Settings.CurrentGain[index]" :increment="0.00001" :decimals="5" prepend="A/mV"></input-spin></td>
           </tr>
         </table>
       </div>
@@ -58,9 +66,9 @@
         <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Current channels can not be used twice<br/>Voltage channels can not be used twice in same analyzer</div>
       </div>
       <div class="col-xs-12">
-        <div class="output-table" v-for="(item, idx) in value.Outputs" :key="idx">
+        <div class="output-table" v-for="(item, idx) in Settings.Outputs" :key="idx">
           <table v-if="item.Mode == '3PHASE+N'">
-            <tr><td colspan="7" class="border-bottom">3PHASE+N<span class="serial-number">{{ value.Serial }}_3PN</span></td></tr>
+            <tr><td colspan="7" class="border-bottom">3PHASE+N<span class="serial-number">{{ Settings.Serial }}_3PN</span></td></tr>
             <tr>
               <td class="text-center border-right" colspan="3"><strong>Voltage</strong></td>
               <td class="text-center" colspan="4"><strong>Current</strong></td>
@@ -85,7 +93,7 @@
             </tr>
           </table>
           <table v-if="item.Mode == '3PHASE'">
-            <tr><td colspan="6" class="border-bottom">3PHASE<span class="serial-number">{{ value.Serial }}_3P</span></td></tr>
+            <tr><td colspan="6" class="border-bottom">3PHASE<span class="serial-number">{{ Settings.Serial }}_3P</span></td></tr>
             <tr>
               <td class="text-center border-right" colspan="3"><strong>Voltage</strong></td>
               <td class="text-center" colspan="3"><strong>Current</strong></td>
@@ -108,7 +116,7 @@
             </tr>
           </table>
           <table v-if="item.Mode == '1PHASE'">
-            <tr><td colspan="2" class="border-bottom">1PHASE<span class="serial-number">{{ value.Serial }}_1P_{{ item.Current.substr(1) }}</span></td></tr>
+            <tr><td colspan="2" class="border-bottom">1PHASE<span class="serial-number">{{ Settings.Serial }}_1P_{{ item.Current.substr(1) }}</span></td></tr>
             <tr>
               <td class="text-center border-right"><strong>Voltage</strong></td>
               <td class="text-center"><strong>Current</strong></td>
@@ -121,24 +129,25 @@
         </div>
       </div>
     </div>
-  </div>
+  </dlg>
 </template>
 
 <script>
   export default {
-    props: { value: Object },
+    props: { settings: Object },
     data() {
-      return { View: 'Inputs', ShowSpinner: false, Error: '', OutputMode: null };
+      return { View: 'Inputs', Loading: false, Error: null, OutputMode: null, Settings: null };
     },
     created: function() {
+      this.Settings = Object.assign({}, this.settings);
       var Phase3N = 0;
       var Phase3  = 0;
       var Phase1  = 0;
-      if(this.value.Outputs.lengt == 0) this.$set(this.value, 'Outputs', [ { Mode: '3PHASE+N', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3', '+CH4'] } ]);
-      for(var idx in this.value.Outputs) {
-        if(this.value.Outputs[idx].Mode === '3PHASE+N') Phase3N++;
-        if(this.value.Outputs[idx].Mode === '3PHASE') Phase3++;
-        if(this.value.Outputs[idx].Mode === '1PHASE') Phase1++;
+      if(this.Settings.Outputs.lengt == 0) this.$set(this.Settings, 'Outputs', [ { Mode: '3PHASE+N', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3', '+CH4'] } ]);
+      for(var idx in this.Settings.Outputs) {
+        if(this.Settings.Outputs[idx].Mode === '3PHASE+N') Phase3N++;
+        if(this.Settings.Outputs[idx].Mode === '3PHASE') Phase3++;
+        if(this.Settings.Outputs[idx].Mode === '1PHASE') Phase1++;
       }
       if((Phase3N === 1) && (Phase3 === 0) && (Phase1 === 0)) this.OutputMode = '3PHASE+N';
       if((Phase3N === 0) && (Phase3 === 1) && (Phase1 === 0)) this.OutputMode = '3PHASE';
@@ -151,41 +160,49 @@
     watch: {
       OutputMode: function(val, old) {
         if(old === null) return;
-        this.$set(this.value, 'Outputs', []);
+        this.$set(this.Settings, 'Outputs', []);
         if(val === '3PHASE+N') {
-          this.$set(this.value, 'Outputs', [ { Mode: '3PHASE+N', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3', '+CH4'] } ]);
+          this.$set(this.Settings, 'Outputs', [ { Mode: '3PHASE+N', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3', '+CH4'] } ]);
         } else if(val === '3PHASE') {
-          this.$set(this.value, 'Outputs', [ { Mode: '3PHASE', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3'] } ]);
+          this.$set(this.Settings, 'Outputs', [ { Mode: '3PHASE', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3'] } ]);
         } else if(val === '3PHASE + 1PHASE') {
-          this.$set(this.value, 'Outputs', [ { Mode: '3PHASE', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3'] }, { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH4' } ]);
+          this.$set(this.Settings, 'Outputs', [ { Mode: '3PHASE', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3'] }, { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH4' } ]);
         } else if(val === '1PHASE') {
-          this.$set(this.value, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' } ]);
+          this.$set(this.Settings, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' } ]);
         } else if(val === '1PHASE + 1PHASE') {
-          this.$set(this.value, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' }, { Mode: '1PHASE', Voltage: 'CH2', Current: '+CH2' } ]);
+          this.$set(this.Settings, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' }, { Mode: '1PHASE', Voltage: 'CH2', Current: '+CH2' } ]);
         } else if(val === '1PHASE + 1PHASE + 1PHASE')  {
-          this.$set(this.value, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' }, { Mode: '1PHASE', Voltage: 'CH2', Current: '+CH2' }, { Mode: '1PHASE', Voltage: 'CH3', Current: '+CH3' } ]);
+          this.$set(this.Settings, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' }, { Mode: '1PHASE', Voltage: 'CH2', Current: '+CH2' }, { Mode: '1PHASE', Voltage: 'CH3', Current: '+CH3' } ]);
         } else if(val === '1PHASE + 1PHASE + 1PHASE + 1PHASE') {
-          this.$set(this.value, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' }, { Mode: '1PHASE', Voltage: 'CH2', Current: '+CH2' }, { Mode: '1PHASE', Voltage: 'CH3', Current: '+CH3' }, { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH4' } ]);
+          this.$set(this.Settings, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' }, { Mode: '1PHASE', Voltage: 'CH2', Current: '+CH2' }, { Mode: '1PHASE', Voltage: 'CH3', Current: '+CH3' }, { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH4' } ]);
         }
       }
     },
     methods: {
+      Save: function () {
+        this.Loading = true;
+        this.$http.post('setDevice', this.Settings).then(
+          (result) => { this.$emit('close', true); },
+          (fail) => {
+            this.Loading = false;
+            this.Error = 'Failed to save device settings!';
+            setTimeout(() => { this.Error = null; }, 1000);
+          }
+        );
+      },
       SetCurrentOffset: function(index) {
-        this.$set(this.value.CurrentOffset, index, -this.value.Wave_Average.Current[index]);
-        this.value.Wave_Average.Current[index] = 0.0;
+        this.$set(this.Settings.CurrentOffset, index, -this.Settings.Wave_Average.Current[index]);
+        this.Settings.Wave_Average.Current[index] = 0.0;
       },
       SetVoltageOffset: function(index) {
-        this.$set(this.value.VoltageOffset, index, -this.value.Wave_Average.Voltage[index]);
-        this.value.Wave_Average.Voltage[index] = 0.0;
+        this.$set(this.Settings.VoltageOffset, index, -this.Settings.Wave_Average.Voltage[index]);
+        this.Settings.Wave_Average.Voltage[index] = 0.0;
       }
     }
   }
 </script>
 
 <style scoped>
-  .row {
-    border-top: 1px solid #474544;
-  }
   table {
      width: 100%;
      border-radius: 6px;

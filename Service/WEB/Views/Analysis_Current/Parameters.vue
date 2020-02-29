@@ -23,7 +23,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: Object, data: Object },
+    props: { analyzer: Object, data: Object, dataNow: Object },
     data() {
       return { Phase: null };
     },
@@ -48,15 +48,15 @@
       Formatter_Current_THD: function(val) { return this.Round(val, 2, true) + ' %'; },
       Formatter_Phi: function(val) { return this.Round(val, 2, true); },
 
-      MouseOver: function(val) {
-        this.mouseOverCount = this.mouseOverCount + ((val === true) ? +1 : -1);
-      },
-      Redraw() {
-        this.$nextTick(function() {
-          for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
-          window.dispatchEvent(new Event('resize'));
-        });
-      },
+//      MouseOver: function(val) {
+//        this.mouseOverCount = this.mouseOverCount + ((val === true) ? +1 : -1);
+//      },
+//      Redraw() {
+//        this.$nextTick(function() {
+//          for(var n = 0; n < this.Series.length; n++) $(this.$refs.rows[n].Graph.graphDiv).parent().removeAttr('style');
+//          window.dispatchEvent(new Event('resize'));
+//        });
+//      },
       ExportClick: function() {
         if(this.$root.SelectedAnalyzer === null) return;
         var Analyzer = this.$root.SelectedAnalyzer;
@@ -74,25 +74,25 @@
         }
         this.$refs.tools.SaveCVS('CurrentParameters.csv', [Header].concat(Data));
       },
-      SetPhases: function(phase) {
-        this.$refs.phases.SetPhases(phase);
-        this.Phase = phase;
-        this.CalcOptions();
-      },
-      SetData: function(result) {
-        if(result['Sampletime'] === null) return;
-        if(result['Sampletime'].length === 0) return;
-        if(this.Data === null) this.Data = [];
-        this.DateWindow = [result['From'], result['To']];
-        this.Aggregation = 'From ' + this.analyzer.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
-        for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
-        if(this.mouseOverCount === 0) this.CalcOptions();
-        this.ShowSpinner = false;
-      },
-      SetDataNow(result) {
-        if(this.mouseOverCount !== 0) return;
-        for(var n = 0; n < this.Series.length; n++) this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.Series[n]].Serie][this.Phase]);
-      }
+//      SetPhases: function(phase) {
+//        this.$refs.phases.SetPhases(phase);
+//        this.Phase = phase;
+//        this.CalcOptions();
+//      },
+//      SetData: function(result) {
+//        if(result['Sampletime'] === null) return;
+//        if(result['Sampletime'].length === 0) return;
+//        if(this.Data === null) this.Data = [];
+//        this.DateWindow = [result['From'], result['To']];
+//        this.Aggregation = 'From ' + this.analyzer.GetAggregLongName(result['Aggregation_Source']) + ' aggregation';
+//S        for(var i = 0; i < this.Series.length; i++) this.Data[this.Series[i]] = oZm.GraphDataAppend(result, oZm.Series[this.Series[i]].Serie, this.Data[this.Series[i]]);
+//        if(this.mouseOverCount === 0) this.CalcOptions();
+//        this.ShowSpinner = false;
+//      },
+//      SetDataNow(result) {
+//        if(this.mouseOverCount !== 0) return;
+//        for(var n = 0; n < this.Series.length; n++) this.$refs.rows[n].SetNowLabel(result[oZm.Series[this.Series[n]].Serie][this.Phase]);
+//      }
     },
     mounted: function() {
       var Graphs = [this.$refs['g0'].Graph, this.$refs['g1'].Graph, this.$refs['g2'].Graph];

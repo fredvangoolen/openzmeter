@@ -65,6 +65,7 @@ class AnalyzerRemote : public Analyzer {
     void  DelRate(const json &params, Response &response) override;
     void  AddRate(const json &params, Response &response) override;
     void  GetPrices(const json &params, Response &response) override;
+    void  GetBills(const json &params, Response &response) override;
     void  TestAlarm(const json &params, Response &response) override;
     void  GetAlarms(const json &params, Response &response) override;
     void  GetRemote(const json &params, Response &response) override;

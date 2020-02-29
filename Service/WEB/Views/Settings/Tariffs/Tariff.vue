@@ -62,9 +62,9 @@
         </div>
       </div>
     </dlg>
-    <edit-periods :tariff="Tariff" v-if="View=='Periods'" @close="View=null"></edit-periods>
-    <edit-seasons :tariff="Tariff" v-if="View=='Seasons'" @close="View=null"></edit-seasons>
-    <edit-holidays :tariff="Tariff" v-if="View=='Holidays'" @close="View=null"></edit-holidays>
+    <edit-periods :tariff="Tariff" v-if="View=='Periods'"   @close="View=null; Tariff=$event;"></edit-periods>
+    <edit-seasons :tariff="Tariff" v-if="View=='Seasons'"   @close="View=null; Tariff=$event;"></edit-seasons>
+    <edit-holidays :tariff="Tariff" v-if="View=='Holidays'" @close="View=null; Tariff=$event;"></edit-holidays>
   </div>
 </template>
 
@@ -76,7 +76,33 @@
   export default {
     props: { tariff: Object },
     data: function() {
-      return { Tariff: null, View: null, TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false, Error: null };
+      return { Tariff: null, View: null, TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false };
+    },
+    computed: {
+      Error: function() {
+        var FindSeason = (date) => {
+          for(var i = 0; i < this.Tariff.Template.Seasons.length; i++) {
+            if(this.Tariff.Template.Seasons[i].StartDate === date) return i;
+          }
+          return null;
+        };
+        for(var i = 0; i < this.Tariff.Template.Seasons.length; i++) {
+          for(var h = 0; h < 24; h++) {
+            if((this.Tariff.Template.Seasons[i].DayPeriods[h] < 0) || (this.Tariff.Template.Seasons[i].DayPeriods[h] >= this.Tariff.Template.Periods.length)) return 'Periods in season "' + tariff.Template.Seasons[i].Name + '" out of range!';
+          }
+        }
+        var Used = this.Tariff.Template.Seasons.length;
+        var Date = this.Tariff.StartDate;
+        while(Used > 0) {
+          var Find = FindSeason(Date);
+          if(Find == null) break;
+          Date = this.Tariff.Template.Seasons[Find].EndDate;
+          Used = Used - 1;
+          if(Used > 0) Date = Date + 1;
+        }
+        if((Used > 0) || (Date != this.Tariff.EndDate)) return 'Defined tariff period is not correctly covered by defined seasons!';
+        return null;
+      }
     },
     created: function() {
       if(this.tariff == null) {
@@ -99,14 +125,6 @@
       }
     },
     methods: {
-      Show: function(tariff) {
-        this.$set(this, 'Tariff', tariff);
-        this.ShowDialog = true;
-        this.$nextTick(() => {
-          $(this.$el).modal('show');
-          this.$refs.Main.Load(this.Tariff);
-        });
-      },
       Save: function() {
         this.$http.post((this.Tariff.TariffID == null) ? 'addTariff' : 'setTariff', this.Tariff).then(
           (result) => {
@@ -117,31 +135,6 @@
             setTimeout(() => { this.Error = null; }, 1000);
           }
         );
-      },
-      Check: function(tariff) {
-        $('#divTariffSuccess, #divTariffError').addClass('hide');
-        $('#btnTariffSave').addClass('disabled');
-        var FindSeason = function(date) {
-          for(var i = 0; i < tariff.Template.Seasons.length; i++) { if(tariff.Template.Seasons[i].StartDate === date) return i; }
-          return null;
-        };
-        for(var i = 0; i < tariff.Template.Seasons.length; i++) {
-          for(var h = 0; h < 24; h++) {
-            if((tariff.Template.Seasons[i].DayPeriods[h] < 0) || (tariff.Template.Seasons[i].DayPeriods[h] >= tariff.Template.Periods.length)) return 'Periods in season "' + tariff.Template.Seasons[i].Name + '" out of range!';
-          }
-        }
-        var Used = tariff.Template.Seasons.length;
-        var Date = tariff.StartDate;
-        while(Used > 0) {
-          var Find = FindSeason(Date);
-          if(Find === null) break;
-          Date = tariff.Template.Seasons[Find].EndDate;
-          Used = Used - 1;
-          if(Used > 0) Date = Date + 1;
-        }
-        if((Used > 0) || (Date !== tariff.EndDate)) return 'Defined tariff period is not correctly covered by defined seasons!';
-        this.Tariff = tariff;
-        return '';
       }
     },
     components: { EditPeriods, EditSeasons, EditHolidays }

@@ -1,7 +1,7 @@
 const openZmeter = {
   install: function(Vue, options) {
     Vue.prototype.CreateSeriesTransfer = (parent, series) => {
-      var Transfer = { This: parent, Timer: null, CancelFunc: null, Data: null, LastData: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
+      var Transfer = { This: parent, Timer: null, CancelFunc: null, Data: null, LastData: null, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -16,6 +16,7 @@ const openZmeter = {
         Transfer.CancelFunc = () => { Cancelled = true; };
         Transfer.This.$http.post('getSeriesNow', { Analyzer: analyzer.Analyzer, Series: series }).then(
           (result) => {
+            if(Cancelled == true) return;
             Transfer.Data = Object.seal(result.body);
             Transfer.Timer = setTimeout(() => { Transfer.UpdateNow(Transfer.Analyzer); }, 1500);
           },
@@ -25,6 +26,10 @@ const openZmeter = {
             Transfer.Timer = setTimeout(() => { Transfer.UpdateNow(Transfer.Analyzer); }, 1500);
           }
         );
+      };
+      Transfer.SetDataPrices = (data) => {
+        Transfer.Data = Object.seal(data);
+
       };
       Transfer.SetData = (data) => {
         Transfer.Data = Object.seal(data);
@@ -144,6 +149,35 @@ const openZmeter = {
           (fail) => {
             if(Cancelled == true) return;
             Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
+          }
+        );
+      };
+      Transfer.UpdatePrices = (analyzer, aggreg, range) => {
+        if((analyzer == null) || (aggreg == null) || (range == null)) return;
+        var Cancelled = false;
+//        var Period    = (aggreg == '15M') ? 900000 : 3600000;
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+        var ReqRange = Transfer.CalcRange(analyzer, range, aggreg);
+        var Data = { };
+        if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetDataPrices(null);
+        Transfer.Analyzer  = analyzer;
+        Transfer.Aggreg    = aggreg;
+        Transfer.Range     = range;
+        Data.Aggreg        = aggreg;
+        Transfer.CancelFunc = () => { Cancelled = true; };
+        Transfer.This.$http.post('getPrices', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }).then(
+          (result) => {
+            if(Cancelled == true) return;
+            Data = Object.assign(Data, result.body);
+            Data.From = ReqRange[0];
+            Data.To = ReqRange[1];
+            Transfer.SetDataPrices(Data);
+            Transfer.Timer = setTimeout(() => { Transfer.UpdatePrices(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
+          },
+          (fail) => {
+            if(Cancelled == true) return;
+            Transfer.Timer = setTimeout(() => { Transfer.UpdatePrices(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
           }
         );
       };

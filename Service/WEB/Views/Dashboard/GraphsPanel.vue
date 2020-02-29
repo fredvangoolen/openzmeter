@@ -3,7 +3,7 @@
     <div class="panel-heading">
       <div class="header-text">
         <div>{{ PanelTitle }}</div>
-        <div class="aggreg-row" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggregation_Source) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
+        <div class="aggreg-row" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggreg) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
       </div>
       <div class="header-buttons">
         <div class="main-value"><span v-html="LastValue.Value"></span> <span class="huge-small-unit">{{ LastValue.Units }}</span></div>
@@ -15,7 +15,7 @@
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
       <div @mouseenter="$emit('update:paused', true)" @mouseleave="$emit('update:paused', false)">
-        <graph ref="Chart" :options="GraphOptions" :height="Expanded?DialogHeight:150" :paused="paused"></graph>
+        <graph ref="graph" :options="GraphOptions" :height="Expanded?DialogHeight:150" :paused="paused"></graph>
       </div>
     </portal>
     <div class="panel-footer clearfix">
@@ -152,13 +152,6 @@
         }
         return Header;
       }
-    },
-    methods: {
-      ExportClick() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        this.$refs.tools.SaveCVS(this.SerieProps.Title + '.csv', [['Time'].concat(this.SerieProps.Names(Analyzer))].concat(this.Data));
-      },
     },
     created: function() {
       this.SerieProps = oZm.Series[this.serie];

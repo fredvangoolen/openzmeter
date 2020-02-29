@@ -3,7 +3,7 @@
     <div class="panel-heading clearfix">
       <div class="header-text">Main variables</div>
       <div class="header-buttons">
-        <span v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggregation_Source) }} aggregation {{ Paused ? '(Paused)' : '' }}</span>
+        <span v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggreg) }} aggregation {{ Paused ? '(Paused)' : '' }}</span>
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" v-model="Phase"></toolbar-phases>
         <div class="btn-group">
           <button-export file="Main_Variables" :rows="Export"></button-export>

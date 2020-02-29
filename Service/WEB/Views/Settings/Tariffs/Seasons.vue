@@ -5,13 +5,13 @@
         <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Seasons</h4></div>
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="New season"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', Tariff)"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
         </div>
       </template>
       <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px;">Define seasons of the year</div>
       <div class="row">
         <div class="col-xs-12">
-          <vuetable ref="table" :fields="Columns" :api-mode="false" :data="tariff.Template.Seasons" class="table small table-striped">
+          <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Tariff.Template.Seasons" class="table small table-striped">
             <template slot="actions" slot-scope="props">
               <div class="btn-group" style="width:100%">
                 <button class="btn btn-xs btn-default" @click="Duplicate(props.rowIndex)">Duplicate</button>
@@ -23,7 +23,7 @@
         </div>
       </div>
     </dlg>
-    <season v-if="View=='Season'" :tariff="tariff" :index="Index" @close="View=null"></season>
+    <season v-if="View=='Season'" :tariff="Tariff" :index="Index" @close="View=null; Tariff=$event"></season>
   </div>
 </template>
 
@@ -45,20 +45,23 @@
         ]
       };
     },
+    created: function() {
+      this.Tariff = Object.assign({}, this.tariff);
+    },
     methods: {
       DateFormat: function(val) {
-        return moment.tz(val, this.tariff.TimeZone).format('DD/MM/YYYY');
+        return moment.tz(val, this.Tariff.TimeZone).format('DD/MM/YYYY');
       },
       Duplicate: function(index) {
-        var Row = Object.assign({}, this.tariff.Template.Seasons[index]);
+        var Row = Object.assign({}, this.Tariff.Template.Seasons[index]);
         Row.Name = Row.Name + "_Copy";
-        this.tariff.Template.Seasons.push(Row);
+        this.Tariff.Template.Seasons.push(Row);
       },
       Delete: function(index) {
-        if(confirm("Delete '" + this.tariff.Template.Seasons[index].Name + "' season?")) this.tariff.Template.Seasons.splice(index, 1);
+        if(confirm("Delete '" + this.Tariff.Template.Seasons[index].Name + "' season?")) this.Tariff.Template.Seasons.splice(index, 1);
       },
       Add: function() {
-        this.tariff.Template.Seasons.push({ StartDate: this.tariff.StartDate, EndDate: this.tariff.EndDate, DayPeriods: new Array(24).fill(0), Name: 'Unnamed season' });
+        this.Tariff.Template.Seasons.push({ StartDate: this.Tariff.StartDate, EndDate: this.Tariff.EndDate, DayPeriods: new Array(24).fill(0), Name: 'Unnamed season' });
       },
       Edit: function(index) {
         this.Index = index;

@@ -33,11 +33,11 @@
       </vuetable>
     </dlg>
     <analyzer-configure v-if="View=='Configure'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-configure>
-    <analyzer-alarms v-if="View=='Alarms'" :analyzer="Analyzer" @close="View=null"></analyzer-alarms>
-    <analyzer-permissions v-if="View=='Permissions'" :analyzer="Analyzer" @close="View=null"></analyzer-permissions>
-    <analyzer-remote v-if="View=='Remote'" :analyzer="Analyzer" @close="View=null"></analyzer-remote>
-    <analyzer-rates v-if="View=='Rates'" :analyzer="Analyzer" @close="View=null"></analyzer-rates>
-    <analyzer-maintenance v-if="View=='Maintenance'" :analyzer="Analyzer" @close="View=null"></analyzer-maintenance>
+    <analyzer-alarms v-if="View=='Alarms'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-alarms>
+    <analyzer-permissions v-if="View=='Permissions'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-permissions>
+    <analyzer-remote v-if="View=='Remote'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-remote>
+    <analyzer-rates v-if="View=='Rates'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-rates>
+    <analyzer-maintenance v-if="View=='Maintenance'" :analyzer="Analyzer" @close="CloseSelect($event)"></analyzer-maintenance>
   </div>
 </template>
 
@@ -53,7 +53,7 @@
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: Object, view: String },
+    props: { analyzer: Object },
     data() {
       return { View: null, Analyzers: [], ShowSpinner: false, Analyzer: null, Filter: '',
         Columns: [
@@ -101,7 +101,7 @@
         this.View = null;
         if(analyzer == null) return;
         this.GetAnalyzers();
-        if(analyzer.Analyzer == this.analyzer.Analyzer) this.$emit('update:analyzer', analyzer);
+        if(analyzer.Analyzer == this.analyzer.Analyzer) this.Select(analyzer.Analyzer);
       },
       Configure: function(analyzer) {
         this.ShowSpinner = true;

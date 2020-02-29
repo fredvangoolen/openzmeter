@@ -5,7 +5,7 @@
         <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Holidays</h4></div>
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="New holiday"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', Tariff)"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
         </div>
       </template>
       <div class="row">
@@ -34,7 +34,7 @@
   export default {
     props: { tariff: Object },
     data() {
-      return { View: null,
+      return { View: null, Tariff: null,
         Columns: [
           {name: 'Name', title: 'Name'},
           {name: 'StartDate', title: 'Start date', callback: this.DateFormat },
@@ -42,6 +42,9 @@
           {name: '__slot:actions', title: ''}
         ]
       };
+    },
+    created: function() {
+      this.Tariff = Object.assign({}, this.tariff);
     },
     methods: {
       DateFormat: function(val) {

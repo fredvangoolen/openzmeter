@@ -1,6 +1,6 @@
 <template>
   <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
-    <graph :options="GraphOptions" :height="height" :paused="MouseOver" :range.sync="range"></graph>
+    <graph :options="GraphOptions" :height="height" :paused="MouseOver"></graph>
   </div>
 </template>
 
@@ -9,13 +9,15 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: Object, height: Number, data: Object, range: [String, Array] },
+    props: { analyzer: Object, height: Number, data: Object },
     data() {
-      return { ShowSpinner: true, MouseOver: false };
+      return { MouseOver: false };
     },
     computed: {
       GraphOptions: function() {
         var Opt = { file: [], axes: { y: {}, x: {} } };
+        Opt.panEdgeFraction = 1;
+        Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -23,15 +25,12 @@
         Opt.fillGraph = true;
         Opt.legend = 'follow';
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
-        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
-        Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.plotter = Graph.Plotters.MultiBar;
         Opt.labels = ['Time', 'Energy'];
-
         Opt.colors = [oZm.Series['ACTIVE_ENERGY'].Color];
         Opt.xAxisHeight = 20;
-        //underlayCallback: this.DrawPeriods,
-        Opt.drawHighlightPointCallback = Graph.DrawHighlightBarChartCallback;
+        Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.periods); Graph.Callbacks.Underlay_DrawBorder(ctx, area, dygraph) };
+        Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { var Units = this.BestUnits(x); return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + Units + 'Wh'; },
@@ -54,10 +53,6 @@
       this.Graph = null;
       this.Data = [];
     },
-//    mounted: function() {
-//      $(window).bind('resize', this.ResizeHandler.bind(this));
-//      window.dispatchEvent(new Event('resize'));
-//    },
     methods: {
       ExportClick: function() {
         if(this.$root.SelectedAnalyzer === null) return;
@@ -143,18 +138,7 @@
         }
         canvas.rect(area.x, area.y + 13, area.w, area.h);
         canvas.clip();
-      },
-      WindowRestore: function() {
-//        this.$refs.period.PopState();
-      },
-      WindowChange: function(minDate, maxDate) {
-        //this.$refs.period.SetCustom(minDate, maxDate, true);
-      },
-
-    },
-//    beforeDestroy: function() {
-//      $(window).off('resize', this.ResizeHandler);
-//    },
-    components: { Graph }
+      }
+    }
   }
 </script>

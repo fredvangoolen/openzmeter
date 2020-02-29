@@ -50,6 +50,7 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("delRate",             DelRateCallback);
   HTTPServer::RegisterCallback("addRate",             AddRateCallback);
   HTTPServer::RegisterCallback("getPrices",           GetPricesCallback);
+  HTTPServer::RegisterCallback("getBills",            GetBillsCallback);
   HTTPServer::RegisterCallback("testAlarm",           TestAlarmCallback);
   HTTPServer::RegisterCallback("getAlarms",           GetAlarmsCallback);
   HTTPServer::RegisterCallback("getPermissions",      GetPermissionsCallback);
@@ -79,6 +80,7 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("delRate");
   HTTPServer::UnregisterCallback("addRate");
   HTTPServer::UnregisterCallback("getPrices");
+  HTTPServer::UnregisterCallback("getBills");
   HTTPServer::UnregisterCallback("testAlarm");
   HTTPServer::UnregisterCallback("getAlarms");
   HTTPServer::UnregisterCallback("getPermissions");
@@ -198,6 +200,9 @@ void DeviceManager::AddRateCallback(const json &params, Response &response) {
 }
 void DeviceManager::GetPricesCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetPrices);
+}
+void DeviceManager::GetBillsCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::GetBills);
 }
 void DeviceManager::TestAlarmCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::TestAlarm);

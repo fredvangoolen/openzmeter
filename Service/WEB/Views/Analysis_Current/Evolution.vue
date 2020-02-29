@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggregation_Source) : '-' }} aggregation</div>
+      <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggreg) : '-' }} aggregation</div>
       <div class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="true" v-model="Phase"></toolbar-phases>
         <div class="btn-group">

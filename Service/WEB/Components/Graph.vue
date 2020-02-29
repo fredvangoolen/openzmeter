@@ -231,6 +231,39 @@
         ctx.strokeStyle = '#000';
         ctx.strokeRect(area.x, area.y, area.w, area.h);
       },
+      Underlay_DrawPeriods: function(ctx, area, dygraph, decoration) {
+        if(decoration == null) return;
+        canvas.strokeStyle = '#777';
+        canvas.lineWidth = 2;
+        canvas.beginPath();
+        canvas.moveTo(area.x, 0);
+        canvas.lineTo(area.x, 13);
+        canvas.stroke();
+        for(var i = 0; i < this.Periods.length; i++) {
+          var Left = g.toDomXCoord(this.Periods[i].From - 1800000);
+          var Right = g.toDomXCoord(this.Periods[i].To - 1800000);
+          if(Left < (area.x + 1)) Left = (area.x + 1);
+          canvas.fillStyle = (this.Periods[i].Color === null) ? "#EEEEEE" : this.Periods[i].Color;
+          canvas.fillRect(Left, area.y, Right, 13);
+          if(((Right - Left) > 20) && (this.Periods[i].Name !== null)) {
+            canvas.fillStyle = '#000000';
+            canvas.font = "10px monospace";
+            canvas.fillText(this.Periods[i].Name, Left + 1, 10);
+          }
+        }
+        for(var i = 0; i < this.Bills.length; i++) {
+          canvas.strokeStyle = '#d9534f';
+          canvas.lineWidth = 1;
+          canvas.beginPath();
+          var X = g.toDomXCoord(this.Bills[i].Sampletime);
+          canvas.moveTo(X, 13);
+          canvas.lineTo(X, area.h);
+          canvas.stroke();
+        }
+        canvas.rect(area.x, area.y + 13, area.w, area.h);
+        canvas.clip();
+
+      },
       DrawHighlightPoint_HighlightBar: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {
         var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;
         var VisibleSerie = serieIndex;
