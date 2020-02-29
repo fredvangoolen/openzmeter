@@ -15,6 +15,7 @@
           <div class="panel-body">
             <spinner v-if="Bills==null"></spinner>
             <summary-graph :data="Bills" :analyzer="analyzer"></summary-graph>
+            <div class="alert alert-warning text-center" style="margin-bottom: 5px; padding: 5px" v-if="Bills!=null&&Bills.length==0">No bills in selected year. No one generated yet or no rate is assigned for required period.</div>
             <bill v-for="(bill, idx) in Bills" :bill="bill" :currency="Currency" :key="idx"></bill>
           </div>
         </div>
@@ -42,9 +43,9 @@
         this.Bills = null;
         var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
         var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getPrices', { From: From, To: To, Aggreg: '1H', Analyzer: this.analyzer.Analyzer }).then(
+        this.$http.post('getBills', { From: From, To: To, Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
-            this.Bills = result.data.Bills.filter(function(value) { return value.Complete === true; });
+            this.Bills = result.data.filter(function(value) { return value.Complete === true; });
           },
           (fail) => {}
         );

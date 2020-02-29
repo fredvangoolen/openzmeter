@@ -16,16 +16,7 @@
         </template>
       </vuetable>
     </div>
-    <dlg v-if="SettingsVisible" :loading="SettingsLoading">
-      <template v-slot:header>
-        <div class="pull-left"><h4 class="modal-title">Device &raquo; {{ Settings.Serial }}</h4></div>
-        <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" v-on:click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" v-on:click="SettingsVisible = false"><img :src="require('Imgs/arrow_undo.png')"></button>
-        </div>
-      </template>
-      <component :is="Driver" v-model="Settings" :error="Error"></component>
-    </dlg>
+    <component v-if="SettingsVisible==true" :is="Driver" :settings="Settings" @close="LoadTable"></component>
   </div>
 </template>
 
@@ -40,7 +31,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, SettingsLoading: false, Settings: null, Error: '', Enabled: false,
+      return { Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, Settings: null, Enabled: false,
         Columns: [
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},
@@ -55,7 +46,9 @@
       EnabledStatus: function(value) {
         return (value === true) ? '&#9635;' : '&#9633;';
       },
-      LoadTable: function () {
+      LoadTable: function (update) {
+        this.SettingsVisible = false;
+        if(update == false) return;
         this.ShowSpinner = true;
         this.$http.post('getDevices', {}).then(
           (result) => {
@@ -81,21 +74,6 @@
           },
           (fail) => {
             this.ShowSpinner = false;
-          }
-        );
-      },
-      Save: function () {
-        this.SettingsLoading = true;
-        this.$http.post('setDevice', this.Settings).then(
-          (result) => {
-            this.SettingsLoading = false;
-            this.SettingsVisible = false;
-            this.LoadTable();
-          },
-          (fail) => {
-            this.SettingsLoading = false;
-            this.Settings.Error = 'Failed to save device settings!';
-            setTimeout(() => { this.Settings.Error = null; }, 1000);
           }
         );
       }

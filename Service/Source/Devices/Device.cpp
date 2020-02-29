@@ -124,6 +124,9 @@ bool Device::AddRate(const json &params, Response &response) {
 bool Device::GetPrices(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetPrices);
 }
+bool Device::GetBills(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetBills);
+}
 bool Device::TestAlarm(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::TestAlarm);
 }

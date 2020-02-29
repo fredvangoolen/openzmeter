@@ -11,45 +11,45 @@
     <div class="row">
       <div class="col-xs-9">
         <label class="control-label">Serial number</label>
-        <input type="text" class="form-control" disabled="" :value="analyzer.Analyzer">
+        <input type="text" class="form-control" disabled="" :value="Analyzer.Analyzer">
       </div>
       <div class="col-xs-3">
         <label class="control-label">Mode</label>
-        <input type="text" class="form-control" disabled="" :value="analyzer.Mode">
+        <input type="text" class="form-control" disabled="" :value="Analyzer.Mode">
       </div>
       <div class="col-xs-12 col-sm-7">
         <label class="control-label">Display name</label>
-        <input type="text" class="form-control" v-model="analyzer.Name" required>
+        <input type="text" class="form-control" v-model="Analyzer.Name" required>
       </div>
       <div class="col-xs-12 col-sm-5">
         <label class="control-label">Time zone</label>
-        <option-picker :options="TimeZones" v-model="analyzer.TimeZone" :big="true"></option-picker>
+        <option-picker :options="TimeZones" v-model="Analyzer.TimeZone" :big="true"></option-picker>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Nominal voltage</label>
-        <input-spin prepend="V" :list="[{name: '120 V (L-N)', value: 120}, {name: '240 V (L-L)', value: 240}, {name: '230 V (L-N)', value: 230}]" :decimals="1" :min="10" :max="10000" :increment="1" v-model="analyzer.NominalVoltage"></input-spin>
+        <input-spin prepend="V" :list="[{name: '120 V (L-N)', value: 120}, {name: '240 V (L-L)', value: 240}, {name: '230 V (L-N)', value: 230}]" :decimals="1" :min="10" :max="10000" :increment="1" v-model="Analyzer.NominalVoltage"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Nominal frequency</label>
-        <input-spin prepend="Hz" :list="[{name: 'DC', value: 0}, {name: '50 Hz', value: 50}, {name: '60 Hz', value: 60}]" :decimals="1" :min="0" :max="500" :increment="1" v-model="analyzer.NominalFreq"></input-spin>
+        <input-spin prepend="Hz" :list="[{name: 'DC', value: 0}, {name: '50 Hz', value: 50}, {name: '60 Hz', value: 60}]" :decimals="1" :min="0" :max="500" :increment="1" v-model="Analyzer.NominalFreq"></input-spin>
       </div>
       <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Min current</label>
-        <input-spin prepend="A" :decimals="1" :min="0" :max="500" :increment="1" v-model="analyzer.MinCurrent"></input-spin>
+        <input-spin prepend="A" :decimals="1" :min="0" :max="500" :increment="1" v-model="Analyzer.MinCurrent"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Max current</label>
-        <input-spin prepend="A" :decimals="1" :min="0.1" :max="500" :increment="1" v-model="analyzer.MaxCurrent"></input-spin>
+        <input-spin prepend="A" :decimals="1" :min="0.1" :max="500" :increment="1" v-model="Analyzer.MaxCurrent"></input-spin>
       </div>
       <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12">
         <table>
           <tr><td><strong>Tag name</strong></td><td class="text-right"><strong>Value</strong></td></tr>
-          <tr v-for="(tag, idx) in analyzer.Tags" :key="idx">
+          <tr v-for="(tag, idx) in Analyzer.Tags" :key="idx">
             <td>
               <div class="input-group input-group-xs">
-                <span class="input-group-btn"><button class="btn btn-default" type="button" @click="analyzer.Tags.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button></span>
+                <span class="input-group-btn"><button class="btn btn-default" type="button" @click="Analyzer.Tags.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button></span>
                 <input type="text" class="form-control" v-model="tag.Name">
               </div>
             </td>
@@ -60,7 +60,9 @@
             </td>
           </tr>
           <tr>
-            <td colspan="2"><button type="button" class="btn btn-default btn-xs" style="width:100%" @click="analyzer.Tags.push({ Name: 'Unnamed tag', Value: 'none'})"><img :src="require('Imgs/plus.png')"> New tag</button></td>
+            <td colspan="2">
+              <button type="button" class="btn btn-default btn-xs" style="width:100%" @click="Analyzer.Tags.push({ Name: 'Unnamed tag', Value: 'none'})"><img :src="require('Imgs/plus.png')"> New tag</button>
+            </td>
           </tr>
         </table>
       </div>
@@ -75,41 +77,30 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { ShowSpinner: false, Error: '', Tags: [{name: 'bliu', value: 'blau'}],
-      Columns: [
-          {name: 'Name', title: 'Name'},
-          {name: '__slot:power', title: 'Power mode'},
-          {name: '__slot:reactive', title: 'Reactive mode'},
-          {name: '__slot:color', title: 'Colour'}
-        ]
+      return { ShowSpinner: false, Error: '', Analyzer: null,
+               TimeZones: moment.tz.names().map((val) => { return { name: val, value: val }}),
+               Columns: [
+                 {name: 'Name', title: 'Name'},
+                 {name: '__slot:power', title: 'Power mode'},
+                 {name: '__slot:reactive', title: 'Reactive mode'},
+                 {name: '__slot:color', title: 'Colour'}
+               ]
       };
     },
-    computed: {
-      TimeZones: function() {
-        return moment.tz.names().map((val) => { return { name: val, value: val }; });
-      }
-    },
-    mounted: function() {
+    created: function() {
+      this.Analyzer = Object.assign({}, this.analyzer);
       this.View = 'Basic';
     },
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setAnalyzer', this.analyzer).then(
-          (result) => {
-            if(result.status == 200) {
-              this.$http.post('getAnalyzer', { Analyzer: this.analyzer.Analyzer }).then(
-                (result) => {
-                  this.ShowSpinner = false;
-                  if(result.status == 200) this.$emit('close', result.data);
-                }
-              );
-            } else {
-              this.ShowSpinner = false;
-              this.Error = 'Failed to save analyzer!';
-              setTimeout(() => { this.Error = ''; }, 5000);
-            }
-          },
+        this.$http.post('setAnalyzer', this.Analyzer).then(
+          (result) => { this.$emit('close', this.Analyzer.Analyzer); },
+          (fail) => {
+            this.ShowSpinner = false;
+            this.Error = 'Failed to save analyzer!';
+            setTimeout(() => { this.Error = ''; }, 5000);
+          }
         );
       }
     },

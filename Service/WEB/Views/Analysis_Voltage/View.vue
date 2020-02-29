@@ -16,12 +16,11 @@
             </portal>
           </div>
           <div class="panel-body">
-            <spinner v-if="TransferGraph.Data==null"></spinner>            
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :data10M="Transfer10M.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
-                  <spinner v-if="Expanded && (TransferGraph.Data==null)"></spinner>
+                  <spinner v-if="TransferGraph.Data==null"></spinner>
                   <voltage :phases="Phases" :analyzer="analyzer" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></voltage>
                 </portal>
               </div>
@@ -88,14 +87,14 @@
       analyzer: function(val) {
         this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
         this.TransferNow.UpdateNow(this.analyzer);
-        this.TransferEvents.UpdateEvents(this.analyzer, this.Range);        
+        this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
         this.Transfer10M.Update(this.analyzer, '10M', 'LastSamples');
         this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
       },
-      Aggreg: function() { 
+      Aggreg: function() {
         this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
-      Range: function(val, prev) { 
+      Range: function(val, prev) {
         if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
         this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
       }

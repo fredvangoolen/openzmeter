@@ -5,11 +5,11 @@
         <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates</h4></div>
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="Add rate"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', analyzer.Analyzer)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
         </div>
       </template>
-      <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != ''">{{ Error }}</div>
-      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error == ''">All dates/times are in analyzer timezone.</div>
+      <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
+      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error==null">All dates/times are in analyzer timezone.</div>
       <vuetable key="rates" :fields="Columns" :data="Rates" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
@@ -19,7 +19,7 @@
         </template>
       </vuetable>
     </dlg>
-    <analyzer-rate v-if="View=='Rate'" @close="View=null" :rate="Rate" :tariffs="Tariffs" :analyzer="analyzer"></analyzer-rate>
+    <analyzer-rate v-if="View=='Rate'" @close="GetRates($event)" :rate="Rate" :analyzer="analyzer"></analyzer-rate>
   </div>
 </template>
 
@@ -32,7 +32,7 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { Error: '', Tariffs: null, Rates: null, ShowSpinner: false, View: null, Rate: null,
+      return { Error: null, Rates: null, ShowSpinner: false, View: null, Rate: null,
         Columns: [
           { name: 'Name', title: 'Name' },
           { name: 'StartDate', title: 'Start date', callback: this.DateFormat },
@@ -48,21 +48,45 @@
       this.GetRates();
     },
     methods: {
-      GetRates: function() {
+      GetRates: function(update) {
+        this.View = null;
+        if(update == false) return;
         this.ShowSpinner = true;
         this.$http.post('getRates', { Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
-            if(result.status == 200) {
-              this.Rates = result.data;
-              this.Error = '';
-              for(var n = 1; n < result.data.length; n++) {
-                if(result.data[n].StartDate > result.data[n - 1].EndDate) continue;
-                this.Error = 'Assigned rates overlaps, please check date ranges';
-                break;
-              }
+            this.Rates = result.data;
+            this.Error = null;
+            for(var n = 1; n < result.data.length; n++) {
+              if(result.data[n].StartDate > result.data[n - 1].EndDate) continue;
+              this.Error = 'Assigned rates overlaps, please check date ranges';
+              break;
             }
             this.ShowSpinner = false;
-          }
+          },
+          (fail) => { }
+        );
+      },
+      Add: function() {
+        this.Rate = null;
+        this.View = 'Rate';
+      },
+      Edit: function(row) {
+        this.ShowSpinner = true;
+        this.$http.post('getRate', { Analyzer: this.analyzer.Analyzer, RateID: row.RateID }).then(
+          (result) => {
+            this.Rate = result.body;
+            this.View = 'Rate';
+            this.ShowSpinner = false;
+          },
+          (fail) => { this.ShowSpinner = false; }
+        );
+      },
+      Delete: function(row) {
+        if(confirm("Delete '" + row.Name + "' rate?") == false) return;
+        this.ShowSpinner = true;
+        this.$http.post('delRate', { RateID: row.RateID, Analyzer: this.analyzer.Analyzer }).then(
+          (result) => { this.GetRates(); },
+          (fail) => { this.ShowSpinner = false; }
         );
       },
       GetTariffs: function(onComplete) {
@@ -78,43 +102,6 @@
       },
       DateFormat: function(val) {
         return moment.tz(val, this.analyzer.TimeZone).format('DD/MM/YYYY');
-      },
-      Edit: function(row) {
-        this.GetTariffs((tariffs) => {
-          this.ShowSpinner = true;
-          $.ajax({ url: "getRate", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ Analyzer: this.Analyzer.Analyzer, RateID: row.RateID }),
-            success: (result) => {
-              this.Rate = result;
-              this.Tariffs = tariffs;
-              this.View = 'Rate';
-            },
-            complete: () => {
-              this.ShowSpinner = false;
-            }
-          });
-        });
-      },
-      Delete: function(row) {
-        if(confirm("Delete '" + row.Name + "' rate?")) {
-          this.ShowSpinner = true;
-          $.ajax({ url: "delRate", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ RateID: row.RateID, Analyzer: this.Analyzer.Analyzer }),
-            success: () => {
-              this.GetRates();
-            },
-            Error: () => {
-              this.$refs.Dialog.ShowSpinner = false;
-            }
-          });
-        }
-      },
-      Add: function() {
-        this.GetTariffs((tariffs) => {
-          this.Rate = null;
-          this.Tariffs = tariffs;
-          this.View = 'Rate';
-          //this.$refs.Dialog.Close();
-          //this.$parent.$refs.Rate.Show(this.Analyzer, tariffs, null);
-        });
       }
     },
     components: { AnalyzerRate, vuetable }

@@ -33,6 +33,7 @@
         Opt.xAxisHeight = 24;
         Opt.selectMode = 'euclidian';
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.visibility = this.phases;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;

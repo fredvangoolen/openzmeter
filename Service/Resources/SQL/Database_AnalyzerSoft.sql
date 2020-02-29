@@ -78,7 +78,6 @@ ALTER TABLE aggreg_1h ADD COLUMN IF NOT EXISTS stat_unbalance int4[];
 UPDATE aggreg_1h SET stat_unbalance = array_fill(0, ARRAY[31]) WHERE stat_unbalance IS NULL;
 ALTER TABLE aggreg_1h ALTER COLUMN stat_unbalance SET NOT NULL;
 
-
 CREATE TABLE IF NOT EXISTS events (
   starttime   bigint                NOT NULL,
   evttype     character varying(16) NOT NULL,
@@ -97,6 +96,7 @@ CREATE TABLE IF NOT EXISTS events (
   rms3        real[],
   CONSTRAINT events_pkey PRIMARY KEY (starttime, evttype)
 ) WITH (OIDS=FALSE);
+ALTER TABLE events DROP COLUMN IF EXISTS finished;
 
 CREATE TABLE IF NOT EXISTS prices (
   sampletime bigint NOT NULL PRIMARY KEY,

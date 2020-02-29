@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="tabs">
     <ul class="nav nav-tabs" ref="tabs">
       <li v-for="tab in tabs" :class="{ active: (tab==value) }" :key="tab"><a data-toggle="tab">{{ tab }}</a></li>
     </ul>
@@ -10,7 +10,7 @@
   import scrollingTabs from 'jquery-bootstrap-scrolling-tabs';
   import 'jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.css';
   export default {
-    props: {value: String, tabs: Array, storage: String },
+    props: { value: String, tabs: Array, storage: String },
     data() {
       return { };
     },
@@ -55,5 +55,11 @@
     width: 16px !important;
     height: 16px !important;
     display: inline-block;
+  }
+  .tabs >>> div {
+    height: 26px;
+  }
+  .tabs >>> a {
+    padding: 2px 6px;
   }
 </style>

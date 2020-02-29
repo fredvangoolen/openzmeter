@@ -1,23 +1,23 @@
 <template>
-  <div class="input-group inputspin">
+  <div class="input-group inputspin" :class="{ small: (big==false) }">
     <div class="input-group-btn" v-if="list != null">
       <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>
       <ul class="dropdown-menu">
-        <li v-for="item in list"><a v-on:click="$emit('input', item.value)">{{ item.name }}</a></li>
+        <li v-for="item in list" :key="item.name"><a @click="$emit('input', item.value)">{{ item.name }}</a></li>
       </ul>
     </div>
-    <input type="text" class="form-control" :value="Format(value)" v-on:change="Change($event.target.value)">
+    <input type="text" class="form-control" :value="Format(value)" @change="Change($event.target.value)">
     <span v-if="prepend" class="input-group-addon" id="basic-addon1">{{ prepend }}</span>
     <div class="input-group-btn-vertical">
-      <button class="btn btn-default" type="button" v-bind:disabled="(value + increment) > max" v-on:click="$emit('input', value + increment)">&#9650;</button>
-      <button class="btn btn-default" type="button" v-bind:disabled="(value - increment) < min" v-on:click="$emit('input', value - increment)">&#9660;</button>
-    </div>    
+      <button class="btn btn-default" type="button" :disabled="(value + increment) > max" @click="$emit('input', value + increment)"><div>&#9650;</div></button>
+      <button class="btn btn-default" type="button" :disabled="(value - increment) < min" @click="$emit('input', value - increment)"><div>&#9660;</div></button>
+    </div>
   </div>
 </template>
 
 <script>
   export default {
-    props: { prepend: { type: String }, min: { type: Number, default: 0}, max: { type: Number, default: 100}, increment: { type: Number, default: 0.1 }, value: { type: Number, default: 50}, decimals: { type: Number, default: 2 }, list: { type: Array, default: null} },
+    props: { big: Boolean, prepend: String, min: Number, max: Number, increment: Number, value: Number, decimals: Number, list: Array },
     data: function() {
       return { };
     },
@@ -26,14 +26,14 @@
     },
     watch: {
 //      value: function(val) {
-        
+
 //      }
     },
     methods: {
 //      SetValue: function(val) {
 //        this.Value = parseFloat(val);
 //        if(this.Value > this.max) this.Value = this.max;
-//        this.$emit('change', this.Value);        
+//        this.$emit('change', this.Value);
 //      },
 //      Increment: function(evt) {
 //        $(evt.target).blur();
@@ -68,11 +68,24 @@
           return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString();
         }
       }
-    }    
+    }
   }
 </script>
 
 <style scoped>
+  .small .form-control, .small .input-group-addon {
+    height: 22px;
+    padding: 2px 5px;
+    font-size: 12px;
+  }
+  .small .input-group-btn-vertical .btn-default {
+    height: 12px;
+  }
+  .small .input-group-btn-vertical .btn-default > div {
+    font-size: 10px;
+    overflow: hidden;
+    margin-top: -3px;
+  }
   .inputspin input {
     text-align: right;
   }

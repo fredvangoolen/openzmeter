@@ -2,7 +2,7 @@
   <div>
     <div class="subpanel clearfix">
       <div class="counters-title">Period stats:</div>
-      <div class="counters-aggreg" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggregation_Source) }} aggregation<br>From {{ analyzer.FormatDateTime(data.From) }} to {{ analyzer.FormatDateTime(data.To) }}</div>
+      <div class="counters-aggreg" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggreg) }} aggregation<br>From {{ analyzer.FormatDateTime(data.From) }} to {{ analyzer.FormatDateTime(data.To) }}</div>
       <div class="line">
         <div class="float-left">
           <div class="counters-stat-type">Max value:</div>
@@ -39,19 +39,19 @@
       Sum: function() {
         var Sum = { Value: 0, Count: 0, Budget: 0 };
         if(this.data == null) return Sum;
-        var Divisor = (this.data.Aggregation_Source == '15M') ? 4 : 1;
+        var Divisor = (this.data.Aggreg == '15M') ? 4 : 1;
         for(var x in this.data.Sampletime) {
           if(this.data.Active_Power[x] == null) continue;
           Sum.Count++;
           Sum.Value += this.data.Active_Power[x] / Divisor;
-          if(this.data.Expense[x] != null) Sum.Budget += this.data.Expense;
+          if(this.data.Period_Expense[x] != null) Sum.Budget += this.data.Period_Expense;
         }
         return Sum;
       },
       Max: function() {
         var Max = { Value: -Infinity, Time: 0, Count: 0 };
         if(this.data == null) return Max;
-        var Divisor = (this.data.Aggregation_Source == '15M') ? 4 : 1;
+        var Divisor = (this.data.Aggreg == '15M') ? 4 : 1;
         for(var x in this.data.Sampletime) {
           if(this.data.Active_Power[x] == null) continue;
           var Value = this.data.Active_Power[x] / Divisor;

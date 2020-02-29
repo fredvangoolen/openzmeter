@@ -3,15 +3,15 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Tariffs template &raquo; Periods</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" @click="Delete" :disabled="tariff.Template.Periods.length == 1"><img :src="require('Imgs/cross.png')" alt="Delete period"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Delete" :disabled="Tariff.Template.Periods.length == 1"><img :src="require('Imgs/cross.png')" alt="Delete period"></button>
         <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="New period"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', Tariff)"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
       </div>
     </template>
     <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px;">Define the maximum periods of days and their pricing model</div>
     <div class="row">
       <div class="col-xs-12">
-        <vuetable ref="table" :fields="Columns" :api-mode="false" :data="tariff.Template.Periods" class="table small table-striped">
+        <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Tariff.Template.Periods" class="table small table-striped">
           <template slot="color" slot-scope="props">
             <color-picker v-model="props.rowData.Color" :columns="2" :colors="['#fffff0', '#ffecd6', '#ffd8bc', '#ffc4a2', '#ffae88', '#ff986c', '#ff7f50', '#f0ffff', '#d4f2f1', '#b7e5e2', '#98d8d3', '#78ccc5', '#55bfb8', '#20b2aa']"></color-picker>
           </template>
@@ -46,15 +46,16 @@
         ]
       };
     },
-    mounted: function() {
-      for(var i in this.tariff.Template.Periods) this.tariff.Template.Periods[i].Name = 'P' + (parseInt(i) + 1);
+    created: function() {
+      this.Tariff = Object.assign({}, this.tariff);
+      for(var i in this.Tariff.Template.Periods) this.Tariff.Template.Periods[i].Name = 'P' + (parseInt(i) + 1);
     },
     methods: {
       Delete: function() {
-        if(confirm("Delete last period?")) this.tariff.Template.Periods.splice(-1, 1);
+        if(confirm("Delete last period?")) this.Tariff.Template.Periods.splice(-1, 1);
       },
       Add: function() {
-        this.tariff.Template.Periods.push({PowerMode: 'NONE', ReactiveMode: 'NONE', Color: '#fffff0', Name: 'P' + (this.tariff.Template.Periods.length + 1)});
+        this.Tariff.Template.Periods.push({PowerMode: 'NONE', ReactiveMode: 'NONE', Color: '#fffff0', Name: 'P' + (this.tariff.Template.Periods.length + 1)});
       }
     },
     updated: function(){
