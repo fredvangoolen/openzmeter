@@ -264,8 +264,7 @@ const openZmeter = {
           (result) => {
             if(Cancelled == true) return;
             for(var n in result) {
-              if(result[n].body.Sampletime.length == 0) continue;
-              var After = ((Data.From != null) && (Data.From > result[n].body.Sampletime[0]));
+              var After = ((Data.From != null) && (result[n].body.Sampletime.length > 0) && (Data.From > result[n].body.Sampletime[0]));
               for(var serie in result[n].body) {
                 if(Array.isArray(result[n].body[serie]) == false) continue
                 if((Data.From == null) || (Data.To == null))

@@ -1599,8 +1599,18 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
         if(SaveActive == true)      Result["Active_Power"].push_back(AccActive);
         if(SaveReactive == true)    Result["Reactive_Power"].push_back(AccReactive);
         if(SaveContracted == true)  Result["Period_Power"].push_back(Contracted);
-        if(SavePeriodColor == true) Result["Period_Color"].push_back((Color.empty() == true) ? nullptr : Color);
-        if(SavePeriodName == true)  Result["Period_Name"].push_back((Period.empty() == true) ? nullptr : Period);
+        if(SavePeriodColor == true) {
+          if(Color.empty() == true)
+            Result["Period_Color"].push_back(nullptr);
+          else
+            Result["Period_Color"].push_back(Color);
+        }
+        if(SavePeriodName == true) {
+          if(Period.empty() == true) 
+            Result["Period_Name"].push_back(nullptr);
+          else
+            Result["Period_Name"].push_back(Period);
+        }
         if(SaveExpense == true)     Result["Period_Expense"].push_back(AccCost);
       }
       AccActive = NAN;

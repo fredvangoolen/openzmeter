@@ -80,6 +80,8 @@
     },
     computed: {
       Error: function() {
+        this.Tariff.StartDate = moment(this.Tariff.StartDate).tz(this.Tariff.TimeZone).startOf('day').valueOf();
+        this.Tariff.EndDate = moment(this.Tariff.EndDate).tz(this.Tariff.TimeZone).endOf('day').valueOf();
         var FindSeason = (date) => {
           for(var i = 0; i < this.Tariff.Template.Seasons.length; i++) {
             if(this.Tariff.Template.Seasons[i].StartDate === date) return i;
@@ -87,6 +89,8 @@
           return null;
         };
         for(var i = 0; i < this.Tariff.Template.Seasons.length; i++) {
+          this.Tariff.Template.Seasons[i].StartDate = moment(this.Tariff.Template.Seasons[i].StartDate).tz(this.Tariff.TimeZone).startOf('day').valueOf();
+          this.Tariff.Template.Seasons[i].EndDate = moment(this.Tariff.Template.Seasons[i].EndDate).tz(this.Tariff.TimeZone).endOf('day').valueOf();
           for(var h = 0; h < 24; h++) {
             if((this.Tariff.Template.Seasons[i].DayPeriods[h] < 0) || (this.Tariff.Template.Seasons[i].DayPeriods[h] >= this.Tariff.Template.Periods.length)) return 'Periods in season "' + tariff.Template.Seasons[i].Name + '" out of range!';
           }

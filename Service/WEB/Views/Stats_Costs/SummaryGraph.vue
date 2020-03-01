@@ -15,6 +15,7 @@
         var Opt = { axes: { x: {}, y: {} } };
         Opt.strokeWidth = 0.5,
         Opt.stepPlot = true;
+        Opt.interactionModel = {};
         Opt.drawGapEdgePoints = true;
         Opt.connectSeparatedPoints = false;
         Opt.fillGraph = false;
@@ -23,7 +24,7 @@
         Opt.legend = 'follow';
         Opt.xAxisHeight = 18;
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
-//        Opt.plotter = Graph.multiColumnBarPlotter;
+        Opt.plotter = Graph.Plotters.MultiBar;
         Opt.labels = ['Time', 'Cost'];
         Opt.colors = [this.analyzer.Color['Active_Energy']];
         Opt.includeZero = true;

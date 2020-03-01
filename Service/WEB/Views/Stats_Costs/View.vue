@@ -43,9 +43,9 @@
         this.Bills = null;
         var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
         var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getBills', { From: From, To: To, Analyzer: this.analyzer.Analyzer }).then(
+        this.$http.post('getPrices', { From: From, To: To, Analyzer: this.analyzer.Analyzer, Aggreg: '1H', Series: ['BILLS'] }).then(
           (result) => {
-            this.Bills = result.data.filter(function(value) { return value.Complete === true; });
+            this.Bills = result.data.Bills.filter(function(value) { return value.Complete === true; });
           },
           (fail) => {}
         );
