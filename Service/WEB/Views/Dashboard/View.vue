@@ -9,8 +9,8 @@
               <toolbar-aggregation storage="AggregationEnergy" v-model="Aggreg" :options="['15M', '1H']"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <div class="btn-group">
-                <button-export file="Energy" :rows="[]"></button-export>
-                <button-expand :expanded.sync="Expanded"></button-expand>
+                <button-export file="Energy" :rows="Export"></button-export>
+                <button-expand v-model="Expanded"></button-expand>
               </div>
             </portal>
           </div>
@@ -94,6 +94,15 @@
         if(this.$refs.g3 != null) Graphs.push(this.$refs.g3.$refs.graph.Graph);
         Dygraph.synchronize(Graphs, { range: false, zoom: false });
       }, 250);
+    },
+    computed: {
+      Export: function() {
+        if(this.TransferGraph.Data == null) return [];
+        var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
+        var Data = [['Sampletime', 'Active Energy', 'Period name', 'Period expense']];
+        for(var i = 0; i < this.TransferGraph.Data.Sampletime.length; i++) Data.push([this.TransferGraph.Data.Sampletime[i], this.TransferGraph.Data.Active_Power[i] / Div, this.TransferGraph.Data.Period_Name[i], this.TransferGraph.Data.Period_Expense[i]]);
+        return Data;
+      }
     },
     watch: {
       analyzer: function() {

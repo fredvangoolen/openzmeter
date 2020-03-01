@@ -90,7 +90,7 @@
                 <option-picker :options="[ {name: 'Total', value: 'PERCENT_TOTAL'}, {name: 'Energy', value: 'PERCENT_ENERGY'}, {name: 'Power', value: 'PERCENT_POWER'}, {name: 'Energy+Power', value: 'PERCENT_ENERGY_POWER'}, {name: 'Fixed', value: 'FIXED_QUANTITY'} ]" v-model="tax.Type"></option-picker>
               </td>
               <td>
-                <input-spin :max="100000" :min="0" :prepend="(tax.Type == 'FIXED_QUANTITY') ? '€/Bill cycle' : '%'" :decimals="6" :increment="1" :value="tax.Value" @input="Rate.Config.Taxs[idx].Value=$event; Rate = Object.assign({}, Rate)"></input-spin>
+                <input-spin :max="100000" :min="-100000" :prepend="(tax.Type == 'FIXED_QUANTITY') ? '€/Bill cycle' : '%'" :decimals="6" :increment="1" :value="tax.Value" @input="Rate.Config.Taxs[idx].Value=$event; Rate = Object.assign({}, Rate)"></input-spin>
               </td>
             </tr>
             <tr>
@@ -132,7 +132,7 @@
               <td><button type="button" class="btn btn-default btn-xs" style="width:100%" @click="AddBillDay"><img :src="require('Imgs/plus.png')"> New bill</button></td>
               <td style="display: flex">
                 <option-picker class="flex-item" :options="BillDayNames.map((val, idx) => { return { name: val, value: idx }; })" v-model="Day"></option-picker>&nbsp;
-                <option-picker class="flex-item" :options="PeriodNames" :selected="PeriodNames[0]" @input="Period=PeriodNames.indexOf($event)"></option-picker>&nbsp;
+                <option-picker class="flex-item" :options="PeriodNames.map((val, idx) => { return { name: val, value: idx }; })" v-model="Period"></option-picker>&nbsp;
                 <button type="button" class="btn btn-default btn-xs flex-item" @click="BuildPeriods" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>
               </td>
               <td></td>

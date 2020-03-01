@@ -53,7 +53,7 @@
         return moment.tz(val, this.Tariff.TimeZone).format('DD/MM/YYYY');
       },
       Duplicate: function(index) {
-        var Row = Object.assign({}, this.Tariff.Template.Seasons[index]);
+        var Row = JSON.parse(JSON.stringify(this.Tariff.Template.Seasons[index]));;
         Row.Name = Row.Name + "_Copy";
         this.Tariff.Template.Seasons.push(Row);
       },
