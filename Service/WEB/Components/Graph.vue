@@ -8,6 +8,13 @@
   import * as oZm from 'JS/openZmeter.js';
   import Vue from 'vue';
   const This = Vue.prototype;
+  var PatternImg = new Image();
+  PatternImg.onload = function() {
+    console.log("Image loaded");
+  }
+  PatternImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAJElEQVQImT2JsQ0AMAyDyP832q+QIWqZEJDEx6gA0JZr9/mmLvBPKENuQmcdAAAAAElFTkSuQmCC";
+
+
   function mouseDown(event, g, context) {
     context.initializeMouseDown(event, g, context);
     if(event.altKey || event.shiftKey) {
@@ -231,38 +238,48 @@
         ctx.strokeStyle = '#000';
         ctx.strokeRect(area.x, area.y, area.w, area.h);
       },
-      Underlay_DrawPeriods: function(ctx, area, dygraph, decoration) {
+      Underlay_DrawPeriods: function(canvas, area, g, decoration) {
         if(decoration == null) return;
-        canvas.strokeStyle = '#777';
-        canvas.lineWidth = 2;
-        canvas.beginPath();
-        canvas.moveTo(area.x, 0);
-        canvas.lineTo(area.x, 13);
-        canvas.stroke();
-        for(var i = 0; i < this.Periods.length; i++) {
-          var Left = g.toDomXCoord(this.Periods[i].From - 1800000);
-          var Right = g.toDomXCoord(this.Periods[i].To - 1800000);
+        var Disp = (decoration.Aggreg == '15M') ? 450000 : 1800000;
+        canvas.strokeStyle = '#000';
+        var EmptyPattern = canvas.createPattern(PatternImg, "repeat");
+        canvas.fillStyle = EmptyPattern;
+        canvas.fillRect(area.x, area.y, area.w, 13);
+        for(var i = 0; i < decoration.Periods.length; i++) {
+          if(decoration.Periods[i].Color == null) continue;
+          var Left = g.toDomXCoord(decoration.Periods[i].From + Disp);
+          var Right = g.toDomXCoord(decoration.Periods[i].To + Disp);
           if(Left < (area.x + 1)) Left = (area.x + 1);
-          canvas.fillStyle = (this.Periods[i].Color === null) ? "#EEEEEE" : this.Periods[i].Color;
-          canvas.fillRect(Left, area.y, Right, 13);
-          if(((Right - Left) > 20) && (this.Periods[i].Name !== null)) {
+          if(Right > (area.w + area.x - 1)) Right = (area.w + area.x - 1);
+          canvas.fillStyle = decoration.Periods[i].Color;
+          canvas.fillRect(Left, area.y + 1, Right - Left, 12);
+
+          canvas.fillStyle = chroma(decoration.Periods[i].Color).brighten(2.5);
+          canvas.fillRect(Left, area.y + 14, Right - Left, area.h);
+          if(((Right - Left) > 20) && (decoration.Periods[i].Name !== null)) {
             canvas.fillStyle = '#000000';
             canvas.font = "10px monospace";
-            canvas.fillText(this.Periods[i].Name, Left + 1, 10);
+            canvas.fillText(decoration.Periods[i].Name, Left + 1, 10);
           }
         }
-        for(var i = 0; i < this.Bills.length; i++) {
+        for(var i = 0; i < decoration.Bills.length; i++) {
           canvas.strokeStyle = '#d9534f';
-          canvas.lineWidth = 1;
+          canvas.lineWidth = 2;
           canvas.beginPath();
-          var X = g.toDomXCoord(this.Bills[i].Sampletime);
+          var X = g.toDomXCoord(decoration.Bills[i].To + Disp);
           canvas.moveTo(X, 13);
           canvas.lineTo(X, area.h);
           canvas.stroke();
         }
-        canvas.rect(area.x, area.y + 13, area.w, area.h);
+        canvas.strokeStyle = '#000';
+        canvas.strokeRect(area.x, area.y, area.w, area.h);
+        canvas.lineWidth = 0.25;
+        canvas.beginPath();
+        canvas.moveTo(area.x, 13.5);
+        canvas.lineTo(area.x + area.w, 13.5);
+        canvas.stroke();
+        canvas.rect(area.x, area.y + 14, area.w, area.h);
         canvas.clip();
-
       },
       DrawHighlightPoint_HighlightBar: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {
         var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;
@@ -374,26 +391,10 @@
         this.Graph.resize();
       }
     },
-    methods: {
-//      ProccessParams: function() {
-//        if(this.options.interactionModel == 'SCROLLABLE_MODEL') this.options.interactionModel = this.ScrollableInteractionModel();
-//        if(this.options.interactionModel == 'FIXED_MODEL') this.options.interactionModel = this.FixedRangeInteractionModel();
-//        if(this.options.interactionModel == 'NONE') this.options.interactionModel = {};
-//        for(var i in this.options.plugins) {
-//          if(this.options.plugins[i] == 'VERTICAL_CROSSHAIR') this.options.plugins[i] = new Dygraph.Plugins.Crosshair( { direction: "vertical" } );
-//        }
-//        if(this.options.legendFormatter == 'FOLLOW') this.options.legendFormatter = this.LegendFormatter_Follow;
-//        if(this.options.plotter == 'BAR_PLOTTER') this.options.plotter = this.multiColumnBarPlotter;
-//        if(this.options.drawHighlightPointCallback == 'BAR_HIGHLIGHT') this.options.drawHighlightPointCallback = this.DrawHighlightBar;
-//        if(this.options.underlayCallback == 'BORDER') this.options.underlayCallback = this.DrawBorder;
-//        if(this.options.axes.x.ticker == 'WAVE_TIME') this.options.axes.x.ticker = this.WaveTimeTicks;
-//        if(this.options.axes.x.ticker == 'ODD_HARMONICS') this.options.axes.x.ticker = OddHarmonicsTicks;
-//      },
-    },
     created: function() {
       this.Graph = null;
       this.PausedOptions = null;
-    },
+      },
     mounted: function() {
       var Data = [];
       if(this.options.labels == null) this.options.labels = ['A', 'B'];

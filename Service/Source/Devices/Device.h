@@ -70,7 +70,6 @@ class Device {
     bool DelRate(const json &params, Response &response);
     bool AddRate(const json &params, Response &response);
     bool GetPrices(const json &params, Response &response);
-    bool GetBills(const json &params, Response &response);
     bool TestAlarm(const json &params, Response &response);
     bool GetAlarms(const json &params, Response &response);
     bool GetPermissions(const json &params, Response &response);

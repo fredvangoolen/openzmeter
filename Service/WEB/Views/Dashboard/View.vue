@@ -70,7 +70,7 @@
                TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
                Transfer3S: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
                Transfer1M: this.CreateSeriesTransfer(this,  ['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
-               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'PERIOD_EXPENSE'])
+               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'PERIOD_EXPENSE', 'PERIOD_COLOR', 'PERIOD_NAME', 'BILLS'])
       };
     },
     created: function() {

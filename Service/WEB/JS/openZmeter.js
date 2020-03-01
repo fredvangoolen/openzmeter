@@ -29,7 +29,28 @@ const openZmeter = {
       };
       Transfer.SetDataPrices = (data) => {
         Transfer.Data = Object.seal(data);
-
+        if(data == null) {
+          Transfer.Periods = null;
+          return;
+        }
+        var Data = { Periods: [], Bills: [], Aggreg: data.Aggreg };
+        if(data.Bills != null) Data.Bills = data.Bills;
+        //Group periods
+        var LastItem = null;//(this.Periods.length > 0) ? this.Periods.slice(-1)[0] : null;
+        for(var i = 0; i < data.Sampletime.length; i++) {
+          if(LastItem == null) {
+            LastItem = { Name: data.Period_Name[i], From: data.Sampletime[i] - ((data.Aggreg === '15M') ? 899999 : 3599999), To: data.Sampletime[i], Color: data.Period_Color[i] };
+            continue;
+          }
+          if(data.Period_Name[i] == LastItem.Name) {
+            LastItem.To = data.Sampletime[i];
+          } else {
+            Data.Periods.push(LastItem);
+            LastItem = { Name: data.Period_Name[i], From: data.Sampletime[i] - ((data.Aggreg === '15M') ? 899999 : 3599999), To: data.Sampletime[i], Color: data.Period_Color[i] };
+          }
+        }
+        if(LastItem != null) Data.Periods.push(LastItem);
+        Transfer.Periods = Object.seal(Data);
       };
       Transfer.SetData = (data) => {
         Transfer.Data = Object.seal(data);
@@ -155,7 +176,6 @@ const openZmeter = {
       Transfer.UpdatePrices = (analyzer, aggreg, range) => {
         if((analyzer == null) || (aggreg == null) || (range == null)) return;
         var Cancelled = false;
-//        var Period    = (aggreg == '15M') ? 900000 : 3600000;
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
         var ReqRange = Transfer.CalcRange(analyzer, range, aggreg);

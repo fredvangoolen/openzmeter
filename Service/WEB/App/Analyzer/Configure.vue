@@ -27,20 +27,20 @@
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Nominal voltage</label>
-        <input-spin prepend="V" :list="[{name: '120 V (L-N)', value: 120}, {name: '240 V (L-L)', value: 240}, {name: '230 V (L-N)', value: 230}]" :decimals="1" :min="10" :max="10000" :increment="1" v-model="Analyzer.NominalVoltage"></input-spin>
+        <input-spin prepend="V" :big="true" :list="[{name: '120 V (L-N)', value: 120}, {name: '240 V (L-L)', value: 240}, {name: '230 V (L-N)', value: 230}]" :decimals="1" :min="10" :max="10000" :increment="1" v-model="Analyzer.NominalVoltage"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Nominal frequency</label>
-        <input-spin prepend="Hz" :list="[{name: 'DC', value: 0}, {name: '50 Hz', value: 50}, {name: '60 Hz', value: 60}]" :decimals="1" :min="0" :max="500" :increment="1" v-model="Analyzer.NominalFreq"></input-spin>
+        <input-spin prepend="Hz" :big="true" :list="[{name: 'DC', value: 0}, {name: '50 Hz', value: 50}, {name: '60 Hz', value: 60}]" :decimals="1" :min="0" :max="500" :increment="1" v-model="Analyzer.NominalFrequency"></input-spin>
       </div>
       <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Min current</label>
-        <input-spin prepend="A" :decimals="1" :min="0" :max="500" :increment="1" v-model="Analyzer.MinCurrent"></input-spin>
+        <input-spin prepend="A" :big="true" :decimals="1" :min="0" :max="500" :increment="1" v-model="Analyzer.MinCurrent"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Max current</label>
-        <input-spin prepend="A" :decimals="1" :min="0.1" :max="500" :increment="1" v-model="Analyzer.MaxCurrent"></input-spin>
+        <input-spin prepend="A" :big="true" :decimals="1" :min="0.1" :max="500" :increment="1" v-model="Analyzer.MaxCurrent"></input-spin>
       </div>
       <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12">
