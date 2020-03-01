@@ -9,7 +9,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: Object, height: Number, data: Object },
+    props: { analyzer: Object, height: Number, data: Object, periods: Object },
     data() {
       return { MouseOver: false };
     },
@@ -29,7 +29,7 @@
         Opt.labels = ['Time', 'Energy'];
         Opt.colors = [oZm.Series['ACTIVE_ENERGY'].Color];
         Opt.xAxisHeight = 20;
-        Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.periods); Graph.Callbacks.Underlay_DrawBorder(ctx, area, dygraph) };
+        Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.periods); };
         Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
@@ -107,37 +107,6 @@
             this.ShowSpinner = true;
           }.bind(this)
         });
-      },
-      DrawPeriods: function(canvas, area, g) {
-        canvas.strokeStyle = '#777';
-        canvas.lineWidth = 2;
-        canvas.beginPath();
-        canvas.moveTo(area.x, 0);
-        canvas.lineTo(area.x, 13);
-        canvas.stroke();
-        for(var i = 0; i < this.Periods.length; i++) {
-          var Left = g.toDomXCoord(this.Periods[i].From - 1800000);
-          var Right = g.toDomXCoord(this.Periods[i].To - 1800000);
-          if(Left < (area.x + 1)) Left = (area.x + 1);
-          canvas.fillStyle = (this.Periods[i].Color === null) ? "#EEEEEE" : this.Periods[i].Color;
-          canvas.fillRect(Left, area.y, Right, 13);
-          if(((Right - Left) > 20) && (this.Periods[i].Name !== null)) {
-            canvas.fillStyle = '#000000';
-            canvas.font = "10px monospace";
-            canvas.fillText(this.Periods[i].Name, Left + 1, 10);
-          }
-        }
-        for(var i = 0; i < this.Bills.length; i++) {
-          canvas.strokeStyle = '#d9534f';
-          canvas.lineWidth = 1;
-          canvas.beginPath();
-          var X = g.toDomXCoord(this.Bills[i].Sampletime);
-          canvas.moveTo(X, 13);
-          canvas.lineTo(X, area.h);
-          canvas.stroke();
-        }
-        canvas.rect(area.x, area.y + 13, area.w, area.h);
-        canvas.clip();
       }
     }
   }

@@ -89,6 +89,7 @@ HTTPServer::~HTTPServer() {
 }
 void *HTTPServer::Listen_Thread(void *params) {
   HTTPServer *This = (HTTPServer*)params;
+  This->pServer->set_keep_alive_max_count(100);
   LOGFile::Info("HTTP server starting on port %hu with relative path '%s'\n", This->pPort, This->pRelativePath.c_str());
   if(This->pServer->listen("0.0.0.0", This->pPort) == false) LOGFile::Error("HTTP port (%hu) already in use\n", This->pPort);
   return NULL;

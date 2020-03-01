@@ -51,7 +51,6 @@ class DeviceManager final {
     static void DelRateCallback(const json &params, Response &response);
     static void AddRateCallback(const json &params, Response &response);
     static void GetPricesCallback(const json &params, Response &response);
-    static void GetBillsCallback(const json &params, Response &response);
     static void TestAlarmCallback(const json &params, Response &response);
     static void GetAlarmsCallback(const json &params, Response &response);
     static void GetPermissionsCallback(const json &params, Response &response);

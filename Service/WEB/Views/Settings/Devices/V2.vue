@@ -30,7 +30,7 @@
           <tr v-for="index in [0, 1, 2]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
             <td><input-spin :min="-200" :max="200" v-model="Settings.VoltageOffset[index]" :increment="0.01"></input-spin></td>
-            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" @click="SetVoltageOffset(index)" :disabled="Settings.Wave_Average.Voltage[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Voltage[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
+            <td><button type="button" class="btn btn-default btn-xs" @click="SetVoltageOffset(index)" :disabled="Settings.Wave_Average.Voltage[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Voltage[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
             <td><input-spin :min="0.1" :max="1000" v-model="Settings.VoltageGain[index]" :increment="0.001" :decimals="3" prepend="V/V"></input-spin></td>
           </tr>
         </table>
@@ -49,7 +49,7 @@
           <tr v-for="index in [0, 1, 2, 3]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
             <td><input-spin :min="-200" :max="200" v-model="Settings.CurrentOffset[index]" :increment="0.01"></input-spin></td>
-            <td><button type="button" class="btn btn-default btn-xs" style="height:34px" @click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Current[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
+            <td><button type="button" class="btn btn-default btn-xs" @click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Current[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
             <td><input-spin :min="0.00001" :max="20" v-model="Settings.CurrentGain[index]" :increment="0.00001" :decimals="5" prepend="A/mV"></input-spin></td>
           </tr>
         </table>

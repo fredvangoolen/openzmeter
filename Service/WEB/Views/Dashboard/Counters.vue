@@ -44,7 +44,7 @@
           if(this.data.Active_Power[x] == null) continue;
           Sum.Count++;
           Sum.Value += this.data.Active_Power[x] / Divisor;
-          if(this.data.Period_Expense[x] != null) Sum.Budget += this.data.Period_Expense;
+          if(this.data.Period_Expense[x] != null) Sum.Budget += this.data.Period_Expense[x];
         }
         return Sum;
       },

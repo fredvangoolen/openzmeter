@@ -16,19 +16,19 @@
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Voltage</label>
-        <input-spin :min="10" :max="350" v-model="Settings.Voltage" :increment="10" :decimals="2" prepend="V"></input-spin>
+        <input-spin :min="10" :max="350" :big="true" v-model="Settings.Voltage" :increment="10" :decimals="2" prepend="V"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Frequency</label>
-        <input-spin :min="0" :max="100" v-model="Settings.Frequency" :increment="1" :decimals="2" prepend="Hz"></input-spin>
+        <input-spin :min="0" :max="100" :big="true" v-model="Settings.Frequency" :increment="1" :decimals="2" prepend="Hz"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Current</label>
-        <input-spin :min="0.1" :max="1000" v-model="Settings.Current" :increment="0.1" :decimals="2" prepend="A"></input-spin>
+        <input-spin :min="0.1" :max="1000" :big="true" v-model="Settings.Current" :increment="0.1" :decimals="2" prepend="A"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Current phase</label>
-        <input-spin :min="-180" :max="180" v-model="Settings.CurrentPhase" :increment="0.1" :decimals="2" prepend="°"></input-spin>
+        <input-spin :min="-180" :max="180" :big="true" v-model="Settings.CurrentPhase" :increment="0.1" :decimals="2" prepend="°"></input-spin>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Mode</label>
@@ -36,7 +36,7 @@
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Samplerate</label>
-        <input-spin :min="10000" :max="100000" v-model="Settings.SampleRate" :increment="100" :decimals="0" prepend="Hz"></input-spin>
+        <input-spin :min="10000" :max="100000" :big="true" v-model="Settings.SampleRate" :increment="100" :decimals="0" prepend="Hz"></input-spin>
       </div>
     </div>
   </dlg>

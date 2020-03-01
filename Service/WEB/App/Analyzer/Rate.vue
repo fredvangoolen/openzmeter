@@ -44,7 +44,7 @@
           <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :big="true" v-model="Rate.EndDate"></date-picker>
         </div>
         <div class="col-xs-12" style="margin-top: 5px">
-          <button type="button" class="btn btn-default btn-xs btn-danger" style="width:100%" @click="Rate.Template=null">Change tariff template</button>
+          <button type="button" class="btn btn-default btn-xs btn-danger" style="width:100%" @click="LoadTariffs()">Change tariff template</button>
         </div>
       </div>
       <div class="row periods" v-if="View=='Periods'">
@@ -129,11 +129,11 @@
               </td>
             </tr>
             <tr>
-              <td><button type="button" class="btn btn-default btn-xs" style="width:100%" v-on:click="AddBillDay"><img :src="require('Imgs/plus.png')"> New bill</button></td>
+              <td><button type="button" class="btn btn-default btn-xs" style="width:100%" @click="AddBillDay"><img :src="require('Imgs/plus.png')"> New bill</button></td>
               <td style="display: flex">
                 <option-picker class="flex-item" :options="BillDayNames.map((val, idx) => { return { name: val, value: idx }; })" v-model="Day"></option-picker>&nbsp;
                 <option-picker class="flex-item" :options="PeriodNames" :selected="PeriodNames[0]" @input="Period=PeriodNames.indexOf($event)"></option-picker>&nbsp;
-                <button type="button" class="btn btn-default btn-xs flex-item" v-on:click="BuildPeriods" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>
+                <button type="button" class="btn btn-default btn-xs flex-item" @click="BuildPeriods" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>
               </td>
               <td></td>
             </tr>
@@ -176,7 +176,7 @@
         if(this.Rate.StartDate < this.Rate.Template.Seasons[0].StartDate) return 'Date ranges is outside selected tariff ranges';
         if(this.Rate.EndDate > this.Rate.Template.Seasons.slice(-1)[0].EndDate) return 'Date ranges is outside selected tariff ranges';
         return null;
-      }
+      },
     },
     methods: {
       FormatDate: function(val) {
@@ -184,6 +184,7 @@
       },
       LoadTariffs: function() {
         this.ShowSpinner = true;
+        this.Rate.Template = null;
         this.$http.post('getTariffs', {}).then(
           (result) => {
             this.Tariffs = result.body;
