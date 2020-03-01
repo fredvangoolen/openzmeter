@@ -15,12 +15,12 @@
             </portal>
           </div>
           <div class="panel-body">
-            <spinner v-if="ShowSpinner"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_ENERGY" :analyzer="analyzer" :data15M="Data15M" :data1H="Data1H" :dataGraph="DataGraph" :height.sync="ActiveHeight"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_ENERGY" :analyzer="analyzer" :data15M="Transfer15M.LastData" :data1H="Transfer1H.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
-                  <energy serie="Active_Energy" :analyzer="analyzer" :data="DataGraph" :height="ExpandedActive?DialogHeight:ActiveHeight"></energy>
+                  <spinner v-if="ShowSpinner"></spinner>
+                  <energy serie="Active_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedActive?DialogHeight:ActiveHeight"></energy>
                 </portal>
               </div>
             </div>
@@ -39,12 +39,12 @@
             </portal>
           </div>
           <div class="panel-body">
-            <spinner v-if="ShowSpinner"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_ENERGY" :analyzer="analyzer" :data15M="Data15M" :data1H="Data1H" :dataGraph="DataGraph" :height.sync="ReactiveHeight"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_ENERGY" :analyzer="analyzer" :data15M="Transfer15M.LastData" :data1H="Transfer1H.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
-                  <energy serie="Reactive_Energy" :analyzer="analyzer" :data="DataGraph" :height="ExpandedReactive?DialogHeight:ReactiveHeight"></energy>
+                  <spinner v-if="ShowSpinner"></spinner>
+                  <energy serie="Reactive_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedReactive?DialogHeight:ReactiveHeight"></energy>
                 </portal>
               </div>
             </div>
@@ -68,13 +68,34 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Aggreg: null, ShowSpinner: true, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300,
-               Data15M: null, Control15M: null, Data1H: null, Control1H: null, DataGraph: null, ControlGraph: null };
+      return { Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300,
+               Transfer15M: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
+               Transfer1H: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
+               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER', 'PERIOD_COLOR', 'PERIOD_NAME', 'BILLS'])
+      };
+    },
+    created: function() {
+      this.Transfer15M.Update(this.analyzer, '15M', 'LastSamples');
+      this.Transfer1H.Update(this.analyzer, '1H', 'LastSamples');
+      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+    },
+    beforeDestroy: function() {
+      this.Transfer15M.Destroy();
+      this.Transfer1H.Destroy();
+      this.TransferGraph.Destroy();
     },
     watch: {
-      analyzer: function() { this.Update15MValues(true); this.Update1HValues(true); this.UpdateGraphValues(true); },
-      Aggreg: function() { this.UpdateGraphValues(true); },
-      Range: function() { this.UpdateGraphValues(false); }
+      analyzer: function() {
+        this.Transfer15M.Update(this.analyzer, '3S', 'LastHours');
+        this.Transfer1H.Update(this.analyzer, '1M', 'LastDay');
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+      },
+      Aggreg: function(val, prev) {
+        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+      },
+      Range: function() {
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+      }
     },
     computed: {
       Export: function() {
@@ -86,46 +107,36 @@
         return Data;
       }
     },
-    created: function() {
-      this.Update15MValues(true);
-      this.Update1HValues(true);
-      this.UpdateGraphValues(true);
-    },
-    beforeDestroy: function() {
-      this.CancelTransfer(this.Control15M);
-      this.CancelTransfer(this.Control1H);
-      this.CancelTransfer(this.ControlGraph);
-    },
-    methods: {
-      Update15MValues: function(clear) {
-        if(clear == true) this.Data15M = null;
-        this.Control15M = this.CancelTransfer(this.Control15M);
-        if(this.analyzer == null) return;
-        this.Control15M.CancelFunc = this.analyzer.GetSeriesLast('15M', ['ACTIVE_POWER', 'REACTIVE_POWER'],
-          (working) => {},
-          (result) => { this.Data15M = Object.seal(result); },
-          (timeout) => { this.Control15M.Timer = setTimeout(() => { this.Update15MValues(false); }, timeout); }
-        );
-      },
-      Update1HValues: function(clear) {
-        if(clear == true) this.DataH = null;
-        this.Control1H = this.CancelTransfer(this.Control1H);
-        if(this.analyzer == null) return;
-        this.Control1H.CancelFunc = this.analyzer.GetSeriesLast('1H', ['ACTIVE_POWER', 'REACTIVE_POWER'],
-          (working) => {},
-          (result) => { this.Data1H = Object.seal(result); },
-          (timeout) => { this.Control1H.Timer = setTimeout(() => { this.Update1HValues(false); }, timeout); }
-        );
-      },
-      UpdateGraphValues: function(clear) {
-        if(clear == true) this.DataGraph = null;
-        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
-        if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
-        this.ControlGraph.CancelFunc = this.analyzer.GetPricesRange(this.Aggreg, this.Range, this.DataGraph,
-          (working) => { this.ShowSpinner = working; },
-          (result) => { this.DataGraph = Object.seal(result); },
-          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(false); }, timeout); }
-        );
+//    methods: {
+//      Update15MValues: function(clear) {
+//        if(clear == true) this.Data15M = null;
+//        this.Control15M = this.CancelTransfer(this.Control15M);
+//        if(this.analyzer == null) return;
+//        this.Control15M.CancelFunc = this.analyzer.GetSeriesLast('15M', ['ACTIVE_POWER', 'REACTIVE_POWER'],
+//          (working) => {},
+//          (result) => { this.Data15M = Object.seal(result); },
+//          (timeout) => { this.Control15M.Timer = setTimeout(() => { this.Update15MValues(false); }, timeout); }
+//        );
+//      },
+//      Update1HValues: function(clear) {
+//        if(clear == true) this.DataH = null;
+//        this.Control1H = this.CancelTransfer(this.Control1H);
+//        if(this.analyzer == null) return;
+//        this.Control1H.CancelFunc = this.analyzer.GetSeriesLast('1H', ['ACTIVE_POWER', 'REACTIVE_POWER'],
+//          (working) => {},
+//          (result) => { this.Data1H = Object.seal(result); },
+//          (timeout) => { this.Control1H.Timer = setTimeout(() => { this.Update1HValues(false); }, timeout); }
+//        );
+//      },
+//      UpdateGraphValues: function(clear) {
+//        if(clear == true) this.DataGraph = null;
+//        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
+//        if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
+//        this.ControlGraph.CancelFunc = this.analyzer.GetPricesRange(this.Aggreg, this.Range, this.DataGraph,
+//          (working) => { this.ShowSpinner = working; },
+//          (result) => { this.DataGraph = Object.seal(result); },
+//          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(false); }, timeout); }
+//        );
 
 //        if(lastsample === 0) {
 //          this.ActiveData = [];
@@ -172,8 +183,8 @@
 //            this.ShowSpinner = true;
 //          }.bind(this)
 //        });
-      }
-    },
+//      }
+//    },
     components: { Energy, Counters }
   }
 </script>

@@ -1513,6 +1513,7 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   bool     SaveContracted  = false;
   bool     SaveExpense     = false;
   bool     SaveBills       = false;
+  bool     SaveTime        = false;
   uint64_t Now             = Tools::GetTime();
   for(uint8_t i = 0; i < params["Series"].size(); i++) {
     if(params["Series"][i].is_string() == false) return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
@@ -1534,10 +1535,11 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
     }
   }
+  if(SaveActive || SaveReactive || SavePeriodName || SavePeriodColor || SaveContracted || SaveExpense) SaveTime = true;
   if(From > To) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
   if((Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' param must be '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
   if(((To - From) / ((Aggreg == "1H") ? 3600000 : 900000)) > 100000) return HTTPServer::FillResponse(response, "Returned period to large for this aggregation level", "text/plain", HTTP_BAD_REQUEST);
-  Result["Sampletime"] = json::array();
+  if(SaveTime == true)        Result["Sampletime"] = json::array();
   if(SaveActive == true)      Result["Active_Power"]   = json::array();
   if(SaveReactive == true)    Result["Reactive_Power"] = json::array();
   if(SavePeriodName == true)  Result["Period_Name"]    = json::array();
@@ -1595,7 +1597,7 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
         AccReactive = AccReactive / 4.0;
       }
       if((Time >= From) && (Time <= To)) {
-        Result["Sampletime"].push_back(Time);
+        if(SaveTime == true)        Result["Sampletime"].push_back(Time);
         if(SaveActive == true)      Result["Active_Power"].push_back(AccActive);
         if(SaveReactive == true)    Result["Reactive_Power"].push_back(AccReactive);
         if(SaveContracted == true)  Result["Period_Power"].push_back(Contracted);
@@ -1606,7 +1608,7 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
             Result["Period_Color"].push_back(Color);
         }
         if(SavePeriodName == true) {
-          if(Period.empty() == true) 
+          if(Period.empty() == true)
             Result["Period_Name"].push_back(nullptr);
           else
             Result["Period_Name"].push_back(Period);
