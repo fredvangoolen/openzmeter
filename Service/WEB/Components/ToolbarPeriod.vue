@@ -6,7 +6,7 @@
       </div>
       <div class="input-group-btn">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">{{ SelectedText }}<span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" ref="periodTags">
+        <ul class="dropdown-menu pull-right">
           <li :class="{active: (value == 'LastHours')}"><a @click="$emit('input', 'LastHours')">Last 2 hour</a></li>
           <li :class="{active: (value == 'LastDay')}"><a @click="$emit('input', 'LastDay')">Last 24 hours</a></li>
           <li :class="{active: (value == 'LastWeek')}"><a @click="$emit('input', 'LastWeek')">Last 7 days</a></li>

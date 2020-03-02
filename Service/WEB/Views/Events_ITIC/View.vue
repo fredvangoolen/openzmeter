@@ -58,7 +58,7 @@
           (result) => {
             this.Data = Object.seal(result.data);
           },
-          (fail) => {}
+          (fail) => { }
         );
       }
     },

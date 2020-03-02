@@ -87,12 +87,12 @@ int main(int argc, char** argv) {
     Database DB("public");
     if(DB.ExecResource("SQL/Database.sql") == false) LOGFile::Error("Database is damaged, manual repair is nedded\n");
   }
-  /* Create WEB service */
-  HTTPServer HTTPServer;
   /* Create system manager */
   SysSupport SystemManager;
   /* Create devices interface */
   DeviceManager DeviceManager;
+  /* Create WEB service */
+  HTTPServer HTTPServer;
 
   uint32_t Iter = 0;
   while(!Terminate) {

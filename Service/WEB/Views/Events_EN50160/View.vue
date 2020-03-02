@@ -6,11 +6,11 @@
           <div class="panel-heading">
             <span class="header-text">EN50160</span>
             <div class="header-buttons clearfix">
-              <toolbar-weeks :weeks="Weeks" v-on:WeekChanged="WeekChange"></toolbar-weeks>
+              <!--toolbar-weeks :weeks="Weeks" v-on:WeekChanged="WeekChange"></toolbar-weeks-->
               <toolbar-years :analyzer="analyzer" v-model="Year" aggreg="1H" storage="StatsYear"></toolbar-years>
             </div>
           </div>
-          <counters ref="counters"></counters>
+          <counters :analyzer="analyzer" :data="Data" :events="Events" :range="Range"></counters>
         </div>
       </div>
     </div>
@@ -31,7 +31,7 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Year: null, Data: null, Events: null, Weeks: [] };
+      return { Year: null, Data: null, Events: null, Range: null, Weeks: [] };
     },
     watch: {
       Year: function(val) {
@@ -42,14 +42,14 @@
         var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
         this.$http.post('getSeries', { From: From, To: To, Aggreg: '1H', Series: ['FREQUENCY_STATS', 'VOLTAGE_STATS', 'VOLTAGE_THD_STATS', 'VOLTAGE_HARMONICS_STATS'], Analyzer: this.analyzer.Analyzer } ).then(
           (result) => {
-            this.Data = result.data;
+            this.Data = Object.seal(result.data);
             this.ProcessYear();
           },
           (fail) => { }
         );
         this.$http.post('getEvents', { From: From, To: To, Analyzer: this.analyzer.Analyzer } ).then(
           (result) => {
-            this.Events = result.data;
+            this.Events = Object.seal(result.data);
             this.ProcessYear();
           },
           (fail) => { }
@@ -57,8 +57,6 @@
       }
     },
     created: function() {
-      this.Events = null;
-      this.Data = null;
       this.Frequencies = [ -Math.INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, Math.INFINITY ];
       this.Voltages    = [-Math.INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, Math.INFINITY];
       this.THDs        = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, Math.INFINITY];

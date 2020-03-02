@@ -5,7 +5,7 @@
       <div class="input-group-btn">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><span>{{ (value == null) ? 'No data' : value.toString() }}</span><span class="caret"></span></button>
         <ul class="dropdown-menu pull-right">
-          <li v-for="year in Years" :key="year" v-bind:class="{ active: (year == value) }"><a @click="$emit('input', parseInt(year))">{{ year }}</a></li>
+          <li v-for="year in Years" :key="year" :class="{ active: (year == value) }"><a @click="$emit('input', parseInt(year))">{{ year }}</a></li>
         </ul>
       </div>
     </div>
