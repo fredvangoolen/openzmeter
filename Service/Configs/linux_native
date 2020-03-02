@@ -15,5 +15,5 @@ TARIFF_NONE = true
 DEBUG   = true
 CC      = g++
 LD      = ld
-CFLAGS += -I /usr/include/postgresql -march=native -funsafe-math-optimizations -DCPPHTTPLIB_THREAD_POOL_COUNT=300
+CFLAGS += -I /usr/include/postgresql -march=native -funsafe-math-optimizations
 

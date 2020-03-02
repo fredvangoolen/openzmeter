@@ -50,7 +50,7 @@ class Database {
   private :
     void ClearAsync();
   public :
-    static void RemoveExpiredSessions();
+    static void AdjustWorkers();
     static void EnablePool();
     static void DisablePool();
   public :

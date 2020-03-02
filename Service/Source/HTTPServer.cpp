@@ -64,6 +64,82 @@ URL::URL(const string &url) {
   if(queryStart != uriEnd) Query = string(queryStart, url.end());
 }
 //----------------------------------------------------------------------------------------------------------------------
+pthread_mutex_t HTTPTaskQueue::pLocks = PTHREAD_MUTEX_INITIALIZER;
+HTTPTaskQueue  *HTTPTaskQueue::pInstance = NULL;
+//----------------------------------------------------------------------------------------------------------------------
+HTTPTaskQueue::HTTPTaskQueue() {
+  pUsedWorkers = 0;
+  pthread_mutex_lock(&pLocks);
+  pInstance = this;
+  pthread_mutex_unlock(&pLocks);
+}
+HTTPTaskQueue::~HTTPTaskQueue() {
+  shutdown();
+}
+void HTTPTaskQueue::enqueue(std::function<void()> fn) {
+  pthread_mutex_lock(&pLocks);
+  Worker_t *Tmp = NULL;
+  if(pFreeWorkers.size() > 0) {
+    Tmp = pFreeWorkers.front();
+    pFreeWorkers.pop();
+    uint64_t Time = Tools::GetTime();
+    Tmp->FreeTime = Tmp->FreeTime + (Time - Tmp->LastTime);
+    Tmp->LastTime = Time;
+  } else {
+    Tmp = (Worker_t*)calloc(sizeof(Worker_t), 1);
+    Tmp->LastTime = Tools::GetTime();
+    Tmp->Thread = new Worker("HTTPWorker", this, Thread);
+  }
+  if(Tmp != NULL) {
+    Tmp->Function = fn;
+    Tmp->Thread->Run(Tmp);
+  }
+  pUsedWorkers++;
+  pthread_mutex_unlock(&pLocks);
+}
+void HTTPTaskQueue::shutdown() {
+  pthread_mutex_lock(&pLocks);
+  pInstance = NULL;
+  while(pFreeWorkers.size() > 0) {
+    auto Tmp = pFreeWorkers.front();
+    delete Tmp->Thread;
+    pFreeWorkers.pop();
+    free(Tmp);
+  }
+  pthread_mutex_unlock(&pLocks);
+}
+void HTTPTaskQueue::Thread(void *param1, void *param2) {
+  HTTPTaskQueue *This = (HTTPTaskQueue*)param1;
+  Worker_t *Work = (Worker_t*)param2;
+  Work->Function();
+  pthread_mutex_lock(&This->pLocks);
+  uint64_t Time = Tools::GetTime();
+  Work->UsageTime = Work->UsageTime + (Time - Work->LastTime);
+  Work->LastTime = Time;
+  This->pFreeWorkers.push(Work);
+  This->pUsedWorkers--;
+  pthread_mutex_unlock(&This->pLocks);
+}
+void HTTPTaskQueue::AdjustWorkers() {
+  pthread_mutex_lock(&pLocks);
+  if(pInstance == NULL) {
+    pthread_mutex_unlock(&pLocks);
+    return;
+  }
+  uint64_t Time = Tools::GetTime();
+  while(pInstance->pFreeWorkers.size() > 0) {
+    auto Tmp = pInstance->pFreeWorkers.front();
+    Tmp->FreeTime = Tmp->FreeTime + (Time - Tmp->LastTime);
+    Tmp->LastTime = Time;
+    if(Tmp->FreeTime < Tmp->UsageTime) break;
+    delete Tmp->Thread;
+    pInstance->pFreeWorkers.pop();
+    free(Tmp);
+  }
+  LOGFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)\n", pInstance->pFreeWorkers.size(), pInstance->pUsedWorkers);
+  pthread_mutex_unlock(&pLocks);
+}
+//----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   pServer = NULL;
   pPort   = 8080;
@@ -75,6 +151,8 @@ HTTPServer::HTTPServer() {
   pServer = new Server();
   pServer->Get(".*", HandleGet);
   pServer->Post(".*", HandlePost);
+  pServer->set_keep_alive_max_count(100);
+  pServer->new_task_queue = [] { return new HTTPTaskQueue(); };
   Config = json::object();
   Config["Port"] = pPort;
   Config["RelativePath"] = pRelativePath;
@@ -89,7 +167,6 @@ HTTPServer::~HTTPServer() {
 }
 void *HTTPServer::Listen_Thread(void *params) {
   HTTPServer *This = (HTTPServer*)params;
-  This->pServer->set_keep_alive_max_count(100);
   LOGFile::Info("HTTP server starting on port %hu with relative path '%s'\n", This->pPort, This->pRelativePath.c_str());
   if(This->pServer->listen("0.0.0.0", This->pPort) == false) LOGFile::Error("HTTP port (%hu) already in use\n", This->pPort);
   return NULL;
