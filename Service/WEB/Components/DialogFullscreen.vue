@@ -58,13 +58,13 @@
     padding: 0px;
     margin: 0px !important;
   }
+  .modal-content {
+    height: 100%;
+  }
   @media only screen and (max-width: 768px) {
   .modal-dialog {
      margin-top:120px !important;
     }
-  }
-  .modal-content {
-    height: 100%;
   }
   @media (min-width: 640px) {
     .modal-dialog {

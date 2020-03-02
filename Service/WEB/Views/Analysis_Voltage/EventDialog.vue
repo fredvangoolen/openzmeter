@@ -1,25 +1,17 @@
 <template>
-  <div class="modal" tabindex="1" role="dialog" data-backdrop="false" v-if="ShowDialog" data-keyboard="false">
-    <div class="modal-backdrop in"></div>
-    <div class="modal-dialog full-screen-dialog">
-      <div class="modal-content" style="height: 100%">
-        <div class="modal-header">
-          <div class="pull-left"><h4 class="modal-title">Event &raquo; {{ ViewMode }}</h4></div>
-          <div class="header-buttons" ref="Toolbar">
-            <toolbar-phases variable="DetailsPhaseMulti" ref="phases" :multi="true" v-on:PhasesChanged="PhasesChanged" type="VOLTAGE"></toolbar-phases>
-            <toolbar-tools ref="tools" :options="['EXPORT']" v-on:ExportClick="ExportClick"></toolbar-tools>
-            <div class="btn-group">
-              <button type="button" class="btn btn-default btn-xs" @click="Close"><img :src="require('Imgs/arrow_undo.png')"></button>
-            </div>
-          </div>
-        </div>
-        <div class="modal-body">
-          <spinner v-if="ShowSpinner"></spinner>
-          <graph ref="graph" :options="GraphOptions"></graph>
+  <dlg :fullscreen="true">
+    <template v-slot:header>
+      <div class="pull-left"><h4 class="modal-title">Event &raquo; {{ mode }}</h4></div>
+      <div class="header-buttons" ref="Toolbar">
+        <toolbar-phases storage="DetailsPhases" :multi="true" v-model="Phases" :analyzer="analyzer" :current="false"></toolbar-phases>
+        <div class="btn-group">
+          <button-export file="Event" :rows="[]"></button-export>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </div>
-    </div>
-  </div>
+    </template>
+    <graph ref="graph" :options="GraphOptions"></graph>
+  </dlg>
 </template>
 
 <script>
@@ -28,26 +20,31 @@
   import * as oZm from 'JS/openZmeter.js';
   import ToolbarPhases from 'Components/ToolbarPhases.vue';
   export default {
+    props: { analyzer: Object, mode: String, event: Object },
     data: function() {
-      return { ShowDialog: false, ViewMode: 'RMS', ShowSpinner: false };
+      return { Phases: null };
     },
-    created: function() {
-      this.Phases = null;
-      this.Event = null;
-      this.GraphOptions = { selectMode: 'euclidian', stepPlot: true, drawGapEdgePoints: true, connectSeparatedPoints: false, fillGraph: false, legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, interactionModel: Graph.FixedRangeInteractionModel(this), xAxisHeight: 24 };
-    },
-    mounted: function() {
-      this.$root.$el.append(this.$el);
-    },
-    beforeDestroy: function() {
-      this.$root.$el.removeChild(this.$el);
+    computed: {
+      GraphOptions: function() {
+        var Opt = { file: [] };
+        Opt.selectMode = 'euclidian';
+        Opt.stepPlot = true;
+        Opt.drawGapEdgePoints = true;
+        Opt.connectSeparatedPoints = false;
+        Opt.fillGraph = false;
+        Opt.legend = 'follow';
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+//        OinteractionModel: Graph.FixedRangeInteractionModel(this);
+        Opt.xAxisHeight = 24;
+        Opt.includeZero = true;
+        Opt.labels = ['Sample'].concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels)); 
+//file: this.Data, , 
+//colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
+
+        return Object.seal(Opt);
+      }
     },
     methods: {
-      Close: function() {
-        $(window).off('resize', this.ResizeHandler);
-        $(this.$el).modal('hide');
-        this.ShowDialog = false;
-      },
       XTicks: function(x) {
         var Analyzer = this.$root.SelectedAnalyzer;
         if((Analyzer == null) || (this.Event == null)) return;
@@ -61,17 +58,6 @@
         }
       },
       Show: function(evt, mode) {
-        this.ShowDialog = true;
-        this.ViewMode = mode;
-        this.ShowSpinner = true;
-        $(window).on('resize', this.ResizeHandler);
-        this.$nextTick(function() {
-          $(this.$el).modal('show');
-        });
-        var Analyzer = this.$root.SelectedAnalyzer;
-        $.ajax({ url: 'getEvent', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ StartTime: evt.StartTime, Analyzer: Analyzer.Analyzer, Type: evt.Type, Samples: this.ViewMode }),
-          success: function(result) {
-            this.Event = Object.assign(evt, result);
             this.Data = [];
             for(var i = 0; i < result.Prev_Samples[0].length; i++) {
               var Row = [this.Data.length];
@@ -231,12 +217,6 @@
                 }
                 canvas.restore();
               }.bind(this),
-              file: this.Data, includeZero: true, labels: ['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer)), colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
-              this.ShowSpinner = false;
-              this.$nextTick(function() {
-                window.dispatchEvent(new Event('resize'));
-              });
-            }.bind(this)
         });
       },
       ExportClick: function() {

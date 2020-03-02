@@ -110,21 +110,6 @@
       }
     },
     methods: {
-      Redraw: function() {
-        this.$nextTick(function() {
-          this.$refs.graph.Redraw('100%', '300');
-        });
-      },
-      SetPhases: function(phases) {
-        this.$refs.phases.SetPhases(phases);
-        this.CurrentPhases = phases;
-        this.CalcOptions();
-      },
-      SetOption: function(option, val) {
-        if(option === 'Voltage') this.ShowVoltage = val;
-        if(option === 'Log') this.Log = val;
-        this.CalcOptions();
-      },
       SetData(result) {
         this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
         this.Data = [];

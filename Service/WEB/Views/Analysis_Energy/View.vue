@@ -19,8 +19,8 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_ENERGY" :analyzer="analyzer" :data15M="Transfer15M.LastData" :data1H="Transfer1H.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
-                  <spinner v-if="ShowSpinner"></spinner>
-                  <energy serie="Active_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedActive?DialogHeight:ActiveHeight"></energy>
+                  <spinner v-if="TransferGraph.Data==null"></spinner>
+                  <energy serie="Active_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedActive?DialogHeight:ActiveHeight"></energy>
                 </portal>
               </div>
             </div>
@@ -43,8 +43,8 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_ENERGY" :analyzer="analyzer" :data15M="Transfer15M.LastData" :data1H="Transfer1H.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
-                  <spinner v-if="ShowSpinner"></spinner>
-                  <energy serie="Reactive_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedReactive?DialogHeight:ReactiveHeight"></energy>
+                  <spinner v-if="TransferGraph.Data==null"></spinner>
+                  <energy serie="Reactive_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedReactive?DialogHeight:ReactiveHeight"></energy>
                 </portal>
               </div>
             </div>

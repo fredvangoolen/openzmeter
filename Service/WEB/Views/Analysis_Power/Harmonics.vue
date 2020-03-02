@@ -36,6 +36,8 @@
       GraphOptions: function() {
         var Opt = { series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
+        Opt.legend = 'follow';
+        Opt.drawAxesAtZero = true;
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.strokeWidth = 0.5;

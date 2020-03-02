@@ -7,7 +7,7 @@
 <script>
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { data: { type: Object }, serie: { type: String }, height: { type: Number, default: 300 }, analyzer: { type: Object } },
+    props: { data: Object, serie: String, height: Number, analyzer: Object, periods: Object },
     data() {
       return { };
     },
@@ -28,7 +28,7 @@
         Opt.plotter = Graph.Plotters.MultiBar;
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
-        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
+        Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.periods) };
         Opt.labels = (this.serie == 'Active_Energy') ? ['Time', 'Active Energy'] : ['Time', 'Reactive Energy'];
         Opt.colors = [this.analyzer.Color[this.serie]];
         Opt.xAxisHeight = 24;
