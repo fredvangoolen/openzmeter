@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <vector>
+#include <set>
 #include <stdlib.h>
 #include "nlohmann/json.hpp"
 #include "Database.h"
@@ -45,6 +46,32 @@ class URL {
     uint16_t Port;
   public :
     URL(const string &url);
+};
+//----------------------------------------------------------------------------------------------------------------------
+class HTTPTaskQueue final : public TaskQueue {
+  private :
+    typedef struct {
+      std::function<void()> Function;
+      uint64_t              FreeTime;     //Total usage time
+      uint64_t              UsageTime;    //Total free time
+      uint64_t              LastTime;     //Last time event
+      Worker               *Thread;
+    } Worker_t;
+  private :
+    static pthread_mutex_t   pLocks;
+    static HTTPTaskQueue    *pInstance;
+  private :
+    queue<Worker_t*>  pFreeWorkers;
+    uint32_t          pUsedWorkers;
+  private:
+    static void Thread(void *param1, void *param2);
+  public :
+    static void AdjustWorkers();
+  public:
+    HTTPTaskQueue();
+    ~HTTPTaskQueue();
+    void enqueue(std::function<void()> fn) override;
+    void shutdown() override;
 };
 //----------------------------------------------------------------------------------------------------------------------
 class HTTPServer final {

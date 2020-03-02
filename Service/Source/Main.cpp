@@ -98,7 +98,8 @@ int main(int argc, char** argv) {
   while(!Terminate) {
 //    SysSupport::PeriodicTask();
     if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
-    if((Iter % 600) == 0) Database::RemoveExpiredSessions();
+    if((Iter % 60) == 0) Database::AdjustWorkers();
+    if((Iter % 60) == 0) HTTPTaskQueue::AdjustWorkers();
     Iter++;
     usleep(1000000);
   }
