@@ -20,7 +20,7 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_POWER" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
-                  <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ActiveHeight" @range="Range=$event"></power>
+                  <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -44,7 +44,7 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_POWER" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
-                  <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ReactiveHeight" :range.sync="Range"></power>
+                  <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedReactive?DialogHeight:ReactiveHeight" :range.sync="Range"></power>
                 </portal>
               </div>
             </div>
@@ -106,23 +106,34 @@
       this.TransferCubism.Destroy();
     },
     watch: {
-      analyzer: function() { 
+      analyzer: function() {
         this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
         this.TransferNow.UpdateNow(this.analyzer);
         this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
         this.Transfer1M.Update(this.analyzer, '1M', 'LastSamples');
         this.Transfer3S.Update(this.analyzer, '3S', 'LastSamples');
       },
-      Aggreg: function() { 
+      Aggreg: function() {
         this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
       },
-      Range: function(val, prev) { 
+      Range: function(val, prev) {
         if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+      },
+      Paused: function() {
+        if(this.Paused == true) {
+          this.TransferNow.Destroy();
+        } else {
+          this.TransferNow.UpdateNow(this.analyzer);
+        }
       }
     },
     computed: {
       Export: function() {
-        return [];
+        var Data = [['Time', 'Period', 'Contracted', 'Active power', 'Reactive power']];
+        if(this.TransferGraph.Data != null) {
+          for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], this.TransferGraph.Data.Period_Name[n], this.Round(this.TransferGraph.Data.Period_Power[n], 3), this.Round(this.TransferGraph.Data.Active_Power[n], 3), this.Round(this.TransferGraph.Data.Reactive_Power[n], 3)]);
+        }
+        return Data;
       }
     },
     components: { Power, Counters, Distribution, Waveform, Harmonics, Evolution, Parameters, Lissajou }

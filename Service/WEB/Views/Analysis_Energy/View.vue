@@ -99,92 +99,14 @@
     },
     computed: {
       Export: function() {
-        var Data = [['Time', 'Active energy', 'Reactive energy']];
-        if(this.DataGraph != null) {
-          var Div = (this.DataGraph.Aggregation_Source == '1H') ? 1 : 4;
-          for(var n in this.DataGraph.Sampletime) Data.push([this.DataGraph.Sampletime[n], this.DataGraph.Active_Power[n] / Div, this.DataGraph.Reactive_Power[n] / Div]);
+        var Data = [['Time', 'Period', 'Active energy', 'Reactive energy']];
+        if(this.TransferGraph.Data != null) {
+          var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
+          for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], this.TransferGraph.Data.Period_Name[n], this.Round(this.TransferGraph.Data.Active_Power[n] / Div, 3), this.Round(this.TransferGraph.Data.Reactive_Power[n] / Div, 3)]);
         }
         return Data;
       }
     },
-//    methods: {
-//      Update15MValues: function(clear) {
-//        if(clear == true) this.Data15M = null;
-//        this.Control15M = this.CancelTransfer(this.Control15M);
-//        if(this.analyzer == null) return;
-//        this.Control15M.CancelFunc = this.analyzer.GetSeriesLast('15M', ['ACTIVE_POWER', 'REACTIVE_POWER'],
-//          (working) => {},
-//          (result) => { this.Data15M = Object.seal(result); },
-//          (timeout) => { this.Control15M.Timer = setTimeout(() => { this.Update15MValues(false); }, timeout); }
-//        );
-//      },
-//      Update1HValues: function(clear) {
-//        if(clear == true) this.DataH = null;
-//        this.Control1H = this.CancelTransfer(this.Control1H);
-//        if(this.analyzer == null) return;
-//        this.Control1H.CancelFunc = this.analyzer.GetSeriesLast('1H', ['ACTIVE_POWER', 'REACTIVE_POWER'],
-//          (working) => {},
-//          (result) => { this.Data1H = Object.seal(result); },
-//          (timeout) => { this.Control1H.Timer = setTimeout(() => { this.Update1HValues(false); }, timeout); }
-//        );
-//      },
-//      UpdateGraphValues: function(clear) {
-//        if(clear == true) this.DataGraph = null;
-//        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
-//        if((this.Aggreg == null) || (this.Range == null) || (this.analyzer == null)) return;
-//        this.ControlGraph.CancelFunc = this.analyzer.GetPricesRange(this.Aggreg, this.Range, this.DataGraph,
-//          (working) => { this.ShowSpinner = working; },
-//          (result) => { this.DataGraph = Object.seal(result); },
-//          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(false); }, timeout); }
-//        );
-
-//        if(lastsample === 0) {
-//          this.ActiveData = [];
-//          this.ReactiveData = [];
-//          this.ShowSpinner = true;
-//        }
-//        var Analyzer = this.$root.SelectedAnalyzer;
-//        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ Aggreg: aggreg, To: to, LastSample: lastsample, Analyzer: Analyzer.Analyzer, Period: period }),
-//          success: function(result) {
-//            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
-//            if(result['Aggregation_Source'] === '15M') {
-//              for(var n = 0; n < result['Active_Power'].length; n++) result['Active_Power'][n] = result['Active_Power'][n] / 4.0;
-//              for(var n = 0; n < result['Reactive_Power'].length; n++) result['Reactive_Power'][n] = result['Reactive_Power'][n] / 4.0;
-//            }
-//            this.ActiveData = oZm.GraphDataAppend(result, 'Active_Power', this.ActiveData);
-//            this.ReactiveData = oZm.GraphDataAppend(result, 'Reactive_Power', this.ReactiveData);
-//            lastsample = oZm.LastSampletime(result, lastsample);
-//            this.Bills = result["Bills"];
-//            //Group periods
-//            var LastItem = (this.Periods.length > 0) ? this.Periods.slice(-1)[0] : null;
-//            for(var i = 0; i < result.Sampletime.length; i++) {
-//              var Period = { Name: result.Period_Name[i], From: result.Sampletime[i] - ((this.Aggreg === '15M') ? 899999 : 3599999), To: result.Sampletime[i], Color: result.Period_Color[i] };
-//              if(LastItem === null) {
-//                this.Periods.push(Period);
-//                LastItem = Period;
-//              } else if(Period.From === (LastItem.To + 1)) {
-//                if(Period.Name === LastItem.Name) {
-//                  LastItem.To = Period.To;
-//                  this.Periods.pop();
-//                  this.Periods.push(LastItem);
-//                } else {
-//                  this.Periods.push(Period);
-//                  LastItem = Period;
-//                }
-//              }
-//              this.Periods = this.Periods.filter(period => (period.To > result.from) || (period.From < result.to) ).sort(function(a, b) { if(a.To < b.To) return -1; if(a.To > b.To) return 1; return 0; });
-//            }
-//          }.bind(this),
-//          complete: function() {
-//            this.$nextTick(function() { window.dispatchEvent(new Event('resize')); });
-//            this.ShowSpinner = false;
-//          }.bind(this),
-//          error: function(response) {
-//            this.ShowSpinner = true;
-//          }.bind(this)
-//        });
-//      }
-//    },
     components: { Energy, Counters }
   }
 </script>

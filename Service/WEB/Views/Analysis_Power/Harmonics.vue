@@ -1,14 +1,14 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
         <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
           <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
           <toolbar-options storage="DetailsOptions" :options="['1st Harmonic']" v-model="Options"></toolbar-options>
           <div class="btn-group">
             <button-export file="Harmonics" :rows="Export"></button-export>
-            <button-expand :expanded.sync="Expanded"></button-expand>
+            <button-expand v-model="Expanded"></button-expand>
             <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
           </div>
         </portal>
@@ -37,7 +37,6 @@
         var Opt = { series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
         Opt.legend = 'follow';
-        Opt.drawAxesAtZero = true;
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.strokeWidth = 0.5;
@@ -53,6 +52,7 @@
         Opt.axes.y.valueFormatter = (x) => { var Units = this.BestUnits(x); return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + Units + 'W'; };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return (g.axes_[0].valueRange == null) ? '' : this.Round(this.ScaleUnits(x, this.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), 2, true); }
         Opt.axes.x.drawGrid = false;
+        Opt.drawAxesAtZero = true;
         Opt.axes.x.ticker = () => { return Graph.Tickers.OddHarmonicsTicks(this.analyzer); };
         Opt.axes.x.axisLabelFormatter = (x) => { return oZm.Series['HARMONICS'].Names[x]; };
         Opt.axes.x.valueFormatter = (y) => { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (this.analyzer.NominalFrequency * (y + 1)) + 'Hz)'; };
@@ -66,7 +66,7 @@
             Opt.file.push(Row);
           }
           Opt.dateWindow = [Opt.file[0][0] - 0.5, 50.5];
-          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 10 });
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { incZero: 1.0 });
         }
         return Opt;
       },
@@ -76,7 +76,7 @@
         var Data = [Header];
         for(var i = 0; i < this.data.Power_Harmonics[0].length; i++) {
           var Row = [this.analyzer.HarmonicsNames[i]];
-          for(var n = 0; n < this.data.Power_Harmonics.length; n++) Row.push(this.data.Power_Harmonics[n][i]);
+          for(var n = 0; n < this.data.Power_Harmonics.length; n++) Row.push(this.Round(this.data.Power_Harmonics[n][i], 3));
           Data.push(Row);
         }
         return Object.freeze(Data);

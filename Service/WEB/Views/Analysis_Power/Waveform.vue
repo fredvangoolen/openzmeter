@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :multi="false" :analyzer="analyzer" v-model="Phase"></toolbar-phases>
@@ -65,13 +65,13 @@
             }
             Opt.file.push(Row);
           }
-          var VoltageRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
-          var CurrentRange = this.MatrixColsRange(Opt.file, [false, false, true], { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
+          var VoltageRange = this.MatrixColsRange(Opt.file, [false, true], { wave: 1.0 });
+          var CurrentRange = this.MatrixColsRange(Opt.file, [false, false, true], { wave: 1.0 });
           var MaxVoltage = Math.max(Math.abs(VoltageRange[0]), Math.abs(VoltageRange[1]));
           var MaxCurrent = Math.max(Math.abs(CurrentRange[0]), Math.abs(CurrentRange[1]));
           this.CurrentMult = MaxVoltage / MaxCurrent;
           for(var i = 0; i < Opt.file.length; i++) Opt.file[i][2] = Opt.file[i][2] * this.CurrentMult;
-          var PowerRange = this.MatrixColsRange(Opt.file, [false, false, false, true, true], { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
+          var PowerRange = this.MatrixColsRange(Opt.file, [false, false, false, true, true], { wave: 1.0 });
           var MaxY1      = Math.max(Math.abs(PowerRange[0]), Math.abs(PowerRange[1]));
           Opt.axes.y.valueRange = [-MaxY1, MaxY1];
           Opt.axes.y2.valueRange = [-MaxVoltage, MaxVoltage];
@@ -87,9 +87,9 @@
         var Data = [Header];
         for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
           var Row = [i];
-          for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.data.Voltage_Samples[n][i]);
-          for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.data.Current_Samples[n][i]);
-          for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.data.Voltage_Samples[n][i] * this.data.Current_Samples[n][i]);
+          for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.Round(this.data.Voltage_Samples[n][i], 3));
+          for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.Round(this.data.Current_Samples[n][i], 3));
+          for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.Round(this.data.Voltage_Samples[n][i] * this.data.Current_Samples[n][i], 3));
           Data.push(Row);
         }
         return Object.seal(Data);
