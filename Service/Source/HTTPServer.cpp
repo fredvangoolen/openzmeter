@@ -81,13 +81,9 @@ void HTTPTaskQueue::enqueue(std::function<void()> fn) {
   Worker_t *Tmp = NULL;
   if(pFreeWorkers.size() > 0) {
     Tmp = pFreeWorkers.front();
-    pFreeWorkers.pop();
-    uint64_t Time = Tools::GetTime();
-    Tmp->FreeTime = Tmp->FreeTime + (Time - Tmp->LastTime);
-    Tmp->LastTime = Time;
+    pFreeWorkers.pop_front();
   } else {
     Tmp = (Worker_t*)calloc(sizeof(Worker_t), 1);
-    Tmp->LastTime = Tools::GetTime();
     Tmp->Thread = new Worker("HTTPWorker", this, Thread);
   }
   if(Tmp != NULL) {
@@ -100,10 +96,15 @@ void HTTPTaskQueue::enqueue(std::function<void()> fn) {
 void HTTPTaskQueue::shutdown() {
   pthread_mutex_lock(&pLocks);
   pInstance = NULL;
+  while(pUsedWorkers > 0) {
+    pthread_mutex_unlock(&pLocks);
+    usleep(100000);
+    pthread_mutex_lock(&pLocks);
+  }
   while(pFreeWorkers.size() > 0) {
     auto Tmp = pFreeWorkers.front();
     delete Tmp->Thread;
-    pFreeWorkers.pop();
+    pFreeWorkers.pop_front();
     free(Tmp);
   }
   pthread_mutex_unlock(&pLocks);
@@ -113,10 +114,8 @@ void HTTPTaskQueue::Thread(void *param1, void *param2) {
   Worker_t *Work = (Worker_t*)param2;
   Work->Function();
   pthread_mutex_lock(&This->pLocks);
-  uint64_t Time = Tools::GetTime();
-  Work->UsageTime = Work->UsageTime + (Time - Work->LastTime);
-  Work->LastTime = Time;
-  This->pFreeWorkers.push(Work);
+  Work->LastTime = Tools::GetTime();
+  This->pFreeWorkers.push_front(Work);
   This->pUsedWorkers--;
   pthread_mutex_unlock(&This->pLocks);
 }
@@ -128,12 +127,10 @@ void HTTPTaskQueue::AdjustWorkers() {
   }
   uint64_t Time = Tools::GetTime();
   while(pInstance->pFreeWorkers.size() > 0) {
-    auto Tmp = pInstance->pFreeWorkers.front();
-    Tmp->FreeTime = Tmp->FreeTime + (Time - Tmp->LastTime);
-    Tmp->LastTime = Time;
-    if(Tmp->FreeTime < Tmp->UsageTime) break;
+    auto Tmp = pInstance->pFreeWorkers.back();
+    if((Time - Tmp->LastTime) < 60000) break;
     delete Tmp->Thread;
-    pInstance->pFreeWorkers.pop();
+    pInstance->pFreeWorkers.pop_back();
     free(Tmp);
   }
   LOGFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)\n", pInstance->pFreeWorkers.size(), pInstance->pUsedWorkers);

@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <vector>
-#include <set>
+#include <list>
 #include <stdlib.h>
 #include "nlohmann/json.hpp"
 #include "Database.h"
@@ -52,8 +52,6 @@ class HTTPTaskQueue final : public TaskQueue {
   private :
     typedef struct {
       std::function<void()> Function;
-      uint64_t              FreeTime;     //Total usage time
-      uint64_t              UsageTime;    //Total free time
       uint64_t              LastTime;     //Last time event
       Worker               *Thread;
     } Worker_t;
@@ -61,7 +59,7 @@ class HTTPTaskQueue final : public TaskQueue {
     static pthread_mutex_t   pLocks;
     static HTTPTaskQueue    *pInstance;
   private :
-    queue<Worker_t*>  pFreeWorkers;
+    list<Worker_t*>   pFreeWorkers;
     uint32_t          pUsedWorkers;
   private:
     static void Thread(void *param1, void *param2);
