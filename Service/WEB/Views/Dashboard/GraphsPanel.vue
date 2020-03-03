@@ -118,11 +118,11 @@
           Opt.file.push(Row);
         }
         if((this.serie == 'VOLTAGE') || (this.serie == 'CURRENT')) {
-          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 5 });
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { rmsRange: 1.0 });
         } else if(this.serie == 'ACTIVE_POWER') {
-          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 10 });
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { incZero: 1.0 });
         } else if(this.serie == 'FREQUENCY') {
-          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, percent: 0.005, minWidth: 0.5 });
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.1 });
         }
         var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
         Opt.axes.y.valueFormatter = (x) => {
@@ -135,18 +135,18 @@
         return Opt;
       },
       Export: function() {
-        if((this.analyzer == null) || (this.data == null)) return [];
+        if(this.data == null) return [];
         var Header = [['Time'].concat(this.SerieProps.Names(this.analyzer))];
         for(var n in this.data.Sampletime) {
           var Row = [this.data.Sampletime[n]];
           if(this.serie == 'VOLTAGE') {
-            for(var i in this.data.Voltage[n]) Row.push(this.data.Voltage[n][i]);
+            for(var i in this.data.Voltage[n]) Row.push(this.Round(this.data.Voltage[n][i], 3));
           } else if(this.serie == 'CURRENT') {
-            for(var i in this.data.Current[n]) Row.push(this.data.Current[n][i]);
+            for(var i in this.data.Current[n]) Row.push(this.Round(this.data.Current[n][i], 3));
           } else if(this.serie == 'ACTIVE_POWER') {
-            for(var i in this.data.Active_Power[n]) Row.push(this.data.Active_Power[n][i]);
+            for(var i in this.data.Active_Power[n]) Row.push(this.Round(this.data.Active_Power[n][i], 3));
           } else if(this.serie == 'FREQUENCY') {
-            Row.push(this.data.Frequency[n]);
+            Row.push(this.Round(this.data.Frequency[n], 3));
           }
           Header.push(Row);
         }

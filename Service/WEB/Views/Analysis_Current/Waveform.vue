@@ -1,14 +1,14 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Voltage']" v-model="Options"></toolbar-options>
         <div class="btn-group">
           <button-export file="Waveform" :rows="Export"></button-export>
-          <button-expand :expanded.sync="Expanded"></button-expand>
+          <button-expand v-model="Expanded"></button-expand>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
         </div>
       </portal>
@@ -77,8 +77,8 @@
           var V = [false], I = [false];
           for(var n in CurrentNames) { I.push(this.Phases[n]); V.push(false); }
           for(var n in VoltageNames) { V.push(this.Phases[n]); I.push(false); }
-          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, I, { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
-          Opt.axes.y2.valueRange = this.MatrixColsRange(Opt.file, V, { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, I, { wave: 1.0 });
+          Opt.axes.y2.valueRange = this.MatrixColsRange(Opt.file, V, { wave: 1.0 });
         }
         return Opt;
       },
@@ -87,8 +87,8 @@
         if(this.data != null) {
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [i];
-            for(var n = 0; n < this.data.Current_Samples.length; n++) Row.push(this.data.Current_Samples[n][i]);
-            for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.data.Voltage_Samples[n][i]);
+            for(var n = 0; n < this.data.Current_Samples.length; n++) Row.push(this.Round(this.data.Current_Samples[n][i], 3));
+            for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.Round(this.data.Voltage_Samples[n][i], 3));
             Rows.push(Row);
           }
         }

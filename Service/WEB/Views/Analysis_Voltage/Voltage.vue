@@ -50,13 +50,6 @@
         }
         return Object.seal(Opt);
       }
-    },
-    methods: {
-      ExportClick: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        this.$refs.tools.SaveCVS('Voltage.csv', [['Time'].concat(oZm.Series['VOLTAGE'].Names(Analyzer))].concat(this.Data));
-      },
     }
   }
 </script>

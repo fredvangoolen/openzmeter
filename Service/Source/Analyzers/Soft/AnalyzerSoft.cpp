@@ -26,8 +26,6 @@
 #include "AnalyzerSoft.h"
 #include "Tools.h"
 #include "SysSupport.h"
-//#include "FFT.h"
-#include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace cctz;
@@ -173,6 +171,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   ConfigOUT["EventsEnabled"] = false;
   ConfigOUT["AlarmsEnabled"] = false;
   ConfigOUT["Alarms"] = json::array();
+  ConfigOUT["Rates"] = json::array();
   if(!config.is_object()) return ConfigOUT;
   if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
   if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
@@ -202,21 +201,27 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
   if(config.contains("Alarms") && config["Alarms"].is_array()) {
     for(auto configAlarm : config["Alarms"]) {
-      json Alarm = json::object();
-      Alarm["Name"] = "Unnamed alarm";
-      Alarm["Priority"] = 0;
-      Alarm["Expression"] = "";
-      Alarm["Aggreg"] = "3S";
-      Alarm["Samples"] = 1;
-      Alarm["Window"] = 10;
-      if(configAlarm.contains("Name") && configAlarm["Name"].is_string()) Alarm["Name"] = configAlarm["Name"];
-      if(configAlarm.contains("Priority") && configAlarm["Priority"].is_number_unsigned() && configAlarm["Priority"] < 3) Alarm["Priority"] = configAlarm["Priority"];
-      if(configAlarm.contains("Expression") && configAlarm["Expression"].is_string()) Alarm["Expression"] = configAlarm["Expression"];
-      if(configAlarm.contains("Aggreg") && configAlarm["Aggreg"].is_string() && ((configAlarm["Aggreg"] == "3S") || (configAlarm["Aggreg"] == "1M") || (configAlarm["Aggreg"] == "10M") || (configAlarm["Aggreg"] == "15M") || (configAlarm["Aggreg"] == "1H"))) Alarm["Aggreg"] = configAlarm["Aggreg"];
-      if(configAlarm.contains("Samples") && configAlarm["Samples"].is_number_unsigned() && configAlarm["Samples"] < 1000) Alarm["Samples"] = configAlarm["Samples"];
-      if(configAlarm.contains("Window") && configAlarm["Window"].is_number_unsigned()) Alarm["Window"] = configAlarm["Window"];
-      if(Alarm["Window"] < Alarm["Samples"]) Alarm["Window"] = Alarm["Samples"];
-      ConfigOUT["Alarms"].push_back(Alarm);
+      if((configAlarm.contains("Name") == false) || (configAlarm["Name"].is_string() == false)) continue;
+      if((configAlarm.contains("Priority") == false) || (configAlarm["Priority"].is_number_unsigned() == false) || (configAlarm["Priority"] > 2)) continue;
+      if((configAlarm.contains("Expression") == false) || (configAlarm["Expression"].is_string() == false)) continue;
+      if((configAlarm.contains("Aggreg") == false) || (configAlarm["Aggreg"].is_string() == false) || ((configAlarm["Aggreg"] != "3S") && (configAlarm["Aggreg"] != "1M") && (configAlarm["Aggreg"] != "10M") && (configAlarm["Aggreg"] != "15M") && (configAlarm["Aggreg"] != "1H"))) continue;
+      if((configAlarm.contains("Samples") == false) || (configAlarm["Samples"].is_number_unsigned() == false) || (configAlarm["Samples"] > 1000)) continue;
+      if((configAlarm.contains("Window") == false) || (configAlarm["Window"].is_number_unsigned() == false)) continue;
+      if(configAlarm["Window"] < configAlarm["Samples"]) continue;
+      ConfigOUT["Alarms"].push_back(configAlarm);
+    }
+  }
+  if(config.contains("Rates") && config["Rates"].is_array()) {
+    for(auto configRate : config["Rates"]) {
+      if((configRate.contains("StartDate") == false) || (configRate["StartDate"].is_number_unsigned() == false)) continue;
+      if((configRate.contains("EndDate") == false) || (configRate["EndDate"].is_number_unsigned() == false)) continue;
+      if((configRate.contains("Name") == false) || (configRate["Name"].is_string() == false)) continue;
+      if((configRate.contains("Config") == false) || (configRate["Config"].is_object() == false)) continue;
+      if((configRate.contains("Template") == false) || (configRate["Template"].is_object() == false)) continue;
+      Tariff T(configRate["StartDate"], configRate["EndDate"], ConfigOUT["TimeZone"]);
+      if(T.SetTemplate(configRate["Template"]) == false) continue;
+      if(T.SetConfig(configRate["Config"]) == false) continue;
+      ConfigOUT["Rates"].push_back(configRate);
     }
   }
   return ConfigOUT;
@@ -281,6 +286,7 @@ void AnalyzerSoft::Configure(const json &options) {
       pDelayCurrent = NULL;
     }
   }
+  pRates = options["Rates"];
   bool AlarmsEnabled = options["AlarmsEnabled"];
   bool EventsEnabled = options["EventsEnabled"];
   if((EventsEnabled == false) && (pEventsWorker != NULL)) {
@@ -324,38 +330,26 @@ void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
   params.Frequency = 0;
   params.Unbalance = 0;
   params.Flag = false;
-//  if((params.Type == AGGREG_200MS) || (params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M) || (params.Type == AGGREG_1H)) {
-    for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage[n] = 0;
-    for(uint8_t n = 0; n < pCurrentChannels; n++) params.Current[n] = 0;
-//  }
-//  if((params.Type == AGGREG_200MS) || (params.Type == AGGREG_3S) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_15M) || (params.Type == AGGREG_1H)) {
-    for(uint8_t n = 0; n < pVoltageChannels; n++) params.Active_Power[n] = 0;
-    for(uint8_t n = 0; n < pVoltageChannels; n++) params.Reactive_Power[n] = 0;
-//  }
-//  if((params.Type == AGGREG_200MS) || (params.Type == AGGREG_1M)) {
-    for(uint8_t n = 0; n < pCurrentChannels; n++) params.Current_THD[n] = 0;
-    for(uint8_t n = 0; n < pVoltageChannels; n++) params.Phi[n] = 0;
-    for(uint8_t n = 0; n < pVoltageChannels; n++) params.Power_Factor[n] = 0;
-    for(uint8_t n = 0; n < (50 * pCurrentChannels); n++) params.Current_Harmonics[n] = 0;
-    for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) params.Power_Harmonics[n] = 0;
-//  }
-//  if((params.Type == AGGREG_200MS) || (params.Type == AGGREG_1M) || (params.Type == AGGREG_10M)) {
-    for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage_THD[n] = 0;
-    for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) params.Voltage_Harmonics[n] = 0;
-//  }
-//  if(params.Type == AGGREG_200MS) {
-    for(uint8_t n = 0; n < pVoltageChannels; n++) params.Active_Energy[n] = 0;
-    for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage_Phase[n]  = 0;
-    for(uint8_t n = 0; n < pVoltageChannels; n++) params.Reactive_Energy[n] = 0;
-    for(uint8_t n = 0; n < pVoltageChannels; n++) params.Apparent_Power[n] = 0;
-//  }
-//  if(params.Type == AGGREG_1H) {
-    params.StatsFrequency = vector<uint16_t>(FrequencyRanges.size() - 1, 0);
-    params.StatsVoltage = vector<uint16_t>(VoltageRanges.size() - 1, 0);
-    params.StatsTHD = vector<uint16_t>(THDRanges.size() - 1, 0);
-    params.StatsUnbalance = vector<uint16_t>(UnbalanceRanges.size() - 1, 0);
-    params.StatsHarmonics = vector<uint16_t>(2, 0);
-//  }
+  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage[n] = 0;
+  for(uint8_t n = 0; n < pCurrentChannels; n++) params.Current[n] = 0;
+  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Active_Power[n] = 0;
+  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Reactive_Power[n] = 0;
+  for(uint8_t n = 0; n < pCurrentChannels; n++) params.Current_THD[n] = 0;
+  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Phi[n] = 0;
+  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Power_Factor[n] = 0;
+  for(uint8_t n = 0; n < (50 * pCurrentChannels); n++) params.Current_Harmonics[n] = 0;
+  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) params.Power_Harmonics[n] = 0;
+  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage_THD[n] = 0;
+  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) params.Voltage_Harmonics[n] = 0;
+  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Active_Energy[n] = 0;
+  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage_Phase[n]  = 0;
+  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Reactive_Energy[n] = 0;
+  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Apparent_Power[n] = 0;
+  params.StatsFrequency = vector<uint16_t>(FrequencyRanges.size() - 1, 0);
+  params.StatsVoltage = vector<uint16_t>(VoltageRanges.size() - 1, 0);
+  params.StatsTHD = vector<uint16_t>(THDRanges.size() - 1, 0);
+  params.StatsUnbalance = vector<uint16_t>(UnbalanceRanges.size() - 1, 0);
+  params.StatsHarmonics = vector<uint16_t>(2, 0);
 }
 void AnalyzerSoft::InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos) {
   Event_t Event;
@@ -539,24 +533,6 @@ void AnalyzerSoft::SaveEvent(Event_t &evt) {
   evt.SamplesRAW_B = deque<vector<float> >();
   evt.SamplesRMS_B = deque<vector<float> >();
 }
-//json AnalyzerSoft::GetAlarmJSON(const Alarm_t &alarm) {
-//  json Alarm = json::object();
-//  string Expresion     = alarm.Evaluator.GetExpr();
-//  Alarm["Name"]        = alarm.Name;
-//  Alarm["Priority"]    = alarm.Priority;
-//  Alarm["Expression"]  = Expresion.erase(Expresion.find_last_not_of(" \n\r\t")+1);
-//  Alarm["Aggreg"]      = (alarm.Aggreg == AnalyzerSoft::AGGREG_3S) ? "3S" : (alarm.Aggreg == AnalyzerSoft::AGGREG_1M) ? "1M" : (alarm.Aggreg == AnalyzerSoft::AGGREG_10M) ? "10M" : (alarm.Aggreg == AnalyzerSoft::AGGREG_15M) ? "15M" : "1H";
-//  Alarm["Samples"]     = alarm.Samples;
-//  Alarm["Window"]      = alarm.Window;
-//  return Alarm;
-//}
-//void AnalyzerSoft::SaveAlarmsConf() {
-//  json Config = json::array();
-//  for(auto &Alarm : pAlarms) {
-//    Config["Alarms"].push_back(GetAlarmJSON(Alarm));
-//  }
-//  ConfigManager::WriteConfig(pConfigPath + "/Alarms", Config);
-//}
 void AnalyzerSoft::InitAlarm(Alarm_t &alarm, const json &config) {
   alarm.Name = config["Name"];
   alarm.Priority = config["Priority"];
@@ -1081,16 +1057,6 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
     This->Analyzer->SetEvent(This->Params, Resp);
   } else if(This->Method == "delEvent") {
     This->Analyzer->DelEvent(This->Params, Resp);
-  } else if(This->Method == "getRates") {
-    This->Analyzer->GetRates(This->Params, Resp);
-  } else if(This->Method == "getRate") {
-    This->Analyzer->GetRate(This->Params, Resp);
-  } else if(This->Method == "setRate") {
-    This->Analyzer->SetRate(This->Params, Resp);
-  } else if(This->Method == "delRate") {
-    This->Analyzer->DelRate(This->Params, Resp);
-  } else if(This->Method == "addRate") {
-    This->Analyzer->AddRate(This->Params, Resp);
   } else if(This->Method == "getPrices") {
     This->Analyzer->GetPrices(This->Params, Resp);
   } else if(This->Method == "testAlarm") {
@@ -1133,6 +1099,7 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"] = pSamplerate;
   if((params.contains("Alarms") == false) || (params["Alarms"].is_boolean() == false) || (params["Alarms"] == false)) Response.erase("Alarms");
+  if((params.contains("Rates") == false) || (params["Rates"].is_boolean() == false) || (params["Rates"] == false)) Response.erase("Rates");
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + DB.Bind(Serial));
   if(DB.FecthRow()) Response["Size"] = DB.ResultUInt64("size");
@@ -1141,7 +1108,8 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
 void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = params;
-  if((Config.contains("Alarms") == false) || (Config["alarms"].is_array() == false)) Config["Alarms"] = ConfigManager::ReadConfig(pConfigPath + "/Alarms");
+  if((Config.contains("Alarms") == false) || (Config["Alarms"].is_array() == false)) Config["Alarms"] = ConfigManager::ReadConfig(pConfigPath + "/Alarms");
+  if((Config.contains("Rates") == false) || (Config["Rates"].is_array() == false)) Config["Rates"] = ConfigManager::ReadConfig(pConfigPath + "/Rates");
   Configure(CheckConfig(Config));
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
@@ -1436,66 +1404,6 @@ void AnalyzerSoft::DelEvent(const json &params, Response &response) {
   bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
   HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
-void AnalyzerSoft::GetRates(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB(Serial);
-  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate))), '[]') AS result FROM rates");
-  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
-}
-void AnalyzerSoft::GetRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("RateID") == false) || (params["RateID"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint32_t RateID = params["RateID"];
-  Database DB(Serial);
-  DB.ExecSentenceAsyncResult("SELECT JSON_BUILD_OBJECT('RateID', rate, 'Name', name, 'StartDate', startdate, 'EndDate', enddate, 'Template', template, 'Config', config) AS result FROM rates WHERE rate = " + DB.Bind(RateID));
-  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
-}
-void AnalyzerSoft::SetRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("RateID") == false) || (params["RateID"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("StartDate") == false) || (params["StartDate"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'StartDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("EndDate") == false) || (params["EndDate"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'EndDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Config") == false) || (params["Config"].is_object() == false)) return HTTPServer::FillResponse(response, "'Config' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint32_t RateID   = params["RateID"];
-  uint64_t Start    = params["StartDate"];
-  uint64_t End      = params["EndDate"];
-  string   Name     = params["Name"];
-  Tariff T(Start, End, pTimeZone);  //THREAD SAFE ISSUE!
-  if(T.SetTemplate(params["Template"]) == false) return HTTPServer::FillResponse(response, "Invalid template", "text/plain", HTTP_BAD_REQUEST);
-  if(T.SetConfig(params["Config"]) == false) return HTTPServer::FillResponse(response, "Invalid 'Config' format", "text/plain", HTTP_BAD_REQUEST);
-  Database DB(Serial);
-  bool Result = DB.ExecSentenceNoResult("UPDATE rates SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(T.GetTemplate().dump()) + ", config = " + DB.Bind(T.GetConfig().dump()) + ", startdate = " + DB.Bind(Start) + ", enddate = " + DB.Bind(End) + " WHERE rate = " + DB.Bind(RateID));
-  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
-void AnalyzerSoft::DelRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("RateID") == false) || (params["RateID"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint32_t RateID = params["RateID"];
-  Database DB(Serial);
-  bool Result = DB.ExecSentenceNoResult("DELETE FROM rates WHERE rate = " + DB.Bind(RateID));
-  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
-void AnalyzerSoft::AddRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("StartDate") == false) || (params["StartDate"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'StartDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("EndDate") == false) || (params["EndDate"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'EndDate' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Config") == false) || (params["Config"].is_object() == false)) return HTTPServer::FillResponse(response, "'Config' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t Start    = params["StartDate"];
-  uint64_t End      = params["EndDate"];
-  string   Name     = params["Name"];
-  Tariff T(Start, End, pTimeZone);  //THREAD SAFE ISSUE!
-  if(T.SetTemplate(params["Template"]) == false) return HTTPServer::FillResponse(response, "Invalid template", "text/plain", HTTP_BAD_REQUEST);
-  if(T.SetConfig(params["Config"]) == false) return HTTPServer::FillResponse(response, "Invalid 'Config' format", "text/plain", HTTP_BAD_REQUEST);
-  Database DB(Serial);
-  bool Result = DB.ExecSentenceNoResult("INSERT INTO rates(startdate, enddate, config, template, name) VALUES (" + DB.Bind(Start) + ", " + DB.Bind(End) + ", " + DB.Bind(T.GetConfig().dump()) + ", " + DB.Bind(T.GetTemplate().dump()) + ", " + DB.Bind(Name) + ")");
-  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
 void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -1549,10 +1457,12 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   if(SaveBills == true)       Result["Bills"]          = json::array();
   //Load involved tariffs, currency and timezone
   Database DB(Serial);
-  DB.ExecSentenceAsyncResult("SELECT to_json(array_agg(json_build_object('Name', rates.name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) as rate FROM rates WHERE enddate >= " + DB.Bind(From) + " AND startdate <= " + DB.Bind(To));
-  json DBTariffs = json::array();
-  if(DB.FecthRow()) DBTariffs = DB.ResultJSON("rate");
-  TariffList Tariffs(DBTariffs, pTimeZone);
+//  DB.ExecSentenceAsyncResult("SELECT to_json(array_agg(json_build_object('Name', rates.name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) as rate FROM rates WHERE enddate >= " + DB.Bind(From) + " AND startdate <= " + DB.Bind(To));
+//  json DBTariffs = json::array();
+//  if(DB.FecthRow()) DBTariffs = DB.ResultJSON("rate");
+  pAnalyzerLock.ReadLock();
+  TariffList Tariffs(pRates, pTimeZone);
+  pAnalyzerLock.Unlock();
   //Find start and end date to retrieve data
   uint64_t BillingFrom = Tariffs.BillFrom(From);
   uint64_t BillingTo = Tariffs.BillTo(To);

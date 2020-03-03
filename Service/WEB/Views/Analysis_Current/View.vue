@@ -57,7 +57,7 @@
                TransferNow: this.CreateSeriesTransfer(this, ['CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
                TransferCubism: this.CreateSeriesTransfer(this, ['CURRENT_HARMONICS', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
                Transfer1M: this.CreateSeriesTransfer(this, ['CURRENT']),
-               Transfer3S: this.CreateSeriesTransfer(this, ['CURRENT']) 
+               Transfer3S: this.CreateSeriesTransfer(this, ['CURRENT'])
       };
     },
     created: function() {
@@ -85,8 +85,15 @@
       Aggreg: function() {
         this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
-      Range: function(val, prev) { 
+      Range: function(val, prev) {
         if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
+      },
+      Paused: function() {
+        if(this.Paused == true) {
+          this.TransferNow.Destroy();
+        } else {
+          this.TransferNow.UpdateNow(this.analyzer);
+        }
       }
     },
 //    methods: {

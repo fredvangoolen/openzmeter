@@ -21,6 +21,7 @@
 #include "muParser/muParser.h"
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
+#include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace httplib;
@@ -159,6 +160,7 @@ class AnalyzerSoft final : public Analyzer {
     uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
     uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
     uint32_t                  *pFreqCycles;              //Frequency calc cycles lenghts
+    json                       pRates;                   //Applied rates local copy
   private : //Used only in Analyzer_Func
     uint64_t                   pPrevTimestamp;           //Previous block time
     Params_t                   pAggreg200MS;             //200ms aggregation
@@ -226,11 +228,11 @@ class AnalyzerSoft final : public Analyzer {
     void  GetEvent(const json &params, Response &response) override;
     void  SetEvent(const json &params, Response &response) override;
     void  DelEvent(const json &params, Response &response) override;
-    void  GetRates(const json &params, Response &response) override;
-    void  GetRate(const json &params, Response &response) override;
-    void  SetRate(const json &params, Response &response) override;
-    void  DelRate(const json &params, Response &response) override;
-    void  AddRate(const json &params, Response &response) override;
+//    void  GetRates(const json &params, Response &response) override;
+//    void  GetRate(const json &params, Response &response) override;
+//    void  SetRate(const json &params, Response &response) override;
+//    void  DelRate(const json &params, Response &response) override;
+//    void  AddRate(const json &params, Response &response) override;
     void  GetPrices(const json &params, Response &response) override;
     void  TestAlarm(const json &params, Response &response) override;
     void  GetAlarms(const json &params, Response &response) override;

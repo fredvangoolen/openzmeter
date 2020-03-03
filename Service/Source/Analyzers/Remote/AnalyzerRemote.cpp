@@ -235,26 +235,26 @@ void AnalyzerRemote::DelEvent(const json &params, Response &response) {
   if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("delEvent", params, response);
 }
-void AnalyzerRemote::GetRates(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  HandleRequest("getRates", params, response);
-}
-void AnalyzerRemote::GetRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  HandleRequest("getRate", params, response);
-}
-void AnalyzerRemote::SetRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  HandleRequest("setRate", params, response);
-}
-void AnalyzerRemote::DelRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  HandleRequest("delRate", params, response);
-}
-void AnalyzerRemote::AddRate(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  HandleRequest("addRate", params, response);
-}
+//void AnalyzerRemote::GetRates(const json &params, Response &response) {
+//  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+//  HandleRequest("getRates", params, response);
+//}
+//void AnalyzerRemote::GetRate(const json &params, Response &response) {
+//  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+//  HandleRequest("getRate", params, response);
+//}
+//void AnalyzerRemote::SetRate(const json &params, Response &response) {
+//  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+//  HandleRequest("setRate", params, response);
+//}
+//void AnalyzerRemote::DelRate(const json &params, Response &response) {
+//  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+//  HandleRequest("delRate", params, response);
+//}
+//void AnalyzerRemote::AddRate(const json &params, Response &response) {
+//  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+//  HandleRequest("addRate", params, response);
+//}
 void AnalyzerRemote::GetPrices(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getPrices", params, response);

@@ -43,8 +43,6 @@
 
 <script>
   import moment from 'moment';
-//  import DatePicker from 'Components/DatePicker.vue';
-//  import Dlg from 'Components/Dialog.vue';
   export default {
     props: { storage: { type: String, default: null }, value: { type: [String, Array], default: null } },
     data: function () {
@@ -55,12 +53,19 @@
         if(this.storage != null) localStorage.setItem(this.storage, JSON.stringify(val));
       }
     },
-//    beforeDestroy: function () {
-//      clearInterval(this.Timer);
-//    },
     created: function () {
       if(this.storage != null) {
-        var Stored = JSON.parse(localStorage.getItem(this.storage));
+        var Stored;
+        try {
+          Stored = JSON.parse(localStorage.getItem(this.storage));
+        } catch(e) {
+          Stored = 'Day';
+        }
+        if(Array.isArray(Stored) == true) {
+          if(Stored.length != 2) Stored = 'Day';
+        } else if((Stored != 'LastHours') && (Stored != 'LastDay') && (Stored != 'LastDay') && (Stored != 'LastWeek') && (Stored != 'LastMonth') && (Stored != 'LastYear') && (Stored != 'Day') && (Stored != 'Week') && (Stored != 'Month') && (Stored != 'Year')) {
+          Stored = 'Day';
+        }
         if(this.value != Stored) this.$emit('input', Stored);
       } else if(this.value == null) {
         this.$emit('input', 'Day');

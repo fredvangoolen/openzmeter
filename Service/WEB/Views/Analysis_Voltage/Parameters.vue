@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggregation_Source) : '-' }} aggregation {{ MouseOver ? '(Paused)' : '' }}</div>
+      <div class="header-text">From {{ (data!=null) ? analyzer.FormatAggregation(data.Aggreg) : '-' }} aggregation {{ MouseOver ? '(Graph paused)' : '' }}</div>
       <div class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
         <div class="btn-group">
@@ -29,7 +29,7 @@
     },
     computed: {
       Data: function() {
-        if((this.data == null) || (this.analyzer == null) || (this.Phase == null)) return null;
+        if((this.data == null) || (this.Phase == null)) return null;
         var Series = { 'Power Factor': [], 'Voltage THD': [], 'Phi': [] };
         Series.Sampletime = this.data.Sampletime;
         Series.From = this.data.From;
@@ -43,7 +43,7 @@
         return Series;
       },
       DataNow: function() {
-        if((this.dataNow == null) || (this.analyzer == null) || (this.Phase == null)) return null;
+        if((this.dataNow == null) || (this.Phase == null)) return null;
         var Series = { 'Power Factor': null, 'Voltage THD': null, 'Phi': null };
         Series['Power Factor'] = this.dataNow.Power_Factor[this.Phase];
         Series['Voltage THD'] = this.dataNow.Voltage_THD[this.Phase];
@@ -51,7 +51,7 @@
         return Series;
       },
       Export: function() {
-        if((this.data == null) || (this.analyzer == null)) return [];
+        if(this.data == null) return [];
         var Header = ['Sample']
           .concat(this.analyzer.GetSeriesNames('Power Factor', this.analyzer.VoltageChannels))
           .concat(this.analyzer.GetSeriesNames('Voltage THD', this.analyzer.VoltageChannels))
@@ -59,9 +59,9 @@
         var Data = [Header];
         for(var n in this.data.Sampletime) {
           var Row = [this.data.Sampletime[n]];
-          for(var i in this.data.Power_Factor[n]) Row.push(this.data.Power_Factor[n][i]);
-          for(var i in this.data.Voltage_THD[n]) Row.push(this.data.Voltage_THD[n][i]);
-          for(var i in this.data.Phi[n]) Row.push(this.data.Phi[n][i]);
+          for(var i in this.data.Power_Factor[n]) Row.push(this.Round(this.data.Power_Factor[n][i], 3));
+          for(var i in this.data.Voltage_THD[n]) Row.push(this.Round(this.data.Voltage_THD[n][i], 3));
+          for(var i in this.data.Phi[n]) Row.push(this.Round(this.data.Phi[n][i], 3));
           Data.push(Row);
         }
         return Data;
