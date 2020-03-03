@@ -1,12 +1,12 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :multi="false" :analyzer="analyzer" v-model="Phase"></toolbar-phases>
         <div class="btn-group">
-          <button-export file="Waveform" :rows="Export"></button-export>
+          <button-export file="Lissajou" :rows="Export"></button-export>
           <button-expand v-model="Expanded"></button-expand>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
         </div>
@@ -18,7 +18,7 @@
         <graph :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver"></graph>
       </div>
     </portal>
-    <dlg-fs v-if="Expanded" title="Waveform" :height.sync="DialogHeight"></dlg-fs>
+    <dlg-fs v-if="Expanded" title="Lissajou" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
 

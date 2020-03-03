@@ -38,6 +38,21 @@
           Series[this.Names[n]] = Serie;
         }
         return Series;
+      },
+      Export: function() {
+        if(this.data == null) return [];
+        var Data = [];
+        var Header = ['Time'];
+        for(var n in this.analyzer.HarmonicsNames) Header.concat(this.analyzer.GetSeriesNames(this.analyzer.HarmonicsNames[n], this.analyzer.VoltageChannels))
+        Data.push(Header);
+        for(var n in this.data.Sampletime) {
+          var Row = [this.data.Sampletime[n]];
+          for(var i in this.analyzer.HarmonicsNames) {
+            for(var j in this.data.Voltage_Harmonics[n]) Row.push(this.data.Voltage_Harmonics[n][j][i]);
+          }
+          Data.push(Row);
+        }
+        return Data;
       }
     },
     methods: {

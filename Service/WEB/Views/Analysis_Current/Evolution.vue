@@ -5,6 +5,7 @@
       <div class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="true" v-model="Phase"></toolbar-phases>
         <div class="btn-group">
+          <button-export file="Evolution" :rows="Export"></button-export>
         </div>
       </div>
     </div>
@@ -38,29 +39,26 @@
           Series[this.Names[n]] = Serie;
         }
         return Series;
+      },
+      Export: function() {
+        if(this.data == null) return [];
+        var Data = [];
+        var Header = ['Time'];
+        for(var n in this.analyzer.HarmonicsNames) Header.concat(this.analyzer.GetSeriesNames(this.analyzer.HarmonicsNames[n], this.analyzer.CurrentChannels))
+        Data.push(Header);
+        for(var n in this.data.Sampletime) {
+          var Row = [this.data.Sampletime[n]];
+          for(var i in this.analyzer.HarmonicsNames) {
+            for(var j in this.data.Current_Harmonics[n]) Row.push(this.data.Current_Harmonics[n][j][i]);
+          }
+          Data.push(Row);
+        }
+        return Data;
       }
     },
     methods: {
       Formatter: function(val) {
         return this.Round(val, 2, true) + ' dB';
-      },
-      ExportClick: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        var Header = ['Date/Time'];
-        var Data = [];
-        for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
-          for(var n = 0; n < oZm.Series['CURRENT'].Names(Analyzer).length; n++) Header.push( oZm.Series['HARMONICS'].Names[i] + '(' + oZm.Series['CURRENT'].Names(Analyzer)[n] + ')');
-        }
-        Data.push(Header);
-        for(var i = 0; i < this.Data.length; i++) {
-          var Row = [moment(this.Data[i][0]).format('HH:mm:ss')];
-          for(var j = 0; j < oZm.Series['HARMONICS'].Names.length; j++) {
-            for(var k = 0; k < oZm.Series['CURRENT'].Names(Analyzer).length; k++) Row.push(this.Data[i][k + 1][j]);
-          }
-          Data.push(Row);
-        }
-        this.$refs.tools.SaveCVS('CurrentHarmonicsEvolution.csv', Data);
       }
     },
     mounted: function() {
