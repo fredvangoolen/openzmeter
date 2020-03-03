@@ -10,7 +10,7 @@
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="false" :multi="true" v-model="Phases"></toolbar-phases>
               <div class="btn-group">
-                <button-export file="Voltage" :rows="[]"></button-export>
+                <button-export file="Voltage" :rows="Export"></button-export>
                 <button-expand v-model="Expanded"></button-expand>
               </div>
             </portal>
@@ -97,6 +97,25 @@
       Range: function(val, prev) {
         if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
         this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
+      },
+      Paused: function() {
+        if(this.Paused == true) {
+          this.TransferNow.Destroy();
+        } else {
+          this.TransferNow.UpdateNow(this.analyzer);
+        }
+      }
+    },
+    computed: {
+      Export: function() {
+        if(this.TransferGraph.Data == null) return [];
+        var Rows = [['Sampletime'].concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels))];
+        for(var n in this.TransferGraph.Data.Sampletime) {
+          var Row = [this.TransferGraph.Data.Sampletime[n]];
+          for(var i in this.TransferGraph.Data.Voltage[n]) Row.push(this.Round(this.TransferGraph.Data.Voltage[n][i], 3));
+          Rows.push(Row);
+        }
+        return Rows;
       }
     },
     components: { Voltage, Counters, Waveform, Advanced, Events, Evolution, Harmonics, Parameters, Phasors }

@@ -1,14 +1,14 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Current', 'Log']" v-model="Options"></toolbar-options>
         <div class="btn-group">
           <button-export file="FFT" :rows="Export"></button-export>
-          <button-expand :expanded.sync="Expanded"></button-expand>
+          <button-expand v-model="Expanded"></button-expand>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
         </div>
       </portal>
@@ -56,7 +56,7 @@
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x - this.VOffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'V'); };
         Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x - this.VOffset, 2, true); };
-        Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.VOffset); } : Dygraph.numericTicks;
+        Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.Tickers.DBTicks(min, max, this.VOffset); } : Dygraph.numericTicks;
         Opt.axes.y.strokeWidth = VoltageStyle.Width;
         Opt.axes.y2.strokeWidth = CurrentStyle.Width;
         Opt.axes.y2.pixelsPerLabel = 15;
@@ -64,7 +64,7 @@
         Opt.axes.y2.axisLabelWidth = this.Options['Current'] ? 34 : 0;
         Opt.axes.y2.valueFormatter = (x) => { return this.Round(x - this.COffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'A'); };
         Opt.axes.y2.axisLabelFormatter = (x) => { return this.Round(x - this.COffset, 2, true); };
-        Opt.axes.y2.ticker = this.Options['Current'] ? this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.COffset) } : Dygraph.numericTicks : () => { return []; };
+        Opt.axes.y2.ticker = this.Options['Current'] ? this.Options['Log'] ? (min, max) => { return Graph.Tickers.DBTicks(min, max, this.COffset) } : Dygraph.numericTicks : () => { return []; };
         Opt.axes.x.drawGrid = false;
         Opt.fillGraph = true;
         Opt.selectMode = 'euclidian';
@@ -90,8 +90,8 @@
           var V = [false], I = [false];
           for(var n in VoltageNames) { V.push(this.Phases[n]); I.push(false); }
           for(var n in CurrentNames) { I.push(this.Phases[n]); V.push(false); }
-          var Y1Range = this.MatrixColsRange(Opt.file, V, { defMin: 0, defMax: 1, upperPercent: 0.05 });
-          var Y2Range = this.MatrixColsRange(Opt.file, I, { defMin: 0, defMax: 1, upperPercent: 0.05 });
+          var Y1Range = this.MatrixColsRange(Opt.file, V, { wave: 1.0 });
+          var Y2Range = this.MatrixColsRange(Opt.file, I, { wave: 1.0 });
           if(this.Options['Log'] == true) { Y1Range[0] = -60; Y2Range[0] = -60; }
           this.VOffset = (Y1Range[0] < 0.0) ? -Y1Range[0] : 0.0;
           this.COffset = (Y2Range[0] < 0.0) ? -Y2Range[0] : 0.0;

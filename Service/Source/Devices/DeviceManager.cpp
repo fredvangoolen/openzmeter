@@ -44,11 +44,11 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("getEvent",            GetEventCallback);
   HTTPServer::RegisterCallback("setEvent",            SetEventCallback);
   HTTPServer::RegisterCallback("delEvent",            DelEventCallback);
-  HTTPServer::RegisterCallback("getRates",            GetRatesCallback);
-  HTTPServer::RegisterCallback("getRate",             GetRateCallback);
-  HTTPServer::RegisterCallback("setRate",             SetRateCallback);
-  HTTPServer::RegisterCallback("delRate",             DelRateCallback);
-  HTTPServer::RegisterCallback("addRate",             AddRateCallback);
+//  HTTPServer::RegisterCallback("getRates",            GetRatesCallback);
+//  HTTPServer::RegisterCallback("getRate",             GetRateCallback);
+//  HTTPServer::RegisterCallback("setRate",             SetRateCallback);
+//  HTTPServer::RegisterCallback("delRate",             DelRateCallback);
+//  HTTPServer::RegisterCallback("addRate",             AddRateCallback);
   HTTPServer::RegisterCallback("getPrices",           GetPricesCallback);
   HTTPServer::RegisterCallback("testAlarm",           TestAlarmCallback);
   HTTPServer::RegisterCallback("getAlarms",           GetAlarmsCallback);
@@ -73,11 +73,11 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("getEvent");
   HTTPServer::UnregisterCallback("setEvent");
   HTTPServer::UnregisterCallback("delEvent");
-  HTTPServer::UnregisterCallback("getRates");
-  HTTPServer::UnregisterCallback("getRate");
-  HTTPServer::UnregisterCallback("setRate");
-  HTTPServer::UnregisterCallback("delRate");
-  HTTPServer::UnregisterCallback("addRate");
+//  HTTPServer::UnregisterCallback("getRates");
+//  HTTPServer::UnregisterCallback("getRate");
+//  HTTPServer::UnregisterCallback("setRate");
+//  HTTPServer::UnregisterCallback("delRate");
+//  HTTPServer::UnregisterCallback("addRate");
   HTTPServer::UnregisterCallback("getPrices");
   HTTPServer::UnregisterCallback("testAlarm");
   HTTPServer::UnregisterCallback("getAlarms");
@@ -181,21 +181,21 @@ void DeviceManager::SetEventCallback(const json &params, Response &response) {
 void DeviceManager::DelEventCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::DelEvent);
 }
-void DeviceManager::GetRatesCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetRates);
-}
-void DeviceManager::GetRateCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetRate);
-}
-void DeviceManager::SetRateCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::SetRate);
-}
-void DeviceManager::DelRateCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::DelRate);
-}
-void DeviceManager::AddRateCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::AddRate);
-}
+//void DeviceManager::GetRatesCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Device::GetRates);
+//}
+//void DeviceManager::GetRateCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Device::GetRate);
+//}
+//void DeviceManager::SetRateCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Device::SetRate);
+//}
+//void DeviceManager::DelRateCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Device::DelRate);
+//}
+//void DeviceManager::AddRateCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Device::AddRate);
+//}
 void DeviceManager::GetPricesCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetPrices);
 }

@@ -1,7 +1,7 @@
 const openZmeter = {
   install: function(Vue, options) {
     Vue.prototype.CreateSeriesTransfer = (parent, series) => {
-      var Transfer = { This: parent, Timer: null, CancelFunc: null, Data: null, LastData: null, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
+      var Transfer = { This: parent, Paused: false, Timer: null, CancelFunc: null, Data: null, LastData: null, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -36,7 +36,7 @@ const openZmeter = {
         var Data = { Periods: [], Bills: [], Aggreg: data.Aggreg };
         if(data.Bills != null) Data.Bills = data.Bills;
         //Group periods
-        var LastItem = null;//(this.Periods.length > 0) ? this.Periods.slice(-1)[0] : null;
+        var LastItem = null;
         for(var i = 0; i < data.Sampletime.length; i++) {
           if(LastItem == null) {
             LastItem = { Name: data.Period_Name[i], From: data.Sampletime[i] - ((data.Aggreg === '15M') ? 899999 : 3599999), To: data.Sampletime[i], Color: data.Period_Color[i] };
@@ -150,8 +150,7 @@ const openZmeter = {
           (result) => {
             if(Cancelled == true) return;
             for(var n in result) {
-              if(result[n].body.StartTime.length == 0) continue;
-              var After = ((Data.From != null) && (Data.From > result[n].body.StartTime[0]));
+              var After = ((result[n].body.StartTime.length > 0) && (Data.From != null) && (Data.From > result[n].body.StartTime[0]));
               for(var serie in result[n].body) {
                 if(Array.isArray(result[n].body[serie]) == false) continue
                 if((Data.From == null) || (Data.To == null))
@@ -305,12 +304,12 @@ const openZmeter = {
 
 
 
-    Vue.prototype.CancelTransfer = (transfer) => {
-      if(transfer == null) transfer = { Timer: null, CancelFunc: null };
-      if(transfer.Timer != null) clearTimeout(transfer.Timer);
-      if(transfer.CancelFunc != null) transfer.CancelFunc();
-      return transfer;
-    },
+//    Vue.prototype.CancelTransfer = (transfer) => {
+//      if(transfer == null) transfer = { Timer: null, CancelFunc: null };
+//      if(transfer.Timer != null) clearTimeout(transfer.Timer);
+//      if(transfer.CancelFunc != null) transfer.CancelFunc();
+//      return transfer;
+//    },
     Vue.prototype.MatrixColsRange = (values, cols, options) => {
       var UpperRange = -Infinity;
       var LowerRange = +Infinity;
@@ -335,6 +334,19 @@ const openZmeter = {
           var Width = Math.max((UpperRange - LowerRange) * 0.1, options.incZero / 2.0);
           return [(LowerRange < 0) ? LowerRange - Width : LowerRange, (UpperRange > 0) ? UpperRange + Width : UpperRange];
         }
+        if(options.wave != null) {
+          if((UpperRange == -Infinity) || (LowerRange == Infinity)) return [-options.wave, options.wave];
+          var Max = Math.max(Math.abs(UpperRange), Math.abs(LowerRange));
+          Max = (Max < (options.wave / 2.0)) ? options.wave / 2.0 : Max * 1.1;
+          if((UpperRange > 0) && (LowerRange < 0)) {
+            return [-Max, Max];
+          } else if((UpperRange > 0) && (LowerRange >= 0)) {
+            return [0, Max];
+          } else {
+            return [-Max, 0];
+          }
+        }
+
 
 
         if((UpperRange == -Infinity) && (options.defMax != null)) UpperRange = options.defMax;

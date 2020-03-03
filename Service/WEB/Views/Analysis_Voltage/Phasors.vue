@@ -1,12 +1,12 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ (MouseOver || paused) ? '(Paused)' : '' }}</div>
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
       <div class="header-buttons" ref="Toolbar">
         <div class="btn-group">
-          <button-pause></button-pause>
-          <button-export file="Phasors" :rows="[]"></button-export>
+          <button-export file="Phasors" :rows="Export"></button-export>
+          <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
         </div>
       </div>
     </div>
@@ -36,7 +36,7 @@
         <div class="col-sm-12 col-md-8 col-lg-6 panel-body" ref="PhasorContainer">
           <table>
             <tr><td class="border-bottom">Phasor view</td></tr>
-            <tr><td class="graphDiv">
+            <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
               <graph class="graph" :options="GraphOptionsPhasors" :height="PhasorHeight" :width="PhasorHeight"></graph>
             </td></tr>
           </table>
@@ -67,7 +67,7 @@
   export default {
     props: { analyzer: Object, data: Object, paused: Boolean },
     data: function() {
-      return { MouseOver: false, PhasorHeight: 200, Phasors: [],
+      return { MouseOver: false, PhasorHeight: 200,
         Columns: [
           { name: 'Phase', title: 'Phase' },
           { name: 'Channel', title: 'Channel' },
@@ -119,20 +119,32 @@
       GraphOptionsPhasors: function() {
         var Opt = {};
         if(this.data != null) {
-//        var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
-        Opt.file = [];
-        this.Phasors = [];
-        for(var i in this.data.Voltage) {
-          Opt.file.push([i * 2, this.data.Voltage_Phase[i], this.data.Voltage[i]]);
-          Opt.file.push([i * 2 + 1, this.data.Voltage_Phase[i] + this.data.Phi[i], this.data.Current[i]]);
-//          this.Data.push([Phases[i], "Voltage", result.Voltage_Phase[i], result['Voltage'][i]]);
-//          this.Data.push([Phases[i], "Current", result.Voltage_Phase[i] + result.Phi[i], result['Current'][i]]);
-          this.Phasors.push( { Phase: this.analyzer.PhaseNames[i], Channel: "Voltage", Angle: this.Round(this.data.Voltage_Phase[i], 2, true) + '°', Value: this.Round(this.data.Voltage[i], 2, true) + ' V' } );
-          this.Phasors.push( { Phase: this.analyzer.PhaseNames[i], Channel: "Current", Angle: this.Round(((this.data.Phi[i] == null) || (this.data.Voltage_Phase[i] == null)) ? null : this.data.Voltage_Phase[i] + this.data.Phi[i], 2, true) + '°', SecAngle: '(' + this.Round(this.data.Phi[i], 2, true) + '°)', Value: this.Round(this.data.Current[i], 2, true) + ' A'} );
+          Opt.file = [];
+          for(var i in this.data.Voltage) {
+            Opt.file.push([i * 2, this.data.Voltage_Phase[i], this.data.Voltage[i]]);
+            Opt.file.push([i * 2 + 1, this.data.Voltage_Phase[i] + this.data.Phi[i], this.data.Current[i]]);
+          }
         }
- }
         Object.assign(Opt, this.CommonOptions);
         return Opt;
+      },
+      Phasors: function() {
+        if(this.data == null) return [];
+        var Phasors = [];
+        for(var i in this.data.Voltage) {
+          Phasors.push( { Phase: this.analyzer.PhaseNames[i], Channel: "Voltage", Angle: this.Round(this.data.Voltage_Phase[i], 2, true) + '°', Value: this.Round(this.data.Voltage[i], 2, true) + ' V' } );
+          Phasors.push( { Phase: this.analyzer.PhaseNames[i], Channel: "Current", Angle: this.Round(((this.data.Phi[i] == null) || (this.data.Voltage_Phase[i] == null)) ? null : this.data.Voltage_Phase[i] + this.data.Phi[i], 2, true) + '°', SecAngle: '(' + this.Round(this.data.Phi[i], 2, true) + '°)', Value: this.Round(this.data.Current[i], 2, true) + ' A'} );
+        }
+        return Phasors;
+      },
+      Export: function() {
+        if(this.data == null) return [];
+        var Data = [['Phase', 'Channel', 'Angle', 'Value']];
+        for(var i in this.data.Voltage) {
+          Data.push([this.analyzer.PhaseNames[i], "Voltage", this.Round(this.data.Voltage_Phase[i], 3), this.Round(this.data.Voltage[i], 3)]);
+          Data.push([this.analyzer.PhaseNames[i], "Current", this.Round(this.data.Voltage_Phase[i] + this.data.Phi[i], 3), this.Round(this.data.Current[i], 3)]);
+        }
+        return Data;
       }
     },
     created: function() {
@@ -298,9 +310,6 @@ return;
 //          this.$refs.negative.Redraw(Width, Width);
 //          this.$refs.zero.Redraw(Width, Width);
         });
-      },
-      ExportClick: function() {
-        this.$refs.tools.SaveCVS('Phasors.csv', [['Phase', 'Channel', 'Angle', 'Value']].concat(this.Data));
       },
 /*      SetData(result) {
         var Analyzer = this.$root.SelectedAnalyzer;

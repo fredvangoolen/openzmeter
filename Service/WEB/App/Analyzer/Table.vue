@@ -118,7 +118,7 @@
       },
       Rates: function(analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer, Rates: true }).then(
           (result) => {
             if(result.status == 200) {
               result.data.Analyzer = analyzer;

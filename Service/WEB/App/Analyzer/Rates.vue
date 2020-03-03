@@ -4,22 +4,23 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates</h4></div>
         <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save rates config"></button>
           <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="Add rate"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', analyzer.Analyzer)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', Analyzer.Analyzer)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
         </div>
       </template>
       <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
       <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error==null">All dates/times are in analyzer timezone.</div>
-      <vuetable key="rates" :fields="Columns" :data="Rates" :api-mode="false" class="table small table-striped">
+      <vuetable key="rates" :fields="Columns" :data="Analyzer.Rates" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowData)">Edit</button>
-            <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData)">Delete</button>
+            <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowIndex)">Edit</button>
+            <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowIndex)">Delete</button>
           </div>
         </template>
       </vuetable>
     </dlg>
-    <analyzer-rate v-if="View=='Rate'" @close="GetRates($event)" :rate="Rate" :analyzer="analyzer"></analyzer-rate>
+    <analyzer-rate v-if="View=='Rate'" @endEdit="EndEdit" :analyzer="Analyzer" :index="Index"></analyzer-rate>
   </div>
 </template>
 
@@ -32,7 +33,7 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { Error: null, Rates: null, ShowSpinner: false, View: null, Rate: null,
+      return { Error: null, ShowSpinner: false, View: null, Index: null, Analyzer: null,
         Columns: [
           { name: 'Name', title: 'Name' },
           { name: 'StartDate', title: 'Start date', callback: this.DateFormat },
@@ -45,60 +46,35 @@
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     created: function() {
-      this.GetRates();
+      this.Analyzer = Object.assign({}, this.analyzer);
     },
     methods: {
-      GetRates: function(update) {
+      EndEdit: function(index, value) {
+        this.Analyzer.Rates[index] = value;
         this.View = null;
-        if(update == false) return;
-        this.ShowSpinner = true;
-        this.$http.post('getRates', { Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            this.Rates = result.data;
-            this.Error = null;
-            for(var n = 1; n < result.data.length; n++) {
-              if(result.data[n].StartDate > result.data[n - 1].EndDate) continue;
-              this.Error = 'Assigned rates overlaps, please check date ranges';
-              break;
-            }
-            this.ShowSpinner = false;
-          },
-          (fail) => { }
-        );
       },
       Add: function() {
-        this.Rate = null;
+        this.Analyzer.Rates.push({ Name: 'Unname rate', StartDate: 0, EndDate: 0, Template: null, Config: { Periods:[], Taxs: [], Billing: [] } });
+        this.Index = this.Analyzer.Rates.length - 1;
         this.View = 'Rate';
       },
       Edit: function(row) {
-        this.ShowSpinner = true;
-        this.$http.post('getRate', { Analyzer: this.analyzer.Analyzer, RateID: row.RateID }).then(
-          (result) => {
-            this.Rate = result.body;
-            this.View = 'Rate';
-            this.ShowSpinner = false;
-          },
-          (fail) => { this.ShowSpinner = false; }
-        );
+        this.Index = row;
+        this.View = 'Rate';
       },
       Delete: function(row) {
-        if(confirm("Delete '" + row.Name + "' rate?") == false) return;
-        this.ShowSpinner = true;
-        this.$http.post('delRate', { RateID: row.RateID, Analyzer: this.analyzer.Analyzer }).then(
-          (result) => { this.GetRates(); },
-          (fail) => { this.ShowSpinner = false; }
-        );
+        if(confirm("Delete '" + this.Analyzer.Rate[row].Name + "' rate?")) this.Analyzer.Rates.splice(row, 1);
       },
-      GetTariffs: function(onComplete) {
+      Save: function() {
         this.ShowSpinner = true;
-        $.ajax({ url: "getTariffs", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
-          success: (result) => {
-            onComplete(result);
-          },
-          complete: () => {
+        this.$http.post('setAnalyzer', this.Analyzer).then(
+          (result) => { this.$emit('close', result.data); },
+          (fail) => {
             this.ShowSpinner = false;
+            this.Error = 'Failed to save analyzer!';
+            setTimeout(() => { this.Error = null; }, 5000);
           }
-        });
+        );
       },
       DateFormat: function(val) {
         return moment.tz(val, this.analyzer.TimeZone).format('DD/MM/YYYY');

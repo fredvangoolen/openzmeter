@@ -21,6 +21,7 @@ TariffList::TariffList(const json &list, const string &timezone) {
   cctz::load_time_zone(timezone, &pTimeZone);
   if(list.is_array() == false) return;
   for(uint32_t n = 0; n < list.size(); n++) PushTariff(list[n]);
+  std::sort(pList.begin(), pList.end(), [](Tariff *a, Tariff *b) { return a->pStartDate > b->pStartDate; });
 }
 bool TariffList::PushTariff(const json &tariff) {
   if(!tariff["StartDate"].is_number()) return false;

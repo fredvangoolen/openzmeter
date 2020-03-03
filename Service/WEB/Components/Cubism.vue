@@ -196,5 +196,9 @@
   .cubism-serie .timeline-day {
     margin-top: -63px;
     font-weight: bold;
+    font-size: 10px;
+    color: black;
+    line-height: 10px;
+    pointer-events: none;
   }
 </style>

@@ -50,11 +50,11 @@ class Analyzer {
     virtual void GetEvent(const json &params, Response &response) = 0;
     virtual void SetEvent(const json &params, Response &response) = 0;
     virtual void DelEvent(const json &params, Response &response) = 0;
-    virtual void GetRates(const json &params, Response &response) = 0;
-    virtual void GetRate(const json &params, Response &response) = 0;
-    virtual void SetRate(const json &params, Response &response) = 0;
-    virtual void DelRate(const json &params, Response &response) = 0;
-    virtual void AddRate(const json &params, Response &response) = 0;
+//    virtual void GetRates(const json &params, Response &response) = 0;
+//    virtual void GetRate(const json &params, Response &response) = 0;
+//    virtual void SetRate(const json &params, Response &response) = 0;
+//    virtual void DelRate(const json &params, Response &response) = 0;
+//    virtual void AddRate(const json &params, Response &response) = 0;
     virtual void GetPrices(const json &params, Response &response) = 0;
     virtual void TestAlarm(const json &params, Response &response) = 0;
     virtual void GetAlarms(const json &params, Response &response) = 0;

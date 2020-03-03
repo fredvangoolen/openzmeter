@@ -5,16 +5,15 @@
       <div class="pull-right input-group input-group-xs" style="width:200px" v-if="Rate.Template==null">
         <input type="text" class="form-control" placeholder="Filter..." v-model="Filter">
         <span class="input-group-btn">
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
         </span>
       </div>
       <div class="pull-right btn-group" v-if="Rate.Template!=null">
-        <button type="button" class="btn btn-default btn-xs" :disabled="Error!=null" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save rate"></button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Concepts' }" @click="View='Concepts'">Concepts</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Cycles' }" @click="View='Cycles'">Cycles</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
@@ -149,7 +148,7 @@
   import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: Object, rate: Object },
+    props: { analyzer: Object, index: Number },
     data() {
       return { View: 'Main', Rate: null, Day: 0, Period: 0, ShowSpinner: false, Filter: '', Tariffs: null,
         PeriodNames: ['Each month', 'Each two month', 'Each three month'],
@@ -163,11 +162,7 @@
       };
     },
     created: function() {
-      if(this.rate != null) {
-        this.Rate = Object.assign({}, this.rate);
-      } else {
-        this.Rate = { StartDate: 0, EndDate: 0, Template: null, Config: { Periods:[], Taxs: [], Billing: [] } };
-      }
+      this.Rate = Object.assign({}, this.analyzer.Rates[this.index]);
       if(this.Rate.Template == null) this.LoadTariffs();
     },
     computed: {
