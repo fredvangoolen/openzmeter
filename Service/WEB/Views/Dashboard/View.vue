@@ -86,23 +86,7 @@
       this.TransferGraph.Destroy();
     },
     mounted: function() {
-      setTimeout(() => {
-        var Graphs = [];
-        if(this.$refs.g0 != null) Graphs.push(this.$refs.g0.$refs.graph.Graph);
-        if(this.$refs.g1 != null) Graphs.push(this.$refs.g1.$refs.graph.Graph);
-        if(this.$refs.g2 != null) Graphs.push(this.$refs.g2.$refs.graph.Graph);
-        if(this.$refs.g3 != null) Graphs.push(this.$refs.g3.$refs.graph.Graph);
-        Dygraph.synchronize(Graphs, { range: false, zoom: false });
-      }, 250);
-    },
-    computed: {
-      Export: function() {
-        if(this.TransferGraph.Data == null) return [];
-        var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
-        var Data = [['Sampletime', 'Active Energy', 'Period name', 'Period expense']];
-        for(var i = 0; i < this.TransferGraph.Data.Sampletime.length; i++) Data.push([this.TransferGraph.Data.Sampletime[i], this.TransferGraph.Data.Active_Power[i] / Div, this.TransferGraph.Data.Period_Name[i], this.TransferGraph.Data.Period_Expense[i]]);
-        return Data;
-      }
+      this.BindGraphs();
     },
     watch: {
       analyzer: function() {
@@ -110,12 +94,32 @@
         this.Transfer3S.Update(this.analyzer, '3S', 'LastHours');
         this.Transfer1M.Update(this.analyzer, '1M', 'LastDay');
         this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.BindGraphs();
       },
       Aggreg: function(val, prev) {
         if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
       },
       Range: function() {
         this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+      }
+    },
+    methods: {
+      BindGraphs: function() {
+        if(this.analyzer != null) setTimeout(() => {
+          var Graphs = [];
+          if(this.$refs.g0 != null) Graphs.push(this.$refs.g0.$refs.graph.Graph);
+          if(this.$refs.g1 != null) Graphs.push(this.$refs.g1.$refs.graph.Graph);
+          if(this.$refs.g2 != null) Graphs.push(this.$refs.g2.$refs.graph.Graph);
+          if(this.$refs.g3 != null) Graphs.push(this.$refs.g3.$refs.graph.Graph);
+          Dygraph.synchronize(Graphs, { range: false, zoom: false });
+        }, 500);
+      },
+      Export: function() {
+        if(this.TransferGraph.Data == null) return [];
+        var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
+        var Data = [['Sampletime', 'Active Energy', 'Period name', 'Period expense']];
+        for(var i = 0; i < this.TransferGraph.Data.Sampletime.length; i++) Data.push([this.TransferGraph.Data.Sampletime[i], this.Round(this.TransferGraph.Data.Active_Power[i] / Div, 3), this.TransferGraph.Data.Period_Name[i], this.Round(this.TransferGraph.Data.Period_Expense[i], 3)]);
+        return Data;
       }
     },
     components: { Energy, Counters, Graphs, Variables }

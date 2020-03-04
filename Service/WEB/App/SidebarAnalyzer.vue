@@ -20,11 +20,9 @@
       return { ShowDialog: false, EventsCount: 0 };
     },
     created: function() {
-      this.LastSample = 0;
-      this.Timer = null;
       if(localStorage.getItem("Analyzer") == null) {
         this.SetAnalyzer(null);
-        this.View = 'Table';
+        this.ShowDialog = true;
       } else {
         this.$http.post('getAnalyzer', { Analyzer: localStorage.getItem("Analyzer") }).then(
           (result) => {
@@ -38,9 +36,6 @@
         );
       }
     },
-    beforeDestroy: function () {
-      clearInterval(this.Timer);
-    },
     methods: {
       SetAnalyzer: function(analyzer) {
         if(analyzer != null) {
@@ -51,22 +46,12 @@
           analyzer.Unit = { Voltage: 'V', Current: 'A', Active_Power: 'W', Active_Energy: 'Wh', Frequency: 'Hz'};
           analyzer.HarmonicsNames = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
           analyzer.GetSeriesNames = this.GetSeriesNames.bind(this);
-//          analyzer.GetSeriesRange = this.GetSeriesRange.bind(this);
-//          analyzer.GetPricesRange = this.GetPricesRange.bind(this);
-//          analyzer.GetSeriesLast = this.GetSeriesLast.bind(this);
-//          analyzer.GetSeriesNow = this.GetSeriesNow.bind(this);
           analyzer.FormatAggregation = this.FormatAggregation.bind(this);
           analyzer.FormatTime = this.FormatTime.bind(this);
           analyzer.FormatTimeMS = this.FormatTimeMS.bind(this);
           analyzer.FormatDateTime = this.FormatDateTime.bind(this);
         }
         this.$emit('update:analyzer', analyzer);
-//        this.$parent.$parent.Analyzer = result;
-//              this.$root.SelectedAnalyzer = result;
-//              this.$root.$emit('AnalyzerChanged', result);
-
-
-//        this.SelAnalyzer = analyzer;
 //        this.LastSample = 0;
 //        this.EventsCount = 0;
 //        this.GetEvents();
@@ -77,208 +62,6 @@
         for(var n = 0; n < len; n++) Result.push(serie + ' (' + this.analyzer.PhaseNames[n] + ')');
         return Result;
       },
-//      GetSeriesRange: function(aggreg, range, prev, series, working, outs, timeout) {
-//        var Cancelled = false;
-//        var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
-//        var ReqRange = null;
-//        var Now = moment().tz(this.analyzer.TimeZone);
-//        var Period = (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
-//        if(range == 'LastDay') ReqRange = [Now.valueOf() - 86400000, Now.valueOf()];
-//        if(range == 'LastWeek') ReqRange = [Now.valueOf() - 604800000, Now.valueOf()];
-//        if(range == 'LastMonth') ReqRange = [Now.valueOf() - 2592000000, Now.valueOf()];
-//        if(range == 'LastYear') ReqRange = [Now.valueOf() - 31536000000, Now.valueOf()];
-//        if(range == 'Day') ReqRange = [Now.startOf('day').valueOf(), Now.endOf('day').valueOf()];
-//        if(range == 'Week') ReqRange = [Now.startOf('week').valueOf(), Now.endOf('week').valueOf()];
-//        if(range == 'Month') ReqRange = [Now.startOf('month').valueOf(), Now.endOf('month').valueOf()];
-//        if(range == 'Year') ReqRange = [Now.startOf('year').valueOf(), Now.endOf('year').valueOf()];
-//        if(Array.isArray(range)) ReqRange = [range[0], range[1]];
-//        var Out = {};
-//        if(prev != null) Out.Aggregation_Source = prev.Aggregation_Source;
-//        if(Out.Aggregation_Source != aggreg) {
-//          prev = null;
-//          Out = { Aggregation_Source: aggreg };
-//        } else if((prev != null) && (prev.Sampletime != undefined)) {
-//          for(var serie in prev) {
-//            if(Array.isArray(prev[serie]) == false) continue;
-//            if(Out[serie] == undefined) Out[serie] = [];
-//            for(var pos in prev.Sampletime) {
-//              if((prev.Sampletime[pos] >= ReqRange[0]) && (prev.Sampletime[pos] <= ReqRange[1])) Out[serie].push(prev[serie][pos]);
-//            }
-//          }
-//          Out.From = prev.From;
-//          Out.To = prev.To;
-//        }
-//        var Promises = [];
-//        if((prev == null) || (prev.From == undefined) || (ReqRange[0] < prev.From)) {
-//          var ToTime = ((prev == null) || (prev.From == undefined)) ? ReqRange[1] : prev.From - 1;
-//          Promises.push(this.$http.post('getSeries', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ToTime, From: ReqRange[0], Series: series }));
-//        }
-//        if((prev != null) && (prev.To != undefined) && (ReqRange[1] > prev.To)) {
-//          Promises.push(this.$http.post('getSeries', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ReqRange[1], From: prev.To - 1, Series: series }));
-//        }
-//        if(Promises.length == 0) {
-//          Out.To = ReqRange[1]
-//          Out.From = ReqRange[0];
-//          if(outs != null) outs(Out);
-//          clearTimeout(Timer);
-//          if(working != null) working(false);
-//          if(timeout != null) timeout(Period / 2);
-//        }
-//        Promise.all(Promises).then(
-//          (result) => {
-//            clearTimeout(Timer);
-//            if(Cancelled == true) return;
-//            for(var req in result) {
-//              if(result[req].data.From == ReqRange[0]) {
-//                for(var serie in result[req].data) {
-//                  if(Array.isArray(result[req].data[serie]) == false) continue;
-//                  Out[serie] = ((prev == null) || (prev[serie] == undefined)) ? result[req].data[serie] : result[req].data[serie].concat(Out[serie]);
-//                }
-//              } else {
-//                for(var serie in result[req].data) {
-//                  if(Array.isArray(result[req].data[serie]) == false) continue;
-//                  Out[serie] = ((prev == null) || (prev[serie] == undefined)) ? result[req].data[serie] : Out[serie].concat(result[req].data[serie]);
-//                }
-//              }
-//            }
-//            Out.To = ReqRange[1]
-//            Out.From = ReqRange[0];
-//            if(outs != null) outs(Out);
-//            if(working != null) working(false);
-//            if(timeout != null) timeout(Period / 2);
-//          },
-//          (fail) => {
-//            if(Cancelled == true) return;
-//            if(timeout != null) timeout(Period / 2);
-//          }
-//        );
-//        return () => { this.Cancelled = true; };
-//      },
-//      GetPricesRange: function(aggreg, range, prev, working, outs, timeout) {
-//        var Cancelled = false;
-//        var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
-//        var ReqRange = null;
-//        var Now = moment().tz(this.analyzer.TimeZone);
-//        if(range == 'LastDay') ReqRange = [Now.valueOf() - 86400000, Now.valueOf()];
-//        if(range == 'LastWeek') ReqRange = [Now.valueOf() - 604800000, Now.valueOf()];
-//        if(range == 'LastMonth') ReqRange = [Now.valueOf() - 2592000000, Now.valueOf()];
-//        if(range == 'LastYear') ReqRange = [Now.valueOf() - 31536000000, Now.valueOf()];
-//        if(range == 'Day') ReqRange = [Now.startOf('day').valueOf(), Now.endOf('day').valueOf()];
-//        if(range == 'Week') ReqRange = [Now.startOf('week').valueOf(), Now.endOf('week').valueOf()];
-//        if(range == 'Month') ReqRange = [Now.startOf('month').valueOf(), Now.endOf('month').valueOf()];
-//        if(range == 'Year') ReqRange = [Now.startOf('year').valueOf(), Now.endOf('year').valueOf()];
-//        if(Array.isArray(range)) ReqRange = [range[0], range[1]];
-//        var Out = {};
-//        if(prev != null) Out.Aggregation_Source = prev.Aggregation_Source;
-//        if(Out.Aggregation_Source != aggreg) {
-//          prev = null;
-//          Out = { Aggregation_Source: aggreg };
-//        } else if((prev != null) && (prev.Sampletime != undefined)) {
-//          for(var serie in prev) {
-//            if(Array.isArray(prev[serie]) == false) continue;
-//            if(Out[serie] == undefined) Out[serie] = [];
-//            for(var pos in prev.Sampletime) {
-//              if((prev.Sampletime[pos] >= ReqRange[0]) && (prev.Sampletime[pos] <= ReqRange[1])) Out[serie].push(prev[serie][pos]);
-//            }
-//          }
-//          Out.From = prev.From;
-//          Out.To = prev.To;
-//        }
-//        var Promises = [];
-//        if((prev == null) || (prev.From == undefined) || (ReqRange[0] < prev.From)) {
-//          var ToTime = ((prev == null) || (prev.From == undefined)) ? ReqRange[1] : prev.From - 1;
-//          Promises.push(this.$http.post('getPrices', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ToTime, From: ReqRange[0] }));
-//        }
-//        if((prev != null) && (prev.To != undefined) && (ReqRange[1] > prev.To)) {
-//          Promises.push(this.$http.post('getPrices', { LastSample: 0, Analyzer: this.analyzer.Analyzer, Aggreg: aggreg, To: ReqRange[1], From: prev.To - 1 }));
-//        }
-//        if(Promises.length == 0) {
-//          Out.To = ReqRange[1]
-//          Out.From = ReqRange[0];
-//          clearTimeout(Timer);
-//          if(outs != null) outs(Out);
-//          if(working != null) working(false);
-//          if(timeout != null) timeout((aggreg == '15M') ? 900000 : 3600000);
-//        }
-//        Promise.all(Promises).then(
-//          (result) => {
-//            clearTimeout(Timer);
-//            if(Cancelled == true) return;
-//            for(var req in result) {
-//              if(result[req].data.From == ReqRange[0]) {
-//                for(var serie in result[req].data) {
-//                  if(Array.isArray(result[req].data[serie]) == false) continue;
-//                  Out[serie] = ((prev == null) || (prev[serie] == undefined)) ? result[req].data[serie] : result[req].data[serie].concat(prev[serie]);
-//                }
-//              } else {
-//                for(var serie in result[req].data) {
-//                  if(Array.isArray(result[req].data[serie]) == false) continue;
-//                  Out[serie] = ((prev == null) || (prev[serie] == undefined)) ? result[req].data[serie] : prev[serie].concat(result[req].data[serie]);
-//                }
-//              }
-//            }
-//            Out.To = ReqRange[1];
-//            Out.From = ReqRange[0];
-//            if(outs != null) outs(Out);
-//            if(working != null) working(false);
-//            if(timeout != null) timeout((aggreg == '15M') ? 900000 : 3600000);
-//          },
-//          (fail) => {
-//            if(Cancelled == true) return;
-//            if(outs != null) outs(Out);
-//            if(working != null) working(false);
-//            if(timeout != null) timeout((aggreg == '15M') ? 900000 : 3600000);
-//          }
-//        );
-//        return () => { Cancelled = true };
-//      },
-//      GetSeriesLast: function(aggreg, series, working, outs, timeout) {
-//        var Cancelled = false;
-//        var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
-//        var Period = (aggreg == '3S') ? 6000 : (aggreg == '1M') ? 120000 : (aggreg == '10M') ? 1200000 : (aggreg == '15M') ? 1800000 : 7200000;
-//        this.$http.post('getSeries', { Series: series, To: moment().valueOf(), Aggreg: aggreg, From: moment().valueOf() - Period, Analyzer: this.analyzer.Analyzer }).then(
-//          (result) => {
-//            clearTimeout(Timer);
-//            if(Cancelled == true) return;
-//            if(result.data.Sampletime.length > 0) {
-//              var Result = {};
-//              Result.Aggregation_Source = result.data.Aggregation_Source;
-//              for(var n in result.data) {
-//                if(Array.isArray(result.data[n])) Result[n] = result.data[n].slice(-1)[0];
-//              }
-//              if(outs != null) outs(Result);
-//            } else {
-//              if(outs != null) outs(null);
-//            }
-//            if(working != null) working(false);
-//            if(timeout != null) timeout(Period / 2);
-//          },
-//          () => {
-//            if(outs != null) outs(null);
-//            if(timeout != null) timeout(Period / 2);
-//          }
-//        );
-//        return () => { Cancelled = true };
-//      },
-//      GetSeriesNow: function(series, working, outs, timeout) {
-//        var Cancelled = false;
-//        var Timer = setTimeout(() => { if(working != null) working(true); }, 500);
-//        this.$http.post('getSeriesNow', { Series: series, Analyzer: this.analyzer.Analyzer }).then(
-//          (result) => {
-//            clearTimeout(Timer);
-//            if(Cancelled == true) return;
-//            if(outs != null) outs((result.status == 200) ? result.data : null);
-//            if(working != null) working(false);
-//            if(timeout != null) timeout(1000);
-//          },
-//          () => {
-//            if(Cancelled == true) return;
-//            if(outs != null) outs(null);
-//            if(timeout != null) timeout(1000);
-//          }
-//        );
-//        return () => { Cancelled = true };
-//      },
       FormatAggregation: function(val) {
         return (val == '1H') ? '1 hour' : (val == '15M') ? '15 minutes' : (val == '10M') ? '10 minutes' : (val == '1M') ? '1 minute' : (val == '3S') ? '3 seconds' : 'unknown';
       },

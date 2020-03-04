@@ -240,6 +240,7 @@
       },
       Underlay_DrawPeriods: function(canvas, area, g, decoration) {
         if(decoration == null) return;
+        canvas.save();
         var Disp = (decoration.Aggreg == '15M') ? 450000 : 1800000;
         canvas.strokeStyle = '#000';
         var EmptyPattern = canvas.createPattern(PatternImg, "repeat");
@@ -254,8 +255,8 @@
           canvas.fillStyle = decoration.Periods[i].Color;
           canvas.fillRect(Left, area.y + 1, Right - Left, 12);
 
-          canvas.fillStyle = chroma(decoration.Periods[i].Color).brighten(2.5);
-          canvas.fillRect(Left, area.y + 14, Right - Left, area.h);
+//          canvas.fillStyle = chroma(decoration.Periods[i].Color).brighten(2.5);
+//          canvas.fillRect(Left, area.y + 14, Right - Left, area.h);
           if(((Right - Left) > 20) && (decoration.Periods[i].Name !== null)) {
             canvas.fillStyle = '#000000';
             canvas.font = "10px monospace";
@@ -278,6 +279,7 @@
         canvas.moveTo(area.x, 13.5);
         canvas.lineTo(area.x + area.w, 13.5);
         canvas.stroke();
+        canvas.restore();
         canvas.rect(area.x, area.y + 14, area.w, area.h);
         canvas.clip();
       },
