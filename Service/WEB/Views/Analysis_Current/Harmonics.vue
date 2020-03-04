@@ -59,13 +59,13 @@
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x - this.COffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'A'); };
         Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x - this.COffset, 2, true); };
-        Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.VOffset); } : Dygraph.numericTicks;
+        Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.Tickers.DBTicks(min, max, this.VOffset); } : Dygraph.numericTicks;
         Opt.axes.y2.pixelsPerLabel = 15;
         Opt.axes.y2.drawAxis = this.Options['Voltage'];
         Opt.axes.y2.axisLabelWidth = this.Options['Voltage'] ? 34 : 0;
         Opt.axes.y2.valueFormatter = (x) => { return this.Round(x - this.VOffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'V'); };
         Opt.axes.y2.axisLabelFormatter = (x) => { return this.Round(x - this.COffset, 2, true); };
-        Opt.axes.y2.ticker = this.Options['Voltage'] ? this.Options['Log'] ? (min, max) => { return Graph.DBTicks(min, max, this.COffset) } : Dygraph.numericTicks : () => { return []; };
+        Opt.axes.y2.ticker = this.Options['Voltage'] ? this.Options['Log'] ? (min, max) => { return Graph.Tickers.DBTicks(min, max, this.COffset) } : Dygraph.numericTicks : () => { return []; };
         Opt.axes.x.drawGrid = false;
         Opt.axes.x.ticker = () => { return Graph.Tickers.OddHarmonicsTicks(this.analyzer); };
         Opt.axes.x.axisLabelFormatter = (x) => { return oZm.Series['HARMONICS'].Names[x]; };
@@ -84,8 +84,8 @@
           var V = [false], I = [false];
           for(var n in CurrentNames) { I.push(this.Phases[n]); V.push(false); }
           for(var n in VoltageNames) { V.push(this.Phases[n]); I.push(false); }
-          var Y1Range = this.MatrixColsRange(Opt.file, I, { defMin: 0, defMax: 1, upperPercent: 0.05 });
-          var Y2Range = this.MatrixColsRange(Opt.file, V, { defMin: 0, defMax: 1, upperPercent: 0.05 });
+          var Y1Range = this.MatrixColsRange(Opt.file, I, { wave: 1.0 });
+          var Y2Range = this.MatrixColsRange(Opt.file, V, { wave: 1.0 });
           if(this.Options['Log'] == true) { Y1Range[0] = -60; Y2Range[0] = -60; }
           this.COffset = (Y1Range[0] < 0.0) ? -Y1Range[0] : 0.0;
           this.VOffset = (Y2Range[0] < 0.0) ? -Y2Range[0] : 0.0;
@@ -99,7 +99,9 @@
           }
         }
         return Opt;
-      },
+      }
+    },
+    methods: {
       Export: function() {
         var Data = [];
         if(this.data == null) return Data;
@@ -118,14 +120,14 @@
         for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
           var Row = [oZm.Series['HARMONICS'].Names[i]];
           for(var n = 0; n < oZm.Series['CURRENT'].Names(this.analyzer).length; n++) {
-            Row.push(this.BinPower(this.data.Current_Harmonics[n][i]));
-            Row.push(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics[n][i]))));
-            Row.push(String(this.data.Current_Harmonics[n][i][0]) + ((this.data.Current_Harmonics[n][i][1] > 0) ? '+' + this.data.Current_Harmonics[n][i][1] : this.data.Current_Harmonics[n][i][1]) + 'i');
+            Row.push(this.Round(this.BinPower(this.data.Current_Harmonics[n][i]), 3));
+            Row.push(this.Round(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics[n][i]))), 3));
+            Row.push(this.Round(this.data.Current_Harmonics[n][i][0], 3) + ((this.data.Current_Harmonics[n][i][1] > 0) ? '+' + this.Round(this.data.Current_Harmonics[n][i][1], 3) : this.Round(this.data.Current_Harmonics[n][i][1], 3)) + 'i');
           }
           for(var n = 0; n < oZm.Series['VOLTAGE'].Names(this.analyzer).length; n++) {
-            Row.push(this.BinPower(this.data.Voltage_Harmonics[n][i]));
-            Row.push(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics[n][i]))));
-            Row.push(String(this.data.Voltage_Harmonics[n][i][0]) + ((this.data.Voltage_Harmonics[n][i][1] > 0) ? '+' + this.data.Voltage_Harmonics[n][i][1] : this.data.Voltage_Harmonics[n][i][1]) + 'i');
+            Row.push(this.Round(this.BinPower(this.data.Voltage_Harmonics[n][i]), 3));
+            Row.push(this.Round(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics[n][i]))), 3));
+            Row.push(this.Round(this.data.Voltage_Harmonics[n][i][0], 3) + ((this.data.Voltage_Harmonics[n][i][1] > 0) ? '+' + this.Round(this.data.Voltage_Harmonics[n][i][1], 3) : this.Round(this.data.Voltage_Harmonics[n][i][1], 3)) + 'i');
           }
           Data.push(Row);
         }

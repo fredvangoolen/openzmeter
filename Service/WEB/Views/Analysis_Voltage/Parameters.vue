@@ -49,7 +49,12 @@
         Series['Voltage THD'] = this.dataNow.Voltage_THD[this.Phase];
         Series['Phi'] = this.dataNow.Phi[this.Phase];
         return Series;
-      },
+      }
+    },
+    methods: {
+      Formatter_Power_Factor: function(val) { return this.Round(val, 2, true); },
+      Formatter_Voltage_THD: function(val) { return this.Round(val, 2, true) + ' %'; },
+      Formatter_Phi: function(val) { return this.Round(val, 2, true); },
       Export: function() {
         if(this.data == null) return [];
         var Header = ['Sample']
@@ -66,11 +71,6 @@
         }
         return Data;
       }
-    },
-    methods: {
-      Formatter_Power_Factor: function(val) { return this.Round(val, 2, true); },
-      Formatter_Voltage_THD: function(val) { return this.Round(val, 2, true) + ' %'; },
-      Formatter_Phi: function(val) { return this.Round(val, 2, true); }
     },
     mounted: function() {
       var Graphs = [this.$refs.g0.Graph, this.$refs.g1.Graph, this.$refs.g2.Graph];

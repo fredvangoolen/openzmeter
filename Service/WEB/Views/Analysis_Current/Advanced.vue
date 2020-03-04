@@ -104,7 +104,9 @@
           }
         }
         return Opt;
-      },
+      }
+    },
+    methods: {
       Export: function() {
         var Data = [];
         if(this.data == null) return Data;
