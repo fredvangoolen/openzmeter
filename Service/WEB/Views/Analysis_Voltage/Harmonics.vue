@@ -100,6 +100,8 @@
         }
         return Opt;
       },
+    },
+    methods: {
       Export: function() {
         var Data = [];
         if(this.data == null) return Data;
@@ -118,14 +120,14 @@
         for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
           var Row = [oZm.Series['HARMONICS'].Names[i]];
           for(var n = 0; n < oZm.Series['VOLTAGE'].Names(this.analyzer).length; n++) {
-            Row.push(this.BinPower(this.data.Voltage_Harmonics[n][i]));
-            Row.push(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics[n][i]))));
-            Row.push(String(this.data.Voltage_Harmonics[n][i][0]) + ((this.data.Voltage_Harmonics[n][i][1] > 0) ? '+' + this.data.Voltage_Harmonics[n][i][1] : this.data.Voltage_Harmonics[n][i][1]) + 'i');
+            Row.push(this.Round(this.BinPower(this.data.Voltage_Harmonics[n][i]), 3));
+            Row.push(this.Round(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics[n][i]))), 3));
+            Row.push(this.Round(this.data.Voltage_Harmonics[n][i][0], 3) + ((this.data.Voltage_Harmonics[n][i][1] > 0) ? '+' + this.Round(this.data.Voltage_Harmonics[n][i][1], 3) : this.Round(this.data.Voltage_Harmonics[n][i][1], 3)) + 'i');
           }
           for(var n = 0; n < oZm.Series['CURRENT'].Names(this.analyzer).length; n++) {
-            Row.push(this.BinPower(this.data.Current_Harmonics[n][i]));
-            Row.push(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics[n][i]))));
-            Row.push(String(this.data.Current_Harmonics[n][i][0]) + ((this.data.Current_Harmonics[n][i][1] > 0) ? '+' + this.data.Current_Harmonics[n][i][1] : this.data.Current_Harmonics[n][i][1]) + 'i');
+            Row.push(this.Round(this.BinPower(this.data.Current_Harmonics[n][i]), 3));
+            Row.push(this.Round(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics[n][i]))), 3));
+            Row.push(this.Round(this.data.Current_Harmonics[n][i][0], 3) + ((this.data.Current_Harmonics[n][i][1] > 0) ? '+' + this.Round(this.data.Current_Harmonics[n][i][1], 3) : this.Round(this.data.Current_Harmonics[n][i][1], 3)) + 'i');
           }
           Data.push(Row);
         }

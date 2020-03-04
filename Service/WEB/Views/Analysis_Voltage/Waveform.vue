@@ -85,7 +85,9 @@
           Opt.dateWindow = [0, Opt.file.length];
         }
         return Object.seal(Opt);
-      },
+      }
+    },
+    methods: {
       Export: function() {
         var Rows = [['Sample'].concat(oZm.Series['VOLTAGE'].Names(this.analyzer).concat(oZm.Series['CURRENT'].Names(this.analyzer)))];
         if(this.data != null) {

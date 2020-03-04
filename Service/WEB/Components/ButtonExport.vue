@@ -19,7 +19,7 @@
         </div>
         <div class="col-md-12 scrollpanel">
           <button type="button" class="btn btn-default btn-sm" v-if="!Preview" @click="Preview=true"><img :src="require('Imgs/magnifier.png')">Load preview</button>
-          <table v-if="Preview" class="table small table-striped">
+          <table v-if="Preview" class="table small">
             <tr v-for="(row, idx) in Rows" :key="idx">
               <td v-for="(val, idx2) in row" :key="idx2">{{ val }}</td>
             </tr>
@@ -109,6 +109,9 @@
   }
   .scrollpanel table tr td {
     border: 1px solid #f5f5f5;
+    text-align: right;
+    font: 10px monospace;
+    padding: 1px 3px;
   }
   .scrollpanel table tr:first-child {
     font-weight: bold;

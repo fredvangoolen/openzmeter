@@ -105,7 +105,9 @@
           }
         }
         return Opt;
-      },
+      }
+    },
+    methods: {
       Export: function() {
         var Data = [];
         if(this.data == null) return Data;
@@ -122,12 +124,12 @@
         for(var i = 0; i < this.data['Voltage_FFT'][0].length; i++) {
           var Row = [i];
           for(var n = 0; n < oZm.Series['VOLTAGE'].Names(this.analyzer).length; n++) {
-            Row.push(this.data.Voltage_FFT[n][i]);
-            Row.push(20.0 * Math.log10(Math.max(0.001, this.data.Voltage_FFT[n][i])));
+            Row.push(this.Round(this.data.Voltage_FFT[n][i], 3));
+            Row.push(this.Round(20.0 * Math.log10(Math.max(0.001, this.data.Voltage_FFT[n][i])), 3));
           }
           for(var n = 0; n < oZm.Series['CURRENT'].Names(this.analyzer).length; n++) {
-            Row.push(this.data.Current_FFT[n][i]);
-            Row.push(20.0 * Math.log10(Math.max(0.001, this.data.Current_FFT[n][i])));
+            Row.push(this.Round(this.data.Current_FFT[n][i], 3));
+            Row.push(this.Round(20.0 * Math.log10(Math.max(0.001, this.data.Current_FFT[n][i])), 3));
           }
           Data.push(Row);
         }
