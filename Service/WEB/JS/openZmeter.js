@@ -1,7 +1,7 @@
 const openZmeter = {
   install: function(Vue, options) {
     Vue.prototype.CreateSeriesTransfer = (parent, series) => {
-      var Transfer = { This: parent, Paused: false, Timer: null, CancelFunc: null, Data: null, LastData: null, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
+      var Transfer = { This: parent, Paused: false, Timer: null, CancelFunc: null, Data: null, LastData: null, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null, AggregFail: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -65,7 +65,7 @@ const openZmeter = {
         }
       };
       Transfer.CalcRange = (analyzer, range, aggreg) => {
-        var Now       = moment().tz(analyzer.TimeZone);
+        var Now = moment().tz(analyzer.TimeZone);
         if(range == 'LastSamples') {
           var Period    = (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
           return [Now.valueOf() - Period * 2, Now.valueOf()];
@@ -196,6 +196,7 @@ const openZmeter = {
           },
           (fail) => {
             if(Cancelled == true) return;
+            console.log(fail);
             Transfer.Timer = setTimeout(() => { Transfer.UpdatePrices(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
           }
         );
@@ -281,6 +282,10 @@ const openZmeter = {
           },
           (fail) => {
             if(Cancelled == true) return;
+            if(fail.status == 400) {
+              if(Transfer.AggregFail != null) Transfer.AggregFail();
+              return;
+            }
             Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 3000);
           }
         );
