@@ -119,7 +119,7 @@
         var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
         var Data = [['Sampletime', 'Active Energy', 'Period name', 'Period expense']];
         for(var i = 0; i < this.TransferGraph.Data.Sampletime.length; i++) Data.push([this.TransferGraph.Data.Sampletime[i], this.Round(this.TransferGraph.Data.Active_Power[i] / Div, 3), this.TransferGraph.Data.Period_Name[i], this.Round(this.TransferGraph.Data.Period_Expense[i], 3)]);
-        return Data;
+        return Object.seal(Data);
       }
     },
     components: { Energy, Counters, Graphs, Variables }

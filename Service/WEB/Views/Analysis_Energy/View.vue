@@ -104,7 +104,7 @@
           var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
           for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], this.TransferGraph.Data.Period_Name[n], this.Round(this.TransferGraph.Data.Active_Power[n] / Div, 3), this.Round(this.TransferGraph.Data.Reactive_Power[n] / Div, 3)]);
         }
-        return Data;
+        return Object.seal(Data);
       }
     },
     components: { Energy, Counters }

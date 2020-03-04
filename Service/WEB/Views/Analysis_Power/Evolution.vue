@@ -5,6 +5,7 @@
       <div class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
         <div class="btn-group">
+          <button type="button" class="btn btn-default btn-xs" v-if="Names.length==20" data-toggle="tooltip" title="Show full 50 harmonics view" @click="Names=Names.concat(['21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'])"><img :src="require('Imgs/table_rows_insert_below_word.png')"></button>
           <button-export file="Evolution" :rows="Export"></button-export>
         </div>
       </div>
@@ -23,7 +24,7 @@
   export default {
     props: { analyzer: Object, data: Object },
     data() {
-      return { MouseOver: false, Phase: null, Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'] };
+      return { MouseOver: false, Phase: null, Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th'] };
     },
     computed: {
       Data: function() {
@@ -38,28 +39,28 @@
           for(var i in this.data.Power_Harmonics) Serie.push(this.data.Power_Harmonics[i][this.Phase][n]);
           Series[this.Names[n]] = Serie;
         }
-        return Object.freeze(Series);
-      },
-      Export: function() {
-        if(this.data == null) return [];
-        var Data = [];
-        var Header = ['Time'];
-        for(var n in this.analyzer.HarmonicsNames) Header.concat(this.analyzer.GetSeriesNames(this.analyzer.HarmonicsNames[n], this.analyzer.VoltageChannels))
-        Data.push(Header);
-        for(var n in this.data.Sampletime) {
-          var Row = [this.data.Sampletime[n]];
-          for(var i in this.analyzer.HarmonicsNames) {
-            for(var j in this.data.Power_Harmonics[n]) Row.push(this.data.Power_Harmonics[n][j][i]);
-          }
-          Data.push(Row);
-        }
-        return Data;
+        return Object.seal(Series);
       }
     },
     methods: {
       Formatter: function(x) {
         var Units = this.BestUnits(x);
         return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + Units + 'W';
+      },
+      Export: function() {
+        if(this.data == null) return [];
+        var Data = [];
+        var Header = ['Time'];
+        for(var n in this.analyzer.HarmonicsNames) Header = Header.concat(this.analyzer.GetSeriesNames(this.analyzer.HarmonicsNames[n], this.analyzer.VoltageChannels))
+        Data.push(Header);
+        for(var n in this.data.Sampletime) {
+          var Row = [this.data.Sampletime[n]];
+          for(var i in this.analyzer.HarmonicsNames) {
+            for(var j in this.data.Power_Harmonics[n]) Row.push(this.Round(this.data.Power_Harmonics[n][j][i], 3));
+          }
+          Data.push(Row);
+        }
+        return Object.seal(Data);
       }
     },
     mounted: function() {

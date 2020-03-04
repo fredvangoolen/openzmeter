@@ -35,9 +35,12 @@
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
         var Opt = { };
+        Opt.showRangeSelector = false;
         Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
         Opt.interactionModel = Graph.InteractionModels.Fixed(this);
         Opt.drawAxesAtZero = true;
+        Opt.gridLineColor = "#DDD";
+        Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return Opt;
@@ -80,7 +83,7 @@
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, I, { wave: 1.0 });
           Opt.axes.y2.valueRange = this.MatrixColsRange(Opt.file, V, { wave: 1.0 });
         }
-        return Opt;
+        return Object.seal(Opt);
       }
     },
     methods: {
@@ -94,7 +97,7 @@
             Rows.push(Row);
           }
         }
-        return Rows;
+        return Object.seal(Rows);
       }
     }
   }

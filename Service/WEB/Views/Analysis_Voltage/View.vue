@@ -116,7 +116,7 @@
           for(var i in this.TransferGraph.Data.Voltage[n]) Row.push(this.Round(this.TransferGraph.Data.Voltage[n][i], 3));
           Rows.push(Row);
         }
-        return Rows;
+        return Object.seal(Rows);
       }
     },
     components: { Voltage, Counters, Waveform, Advanced, Events, Evolution, Harmonics, Parameters, Phasors }

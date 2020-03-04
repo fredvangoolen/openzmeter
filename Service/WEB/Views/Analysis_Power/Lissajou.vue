@@ -77,6 +77,9 @@
         }
         return Object.seal(Opt);
       },
+    },
+    methods: {
+
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
         var Header = ['Sample']

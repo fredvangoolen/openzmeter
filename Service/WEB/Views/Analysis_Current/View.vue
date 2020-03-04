@@ -106,7 +106,7 @@
           for(var i in this.TransferGraph.Data.Current[n]) Row.push(this.Round(this.TransferGraph.Data.Current[n][i], 3));
           Rows.push(Row);
         }
-        return Rows;
+        return Object.seal(Rows);
       }
     },
     components: { Current, Counters, Waveform, Advanced, Evolution, Harmonics, Parameters }

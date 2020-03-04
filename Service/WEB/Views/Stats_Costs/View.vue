@@ -60,7 +60,7 @@
 //          Data.push([]);
 //        }
 //        this.$refs.tools.SaveCVS('Cost.csv', Data);
-        return Data;
+        return Object.seal(Data);
       }
     },
     components: { SummaryGraph, Bill }

@@ -98,7 +98,7 @@
             Rows.push(Row);
           }
         }
-        return Rows;
+        return Object.seal(Rows);
       }
     }
   }

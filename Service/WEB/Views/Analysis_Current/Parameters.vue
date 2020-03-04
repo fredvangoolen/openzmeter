@@ -39,7 +39,7 @@
           Series['Current THD'].push(this.data.Current_THD[i][this.Phase]);
           Series['Phi'].push(this.data.Phi[i][this.Phase]);
         }
-        return Series;
+        return Object.seal(Series);
       },
       DataNow: function() {
         if((this.dataNow == null) || (this.Phase == null)) return null;
@@ -47,7 +47,7 @@
         Series['Power Factor'] = this.dataNow.Power_Factor[this.Phase];
         Series['Current THD'] = this.dataNow.Current_THD[this.Phase];
         Series['Phi'] = this.dataNow.Phi[this.Phase];
-        return Series;
+        return Object.seal(Series);
       }
     },
     methods: {
@@ -68,7 +68,7 @@
           for(var i in this.data.Phi[n]) Row.push(this.Round(this.data.Phi[n][i], 3));
           Data.push(Row);
         }
-        return Data;
+        return Object.seal(Data);
       }
     },
     mounted: function() {
