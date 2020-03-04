@@ -159,7 +159,7 @@
           Data.push([this.analyzer.PhaseNames[i], "Voltage", this.Round(this.data.Voltage_Phase[i], 3), this.Round(this.data.Voltage[i], 3)]);
           Data.push([this.analyzer.PhaseNames[i], "Current", this.Round(this.data.Voltage_Phase[i] + this.data.Phi[i], 3), this.Round(this.data.Current[i], 3)]);
         }
-        return Data;
+        return Object.seal(Data);
       },
       Underlay: function(canvas, area, g) {
         if((area.h <= 0) || (area.w <= 0)) return;

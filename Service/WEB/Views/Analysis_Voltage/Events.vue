@@ -164,7 +164,7 @@
       Export: function() {
         var Export = [['Date', 'Type', 'Duration', 'ΔU (V)', 'Notes']];
         for(var i = 0; i < this.Events.length; i++) Export.push([this.Events[i].StartTime, this.Events[i].Type, this.Round(this.Events[i].SampleDuration / this.Events[i].SampleRate, 3), this.Round(this.Events[i].Diff, 3), this.Events[i].Notes]);
-        return Export;
+        return Object.seal(Export);
       }
     },
     components: { Vuetable, EventDialog, EventNotes }

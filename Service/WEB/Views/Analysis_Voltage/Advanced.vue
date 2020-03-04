@@ -36,6 +36,7 @@
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
         var Opt = { series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
+        Opt.showRangeSelector = false;
         Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
         Opt.interactionModel = Graph.InteractionModels.Fixed(this);
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
@@ -104,7 +105,7 @@
             }
           }
         }
-        return Opt;
+        return Object.seal(Opt);
       }
     },
     methods: {
@@ -133,7 +134,7 @@
           }
           Data.push(Row);
         }
-        return Data;
+        return Object.seal(Data);
       }
     }
   }

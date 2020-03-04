@@ -39,7 +39,7 @@
           for(var i in this.data.Current_Harmonics) Serie.push(20 * Math.log10(Math.max(0.001, this.data.Current_Harmonics[i][this.Phase][n])));
           Series[this.Names[n]] = Serie;
         }
-        return Series;
+        return Object.seal(Series);
       }
     },
     methods: {
@@ -56,7 +56,7 @@
           }
           Data.push(Row);
         }
-        return Data;
+        return Object.seal(Data);
       },
       Formatter: function(val) {
         return this.Round(val, 2, true) + ' dB';

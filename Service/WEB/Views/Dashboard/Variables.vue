@@ -47,7 +47,7 @@
           Series['Voltage THD'].push(this.data.Voltage_THD[i][this.Phase]);
           Series['Current THD'].push(this.data.Current_THD[i][this.Phase]);
         }
-        return Series;
+        return Object.seal(Series);
       },
       DataNow: function() {
         var Series = { 'Active Power': null, 'Reactive Power': null, 'Power Factor': null, 'Phi': null, 'Voltage THD': null, 'Current THD': null };
@@ -58,7 +58,7 @@
         Series['Phi'] = this.dataNow.Phi[this.Phase];
         Series['Voltage THD'] = this.dataNow.Voltage_THD[this.Phase];
         Series['Current THD'] = this.dataNow.Current_THD[this.Phase];
-        return Series;
+        return Object.seal(Series);
       }
     },
     methods: {
@@ -87,7 +87,7 @@
           for(var i in this.data.Current_THD[n]) Row.push(this.Round(this.data.Current_THD[n][i], 3));
           Data.push(Row);
         }
-        return Data;
+        return Object.seal(Data);
       }
     },
     mounted: function() {

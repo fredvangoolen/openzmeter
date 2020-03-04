@@ -87,6 +87,7 @@
         Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
+        Opt.showRangeSelector = false;
         Opt.strokeWidth = 0.5;
         Opt.gridLineColor = "#DDD";
         Opt.gridLinePattern = [4, 4];
@@ -134,7 +135,7 @@
         Opt.axes.y.axisLabelFormatter = (x) => {
           return oZm.FormatSerieValue(x, this.SerieProps, Units).ValuePlain;
         };
-        return Opt;
+        return Object.seal(Opt);
       }
     },
     methods: {

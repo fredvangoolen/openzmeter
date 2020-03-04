@@ -38,6 +38,8 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.drawAxesAtZero = true;
+        Opt.gridLineColor = "#DDD";
+        Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
         Opt.showRangeSelector = false;
         Opt.strokeWidth = 0.5;
@@ -77,7 +79,9 @@
           Opt.axes.y2.valueRange = [-MaxVoltage, MaxVoltage];
         }
         return Object.seal(Opt);
-      },
+      }
+    },
+    methods: {
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
         var Header = ['Sample']

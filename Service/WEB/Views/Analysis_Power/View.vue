@@ -92,6 +92,7 @@
       };
     },
     created: function() {
+      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       this.TransferNow.UpdateNow(this.analyzer);
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
@@ -127,13 +128,13 @@
         }
       }
     },
-    computed: {
+    methods: {
       Export: function() {
         var Data = [['Time', 'Period', 'Contracted', 'Active power', 'Reactive power']];
         if(this.TransferGraph.Data != null) {
           for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], this.TransferGraph.Data.Period_Name[n], this.Round(this.TransferGraph.Data.Period_Power[n], 3), this.Round(this.TransferGraph.Data.Active_Power[n], 3), this.Round(this.TransferGraph.Data.Reactive_Power[n], 3)]);
         }
-        return Data;
+        return Object.seal(Data);
       }
     },
     components: { Power, Counters, Distribution, Waveform, Harmonics, Evolution, Parameters, Lissajou }

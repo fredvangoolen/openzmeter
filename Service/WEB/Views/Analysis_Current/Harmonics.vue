@@ -47,7 +47,8 @@
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n] && this.Options['Voltage']);
         for(var n in VoltageNames) Opt.series[VoltageNames[n]] = { axis: 'y2' };
         Opt.strokeWidth = 0.5;
-        Opt.gridLineColor = "#BBB";
+        Opt.showRangeSelector = false;
+        Opt.gridLineColor = "#DDD";
         Opt.gridLinePattern = [4, 4];
         Opt.interactionModel = { };
         Opt.legend = 'follow';
@@ -98,7 +99,7 @@
             }
           }
         }
-        return Opt;
+        return Object.seal(Opt);
       }
     },
     methods: {
@@ -131,7 +132,7 @@
           }
           Data.push(Row);
         }
-        return Data;
+        return Object.seal(Data);
       }
     }
   }

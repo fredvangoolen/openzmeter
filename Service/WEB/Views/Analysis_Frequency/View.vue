@@ -49,15 +49,15 @@
       };
     },
     watch: {
-      analyzer: function() { 
-        this.TransferNow.Update(this.analyzer, '3S', 'LastSamples'); 
-        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range) 
+      analyzer: function() {
+        this.TransferNow.Update(this.analyzer, '3S', 'LastSamples');
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range)
       },
-      Aggreg: function(val, prev) { 
-        if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range); 
+      Aggreg: function(val, prev) {
+        if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
-      Range: function() { 
-        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range); 
+      Range: function() {
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
     },
     computed: {
@@ -65,7 +65,7 @@
         if(this.TransferGraph.Data == null) return [];
         var Rows = [['Time', 'Frequency']];
         for(var n in this.TransferGraph.Data.Sampletime) Rows.push([this.TransferGraph.Data.Sampletime[n], this.TransferGraph.Data.Frequency[n]]);
-        return Rows;
+        return Object.seal(Rows);
       }
     },
     created: function() {

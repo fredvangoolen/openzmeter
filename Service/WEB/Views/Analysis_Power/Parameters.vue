@@ -45,7 +45,7 @@
           Series['Power Factor'].push(this.data.Power_Factor[i][this.Phase]);
           Series['Phi'].push(this.data.Phi[i][this.Phase]);
         }
-        return Series;
+        return Object.seal(Series);
       },
       DataNow: function() {
         if((this.dataNow == null) || (this.analyzer == null) || (this.Phase == null)) return null;
@@ -55,8 +55,15 @@
         Series['Apparent Power'] = this.dataNow.Apparent_Power[this.Phase];
         Series['Power Factor'] = this.dataNow.Power_Factor[this.Phase];
         Series['Phi'] = this.dataNow.Phi[this.Phase];
-        return Series;
-      },
+        return Object.seal(Series);
+      }
+    },
+    methods: {
+      Formatter_Active_Power: function(val) { var Units = this.BestUnits(val); return this.Round(this.ScaleUnits(val, Units), 2, true) + ' ' + Units + 'W'; },
+      Formatter_Reactive_Power: function(val) { var Units = this.BestUnits(val); return this.Round(this.ScaleUnits(val, Units), 2, true) + ' ' + Units + 'var'; },
+      Formatter_Apparent_Power: function(val) { var Units = this.BestUnits(val); return this.Round(this.ScaleUnits(val, Units), 2, true) + ' ' + Units + 'va'; },
+      Formatter_Power_Factor: function(val) { return this.Round(val, 2, true); },
+      Formatter_Phi: function(val) { return this.Round(val, 2, true) + ((val < 0) ? '° IND' : (val > 0) ? '° CAP' : '°'); },
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
         var Header = ['Sample']
@@ -68,22 +75,15 @@
         var Data = [Header];
         for(var n in this.data.Sampletime) {
           var Row = [this.data.Sampletime[n]];
-          for(var i in this.data.Active_Power[n]) Row.push(this.data.Active_Power[n][i]);
-          for(var i in this.data.Reactive_Power[n]) Row.push(this.data.Reactive_Power[n][i]);
-          for(var i in this.data.Voltage[n]) Row.push(this.data.Voltage[n][i] * this.data.Current[n][i]);
-          for(var i in this.data.Power_Factor[n]) Row.push(this.data.Power_Factor[n][i]);
-          for(var i in this.data.Phi[n]) Row.push(this.data.Phi[n][i]);
+          for(var i in this.data.Active_Power[n]) Row.push(this.Round(this.data.Active_Power[n][i], 3));
+          for(var i in this.data.Reactive_Power[n]) Row.push(this.Round(this.data.Reactive_Power[n][i], 3));
+          for(var i in this.data.Voltage[n]) Row.push(this.Round(this.data.Voltage[n][i] * this.data.Current[n][i], 3));
+          for(var i in this.data.Power_Factor[n]) Row.push(this.Round(this.data.Power_Factor[n][i], 3));
+          for(var i in this.data.Phi[n]) Row.push(this.Round(this.data.Phi[n][i], 3));
           Data.push(Row);
         }
-        return Data;
+        return Object.seal(Data);
       }
-    },
-    methods: {
-      Formatter_Active_Power: function(val) { var Units = this.BestUnits(val); return this.Round(this.ScaleUnits(val, Units), 2, true) + ' ' + Units + 'W'; },
-      Formatter_Reactive_Power: function(val) { var Units = this.BestUnits(val); return this.Round(this.ScaleUnits(val, Units), 2, true) + ' ' + Units + 'var'; },
-      Formatter_Apparent_Power: function(val) { var Units = this.BestUnits(val); return this.Round(this.ScaleUnits(val, Units), 2, true) + ' ' + Units + 'va'; },
-      Formatter_Power_Factor: function(val) { return this.Round(val, 2, true); },
-      Formatter_Phi: function(val) { return this.Round(val, 2, true) + ((val < 0) ? '° IND' : (val > 0) ? '° CAP' : '°'); }
     },
     mounted: function() {
       var Graphs = [this.$refs.g0.Graph, this.$refs.g1.Graph, this.$refs.g2.Graph, this.$refs.g3.Graph, this.$refs.g4.Graph];

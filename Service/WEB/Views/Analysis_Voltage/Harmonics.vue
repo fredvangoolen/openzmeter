@@ -38,6 +38,7 @@
       GraphOptions: function() {
         var Opt = { series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         Opt.strokeWidth = 0.5;
+        Opt.showRangeSelector = false;
         Opt.gridLineColor = "#BBB";
         Opt.gridLinePattern = [4, 4];
         Opt.interactionModel = { };
@@ -98,7 +99,7 @@
             }
           }
         }
-        return Opt;
+        return Object.seal(Opt);
       },
     },
     methods: {
@@ -131,7 +132,7 @@
           }
           Data.push(Row);
         }
-        return Data;
+        return Object.seal(Data);
       }
     }
   }
