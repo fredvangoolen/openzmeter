@@ -19,6 +19,8 @@
         Opt.panEdgeFraction = 1;
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.strokeWidth = 0.5;
+        Opt.gridLineColor = "#BBB";
+        Opt.gridLinePattern = [4, 4];
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
         Opt.connectSeparatedPoints = false;
@@ -44,69 +46,6 @@
           Opt.dateWindow = [this.data.From, this.data.To];
         }
         return Opt;
-      }
-    },
-    created: function() {
-      this.Periods = [];
-      this.Bills = [];
-      this.Costs = [];
-      this.Graph = null;
-      this.Data = [];
-    },
-    methods: {
-      ExportClick: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        this.$refs.tools.SaveCVS('Active_Energy.csv', [['Time'].concat(oZm.Series['ACTIVE_ENERGY'].Names(Analyzer))].concat(this.Data));
-      },
-      UpdateGraph: function(to, period, lastsample, aggreg) {
-        if(lastsample === 0) {
-          this.Data = [];
-          this.Periods = [];
-          this.Costs = [];
-          this.ShowSpinner = true;
-        }
-        $.ajax({ url: 'getPrices', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json',  data: JSON.stringify({ Aggreg: aggreg, Series: ['ACTIVE_POWER'], To: to, LastSample: lastsample, Analyzer: this.$root.SelectedAnalyzer.Analyzer, Period: period }),
-          success: function(result) {
-            if((result['Sampletime'] === null) || (result['Sampletime'].length === 0)) return;
-            if(result['Aggregation_Source'] === '15M') {
-              for(var n = 0; n < result['Active_Power'].length; n++) result['Active_Power'][n] = result['Active_Power'][n] / 4.0;
-            }
-            this.Data = oZm.GraphDataAppend(result, 'Active_Power', this.Data);
-            this.Costs = oZm.GraphDataAppend(result, 'Expense', this.Costs);
-            if(aggreg !== result['Aggregation_Source']) this.$refs.period.SetAggregation(result['Aggregation_Source']);
-            lastsample = oZm.LastSampletime(result, lastsample);
-            this.Bills = result["Bills"];
-            //Group periods
-            var LastItem = (this.Periods.length > 0) ? this.Periods.slice(-1)[0] : null;
-            for(var i = 0; i < result.Sampletime.length; i++) {
-              var Period = { Name: result.Period_Name[i], From: result.Sampletime[i] - ((result['Aggregation_Source'] === '15M') ? 899999 : 3599999), To: result.Sampletime[i], Color: result.Period_Color[i] };
-              if(LastItem === null) {
-                this.Periods.push(Period);
-                LastItem = Period;
-              } else if(Period.From === (LastItem.To + 1)) {
-                if(Period.Name === LastItem.Name) {
-                  LastItem.To = Period.To;
-                  this.Periods.pop();
-                  this.Periods.push(LastItem);
-                } else {
-                  this.Periods.push(Period);
-                  LastItem = Period;
-                }
-              }
-              this.Periods = this.Periods.filter(period => (period.To > result.From) || (period.From < result.To) ).sort(function(a, b) { if(a.To < b.To) return -1; if(a.To > b.To) return 1; return 0; });
-            }
-            this.$refs.graph.SetOptions( { dateWindow: [result.From, result.To], file: this.Data, valueRange: oZm.Series['ACTIVE_ENERGY'].Range(this.Data, [true]) } );
-            this.UpdateCounters(result['Aggregation_Source']);
-          }.bind(this),
-          complete: function() {
-            this.ShowSpinner = false;
-            this.$refs.period.UpdateCompleted(lastsample);
-          }.bind(this),
-          error: function() {
-            this.ShowSpinner = true;
-          }.bind(this)
-        });
       }
     }
   }

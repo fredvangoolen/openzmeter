@@ -88,6 +88,8 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.strokeWidth = 0.5;
+        Opt.gridLineColor = "#DDD";
+        Opt.gridLinePattern = [4, 4];
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
         Opt.connectSeparatedPoints = false;
@@ -133,7 +135,9 @@
           return oZm.FormatSerieValue(x, this.SerieProps, Units).ValuePlain;
         };
         return Opt;
-      },
+      }
+    },
+    methods: {
       Export: function() {
         if(this.data == null) return [];
         var Header = [['Time'].concat(this.SerieProps.Names(this.analyzer))];
@@ -150,7 +154,7 @@
           }
           Header.push(Row);
         }
-        return Header;
+        return Object.seal(Header);
       }
     },
     created: function() {
