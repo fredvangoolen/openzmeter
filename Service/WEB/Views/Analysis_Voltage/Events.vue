@@ -6,7 +6,7 @@
         <toolbar-pager :total="(events==null)?0:events.StartTime.length" :pageSize="PageSize" v-model="Page"></toolbar-pager>
         <div class="btn-group">
           <button class="btn btn-default btn-xs btn-danger" type="button" @click="DeleteSelected">Delete selection</button>
-          <button-export file="Events" :rows="[]"></button-export>
+          <button-export file="Events" :rows="Export"></button-export>
         </div>
       </div>
     </div>
@@ -60,14 +60,14 @@
         if(this.events == null) return [];
         for(var x = 0; x < this.events.StartTime.length; x++) {
           var Event = { id: x,
-                        StartTime: this.events.StartTime[x], 
-                        Date: this.analyzer.FormatDateTime(this.events.StartTime[x]), 
-                        Type: this.events.Type[x], 
-                        Reference: this.events.Reference[x], 
-                        PeakVoltage: this.events.Peak[x], 
-                        ExitVoltage: this.events.Change[x], 
-                        SampleDuration: this.events.Duration[x], 
-                        SampleRate: this.events.SampleRate[x], 
+                        StartTime: this.events.StartTime[x],
+                        Date: this.analyzer.FormatDateTime(this.events.StartTime[x]),
+                        Type: this.events.Type[x],
+                        Reference: this.events.Reference[x],
+                        PeakVoltage: this.events.Peak[x],
+                        ExitVoltage: this.events.Change[x],
+                        SampleDuration: this.events.Duration[x],
+                        SampleRate: this.events.SampleRate[x],
                         Notes: this.events.Notes[x],
                         Duration: (this.events.Duration == 0) ? 'RUNNNING' : oZm.Round2Plain(this.events.Duration[x] / this.events.SampleRate[x])
           };
@@ -161,12 +161,10 @@
         }
       },
 
-      ExportClick: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
+      Export: function() {
         var Export = [['Date', 'Type', 'Duration', 'ΔU (V)', 'Notes']];
-        for(var i = 0; i < this.Events.length; i++) Export.push([this.Events[i].Date, this.Events[i].Type, this.Events[i].SampleDuration / this.Events[i].SampleRate, this.Events[i].Diff, this.Events[i].Notes]);
-        this.$refs.tools.SaveCVS('Events.csv', Export);
+        for(var i = 0; i < this.Events.length; i++) Export.push([this.Events[i].StartTime, this.Events[i].Type, this.Round(this.Events[i].SampleDuration / this.Events[i].SampleRate, 3), this.Round(this.Events[i].Diff, 3), this.Events[i].Notes]);
+        return Export;
       }
     },
     components: { Vuetable, EventDialog, EventNotes }
@@ -177,7 +175,7 @@
   @media screen and (min-width: 600px) {
     .table >>> th:nth-child(1) {
       width: 30px;
-    }    
+    }
     .table >>> th:nth-child(2) {
       width: 160px;
     }

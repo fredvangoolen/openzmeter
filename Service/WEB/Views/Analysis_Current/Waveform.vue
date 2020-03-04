@@ -81,7 +81,9 @@
           Opt.axes.y2.valueRange = this.MatrixColsRange(Opt.file, V, { wave: 1.0 });
         }
         return Opt;
-      },
+      }
+    },
+    methods: {
       Export: function() {
         var Rows = [['Sample'].concat(oZm.Series['CURRENT'].Names(this.analyzer).concat(oZm.Series['VOLTAGE'].Names(this.analyzer)))];
         if(this.data != null) {

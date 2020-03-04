@@ -99,6 +99,7 @@
     margin-top: 5px;
     overflow: auto;
     max-height: 150px;
+    padding: 0px 0px 0px 5px;
   }
   .scrollpanel button {
     width: 100%;

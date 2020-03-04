@@ -136,15 +136,6 @@
           Phasors.push( { Phase: this.analyzer.PhaseNames[i], Channel: "Current", Angle: this.Round(((this.data.Phi[i] == null) || (this.data.Voltage_Phase[i] == null)) ? null : this.data.Voltage_Phase[i] + this.data.Phi[i], 2, true) + '°', SecAngle: '(' + this.Round(this.data.Phi[i], 2, true) + '°)', Value: this.Round(this.data.Current[i], 2, true) + ' A'} );
         }
         return Phasors;
-      },
-      Export: function() {
-        if(this.data == null) return [];
-        var Data = [['Phase', 'Channel', 'Angle', 'Value']];
-        for(var i in this.data.Voltage) {
-          Data.push([this.analyzer.PhaseNames[i], "Voltage", this.Round(this.data.Voltage_Phase[i], 3), this.Round(this.data.Voltage[i], 3)]);
-          Data.push([this.analyzer.PhaseNames[i], "Current", this.Round(this.data.Voltage_Phase[i] + this.data.Phi[i], 3), this.Round(this.data.Current[i], 3)]);
-        }
-        return Data;
       }
     },
     created: function() {
@@ -161,6 +152,15 @@
       window.removeEventListener('resize', this.Resize)
     },
     methods: {
+      Export: function() {
+        if(this.data == null) return [];
+        var Data = [['Phase', 'Channel', 'Angle', 'Value']];
+        for(var i in this.data.Voltage) {
+          Data.push([this.analyzer.PhaseNames[i], "Voltage", this.Round(this.data.Voltage_Phase[i], 3), this.Round(this.data.Voltage[i], 3)]);
+          Data.push([this.analyzer.PhaseNames[i], "Current", this.Round(this.data.Voltage_Phase[i] + this.data.Phi[i], 3), this.Round(this.data.Current[i], 3)]);
+        }
+        return Data;
+      },
       Underlay: function(canvas, area, g) {
         if((area.h <= 0) || (area.w <= 0)) return;
         //x-axis

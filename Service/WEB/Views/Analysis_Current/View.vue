@@ -10,7 +10,7 @@
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
               <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="true" :multi="true" v-model="Phases"></toolbar-phases>
               <div class="btn-group">
-                <button-export file="Current" :rows="[]"></button-export>
+                <button-export file="Current" :rows="Export"></button-export>
                 <button-expand :expanded.sync="Expanded"></button-expand>
               </div>
             </div>
@@ -61,6 +61,7 @@
       };
     },
     created: function() {
+      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       this.TransferNow.UpdateNow(this.analyzer);
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
@@ -96,53 +97,18 @@
         }
       }
     },
-//    methods: {
-//      UpdateNowValues: function() {
-//        this.ControlNow = this.CancelTransfer(this.ControlNow);
-//        if(this.analyzer == null) return;
-//        this.ControlNow.CancelFunc = this.analyzer.GetSeriesNow(['CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI'],
-//          (working) => {},
-//          (result) => { this.DataNow = Object.freeze(result); },
-//          (timeout) => { this.ControlNow.Timer = setTimeout(() => { this.UpdateNowValues(); }, timeout); }
-//        );
-//      },
-//      Update1MValues: function() {
-//        this.Control1M = this.CancelTransfer(this.Control1M);
-//        if(this.analyzer == null) return;
-//        this.Control1M.CancelFunc = this.analyzer.GetSeriesLast('1M', ['CURRENT'],
-//          (working) => {},
-//          (result) => { this.Data1M = Object.freeze(result); },
-//          (timeout) => { this.Control1M.Timer = setTimeout(() => { this.Update1MValues(); }, timeout); }
-//        );
-//      },
-//      Update3SValues: function() {
-//        this.Control3S = this.CancelTransfer(this.Control3S);
-//        if(this.analyzer == null) return;
-//        this.Control3S.CancelFunc = this.analyzer.GetSeriesLast('3S', ['CURRENT'],
-//          (working) => {},
-//          (result) => { this.Data3S = Object.freeze(result); },
-//          (timeout) => { this.Control3S.Timer = setTimeout(() => { this.Update3SValues(); }, timeout); }
-//        );
-//      },
-//      UpdateCubismValues: function() {
-//        this.ControlCubism = this.CancelTransfer(this.ControlCubism);
-//        if(this.analyzer == null) return;
-//        this.ControlCubism.CancelFunc = this.analyzer.GetSeriesRange('1M', 'LastDay', this.DataCubism, ['CURRENT_HARMONICS', 'POWER_FACTOR', 'CURRENT_THD', 'PHI'],
-//          (working) => {},
-//          (result) => { this.DataCubism = Object.freeze(result); },
-//          (timeout) => { this.ControlCubism.Timer = setTimeout( () => { this.UpdateCubismValues(); }, timeout); }
-//        );
-//      },
-//      UpdateGraphValues: function() {
-//        this.ControlGraph = this.CancelTransfer(this.ControlGraph);
-//        if((this.Aggreg == null) || (this.Phases == null) || (this.Range == null) || (this.analyzer == null)) return;
-//        this.ControlGraph.CancelFunc = this.analyzer.GetSeriesRange(this.Aggreg, this.Range, this.DataGraph, ['CURRENT'],
-//          (working) => { this.ShowSpinner = working; },
-//          (result) => { this.DataGraph = Object.freeze(result); },
-//          (timeout) => { this.ControlGraph.Timer = setTimeout( () => { this.UpdateGraphValues(); }, timeout); }
-//        );
-//      },
-//    },
+    methods: {
+      Export: function() {
+        if(this.TransferGraph.Data == null) return [];
+        var Rows = [['Sampletime'].concat(this.analyzer.GetSeriesNames('Current', this.analyzer.CurrentChannels))];
+        for(var n in this.TransferGraph.Data.Sampletime) {
+          var Row = [this.TransferGraph.Data.Sampletime[n]];
+          for(var i in this.TransferGraph.Data.Current[n]) Row.push(this.Round(this.TransferGraph.Data.Current[n][i], 3));
+          Rows.push(Row);
+        }
+        return Rows;
+      }
+    },
     components: { Current, Counters, Waveform, Advanced, Evolution, Harmonics, Parameters }
   }
 </script>
