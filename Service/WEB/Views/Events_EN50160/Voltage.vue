@@ -2,12 +2,13 @@
   <div class="panel panel-voltage">
     <div class="panel-heading">
       <div class="float-left">Grid Voltage</div>
-      <div class="float-right" v-if="Warning"><img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded"></div>
+      <div class="float-right" v-if="Warning">
+        <img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
+      </div>
       <div class="clearfix"></div>
     </div>
     <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <graph :options="GraphOptions" ref="graph"></graph>
+      <graph :options="GraphOptions" :height="200"></graph>
     </div>
     <div class="panel-footer">
       <div class="text-center">95% of the year between {{ Nominal }}V±10%</div>
@@ -20,73 +21,72 @@
 </template>
 
 <script>
-  import * as oZm from 'JS/openZmeter.js';
   import Graph from 'Components/Graph.vue';
-  import Spinner from 'Components/Spinner.vue';
-  import ProgressBar from 'Components/ProgressBar.vue';
   export default {
+    props: { data: Array, index: Number, analyzer: Object, ranges: Array },
     data: function() {
       return { Nominal: 50, Voltage: 0, VoltageText: '', ShowSpinner: true, Warning: true };
     },
-    created: function() {
-      this.GraphOptions = { strokeWidth: 1, labels: ["Variation", "Time"], stepPlot: true, plotter: Graph.multiColumnBarPlotter, colors: [oZm.Series['VOLTAGE'].Color], interactionModel: {}, legend: 'follow', drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback };
-      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);  
-    },
-    mounted: function() {
-      this.SetAnalyzer();
+    computed: {
+      GraphOptions: function() {
+        var Opt = { file: [], axes: { x: {}, y: {} } };
+        Opt.strokeWidth = 1;
+        Opt.labels = ["Variation", "Time"];
+        Opt.stepPlot = true;
+        Opt.plotter = Graph.Plotters.MultiBar;
+        Opt.colors = [this.analyzer.Color.Voltage];
+        Opt.interactionModel = { };
+        Opt.showRangeSelector = false;
+        Opt.gridLineColor = "#DDD";
+        Opt.gridLinePattern = [4, 4];
+        Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
+        Opt.legend = 'follow';
+        Opt.dateWindow = [-0.5, this.ranges.length - 1.5];
+        Opt.axes.y.pixelsPerLabel = 24;
+        Opt.axes.y.axisLabelWidth = 24;
+        Opt.axes.x.pixelsPerLabel = 30;
+        Opt.axes.x.axisLabelWidth = 30;
+        Opt.axes.x.valueFormatter = (x) => {
+          if((x < 0) || (x >= this.ranges.length - 1)) return "";
+          if(x == 0) {
+            return "Less than " + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0)) + ' V';
+          } else if(x == (this.ranges.length - 2)) {
+            return "More than " + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0)) + ' V';
+          } else {
+            return "From " + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0), 2) + " to " + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0), 2) + ' V';
+          }
+        };
+        Opt.axes.x.axisLabelFormatter = (x) => {
+          if((x < 0) || (x >= this.ranges.length - 1)) return "";
+          if(x == 0) {
+            return '≤' + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0), 2);
+          } else if(x == (this.ranges.length - 2)) {
+            return '≥' + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0));
+          } else {
+            return this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x] / 100.0), 2) + "<br/>" + this.Round(this.analyzer.NominalVoltage * (1 + this.ranges[x + 1] / 100.0), 2);
+          }
+        };
+        if(this.data != null) {
+          for(var i = 0; i < this.data[this.index].Voltage.length; i++) Opt.file.push([i, this.data[this.index].Voltage[i]]);
+          Opt.axes.y.valueFormatter = (x) => { return this.Round(x * 100.0 / this.data[this.index].VoltageSamples, 2) + ' %'; };
+          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x * 100 / this.data[this.index].VoltageSamples, 0) + '%'; };
+        }
+        return Object.seal(Opt);
+      }
     },
     methods: {
       SetData(data, voltages) {
         var In  = (data.VoltageIN / data.VoltageSamples) * 100.0;
         var ToShow = [];
-        var Analyzer = this.$root.SelectedAnalyzer;  
+        var Analyzer = this.$root.SelectedAnalyzer;
         for(var i = 0; i < data.Voltage.length; i++) ToShow.push([i, data.Voltage[i]]);
         this.Warning = (In < 95);
         this.Voltage = (In - 90) * 10;
         this.VoltageText = oZm.Round2Plain(In) + '% of time in range';
-        var Options = {
-          dateWindow: [-0.5, voltages.length - 1.5],
-          axes: {
-            y: { pixelsPerLabel: 24, axisLabelWidth: 24,
-                 valueFormatter: function (x) { return oZm.Round2(x * 100.0 / data.VoltageSamples) + ' %'; },
-                 axisLabelFormatter: function (x) { return Math.round(x * 100 / data.VoltageSamples, 0) + '%'; }
-               },
-            x: { pixelsPerLabel: 30, axisLabelWidth: 30,
-                 valueFormatter: function (x) {
-                   if((x < 0) || (x >= voltages.length - 1)) return "";
-                   if(x === 0) {
-                     return "Less than " + oZm.Round2(Analyzer.NominalVoltage * (1 + voltages[x + 1] / 100.0)) + ' V';
-                  } else if(x === (voltages.length - 2)) {
-                    return "More than " + oZm.Round2(Analyzer.NominalVoltage * (1 + voltages[x] / 100.0)) + ' V';
-                  } else {
-                    return "From " + oZm.Round2(Analyzer.NominalVoltage * (1 + voltages[x] / 100.0)) + " to " + oZm.Round2(Analyzer.NominalVoltage * (1 + voltages[x + 1] / 100.0)) + ' V';
-                  }
-                },
-                axisLabelFormatter: function (x) {
-                  if((x < 0) || (x >= voltages.length - 1)) return "";
-                  if(x === 0) {
-                    return '≤' + oZm.Round2(Analyzer.NominalVoltage * (1 + voltages[x + 1] / 100.0));
-                  } else if(x === (voltages.length - 2)) {
-                    return '≥' + oZm.Round2(Analyzer.NominalVoltage * (1 + voltages[x] / 100.0));
-                  } else {
-                    return oZm.Round2(Analyzer.NominalVoltage * (1 + voltages[x] / 100.0)) + "<br/>" + oZm.Round2(Analyzer.NominalVoltage * (1 + voltages[x + 1] / 100.0));
-                  }
-                }
-            }
-          }, 
-          file: ToShow
-        };      
-        this.$refs.graph.SetOptions(Options);
-        this.ShowSpinner = false;
-      },
-      SetAnalyzer() {
-        this.ShowSpinner = true;
-        this.Nominal = '';
-        if(this.$root.SelectedAnalyzer === null) return;
-        this.Nominal = this.$root.SelectedAnalyzer.NominalVoltage;
       }
-    },
-    components: { Graph, Spinner, ProgressBar }
+    }
   }
 </script>
 

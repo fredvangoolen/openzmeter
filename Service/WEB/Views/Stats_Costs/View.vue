@@ -51,7 +51,7 @@
         );
       }
     },
-    computed: {
+    methods: {
       Export: function() {
         var Data = [];
 //        for(var i = 0; i < this.$refs.bills.length; i++) {

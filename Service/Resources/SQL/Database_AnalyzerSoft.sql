@@ -111,7 +111,9 @@ CREATE TABLE IF NOT EXISTS rates(
   config    jsonb             NOT NULL,
   template  jsonb             NOT NULL
 ) WITH (OIDS=FALSE);
+DROP TABLE IF EXISTS rates;
 
+DROP TABLE IF EXISTS alarms;
 CREATE TABLE IF NOT EXISTS alarms(
   alarmtime     bigint            NOT NULL PRIMARY KEY,
   name          character varying NOT NULL,

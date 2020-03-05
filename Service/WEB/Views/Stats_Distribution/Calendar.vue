@@ -22,7 +22,7 @@
     };
   } (jQuery));
   export default {
-    props: { data: Object, analyzer: Object, year: Number, export: Array },
+    props: { data: Object, analyzer: Object, year: Number },
     data: function() {
       return { };
     },

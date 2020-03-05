@@ -48,6 +48,15 @@
                TransferNow: this.CreateSeriesTransfer(this, ['FREQUENCY']),
       };
     },
+    created: function() {
+      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
+      this.TransferNow.Update(this.analyzer, '3S', 'LastSamples');
+      this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
+    },
+    beforeDestroy: function() {
+      this.TransferNow.Destroy();
+      this.TransferGraph.Destroy();
+    },
     watch: {
       analyzer: function() {
         this.TransferNow.Update(this.analyzer, '3S', 'LastSamples');
@@ -60,21 +69,13 @@
         this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
     },
-    computed: {
+    methods: {
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
         var Rows = [['Time', 'Frequency']];
-        for(var n in this.TransferGraph.Data.Sampletime) Rows.push([this.TransferGraph.Data.Sampletime[n], this.TransferGraph.Data.Frequency[n]]);
+        for(var n in this.TransferGraph.Data.Sampletime) Rows.push([this.TransferGraph.Data.Sampletime[n], this.Round(this.TransferGraph.Data.Frequency[n], 3)]);
         return Object.seal(Rows);
       }
-    },
-    created: function() {
-      this.TransferNow.Update(this.analyzer, '3S', 'LastSamples');
-      this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
-    },
-    beforeDestroy: function() {
-      this.TransferNow.Destroy();
-      this.TransferGraph.Destroy();
     },
     components: { Frequency, Counters }
   }

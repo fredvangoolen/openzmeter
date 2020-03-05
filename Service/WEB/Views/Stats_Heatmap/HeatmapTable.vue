@@ -46,7 +46,7 @@
   import * as oZm from 'JS/openZmeter.js';
   var DaysNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   export default {
-    props: { analyzer: { type: Object, required: true }, data: { type: Object, default: null }, aggreg: { type: String, default: '1H'}, export: { type: Array, default: [] } },
+    props: { analyzer: Object, data: Object, aggreg: String },
     data: function() {
       return { Days: {} };
     },
@@ -98,7 +98,7 @@
         var Export = [];
         var Row = ['Day', 'Date'];
         for(var h = 0; h < 24; h++) {
-          if(this.aggreg === '15M') {
+          if(this.aggreg == '15M') {
             for(var q = 1; q < 5; q++) Row.push(("0" + h).slice(-2) + ' Q' + q);
           } else {
             Row.push(("0" + h).slice(-2));
@@ -108,7 +108,7 @@
         for(var i in this.Days) {
           var Row = [this.Days[i].DayOfWeek, this.Days[i].Date];
           for(var n in this.Days[i].Cells) {
-            Row.push((this.Days[i].Cells[n].Value === undefined) ? '' : this.Days[i].Cells[n].Value);
+            Row.push(this.Round(this.Days[i].Cells[n].Value, 3));
             if(this.Days[i].Cells[n].Value === undefined) {
               this.Days[i].Cells[n].Color = "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAJElEQVQImT2JsQ0AMAyDyP832q+QIWqZEJDEx6gA0JZr9/mmLvBPKENuQmcdAAAAAElFTkSuQmCC')";
               this.Days[i].Cells[n].BorderColor = '#EEE'

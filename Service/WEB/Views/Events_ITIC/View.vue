@@ -62,11 +62,11 @@
         );
       }
     },
-    computed: {
+    methods: {
       Export: function() {
         if(this.Data == null) return [];
         var Data =  [['Start', 'Type', 'Duration', 'Notes']];
-        for(var i in this.Data.StartTime) Data.push([this.Data.StartTime[i], this.Data.Type[i], this.Data.Duration[i] / this.Data.SampleRate[i], this.Data.Notes[i]]);
+        for(var i in this.Data.StartTime) Data.push([this.Data.StartTime[i], this.Data.Type[i], this.Round(this.Data.Duration[i] / this.Data.SampleRate[i], 3), this.Data.Notes[i]]);
         return Object.seal(Data);
       }
     },
