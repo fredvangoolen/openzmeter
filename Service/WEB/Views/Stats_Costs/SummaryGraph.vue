@@ -19,7 +19,7 @@
         Opt.drawGapEdgePoints = true;
         Opt.connectSeparatedPoints = false;
         Opt.fillGraph = false;
-        Opt.gridLineColor = "#BBB";
+        Opt.gridLineColor = "#DDD";
         Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
         Opt.xAxisHeight = 18;

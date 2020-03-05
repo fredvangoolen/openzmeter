@@ -28,7 +28,7 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.plotter = Graph.Plotters.MultiBar;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
-        Opt.gridLineColor = "#BBB";
+        Opt.gridLineColor = "#DDD";
         Opt.gridLinePattern = [4, 4];
         Opt.colors = ["#DF842A"];
         Opt.interactionModel = {};
