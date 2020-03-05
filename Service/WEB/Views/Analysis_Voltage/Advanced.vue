@@ -50,7 +50,7 @@
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
         for(var n in CurrentNames) Opt.series[CurrentNames[n]] = { axis: 'y2' };
-        Opt.gridLineColor = "#BBB";
+        Opt.gridLineColor = "#DDD";
         Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
         Opt.axes.y.pixelsPerLabel = 15;

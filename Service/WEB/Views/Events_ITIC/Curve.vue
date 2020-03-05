@@ -22,7 +22,7 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.drawPoints = true;
         Opt.pointSize = 3;
-        Opt.gridLineColor = "#BBB";
+        Opt.gridLineColor = "#DDD";
         Opt.gridLinePattern = [4, 4];
         Opt.highlightCircleSize = 6;
         Opt.colors = ["#d9534f"];

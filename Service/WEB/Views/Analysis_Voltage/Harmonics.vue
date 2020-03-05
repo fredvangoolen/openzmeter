@@ -39,7 +39,7 @@
         var Opt = { series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         Opt.strokeWidth = 0.5;
         Opt.showRangeSelector = false;
-        Opt.gridLineColor = "#BBB";
+        Opt.gridLineColor = "#DDD";
         Opt.gridLinePattern = [4, 4];
         Opt.interactionModel = { };
         Opt.plotter = Graph.Plotters.MultiBar;

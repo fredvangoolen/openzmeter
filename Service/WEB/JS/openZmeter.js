@@ -1,7 +1,7 @@
 const openZmeter = {
   install: function(Vue, options) {
     Vue.prototype.CreateSeriesTransfer = (parent, series) => {
-      var Transfer = { This: parent, Paused: false, Timer: null, CancelFunc: null, Data: null, LastData: null, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null, AggregFail: null };
+      var Transfer = { This: parent, SingleShot: false, Timer: null, CancelFunc: null, Data: null, LastData: null, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null, AggregFail: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -142,7 +142,7 @@ const openZmeter = {
           Data.From = ReqRange[0];
           Data.To = ReqRange[1];
           Transfer.Data = Object.seal(Data);
-          Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
+          if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
           return;
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
@@ -164,11 +164,11 @@ const openZmeter = {
             Data.From = ReqRange[0];
             Data.To = ReqRange[1];
             Transfer.Data = Object.seal(Data);
-            Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
           },
           (fail) => {
             if(Cancelled == true) return;
-            Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
           }
         );
       };

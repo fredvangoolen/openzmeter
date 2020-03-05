@@ -41,6 +41,8 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.drawAxesAtZero = true;
+        Opt.gridLineColor = "#DDD";
+        Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
         Opt.showRangeSelector = false;
         Opt.axes.x.ticker = (min, max) => { return Graph.Tickers.WaveTimeTicks(max, this.analyzer); };
