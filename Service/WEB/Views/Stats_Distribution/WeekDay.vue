@@ -22,7 +22,7 @@
   export default {
     props: { data: Object, analyzer: Object },
     data() {
-      return { Columns: [], Units: '', Days: [], Periods: [], Export: [] };
+      return { Columns: [], Units: '', Days: [], Periods: [], ExportData: [] };
     },
     watch: {
       data: function() {
@@ -33,6 +33,9 @@
       if(this.data != null) this.SetData();
     },
     methods: {
+      Export: function() {
+        return this.ExportData;
+      },
       SetData: function() {
         this.Days = [];
         this.Periods = [];
@@ -53,15 +56,15 @@
         this.Columns = [ { name: 'Day', title: 'Day' } ];
         for(var Period in this.Periods) this.Columns.push({ name: this.Periods[Period], title: this.Periods[Period] });
         this.$nextTick(() => { this.$refs.table.normalizeFields(); });
-        this.Export = [['Week day'].concat(this.Periods)];
+        this.ExportData = [['Week day'].concat(this.Periods)];
         for(var Day in this.Days) {
           var Row = [Names[Day]];
           for(var Period in this.Days[Day]) {
-            Row.push(this.Days[Day][Period]);
+            Row.push(this.Round(this.Days[Day][Period], 3));
             this.Days[Day][Period] = (this.Days[Day][Period] == null) ? '-' : this.Round(this.ScaleUnits(this.Days[Day][Period], this.Units), 2, true);
           }
           this.Days[Day].Day = Names[Day];
-          this.Export.push(Row);
+          this.ExportData.push(Row);
         }
       }
     },

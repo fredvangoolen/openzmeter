@@ -2,91 +2,80 @@
   <div class="panel panel-frequency">
     <div class="panel-heading">
       <div class="float-left">Grid frequency</div>
-      <div class="float-right" v-if="Warning"><img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded"></div>
+      <div class="float-right" v-if="(((data[index].FrequencyIN / data[index].FrequencySamples) * 100.0) < 99.5)">
+        <img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
+      </div>
       <div class="clearfix"></div>
     </div>
     <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <graph :options="GraphOptions" ref="graph"></graph>
+      <graph :options="GraphOptions" :height="200"></graph>
     </div>
     <div class="panel-footer">
-      <div class="text-center">99.5% of the year between {{ Math.round(Nominal) }}Hz±1% with no events allowed outside {{ Math.round(Nominal * 0.94) }} to {{ Math.round(Nominal * 1.04) }}Hz</div>
-        <progress-bar :value="Frequency" :text="FrequencyText"></progress-bar>
+      <div class="text-center">99.5% of the year between {{ Round(analyzer.NominalFrequency, 2) }}Hz±1% with no events allowed outside {{ Round(analyzer.NominalFrequency * 0.94, 2) }} to {{ Round(analyzer.NominalFrequency * 1.04, 2) }}Hz</div>
+        <progress-bar :value="(((data[index].FrequencyIN / data[index].FrequencySamples) * 100.0) - 90) * 10" :text="Round(((data[index].FrequencyIN / data[index].FrequencySamples) * 100.0), 2) + '% of time in range'"></progress-bar>
         <div style="float: left; font-size: 10px">90%</div>
         <div style="float:right; font-size: 10px">100%</div>
-        <div class="clearfix text-center">{{ FrequencyText }}</div>
+        <div class="clearfix text-center">{{ Round(((data[index].FrequencyIN / data[index].FrequencySamples) * 100.0), 2) + '% of time in range' }}</div>
     </div>
   </div>
 </template>
 
 <script>
-  import * as oZm from 'JS/openZmeter.js';
   import Graph from 'Components/Graph.vue';
-  import Spinner from 'Components/Spinner.vue';
-  import ProgressBar from 'Components/ProgressBar.vue';
   export default {
+    props: { data: Array, index: Number, analyzer: Object, ranges: Array },
     data: function() {
-      return { Nominal: 0, Frequency: 0, FrequencyText: '', ShowSpinner: true, Warning: true };
+      return { };
     },
-    created: function() {
-      this.GraphOptions = { strokeWidth: 1, labels: ["Variation", "Time"], stepPlot: true, plotter: Graph.multiColumnBarPlotter, colors: [oZm.Series['FREQUENCY'].Color], interactionModel: {}, legend: 'follow', drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback,};
-      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);  
-    },
-    mounted: function() {
-      this.SetAnalyzer();
-    },
-    methods: {
-      SetData(data, frequencies) {
-        var In  = (data.FrequencyIN / data.FrequencySamples) * 100.0;
-        var ToShow = [];
-        var Analyzer = this.$root.SelectedAnalyzer;  
-        for(var i = 0; i < data.Frequency.length; i++) ToShow.push([i, data.Frequency[i]]);
-        this.Warning = (In < 99.5);
-        this.Frequency = (In - 90) * 10;
-        this.FrequencyText = oZm.Round2Plain(In) + '% of time in range';
-        var Options = {
-          dateWindow: [-0.5, frequencies.length - 1.5],
-          axes: {
-            y: { pixelsPerLabel: 24, axisLabelWidth: 24,
-                 valueFormatter: function (x) { return oZm.Round2(x * 100.0 / data.FrequencySamples) + ' %'; },
-                 axisLabelFormatter: function (x) { return Math.round(x * 100 / data.FrequencySamples, 0) + '%'; }
-               },
-            x: { pixelsPerLabel: 30, axisLabelWidth: 30,
-                 valueFormatter: function (x) {
-                   if((x < 0) || (x >= frequencies.length - 1)) return "";
-                   if(x === 0) {
-                     return "Less than " + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x + 1] / 100.0)) + ' Hz';
-                   } else if(x === (frequencies.length - 2)) {
-                     return "More than " + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0)) + ' Hz';
-                   } else {
-                     return "From " + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0)) + " to " + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x + 1] / 100.0)) + ' Hz';
-                   }
-                 },
-                 axisLabelFormatter: function (x) {
-                   if((x < 0) || (x >= frequencies.length - 1)) return "";
-                   if(x === 0) {
-                     return '≤' + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x + 1] / 100.0));
-                   } else if(x === (frequencies.length - 2)) {
-                     return '≥' + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0));
-                   } else {
-                     return oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x] / 100.0)) + "<br/>" + oZm.Round2(Analyzer.NominalFreq * (1 + frequencies[x + 1] / 100.0));
-                   }
-                 }
-               }
-          }, 
-          file: ToShow
-        };      
-        this.$refs.graph.SetOptions(Options);
-        this.ShowSpinner = false;
-      },
-      SetAnalyzer() {
-        this.ShowSpinner = true;
-        this.Nominal = '';
-        if(this.$root.SelectedAnalyzer === null) return;
-        this.Nominal = this.$root.SelectedAnalyzer.NominalFreq;
+    computed: {
+      GraphOptions: function() {
+        var Opt = { file: [], axes: { x: {}, y: {} } };
+        Opt.strokeWidth = 1;
+        Opt.labels = ["Variation", "Time"];
+        Opt.stepPlot = true;
+        Opt.plotter = Graph.Plotters.MultiBar;
+        Opt.colors = [this.analyzer.Color.Frequency];
+        Opt.interactionModel = { };
+        Opt.showRangeSelector = false;
+        Opt.gridLineColor = "#DDD";
+        Opt.gridLinePattern = [4, 4];
+        Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
+        Opt.legend = 'follow';
+        Opt.dateWindow = [-0.5, this.ranges.length - 1.5];
+        Opt.axes.y.pixelsPerLabel = 24;
+        Opt.axes.y.axisLabelWidth = 24;
+        Opt.axes.x.pixelsPerLabel = 30;
+        Opt.axes.x.axisLabelWidth = 30;
+        Opt.axes.x.valueFormatter = (x) => {
+          if((x < 0) || (x >= this.ranges.length - 1)) return "";
+          if(x == 0) {
+            return "Less than " + this.Round(this.analyzer.NominalFrequency * (1 + this.ranges[x + 1] / 100.0)) + ' Hz';
+          } else if(x == (this.ranges.length - 2)) {
+            return "More than " + this.Round(this.analyzer.NominalFrequency * (1 + this.ranges[x] / 100.0)) + ' Hz';
+          } else {
+            return "From " + this.Round(this.analyzer.NominalFrequency * (1 + this.ranges[x] / 100.0), 2) + " to " + this.Round(this.analyzer.NominalFrequency * (1 + this.ranges[x + 1] / 100.0), 2) + ' Hz';
+          }
+        };
+        Opt.axes.x.axisLabelFormatter = (x) => {
+          if((x < 0) || (x >= this.ranges.length - 1)) return "";
+          if(x == 0) {
+            return '≤' + this.Round(this.analyzer.NominalFrequency * (1 + this.ranges[x + 1] / 100.0), 2);
+          } else if(x == (this.ranges.length - 2)) {
+            return '≥' + this.Round(this.analyzer.NominalFrequency * (1 + this.ranges[x] / 100.0));
+          } else {
+            return this.Round(this.analyzer.NominalFrequency * (1 + this.ranges[x] / 100.0), 2) + "<br/>" + this.Round(this.analyzer.NominalFrequency * (1 + this.ranges[x + 1] / 100.0), 2);
+          }
+        };
+        if(this.data != null) {
+          for(var i = 0; i < this.data[this.index].Frequency.length; i++) Opt.file.push([i, this.data[this.index].Frequency[i]]);
+          Opt.axes.y.valueFormatter = (x) => { return this.Round(x * 100.0 / this.data[this.index].FrequencySamples, 2) + ' %'; };
+          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x * 100 / this.data[this.index].FrequencySamples, 0) + '%'; };
+        }
+        return Object.seal(Opt);
       }
-    },
-    components: { Graph, Spinner, ProgressBar }
+    }
   }
 </script>
 

@@ -22,7 +22,7 @@
   export default {
     props: { data: Object, analyzer: Object },
     data: function() {
-      return { Units: '', Columns: [], Months: [], Periods: [], Export: [] };
+      return { Units: '', Columns: [], Months: [], Periods: [], ExportData: [] };
     },
     watch: {
       data: function() { this.SetData(); }
@@ -31,6 +31,9 @@
       if(this.data != null) this.SetData();
     },
     methods: {
+      Export: function() {
+        return this.ExportData;
+      },
       SetData: function() {
         this.Months = [];
         this.Periods = [];
@@ -51,15 +54,15 @@
         this.Columns = [ { name: 'Month', title: 'Month' } ];
         for(var Period in this.Periods) this.Columns.push({ name: this.Periods[Period], title: this.Periods[Period] });
         this.$nextTick(() => { this.$refs.table.normalizeFields(); });
-        this.Export = [['Month'].concat(this.Periods)];
+        this.ExportData = [['Month'].concat(this.Periods)];
         for(var Month in this.Months) {
           var Row = [Names[Month]];
           for(var Period in this.Months[Month]) {
-            Row.push(this.Months[Month][Period]);
+            Row.push(this.Round(this.Months[Month][Period], 3));
             this.Months[Month][Period] = (this.Months[Month][Period] === null) ? '-' : this.Round(this.ScaleUnits(this.Months[Month][Period], this.Units), 2, true);
           }
           this.Months[Month].Month = Names[Month];
-          this.Export.push(Row);
+          this.ExportData.push(Row);
         }
       }
     },

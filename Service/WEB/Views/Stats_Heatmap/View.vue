@@ -16,7 +16,7 @@
           </div>
           <div class="panel-body" style="min-height: 300px">
             <spinner :class="{ 'hide': !ShowSpinner }"></spinner>
-            <heatmap-table :data="Data" :aggreg="Aggreg" :analyzer="analyzer" :range.sync="Range" :export.sync="Export"></heatmap-table>
+            <heatmap-table :data="Data" :aggreg="Aggreg" :analyzer="analyzer" :range.sync="Range" @update:export="ExportData=$event"></heatmap-table>
           </div>
         </div>
       </div>
@@ -36,7 +36,7 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Aggreg: '1H', Range: [0, 1], Data: {}, Year: 0, ShowSpinner: true, Export: [] };
+      return { Aggreg: '1H', Range: [0, 1], Data: {}, Year: 0, ShowSpinner: true, ExportData: null };
     },
     watch: {
       Year: function(val) {
@@ -51,6 +51,11 @@
           },
           (fail) => {}
         );
+      }
+    },
+    methods: {
+      Export: function() {
+        return this.ExportData;
       }
     },
     components: { HeatmapTable }

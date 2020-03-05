@@ -9,13 +9,13 @@
               <color-bar :width="140" :height="10" :range="Range" units="Wh"></color-bar>
               <toolbar-years storage="StatsYear" v-model="Year" :analyzer="analyzer" aggreg="1H"></toolbar-years>
               <div class="btn-group">
-                <button-export file="Distribution" :rows="CalendarRows"></button-export>
+                <button-export file="Distribution" :rows="Export"></button-export>
               </div>
             </div>
           </div>
           <div class="panel-body">
             <spinner v-if="ShowSpinner"></spinner>
-            <calendar :data="Data" :analyzer="analyzer" :year="Year" :range.sync="Range" :export.sync="CalendarRows"></calendar>
+            <calendar :data="Data" :analyzer="analyzer" :year="Year" :range.sync="Range" @update:export="CalendarData=$event"></calendar>
           </div>
         </div>
       </div>
@@ -43,7 +43,7 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Range: [0, 1], Year: null, Data: null, ShowSpinner: true, CalendarRows: [] };
+      return { Range: [0, 1], Year: null, Data: null, ShowSpinner: true, CalendarData: [] };
     },
     watch: {
       Year: function(val) {
@@ -57,6 +57,11 @@
             this.Data = Object.seal(result.data);
           }
         );
+      }
+    },
+    methods: {
+      Export: function() {
+        return this.CalendarData;
       }
     },
     components: { Calendar, Months, WeekDay }

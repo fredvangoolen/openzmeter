@@ -6,8 +6,7 @@
       <div class="clearfix"></div>
     </div>
     <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <graph :options="GraphOptions" ref="graph"></graph>
+      <graph :options="GraphOptions" :height="200"></graph>
     </div>
     <div class="panel-footer">
       <div class="text-center">100% of the year under 8%</div>
@@ -20,66 +19,67 @@
 </template>
 
 <script>
-  import * as oZm from 'JS/openZmeter.js';
   import Graph from 'Components/Graph.vue';
-  import Spinner from 'Components/Spinner.vue';
-  import ProgressBar from 'Components/ProgressBar.vue';
   export default {
+    props: { data: Array, index: Number, analyzer: Object, ranges: Array },
     data: function() {
       return {THD: 0, THDText: '', ShowSpinner: true, Warning: true };
     },
-    created: function() {
-      this.GraphOptions = { strokeWidth: 1, labels: ["Distorsion", "Time"], stepPlot: true, plotter: Graph.multiColumnBarPlotter, colors: [oZm.Series['REACTIVE_POWER'].Color], interactionModel: {}, legend: 'follow', drawHighlightPointCallback: Graph.DrawHighlightBarChartCallback, };
-      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);  
-    },
-    mounted: function() {
-      this.SetAnalyzer();
-    },
-    methods: {
-      SetData(data, thds) {
+    computed: {
+      GraphOptions: function() {
+        var Opt = { file: [], axes: { x: {}, y: {} } };
+        Opt.strokeWidth = 1;
+        Opt.labels = ["Distorsion", "Time"];
+        Opt.stepPlot = true;
+        Opt.plotter = Graph.Plotters.MultiBar;
+        Opt.colors = [this.analyzer.Color.Reactive_Power];
+        Opt.interactionModel = { };
+        Opt.showRangeSelector = false;
+        Opt.gridLineColor = "#DDD";
+        Opt.gridLinePattern = [4, 4];
+        Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
+        Opt.legend = 'follow';
+        Opt.dateWindow = [-0.5, this.ranges.length - 1.5];
+        Opt.axes.y.pixelsPerLabel = 24;
+        Opt.axes.y.axisLabelWidth = 24;
+        Opt.axes.x.pixelsPerLabel = 30;
+        Opt.axes.x.axisLabelWidth = 30;
+        Opt.axes.x.valueFormatter = (x) => {
+          if((x < 0) || (x >= this.ranges.length - 1)) return "";
+          if(x == (this.ranges.length - 2)) {
+            return "More than " + this.Round(this.ranges[x], 2) + ' %';
+          } else {
+            return "From " + this.Round(this.ranges[x], 2) + " to " + this.Round(this.ranges[x + 1], 2) + ' %';
+          }
+        };
+        Opt.axes.x.axisLabelFormatter = (x) => {
+          if((x < 0) || (x >= this.ranges.length - 1)) return "";
+          if(x == (this.ranges.length - 2)) {
+            return '≥' + this.Round(this.ranges[x], 2);
+          } else {
+            return this.Round(this.ranges[x], 2) + "<br/>" + this.Round(this.ranges[x + 1], 2);
+          }
+        };
+        if(this.data != null) {
+          for(var i = 0; i < this.data[this.index].THD.length; i++) Opt.file.push([i, this.data[this.index].THD[i]]);
+          Opt.axes.y.valueFormatter = (x) => { return this.Round(x * 100.0 / this.data[this.index].THDSamples, 2) + ' %'; };
+          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x * 100 / this.data[this.index].THDSamples, 0) + '%'; };
+        }
+        return Object.seal(Opt);
+
         var In  = (data.THDIN / data.THDSamples) * 100.0;
         var ToShow = [];
-        var Analyzer = this.$root.SelectedAnalyzer;  
-        for(var i = 0; i < data.THD.length; i++) ToShow.push([i, data.THD[i]]);
+        var Analyzer = this.$root.SelectedAnalyzer;
+
         this.Warning = (In < 100);
         this.THD = (In - 90) * 10;
         this.THDText = oZm.Round2Plain(In) + '% of time in range';
-        var Options = {
-          dateWindow: [-0.5, thds.length - 1.5],
-          axes: {
-            y: { pixelsPerLabel: 24, axisLabelWidth: 24,
-                 valueFormatter: function (x) { return oZm.Round2(x * 100.0 / data.THDSamples) + ' %'; },
-                 axisLabelFormatter: function (x) { return Math.round(x * 100 / data.THDSamples, 0) + '%'; }
-               },
-            x: { pixelsPerLabel: 30, axisLabelWidth: 30,
-                 valueFormatter: function (x) {
-                   if((x < 0) || (x >= thds.length - 1)) return "";
-                   if(x === (thds.length - 2)) {
-                    return "More than " + oZm.Round2(thds[x]) + ' %';
-                  } else {
-                    return "From " + oZm.Round2(thds[x]) + " to " + oZm.Round2(thds[x + 1]) + ' %';
-                  }
-                },
-                axisLabelFormatter: function (x) {
-                  if((x < 0) || (x >= thds.length - 1)) return "";
-                  if(x === (thds.length - 2)) {
-                    return '≥' + oZm.Round2(thds[x]);
-                  } else {
-                    return oZm.Round2(thds[x]) + "<br/>" + oZm.Round2(thds[x + 1]);
-                  }
-                }
-            }
-          }, 
-          file: ToShow
-        };      
-        this.$refs.graph.SetOptions(Options);
-        this.ShowSpinner = false;
+
+
       },
-      SetAnalyzer() {
-        this.ShowSpinner = true;
-      }
-    },
-    components: { Graph, Spinner, ProgressBar }
+    }
   }
 </script>
 

@@ -75,6 +75,7 @@
       };
     },
     created: function() {
+      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.Transfer15M.Update(this.analyzer, '15M', 'LastSamples');
       this.Transfer1H.Update(this.analyzer, '1H', 'LastSamples');
       this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
@@ -97,7 +98,7 @@
         this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
       }
     },
-    computed: {
+    methods: {
       Export: function() {
         var Data = [['Time', 'Period', 'Active energy', 'Reactive energy']];
         if(this.TransferGraph.Data != null) {
