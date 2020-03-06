@@ -4,7 +4,7 @@
       <div class="col-lg-12">
         <div class="panel panel-active-energy">
           <div class="panel-heading">
-            <div class="huge header-text">Energy consumption</div>
+            <div class="header-text">Energy consumption</div>
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="AggregationEnergy" v-model="Aggreg" :options="['15M', '1H']"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range"></toolbar-period>
