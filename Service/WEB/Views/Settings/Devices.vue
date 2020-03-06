@@ -2,9 +2,6 @@
   <div class="panel panel-other" v-show="Enabled">
     <div class="panel-heading">
       <div class="huge-small header-text">Device manager</div>
-      <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes"><img :src="require('Imgs/diskette.png')"> Save</button>
-      </div>
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
