@@ -7,7 +7,7 @@
             <div class="header-text">Energy consumption</div>
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="AggregationEnergy" v-model="Aggreg" :options="['15M', '1H']"></toolbar-aggregation>
-              <toolbar-period storage="Period" v-model="Range"></toolbar-period>
+              <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <div class="btn-group">
                 <button-export file="Energy" :rows="Export"></button-export>
                 <button-expand v-model="Expanded"></button-expand>

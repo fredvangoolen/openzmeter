@@ -7,7 +7,7 @@
             <div class="huge header-text">Frequency</div>
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
-              <toolbar-period storage="Period" v-model="Range"></toolbar-period>
+              <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <div class="btn-group">
                 <button-export :rows="Export" file="Frequency"></button-export>
                 <button-expand v-model="Expanded"></button-expand>

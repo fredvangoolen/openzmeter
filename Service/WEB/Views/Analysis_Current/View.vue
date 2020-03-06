@@ -7,7 +7,7 @@
             <div class="header-text">Current</div>
             <div class="header-buttons clearfix" ref="Toolbar">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
-              <toolbar-period storage="Period" v-model="Range"></toolbar-period>
+              <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="true" :multi="true" v-model="Phases"></toolbar-phases>
               <div class="btn-group">
                 <button-export file="Current" :rows="Export"></button-export>

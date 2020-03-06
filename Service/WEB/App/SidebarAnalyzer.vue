@@ -50,6 +50,7 @@
           analyzer.FormatTime = this.FormatTime.bind(this);
           analyzer.FormatTimeMS = this.FormatTimeMS.bind(this);
           analyzer.FormatDateTime = this.FormatDateTime.bind(this);
+          analyzer.CalcRange = this.CalcRange.bind(this);
         }
         this.$emit('update:analyzer', analyzer);
 //        this.LastSample = 0;
@@ -75,7 +76,32 @@
         if(spacer == null) spacer = ' - ';
         return moment(val).tz(this.analyzer.TimeZone).format('hh:mm:ss') + spacer + moment(val).tz(this.analyzer.TimeZone).format('DD/MM/YYYY');
       },
-
+      CalcRange: function(range, aggreg) {
+        var Now = moment().tz(this.analyzer.TimeZone);
+        if(range == 'LastSamples') {
+          var Period    = (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
+          return [Now.valueOf() - Period * 2, Now.valueOf()];
+        } else if(range == 'LastHours')
+          return [Now.valueOf() - 7200000, Now.valueOf()];
+        else if(range == 'LastDay')
+          return [Now.valueOf() - 86400000, Now.valueOf()];
+        else if(range == 'LastWeek')
+          return [Now.valueOf() - 604800000, Now.valueOf()];
+        else if(range == 'LastMonth')
+          return [Now.valueOf() - 2592000000, Now.valueOf()];
+        else if(range == 'LastYear')
+          return [Now.valueOf() - 31536000000, Now.valueOf()];
+        else if(range == 'Day')
+          return [Now.startOf('day').valueOf(), Now.endOf('day').valueOf()];
+        else if(range == 'Week')
+          return [Now.startOf('week').valueOf(), Now.endOf('week').valueOf()];
+        else if(range == 'Month')
+          return [Now.startOf('month').valueOf(), Now.endOf('month').valueOf()];
+        else if(range == 'Year')
+          return [Now.startOf('year').valueOf(), Now.endOf('year').valueOf()];
+        else if(Array.isArray(range))
+          return Array.from(range);
+      },
 
 
 
