@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other" v-show="Enabled">
     <div class="panel-heading">
-      <div class="huge-small header-text">Users</div>
+      <div class="header">Users</div>
       <div class="pull-right input-group input-group-xs" style="width:200px">
         <input type="text" class="form-control" placeholder="Filter..." v-model="Filter">
         <span class="input-group-btn">
@@ -99,6 +99,11 @@
 </script>
 
 <style scoped>
+  .header {
+    display: inline-block;
+    font-size: 20px;
+    line-height: 22px;
+  }
   @media screen and (min-width: 600px) {
     .table >>> th:nth-child(1) {
       text-align: center;

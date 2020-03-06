@@ -60,12 +60,4 @@
       padding: 10px;
     }
   }
-  @media only screen and (max-width: 768px) {
-    .modal-dialog {
-     margin-top:120px !important;
-    }
-    .modal-dialog.fullscreen {
-     margin-top:120px !important;
-    }
-  }
 </style>

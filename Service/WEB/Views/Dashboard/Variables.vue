@@ -2,7 +2,7 @@
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
       <div class="header-text">Main variables</div>
-      <div class="header-buttons">
+      <div class="float-right">
         <span v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggreg) }} aggregation {{ Paused ? '(Paused)' : '' }}</span>
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" v-model="Phase"></toolbar-phases>
         <div class="btn-group">
@@ -96,10 +96,3 @@
     }
   }
 </script>
-
-<style scoped>
-  .header-text {
-    font-size: 20px;
-    line-height: 24px;
-  }
-</style>

@@ -179,8 +179,8 @@
   }
   .aggreg-row {
     font-size: 14px;
-    line-height: 14px;
-    margin-top: 2px;
+    line-height: 20px;
+    margin-top: -2px;
   }
   .panel-heading > .header-buttons {
     margin-top: -3px;

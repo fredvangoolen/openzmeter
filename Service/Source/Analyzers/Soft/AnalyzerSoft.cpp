@@ -1204,10 +1204,7 @@ void AnalyzerSoft::GetSeries(const json &params, Response &response) {
 void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if(pNowDataLock.ConsumerWait(5000) == false) {
-    response.set_content("", "text/plain");
-    response.status = HTTP_INTERNAL_SERVER_ERROR;
-  }
+  if(pNowDataLock.ConsumerWait(5000) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   json Result = json::object();
   Result["Sampletime"] = pAggreg200MS.Timestamp;
   for(uint8_t i = 0; i < params["Series"].size(); i++) {
