@@ -7,7 +7,7 @@
             <div class="header-text">Voltage</div>
             <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
-              <toolbar-period storage="Period" v-model="Range"></toolbar-period>
+              <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="false" :multi="true" v-model="Phases"></toolbar-phases>
               <div class="btn-group">
                 <button-export file="Voltage" :rows="Export"></button-export>

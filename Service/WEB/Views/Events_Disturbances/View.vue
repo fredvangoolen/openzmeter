@@ -5,7 +5,7 @@
         <div class="panel-heading">
           <span class="header-text">Disturbances</span>
           <div class="header-buttons clearfix" ref="Toolbar">
-            <toolbar-period storage="Period" v-model="Range"></toolbar-period>
+            <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
           </div>
         </div>
         <div class="panel-body">
