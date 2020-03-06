@@ -134,19 +134,9 @@ bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
     for(uint8_t i = 0; i < pVoltageChannels; i++) pLastSamples[i] = voltageSamples[i];
   }
   if((pBlockSamples == pMaxSamples) || ((pNominalFrequency == 50.0) && (pBlockCyclesCount == 20)) || ((pNominalFrequency == 60.0) && (pBlockCyclesCount == 24))) {
-    if(pSequence == 0) {
-      InitAggreg(pAggreg200MS, AGGREG_200MS);
-      pBlockSamples     = 0;
-      pBlockCyclesCount = 0;
-      pSequence ++;
-      memset(pBlockCycles, 0, sizeof(pBlockCycles));
-      pAnalyzerLock.Unlock();
-      return false;
-    } else {
-      pAnalyzerWorker->Run(&pAggreg200MS);
-      pAnalyzerLock.Unlock();
-      return true;
-    }
+    pAnalyzerWorker->Run(&pAggreg200MS);
+    pAnalyzerLock.Unlock();
+    return true;
   }
   pAnalyzerLock.Unlock();
   return false;
@@ -434,6 +424,8 @@ bool AnalyzerSoft::FindRunningEvent(const uint32_t mask) {
   return false;
 }
 void AnalyzerSoft::SaveAggreg(Params_t &params) {
+  SetOnline();
+  if(pSequence < 50) return;
   Database DB(Serial);
   if(params.Type == AGGREG_200MS)
     DB.ExecSentenceNoResult("INSERT INTO aggreg_10c(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi) VALUES(" +
@@ -502,7 +494,6 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
     DB.Bind(params.StatsUnbalance) + ")");
   if(params.Type == AGGREG_1M) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(params.Timestamp - 86400000));   //Delete 1 day old
   if((params.Type == AGGREG_1M) && (pSave200MS == true)) DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(params.Timestamp - 3600000));     //Delete 1 hour old
-  SetOnline();
 }
 void AnalyzerSoft::SaveEvent(Event_t &evt) {
   Database DB(Serial);
