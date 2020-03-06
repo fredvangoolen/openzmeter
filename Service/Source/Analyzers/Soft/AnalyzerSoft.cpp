@@ -917,7 +917,15 @@ void AnalyzerSoft::FFT_Func(void *creation, void *run) {
   for(uint16_t i = 0; i < (2 * This->pFFTSamples); i++) Ch->OutPtr[i] = Ch->OutPtr[i] / This->pBlockSamples;
 }
 void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
+  AnalyzerSoft *This  = (AnalyzerSoft*)creation;
 
+//    if(This->pWorkerLocks.WorkerWaitTask() == false) break;
+//    This->pMemberLocks.ReadLock();
+//    printf("chech alarms\n");
+//    for(auto Alarm : This->pAlarms) {
+//    }
+//    This->pMemberLocks.ReadUnlock();
+//    This->pWorkerLocks.WorkerEndsTask();
 }
 void *AnalyzerSoft::Sync_Thread(void *params) {
   AnalyzerSoft *This = (AnalyzerSoft*)params;

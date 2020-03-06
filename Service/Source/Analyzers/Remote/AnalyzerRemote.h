@@ -59,11 +59,6 @@ class AnalyzerRemote : public Analyzer {
     void  GetEvent(const json &params, Response &response) override;
     void  SetEvent(const json &params, Response &response) override;
     void  DelEvent(const json &params, Response &response) override;
-//    void  GetRates(const json &params, Response &response) override;
-//    void  GetRate(const json &params, Response &response) override;
-//    void  SetRate(const json &params, Response &response) override;
-//    void  DelRate(const json &params, Response &response) override;
-//    void  AddRate(const json &params, Response &response) override;
     void  GetPrices(const json &params, Response &response) override;
     void  TestAlarm(const json &params, Response &response) override;
     void  GetAlarms(const json &params, Response &response) override;

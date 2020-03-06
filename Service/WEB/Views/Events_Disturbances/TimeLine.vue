@@ -16,6 +16,7 @@
     created: function() {
       this.TimeLine = null;
       this.TimeLineDataset = new vis.DataSet();
+      this.TimeLineGroups = new vis.DataSet();
     },
     mounted: function() {
       this.TimeLine = new vis.Timeline(this.$el, this.TimeLineDataset, {
@@ -25,14 +26,11 @@
         orientation: 'top'
       });
       this.TimeLine.on('rangechanged', (evt) => { if(evt.byUser == true) this.$emit('update:range', [moment(evt.start).valueOf(), moment(evt.end).valueOf()]) } );
-      var Groups = new vis.DataSet([
-        { id: 1, content: 'Dips'},
-        { id: 2, content: 'Swells'},
-        { id: 3, content: 'Interruptions'},
-        { id: 4, content: 'RVC'},
-        { id: 5, content: 'Glitchs'}
-      ]);
-      this.TimeLine.setGroups(Groups);
+      this.TimeLineGroups.add({ id: 1, content: '<div style="width:150px">Dips</div>'});
+      this.TimeLineGroups.add({ id: 2, content: '<div style="width:150px">Swells</div>'});
+      this.TimeLineGroups.add({ id: 3, content: '<div style="width:150px">Interruptions</div>'});
+      this.TimeLineGroups.add({ id: 4, content: '<div style="width:150px">RVC</div>'});
+      this.TimeLine.setGroups(this.TimeLineGroups);
       $(document).on("mouseover", '.vis-item', (e) => {
         $(e.target).qtip({
           overwrite: false,
@@ -56,6 +54,7 @@
       SetEvents: function() {
         this.TimeLineDataset.clear();
         if(this.events == null) return;
+        var Count = {Interruption: 0, Swell: 0, Dip: 0, RVC: 0 };
         for(var i = 0; i < this.events.StartTime.length; i++) {
           var Item = {
             id: i,
@@ -70,18 +69,26 @@
           if(this.events.Type[i] == 'INTERRUPTION') {
             Item.className = 'red';
             Item.group = 3;
+            Count.Interruption = Count.Interruption + 1;
           } else if(this.events.Type[i] == 'SWELL') {
             Item.className = 'blue';
             Item.group = 2;
+            Count.Swell = Count.Swell + 1;
           } else if(this.events.Type[i] == 'DIP') {
             Item.className = 'blue';
             Item.group = 1;
+            Count.Dip = Count.Dip + 1;
           } else if(this.events.Type[i] == 'RVC') {
             Item.className = 'blue';
             Item.group = 4;
+            Count.RVC = Count.RVC + 1;
           }
           this.TimeLineDataset.add(Item);
         }
+        this.TimeLineGroups.update({ id: 1, content: '<div style="width:150px">Dips<span class="pull-right badge">' + Count.Dip + '</span></div>'});
+        this.TimeLineGroups.update({ id: 2, content: '<div style="width:150px">Swells<span class="pull-right badge">' + Count.Swell + '</span></div>'});
+        this.TimeLineGroups.update({ id: 3, content: '<div style="width:150px">Interruptions<span class="pull-right badge">' + Count.Interruption + '</span></div>'});
+        this.TimeLineGroups.update({ id: 4, content: '<div style="width:150px">RVC<span class="pull-right badge">' + Count.RVC + '</span></div>'});
         this.TimeLine.setWindow(this.events.From, this.events.To);
       }
     }
