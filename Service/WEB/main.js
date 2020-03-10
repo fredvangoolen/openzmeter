@@ -74,6 +74,7 @@ import AnalysisCurrent from 'Views/Analysis_Current/View.vue';
 import AnalysisPower from 'Views/Analysis_Power/View.vue';
 import AnalysisEnergy from 'Views/Analysis_Energy/View.vue';
 import AnalysisFrequency from 'Views/Analysis_Frequency/View.vue';
+import Analysis200MS from 'Views/Analysis_200MS/View.vue';
 import EventsITIC from 'Views/Events_ITIC/View.vue';
 import EventsDisturbances from 'Views/Events_Disturbances/View.vue';
 import EventsEN50160 from 'Views/Events_EN50160/View.vue';
@@ -96,6 +97,7 @@ const AppRouter = new Router({
     { path: '/Analysis/Power', component: AnalysisPower },
     { path: '/Analysis/Energy', component: AnalysisEnergy },
     { path: '/Analysis/Frequency', component: AnalysisFrequency },
+    { path: '/Analysis/200MS', component: Analysis200MS },
     { path: '/Events/ITIC', component: EventsITIC },
     { path: '/Events/Disturbances', component: EventsDisturbances },
     { path: '/Events/EN50160', component: EventsEN50160 },

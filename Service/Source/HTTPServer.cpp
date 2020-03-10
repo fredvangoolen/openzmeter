@@ -238,7 +238,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
     }
   }
   if(UserName == "") {
-    return response.set_redirect("Login");
+    return response.set_redirect(string(pRelativePath + "Login").c_str());
   } else {
     size_t Len;
     const char *Content = (const char *)ResourceLoader::GetFile("WEB/Index.html", &Len);

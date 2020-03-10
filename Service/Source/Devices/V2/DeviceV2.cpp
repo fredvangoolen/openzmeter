@@ -91,17 +91,19 @@ vector<Device*> DeviceV2::GetInstances() {
 }
 DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device V2") {
   pSignalTransfer.Init(this, 2);
-  pBuffer       = (int16_t*)malloc(DEVICEV2_BUFFERSIZE * sizeof(uint16_t) * 7);
-  pConfigLock   = PTHREAD_MUTEX_INITIALIZER;
-  pThread       = 0;
-  pBufferHead   = 0;
-  pBufferTail   = 0;
+  pBuffer        = (int16_t*)malloc(DEVICEV2_BUFFERSIZE * sizeof(uint16_t) * 7);
+  pConfigLock    = PTHREAD_MUTEX_INITIALIZER;
+  pThread        = 0;
+  pBufferHead    = 0;
+  pBufferTail    = 0;
+  pChannelsDelay = NULL;
   Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial)));
 }
 DeviceV2::~DeviceV2() {
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   if(pBuffer != NULL) free(pBuffer);
+  if(pChannelsDelay != NULL) free(pChannelsDelay);
 }
 json DeviceV2::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
@@ -109,28 +111,34 @@ json DeviceV2::CheckConfig(const json &config) {
   ConfigOUT["VoltageOffset"] = vector<float>(3, 0.0);
   ConfigOUT["CurrentGain"] = vector<float>(4, 1.0);
   ConfigOUT["CurrentOffset"] = vector<float>(4, 0.0);
+  ConfigOUT["CurrentDelay"] = vector<uint8_t>(4, 0);
   ConfigOUT["Enabled"] = false;
   ConfigOUT["HighGain"] = false;
   ConfigOUT["Outputs"] = json::array();
   if(config.is_object()) {
     if(config.contains("VoltageGain") && config["VoltageGain"].is_array() && (config["VoltageGain"].size() == ConfigOUT["VoltageGain"].size())) {
-      for(unsigned n = 0; n < ConfigOUT["VoltageGain"].size(); n++) {
+      for(uint8_t n = 0; n < ConfigOUT["VoltageGain"].size(); n++) {
         if(config["VoltageGain"][n].is_number() && (config["VoltageGain"][n] > 0.0) && (config["VoltageGain"][n] <= 1000.0)) ConfigOUT["VoltageGain"][n] = config["VoltageGain"][n];
       }
     }
     if(config.contains("VoltageOffset") && config["VoltageOffset"].is_array() && (config["VoltageOffset"].size() == ConfigOUT["VoltageOffset"].size())) {
-      for(unsigned n = 0; n < ConfigOUT["VoltageOffset"].size(); n++) {
+      for(uint8_t n = 0; n < ConfigOUT["VoltageOffset"].size(); n++) {
         if(config["VoltageOffset"][n].is_number() && (config["VoltageOffset"][n] >= -200.0) && (config["VoltageOffset"][n] <= 200.0)) ConfigOUT["VoltageOffset"][n] = config["VoltageOffset"][n];
       }
     }
     if(config.contains("CurrentGain") && config["CurrentGain"].is_array() && (config["CurrentGain"].size() == ConfigOUT["CurrentGain"].size())) {
-      for(unsigned n = 0; n < ConfigOUT["CurrentGain"].size(); n++) {
+      for(uint8_t n = 0; n < ConfigOUT["CurrentGain"].size(); n++) {
         if(config["CurrentGain"][n].is_number() && (config["CurrentGain"][n] > 0.0) && (config["CurrentGain"][n] <= 1000.0)) ConfigOUT["CurrentGain"][n] = config["CurrentGain"][n];
       }
     }
     if(config.contains("CurrentOffset") && config["CurrentOffset"].is_array() && (config["CurrentOffset"].size() == ConfigOUT["CurrentOffset"].size())) {
-      for(unsigned n = 0; n < ConfigOUT["CurrentOffset"].size(); n++) {
+      for(uint8_t n = 0; n < ConfigOUT["CurrentOffset"].size(); n++) {
         if(config["CurrentOffset"][n].is_number() && (config["CurrentOffset"][n] >= -200.0) && (config["CurrentOffset"][n] <= 200.0)) ConfigOUT["CurrentOffset"][n] = config["CurrentOffset"][n];
+      }
+    }
+    if(config.contains("CurrentDelay") && config["CurrentDelay"].is_array() && (config["CurrentDelay"].size() == ConfigOUT["CurrentDelay"].size())) {
+      for(uint8_t n = 0; n < ConfigOUT["CurrentDelay"].size(); n++) {
+        if(config["CurrentDelay"][n].is_number_unsigned() && (config["CurrentOffset"][n] <= 200.0)) ConfigOUT["CurrentDelay"][n] = config["CurrentDelay"][n];
       }
     }
     if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
@@ -195,14 +203,32 @@ void DeviceV2::Configure(const json& config) {
     ClearAnalyzers();
     pThread = 0;
   }
-  for(unsigned Ch = 0; Ch < 3; Ch++) {
+  for(uint8_t Ch = 0; Ch < 3; Ch++) {
     pVoltageGain[Ch] = config["VoltageGain"][Ch];
     pVoltageOffset[Ch] = config["VoltageOffset"][Ch];
   }
-  for(unsigned Ch = 0; Ch < 4; Ch++) {
+  uint8_t  MaxDelay = 0;
+  uint8_t  Delays[4];
+  for(uint8_t Ch = 0; Ch < 4; Ch++) {
     pCurrentGain[Ch] = config["CurrentGain"][Ch];
     pCurrentOffset[Ch] = config["CurrentOffset"][Ch];
+    Delays[Ch] = config["CurrentDelay"][Ch];
+    if(Delays[Ch] > MaxDelay) MaxDelay = Delays[Ch];
   }
+  for(uint8_t Ch = 0; Ch < 7; Ch++) pChannelsDelayPos[Ch] = 0;
+  uint16_t DelayLen = 0;
+  for(uint8_t Ch = 0; Ch < 3; Ch++) {
+    pChannelsDelaySize[Ch] = MaxDelay + 1;
+    DelayLen = MaxDelay + 1;
+  }
+  for(uint8_t Ch = 0; Ch < 4; Ch++) {
+   pChannelsDelaySize[3 + Ch] = (MaxDelay
+   + 1) - Delays[Ch];
+   DelayLen = (MaxDelay + 1) - Delays[Ch];
+  }
+  pChannelsDelay = (int16_t*)realloc(pChannelsDelay, sizeof(uint16_t) * DelayLen);
+  memset(pChannelsDelay, 0, sizeof(uint16_t) * DelayLen);
+
   pHighGain = config["HighGain"];
   pEnabled = config["Enabled"];
   for(auto Tmp : config["Outputs"]) {
@@ -508,16 +534,23 @@ void  DeviceV2::BufferAppend() {
   }
   bool AnalyzerRun = false;
   while((pBufferTail != pBufferHead) && (AnalyzerRun == false)) {
-    int16_t *Ptr = &pBuffer[pBufferTail * 7];
-    pBufferTail = (pBufferTail + 1) % DEVICEV2_BUFFERSIZE;
     float Values[7];
-    Values[0] = ((float)Ptr[0] + pVoltageOffset[0]) * 0.110266113281 * pVoltageGain[0];
-    Values[1] = ((float)Ptr[1] + pVoltageOffset[1]) * 0.110266113281 * pVoltageGain[1];
-    Values[2] = ((float)Ptr[2] + pVoltageOffset[2]) * 0.110266113281 * pVoltageGain[2];
-    Values[3] = ((float)Ptr[3] + pCurrentOffset[0]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[0];
-    Values[4] = ((float)Ptr[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
-    Values[5] = ((float)Ptr[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
-    Values[6] = ((float)Ptr[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
+    int16_t *DelayPtr = pChannelsDelay;
+    int16_t *Ptr      = &pBuffer[pBufferTail * 7];
+    for(uint8_t Ch = 0; Ch < 7; Ch++) {
+      Values[Ch] = DelayPtr[pChannelsDelayPos[Ch]];
+      DelayPtr[pChannelsDelayPos[Ch]] = Ptr[Ch];
+      pChannelsDelayPos[Ch] = (pChannelsDelayPos[Ch] + 1) % pChannelsDelaySize[Ch];
+      DelayPtr = &DelayPtr[pChannelsDelaySize[Ch]];
+    }
+    pBufferTail = (pBufferTail + 1) % DEVICEV2_BUFFERSIZE;
+    Values[0] = (Values[0] + pVoltageOffset[0]) * 0.110266113281 * pVoltageGain[0];
+    Values[1] = (Values[1] + pVoltageOffset[1]) * 0.110266113281 * pVoltageGain[1];
+    Values[2] = (Values[2] + pVoltageOffset[2]) * 0.110266113281 * pVoltageGain[2];
+    Values[3] = (Values[3] + pCurrentOffset[0]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[0];
+    Values[4] = (Values[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
+    Values[5] = (Values[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
+    Values[6] = (Values[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
     for(auto &Tmp : pAnalyzersSetup) {
       float Voltage[3], Current[4];
       for(unsigned Ch = 0; Ch < Tmp.VoltageChannels; Ch++) Voltage[Ch] = Values[Tmp.Voltage[Ch]];

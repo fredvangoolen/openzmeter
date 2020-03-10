@@ -207,89 +207,30 @@ void *SysSupport::Actions_Thread(void *params) {
 }
 #ifdef OPENWRT
 void *SysSupport::Bluetooth_Thread(void *params) {
-  DBusError Error;
-  dbus_error_init(&Error);
-  DBusConnection *pDBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
-  if(dbus_error_is_set(&Error)) {
-    LOGFile::Error("Can not open DBus connection (%s)\n", Error.message);
-    dbus_error_free(&Error);
-    return NULL;
-  }
+  DBusConnection *DBus = NULL;
   while(true) {
     pSysStatLock.ReadLock();
     bool   PrevEnable = pBT_Enabled;
     bool   Enable     = (pTerminate == false) ? pBTEnable : false;
     pSysStatLock.Unlock();
     if((pTerminate == true) && (PrevEnable == false)) break;
-    usleep(100000);
-    if((PrevEnable == false) && (Enable == true)) {
-      DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "RegisterAgent");
-      DBusMessageIter ArgsIter;
-      dbus_message_iter_init_append(Msg, &ArgsIter);
-      const char *Path = "/oZm_BT/agent1";
-      const char *Capabilities = "NoInputNoOutput";
-      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_OBJECT_PATH, &Path);
-      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &Capabilities);
-      DBusMessage *Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-      if(Reply) dbus_message_unref(Reply);
-      dbus_message_unref(Msg);
-      Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "RequestDefaultAgent");
-      dbus_message_iter_init_append(Msg, &ArgsIter);
-      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_OBJECT_PATH, &Path);
-      Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-      if(Reply) dbus_message_unref(Reply);
-      dbus_message_unref(Msg);
-      if(SendBoolBT(pDBus, "Powered", false) == false) continue;
-      string MAC = GetMacBT(pDBus);
-      if(MAC.empty() == true) continue;
-      MAC.erase(std::remove(MAC.begin(), MAC.end(), ':'), MAC.end());
-      string NetName = "openZmeter_" + MAC.substr(8);
-      if(SendStringBT(pDBus, "Alias", NetName.c_str()) == false) continue;
-      if(SendBoolBT(pDBus, "Powered", true) == false) continue;
-      if(SendBoolBT(pDBus, "Discoverable", true) == false) continue;
-      if(SendUINT32BT(pDBus, "DiscoverableTimeout", 0) == false) continue;
-      if(SendBoolBT(pDBus, "Discoverable", true) == false) continue;
-      if(SendUINT32BT(pDBus, "DiscoverableTimeout", 0) == false) continue;
-      Msg = dbus_message_new_method_call("org.bluez", "/org/bluez/hci0", "org.bluez.NetworkServer1", "Register");
-      dbus_message_iter_init_append(Msg, &ArgsIter);
-      const char *UUID = "nap";
-      const char *Bridge = pBTBridgeName.c_str();
-      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &UUID);
-      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &Bridge);
-      Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-      if(Reply) dbus_message_unref(Reply);
-      dbus_message_unref(Msg);
-      LOGFile::Info("Bluetooth interface UP\n");
-      pSysStatLock.WriteLock();
-      pBTServerName = NetName;
-      pBT_Enabled = true;
-      pSysStatLock.Unlock();
-    } else if((PrevEnable == true) && (Enable == false)) {
-      if(SendBoolBT(pDBus, "Powered", false) == false) continue;
-      DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "UnregisterAgent");
-      DBusMessageIter ArgsIter;
-      dbus_message_iter_init_append(Msg, &ArgsIter);
-      const char *Path = "/oZm_BT/agent1";
-      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_OBJECT_PATH, &Path);
-      DBusMessage *Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-      if(Reply) dbus_message_unref(Reply);
-      dbus_message_unref(Msg);
-      Msg = dbus_message_new_method_call("org.bluez", "/org/bluez/hci0", "org.bluez.NetworkServer1", "Unregister");
-      dbus_message_iter_init_append(Msg, &ArgsIter);
-      const char *UUID = "nap";
-      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &UUID);
-      Reply = dbus_connection_send_with_reply_and_block(pDBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
-      if(Reply) dbus_message_unref(Reply);
-      dbus_message_unref(Msg);
-      LOGFile::Info("Bluetooth interface DOWN\n");
-      pSysStatLock.WriteLock();
-      pBTServerName = "";
-      pBT_Enabled = false;
-      pSysStatLock.Unlock();
-    } else if((PrevEnable == true) && (Enable == true)) {
-      dbus_connection_read_write(pDBus, 0);
-      DBusMessage *Msg = dbus_connection_pop_message(pDBus);
-      if(Msg == NULL) continue;
+    if(DBus == NULL) {
+      DBusError Error;
+      dbus_error_init(&Error);
+      DBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
+      if(dbus_error_is_set(&Error)) {
+        LOGFile::Error("Can not open DBus connection (%s)\n", Error.message);
+        dbus_error_free(&Error);
+        usleep(1000000);
+        continue;
+      }
+    }
+    if(dbus_connection_read_write(DBus, 0) == false) {
+      dbus_connection_unref(DBus);
+      DBus = NULL;
+    }
+    DBusMessage *Msg = dbus_connection_pop_message(DBus);
+    if(Msg != NULL) {
       if(dbus_message_is_method_call(Msg, "org.bluez.Agent1", "AuthorizeService")) {
         dbus_uint32_t Serial = 0;
         char *Param = (char*)"";
@@ -298,14 +239,80 @@ void *SysSupport::Bluetooth_Thread(void *params) {
         dbus_message_iter_get_basic(&Args, &Param);
         LOGFile::Info("Authorized BT client: '%s'\n", Param);
         DBusMessage *Reply = dbus_message_new_method_return(Msg);
-        dbus_connection_send(pDBus, Reply, &Serial);
-        dbus_connection_flush(pDBus);
+        dbus_connection_send(DBus, Reply, &Serial);
+        dbus_connection_flush(DBus);
         dbus_message_unref(Reply);
       }
       dbus_message_unref(Msg);
+    } else if((PrevEnable == false) && (Enable == true)) {
+      DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "RegisterAgent");
+      DBusMessageIter ArgsIter;
+      dbus_message_iter_init_append(Msg, &ArgsIter);
+      const char *Path = "/oZm_BT/agent1";
+      const char *Capabilities = "NoInputNoOutput";
+      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_OBJECT_PATH, &Path);
+      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &Capabilities);
+      DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+      if(Reply) dbus_message_unref(Reply);
+      dbus_message_unref(Msg);
+      Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "RequestDefaultAgent");
+      dbus_message_iter_init_append(Msg, &ArgsIter);
+      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_OBJECT_PATH, &Path);
+      Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+      if(Reply) dbus_message_unref(Reply);
+      dbus_message_unref(Msg);
+      if(SendBoolBT(DBus, "Powered", false) == false) continue;
+      string MAC = GetMacBT(DBus);
+      if(MAC.empty() == true) continue;
+      MAC.erase(std::remove(MAC.begin(), MAC.end(), ':'), MAC.end());
+      string NetName = "openZmeter_" + MAC.substr(8);
+      if(SendStringBT(DBus, "Alias", NetName.c_str()) == false) continue;
+      if(SendBoolBT(DBus, "Powered", true) == false) continue;
+      if(SendBoolBT(DBus, "Discoverable", true) == false) continue;
+      if(SendUINT32BT(DBus, "DiscoverableTimeout", 0) == false) continue;
+      if(SendBoolBT(DBus, "Discoverable", true) == false) continue;
+      if(SendUINT32BT(DBus, "DiscoverableTimeout", 0) == false) continue;
+      Msg = dbus_message_new_method_call("org.bluez", "/org/bluez/hci0", "org.bluez.NetworkServer1", "Register");
+      dbus_message_iter_init_append(Msg, &ArgsIter);
+      const char *UUID = "nap";
+      const char *Bridge = pBTBridgeName.c_str();
+      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &UUID);
+      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &Bridge);
+      Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+      if(Reply) dbus_message_unref(Reply);
+      dbus_message_unref(Msg);
+      LOGFile::Info("Bluetooth interface UP\n");
+      pSysStatLock.WriteLock();
+      pBTServerName = NetName;
+      pBT_Enabled = true;
+      pSysStatLock.Unlock();
+    } else if((PrevEnable == true) && (Enable == false)) {
+      if(SendBoolBT(DBus, "Powered", false) == false) continue;
+      DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "UnregisterAgent");
+      DBusMessageIter ArgsIter;
+      dbus_message_iter_init_append(Msg, &ArgsIter);
+      const char *Path = "/oZm_BT/agent1";
+      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_OBJECT_PATH, &Path);
+      DBusMessage *Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+      if(Reply) dbus_message_unref(Reply);
+      dbus_message_unref(Msg);
+      Msg = dbus_message_new_method_call("org.bluez", "/org/bluez/hci0", "org.bluez.NetworkServer1", "Unregister");
+      dbus_message_iter_init_append(Msg, &ArgsIter);
+      const char *UUID = "nap";
+      dbus_message_iter_append_basic(&ArgsIter, DBUS_TYPE_STRING, &UUID);
+      Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
+      if(Reply) dbus_message_unref(Reply);
+      dbus_message_unref(Msg);
+      LOGFile::Info("Bluetooth interface DOWN\n");
+      pSysStatLock.WriteLock();
+      pBTServerName = "";
+      pBT_Enabled = false;
+      pSysStatLock.Unlock();
+    } else {
+      usleep(100000);
     }
   }
-  dbus_connection_unref(pDBus);
+  if(DBus != NULL) dbus_connection_unref(DBus);
   return NULL;
 }
 void *SysSupport::SysStat_Thread(void *params) {

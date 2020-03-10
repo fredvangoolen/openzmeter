@@ -5,7 +5,7 @@
         <div class="panel panel-current">
           <div class="panel-heading">
             <div class="header-text">Current</div>
-            <div class="header-buttons clearfix" ref="Toolbar">
+            <div class="header-buttons clearfix">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="true" :multi="true" v-model="Phases"></toolbar-phases>

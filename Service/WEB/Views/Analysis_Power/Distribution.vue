@@ -2,7 +2,7 @@
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
       <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
-      <div class="header-buttons" ref="Toolbar">
+      <div class="header-buttons">
         <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick"></toolbar-tools-->
       </div>
     </div>

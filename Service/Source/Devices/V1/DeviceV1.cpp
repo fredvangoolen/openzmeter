@@ -113,7 +113,7 @@ DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial
   }
   pthread_mutex_lock(&pConfigLock);
   Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial)));
-  pthread_mutex_unlock(&pConfigLock);  
+  pthread_mutex_unlock(&pConfigLock);
 }
 DeviceV1::~DeviceV1() {
   pTerminate = true;
@@ -332,9 +332,9 @@ void DeviceV1::BufferAppend(int16_t *sample) {
   while((pBufferTail != pBufferHead) && (AnalyzerRun == false)) {
     int16_t *Ptr = &pBuffer[pBufferTail * 2];
     pBufferTail = (pBufferTail + 1) % DEVICEV1_BUFFERSIZE;
-    float Voltage = pVoltageDelay[pVoltageDelayPos];
+    float Voltage = ((pVoltageDelay[pVoltageDelayPos] * pVoltageMult) * (1.0 + (pVoltageGain / 100.0))) + pVoltageOffset;
     float Current = ((Ptr[1] * 0.0015625000000) * (1.0 + (pCurrentGain / 100.0)) * (pCurrentInvert ? -1.0 : 1.0)) + pCurrentOffset;
-    pVoltageDelay[pVoltageDelayPos] = ((Ptr[0] * pVoltageMult) * (1.0 + (pVoltageGain / 100.0))) + pVoltageOffset;
+    pVoltageDelay[pVoltageDelayPos] = Ptr[0];
     pVoltageDelayPos = (pVoltageDelayPos + 1) % DEVICEV1_VOLTAGEDELAY;
     if(pAnalyzer->BufferAppend(&Voltage, &Current) == true) AnalyzerRun = true;
   }

@@ -2,7 +2,7 @@
   <dlg :fullscreen="true">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Event &raquo; {{ mode }}</h4></div>
-      <div class="header-buttons" ref="Toolbar">
+      <div class="header-buttons">
         <toolbar-phases storage="DetailsPhases" :multi="true" v-model="Phases" :analyzer="analyzer" :current="false"></toolbar-phases>
         <div class="btn-group">
           <button-export file="Event" :rows="[]"></button-export>
@@ -37,8 +37,8 @@
 //        OinteractionModel: Graph.FixedRangeInteractionModel(this);
         Opt.xAxisHeight = 24;
         Opt.includeZero = true;
-        Opt.labels = ['Sample'].concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels)); 
-//file: this.Data, , 
+        Opt.labels = ['Sample'].concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels));
+//file: this.Data, ,
 //colors: oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
 
         return Object.seal(Opt);

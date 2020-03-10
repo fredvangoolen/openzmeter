@@ -3,7 +3,7 @@
     <div class="panel-heading clearfix">
       <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
       <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
-      <div class="header-buttons" ref="Toolbar">
+      <div class="header-buttons">
         <div class="btn-group">
           <button-export file="Phasors" :rows="Export"></button-export>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>

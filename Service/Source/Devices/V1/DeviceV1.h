@@ -73,7 +73,7 @@ class DeviceV1 final : public Device {
     AnalyzerSoft                *pAnalyzer;
     uint8_t                      pVoltageDelayPos;
     Transfer                     pTransfers[DEVICEV1_TRANSFERS];
-    float                        pVoltageDelay[DEVICEV1_VOLTAGEDELAY];
+    int16_t                      pVoltageDelay[DEVICEV1_VOLTAGEDELAY];
   private :
     static bool  Register();
     static vector<Device*> GetInstances();

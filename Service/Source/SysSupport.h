@@ -62,20 +62,9 @@ class SysSupport final {
     static string      pBTBridgeName;   //bluetooth bridge name
     static pthread_t   pBTThread;       //bluetooth manager thread
     static pthread_t   pStatsThread;    //sys mem, cpu, etc thread
-//      static DBusConnection  *pDBus;
-//      static pthread_mutex_t  pBTMutex;
-
-//      static bool             pBTEnabled;
-      static string           pInterfaceWIFI;
-      static string           pNetworkWIFI;
-      static string           pWirelessWIFI;
-
-//      static vector<Update_t> pUpdates;
-//      static RWLocks          pUpdatesLock;
-
-//      static uint64_t         pLastTask_1H;
-//      static uint64_t         pLastTask_5S;
-//      static uint64_t         pLastTask_1M;
+    static string      pInterfaceWIFI;
+    static string      pNetworkWIFI;
+    static string      pWirelessWIFI;
   #endif
   private :
     static void GetVersionCallback(const json &params, Response &response);

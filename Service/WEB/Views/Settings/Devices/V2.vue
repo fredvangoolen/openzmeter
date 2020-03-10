@@ -5,7 +5,7 @@
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Inputs' }" @click="View='Inputs'">Main</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Outputs' }" @click="View='Outputs'">Periods</button>
+        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Outputs' }" @click="View='Outputs'">Outputs</button>
         <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')"></button>
       </div>
     </template>
@@ -23,34 +23,64 @@
           <tr><td colspan="4" class="border-bottom">Voltage channels</td></tr>
           <tr>
             <td></td>
-            <td class="text-right"><strong>ADC Offset</strong> <img :src="require('Imgs/help16.png')" data-toggle="tooltip" title="Add or substract value to ADC read, to adjust 0 point."></td>
+            <td class="text-right">
+              <strong>ADC Offset</strong>
+              <img :src="require('Imgs/help16.png')" data-toggle="tooltip" title="Add or substract value to ADC read, to adjust 0 point.">
+            </td>
             <td></td>
-            <td class="text-right"><strong>Multiplier</strong> <img :src="require('Imgs/help16.png')" data-toggle="tooltip" title="Multiply read value by a number to adjust input across voltage sensing transformer or for apply calibrations."></td>
+            <td class="text-right">
+              <strong>Multiplier</strong>
+              <img :src="require('Imgs/help16.png')" data-toggle="tooltip" title="Multiply read value by a number to adjust input across voltage sensing transformer or for apply calibrations.">
+            </td>
           </tr>
           <tr v-for="index in [0, 1, 2]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
-            <td><input-spin :min="-200" :max="200" v-model="Settings.VoltageOffset[index]" :increment="0.01"></input-spin></td>
-            <td><button type="button" class="btn btn-default btn-xs" @click="SetVoltageOffset(index)" :disabled="Settings.Wave_Average.Voltage[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Voltage[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
-            <td><input-spin :min="0.1" :max="1000" v-model="Settings.VoltageGain[index]" :increment="0.001" :decimals="3" prepend="V/V"></input-spin></td>
+            <td>
+              <input-spin :min="-200" :max="200" v-model="Settings.VoltageOffset[index]" :increment="0.01" :decimals="2"></input-spin>
+            </td>
+            <td>
+              <button type="button" class="btn btn-default btn-xs" @click="SetVoltageOffset(index)" :disabled="Settings.Wave_Average.Voltage[index] == 0.0" data-toggle="tooltip" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Voltage[index], 2, false)"><img :src="require('Imgs/wand.png')"></button>
+            </td>
+            <td>
+              <input-spin :min="0.1" :max="1000" v-model="Settings.VoltageGain[index]" :increment="0.001" :decimals="3" prepend="V/V"></input-spin>
+            </td>
           </tr>
         </table>
         <table>
-          <tr><td colspan="4" class="border-bottom">Current channels</td></tr>
-          <tr><td colspan="4">
-            <label class="control-label" style="line-height: 22px">Full scale mode</label>
-            <toggle class="float-right toggle-gain" onText="333mV" onStyle="primary" offText="625mV" offStyle="primary" v-model="Settings.HighGain"></toggle>
-          </td></tr>
+          <tr><td colspan="5" class="border-bottom">Current channels</td></tr>
+          <tr>
+            <td colspan="5">
+              <label class="control-label" style="line-height: 22px">Full scale mode</label>
+              <toggle class="float-right toggle-gain" onText="333mV" onStyle="primary" offText="625mV" offStyle="primary" v-model="Settings.HighGain"></toggle>
+            </td>
+          </tr>
           <tr>
             <td></td>
-            <td class="text-right"><strong>Offset <img :src="require('Imgs/help16.png')" data-toggle="tooltip" title="Add or substract value to ADC read, to adjust 0 point."></strong></td>
+            <td class="text-right">
+              <strong>Offset <img :src="require('Imgs/help16.png')" data-toggle="tooltip" title="Add or substract value to ADC read, to adjust 0 point."></strong>
+            </td>
             <td></td>
-            <td class="text-right"><strong>Multiplier</strong></td>
+            <td class="text-right">
+              <strong>Delay</strong>
+            </td>
+            <td class="text-right">
+              <strong>Multiplier</strong>
+            </td>
           </tr>
           <tr v-for="index in [0, 1, 2, 3]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
-            <td><input-spin :min="-200" :max="200" v-model="Settings.CurrentOffset[index]" :increment="0.01"></input-spin></td>
-            <td><button type="button" class="btn btn-default btn-xs" @click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Current[index], 2, false)"><img :src="require('Imgs/wand.png')"></button></td>
-            <td><input-spin :min="0.00001" :max="20" v-model="Settings.CurrentGain[index]" :increment="0.00001" :decimals="5" prepend="A/mV"></input-spin></td>
+            <td>
+              <input-spin :min="-200" :max="200" v-model="Settings.CurrentOffset[index]" :increment="0.01" :decimals="2"></input-spin>
+            </td>
+            <td>
+              <button type="button" class="btn btn-default btn-xs" @click="SetCurrentOffset(index)" data-toggle="tooltip" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Current[index], 2, false)"><img :src="require('Imgs/wand.png')"></button>
+            </td>
+            <td>
+              <input-spin :min="0" :max="200" v-model="Settings.CurrentDelay[index]" :increment="1" :decimals="0"></input-spin>
+            </td>
+            <td>
+              <input-spin :min="0.00001" :max="20" v-model="Settings.CurrentGain[index]" :increment="0.00001" :decimals="5" prepend="A/mV"></input-spin>
+            </td>
           </tr>
         </table>
       </div>

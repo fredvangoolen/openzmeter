@@ -119,7 +119,7 @@ void DMA_CH1_ISR() {
     uint16_t Next = (Samples_Buffer.Head + 1) % BUFF_LEN;
     Ptr++;
     if(Next != Samples_Buffer.Tail) {
-      Samples_Buffer.Buffer[Samples_Buffer.Head] = ((Ptr[0] + Ptr[9] + Ptr[18] + Ptr[27] + Offset) >> 1) | (Count << 13);
+      Samples_Buffer.Buffer[Samples_Buffer.Head] = (((Ptr[0] + Ptr[9] + Ptr[18] + Ptr[27] + Offset) >> 1) & 0x1FFF) | (Count << 13);
       Samples_Buffer.Head = Next;
     } else {
       Samples_Buffer.Head = 0;
