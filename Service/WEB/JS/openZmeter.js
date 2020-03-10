@@ -178,7 +178,7 @@ const openZmeter = {
       Transfer.Update = (analyzer, aggreg, range) => {
         if((analyzer == null) || (aggreg == null) || (range == null)) return;
         var Cancelled = false;
-        var Period    = (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
+        var Period    = (aggreg == '200MS') ? 200 : (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
         var ReqRange = analyzer.CalcRange(range, aggreg);
@@ -252,7 +252,7 @@ const openZmeter = {
             Data.From = ReqRange[0];
             Data.To = ReqRange[1];
             Transfer.SetData(Data);
-            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 3000);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, (Period == 200) ? 0 : 3000);
           },
           (fail) => {
             if(Cancelled == true) return;
@@ -260,7 +260,7 @@ const openZmeter = {
               if(Transfer.AggregFail != null) Transfer.AggregFail();
               return;
             }
-            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 3000);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, (Period == 200) ? 0 : 3000);
           }
         );
       };

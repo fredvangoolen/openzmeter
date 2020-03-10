@@ -88,13 +88,12 @@
         localStorage.setItem('Analyzer', analyzer);
         this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
-            if(result.status == 200) {
-              result.data.Analyzer = analyzer;
-              this.$emit('update:analyzer', result.data);
-              this.$emit('close');
-            }
+            result.data.Analyzer = analyzer;
+            this.$emit('update:analyzer', result.data);
+            this.$emit('close');
             this.ShowSpinner = false;
-          }
+          },
+          (fail) => {}
         );
       },
       CloseSelect: function(analyzer) {

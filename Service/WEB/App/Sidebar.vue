@@ -3,7 +3,7 @@
     <div class="menu-wrapper">
       <sidebar-analyzer :analyzer="analyzer" @update:analyzer="$emit('update:analyzer', $event)" :expanded="expanded"></sidebar-analyzer>
       <sidebar-user :user="user" @update:user="$emit('update:user', $event)" :expanded="expanded"></sidebar-user>
-      <sidebar-menu :expanded="expanded"></sidebar-menu>
+      <sidebar-menu :analyzer="analyzer" :expanded="expanded"></sidebar-menu>
     </div>
     <sidebar-news v-if="false"></sidebar-news>
   </div>

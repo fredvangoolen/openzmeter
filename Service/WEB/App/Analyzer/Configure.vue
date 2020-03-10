@@ -44,6 +44,12 @@
       </div>
       <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12">
+        <label class="control-label" style="line-height: 22px">Enable 200ms</label>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.Save200MS"></toggle>
+        <div class="help">This function allow access all parameters obtained from 200ms blocks. This aggregation is not saved to disk and is only retained for an hour. All parameters can be browsed from 'Analysis/200MS'</div>
+      </div>
+      <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
+      <div class="col-xs-12">
         <table>
           <tr><td><strong>Tag name</strong></td><td class="text-right"><strong>Value</strong></td></tr>
           <tr v-for="(tag, idx) in Analyzer.Tags" :key="idx">
@@ -117,5 +123,8 @@
   }
   .rounded {
     border-radius: 4px !important;
+  }
+  .help {
+    font-size: 80%;
   }
 </style>

@@ -88,7 +88,10 @@ class DeviceV2 final : public Device {
     uint64_t                     pLastSignalRecv;          //Last battery message recv
     bool                         pButtonAction;            //Last action readed
     Transfer                     pTransfers[DEVICEV2_TRANSFERS];
-    Transfer                     pSignalTransfer;
+    Transfer                     pSignalTransfer;          //Usb transfer for signaling
+    uint8_t                      pChannelsDelaySize[7];    //Delay line size for each channel
+    uint8_t                      pChannelsDelayPos[7];     //Delay line position for each channel
+    int16_t                     *pChannelsDelay;           //Channel delay line buffers
   private :
     static bool            Register();
     static vector<Device*> GetInstances();

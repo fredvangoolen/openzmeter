@@ -1,41 +1,42 @@
 <template>
   <div>
-    <router-link to="/Dashboard" class="item">
+    <router-link to="/Dashboard" class="item" v-if="analyzer!=null">
       <img class="icon" :src="require('Imgs/dashboard.png')">
       <div class="name">Dashboard</div>
     </router-link>
-    <div class="item" v-on:click="Submenu = (Submenu == 'Analysis') ? null : 'Analysis'">
+    <div class="item" @click="Submenu = (Submenu == 'Analysis') ? null : 'Analysis'" v-if="analyzer!=null">
       <img class="icon" :src="require('Imgs/draw_wave.png')">
       <div class="name">Analysis</div>
-      <span class="dropdown-icon" v-bind:class="{ show: (Submenu != 'Analysis') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-      <span class="dropdown-icon" v-bind:class="{ show: (Submenu == 'Analysis') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
+      <span class="dropdown-icon" :class="{ show: (Submenu != 'Analysis') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+      <span class="dropdown-icon" :class="{ show: (Submenu == 'Analysis') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
     </div>
-    <div class="submenu" v-bind:class="{ show: (Submenu == 'Analysis') }">
+    <div class="submenu" :class="{ show: (Submenu == 'Analysis') }" v-if="analyzer!=null">
       <router-link to="/Analysis/Voltage">Voltage</router-link>
       <router-link to="/Analysis/Current">Current</router-link>
       <router-link to="/Analysis/Power">Power</router-link>
       <router-link to="/Analysis/Energy">Energy</router-link>
-      <router-link to="/Analysis/Frequency">Frequency</router-link>
+      <router-link to="/Analysis/Frequency" v-if="analyzer.NominalFrequency!=0">Frequency</router-link>
+      <router-link to="/Analysis/200MS" v-if="analyzer.Save200MS==true">200 MS</router-link>
     </div>
-    <div class="item" v-on:click="Submenu = (Submenu == 'Events') ? null : 'Events'">
+    <div class="item" @click="Submenu = (Submenu == 'Events') ? null : 'Events'" v-if="analyzer!=null">
       <img class="icon" :src="require('Imgs/warning.png')">
       <div class="name">Events</div>
-      <span class="dropdown-icon" v-bind:class="{ show: (Submenu != 'Events') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-      <span class="dropdown-icon" v-bind:class="{ show: (Submenu == 'Events') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
+      <span class="dropdown-icon" :class="{ show: (Submenu != 'Events') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+      <span class="dropdown-icon" :class="{ show: (Submenu == 'Events') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
     </div>
-    <div class="submenu" v-bind:class="{ show: (Submenu == 'Events') }">
+    <div class="submenu" :class="{ show: (Submenu == 'Events') }" v-if="analyzer!=null">
       <router-link to="/Events/ITIC">ITIC</router-link>
       <router-link to="/Events/Disturbances">Disturbances</router-link>
       <router-link to="/Events/EN50160">EN50160</router-link>
       <router-link to="/Events/Alarms">Alarms</router-link>
     </div>
-    <div class="item" v-on:click="Submenu = (Submenu == 'Costs') ? null : 'Costs'">
+    <div class="item" @click="Submenu = (Submenu == 'Costs') ? null : 'Costs'" v-if="analyzer!=null">
       <img class="icon" :src="require('Imgs/table_money.png')">
       <div class="name">Energy Stats</div>
-      <span class="dropdown-icon" v-bind:class="{ show: (Submenu != 'Costs') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
-      <span class="dropdown-icon" v-bind:class="{ show: (Submenu == 'Costs') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
+      <span class="dropdown-icon" :class="{ show: (Submenu != 'Costs') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
+      <span class="dropdown-icon" :class="{ show: (Submenu == 'Costs') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
     </div>
-    <div class="submenu" v-bind:class="{ show: (Submenu == 'Costs') }">
+    <div class="submenu" :class="{ show: (Submenu == 'Costs') }" v-if="analyzer!=null">
       <router-link class="link" to="/Stats/Costs">Costs</router-link>
       <router-link class="link" to="/Stats/Heatmap">Heatmap</router-link>
       <router-link class="link" to="/Stats/Distribution">Distribution</router-link>
@@ -48,14 +49,12 @@
       <img class="icon" :src="require('Imgs/help.png')">
       <div class="name">About</div>
     </router-link>
-
-
   </div>
 </template>
 
 <script>
   export default {
-    props: { expanded: Boolean },
+    props: { analyzer:Object, expanded: Boolean },
     data() {
       return { Submenu: null, AnalyzerSelected: false }
     },

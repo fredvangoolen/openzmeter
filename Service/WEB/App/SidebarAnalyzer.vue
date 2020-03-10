@@ -81,7 +81,19 @@
         if(range == 'LastSamples') {
           var Period    = (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
           return [Now.valueOf() - Period * 2, Now.valueOf()];
-        } else if(range == 'LastHours')
+        } else if(range == 'LastMinute')
+          return [Now.valueOf() - 60000, Now.valueOf()];
+        else if(range == 'Last5Minutes')
+          return [Now.valueOf() - 300000, Now.valueOf()];
+        else if(range == 'Last10Minutes')
+          return [Now.valueOf() - 600000, Now.valueOf()];
+        else if(range == 'Last15Minutes')
+          return [Now.valueOf() - 900000, Now.valueOf()];
+        else if(range == 'Last30Minutes')
+          return [Now.valueOf() - 1800000, Now.valueOf()];
+        else if(range == 'LastHour')
+          return [Now.valueOf() - 3600000, Now.valueOf()];
+        else if(range == 'LastHours')
           return [Now.valueOf() - 7200000, Now.valueOf()];
         else if(range == 'LastDay')
           return [Now.valueOf() - 86400000, Now.valueOf()];
