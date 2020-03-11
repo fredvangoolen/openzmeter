@@ -78,14 +78,16 @@ class AnalyzerSoft final : public Analyzer {
       float   ChannelsZ2[3];
     } Filter_t;
     typedef struct {
-      uint32_t           AlarmID;
       string             Name;
       uint8_t            Priority;
-      uint32_t           Samples;
-      uint32_t           Window;
+      uint16_t           Samples;
+      uint16_t           Window;
+      uint16_t           ResultPos;
+      uint16_t           ResultCount;
       AggregType         Aggreg;
       Parser             Evaluator;
-      queue<bool>        Results;
+      uint8_t           *Results;
+      bool               Triggered;
     } Alarm_t;
     typedef struct {
       vector<float> RMS;
@@ -176,7 +178,6 @@ class AnalyzerSoft final : public Analyzer {
     Worker                    *pAlarmsWorker;            //Alarms detection worker
     Worker                    *pEventsWorker;            //Events detector
   private : //Alarms related (should be locked)
-//    RWLocks                    pAlarmsLock;              //Control access
     vector<Alarm_t>            pAlarms;                  //Alarms control object
   private : //Events related (only acceded inside analyzer thread)
     list<Event_t>              pEvents;                  //Running events
@@ -207,8 +208,7 @@ class AnalyzerSoft final : public Analyzer {
     static float CalcChange(const float in, const float reference);
     static float CalcAngle(const float *a, const float *b);
     static float BinPower(const float *a);
-    static void  InitAlarm(Alarm_t &alarm, const json &config);
-
+    static bool  Alarm_Eval(Parser &parser, Params_t *params);
   private :
     void  Configure(const json &options);
     void  InitAggreg(Params_t &params, AggregType type);

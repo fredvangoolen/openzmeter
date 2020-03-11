@@ -17,38 +17,6 @@
 
 #include "Alarms.h"
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerSoft::Alarms::Alarms(AnalyzerSoft *parent, const json &config) {
-//  json Config = ConfigManager::ReadConfig(configPath);
-  for(auto &Tmp : config) pAlarms.emplace_back(pLastAlarmID++, Tmp);
-}
-void *AnalyzerSoft::Alarms::Alarms_Thread(void* args) {
-  Alarms *This = (Alarms*)args;
-  while(This->pTerminate == false) {
-    if(This->pWorkerLocks.WorkerWaitTask() == false) break;
-    This->pMemberLocks.ReadLock();
-    printf("chech alarms\n");
-    for(auto Alarm : This->pAlarms) {
-    }
-    This->pMemberLocks.ReadUnlock();
-    This->pWorkerLocks.WorkerEndsTask();
-  }
-  return NULL;
-}
-AnalyzerSoft::Alarms::~Alarms() {
-  pTerminate = true;
-  pWorkerLocks.Abort(&pAlarmThread);
-  pMemberLocks.WriteLock();
-  pAlarms.clear();
-  pMemberLocks.WriteUnlock();
-}
-
-void AnalyzerSoft::Alarms::Start(AnalyzerSoft::Params_t &aggreg) {
-  pParams = &aggreg;
-  pWorkerLocks.WakeWorker();
-}
-void AnalyzerSoft::Alarms::Wait() {
-  pWorkerLocks.WaitWorker();
-}
 void AnalyzerSoft::Alarms::SetAlarm(const json &params, Response &response) {
   json Result = json::object();
   uint32_t AlarmID = params["AlarmID"];
