@@ -194,6 +194,9 @@ void Database::ClearAsync() {
     pResult = PQgetResult(pDBConn);
   } while(pResult != NULL);
 }
+string Database::Bind(const uint8_t param) const {
+  return to_string(param);
+}
 string Database::Bind(const uint32_t param) const {
   return to_string(param);
 }

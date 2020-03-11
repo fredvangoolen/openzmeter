@@ -46,7 +46,6 @@ const vector<float> AnalyzerSoft::UnbalanceRanges  = {0, 0.25, 0.5, 0.75, 1.0, 1
 //----------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t     AnalyzerSoft::pFFTMutex = PTHREAD_MUTEX_INITIALIZER;
 uint32_t            AnalyzerSoft::pFFTRunning = 0;
-uint32_t            AnalyzerSoft::pAlarmsID = 0;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pMode(mode) {
   LOGFile::Debug("Creating AnalyzerSoft database tables\n");
@@ -194,7 +193,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
       if((configAlarm.contains("Name") == false) || (configAlarm["Name"].is_string() == false)) continue;
       if((configAlarm.contains("Priority") == false) || (configAlarm["Priority"].is_number_unsigned() == false) || (configAlarm["Priority"] > 2)) continue;
       if((configAlarm.contains("Expression") == false) || (configAlarm["Expression"].is_string() == false)) continue;
-      if((configAlarm.contains("Aggreg") == false) || (configAlarm["Aggreg"].is_string() == false) || ((configAlarm["Aggreg"] != "3S") && (configAlarm["Aggreg"] != "1M") && (configAlarm["Aggreg"] != "10M") && (configAlarm["Aggreg"] != "15M") && (configAlarm["Aggreg"] != "1H"))) continue;
+      if((configAlarm.contains("Aggreg") == false) || (configAlarm["Aggreg"].is_string() == false) || ((configAlarm["Aggreg"] != "200MS") && (configAlarm["Aggreg"] != "3S") && (configAlarm["Aggreg"] != "1M") && (configAlarm["Aggreg"] != "10M") && (configAlarm["Aggreg"] != "15M") && (configAlarm["Aggreg"] != "1H"))) continue;
       if((configAlarm.contains("Samples") == false) || (configAlarm["Samples"].is_number_unsigned() == false) || (configAlarm["Samples"] > 1000)) continue;
       if((configAlarm.contains("Window") == false) || (configAlarm["Window"].is_number_unsigned() == false)) continue;
       if(configAlarm["Window"] < configAlarm["Samples"]) continue;
@@ -286,29 +285,35 @@ void AnalyzerSoft::Configure(const json &options) {
     pPrevStationary = false;
     pEventsWorker = new Worker("EventsDet", this, &Events_Func);
   }
-  if((AlarmsEnabled == true) && (pAlarmsWorker != NULL)) {
+  if((AlarmsEnabled == false) && (pAlarmsWorker != NULL)) {
     delete pAlarmsWorker;
     pAlarmsWorker = NULL;
   } else if((AlarmsEnabled == true) && (pAlarmsWorker == NULL)) {
     pAlarmsWorker = new Worker("AlarmsDet", this, &Alarms_Func);
   }
-//void AnalyzerSoft::InitAlarm(Alarm_t &alarm, const json &config) {
-//  alarm.Name = config["Name"];
-//  alarm.Priority = config["Priority"];
-//  if(alarm.Priority > 2) alarm.Priority = 2;
-//  try {
-//    alarm.Evaluator.SetExpr(config["Expression"]);
-//  } catch (Parser::exception_type &e) {
-//  }
-//  alarm.Aggreg = (config["Aggreg"] == "3S") ? AnalyzerSoft::AGGREG_3S : (config["Aggreg"] == "1M") ? AnalyzerSoft::AGGREG_1M : (config["Aggreg"] == "10M") ? AnalyzerSoft::AGGREG_10M : (config["Aggreg"] == "15M") ? AnalyzerSoft::AGGREG_15M : AnalyzerSoft::AGGREG_1H;
-//  alarm.Samples = config["Samples"];
-//  alarm.Window = config["Window"];
-//  alarm.Results = queue<bool>();
-//}
-
-
-
-
+  for(Alarm_t &Alarm : pAlarms) {
+    if(Alarm.Results != NULL) free(Alarm.Results);
+  }
+  pAlarms.clear();
+  if(AlarmsEnabled == true) {
+    pAlarms.resize(options["Alarms"].size());
+    for(uint32_t n = 0; n < pAlarms.size(); n++) {
+      pAlarms[n].Name        = options["Alarms"][n]["Name"];
+      pAlarms[n].Priority    = options["Alarms"][n]["Priority"];
+      pAlarms[n].Samples     = options["Alarms"][n]["Samples"];
+      pAlarms[n].Window      = options["Alarms"][n]["Window"];
+      pAlarms[n].ResultPos   = 0;
+      pAlarms[n].ResultCount = 0;
+      pAlarms[n].Aggreg      = (options["Alarms"][n]["Aggreg"] == "200MS") ? AnalyzerSoft::AGGREG_200MS :
+                               (options["Alarms"][n]["Aggreg"] == "3S") ? AnalyzerSoft::AGGREG_3S :
+                               (options["Alarms"][n]["Aggreg"] == "1M") ? AnalyzerSoft::AGGREG_1M :
+                               (options["Alarms"][n]["Aggreg"] == "10M") ? AnalyzerSoft::AGGREG_10M :
+                               (options["Alarms"][n]["Aggreg"] == "15M") ? AnalyzerSoft::AGGREG_15M : AnalyzerSoft::AGGREG_1H;
+      pAlarms[n].Results     = (uint8_t*)calloc(ceil(pAlarms[n].Window / 8), 1);
+      pAlarms[n].Triggered   = false;
+      InitAlarmParser(pAlarms[n].Evaluator, options["Alarms"][n]["Expression"], pAlarms[n].Aggreg);
+    }
+  }
   bool ExportEnabled = options["RemoteEnabled"];
   if(ExportEnabled == true) {
     pSyncServer    = options["RemoteServer"];
@@ -566,8 +571,38 @@ float AnalyzerSoft::CalcAngle(const float *a, const float *b) {
 float AnalyzerSoft::BinPower(const float *a) {
   return sqrt(pow(a[0], 2.0) + pow(a[1], 2.0)) / M_SQRT2 * 2.0;
 }
-bool AnalyzerSoft::Alarm_Eval(Parser &parser, Params_t *params) {
-  return false;
+void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const AggregType &type) {
+  auto AppendArray = [&](const string &serie, float *data, const uint8_t len) {
+    if(len == 1) {
+      parser.DefineVar(serie, &data[0]);
+    } else {
+      for(uint8_t n = 0; n < len; n++) parser.DefineVar(serie + "_" + to_string(n + 1), &data[n]);
+    }
+  };
+  Params_t *Params = NULL;
+  if(type == AGGREG_200MS) Params = &pAggreg200MS;
+  if(type == AGGREG_3S)    Params = &pAggreg3S;
+  parser.DefineVar("Frequency", &Params->Frequency);
+  parser.DefineVar("NominalVoltage", &pNominalVoltage);
+  parser.DefineVar("NominalFrequency", &pNominalFrequency);
+  if(pVoltageChannels > 1) parser.DefineVar("Unbalance", &Params->Unbalance);
+  AppendArray("Voltage", Params->Voltage, pVoltageChannels);
+  AppendArray("Current", Params->Current, pCurrentChannels);
+  AppendArray("Active_Power", Params->Active_Power, pVoltageChannels);
+  AppendArray("Reactive_Power", Params->Reactive_Power, pVoltageChannels);
+  AppendArray("Active_Energy", Params->Active_Energy, pVoltageChannels);
+  AppendArray("Reactive_Energy", Params->Reactive_Energy, pVoltageChannels);
+  AppendArray("Apparent_Power", Params->Apparent_Power, pVoltageChannels);
+  AppendArray("Power_Factor", Params->Power_Factor, pVoltageChannels);
+  AppendArray("Voltage_THD", Params->Voltage_THD, pVoltageChannels);
+  AppendArray("Current_THD", Params->Current_THD, pCurrentChannels);
+  if(pVoltageChannels > 1) AppendArray("Voltage_Phase", Params->Voltage_Phase, pVoltageChannels);
+  AppendArray("Phi", Params->Phi, pVoltageChannels);
+  try {
+    parser.SetExpr(expr);
+  } catch(Parser::exception_type &e) {
+    LOGFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", Serial.c_str());
+  }
 }
 void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   AnalyzerSoft *This  = (AnalyzerSoft*)creation;
@@ -648,7 +683,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   }
   if(This->pEventsWorker != NULL) This->pEventsWorker->Wait();
   if(((This->pSequence % 15) == 0) && (This->pPrevTimestamp != 0)) {
-    LOGFile::Debug("Storing 3S aggregation\n");
+    LOGFile::Debug("Storing 3S aggregation for analyzer '%s'\n", This->Serial.c_str());
     This->NormalizeAggreg(This->pAggreg3S);
     if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg3S);
     if(This->pAggreg3S.Flag == false) {
@@ -663,7 +698,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   }
   This->AccumulateAggreg(This->pAggreg3S, This->pAggreg200MS);
   if(((This->pAggreg200MS.Timestamp / 60000) > (This->pPrevTimestamp / 60000)) && (This->pPrevTimestamp != 0)) {
-    LOGFile::Debug("Storing 1M aggregation\n");
+    LOGFile::Debug("Storing 1M aggregation for analyzer '%s'\n", This->Serial.c_str());
     This->pAggreg1M.Timestamp = This->pAggreg1M.Timestamp / 60000 * 60000 + 59999;
     This->NormalizeAggreg(This->pAggreg1M);
     if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1M);
@@ -673,7 +708,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   }
   This->AccumulateAggreg(This->pAggreg1M, This->pAggreg200MS);
   if(((This->pAggreg200MS.Timestamp / 600000) > (This->pPrevTimestamp / 600000)) && (This->pPrevTimestamp != 0)) {
-    LOGFile::Debug("Storing 10M aggregation\n");
+    LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", This->Serial.c_str());
     This->pAggreg10M.Timestamp = This->pAggreg10M.Timestamp / 600000 * 600000 + 599999;
     This->NormalizeAggreg(This->pAggreg10M);
     if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg10M);
@@ -708,7 +743,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   This->pNowDataLock.ProviderWrite();
   This->AccumulateAggreg(This->pAggreg10M, This->pAggreg200MS);
   if(((This->pAggreg200MS.Timestamp / 900000) > (This->pPrevTimestamp / 900000)) && (This->pPrevTimestamp != 0)) {
-    LOGFile::Debug("Storing 15M aggregation\n");
+    LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", This->Serial.c_str());
     This->pAggreg15M.Timestamp = This->pAggreg15M.Timestamp / 900000 * 900000 + 899999;
     This->NormalizeAggreg(This->pAggreg15M);
     if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg15M);
@@ -718,7 +753,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   }
   This->AccumulateAggreg(This->pAggreg15M, This->pAggreg200MS);
   if(((This->pAggreg200MS.Timestamp / 3600000) > (This->pPrevTimestamp / 3600000)) && (This->pPrevTimestamp != 0)) {
-    LOGFile::Debug("Storing 1H aggregation\n");
+    LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", This->Serial.c_str());
     This->pAggreg1H.Timestamp = This->pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
     This->NormalizeAggreg(This->pAggreg1H);
     if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1H);
@@ -726,9 +761,15 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
     This->InitAggreg(This->pAggreg1H, AGGREG_1H);
   }
+  if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg200MS);
   This->AccumulateAggreg(This->pAggreg1H, This->pAggreg200MS);
   This->pPrevTimestamp = This->pAggreg200MS.Timestamp;
-  if(This->pSave200MS) This->SaveAggreg(This->pAggreg200MS);
+  if(This->pSave200MS) {
+    LOGFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", This->Serial.c_str());
+    This->SaveAggreg(This->pAggreg200MS);
+  }
+  if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+
 //  SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
 //  SysStatus->Lock.WriteLock();
 //  SysStatus->Events = This->pAggreg200MS.Flag;
@@ -923,20 +964,25 @@ void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
     uint8_t  Bit    = Alarm.ResultPos % 8;
     if((*Byte) & (1 << Bit)) Alarm.ResultCount--;
     *Byte &= ~(1 << Bit);
-
-    //evaluo
-    bool Eval = true;
-    if(Eval == true) {
-      Alarm.ResultCount++;
-      *Byte |= (1 << Bit);
+    try {
+      if((Alarm.Evaluator.Eval() > 0.0) == true) {
+        Alarm.ResultCount++;
+        *Byte |= (1 << Bit);
+      }
+    } catch (Parser::exception_type &e) {
+      LOGFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", This->Serial.c_str());
     }
     Alarm.ResultPos = (Alarm.ResultPos + 1) % Alarm.Window;
     if((Alarm.ResultCount == Alarm.Samples) && (Alarm.Triggered == false)) {
       Alarm.Triggered = true;
-      LOGFile::Warning("Alarma disparada!\n");
+      LOGFile::Debug("Alarm triggered on analyzer '%s'\n", This->Serial.c_str());
+      Database DB(This->Serial);
+      DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(Aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", true, " + DB.Bind(Alarm.Priority) + ")");
     } else if((Alarm.ResultCount == 0) && (Alarm.Triggered == true)) {
       Alarm.Triggered = false;
-      LOGFile::Warning("Alarma reseteada!\n");
+      LOGFile::Debug("Alarm reseted on analyzer '%s'\n", This->Serial.c_str());
+      Database DB(This->Serial);
+      DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(Aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", false, " + DB.Bind(Alarm.Priority) + ")");
     }
   }
 }
@@ -1543,98 +1589,19 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
 }
 void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string Aggreg = params["Aggreg"];
-  if((Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' need to be '3S', '1M', '10M', 15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
-  json Result = json::object();
-  Result["Variables"] = json::array();
-  pAnalyzerLock.ReadLock();
-  json NominalVoltage = json::object();
-  NominalVoltage["Name"] = "NominalVoltage";
-  NominalVoltage["Value"] = pNominalVoltage;
-  NominalVoltage["Units"] = "V";
-  Result["Variables"].push_back(NominalVoltage);
-  json NominalFreq = json::object();
-  NominalFreq["Name"] = "NominalFrequency";
-  NominalFreq["Value"] = pNominalFrequency;
-  NominalFreq["Units"] = "Hz";
-  Result["Variables"].push_back(NominalFreq);
-  pAnalyzerLock.Unlock();
-  Result["Aggregation_Source"] = Aggreg;
-  Database DB(Serial);
-  if(Aggreg == "3S") {
-    DB.ExecSentenceAsyncResult("SELECT COALESCE(json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag, 'Active_Power', active_power, 'Reactive_Power', reactive_power), '{}') as result FROM aggreg_3s ORDER BY sampletime DESC LIMIT 1");
-  } else if(Aggreg == "1M") {
-    DB.ExecSentenceAsyncResult("SELECT COALESCE(json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag, 'Power_Factor', power_factor, 'Voltage_THD', thd_v, 'Current_THD', thd_i, 'Active_Power', active_power, 'Reactive_Power', reactive_power, 'Phi', phi), '{}') as result FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m ORDER BY sampletime DESC LIMIT 1");
-  } else if(Aggreg == "10M") {
-    DB.ExecSentenceAsyncResult("SELECT COALESCE(json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag), '{}') as result FROM aggreg_10m ORDER BY sampletime DESC LIMIT 1");
-  } else if(Aggreg == "15M") {
-    DB.ExecSentenceAsyncResult("SELECT COALESCE(json_build_object('Sampletime', sampletime, 'Active_Power', active_power, 'Reactive_Power', reactive_power), '{}') as result FROM aggreg_15m ORDER BY sampletime DESC LIMIT 1");
-  } else if(Aggreg == "1H") {
-    DB.ExecSentenceAsyncResult("SELECT COALESCE(json_build_object('Sampletime', sampletime, 'Voltage', rms_v, 'Current', rms_i, 'Frequency', freq, 'Flag', flag, 'Active_Power', active_power, 'Reactive_Power', reactive_power), '{}') as result FROM aggreg_1h ORDER BY sampletime DESC LIMIT 1");
+  if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  Parser Evaluator;
+  json   Result = json::object();
+  if(pNowDataLock.ConsumerWait(5000) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  InitAlarmParser(Evaluator, params["Expression"], AGGREG_200MS);
+  Result["Variables"] = json::object();
+  for(auto Var : Evaluator.GetVar()) Result["Variables"][Var.first] = *Var.second;
+  try {
+    Result["Result"] = Evaluator.Eval();
+  } catch (Parser::exception_type &e) {
+    Result["Error"] = e.GetMsg();
   }
-  if(DB.FecthRow() == false) {
-    Result["Error"] = "No data avaliable";
-    return HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_BAD_REQUEST);
-  }
-  json Query = DB.ResultJSON("result");
-  auto AppendArray = [&Query, &Result](const string &serie, const string &units) {
-    for(unsigned n = 0; n < Query[serie].size(); n++) {
-      float  Tmp = 0.0;
-      string Name = serie;
-      if(Query[serie].size() > 1) Name = Name + "_" + to_string(n + 1);
-      if(Query[serie][n].is_number()) Tmp = Query[serie][n];
-      json Row = json::object();
-      Row["Name"] = Name;
-      Row["Value"] = Tmp;
-      Row["Units"] = units;
-      Result["Variables"].push_back(Row);
-    }
-  };
-  if(Query["Sampletime"].is_number()) {
-    json Sampletime = json::object();
-    Sampletime["Name"] = "Sampletime";
-    Sampletime["Value"] = Query["Sampletime"];
-    Sampletime["Units"] = "ms";
-    Result["Variables"].push_back(Sampletime);
-  }
-  if(Query["Flag"].is_boolean()) {
-    bool Tmp = Query["Flag"];
-    json Flag = json::object();
-    Flag["Name"] = "Flag";
-    Flag["Value"] = Tmp ? 1 : 0;
-    Flag["Units"] = "";
-    Result["Variables"].push_back(Flag);
-  }
-  if(Query["Frequency"].is_number()) {
-    float Tmp = 0.0;
-    if(Query["Frequency"].is_number()) Tmp = Query["Frequency"];
-    json Frequency = json::object();
-    Frequency["Name"] = "Frequency";
-    Frequency["Value"] = Tmp;
-    Frequency["Units"] = "Hz";
-    Result["Variables"].push_back(Frequency);
-  }
-  if(Query["Voltage"].is_array()) AppendArray("Voltage", "V");
-  if(Query["Current"].is_array()) AppendArray("Current", "A");
-  if(Query["Active_Power"].is_array()) AppendArray("Active_Power", "W");
-  if(Query["Reactive_Power"].is_array()) AppendArray("Reactive_Power", "var");
-  if(Query["Power_Factor"].is_array()) AppendArray("Power_Factor", "");
-  if(Query["Voltage_THD"].is_array()) AppendArray("Voltage_THD", "%");
-  if(Query["Current_THD"].is_array()) AppendArray("Current_THD", "%");
-  if(Query["Phi"].is_array()) AppendArray("Phi", "°");
-  if(params.contains("Expression") && params["Expression"].is_string()) {
-    string Expression = params["Expression"];
-    try {
-      Parser Exp;
-      for(auto &Var : Result["Variables"]) Exp.DefineConst(Var["Name"], Var["Value"]);
-      Exp.SetExpr(Expression);
-      float Tmp = Exp.Eval();
-      Result["Result"] = Tmp;
-    } catch (Parser::exception_type &e) {
-      Result["Error"] = e.GetMsg();
-    }
-  }
+  pNowDataLock.ConsumerEnds();
   return HTTPServer::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
 }
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {

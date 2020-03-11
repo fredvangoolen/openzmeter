@@ -119,7 +119,6 @@ class AnalyzerSoft final : public Analyzer {
     } Sync_t;
   private :
     static pthread_mutex_t      pFFTMutex;               //Planer mutex
-    static uint32_t             pAlarmsID;               //Last assigned AlarmID
     static uint32_t             pFFTRunning;             //Currently running FFTs
   private :
     static const vector<float>  FrequencyRanges;         //Rangos de frecuencias para estadisticas
@@ -208,16 +207,16 @@ class AnalyzerSoft final : public Analyzer {
     static float CalcChange(const float in, const float reference);
     static float CalcAngle(const float *a, const float *b);
     static float BinPower(const float *a);
-    static bool  Alarm_Eval(Parser &parser, Params_t *params);
   private :
-    void  Configure(const json &options);
-    void  InitAggreg(Params_t &params, AggregType type);
-    void  AccumulateAggreg(Params_t &src, const Params_t &dst);
-    void  NormalizeAggreg(Params_t &src);
-    void  SaveAggreg(Params_t &params);
-    void  InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
-    bool  FindRunningEvent(const uint32_t mask);
-    void  SaveEvent(Event_t &evt);
+    void Configure(const json &options);
+    void InitAggreg(Params_t &params, AggregType type);
+    void InitAlarmParser(Parser &parser, const string &expr, const AggregType &type);
+    void AccumulateAggreg(Params_t &src, const Params_t &dst);
+    void NormalizeAggreg(Params_t &src);
+    void SaveAggreg(Params_t &params);
+    void InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
+    bool FindRunningEvent(const uint32_t mask);
+    void SaveEvent(Event_t &evt);
   private :
     void  GetAnalyzer(const json &params, Response &response) override;
     void  SetAnalyzer(const json &params, Response &response) override;
