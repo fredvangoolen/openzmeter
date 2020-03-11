@@ -8,7 +8,7 @@
         <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Alarm)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
-    <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="(EvalResult!=null)&&(View=='Expression')&&(Error==null)">Expresion evaluated to: <span v-html="Round(EvalResult, 2, true)"></span><br/>Alarm is {{ (EvalResult==0.0) ? 'NOT' : '' }} triggered</div>
+    <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="(Data!=null)&&(Data.Result!=null)&&(View=='Expression')">Expresion evaluated to: <span v-html="Round(Data.Result, 3, true)"></span><br/>Alarm is {{ (Data.Result==0.0) ? 'NOT' : '' }} triggered</div>
     <div class="row" v-if="View=='Main'">
       <div class="col-xs-12">
         <label class="control-label">Name</label>
@@ -20,15 +20,15 @@
       </div>
       <div class="col-xs-6">
         <label class="control-label">Aggregation</label>
-        <option-picker :options="[{name: '3 seconds', value: '3S'}, {name: '1 minute', value: '1M'}, {name: '10 minutes', value: '10M'}, {name: '15 minutes', value: '15M'}, {name: '1 hour', value: '1H'}]" v-model="Alarm.Aggreg" :big="true"></option-picker>
+        <option-picker :options="[{name: '200 miliseconds', value: '200MS'}, {name: '3 seconds', value: '3S'}, {name: '1 minute', value: '1M'}, {name: '10 minutes', value: '10M'}, {name: '15 minutes', value: '15M'}, {name: '1 hour', value: '1H'}]" v-model="Alarm.Aggreg" :big="true"></option-picker>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Occurrences</label>
-        <input-spin :min="1" :max="1000" v-model="Alarm.Samples" :increment="1" :decimals="0"></input-spin>
+        <input-spin :min="1" :max="1000" v-model="Alarm.Samples" :increment="1" :decimals="0" :big="true"></input-spin>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Window</label>
-        <input-spin :min="1" :max="1000" v-model="Alarm.Window" :increment="1" :decimals="0"></input-spin>
+        <input-spin :min="1" :max="1000" v-model="Alarm.Window" :increment="1" :decimals="0" :big="true"></input-spin>
       </div>
     </div>
     <div class="row" v-if="View=='Expression'">
@@ -62,10 +62,10 @@
   export default {
     props: { analyzer: Object, index: Number },
     data: function() {
-      return { ShowSpinner: false, Alarm: null, Values: [], EvalResult: null, View: 'Main', Priorities: ['LOW', 'NORMAL', 'HIGH'],
+      return { ShowSpinner: false, Alarm: null, Data: null, View: 'Main',
         columns: [
           { name: 'Name', title: 'Variable' },
-          { name: 'Value', title: 'Value', callback: this.ValueFormat },
+          { name: 'Value', title: 'Value' },
           { name: 'Units', title: 'Units' },
           { name: '__slot:actions', title: '' }
         ]
@@ -74,22 +74,35 @@
     created: function() {
       this.Alarm = Object.assign({}, this.analyzer.Alarms[this.index]);
     },
+    computed: {
+      Values: function() {
+        var Result = [];
+        for(var n in this.Data.Variables) {
+          var Var = { Name: n, Value: this.Round(this.Data.Variables[n], 3) };
+          if(Var.Name == 'Voltage') Var.Units = 'V';
+          if(Var.Name == 'NominalVoltage') Var.Units = 'V';
+          if(Var.Name == 'Frequency') Var.Units = 'Hz';
+          if(Var.Name == 'NominalFrequency') Var.Units = 'Hz';
+          Result.push(Var);
+        }
+        return Result;
+      }
+    },
     methods: {
       ValueFormat: function(val) {
         return this.Round(val, 2, false);
       },
       Evaluate: function() {
+        this.ShowSpinner = true;
         this.View = 'Expression';
-        this.$http.post('testAlarm', { Analyzer: this.analyzer.Analyzer, Aggreg: this.Alarm.Aggreg, Expression: this.Alarm.Expression }).then(
+        this.$http.post('testAlarm', { Analyzer: this.analyzer.Analyzer, Expression: this.Alarm.Expression }).then(
           (result) => {
-            this.EvalResult = result.data.Result;
-            this.Error = null;
-            this.Values = result.data.Variables;
+            this.ShowSpinner = false;
+            this.Data = result.body;
           },
           (fail) => {
-            this.Error = fail.data.Error;
-            this.Values = fail.data.Variables;
-            this.EvalResult = null;
+            this.ShowSpinner = false;
+            if(fail.status == 400) this.Data = fail.body;
           }
         );
       },

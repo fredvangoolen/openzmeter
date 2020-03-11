@@ -54,6 +54,7 @@ class Database {
     static void EnablePool();
     static void DisablePool();
   public :
+    string      Bind(const uint8_t param) const;
     string      Bind(const uint32_t param) const;
     string      Bind(const uint64_t param) const;
     string      Bind(const float param) const;
