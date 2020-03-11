@@ -292,6 +292,23 @@ void AnalyzerSoft::Configure(const json &options) {
   } else if((AlarmsEnabled == true) && (pAlarmsWorker == NULL)) {
     pAlarmsWorker = new Worker("AlarmsDet", this, &Alarms_Func);
   }
+//void AnalyzerSoft::InitAlarm(Alarm_t &alarm, const json &config) {
+//  alarm.Name = config["Name"];
+//  alarm.Priority = config["Priority"];
+//  if(alarm.Priority > 2) alarm.Priority = 2;
+//  try {
+//    alarm.Evaluator.SetExpr(config["Expression"]);
+//  } catch (Parser::exception_type &e) {
+//  }
+//  alarm.Aggreg = (config["Aggreg"] == "3S") ? AnalyzerSoft::AGGREG_3S : (config["Aggreg"] == "1M") ? AnalyzerSoft::AGGREG_1M : (config["Aggreg"] == "10M") ? AnalyzerSoft::AGGREG_10M : (config["Aggreg"] == "15M") ? AnalyzerSoft::AGGREG_15M : AnalyzerSoft::AGGREG_1H;
+//  alarm.Samples = config["Samples"];
+//  alarm.Window = config["Window"];
+//  alarm.Results = queue<bool>();
+//}
+
+
+
+
   bool ExportEnabled = options["RemoteEnabled"];
   if(ExportEnabled == true) {
     pSyncServer    = options["RemoteServer"];
@@ -524,19 +541,6 @@ void AnalyzerSoft::SaveEvent(Event_t &evt) {
   evt.SamplesRAW_B = deque<vector<float> >();
   evt.SamplesRMS_B = deque<vector<float> >();
 }
-void AnalyzerSoft::InitAlarm(Alarm_t &alarm, const json &config) {
-  alarm.Name = config["Name"];
-  alarm.Priority = config["Priority"];
-  if(alarm.Priority > 2) alarm.Priority = 2;
-  try {
-    alarm.Evaluator.SetExpr(config["Expression"]);
-  } catch (Parser::exception_type &e) {
-  }
-  alarm.Aggreg = (config["Aggreg"] == "3S") ? AnalyzerSoft::AGGREG_3S : (config["Aggreg"] == "1M") ? AnalyzerSoft::AGGREG_1M : (config["Aggreg"] == "10M") ? AnalyzerSoft::AGGREG_10M : (config["Aggreg"] == "15M") ? AnalyzerSoft::AGGREG_15M : AnalyzerSoft::AGGREG_1H;
-  alarm.Samples = config["Samples"];
-  alarm.Window = config["Window"];
-  alarm.Results = queue<bool>();
-}
 float AnalyzerSoft::CalcChange(const float in, const float reference) {
   return ((in - reference) / reference) * 100;
 }
@@ -561,6 +565,9 @@ float AnalyzerSoft::CalcAngle(const float *a, const float *b) {
 }
 float AnalyzerSoft::BinPower(const float *a) {
   return sqrt(pow(a[0], 2.0) + pow(a[1], 2.0)) / M_SQRT2 * 2.0;
+}
+bool AnalyzerSoft::Alarm_Eval(Parser &parser, Params_t *params) {
+  return false;
 }
 void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   AnalyzerSoft *This  = (AnalyzerSoft*)creation;
@@ -908,15 +915,30 @@ void AnalyzerSoft::FFT_Func(void *creation, void *run) {
   for(uint16_t i = 0; i < (2 * This->pFFTSamples); i++) Ch->OutPtr[i] = Ch->OutPtr[i] / This->pBlockSamples;
 }
 void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
-  AnalyzerSoft *This  = (AnalyzerSoft*)creation;
+  AnalyzerSoft *This   = (AnalyzerSoft*)creation;
+  Params_t     *Aggreg = (Params_t*)run;
+  for(Alarm_t &Alarm : This->pAlarms) {
+    if(Alarm.Aggreg != Aggreg->Type) continue;
+    uint8_t *Byte   = &Alarm.Results[Alarm.ResultPos / 8];
+    uint8_t  Bit    = Alarm.ResultPos % 8;
+    if((*Byte) & (1 << Bit)) Alarm.ResultCount--;
+    *Byte &= ~(1 << Bit);
 
-//    if(This->pWorkerLocks.WorkerWaitTask() == false) break;
-//    This->pMemberLocks.ReadLock();
-//    printf("chech alarms\n");
-//    for(auto Alarm : This->pAlarms) {
-//    }
-//    This->pMemberLocks.ReadUnlock();
-//    This->pWorkerLocks.WorkerEndsTask();
+    //evaluo
+    bool Eval = true;
+    if(Eval == true) {
+      Alarm.ResultCount++;
+      *Byte |= (1 << Bit);
+    }
+    Alarm.ResultPos = (Alarm.ResultPos + 1) % Alarm.Window;
+    if((Alarm.ResultCount == Alarm.Samples) && (Alarm.Triggered == false)) {
+      Alarm.Triggered = true;
+      LOGFile::Warning("Alarma disparada!\n");
+    } else if((Alarm.ResultCount == 0) && (Alarm.Triggered == true)) {
+      Alarm.Triggered = false;
+      LOGFile::Warning("Alarma reseteada!\n");
+    }
+  }
 }
 void *AnalyzerSoft::Sync_Thread(void *params) {
   AnalyzerSoft *This = (AnalyzerSoft*)params;
@@ -1343,24 +1365,10 @@ void AnalyzerSoft::GetEvents(const json &params, Response &response) {
   HTTPServer::FillResponse(response, DB.ResultString("evt"), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetEvent(const json &params, Response &response) {
-//  if(CheckRights(params, response, READ) == false) return;
-//  json Params = req.GetParams();
-//  if(!Params["Analyzer"].is_string()) return req.FromString("'Analyzer' param is requiered", MHD_HTTP_BAD_REQUEST);
-//  if(!Params["StartTime"].is_number_unsigned() || !Params["Type"].is_string() || !Params["Samples"].is_string()) return req.FromString("'Analyzer', 'StartTime', 'Type' and 'Samples' params are requiered", MHD_HTTP_BAD_REQUEST);
-//  req.FromString("Analyzer not found", MHD_HTTP_BAD_REQUEST);
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->GetEvent(req) == true) break;
-//  }
-//  pDevicesLock.ReadUnlock();
-//  pMembersLocks.ReadLock();
-//  if(pEventsDetector != NULL) {
-//    pEventsDetector->GetEvent(params, response);
-//  } else {
-//    response.set_content("Events detection disabled", "text/plain");
-//    response.status = HTTP_SERVICE_UNAVAILABLE;
-//  }
-//  pMembersLocks.ReadUnlock();
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Type") == false) || (params["Type"].is_string() == false)) return HTTPServer::FillResponse(response, "'Type' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Samples") == false) || (params["Samples"].is_string() == false)) return HTTPServer::FillResponse(response, "'Samples' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Database DB(Serial);
   if((params["Samples"] != "RMS") && (params["Samples"] != "RAW")) {
     response.set_content("'Samples' params must be 'RMS' or 'RAW'", "text/plain");
@@ -1385,6 +1393,9 @@ void AnalyzerSoft::GetEvent(const json &params, Response &response) {
 }
 void AnalyzerSoft::SetEvent(const json &params, Response &response) {
   if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Type") == false) || (params["Type"].is_string() == false)) return HTTPServer::FillResponse(response, "'Type' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Notes") == false) || (params["Notes"].is_string() == false)) return HTTPServer::FillResponse(response, "'Notes' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Database DB(Serial);
   uint64_t ID    = params["StartTime"];
   string   Type  = params["Type"];
@@ -1394,6 +1405,8 @@ void AnalyzerSoft::SetEvent(const json &params, Response &response) {
 }
 void AnalyzerSoft::DelEvent(const json &params, Response &response) {
   if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Type") == false) || (params["Type"].is_string() == false)) return HTTPServer::FillResponse(response, "'Type' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Database DB(Serial);
   uint64_t ID = params["StartTime"];
   string Type = params["Type"];

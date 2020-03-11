@@ -208,6 +208,7 @@ void DeviceV2::Configure(const json& config) {
     pVoltageOffset[Ch] = config["VoltageOffset"][Ch];
   }
   uint8_t  MaxDelay = 0;
+  uint16_t DelayLen = 0;
   uint8_t  Delays[4];
   for(uint8_t Ch = 0; Ch < 4; Ch++) {
     pCurrentGain[Ch] = config["CurrentGain"][Ch];
@@ -216,19 +217,11 @@ void DeviceV2::Configure(const json& config) {
     if(Delays[Ch] > MaxDelay) MaxDelay = Delays[Ch];
   }
   for(uint8_t Ch = 0; Ch < 7; Ch++) pChannelsDelayPos[Ch] = 0;
-  uint16_t DelayLen = 0;
-  for(uint8_t Ch = 0; Ch < 3; Ch++) {
-    pChannelsDelaySize[Ch] = MaxDelay + 1;
-    DelayLen = MaxDelay + 1;
-  }
-  for(uint8_t Ch = 0; Ch < 4; Ch++) {
-   pChannelsDelaySize[3 + Ch] = (MaxDelay
-   + 1) - Delays[Ch];
-   DelayLen = (MaxDelay + 1) - Delays[Ch];
-  }
-  pChannelsDelay = (int16_t*)realloc(pChannelsDelay, sizeof(uint16_t) * DelayLen);
-  memset(pChannelsDelay, 0, sizeof(uint16_t) * DelayLen);
-
+  for(uint8_t Ch = 0; Ch < 3; Ch++) pChannelsDelaySize[Ch] = MaxDelay + 1;
+  for(uint8_t Ch = 0; Ch < 4; Ch++) pChannelsDelaySize[3 + Ch] = (MaxDelay + 1) - Delays[Ch];
+  for(uint8_t Ch = 0; Ch < 7; Ch++) DelayLen = DelayLen + pChannelsDelaySize[Ch];
+  pChannelsDelay = (int16_t*)realloc(pChannelsDelay, sizeof(int16_t) * DelayLen);
+  memset(pChannelsDelay, 0, sizeof(int16_t) * DelayLen);
   pHighGain = config["HighGain"];
   pEnabled = config["Enabled"];
   for(auto Tmp : config["Outputs"]) {
