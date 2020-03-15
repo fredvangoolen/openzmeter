@@ -11,14 +11,30 @@
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Tariffs" class="table small table-striped">
-        <template slot="actions" slot-scope="props">
-          <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="Edit(props.rowData)">Edit</button>
-            <button class="btn btn-xs btn-danger" @click="Delete(props.rowData)">Delete</button>
-          </div>
-        </template>
-      </vuetable>
+      <div class="row">
+        <div class="col-sm-12">
+          <label class="control-label">Template definitions</label>
+          <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="Tariffs" class="table small table-striped">
+            <template slot="actions" slot-scope="props">
+              <div class="btn-group">
+                <button class="btn btn-xs btn-default" @click="Edit(props.rowData)">Edit</button>
+                <button class="btn btn-xs btn-danger" @click="Delete(props.rowData)">Delete</button>
+              </div>
+            </template>
+          </vuetable>
+        </div>
+        <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"></div>
+        <div class="col-sm-12">
+          <label class="control-label">Price fetch modules</label>
+          <vuetable :fields="ColumnsModules" :api-mode="false" :data="Modules" class="table small table-striped modules">
+            <template slot="actions" slot-scope="props">
+              <div class="btn-group">
+                <button class="btn btn-xs btn-default" @click="Configure(props.rowData)">Configure</button>
+              </div>
+            </template>
+          </vuetable>
+        </div>
+      </div>
     </div>
     <tariff v-if="ShowDialog" :tariff="Tariff" @close="LoadTariffs"></tariff>
   </div>
@@ -33,7 +49,15 @@
   export default {
     data: function() {
       return { ShowSpinner: true, Tariffs: [], ShowDialog: false, Filter: '', Enabled: false, Tariff: null,
-        Columns: [
+        Modules: [
+          { Name: 'ESP_ESIOS', Description: 'Fetch hourly prices from spanish ESIOS (Sistema de informacion del operador del sistema)' }
+        ],
+        ColumnsModules: [
+          { name: 'Name', title: 'Name' },
+          { name: 'Description', title: 'Description' },
+          { name: '__slot:actions', title: '' }
+        ],
+        ColumnsTariffs: [
           { name: 'TimeZone', title: 'Time zone' },
           { name: 'Name', title: 'Name' },
           { name: 'StartDate', title: 'Start date' },
@@ -83,7 +107,7 @@
         );
       },
       Delete: function(tariff) {
-        if(confirm("Delete '" + tariff.Name + "' tariff?")){
+        if(confirm("Delete '" + tariff.Name + "' tariff?")) {
           this.$http.post('delTariff', { TariffID: tariff.TariffID }).then(
             (result) => {
               this.LoadTariffs();
@@ -91,11 +115,14 @@
             (fail) => {}
           );
         }
+      },
+      Configure: function() {
+
       }
     },
-    updated: function(){
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
-    },
+//    updated: function() {
+//      oZm.createCaptionsForResponsiveTable(this.$refs.table);
+//    },
     components: { Vuetable, Tariff }
   }
 </script>
@@ -120,6 +147,12 @@
       width: 100px;
     }
     .table >>> td:nth-child(5) {
+      text-align: right;
+    }
+    .table.modules >>> th:nth-child(3) {
+      width: 80px;
+    }
+    .table.modules >>> td:nth-child(3) {
       text-align: right;
     }
   }

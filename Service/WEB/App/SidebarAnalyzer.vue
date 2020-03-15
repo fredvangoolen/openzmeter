@@ -64,7 +64,7 @@
         return Result;
       },
       FormatAggregation: function(val) {
-        return (val == '1H') ? '1 hour' : (val == '15M') ? '15 minutes' : (val == '10M') ? '10 minutes' : (val == '1M') ? '1 minute' : (val == '3S') ? '3 seconds' : 'unknown';
+        return (val == '1H') ? '1 hour' : (val == '15M') ? '15 minutes' : (val == '10M') ? '10 minutes' : (val == '1M') ? '1 minute' : (val == '3S') ? '3 seconds' : (val == '200MS') ? '200 miliseconds' : 'unknown';
       },
       FormatTime: function(val) {
         return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss');
@@ -74,7 +74,7 @@
       },
       FormatDateTime: function(val, spacer) {
         if(spacer == null) spacer = ' - ';
-        return moment(val).tz(this.analyzer.TimeZone).format('hh:mm:ss') + spacer + moment(val).tz(this.analyzer.TimeZone).format('DD/MM/YYYY');
+        return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss') + spacer + moment(val).tz(this.analyzer.TimeZone).format('DD/MM/YYYY');
       },
       CalcRange: function(range, aggreg) {
         var Now = moment().tz(this.analyzer.TimeZone);

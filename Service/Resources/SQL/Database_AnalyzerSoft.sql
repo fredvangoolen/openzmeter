@@ -1,4 +1,4 @@
-CREATE UNLOGGED TABLE IF NOT EXISTS aggreg_10c (
+CREATE UNLOGGED TABLE IF NOT EXISTS aggreg_200ms (
   sampletime     bigint NOT NULL PRIMARY KEY,
   rms_v          real[] NOT NULL,
   rms_i          real[] NOT NULL,
@@ -113,7 +113,6 @@ CREATE TABLE IF NOT EXISTS rates(
 ) WITH (OIDS=FALSE);
 DROP TABLE IF EXISTS rates;
 
-DROP TABLE IF EXISTS alarms;
 CREATE TABLE IF NOT EXISTS alarms(
   alarmtime     bigint            NOT NULL PRIMARY KEY,
   name          character varying NOT NULL,

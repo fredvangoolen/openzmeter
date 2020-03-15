@@ -18,10 +18,9 @@
           <div class="panel-body" style="min-height: 100px">
             <spinner v-if="ShowSpinner"></spinner>
             <vuetable ref="table" :fields="Columns" :data="Alarms" :api-mode="false" class="table small table-striped">
-              <template slot="actions" slot-scope="props">
-                <div class="btn-group" >
-                  <button class="btn btn-xs btn-danger" @click="Delete(props.rowData)">Delete</button>
-                </div>
+              <template slot="state" slot-scope="props">
+                <img v-if="props.rowData.Triggered==false" :src="require('Imgs/alarm_release.png')">
+                <img v-if="props.rowData.Triggered==true" :src="require('Imgs/alarm_trigger.png')">
               </template>
             </vuetable>
           </div>
@@ -43,11 +42,9 @@
     data: function() {
       return { ShowSpinner: true, Filter: '', Alarms: [],
       Columns: [
-          {name: 'User', title: 'User name' },
-          {name: 'Name', title: 'Name' },
-          {name: 'TimeZone', title: 'Time zone' },
-          {name: 'E-Mail', title: 'EMail' },
-          {name: '__slot:actions', title: '' }
+          {name: '__slot:state', title: ''},
+          {name: 'AlarmTime', title: 'Date', callback: this.FormatDateTime },
+          {name: 'Name', title: 'Name' }
         ] };
     },
     created: function () {
@@ -62,6 +59,7 @@
       }
     },
     methods: {
+      FormatDateTime: function(val) { return this.analyzer.FormatDateTime(val); },
       LoadAlarms: function () {
         this.ShowSpinner = true;
         this.$http.post('getAlarms', { Limit: 10, Offset: 0, Filter: this.Filter, Analyzer: this.analyzer.Analyzer }).then(
@@ -81,6 +79,13 @@
 </script>
 
 <style scoped>
+  .table >>> th:nth-child(1) {
+    width: 30px;
+  }
+  .table >>> th:nth-child(2), .table >>> td:nth-child(2) {
+    width: 160px;
+    text-align: center;
+  }
   .header-text {
     font-size: 24px;
     line-height: 16px;

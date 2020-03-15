@@ -70,6 +70,9 @@
 </script>
 
 <style scoped>
+  .header-text {
+    font-size: 14px;
+  }
   .table >>> th:nth-child(2) {
     text-align: center;
   }

@@ -35,34 +35,45 @@ class AnalyzerSoft final : public Analyzer {
     enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
     enum EventState  { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
     enum SyncState   { NOT_LOGGED, LOGGED, CONNECTED, TERMINATE };
+  private :
+    static constexpr float   FrequencyRanges[]   = { -INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY };
+    static constexpr uint8_t FrequencyRangesLen  = (sizeof(FrequencyRanges) / sizeof(float)) - 1;
+    static constexpr float   VoltageRanges[]     = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
+    static constexpr uint8_t VoltageRangesLen    = (sizeof(VoltageRanges) / sizeof(float)) - 1;
+    static constexpr float   THDRanges[]         = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
+    static constexpr uint8_t THDRangesLen        = (sizeof(THDRanges) / sizeof(float)) - 1;
+    static constexpr float   UnbalanceRanges[]   = {0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.50, 1.75, 2.0, 2.25, 2.50, 2.75, 3.0, 3.25, 3.50, 3.75, 4.0, 4.25, 4.50, 4.75, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, INFINITY};
+    static constexpr uint8_t UnbalanceRangesLen  = (sizeof(UnbalanceRanges) / sizeof(float)) - 1;
+    static constexpr float   HarmonicsAllowed[]  = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
+    static constexpr uint8_t HarmonicsAllowedLen = (sizeof(HarmonicsAllowed) / sizeof(float));
    private :
     typedef struct {
-      AggregType                     Type;                   //Aggregation type
-      bool                           Flag;                   //Flagged period
-      float                          Frequency;              //Frecuency
-      float                          Unbalance;              //Unbalance (only in 3phase)
-      float                          Voltage[3];             //Aggregation average RMS voltage
-      float                          Current[4];             //Aggregation average RMS current
-      uint64_t                       Timestamp;              //Aggregation timestampt
-      uint16_t                       AggregSamples;          //Number of samples accumulated in aggreg
-      vector<uint16_t>               StatsFrequency;         //Distribucion de frecuencias
-      vector<uint16_t>               StatsVoltage;           //Distribucion de tensiones
-      vector<uint16_t>               StatsTHD;               //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
-      vector<uint16_t>               StatsHarmonics;         //Numero de muestras que cumplen los limites de harmonicos / no cumplen
-      vector<uint16_t>               StatsUnbalance;         //Distribucion de unbalance
-      float                          Active_Power[3];        //Aggregation average Active Power (P)
-      float                          Reactive_Power[3];      //Reactive power
-      float                          Active_Energy[3];       //Energia consumida
-      float                          Reactive_Energy[3];     //Reactive energy
-      float                          Apparent_Power[3];      //Potencia aparente (S)
-      float                          Power_Factor[3];        //Factor de potencia (cos(PHI))
-      float                          Voltage_THD[3];         //Distorsion harmonica de la tension
-      float                          Current_THD[4];         //Distorsion harmonica de la corriente
-      float                          Voltage_Phase[3];       //Angulo entre canales de tension
-      float                          Phi[3];                 //Angulo de Phi
-      float                          Voltage_Harmonics[150]; //Harmonicos del canal de tension
-      float                          Current_Harmonics[200]; //Harmonicos del canal de corriente
-      float                          Power_Harmonics[150];   //Power harmonics
+      AggregType                     Type;                               //Aggregation type
+      bool                           Flag;                               //Flagged period
+      float                          Frequency;                          //Frecuency
+      float                          Unbalance;                          //Unbalance (only in 3phase)
+      float                          Voltage[3];                         //Aggregation average RMS voltage
+      float                          Current[4];                         //Aggregation average RMS current
+      uint64_t                       Timestamp;                          //Aggregation timestampt
+      uint16_t                       AggregSamples;                      //Number of samples accumulated in aggreg
+      uint16_t                       StatsFrequency[FrequencyRangesLen]; //Distribucion de frecuencias
+      uint16_t                       StatsVoltage[VoltageRangesLen];     //Distribucion de tensiones
+      uint16_t                       StatsTHD[THDRangesLen];             //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
+      uint16_t                       StatsHarmonics[2];                  //Numero de muestras que cumplen los limites de harmonicos / no cumplen
+      uint16_t                       StatsUnbalance[UnbalanceRangesLen]; //Distribucion de unbalance
+      float                          Active_Power[3];                    //Aggregation average Active Power (P)
+      float                          Reactive_Power[3];                  //Reactive power
+      float                          Active_Energy[3];                   //Energia consumida
+      float                          Reactive_Energy[3];                 //Reactive energy
+      float                          Apparent_Power[3];                  //Potencia aparente (S)
+      float                          Power_Factor[3];                    //Factor de potencia (cos(PHI))
+      float                          Voltage_THD[3];                     //Distorsion harmonica de la tension
+      float                          Current_THD[4];                     //Distorsion harmonica de la corriente
+      float                          Voltage_Phase[3];                   //Angulo entre canales de tension
+      float                          Phi[3];                             //Angulo de Phi
+      float                          Voltage_Harmonics[150];             //Harmonicos del canal de tension
+      float                          Current_Harmonics[200];             //Harmonicos del canal de corriente
+      float                          Power_Harmonics[150];               //Power harmonics
     } Params_t;
     typedef struct {
      float *InPtr;
@@ -120,12 +131,6 @@ class AnalyzerSoft final : public Analyzer {
   private :
     static pthread_mutex_t      pFFTMutex;               //Planer mutex
     static uint32_t             pFFTRunning;             //Currently running FFTs
-  private :
-    static const vector<float>  FrequencyRanges;         //Rangos de frecuencias para estadisticas
-    static const vector<float>  VoltageRanges;           //Rangos de tensiones para estadisticas
-    static const vector<float>  THDRanges;               //Rangos de distorsion harmonica para estadisticas
-    static const vector<float>  UnbalanceRanges;         //Unbalance ranges
-    static const vector<float>  HarmonicsAllowed;        //Rangos permitidos para cada harmonico
   private : //Not modified after creation
     const float                pSamplerate;              //Velocidad de muestreo
     const string               pConfigPath;              //Path to configuration

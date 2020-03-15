@@ -63,6 +63,7 @@ class Database {
     string      Bind(const float *params, const uint32_t len) const;
     string      Bind(const float *params, const uint32_t lenA, const uint32_t lenB) const;
     string      Bind(const vector<uint16_t> &params) const;
+    string      Bind(const uint16_t *params, const uint32_t len) const;
     string      Bind(const bool param) const;
     string      Bind(const string &string) const;
     string      BindID(const string &string) const;
