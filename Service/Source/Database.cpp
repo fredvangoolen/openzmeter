@@ -241,6 +241,14 @@ string Database::Bind(const vector<uint16_t> &params) const {
   }
   return Result;
 }
+string Database::Bind(const uint16_t *params, const uint32_t len) const {
+  string Result = "'{";
+  for(uint i = 0; i < len; i++) {
+    Result.append(isfinite(params[i]) ? to_string(params[i]) : string("NULL"));
+    Result.append((i < (len - 1)) ? ", " : "}'");
+  }
+  return Result;
+}
 string Database::Bind(const vector<float> &params) const {
   string Result = "'{";
   for(uint i = 0; i < params.size(); i++) {

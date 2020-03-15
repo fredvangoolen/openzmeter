@@ -38,11 +38,16 @@ using namespace cctz;
 #define EVENT_RAWENVELOPETIME            0.5        //Time in seconds before and after event to store RAW samples
 #define EVENT_RMSENVELOPETIME           10.0        //Time in seconds before and after event to store RMS samples
 //----------------------------------------------------------------------------------------------------------------------
-const vector<float> AnalyzerSoft::FrequencyRanges  = {-INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY};
-const vector<float> AnalyzerSoft::VoltageRanges    = { -INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, INFINITY };
-const vector<float> AnalyzerSoft::THDRanges        = { 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, INFINITY };
-const vector<float> AnalyzerSoft::HarmonicsAllowed = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
-const vector<float> AnalyzerSoft::UnbalanceRanges  = {0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.50, 1.75, 2.0, 2.25, 2.50, 2.75, 3.0, 3.25, 3.50, 3.75, 4.0, 4.25, 4.50, 4.75, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, INFINITY};
+const float   AnalyzerSoft::FrequencyRanges[];
+const uint8_t AnalyzerSoft::FrequencyRangesLen;
+const float   AnalyzerSoft::VoltageRanges[];
+const uint8_t AnalyzerSoft::VoltageRangesLen;
+const float   AnalyzerSoft::THDRanges[];
+const uint8_t AnalyzerSoft::THDRangesLen;
+const float   AnalyzerSoft::HarmonicsAllowed[];
+const uint8_t AnalyzerSoft::HarmonicsAllowedLen;
+const float   AnalyzerSoft::UnbalanceRanges[];
+const uint8_t AnalyzerSoft::UnbalanceRangesLen;
 //----------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t     AnalyzerSoft::pFFTMutex = PTHREAD_MUTEX_INITIALIZER;
 uint32_t            AnalyzerSoft::pFFTRunning = 0;
@@ -52,7 +57,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   Database DB(id);
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
   DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Tools::GetTime() - 86400000));   //Delete 1 day old
-  DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(Tools::GetTime() - 3600000));       //Delete 1 hour old
+  DB.ExecSentenceNoResult("DELETE FROM aggreg_200ms WHERE sampletime < " + DB.Bind(Tools::GetTime() - 3600000));       //Delete 1 hour old
   pDelayVoltage     = NULL;
   pDelayCurrent     = NULL;
   pVoltageSamples   = NULL;
@@ -357,11 +362,11 @@ void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
   for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage_Phase[n]  = 0;
   for(uint8_t n = 0; n < pVoltageChannels; n++) params.Reactive_Energy[n] = 0;
   for(uint8_t n = 0; n < pVoltageChannels; n++) params.Apparent_Power[n] = 0;
-  params.StatsFrequency = vector<uint16_t>(FrequencyRanges.size() - 1, 0);
-  params.StatsVoltage = vector<uint16_t>(VoltageRanges.size() - 1, 0);
-  params.StatsTHD = vector<uint16_t>(THDRanges.size() - 1, 0);
-  params.StatsUnbalance = vector<uint16_t>(UnbalanceRanges.size() - 1, 0);
-  params.StatsHarmonics = vector<uint16_t>(2, 0);
+  for(uint8_t n = 0; n < FrequencyRangesLen; n++) params.StatsFrequency[n] = 0;
+  for(uint8_t n = 0; n < VoltageRangesLen; n++) params.StatsVoltage[n] = 0;
+  for(uint8_t n = 0; n < THDRangesLen; n++) params.StatsTHD[n] = 0;
+  for(uint8_t n = 0; n < UnbalanceRangesLen; n++) params.StatsUnbalance[n] = 0;
+  for(uint8_t n = 0; n < 2; n++) params.StatsHarmonics[n] = 0;
 }
 void AnalyzerSoft::InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos) {
   Event_t Event;
@@ -450,7 +455,7 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
   if(pSequence < 50) return;
   Database DB(Serial);
   if(params.Type == AGGREG_200MS)
-    DB.ExecSentenceNoResult("INSERT INTO aggreg_10c(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi) VALUES(" +
+    DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi) VALUES(" +
     DB.Bind(params.Timestamp) + ", " +
     DB.Bind(params.Voltage, pVoltageChannels) + ", " +
     DB.Bind(params.Current, pCurrentChannels) + ", " +
@@ -509,13 +514,13 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
     DB.Bind(params.Flag) + ", " +
     DB.Bind(params.Active_Power, pVoltageChannels) + ", " +
     DB.Bind(params.Reactive_Power, pVoltageChannels) + ", " +
-    DB.Bind(params.StatsVoltage) + ", " +
-    DB.Bind(params.StatsFrequency) + ", " +
-    DB.Bind(params.StatsTHD) + ", " +
-    DB.Bind(params.StatsHarmonics) + ", " +
-    DB.Bind(params.StatsUnbalance) + ")");
+    DB.Bind(params.StatsVoltage, VoltageRangesLen) + ", " +
+    DB.Bind(params.StatsFrequency, FrequencyRangesLen) + ", " +
+    DB.Bind(params.StatsTHD, THDRangesLen) + ", " +
+    DB.Bind(params.StatsHarmonics, 2) + ", " +
+    DB.Bind(params.StatsUnbalance, UnbalanceRangesLen) + ")");
   if(params.Type == AGGREG_1M) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(params.Timestamp - 86400000));   //Delete 1 day old
-  if((params.Type == AGGREG_1M) && (pSave200MS == true)) DB.ExecSentenceNoResult("DELETE FROM aggreg_10c WHERE sampletime < " + DB.Bind(params.Timestamp - 3600000));     //Delete 1 hour old
+  if((params.Type == AGGREG_1M) && (pSave200MS == true)) DB.ExecSentenceNoResult("DELETE FROM aggreg_200ms WHERE sampletime < " + DB.Bind(params.Timestamp - 3600000));     //Delete 1 hour old
 }
 void AnalyzerSoft::SaveEvent(Event_t &evt) {
   Database DB(Serial);
@@ -582,6 +587,10 @@ void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const Agg
   Params_t *Params = NULL;
   if(type == AGGREG_200MS) Params = &pAggreg200MS;
   if(type == AGGREG_3S)    Params = &pAggreg3S;
+  if(type == AGGREG_1M)    Params = &pAggreg1M;
+  if(type == AGGREG_10M)    Params = &pAggreg10M;
+  if(type == AGGREG_15M)    Params = &pAggreg15M;
+  if(type == AGGREG_1H)    Params = &pAggreg1H;
   parser.DefineVar("Frequency", &Params->Frequency);
   parser.DefineVar("NominalVoltage", &pNominalVoltage);
   parser.DefineVar("NominalFrequency", &pNominalFrequency);
@@ -688,7 +697,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg3S);
     if(This->pAggreg3S.Flag == false) {
       float Variation = This->CalcChange(This->pAggreg3S.Frequency, This->pNominalFrequency);
-      for(uint8_t Range = 0; Range < 40; Range++) {
+      for(uint8_t Range = 0; Range < FrequencyRangesLen; Range++) {
         if((Variation >= FrequencyRanges[Range]) && (Variation < FrequencyRanges[Range + 1])) This->pAggreg1H.StatsFrequency[Range]++;
       }
     }
@@ -715,19 +724,19 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     if(This->pAggreg10M.Flag == false) {
       for(uint i = 0; i < This->pVoltageChannels; i++) {
         float Variation = This->CalcChange(This->pAggreg10M.Voltage[i], This->pNominalVoltage);
-        for(uint Range = 0; Range < (VoltageRanges.size() - 1); Range++) {
+        for(uint Range = 0; Range < VoltageRangesLen; Range++) {
           if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) This->pAggreg1H.StatsVoltage[Range]++;
         }
-        for(uint Range = 0; Range < (THDRanges.size() - 1); Range++) {
+        for(uint Range = 0; Range < THDRangesLen; Range++) {
           if((This->pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (This->pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) This->pAggreg1H.StatsTHD[Range]++;
         }
         bool HarmonicsInRange = true;
-        for(uint n = 0; n < HarmonicsAllowed.size(); n++) {
-//          float Variation = This->CalcChange(sqrt(norm(This->pAggreg10M.Voltage_Harmonics[i][n + 1])), This->pNominalVoltage);
-//            if(Variation > HarmonicsAllowed[n]) {
-//              HarmonicsInRange = false;
-//              break;
-//             }
+        for(uint n = 0; n < HarmonicsAllowedLen; n++) {
+          float Variation = This->CalcChange(This->pAggreg10M.Voltage_Harmonics[i * 50 + n + 1], This->pNominalVoltage);
+            if(Variation > HarmonicsAllowed[n]) {
+              HarmonicsInRange = false;
+              break;
+            }
         }
         if(HarmonicsInRange == true) {
           This->pAggreg1H.StatsHarmonics[0]++;
