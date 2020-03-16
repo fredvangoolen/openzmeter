@@ -100,7 +100,7 @@
         this.View = null;
         if(analyzer == null) return;
         this.GetAnalyzers();
-        if(analyzer.Analyzer == this.analyzer.Analyzer) this.Select(analyzer.Analyzer);
+        if(analyzer == this.analyzer.Analyzer) this.Select(analyzer.Analyzer);
       },
       Configure: function(analyzer) {
         this.ShowSpinner = true;

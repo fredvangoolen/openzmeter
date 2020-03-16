@@ -1,11 +1,11 @@
 <template>
   <div class="btn-group">
-    <div class="input-group" v-bind:class="{ 'input-group-xs': (big != true) }">
+    <div class="input-group" :class="{ 'input-group-xs': (big != true) }">
       <span class="form-control">{{ Selected.name }}</span>
       <div class="input-group-btn" ref="button">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" ><span class="caret"></span></button>
         <ul class="dropdown-menu pull-right">
-          <li v-for="option in options" :class="{ active: (value == option.value) }"><a @click="$emit('input', option.value)">{{ option.name }}</a></li>
+          <li v-for="option in options" :key="option.value" :class="{ active: (value == option.value) }"><a @click="$emit('input', option.value)">{{ option.name }}</a></li>
         </ul>
       </div>
     </div>

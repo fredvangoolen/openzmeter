@@ -43,7 +43,7 @@
           <date-picker :options="{ format: 'DD/MM/YYYY - HH:mm:ss', viewMode: 'days', timeZone: analyzer.TimeZone }" v-model="Range[1]"></date-picker>
         </div>
       </div>
-    </Dlg>
+    </dlg>
   </div>
 </template>
 
