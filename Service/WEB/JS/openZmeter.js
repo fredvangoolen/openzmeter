@@ -230,7 +230,7 @@ const openZmeter = {
           Data.From = ReqRange[0];
           Data.To = ReqRange[1];
           Transfer.SetData(Data);
-          Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 3000);
+          Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, (Period == 200) ? 100 : 3000);
           return;
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
