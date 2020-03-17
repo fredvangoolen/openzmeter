@@ -105,12 +105,6 @@
     line-height: 22px;
   }
   @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(1) {
-      text-align: center;
-    }
-    .table >>> td:nth-child(1) {
-      text-align: center;
-    }
     .table >>> th:nth-child(3) {
       text-align: center;
     }
@@ -130,18 +124,5 @@
     .table >>> td:nth-child(5) {
       text-align: center;
     }
-  }
-  .modal-dialog {
-    z-index: 1100;
-    color: #333;
-    font-size: 14px;
-  }
-  .checkbox {
-    margin-top: 1px;
-    margin-bottom: 0px;
-    margin-right: 4px;
-  }
-  .modal-body {
-    min-height: 100px;
   }
 </style>

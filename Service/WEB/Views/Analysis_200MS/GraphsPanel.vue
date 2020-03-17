@@ -35,7 +35,6 @@
     },
     created: function() {
       this.SerieProps = oZm.Series[this.serie];
-//      this.TransferGraph.Series = [];
       this.TransferGraph.Update(this.analyzer, '200MS', this.range);
     },
     beforeDestroy: function() {

@@ -63,13 +63,12 @@ class RWLocks final {
 class ProviderLocks {
   //Provider wait until all consumers ends, consumers wait until provider write
   private :
-    uint32_t         pWaitingThreads;
-    pthread_mutex_t  pWaitingThreadsMutex;
-    pthread_cond_t   pWaitingThreadsCond;
-    bool             pDataReady;
     volatile bool    pTerminate;
-    pthread_mutex_t  pDataReadyMutex;
-    pthread_cond_t   pDataReadyCond;
+    bool             pDataReady;
+    uint32_t         pConsumers;
+    pthread_mutex_t  pMutex;
+    pthread_cond_t   pConsumersCond;
+    pthread_cond_t   pProducerCond;
   public :
     ProviderLocks();
     void Abort();
