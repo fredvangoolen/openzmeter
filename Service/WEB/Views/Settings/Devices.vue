@@ -40,9 +40,7 @@
       };
     },
     methods: {
-      EnabledStatus: function(value) {
-        return (value === true) ? '&#9635;' : '&#9633;';
-      },
+      EnabledStatus: function(value) { return (value === true) ? '&#9635;' : '&#9633;'; },
       LoadTable: function (update) {
         this.SettingsVisible = false;
         if(update == false) return;

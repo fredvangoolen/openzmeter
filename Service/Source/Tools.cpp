@@ -146,63 +146,55 @@ void RWLocks::Unlock() {
 }
 //----------------------------------------------------------------------------------------------------------------------
 ProviderLocks::ProviderLocks() {
-  pWaitingThreads      = 0;
-  pDataReady           = false;
-  pTerminate           = false;
-  pWaitingThreadsMutex = PTHREAD_MUTEX_INITIALIZER;
-  pDataReadyMutex      = PTHREAD_MUTEX_INITIALIZER;
-  pWaitingThreadsCond  = PTHREAD_COND_INITIALIZER;
-  pDataReadyCond       = PTHREAD_COND_INITIALIZER;
+  pConsumers     = 0;
+  pDataReady     = false;
+  pTerminate     = false;
+  pMutex         = PTHREAD_MUTEX_INITIALIZER;
+  pProducerCond  = PTHREAD_COND_INITIALIZER;
+  pConsumersCond = PTHREAD_COND_INITIALIZER;
 }
 void ProviderLocks::Abort() {
+  pthread_mutex_lock(&pMutex);
   pTerminate = true;
-  pthread_cond_broadcast(&pDataReadyCond);
+  pthread_mutex_unlock(&pMutex);
+  pthread_cond_broadcast(&pConsumersCond);
 }
 void ProviderLocks::ProviderWrite() {
-  pthread_mutex_lock(&pDataReadyMutex);
+  pthread_mutex_lock(&pMutex);
   pDataReady = true;
-  pthread_mutex_unlock(&pDataReadyMutex);
-  pthread_cond_broadcast(&pDataReadyCond);
+  pthread_cond_broadcast(&pConsumersCond);
+  pthread_mutex_unlock(&pMutex);
 }
 void ProviderLocks::ProviderWait() {
-  pthread_mutex_lock(&pWaitingThreadsMutex);
-  while(pWaitingThreads != 0) pthread_cond_wait(&pWaitingThreadsCond, &pWaitingThreadsMutex);
-  pthread_mutex_unlock(&pWaitingThreadsMutex);
-  pthread_mutex_lock(&pDataReadyMutex);
+  pthread_mutex_lock(&pMutex);
+  if(pConsumers > 0) pthread_cond_wait(&pProducerCond, &pMutex);
   pDataReady = false;
-  pthread_mutex_unlock(&pDataReadyMutex);
+  pthread_mutex_unlock(&pMutex);
 }
-bool ProviderLocks::ConsumerWait(uint timeoutMS) {
+bool ProviderLocks::ConsumerWait(uint32_t timeoutMS) {
   int Error = 0;
-  pthread_mutex_lock(&pWaitingThreadsMutex);
-  pWaitingThreads++;
-  pthread_mutex_unlock(&pWaitingThreadsMutex);
-  pthread_mutex_lock(&pDataReadyMutex);
-  while((pDataReady == false) && (Error == 0)) {
-    if(pTerminate == true) {
-      pthread_mutex_unlock(&pDataReadyMutex);
-      ConsumerEnds();
-      return false;
-    }
+  pthread_mutex_lock(&pMutex);
+  pConsumers++;
+  if(pDataReady == false) {
     struct timeval  Current;
     struct timespec Timeout;
     gettimeofday(&Current, NULL);
     Timeout.tv_sec  = Current.tv_sec + (timeoutMS / 1000);
     Timeout.tv_nsec = (timeoutMS % 1000) * 1000000;
-    Error = pthread_cond_timedwait(&pDataReadyCond, &pDataReadyMutex, &Timeout);
+    Error = pthread_cond_timedwait(&pConsumersCond, &pMutex, &Timeout);
   }
-  pthread_mutex_unlock(&pDataReadyMutex);
   if(Error != 0) {
-    ConsumerEnds();
-    return false;
+    pConsumers--;
+    if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
   }
-  return true;
+  pthread_mutex_unlock(&pMutex);
+  return (Error == 0);
 }
 void ProviderLocks::ConsumerEnds() {
-  pthread_mutex_lock(&pWaitingThreadsMutex);
-  pWaitingThreads--;
-  pthread_cond_signal(&pWaitingThreadsCond);
-  pthread_mutex_unlock(&pWaitingThreadsMutex);
+  pthread_mutex_lock(&pMutex);
+  pConsumers--;
+  if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
+  pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
 int             ConfigManager::pFile   = -1;

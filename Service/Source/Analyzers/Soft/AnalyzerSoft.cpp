@@ -99,6 +99,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   for(uint8_t n = 0; n < pCurrentChannels; n++) {
     if(pCurrentFFTWorker[n] != NULL) delete pCurrentFFTWorker[n];
   }
+  pNowDataLock.Abort();
   pthread_mutex_lock(&pFFTMutex);
   if(pFFTRunning == 0) {
     LOGFile::Debug("Clearing FFT cached plans\n");
@@ -691,6 +692,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     Aggreg->Current_THD[3] = (Aggreg->Current_THD[3] / Aggreg->Current_Harmonics[3 * 50]) * 100.0;
   }
   if(This->pEventsWorker != NULL) This->pEventsWorker->Wait();
+  This->pNowDataLock.ProviderWrite();
   if(((This->pSequence % 15) == 0) && (This->pPrevTimestamp != 0)) {
     LOGFile::Debug("Storing 3S aggregation for analyzer '%s'\n", This->Serial.c_str());
     This->NormalizeAggreg(This->pAggreg3S);
@@ -749,7 +751,6 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
     This->InitAggreg(This->pAggreg10M, AGGREG_10M);
   }
-  This->pNowDataLock.ProviderWrite();
   This->AccumulateAggreg(This->pAggreg10M, This->pAggreg200MS);
   if(((This->pAggreg200MS.Timestamp / 900000) > (This->pPrevTimestamp / 900000)) && (This->pPrevTimestamp != 0)) {
     LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", This->Serial.c_str());

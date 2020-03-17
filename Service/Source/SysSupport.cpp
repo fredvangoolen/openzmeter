@@ -671,71 +671,73 @@ void SysSupport::ScanWIFICallback(const json &params, Response &response) {
 }
 void SysSupport::GetWIFICallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(!params["Type"].is_string() || ((params["Type"] != "CURRENT") && (params["Type"] != "CONFIG"))) return HTTPServer::FillResponse(response, "'Type' param is requiered to be 'CURRENT' or 'CONFIG'", "text/plain", HTTP_BAD_REQUEST);
   json Result = json::object();
-  if(params["Type"] == "CURRENT") {
-    string CommandStr = Run("ubus call network.device status '{\"name\":\"" + pInterfaceWIFI + "\"}'");
-    if(CommandStr.empty() == false) {
-      json Tmp = json::parse(CommandStr, NULL, false);
-      if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-      if(Tmp.is_object() && Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
-      if(Result["Enabled"] == false) return HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
-    }
-    CommandStr = Run("ubus call network.interface." + pNetworkWIFI + " status");
-    if(CommandStr.empty() == false) {
-      json Tmp = json::parse(CommandStr, NULL, false);
-      if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-      if(Tmp.is_object()) {
-        if(Tmp["up"].is_boolean()) Result["Connected"] = Tmp["up"];
-        if(Result["Connected"] == false) return HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
-        if(Tmp["dns-server"].is_array()) Result["DNS"] = Tmp["dns-server"];
-        if(Tmp["ipv4-address"].is_array() && Tmp["ipv4-address"][0].is_object() && Tmp["ipv4-address"][0]["address"].is_string()) Result["IP"] = Tmp["ipv4-address"][0]["address"];
-        if(Tmp["proto"].is_string()) Result["IPMode"] = (Tmp["proto"] == "dhcp") ? "DHCP" : "STATIC";
-        if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Gateway"] = Tmp["route"][0]["nexthop"];
+  string CommandStr = Run("ubus call network.device status '{\"name\":\"" + pInterfaceWIFI + "\"}'");
+  if(CommandStr.empty() == false) {
+    json Tmp = json::parse(CommandStr, NULL, false);
+    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+    if(Tmp.is_object() && Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
+    if(Result["Enabled"] == false) return HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  }
+  CommandStr = Run("ubus call uci get '{\"config\":\"network\", \"section\":\"" + pNetworkWIFI + "\"}'");
+  if(CommandStr.empty() == false) {
+    json Tmp = json::parse(CommandStr, NULL, false);
+    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+    if(Tmp.is_object()) {
+      if(Tmp["values"].is_object()) {
+        Result["IPMode"] = "DHCP";
+        if(Tmp["values"]["proto"].is_string()) Result["IPMode"] = (Tmp["values"]["proto"] == "static") ? "STATIC" : "DHCP";
+        Result["IP"] = "";
+        if(Tmp["values"]["ipaddr"].is_string()) Result["IP"] = Tmp["values"]["ipaddr"];
+        Result["Netmask"] = "";
+        if(Tmp["values"]["netmask"].is_string()) Result["Netmask"] = Tmp["values"]["netmask"];
+        Result["Gateway"] = "";
+        if(Tmp["values"]["gateway"].is_string()) Result["Gateway"] = Tmp["values"]["gateway"];
+        Result["DNS"] = json::array();
+        if(Tmp["values"]["dns"].is_array()) Result["DNS"] = Tmp["values"]["dns"];
       }
     }
-    CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
-    if(CommandStr.empty() == false) {
-      json Tmp = json::parse(CommandStr, NULL, false);
-      if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-      if(Tmp.is_object()) {
-        if(Tmp["ssid"].is_string()) Result["ESSID"] = Tmp["ssid"];
-        if(Tmp["channel"].is_number()) Result["Channel"] = Tmp["channel"];
-        if(Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
-          float Current = Tmp["quality"], Max = Tmp["quality_max"];
-          Result["Quality"] = (int) (Current * 100.0 / Max);
+  }
+  CommandStr = Run("ubus call uci get '{\"config\":\"wireless\", \"section\":\"" + pWirelessWIFI + "\"}'");
+  if(CommandStr.empty() == false) {
+    json Tmp = json::parse(CommandStr, NULL, false);
+    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+    if(Tmp.is_object()) {
+      if(Tmp["values"].is_object()) {
+        if(Tmp["values"]["ssid"].is_string()) Result["ESSID"] = Tmp["values"]["ssid"];
+        if(Tmp["values"]["encryption"].is_string()) Result["KeyMode"] = (Tmp["values"]["encryption"] == "none") ? "NONE" : (Tmp["values"]["encryption"] == "wep") ? "WEP" : (Tmp["values"]["encryption"] == "psk") ? "WPA" : "WPA2";
+        if(Result["KeyMode"] != "NONE") {
+          if(Tmp["values"]["key"].is_string()) Result["Key"] = Tmp["values"]["key"];
         }
       }
     }
-  } else {
-    string CommandStr = Run("ubus call uci get '{\"config\":\"network\", \"section\":\"" + pNetworkWIFI + "\"}'");
-    if(CommandStr.empty() == false) {
-      json Tmp = json::parse(CommandStr, NULL, false);
-      if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-      if(Tmp.is_object()) {
-        if(Tmp["values"].is_object()) {
-          if(Tmp["values"]["proto"].is_string()) Result["IPMode"] = (Tmp["values"]["proto"] == "static") ? "STATIC" : "DHCP";
-          if(Result["IPMode"] != "DHCP") {
-            if(Tmp["values"]["ipaddr"].is_string()) Result["IP"] = Tmp["values"]["ipaddr"];
-            if(Tmp["values"]["netmask"].is_string()) Result["Netmask"] = Tmp["values"]["netmask"];
-            if(Tmp["values"]["gateway"].is_string()) Result["Gateway"] = Tmp["values"]["gateway"];
-            if(Tmp["values"]["dns"].is_array()) Result["DNS"] = Tmp["values"]["dns"];
-          }
-        }
+  }
+  Result["Status"] = json::object();
+  CommandStr = Run("ubus call network.interface." + pNetworkWIFI + " status");
+  if(CommandStr.empty() == false) {
+    json Tmp = json::parse(CommandStr, NULL, false);
+    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+    if(Tmp.is_object()) {
+      Result["Status"]["Connected"] = false;
+      if(Tmp["up"].is_boolean()) Result["Status"]["Connected"] = Tmp["up"];
+      if(Result["Status"]["Connected"] == true) {
+        if(Tmp["dns-server"].is_array()) Result["Status"]["DNS"] = Tmp["dns-server"];
+        if(Tmp["ipv4-address"].is_array() && Tmp["ipv4-address"][0].is_object() && Tmp["ipv4-address"][0]["address"].is_string()) Result["Status"]["IP"] = Tmp["ipv4-address"][0]["address"];
+        if(Tmp["proto"].is_string()) Result["Status"]["IPMode"] = (Tmp["proto"] == "dhcp") ? "DHCP" : "STATIC";
+        if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Status"]["Gateway"] = Tmp["route"][0]["nexthop"];
       }
     }
-    CommandStr = Run("ubus call uci get '{\"config\":\"wireless\", \"section\":\"" + pWirelessWIFI + "\"}'");
-    if(CommandStr.empty() == false) {
-      json Tmp = json::parse(CommandStr, NULL, false);
-      if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-      if(Tmp.is_object()) {
-        if(Tmp["values"].is_object()) {
-          if(Tmp["values"]["ssid"].is_string()) Result["ESSID"] = Tmp["values"]["ssid"];
-          if(Tmp["values"]["encryption"].is_string()) Result["KeyMode"] = (Tmp["values"]["encryption"] == "none") ? "NONE" : (Tmp["values"]["encryption"] == "wep") ? "WEP" : (Tmp["values"]["encryption"] == "psk") ? "WPA" : "WPA2";
-          if(Result["KeyMode"] != "NONE") {
-            if(Tmp["values"]["key"].is_string()) Result["Key"] = Tmp["values"]["key"];
-          }
-        }
+  }
+  CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
+  if(CommandStr.empty() == false) {
+    json Tmp = json::parse(CommandStr, NULL, false);
+    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+    if(Tmp.is_object()) {
+      if(Tmp["ssid"].is_string()) Result["Status"]["ESSID"] = Tmp["ssid"];
+      if(Tmp["channel"].is_number()) Result["Status"]["Channel"] = Tmp["channel"];
+      if(Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
+        float Current = Tmp["quality"], Max = Tmp["quality_max"];
+        Result["Status"]["Quality"] = (int) (Current * 100.0 / Max);
       }
     }
   }
