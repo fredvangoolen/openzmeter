@@ -2,7 +2,7 @@
   <div class="panel panel-voltage">
     <div class="panel-heading">
       <div class="float-left">Grid Voltage</div>
-      <div class="float-right" v-if="Warning">
+      <div class="float-right" v-if="(((data[index].VoltageIN / data[index].VoltageSamples) * 100.0) < 95)">
         <img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
       </div>
       <div class="clearfix"></div>
@@ -11,7 +11,7 @@
       <graph :options="GraphOptions" :height="200"></graph>
     </div>
     <div class="panel-footer">
-      <div class="text-center">95% of the year between {{ Nominal }}V±10%</div>
+      <div class="text-center">95% of the year between {{ Round(analyzer.NominalVoltage, 2) }}V±10%</div>
         <progress-bar :value="Voltage" :text="VoltageText"></progress-bar>
         <div style="float: left; font-size: 10px">90%</div>
         <div style="float:right; font-size: 10px">100%</div>
@@ -25,7 +25,7 @@
   export default {
     props: { data: Array, index: Number, analyzer: Object, ranges: Array },
     data: function() {
-      return { Nominal: 50, Voltage: 0, VoltageText: '', ShowSpinner: true, Warning: true };
+      return { };
     },
     computed: {
       GraphOptions: function() {

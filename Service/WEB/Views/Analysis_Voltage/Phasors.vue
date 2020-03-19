@@ -12,23 +12,29 @@
     </div>
     <div class="panel-body">
       <spinner v-if="data==null"></spinner>
-      <div class="row" v-if="(analyzer.Mode=='3PHASE') || (analyzer.Mode=='3PHASE+N')">
-        <div class="col-xs-12 col-md-4 panel-body">
+      <div class="row" v-if="analyzer.VoltageChannels>1">
+        <div class="col-xs-12 col-md-4 panel-body" ref="SequenceContainer">
           <table>
             <tr><td class="border-bottom">Positive sequence</td></tr>
-            <tr><td class="graphDiv"><graph class="graph" :options="GraphOptionsPositive"></graph></td></tr>
+            <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+              <graph class="graph" :options="GraphOptionsSequence.Positive" :height="SequenceHeight" :width="SequenceHeight"></graph>
+            </td></tr>
           </table>
         </div>
         <div class="col-xs-12 col-md-4 panel-body">
           <table>
             <tr><td class="border-bottom">Negative sequence</td></tr>
-            <tr><td class="graphDiv"><graph class="graph" :options="GraphOptionsNegative"></graph></td></tr>
+            <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+              <graph class="graph" :options="GraphOptionsSequence.Negative" :height="SequenceHeight" :width="SequenceHeight"></graph>
+            </td></tr>
           </table>
         </div>
         <div class="col-xs-12 col-md-4 panel-body">
           <table>
             <tr><td class="border-bottom">Zero sequence</td></tr>
-            <tr><td class="graphDiv"><graph class="graph" :options="GraphOptionsZero"></graph></td></tr>
+            <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+              <graph class="graph" :options="GraphOptionsSequence.Zero" :height="SequenceHeight" :width="SequenceHeight"></graph>
+            </td></tr>
           </table>
         </div>
       </div>
@@ -67,7 +73,7 @@
   export default {
     props: { analyzer: Object, data: Object, paused: Boolean },
     data: function() {
-      return { MouseOver: false, PhasorHeight: 200,
+      return { MouseOver: false, PhasorHeight: 200, SequenceHeight: 200,
         Columns: [
           { name: 'Phase', title: 'Phase' },
           { name: 'Channel', title: 'Channel' },
@@ -105,9 +111,24 @@
         Opt.underlayCallback = this.Underlay;
         return Opt;
       },
-      GraphOptionsPositive: function() {
-        var Opt = {};
-        Object.assign(Opt, this.CommonOptions);
+      GraphOptionsSequence: function() {
+        var Opt = {Positive: Object.assign({ file: [] }, this.CommonOptions), Negative: Object.assign({ file: [] }, this.CommonOptions), Zero: Object.assign({ file: [] }, this.CommonOptions) };
+        if(this.data.Voltage.length == 3) {
+          var A = new Complex(Math.cos(120.0 * Math.PI / 180.0), Math.sin(120.0 * Math.PI / 180.0));
+          var A2 = A.clone().mult(A);
+          var V1 = new Complex(this.data.Voltage_Harmonics[0][0][0], this.data.Voltage_Harmonics[0][0][1]);
+          var V2 = new Complex(this.data.Voltage_Harmonics[1][0][0], this.data.Voltage_Harmonics[1][0][1]);
+          var V3 = new Complex(this.data.Voltage_Harmonics[2][0][0], this.data.Voltage_Harmonics[2][0][1]);
+          var Zero = V1.clone().add(V2).add(V3).mult(new Complex(1.0 / 3.0, 0.0));
+          var Positive = V1.clone().add(A.clone().mult(V2)).add(A2.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
+          var Negative = V1.clone().add(A2.clone().mult(V2)).add(A.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
+          var OffsetAngle = Positive.arg() * 180.0 / Math.PI;
+          for(var n = 0; n < 3; n++) {
+            Opt.Positive.file.push([n * 2, Positive.arg() * 180.0 / Math.PI + (n * 120.0) - OffsetAngle, Positive.abs()]);
+            Opt.Negative.file.push([n * 2, Negative.arg() * 180.0 / Math.PI + (n * -120.0) - OffsetAngle, Negative.abs()]);
+          }
+          Opt.Zero.file.push([n * 2, Zero.arg() * 180.0 / Math.PI - OffsetAngle, Zero.abs()]);
+        }
         return Opt;
       },
       GraphOptionsNegative: function() {
@@ -138,18 +159,12 @@
         return Phasors;
       }
     },
-    created: function() {
-      this.Data = [];
-    },
     mounted: function() {
       window.addEventListener('resize', this.Resize);
       window.dispatchEvent(new Event('resize'));
     },
-    updated: function(){
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
-    },
     beforeDestroy: function() {
-      window.removeEventListener('resize', this.Resize)
+      window.removeEventListener('resize', this.Resize);
     },
     methods: {
       Export: function() {
@@ -195,8 +210,8 @@
         canvas.stroke();
       },
       Plotter: function(e) {
-        if((this.analyzer === null) || (e.seriesIndex !== 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0) || (e.dygraph.file_.length === 0) || (e.dygraph.file_[0].length !== 3)) return;
-        var Phases = (oZm.Series['VOLTAGE'].Names(this.analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
+        if((this.analyzer == null) || (e.seriesIndex != 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0) || (e.dygraph.file_.length == 0) || (e.dygraph.file_[0].length != 3)) return;
+        var Phases = (oZm.Series['VOLTAGE'].Names(this.analyzer).length == 1) ? ['L'] : ['R', 'S', 'T'];
         var ctx = e.drawingContext;
         var MaxCurrent = 0;
         for(var i = 0; i < e.points.length; i++) {
@@ -232,14 +247,14 @@
             ctx.textBaseline = "middle";
             ctx.font = "10px sans";
             ctx.fillStyle = "#333";
-            ctx.fillText(oZm.Round2Plain(e.dygraph.file_[i][1] - e.dygraph.file_[i - 1][1]) + "°", 3, 0);
+            ctx.fillText(this.Round(e.dygraph.file_[i][1] - e.dygraph.file_[i - 1][1], 2, flase) + "°", 3, 0);
             ctx.font = "bold 12px sans";
             ctx.textAlign = "right";
             ctx.fillText(Phases[(i - 1) / 2], -3, 0);
             ctx.fill();
             ctx.restore();
           }
-          if(((e.dygraph.file_[i][0] % 2) === 0) && ((e.dygraph.file_.length === (i + 1)) || ((e.dygraph.file_[i + 1][0] % 2) === 0))) {
+          if(((e.dygraph.file_[i][0] % 2) == 0) && ((e.dygraph.file_.length == (i + 1)) || ((e.dygraph.file_[i + 1][0] % 2) == 0))) {
             //Value legend
             ctx.save();
             ctx.translate(e.dygraph.toDomXCoord(100 * Math.cos(e.dygraph.file_[i][1] * Math.PI / 180.0)), e.dygraph.toDomYCoord(100 * Math.sin(e.dygraph.file_[i][1] * Math.PI / 180.0)));
@@ -248,7 +263,7 @@
             ctx.textAlign = "right";
             ctx.font = "bold 12px sans";
             ctx.fillStyle = "#333";
-            ctx.fillText((e.dygraph.file_.length === 1) ? 'ALL' : Phases[(e.dygraph.file_[i][0]) / 2], -15, -5);
+            ctx.fillText((e.dygraph.file_.length == 1) ? 'ALL' : Phases[(e.dygraph.file_[i][0]) / 2], -15, -5);
             ctx.fill();
             ctx.restore();
           }
@@ -289,68 +304,15 @@
           ctx.textAlign = "left";
           ctx.font = "10px sans";
           ctx.fillStyle = e.dygraph.getColors()[e.dygraph.file_[i][0] % 2];
-          ctx.fillText(oZm.Round2Plain(e.allSeriesPoints[1][i].yval) + ((e.dygraph.file_[i][0] % 2) ? "A" : "V"), 2, -5);
+          ctx.fillText(this.Round(e.allSeriesPoints[1][i].yval, 2, false) + ((e.dygraph.file_[i][0] % 2) ? "A" : "V"), 2, -5);
           ctx.fill();
           ctx.restore();
         }
       },
       Resize: function() {
         this.PhasorHeight = Math.min(600, this.$refs.PhasorContainer.clientWidth - 30);
-return;
-
-        this.$nextTick(function() {
-
-        if((this.$refs === undefined) || (this.$refs.graphContainer === undefined)) return;
-          var Width = this.$refs.graphContainer.clientWidth - 30;
-          if(Width > 600) Width = 600;
-//          this.$refs.graph.Redraw(Width, Width);
-          Width = this.$refs.positiveContainer.clientWidth - 30;
-          if(Width > 600) Width = 600;
-//          this.$refs.positive.Redraw(Width, Width);
-//          this.$refs.negative.Redraw(Width, Width);
-//          this.$refs.zero.Redraw(Width, Width);
-        });
-      },
-/*      SetData(result) {
-        var Analyzer = this.$root.SelectedAnalyzer;
-        this.ShowWarning = (oZm.ArrayAbsMax(result.Current) < Analyzer.MinCurrent);
-        this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
-        var Phases = (oZm.Series['VOLTAGE'].Names(Analyzer).length === 1) ? ['L'] : ['R', 'S', 'T'];
-        this.Data = [];
-        var Table = [];
-        var Vectors = [];
-        for(var i = 0; i < result['Voltage'].length; i++) {
-          Vectors.push([i * 2, result.Voltage_Phase[i], result.Voltage[i]]);
-          Vectors.push([i * 2 + 1, result.Voltage_Phase[i] + result.Phi[i], result.Current[i]]);
-          this.Data.push([Phases[i], "Voltage", result.Voltage_Phase[i], result['Voltage'][i]]);
-          this.Data.push([Phases[i], "Current", result.Voltage_Phase[i] + result.Phi[i], result['Current'][i]]);
-          Table.push( { Phase: Phases[i], Channel: "Voltage", Angle: oZm.Round2(result.Voltage_Phase[i]) + '°', Value: oZm.Round2(result['Voltage'][i]) + ' V' } );
-          Table.push( { Phase: Phases[i], Channel: "Current", Angle: oZm.Round2(((result.Phi[i] === null) || (result.Voltage_Phase[i] === null)) ? null : result.Voltage_Phase[i] + result.Phi[i]) + '°', SecAngle: '(' + oZm.Round2(result.Phi[i]) + '°)', Value: oZm.Round2(result.Current[i]) + ' A'} );
-        }
-        if(result['Voltage'].length === 3) {
-          var A = new Complex(Math.cos(120.0 * Math.PI / 180.0), Math.sin(120.0 * Math.PI / 180.0));
-          var A2 = A.clone().mult(A);
-          var V1 = new Complex(result.Voltage_Harmonics[0][0][0], result.Voltage_Harmonics[0][0][1]);
-          var V2 = new Complex(result.Voltage_Harmonics[1][0][0], result.Voltage_Harmonics[1][0][1]);
-          var V3 = new Complex(result.Voltage_Harmonics[2][0][0], result.Voltage_Harmonics[2][0][1]);
-          var Zero = V1.clone().add(V2).add(V3).mult(new Complex(1.0 / 3.0, 0.0));
-          var Positive = V1.clone().add(A.clone().mult(V2)).add(A2.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
-          var Negative = V1.clone().add(A2.clone().mult(V2)).add(A.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
-          var PositiveVectors = [], NegativeVectors = [], ZeroVectors = [];
-          var OffsetAngle = Positive.arg() * 180.0 / Math.PI;
-          for(var n = 0; n < 3; n++) {
-            PositiveVectors.push([n * 2, Positive.arg() * 180.0 / Math.PI + (n * 120.0) - OffsetAngle, Positive.abs()]);
-            NegativeVectors.push([n * 2, Negative.arg() * 180.0 / Math.PI + (n * -120.0) - OffsetAngle, Negative.abs()]);
-          }
-          ZeroVectors.push([n * 2, Zero.arg() * 180.0 / Math.PI - OffsetAngle, Zero.abs()]);
-          this.$refs.positive.SetOptions({ file: PositiveVectors });
-          this.$refs.negative.SetOptions({ file: NegativeVectors });
-          this.$refs.zero.SetOptions({ file: ZeroVectors });
-        }
-        this.$refs.graph.SetOptions({ file: Vectors });
-        this.$refs.table.setData( { data: Table });
-        this.ShowSpinner = false;
-      }*/
+        this.SequenceHeight = Math.min(600, this.$refs.SequenceContainer.clientWidth - 30);
+      }
     },
     components: { Graph, vuetable }
   }

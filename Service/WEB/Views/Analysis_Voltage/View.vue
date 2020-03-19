@@ -63,8 +63,8 @@
     data: function() {
       return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
                TransferGraph: this.CreateSeriesTransfer(this, ['VOLTAGE']),
-               TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'VOLTAGE_PHASE', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI']),
-               TransferCubism: this.CreateSeriesTransfer(this, ['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI']),
+               TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'VOLTAGE_PHASE', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'UNBALANCE']),
+               TransferCubism: this.CreateSeriesTransfer(this, ['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'UNBALANCE']),
                Transfer10M: this.CreateSeriesTransfer(this, ['VOLTAGE']),
                TransferEvents: this.CreateSeriesTransfer(this)
       };

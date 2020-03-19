@@ -18,14 +18,19 @@
       </div>
     </div>
     <div class="row" v-if="Weeks!=null">
-      <div class="col col-lg-4 col-md-12">
+      <div :class="[(analyzer.VoltageChannels==1) ? 'col-lg-4' : 'col-lg-6', 'col-md-12']">
         <frequency :data="Weeks" :index="Index" :analyzer="analyzer" :ranges="Frequencies"></frequency>
       </div>
-      <div class="col col-lg-4 col-md-12">
+      <div :class="[(analyzer.VoltageChannels==1) ? 'col-lg-4' : 'col-lg-6', 'col-md-12']">
         <voltage :data="Weeks" :index="Index" :analyzer="analyzer" :ranges="Voltages"></voltage>
       </div>
-      <div class="col col-lg-4 col-md-12">
+    </div>
+    <div class="row" v-if="Weeks!=null">
+      <div :class="[(analyzer.VoltageChannels==1) ? 'col-lg-4' : 'col-lg-6', 'col-md-12']">
         <thd :data="Weeks" :index="Index" :analyzer="analyzer" :ranges="THDs"></thd>
+      </div>
+      <div :class="[(analyzer.VoltageChannels==1) ? 'col-lg-4' : 'col-lg-6', 'col-md-12']">
+        <unbalance :data="Weeks" :index="Index" :analyzer="analyzer" :ranges="Frequencies"></unbalance>
       </div>
     </div>
   </div>
@@ -42,6 +47,7 @@
   import Voltage from './Voltage.vue';
   import Counters from './Counters.vue';
   import Thd from './THD.vue';
+  import Unbalance from './Unbalance.vue';
   export default {
     props: { analyzer: Object },
     data: function() {
@@ -183,7 +189,7 @@
 //        this.$refs.counters.SetData(this.Weeks[week]);
 //      }
     },
-    components: { Frequency, Voltage, Thd, Counters }
+    components: { Frequency, Voltage, Thd, Counters, Unbalance }
 }
 </script>
 

@@ -456,7 +456,7 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
   if(pSequence < 50) return;
   Database DB(Serial);
   if(params.Type == AGGREG_200MS)
-    DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi) VALUES(" +
+    DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance) VALUES(" +
     DB.Bind(params.Timestamp) + ", " +
     DB.Bind(params.Voltage, pVoltageChannels) + ", " +
     DB.Bind(params.Current, pCurrentChannels) + ", " +
@@ -467,7 +467,8 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
     DB.Bind(params.Power_Factor, pVoltageChannels) + ", " +
     DB.Bind(params.Voltage_THD, pVoltageChannels) + ", " +
     DB.Bind(params.Current_THD, pCurrentChannels) + ", " +
-    DB.Bind(params.Phi, pVoltageChannels) + ")");
+    DB.Bind(params.Phi, pVoltageChannels) + ", " +
+    DB.Bind(params.Unbalance) + ")");
   else if(params.Type == AGGREG_3S)
     DB.ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" +
     DB.Bind(params.Timestamp) + ", " +
@@ -619,7 +620,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   Params_t     *Aggreg = (Params_t*)run;
   This->pAnalyzerLock.ReadLock();
   uint64_t Start = Tools::GetTime();
-  Aggreg->Timestamp = Start;
+  Aggreg->Timestamp = Start; //TODO: This alter precise timestamp of samples, improve it as much as possible!
   Aggreg->AggregSamples = 1;
   if(This->pEventsWorker != NULL) This->pEventsWorker->Run(Aggreg);
   This->pFFTSamples = (This->pBlockSamples / 2) + 1;
@@ -683,10 +684,17 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     Aggreg->Power_Factor[j] = Aggreg->Active_Power[j] / Aggreg->Apparent_Power[j];
     Aggreg->Reactive_Energy[j] = (Aggreg->Reactive_Power[j] * This->pBlockSamples) / (This->pSamplerate * 3600.0);
   }
+  if(This->pMode != PHASE1) {
+    complex<float> A(cos(120.0 * M_PI / 180.0), sin(120.0 * M_PI / 180.0));
+    complex<float> V1(This->pVoltageFFT[0 * This->pFFTSamples * 2 + 20] * M_SQRT2, This->pVoltageFFT[0 * This->pFFTSamples * 2 + 21] * M_SQRT2);
+    complex<float> V2(This->pVoltageFFT[1 * This->pFFTSamples * 2 + 20] * M_SQRT2, This->pVoltageFFT[1 * This->pFFTSamples * 2 + 21] * M_SQRT2);
+    complex<float> V3(This->pVoltageFFT[2 * This->pFFTSamples * 2 + 20] * M_SQRT2, This->pVoltageFFT[2 * This->pFFTSamples * 2 + 21] * M_SQRT2);
+    Aggreg->Unbalance = ((abs(V1 +  A * A * V2 + A * V3) / 3.0) / (abs(V1 + A * V2 + A * A * V3) / 3.0)) * 100.0;
+  }
   if(This->pMode == PHASE3N) {
     This->pCurrentFFTWorker[3]->Wait();
     for(uint i = 0; i < 50; i++) {
-      Aggreg->Current_Harmonics[3 * 50 + i] = BinPower(&This->pCurrentFFT[3 * This->pFFTSamples * 2 + (20 + i * 20)]);
+      Aggreg->Current_Harmonics[3 * 50 + i] = BinPower(&This->pCurrentFFT[3 * This->pFFTSamples * 2 + (20+ i * 20)]);
       if(i > 0) Aggreg->Current_THD[3] += Aggreg->Current_Harmonics[3 * 50 + i];
     }
     Aggreg->Current_THD[3] = (Aggreg->Current_THD[3] / Aggreg->Current_Harmonics[3 * 50]) * 100.0;
@@ -724,16 +732,19 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     This->NormalizeAggreg(This->pAggreg10M);
     if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg10M);
     if(This->pAggreg10M.Flag == false) {
-      for(uint i = 0; i < This->pVoltageChannels; i++) {
+      for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
+        if((This->pAggreg10M.Unbalance >= UnbalanceRanges[Range]) && (This->pAggreg10M.Unbalance < UnbalanceRanges[Range + 1])) This->pAggreg1H.StatsUnbalance[Range]++;
+      }
+      for(uint8_t i = 0; i < This->pVoltageChannels; i++) {
         float Variation = This->CalcChange(This->pAggreg10M.Voltage[i], This->pNominalVoltage);
-        for(uint Range = 0; Range < VoltageRangesLen; Range++) {
+        for(uint8_t Range = 0; Range < VoltageRangesLen; Range++) {
           if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) This->pAggreg1H.StatsVoltage[Range]++;
         }
-        for(uint Range = 0; Range < THDRangesLen; Range++) {
+        for(uint8_t Range = 0; Range < THDRangesLen; Range++) {
           if((This->pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (This->pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) This->pAggreg1H.StatsTHD[Range]++;
         }
         bool HarmonicsInRange = true;
-        for(uint n = 0; n < HarmonicsAllowedLen; n++) {
+        for(uint8_t n = 0; n < HarmonicsAllowedLen; n++) {
           float Variation = This->CalcChange(This->pAggreg10M.Voltage_Harmonics[i * 50 + n + 1], This->pNominalVoltage);
             if(Variation > HarmonicsAllowed[n]) {
               HarmonicsInRange = false;
@@ -1214,6 +1225,8 @@ void AnalyzerSoft::GetSeries(const json &params, Response &response) {
     string Serie = params["Series"][i];
     if((Serie == "FREQUENCY") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
       Query += "COALESCE(ARRAY_AGG(freq ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Frequency") + ", ";
+    } else if((Serie == "UNBALANCE") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
+      Query += "COALESCE(ARRAY_AGG(unbalance ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Unbalance") + ", ";
     } else if((Serie == "FLAG") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
       Query += "COALESCE(ARRAY_AGG(flag ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Flag") + ", ";
     } else if((Serie == "VOLTAGE") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
@@ -1294,6 +1307,8 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
       Result["Frequency"] = pAggreg200MS.Frequency;
     } else if(Serie == "FLAG") {
       Result["Flag"] = pAggreg200MS.Flag;
+    } else if(Serie == "UNBALANCE") {
+      Result["Unbalance"] = pAggreg200MS.Unbalance;
     } else if(Serie == "VOLTAGE") {
       Result["Voltage"] = json::array();
       for(uint8_t n = 0; n < pVoltageChannels; n++) Result["Voltage"].push_back(pAggreg200MS.Voltage[n]);
