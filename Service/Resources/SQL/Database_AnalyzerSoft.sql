@@ -11,6 +11,9 @@ CREATE UNLOGGED TABLE IF NOT EXISTS aggreg_200ms (
   thd_i          real[] NOT NULL,
   phi            real[] NOT NULL
 ) WITH (OIDS=FALSE);
+ALTER TABLE aggreg_200ms ADD COLUMN IF NOT EXISTS unbalance real;
+UPDATE aggreg_200ms SET unbalance = 0 WHERE unbalance IS NULL;
+ALTER TABLE aggreg_200ms ALTER COLUMN unbalance SET NOT NULL;
 
 CREATE TABLE IF NOT EXISTS aggreg_3s (
   sampletime     bigint NOT NULL PRIMARY KEY,

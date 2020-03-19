@@ -237,6 +237,8 @@
       Underlay_DrawBorder: function(ctx, area, dygraph) {
         ctx.strokeStyle = '#000';
         ctx.strokeRect(area.x, area.y, area.w, area.h);
+        ctx.rect(area.x + 1, area.y + 1, area.w - 2, area.h - 2);
+        ctx.clip();
       },
       Underlay_DrawPeriods: function(canvas, area, g, decoration) {
         if(decoration == null) return;
@@ -254,9 +256,6 @@
           if(Right > (area.w + area.x - 1)) Right = (area.w + area.x - 1);
           canvas.fillStyle = decoration.Periods[i].Color;
           canvas.fillRect(Left, area.y + 1, Right - Left, 12);
-
-//          canvas.fillStyle = chroma(decoration.Periods[i].Color).brighten(2.5);
-//          canvas.fillRect(Left, area.y + 14, Right - Left, area.h);
           if(((Right - Left) > 20) && (decoration.Periods[i].Name !== null)) {
             canvas.fillStyle = '#000000';
             canvas.font = "10px monospace";
@@ -280,7 +279,7 @@
         canvas.lineTo(area.x + area.w, 13.5);
         canvas.stroke();
         canvas.restore();
-        canvas.rect(area.x, area.y + 14, area.w, area.h);
+        canvas.rect(area.x + 1, area.y + 14, area.w - 2, area.h - 15);
         canvas.clip();
       },
       DrawHighlightPoint_HighlightBar: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {

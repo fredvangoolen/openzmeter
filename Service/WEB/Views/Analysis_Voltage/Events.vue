@@ -172,6 +172,9 @@
 </script>
 
 <style scoped>
+  .header-text {
+    font-size: 14px;
+  }
   @media screen and (min-width: 600px) {
     .table >>> th:nth-child(1) {
       width: 30px;

@@ -31,7 +31,7 @@
     props: { analyzer: Object, expanded: Boolean },
     data () {
       return { Grouped: false,
-               Transfer1: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS']), 
+               Transfer1: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS']),
                Transfer2: this.CreateSeriesTransfer(this, ['ACTIVE_POWER']) };
     },
     created: function() {
@@ -43,11 +43,11 @@
       this.Transfer2.Destroy();
     },
     watch: {
-      analyzer: function(analyzer) { 
-        this.$nextTick(() => {       
+      analyzer: function(analyzer) {
+        this.$nextTick(() => {
           this.Transfer1.UpdateNow(this.analyzer);
-          this.Transfer2.Update(this.analyzer, '15M', 'Day'); 
-        }); 
+          this.Transfer2.Update(this.analyzer, '15M', 'Day');
+        });
       }
     },
     computed: {
@@ -127,15 +127,14 @@
   }
   .navbar-brand {
     padding: 0px 6px;
+    margin-left: 48px;
   }
   @media(min-width: 1280px) {
     .navbar-toggle {
       display: none;
     }
-  }
-  @media(max-width: 1280px) {
     .navbar-brand {
-      margin-left: 48px;
+      margin-left: 0px;
     }
   }
   .navbar-brand > img {
