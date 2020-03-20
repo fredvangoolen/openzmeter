@@ -14,8 +14,8 @@
     </div>
     <portal to="fs-body" :disabled="!Expanded" class="panel-body">
       <spinner v-if="data==null"></spinner>
-      <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
-        <graph :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver"></graph>
+      <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false" ref="Container" style="text-align: center">
+        <graph :options="GraphOptions" :height="Expanded?DialogHeight:Height" :width="Expanded?DialogHeight:Height" :paused="MouseOver"></graph>
       </div>
     </portal>
     <dlg-fs v-if="Expanded" title="Lissajou" :height.sync="DialogHeight"></dlg-fs>
@@ -27,59 +27,47 @@
   export default {
     props: { analyzer: Object, data: Object, paused: Boolean },
     data() {
-      return { MouseOver: false, Phase: null, Expanded: false, DialogHeight: 300, CurrentMult: 1.0 };
+      return { MouseOver: false, Phase: null, Expanded: false, Height: 300, DialogHeight: 300, CurrentMult: 1.0 };
+    },
+    mounted: function() {
+      window.addEventListener('resize', this.Resize);
+      this.$nextTick(() => { window.dispatchEvent(new Event('resize')); });
     },
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : this.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
         var Opt = {file: [], axes: { y: {}, x: {} } };
-        Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
         Opt.interactionModel = Graph.InteractionModels.Fixed(this);
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.drawAxesAtZero = true;
         Opt.legend = 'follow';
+        Opt.selectMode = 'euclidian';
         Opt.showRangeSelector = false;
         Opt.strokeWidth = 0.5;
-//        Opt.series = { 'Voltage': { axis: 'y2' }, 'Current': { axis: 'y2' }, 'Power': { fillGraph: true }, 'Power SUM': { axis: 'y', strokeWidth: 2 } };
         Opt.labels = ['Voltage', 'Current'];
         Opt.colors = [this.analyzer.Color.Voltage, this.analyzer.Color.Current, this.analyzer.Color.Active_Power].concat(this.analyzer.VoltageChannels > 1 ? [this.analyzer.Color.Active_Power] : []);
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
-//        Opt.axes.x.ticker = (min, max) => { return Graph.Tickers.WaveTimeTicks(max, this.analyzer); };
-//        Opt.axes.x.valueFormatter = (x) => { return this.Round((x * 1000) / this.analyzer.SampleRate, 2, false) + ' ms'; };
-//        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, 'W', 2, true);  };
-//        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
-//        Opt.axes.y2.valueFormatter = (x, opts, seriesName) => { return this.Round((seriesName == 'Voltage') ? x : (x / this.CurrentMult), 2, false) + ((seriesName == 'Voltage') ? ' V' : ' A'); };
-//        Opt.axes.y2.axisLabelFormatter = (x) => { return '<div style="display: inline-block; text-align: right; width: 36px; color: ' + this.analyzer.Color['Voltage'] + ' ">' + this.Round(x, 2, false) + '</div><div style="display: inline-block; text-align: right; width: 36px; color: ' + this.analyzer.Color['Current'] + ' ">' + this.Round(x / this.CurrentMult, 2, false) + '</div>'; };
         if((this.Phase != null) && (this.data != null)) {
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [this.data.Voltage_Samples[this.Phase][i], this.data.Current_Samples[this.Phase][i]];
-//            Row.push(Row[1] * Row[2]);
-//            if(this.analyzer.VoltageChannels > 1) {
-//              var Sum = 0;
-//              for(var j = 0; j < this.analyzer.VoltageChannels; j++) Sum = Sum + this.data.Voltage_Samples[j][i] * this.data.Current_Samples[j][i];
-//              Row.push(Sum);
-//            }
             Opt.file.push(Row);
           }
-  //        var VoltageRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
-  //        var CurrentRange = this.MatrixColsRange(Opt.file, [false, false, true], { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
-  //        var MaxVoltage = Math.max(Math.abs(VoltageRange[0]), Math.abs(VoltageRange[1]));
-  //        var MaxCurrent = Math.max(Math.abs(CurrentRange[0]), Math.abs(CurrentRange[1]));
-  //        this.CurrentMult = MaxVoltage / MaxCurrent;
-//          for(var i = 0; i < Opt.file.length; i++) Opt.file[i][2] = Opt.file[i][2] * this.CurrentMult;
-  //        var PowerRange = this.MatrixColsRange(Opt.file, [false, false, false, true, true], { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
-  //        var MaxY1      = Math.max(Math.abs(PowerRange[0]), Math.abs(PowerRange[1]));
-          Opt.axes.y.valueRange = [-10, 10];
-          Opt.dateWindow = [-350, 350];
-  //        Opt.axes.y2.valueRange = [-MaxVoltage, MaxVoltage];
+          var VoltageRange = this.MatrixColsRange(Opt.file, [ true], { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
+          var CurrentRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, percent: 0.05, minWidth: 10 });
+          var MaxVoltage = Math.max(Math.abs(VoltageRange[0]), Math.abs(VoltageRange[1]));
+          var MaxCurrent = Math.max(Math.abs(CurrentRange[0]), Math.abs(CurrentRange[1]));
+          Opt.axes.y.valueRange = [-MaxCurrent, MaxCurrent];
+          Opt.dateWindow = [-MaxVoltage, MaxVoltage];
         }
         return Object.seal(Opt);
       },
     },
     methods: {
-
+      Resize: function() {
+        this.Height = Math.min(600, this.$refs.Container.clientWidth - 30);
+      },
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
         var Header = ['Sample']

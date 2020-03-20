@@ -419,6 +419,7 @@
     width: 100%;
     user-select: none;
     cursor: crosshair;
+    display: inline-block;
   }
   .chart >>> .dygraph-legend-title {
     color: #FFF;

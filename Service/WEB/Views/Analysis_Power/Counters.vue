@@ -99,16 +99,16 @@
       },
 
 
-//      FormatPhases: function(values) {
-//        var Return = '';
-//        if(values.length > 1) {
-//          for(var n = 0; n < values.length; n++) {
-//            var Format = oZm.Series[this.variable].FormatValue(values[n]);
-//            Return += Format.Value + Format.Units +'<br>';
-//          }
-//        }
-//        return Return;
-//      },
+      FormatPhases: function(values) {
+        var Return = '';
+        if(values.length > 1) {
+          for(var n = 0; n < values.length; n++) {
+            var Format = oZm.Series[this.variable].FormatValue(values[n]);
+            Return += Format.Value + Format.Units +'<br>';
+          }
+        }
+        return Return;
+      },
 //      SumPhases: function(values) {
 //        var Sum = 0;
 //        for(var n = 0; n < values.length; n++) Sum += values[n];

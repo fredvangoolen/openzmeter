@@ -161,7 +161,7 @@
     },
     mounted: function() {
       window.addEventListener('resize', this.Resize);
-      window.dispatchEvent(new Event('resize'));
+      this.$nextTick(() => { window.dispatchEvent(new Event('resize')); });
     },
     beforeDestroy: function() {
       window.removeEventListener('resize', this.Resize);
