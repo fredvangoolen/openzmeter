@@ -453,7 +453,7 @@ bool AnalyzerSoft::FindRunningEvent(const uint32_t mask) {
 }
 void AnalyzerSoft::SaveAggreg(Params_t &params) {
   SetOnline();
-  if(pSequence < 50) return;
+  if((pSequence < 50) || (params.AggregSamples == 0)) return;
   Database DB(Serial);
   if(params.Type == AGGREG_200MS)
     DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance) VALUES(" +
@@ -716,6 +716,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     This->InitAggreg(This->pAggreg3S, AGGREG_3S);
   }
   This->AccumulateAggreg(This->pAggreg3S, This->pAggreg200MS);
+
   if(((This->pAggreg200MS.Timestamp / 60000) > (This->pPrevTimestamp / 60000)) && (This->pPrevTimestamp != 0)) {
     LOGFile::Debug("Storing 1M aggregation for analyzer '%s'\n", This->Serial.c_str());
     This->pAggreg1M.Timestamp = This->pAggreg1M.Timestamp / 60000 * 60000 + 59999;
@@ -723,67 +724,69 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1M);
     This->SaveAggreg(This->pAggreg1M);
     if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+
+    if((This->pAggreg200MS.Timestamp / 600000) > (This->pPrevTimestamp / 600000)) {
+      LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", This->Serial.c_str());
+      This->pAggreg10M.Timestamp = This->pAggreg10M.Timestamp / 600000 * 600000 + 599999;
+      This->NormalizeAggreg(This->pAggreg10M);
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg10M);
+      if(This->pAggreg10M.Flag == false) {
+        for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
+          if((This->pAggreg10M.Unbalance >= UnbalanceRanges[Range]) && (This->pAggreg10M.Unbalance < UnbalanceRanges[Range + 1])) This->pAggreg1H.StatsUnbalance[Range]++;
+        }
+        for(uint8_t i = 0; i < This->pVoltageChannels; i++) {
+          float Variation = This->CalcChange(This->pAggreg10M.Voltage[i], This->pNominalVoltage);
+          for(uint8_t Range = 0; Range < VoltageRangesLen; Range++) {
+            if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) This->pAggreg1H.StatsVoltage[Range]++;
+          }
+          for(uint8_t Range = 0; Range < THDRangesLen; Range++) {
+            if((This->pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (This->pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) This->pAggreg1H.StatsTHD[Range]++;
+          }
+          bool HarmonicsInRange = true;
+          for(uint8_t n = 0; n < HarmonicsAllowedLen; n++) {
+            float Variation = This->CalcChange(This->pAggreg10M.Voltage_Harmonics[i * 50 + n + 1], This->pNominalVoltage);
+              if(Variation > HarmonicsAllowed[n]) {
+                HarmonicsInRange = false;
+                break;
+              }
+          }
+          if(HarmonicsInRange == true) {
+            This->pAggreg1H.StatsHarmonics[0]++;
+          } else {
+            This->pAggreg1H.StatsHarmonics[1]++;
+          }
+        }
+      }
+      This->SaveAggreg(This->pAggreg10M);
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+      This->InitAggreg(This->pAggreg10M, AGGREG_10M);
+    }
+    This->AccumulateAggreg(This->pAggreg10M, This->pAggreg1M);
+
+    if((This->pAggreg200MS.Timestamp / 900000) > (This->pPrevTimestamp / 900000)) {
+      LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", This->Serial.c_str());
+      This->pAggreg15M.Timestamp = This->pAggreg15M.Timestamp / 900000 * 900000 + 899999;
+      This->NormalizeAggreg(This->pAggreg15M);
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg15M);
+      This->SaveAggreg(This->pAggreg15M);
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+      if((This->pAggreg200MS.Timestamp / 3600000) > (This->pPrevTimestamp / 3600000)) {
+        LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", This->Serial.c_str());
+        This->pAggreg1H.Timestamp = This->pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
+        This->NormalizeAggreg(This->pAggreg1H);
+        if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1H);
+        This->SaveAggreg(This->pAggreg1H);
+        if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+        This->InitAggreg(This->pAggreg1H, AGGREG_1H);
+      }
+      This->AccumulateAggreg(This->pAggreg1H, This->pAggreg15M);
+      This->InitAggreg(This->pAggreg15M, AGGREG_15M);
+    }
+    This->AccumulateAggreg(This->pAggreg15M, This->pAggreg1M);
     This->InitAggreg(This->pAggreg1M, AGGREG_1M);
   }
   This->AccumulateAggreg(This->pAggreg1M, This->pAggreg200MS);
-  if(((This->pAggreg200MS.Timestamp / 600000) > (This->pPrevTimestamp / 600000)) && (This->pPrevTimestamp != 0)) {
-    LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", This->Serial.c_str());
-    This->pAggreg10M.Timestamp = This->pAggreg10M.Timestamp / 600000 * 600000 + 599999;
-    This->NormalizeAggreg(This->pAggreg10M);
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg10M);
-    if(This->pAggreg10M.Flag == false) {
-      for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
-        if((This->pAggreg10M.Unbalance >= UnbalanceRanges[Range]) && (This->pAggreg10M.Unbalance < UnbalanceRanges[Range + 1])) This->pAggreg1H.StatsUnbalance[Range]++;
-      }
-      for(uint8_t i = 0; i < This->pVoltageChannels; i++) {
-        float Variation = This->CalcChange(This->pAggreg10M.Voltage[i], This->pNominalVoltage);
-        for(uint8_t Range = 0; Range < VoltageRangesLen; Range++) {
-          if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) This->pAggreg1H.StatsVoltage[Range]++;
-        }
-        for(uint8_t Range = 0; Range < THDRangesLen; Range++) {
-          if((This->pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (This->pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) This->pAggreg1H.StatsTHD[Range]++;
-        }
-        bool HarmonicsInRange = true;
-        for(uint8_t n = 0; n < HarmonicsAllowedLen; n++) {
-          float Variation = This->CalcChange(This->pAggreg10M.Voltage_Harmonics[i * 50 + n + 1], This->pNominalVoltage);
-            if(Variation > HarmonicsAllowed[n]) {
-              HarmonicsInRange = false;
-              break;
-            }
-        }
-        if(HarmonicsInRange == true) {
-          This->pAggreg1H.StatsHarmonics[0]++;
-        } else {
-          This->pAggreg1H.StatsHarmonics[1]++;
-        }
-      }
-    }
-    This->SaveAggreg(This->pAggreg10M);
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-    This->InitAggreg(This->pAggreg10M, AGGREG_10M);
-  }
-  This->AccumulateAggreg(This->pAggreg10M, This->pAggreg200MS);
-  if(((This->pAggreg200MS.Timestamp / 900000) > (This->pPrevTimestamp / 900000)) && (This->pPrevTimestamp != 0)) {
-    LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", This->Serial.c_str());
-    This->pAggreg15M.Timestamp = This->pAggreg15M.Timestamp / 900000 * 900000 + 899999;
-    This->NormalizeAggreg(This->pAggreg15M);
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg15M);
-    This->SaveAggreg(This->pAggreg15M);
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-    This->InitAggreg(This->pAggreg15M, AGGREG_15M);
-  }
-  This->AccumulateAggreg(This->pAggreg15M, This->pAggreg200MS);
-  if(((This->pAggreg200MS.Timestamp / 3600000) > (This->pPrevTimestamp / 3600000)) && (This->pPrevTimestamp != 0)) {
-    LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", This->Serial.c_str());
-    This->pAggreg1H.Timestamp = This->pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
-    This->NormalizeAggreg(This->pAggreg1H);
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1H);
-    This->SaveAggreg(This->pAggreg1H);
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-    This->InitAggreg(This->pAggreg1H, AGGREG_1H);
-  }
   if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg200MS);
-  This->AccumulateAggreg(This->pAggreg1H, This->pAggreg200MS);
   This->pPrevTimestamp = This->pAggreg200MS.Timestamp;
   if(This->pSave200MS) {
     LOGFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", This->Serial.c_str());
