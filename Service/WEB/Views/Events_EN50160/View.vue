@@ -30,7 +30,7 @@
         <thd :data="Weeks" :index="Index" :analyzer="analyzer" :ranges="THDs"></thd>
       </div>
       <div :class="[(analyzer.VoltageChannels==1) ? 'col-lg-4' : 'col-lg-6', 'col-md-12']">
-        <unbalance :data="Weeks" :index="Index" :analyzer="analyzer" :ranges="Frequencies"></unbalance>
+        <unbalance :data="Weeks" :index="Index" :analyzer="analyzer" :ranges="Unbalances"></unbalance>
       </div>
     </div>
   </div>
@@ -54,7 +54,8 @@
       return { Year: null, Data: null, Events: null, Index: 0,
                Frequencies: [ -Math.INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, Math.INFINITY ],
                Voltages: [-Math.INFINITY, -20, -15, -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, Math.INFINITY],
-               THDs: [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, Math.INFINITY]
+               THDs: [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 12, 13, 14, 15, Math.INFINITY],
+               Unbalances: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0, 2.25, 2.50, 2.75, 3.0, 3.25, 3.50, 3.75, 4.0, 4.5, 5.0, Math.INFINITY]
       };
     },
     watch: {
@@ -63,7 +64,7 @@
         this.Data = null;
         var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
         var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        var Promises = [ this.$http.post('getSeries', { From: From, To: To, Aggreg: '1H', Series: ['FREQUENCY_STATS', 'VOLTAGE_STATS', 'VOLTAGE_THD_STATS', 'VOLTAGE_HARMONICS_STATS'], Analyzer: this.analyzer.Analyzer } ),
+        var Promises = [ this.$http.post('getSeries', { From: From, To: To, Aggreg: '1H', Series: ['FREQUENCY_STATS', 'VOLTAGE_STATS', 'VOLTAGE_THD_STATS', 'VOLTAGE_HARMONICS_STATS', 'UNBALANCE_STATS'], Analyzer: this.analyzer.Analyzer } ),
                          this.$http.post('getEvents', { From: From, To: To, Analyzer: this.analyzer.Analyzer } )];
         Promise.all(Promises).then(
           (result) => {
@@ -130,6 +131,18 @@
               Weeks[Week].THDIN = Weeks[Week].THDIN + this.Data.Voltage_THD_Stats[i][j];
             }
           }
+          for(var j = 0; j < this.Unbalances.length - 1; j++) {
+            Weeks[Week].Unbalance[j] = Weeks[Week].Unbalance[j] + this.Data.Unbalance_Stats[i][j];
+            Weeks[0].Unbalance[j] = Weeks[0].Unbalance[j] +  this.Data.Unbalance_Stats[i][j];
+            Weeks[0].UnbalanceSamples = Weeks[0].UnbalanceSamples + this.Data.Unbalance_Stats[i][j];
+            Weeks[Week].UnbalanceSamples = Weeks[Week].UnbalanceSamples + this.Data.Unbalance_Stats[i][j];
+            if(j < 21) {
+              Weeks[0].UnbalanceIN = Weeks[0].UnbalanceIN + this.Data.Unbalance_Stats[i][j];
+              Weeks[Week].UnbalanceIN = Weeks[Week].UnbalanceIN + this.Data.Unbalance_Stats[i][j];
+            }
+          }
+
+
           Weeks[Week].HarmonicsSamples = Weeks[Week].HarmonicsSamples + this.Data.Voltage_Harmonics_Stats[i][0] + this.Data.Voltage_Harmonics_Stats[i][1];
           Weeks[0].HarmonicsSamples = Weeks[0].HarmonicsSamples + this.Data.Voltage_Harmonics_Stats[i][0] + this.Data.Voltage_Harmonics_Stats[i][1];
           Weeks[0].HarmonicsIN = Weeks[0].HarmonicsIN + this.Data.Voltage_Harmonics_Stats[i][0];
@@ -162,11 +175,14 @@
         Week.Frequency        = Array(this.Frequencies.length - 1).fill(0);
         Week.FrequencySamples = 0;
         Week.FrequencyIN      = 0;
-        Week.Voltage          = Array(this.Voltages.length - 1).fill(0);;
+        Week.Voltage          = Array(this.Voltages.length - 1).fill(0);
         Week.VoltageSamples   = 0;
         Week.VoltageIN        = 0;
-        Week.THD              = Array(this.THDs.length - 1).fill(0);;
+        Week.THD              = Array(this.THDs.length - 1).fill(0);
         Week.THDSamples       = 0;
+        Week.Unbalance        = Array(this.Unbalances.length - 1).fill(0);
+        Week.UnbalanceSamples = 0;
+        Week.UnbalanceIN      = 0;
         Week.THDIN            = 0;
         Week.HarmonicsSamples = 0;
         Week.HarmonicsIN      = 0;

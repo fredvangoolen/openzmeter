@@ -1279,6 +1279,8 @@ void AnalyzerSoft::GetSeries(const json &params, Response &response) {
       Query += "COALESCE(ARRAY_AGG(stat_thd ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_THD_Stats") + ", ";
     } else if((Serie == "VOLTAGE_HARMONICS_STATS") && (Aggreg ==  "1H")) {
       Query += "COALESCE(ARRAY_AGG(stat_harmonics ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_Harmonics_Stats") + ", ";
+    } else if((Serie == "UNBALANCE_STATS") && (Aggreg == "1H")) {
+      Query += "COALESCE(ARRAY_AGG(stat_unbalance ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Unbalance_Stats") + ", ";
     } else {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
     }

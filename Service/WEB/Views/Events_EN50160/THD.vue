@@ -2,7 +2,9 @@
   <div class="panel panel-reactive-power">
     <div class="panel-heading">
       <div class="float-left">Harmonic distorsion</div>
-      <div class="float-right" v-if="Warning"><img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded"></div>
+      <div class="float-right" v-if="(((data[index].THDIN / data[index].THDSamples) * 100.0) < 100)">
+        <img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
+      </div>
       <div class="clearfix"></div>
     </div>
     <div class="panel-body">
@@ -10,10 +12,10 @@
     </div>
     <div class="panel-footer">
       <div class="text-center">100% of the year under 8%</div>
-        <progress-bar :value="THD" :text="THDText"></progress-bar>
-        <div style="float: left; font-size: 10px">90%</div>
+        <progress-bar :value="(((data[index].THDIN / data[index].THDSamples) * 100.0) - 80) * 5" :text="Round(((data[index].THDIN / data[index].THDSamples) * 100.0), 2) + '% of time in range'"></progress-bar>
+        <div style="float: left; font-size: 10px">80%</div>
         <div style="float:right; font-size: 10px">100%</div>
-        <div class="clearfix text-center">{{ THDText }}</div>
+        <div class="clearfix text-center">{{ Round(((data[index].THDIN / data[index].THDSamples) * 100.0), 2) + '% of time in range' }}</div>
     </div>
   </div>
 </template>
@@ -23,7 +25,7 @@
   export default {
     props: { data: Array, index: Number, analyzer: Object, ranges: Array },
     data: function() {
-      return {THD: 0, THDText: '', ShowSpinner: true, Warning: true };
+      return { };
     },
     computed: {
       GraphOptions: function() {
@@ -43,7 +45,7 @@
         Opt.legend = 'follow';
         Opt.dateWindow = [-0.5, this.ranges.length - 1.5];
         Opt.axes.y.pixelsPerLabel = 24;
-        Opt.axes.y.axisLabelWidth = 24;
+        Opt.axes.y.axisLabelWidth = 26;
         Opt.axes.x.pixelsPerLabel = 30;
         Opt.axes.x.axisLabelWidth = 30;
         Opt.axes.x.valueFormatter = (x) => {
@@ -68,17 +70,7 @@
           Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x * 100 / this.data[this.index].THDSamples, 0) + '%'; };
         }
         return Object.seal(Opt);
-
-        var In  = (data.THDIN / data.THDSamples) * 100.0;
-        var ToShow = [];
-        var Analyzer = this.$root.SelectedAnalyzer;
-
-        this.Warning = (In < 100);
-        this.THD = (In - 90) * 10;
-        this.THDText = oZm.Round2Plain(In) + '% of time in range';
-
-
-      },
+      }
     }
   }
 </script>
