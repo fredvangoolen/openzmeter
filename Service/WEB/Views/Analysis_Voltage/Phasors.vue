@@ -247,7 +247,7 @@
             ctx.textBaseline = "middle";
             ctx.font = "10px sans";
             ctx.fillStyle = "#333";
-            ctx.fillText(this.Round(e.dygraph.file_[i][1] - e.dygraph.file_[i - 1][1], 2, flase) + "°", 3, 0);
+            ctx.fillText(this.Round(e.dygraph.file_[i][1] - e.dygraph.file_[i - 1][1], 2, false) + "°", 3, 0);
             ctx.font = "bold 12px sans";
             ctx.textAlign = "right";
             ctx.fillText(Phases[(i - 1) / 2], -3, 0);

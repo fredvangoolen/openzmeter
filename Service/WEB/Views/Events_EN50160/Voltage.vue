@@ -12,10 +12,10 @@
     </div>
     <div class="panel-footer">
       <div class="text-center">95% of the year between {{ Round(analyzer.NominalVoltage, 2) }}V±10%</div>
-        <progress-bar :value="Voltage" :text="VoltageText"></progress-bar>
-        <div style="float: left; font-size: 10px">90%</div>
+        <progress-bar :value="(((data[index].VoltageIN / data[index].VoltageSamples) * 100.0) - 80) * 5" :text="Round(((data[index].VoltageIN / data[index].VoltageSamples) * 100.0), 2) + '% of time in range'"></progress-bar>
+        <div style="float: left; font-size: 10px">80%</div>
         <div style="float:right; font-size: 10px">100%</div>
-        <div class="clearfix text-center">{{ VoltageText }}</div>
+        <div class="clearfix text-center">{{ Round(((data[index].VoltageIN / data[index].VoltageSamples) * 100.0), 2) + '% of time in range' }}</div>
     </div>
   </div>
 </template>
@@ -45,7 +45,7 @@
         Opt.legend = 'follow';
         Opt.dateWindow = [-0.5, this.ranges.length - 1.5];
         Opt.axes.y.pixelsPerLabel = 24;
-        Opt.axes.y.axisLabelWidth = 24;
+        Opt.axes.y.axisLabelWidth = 26;
         Opt.axes.x.pixelsPerLabel = 30;
         Opt.axes.x.axisLabelWidth = 30;
         Opt.axes.x.valueFormatter = (x) => {

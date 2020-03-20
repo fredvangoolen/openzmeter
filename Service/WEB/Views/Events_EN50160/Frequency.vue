@@ -12,8 +12,8 @@
     </div>
     <div class="panel-footer">
       <div class="text-center">99.5% of the year between {{ Round(analyzer.NominalFrequency, 2) }}Hz±1% with no events allowed outside {{ Round(analyzer.NominalFrequency * 0.94, 2) }} to {{ Round(analyzer.NominalFrequency * 1.04, 2) }}Hz</div>
-        <progress-bar :value="(((data[index].FrequencyIN / data[index].FrequencySamples) * 100.0) - 90) * 10" :text="Round(((data[index].FrequencyIN / data[index].FrequencySamples) * 100.0), 2) + '% of time in range'"></progress-bar>
-        <div style="float: left; font-size: 10px">90%</div>
+        <progress-bar :value="(((data[index].FrequencyIN / data[index].FrequencySamples) * 100.0) - 95) * 20" :text="Round(((data[index].FrequencyIN / data[index].FrequencySamples) * 100.0), 2) + '% of time in range'"></progress-bar>
+        <div style="float: left; font-size: 10px">95%</div>
         <div style="float:right; font-size: 10px">100%</div>
         <div class="clearfix text-center">{{ Round(((data[index].FrequencyIN / data[index].FrequencySamples) * 100.0), 2) + '% of time in range' }}</div>
     </div>
@@ -45,7 +45,7 @@
         Opt.legend = 'follow';
         Opt.dateWindow = [-0.5, this.ranges.length - 1.5];
         Opt.axes.y.pixelsPerLabel = 24;
-        Opt.axes.y.axisLabelWidth = 24;
+        Opt.axes.y.axisLabelWidth = 26;
         Opt.axes.x.pixelsPerLabel = 30;
         Opt.axes.x.axisLabelWidth = 30;
         Opt.axes.x.valueFormatter = (x) => {
