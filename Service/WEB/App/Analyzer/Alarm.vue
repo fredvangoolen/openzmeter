@@ -43,7 +43,7 @@
       </div>
       <div class="col-xs-12">
         <div style="width:100%; height: 200px; overflow-y: auto; margin-top: 5px">
-          <vuetable ref="table" :fields="columns" :api-mode="false" :data="Values" class="table small table-striped">
+          <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Values" class="table small table-striped">
             <template slot="actions" slot-scope="props">
               <div class="btn-group">
                 <button type="button" class="btn btn-primary btn-xs" v-on:click="Insert(props.rowData)">Insert</button>
@@ -63,7 +63,7 @@
     props: { analyzer: Object, index: Number },
     data: function() {
       return { ShowSpinner: false, Alarm: null, Data: null, View: 'Main',
-        columns: [
+        Columns: [
           { name: 'Name', title: 'Variable' },
           { name: 'Value', title: 'Value' },
           { name: 'Units', title: 'Units' },

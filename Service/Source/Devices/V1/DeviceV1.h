@@ -51,6 +51,7 @@ class DeviceV1 final : public Device {
     static bool                  pRegistered;
   private :
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
+    uint16_t                     pHWVersion;               //Version de hardware
     pthread_t                    pThread;                  //Descriptor del hilo de captura
     volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
     int16_t                     *pBuffer;                  //Read buffer
@@ -62,7 +63,6 @@ class DeviceV1 final : public Device {
     float                        pVoltageOffset;           //Voltage offset
     float                        pCurrentOffset;           //Current offset
     bool                         pCurrentInvert;           //Invert current channel
-    float                        pVoltageMult;             //Voltage gain depens on device version (mounted voltage divisor)
     struct libusb_device_handle *pDeviceHandle;            //USB handle
     struct libusb_device        *pNewDevice;               //USB device
     libusb_context              *pContext;                 //USB context

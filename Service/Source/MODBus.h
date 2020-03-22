@@ -1,7 +1,30 @@
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
+#pragma once
+#include <pthread.h>
+// ---------------------------------------------------------------------------------------------------------------------
+class MODBus {
+  public :
+    MODBus();
+    ~MODBus();
+};
 //#ifndef ModbusTCPSlave_h
 //#define ModbusTCPSlave_h
 //
-//#define MB_PORT 1502  
+//#define MB_PORT 1502
 //
 ////#define MB_ETHERNET
 ////#define MB_CC3000
@@ -84,20 +107,20 @@ private :
 //    void Run();
 //    unsigned int  MBInputRegister[maxInputRegister];
 //    unsigned int  MBHoldingRegister[maxHoldingRegister];
-//private: 
+//private:
 //    byte ByteArray[260];
 //    bool ledPinStatus = LOW;
-//    
-//    
+//
+//
 //#ifdef MB_ETHERNET
 //    EthernetServer MBServer;
 //#endif
-//    
+//
 //#ifdef MB_CC3000
 //    Adafruit_CC3000 MBClient;
 //    Adafruit_CC3000_Server MBServer;
 //#endif
-//    
+//
 //#ifdef MB_ESP8266
 //    WiFiServer MBServer;
 //#endif
