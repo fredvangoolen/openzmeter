@@ -230,7 +230,8 @@ class AnalyzerSoft final : public Analyzer {
     void AccumulateAggreg(Params_t &src, const Params_t &dst);
     void NormalizeAggreg(Params_t &src);
     void SaveAggreg(Params_t &params);
-    void PublishAggreg(Params_t &params);
+    void PublishAggreg(const Params_t &params);
+    void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
     void InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
     bool FindRunningEvent(const uint32_t mask);
     void SaveEvent(Event_t &evt);
