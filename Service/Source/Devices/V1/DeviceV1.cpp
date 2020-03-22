@@ -84,7 +84,7 @@ DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial
   pThread        = 0;
   pBufferHead    = 0;
   pBufferTail    = 0;
-  pVoltageMult   = (version == 0x0100) ? 0.0106834716796 : 0.0142446289062;
+  pHWVersion     = version;
   pVoltageGain   = 0.0;
   pCurrentGain   = 0.0;
   pVoltageOffset = 0.0;
@@ -253,11 +253,14 @@ void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
   if((transfer->endpoint == DEVICEV1_ENDPOINT_IN) && (transfer->status == LIBUSB_TRANSFER_COMPLETED)) {
     int16_t *Samples = (int16_t*)transfer->buffer;
     if(pthread_mutex_trylock(&This->pConfigLock) == 0) {
-      for(int Pos = 0; Pos < (transfer->actual_length / 2); Pos = Pos +2) {
+      for(uint16_t Pos = 0; Pos < (transfer->actual_length / 2); Pos = Pos +2) {
         if(Samples[Pos] != -32768) This->BufferAppend(&Samples[Pos]);
       }
       pthread_mutex_unlock(&This->pConfigLock);
     }
+  } else {
+    printf("transfer endpoint: %d - return status: %d\n", transfer->endpoint, transfer->status);
+
   }
   if(This->pTerminate == false) {
     libusb_submit_transfer(transfer);
@@ -328,11 +331,12 @@ void DeviceV1::BufferAppend(int16_t *sample) {
     LOGFile::Error("Capture buffer overflow in device '%s'\n", Serial.c_str());
   }
   if(pAnalyzer->IsWorking() == true) return;
-  bool AnalyzerRun = false;
+  bool AnalyzerRun  = false;
+  float VoltageMult = (pHWVersion == 0x0100) ? 0.0106834716796 : 0.0142446289062;
   while((pBufferTail != pBufferHead) && (AnalyzerRun == false)) {
     int16_t *Ptr = &pBuffer[pBufferTail * 2];
     pBufferTail = (pBufferTail + 1) % DEVICEV1_BUFFERSIZE;
-    float Voltage = ((pVoltageDelay[pVoltageDelayPos] * pVoltageMult) * (1.0 + (pVoltageGain / 100.0))) + pVoltageOffset;
+    float Voltage = ((pVoltageDelay[pVoltageDelayPos] * VoltageMult) * (1.0 + (pVoltageGain / 100.0))) + pVoltageOffset;
     float Current = ((Ptr[1] * 0.0015625000000) * (1.0 + (pCurrentGain / 100.0)) * (pCurrentInvert ? -1.0 : 1.0)) + pCurrentOffset;
     pVoltageDelay[pVoltageDelayPos] = Ptr[0];
     pVoltageDelayPos = (pVoltageDelayPos + 1) % DEVICEV1_VOLTAGEDELAY;

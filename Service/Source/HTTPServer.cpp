@@ -149,6 +149,7 @@ HTTPServer::HTTPServer() {
   pServer->Get(".*", HandleGet);
   pServer->Post(".*", HandlePost);
   pServer->set_keep_alive_max_count(100);
+  pServer->set_read_timeout(5, 0);
   pServer->new_task_queue = [] { return new HTTPTaskQueue(); };
   Config = json::object();
   Config["Port"] = pPort;
@@ -158,9 +159,11 @@ HTTPServer::HTTPServer() {
   pthread_setname_np(pThread, "HTTPServer");
 }
 HTTPServer::~HTTPServer() {
+  LOGFile::Debug("Stopping HTTPServer\n");
   pServer->stop();
   if(pThread != 0) pthread_join(pThread, NULL);
   delete pServer;
+  LOGFile::Debug("HTTPServer stopped\n");
 }
 void *HTTPServer::Listen_Thread(void *params) {
   HTTPServer *This = (HTTPServer*)params;

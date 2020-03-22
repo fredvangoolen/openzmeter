@@ -58,6 +58,7 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("delPermission",       DelPermissionCallback);
 }
 DeviceManager::~DeviceManager() {
+  LOGFile::Debug("Stopping DeviceManager\n");
   HTTPServer::UnregisterCallback("getDevices");
   HTTPServer::UnregisterCallback("getDevice");
   HTTPServer::UnregisterCallback("setDevice");
@@ -73,11 +74,6 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("getEvent");
   HTTPServer::UnregisterCallback("setEvent");
   HTTPServer::UnregisterCallback("delEvent");
-//  HTTPServer::UnregisterCallback("getRates");
-//  HTTPServer::UnregisterCallback("getRate");
-//  HTTPServer::UnregisterCallback("setRate");
-//  HTTPServer::UnregisterCallback("delRate");
-//  HTTPServer::UnregisterCallback("addRate");
   HTTPServer::UnregisterCallback("getPrices");
   HTTPServer::UnregisterCallback("testAlarm");
   HTTPServer::UnregisterCallback("getAlarms");
@@ -93,6 +89,7 @@ DeviceManager::~DeviceManager() {
     delete Dev;
   }
   pDevicesLock.Unlock();
+  LOGFile::Debug("DeviceManager stopped\n");
 }
 void DeviceManager::AddDriver(vector<Device*> (*func)()) {
   pDrivers.push_back(func);

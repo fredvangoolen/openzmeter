@@ -119,6 +119,7 @@ SysSupport::SysSupport() {
   #endif
 }
 SysSupport::~SysSupport() {
+  LOGFile::Debug("Stopping SysSupport\n");
   HTTPServer::UnregisterCallback("getVersion");
   HTTPServer::UnregisterCallback("getUsers");
   HTTPServer::UnregisterCallback("getUser");
@@ -145,6 +146,7 @@ SysSupport::~SysSupport() {
   pStatsThread = 0;
   pBTThread = 0;
   #endif
+  LOGFile::Debug("SysSupport stopped\n");
 }
 json SysSupport::GetSystemStatusJSON() {
   json Result = json::object();

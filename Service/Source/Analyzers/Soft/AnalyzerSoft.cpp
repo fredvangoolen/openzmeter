@@ -57,7 +57,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   Database DB(id);
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
   DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Tools::GetTime() - 86400000));   //Delete 1 day old
-  DB.ExecSentenceNoResult("DELETE FROM aggreg_200ms WHERE sampletime < " + DB.Bind(Tools::GetTime() - 3600000));       //Delete 1 hour old
+  DB.ExecSentenceNoResult("DELETE FROM aggreg_200ms WHERE sampletime < " + DB.Bind(Tools::GetTime() - 3600000));     //Delete 1 hour old
+  LOGFile::Debug("AnalyzerSoft database tables created\n");
   pDelayVoltage     = NULL;
   pDelayCurrent     = NULL;
   pVoltageSamples   = NULL;
@@ -69,6 +70,9 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pFreqCycles       = NULL;
   pPrevTimestamp    = 0;
   pSyncThread       = 0;
+  pMQTTThread       = 0;
+  pMQTTClient       = NULL;
+  pMQTTMutex        = PTHREAD_MUTEX_INITIALIZER;
   InitAggreg(pAggreg200MS, AGGREG_200MS);
   InitAggreg(pAggreg3S, AGGREG_3S);
   InitAggreg(pAggreg1M, AGGREG_1M);
@@ -83,6 +87,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
 AnalyzerSoft::~AnalyzerSoft() {
   pSyncTerminate = true;
   if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
+  pMQTTTerminate = true;
+  if(pMQTTThread != 0) pthread_join(pMQTTThread, NULL);
   if(pAnalyzerWorker != NULL) delete pAnalyzerWorker;
   if(pEventsWorker != NULL) delete pEventsWorker;
   if(pAlarmsWorker != NULL) delete pAlarmsWorker;
@@ -158,10 +164,22 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   ConfigOUT["MinCurrent"] = 0.1;
   ConfigOUT["TimeZone"] = "UTC";
   ConfigOUT["Tags"] = json::array();
-  ConfigOUT["RemoteEnabled"] = false;
-  ConfigOUT["RemoteServer"] = "";
-  ConfigOUT["RemoteUser"] = "";
-  ConfigOUT["RemotePass"] = "";
+  ConfigOUT["SyncEnabled"] = false;
+  ConfigOUT["Sync"] = json::object();
+  ConfigOUT["Sync"]["Server"] = "";
+  ConfigOUT["Sync"]["User"] = "";
+  ConfigOUT["Sync"]["Pass"] = "";
+  ConfigOUT["MQTTEnabled"] = false;
+  ConfigOUT["MQTT"] = json::object();
+  ConfigOUT["MQTT"]["Server"] = "";
+  ConfigOUT["MQTT"]["User"] = "";
+  ConfigOUT["MQTT"]["Pass"] = "";
+  ConfigOUT["MQTT"]["Export3S"] = false;
+  ConfigOUT["MQTT"]["Export1M"] = false;
+  ConfigOUT["MQTT"]["Export10M"] = false;
+  ConfigOUT["MQTT"]["Export15M"] = false;
+  ConfigOUT["MQTT"]["Export1H"] = false;
+  ConfigOUT["MQTT"]["ExportAlarms"] = false;
   ConfigOUT["Save200MS"] = false;
   ConfigOUT["EventsEnabled"] = false;
   ConfigOUT["AlarmsEnabled"] = false;
@@ -187,10 +205,24 @@ json AnalyzerSoft::CheckConfig(const json &config) {
       ConfigOUT["Tags"].push_back(Row);
     }
   }
-  if(config.contains("RemoteEnabled") && config["RemoteEnabled"].is_boolean()) ConfigOUT["RemoteEnabled"] = config["RemoteEnabled"];
-  if(config.contains("RemoteServer") && config["RemoteServer"].is_string()) ConfigOUT["RemoteServer"] = config["RemoteServer"];
-  if(config.contains("RemoteUser") && config["RemoteUser"].is_string()) ConfigOUT["RemoteUser"] = config["RemoteUser"];
-  if(config.contains("RemotePass") && config["RemotePass"].is_string()) ConfigOUT["RemotePass"] = config["RemotePass"];
+  if(config.contains("SyncEnabled") && config["SyncEnabled"].is_boolean()) ConfigOUT["SyncEnabled"] = config["SyncEnabled"];
+  if(config.contains("Sync") && config["Sync"].is_object()) {
+    if(config["Sync"].contains("Server") && config["Sync"]["Server"].is_string()) ConfigOUT["Sync"]["Server"] = config["Sync"]["Server"];
+    if(config["Sync"].contains("User") && config["Sync"]["User"].is_string()) ConfigOUT["Sync"]["User"] = config["Sync"]["User"];
+    if(config["Sync"].contains("Pass") && config["Sync"]["Pass"].is_string()) ConfigOUT["Sync"]["Pass"] = config["Sync"]["Pass"];
+  }
+  if(config.contains("MQTTEnabled") && config["MQTTEnabled"].is_boolean()) ConfigOUT["MQTTEnabled"] = config["MQTTEnabled"];
+  if(config.contains("MQTT") && config["MQTT"].is_object()) {
+    if(config["MQTT"].contains("Server") && config["MQTT"]["Server"].is_string()) ConfigOUT["MQTT"]["Server"] = config["MQTT"]["Server"];
+    if(config["MQTT"].contains("User") && config["MQTT"]["User"].is_string()) ConfigOUT["MQTT"]["User"] = config["MQTT"]["User"];
+    if(config["MQTT"].contains("Pass") && config["MQTT"]["Pass"].is_string()) ConfigOUT["MQTT"]["Pass"] = config["MQTT"]["Pass"];
+    if(config["MQTT"].contains("Export3S") && config["MQTT"]["Export3S"].is_boolean()) ConfigOUT["MQTT"]["Export3S"] = config["MQTT"]["Export3S"];
+    if(config["MQTT"].contains("Export1M") && config["MQTT"]["Export1M"].is_boolean()) ConfigOUT["MQTT"]["Export1M"] = config["MQTT"]["Export1M"];
+    if(config["MQTT"].contains("Export10M") && config["MQTT"]["Export10M"].is_boolean()) ConfigOUT["MQTT"]["Export10M"] = config["MQTT"]["Export10M"];
+    if(config["MQTT"].contains("Export15M") && config["MQTT"]["Export15M"].is_boolean()) ConfigOUT["MQTT"]["Export15M"] = config["MQTT"]["Export15M"];
+    if(config["MQTT"].contains("Export1H") && config["MQTT"]["Export1H"].is_boolean()) ConfigOUT["MQTT"]["Export1H"] = config["MQTT"]["Export1H"];
+    if(config["MQTT"].contains("ExportAlarms") && config["MQTT"]["ExportAlarms"].is_boolean()) ConfigOUT["MQTT"]["ExportAlarms"] = config["MQTT"]["ExportAlarms"];
+  }
   if(config.contains("Save200MS") && config["Save200MS"].is_boolean()) ConfigOUT["Save200MS"] = config["Save200MS"];
   if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
   if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
@@ -320,11 +352,11 @@ void AnalyzerSoft::Configure(const json &options) {
       InitAlarmParser(pAlarms[n].Evaluator, options["Alarms"][n]["Expression"], pAlarms[n].Aggreg);
     }
   }
-  bool ExportEnabled = options["RemoteEnabled"];
+  bool ExportEnabled = options["SyncEnabled"];
   if(ExportEnabled == true) {
-    pSyncServer    = options["RemoteServer"];
-    pSyncUser      = options["RemoteUser"];
-    pSyncPass      = options["RemotePass"];
+    pSyncServer    = options["Sync"]["Server"];
+    pSyncUser      = options["Sync"]["User"];
+    pSyncPass      = options["Sync"]["Pass"];
     pSyncTerminate = false;
     if(pSyncThread == 0) {
       if(pthread_create(&pSyncThread, NULL, Sync_Thread, this) != 0) {
@@ -338,6 +370,31 @@ void AnalyzerSoft::Configure(const json &options) {
     pSyncTerminate = true;
     pthread_join(pSyncThread, NULL);
     pSyncThread = 0;
+  }
+  bool MQTTEnabled = options["MQTTEnabled"];
+  if(MQTTEnabled == true) {
+    pMQTTServer    = options["MQTT"]["Server"];
+    pMQTTUser      = options["MQTT"]["User"];
+    pMQTTPass      = options["MQTT"]["Pass"];
+    pMQTT3S        = options["MQTT"]["Export3S"];
+    pMQTT1M        = options["MQTT"]["Export1M"];
+    pMQTT10M       = options["MQTT"]["Export10M"];
+    pMQTT15M       = options["MQTT"]["Export15M"];
+    pMQTT1H        = options["MQTT"]["Export1H"];
+    pMQTTAlarms    = options["MQTT"]["ExportAlarms"];
+    pMQTTTerminate = false;
+    if(pMQTTThread == 0) {
+      if(pthread_create(&pMQTTThread, NULL, MQTT_Thread, this) != 0) {
+        LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+        pMQTTThread = 0;
+      } else {
+        pthread_setname_np(pMQTTThread, "MQTT");
+      }
+    }
+  } else if((MQTTEnabled == false) && (pMQTTThread != 0)) {
+    pMQTTTerminate = true;
+    pthread_join(pMQTTThread, NULL);
+    pMQTTThread = 0;
   }
   pAnalyzerLock.Unlock();
 }
@@ -455,6 +512,7 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
   SetOnline();
   if((pSequence < 50) || (params.AggregSamples == 0)) return;
   Database DB(Serial);
+  PublishAggreg(params);
   if(params.Type == AGGREG_200MS)
     DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance) VALUES(" +
     DB.Bind(params.Timestamp) + ", " +
@@ -552,6 +610,62 @@ void AnalyzerSoft::SaveEvent(Event_t &evt) {
   evt.SamplesRMS_A = deque<vector<float> >();
   evt.SamplesRAW_B = deque<vector<float> >();
   evt.SamplesRMS_B = deque<vector<float> >();
+}
+void AnalyzerSoft::PublishAggreg(Params_t &params) {
+  if(pMQTTThread == 0) return;
+  pthread_mutex_lock(&pMQTTMutex);
+  if(pMQTTClient == NULL) {
+    pthread_mutex_unlock(&pMQTTMutex);
+    return;
+  }
+  string Topic;
+  if((params.Type == AGGREG_3S) && (pMQTT3S == true)) {
+    Topic = Serial + "/3S";
+  } else if((params.Type == AGGREG_1M) && (pMQTT1M == true)) {
+    Topic = Serial + "/1M";
+  } else if((params.Type == AGGREG_10M) && (pMQTT10M == true)) {
+    Topic = Serial + "/10M";
+  } else if((params.Type == AGGREG_15M) && (pMQTT15M == true)) {
+    Topic = Serial + "/15M";
+  } else if((params.Type == AGGREG_1H) && (pMQTT1H  == true)) {
+    Topic = Serial + "/1H";
+  } else {
+    pthread_mutex_unlock(&pMQTTMutex);
+    return;
+  }
+  json Msg = json::object();
+  Msg["Sampletime"] = params.Timestamp;
+  Msg["Frequency"] = params.Frequency;
+  Msg["Flag"] = params.Flag;
+  Msg["Unbalance"] = params.Unbalance;
+  Msg["Voltage"] = json::array();
+  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage"].push_back(params.Voltage[n]);
+  Msg["Current"] = json::array();
+  for(uint8_t n = 0; n < pCurrentChannels; n++) Msg["Current"].push_back(params.Current[n]);
+  Msg["Active_Power"] = json::array();
+  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Active_Power"].push_back(params.Active_Power[n]);
+  Msg["Reactive_Power"] = json::array();
+  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Reactive_Power"].push_back(params.Reactive_Power[n]);
+  Msg["Active_Energy"] = json::array();
+  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Active_Energy"].push_back(params.Active_Energy[n]);
+  Msg["Rective_Energy"] = json::array();
+  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Reactive_Energy"].push_back(params.Reactive_Energy[n]);
+  Msg["Apparent_Power"] = json::array();
+  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Apparent_Power"].push_back(params.Apparent_Power[n]);
+  Msg["Power_Factor"] = json::array();
+  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Power_Factor"].push_back(params.Power_Factor[n]);
+  Msg["Voltage_THD"] = json::array();
+  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage_THD"].push_back(params.Voltage_THD[n]);
+  Msg["Current_THD"] = json::array();
+  for(uint8_t n = 0; n < pCurrentChannels; n++) Msg["Current_THD"].push_back(params.Current_THD[n]);
+  Msg["Phi"] = json::array();
+  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Phi"].push_back(params.Phi[n]);
+  Msg["Voltage_Phase"] = json::array();
+  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage_Phase"].push_back(params.Voltage_Phase[n]);
+  string TextMsg = Msg.dump();
+  mqtt_publish(pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_0);
+  LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", Serial.c_str());
+  pthread_mutex_unlock(&pMQTTMutex);
 }
 float AnalyzerSoft::CalcChange(const float in, const float reference) {
   return ((in - reference) / reference) * 100;
@@ -1123,6 +1237,79 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
     pthread_cond_wait(&Cond, &Mutex);
   }
   pthread_mutex_unlock(&Mutex);
+  return NULL;
+}
+void *AnalyzerSoft::MQTT_Thread(void *params) {
+  AnalyzerSoft *This = (AnalyzerSoft*)params;
+  static uint32_t BuffSize = 0x00020000;
+  string User, Pass, Server;
+  int Socket = -1;
+  mqtt_client Client;
+  uint8_t *SendBuff = (uint8_t*)calloc(BuffSize, 1);
+  uint8_t *RecvBuff = (uint8_t*)calloc(BuffSize, 1);
+  while(This->pMQTTTerminate == false) {
+    if(This->pAnalyzerLock.TryReadLock() == false) {
+      usleep(100000);
+      continue;
+    }
+    if((This->pMQTTUser != User) || (This->pMQTTPass != Pass) || (This->pMQTTServer != Server)) {
+      if(Socket != -1) {
+        close(Socket);
+        Socket = -1;
+      }
+      User   = This->pMQTTUser;
+      Pass   = This->pMQTTPass;
+      Server = This->pMQTTServer;
+    }
+    This->pAnalyzerLock.Unlock();
+    if(Socket == -1) {
+      URL  Url(Server);
+      char Port[16];
+      addrinfo Hints = { .ai_flags = 0, .ai_family = AF_UNSPEC, .ai_socktype = SOCK_STREAM };
+      addrinfo *ServInfo;
+      sprintf(Port, "%u", Url.Port);
+      int Error = getaddrinfo(Url.Host.c_str(), Port, &Hints, &ServInfo);
+      if(Error != 0) {
+        LOGFile::Error("%s:%d -> %d\n", __func__, __LINE__, Error);
+        usleep(1000000);
+        continue;
+      }
+      for(addrinfo *p = ServInfo; p != NULL; p = p->ai_next) {
+        Socket = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if(Socket == -1) continue;
+        if(connect(Socket, p->ai_addr, p->ai_addrlen) == -1) continue;
+        fcntl(Socket, F_SETFL, fcntl(Socket, F_GETFL) | O_NONBLOCK);
+        break;
+      }
+      freeaddrinfo(ServInfo);
+      if(Socket == -1) {
+        LOGFile::Debug("Analyzer '%s' can not connect to MQTT broker\n", This->Serial.c_str());
+        usleep(1000000);
+        continue;
+      }
+      mqtt_init(&Client, Socket, SendBuff, BuffSize, RecvBuff, BuffSize, [](void** unused, struct mqtt_response_publish *published) {});
+      mqtt_connect(&Client, NULL, NULL, NULL, 0, (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
+      if(Client.error != MQTT_OK) {
+        LOGFile::Error("Analyzer '%s' MQTT broker error: %s\n", mqtt_error_str(Client.error));
+        close(Socket);
+        Socket = -1;
+        continue;
+      }
+      pthread_mutex_lock(&This->pMQTTMutex);
+      LOGFile::Debug("Analyzer '%s' logged on MQTT broker\n", This->Serial.c_str());
+      This->pMQTTClient = &Client;
+      pthread_mutex_unlock(&This->pMQTTMutex);
+    } else {
+      mqtt_sync(&Client);
+      usleep(100000);
+    }
+  }
+  pthread_mutex_lock(&This->pMQTTMutex);
+  This->pMQTTClient = NULL;
+  pthread_mutex_unlock(&This->pMQTTMutex);
+  close(Socket);
+  free(SendBuff);
+  free(RecvBuff);
   return NULL;
 }
 void *AnalyzerSoft::Sync_RespThread(void *args) {

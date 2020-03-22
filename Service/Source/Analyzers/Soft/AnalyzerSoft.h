@@ -18,6 +18,9 @@
 #include <inttypes.h>
 #include <deque>
 #include <list>
+extern "C" {
+  #include "mqtt-c/mqtt.h"
+}
 #include "muParser/muParser.h"
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
@@ -191,16 +194,31 @@ class AnalyzerSoft final : public Analyzer {
     deque<EventCycle_t>        pPrevCycles;              //Previous cycles
   private : //Readed in thread, changed in configure
     pthread_t                  pSyncThread;              //Export thread
-    bool                       pSyncTerminate;           //Sync status
+    bool                       pSyncTerminate;           //Sync terminate signal
     string                     pSyncServer;              //Export server address
     string                     pSyncUser;                //Export server user
     string                     pSyncPass;                //Export server password
+  private :
+    pthread_t                  pMQTTThread;              //MQTT thread
+    pthread_mutex_t            pMQTTMutex;               //MQTT mutex
+    mqtt_client               *pMQTTClient;              //MQTT client object
+    bool                       pMQTTTerminate;           //MQTT terminate signal
+    string                     pMQTTServer;              //MQTT server address
+    string                     pMQTTUser;                //MQTT server user
+    string                     pMQTTPass;                //MQTT server password
+    bool                       pMQTT3S;                  //Enable 3 seconds publish
+    bool                       pMQTT1M;                  //Enable 1 minute publish
+    bool                       pMQTT10M;                 //Enable 10 minutes publish
+    bool                       pMQTT15M;                 //Enable 15 minutes publish
+    bool                       pMQTT1H;                  //Enable 1 hour publish
+    bool                       pMQTTAlarms;              //Enable alarms publish
   private :
     static void  Analyzer_Func(void *creation, void *run);
     static void  Events_Func(void *creation, void *run);
     static void  FFT_Func(void *creation, void *run);
     static void  Alarms_Func(void *creation, void *run);
     static void *Sync_Thread(void *params);
+    static void *MQTT_Thread(void *params);
     static void *Sync_RespThread(void *params);
     static float CalcChange(const float in, const float reference);
     static float CalcAngle(const float *a, const float *b);
@@ -212,6 +230,7 @@ class AnalyzerSoft final : public Analyzer {
     void AccumulateAggreg(Params_t &src, const Params_t &dst);
     void NormalizeAggreg(Params_t &src);
     void SaveAggreg(Params_t &params);
+    void PublishAggreg(Params_t &params);
     void InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
     bool FindRunningEvent(const uint32_t mask);
     void SaveEvent(Event_t &evt);
