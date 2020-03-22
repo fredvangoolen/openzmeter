@@ -611,7 +611,7 @@ void AnalyzerSoft::SaveEvent(Event_t &evt) {
   evt.SamplesRAW_B = deque<vector<float> >();
   evt.SamplesRMS_B = deque<vector<float> >();
 }
-void AnalyzerSoft::PublishAggreg(Params_t &params) {
+void AnalyzerSoft::PublishAggreg(const Params_t &params) {
   if(pMQTTThread == 0) return;
   pthread_mutex_lock(&pMQTTMutex);
   if(pMQTTClient == NULL) {
@@ -662,6 +662,24 @@ void AnalyzerSoft::PublishAggreg(Params_t &params) {
   for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Phi"].push_back(params.Phi[n]);
   Msg["Voltage_Phase"] = json::array();
   for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage_Phase"].push_back(params.Voltage_Phase[n]);
+  string TextMsg = Msg.dump();
+  mqtt_publish(pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_0);
+  LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", Serial.c_str());
+  pthread_mutex_unlock(&pMQTTMutex);
+}
+void AnalyzerSoft::PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered) {
+  if(pMQTTThread == 0) return;
+  pthread_mutex_lock(&pMQTTMutex);
+  if(pMQTTClient == NULL) {
+    pthread_mutex_unlock(&pMQTTMutex);
+    return;
+  }
+  string Topic = Serial + "/Alarms";
+  json Msg = json::object();
+  Msg["AlarmTime"] = time;
+  Msg["Name"] = name;
+  Msg["Priority"] = prio;
+  Msg["Triggered"] = triggered;
   string TextMsg = Msg.dump();
   mqtt_publish(pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_0);
   LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", Serial.c_str());
@@ -1116,11 +1134,13 @@ void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
       LOGFile::Debug("Alarm triggered on analyzer '%s'\n", This->Serial.c_str());
       Database DB(This->Serial);
       DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(Aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", true, " + DB.Bind(Alarm.Priority) + ")");
+      This->PublishAlarm(Aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
     } else if((Alarm.ResultCount == 0) && (Alarm.Triggered == true)) {
       Alarm.Triggered = false;
       LOGFile::Debug("Alarm reseted on analyzer '%s'\n", This->Serial.c_str());
       Database DB(This->Serial);
       DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(Aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", false, " + DB.Bind(Alarm.Priority) + ")");
+      This->PublishAlarm(Aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
     }
   }
 }
