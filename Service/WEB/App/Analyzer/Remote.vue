@@ -40,9 +40,13 @@
         <div class="help">Publish analyzer data to MQTT broker. Only selected data is exported.</div>
       </div>
       <div class="col-xs-12"><hr style="margin: 5px 0px 5px 0px"/></div>
-      <div class="col-xs-12">
+      <div class="col-xs-8">
         <label class="control-label" style="line-height: 22px">Broker</label>
         <input type="text" class="form-control form-control-sm" v-model="Analyzer.MQTT.Server">
+      </div>
+      <div class="col-xs-4">
+        <label class="control-label" style="line-height: 22px">Prefix</label>
+        <input type="text" class="form-control form-control-sm" v-model="Analyzer.MQTT.Prefix">
       </div>
       <div class="col-xs-6">
         <label class="control-label" style="line-height: 22px">User</label>
@@ -71,16 +75,17 @@
       return { ShowSpinner: false, Error: null, Analyzer: null, View: 'Main',
                Columns: [
                 { name: 'Source', title: 'Source' },
-                { name: 'Topic', title: 'Topic' },
+                { name: 'Topic', title: 'Topic', callback: this.TopicName },
                 { name: '__slot:actions', title: 'Enabled' }
               ],
               Rows: [
-                { Source: '3 seconds aggregation', Topic: '/1200B1009034E42413032302_3PN/3S', Export: 'Export3S' },
-                { Source: '1 minute aggregation', Topic: '/1200B1009034E42413032302_3PN/1M', Export: 'Export1M' },
-                { Source: '10 minutes aggregation', Topic: '/1200B1009034E42413032302_3PN/10M', Export: 'Export10M' },
-                { Source: '15 minutes aggregation', Topic: '/1200B1009034E42413032302_3PN/15M', Export: 'Export15M' },
-                { Source: '1 hour aggregation', Topic: '/1200B1009034E42413032302_3PN/1H', Export: 'Export1H' },
-                { Source: 'Alarms', Topic: '/1200B1009034E42413032302_3PN/Alarms', Export: 'ExportAlarms' }
+                { Source: '3 seconds aggregation', Topic: '3S', Export: 'Export3S' },
+                { Source: '1 minute aggregation', Topic: '1M', Export: 'Export1M' },
+                { Source: '10 minutes aggregation', Topic: '10M', Export: 'Export10M' },
+                { Source: '15 minutes aggregation', Topic: '15M', Export: 'Export15M' },
+                { Source: '1 hour aggregation', Topic: '1H', Export: 'Export1H' },
+                { Source: 'Alarms', Topic: 'Alarms', Export: 'ExportAlarms' },
+                { Source: 'Config', Topic: 'Config', Export: 'ExportConfig' }
               ]
       };
     },
@@ -88,6 +93,9 @@
       this.Analyzer = Object.assign({}, this.analyzer);
     },
     methods: {
+      TopicName: function(val) {
+        return (this.Analyzer.MQTT.Prefix != "") ? this.Analyzer.MQTT.Prefix + "/" + this.Analyzer.Analyzer + "/" + val : this.Analyzer.Analyzer + "/" + val;
+      },
       Save: function() {
         this.ShowSpinner = true;
         this.$http.post('setAnalyzer', this.Analyzer).then(

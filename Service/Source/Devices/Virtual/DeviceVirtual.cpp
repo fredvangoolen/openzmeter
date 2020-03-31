@@ -124,7 +124,7 @@ void *DeviceVirtual::Capture_Thread(void *args) {
       }
       if(This->pMode == Analyzer::PHASE3) (This->pFrequency > 0.0) ? Current[3] = Current[0] + Current[1] + Current[2] : 0;
       GeneratedSamples++;
-      This->pAnalyzer->BufferAppend(Voltage, Current);
+      This->pAnalyzer->BufferAppend(Voltage, Current, 0);
     } else {
       usleep(1000);
     }

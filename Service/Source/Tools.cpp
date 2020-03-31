@@ -193,6 +193,7 @@ bool ProviderLocks::ConsumerWait(uint32_t timeoutMS) {
 void ProviderLocks::ConsumerEnds() {
   pthread_mutex_lock(&pMutex);
   pConsumers--;
+  printf("%u\n", pConsumers);
   if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
   pthread_mutex_unlock(&pMutex);
 }

@@ -20,6 +20,7 @@
 #include <list>
 extern "C" {
   #include "mqtt-c/mqtt.h"
+  #include "mqtt-c/mqtt_pal.h"
 }
 #include "muParser/muParser.h"
 #include "cpp-httplib/httplib.h"
@@ -200,10 +201,13 @@ class AnalyzerSoft final : public Analyzer {
     string                     pSyncPass;                //Export server password
   private :
     pthread_t                  pMQTTThread;              //MQTT thread
-    pthread_mutex_t            pMQTTMutex;               //MQTT mutex
-    mqtt_client               *pMQTTClient;              //MQTT client object
+    mqtt_client                pMQTTClient;              //MQTT client state
+    uint32_t                   pMQTTBuffSize;            //MQTT buffers size
+    uint8_t                   *pMQTTSendBuff;            //MQTT send buffer
+    uint8_t                   *pMQTTRecvBuff;            //MQTT recv buffer
     bool                       pMQTTTerminate;           //MQTT terminate signal
     string                     pMQTTServer;              //MQTT server address
+    string                     pMQTTPrefix;              //MQTT prefix
     string                     pMQTTUser;                //MQTT server user
     string                     pMQTTPass;                //MQTT server password
     bool                       pMQTT3S;                  //Enable 3 seconds publish
@@ -212,6 +216,7 @@ class AnalyzerSoft final : public Analyzer {
     bool                       pMQTT15M;                 //Enable 15 minutes publish
     bool                       pMQTT1H;                  //Enable 1 hour publish
     bool                       pMQTTAlarms;              //Enable alarms publish
+    bool                       pMQTTConfig;              //Enable config publish
   private :
     static void  Analyzer_Func(void *creation, void *run);
     static void  Events_Func(void *creation, void *run);
@@ -230,8 +235,9 @@ class AnalyzerSoft final : public Analyzer {
     void AccumulateAggreg(Params_t &src, const Params_t &dst);
     void NormalizeAggreg(Params_t &src);
     void SaveAggreg(Params_t &params);
-    void PublishAggreg(const Params_t &params);
+    void PublishAggreg(const Params_t &params, const string &topic);
     void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
+    void PublishConfig(const json &options);
     void InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
     bool FindRunningEvent(const uint32_t mask);
     void SaveEvent(Event_t &evt);
@@ -255,6 +261,6 @@ class AnalyzerSoft final : public Analyzer {
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();
-    bool BufferAppend(float *voltageSamples, float *currentSamples);
+    bool BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage);
     bool IsWorking();
 };

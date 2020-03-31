@@ -91,13 +91,39 @@ vector<Device*> DeviceV2::GetInstances() {
 }
 DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device V2") {
   pSignalTransfer.Init(this, 2);
-  pBuffer        = (int16_t*)malloc(DEVICEV2_BUFFERSIZE * sizeof(uint16_t) * 7);
-  pConfigLock    = PTHREAD_MUTEX_INITIALIZER;
-  pThread        = 0;
-  pBufferHead    = 0;
-  pBufferTail    = 0;
-  pChannelsDelay = NULL;
+  pBuffer             = (int16_t*)malloc(DEVICEV2_BUFFERSIZE * sizeof(uint16_t) * 7);
+  pConfigLock         = PTHREAD_MUTEX_INITIALIZER;
+  pThread             = 0;
+  pBufferHead         = 0;
+  pBufferTail         = 0;
+  pChannelsDelay      = NULL;
+  pButtonAction       = false;
+  pDeviceHandle       = NULL;
+  pNewDevice          = NULL;
+  pSubmittedTransfers = 0;
+  pRunAverageCounter  = 0;
+  pTerminate          = false;
+  pCaptureSize        = 0;
+  memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
+  memset(pAverageValues, 0 , sizeof(pAverageValues));
   Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial)));
+  if(libusb_init(&pContext) < 0) {
+    LOGFile::Error("Can not open libUSB...\n");
+    return;
+  }
+  if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    libusb_exit(pContext);
+    return;
+  }
+  pthread_setname_np(pThread, "DeviceV2");
+  if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE, DEVICEV2_VID, DEVICEV2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
+    LOGFile::Error("Failed to register libUSB calback...\n");
+    pTerminate = true;
+    pthread_join(pThread, NULL);
+    pThread = 0;
+    libusb_exit(pContext);
+  }
 }
 DeviceV2::~DeviceV2() {
   pTerminate = true;
@@ -195,14 +221,10 @@ json DeviceV2::CheckConfig(const json &config) {
   return ConfigOUT;
 }
 void DeviceV2::Configure(const json& config) {
+  pthread_mutex_lock(&pConfigLock);
   ConfigManager::WriteConfig("/Devices/" + Serial, config);
-  if(pThread != 0) {
-    pTerminate = true;
-    pthread_join(pThread, NULL);
-    pAnalyzersSetup.clear();
-    ClearAnalyzers();
-    pThread = 0;
-  }
+  pAnalyzersSetup.clear();
+  ClearAnalyzers();
   for(uint8_t Ch = 0; Ch < 3; Ch++) {
     pVoltageGain[Ch] = config["VoltageGain"][Ch];
     pVoltageOffset[Ch] = config["VoltageOffset"][Ch];
@@ -255,39 +277,7 @@ void DeviceV2::Configure(const json& config) {
     pAnalyzersSetup.push_back(AnalyzerSetup);
     AddAnalyzer(AnalyzerSetup.Parent);
   }
-  pTerminate = false;
-  if(libusb_init(&pContext) < 0) {
-    LOGFile::Error("Can not open libUSB...\n");
-  } else {
-    if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
-      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      pAnalyzersSetup.clear();
-      ClearAnalyzers();
-      pThread = 0;
-      libusb_exit(pContext);
-    } else {
-      pButtonAction = false;
-      pDeviceHandle = NULL;
-      pNewDevice    = NULL;
-      pSubmittedTransfers = 0;
-      pRunAverageCounter  = 0;
-      memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
-      memset(pAverageValues, 0 , sizeof(pAverageValues));
-      pCaptureSize = 0;
-      pthread_setname_np(pThread, "DeviceV2");
-      if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE, DEVICEV2_VID, DEVICEV2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
-        LOGFile::Error("Failed to register libUSB calback...\n");
-        pTerminate = true;
-        pthread_join(pThread, NULL);
-        pAnalyzersSetup.clear();
-        ClearAnalyzers();
-        pThread = 0;
-        libusb_exit(pContext);
-      } else {
-        pthread_setname_np(pThread, "DeviceV2");
-      }
-    }
-  }
+  pthread_mutex_unlock(&pConfigLock);
 }
 void *DeviceV2::Capture_Thread(void *args) {
   DeviceV2 *This           = (DeviceV2*)args;
@@ -389,7 +379,6 @@ void *DeviceV2::Capture_Thread(void *args) {
       LOGFile::Info("Capture started on DeviceV2 with serial '%s'\n", This->Serial.c_str());
       This->pNewDevice = NULL;
       LastSignalSend = 0;
-      This->pLastSignalRecv = 0;
     }
   }
   if(This->pDeviceHandle != 0) libusb_release_interface(This->pDeviceHandle, 0);
@@ -398,15 +387,16 @@ void *DeviceV2::Capture_Thread(void *args) {
   return NULL;
 }
 void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
-  DeviceV2 *This = (DeviceV2*)transfer->user_data;
-  uint64_t Time = Tools::GetTime();
+  DeviceV2 *This       = (DeviceV2*)transfer->user_data;
+  bool      StatusRecv = false;
   if((transfer->endpoint == DEVICEV2_ENDPOINT_IN) && (transfer->status == LIBUSB_TRANSFER_COMPLETED)) {
     uint16_t *Samples = (uint16_t*)transfer->buffer;
+    pthread_mutex_lock(&This->pConfigLock);
     for(int Pos = 0; Pos < (transfer->actual_length / 2); Pos++) {
       uint8_t  Seq    = Samples[Pos] >> 13;
       uint16_t Sample = (Samples[Pos] & 0x1FFF);
       if(Seq == 7) {
-        if(This->pLastSignalRecv < (Time - 500)) {
+        if(StatusRecv == true) continue;
 //          SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
 //          SysStatus->Lock.WriteLock();
 //          SysStatus->Battery_Volt = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
@@ -415,30 +405,29 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
 //          Status["Charging"] = (Sample & 0x0002) ? true: false;
 //          Status["Powered"] = (Sample & 0x0001) ? true: false;
 //          SysStatus->Lock.Unlock();
-          uint8_t Action = (Sample & 0x0300) >> 8;
-          if((Action == CLICK) && (This->pButtonAction == false)) {
-            SysSupport::AddSystemAction("ToogleBluetooth");
-          } else if((Action == LONG_CLICK) && (This->pButtonAction == false)) {
-            SysSupport::AddSystemAction("PowerOff");
-          }
-          This->pButtonAction = (Action == NONE);
-          This->pLastSignalRecv = Time;
+        uint8_t Action = (Sample & 0x0300) >> 8;
+        if((Action == CLICK) && (This->pButtonAction == false)) {
+          SysSupport::AddSystemAction("ToogleBluetooth");
+        } else if((Action == LONG_CLICK) && (This->pButtonAction == false)) {
+          SysSupport::AddSystemAction("PowerOff");
         }
-        continue;
-      }
-      if(This->pCaptureSize != Seq) {
+        This->pButtonAction = (Action == NONE);
+        StatusRecv = true;
+      } else if(This->pCaptureSize != Seq) {
         LOGFile::Debug("Lost sample, restarting adquisition\n");
         This->pCaptureSize = 0;
         break;
-      }
-      This->pCapture[This->pCaptureSize] = Sample - 4096;
-      if(This->pCaptureSize == 6) {
-        This->BufferAppend();
-        This->pCaptureSize = 0;
       } else {
-        This->pCaptureSize++;
+        This->pCapture[This->pCaptureSize] = Sample - 4096;
+        if(This->pCaptureSize == 6) {
+          This->BufferAppend();
+          This->pCaptureSize = 0;
+        } else {
+          This->pCaptureSize++;
+        }
       }
     }
+    pthread_mutex_unlock(&This->pConfigLock);
   }
   if(This->pTerminate == false) {
     if(transfer->endpoint == DEVICEV2_ENDPOINT_IN) {
@@ -469,7 +458,6 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
 void DeviceV2::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pthread_mutex_lock(&pConfigLock);
   json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
   pAverageLocks.ReadLock();
@@ -485,12 +473,10 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
   pAverageLocks.Unlock();
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
-  pthread_mutex_unlock(&pConfigLock);
 }
 void  DeviceV2::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pthread_mutex_lock(&pConfigLock);
   json Config = params;
   json Orig = ConfigManager::ReadConfig("/Devices/" + Serial);
   if(Config.contains("Outputs") && Orig.contains("Outputs") && Config["Outputs"].is_array() && Orig["Outputs"].is_array()) {
@@ -498,9 +484,8 @@ void  DeviceV2::SetDevice(const json &params, Response &response) {
       if(n < Orig["Outputs"].size() && (Config["Outputs"][n].contains("Mode") && Orig["Outputs"][n].contains("Mode")) && Orig["Outputs"][n].contains("Analyzer") && (Config["Outputs"][n]["Mode"] == Orig["Outputs"][n]["Mode"])) Config["Outputs"][n]["Analyzer"] = Orig["Outputs"][n]["Analyzer"];
     }
   }
-  Configure(Config);
+  Configure(CheckConfig(Config));
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
-  pthread_mutex_unlock(&pConfigLock);
 }
 void  DeviceV2::BufferAppend() {
   for(uint8_t Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] = pRunAverageValues[Ch] + pCapture[Ch];
@@ -536,6 +521,7 @@ void  DeviceV2::BufferAppend() {
       pChannelsDelayPos[Ch] = (pChannelsDelayPos[Ch] + 1) % pChannelsDelaySize[Ch];
       DelayPtr = &DelayPtr[pChannelsDelaySize[Ch]];
     }
+    uint32_t Used = (pBufferHead > pBufferTail) ? pBufferHead - pBufferTail : DEVICEV2_BUFFERSIZE - pBufferTail + pBufferHead;
     pBufferTail = (pBufferTail + 1) % DEVICEV2_BUFFERSIZE;
     Values[0] = (Values[0] + pVoltageOffset[0]) * 0.110266113281 * pVoltageGain[0];
     Values[1] = (Values[1] + pVoltageOffset[1]) * 0.110266113281 * pVoltageGain[1];
@@ -548,7 +534,7 @@ void  DeviceV2::BufferAppend() {
       float Voltage[3], Current[4];
       for(unsigned Ch = 0; Ch < Tmp.VoltageChannels; Ch++) Voltage[Ch] = Values[Tmp.Voltage[Ch]];
       for(unsigned Ch = 0; Ch < Tmp.CurrentChannels; Ch++) Current[Ch] = Values[Tmp.Current[Ch]] * Tmp.CurrentInvert[Ch];
-      if(Tmp.Parent->BufferAppend(Voltage, Current) == true) AnalyzerRun = true;
+      if(Tmp.Parent->BufferAppend(Voltage, Current, Used) == true) AnalyzerRun = true;
     }
   }
 }
