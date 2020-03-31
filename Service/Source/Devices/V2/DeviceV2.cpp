@@ -282,7 +282,7 @@ void DeviceV2::Configure(const json& config) {
 void *DeviceV2::Capture_Thread(void *args) {
   DeviceV2 *This           = (DeviceV2*)args;
   uint64_t  LastSignalSend = 0;
-  for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) This->pTransfers[n].Init(This, 32768);
+  for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) This->pTransfers[n].Init(This, 65536);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
     struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
