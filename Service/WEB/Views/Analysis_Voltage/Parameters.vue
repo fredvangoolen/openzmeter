@@ -14,7 +14,7 @@
       <cubism :index="0" ref="g0" title="Power Factor" :data="Data" :now="DataNow" :format="Formatter_NoUnits" :paused="MouseOver"></cubism>
       <cubism :index="1" ref="g1" title="Voltage THD" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="MouseOver"></cubism>
       <cubism :index="2" ref="g2" title="Phi" :data="Data" :now="DataNow" :format="Formatter_NoUnits" :paused="MouseOver"></cubism>
-      <cubism v-show="analyzer.VoltageChannels" :index="3" ref="g3" title="Unbalance" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="MouseOver"></cubism>
+      <cubism v-show="analyzer.VoltageChannels>1" :index="3" ref="g3" title="Unbalance" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="MouseOver"></cubism>
     </div>
   </div>
 </template>
@@ -77,7 +77,8 @@
       }
     },
     mounted: function() {
-      var Graphs = [this.$refs.g0.Graph, this.$refs.g1.Graph, this.$refs.g2.Graph, this.$refs.g3.Graph];
+      var Graphs = [this.$refs.g0.Graph, this.$refs.g1.Graph, this.$refs.g2.Graph];
+      if(this.analyzer.VoltageChannels > 1) Graphs.push(this.$refs.g3.Graph);
       Dygraph.synchronize(Graphs, { range: false, zoom: false });
     }
   }

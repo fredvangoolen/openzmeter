@@ -84,6 +84,7 @@
         return (value === true) ? '&#9635;' : '&#9633;';
       },
       Select: function(analyzer) {
+        this.$emit('update:analyzer', null);
         this.ShowSpinner = true;
         localStorage.setItem('Analyzer', analyzer);
         this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
