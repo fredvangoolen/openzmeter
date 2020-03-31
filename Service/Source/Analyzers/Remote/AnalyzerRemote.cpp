@@ -40,15 +40,13 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   SetName(params["Name"]);
   response.set_header("Content-Type", "text/event-stream");
-  pthread_mutex_lock(&pMutex);
-  pConsumerReady = true;
-  pthread_mutex_unlock(&pMutex);
   response.set_chunked_content_provider(
     [&](uint64_t offset, DataSink &sink) {
       if((pTerminate == true) || (sink.is_writable() == false)) return sink.done();
       SetOnline();
       pthread_mutex_lock(&pMutex);
-      int Result = 0;
+      pConsumerReady = true;
+      int Result     = 0;
       if(pProducerRequest == NULL) {
         timespec Time;
         clock_gettime(CLOCK_REALTIME, &Time);
@@ -56,9 +54,10 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
         Result = pthread_cond_timedwait(&pConsumerCond, &pMutex, &Time);
       }
       if(Result == ETIMEDOUT) {
-        static const string Data = "data: null\n\n";
+        string Data = "data: null\n\n";
         sink.write(Data.c_str(), Data.size());
       } else if(Result == 0) {
+        pRequestList.insert(pProducerRequest);
         string Data = "data: " + pProducerRequest->Request.dump() + "\n\n";
         sink.write(Data.c_str(), Data.size());
         pProducerRequest = NULL;
@@ -75,49 +74,6 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
       pthread_mutex_unlock(&pMutex);
     }
   );
-
-//  if(pQueries.size() > 0) {
-//    for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-//      if((*it)->Sequence != 0) continue;
-//      (*it)->Sequence = ++pQuerySequence;
-//      json Query = json::object();
-//      Query["Method"] = (*it)->Method;
-//      Query["Params"] = (*it)->Request->GetParams();
-//      Query["Params"].erase("Analyzer");
-//      Query["Sequence"] = (*it)->Sequence;
-//      Response.push_back(Query);
-//    }
-//    pMembersLocks.WriteUnlock();
-//    return req.FromJSON(Response);
-//  } else {
-//    if(pRequestLocks != NULL) {
-//      pMembersLocks.WriteUnlock();
-//      return req.FromString("", MHD_HTTP_SERVICE_UNAVAILABLE);
-//    } else {
-//      pRequestLocks = new ProviderLocks();
-//      pMembersLocks.WriteUnlock();
-//      if(pRequestLocks->ConsumerWait(15000) == false) {
-//        pMembersLocks.WriteLock();
-//        req.FromString("", MHD_HTTP_NO_CONTENT);
-//      } else {
-//        pMembersLocks.WriteLock();
-//        for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-//          if((*it)->Sequence != 0) continue;
-//          (*it)->Sequence = ++pQuerySequence;
-//          json Query = json::object();
-//          Query["Method"] = (*it)->Method;
-//          Query["Params"] = (*it)->Request->GetParams();
-//          Query["Params"].erase("Analyzer");
-//          Query["Sequence"] = (*it)->Sequence;
-//          Response.push_back(Query);
-//        }
-//        req.FromJSON(Response);
-//      }
-//      delete pRequestLocks;
-//      pRequestLocks = NULL;
-//      pMembersLocks.WriteUnlock();
-//    }
-//  }
 }
 void AnalyzerRemote::SetRemote(const json &params, Response &response) {
   if((params.contains("Code") == false) || (params["Code"].is_number() == false)) return HTTPServer::FillResponse(response, "'Code' param is requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -126,7 +82,7 @@ void AnalyzerRemote::SetRemote(const json &params, Response &response) {
   if((params.contains("Mime") == false) || (params["Mime"].is_string() == false)) return HTTPServer::FillResponse(response, "'Mime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   pthread_mutex_lock(&pMutex);
   uint64_t Sequence = params["Sequence"];
-  auto Request = pRequestList.find(Sequence);
+  auto     Request  = pRequestList.find(Sequence);
   if(Request == pRequestList.end()) {
     pthread_mutex_unlock(&pMutex);
     return HTTPServer::FillResponse(response, "Sequence not found", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
@@ -138,25 +94,22 @@ void AnalyzerRemote::SetRemote(const json &params, Response &response) {
   pthread_cond_signal(&(*Request)->Cond);
   pthread_mutex_unlock(&pMutex);
   return HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
-//  json Params = req.GetParams();
-//  if(!Params["Code"].is_number() || !Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' and 'Code' param are required", MHD_HTTP_BAD_REQUEST);
-//  uint64_t Sequence = Params["Sequence"];
-//  uint16_t Code = Params["Code"];
-//  pMembersLocks.WriteLock();
-//  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-//    if((*it)->Sequence != Sequence) continue;
-//    Query_t *Query = (*it);
-//    pQueries.erase(it);
-//    pMembersLocks.WriteUnlock();
-//    Query->Request->FromString(Params["Response"], Code);
-//    Query->Locks.ProviderWrite();
-//    return;
-//  }
-//  pMembersLocks.WriteUnlock();
 }
 void AnalyzerRemote::HandleRequest(const string &url, const json &params, Response &response) {
-  Request_t Request;
   pthread_mutex_lock(&pMutex);
+  if(pConsumerReady == false) {
+    pthread_mutex_unlock(&pMutex);
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
+  }
+  while(pProducerRequest != NULL) {
+    pthread_cond_wait(&pProducerCond, &pMutex);
+    if(pConsumerReady == false) {
+      pthread_mutex_unlock(&pMutex);
+      return HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
+    }
+  }
+  Request_t Request;
+  timespec  Time;
   Request.Cond     = PTHREAD_COND_INITIALIZER;
   Request.Sequence = pSequence++;
   Request.Request  = json::object();
@@ -165,25 +118,12 @@ void AnalyzerRemote::HandleRequest(const string &url, const json &params, Respon
   Request.Request["Sequence"] = Request.Sequence;
   Request.Request["Params"].erase("Analyzer");
   Request.Response = nullptr;
-  while(pProducerRequest != NULL) pthread_cond_wait(&pProducerCond, &pMutex);
-  if(pConsumerReady == false) {
-    pthread_mutex_unlock(&pMutex);
-    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
-  }
   pProducerRequest = &Request;
-  pRequestList.insert(pProducerRequest);
   pthread_cond_signal(&pConsumerCond);
-  pthread_mutex_unlock(&pMutex);
-
-  int Result = 0;
-  pthread_mutex_lock(&pMutex);
-  if(Request.Response == nullptr) {
-    timespec Time;
-    clock_gettime(CLOCK_REALTIME, &Time);
-    Time.tv_sec = Time.tv_sec + 30;
-    Result = pthread_cond_timedwait(&Request.Cond, &pMutex, &Time);
-  }
-  auto Tmp = pRequestList.find(Request.Sequence);
+  clock_gettime(CLOCK_REALTIME, &Time);
+  Time.tv_sec = Time.tv_sec + 30;
+  int Result  = pthread_cond_timedwait(&Request.Cond, &pMutex, &Time);
+  auto Tmp    = pRequestList.find(Request.Sequence);
   if(Tmp != pRequestList.end()) pRequestList.erase(Tmp);
   if(Result == ETIMEDOUT) {
     pthread_mutex_unlock(&pMutex);

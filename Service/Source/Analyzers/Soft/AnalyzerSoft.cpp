@@ -71,8 +71,9 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pPrevTimestamp    = 0;
   pSyncThread       = 0;
   pMQTTThread       = 0;
-  pMQTTClient       = NULL;
-  pMQTTMutex        = PTHREAD_MUTEX_INITIALIZER;
+  pMQTTSendBuff     = NULL;
+  pMQTTRecvBuff     = NULL;
+  pMQTTBuffSize     = 0x00020000;
   InitAggreg(pAggreg200MS, AGGREG_200MS);
   InitAggreg(pAggreg3S, AGGREG_3S);
   InitAggreg(pAggreg1M, AGGREG_1M);
@@ -113,8 +114,12 @@ AnalyzerSoft::~AnalyzerSoft() {
   }
   pthread_mutex_unlock(&pFFTMutex);
 }
-bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
+bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
   pAnalyzerLock.ReadLock();
+  if(pBlockSamples == 0) {
+    pAggreg200MS.Timestamp = Tools::GetTime();
+    pAggreg200MS.Timestamp -= (uint64_t)((buffUsage * 1000) / pSamplerate);
+  }
   if(pNominalFrequency == 0) {
     for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageSamples[i * pMaxSamples + pBlockSamples] = voltageSamples[i];
     for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentSamples[i * pMaxSamples + pBlockSamples] = currentSamples[i];
@@ -171,6 +176,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   ConfigOUT["Sync"]["Pass"] = "";
   ConfigOUT["MQTTEnabled"] = false;
   ConfigOUT["MQTT"] = json::object();
+  ConfigOUT["MQTT"]["Prefix"] = "";
   ConfigOUT["MQTT"]["Server"] = "";
   ConfigOUT["MQTT"]["User"] = "";
   ConfigOUT["MQTT"]["Pass"] = "";
@@ -180,6 +186,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   ConfigOUT["MQTT"]["Export15M"] = false;
   ConfigOUT["MQTT"]["Export1H"] = false;
   ConfigOUT["MQTT"]["ExportAlarms"] = false;
+  ConfigOUT["MQTT"]["ExportConfig"] = false;
   ConfigOUT["Save200MS"] = false;
   ConfigOUT["EventsEnabled"] = false;
   ConfigOUT["AlarmsEnabled"] = false;
@@ -213,6 +220,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   }
   if(config.contains("MQTTEnabled") && config["MQTTEnabled"].is_boolean()) ConfigOUT["MQTTEnabled"] = config["MQTTEnabled"];
   if(config.contains("MQTT") && config["MQTT"].is_object()) {
+    if(config["MQTT"].contains("Prefix") && config["MQTT"]["Prefix"].is_string()) ConfigOUT["MQTT"]["Prefix"] = config["MQTT"]["Prefix"];
     if(config["MQTT"].contains("Server") && config["MQTT"]["Server"].is_string()) ConfigOUT["MQTT"]["Server"] = config["MQTT"]["Server"];
     if(config["MQTT"].contains("User") && config["MQTT"]["User"].is_string()) ConfigOUT["MQTT"]["User"] = config["MQTT"]["User"];
     if(config["MQTT"].contains("Pass") && config["MQTT"]["Pass"].is_string()) ConfigOUT["MQTT"]["Pass"] = config["MQTT"]["Pass"];
@@ -222,6 +230,7 @@ json AnalyzerSoft::CheckConfig(const json &config) {
     if(config["MQTT"].contains("Export15M") && config["MQTT"]["Export15M"].is_boolean()) ConfigOUT["MQTT"]["Export15M"] = config["MQTT"]["Export15M"];
     if(config["MQTT"].contains("Export1H") && config["MQTT"]["Export1H"].is_boolean()) ConfigOUT["MQTT"]["Export1H"] = config["MQTT"]["Export1H"];
     if(config["MQTT"].contains("ExportAlarms") && config["MQTT"]["ExportAlarms"].is_boolean()) ConfigOUT["MQTT"]["ExportAlarms"] = config["MQTT"]["ExportAlarms"];
+    if(config["MQTT"].contains("ExportConfig") && config["MQTT"]["ExportConfig"].is_boolean()) ConfigOUT["MQTT"]["ExportConfig"] = config["MQTT"]["ExportConfig"];
   }
   if(config.contains("Save200MS") && config["Save200MS"].is_boolean()) ConfigOUT["Save200MS"] = config["Save200MS"];
   if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
@@ -352,8 +361,8 @@ void AnalyzerSoft::Configure(const json &options) {
       InitAlarmParser(pAlarms[n].Evaluator, options["Alarms"][n]["Expression"], pAlarms[n].Aggreg);
     }
   }
-  bool ExportEnabled = options["SyncEnabled"];
-  if(ExportEnabled == true) {
+  bool SyncEnabled = options["SyncEnabled"];
+  if(SyncEnabled == true) {
     pSyncServer    = options["Sync"]["Server"];
     pSyncUser      = options["Sync"]["User"];
     pSyncPass      = options["Sync"]["Pass"];
@@ -366,13 +375,14 @@ void AnalyzerSoft::Configure(const json &options) {
         pthread_setname_np(pSyncThread, "Sync");
       }
     }
-  } else if((ExportEnabled == false) && (pSyncThread != 0)) {
+  } else if((SyncEnabled == false) && (pSyncThread != 0)) {
     pSyncTerminate = true;
     pthread_join(pSyncThread, NULL);
     pSyncThread = 0;
   }
   bool MQTTEnabled = options["MQTTEnabled"];
   if(MQTTEnabled == true) {
+    pMQTTPrefix    = options["MQTT"]["Prefix"];
     pMQTTServer    = options["MQTT"]["Server"];
     pMQTTUser      = options["MQTT"]["User"];
     pMQTTPass      = options["MQTT"]["Pass"];
@@ -382,8 +392,13 @@ void AnalyzerSoft::Configure(const json &options) {
     pMQTT15M       = options["MQTT"]["Export15M"];
     pMQTT1H        = options["MQTT"]["Export1H"];
     pMQTTAlarms    = options["MQTT"]["ExportAlarms"];
+    pMQTTConfig    = options["MQTT"]["ExportConfig"];
     pMQTTTerminate = false;
     if(pMQTTThread == 0) {
+      pMQTTSendBuff = (uint8_t*)calloc(pMQTTBuffSize, 1);
+      pMQTTRecvBuff = (uint8_t*)calloc(pMQTTBuffSize, 1);
+      mqtt_init_reconnect(&pMQTTClient, NULL, NULL, NULL);
+//      mqtt_reinit(&pMQTTClient, -1, pMQTTSendBuff, pMQTTBuffSize, pMQTTRecvBuff, pMQTTBuffSize);
       if(pthread_create(&pMQTTThread, NULL, MQTT_Thread, this) != 0) {
         LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
         pMQTTThread = 0;
@@ -391,12 +406,23 @@ void AnalyzerSoft::Configure(const json &options) {
         pthread_setname_np(pMQTTThread, "MQTT");
       }
     }
-  } else if((MQTTEnabled == false) && (pMQTTThread != 0)) {
-    pMQTTTerminate = true;
-    pthread_join(pMQTTThread, NULL);
-    pMQTTThread = 0;
+  } else if(MQTTEnabled == false) {
+    pMQTT3S        = false;
+    pMQTT1M        = false;
+    pMQTT10M       = false;
+    pMQTT15M       = false;
+    pMQTT1H        = false;
+    pMQTTAlarms    = false;
+    pMQTTConfig    = false;
+    if(pMQTTThread != 0) {
+      pthread_join(pMQTTThread, NULL);
+      free(pMQTTSendBuff);
+      free(pMQTTRecvBuff);
+      pMQTTThread = 0;
+    }
   }
   pAnalyzerLock.Unlock();
+  if(pMQTTConfig == true) PublishConfig(options);
 }
 void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
   params.Type = type;
@@ -485,6 +511,7 @@ void AnalyzerSoft::AccumulateAggreg(Params_t &dst, const Params_t &src) {
   for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Apparent_Power[n] += src.Apparent_Power[n];
 }
 void AnalyzerSoft::NormalizeAggreg(Params_t &params) {
+  if(params.AggregSamples == 0) return;
   params.Frequency = params.Frequency / params.AggregSamples;
   params.Unbalance = params.Unbalance / params.AggregSamples;
   for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage[n] = sqrt(params.Voltage[n] / params.AggregSamples);
@@ -510,9 +537,7 @@ bool AnalyzerSoft::FindRunningEvent(const uint32_t mask) {
 }
 void AnalyzerSoft::SaveAggreg(Params_t &params) {
   SetOnline();
-  if((pSequence < 50) || (params.AggregSamples == 0)) return;
   Database DB(Serial);
-  PublishAggreg(params);
   if(params.Type == AGGREG_200MS)
     DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance) VALUES(" +
     DB.Bind(params.Timestamp) + ", " +
@@ -611,28 +636,8 @@ void AnalyzerSoft::SaveEvent(Event_t &evt) {
   evt.SamplesRAW_B = deque<vector<float> >();
   evt.SamplesRMS_B = deque<vector<float> >();
 }
-void AnalyzerSoft::PublishAggreg(const Params_t &params) {
-  if(pMQTTThread == 0) return;
-  pthread_mutex_lock(&pMQTTMutex);
-  if(pMQTTClient == NULL) {
-    pthread_mutex_unlock(&pMQTTMutex);
-    return;
-  }
-  string Topic;
-  if((params.Type == AGGREG_3S) && (pMQTT3S == true)) {
-    Topic = Serial + "/3S";
-  } else if((params.Type == AGGREG_1M) && (pMQTT1M == true)) {
-    Topic = Serial + "/1M";
-  } else if((params.Type == AGGREG_10M) && (pMQTT10M == true)) {
-    Topic = Serial + "/10M";
-  } else if((params.Type == AGGREG_15M) && (pMQTT15M == true)) {
-    Topic = Serial + "/15M";
-  } else if((params.Type == AGGREG_1H) && (pMQTT1H  == true)) {
-    Topic = Serial + "/1H";
-  } else {
-    pthread_mutex_unlock(&pMQTTMutex);
-    return;
-  }
+void AnalyzerSoft::PublishAggreg(const Params_t &params, const string &topic) {
+  if(pMQTTClient.socketfd == -1) return;
   json Msg = json::object();
   Msg["Sampletime"] = params.Timestamp;
   Msg["Frequency"] = params.Frequency;
@@ -648,7 +653,7 @@ void AnalyzerSoft::PublishAggreg(const Params_t &params) {
   for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Reactive_Power"].push_back(params.Reactive_Power[n]);
   Msg["Active_Energy"] = json::array();
   for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Active_Energy"].push_back(params.Active_Energy[n]);
-  Msg["Rective_Energy"] = json::array();
+  Msg["Reactive_Energy"] = json::array();
   for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Reactive_Energy"].push_back(params.Reactive_Energy[n]);
   Msg["Apparent_Power"] = json::array();
   for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Apparent_Power"].push_back(params.Apparent_Power[n]);
@@ -663,27 +668,29 @@ void AnalyzerSoft::PublishAggreg(const Params_t &params) {
   Msg["Voltage_Phase"] = json::array();
   for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage_Phase"].push_back(params.Voltage_Phase[n]);
   string TextMsg = Msg.dump();
-  mqtt_publish(pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_0);
+  string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + Serial + "/" + topic : Serial + "/" + topic;
+  mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
   LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", Serial.c_str());
-  pthread_mutex_unlock(&pMQTTMutex);
 }
 void AnalyzerSoft::PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered) {
-  if(pMQTTThread == 0) return;
-  pthread_mutex_lock(&pMQTTMutex);
-  if(pMQTTClient == NULL) {
-    pthread_mutex_unlock(&pMQTTMutex);
-    return;
-  }
-  string Topic = Serial + "/Alarms";
+  if(pMQTTClient.socketfd == -1) return;
   json Msg = json::object();
   Msg["AlarmTime"] = time;
   Msg["Name"] = name;
   Msg["Priority"] = prio;
   Msg["Triggered"] = triggered;
   string TextMsg = Msg.dump();
-  mqtt_publish(pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_0);
+  string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + Serial + "/Alarms" : Serial + "/Alarms";
+  mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1);
   LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", Serial.c_str());
-  pthread_mutex_unlock(&pMQTTMutex);
+}
+void AnalyzerSoft::PublishConfig(const json &options) {
+  if(pMQTTClient.socketfd != -1) {
+    string TextMsg = options.dump();
+    string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + Serial + "/Config" : Serial + "/Config";
+    mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
+    LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", Serial.c_str());
+  }
 }
 float AnalyzerSoft::CalcChange(const float in, const float reference) {
   return ((in - reference) / reference) * 100;
@@ -752,7 +759,6 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   Params_t     *Aggreg = (Params_t*)run;
   This->pAnalyzerLock.ReadLock();
   uint64_t Start = Tools::GetTime();
-  Aggreg->Timestamp = Start; //TODO: This alter precise timestamp of samples, improve it as much as possible!
   Aggreg->AggregSamples = 1;
   if(This->pEventsWorker != NULL) This->pEventsWorker->Run(Aggreg);
   This->pFFTSamples = (This->pBlockSamples / 2) + 1;
@@ -832,105 +838,112 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     Aggreg->Current_THD[3] = (Aggreg->Current_THD[3] / Aggreg->Current_Harmonics[3 * 50]) * 100.0;
   }
   if(This->pEventsWorker != NULL) This->pEventsWorker->Wait();
-  This->pNowDataLock.ProviderWrite();
-  if(((This->pSequence % 15) == 0) && (This->pPrevTimestamp != 0)) {
-    LOGFile::Debug("Storing 3S aggregation for analyzer '%s'\n", This->Serial.c_str());
-    This->NormalizeAggreg(This->pAggreg3S);
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg3S);
-    if(This->pAggreg3S.Flag == false) {
-      float Variation = This->CalcChange(This->pAggreg3S.Frequency, This->pNominalFrequency);
-      for(uint8_t Range = 0; Range < FrequencyRangesLen; Range++) {
-        if((Variation >= FrequencyRanges[Range]) && (Variation < FrequencyRanges[Range + 1])) This->pAggreg1H.StatsFrequency[Range]++;
-      }
-    }
-    This->SaveAggreg(This->pAggreg3S);
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-    This->InitAggreg(This->pAggreg3S, AGGREG_3S);
-  }
-  This->AccumulateAggreg(This->pAggreg3S, This->pAggreg200MS);
-
-  if(((This->pAggreg200MS.Timestamp / 60000) > (This->pPrevTimestamp / 60000)) && (This->pPrevTimestamp != 0)) {
-    LOGFile::Debug("Storing 1M aggregation for analyzer '%s'\n", This->Serial.c_str());
-    This->pAggreg1M.Timestamp = This->pAggreg1M.Timestamp / 60000 * 60000 + 59999;
-    This->NormalizeAggreg(This->pAggreg1M);
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1M);
-    This->SaveAggreg(This->pAggreg1M);
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-
-    if((This->pAggreg200MS.Timestamp / 600000) > (This->pPrevTimestamp / 600000)) {
-      LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", This->Serial.c_str());
-      This->pAggreg10M.Timestamp = This->pAggreg10M.Timestamp / 600000 * 600000 + 599999;
-      This->NormalizeAggreg(This->pAggreg10M);
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg10M);
-      if(This->pAggreg10M.Flag == false) {
-        for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
-          if((This->pAggreg10M.Unbalance >= UnbalanceRanges[Range]) && (This->pAggreg10M.Unbalance < UnbalanceRanges[Range + 1])) This->pAggreg1H.StatsUnbalance[Range]++;
-        }
-        for(uint8_t i = 0; i < This->pVoltageChannels; i++) {
-          float Variation = This->CalcChange(This->pAggreg10M.Voltage[i], This->pNominalVoltage);
-          for(uint8_t Range = 0; Range < VoltageRangesLen; Range++) {
-            if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) This->pAggreg1H.StatsVoltage[Range]++;
-          }
-          for(uint8_t Range = 0; Range < THDRangesLen; Range++) {
-            if((This->pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (This->pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) This->pAggreg1H.StatsTHD[Range]++;
-          }
-          bool HarmonicsInRange = true;
-          for(uint8_t n = 0; n < HarmonicsAllowedLen; n++) {
-            float Variation = This->CalcChange(This->pAggreg10M.Voltage_Harmonics[i * 50 + n + 1], This->pNominalVoltage);
-              if(Variation > HarmonicsAllowed[n]) {
-                HarmonicsInRange = false;
-                break;
-              }
-          }
-          if(HarmonicsInRange == true) {
-            This->pAggreg1H.StatsHarmonics[0]++;
-          } else {
-            This->pAggreg1H.StatsHarmonics[1]++;
-          }
+  if(This->pSequence > 50) {
+    This->pNowDataLock.ProviderWrite();
+    if(((This->pSequence % 15) == 0) && (This->pPrevTimestamp != 0)) {
+      LOGFile::Debug("Storing 3S aggregation for analyzer '%s'\n", This->Serial.c_str());
+      This->NormalizeAggreg(This->pAggreg3S);
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg3S);
+      if(This->pAggreg3S.Flag == false) {
+        float Variation = This->CalcChange(This->pAggreg3S.Frequency, This->pNominalFrequency);
+        for(uint8_t Range = 0; Range < FrequencyRangesLen; Range++) {
+          if((Variation >= FrequencyRanges[Range]) && (Variation < FrequencyRanges[Range + 1])) This->pAggreg1H.StatsFrequency[Range]++;
         }
       }
-      This->SaveAggreg(This->pAggreg10M);
+      This->SaveAggreg(This->pAggreg3S);
+      if(This->pMQTT3S) This->PublishAggreg(This->pAggreg3S, "3S");
       if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-      This->InitAggreg(This->pAggreg10M, AGGREG_10M);
+      This->InitAggreg(This->pAggreg3S, AGGREG_3S);
     }
-    This->AccumulateAggreg(This->pAggreg10M, This->pAggreg1M);
+    This->AccumulateAggreg(This->pAggreg3S, This->pAggreg200MS);
 
-    if((This->pAggreg200MS.Timestamp / 900000) > (This->pPrevTimestamp / 900000)) {
-      LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", This->Serial.c_str());
-      This->pAggreg15M.Timestamp = This->pAggreg15M.Timestamp / 900000 * 900000 + 899999;
-      This->NormalizeAggreg(This->pAggreg15M);
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg15M);
-      This->SaveAggreg(This->pAggreg15M);
+    if(((This->pAggreg200MS.Timestamp / 60000) > (This->pPrevTimestamp / 60000)) && (This->pPrevTimestamp != 0)) {
+      LOGFile::Debug("Storing 1M aggregation for analyzer '%s'\n", This->Serial.c_str());
+      This->pAggreg1M.Timestamp = This->pAggreg1M.Timestamp / 60000 * 60000 + 59999;
+      This->NormalizeAggreg(This->pAggreg1M);
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1M);
+      This->SaveAggreg(This->pAggreg1M);
+      if(This->pMQTT1M) This->PublishAggreg(This->pAggreg1M, "1M");
       if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-      if((This->pAggreg200MS.Timestamp / 3600000) > (This->pPrevTimestamp / 3600000)) {
-        LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", This->Serial.c_str());
-        This->pAggreg1H.Timestamp = This->pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
-        This->NormalizeAggreg(This->pAggreg1H);
-        if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1H);
-        This->SaveAggreg(This->pAggreg1H);
+
+      if((This->pAggreg200MS.Timestamp / 600000) > (This->pPrevTimestamp / 600000)) {
+        LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", This->Serial.c_str());
+        This->pAggreg10M.Timestamp = This->pAggreg10M.Timestamp / 600000 * 600000 + 599999;
+        This->NormalizeAggreg(This->pAggreg10M);
+        if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg10M);
+        if(This->pAggreg10M.Flag == false) {
+          for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
+            if((This->pAggreg10M.Unbalance >= UnbalanceRanges[Range]) && (This->pAggreg10M.Unbalance < UnbalanceRanges[Range + 1])) This->pAggreg1H.StatsUnbalance[Range]++;
+          }
+          for(uint8_t i = 0; i < This->pVoltageChannels; i++) {
+            float Variation = This->CalcChange(This->pAggreg10M.Voltage[i], This->pNominalVoltage);
+            for(uint8_t Range = 0; Range < VoltageRangesLen; Range++) {
+              if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) This->pAggreg1H.StatsVoltage[Range]++;
+            }
+            for(uint8_t Range = 0; Range < THDRangesLen; Range++) {
+              if((This->pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (This->pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) This->pAggreg1H.StatsTHD[Range]++;
+            }
+            bool HarmonicsInRange = true;
+            for(uint8_t n = 0; n < HarmonicsAllowedLen; n++) {
+              float Variation = This->CalcChange(This->pAggreg10M.Voltage_Harmonics[i * 50 + n + 1], This->pNominalVoltage);
+                if(Variation > HarmonicsAllowed[n]) {
+                  HarmonicsInRange = false;
+                  break;
+                }
+            }
+            if(HarmonicsInRange == true) {
+              This->pAggreg1H.StatsHarmonics[0]++;
+            } else {
+              This->pAggreg1H.StatsHarmonics[1]++;
+            }
+          }
+        }
+        This->SaveAggreg(This->pAggreg10M);
+        if(This->pMQTT10M) This->PublishAggreg(This->pAggreg10M, "10M");
         if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-        This->InitAggreg(This->pAggreg1H, AGGREG_1H);
+        This->InitAggreg(This->pAggreg10M, AGGREG_10M);
       }
-      This->AccumulateAggreg(This->pAggreg1H, This->pAggreg15M);
-      This->InitAggreg(This->pAggreg15M, AGGREG_15M);
-    }
-    This->AccumulateAggreg(This->pAggreg15M, This->pAggreg1M);
-    This->InitAggreg(This->pAggreg1M, AGGREG_1M);
-  }
-  This->AccumulateAggreg(This->pAggreg1M, This->pAggreg200MS);
-  if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg200MS);
-  This->pPrevTimestamp = This->pAggreg200MS.Timestamp;
-  if(This->pSave200MS) {
-    LOGFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", This->Serial.c_str());
-    This->SaveAggreg(This->pAggreg200MS);
-  }
-  if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+      This->AccumulateAggreg(This->pAggreg10M, This->pAggreg1M);
 
-//  SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
-//  SysStatus->Lock.WriteLock();
-//  SysStatus->Events = This->pAggreg200MS.Flag;
-//  SysStatus->Lock.Unlock();
-  This->pNowDataLock.ProviderWait();
+      if((This->pAggreg200MS.Timestamp / 900000) > (This->pPrevTimestamp / 900000)) {
+        LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", This->Serial.c_str());
+        This->pAggreg15M.Timestamp = This->pAggreg15M.Timestamp / 900000 * 900000 + 899999;
+        This->NormalizeAggreg(This->pAggreg15M);
+        if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg15M);
+        This->SaveAggreg(This->pAggreg15M);
+        if(This->pMQTT15M) This->PublishAggreg(This->pAggreg15M, "15M");
+        if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+        if((This->pAggreg200MS.Timestamp / 3600000) > (This->pPrevTimestamp / 3600000)) {
+          LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", This->Serial.c_str());
+          This->pAggreg1H.Timestamp = This->pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
+          This->NormalizeAggreg(This->pAggreg1H);
+          if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1H);
+          This->SaveAggreg(This->pAggreg1H);
+          if(This->pMQTT1H) This->PublishAggreg(This->pAggreg1H, "1H");
+          if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+          This->InitAggreg(This->pAggreg1H, AGGREG_1H);
+        }
+        This->AccumulateAggreg(This->pAggreg1H, This->pAggreg15M);
+        This->InitAggreg(This->pAggreg15M, AGGREG_15M);
+      }
+      This->AccumulateAggreg(This->pAggreg15M, This->pAggreg1M);
+      This->InitAggreg(This->pAggreg1M, AGGREG_1M);
+    }
+    This->AccumulateAggreg(This->pAggreg1M, This->pAggreg200MS);
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg200MS);
+    This->pPrevTimestamp = This->pAggreg200MS.Timestamp;
+    if(This->pSave200MS) {
+      LOGFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", This->Serial.c_str());
+      This->SaveAggreg(This->pAggreg200MS);
+    }
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+
+  //  SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
+  //  SysStatus->Lock.WriteLock();
+  //  SysStatus->Events = This->pAggreg200MS.Flag;
+  //  SysStatus->Lock.Unlock();
+    This->pNowDataLock.ProviderWait();
+  }
   This->InitAggreg(This->pAggreg200MS, AGGREG_200MS);
   This->pBlockSamples     = 0;
   This->pBlockCyclesCount = 0;
@@ -1134,13 +1147,13 @@ void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
       LOGFile::Debug("Alarm triggered on analyzer '%s'\n", This->Serial.c_str());
       Database DB(This->Serial);
       DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(Aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", true, " + DB.Bind(Alarm.Priority) + ")");
-      This->PublishAlarm(Aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
+        if(This->pMQTTAlarms == true) This->PublishAlarm(Aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
     } else if((Alarm.ResultCount == 0) && (Alarm.Triggered == true)) {
       Alarm.Triggered = false;
       LOGFile::Debug("Alarm reseted on analyzer '%s'\n", This->Serial.c_str());
       Database DB(This->Serial);
       DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(Aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", false, " + DB.Bind(Alarm.Priority) + ")");
-      This->PublishAlarm(Aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
+      if(This->pMQTTAlarms == true) This->PublishAlarm(Aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
     }
   }
 }
@@ -1261,28 +1274,31 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
 }
 void *AnalyzerSoft::MQTT_Thread(void *params) {
   AnalyzerSoft *This = (AnalyzerSoft*)params;
-  static uint32_t BuffSize = 0x00020000;
   string User, Pass, Server;
-  int Socket = -1;
-  mqtt_client Client;
-  uint8_t *SendBuff = (uint8_t*)calloc(BuffSize, 1);
-  uint8_t *RecvBuff = (uint8_t*)calloc(BuffSize, 1);
   while(This->pMQTTTerminate == false) {
     if(This->pAnalyzerLock.TryReadLock() == false) {
       usleep(100000);
       continue;
     }
     if((This->pMQTTUser != User) || (This->pMQTTPass != Pass) || (This->pMQTTServer != Server)) {
-      if(Socket != -1) {
-        close(Socket);
-        Socket = -1;
+      if(This->pMQTTClient.socketfd != -1) {
+        close(This->pMQTTClient.socketfd);
+        This->pMQTTClient.socketfd = -1;
       }
       User   = This->pMQTTUser;
       Pass   = This->pMQTTPass;
       Server = This->pMQTTServer;
     }
     This->pAnalyzerLock.Unlock();
-    if(Socket == -1) {
+    mqtt_sync(&This->pMQTTClient);
+    if(This->pMQTTClient.error == MQTT_ERROR_CONNECT_NOT_CALLED) {
+      mqtt_connect(&This->pMQTTClient, NULL, NULL, NULL, 0, (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
+      if(This->pMQTTConfig == true) This->PublishConfig(CheckConfig(ConfigManager::ReadConfig(This->pConfigPath)));
+    } else if(This->pMQTTClient.error == MQTT_ERROR_SOCKET_ERROR) {
+      if(This->pMQTTClient.socketfd != -1) {
+        close(This->pMQTTClient.socketfd);
+        This->pMQTTClient.socketfd = -1;
+      }
       URL  Url(Server);
       char Port[16];
       addrinfo Hints = { .ai_flags = 0, .ai_family = AF_UNSPEC, .ai_socktype = SOCK_STREAM };
@@ -1295,20 +1311,37 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
         continue;
       }
       for(addrinfo *p = ServInfo; p != NULL; p = p->ai_next) {
-        Socket = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if(Socket == -1) continue;
-        if(connect(Socket, p->ai_addr, p->ai_addrlen) == -1) continue;
-        fcntl(Socket, F_SETFL, fcntl(Socket, F_GETFL) | O_NONBLOCK);
+        This->pMQTTClient.socketfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if(This->pMQTTClient.socketfd == -1) {
+          LOGFile::Error("%s:%d -> (%s)\n", __func__, __LINE__, strerror(errno));
+          continue;
+        }
+        if(connect(This->pMQTTClient.socketfd, p->ai_addr, p->ai_addrlen) == -1) {
+          close(This->pMQTTClient.socketfd);
+          This->pMQTTClient.socketfd = -1;
+          continue;
+        }
+        fcntl(This->pMQTTClient.socketfd, F_SETFL, fcntl(This->pMQTTClient.socketfd, F_GETFL) | O_NONBLOCK);
         break;
       }
       freeaddrinfo(ServInfo);
-      if(Socket == -1) {
+      if(This->pMQTTClient.socketfd == -1) {
         LOGFile::Debug("Analyzer '%s' can not connect to MQTT broker\n", This->Serial.c_str());
         usleep(1000000);
         continue;
+      } else {
+        mqtt_reinit(&This->pMQTTClient, This->pMQTTClient.socketfd, This->pMQTTSendBuff, This->pMQTTBuffSize, This->pMQTTRecvBuff, This->pMQTTBuffSize);
       }
+    } else if(This->pMQTTClient.error != MQTT_OK) {
+      LOGFile::Error("MQTT ERROR: %s (%d)\n", mqtt_error_str(This->pMQTTClient.error), This->pMQTTClient.error);
+//HAGO COSAS
+    }
+    usleep(100000);
+
+
+/*    if(true) {
       mqtt_init(&Client, Socket, SendBuff, BuffSize, RecvBuff, BuffSize, [](void** unused, struct mqtt_response_publish *published) {});
-      mqtt_connect(&Client, NULL, NULL, NULL, 0, (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
+
       if(Client.error != MQTT_OK) {
         LOGFile::Error("Analyzer '%s' MQTT broker error: %s\n", mqtt_error_str(Client.error));
         close(Socket);
@@ -1320,16 +1353,12 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
       This->pMQTTClient = &Client;
       pthread_mutex_unlock(&This->pMQTTMutex);
     } else {
-      mqtt_sync(&Client);
-      usleep(100000);
-    }
+    }*/
   }
-  pthread_mutex_lock(&This->pMQTTMutex);
-  This->pMQTTClient = NULL;
-  pthread_mutex_unlock(&This->pMQTTMutex);
-  close(Socket);
-  free(SendBuff);
-  free(RecvBuff);
+  if(This->pMQTTClient.socketfd != -1) {
+    close(This->pMQTTClient.socketfd);
+    This->pMQTTClient.socketfd = -1;
+  }
   return NULL;
 }
 void *AnalyzerSoft::Sync_RespThread(void *args) {
