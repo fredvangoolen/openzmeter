@@ -29,7 +29,8 @@
         </div>
       </div>
       <div class="col-lg-12">
-        <detail-tabs :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events']" storage="VoltageDetailTab" v-model="ActiveTab"></detail-tabs>
+        <detail-tabs v-if="analyzer.NominalFrequency>0" :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events']" storage="Voltage.Details.Tab.AC" v-model="ActiveTab"></detail-tabs>
+        <detail-tabs v-if="analyzer.NominalFrequency==0" :tabs="['Waveform', 'Advanced']" storage="Voltage.Details.Tab.DC" v-model="ActiveTab"></detail-tabs>
         <waveform v-if="ActiveTab=='Waveform'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></waveform>
         <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
         <evolution v-if="ActiveTab=='Evolution'" :data="TransferCubism.Data" :analyzer="analyzer"></evolution>
@@ -76,6 +77,8 @@
       this.Transfer10M.Update(this.analyzer, '10M', 'LastSamples');
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
       this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
+      this.LocalStorage_Set("bliu", 2);
+      this.LocalStorage_Set("blasdadsu", 42);
     },
     beforeDestroy: function() {
       this.TransferGraph.Destroy();

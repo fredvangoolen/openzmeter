@@ -1,3 +1,4 @@
+import objectPath from 'object-path';
 const openZmeter = {
   install: function(Vue, options) {
     Vue.prototype.CreateSeriesTransfer = (parent, series) => {
@@ -266,29 +267,6 @@ const openZmeter = {
       };
       return Transfer;
     },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    Vue.prototype.CancelTransfer = (transfer) => {
-//      if(transfer == null) transfer = { Timer: null, CancelFunc: null };
-//      if(transfer.Timer != null) clearTimeout(transfer.Timer);
-//      if(transfer.CancelFunc != null) transfer.CancelFunc();
-//      return transfer;
-//    },
     Vue.prototype.MatrixColsRange = (values, cols, options) => {
       var UpperRange = -Infinity;
       var LowerRange = +Infinity;
@@ -370,6 +348,25 @@ const openZmeter = {
     },
     Vue.prototype.BinPower = (complex) => {
       return Math.sqrt(Math.pow(complex[0], 2.0) + Math.pow(complex[1], 2.0));
+    }
+    Vue.prototype.LocalStorage_Get = (path) => {
+      var Conf;
+      try {
+        Conf = JSON.parse(localStorage.getItem('Settings'));
+        return objectPath.get(Conf, path);
+      } catch(err) {
+        return null;
+      }
+    },
+    Vue.prototype.LocalStorage_Set = (path, json) => {
+      var Conf;
+      try {
+        Conf = JSON.parse(localStorage.getItem('Settings'));
+      } catch(err) {
+        Conf = {};
+      }
+      objectPath.set(Conf, path, json);
+      localStorage.setItem('Settings', JSON.stringify(Conf));
     }
   }
 };
