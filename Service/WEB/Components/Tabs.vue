@@ -16,12 +16,12 @@
     },
     watch: {
       value: function(val) {
-        if(this.storage != null) localStorage.setItem(this.storage, val);
+        if(this.storage != null) this.LocalStorage_Set(this.storage, val);
       }
     },
     created: function() {
       if(this.storage != null) {
-        var Find = this.tabs.indexOf(localStorage.getItem(this.storage));
+        var Find = this.tabs.indexOf(this.LocalStorage_Get(this.storage));
         this.$emit('input', (Find == -1) ? this.tabs[0] : this.tabs[Find]);
       } else {
         var Find = this.tabs.indexOf(this.value);
