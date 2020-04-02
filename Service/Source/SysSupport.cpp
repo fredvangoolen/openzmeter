@@ -178,6 +178,7 @@ void SysSupport::AddSystemAction(const string &action) {
   pthread_mutex_unlock(&pSystemActionMutex);
 }
 void *SysSupport::Actions_Thread(void *params) {
+  nice(5);
   while(true) {
     pthread_mutex_lock(&pSystemActionMutex);
     if(pSystemActions.size() == 0) pthread_cond_wait(&pSystemActionCond, &pSystemActionMutex);
@@ -210,6 +211,7 @@ void *SysSupport::Actions_Thread(void *params) {
 #ifdef OPENWRT
 void *SysSupport::Bluetooth_Thread(void *params) {
   DBusConnection *DBus = NULL;
+  nice(5);
   while(true) {
     pSysStatLock.ReadLock();
     bool   PrevEnable = pBT_Enabled;
@@ -318,6 +320,7 @@ void *SysSupport::Bluetooth_Thread(void *params) {
   return NULL;
 }
 void *SysSupport::SysStat_Thread(void *params) {
+  nice(15);
   uint64_t NextUpdate = Tools::GetTime() + 5000;
   while(pTerminate == false) {
     usleep(100000);
@@ -479,20 +482,6 @@ void SysSupport::GetVersionCallback(const json &params, Response &response) {
   json Result = json::object();
   Result["Version"] = __BUILD__;
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
-//  Database DB;
-//  if(params["NewsTime"].is_number()) {
-//    uint64_t Time = params["NewsTime"];
-//    DB.ExecSentenceAsyncResult("SELECT json_build_object('NewsTime', newstime, 'Header', header, 'Contents', contents) as result FROM news WHERE newstime = " + DB.Bind(Time));
-//  } else {
-//    DB.ExecSentenceAsyncResult("SELECT json_build_object('Version', '" __BUILD__ "', 'News', COALESCE(array_agg(newstime ORDER BY newstime ASC), '{}')) AS result from news");
-//  }
-//  if(DB.FecthRow() == false) {
-//    response.set_content("", "text/plain");
-//    response.status = HTTP_INTERNAL_SERVER_ERROR;
-//  } else {
-//    response.set_content(DB.ResultString("result"), "application/json");
-//    response.status = HTTP_OK;
-//  }
 }
 void SysSupport::GetUsersCallback(const json &params, Response &response) {
   //only 'admin' user can get this information

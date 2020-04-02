@@ -610,27 +610,27 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
 void AnalyzerSoft::SaveEvent(Event_t &evt) {
   Database DB(Serial);
   string Type = (evt.Type == EVT_RVC) ? "RVC" : (evt.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (evt.Type == EVT_DIP) ? "DIP" : "SWELL";
-  vector<vector<float> > RMS = vector<vector< float> >(evt.Reference.size(), vector<float>());
-  vector<vector<float> > RAW = vector<vector< float> >(evt.Reference.size(), vector<float>());
-  for(deque<vector<float> >::iterator it = evt.SamplesRMS_A.begin(); it != evt.SamplesRMS_A.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
-  }
-  for(deque<vector<float> >::iterator it = evt.SamplesRMS_B.begin(); it != evt.SamplesRMS_B.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
-  }
-  for(deque<vector<float> >::iterator it = evt.SamplesRAW_A.begin(); it != evt.SamplesRAW_A.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
-  }
-  for(deque<vector<float> >::iterator it = evt.SamplesRAW_B.begin(); it != evt.SamplesRAW_B.end(); it++) {
-    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
-  }
-  if(evt.State == EVT_RUNNING) {
-    DB.ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, finished, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + DB.Bind(evt.Start) + ", 0, " + DB.Bind(pSamplerate) + ", false, " + DB.Bind(Type) + ", " + DB.Bind(evt.Reference) + ", " + DB.Bind(evt.PeakValue) + ", " + DB.Bind(evt.ChangeValue) + ", '', " + DB.Bind(RAW) + ", " + DB.Bind(RMS) + ")");
-  } else if(evt.State == EVT_CLOSING) {
-    DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", duration = " + DB.Bind(evt.Duration) + ", peak = " + DB.Bind(evt.PeakValue) + ", change = " + DB.Bind(evt.ChangeValue) + ", samples2 = " + DB.Bind(RAW) + ", rms2 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
-  } else {
-    DB.ExecSentenceNoResult("UPDATE events SET finished = TRUE, samples3 = " + DB.Bind(RAW) + ", rms3 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
-  }
+//  vector<vector<float> > RMS = vector<vector< float> >(evt.Reference.size(), vector<float>());
+//  vector<vector<float> > RAW = vector<vector< float> >(evt.Reference.size(), vector<float>());
+//  for(deque<vector<float> >::iterator it = evt.SamplesRMS_A.begin(); it != evt.SamplesRMS_A.end(); it++) {
+//    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
+//  }
+//  for(deque<vector<float> >::iterator it = evt.SamplesRMS_B.begin(); it != evt.SamplesRMS_B.end(); it++) {
+//    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
+//  }
+//  for(deque<vector<float> >::iterator it = evt.SamplesRAW_A.begin(); it != evt.SamplesRAW_A.end(); it++) {
+//    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
+//  }
+//  for(deque<vector<float> >::iterator it = evt.SamplesRAW_B.begin(); it != evt.SamplesRAW_B.end(); it++) {
+//    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
+//  }
+//  if(evt.State == EVT_RUNNING) {
+//    DB.ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, finished, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + DB.Bind(evt.Start) + ", 0, " + DB.Bind(pSamplerate) + ", false, " + DB.Bind(Type) + ", " + DB.Bind(evt.Reference) + ", " + DB.Bind(evt.PeakValue) + ", " + DB.Bind(evt.ChangeValue) + ", '', " + DB.Bind(RAW) + ", " + DB.Bind(RMS) + ")");
+//  } else if(evt.State == EVT_CLOSING) {
+//    DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", duration = " + DB.Bind(evt.Duration) + ", peak = " + DB.Bind(evt.PeakValue) + ", change = " + DB.Bind(evt.ChangeValue) + ", samples2 = " + DB.Bind(RAW) + ", rms2 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
+//  } else {
+//    DB.ExecSentenceNoResult("UPDATE events SET finished = TRUE, samples3 = " + DB.Bind(RAW) + ", rms3 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
+//  }
   evt.SamplesRAW_A = deque<vector<float> >();
   evt.SamplesRMS_A = deque<vector<float> >();
   evt.SamplesRAW_B = deque<vector<float> >();
@@ -1159,6 +1159,7 @@ void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
 }
 void *AnalyzerSoft::Sync_Thread(void *params) {
   AnalyzerSoft *This = (AnalyzerSoft*)params;
+  nice(10);
   string Cookie, User, Pass, Server;
   uint32_t ThreadsCount = 0;
   pthread_mutex_t Mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -1274,6 +1275,7 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
 }
 void *AnalyzerSoft::MQTT_Thread(void *params) {
   AnalyzerSoft *This = (AnalyzerSoft*)params;
+  nice(10);
   string User, Pass, Server;
   while(This->pMQTTTerminate == false) {
     if(This->pAnalyzerLock.TryReadLock() == false) {
@@ -1459,6 +1461,8 @@ void AnalyzerSoft::GetSeries(const json &params, Response &response) {
   if(((To - From) / PeriodSeconds) > 100000) return HTTPServer::FillResponse(response, "Returned period to large for this aggregation level", "text/plain", HTTP_BAD_REQUEST);
   Database DB(Serial);
   string Query = "SELECT ROW_TO_JSON(Result) AS result FROM ( SELECT ";
+  float Default[200];
+  for(uint8_t n = 0; n < 200; n++) Default[n] = 0.0;
   for(uint i = 0; i < params["Series"].size(); i++) {
     if(!params["Series"][i].is_string()) return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
     string Serie = params["Series"][i];
@@ -1474,39 +1478,30 @@ void AnalyzerSoft::GetSeries(const json &params, Response &response) {
       Query += "COALESCE(ARRAY_AGG(rms_i ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Current") + ", ";
     } else if((Serie == "ACTIVE_POWER") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {
       if(Aggreg == "1M") {
-        vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-        Query += "COALESCE(ARRAY_AGG(COALESCE(active_power, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Active_Power") + ", ";
+        Query += "COALESCE(ARRAY_AGG(COALESCE(active_power, " + DB.Bind(Default, pVoltageChannels) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Active_Power") + ", ";
       } else {
         Query += "COALESCE(ARRAY_AGG(active_power ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Active_Power") + ", ";
       }
     } else if((Serie == "REACTIVE_POWER") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {
       if(Aggreg == "1M") {
-        vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-        Query += "COALESCE(ARRAY_AGG(COALESCE(reactive_power, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Reactive_Power") + ", ";
+        Query += "COALESCE(ARRAY_AGG(COALESCE(reactive_power, " + DB.Bind(Default, pVoltageChannels) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Reactive_Power") + ", ";
       } else {
         Query += "COALESCE(ARRAY_AGG(reactive_power ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Reactive_Power") + ", ";
       }
     } else if((Serie == "POWER_FACTOR") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
-      vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-      Query += "COALESCE(ARRAY_AGG(COALESCE(power_factor, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Power_Factor") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(power_factor, " + DB.Bind(Default, pVoltageChannels) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Power_Factor") + ", ";
     } else if((Serie == "VOLTAGE_THD") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
-      vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-      Query += "COALESCE(ARRAY_AGG(COALESCE(thd_v, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_THD") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(thd_v, " + DB.Bind(Default, pVoltageChannels) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_THD") + ", ";
     } else if((Serie == "CURRENT_THD") && (((Aggreg == "200MS") || Aggreg == "1M"))) {
-      vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, NAN);
-      Query += "COALESCE(ARRAY_AGG(COALESCE(thd_i, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Current_THD") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(thd_i, " + DB.Bind(Default, pCurrentChannels) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Current_THD") + ", ";
     } else if((Serie == "PHI") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
-      vector<float> Default = vector<float>((pMode == PHASE1) ? 1 : 3, NAN);
-      Query += "COALESCE(ARRAY_AGG(COALESCE(phi, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Phi") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(phi, " + DB.Bind(Default, pVoltageChannels) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Phi") + ", ";
     } else if((Serie == "VOLTAGE_HARMONICS") && (Aggreg == "1M")) {
-      vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
-      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_v, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_Harmonics") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_v, " + DB.Bind(Default, pVoltageChannels, 50) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_Harmonics") + ", ";
     } else if((Serie == "CURRENT_HARMONICS") && (Aggreg ==  "1M")) {
-      vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, vector<float>(50, NAN));
-      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_i, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Current_Harmonics") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_i, " + DB.Bind(Default, pCurrentChannels, 50) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Current_Harmonics") + ", ";
     } else if((Serie == "POWER_HARMONICS") && (Aggreg == "1M")) {
-      vector<vector<float> > Default = vector<vector<float> >((pMode == PHASE1) ? 1 : 3, vector<float>(50, NAN));
-      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_p, " + DB.Bind(Default) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Power_Harmonics") + ", ";
+      Query += "COALESCE(ARRAY_AGG(COALESCE(harmonics_p, " + DB.Bind(Default, pVoltageChannels, 50) + ") ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Power_Harmonics") + ", ";
     } else if((Serie == "VOLTAGE_STATS") && (Aggreg ==  "1H")) {
       Query += "COALESCE(ARRAY_AGG(stat_voltage ORDER BY sampletime ASC), '{}') AS " + DB.BindID("Voltage_Stats") + ", ";
     } else if((Serie == "FREQUENCY_STATS") && (Aggreg ==  "1H")) {

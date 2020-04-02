@@ -17,15 +17,20 @@
 #include "cpp-httplib/httplib.h"
 #include "nlohmann/json.h"
 #include "Tools.h"
+#include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class Telegram final {
   private :
-    string  pToken;
+    static string          pToken;
+    static pthread_t       pThread;
+    static pthread_mutex_t pMutex;
+    static bool            pTerminate;
   private :
-    static void GetTelegramCallback(const json &params, Response &response);
-    static void SetTelegramCallback(const json &params, Response &response);
+    static void  GetTelegramCallback(const json &params, Response &response);
+    static void  SetTelegramCallback(const json &params, Response &response);
+    static void *Thread_Func(void *params);
   public :
     Telegram();
     ~Telegram();

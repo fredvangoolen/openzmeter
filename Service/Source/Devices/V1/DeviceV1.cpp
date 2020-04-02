@@ -161,6 +161,7 @@ void DeviceV1::Configure(const json& config) {
 }
 void *DeviceV1::Capture_Thread(void *args) {
   DeviceV1 *This = (DeviceV1*)args;
+  nice(-20);
   for(uint8_t n = 0; n < DEVICEV1_TRANSFERS; n++) This->pTransfers[n].Init(This, 32768);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
     struct timeval tv = { 0, 100000 };

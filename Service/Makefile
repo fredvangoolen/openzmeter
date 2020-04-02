@@ -9,7 +9,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
 EXECUTABLE_SOURCE = Source/Tools.cpp Source/Main.cpp Source/Database.cpp Source/HTTPServer.cpp Source/SysSupport.cpp Source/Devices/DeviceManager.cpp Source/Devices/Device.cpp Source/Analyzers/Analyzer.cpp Source/Tariffs/Tariff.cpp Source/MODBus.cpp Source/Telegram.cpp
-CFLAGS += -Wno-psabi -Wall -no-pie -std=c++14 -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs
+CFLAGS += -Wno-psabi -Wall -no-pie -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs
 LDFLAGS += -lstdc++ -lpq -lz -lpthread -lm
 
 #Add libs (cctz, nlohmann, muparser, httplib, mqtt-c)
@@ -107,7 +107,7 @@ $(EXECUTABLE_TARGET): $(RESOURCES_TARGET) $(EXECUTABLE_OBJS)
 Tmp/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "Building" $@
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -std=c++14 -c $< -o $@
 
 Tmp/%.c.o: %.c
 	@mkdir -p $(dir $@)
