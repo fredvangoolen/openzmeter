@@ -79,7 +79,7 @@
       Save: function() {
         this.ShowSpinner = true;
         this.$http.post('setAnalyzer', this.Analyzer).then(
-          (result) => { this.$emit('close', this.Analyzer.Analyzer); },
+          (result) => { this.$emit('close', this.Analyzer); },
           (fail) => {
             this.ShowSpinner = false;
             this.Error = 'Failed to save analyzer!';

@@ -178,21 +178,6 @@ void DeviceManager::SetEventCallback(const json &params, Response &response) {
 void DeviceManager::DelEventCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::DelEvent);
 }
-//void DeviceManager::GetRatesCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Device::GetRates);
-//}
-//void DeviceManager::GetRateCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Device::GetRate);
-//}
-//void DeviceManager::SetRateCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Device::SetRate);
-//}
-//void DeviceManager::DelRateCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Device::DelRate);
-//}
-//void DeviceManager::AddRateCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Device::AddRate);
-//}
 void DeviceManager::GetPricesCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetPrices);
 }

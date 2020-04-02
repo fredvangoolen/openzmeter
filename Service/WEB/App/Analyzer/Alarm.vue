@@ -77,6 +77,7 @@
     computed: {
       Values: function() {
         var Result = [];
+        if(this.Data == null) return Result;
         for(var n in this.Data.Variables) {
           var Var = { Name: n, Value: this.Round(this.Data.Variables[n], 3) };
           if(Var.Name == 'Voltage') Var.Units = 'V';

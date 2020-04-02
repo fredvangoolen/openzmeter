@@ -63,6 +63,8 @@ int main(int argc, char** argv) {
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
       ConfigFileName = &argv[i][9];
+    } else if(strcmp(argv[i], "--debug") == 0) {
+      LOGFile::EnableDebug();
     } else if(strcmp(argv[i], "--daemon") == 0) {
       RunDaemon();
     } else if(strcmp(argv[i], "--help") == 0) {

@@ -77,7 +77,8 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
   stat_voltage   int4[]  NOT NULL,
   stat_frequency int4[]  NOT NULL,
   stat_thd       int4[]  NOT NULL,
-  stat_harmonics int4[]  NOT NULL
+  stat_harmonics int4[]  NOT NULL,
+  stat_unbalance int4[]  NOT NULL
 ) WITH (OIDS=FALSE);
 --ALTER TABLE aggreg_1h ADD COLUMN IF NOT EXISTS stat_unbalance int4[];
 --UPDATE aggreg_1h SET stat_unbalance = array_fill(0, ARRAY[31]) WHERE stat_unbalance IS NULL;
