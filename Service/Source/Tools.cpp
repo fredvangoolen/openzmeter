@@ -167,28 +167,37 @@ void ProviderLocks::ProviderWrite() {
 }
 void ProviderLocks::ProviderWait() {
   pthread_mutex_lock(&pMutex);
-  if(pConsumers > 0) pthread_cond_wait(&pProducerCond, &pMutex);
+  while(pConsumers > 0) pthread_cond_wait(&pProducerCond, &pMutex);
   pDataReady = false;
   pthread_mutex_unlock(&pMutex);
 }
 bool ProviderLocks::ConsumerWait(uint32_t timeoutMS) {
-  int Error = 0;
   pthread_mutex_lock(&pMutex);
   pConsumers++;
-  if(pDataReady == false) {
-    struct timeval  Current;
-    struct timespec Timeout;
-    gettimeofday(&Current, NULL);
-    Timeout.tv_sec  = Current.tv_sec + (timeoutMS / 1000);
-    Timeout.tv_nsec = (timeoutMS % 1000) * 1000000;
-    Error = pthread_cond_timedwait(&pConsumersCond, &pMutex, &Timeout);
+  struct timeval  Current;
+  struct timespec Timeout;
+  gettimeofday(&Current, NULL);
+  Timeout.tv_sec  = Current.tv_sec + (timeoutMS / 1000);
+  Timeout.tv_nsec = (timeoutMS % 1000) * 1000000;
+  while((pDataReady == false) && (pTerminate == false)) {
+    int Error = pthread_cond_timedwait(&pConsumersCond, &pMutex, &Timeout);
+    if((Error == ETIMEDOUT) || (pTerminate == true)){
+      pConsumers--;
+      if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
+      pthread_mutex_unlock(&pMutex);
+      return false;
+    } else if(Error != 0) {
+      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      return false;
+    }
   }
-  if(Error != 0) {
-    pConsumers--;
-    if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
+  if(pTerminate == true) {
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  } else {
+    pthread_mutex_unlock(&pMutex);
+    return true;
   }
-  pthread_mutex_unlock(&pMutex);
-  return (Error == 0);
 }
 void ProviderLocks::ConsumerEnds() {
   pthread_mutex_lock(&pMutex);
@@ -283,6 +292,7 @@ FILE           *LOGFile::pFile     = NULL;
 LOGFile::Type   LOGFile::pLevel    = LOGFile::DEBUG;
 bool            LOGFile::pConsole  = true;
 pthread_mutex_t LOGFile::pMutex    = PTHREAD_MUTEX_INITIALIZER;
+bool            LOGFile::pDebug    = false;
 LOGFile::LOGFile() {
   string Name = "/var/log/openZmeter.log";
   json Config = ConfigManager::ReadConfig("/Log");
@@ -304,6 +314,9 @@ LOGFile::~LOGFile() {
   pthread_mutex_lock(&pMutex);
   if(pFile != NULL) fclose(pFile);
   pthread_mutex_unlock(&pMutex);
+}
+void LOGFile::EnableDebug() {
+  pDebug = true;
 }
 void LOGFile::Debug(const char* msg, ...) {
   va_list args;
@@ -347,7 +360,7 @@ void LOGFile::Msg(Type type, const char *msg, va_list params) {
       printf("\033[1;31m%s\033[0m %s", DateStr, MsgStr);
     } else if(type == WARNING) {
       printf("\033[1;33m%s\033[0m %s", DateStr, MsgStr);
-    } else if(type == DEBUG) {
+    } else if((type == DEBUG) && (pDebug == true)) {
       printf("\033[1;37m%s\033[0m %s", DateStr, MsgStr);
     } else if(type == INFO) {
       printf("\033[1;34m%s\033[0m %s", DateStr, MsgStr);

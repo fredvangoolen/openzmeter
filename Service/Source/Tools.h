@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 #include <pthread.h>
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.h"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 using namespace std;
@@ -120,12 +120,14 @@ class LOGFile {
     static bool             pConsole;
     static FILE            *pFile;
     static Type             pLevel;
+    static bool             pDebug;
   private :
     static void Msg(Type type, const char *msg, va_list params);
   public :
     LOGFile();
     virtual ~LOGFile();
   public :
+    static void EnableDebug();
     static void CloseConsole();
     static void Info(const char *msg, ...);
     static void Warning(const char *msg, ...);

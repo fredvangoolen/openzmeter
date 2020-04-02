@@ -13,7 +13,7 @@
   import chroma from 'chroma-js';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { width: Number, height: Number, range: { type: Array, required: true }, units: { type: String, required: true } },
+    props: { width: Number, height: Number, range: Array, units: String },
     data() {
       return { Divs: [], Prefix: '', Min: '', Max: '' };
     },

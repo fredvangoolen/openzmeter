@@ -20,8 +20,6 @@
 #ifdef OPENWRT
   #include <iwlib.h>
   #include <dbus/dbus.h>
-#else
-
 #endif
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;

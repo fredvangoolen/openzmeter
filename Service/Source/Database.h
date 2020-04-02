@@ -20,7 +20,7 @@
 #include <sstream>
 #include <inttypes.h>
 #include <libpq-fe.h>
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using json = nlohmann::json;

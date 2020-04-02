@@ -106,21 +106,6 @@ bool Device::SetEvent(const json &params, Response &response) {
 bool Device::DelEvent(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::DelEvent);
 }
-//bool Device::GetRates(const json &params, Response &response) {
-//  return CallAnalyzerFunction(params, response, &Analyzer::GetRates);
-//}
-//bool Device::GetRate(const json &params, Response &response) {
-//  return CallAnalyzerFunction(params, response, &Analyzer::GetRate);
-//}
-//bool Device::SetRate(const json &params, Response &response) {
-//  return CallAnalyzerFunction(params, response, &Analyzer::SetRate);
-//}
-//bool Device::DelRate(const json &params, Response &response) {
-//  return CallAnalyzerFunction(params, response, &Analyzer::DelRate);
-//}
-//bool Device::AddRate(const json &params, Response &response) {
-//  return CallAnalyzerFunction(params, response, &Analyzer::AddRate);
-//}
 bool Device::GetPrices(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetPrices);
 }

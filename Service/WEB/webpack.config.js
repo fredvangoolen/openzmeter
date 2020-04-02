@@ -1,6 +1,7 @@
 var path = require('path');
 var webpack = require('webpack');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+//const TerserPlugin = require('terser-webpack-plugin');
+//const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 //const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 module.exports = {
@@ -34,17 +35,8 @@ module.exports = {
         options: {
           loaders: {
           }
-          // other vue-loader options go here
         }
       },
-//      {
-//        test: /\.js$/,
-//        exclude: /node_modules/,
-//        loader: 'eslint-loader',
-//        options: {
-//          // eslint options (if necessary)
-//        },
-//      },
       {
         test: /\.js$/,
         loader: 'babel-loader',
@@ -97,14 +89,6 @@ if(process.env.NODE_ENV === 'production') {
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: '"production"'
-      }
-    }),
-    new UglifyJsPlugin({
-      'uglifyOptions': {
-          parallel: true,
-          cache: true,
-          compress: { warnings: false },
-          sourceMap: false
       }
     }),
     new webpack.LoaderOptionsPlugin({

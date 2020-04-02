@@ -16,7 +16,7 @@
 #pragma once
 #include <set>
 #include <pthread.h>
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.h"
 #include "Analyzer.h"
 #include "HTTPServer.h"
 #include "Tools.h"
@@ -64,11 +64,6 @@ class Device {
     bool GetEvent(const json &params, Response &response);
     bool SetEvent(const json &params, Response &response);
     bool DelEvent(const json &params, Response &response);
-//    bool GetRates(const json &params, Response &response);
-//    bool GetRate(const json &params, Response &response);
-//    bool SetRate(const json &params, Response &response);
-//    bool DelRate(const json &params, Response &response);
-//    bool AddRate(const json &params, Response &response);
     bool GetPrices(const json &params, Response &response);
     bool TestAlarm(const json &params, Response &response);
     bool GetAlarms(const json &params, Response &response);

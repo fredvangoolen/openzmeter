@@ -93,7 +93,7 @@
             Min = Math.min(Min, this.Days[i].Cells[n].Value);
           }
         }
-        this.$emit('range', [Min, Max]);
+        this.$emit('update:range', [Min, Max]);
         var ColorScale = chroma.bezier(['#00429d', '#96ffea', '#ffffe0', '#ff005e', '#93003a']);
         var Export = [];
         var Row = ['Day', 'Date'];
