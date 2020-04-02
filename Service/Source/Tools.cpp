@@ -17,10 +17,11 @@
 #include <stdarg.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#include <sys/resource.h>
 #include <unistd.h>
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-Worker::Worker(const string &name, void *param, void (*callback)(void*, void*)) {
+Worker::Worker(const string &name, void *param, void (*callback)(void*, void*), int8_t nice) {
   pWorking       = false;
   pTerminate     = false;
   pCond          = PTHREAD_COND_INITIALIZER;
@@ -33,6 +34,7 @@ Worker::Worker(const string &name, void *param, void (*callback)(void*, void*)) 
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
   }
+  if(nice != 0) setpriority(PRIO_PROCESS, pThread, -nice);
   pthread_setname_np(pThread, name.c_str());
 }
 Worker::~Worker() {

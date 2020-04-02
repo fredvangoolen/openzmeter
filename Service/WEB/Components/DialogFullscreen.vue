@@ -55,15 +55,22 @@
     font-size: 14px;
     width: 100%;
     height: 100%;
-    padding: 0px;
+    padding: 10px;
     margin: 0px !important;
   }
   .modal-content {
     height: 100%;
   }
-  @media (min-width: 640px) {
+  @media (max-width: 640px) {
     .modal-dialog {
-      padding: 10px;
+      padding: 0px;
+    }
+    .modal-content {
+      border: none;
+      border-radius: 0px;
+    }
+    .modal-header {
+      border-radius: 0px;
     }
   }
 </style>

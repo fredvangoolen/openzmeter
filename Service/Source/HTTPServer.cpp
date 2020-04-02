@@ -77,21 +77,22 @@ HTTPTaskQueue::~HTTPTaskQueue() {
   shutdown();
 }
 void HTTPTaskQueue::enqueue(std::function<void()> fn) {
-  pthread_mutex_lock(&pLocks);
   Worker_t *Tmp = NULL;
+  pthread_mutex_lock(&pLocks);
+  pUsedWorkers++;
   if(pFreeWorkers.size() > 0) {
     Tmp = pFreeWorkers.front();
     pFreeWorkers.pop_front();
-  } else {
+  }
+  pthread_mutex_unlock(&pLocks);
+  if(Tmp == NULL) {
     Tmp = (Worker_t*)calloc(sizeof(Worker_t), 1);
-    Tmp->Thread = new Worker("HTTPWorker", this, Thread);
+    Tmp->Thread = new Worker("HTTPWorker", this, Thread, 15);
   }
   if(Tmp != NULL) {
     Tmp->Function = fn;
     Tmp->Thread->Run(Tmp);
   }
-  pUsedWorkers++;
-  pthread_mutex_unlock(&pLocks);
 }
 void HTTPTaskQueue::shutdown() {
   pthread_mutex_lock(&pLocks);
@@ -155,8 +156,12 @@ HTTPServer::HTTPServer() {
   Config["Port"] = pPort;
   Config["RelativePath"] = pRelativePath;
   ConfigManager::WriteConfig("/HTTPServer", Config);
-  pthread_create(&pThread, NULL, Listen_Thread, (void*)this);
-  pthread_setname_np(pThread, "HTTPServer");
+  if(pthread_create(&pThread, NULL, Listen_Thread, (void*)this) != 0) {
+    pThread = 0;
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  } else {
+    pthread_setname_np(pThread, "HTTPServer");
+  }
 }
 HTTPServer::~HTTPServer() {
   LOGFile::Debug("Stopping HTTPServer\n");
@@ -167,6 +172,7 @@ HTTPServer::~HTTPServer() {
 }
 void *HTTPServer::Listen_Thread(void *params) {
   HTTPServer *This = (HTTPServer*)params;
+  nice(10);
   LOGFile::Info("HTTP server starting on port %hu with relative path '%s'\n", This->pPort, This->pRelativePath.c_str());
   if(This->pServer->listen("0.0.0.0", This->pPort) == false) LOGFile::Error("HTTP port (%hu) already in use\n", This->pPort);
   return NULL;

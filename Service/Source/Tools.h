@@ -36,7 +36,7 @@ class Worker final {
   private :
     static void *Thread(void *args);
   public :
-    Worker(const string &name, void *param, void (*callback)(void*, void*));
+    Worker(const string &name, void *param, void (*callback)(void*, void*), int8_t nice = 0);
     ~Worker();
     bool IsWorking();
     void Run(void *param);

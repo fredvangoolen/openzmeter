@@ -65,7 +65,10 @@
         (result) => { this.Modules.NTP.Settings = result.body; },
         (fail) => { }
       );
-      this.Modules.Telegram.Settings = { Enabled: true, Token: 'dsasdasdfsdfsdfsdfsdfsdf'};
+      this.$http.post('getTelegram', { }).then(
+        (result) => { this.Modules.Telegram.Settings = result.body; },
+        (fail) => { }
+      );
     },
     methods: {
       EnabledStatus: function(value) { return (value === true) ? '&#9635;' : '&#9633;'; },

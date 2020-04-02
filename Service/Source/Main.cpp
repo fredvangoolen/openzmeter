@@ -21,6 +21,7 @@
 #include <cctz/time_zone.h>
 #include "Tools.h"
 #include "HTTPServer.h"
+#include "Telegram.h"
 #include "DeviceManager.h"
 #include "SysSupport.h"
 //---------------------------------------------------------------------------------------------------------------------
@@ -83,28 +84,23 @@ int main(int argc, char** argv) {
   /* Create LOG file */
   LOGFile LOGFile;
   /* Create database tables */
-  LOGFile::Debug("Creating database tables\n");
-  Database::EnablePool();
-  {
-    Database DB("public");
-    if(DB.ExecResource("SQL/Database.sql") == false) LOGFile::Error("Database is damaged, manual repair is nedded\n");
-  }
+  DatabasePool DBPool;
+  /* Create WEB service */
+  HTTPServer HTTPServer;
+  /* Create Telegram manager */
+  Telegram TG;
   /* Create system manager */
   SysSupport SystemManager;
   /* Create devices interface */
   DeviceManager DeviceManager;
-  /* Create WEB service */
-  HTTPServer HTTPServer;
 
   uint32_t Iter = 0;
   while(!Terminate) {
-//    SysSupport::PeriodicTask();
     if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
-    if((Iter % 60) == 0) Database::AdjustWorkers();
+    if((Iter % 60) == 0) DatabasePool::AdjustWorkers();
     if((Iter % 60) == 0) HTTPTaskQueue::AdjustWorkers();
     Iter++;
     usleep(1000000);
   }
-  Database::DisablePool();
   return EXIT_SUCCESS;
 }
