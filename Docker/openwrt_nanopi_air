@@ -20,9 +20,8 @@ RUN cd /opt/openWRT_SDK && make tools/install -j8
 RUN cd /opt/openWRT_SDK && make toolchain/install -j8
 RUN cd /opt/openWRT_SDK && make package/usign/host/compile -j8
 RUN cd /opt/openWRT_SDK && make package/zlib/compile -j8 
-RUN cd /opt/openWRT_SDK && make package/libmicrohttpd/compile -j8
 RUN cd /opt/openWRT_SDK && make package/postgresql/compile -j8
-RUN cd /opt/openWRT_SDK && make package/curl/compile -j8
+RUN cd /opt/openWRT_SDK && make package/openssl/compile -j8
 RUN cd /opt/openWRT_SDK && make package/wireless-tools/compile -j8
 RUN cd /opt/openWRT_SDK && make package/dbus/compile -j8
 RUN cd /opt/openWRT_SDK && make package/libusb/compile -j8
