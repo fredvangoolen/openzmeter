@@ -42,6 +42,64 @@
         <label class="control-label">Max current</label>
         <input-spin prepend="A" :big="true" :decimals="1" :min="0.1" :max="500" :increment="1" v-model="Analyzer.MaxCurrent"></input-spin>
       </div>
+      <div v-if="Analyzer.Mode == '3PHASE'">
+        <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
+        <div class="row">
+          <div class="col-xs-12">
+            <label class="control-label" style="line-height: 22px">Phase names</label>
+          </div>
+          <div class="col-xs-4">
+            <div class="input-group">
+              <span class="input-group-addon">L1</span>
+              <input type="text" class="form-control" maxlength="2" v-model="Analyzer.PhaseNames[0]">
+            </div>
+          </div>
+          <div class="col-xs-4">
+            <div class="input-group">
+              <span class="input-group-addon">L2</span>
+              <input type="text" class="form-control" maxlength="2" v-model="Analyzer.PhaseNames[1]">
+            </div>
+          </div>
+          <div class="col-xs-4">
+            <div class="input-group">
+              <span class="input-group-addon">L3</span>
+              <input type="text" class="form-control" maxlength="2" v-model="Analyzer.PhaseNames[2]">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="Analyzer.Mode == '3PHASE+N'">
+        <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
+        <div class="row">
+          <div class="col-xs-12">
+            <label class="control-label" style="line-height: 22px">Phase names</label>
+          </div>
+          <div class="col-xs-3">
+            <div class="input-group">
+              <span class="input-group-addon">L1</span>
+              <input type="text" class="form-control" maxlength="2" v-model="Analyzer.PhaseNames[0]">
+            </div>
+          </div>
+          <div class="col-xs-3">
+            <div class="input-group">
+              <span class="input-group-addon">L2</span>
+              <input type="text" class="form-control" maxlength="2" v-model="Analyzer.PhaseNames[1]">
+            </div>
+          </div>
+          <div class="col-xs-3">
+            <div class="input-group">
+              <span class="input-group-addon">L3</span>
+              <input type="text" class="form-control" maxlength="2" v-model="Analyzer.PhaseNames[2]">
+            </div>
+          </div>
+          <div class="col-xs-3">
+            <div class="input-group">
+              <span class="input-group-addon">N</span>
+              <input type="text" class="form-control" maxlength="2" v-model="Analyzer.PhaseNames[3]">
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable 200ms</label>
@@ -95,7 +153,6 @@
     },
     created: function() {
       this.Analyzer = Object.assign({}, this.analyzer);
-      this.View = 'Basic';
     },
     methods: {
       Save: function() {

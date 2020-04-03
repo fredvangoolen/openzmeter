@@ -39,7 +39,6 @@
     methods: {
       SetAnalyzer: function(analyzer) {
         if(analyzer != null) {
-          analyzer.PhaseNames = ['R', 'S', 'T', 'N'];
           analyzer.VoltageChannels = (analyzer.Mode == '1PHASE') ? 1 : 3;
           analyzer.CurrentChannels = (analyzer.Mode == '1PHASE') ? 1 : (analyzer.Mode == '3PHASE') ? 3 : 4;
           analyzer.Color = { Voltage: '#d9534f', Current: '#428bca', Active_Power: '#f0ad4e', Reactive_Power: '#DF842A', Active_Energy: '#3d3d8b', Reactive_Energy: '#643d8b', Frequency: '#5cb85c' };

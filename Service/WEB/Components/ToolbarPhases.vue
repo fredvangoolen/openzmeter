@@ -37,18 +37,27 @@
     computed: {
       PhaseImgs: function() {
         var Imgs = [];
+        var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];
         for(var n in this.analyzer.PhaseNames) {
           var elem = document.createElement('canvas');
           elem.width = 16;
           elem.height = 16;
           var ctx = elem.getContext('2d');
+          ctx.globalAlpha = 0.5;
           if(this.BaseImg != null) ctx.drawImage(this.BaseImg, 0, 0, 16, 16);
-          ctx.font = "bold 12px Titillium Web";
+          ctx.globalAlpha = 1.0;
+          ctx.font = "bold 11px Titillium Web";
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 0;
           ctx.shadowBlur = 2;
           ctx.shadowColor = "rgba(0,0,0,0.4)";
           ctx.fillText(this.analyzer.PhaseNames[n], 0, 15);
+          if(this.multi == true) {
+            ctx.beginPath();
+            ctx.arc(13, 3, 2.5, 0, 2 * Math.PI, false);
+            ctx.fillStyle = Colors[n];
+            ctx.fill();
+          }
           Imgs.push(ctx.canvas.toDataURL());
         }
         return Imgs;

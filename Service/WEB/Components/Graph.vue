@@ -9,9 +9,7 @@
   import Vue from 'vue';
   const This = Vue.prototype;
   var PatternImg = new Image();
-  PatternImg.onload = function() {
-    console.log("Image loaded");
-  }
+  PatternImg.onload = () => {};
   PatternImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAJElEQVQImT2JsQ0AMAyDyP832q+QIWqZEJDEx6gA0JZr9/mmLvBPKENuQmcdAAAAAElFTkSuQmCC";
 
 

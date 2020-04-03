@@ -82,7 +82,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   InitAggreg(pAggreg1H, AGGREG_1H);
   for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFTWorker[i] = new Worker("FFT_V" + to_string(i), this, &FFT_Func);
   for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFTWorker[i] = new Worker("FFT_I" + to_string(i), this, &FFT_Func);
-  Configure(CheckConfig(ConfigManager::ReadConfig(optionPath)));
+  Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode));
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", this, &Analyzer_Func);
 }
 AnalyzerSoft::~AnalyzerSoft() {
@@ -160,13 +160,20 @@ bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, co
 bool AnalyzerSoft::IsWorking() {
   return pAnalyzerWorker->IsWorking();
 }
-json AnalyzerSoft::CheckConfig(const json &config) {
+json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode mode) {
   json ConfigOUT = json::object();
   ConfigOUT["Name"] = "Unnamed analyzer";
   ConfigOUT["NominalVoltage"] = 230.0;
   ConfigOUT["NominalFrequency"] = 50.0;
   ConfigOUT["MaxCurrent"] = 35.0;
   ConfigOUT["MinCurrent"] = 0.1;
+  if(mode != Analyzer::PHASE1) {
+    ConfigOUT["PhaseNames"] = json::array();
+    ConfigOUT["PhaseNames"].push_back("R");
+    ConfigOUT["PhaseNames"].push_back("S");
+    ConfigOUT["PhaseNames"].push_back("T");
+    if(mode == Analyzer::PHASE3N) ConfigOUT["PhaseNames"].push_back("N");
+  }
   ConfigOUT["TimeZone"] = "UTC";
   ConfigOUT["Tags"] = json::array();
   ConfigOUT["SyncEnabled"] = false;
@@ -198,6 +205,11 @@ json AnalyzerSoft::CheckConfig(const json &config) {
   if(config.contains("NominalFrequency") && config["NominalFrequency"].is_number() && (config["NominalFrequency"] >= 0) && (config["NominalFrequency"] <= 400)) ConfigOUT["NominalFrequency"] = config["NominalFrequency"];
   if(config.contains("MaxCurrent") && config["MaxCurrent"].is_number() && (config["MaxCurrent"] >= 1) && (config["MaxCurrent"] <= 100000)) ConfigOUT["MaxCurrent"] = config["MaxCurrent"];
   if(config.contains("MinCurrent") && config["MinCurrent"].is_number() && (config["MinCurrent"] >= 0.01) && (config["MinCurrent"] <= 100)) ConfigOUT["MinCurrent"] = config["MinCurrent"];
+  if((mode != Analyzer::PHASE1) && config.contains("PhaseNames") && config["PhaseNames"].is_array() && (config["PhaseNames"].size() == ConfigOUT["PhaseNames"].size())) {
+    for(uint8_t n = 0; n < ConfigOUT["PhaseNames"].size(); n++) {
+      if(config["PhaseNames"][n].is_string() && (config["PhaseNames"][n].size() < 3)) ConfigOUT["PhaseNames"][n] = config["PhaseNames"][n];
+    }
+  }
   if(config.contains("TimeZone") && config["TimeZone"].is_string()) {
     time_zone TimeZone;
     string TZ = config["TimeZone"];
@@ -1295,7 +1307,7 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
     mqtt_sync(&This->pMQTTClient);
     if(This->pMQTTClient.error == MQTT_ERROR_CONNECT_NOT_CALLED) {
       mqtt_connect(&This->pMQTTClient, NULL, NULL, NULL, 0, (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
-      if(This->pMQTTConfig == true) This->PublishConfig(CheckConfig(ConfigManager::ReadConfig(This->pConfigPath)));
+      if(This->pMQTTConfig == true) This->PublishConfig(CheckConfig(ConfigManager::ReadConfig(This->pConfigPath), This->pMode));
     } else if(This->pMQTTClient.error == MQTT_ERROR_SOCKET_ERROR) {
       if(This->pMQTTClient.socketfd != -1) {
         close(This->pMQTTClient.socketfd);
@@ -1439,7 +1451,7 @@ void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
   json Config = params;
   if((Config.contains("Alarms") == false) || (Config["Alarms"].is_array() == false)) Config["Alarms"] = ConfigManager::ReadConfig(pConfigPath + "/Alarms");
   if((Config.contains("Rates") == false) || (Config["Rates"].is_array() == false)) Config["Rates"] = ConfigManager::ReadConfig(pConfigPath + "/Rates");
-  Configure(CheckConfig(Config));
+  Configure(CheckConfig(Config, pMode));
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void AnalyzerSoft::GetSeries(const json &params, Response &response) {

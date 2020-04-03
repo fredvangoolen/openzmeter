@@ -80,17 +80,21 @@ void Telegram::SetTelegramCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
 void *Telegram::Thread_Func(void *params) {
-  nice(10);
   LOGFile::Debug("Telegram BOT started\n");
-  string Token = "";
+  nice(10);
+  string  Token   = "";
+  Headers Header  = {{"Accept", "application/json"}};
+  SSLClient HTTP("https://api.telegram.org", 443);
   while(pTerminate == false) {
     pthread_mutex_lock(&pMutex);
     Token = pThread;
     pthread_mutex_unlock(&pMutex);
+    auto Response = HTTP.Get(string("bot" + Token + "/getUpdates").c_str(), Header);
+    printf("%s\n", Response->body.c_str());
 
 
 
-    usleep(100000);
+    usleep(1000000);
   }
   LOGFile::Debug("Telegram BOT stopped\n");
   return NULL;
