@@ -257,7 +257,7 @@ class AnalyzerSoft final : public Analyzer {
     void GetRemote(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
   public :
-    static json CheckConfig(const json &config);
+    static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode);
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();
