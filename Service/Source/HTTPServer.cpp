@@ -138,10 +138,11 @@ void HTTPTaskQueue::AdjustWorkers() {
   pthread_mutex_unlock(&pLocks);
 }
 //----------------------------------------------------------------------------------------------------------------------
+uint16_t       HTTPServer::pPort   = 8080;
+pthread_t      HTTPServer::pThread = 0;
+Server        *HTTPServer::pServer = NULL;
+//----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
-  pServer = NULL;
-  pPort   = 8080;
-  pThread = 0;
   json Config = ConfigManager::ReadConfig("/HTTPServer");
   if(!Config.is_object()) Config = json::object();
   if(Config["Port"].is_number_unsigned()) pPort = Config["Port"];
