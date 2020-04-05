@@ -133,7 +133,6 @@ class LOGFile {
     static void Warning(const char *msg, ...);
     static void Error(const char *msg, ...);
     static void Debug(const char *msg, ...);
-  public :
 };
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
@@ -143,6 +142,7 @@ class Tools {
     static void ResetConsole();
   public :
     static void      DisableEcho();
+    static void      RunDaemon();
     static uint64_t  GetTime();
     static void      SendUDP(const json &obj);
 };

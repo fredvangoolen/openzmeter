@@ -80,9 +80,9 @@ class HTTPServer final {
     static map<string, Func_t>  pCallbacks;       //List of callbacks URLs
     static string               pRelativePath;    //Relative path of server
   private:
-    uint16_t       pPort;
-    pthread_t      pThread;
-    Server        *pServer;
+    static uint16_t       pPort;
+    static pthread_t      pThread;
+    static Server        *pServer;
   private :
     static void   *Listen_Thread(void *params);
     static string ParseCookie(const string &cookie);

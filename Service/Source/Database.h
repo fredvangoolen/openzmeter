@@ -28,35 +28,29 @@ using json = nlohmann::json;
 class Database final {
   private :
     PGconn      *pDBConn;
-//    string       pSchema;
     PGresult    *pResult;
-    uint64_t     pUsageTime;
-    uint64_t     pFreeTime;
-    uint64_t     pLastTime;
   private :
-    void ClearAsync();
+    void     ClearAsync();
   public :
-    string      Bind(const uint8_t param) const;
-    string      Bind(const uint32_t param) const;
-    string      Bind(const uint64_t param) const;
-    string      Bind(const float param) const;
-//    string      Bind(const vector< vector<float> > &params) const;
-//    string      Bind(const vector<float> &params) const;
-    string      Bind(const float *params, const uint32_t len) const;
-    string      Bind(const float *params, const uint32_t lenA, const uint32_t lenB) const;
-//    string      Bind(const vector<uint16_t> &params) const;
-    string      Bind(const uint16_t *params, const uint32_t len) const;
-    string      Bind(const bool param) const;
-    string      Bind(const string &string) const;
-    string      BindID(const string &string) const;
-    bool        ExecSentenceNoResult(const string &sql);
-    bool        ExecSentenceAsyncResult(const string &sql);
-    bool        ExecResource(const string &file);
-    bool        FecthRow();
-    string      ResultString(const string &name) const;
-    float       ResultFloat(const string &name) const;
-    uint64_t    ResultUInt64(const string &name) const;
-    json        ResultJSON(const string &name) const;
+    string   Bind(const uint8_t param) const;
+    string   Bind(const uint32_t param) const;
+    string   Bind(const uint64_t param) const;
+    string   Bind(const float param) const;
+    string   Bind(const float *params, const uint32_t len) const;
+    string   Bind(const float *params, const uint32_t lenA, const uint32_t lenB) const;
+    string   Bind(const uint16_t *params, const uint32_t len) const;
+    string   Bind(const bool param) const;
+    string   Bind(const string &string) const;
+    string   BindID(const string &string) const;
+  public :
+    bool     ExecSentenceNoResult(const string &sql);
+    bool     ExecSentenceAsyncResult(const string &sql);
+    bool     ExecResource(const string &file);
+    bool     FecthRow();
+    string   ResultString(const string &name) const;
+    float    ResultFloat(const string &name) const;
+    uint64_t ResultUInt64(const string &name) const;
+    json     ResultJSON(const string &name) const;
     Database(const string &schema = "public");
     ~Database();
 };
@@ -77,7 +71,4 @@ class DatabasePool final {
   public :
     DatabasePool();
     ~DatabasePool();
-
-//    void EnablePool();
-//    static void DisablePool();
 };

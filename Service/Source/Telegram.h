@@ -21,16 +21,26 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
+#define TELEGRAM_POLLING_SEC    5
+#define TELEGRAM_UPDATE_LIMIT 100
+//----------------------------------------------------------------------------------------------------------------------
 class Telegram final {
   private :
-    static string          pToken;
-    static pthread_t       pThread;
-    static pthread_mutex_t pMutex;
-    static bool            pTerminate;
+    static string              pToken;
+    static pthread_t           pThread;
+    static pthread_mutex_t     pMutex;
+    static bool                pTerminate;
   private :
     static void  GetTelegramCallback(const json &params, Response &response);
     static void  SetTelegramCallback(const json &params, Response &response);
+    static void  Configure(const json &config);
+    static json  CheckConfig(const json &config);
     static void *Thread_Func(void *params);
+
+    //algo que admita encolar mensajes a chatids
+    //algo que procese la lista de mensajes generando tareas como el servidor web
+  private :
+    static json   GetUpdates();
   public :
     Telegram();
     ~Telegram();

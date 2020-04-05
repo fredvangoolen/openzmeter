@@ -16,8 +16,6 @@
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <cctz/time_zone.h>
 #include "Tools.h"
 #include "HTTPServer.h"
@@ -31,25 +29,6 @@ volatile bool Terminate = false;
 void SignalHandler(int signal) {
   LOGFile::Info("Shutting down. Please wait while all task ends...\n");
   Terminate = true;
-}
-void RunDaemon() {
-  LOGFile::Info("Move to background task\n");
-  pid_t ProcID = fork();
-  if(ProcID < 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    exit(1);
-  }
-  if(ProcID > 0) exit(0);
-  umask(0);
-  pid_t SID = setsid();
-  if(SID < 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    exit(1);
-  }
-  LOGFile::CloseConsole();
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
 }
 int main(int argc, char** argv) {
   Tools::DisableEcho();
@@ -67,7 +46,7 @@ int main(int argc, char** argv) {
     } else if(strcmp(argv[i], "--debug") == 0) {
       LOGFile::EnableDebug();
     } else if(strcmp(argv[i], "--daemon") == 0) {
-      RunDaemon();
+      Tools::RunDaemon();
     } else if(strcmp(argv[i], "--help") == 0) {
       printf("--help           - Shows this screen");
       printf("--config=<file>  - Set config file\n");

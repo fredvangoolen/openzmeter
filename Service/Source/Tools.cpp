@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <stdarg.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/resource.h>
 #include <unistd.h>
@@ -418,4 +419,23 @@ uint64_t Tools::GetTime() {
     return 0;
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
+}
+void Tools::RunDaemon() {
+  LOGFile::Info("Move to background task\n");
+  pid_t ProcID = fork();
+  if(ProcID < 0) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    exit(1);
+  }
+  if(ProcID > 0) exit(0);
+  umask(0);
+  pid_t SID = setsid();
+  if(SID < 0) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    exit(1);
+  }
+  LOGFile::CloseConsole();
+  close(STDIN_FILENO);
+  close(STDOUT_FILENO);
+  close(STDERR_FILENO);
 }
