@@ -76,8 +76,9 @@ int main(int argc, char** argv) {
   uint32_t Iter = 0;
   while(!Terminate) {
     if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
-    if((Iter % 60) == 0) DatabasePool::AdjustWorkers();
-    if((Iter % 60) == 0) HTTPTaskQueue::AdjustWorkers();
+    if((Iter % 60) == 10) DatabasePool::AdjustWorkers();
+    if((Iter % 60) == 20) Telegram::AdjustWorkers();
+    if((Iter % 60) == 30) HTTPTaskQueue::AdjustWorkers();
     Iter++;
     usleep(1000000);
   }
