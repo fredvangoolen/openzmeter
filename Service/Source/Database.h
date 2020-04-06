@@ -34,6 +34,7 @@ class Database final {
   public :
     string   Bind(const uint8_t param) const;
     string   Bind(const uint32_t param) const;
+    string   Bind(const int64_t param) const;
     string   Bind(const uint64_t param) const;
     string   Bind(const float param) const;
     string   Bind(const float *params, const uint32_t len) const;
