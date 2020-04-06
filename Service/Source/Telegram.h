@@ -26,22 +26,35 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class Telegram final {
   private :
+    typedef struct {
+      uint64_t              LastTime;     //Last time event
+      string                Token;
+      json                  JSON;
+      Worker               *Thread;
+      SSLClient            *Client;
+    } Worker_t;
+  private :
     static string              pToken;
     static pthread_t           pThread;
     static pthread_mutex_t     pMutex;
     static bool                pTerminate;
+    static list<Worker_t*>     pFreeWorkers;
+    static uint32_t            pUsedWorkers;
+    static Headers             pHeaders;
   private :
     static void  GetTelegramCallback(const json &params, Response &response);
     static void  SetTelegramCallback(const json &params, Response &response);
     static void  Configure(const json &config);
     static json  CheckConfig(const json &config);
     static void *Thread_Func(void *params);
-
-    //algo que admita encolar mensajes a chatids
-    //algo que procese la lista de mensajes generando tareas como el servidor web
-  private :
-    static json   GetUpdates();
+  public :
+    static bool  SendMessage(const json &msg);
+    static void  AdjustWorkers();
   public :
     Telegram();
     ~Telegram();
+//----------------------------------------------------------------------------------------------------------------------
+  public :
+      static void  HandleUpdate(SSLClient *client, const json &JSON);
+
 };

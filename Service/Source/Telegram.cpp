@@ -15,10 +15,13 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "Telegram.h"
 //----------------------------------------------------------------------------------------------------------------------
-string          Telegram::pToken          = "";
-pthread_t       Telegram::pThread         = 0;
-pthread_mutex_t Telegram::pMutex          = PTHREAD_MUTEX_INITIALIZER;
-bool            Telegram::pTerminate      = false;
+string                    Telegram::pToken       = "";
+pthread_t                 Telegram::pThread      = 0;
+pthread_mutex_t           Telegram::pMutex       = PTHREAD_MUTEX_INITIALIZER;
+bool                      Telegram::pTerminate   = false;
+uint32_t                  Telegram::pUsedWorkers = 0;
+Headers                   Telegram::pHeaders     = {{"Accept", "application/json"}, {"Host", "api.telegram.org"}, {"Accept-Encoding", "gzip, deflate"}, {"Connection", "keep-alive"}};
+list<Telegram::Worker_t*> Telegram::pFreeWorkers;
 //----------------------------------------------------------------------------------------------------------------------
 Telegram::Telegram() {
   HTTPServer::RegisterCallback("getTelegram", GetTelegramCallback);
@@ -29,6 +32,18 @@ Telegram::~Telegram() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
+  while(pUsedWorkers > 0) {
+    pthread_mutex_unlock(&pMutex);
+    usleep(100000);
+    pthread_mutex_lock(&pMutex);
+  }
+  while(pFreeWorkers.size() > 0) {
+    auto Tmp = pFreeWorkers.front();
+    delete Tmp->Thread;
+    delete Tmp->Client;
+    pFreeWorkers.pop_front();
+    free(Tmp);
+  }
   pthread_mutex_unlock(&pMutex);
 }
 void Telegram::Configure(const json &config) {
@@ -99,17 +114,256 @@ void *Telegram::Thread_Func(void *params) {
     if(Params["result"].is_array() == false) continue;
     for(auto &Item : Params["result"]) {
       if(Item["update_id"].is_number()) LastUpdate = Item["update_id"];
-      printf("%s\n", Item.dump().c_str());
-      json Msg = json::object();
-      Msg["chat_id"] = 242623189;
-      Msg["text"] = "Soy un mensaje!";
-      string URL = "/bot" + pToken + "/sendMessage";
-      auto Response = Client->Post(URL.c_str(), Headers, Msg.dump(), "application/json");
-
-
+      Worker_t *Tmp = NULL;
+      pthread_mutex_lock(&pMutex);
+      pUsedWorkers++;
+      if(pFreeWorkers.size() > 0) {
+        Tmp = pFreeWorkers.front();
+        pFreeWorkers.pop_front();
+      }
+      pthread_mutex_unlock(&pMutex);
+      if(Tmp == NULL) {
+        Tmp = (Worker_t*)calloc(sizeof(Worker_t), 1);
+        Tmp->Client = new SSLClient("api.telegram.org", 443);
+        Tmp->Thread = new Worker("HTTPWorker", NULL, [](void *param1, void *param2) {
+          Worker_t *Work = (Worker_t*)param2;
+          HandleUpdate(Work->Client, Work->JSON);
+          Work->Token = "";
+          Work->JSON = nullptr;
+          pthread_mutex_lock(&pMutex);
+          Work->LastTime = Tools::GetTime();
+          pFreeWorkers.push_front(Work);
+          pUsedWorkers--;
+          pthread_mutex_unlock(&pMutex);
+        }, 15);
+      }
+      if(Tmp != NULL) {
+        Tmp->Token = pToken;
+        Tmp->JSON  = Item;
+        Tmp->Thread->Run(Tmp);
+      }
     }
   }
   LOGFile::Debug("Telegram BOT stopped\n");
   delete Client;
   return NULL;
 }
+void Telegram::AdjustWorkers() {
+  pthread_mutex_lock(&pMutex);
+  uint64_t Time = Tools::GetTime();
+  while(pFreeWorkers.size() > 0) {
+    auto Tmp = pFreeWorkers.back();
+    if((Time - Tmp->LastTime) < 60000) break;
+    delete Tmp->Thread;
+    delete Tmp->Client;
+    pFreeWorkers.pop_back();
+    free(Tmp);
+  }
+  LOGFile::Debug("Adjusted Telegram workers pool to %d connections (plus %u in use)\n", pFreeWorkers.size(), pUsedWorkers);
+  pthread_mutex_unlock(&pMutex);
+}
+bool Telegram::SendMessage(const json &msg) {
+  string URL = "/bot" + pToken + "/sendMessage";
+  SSLClient Client("api.telegram.org", 443);
+  auto Response = Client.Post(URL.c_str(), pHeaders, msg.dump(), "application/json");
+  return true; ///TODO: Comprobar valores devueltos
+}
+//----------------------------------------------------------------------------------------------------------------------
+void Telegram::HandleUpdate(SSLClient *client, const json &JSON) {
+  printf("%s\n", JSON.dump().c_str());
+  try {
+    if(JSON.contains("message")) {
+      Database DB;
+      int64_t ChatID = JSON["message"]["chat"]["id"];
+      if(DB.ExecSentenceAsyncResult("SELECT username FROM users WHERE telegram = " + DB.Bind(to_string(ChatID))) == false) return;
+      json Msg = json::object();
+      Msg["chat_id"] = ChatID;
+      if(DB.FecthRow() == false) {
+        Msg["text"] = "Your user ID is not found, please check it is correctly set in user profile and try again\n\n*Your user ID is '" + to_string(ChatID) + "'*";
+        Msg["parse_mode"] = "Markdown";
+        SendMessage(Msg);
+        return;
+      }
+      if(JSON["message"]["text"] == "/start") {
+        Msg["text"] = "*Welcome* to *openZmeter*\n\nYou are ready to receive alarms and query your analyzers information.";
+        Msg["parse_mode"] = "Markdown";
+        SendMessage(Msg);
+        //Envio teclado con analyzers
+        return;
+
+//      SendMessage(message.chat().id(), "Bienvenido "+message.chat().firstName()+ "👋👋👋\nA partir de este momento podrás disfrutar de"
+//            + " todas las funcionalidades, y podrás recibir los eventos y alarmas en tiempo real", MAINMENU_KB);
+      }
+      Msg["text"] = "Unknown command";
+      SendMessage(Msg);
+    }
+  } catch(...) {}
+}
+
+
+
+//void Telegram::HandleUpdate(SSLClient *client, const json &message) {
+//  printf("%s\n", message.dump().c_str());
+//
+
+//
+//        } else {
+//            String command = message.text();
+//            switch (command) {
+//                case CDASHBOARD:
+//                {
+//                   sendDashboard(message.chat().id());
+//                   break;
+//                }
+//                case CENERGY:
+//                {
+//                    sendMessage(message.chat().id(), "📅", ENERGY_KB);
+//                    break;
+//                }
+//                case CEVENT:
+//                {
+//                    sendMessage(message.chat().id(), "🚩", EVENTS_KB);
+//                    break;
+//                }
+//                case CALARM:
+//                {
+//                    sendMessage(message.chat().id(), "Coming soon", EVENTS_KB);
+//                    break;
+//                }
+//                case CSYSTEM:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    OZMSystem ozmSys = new OZMSystem(true);
+//                    sendMessageMarkDown(message.chat().id(), ozmSys.getSystemParameters(), MAINMENU_KB);
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    ozmSys.closeSession();
+//                    break;
+//                }
+//
+//                case CREPORT:
+//                {
+//                    sendMessage(message.chat().id(), CREPORT, REPORT_KB);
+//                    //updateIma(message.chat().id());
+//                    sendMessage(36166036, "http://telegra.ph/oZm-daily-report-11-30", MAINMENU_KB);
+//                    sendMessage(828068, "http://telegra.ph/oZm-daily-report-11-30", MAINMENU_KB);
+//                    break;
+//                }
+//
+//                case CBACKHOME:
+//                {
+//                    sendMessage(message.chat().id(), HOME, MAINMENU_KB);
+//                    break;
+//                }
+//
+//
+//                case ETODAY:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendEnergyToday(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    break;
+//                }
+//                case EYESTERDAY:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendEnergyYesterday(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    break;
+//                }
+//                case EWEEK:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendEnergyThisWeek(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//
+//
+//                    break;
+//                }
+//                case ELASTWEEK:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendEnergyLastWeek(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    break;
+//                }
+//                case ETHISMONTH:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendEnergyThisMonth(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    break;
+//                }
+//                case ELASTMONTH:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendEnergyLastMonth(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    break;
+//                }
+//                case EYEAR:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendEnergyThisYear(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    break;
+//                }
+//                case ELASTYEAR:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendEnergyLastYear(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    break;
+//                }
+//
+//                case EVLASTEVENTS:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendLastEvents(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    break;
+//                }
+//                case EVTODAY:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendEventToday(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    break;
+//
+//                }
+//                case EVMONTH:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendEventMonth(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    break;
+//                }
+//                case EVYEAR:
+//                {
+//                    int messageid = sendWaitGif(message.chat().id());
+//                    sendEventYear(message.chat().id());
+//                    sendDeleteWaitGif(message.chat().id(), messageid);
+//                    break;
+//                }
+//
+//                default: {
+//                    sendMessage(message.chat().id(), "Comando Incorrecto", MAINMENU_KB);
+//                    System.out.println("No action");
+//                }
+//
+//            }
+//
+//        }
+//
+
+
+
+
+
+//  json Msg = json::object();
+//  Msg["chat_id"] = 242623189;
+//  Msg["text"] = "Soy un mensaje!";
+//  Msg["reply_markup"]
+//  SendMessage(Msg);
+//
+
+//}
