@@ -57,7 +57,7 @@ void Telegram::Configure(const json &config) {
       pThread = 0;
       LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     } else {
-      pthread_setname_np(pThread, "Telegram");
+      pthread_setname_np(pThread, "TelegramServer");
     }
   } else if((Enable == false) && (pThread != 0)) {
     pTerminate = true;
@@ -125,7 +125,7 @@ void *Telegram::Thread_Func(void *params) {
       if(Tmp == NULL) {
         Tmp = (Worker_t*)calloc(sizeof(Worker_t), 1);
         Tmp->Client = new SSLClient("api.telegram.org", 443);
-        Tmp->Thread = new Worker("HTTPWorker", NULL, [](void *param1, void *param2) {
+        Tmp->Thread = new Worker("TelegramWorker", NULL, [](void *param1, void *param2) {
           Worker_t *Work = (Worker_t*)param2;
           HandleUpdate(Work->Client, Work->JSON);
           Work->Token = "";
