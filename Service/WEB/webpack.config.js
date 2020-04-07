@@ -1,6 +1,9 @@
 var path = require('path');
 var webpack = require('webpack');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+//const TerserPlugin = require('terser-webpack-plugin');
+//const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const VueLoaderPlugin = require('vue-loader/lib/plugin');
+//const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 module.exports = {
   entry: './main.js',
   output: {
@@ -9,6 +12,9 @@ module.exports = {
     filename: 'openZmeter.js'
   },
   plugins: [
+    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+    new VueLoaderPlugin(),
+//    new BundleAnalyzerPlugin({}),
     new webpack.ProvidePlugin({
     $: "jquery",
     jQuery: "jquery",
@@ -29,7 +35,6 @@ module.exports = {
         options: {
           loaders: {
           }
-          // other vue-loader options go here
         }
       },
       {
@@ -41,7 +46,7 @@ module.exports = {
         exclude: /node_modules/
       },
       {
-        test: /\.(png|svg|woff2|ttf|eot|woff)$/,  
+        test: /\.(png|svg|woff2|ttf|eot|woff)$/,
         use: [{
             loader: 'url-loader',
             options: {
@@ -54,6 +59,8 @@ module.exports = {
   resolve: {
     alias: {
       'Components': path.resolve(__dirname, 'Components'),
+      'Views': path.resolve(__dirname, 'Views'),
+      'App': path.resolve(__dirname, 'App'),
       'JS': path.resolve(__dirname, 'JS'),
       'CSS': path.resolve(__dirname, 'CSS'),
       'Imgs': path.resolve(__dirname, 'Imgs'),
@@ -66,7 +73,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*': { target: 'http://10.8.0.131:80'}
+      '*': { target: 'http://195.77.159.50:8704'}
     }
   },
   performance: {
@@ -75,19 +82,13 @@ module.exports = {
   devtool: '#eval-source-map'
 };
 
-if (process.env.NODE_ENV === 'production') {
+if(process.env.NODE_ENV === 'production') {
   module.exports.devtool = '#source-map';
-  // http://vue-loader.vuejs.org/en/workflow/production.html
+  module.exports.resolve.alias['vue$'] =  'vue/dist/vue.min.js';
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: '"production"'
-      }
-    }),
-    new UglifyJsPlugin({
-      'uglifyOptions': {
-          compress: { warnings: false },
-          sourceMap: true
       }
     }),
     new webpack.LoaderOptionsPlugin({

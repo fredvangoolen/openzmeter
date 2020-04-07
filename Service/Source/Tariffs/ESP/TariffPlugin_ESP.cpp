@@ -113,7 +113,7 @@ TariffPower_ESP6::CycleStats_t TariffPower_ESP6::CycleStats() {
   return pStats;
 }
 //----------------------------------------------------------------------------------------------------------------------
-bool TariffEnergy_ESP::pRegistered = TariffEnergy_ESP::Register("NONE", TariffEnergy_ESP::Instance);
+bool TariffEnergy_ESP::pRegistered = TariffEnergy_ESP::Register("ESP", TariffEnergy_ESP::Instance);
 TariffEnergyPlugin *TariffEnergy_ESP::Instance() {
   TariffEnergy_ESP *Module = new TariffEnergy_ESP();
   Module->pLen = 0;

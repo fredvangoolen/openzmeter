@@ -1,35 +1,40 @@
-/* ================================== zMeter ===========================================================================
- * File:     DeviceRemote.h
- * Author:   Eduardo Viciana (12 de abril de 2017)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <list>
+#include <vector>
 #include "Device.h"
 #include "AnalyzerRemote.h"
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class DeviceRemote : public Device {
+class DeviceRemote final : public Device {
   private :
-    static bool          pRegistered;
-    static DeviceRemote *pInstance;
+    static bool            pRegistered;
   private :
-    static bool GetInstances();
-    static void GetRemoteCallback(HTTPRequest &req);
-    static void SetRemoteCallback(HTTPRequest &req);
-    static json CheckConfig(const json &config);
-  private :
-    pthread_mutex_t  pMutex;                   //Critical sections locks
+    static bool            Register();
+    static vector<Device*> GetInstances();
+    static json            CheckConfig(const json &config);
   private :
     DeviceRemote();
-    bool Start(const json &config);
-    bool StartDevice();
-    bool StopDevice();
-    void GetDevice(HTTPRequest &req);
-    void SetDevice(HTTPRequest &req);
-    void GetRemote(HTTPRequest &req);
-    void SetRemote(HTTPRequest &req);
+    void Configure(const json &config);
+    void GetDevice(const json &params, Response &response) override;
+    void SetDevice(const json &params, Response &response) override;
+    void GetRemote(const json &params, Response &response) override;
+    void SetRemote(const json &params, Response &response) override;
   public :
     ~DeviceRemote();
 };

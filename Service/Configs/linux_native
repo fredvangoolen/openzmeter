@@ -1,0 +1,19 @@
+#Enable/Disable device plugins (set to true or false) ------------------------------------------------------------------
+DEVICE_V1      = true
+DEVICE_V2      = true
+DEVICE_VIRTUAL = true
+DEVICE_REMOTE  = true
+
+#Target OS (set to DEBIAN or OPENWRT) ----------------------------------------------------------------------------------
+OS_TARGET = DEBIAN
+
+#Enable/Disable tariff plugins (set to true or false) ------------------------------------------------------------------
+TARIFF_ESP  = true
+TARIFF_NONE = true
+
+# Build options --------------------------------------------------------------------------------------------------------
+DEBUG   = true
+CC      = gcc
+LD      = ld
+CFLAGS += -I /usr/include/postgresql -march=native -funsafe-math-optimizations
+

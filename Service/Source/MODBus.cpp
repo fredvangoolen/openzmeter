@@ -1,8 +1,8 @@
 //#include <Arduino.h>
-//#include "ModbusTCPSlave.h"
+#include "MODBus.h"
 //
 //
-//ModbusTCPSlave::ModbusTCPSlave(void):
+//ModbusTCPSlave::ModbusTCPSlave(void)
 //#ifdef MB_ETHERNET
 //    MBServer(MB_PORT)
 //    #endif
@@ -33,7 +33,7 @@
 //    #ifdef MBDebug
 //    else
 //        Serial.println();
-//    
+//
 //    Serial.print(F("Listening on "));
 //    for (byte thisByte = 0; thisByte < 4; thisByte++) {
 //        Serial.print(Ethernet.localIP()[thisByte], DEC);
@@ -100,9 +100,9 @@
 //    Serial.print("Connecting to ");
 //    Serial.println(ssid);
 //    #endif
-//    
+//
 //    WiFi.begin(ssid, key);
-//    
+//
 //    while (WiFi.status() != WL_CONNECTED) {
 //        // Blink the LED
 //        digitalWrite(LED_PIN, ledPinStatus); // Write LED high/low
@@ -116,14 +116,14 @@
 //    Serial.println("");
 //    Serial.println("WiFi connected");
 //    #endif
-//    
+//
 //    #ifdef MBDebug
 //    Serial.print("IP address: ");
 //    Serial.println(WiFi.localIP());
 //    Serial.print("WiFi signal");
 //    Serial.println(WiFi.RSSI());
 //    #endif
-//    
+//
 //    // Start the server
 //    digitalWrite(LED_PIN, HIGH);
 //    MBServer.begin();
@@ -145,11 +145,11 @@
 //    Serial.print("Connecting to ");
 //    Serial.println(ssid);
 //#endif
-//    
+//
 //    WiFi.config(IPAddress(ip), IPAddress(gateway), IPAddress(subnet));
-//    
+//
 //    WiFi.begin(ssid, key);
-//    
+//
 //    while (WiFi.status() != WL_CONNECTED) {
 //        // Blink the LED
 //        digitalWrite(LED_PIN, ledPinStatus); // Write LED high/low
@@ -163,14 +163,14 @@
 //    Serial.println("");
 //    Serial.println("WiFi connected");
 //#endif
-//    
+//
 //#ifdef MBDebug
 //    Serial.print("IP address: ");
 //    Serial.println(WiFi.localIP());
 //    Serial.print("WiFi signal");
 //    Serial.println(WiFi.RSSI());
 //#endif
-//    
+//
 //    // Start the server
 //    digitalWrite(LED_PIN, HIGH);
 //    MBServer.begin();
@@ -182,14 +182,15 @@
 //}
 //#endif
 //
-//void ModbusTCPSlave::Run(){
+//void ModbusTCP::Thread(void *args) {
+//  ModbusTCP *This = (ModbusTCP*)args;
 //    boolean flagClientConnected = 0;
 //    byte byteFN = MB_FC_NONE;
 //    int Start;
 //    int WordDataLength;
 //    int ByteDataLength;
 //    int MessageLength;
-//    
+//
 //    //****************** Read from socket ****************
 //    #ifdef MB_ETHERNET
 //        EthernetClient client = MBServer.available();
@@ -200,8 +201,9 @@
 //    #ifdef MB_ESP8266
 //        WiFiClient client = MBServer.available();
 //    #endif
-//    
-//    while (client.connected()) {
+//
+//  while (!This.pTerminate) {
+//    uint8_t byteFN = MB_FC_NONE;
 //    if(client.available())
 //    {
 //        flagClientConnected = 1;
@@ -229,14 +231,13 @@
 //        Serial.println(byteFN);
 //        #endif
 //    }
-//    
+//
 //    // Handle request
 //
 //    switch(byteFN) {
-//        case MB_FC_NONE:
-//            break;
-//        
-//        case MB_FC_READ_REGISTERS:  // 03 Read Holding Registers
+//      case MB_FC_NONE :
+//        break;
+//      case MB_FC_READ_REGISTERS :  // 03 Read Holding Registers
 //            ByteDataLength = WordDataLength * 2;
 //            ByteArray[5] = ByteDataLength + 3; //Number of bytes after this one.
 //            ByteArray[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
@@ -257,7 +258,7 @@
 //            #endif
 //            byteFN = MB_FC_NONE;
 //            break;
-//            
+//
 //        case MB_FC_READ_INPUT_REGISTERS:  // 04 Read Input Registers
 //            Start = word(ByteArray[MB_TCP_REGISTER_START],ByteArray[MB_TCP_REGISTER_START+1]);
 //            WordDataLength = word(ByteArray[MB_TCP_REGISTER_NUMBER],ByteArray[MB_TCP_REGISTER_NUMBER+1]);
@@ -281,7 +282,7 @@
 //            #endif
 //            byteFN = MB_FC_NONE;
 //            break;
-//            
+//
 //        case MB_FC_WRITE_REGISTER:  // 06 Write Holding Register
 //            MBHoldingRegister[Start] = word(ByteArray[MB_TCP_REGISTER_NUMBER],ByteArray[MB_TCP_REGISTER_NUMBER+1]);
 //            ByteArray[5] = 6; //Number of bytes after this one.
@@ -301,7 +302,7 @@
 //            #endif
 //            byteFN = MB_FC_NONE;
 //            break;
-//            
+//
 //        case MB_FC_WRITE_MULTIPLE_REGISTERS:    //16 Write Holding Registers
 //            ByteDataLength = WordDataLength * 2;
 //            ByteArray[5] = ByteDataLength + 3; //Number of bytes after this one.
@@ -328,12 +329,11 @@
 //    }
 //    }
 //    client.stop();
-//    
+//
 //    if (flagClientConnected == 1){
 //        #ifdef MBDebug
 //        Serial.println("client disonnected");
 //        #endif
 //        flagClientConnected = 0;
-//    }
+//  }
 //}
-//

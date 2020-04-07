@@ -1,284 +1,189 @@
-/* ================================== zMeter ===========================================================================
- * File:     AnalyzerRemote.cpp
- * Author:   Eduardo Viciana (agosto de 2018)
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #include <string.h>
 #include <condition_variable>
 #include "Tools.h"
 #include "AnalyzerRemote.h"
-AnalyzerRemote::AnalyzerRemote(string id) : Analyzer(id) {
-  pName = "Never seen";
-  pQuerySequence = 0;
-  pRequestLocks  = NULL;
-  pMutex         = PTHREAD_MUTEX_INITIALIZER;
+AnalyzerRemote::AnalyzerRemote(const string &id) : Analyzer(id) {
+  SetName("Never seen");
+  pMutex           = PTHREAD_MUTEX_INITIALIZER;
+  pProducerCond    = PTHREAD_COND_INITIALIZER;
+  pConsumerCond    = PTHREAD_COND_INITIALIZER;
+  pTerminate       = false;
+  pConsumerReady   = false;
+  pProducerRequest = NULL;
+  pSequence        = 0;
 }
 AnalyzerRemote::~AnalyzerRemote() {
-  pthread_mutex_lock(&pMutex);
-  if(pRequestLocks != NULL) pRequestLocks->Abort();
-  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) (*it)->Locks.Abort();
-  pthread_mutex_unlock(&pMutex);
+  pTerminate = true;
+  //Espero.. no se como ni a que!
+
+//  pMembersLocks.WriteLock();
+//  if(pRequestLocks != NULL) pRequestLocks->Abort();
+//  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) (*it)->Locks.Abort();
+//  pMembersLocks.WriteUnlock();
 }
-void AnalyzerRemote::GetRemote(HTTPRequest& req) {
-  json Params = req.GetParams();
+void AnalyzerRemote::GetRemote(const json &params, Response &response) {
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  SetName(params["Name"]);
+  response.set_header("Content-Type", "text/event-stream");
+  response.set_chunked_content_provider(
+    [&](uint64_t offset, DataSink &sink) {
+      if((pTerminate == true) || (sink.is_writable() == false)) return sink.done();
+      SetOnline();
+      pthread_mutex_lock(&pMutex);
+      pConsumerReady = true;
+      int Result     = 0;
+      if(pProducerRequest == NULL) {
+        timespec Time;
+        clock_gettime(CLOCK_REALTIME, &Time);
+        Time.tv_sec = Time.tv_sec + 1;
+        Result = pthread_cond_timedwait(&pConsumerCond, &pMutex, &Time);
+      }
+      if(Result == ETIMEDOUT) {
+        string Data = "data: null\n\n";
+        sink.write(Data.c_str(), Data.size());
+      } else if(Result == 0) {
+        pRequestList.insert(pProducerRequest);
+        string Data = "data: " + pProducerRequest->Request.dump() + "\n\n";
+        sink.write(Data.c_str(), Data.size());
+        pProducerRequest = NULL;
+      } else {
+        LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      }
+      pthread_cond_signal(&pProducerCond);
+      pthread_mutex_unlock(&pMutex);
+    },
+    [&]() {
+      pthread_mutex_lock(&pMutex);
+      pConsumerReady = false;
+      pthread_cond_broadcast(&pProducerCond);
+      pthread_mutex_unlock(&pMutex);
+    }
+  );
+}
+void AnalyzerRemote::SetRemote(const json &params, Response &response) {
+  if((params.contains("Code") == false) || (params["Code"].is_number() == false)) return HTTPServer::FillResponse(response, "'Code' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Sequence") == false) || (params["Sequence"].is_number() == false)) return HTTPServer::FillResponse(response, "'Sequence' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Response") == false) || (params["Response"].is_string() == false)) return HTTPServer::FillResponse(response, "'Response' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Mime") == false) || (params["Mime"].is_string() == false)) return HTTPServer::FillResponse(response, "'Mime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   pthread_mutex_lock(&pMutex);
-  if(pRequestLocks != NULL) {
-    req.FromString("", MHD_HTTP_SERVICE_UNAVAILABLE);
+  uint64_t Sequence = params["Sequence"];
+  auto     Request  = pRequestList.find(Sequence);
+  if(Request == pRequestList.end()) {
     pthread_mutex_unlock(&pMutex);
-    return;
+    return HTTPServer::FillResponse(response, "Sequence not found", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   }
-  pConfigLocks.WriteLock();
-  pLastSave = Tools::GetTime();
-  pName     = Params["Name"];
-  pConfigLocks.WriteUnlock();
-  pRequestLocks = new ProviderLocks();
+  (*Request)->Response = json::object();
+  (*Request)->Response["Code"] = params["Code"];
+  (*Request)->Response["Mime"] = params["Mime"];
+  (*Request)->Response["Response"] = params["Response"];
+  pthread_cond_signal(&(*Request)->Cond);
   pthread_mutex_unlock(&pMutex);
-  if(pRequestLocks->ConsumerWait(15000) == false) {
-    req.FromString("", MHD_HTTP_NO_CONTENT);
-    pthread_mutex_lock(&pMutex);
-    delete pRequestLocks;
-    pRequestLocks = NULL;
+  return HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
+}
+void AnalyzerRemote::HandleRequest(const string &url, const json &params, Response &response) {
+  pthread_mutex_lock(&pMutex);
+  if(pConsumerReady == false) {
     pthread_mutex_unlock(&pMutex);
-    return;
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
   }
-  json Response = json::array();
-  pthread_mutex_lock(&pMutex);
-  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-    if((*it)->Sequence != 0) continue;
-    (*it)->Sequence = ++pQuerySequence;
-    json Query = json::object();
-    Query["Method"] = (*it)->Method;
-    Query["Params"] = (*it)->Request->GetParams();
-    Query["Params"].erase("Analyzer");
-    Query["Sequence"] = (*it)->Sequence;
-    Response.push_back(Query);
+  while(pProducerRequest != NULL) {
+    pthread_cond_wait(&pProducerCond, &pMutex);
+    if(pConsumerReady == false) {
+      pthread_mutex_unlock(&pMutex);
+      return HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
+    }
   }
-  delete pRequestLocks;
-  pRequestLocks = NULL;
-  pthread_mutex_unlock(&pMutex);
-  req.FromJSON(Response);
-}
-void AnalyzerRemote::SetRemote(HTTPRequest &req) {
-  json Params = req.GetParams();
-  if(!Params["Code"].is_number() || !Params["Sequence"].is_number_unsigned()) return req.FromString("'Sequence' and 'Code' param are required", MHD_HTTP_BAD_REQUEST);
-  uint64_t Sequence = Params["Sequence"];
-  uint16_t Code = Params["Code"];
-  pthread_mutex_lock(&pMutex);
-  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-    if((*it)->Sequence != Sequence) continue;
-    Query_t *Query = (*it);
-    pQueries.erase(it);
+  Request_t Request;
+  timespec  Time;
+  Request.Cond     = PTHREAD_COND_INITIALIZER;
+  Request.Sequence = pSequence++;
+  Request.Request  = json::object();
+  Request.Request["Method"]   = url;
+  Request.Request["Params"]   = params;
+  Request.Request["Sequence"] = Request.Sequence;
+  Request.Request["Params"].erase("Analyzer");
+  Request.Response = nullptr;
+  pProducerRequest = &Request;
+  pthread_cond_signal(&pConsumerCond);
+  clock_gettime(CLOCK_REALTIME, &Time);
+  Time.tv_sec = Time.tv_sec + 30;
+  int Result  = pthread_cond_timedwait(&Request.Cond, &pMutex, &Time);
+  auto Tmp    = pRequestList.find(Request.Sequence);
+  if(Tmp != pRequestList.end()) pRequestList.erase(Tmp);
+  if(Result == ETIMEDOUT) {
     pthread_mutex_unlock(&pMutex);
-    Query->Request->FromString(Params["Response"], Code);
-    Query->Locks.ProviderWrite();
-    return;
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_GATEWAY_TIMEOUT);
+  } else if(Result == 0) {
+    pthread_mutex_unlock(&pMutex);
+    string Mime = Request.Response["Mime"];
+    int    Code = Request.Response["Code"];
+    return HTTPServer::FillResponse(response, Request.Response["Response"], Mime.c_str(), Code);
+  } else {
+    pthread_mutex_unlock(&pMutex);
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   }
-  pthread_mutex_unlock(&pMutex);
 }
-void AnalyzerRemote::HandleRequest(string url, HTTPRequest &req) {
-  Query_t Query;
-  Query.Sequence = 0;
-  Query.Method = url;
-  Query.Request = &req;
-  pthread_mutex_lock(&pMutex);
-  pQueries.push_back(&Query);
-  if(pRequestLocks != NULL) pRequestLocks->ProviderWrite();
-  pthread_mutex_unlock(&pMutex);
-  if(Query.Locks.ConsumerWait(15000) == false) req.FromString("", MHD_HTTP_GATEWAY_TIMEOUT);
-  pthread_mutex_lock(&pMutex);
-  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) {
-    if(*it != &Query) continue;
-    pQueries.erase(it);
-    break;
-  }
-  pthread_mutex_unlock(&pMutex);
+void AnalyzerRemote::GetAnalyzer(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getAnalyzer", params, response);
 }
-void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;  
-  HandleRequest("getAnalyzer", req);
+void AnalyzerRemote::SetAnalyzer(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("setAnalyzer", params, response);
 }
-void AnalyzerRemote::SetAnalyzer(HTTPRequest &req) {
-  if(CheckRights(req, CONFIG) == false) return;
-  HandleRequest("setAnalyzer", req);
+void AnalyzerRemote::GetSeries(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getSeries", params, response);
 }
-void AnalyzerRemote::GetSeries(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("getSeries", req);
+void AnalyzerRemote::GetSeriesNow(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getSeriesNow", params, response);
 }
-void AnalyzerRemote::GetSeriesNow(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("getSeriesNow", req);
+void AnalyzerRemote::GetSeriesRange(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getSeriesRange", params, response);
 }
-void AnalyzerRemote::GetSeriesRange(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("getSeriesRange", req);
+void AnalyzerRemote::GetEvents(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getEvents", params, response);
 }
-void AnalyzerRemote::GetEvents(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("getEvents", req);
+void AnalyzerRemote::GetEvent(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getEvent", params, response);
 }
-void AnalyzerRemote::GetEvent(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("getEvent", req);
+void AnalyzerRemote::SetEvent(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("setEvent", params, response);
 }
-void AnalyzerRemote::SetEvent(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
-  HandleRequest("setEvent", req);
+void AnalyzerRemote::DelEvent(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("delEvent", params, response);
 }
-void AnalyzerRemote::DelEvent(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
-  HandleRequest("delEvent", req);
+void AnalyzerRemote::GetPrices(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getPrices", params, response);
 }
-void AnalyzerRemote::GetRates(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("getRates", req);
+void AnalyzerRemote::TestAlarm(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("testAlarm", params, response);
 }
-void AnalyzerRemote::GetRate(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("getRate", req);
+void AnalyzerRemote::GetAlarms(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getAlarms", params, response);
 }
-void AnalyzerRemote::SetRate(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
-  HandleRequest("setRate", req);
-}
-void AnalyzerRemote::DelRate(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
-  HandleRequest("delRate", req);
-}
-void AnalyzerRemote::AddRate(HTTPRequest &req) {
-  if(CheckRights(req, WRITE | CONFIG) == false) return;
-  HandleRequest("addRate", req);
-}
-void AnalyzerRemote::GetPrices(HTTPRequest &req) {
-  if(CheckRights(req, READ | WRITE | CONFIG) == false) return;
-  HandleRequest("getPrices", req);
-}
-
-
-//void AnalyzerRemote::GetParams(Params_t& params, ParamsType& copy) {
-//}
-//void AnalyzerRemote::UpdateConfig(float nominalVoltage, float nominalFreq, char* name, float maxCurrent, float minCurrent, AnalyzerMode mode, float sampleFreq, bool online) {
-  //Si ha cambiado el modo tengo que asegurarme que las muestras que hay son coherentes, si no la web fallara!
-//}
-//void AnalyzerRemote::GetParams(Params_t &params, bool frequency, bool flag, bool rms_v, bool rms_i, bool active_power, bool reactive_power, bool active_energy,
-//                                     bool reactive_energy, bool apparent_power, bool power_factor, bool thd_v, bool thd_i, bool phi, bool voltage_harmonics, 
-//                                     bool current_harmonics, bool fft_v, bool fft_i, bool voltage, bool current) {
-//
-//}
-//bool AnalyzerRemote::SaveJSON(json_object *json, Database *db) {
-//  char *Table = NULL;
-//  Tools::JSONString(json, "Table", &Table, false);
-//  if(Table == NULL) return false;
-//  if((strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0) || (strcmp("aggreg_3s", Table) == 0)) {
-//    Params_t Params;
-//    if(strcmp("aggreg_3s", Table) == 0) Params.Type = AGGREG_3S;
-//    if(Tools::JSONUInt64(json, "sampletime", &Params.Timestamp) == false) return false;                                                 //sampletime
-//    if(Tools::JSONArrayFloat(json, "rms_v", &Params.RMS_V[0], (pMode == PHASE1) ? 1 : 3) == false) return false;                            //rms_v 
-//    if(Tools::JSONArrayFloat(json, "rms_i", &Params.RMS_I[0], (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4) == false) return false;    //rms_i 
-//    if(Tools::JSONArrayFloat(json, "active_power", &Params.Active_Power[0], (pMode == PHASE1) ? 1 : 3) == false) return false;              //active_power 
-//    if(Tools::JSONArrayFloat(json, "active_energy", &Params.Active_Energy[0], (pMode == PHASE1) ? 1 : 3) == false) return false;            //active_energy
-//  BindArrayFloat(params->Reactive_Power, (pMode == PHASE1) ? 1 : 3);                                         //reactive_power
-//  BindArrayFloat(params->Reactive_Energy, (pMode == PHASE1) ? 1 : 3);                                        //reactive_energy
-//  BindSingleFloat(params->Frequency);                                                                        //frequency
-//  BindSingleBool(params->Flag);                                                                              //flaged
-//  ExecSentence();
-//  if(params->Type == AGGREG_1M) {
-//    PrepareSentence("INSERT INTO aggreg_ext_1m(sampletime_ext, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i) VALUES(?, ?, ?, ?, ?, ?, ?)");
-//    BindSingleUInt64(params->Timestamp);                                                                     //sampletime
-//    BindArrayFloat(params->Power_Factor, (pMode == PHASE1) ? 1 : 3);                                         //power_factor
-//    BindArrayFloat(params->THD_V, (pMode == PHASE1) ? 1 : 3);                                                //thd_v
-//    BindArrayFloat(params->THD_I, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4);                        //thd_i
-//    BindArrayFloat(params->Phi, (pMode == PHASE1) ? 1 : 3);                                                  //phi
-//    BindArrayArrayFloat((float*)params->VoltageHarmonics, (pMode == PHASE1) ? 1 : 3, 50);                         //harmonics_v
-//    BindArrayArrayFloat((float*)params->CurrentHarmonics, (pMode == PHASE1) ? 1 : (pMode == PHASE3) ? 3 : 4, 50); //harmonics_i
-//    ExecSentence();
-//    PrepareSentence("DELETE FROM aggreg_ext_1m WHERE sampletime_ext < ?");
-//    BindSingleUInt64(params->Timestamp - 86400000);                                                          //sampletime
-//    ExecSentence();
-//  }
-//  if(params->Type == AGGREG_1H) {
-//    PrepareSentence("INSERT INTO aggreg_stat_1h(sampletime_ext, stat_voltage, stat_frequency, stat_thd, stat_harmonics) VALUES(?, ?, ?, ?, ?)");
-//    BindSingleUInt64(params->Timestamp);
-//    BindArrayUInt16(params->StatsVoltage, 26);     //estadisticas de tension
-//    BindArrayUInt16(params->StatsFrequency, 40); //estadisticas de frequencia
-//    BindArrayUInt16(params->StatsTHD, 26);             //estadisticas de distorsion harmonica
-//    BindArrayUInt16(params->StatsHarmonics, 2);                                           //estadisticas de harmonicos en rango
-//    ExecSentence();
-//  }
-
-    
-    
-//    
-//    db->PrepareSentence("INSERT INTO aggreg_3s SELECT * from json_populate_record(null::\"aggreg_3s\", ?)");
-//    db->BindSingleString(json_object_to_json_string(reader));
-//    if(db->ExecSentence() == false) {
-//      *postdata  = (char*)"Can save data";
-//      *resultLen = strlen(*postdata);
-//      return false;
-//    } else {
-//      *writer = json_object_new_object();
-//      json_object_object_add(*writer, "RequiereLive", json_object_new_boolean(false));
-//      *postdata = (char*)json_object_to_json_string_length(*writer, JSON_C_TO_STRING_PLAIN, resultLen);
-//      return true;
-//    }
-//    SaveAggreg(Params);
-//    LOGFile::Debug("Storing 3S aggregation\n");
-//  } 
-  
-  
-  
-
-//  char *Table = NULL;
-//  if((json_object_object_get_ex(json, "Table", &Find) == true) && (json_object_get_type(Find) == json_type_string)) Table = (char*)json_object_get_string(Find);
-//  db->PrepareSentence("SET search_path TO ?");
-//  db->BindSingleString(pID);
-//  db->ExecSentence();
-//  if(strcmp("aggreg_3s", Table) == 0) {
-//    db->PrepareSentence("INSERT INTO SELECT * from json_populate_record(null::\"aggreg_3s\", ?)");
-//    db->BindSingleString(json_object_to_json_string(json));
-//    return db->ExecSentence();
-//  }  
-  
-//  
-//  if((json_object_object_get_ex(config, "aggreg", &Find) == true) && (json_object_get_type(Find) == json_type_string)) {
-//    if(ReadJSONFloatArray(Find, pVoltageGain, 3) == false) {
-//      LOGFile::Error("CaptureV2: Voltage gain must have 3 double values\n");
-//      return;
-//    }
-//  }
-//  
-//    if(json_object_array_length(object) != len) return false;
-//  for(int i = 0; i < len; i++) {
-//    if(json_object_get_type(json_object_array_get_idx(object, i)) != json_type_double) return false;
-//    dst[i] = json_object_get_double(json_object_array_get_idx(object, i));
-//  }
-//  return true;
-//  
-//  
-//  
-//  
-//  
-//  
-//  
-//        AggregType Type;                          //Tipo de agregacion
-//      uint64_t   Timestamp;                     //Timestamp de la muestra inicial
-//      uint32_t   Samples;                       //Muestras que han formado esta agregacion
-//      float      RMS_V[3];                      //Valor RMS de la tension durante el bloque
-//      float      RMS_I[4];                      //Valor RMS de la intensidad durante el bloque
-//      float      Active_Power[3];               //Potencia activa (P)
-//      float      Apparent_Power[3];             //Potencia aparente (S)
-//      float      Power_Factor[3];               //Factor de potencia (cos(PHI))
-//      float      Active_Energy[3];              //Energia consumida
-//      float      Reactive_Power[3];             //Reactive power
-//      float      Reactive_Energy[3];            //Reactive energy
-//      float      Frequency;                     //Frecuencia
-//      bool       Flag;                          //Periodo marcado
-//      float      THD_V[3];                      //Distorsion harmonica de la tension
-//      float      THD_I[4];                      //Distorsion harmonica de la corriente
-//      float      VoltageHarmonics[3][50];       //Armonicos del canal de tension
-//      float      CurrentHarmonics[4][50];       //Armonicos del canal de corriente
-//      float      Phi[3];                        //Angulo de Phi
-//    } Params_t;
-  
-//  return true;
-//
-//}

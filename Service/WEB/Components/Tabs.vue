@@ -1,37 +1,65 @@
 <template>
-  <ul class="nav nav-tabs">
-    <li v-for="(tab, index) in tabs" v-bind:class="{ active: (Index == index) }"><a data-toggle="tab">{{ tab }}</a></li>
-  </ul>
+  <div class="tabs">
+    <ul class="nav nav-tabs" ref="tabs">
+      <li v-for="tab in tabs" :class="{ active: (tab==value) }" :key="tab"><a data-toggle="tab">{{ tab }}</a></li>
+    </ul>
+  </div>
 </template>
 
 <script>
   import scrollingTabs from 'jquery-bootstrap-scrolling-tabs';
   import 'jquery-bootstrap-scrolling-tabs/dist/jquery.scrolling-tabs.css';
   export default {
-    props: ['tabs', 'variable'],
+    props: { value: String, tabs: Array, storage: String },
     data() {
-      return { Index: 0 };
+      return { };
+    },
+    watch: {
+      value: function(val) {
+        if(this.storage != null) this.LocalStorage_Set(this.storage, val);
+      }
     },
     created: function() {
-      this.Index = parseInt(localStorage.getItem(this.variable));
-      if((this.Index < 0) || (this.Index >= this.tabs.length) || (isNaN(this.Index) === true)) this.Index = 0;
-      localStorage.setItem(this.variable, this.Index);
-    },
-    mounted: function() {
-      $(this.$el).scrollingTabs({ tabClickHandler: this.TabChange });
-      this.$emit('TabChange', this.Index, this.tabs[this.Index]);
+      if(this.storage != null) {
+        var Find = this.tabs.indexOf(this.LocalStorage_Get(this.storage));
+        this.$emit('input', (Find == -1) ? this.tabs[0] : this.tabs[Find]);
+      } else {
+        var Find = this.tabs.indexOf(this.value);
+        this.$emit('input', (Find == -1) ? this.tabs[0] : this.tabs[Find]);
+      }
+      this.$nextTick(() => {$(this.$refs.tabs).scrollingTabs({ enableSwiping: true, tabClickHandler: this.TabChange }); });
     },
     beforeDestroy: function() {
-      $(this.$el).scrollingTabs('destroy');
+      $(this.$refs.tabs).scrollingTabs('destroy');
     },
     methods: {
       TabChange: function(sender) {
-        this.Index = $(sender['target']).parent().index();
-        localStorage.setItem(this.variable, this.Index);
-        this.$emit('TabChange', this.Index, $(sender['target']).text());
+        this.$emit('input', $(sender['target']).text());
       }
     }
   }
 </script>
 
-<style></style>
+<style scoped>
+  .nav {
+    border-bottom: none;
+  }
+  .glyphicon-chevron-left {
+    background-image: url(../Imgs/resultset_previous.png);
+    width: 16px !important;
+    height: 16px !important;
+    display: inline-block;
+  }
+  .glyphicon-chevron-right {
+    background-image: url(../Imgs/resultset_next.png);
+    width: 16px !important;
+    height: 16px !important;
+    display: inline-block;
+  }
+  .tabs >>> div {
+    height: 26px;
+  }
+  .tabs >>> a {
+    padding: 2px 6px;
+  }
+</style>

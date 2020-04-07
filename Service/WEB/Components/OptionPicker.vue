@@ -1,11 +1,11 @@
 <template>
   <div class="btn-group">
-    <div class="input-group" v-bind:class="{ 'input-group-xs': (big != true) }">
-      <span class="form-control">{{ Selected }}</span>
+    <div class="input-group" :class="{ 'input-group-xs': (big != true) }">
+      <span class="form-control">{{ Selected.name }}</span>
       <div class="input-group-btn" ref="button">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" ><span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" ref="list">
-          <li v-for="option in options" v-bind:class="{active: (Selected == option)}"><a @click="OptionClick(option, $event)">{{ option }}</a></li>
+        <ul class="dropdown-menu pull-right">
+          <li v-for="option in options" :key="option.value" :class="{ active: (value == option.value) }"><a @click="$emit('input', option.value)">{{ option.name }}</a></li>
         </ul>
       </div>
     </div>
@@ -14,28 +14,32 @@
 
 <script>
   export default {
-    props: ['options', 'selected', 'big'],
+    props: { options: Array, value: [Boolean, String, Number], big: Boolean },
     data() {
-      return { Selected: 'NONE' };
+      return { Selected: {} };
     },
     mounted: function() {
       $(this.$refs.button).on("shown.bs.dropdown", function() {
-        var top = $(this).children('ul').scrollTop() + $(this).find(".dropdown-menu li.active").offset().top - $(this).children('ul').offset().top;
-        $(this).children('ul').scrollTop(top);
+        var Item = $(this).find(".dropdown-menu li.active");
+        if(Item.length == 1) {
+          var top = $(this).children('ul').scrollTop() + Item.offset().top - $(this).children('ul').offset().top;
+          $(this).children('ul').scrollTop(top);
+        }
       });
-    },
-    methods: {
-      OptionClick(option, evt) {
-        event.preventDefault();
-        this.Selected = option;
-        this.$emit('change', option);
-      },
-      SetOption: function(option) {
-        this.Selected = option;
+      for(var idx in this.options) {
+        if(this.options[idx].value !== this.value) continue;
+        this.Selected = this.options[idx];
+        return;
       }
     },
-    created: function() {
-      if(this.selected !== undefined) this.Selected = this.selected;
+    watch: {
+      value: function(val) {
+        for(var idx in this.options) {
+          if(this.options[idx].value !== val) continue;
+          this.Selected = this.options[idx];
+          return;
+        }
+      }
     }
   }
 </script>

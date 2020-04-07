@@ -1,4 +1,3 @@
--- Create database
 CREATE TABLE IF NOT EXISTS users(
   username      character varying  NOT NULL PRIMARY KEY,
   password      character varying  NOT NULL,
@@ -18,6 +17,8 @@ CREATE TABLE IF NOT EXISTS sessions(
   username  character varying REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
   timestamp bigint NOT NULL
 ) WITH (OIDS=FALSE);
+DELETE FROM sessions WHERE username IS NULL;
+ALTER TABLE sessions ALTER COLUMN username SET NOT NULL;
 CREATE INDEX IF NOT EXISTS sessions_timestamp_idx ON sessions USING btree (timestamp);
 
 CREATE TABLE IF NOT EXISTS tariffs(
@@ -30,16 +31,11 @@ CREATE TABLE IF NOT EXISTS tariffs(
   enddate      bigint            NOT NULL
 ) WITH (OIDS=FALSE);
 
-CREATE TABLE IF NOT EXISTS permisions(
+CREATE TABLE IF NOT EXISTS permissions(
   username   character varying NOT NULL REFERENCES users(username) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,
-  serial     character varying NOT NULL REFERENCES analyzers(serial) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,
+  serial     character varying NOT NULL,
   read       boolean           NOT NULL,
   write      boolean           NOT NULL,
-  config     boolean           NOT NULL
-) WITH (OIDS=FALSE);
-
-CREATE TABLE IF NOT EXISTS news(
-  newstime  bigint            NOT NULL PRIMARY KEY,
-  header    character varying NOT NULL,
-  contents  text              NOT NULL
+  config     boolean           NOT NULL,
+  CONSTRAINT user_serial UNIQUE(username, serial)
 ) WITH (OIDS=FALSE);

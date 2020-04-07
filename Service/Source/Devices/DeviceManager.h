@@ -1,7 +1,18 @@
-/* ================================== zMeter ===========================================================================
- * File:     DeviceManager.h
- * Author:   Eduardo Viciana
- * -------------------------------------------------------------------------------------------------------------------*/
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <vector>
 #include "Device.h"
@@ -10,34 +21,39 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class DeviceManager {
-  private :  
-    static vector<Device*>  pDevices;         //Initiated by devices, cleared on destroy
-    static RWLocks          pDevicesLock;     //Control access to critical sections
-  public :
-    static bool AddDevice(Device *dev);
+class DeviceManager final {
   private :
-    static void GetDevicesCallback(HTTPRequest &req);
-    static void GetDeviceCallback(HTTPRequest &req);
-    static void SetDeviceCallback(HTTPRequest &req);
-    static void StartDeviceCallback(HTTPRequest &req);
-    static void StopDeviceCallback(HTTPRequest &req);
-    static void GetAnalyzersCallback(HTTPRequest &req);
-    static void GetAnalyzerCallback(HTTPRequest &req);
-    static void SetAnalyzerCallback(HTTPRequest &req);
-    static void GetSeriesCallback(HTTPRequest &req);
-    static void GetSeriesNowCallback(HTTPRequest &req);
-    static void GetSeriesRangeCallback(HTTPRequest &req);
-    static void GetEventsCallback(HTTPRequest &req);
-    static void GetEventCallback(HTTPRequest &req);
-    static void SetEventCallback(HTTPRequest &req);
-    static void DelEventCallback(HTTPRequest &req);
-    static void GetRatesCallback(HTTPRequest &req);
-    static void GetRateCallback(HTTPRequest &req);
-    static void SetRateCallback(HTTPRequest &req);
-    static void DelRateCallback(HTTPRequest &req);
-    static void AddRateCallback(HTTPRequest &req);
-    static void GetPricesCallback(HTTPRequest &req);
+    static vector<vector<Device*> (*)()> pDrivers;
+    static vector<Device*>               pDevices;         //Initiated by devices, cleared on destroy
+    static RWLocks                       pDevicesLock;     //Control access to critical sections
+  private :
+    static void CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response));
+    static void CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response));
+    static void GetDevicesCallback(const json &params, Response &response);
+    static void SetDevicesCallback(const json &params, Response &response);
+    static void GetDeviceCallback(const json &params, Response &response);
+    static void SetDeviceCallback(const json &params, Response &response);
+    static void GetRemoteCallback(const json &params, Response &response);
+    static void SetRemoteCallback(const json &params, Response &response);
+    static void GetAnalyzersCallback(const json &params, Response &response);
+    static void GetAnalyzerCallback(const json &params, Response &response);
+    static void SetAnalyzerCallback(const json &params, Response &response);
+    static void GetSeriesCallback(const json &params, Response &response);
+    static void GetSeriesNowCallback(const json &params, Response &response);
+    static void GetSeriesRangeCallback(const json &params, Response &response);
+    static void GetEventsCallback(const json &params, Response &response);
+    static void GetEventCallback(const json &params, Response &response);
+    static void SetEventCallback(const json &params, Response &response);
+    static void DelEventCallback(const json &params, Response &response);
+    static void GetPricesCallback(const json &params, Response &response);
+    static void TestAlarmCallback(const json &params, Response &response);
+    static void GetAlarmsCallback(const json &params, Response &response);
+    static void GetPermissionsCallback(const json &params, Response &response);
+    static void AddPermissionCallback(const json &params, Response &response);
+    static void SetPermissionCallback(const json &params, Response &response);
+    static void DelPermissionCallback(const json &params, Response &response);
+  public :
+    static void AddDriver(vector<Device*> (*func)());
   public :
     DeviceManager();
     ~DeviceManager();

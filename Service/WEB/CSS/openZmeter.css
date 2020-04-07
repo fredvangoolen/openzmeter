@@ -35,18 +35,7 @@
 .glyphicon-calendar:before {
   content: none;
 }
-.glyphicon-chevron-left {
-  background-image: url(../Imgs/resultset_previous.png);
-  width: 16px !important;
-  height: 16px !important;
-  display: inline-block;    
-}
-.glyphicon-chevron-right {
-  background-image: url(../Imgs/resultset_next.png);
-  width: 16px !important;
-  height: 16px !important;
-  display: inline-block;    
-}
+
 /* dataTables icons */
 table.dataTable thead .sorting_desc:after {
   content: no-open-quote;
@@ -112,7 +101,6 @@ table.dataTable thead .sorting:after {
 body {
   background-color: #F1F1F1;
   overflow-x: hidden;
-  background-image: url(../Imgs/Background.png);
 }
 img {
   margin-top: -2px;
@@ -127,7 +115,7 @@ img {
 }
 .panel-heading {
   border-radius: 0px;
-  padding: 8px 5px;
+  padding: 4px 4px;
 }
 .rounded-panel {
   border: 1px solid rgba(0,0,0,.2);
@@ -136,6 +124,8 @@ img {
 .header-text {
   display: inline-block;
   padding-bottom: 0px;
+  font-size: 20px;
+  line-height: 24px;
 }
 .header-buttons {
   float: right;
@@ -143,15 +133,13 @@ img {
 }
 @media(max-width:768px) {
   .header-text {
-    text-align: center;
     display: block;
-    padding-bottom: 10px;
+    padding-bottom: 4px;
   }
   .header-buttons {
     border-top: 1px solid rgba(255,255,255,0.5);
     float: none;
-    text-align: center;
-    padding-top: 2px;
+    padding-top: 4px;
   }
 }
 @media(min-width:1280px) {
@@ -315,7 +303,6 @@ img {
   background-color: rgba(255,255,255,0.5);
 }
 .modal-header {
-  padding: 5px;
   background-color: #474544;
   color: #FFF;
   position: relative;
@@ -340,57 +327,13 @@ img {
   left: 0px;
   z-index: 100;
 }
-div.scrtabs-tab-container + div.panel { 
+div.scrtabs-tab-container + div.panel {
   border-top-left-radius: 0px;
   border-top-right-radius: 0px;
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-.dygraph-axis-label {
-  font-size: 11px;
-  color: black;
-  line-height: 10px;
-}
-.dygraph-legend {
-  position: absolute;
-  color: #FFF !important;
-  font-size: 12px;
-  z-index: 10;
-  width: 140px;
-  background-color: #474543 !important;
-  border: 1px solid #212121;
-  border-radius: 3px;
-  line-height: 13px;
-  text-align: center;
-  overflow: hidden;
-  pointer-events: none;
-}
-.dygraph-legend-title {
-  color: #FFF;
-  font-size: 10px;
-  font-weight: bold;
-}
-/* styles for a solid line in the legend */
-.dygraph-legend-line {
-  display: inline-block;
-  position: relative;
-  bottom: .5ex;
-  padding-left: 1em;
-  height: 1px;
-  border-bottom-width: 2px;
-  border-bottom-style: solid;
-  /* border-bottom-color is set based on the series color */
-}
 
-/* styles for a dashed line in the legend, e.g. when strokePattern is set */
-.dygraph-legend-dash {
-  display: inline-block;
-  position: relative;
-  bottom: .5ex;
-  height: 1px;
-  border-bottom-width: 2px;
-  border-bottom-style: solid;
-}
 /*--------------------------------------------------------------------------------------------------------------------*/
 
 .nav-tabs>li>a {
@@ -715,14 +658,6 @@ label.btn:active, label.btn.active {
     font-size: 7vw;
 }
 
-.chart{
-    height:150px;
-    width: 100%;
-}
-
-.big_chart{
-    height: 300px;
-}
 
 
 
@@ -890,7 +825,7 @@ For energy chart in dashboard
   color: #1a3f1a;
   margin: 5px;
   border-color: #b3e0b3;
-  background-color: #e9f6e9;  
+  background-color: #e9f6e9;
 }
 
 .indicators {
@@ -1028,7 +963,7 @@ text.area_text {
 
 
 .spinnerdiv {
-  position: absolute; 
+  position: absolute;
   top: 0;
   left:0;
   width:100%;
@@ -1044,7 +979,7 @@ text.area_text {
   text-align: center;
   font-size: 11px !important;
   font-weight: bold;
-  
+
 }
 .dygraph-annotation {
   position: absolute;

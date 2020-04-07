@@ -1,56 +1,118 @@
-//Libs -----------------------------------------
-import Vue from './JS/vue.js';
-import Router from './JS/vue-router.js';
-import jQuery from './JS/jquery.js';
-window.$ = window.jQuery = jQuery;
-import './JS/bootstrap.min.js';
-import './CSS/bootstrap.min.css';
-import './JS/dygraph.js';
-
+//Main libs and style --------------------------------------------------------------------------------------------------
+import jQuery from 'jquery';
+import Bootstrap from 'bootstrap';
+import 'bootstrap/dist/css/bootstrap.css';
+import 'CSS/openZmeter.css';
+//VUE components -------------------------------------------------------------------------------------------------------
+import Vue from 'vue';
+import Router from 'vue-router';
 Vue.use(Router);
-import './CSS/openZmeter.css';
-
+import VueResource from 'vue-resource';
+Vue.use(VueResource);
+import PortalVue from 'portal-vue';
+Vue.use(PortalVue);
+//Other tools ----------------------------------------------------------------------------------------------------------
+import { blur } from 'auto-blur';
+addEventListener('click', evt => blur(evt));
+//OZM tools ------------------------------------------------------------------------------------------------------------
+import openZmeter from 'JS/openZmeter.js';
+Vue.use(openZmeter);
+// Custom components ---------------------------------------------------------------------------------------------------
+import Avatar from 'Components/Avatar.vue';
+Vue.component('Avatar', Avatar);
+import ButtonExpand from 'Components/ButtonExpand.vue';
+Vue.component('ButtonExpand', ButtonExpand);
+import ButtonExport from 'Components/ButtonExport.vue';
+Vue.component('ButtonExport', ButtonExport);
+import ButtonPause from 'Components/ButtonPause.vue';
+Vue.component('ButtonPause', ButtonPause);
+import ColorBar from 'Components/ColorBar.vue';
+Vue.component('ColorBar', ColorBar);
+import ColorPicker from 'Components/ColorPicker.vue';
+Vue.component('ColorPicker', ColorPicker);
+import Cubism from 'Components/Cubism.vue';
+Vue.component('Cubism', Cubism);
+import Dlg from 'Components/Dialog.vue';
+Vue.component('Dlg', Dlg);
+import DatePicker from 'Components/DatePicker.vue';
+Vue.component('DatePicker', DatePicker);
+import DlgFs from 'Components/DialogFullscreen.vue';
+Vue.component('DlgFs', DlgFs);
+import Graph from 'Components/Graph.vue';
+Vue.component('Graph', Graph);
+import InputSpin from 'Components/InputSpin.vue';
+Vue.component('InputSpin', InputSpin);
+import OptionAdder from 'Components/OptionAdder.vue';
+Vue.component('OptionAdder', OptionAdder);
+import OptionPicker from 'Components/OptionPicker.vue';
+Vue.component('OptionPicker', OptionPicker);
+import Password from 'Components/Password.vue';
+Vue.component('Password', Password);
+import ProgressBar from 'Components/ProgressBar.vue';
+Vue.component('ProgressBar', ProgressBar);
+import Spinner from 'Components/Spinner.vue';
+Vue.component('Spinner', Spinner);
+import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
+Vue.component('ToolbarAggregation', ToolbarAggregation);
+import ToolbarYears from 'Components/ToolbarYears.vue';
+Vue.component('ToolbarYears', ToolbarYears);
+import ToolbarPager from 'Components/ToolbarPager.vue';
+Vue.component('ToolbarPager', ToolbarPager);
+import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
+Vue.component('ToolbarPeriod', ToolbarPeriod);
+import ToolbarPeriodB from 'Components/ToolbarPeriodB.vue';
+Vue.component('ToolbarPeriodB', ToolbarPeriodB);
+import ToolbarPhases from 'Components/ToolbarPhases.vue';
+Vue.component('ToolbarPhases', ToolbarPhases);
+import ToolbarOptions from 'Components/ToolbarOptions.vue';
+Vue.component('ToolbarOptions', ToolbarOptions);
+import DetailTabs from 'Components/Tabs.vue';
+Vue.component('DetailTabs', DetailTabs);
+import Toggle from 'Components/Toggle.vue';
+Vue.component('Toggle', Toggle);
 //Views ----------------------------------------
-import App from 'Components/App/App.vue';
-import Dashboard from 'Components/Views/Dashboard/View.vue';
-import AnalysisVoltage from 'Components/Views/Analysis_Voltage/View.vue';
-import AnalysisCurrent from 'Components/Views/Analysis_Current/View.vue';
-import AnalysisPower from 'Components/Views/Analysis_Power/View.vue';
-import AnalysisEnergy from 'Components/Views/Analysis_Energy/View.vue';
-import AnalysisFrequency from 'Components/Views/Analysis_Frequency/View.vue';
-import EventsITIC from 'Components/Views/Events_ITIC/View.vue';
-import EventsDisturbances from 'Components/Views/Events_Disturbances/View.vue';
-import EventsEN50160 from 'Components/Views/Events_EN50160/View.vue';
-import StatsCosts from 'Components/Views/Stats_Costs/View.vue';
-import StatsHeatmap from 'Components/Views/Stats_Heatmap/View.vue';
-import StatsDistribution from 'Components/Views/Stats_Distribution/View.vue';
-import Settings from './Components/Views/Settings/View.vue';
-import Help from './Components/Views/Help/Help.vue';
+import App from 'App/App.vue';
+import Dashboard from 'Views/Dashboard/View.vue';
+import AnalysisVoltage from 'Views/Analysis_Voltage/View.vue';
+import AnalysisCurrent from 'Views/Analysis_Current/View.vue';
+import AnalysisPower from 'Views/Analysis_Power/View.vue';
+import AnalysisEnergy from 'Views/Analysis_Energy/View.vue';
+import AnalysisFrequency from 'Views/Analysis_Frequency/View.vue';
+import Analysis200MS from 'Views/Analysis_200MS/View.vue';
+import EventsITIC from 'Views/Events_ITIC/View.vue';
+import EventsDisturbances from 'Views/Events_Disturbances/View.vue';
+import EventsEN50160 from 'Views/Events_EN50160/View.vue';
+import EventsAlarms from 'Views/Events_Alarms/View.vue';
+import StatsCosts from 'Views/Stats_Costs/View.vue';
+import StatsHeatmap from 'Views/Stats_Heatmap/View.vue';
+import StatsDistribution from 'Views/Stats_Distribution/View.vue';
+import Settings from 'Views/Settings/View.vue';
+import About from 'Views/About/View.vue';
+import PageNotFound from 'Views/PageNotFound.vue';
 
-import PageNotFound from './Components/Views/PageNotFound.vue';
+const AppRouter = new Router({
+  linkActiveClass: 'active',
+  mode: 'history',
+  routes: [
+    { path: '/', redirect: '/Dashboard' },
+    { path: '/Dashboard', component: Dashboard },
+    { path: '/Analysis/Voltage', component: AnalysisVoltage },
+    { path: '/Analysis/Current', component: AnalysisCurrent },
+    { path: '/Analysis/Power', component: AnalysisPower },
+    { path: '/Analysis/Energy', component: AnalysisEnergy },
+    { path: '/Analysis/Frequency', component: AnalysisFrequency },
+    { path: '/Analysis/200MS', component: Analysis200MS },
+    { path: '/Events/ITIC', component: EventsITIC },
+    { path: '/Events/Disturbances', component: EventsDisturbances },
+    { path: '/Events/EN50160', component: EventsEN50160 },
+    { path: '/Events/Alarms', component: EventsAlarms },
+    { path: '/Stats/Costs', component: StatsCosts },
+    { path: '/Stats/Heatmap', component: StatsHeatmap },
+    { path: '/Stats/Distribution', component: StatsDistribution },
+    { path: '/Settings', component: Settings },
+    { path: '/About', component: About },
+    { path: '*', component: PageNotFound }
+  ]
+});
 
-new Vue({
-  el: '#app',
-  render: h => h(App),
-  router: new Router({
-    linkActiveClass: 'active',
-    mode: 'history',
-    routes: [
-      { path: '/', redirect: '/Dashboard' },
-      { path: '/Dashboard', component: Dashboard },
-      { path: '/Analysis/Voltage', component: AnalysisVoltage },
-      { path: '/Analysis/Current', component: AnalysisCurrent },
-      { path: '/Analysis/Power', component: AnalysisPower },
-      { path: '/Analysis/Energy', component: AnalysisEnergy },
-      { path: '/Analysis/Frequency', component: AnalysisFrequency },
-      { path: '/Events/ITIC', component: EventsITIC },
-      { path: '/Events/Disturbances', component: EventsDisturbances },
-      { path: '/Events/EN50160', component: EventsEN50160 },
-      { path: '/Stats/Costs', component: StatsCosts },
-      { path:'/Stats/Heatmap', component: StatsHeatmap },
-      { path:'/Stats/Distribution', component: StatsDistribution },
-      { path:'/Settings', component: Settings },
-      { path:'/Help', component: Help },
-      { path: '*', component: PageNotFound }
-    ]})
-})
+new Vue( { el: '#app', render: h => h(App), router: AppRouter } );
