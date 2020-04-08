@@ -50,7 +50,7 @@
         for(var n = 0; n < this.alarms.AlarmTime.length; n++) {
           var Index = Groups.indexOf(this.alarms.Name[n]);
           if(Index == -1) continue;
-          if((this.alarms.Triggered[n] == false) && (StartDate[Index] == null)) {
+          if((this.alarms.Triggered[n] == false) && (StartDate[Index] == null) && (Counts[Index] == 0)) {
             Counts[Index] = Counts[Index] + 1;
             this.TimeLineDataset.add({ start: this.alarms.From, className: Colors[this.alarms.Priority[n]], group: Index, end: this.alarms.AlarmTime[n] });
           } else if((this.alarms.Triggered[n] == false) && (StartDate[Index] != null)) {

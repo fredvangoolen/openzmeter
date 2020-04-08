@@ -39,3 +39,15 @@ CREATE TABLE IF NOT EXISTS permissions(
   config     boolean           NOT NULL,
   CONSTRAINT user_serial UNIQUE(username, serial)
 ) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS esios_index(
+  valuekey    int4               NOT NULL PRIMARY KEY,
+  shortname   character varying  NOT NULL,
+  description character varying  NOT NULL
+) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS esios(
+  valuekey    int4       NOT NULL REFERENCES esios_index(valuekey),
+  timestamp   bigint     NOT NULL,
+  value       real       NOT NULL
+) WITH (OIDS=FALSE);

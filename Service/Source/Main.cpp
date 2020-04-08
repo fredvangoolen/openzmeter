@@ -20,8 +20,9 @@
 #include "Tools.h"
 #include "HTTPServer.h"
 #include "Telegram.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "SysSupport.h"
+#include "Tariffs/ESIOS.h"
 //---------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 volatile bool Terminate = false;
@@ -72,6 +73,9 @@ int main(int argc, char** argv) {
   SysSupport SystemManager;
   /* Create devices interface */
   DeviceManager DeviceManager;
+  /* Create ESIOS */
+  ESIOS Esios;
+
 
   uint32_t Iter = 0;
   while(!Terminate) {
