@@ -13,7 +13,10 @@
         </template>
       </vuetable>
     </div>
-    <component v-if="SettingsVisible==true" :is="Driver" :settings="Settings" @close="LoadTable"></component>
+    <device-virtual v-if="Driver=='DeviceVirtual'" :settings="Settings" @close="LoadTable"></device-virtual>
+    <device-v1 v-if="Driver=='DeviceV1'" :settings="Settings" @close="LoadTable"></device-v1>
+    <device-v2 v-if="Driver=='DeviceV2'" :settings="Settings" @close="LoadTable"></device-v2>
+    <device-remote v-if="Driver=='DeviceRemote'" :settings="Settings" @close="LoadTable"></device-remote>
   </div>
 </template>
 
@@ -28,7 +31,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { Devices: [], ShowSpinner: true, Driver: null, SettingsVisible: false, Settings: null, Enabled: false,
+      return { Devices: [], ShowSpinner: true, Driver: null, Settings: null, Enabled: false,
         Columns: [
           {name: 'Driver', title: 'Driver'},
           {name: 'Name', title: 'Name'},
@@ -42,7 +45,7 @@
     methods: {
       EnabledStatus: function(value) { return (value === true) ? '&#9635;' : '&#9633;'; },
       LoadTable: function (update) {
-        this.SettingsVisible = false;
+        this.Driver = null;
         if(update == false) return;
         this.ShowSpinner = true;
         this.$http.post('getDevices', {}).then(
@@ -56,15 +59,14 @@
       },
       Configure: function (id) {
         this.ShowSpinner = true;
-        if(id.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
-        if(id.Driver === 'V1') this.Driver = 'DeviceV1';
-        if(id.Driver === 'V2') this.Driver = 'DeviceV2';
-        if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
         this.$http.post('getDevice', { Serial: id.Serial } ).then(
           (result) => {
             this.Settings = result.data;
             this.Settings.Serial = id.Serial;
-            this.SettingsVisible = true;
+            if(id.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
+            if(id.Driver === 'V1') this.Driver = 'DeviceV1';
+            if(id.Driver === 'V2') this.Driver = 'DeviceV2';
+            if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
             this.ShowSpinner = false;
           },
           (fail) => {

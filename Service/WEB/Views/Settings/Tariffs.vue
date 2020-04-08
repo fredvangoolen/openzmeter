@@ -35,6 +35,7 @@
       </div>
     </div>
     <tariff v-if="ShowDialog" :tariff="Tariff" @close="LoadTariffs"></tariff>
+    <esp-esios v-if="Module!=null && Module.Name=='ESP_ESIOS'" :settings="Module" @close="Module=null"></esp-esios>
   </div>
 </template>
 
@@ -42,11 +43,12 @@
   import Vuetable from 'vuetable-2';
   import moment from 'moment';
   import Tariff from './Tariffs/Tariff.vue';
+  import EspEsios from './Tariffs/EspEsios.vue';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return { ShowSpinner: true, Tariffs: [], FilterTariffs: [], ShowDialog: false, Enabled: false, Tariff: null,
+      return { ShowSpinner: true, Tariffs: [], FilterTariffs: [], ShowDialog: false, Enabled: false, Tariff: null, Module: null,
         Modules: [
           { Name: 'ESP_ESIOS', Description: 'Fetch hourly prices from spanish ESIOS (Sistema de informacion del operador del sistema)' }
         ],
@@ -114,14 +116,19 @@
           );
         }
       },
-      Configure: function() {
-
+      Configure: function(module) {
+        if(module.Name == 'ESP_ESIOS') {
+          this.$http.post('getESIOS', { Type: "CURRENT" }).then(
+            (result) => { this.Module = result.body; this.Module.Name = module.Name; },
+            (fail) => { }
+          );
+        }
       }
     },
 //    updated: function() {
 //      oZm.createCaptionsForResponsiveTable(this.$refs.table);
 //    },
-    components: { Vuetable, Tariff }
+    components: { Vuetable, Tariff, EspEsios }
   }
 </script>
 
