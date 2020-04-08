@@ -19,17 +19,17 @@
       this.TimeLineGroups = new vis.DataSet();
     },
     mounted: function() {
+      this.TimeLineGroups.add({ id: 1, content: '<div style="width:150px">Dips</div>'});
+      this.TimeLineGroups.add({ id: 2, content: '<div style="width:150px">Swells</div>'});
+      this.TimeLineGroups.add({ id: 3, content: '<div style="width:150px">Interruptions</div>'});
+      this.TimeLineGroups.add({ id: 4, content: '<div style="width:150px">RVC</div>'});
+      this.SetEvents();
       this.TimeLine = new vis.Timeline(this.$el, this.TimeLineDataset, {
         stack: false,
         editable: false,
         margin: { item: 10, axis: 5 },
         orientation: 'top'
       });
-      this.TimeLine.on('rangechanged', (evt) => { if(evt.byUser == true) this.$emit('update:range', [moment(evt.start).valueOf(), moment(evt.end).valueOf()]) } );
-      this.TimeLineGroups.add({ id: 1, content: '<div style="width:150px">Dips</div>'});
-      this.TimeLineGroups.add({ id: 2, content: '<div style="width:150px">Swells</div>'});
-      this.TimeLineGroups.add({ id: 3, content: '<div style="width:150px">Interruptions</div>'});
-      this.TimeLineGroups.add({ id: 4, content: '<div style="width:150px">RVC</div>'});
       this.TimeLine.setGroups(this.TimeLineGroups);
       $(document).on("mouseover", '.vis-item', (e) => {
         $(e.target).qtip({
@@ -42,12 +42,18 @@
         });
         $(e.target).qtip().show();
       });
-      this.TimeLine.setWindow(moment().subtract(1, 'day').valueOf(), moment().valueOf());
-      if(this.events != null) this.SetEvents();
+      this.TimeLine.on('rangechanged', (evt) => { if(evt.byUser == true) this.$emit('update:range', [moment(evt.start).valueOf(), moment(evt.end).valueOf()]) } );
+      if(this.events == null)
+        this.TimeLine.setWindow(moment().subtract(1, 'day').valueOf(), moment().valueOf());
+      else
+        this.TimeLine.setWindow(this.events.From, this.events.To);
     },
     watch: {
       events: function() {
-        if(this.TimeLine != null) this.SetEvents();
+        if(this.TimeLine != null) {
+          this.SetEvents();
+          this.TimeLine.setWindow(this.events.From, this.events.To);
+        }
       }
     },
     methods: {
@@ -89,7 +95,7 @@
         this.TimeLineGroups.update({ id: 2, content: '<div style="width:150px">Swells<span class="pull-right badge">' + Count.Swell + '</span></div>'});
         this.TimeLineGroups.update({ id: 3, content: '<div style="width:150px">Interruptions<span class="pull-right badge">' + Count.Interruption + '</span></div>'});
         this.TimeLineGroups.update({ id: 4, content: '<div style="width:150px">RVC<span class="pull-right badge">' + Count.RVC + '</span></div>'});
-        this.TimeLine.setWindow(this.events.From, this.events.To);
+
       }
     }
   }

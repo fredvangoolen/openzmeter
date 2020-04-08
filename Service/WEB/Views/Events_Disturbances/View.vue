@@ -27,7 +27,7 @@
 
 <script>
   import TimeLine from './TimeLine.vue';
-  import EventsTable from '../Analysis_Voltage/Events.vue';
+  import EventsTable from './Events.vue';
   export default {
     props: { analyzer: Object },
     data: function() {

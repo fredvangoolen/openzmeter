@@ -109,16 +109,6 @@ CREATE TABLE IF NOT EXISTS prices (
   price real NOT NULL
 ) WITH (OIDS=FALSE);
 
---CREATE TABLE IF NOT EXISTS rates(
---  rate      serial            NOT NULL PRIMARY KEY,
---  name      character varying NOT NULL,
---  startdate bigint            NOT NULL,
---  enddate   bigint            NOT NULL,
---  config    jsonb             NOT NULL,
---  template  jsonb             NOT NULL
---) WITH (OIDS=FALSE);
---DROP TABLE IF EXISTS rates;
-
 CREATE TABLE IF NOT EXISTS alarms(
   alarmtime     bigint            NOT NULL PRIMARY KEY,
   name          character varying NOT NULL,

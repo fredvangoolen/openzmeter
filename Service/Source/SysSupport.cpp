@@ -487,14 +487,8 @@ void SysSupport::GetUsersCallback(const json &params, Response &response) {
   //only 'admin' user can get this information
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Filter") == false) || (params["Filter"].is_string() == false)) return HTTPServer::FillResponse(response, "'Filter' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Limit") == false) || (params["Limit"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Limit' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Offset") == false) || (params["Offset"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Offset' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string   Filter = params["Filter"];
-  uint32_t Limit  = params["Limit"];
-  uint32_t Offset  = params["Offset"];
   Database DB;
-  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(t1.user)), '[]') AS result FROM (SELECT json_build_object('User', username, 'Name', name, 'Email', email, 'TimeZone', time_zone) AS user FROM users WHERE position(" + DB.Bind(Filter) + " in username) > 0 ORDER BY username ASC LIMIT " + DB.Bind(Limit) + " OFFSET " + DB.Bind(Offset) + ") t1");
+  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('User', username, 'Name', name, 'Email', email, 'TimeZone', time_zone) ORDER BY username ASC)), '[]') AS result FROM users");
   if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }

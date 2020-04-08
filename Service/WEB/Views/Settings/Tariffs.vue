@@ -2,19 +2,17 @@
   <div class="panel panel-other" v-show="Enabled">
     <div class="panel-heading clearfix">
       <div class="huge-small pull-left">Tariffs</div>
-      <div class="pull-right input-group input-group-xs" style="width:200px">
-        <input type="text" class="form-control" placeholder="Filter..." disabled>
-        <span class="input-group-btn">
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
-        </span>
+      <div class="pull-right btn-group">
+        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
       </div>
+      <toolbar-pager class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['TimeZone', 'Name', 'StartDate', 'EndDate']"></toolbar-pager>
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
       <div class="row">
         <div class="col-sm-12">
           <label class="control-label">Template definitions</label>
-          <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="Tariffs" class="table small table-striped">
+          <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="table small table-striped">
             <template slot="actions" slot-scope="props">
               <div class="btn-group">
                 <button class="btn btn-xs btn-default" @click="Edit(props.rowData)">Edit</button>
@@ -48,7 +46,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return { ShowSpinner: true, Tariffs: [], ShowDialog: false, Filter: '', Enabled: false, Tariff: null,
+      return { ShowSpinner: true, Tariffs: [], FilterTariffs: [], ShowDialog: false, Enabled: false, Tariff: null,
         Modules: [
           { Name: 'ESP_ESIOS', Description: 'Fetch hourly prices from spanish ESIOS (Sistema de informacion del operador del sistema)' }
         ],
@@ -78,7 +76,7 @@
       LoadTariffs: function() {
         this.ShowDialog = false;
         this.ShowSpinner = true;
-        this.$http.post('getTariffs', { Limit: 10, Offset: 0, Filter: this.Filter }).then(
+        this.$http.post('getTariffs', { }).then(
           (result) => {
             this.Enabled = true;
             this.Tariffs = result.data;
@@ -130,7 +128,7 @@
 <style scoped>
   @media screen and (min-width: 600px) {
     .table >>> th:nth-child(1) {
-      width: 60px;
+      width: 100px;
       text-align: center;
     }
     .table >>> td:nth-child(1) {

@@ -57,7 +57,7 @@
   import Harmonics from './Harmonics.vue';
   import Parameters from './Parameters.vue';
   import Waveform from './Waveform.vue';
-  import Events from './Events.vue';
+  import Events from '../Events_Disturbances/Events.vue';
   import Phasors from './Phasors.vue';
   export default {
     props: { analyzer: { type: Object } },
