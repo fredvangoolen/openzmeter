@@ -2,16 +2,14 @@
   <div class="panel panel-other" v-show="Enabled">
     <div class="panel-heading">
       <div class="header">Users</div>
-      <div class="pull-right input-group input-group-xs" style="width:200px">
-        <input type="text" class="form-control" placeholder="Filter..." v-model="Filter">
-        <span class="input-group-btn">
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add user" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
-        </span>
+      <div class="pull-right btn-group">
+        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add user" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
       </div>
+      <toolbar-pager class="pull-right" :pageSize="10" :input="Users" :output.sync="FilterUsers" :filtercols="['User', 'Name', 'TimeZone', 'Email']"></toolbar-pager>
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :data="Users" :api-mode="false" class="table small table-striped">
+      <vuetable ref="table" :fields="Columns" :data="FilterUsers" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
             <button class="btn btn-xs btn-default" @click="Edit(props.rowData)">Edit</button>
@@ -31,12 +29,12 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data() {
-      return { Users: [], ShowSpinner: true, ShowDialog: false, Enabled: false, User: null, Filter: '',
+      return { Users: [], FilterUsers: [], ShowSpinner: true, ShowDialog: false, Enabled: false, User: null,
         Columns: [
           {name: 'User', title: 'User name' },
           {name: 'Name', title: 'Name' },
           {name: 'TimeZone', title: 'Time zone' },
-          {name: 'E-Mail', title: 'EMail' },
+          {name: 'Email', title: 'E-Mail' },
           {name: '__slot:actions', title: '' }
         ]
       };
@@ -53,7 +51,7 @@
       LoadUsers: function () {
         this.ShowDialog = false;
         this.ShowSpinner = true;
-        this.$http.post('getUsers', { Limit: 10, Offset: 0, Filter: this.Filter }).then(
+        this.$http.post('getUsers', { }).then(
           (result) => {
             this.Enabled = true;
             this.Users = result.data;

@@ -65,6 +65,88 @@ const openZmeter = {
           Transfer.LastData = Object.seal(LastData);
         }
       };
+      Transfer.UpdateAlarms = (analyzer, range) => {
+        if((analyzer == null) || (range == null)) return;
+        var Cancelled = false;
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+        var ReqRange = analyzer.CalcRange(range);
+        var Data = { };
+        if((Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer == analyzer.Analyzer)) Data = Object.assign(Data, Transfer.Data);
+        if((Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.Data = null;
+        Transfer.Analyzer  = analyzer;
+        Transfer.Range     = range;
+        Data.From   = null;
+        Data.To     = null;
+        if(Data.AlarmTime != null) {
+          var Pos = 0;
+          for(var n = 0; n < Data.AlarmTime.length; n++) {
+            if(Data.AlarmTime[n] < ReqRange[0])
+              Pos++;
+            else
+              break;
+          }
+          if(Pos != 0) {
+            for(var serie in Data) {
+              if(Array.isArray(Data[serie]) == true) Data[serie].splice(0, Pos);
+            }
+          }
+          var Pos = 0;
+          for(var n = 0; n < Data.AlarmTime.length; n++) {
+            if(Data.AlarmTime[n] <= ReqRange[1])
+              Pos++;
+            else
+              break;
+          }
+          if(Pos != 0) {
+            for(var serie in Data) {
+              if(Array.isArray(Data[serie]) == true) Data[serie].splice(Pos);
+            }
+          }
+          Data.From = Data.AlarmTime[0];
+          Data.To = Data.AlarmTime.slice(-1)[0];
+        }
+        var Promises = [];
+        if((Data.From == null) || (Data.To == null)) {
+          Promises.push(Transfer.This.$http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1] }));
+        } else {
+          if(ReqRange[0] < Data.From) Promises.push(Transfer.This.$http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Data.From - 1, Series: series }));
+          if(ReqRange[1] > Data.To) Promises.push(Transfer.This.$http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: Data.To + 1, To: ReqRange[1], Series: series }));
+        }
+        if(Promises.length == 0) {
+          Data.From = ReqRange[0];
+          Data.To = ReqRange[1];
+          Transfer.Data = Object.seal(Data);
+          if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateAlarms(Transfer.Analyzer, Transfer.Range); }, 3000);
+          return;
+        }
+        Transfer.CancelFunc = () => { Cancelled = true; };
+        Promise.all(Promises).then(
+          (result) => {
+            if(Cancelled == true) return;
+            for(var n in result) {
+              var After = ((result[n].body.AlarmTime.length > 0) && (Data.From != null) && (Data.From > result[n].body.AlarmTime[0]));
+              for(var serie in result[n].body) {
+                if(Array.isArray(result[n].body[serie]) == false) continue
+                if((Data.From == null) || (Data.To == null))
+                  Data[serie] = result[n].body[serie];
+                else if(After == true)
+                  Data[serie] = result[n].body[serie].concat(Data[serie]);
+                else
+                  Data[serie] = Data[serie].concat(result[n].body[serie]);
+              }
+            }
+            Data.From = ReqRange[0];
+            Data.To = ReqRange[1];
+            Transfer.Data = Object.seal(Data);
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateAlarms(Transfer.Analyzer, Transfer.Range); }, 3000);
+          },
+          (fail) => {
+            if(Cancelled == true) return;
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateAlarms(Transfer.Analyzer, Transfer.Range); }, 3000);
+          }
+        );
+      };
       Transfer.UpdateEvents = (analyzer, range) => {
         if((analyzer == null) || (range == null)) return;
         var Cancelled = false;

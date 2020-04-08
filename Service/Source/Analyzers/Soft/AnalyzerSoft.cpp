@@ -1879,14 +1879,17 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
 }
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Filter") == false) || (params["Filter"].is_string() == false)) return HTTPServer::FillResponse(response, "'Filter' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Limit") == false) || (params["Limit"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Limit' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Offset") == false) || (params["Offset"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Offset' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string   Filter = params["Filter"];
-  uint32_t Limit  = params["Limit"];
-  uint32_t Offset  = params["Offset"];
+  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  uint64_t To = params["To"];
+  uint64_t From = params["From"];
   Database DB(Serial);
-  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(t1.alarm)), '[]') AS result FROM (SELECT json_build_object('AlarmTime', alarmtime, 'Name', name, 'Priority', priority, 'Triggered', trigger) AS alarm FROM alarms WHERE position(" + DB.Bind(Filter) + " in name) > 0 ORDER BY alarmtime DESC LIMIT " + DB.Bind(Limit) + " OFFSET " + DB.Bind(Offset) + ") t1");
+  DB.ExecSentenceAsyncResult("SELECT json_build_object("
+                              "'AlarmTime', COALESCE(ARRAY_AGG(alarmtime ORDER BY alarmtime ASC), '{}'), "
+                              "'Name', COALESCE(ARRAY_AGG(name ORDER BY alarmtime ASC), '{}'), "
+                              "'Priority', COALESCE(ARRAY_AGG(priority ORDER BY alarmtime ASC), '{}'), "
+                              "'Triggered', COALESCE(ARRAY_AGG(trigger ORDER BY alarmtime ASC), '{}')) AS result "
+                              "FROM alarms WHERE alarmtime >= " + DB.Bind(From) + " AND alarmtime <= " + DB.Bind(To));
   if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
