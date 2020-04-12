@@ -15,7 +15,7 @@ CREATE UNLOGGED TABLE IF NOT EXISTS aggreg_200ms (
 --ALTER TABLE aggreg_200ms ADD COLUMN IF NOT EXISTS unbalance real;
 --UPDATE aggreg_200ms SET unbalance = 0 WHERE unbalance IS NULL;
 --ALTER TABLE aggreg_200ms ALTER COLUMN unbalance SET NOT NULL;
-select count(*) from aggreg_200ms;
+--select count(*) from aggreg_200ms;
 CREATE TABLE IF NOT EXISTS aggreg_3s (
   sampletime     bigint NOT NULL PRIMARY KEY,
   rms_v          real[] NOT NULL,
@@ -104,14 +104,14 @@ CREATE TABLE IF NOT EXISTS events (
 ) WITH (OIDS=FALSE);
 --ALTER TABLE events DROP COLUMN IF EXISTS finished;
 
-CREATE TABLE IF NOT EXISTS prices (
-  sampletime bigint NOT NULL PRIMARY KEY,
-  price real NOT NULL
-) WITH (OIDS=FALSE);
+--CREATE TABLE IF NOT EXISTS prices (
+--  sampletime bigint NOT NULL PRIMARY KEY,
+--  price real NOT NULL
+--) WITH (OIDS=FALSE);
 
-CREATE TABLE IF NOT EXISTS alarms(
-  alarmtime     bigint            NOT NULL PRIMARY KEY,
-  name          character varying NOT NULL,
-  trigger       boolean           NOT NULL,
-  priority      smallint          NOT NULL
-) WITH (OIDS=FALSE);
+--CREATE TABLE IF NOT EXISTS alarms(
+--  alarmtime     bigint            NOT NULL PRIMARY KEY,
+--  name          character varying NOT NULL,
+--  trigger       boolean           NOT NULL,
+--  priority      smallint          NOT NULL
+--) WITH (OIDS=FALSE);

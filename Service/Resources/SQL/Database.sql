@@ -8,9 +8,9 @@ CREATE TABLE IF NOT EXISTS users(
   company       character varying  NOT NULL,
   photo         text               NULL,
   email         character varying  NOT NULL,
-  telegram      character varying  NOT NULL
+  telegram      bigint             NULL UNIQUE
 ) WITH (OIDS=FALSE);
-INSERT INTO users(username, password, lastlogin, time_zone, name, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'UTC', 'System administrator', '', '', '', '', '') ON CONFLICT (username) DO NOTHING;
+INSERT INTO users(username, password, lastlogin, time_zone, name, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'UTC', 'System administrator', '', '', '', '', NULL) ON CONFLICT (username) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS sessions(
   id        serial NOT NULL PRIMARY KEY,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS tariffs(
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS permissions(
-  username   character varying NOT NULL REFERENCES users(username) MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,
+  username   character varying NOT NULL REFERENCES users(username) ON UPDATE CASCADE ON DELETE CASCADE,
   serial     character varying NOT NULL,
   read       boolean           NOT NULL,
   write      boolean           NOT NULL,
@@ -50,4 +50,9 @@ CREATE TABLE IF NOT EXISTS esios(
   valuekey    int4       NOT NULL REFERENCES esios_index(valuekey),
   timestamp   bigint     NOT NULL,
   value       real       NOT NULL
+) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS telegram(
+  id       serial NOT NULL PRIMARY KEY,
+  msg      jsonb  NOT NULL
 ) WITH (OIDS=FALSE);

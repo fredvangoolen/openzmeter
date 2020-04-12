@@ -115,7 +115,7 @@ void HTTPTaskQueue::Thread(void *param1, void *param2) {
   Worker_t *Work = (Worker_t*)param2;
   Work->Function();
   pthread_mutex_lock(&This->pLocks);
-  Work->LastTime = Tools::GetTime();
+  Work->LastTime = Tools::GetTime64();
   This->pFreeWorkers.push_front(Work);
   This->pUsedWorkers--;
   pthread_mutex_unlock(&This->pLocks);
@@ -126,7 +126,7 @@ void HTTPTaskQueue::AdjustWorkers() {
     pthread_mutex_unlock(&pLocks);
     return;
   }
-  uint64_t Time = Tools::GetTime();
+  uint64_t Time = Tools::GetTime64();
   while(pInstance->pFreeWorkers.size() > 0) {
     auto Tmp = pInstance->pFreeWorkers.back();
     if((Time - Tmp->LastTime) < 60000) break;
@@ -282,9 +282,9 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
         Response["Result"] = true;
         Response["LastLogin"] = DB.ResultUInt64("lastlogin");
         if(Params["UpdateLastLogin"].is_boolean()) UpdateLastLogin = Params["UpdateLastLogin"];
-        DB.ExecSentenceAsyncResult("INSERT INTO sessions(username, timestamp) VALUES (" + DB.Bind(User) + ", " + DB.Bind(Tools::GetTime()) + ") RETURNING id");
+        DB.ExecSentenceAsyncResult("INSERT INTO sessions(username, timestamp) VALUES (" + DB.Bind(User) + ", " + DB.Bind(Tools::GetTime64()) + ") RETURNING id");
         if(DB.FecthRow()) response.set_header("Set-Cookie", "SESSION=" + DB.ResultString("id"));
-        if(UpdateLastLogin) DB.ExecSentenceNoResult("UPDATE users SET lastlogin = " + DB.Bind(Tools::GetTime()) + " WHERE username = " + DB.Bind(User));
+        if(UpdateLastLogin) DB.ExecSentenceNoResult("UPDATE users SET lastlogin = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(User));
       } else {
         Response["Result"] = false;
       }
@@ -324,7 +324,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
   FillResponse(response, "Method not found", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
 void HTTPServer::RemoveExpiredSessions() const {
-  if(Tools::GetTime() < 1296000000) return;
+  if(Tools::GetTime64() < 1296000000) return;
   Database DB;
-  DB.ExecSentenceNoResult("DELETE FROM sessions WHERE timestamp < " + DB.Bind(Tools::GetTime() - 1296000000));
+  DB.ExecSentenceNoResult("DELETE FROM sessions WHERE timestamp < " + DB.Bind(Tools::GetTime64() - 1296000000));
 }

@@ -25,8 +25,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 queue<string>    SysSupport::pSystemActions;
 pthread_mutex_t  SysSupport::pSystemActionMutex  = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t   SysSupport::pSystemActionCond   = PTHREAD_COND_INITIALIZER;
-pthread_t        SysSupport::pSystemActionThread = 0;
 bool             SysSupport::pTerminate          = false;
 RWLocks          SysSupport::pSysStatLock        = RWLocks();
 bool             SysSupport::pBT_Enabled         = false;
@@ -47,16 +45,9 @@ bool             SysSupport::pBTEnable      = false;
 string           SysSupport::pBTBridgeName  = "br-bt";
 string           SysSupport::pBTServerName  = "";
 pthread_t        SysSupport::pBTThread      = 0;
-pthread_t        SysSupport::pStatsThread   = 0;
 string           SysSupport::pInterfaceWIFI = "wlan0";;
 string           SysSupport::pNetworkWIFI   = "lan";
 string           SysSupport::pWirelessWIFI  = "default_radio";
-
-//  vector<SysSupport::Update_t> SysSupport::pUpdates;
-//  RWLocks                      SysSupport::pUpdatesLock;
-//  uint64_t                     SysSupport::pLastTask_1H = 0;
-//  uint64_t                     SysSupport::pLastTask_1M = 0;
-//  uint64_t                     SysSupport::pLastTask_5S = 0;
 #endif
 //----------------------------------------------------------------------------------------------------------------------
 SysSupport::SysSupport() {
@@ -68,19 +59,7 @@ SysSupport::SysSupport() {
   HTTPServer::RegisterCallback("addUser",         AddUserCallback);
   HTTPServer::RegisterCallback("delUser",         DelUserCallback);
   pTerminate = false;
-  if(pthread_create(&pSystemActionThread, NULL, Actions_Thread, NULL) != 0) {
-    pSystemActionThread = 0;
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-  } else {
-    pthread_setname_np(pSystemActionThread, "SysActions");
-  }
   #ifdef OPENWRT
-  if(pthread_create(&pStatsThread, NULL, SysStat_Thread, NULL) != 0) {
-    pStatsThread = 0;
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-  } else {
-    pthread_setname_np(pStatsThread, "SysStats");
-  }
   HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback);
   HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback);
   json Config = ConfigManager::ReadConfig("/Bluetooth");
@@ -128,9 +107,6 @@ SysSupport::~SysSupport() {
   HTTPServer::UnregisterCallback("addUser");
   HTTPServer::UnregisterCallback("delUser");
   pTerminate = true;
-  pthread_cond_signal(&pSystemActionCond);
-  if(pSystemActionThread != 0) pthread_join(pSystemActionThread, NULL);
-  pSystemActionThread = 0;
   #ifdef OPENWRT
   HTTPServer::UnregisterCallback("getBluetooth");
   HTTPServer::UnregisterCallback("setBluetooth");
@@ -141,9 +117,7 @@ SysSupport::~SysSupport() {
   HTTPServer::UnregisterCallback("setNTP");
   HTTPServer::UnregisterCallback("getUpdates");
   HTTPServer::UnregisterCallback("setUpgrade");
-  if(pStatsThread != 0) pthread_join(pStatsThread, NULL);
   if(pBTThread != 0) pthread_join(pBTThread, NULL);
-  pStatsThread = 0;
   pBTThread = 0;
   #endif
   LOGFile::Debug("SysSupport stopped\n");
@@ -174,23 +148,13 @@ json SysSupport::GetSystemStatusJSON() {
 void SysSupport::AddSystemAction(const string &action) {
   pthread_mutex_lock(&pSystemActionMutex);
   pSystemActions.push(action);
-  pthread_cond_signal(&pSystemActionCond);
   pthread_mutex_unlock(&pSystemActionMutex);
 }
-void *SysSupport::Actions_Thread(void *params) {
-  nice(5);
-  while(true) {
-    pthread_mutex_lock(&pSystemActionMutex);
-    if(pSystemActions.size() == 0) pthread_cond_wait(&pSystemActionCond, &pSystemActionMutex);
-    if(pTerminate == true) {
-      pthread_mutex_unlock(&pSystemActionMutex);
-      return NULL;
-    }
-    string Action = "";
-    if(pSystemActions.size() > 0) {
-      Action = pSystemActions.front();
-      pSystemActions.pop();
-    }
+void SysSupport::PeriodicTask() {
+  pthread_mutex_lock(&pSystemActionMutex);
+  while(pSystemActions.size() > 0) {
+    string Action = pSystemActions.front();
+    pSystemActions.pop();
     pthread_mutex_unlock(&pSystemActionMutex);
     #ifdef OPENWRT
     if(Action != "") LOGFile::Info("Received '%s' action\n", Action.c_str());
@@ -206,7 +170,66 @@ void *SysSupport::Actions_Thread(void *params) {
       ConfigManager::WriteConfig("/Bluetooth", Config);
     }
     #endif
+    pthread_mutex_lock(&pSystemActionMutex);
   }
+  pthread_mutex_unlock(&pSystemActionMutex);
+  #ifdef OPENWRT
+  struct sysinfo Info;
+  struct statvfs Disk;
+  int Error1 = sysinfo(&Info);
+  if(Error1 != 0) LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  int Error2 = statvfs("/", &Disk);
+  if(Error2 != 0) LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  pSysStatLock.WriteLock();
+  pUpTime = (Error1 != 0) ? 0 : Info.uptime;
+  pSwap_Total = (Error1 != 0) ? 0 : (uint64_t)Info.totalswap * Info.mem_unit;
+  pSwap_Usage = (Error1 != 0) ? NAN : ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap;
+  pCPU_Usage = (Error1 != 0) ? NAN : ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0;
+  pDisk_Total = (Error2 != 0) ? 0 : (uint64_t)Disk.f_blocks * Disk.f_frsize;
+  pDisk_Usage = (Error2 != 0) ? NAN : ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks;
+  pSysStatLock.Unlock();
+  char Buffer[8192];
+  int TmpFile = open("/proc/meminfo", O_RDONLY);
+  Buffer[0] = 0;
+  if(TmpFile > 0) {
+    size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
+    close(TmpFile);
+    Buffer[Len] = 0;
+  }
+  pSysStatLock.WriteLock();
+  pRAM_Total = ParseProcMem("MemTotal:", Buffer);
+  pRAM_Usage = ((ParseProcMem("MemTotal:", Buffer) -  ParseProcMem("MemFree:", Buffer) - ParseProcMem("Cached:", Buffer) - ParseProcMem("Buffers:", Buffer)) * 100.0) / ParseProcMem("MemTotal:", Buffer);
+  pSysStatLock.Unlock();
+
+  TmpFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
+  Buffer[0] = 0;
+  if(TmpFile > 0) {
+    size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
+    close(TmpFile);
+    Buffer[Len] = 0;
+  }
+  pSysStatLock.WriteLock();
+  pTemperature = atoi(Buffer) / 1000.0;
+  pSysStatLock.Unlock();
+
+  string CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
+  json Tmp = nullptr;
+  if(CommandStr.empty() == false) {
+    Tmp = json::parse(CommandStr, NULL, false);
+    if((Tmp.is_discarded() == true) || (Tmp.is_object() == false) || (Tmp["ssid"].is_string() == false) || (Tmp["quality"].is_number() == false) || (Tmp["quality_max"].is_number() == false)) Tmp = nullptr;
+  }
+  pSysStatLock.WriteLock();
+  if(Tmp == nullptr) {
+    pWIFI_Network = "";
+    pWIFI_Power = NAN;
+  } else {
+    pWIFI_Network =  Tmp["ssid"];
+    float Current = Tmp["quality"], Max = Tmp["quality_max"];
+    pWIFI_Power = Current * 100.0 / Max;
+  }
+  pTimeSet = (Tools::GetTime64() > 946684800000);
+  pSysStatLock.Unlock();
+  #endif
 }
 #ifdef OPENWRT
 void *SysSupport::Bluetooth_Thread(void *params) {
@@ -317,71 +340,6 @@ void *SysSupport::Bluetooth_Thread(void *params) {
     }
   }
   if(DBus != NULL) dbus_connection_unref(DBus);
-  return NULL;
-}
-void *SysSupport::SysStat_Thread(void *params) {
-  nice(15);
-  uint64_t NextUpdate = Tools::GetTime() + 5000;
-  while(pTerminate == false) {
-    usleep(100000);
-    if(Tools::GetTime() < NextUpdate) continue;
-    NextUpdate = Tools::GetTime() + 5000;
-    struct sysinfo Info;
-    struct statvfs Disk;
-    int Error1 = sysinfo(&Info);
-    if(Error1 != 0) LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    int Error2 = statvfs("/", &Disk);
-    if(Error2 != 0) LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-    pSysStatLock.WriteLock();
-    pUpTime = (Error1 != 0) ? 0 : Info.uptime;
-    pSwap_Total = (Error1 != 0) ? 0 : (uint64_t)Info.totalswap * Info.mem_unit;
-    pSwap_Usage = (Error1 != 0) ? NAN : ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap;
-    pCPU_Usage = (Error1 != 0) ? NAN : ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0;
-    pDisk_Total = (Error2 != 0) ? 0 : (uint64_t)Disk.f_blocks * Disk.f_frsize;
-    pDisk_Usage = (Error2 != 0) ? NAN : ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks;
-    pSysStatLock.Unlock();
-    char Buffer[8192];
-    int TmpFile = open("/proc/meminfo", O_RDONLY);
-    Buffer[0] = 0;
-    if(TmpFile > 0) {
-      size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
-      close(TmpFile);
-      Buffer[Len] = 0;
-    }
-    pSysStatLock.WriteLock();
-    pRAM_Total = ParseProcMem("MemTotal:", Buffer);
-    pRAM_Usage = ((ParseProcMem("MemTotal:", Buffer) -  ParseProcMem("MemFree:", Buffer) - ParseProcMem("Cached:", Buffer) - ParseProcMem("Buffers:", Buffer)) * 100.0) / ParseProcMem("MemTotal:", Buffer);
-    pSysStatLock.Unlock();
-
-    TmpFile = open("/sys/class/thermal/thermal_zone0/temp", O_RDONLY);
-    Buffer[0] = 0;
-    if(TmpFile > 0) {
-      size_t Len = read(TmpFile, Buffer, sizeof(Buffer));
-      close(TmpFile);
-      Buffer[Len] = 0;
-    }
-    pSysStatLock.WriteLock();
-    pTemperature = atoi(Buffer) / 1000.0;
-    pSysStatLock.Unlock();
-
-    string CommandStr = Run("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
-    json Tmp = nullptr;
-    if(CommandStr.empty() == false) {
-      Tmp = json::parse(CommandStr, NULL, false);
-      if((Tmp.is_discarded() == true) || (Tmp.is_object() == false) || (Tmp["ssid"].is_string() == false) || (Tmp["quality"].is_number() == false) || (Tmp["quality_max"].is_number() == false)) Tmp = nullptr;
-    }
-    pSysStatLock.WriteLock();
-    if(Tmp == nullptr) {
-      pWIFI_Network = "";
-      pWIFI_Power = NAN;
-    } else {
-      pWIFI_Network =  Tmp["ssid"];
-      float Current = Tmp["quality"], Max = Tmp["quality_max"];
-      pWIFI_Power = Current * 100.0 / Max;
-    }
-    pTimeSet = (Tools::GetTime() > 946684800000);
-    pSysStatLock.Unlock();
-  }
   return NULL;
 }
 string SysSupport::GetMacBT(DBusConnection *bus) {
@@ -787,7 +745,7 @@ void SysSupport::GetNTPCallback(const json &params, Response &response) {
       }
     }
   }
-  Result["Time"] = Tools::GetTime();
+  Result["Time"] = Tools::GetTime64();
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void SysSupport::SetNTPCallback(const json &params, Response &response) {

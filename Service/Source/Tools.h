@@ -71,10 +71,10 @@ class ProviderLocks {
     pthread_cond_t   pProducerCond;
   public :
     ProviderLocks();
-    void Abort();
+    ~ProviderLocks();
     void ProviderWrite();
     void ProviderWait();
-    bool ConsumerWait(uint32_t timeoutMS);
+    bool ConsumerWait(uint32_t timeoutSec);
     void ConsumerEnds();
 };
 //----------------------------------------------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ class Tools {
   public :
     static void      DisableEcho();
     static void      RunDaemon();
-    static uint64_t  GetTime();
+    static uint64_t  GetTime64();
     static void      SendUDP(const json &obj);
 };
 //----------------------------------------------------------------------------------------------------------------------

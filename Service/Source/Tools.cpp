@@ -146,15 +146,23 @@ ProviderLocks::ProviderLocks() {
   pConsumers     = 0;
   pDataReady     = false;
   pTerminate     = false;
-  pMutex         = PTHREAD_MUTEX_INITIALIZER;
+  //pMutex         = PTHREAD_MUTEX_INITIALIZER;
   pProducerCond  = PTHREAD_COND_INITIALIZER;
-  pConsumersCond = PTHREAD_COND_INITIALIZER;
+  pthread_condattr_t  CondAttr;
+  pthread_mutexattr_t MutexAttr;
+  pthread_condattr_init(&CondAttr);
+  pthread_mutexattr_init(&MutexAttr);
+  pthread_condattr_setclock(&CondAttr, CLOCK_MONOTONIC);
+  pthread_mutexattr_settype(&MutexAttr, PTHREAD_MUTEX_ERRORCHECK);
+  pthread_cond_init(&pConsumersCond, &CondAttr);
+  pthread_mutex_init(&pMutex, &MutexAttr);
 }
-void ProviderLocks::Abort() {
+ProviderLocks::~ProviderLocks() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
-  pthread_mutex_unlock(&pMutex);
   pthread_cond_broadcast(&pConsumersCond);
+  pthread_mutex_unlock(&pMutex);
+  pthread_cond_destroy(&pConsumersCond);
 }
 void ProviderLocks::ProviderWrite() {
   pthread_mutex_lock(&pMutex);
@@ -168,28 +176,19 @@ void ProviderLocks::ProviderWait() {
   pDataReady = false;
   pthread_mutex_unlock(&pMutex);
 }
-bool ProviderLocks::ConsumerWait(uint32_t timeoutMS) {
+bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
+  int Error = 0;
+  timespec To;
+  clock_gettime(CLOCK_MONOTONIC, &To);
+  To.tv_sec += timeoutSec;
   pthread_mutex_lock(&pMutex);
   pConsumers++;
-  struct timeval  Current;
-  struct timespec Timeout;
-  gettimeofday(&Current, NULL);
-  Timeout.tv_sec  = Current.tv_sec + (timeoutMS / 1000);
-  Timeout.tv_nsec = (timeoutMS % 1000) * 1000000;
-  while((pDataReady == false) && (pTerminate == false)) {
-    int Error = pthread_cond_timedwait(&pConsumersCond, &pMutex, &Timeout);
-    if((Error == ETIMEDOUT) || (pTerminate == true)){
-      pConsumers--;
-      if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
-      pthread_mutex_unlock(&pMutex);
-      return false;
-    } else if(Error != 0) {
-      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      return false;
-    }
-  }
-  if(pTerminate == true) {
+  while((Error == 0) && (pDataReady == false) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumersCond, &pMutex, &To);
+  if((Error != 0) || (pTerminate == true)) {
+    pConsumers--;
+    if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
     pthread_mutex_unlock(&pMutex);
+    if(Error != ETIMEDOUT) LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return false;
   } else {
     pthread_mutex_unlock(&pMutex);
@@ -289,6 +288,7 @@ LOGFile::Type   LOGFile::pLevel    = LOGFile::DEBUG;
 bool            LOGFile::pConsole  = true;
 pthread_mutex_t LOGFile::pMutex    = PTHREAD_MUTEX_INITIALIZER;
 bool            LOGFile::pDebug    = false;
+//----------------------------------------------------------------------------------------------------------------------
 LOGFile::LOGFile() {
   string Name = "/var/log/openZmeter.log";
   json Config = ConfigManager::ReadConfig("/Log");
@@ -342,15 +342,16 @@ void LOGFile::CloseConsole() {
   pConsole = false;
 }
 void LOGFile::Msg(Type type, const char *msg, va_list params) {
+  if(((type > pLevel) || (pFile == NULL)) && (pConsole == false)) return;
+  char   DateStr[32];
+  char   MsgStr[1024];
   time_t Now;
-  struct tm *TimeStamp;
-  char DateStr[32];
-  char MsgStr[1024];
-  pthread_mutex_lock(&pMutex);
+  tm     TimeStamp;
   time(&Now);
-  TimeStamp = localtime(&Now);
-  strftime(DateStr, 80, "[%d/%m/%Y - %X]", TimeStamp);
+  localtime_r(&Now, &TimeStamp);
+  strftime(DateStr, 80, "[%d/%m/%Y - %X]", &TimeStamp);
   vsnprintf(MsgStr, sizeof(MsgStr), msg, params);
+  pthread_mutex_lock(&pMutex);
   if(pConsole == true) {
     if(type == ERROR) {
       printf("\033[1;31m%s\033[0m %s", DateStr, MsgStr);
@@ -412,13 +413,19 @@ void Tools::DisableEcho() {
   tattr.c_cc[VTIME] = 0;
   tcsetattr (STDIN_FILENO, TCSAFLUSH, &tattr);
 }
-uint64_t Tools::GetTime() {
-  struct timeval Time;
-  if(gettimeofday(&Time, NULL) != 0) {
+uint64_t Tools::GetTime64() {
+  struct timespec Time;
+  if(clock_gettime(CLOCK_REALTIME, &Time) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return 0;
   }
-  return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
+  return (uint64_t)Time.tv_sec * 1000 + Time.tv_nsec / 1000000;
+//  struct timeval Time;
+//  if(gettimeofday(&Time, NULL) != 0) {
+//    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+//    return 0;
+//  }
+//  return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
 }
 void Tools::RunDaemon() {
   LOGFile::Info("Move to background task\n");

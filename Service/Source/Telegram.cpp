@@ -13,7 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
+#include "cctz/time_zone.h"
 #include "Telegram.h"
+//----------------------------------------------------------------------------------------------------------------------
+using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 string                    Telegram::pToken       = "";
 pthread_t                 Telegram::pThread      = 0;
@@ -93,16 +96,25 @@ void *Telegram::Thread_Func(void *params) {
   nice(10);
   int32_t    LastUpdate = 0;
   Headers    Headers    = {{"Accept", "application/json"}, {"Host", "api.telegram.org"}, {"Accept-Encoding", "gzip, deflate"}, {"Connection", "keep-alive"}};
-  SSLClient *Client     = new SSLClient("api.telegram.org", 443);
-  Client->set_keep_alive_max_count(100);
-  Client->set_read_timeout(20, 0);
-  Client->set_timeout_sec(30);
-  Client->set_compress(true);
+  SSLClient  Client("api.telegram.org", 443);
+  Client.set_keep_alive_max_count(100);
+  Client.set_read_timeout(20, 0);
+  Client.set_timeout_sec(30);
+  Client.set_compress(true);
   while(pTerminate == false) {
-    json Commands = nullptr;
+    for(uint8_t Count = 0; Count < 100; Count++) {
+      Database DB;
+      string   URL = "/bot" + pToken + "/sendMessage";
+      DB.ExecSentenceAsyncResult("SELECT * FROM telegram ORDER BY id ASC LIMIT 1");
+      if(DB.FecthRow() == false) break;
+      uint64_t Seq = DB.ResultUInt64("id");
+      string   Msg = DB.ResultString("msg");
+      auto Response = Client.Post(URL.c_str(), pHeaders, Msg, "application/json");
+      if(Response != nullptr) DB.ExecSentenceNoResult("DELETE FROM telegram WHERE id = " + DB.Bind(Seq));
+    }
     string URL   = "/bot" + pToken + "/getUpdates";
     Params Param = { { "timeout", to_string(TELEGRAM_POLLING_SEC) }, { "offset", to_string(LastUpdate + 1) }, { "limit", to_string(TELEGRAM_UPDATE_LIMIT) } };
-    auto Response = Client->Post(URL.c_str(), Headers, Param);
+    auto Response = Client.Post(URL.c_str(), Headers, Param);
     if(Response == nullptr) {
       usleep(100000);
       continue;
@@ -131,7 +143,7 @@ void *Telegram::Thread_Func(void *params) {
           Work->Token = "";
           Work->JSON = nullptr;
           pthread_mutex_lock(&pMutex);
-          Work->LastTime = Tools::GetTime();
+          Work->LastTime = Tools::GetTime64();
           pFreeWorkers.push_front(Work);
           pUsedWorkers--;
           pthread_mutex_unlock(&pMutex);
@@ -145,12 +157,11 @@ void *Telegram::Thread_Func(void *params) {
     }
   }
   LOGFile::Debug("Telegram BOT stopped\n");
-  delete Client;
   return NULL;
 }
 void Telegram::AdjustWorkers() {
   pthread_mutex_lock(&pMutex);
-  uint64_t Time = Tools::GetTime();
+  uint64_t Time = Tools::GetTime64();
   while(pFreeWorkers.size() > 0) {
     auto Tmp = pFreeWorkers.back();
     if((Time - Tmp->LastTime) < 60000) break;
@@ -162,18 +173,27 @@ void Telegram::AdjustWorkers() {
   LOGFile::Debug("Adjusted Telegram workers pool to %d connections (plus %u in use)\n", pFreeWorkers.size(), pUsedWorkers);
   pthread_mutex_unlock(&pMutex);
 }
-bool Telegram::SendMessage(const json &msg) {
-  string URL = "/bot" + pToken + "/sendMessage";
-  SSLClient Client("api.telegram.org", 443);
-  auto Response = Client.Post(URL.c_str(), pHeaders, msg.dump(), "application/json");
-  return true; ///TODO: Comprobar valores devueltos
+void Telegram::SendAlarm(const string &analyzer, const string &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered) {
+  Database  DB;
+  time_zone Timezone;
+  json      Tmp = json::object();
+  cctz::load_time_zone(tz, &Timezone);
+  Tmp["text"] = (triggered ? "↗️ *" : "↘️ *") + name + "*\n" + (triggered ? "Triggered" : "Released") + " at " + cctz::format("%H:%M:%S - %Y/%m/%d \n", chrono::system_clock::from_time_t(timestamp / 1000), Timezone);
+  Tmp["parse_mode"] = "Markdown";
+  DB.ExecSentenceNoResult("INSERT INTO telegram(msg) SELECT jsonb_build_object('chat_id', telegram) || " + DB.Bind(Tmp.dump()) + "::jsonb FROM permissions NATURAL JOIN users WHERE serial = " + DB.Bind(analyzer) + " AND telegram IS NOT NULL");
 }
+//bool Telegram::SendMessage(const json &msg, Client *client) {
+//  string URL = "/bot" + pToken + "/sendMessage";
+//  SSLClient Client("api.telegram.org", 443);
+//  auto Response = Client.Post(URL.c_str(), pHeaders, msg.dump(), "application/json");
+//  return true; ///TODO: Comprobar valores devueltos
+//}
 //----------------------------------------------------------------------------------------------------------------------
 void Telegram::HandleUpdate(SSLClient *client, const json &JSON) {
   printf("%s\n", JSON.dump().c_str());
+  Database DB;
   try {
     if(JSON.contains("message")) {
-      Database DB;
       int64_t ChatID = JSON["message"]["chat"]["id"];
       if(DB.ExecSentenceAsyncResult("SELECT username FROM users WHERE telegram = " + DB.Bind(to_string(ChatID))) == false) return;
       json Msg = json::object();
@@ -181,21 +201,18 @@ void Telegram::HandleUpdate(SSLClient *client, const json &JSON) {
       if(DB.FecthRow() == false) {
         Msg["text"] = "Your user ID is not found, please check it is correctly set in user profile and try again\n\n*Your user ID is '" + to_string(ChatID) + "'*";
         Msg["parse_mode"] = "Markdown";
-        SendMessage(Msg);
+        DB.ExecSentenceNoResult("INSERT INTO telegram(msg) VALUES(" + DB.Bind(Msg.dump()) + ")");
         return;
       }
       if(JSON["message"]["text"] == "/start") {
         Msg["text"] = "*Welcome* to *openZmeter*\n\nYou are ready to receive alarms and query your analyzers information.";
         Msg["parse_mode"] = "Markdown";
-        SendMessage(Msg);
+        DB.ExecSentenceNoResult("INSERT INTO telegram(msg) VALUES(" + DB.Bind(Msg.dump()) + ")");
         //Envio teclado con analyzers
         return;
-
-//      SendMessage(message.chat().id(), "Bienvenido "+message.chat().firstName()+ "👋👋👋\nA partir de este momento podrás disfrutar de"
-//            + " todas las funcionalidades, y podrás recibir los eventos y alarmas en tiempo real", MAINMENU_KB);
       }
       Msg["text"] = "Unknown command";
-      SendMessage(Msg);
+      DB.ExecSentenceNoResult("INSERT INTO telegram(msg) VALUES(" + DB.Bind(Msg.dump()) + ")");
     }
   } catch(...) {}
 }
@@ -354,16 +371,4 @@ void Telegram::HandleUpdate(SSLClient *client, const json &JSON) {
 //
 //        }
 //
-
-
-
-
-
-//  json Msg = json::object();
-//  Msg["chat_id"] = 242623189;
-//  Msg["text"] = "Soy un mensaje!";
-//  Msg["reply_markup"]
-//  SendMessage(Msg);
-//
-
 //}
