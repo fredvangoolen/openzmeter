@@ -64,7 +64,7 @@ DatabasePool::~DatabasePool() {
 }
 void DatabasePool::AdjustWorkers() {
   pthread_mutex_lock(&pMutex);
-  uint64_t Time = Tools::GetTime();
+  uint64_t Time = Tools::GetTime64();
   while(pConnectionPool.size() > 0) {
     auto Tmp = pConnectionPool.back();
     if((Time - Tmp.LastTime) < 60000) break;
@@ -111,7 +111,7 @@ void DatabasePool::PushConnection(PGconn *conn) {
   if(conn == NULL) return;
   pthread_mutex_lock(&pMutex);
   Connection_t Connection;
-  Connection.LastTime = Tools::GetTime();
+  Connection.LastTime = Tools::GetTime64();
   Connection.Connection = conn;
   pConnectionPool.push_front(Connection);
   pthread_mutex_unlock(&pMutex);

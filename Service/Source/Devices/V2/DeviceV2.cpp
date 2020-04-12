@@ -289,7 +289,7 @@ void *DeviceV2::Capture_Thread(void *args) {
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) LOGFile::Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
     if(This->pTerminate == true) continue;
-    if((This->pDeviceHandle != NULL) && (LastSignalSend < (Tools::GetTime() - 500))) {
+    if((This->pDeviceHandle != NULL) && (LastSignalSend < (Tools::GetTime64() - 500))) {
       uint16_t Status = 0x0006; //Stat=GREEN y Wifi=RED
 //      SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
 //      SysStatus->Lock.ReadLock();
@@ -304,7 +304,7 @@ void *DeviceV2::Capture_Thread(void *args) {
       Status |= (This->pHighGain == true) ? 0x4000 : 0x0000;
       This->pSignalTransfer.Submit(&Status, sizeof(Status));
       This->pSubmittedTransfers++;
-      LastSignalSend = Tools::GetTime();
+      LastSignalSend = Tools::GetTime64();
     }
     if(This->pNewDevice != NULL) {
       struct libusb_device_descriptor Descriptor;
@@ -365,9 +365,9 @@ void *DeviceV2::Capture_Thread(void *args) {
       } else {
         LOGFile::Info("Claimed interface 0 for DeviceV2 with serial '%s'\n", This->Serial.c_str());
       }
-      This->pSignalTransfer.Setup(This->pDeviceHandle, DEVICEV2_ENDPOINT_OUT, ReadCallback, -1);
+      This->pSignalTransfer.Setup(This->pDeviceHandle, DEVICEV2_ENDPOINT_OUT, ReadCallback, 1000);
       for(Transfer &Tmp : This->pTransfers) {
-        Tmp.Submit(This->pDeviceHandle, DEVICEV2_ENDPOINT_IN, ReadCallback, -1);
+        Tmp.Submit(This->pDeviceHandle, DEVICEV2_ENDPOINT_IN, ReadCallback, 5000);
         This->pSubmittedTransfers++;
       }
       if(Result != LIBUSB_SUCCESS) {

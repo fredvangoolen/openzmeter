@@ -107,12 +107,12 @@ void DeviceVirtual::SetDevice(const json &params, Response &response) {
 }
 void *DeviceVirtual::Capture_Thread(void *args) {
   DeviceVirtual *This = (DeviceVirtual*)args;
-  uint64_t       StartTime        = Tools::GetTime();
+  uint64_t       StartTime        = Tools::GetTime64();
   uint64_t       GeneratedSamples = 0;
   int32_t        Phase            = (This->pSampleRate / This->pFrequency) * (This->pCurrentPhase / 360.0);
   while(!This->pTerminate) {
     float Voltage[3], Current[4];
-    uint64_t Sampletime = Tools::GetTime();
+    uint64_t Sampletime = Tools::GetTime64();
     if((This->pAnalyzer->IsWorking() == false) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
       Voltage[0] = (This->pFrequency > 0.0) ? This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency) : This->pVoltage;
       Current[0] = (This->pFrequency > 0.0) ? This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples + Phase) / This->pSampleRate * This->pFrequency) : This->pCurrent;

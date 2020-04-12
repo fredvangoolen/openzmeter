@@ -26,6 +26,7 @@
 #include "AnalyzerSoft.h"
 #include "Tools.h"
 #include "SysSupport.h"
+#include "Telegram.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace cctz;
@@ -56,8 +57,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   LOGFile::Debug("Creating AnalyzerSoft database tables\n");
   Database DB(id);
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
-  DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Tools::GetTime() - 86400000));   //Delete 1 day old
-  DB.ExecSentenceNoResult("DELETE FROM aggreg_200ms WHERE sampletime < " + DB.Bind(Tools::GetTime() - 3600000));     //Delete 1 hour old
+  DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Tools::GetTime64() - 86400000));   //Delete 1 day old
+  DB.ExecSentenceNoResult("DELETE FROM aggreg_200ms WHERE sampletime < " + DB.Bind(Tools::GetTime64() - 3600000));     //Delete 1 hour old
   LOGFile::Debug("AnalyzerSoft database tables created\n");
   pDelayVoltage     = NULL;
   pDelayCurrent     = NULL;
@@ -106,7 +107,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   for(uint8_t n = 0; n < pCurrentChannels; n++) {
     if(pCurrentFFTWorker[n] != NULL) delete pCurrentFFTWorker[n];
   }
-  pNowDataLock.Abort();
+//  pNowDataLock.Abort();
   pthread_mutex_lock(&pFFTMutex);
   if(pFFTRunning == 0) {
     LOGFile::Debug("Clearing FFT cached plans\n");
@@ -117,7 +118,7 @@ AnalyzerSoft::~AnalyzerSoft() {
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
   pAnalyzerLock.ReadLock();
   if(pBlockSamples == 0) {
-    pAggreg200MS.Timestamp = Tools::GetTime();
+    pAggreg200MS.Timestamp = Tools::GetTime64();
     pAggreg200MS.Timestamp -= (uint64_t)((buffUsage * 1000) / pSamplerate);
   }
   if(pNominalFrequency == 0) {
@@ -770,7 +771,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   AnalyzerSoft *This  = (AnalyzerSoft*)creation;
   Params_t     *Aggreg = (Params_t*)run;
   This->pAnalyzerLock.ReadLock();
-  uint64_t Start = Tools::GetTime();
+  uint64_t Start = Tools::GetTime64();
   Aggreg->AggregSamples = 1;
   if(This->pEventsWorker != NULL) This->pEventsWorker->Run(Aggreg);
   This->pFFTSamples = (This->pBlockSamples / 2) + 1;
@@ -960,7 +961,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   This->pBlockSamples     = 0;
   This->pBlockCyclesCount = 0;
   memset(This->pBlockCycles, 0, sizeof(pBlockCycles));
-  LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->Serial.c_str(), Tools::GetTime() - Start, This->pSequence);
+  LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->Serial.c_str(), Tools::GetTime64() - Start, This->pSequence);
   This->pSequence++;
   This->pAnalyzerLock.Unlock();
 }
@@ -1159,13 +1160,15 @@ void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
       LOGFile::Debug("Alarm triggered on analyzer '%s'\n", This->Serial.c_str());
       Database DB(This->Serial);
       DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(Aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", true, " + DB.Bind(Alarm.Priority) + ")");
-        if(This->pMQTTAlarms == true) This->PublishAlarm(Aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
+      if(This->pMQTTAlarms == true) This->PublishAlarm(Aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
+      Telegram::SendAlarm(This->Serial, This->pTimeZone, Aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
     } else if((Alarm.ResultCount == 0) && (Alarm.Triggered == true)) {
       Alarm.Triggered = false;
       LOGFile::Debug("Alarm reseted on analyzer '%s'\n", This->Serial.c_str());
       Database DB(This->Serial);
       DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(Aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", false, " + DB.Bind(Alarm.Priority) + ")");
       if(This->pMQTTAlarms == true) This->PublishAlarm(Aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
+      Telegram::SendAlarm(This->Serial, This->pTimeZone, Aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
     }
   }
 }
@@ -1542,7 +1545,7 @@ void AnalyzerSoft::GetSeries(const json &params, Response &response) {
 void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if(pNowDataLock.ConsumerWait(5000) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   json Result = json::object();
   Result["Sampletime"] = pAggreg200MS.Timestamp;
   for(uint8_t i = 0; i < params["Series"].size(); i++) {
@@ -1750,7 +1753,7 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   bool     SaveExpense     = false;
   bool     SaveBills       = false;
   bool     SaveTime        = false;
-  uint64_t Now             = Tools::GetTime();
+  uint64_t Now             = Tools::GetTime64();
   for(uint8_t i = 0; i < params["Series"].size(); i++) {
     if(params["Series"][i].is_string() == false) return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
     if(params["Series"][i] == "ACTIVE_POWER") {

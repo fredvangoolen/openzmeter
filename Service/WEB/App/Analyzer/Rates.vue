@@ -63,7 +63,7 @@
         this.View = 'Rate';
       },
       Delete: function(row) {
-        if(confirm("Delete '" + this.Analyzer.Rate[row].Name + "' rate?")) this.Analyzer.Rates.splice(row, 1);
+        if(confirm("Delete '" + this.Analyzer.Rates[row].Name + "' rate?")) this.Analyzer.Rates.splice(row, 1);
       },
       Save: function() {
         this.ShowSpinner = true;

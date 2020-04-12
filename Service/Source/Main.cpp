@@ -76,9 +76,12 @@ int main(int argc, char** argv) {
   /* Create ESIOS */
   ESIOS Esios;
 
+  pthread_setname_np(pthread_self(), "BackgroundTask");
+  nice(15);
 
   uint32_t Iter = 0;
   while(!Terminate) {
+    SysSupport::PeriodicTask();
     if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
     if((Iter % 60) == 10) DatabasePool::AdjustWorkers();
     if((Iter % 60) == 20) Telegram::AdjustWorkers();

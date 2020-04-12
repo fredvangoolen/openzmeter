@@ -2,12 +2,10 @@
   <dlg :loading="ShowSpinner">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
-      <div class="pull-right input-group input-group-xs" style="width:200px" v-if="Rate.Template==null">
-        <input type="text" class="form-control" placeholder="Filter..." v-model="Filter">
-        <span class="input-group-btn">
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
-        </span>
+      <div class="pull-right btn-group" v-if="Rate.Template==null">
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
+      <toolbar-pager v-if="Rate.Template==null" class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['Name', 'StartDate', 'EndDate']"></toolbar-pager>
       <div class="pull-right btn-group" v-if="Rate.Template!=null">
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
@@ -19,7 +17,7 @@
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
     <div class="row" v-if="Rate.Template==null">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Tariffs" class="table small table-striped">
+      <vuetable ref="table" :fields="Columns" :api-mode="false" :data="FilterTariffs" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
             <button class="btn btn-xs btn-default" @click="LoadTariff(props.rowData)">Load</button>
@@ -42,12 +40,79 @@
           <label class="control-label">To</label>
           <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :big="true" v-model="Rate.EndDate"></date-picker>
         </div>
+        <div class="col-xs-12">
+          <label class="control-label">Prices source</label>
+          <option-picker :options="[{name: 'FIXED', value: null}, {name: 'ESP_ESIOS', value: 'ESP_ESIOS'}]" v-model="Rate.Module" :big="true"></option-picker>
+        </div>
+        <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12" style="margin-top: 5px">
           <button type="button" class="btn btn-default btn-xs btn-danger" style="width:100%" @click="LoadTariffs()">Change tariff template</button>
         </div>
       </div>
-      <div class="row periods" v-if="View=='Periods'">
+      <div class="row" v-if="View=='Periods'">
         <div class="col-xs-12">
+          <table class="contracted_power">
+            <tr><td colspan="3" class="border-bottom">Contracted power</td></tr>
+            <tr v-for="(period, idx) in Rate.Config.Periods" :key="idx">
+              <td class="text-center"><strong>P{{ idx + 1 }}</strong></td>
+              <td>
+                <input-spin :max="100000" :min="0" prepend="kW" :decimals="6" :increment="1" :value="period.Contracted_Power/1000" @input="Rate.Config.Periods[idx].Contracted_Power=$event*1000; Rate = Object.assign({}, Rate)"></input-spin>
+              </td>
+              <td>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: LinkContractedPower==true }" @click="LinkContractedPower=!LinkContractedPower" data-toggle="tooltip" title="Link all periods value"><img :src="require('Imgs/link.png')"></button>
+              </td>
+            </tr>
+          </table>
+          <table class="power_costs">
+            <tr>
+              <td colspan="3" class="border-bottom">
+                Power costs
+                <div class="btn-group float-right">
+                  <button type="button" class="btn btn-default btn-xs" @click="LinkPowerCosts=!LinkPowerCosts" data-toggle="tooltip" title="Load tariff default values"><img :src="require('Imgs/wand.png')"> Load defaults</button>
+                </div>
+              </td>
+            </tr>
+            <tr v-for="(period, idx) in Rate.Config.Periods" :key="idx">
+              <td class="text-center"><strong>P{{ idx + 1 }}</strong></td>
+              <td>
+                <input-spin :max="100000" :min="0" prepend="€/kW/day" :decimals="6" :increment="1" :value="period.Power_Cost*1000" @input="Rate.Config.Periods[idx].Power_Cost=$event/1000; Rate = Object.assign({}, Rate)"></input-spin>
+              </td>
+              <td>
+                <div class="btn-group">
+                  <button type="button" class="btn btn-default btn-xs" :class="{ active: LinkPowerCosts==true }" @click="LinkPowerCosts=!LinkPowerCosts" data-toggle="tooltip" title="Link all periods value"><img :src="require('Imgs/link.png')"></button>
+                  <button type="button" class="btn btn-default btn-xs" @click="LinkContractedPower=!LinkContractedPower" data-toggle="tooltip" title="Edit expresion"><img :src="require('Imgs/math_functions.png')"></button>
+                </div>
+              </td>
+            </tr>
+          </table>
+          <table class="energy_costs">
+            <tr>
+              <td colspan="3" class="border-bottom">
+                Energy costs
+                <div class="btn-group float-right">
+                  <button type="button" class="btn btn-default btn-xs" @click="LinkPowerCosts=!LinkPowerCosts" data-toggle="tooltip" title="Load tariff default values"><img :src="require('Imgs/wand.png')"> Load defaults</button>
+                </div>
+              </td>
+            </tr>
+            <tr v-for="(period, idx) in Rate.Config.Periods" :key="idx">
+              <td class="text-center"><strong>P{{ idx + 1 }}</strong></td>
+              <td>
+                <input-spin :max="100000" :min="0" prepend="€/kWh" :decimals="6" :increment="1" :value="period.Energy_Cost*1000" @input="Rate.Config.Periods[idx].Energy_Cost=$event/1000; Rate = Object.assign({}, Rate)"></input-spin>
+              </td>
+              <td>
+                <div class="btn-group">
+                  <button type="button" class="btn btn-default btn-xs" :class="{ active: LinkPowerCosts==true }" @click="LinkPowerCosts=!LinkPowerCosts" data-toggle="tooltip" title="Link all periods value"><img :src="require('Imgs/link.png')"></button>
+                  <button type="button" class="btn btn-default btn-xs" @click="LinkContractedPower=!LinkContractedPower" data-toggle="tooltip" title="Edit expresion"><img :src="require('Imgs/math_functions.png')"></button>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+
+
+
+        <div class="col-xs-12" v-if="false">
           <table>
             <tr>
               <td></td>
@@ -150,7 +215,7 @@
   export default {
     props: { analyzer: Object, index: Number },
     data() {
-      return { View: 'Main', Rate: null, Day: 0, Period: 0, ShowSpinner: false, Filter: '', Tariffs: null,
+      return { View: 'Main', Rate: null, Day: 0, Period: 0, ShowSpinner: false, FilterTariffs: [], Tariffs: [], LinkContractedPower: false, LinkPowerCosts: false,
         PeriodNames: ['Each month', 'Each two month', 'Each three month'],
         BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th'],
         Columns: [
@@ -393,4 +458,36 @@
   .periods input, .periods td {
     text-align: right;
   }
+
+  table.contracted_power, table.power_costs, table.energy_costs {
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+  table:not(:first-child) {
+    margin-top: 5px;
+  }
+  table tr td {
+    border-spacing: 0px;
+    padding: 3px;
+  }
+  table .border-bottom {
+    border-bottom: 1px solid #ccc;
+    background: #eee;
+    font-weight: bold;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    line-height: 22px;
+  }
+  table .border-right {
+    border-right: 1px solid #ccc;
+  }
+  .contracted_power td:nth-child(3), .contracted_power td:nth-child(1), .power_costs td:nth-child(1), .energy_costs td:nth-child(1)  {
+    width: 36px;
+  }
+  .power_costs td:nth-child(3), .energy_costs td:nth-child(3) {
+    width: 63px
+  }
+</style>
+
 </style>

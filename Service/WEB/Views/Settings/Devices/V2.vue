@@ -234,9 +234,8 @@
 
 <style scoped>
   table {
-     width: 100%;
-     border-radius: 6px;
-     border: 1px solid #ccc;
+    width: 100%;
+    border: 1px solid #ccc;
   }
   table:not(:first-child), .output-table:not(:first-child) {
     margin-top: 5px;

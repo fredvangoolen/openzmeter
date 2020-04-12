@@ -15,7 +15,7 @@
       <vuetable key="analyzers" :fields="Columns" :data="FilterAnalyzers" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-success btn-xs" :disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" @click="Select(props.rowData.Analyzer)">Select</button>
+            <button type="button" class="btn btn-success btn-xs" :disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" @click="Select(props.rowData.Analyzer, true)">Select</button>
             <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
             <ul class="dropdown-menu pull-right">
               <li><a @click="Alarms(props.rowData.Analyzer)">Alarms and events</a></li>
@@ -78,7 +78,7 @@
           }
         });
       },
-      OnlineStatus: function(value) {
+      OnlineStatus: function(value, close) {
         return (value === true) ? '&#9635;' : '&#9633;';
       },
       Select: function(analyzer) {
@@ -89,7 +89,7 @@
           (result) => {
             result.data.Analyzer = analyzer;
             this.$emit('update:analyzer', result.data);
-            this.$emit('close');
+            if(close == true) this.$emit('close');
             this.ShowSpinner = false;
           },
           (fail) => {}
@@ -99,7 +99,7 @@
         this.View = null;
         if(analyzer == null) return;
         this.GetAnalyzers();
-        if(analyzer == this.analyzer.Analyzer) this.Select(analyzer);
+        if(analyzer == this.analyzer.Analyzer) this.Select(analyzer, false);
       },
       Configure: function(analyzer) {
         this.ShowSpinner = true;

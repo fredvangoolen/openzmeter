@@ -21,7 +21,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-#define TELEGRAM_POLLING_SEC    5
+#define TELEGRAM_POLLING_SEC    3
 #define TELEGRAM_UPDATE_LIMIT 100
 //----------------------------------------------------------------------------------------------------------------------
 class Telegram final {
@@ -48,7 +48,8 @@ class Telegram final {
     static json  CheckConfig(const json &config);
     static void *Thread_Func(void *params);
   public :
-    static bool  SendMessage(const json &msg);
+    static void  SendAlarm(const string &analyzer, const string &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered);
+    static bool  SendMessage(const json &msg, Client *client);
     static void  AdjustWorkers();
   public :
     Telegram();
