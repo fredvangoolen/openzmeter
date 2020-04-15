@@ -25,11 +25,13 @@
 Worker::Worker(const string &name, void *param, void (*callback)(void*, void*), int8_t nice) {
   pWorking       = false;
   pTerminate     = false;
-  pCond          = PTHREAD_COND_INITIALIZER;
+  pCondWake      = PTHREAD_COND_INITIALIZER;
+  pCondWait      = PTHREAD_COND_INITIALIZER;
   pMutex         = PTHREAD_MUTEX_INITIALIZER;
   pCreationParam = param;
   pRunParam      = NULL;
   pCallback      = callback;
+  pThread        = 0;
   if(pthread_create(&pThread, NULL, Thread, (void*)this) != 0) {
     pThread = 0;
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -39,26 +41,22 @@ Worker::Worker(const string &name, void *param, void (*callback)(void*, void*), 
   pthread_setname_np(pThread, name.c_str());
 }
 Worker::~Worker() {
+  pthread_mutex_lock(&pMutex);
   pTerminate = true;
-  pthread_cond_signal(&pCond);
-  if(pThread == 0) return;
-  if(pthread_join(pThread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
+  pthread_cond_signal(&pCondWake);
+  pthread_mutex_unlock(&pMutex);
+  if(pThread != 0) pthread_join(pThread, NULL);
 }
 void Worker::Run(void *param) {
   pthread_mutex_lock(&pMutex);
-  if(pTerminate == true) {
-    pthread_mutex_unlock(&pMutex);
-    return;
-  }
   pWorking = true;
   pRunParam = param;
+  pthread_cond_signal(&pCondWake);
   pthread_mutex_unlock(&pMutex);
-  pthread_cond_signal(&pCond);
 }
 bool Worker::IsWorking() {
-  bool Result;
   pthread_mutex_lock(&pMutex);
-  Result = pWorking;
+  bool Result = pWorking;
   pthread_mutex_unlock(&pMutex);
   return Result;
 }
@@ -66,26 +64,21 @@ void *Worker::Thread(void *args) {
   Worker *This = (Worker*)args;
   while(This->pTerminate == false) {
     pthread_mutex_lock(&This->pMutex);
-    while(This->pWorking == false) {
-      if(This->pTerminate == true) {
-        This->pWorking = false;
-        pthread_mutex_unlock(&This->pMutex);
-        return NULL;
-      }
-      pthread_cond_wait(&This->pCond, &This->pMutex);
+    while((This->pTerminate == false) && (This->pWorking == false)) pthread_cond_wait(&This->pCondWake, &This->pMutex);
+    if((This->pTerminate == false) && (This->pWorking == true)) {
+      pthread_mutex_unlock(&This->pMutex);
+      This->pCallback(This->pCreationParam, This->pRunParam);
+      pthread_mutex_lock(&This->pMutex);
     }
-    pthread_mutex_unlock(&This->pMutex);
-    This->pCallback(This->pCreationParam, This->pRunParam);
-    pthread_mutex_lock(&This->pMutex);
     This->pWorking = false;
+    pthread_cond_broadcast(&This->pCondWait);
     pthread_mutex_unlock(&This->pMutex);
-    pthread_cond_signal(&This->pCond);
   }
   return NULL;
 }
 void Worker::Wait() {
   pthread_mutex_lock(&pMutex);
-  while(pWorking == true) pthread_cond_wait(&pCond, &pMutex);
+  while((pTerminate == false) && (pWorking == true)) pthread_cond_wait(&pCondWait, &pMutex);
   pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -98,9 +91,9 @@ RWLocks::RWLocks() {
   pWriter           = false;
 }
 RWLocks::~RWLocks() {
-  pthread_mutex_destroy(&pMutex);
-  pthread_cond_destroy(&pReadersCondition);
-  pthread_cond_destroy(&pWritersCondition);
+//  pthread_mutex_destroy(&pMutex);
+//  pthread_cond_destroy(&pReadersCondition);
+//  pthread_cond_destroy(&pWritersCondition);
 }
 void RWLocks::ReadLock() {
   pthread_mutex_lock(&pMutex);
@@ -348,8 +341,7 @@ void LOGFile::Msg(Type type, const char *msg, va_list params) {
   time_t Now;
   tm     TimeStamp;
   time(&Now);
-  localtime_r(&Now, &TimeStamp);
-  strftime(DateStr, 80, "[%d/%m/%Y - %X]", &TimeStamp);
+  strftime(DateStr, 80, "[%d/%m/%Y - %X]", localtime_r(&Now, &TimeStamp));
   vsnprintf(MsgStr, sizeof(MsgStr), msg, params);
   pthread_mutex_lock(&pMutex);
   if(pConsole == true) {

@@ -50,7 +50,11 @@ class AnalyzerSoft final : public Analyzer {
     static constexpr uint8_t UnbalanceRangesLen  = (sizeof(UnbalanceRanges) / sizeof(float)) - 1;
     static constexpr float   HarmonicsAllowed[]  = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
     static constexpr uint8_t HarmonicsAllowedLen = (sizeof(HarmonicsAllowed) / sizeof(float));
-   private :
+  private :
+    typedef struct {
+      float Re;
+      float Im;
+    } Complex_t;
     typedef struct {
       AggregType               Type;                               //Aggregation type
       bool                     Flag;                               //Flagged period
@@ -81,7 +85,7 @@ class AnalyzerSoft final : public Analyzer {
     } Params_t;
     typedef struct {
      float                    *InPtr;
-     float                    *OutPtr;
+     Complex_t                *OutPtr;
     } FFTChannel_t;
     typedef struct {
       float                    A0;
@@ -156,9 +160,10 @@ class AnalyzerSoft final : public Analyzer {
     uint16_t                   pBlockCycles[24];         //Max block sizes
     float                     *pVoltageSamples;          //Voltage samples
     float                     *pCurrentSamples;          //Current samples
+    uint32_t                   pMaxFFTSamples;           //Max FFT block samples
     uint16_t                   pFFTSamples;              //FFT result samples
-    float                     *pVoltageFFT;              //FFT voltage output (complex)
-    float                     *pCurrentFFT;              //FFT current output (complex)
+    Complex_t                 *pVoltageFFT;              //FFT voltage output (complex)
+    Complex_t                 *pCurrentFFT;              //FFT current output (complex)
     FFTChannel_t               pVoltageFFTChannels[3];   //FFT configuration channels
     FFTChannel_t               pCurrentFFTChannels[4];   //FFT configuration channels
     float                      pLastSamples[3];          //Filter samples backup
@@ -226,8 +231,8 @@ class AnalyzerSoft final : public Analyzer {
     static void *MQTT_Thread(void *params);
     static void *Sync_RespThread(void *params);
     static float CalcChange(const float in, const float reference);
-    static float CalcAngle(const float *a, const float *b);
-    static float BinPower(const float *a);
+    static float CalcAngle(const Complex_t &a, const Complex_t &b);
+    static float BinPower(const Complex_t &a);
   private :
     void Configure(const json &options);
     void InitAggreg(Params_t &params, AggregType type);

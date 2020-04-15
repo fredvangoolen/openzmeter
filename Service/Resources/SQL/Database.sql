@@ -41,15 +41,16 @@ CREATE TABLE IF NOT EXISTS permissions(
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS esios_index(
-  valuekey    int4               NOT NULL PRIMARY KEY,
-  shortname   character varying  NOT NULL,
-  description character varying  NOT NULL
+  keyvalue    serial             NOT NULL PRIMARY KEY,
+  keyname     character varying  NOT NULL UNIQUE,
+  shortname   character varying  NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS esios(
-  valuekey    int4       NOT NULL REFERENCES esios_index(valuekey),
-  timestamp   bigint     NOT NULL,
-  value       real       NOT NULL
+  keyvalue    serial  NOT NULL REFERENCES esios_index(keyvalue),
+  timestamp   bigint  NOT NULL,
+  value       real    NOT NULL,
+  CONSTRAINT keyvalue_timestamp UNIQUE(keyvalue, timestamp)
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS telegram(

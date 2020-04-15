@@ -19,6 +19,10 @@
         <label class="control-label">Token</label>
         <input type="text" class="form-control" v-model="Config.Token">
       </div>
+      <div class="col-xs-12">
+        <label class="control-label">Last data requested</label>
+        <date-picker :options="{ format: 'DD/MM/YYYY - HH:MM:ss', viewMode: 'months', timeZone: 'Europe/Madrid' }" :disabled="true" v-model="Config.LastDate" :big="true"></date-picker>
+      </div>
     </div>
   </dlg>
 </template>

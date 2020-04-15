@@ -34,11 +34,11 @@ void SignalHandler(int signal) {
 int main(int argc, char** argv) {
   Tools::DisableEcho();
   setbuf(stdout, NULL);
-  signal(SIGPIPE, SIG_IGN);
+//  signal(SIGPIPE, SIG_IGN);
   signal(SIGILL, SIG_IGN);
-  signal(SIGALRM, SIG_IGN);
-  signal(SIGINT, SignalHandler);
-  signal(SIGTERM, SignalHandler);
+//  signal(SIGALRM, SIG_IGN);
+//  signal(SIGINT, SignalHandler);
+//  signal(SIGTERM, SignalHandler);
 
   string ConfigFileName = "/etc/openZmeter.conf";
   for(int i = 1; i != argc; i++) {
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
     if((Iter % 60) == 10) DatabasePool::AdjustWorkers();
     if((Iter % 60) == 20) Telegram::AdjustWorkers();
-    if((Iter % 60) == 30) HTTPTaskQueue::AdjustWorkers();
+//    if((Iter % 60) == 30) HTTPTaskQueue::AdjustWorkers();
     Iter++;
     usleep(1000000);
   }

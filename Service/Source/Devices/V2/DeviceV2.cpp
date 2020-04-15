@@ -285,7 +285,7 @@ void *DeviceV2::Capture_Thread(void *args) {
   nice(-20);
   for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) This->pTransfers[n].Init(This, 65536);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
-    struct timeval tv = { 1, 0 };
+    struct timeval tv = { 0, 100000 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) LOGFile::Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
     if(This->pTerminate == true) continue;

@@ -52,24 +52,35 @@ class HTTPTaskQueue final : public TaskQueue {
   private :
     typedef struct {
       std::function<void()> Function;
-      uint64_t              LastTime;     //Last time event
-      Worker               *Thread;
+      uint64_t              LastTime;
+      bool                  Terminate;
+      pthread_t             Thread;
+      pthread_mutex_t       Mutex;
+      pthread_cond_t        Cond;
+      HTTPTaskQueue        *Parent;
+
+//    void           *pCreationParam;
+//    void           *pRunParam;
+
+
+
+
     } Worker_t;
   private :
-    static pthread_mutex_t   pLocks;
-    static HTTPTaskQueue    *pInstance;
+    pthread_mutex_t   pMutex;
+    pthread_cond_t    pCond;
+//    static HTTPTaskQueue    *pInstance;
   private :
     list<Worker_t*>   pFreeWorkers;
-    uint32_t          pUsedWorkers;
+    uint32_t          pRunningWorkers;
   private:
-    static void Thread(void *param1, void *param2);
-  public :
-    static void AdjustWorkers();
+    static void *Thread(void *params);
   public:
     HTTPTaskQueue();
     ~HTTPTaskQueue();
     void enqueue(std::function<void()> fn) override;
     void shutdown() override;
+    void queue_tasks();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class HTTPServer final {

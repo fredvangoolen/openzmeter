@@ -31,7 +31,8 @@ class Worker final {
     volatile bool   pTerminate;
     pthread_t       pThread;
     pthread_mutex_t pMutex;
-    pthread_cond_t  pCond;
+    pthread_cond_t  pCondWake;
+    pthread_cond_t  pCondWait;
     void          (*pCallback)(void*, void*);
   private :
     static void *Thread(void *args);
