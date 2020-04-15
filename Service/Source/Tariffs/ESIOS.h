@@ -21,28 +21,17 @@
 class ESIOS final {
   private :
     static string              pToken;
+    static uint64_t            pSyncDate;
     static pthread_t           pThread;
     static pthread_mutex_t     pMutex;
     static bool                pTerminate;
   private :
-    static void  GetESIOSCallback(const json &params, Response &response);
-    static void  SetESIOSCallback(const json &params, Response &response);
-    static void  Configure(const json &config);
-    static json  CheckConfig(const json &config);
-    static void *Thread_Func(void *params);
-
-//  private :
-//    static bool    pClassRegistered;
-//  private :
-//    const char *pRate;
-//    CURL       *pCurl;
-//    CurlBuff_t  pCurlBuff;
-//  private :
-//    static size_t Curl_Read_Callback(void *contents, size_t size, size_t nmemb, void *userp);
-//    static PricesInterface *CreateInstance(const char *name, json_object *config);
-//    static void XMLError(void *ctx, const char *msg,...);
-//  private :
-//    void CheckPrices(uint64_t from);
+    static void     GetESIOSCallback(const json &params, Response &response);
+    static void     SetESIOSCallback(const json &params, Response &response);
+    static void     Configure(const json &config);
+    static json     CheckConfig(const json &config);
+    static void    *Thread_Func(void *params);
+    static bool     FetchIndicator(SSLClient *client, const string &token, const string &indicator, const string &shortName, const string &time_trunc, const string &geo_id, uint64_t to);
   public :
     ESIOS();
     ~ESIOS();

@@ -34,6 +34,7 @@ class Telegram final {
       SSLClient            *Client;
     } Worker_t;
   private :
+    static json                pStatus;
     static string              pToken;
     static pthread_t           pThread;
     static pthread_mutex_t     pMutex;
@@ -48,14 +49,12 @@ class Telegram final {
     static json  CheckConfig(const json &config);
     static void *Thread_Func(void *params);
   public :
+    Telegram();
+    ~Telegram();
+  public :
     static void  SendAlarm(const string &analyzer, const string &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered);
     static bool  SendMessage(const json &msg, Client *client);
     static void  AdjustWorkers();
-  public :
-    Telegram();
-    ~Telegram();
 //----------------------------------------------------------------------------------------------------------------------
-  public :
-      static void  HandleUpdate(SSLClient *client, const json &JSON);
-
+    static void  HandleUpdate(SSLClient *client, const json &JSON);
 };

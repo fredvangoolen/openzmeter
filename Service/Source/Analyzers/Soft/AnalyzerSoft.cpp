@@ -107,7 +107,6 @@ AnalyzerSoft::~AnalyzerSoft() {
   for(uint8_t n = 0; n < pCurrentChannels; n++) {
     if(pCurrentFFTWorker[n] != NULL) delete pCurrentFFTWorker[n];
   }
-//  pNowDataLock.Abort();
   pthread_mutex_lock(&pFFTMutex);
   if(pFFTRunning == 0) {
     LOGFile::Debug("Clearing FFT cached plans\n");
@@ -295,6 +294,7 @@ void AnalyzerSoft::Configure(const json &options) {
     pFreqCyclesLen = ZEROCROSSING_SECONDS * 60;
     pMaxSamples = (12.0 * pSamplerate * 1.15) / pNominalFrequency;
   }
+  pMaxFFTSamples    = (pMaxSamples / 2) + 1;
   pFreqCyclesPos    = 0;
   pSequence         = 0;
   pBlockSamples     = 0;
@@ -304,11 +304,17 @@ void AnalyzerSoft::Configure(const json &options) {
   pFreqCycles       = (uint32_t*)realloc(pFreqCycles, pFreqCyclesLen * sizeof(uint32_t));
   pVoltageSamples   = (float*)realloc(pVoltageSamples, sizeof(float) * pVoltageChannels * pMaxSamples);
   pCurrentSamples   = (float*)realloc(pCurrentSamples, sizeof(float) * pCurrentChannels * pMaxSamples);
-  pVoltageFFT       = (float*)realloc(pVoltageFFT, sizeof(float) * 2 * pVoltageChannels * ((pMaxSamples / 2) + 1));
-  pCurrentFFT       = (float*)realloc(pCurrentFFT, sizeof(float) * 2 * pCurrentChannels * ((pMaxSamples / 2) + 1));
+  pVoltageFFT       = (Complex_t*)realloc(pVoltageFFT, sizeof(Complex_t) * pVoltageChannels * pMaxFFTSamples);
+  pCurrentFFT       = (Complex_t*)realloc(pCurrentFFT, sizeof(Complex_t) * pCurrentChannels * pMaxFFTSamples);
   for(uint8_t n = 0; n < pVoltageChannels; n++) pLastSamples[n] = 0.0;
-  for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFTChannels[i].InPtr = &pVoltageSamples[i * pMaxSamples];
-  for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFTChannels[i].InPtr = &pCurrentSamples[i * pMaxSamples];
+  for(uint8_t i = 0; i < pVoltageChannels; i++) {
+    pVoltageFFTChannels[i].OutPtr = &pVoltageFFT[i * pMaxFFTSamples];
+    pVoltageFFTChannels[i].InPtr  = &pVoltageSamples[i * pMaxSamples];
+  }
+  for(uint8_t i = 0; i < pCurrentChannels; i++) {
+    pCurrentFFTChannels[i].OutPtr = &pCurrentFFT[i * pMaxFFTSamples];
+    pCurrentFFTChannels[i].InPtr  = &pCurrentSamples[i * pMaxSamples];
+  }
   if(pNominalFrequency != 0.0) {
     for(uint8_t n = 0; n < FILTERSTAGES; n++) {
       float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
@@ -708,27 +714,26 @@ void AnalyzerSoft::PublishConfig(const json &options) {
 float AnalyzerSoft::CalcChange(const float in, const float reference) {
   return ((in - reference) / reference) * 100;
 }
-float AnalyzerSoft::CalcAngle(const float *a, const float *b) {
+float AnalyzerSoft::CalcAngle(const Complex_t &a, const Complex_t &b) {
   float Tmp;
-  if((a[0] == 0.0) && (a[1] == 0.0))
+  if((a.Re == 0.0) && (a.Im == 0.0))
     Tmp = 0.0;
-  else if(a[0] < 0.0)
-    Tmp = atan(a[1] / a[0]);
+  else if(a.Re < 0.0)
+    Tmp = atan(a.Im / a.Re);
   else
-    Tmp = atan(a[1] / a[0]) + M_PI;
-  if((b[0] == 0.0) && (b[1] == 0.0))
+    Tmp = atan(a.Im / a.Re) + M_PI;
+  if((b.Re == 0.0) && (b.Im == 0.0))
     Tmp = Tmp;
-  else if(b[0] < 0.0)
-    Tmp = Tmp - atan(b[1] / b[0]);
+  else if(b.Re < 0.0)
+    Tmp = Tmp - atan(b.Im / b.Re);
   else
-    Tmp = Tmp - atan(b[1] / b[0]) + M_PI;
+    Tmp = Tmp - atan(b.Im / b.Re) + M_PI;
   Tmp = fmod(Tmp, 2.0 * M_PI);
   if(Tmp > M_PI) Tmp = Tmp -  2.0 * M_PI;
   return Tmp;
-
 }
-float AnalyzerSoft::BinPower(const float *a) {
-  return sqrt(pow(a[0], 2.0) + pow(a[1], 2.0)) / M_SQRT2 * 2.0;
+float AnalyzerSoft::BinPower(const Complex_t &a) {
+  return sqrt(pow(a.Re, 2.0) + pow(a.Im, 2.0)) / M_SQRT2 * 2.0;
 }
 void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const AggregType &type) {
   auto AppendArray = [&](const string &serie, float *data, const uint8_t len) {
@@ -742,8 +747,8 @@ void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const Agg
   if(type == AGGREG_200MS) Params = &pAggreg200MS;
   if(type == AGGREG_3S)    Params = &pAggreg3S;
   if(type == AGGREG_1M)    Params = &pAggreg1M;
-  if(type == AGGREG_10M)    Params = &pAggreg10M;
-  if(type == AGGREG_15M)    Params = &pAggreg15M;
+  if(type == AGGREG_10M)   Params = &pAggreg10M;
+  if(type == AGGREG_15M)   Params = &pAggreg15M;
   if(type == AGGREG_1H)    Params = &pAggreg1H;
   parser.DefineVar("Frequency", &Params->Frequency);
   parser.DefineVar("NominalVoltage", &pNominalVoltage);
@@ -769,20 +774,19 @@ void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const Agg
 }
 void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   AnalyzerSoft *This  = (AnalyzerSoft*)creation;
+  printf("Inicio analyzer func (%d) ", This->pBlockSamples); fflush(stdout);
   Params_t     *Aggreg = (Params_t*)run;
   This->pAnalyzerLock.ReadLock();
   uint64_t Start = Tools::GetTime64();
   Aggreg->AggregSamples = 1;
+  printf("1 "); fflush(stdout);
   if(This->pEventsWorker != NULL) This->pEventsWorker->Run(Aggreg);
+  printf("2 "); fflush(stdout);
   This->pFFTSamples = (This->pBlockSamples / 2) + 1;
-  for(uint8_t i = 0; i < This->pVoltageChannels; i++) {
-    This->pVoltageFFTChannels[i].OutPtr = &This->pVoltageFFT[i * 2 * This->pFFTSamples];
-    This->pVoltageFFTWorker[i]->Run(&This->pVoltageFFTChannels[i]);
-  }
-  for(uint8_t i = 0; i < This->pCurrentChannels; i++) {
-    This->pCurrentFFTChannels[i].OutPtr = &This->pCurrentFFT[i * 2 * This->pFFTSamples];
-    This->pCurrentFFTWorker[i]->Run(&This->pCurrentFFTChannels[i]);
-  }
+  for(uint8_t i = 0; i < This->pVoltageChannels; i++) This->pVoltageFFTWorker[i]->Run(&This->pVoltageFFTChannels[i]);
+  printf("3 "); fflush(stdout);
+  for(uint8_t i = 0; i < This->pCurrentChannels; i++) This->pCurrentFFTWorker[i]->Run(&This->pCurrentFFTChannels[i]);
+  printf("4 "); fflush(stdout);
   if(This->pNominalFrequency > 0) {
     for(uint8_t n = 0; n < This->pBlockCyclesCount; n++) {
       This->pFreqCycles[This->pFreqCyclesPos] = This->pBlockCycles[n];
@@ -799,6 +803,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     }
     Aggreg->Frequency = (Cycles == This->pFreqCyclesLen) ? This->pFreqCyclesLen / ((2.0 * Samples) / This->pSamplerate) : 0;
   }
+  printf("5 "); fflush(stdout);
   for(uint8_t j = 0; j < This->pVoltageChannels; j++) {
     float *ChV = &This->pVoltageSamples[j * This->pMaxSamples];
     float *ChC = &This->pCurrentSamples[j * This->pMaxSamples];
@@ -809,25 +814,29 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     Aggreg->Voltage[j] = sqrt(Aggreg->Voltage[j] / This->pBlockSamples);
     Aggreg->Active_Power[j] = Aggreg->Active_Power[j] / This->pBlockSamples;
   }
+  printf("6 "); fflush(stdout);
   for(uint8_t j = 0; j < This->pCurrentChannels; j++) {
     float *Ch = &This->pCurrentSamples[j * This->pMaxSamples];
     for(uint16_t i = 0; i < This->pBlockSamples; i++) Aggreg->Current[j] += pow(Ch[i], 2.0);
     Aggreg->Current[j] = sqrt(Aggreg->Current[j] / This->pBlockSamples);
   }
+  printf("7 "); fflush(stdout);
   for(uint8_t j = 0; j < This->pVoltageChannels; j++) {
+    printf(" L7 "); fflush(stdout);
     This->pVoltageFFTWorker[j]->Wait();
     This->pCurrentFFTWorker[j]->Wait();
+    printf(" L8 "); fflush(stdout);
     for(uint8_t i = 0; i < 50; i++) {
-      Aggreg->Voltage_Harmonics[j * 50 + i] = BinPower(&This->pVoltageFFT[j * This->pFFTSamples * 2 + (20 + i * 20)]);
-      Aggreg->Current_Harmonics[j * 50 + i] = BinPower(&This->pCurrentFFT[j * This->pFFTSamples * 2 + (20 + i * 20)]);
-      Aggreg->Power_Harmonics[j *50 + i]    = Aggreg->Current_Harmonics[j * 50 + i] * Aggreg->Voltage_Harmonics[j * 50 + i] * cos(CalcAngle(&This->pCurrentFFT[j * This->pFFTSamples * 2 + (20 + i * 20)], &This->pVoltageFFT[j * This->pFFTSamples * 2 + (20 + i * 20)]));
+      Aggreg->Voltage_Harmonics[j * 50 + i] = BinPower(This->pVoltageFFT[j * This->pMaxFFTSamples + (10 + i * 10)]);
+      Aggreg->Current_Harmonics[j * 50 + i] = BinPower(This->pCurrentFFT[j * This->pMaxFFTSamples + (10 + i * 10)]);
+      Aggreg->Power_Harmonics[j * 50 + i]   = Aggreg->Current_Harmonics[j * 50 + i] * Aggreg->Voltage_Harmonics[j * 50 + i] * cos(CalcAngle(This->pCurrentFFT[j * This->pMaxFFTSamples + (10 + i * 10)], This->pVoltageFFT[j * This->pMaxFFTSamples + (10 + i * 10)]));
       if(i > 0) Aggreg->Voltage_THD[j] += Aggreg->Voltage_Harmonics[j * 50 + i];
       if(i > 0) Aggreg->Current_THD[j] += Aggreg->Current_Harmonics[j * 50 + i];
     }
-    Aggreg->Voltage_Phase[j] = (j == 0) ? 0.0 : CalcAngle(&This->pVoltageFFT[j * This->pFFTSamples * 2 + 20], &This->pVoltageFFT[10 * 2]) * 180.0 / M_PI;
+    Aggreg->Voltage_Phase[j] = (j == 0) ? 0.0 : CalcAngle(This->pVoltageFFT[j * This->pMaxFFTSamples + 10], This->pVoltageFFT[10]) * 180.0 / M_PI;
     Aggreg->Voltage_THD[j] = (Aggreg->Voltage_THD[j] / Aggreg->Voltage_Harmonics[j * 50]) * 100.0;
     Aggreg->Apparent_Power[j] = Aggreg->Voltage[j] * Aggreg->Current[j];
-    float PHI = CalcAngle(&This->pCurrentFFT[j * This->pFFTSamples * 2 + 20], &This->pVoltageFFT[j * This->pFFTSamples * 2 + 20]);
+    float PHI = CalcAngle(This->pCurrentFFT[j * This->pMaxFFTSamples + 10], This->pVoltageFFT[j * This->pMaxFFTSamples + 10]);
     Aggreg->Reactive_Power[j] = Aggreg->Voltage_Harmonics[j * 50] * Aggreg->Current_Harmonics[j * 50] * sin(-PHI);
     Aggreg->Phi[j] = PHI * 180.0 / M_PI;
     Aggreg->Current_THD[j] = (Aggreg->Current_THD[j] / Aggreg->Current_Harmonics[j * 50]) * 100.0;
@@ -835,25 +844,30 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     Aggreg->Power_Factor[j] = Aggreg->Active_Power[j] / Aggreg->Apparent_Power[j];
     Aggreg->Reactive_Energy[j] = (Aggreg->Reactive_Power[j] * This->pBlockSamples) / (This->pSamplerate * 3600.0);
   }
+  printf("8 "); fflush(stdout);
   if(This->pMode != PHASE1) {
     complex<float> A(cos(120.0 * M_PI / 180.0), sin(120.0 * M_PI / 180.0));
-    complex<float> V1(This->pVoltageFFT[0 * This->pFFTSamples * 2 + 20] * M_SQRT2, This->pVoltageFFT[0 * This->pFFTSamples * 2 + 21] * M_SQRT2);
-    complex<float> V2(This->pVoltageFFT[1 * This->pFFTSamples * 2 + 20] * M_SQRT2, This->pVoltageFFT[1 * This->pFFTSamples * 2 + 21] * M_SQRT2);
-    complex<float> V3(This->pVoltageFFT[2 * This->pFFTSamples * 2 + 20] * M_SQRT2, This->pVoltageFFT[2 * This->pFFTSamples * 2 + 21] * M_SQRT2);
-    Aggreg->Unbalance = ((abs(V1 +  A * A * V2 + A * V3) / 3.0) / (abs(V1 + A * V2 + A * A * V3) / 3.0)) * 100.0;
+    complex<float> V1(This->pVoltageFFT[0 * This->pMaxFFTSamples + 10].Re * M_SQRT2, This->pVoltageFFT[0 * This->pMaxFFTSamples + 10].Im * M_SQRT2);
+    complex<float> V2(This->pVoltageFFT[1 * This->pMaxFFTSamples + 10].Re * M_SQRT2, This->pVoltageFFT[1 * This->pMaxFFTSamples + 10].Im * M_SQRT2);
+    complex<float> V3(This->pVoltageFFT[2 * This->pMaxFFTSamples + 10].Re * M_SQRT2, This->pVoltageFFT[2 * This->pMaxFFTSamples + 10].Im * M_SQRT2);
+    Aggreg->Unbalance = ((abs(V1 + A * A * V2 + A * V3) / 3.0) / (abs(V1 + A * V2 + A * A * V3) / 3.0)) * 100.0;
   }
+  printf("9 "); fflush(stdout);
   if(This->pMode == PHASE3N) {
     This->pCurrentFFTWorker[3]->Wait();
     for(uint i = 0; i < 50; i++) {
-      Aggreg->Current_Harmonics[3 * 50 + i] = BinPower(&This->pCurrentFFT[3 * This->pFFTSamples * 2 + (20+ i * 20)]);
+      Aggreg->Current_Harmonics[3 * 50 + i] = BinPower(This->pCurrentFFT[3 * This->pFFTSamples + (10 + i * 10)]);
       if(i > 0) Aggreg->Current_THD[3] += Aggreg->Current_Harmonics[3 * 50 + i];
     }
     Aggreg->Current_THD[3] = (Aggreg->Current_THD[3] / Aggreg->Current_Harmonics[3 * 50]) * 100.0;
   }
+  printf("10 "); fflush(stdout);
   if(This->pEventsWorker != NULL) This->pEventsWorker->Wait();
-  if(This->pSequence > 50) {
-    This->pNowDataLock.ProviderWrite();
-    if(((This->pSequence % 15) == 0) && (This->pPrevTimestamp != 0)) {
+  printf("11 "); fflush(stdout);
+  This->pNowDataLock.ProviderWrite();
+  printf("13 "); fflush(stdout);
+  if((This->pSequence % 15) == 0) {
+    if(This->pSequence > 50) {
       LOGFile::Debug("Storing 3S aggregation for analyzer '%s'\n", This->Serial.c_str());
       This->NormalizeAggreg(This->pAggreg3S);
       if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg3S);
@@ -866,11 +880,13 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
       This->SaveAggreg(This->pAggreg3S);
       if(This->pMQTT3S) This->PublishAggreg(This->pAggreg3S, "3S");
       if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-      This->InitAggreg(This->pAggreg3S, AGGREG_3S);
     }
-    This->AccumulateAggreg(This->pAggreg3S, This->pAggreg200MS);
+    This->InitAggreg(This->pAggreg3S, AGGREG_3S);
+  }
+  This->AccumulateAggreg(This->pAggreg3S, This->pAggreg200MS);
 
-    if(((This->pAggreg200MS.Timestamp / 60000) > (This->pPrevTimestamp / 60000)) && (This->pPrevTimestamp != 0)) {
+  if((This->pAggreg200MS.Timestamp / 60000) > (This->pPrevTimestamp / 60000)) {
+    if(This->pSequence > 50) {
       LOGFile::Debug("Storing 1M aggregation for analyzer '%s'\n", This->Serial.c_str());
       This->pAggreg1M.Timestamp = This->pAggreg1M.Timestamp / 60000 * 60000 + 59999;
       This->NormalizeAggreg(This->pAggreg1M);
@@ -878,92 +894,104 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
       This->SaveAggreg(This->pAggreg1M);
       if(This->pMQTT1M) This->PublishAggreg(This->pAggreg1M, "1M");
       if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+    }
+    This->InitAggreg(This->pAggreg1M, AGGREG_1M);
+  }
+  This->AccumulateAggreg(This->pAggreg1M, This->pAggreg200MS);
 
-      if((This->pAggreg200MS.Timestamp / 600000) > (This->pPrevTimestamp / 600000)) {
-        LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", This->Serial.c_str());
-        This->pAggreg10M.Timestamp = This->pAggreg10M.Timestamp / 600000 * 600000 + 599999;
-        This->NormalizeAggreg(This->pAggreg10M);
-        if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg10M);
-        if(This->pAggreg10M.Flag == false) {
-          for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
-            if((This->pAggreg10M.Unbalance >= UnbalanceRanges[Range]) && (This->pAggreg10M.Unbalance < UnbalanceRanges[Range + 1])) This->pAggreg1H.StatsUnbalance[Range]++;
+  if((This->pAggreg200MS.Timestamp / 600000) > (This->pPrevTimestamp / 600000)) {
+    if(This->pSequence > 50) {
+      LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", This->Serial.c_str());
+      This->pAggreg10M.Timestamp = This->pAggreg10M.Timestamp / 600000 * 600000 + 599999;
+      This->NormalizeAggreg(This->pAggreg10M);
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg10M);
+      if(This->pAggreg10M.Flag == false) {
+        for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
+          if((This->pAggreg10M.Unbalance >= UnbalanceRanges[Range]) && (This->pAggreg10M.Unbalance < UnbalanceRanges[Range + 1])) This->pAggreg1H.StatsUnbalance[Range]++;
+        }
+        for(uint8_t i = 0; i < This->pVoltageChannels; i++) {
+          float Variation = This->CalcChange(This->pAggreg10M.Voltage[i], This->pNominalVoltage);
+          for(uint8_t Range = 0; Range < VoltageRangesLen; Range++) {
+            if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) This->pAggreg1H.StatsVoltage[Range]++;
           }
-          for(uint8_t i = 0; i < This->pVoltageChannels; i++) {
-            float Variation = This->CalcChange(This->pAggreg10M.Voltage[i], This->pNominalVoltage);
-            for(uint8_t Range = 0; Range < VoltageRangesLen; Range++) {
-              if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) This->pAggreg1H.StatsVoltage[Range]++;
-            }
-            for(uint8_t Range = 0; Range < THDRangesLen; Range++) {
-              if((This->pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (This->pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) This->pAggreg1H.StatsTHD[Range]++;
-            }
-            bool HarmonicsInRange = true;
-            for(uint8_t n = 0; n < HarmonicsAllowedLen; n++) {
-              float Variation = This->CalcChange(This->pAggreg10M.Voltage_Harmonics[i * 50 + n + 1], This->pNominalVoltage);
-                if(Variation > HarmonicsAllowed[n]) {
-                  HarmonicsInRange = false;
-                  break;
-                }
-            }
-            if(HarmonicsInRange == true) {
-              This->pAggreg1H.StatsHarmonics[0]++;
-            } else {
-              This->pAggreg1H.StatsHarmonics[1]++;
-            }
+          for(uint8_t Range = 0; Range < THDRangesLen; Range++) {
+            if((This->pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (This->pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) This->pAggreg1H.StatsTHD[Range]++;
+          }
+          bool HarmonicsInRange = true;
+          for(uint8_t n = 0; n < HarmonicsAllowedLen; n++) {
+            float Variation = This->CalcChange(This->pAggreg10M.Voltage_Harmonics[i * 50 + n + 1], This->pNominalVoltage);
+              if(Variation > HarmonicsAllowed[n]) {
+                HarmonicsInRange = false;
+                break;
+              }
+          }
+          if(HarmonicsInRange == true) {
+            This->pAggreg1H.StatsHarmonics[0]++;
+          } else {
+            This->pAggreg1H.StatsHarmonics[1]++;
           }
         }
-        This->SaveAggreg(This->pAggreg10M);
-        if(This->pMQTT10M) This->PublishAggreg(This->pAggreg10M, "10M");
-        if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-        This->InitAggreg(This->pAggreg10M, AGGREG_10M);
       }
-      This->AccumulateAggreg(This->pAggreg10M, This->pAggreg1M);
+      This->SaveAggreg(This->pAggreg10M);
+      if(This->pMQTT10M) This->PublishAggreg(This->pAggreg10M, "10M");
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+    }
+    This->InitAggreg(This->pAggreg10M, AGGREG_10M);
+  }
+  This->AccumulateAggreg(This->pAggreg10M, This->pAggreg200MS);
 
-      if((This->pAggreg200MS.Timestamp / 900000) > (This->pPrevTimestamp / 900000)) {
-        LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", This->Serial.c_str());
-        This->pAggreg15M.Timestamp = This->pAggreg15M.Timestamp / 900000 * 900000 + 899999;
-        This->NormalizeAggreg(This->pAggreg15M);
-        if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg15M);
-        This->SaveAggreg(This->pAggreg15M);
-        if(This->pMQTT15M) This->PublishAggreg(This->pAggreg15M, "15M");
-        if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-        if((This->pAggreg200MS.Timestamp / 3600000) > (This->pPrevTimestamp / 3600000)) {
-          LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", This->Serial.c_str());
-          This->pAggreg1H.Timestamp = This->pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
-          This->NormalizeAggreg(This->pAggreg1H);
-          if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1H);
-          This->SaveAggreg(This->pAggreg1H);
-          if(This->pMQTT1H) This->PublishAggreg(This->pAggreg1H, "1H");
-          if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-          This->InitAggreg(This->pAggreg1H, AGGREG_1H);
-        }
-        This->AccumulateAggreg(This->pAggreg1H, This->pAggreg15M);
-        This->InitAggreg(This->pAggreg15M, AGGREG_15M);
-      }
-      This->AccumulateAggreg(This->pAggreg15M, This->pAggreg1M);
-      This->InitAggreg(This->pAggreg1M, AGGREG_1M);
+  if((This->pAggreg200MS.Timestamp / 900000) > (This->pPrevTimestamp / 900000)) {
+    if(This->pSequence > 50) {
+      LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", This->Serial.c_str());
+      This->pAggreg15M.Timestamp = This->pAggreg15M.Timestamp / 900000 * 900000 + 899999;
+      This->NormalizeAggreg(This->pAggreg15M);
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg15M);
+      This->SaveAggreg(This->pAggreg15M);
+      if(This->pMQTT15M) This->PublishAggreg(This->pAggreg15M, "15M");
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
     }
-    This->AccumulateAggreg(This->pAggreg1M, This->pAggreg200MS);
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg200MS);
-    This->pPrevTimestamp = This->pAggreg200MS.Timestamp;
-    if(This->pSave200MS) {
-      LOGFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", This->Serial.c_str());
-      This->SaveAggreg(This->pAggreg200MS);
+    This->InitAggreg(This->pAggreg15M, AGGREG_15M);
+  }
+  This->AccumulateAggreg(This->pAggreg15M, This->pAggreg200MS);
+
+  if((This->pAggreg200MS.Timestamp / 3600000) > (This->pPrevTimestamp / 3600000)) {
+    if(This->pSequence > 50) {
+      LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", This->Serial.c_str());
+      This->pAggreg1H.Timestamp = This->pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
+      This->NormalizeAggreg(This->pAggreg1H);
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1H);
+      This->SaveAggreg(This->pAggreg1H);
+      if(This->pMQTT1H) This->PublishAggreg(This->pAggreg1H, "1H");
+      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
     }
-    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
+    This->InitAggreg(This->pAggreg1H, AGGREG_1H);
+  }
+  This->AccumulateAggreg(This->pAggreg1H, This->pAggreg200MS);
+
+  if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg200MS);
+  This->pPrevTimestamp = This->pAggreg200MS.Timestamp;
+  if(This->pSave200MS) {
+    LOGFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", This->Serial.c_str());
+    This->SaveAggreg(This->pAggreg200MS);
+  }
+  if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
 
   //  SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
   //  SysStatus->Lock.WriteLock();
   //  SysStatus->Events = This->pAggreg200MS.Flag;
   //  SysStatus->Lock.Unlock();
-    This->pNowDataLock.ProviderWait();
-  }
+  printf("14 "); fflush(stdout);
+  This->pNowDataLock.ProviderWait();
+  printf("15 "); fflush(stdout);
+  LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")\n", This->Serial.c_str(), Tools::GetTime64() - Start, This->pSequence, This->pAggreg200MS.Timestamp);
   This->InitAggreg(This->pAggreg200MS, AGGREG_200MS);
   This->pBlockSamples     = 0;
   This->pBlockCyclesCount = 0;
   memset(This->pBlockCycles, 0, sizeof(pBlockCycles));
-  LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 "\n", This->Serial.c_str(), Tools::GetTime64() - Start, This->pSequence);
   This->pSequence++;
+printf(" 16 "); fflush(stdout);
   This->pAnalyzerLock.Unlock();
+  printf("17\n"); fflush(stdout);
 }
 void AnalyzerSoft::Events_Func(void *creation, void *run) {
   AnalyzerSoft *This = (AnalyzerSoft*)creation;
@@ -1126,16 +1154,28 @@ void AnalyzerSoft::Events_Func(void *creation, void *run) {
 void AnalyzerSoft::FFT_Func(void *creation, void *run) {
   AnalyzerSoft *This  = (AnalyzerSoft*)creation;
   FFTChannel_t *Ch = (FFTChannel_t*)run;
+  printf(" F1 "); fflush(stdout);
   pthread_mutex_lock(&pFFTMutex);
+  printf(" F2 "); fflush(stdout);
   fftwf_plan Plan = fftwf_plan_dft_r2c_1d(This->pBlockSamples, Ch->InPtr, (fftwf_complex*)Ch->OutPtr, FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
+  printf(" F3 "); fflush(stdout);
   pFFTRunning++;
   pthread_mutex_unlock(&pFFTMutex);
+  printf(" F4 "); fflush(stdout);
   fftwf_execute_dft_r2c(Plan, Ch->InPtr, (fftwf_complex*)Ch->OutPtr);
+  printf(" F5 "); fflush(stdout);
   pthread_mutex_lock(&pFFTMutex);
+  printf(" F6 "); fflush(stdout);
   fftwf_destroy_plan(Plan);
+  printf(" F7 "); fflush(stdout);
   pFFTRunning--;
   pthread_mutex_unlock(&pFFTMutex);
-  for(uint16_t i = 0; i < (2 * This->pFFTSamples); i++) Ch->OutPtr[i] = Ch->OutPtr[i] / This->pBlockSamples;
+  printf(" F8 "); fflush(stdout);
+  for(uint16_t i = 0; i < This->pFFTSamples; i++) {
+    Ch->OutPtr[i].Re = Ch->OutPtr[i].Re / This->pBlockSamples;
+    Ch->OutPtr[i].Im = Ch->OutPtr[i].Im / This->pBlockSamples;
+  }
+  printf(" F9 "); fflush(stdout);
 }
 void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
   AnalyzerSoft *This   = (AnalyzerSoft*)creation;
@@ -1602,8 +1642,8 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
         Result["Voltage_Harmonics"].push_back(json::array());
         for(uint8_t i = 0; i < 50; i++) {
           Result["Voltage_Harmonics"][n].push_back(json::array());
-          Result["Voltage_Harmonics"][n][i].push_back(pVoltageFFT[n * pFFTSamples * 2 + (20 + i * 20) + 0] * M_SQRT2);
-          Result["Voltage_Harmonics"][n][i].push_back(pVoltageFFT[n * pFFTSamples * 2 + (20 + i * 20) + 1] * M_SQRT2);
+          Result["Voltage_Harmonics"][n][i].push_back(pVoltageFFT[n * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2);
+          Result["Voltage_Harmonics"][n][i].push_back(pVoltageFFT[n * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
         }
       }
     } else if(Serie == "CURRENT_HARMONICS") {
@@ -1612,8 +1652,8 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
         Result["Current_Harmonics"].push_back(json::array());
         for(uint8_t i = 0; i < 50; i++) {
           Result["Current_Harmonics"][n].push_back(json::array());
-          Result["Current_Harmonics"][n][i].push_back(pCurrentFFT[n * pFFTSamples * 2 + (20 + i * 20) + 0] * M_SQRT2);
-          Result["Current_Harmonics"][n][i].push_back(pCurrentFFT[n * pFFTSamples * 2 + (20 + i * 20) + 1] * M_SQRT2);
+          Result["Current_Harmonics"][n][i].push_back(pCurrentFFT[n * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2);
+          Result["Current_Harmonics"][n][i].push_back(pCurrentFFT[n * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
         }
       }
     } else if(Serie == "POWER_HARMONICS") {
@@ -1626,13 +1666,13 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
       Result["Voltage_FFT"] = json::array();
       for(uint8_t n = 0; n < pVoltageChannels; n++) {
         Result["Voltage_FFT"].push_back(json::array());
-        for(uint16_t i = 0; i < pFFTSamples; i++) Result["Voltage_FFT"][n].push_back(BinPower(&pVoltageFFT[n * 2 * pFFTSamples + (2 * i)]));
+        for(uint16_t i = 0; i < pFFTSamples; i++) Result["Voltage_FFT"][n].push_back(BinPower(pVoltageFFT[n * pMaxFFTSamples + i]));
       }
     } else if(Serie == "CURRENT_FFT") {
       Result["Current_FFT"] = json::array();
       for(uint8_t n = 0; n < pCurrentChannels; n++) {
         Result["Current_FFT"].push_back(json::array());
-        for(uint16_t i = 0; i < pFFTSamples; i++) Result["Current_FFT"][n].push_back(BinPower(&pCurrentFFT[n * 2 * pFFTSamples + (2 * i)]));
+        for(uint16_t i = 0; i < pFFTSamples; i++) Result["Current_FFT"][n].push_back(BinPower(pCurrentFFT[n * pMaxFFTSamples + i]));
       }
     } else if(Serie == "VOLTAGE_SAMPLES") {
       Result["Voltage_Samples"] = json::array();

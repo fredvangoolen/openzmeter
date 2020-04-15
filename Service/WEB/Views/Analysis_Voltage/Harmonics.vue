@@ -81,7 +81,7 @@
             for(var n = 0; n < this.data.Current_Harmonics.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics[n][i]))) : this.BinPower(this.data.Current_Harmonics[n][i]));
             Opt.file.push(Row);
           }
-          Opt.dateWindow = [Opt.file[0][0] - 0.5, 50.5];
+          Opt.dateWindow = [Opt.file[0][0] - 0.5, 49.5];
           var V = [false], I = [false];
           for(var n in VoltageNames) { V.push(this.Phases[n]); I.push(false); }
           for(var n in CurrentNames) { I.push(this.Phases[n]); V.push(false); }

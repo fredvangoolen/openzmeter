@@ -7,7 +7,7 @@
       <vuetable ref="table" :fields="Columns" :data="Rows" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="View=props.rowData.Name">Configure</button>
+            <button class="btn btn-xs btn-default" @click="props.rowData.Method(true)">Configure</button>
           </div>
         </template>
       </vuetable>
@@ -31,10 +31,10 @@
     data: function() {
       return { View: null,
                Modules: {
-                 'Bluetooth': { Module: 'Bluetooth connection', Settings: null },
-                 'Wifi': { Module: 'Wifi connection', Settings: null },
-                 'NTP': { Module: 'NTP synchronization', Settings: null },
-                 'Telegram': { Module: 'Telegram Bot', Settings: null }
+                 'Bluetooth': { Module: 'Bluetooth connection', Settings: null, Method: this.LoadBluetooth },
+                 'Wifi': { Module: 'Wifi connection', Settings: null, Method: this.LoadWIFI },
+                 'NTP': { Module: 'NTP synchronization', Settings: null, Method: this.LoadNTP },
+                 'Telegram': { Module: 'Telegram Bot', Settings: null, Method: this.LoadESIOS }
                },
                Columns: [
                  { name: 'Module', title: 'Module' },
@@ -53,25 +53,49 @@
       }
     },
     created: function() {
-      this.$http.post('getBluetooth', { }).then(
-        (result) => { this.Modules.Bluetooth.Settings = result.body; },
-        (fail) => { }
-      );
-      this.$http.post('getWIFI', { Type: "CURRENT" }).then(
-        (result) => { this.Modules.Wifi.Settings = result.body; },
-        (fail) => { }
-      );
-      this.$http.post('getNTP', { }).then(
-        (result) => { this.Modules.NTP.Settings = result.body; },
-        (fail) => { }
-      );
-      this.$http.post('getTelegram', { }).then(
-        (result) => { this.Modules.Telegram.Settings = result.body; },
-        (fail) => { }
-      );
+      this.LoadBluetooth(false);
+      this.LoadWIFI(false);
+      this.LoadNTP(false);
+      this.LoadESIOS(false);
     },
     methods: {
       EnabledStatus: function(value) { return (value === true) ? '&#9635;' : '&#9633;'; },
+      LoadBluetooth: function(show) {
+        this.$http.post('getBluetooth', { }).then(
+          (result) => {
+            this.Modules.Bluetooth.Settings = result.body;
+            if(show) this.View = 'Bluetooth';
+          },
+          (fail) => { }
+        );
+      },
+      LoadWIFI: function(show) {
+        this.$http.post('getWIFI', { Type: "CURRENT" }).then(
+          (result) => {
+            this.Modules.Wifi.Settings = result.body;
+            if(show) this.View = 'Wifi';
+          },
+          (fail) => { }
+        );
+      },
+      LoadNTP: function(show) {
+        this.$http.post('getNTP', { }).then(
+          (result) => {
+            this.Modules.NTP.Settings = result.body;
+            if(show) this.View = 'NTP';
+          },
+          (fail) => { }
+        );
+      },
+      LoadESIOS: function(show) {
+        this.$http.post('getTelegram', { }).then(
+          (result) => {
+            this.Modules.Telegram.Settings = result.body;
+            if(show) this.View = 'Telegram';
+          },
+          (fail) => { }
+        );
+      }
     },
     components: { Bluetooth, Wifi, Lan, Ntp, Modbus, Telegram, Vuetable }
   }

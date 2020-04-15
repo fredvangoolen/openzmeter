@@ -13,8 +13,13 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
+#include "cctz/time_zone.h"
+#include "Database.h"
 #include "ESIOS.h"
 // ---------------------------------------------------------------------------------------------------------------------
+using namespace cctz;
+// ---------------------------------------------------------------------------------------------------------------------
+uint64_t                  ESIOS::pSyncDate    = 1262304000000;
 string                    ESIOS::pToken       = "";
 pthread_t                 ESIOS::pThread      = 0;
 pthread_mutex_t           ESIOS::pMutex       = PTHREAD_MUTEX_INITIALIZER;
@@ -24,14 +29,6 @@ ESIOS::ESIOS() {
   HTTPServer::RegisterCallback("getESIOS", GetESIOSCallback);
   HTTPServer::RegisterCallback("setESIOS", SetESIOSCallback);
   Configure(CheckConfig(ConfigManager::ReadConfig("/ESIOS")));
-//  curl_global_init(CURL_GLOBAL_DEFAULT);
-//  pCurlBuff.Buffer  = NULL;
-//  pCurlBuff.MaxSize = 0;
-//  pCurlBuff.Size    = 0;
-//  pCurl = curl_easy_init();
-//  curl_easy_setopt(pCurl, CURLOPT_WRITEDATA, (void*)&pCurlBuff);
-//  curl_easy_setopt(pCurl, CURLOPT_WRITEFUNCTION, Curl_Read_Callback);
-//  pRate = "Z01";
 }
 ESIOS::~ESIOS() {
   pthread_mutex_lock(&pMutex);
@@ -53,7 +50,7 @@ void ESIOS::Configure(const json &config) {
   ConfigManager::WriteConfig("/ESIOS", config);
   bool Enable = config["Enabled"];
   pthread_mutex_lock(&pMutex);
-  pToken = config["Token"];
+  pToken    = config["Token"];
   if((Enable == true) && (pThread == 0)) {
     pTerminate = false;
     if(pthread_create(&pThread, NULL, Thread_Func, NULL) != 0) {
@@ -72,6 +69,9 @@ void ESIOS::Configure(const json &config) {
 void ESIOS::GetESIOSCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = ConfigManager::ReadConfig("/ESIOS");
+  pthread_mutex_lock(&pMutex);
+  Config["LastDate"] = pSyncDate;
+  pthread_mutex_unlock(&pMutex);
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void ESIOS::SetESIOSCallback(const json &params, Response &response) {
@@ -82,85 +82,69 @@ void ESIOS::SetESIOSCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
 void *ESIOS::Thread_Func(void *params) {
+  ESIOS    *This = (ESIOS*)params;
+  SSLClient Client("api.esios.ree.es", 443);
+  Client.set_keep_alive_max_count(100);
+  Client.set_read_timeout(20, 0);
+  Client.set_timeout_sec(30);
+  Client.set_compress(true);
   while(pTerminate == false) {
-    usleep(100000);
+    pthread_mutex_lock(&pMutex);
+    string   Token = This->pToken;
+    uint64_t To = pSyncDate + 863999999;
+    pthread_mutex_unlock(&pMutex);
+    printf("Pidiendo datos (%llu)\n", To);
+    if(FetchIndicator(&Client, Token, "773", "ESIOS_773_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "792", "ESIOS_792_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "793", "ESIOS_793_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "794", "ESIOS_794_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "797", "ESIOS_797_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "798", "ESIOS_798_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "799", "ESIOS_799_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "800", "ESIOS_800_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "802", "ESIOS_802_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "803", "ESIOS_803_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "1277", "ESIOS_1277_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "1286", "ESIOS_1286_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    if(FetchIndicator(&Client, Token, "1368", "ESIOS_1368_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    pthread_mutex_lock(&pMutex);
+    pSyncDate = pSyncDate + 864000000;
+    pthread_mutex_unlock(&pMutex);
+    for(uint32_t Loop = 0; (pTerminate == false) && (To > Tools::GetTime64()) && (Loop < 6000); Loop++) usleep(100000);
   }
   return NULL;
 }
-
-//PricesInterface *ESIOS::CreateInstance(const char *name, json_object *config) {
-//  ESIOS *This = new ESIOS(name);
-  //Leo si estoy en Z01...
-//  Tools::LogMsg("INFO", "Initiated ESIOS price interface\n");
-//  This->StartThread();
-//  return This;
-//}
-//void ESIOS::XMLError(void *ctx, const char *msg,...) {}
-//ESIOS::~ESIOS() {
-//  curl_easy_cleanup(pCurl);
-//  if(pCurlBuff.Buffer) free(pCurlBuff.Buffer);
-//  curl_global_cleanup();
-//}
-//size_t ESIOS::Curl_Read_Callback(void *contents, size_t size, size_t nmemb, void *userp) {
-//  CurlBuff_t *Buff = (CurlBuff_t*)userp;
-//  if((Buff->Size + size * nmemb + 1) > Buff->MaxSize) {
-//    Buff->Buffer = (char*)realloc(Buff->Buffer, Buff->Size + size * nmemb + 1);
-//    if(Buff->Buffer == NULL) {
-//      return 0;
-//    } else {
-//      Buff->MaxSize = Buff->Size + size * nmemb + 1;
-//    }
-//  }
-//  memcpy(&Buff->Buffer[Buff->Size], contents, size * nmemb);
-//  Buff->Size += size * nmemb;
-//  Buff->Buffer[Buff->Size] = 0;
-//  return size * nmemb;
-//}
-//void ESIOS::CheckPrices(uint64_t from) {
-//  long   HTTPCode;
-//  char   Tmp[256];
-//  time_t Timestamp = ((from / 1000) / 86400) * 86400;
-//  struct tm Time;
-//  pCurlBuff.Size = 0;
-//  gmtime_r(&Timestamp, &Time);
-//  strftime(Tmp, sizeof(Tmp), "https://api.esios.ree.es/archives/80/download?date=%Y-%m-%d", &Time);
-//  xmlGenericErrorFunc ErrorHandler = XMLError;
-//  initGenericErrorDefaultFunc(&ErrorHandler);
-//  curl_easy_setopt(pCurl, CURLOPT_URL, Tmp);
-//  CURLcode Result = curl_easy_perform(pCurl);
-//  curl_easy_getinfo(pCurl, CURLINFO_RESPONSE_CODE, &HTTPCode);
-//  if(Result != CURLE_OK) {
-//    LOGFile::Error("curl_easy_perform() failed: %s\n", curl_easy_strerror(Result));
-//    return;
-//  }
-//  if(HTTPCode != 200) {
-//    LOGFile::Error("Query '%s' return code %d\n", Tmp, HTTPCode);
-//    return;
-//  }
-//  xmlDoc *Doc = xmlReadMemory(pCurlBuff.Buffer, pCurlBuff.Size, Tmp, NULL, 0);
-//  if(Doc != NULL) {
-//    xmlXPathContext *Context = xmlXPathNewContext(Doc);
-//    xmlXPathRegisterNs(Context, (const xmlChar*)"ns", (const xmlChar*)"http://sujetos.esios.ree.es/schemas/2014/04/01/PVPCDesgloseHorario-esios-MP/");
-//    if(Context != NULL) {
-//      snprintf(Tmp, sizeof(Tmp), "/ns:PVPCDesgloseHorario/ns:SeriesTemporales[ns:TerminoCosteHorario[@v='FEU'] and ns:TipoPrecio[@v='%s']]/ns:Periodo/ns:Intervalo/ns:Ctd", pRate);
-//      xmlXPathObject *Result = xmlXPathEvalExpression((xmlChar*)Tmp, Context);
-//      xmlXPathFreeContext(Context);
-//      if(Result != NULL) {
-//        xmlNodeSet *NodeSet = Result->nodesetval;
-//        for(int i = 0; i < NodeSet->nodeNr; i++) {
-//          float Price = atof((const char *)xmlGetProp(NodeSet->nodeTab[i], (const xmlChar*)"v"));
-//          SavePrice((uint64_t)Timestamp * 1000 + (i * 3600000), Price);
-//        }
-//        Tools::LogMsg("INFO", "Price information downloaded from ESIOS for day %d/%d/%d\n", Time.tm_mday, Time.tm_mon + 1, Time.tm_year + 1900);
-//        xmlXPathFreeObject(Result);
-//      } else {
-//        LOGFile::Error("No data found in response\n");
-//      }
-//    } else {
-//      LOGFile::Error("Invalid XML context\n");
-//    }
-//    xmlFreeDoc(Doc);
-//  } else {
-//    LOGFile::Debug("No data for requested day (Invalid XML response)\n");
-//  }
-//}
+bool ESIOS::FetchIndicator(SSLClient *client, const string &token, const string &indicator, const string &shortName, const string &time_trunc, const string &geo_id, uint64_t to) {
+  Database DB;
+  time_t   Time;
+  tm       Timestamp;
+  char     DateBuffFrom[64], DateBuffTo[64], URL[256];
+  Headers  Header = { {"Accept", "application/json"}, {"Host", "api.esios.ree.es"}, {"Authorization", "Token token=\"" + token + "\""}, {"Content-Type", "application/x-www-form-urlencoded" } };
+  DB.ExecSentenceAsyncResult("SELECT GREATEST(COALESCE(MAX(timestamp) + 1, 1262304000000), 1262304000000) AS min FROM esios WHERE keyvalue = (SELECT keyvalue FROM esios_index WHERE keyname = " + DB.Bind(shortName) + ")");
+  if(DB.FecthRow()) Time = DB.ResultUInt64("min") / 1000;
+  if((uint64_t)Time > (to / 1000)) return true;
+  strftime(DateBuffFrom, sizeof(DateBuffFrom), "%Y-%m-%dT%H:%M:%SZ", gmtime_r(&Time, &Timestamp));
+  Time =  to / 1000;
+  strftime(DateBuffTo, sizeof(DateBuffTo), "%Y-%m-%dT%H:%M:%SZ", gmtime_r(&Time, &Timestamp));
+  snprintf(URL, sizeof(URL), "/indicators/%s?locale=es&time_trunc=%s&geo_ids=%s&start_date=%s&end_date=%s", indicator.c_str(), time_trunc.c_str(), geo_id.c_str(), DateBuffFrom, DateBuffTo);
+  printf("%s\n", URL);
+  auto Response = client->Get(URL, Header);
+  if((Response != nullptr) && (Response->status == 200)) {
+    json Params = json::parse(Response->body, NULL, false);
+    if((Params.is_discarded() == false) && (Params["indicator"].is_object() == true) && (Params["indicator"]["values"].is_array() == true) && (Params["indicator"]["name"].is_string() == true)) {
+      if(Params["indicator"]["values"].size() == 0) return true;
+      string Query = "WITH t1 AS (SELECT " + DB.Bind(shortName) + "::text AS keyname),"
+                     "     t2 AS (INSERT INTO esios_index(keyname, shortname) SELECT keyname, " + DB.Bind(Params["indicator"]["name"].get<string>()) + " FROM t1 ON CONFLICT (keyname) DO NOTHING RETURNING keyvalue),"
+                     "     t3 AS (SELECT COALESCE((SELECT keyvalue FROM t2), (SELECT keyvalue FROM esios_index, t1 WHERE t1.keyname = esios_index.keyname)) AS keyvalue) "
+                    "INSERT INTO esios(keyvalue, timestamp, value) SELECT keyvalue, timestamp, value FROM (VALUES ";
+      for(auto &Item : Params["indicator"]["values"]) {
+        if((Item.is_object() == false) || (Item["value"].is_number() == false) || (Item["tz_time"].is_string() == false) || (strptime(Item["tz_time"].get<string>().c_str(), "%Y-%m-%dT%H:%M:%S%z", &Timestamp) != NULL)) return false;
+        Query += "(" + DB.Bind(((uint64_t)timegm(&Timestamp)) * 1000 + 3599999) + ", " + DB.Bind(Item["value"].get<float>()) + "), ";
+      }
+      Query.resize(Query.size() - 2);
+      Query += ") AS t(timestamp, value), t3 ON CONFLICT(keyvalue, timestamp) DO NOTHING";
+      return DB.ExecSentenceNoResult(Query);
+    }
+  }
+  return false;
+}
