@@ -161,8 +161,8 @@ void ProviderLocks::ProviderWrite() {
 }
 void ProviderLocks::ProviderWait() {
   pthread_mutex_lock(&pMutex);
-  while(pConsumers > 0) pthread_cond_wait(&pProducerCond, &pMutex);
   pDataReady = false;
+  while(pConsumers > 0) pthread_cond_wait(&pProducerCond, &pMutex);
   pthread_mutex_unlock(&pMutex);
 }
 bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {

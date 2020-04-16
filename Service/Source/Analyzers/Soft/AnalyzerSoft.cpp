@@ -751,8 +751,8 @@ void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const Agg
   if(type == AGGREG_15M)   Params = &pAggreg15M;
   if(type == AGGREG_1H)    Params = &pAggreg1H;
   parser.DefineVar("Frequency", &Params->Frequency);
-  parser.DefineVar("NominalVoltage", &pNominalVoltage);
-  parser.DefineVar("NominalFrequency", &pNominalFrequency);
+  parser.DefineVar("Nominal_Voltage", &pNominalVoltage);
+  parser.DefineVar("Nominal_Frequency", &pNominalFrequency);
   if(pVoltageChannels > 1) parser.DefineVar("Unbalance", &Params->Unbalance);
   AppendArray("Voltage", Params->Voltage, pVoltageChannels);
   AppendArray("Current", Params->Current, pCurrentChannels);
