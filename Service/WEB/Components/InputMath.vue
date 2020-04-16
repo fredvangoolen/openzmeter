@@ -12,7 +12,7 @@
         </div>
         <option-adder :icon="require('Imgs/math_functions.png')" :options="Functions" @add="Insert"></option-adder>
         <option-adder :icon="require('Imgs/sql_join_outer_exclude.png')" :options="Operators" @add="Insert"></option-adder>
-        <toolbar-pager class="pull-right" :pageSize="10" :input="vars" :output.sync="FilterVars" :filtercols="['Name', 'StartDate', 'EndDate']"></toolbar-pager>
+        <toolbar-pager class="pull-right" :pageSize="10" :input="vars" :output.sync="FilterVars" :filtercols="['Name', 'Description', 'Value', 'Units']"></toolbar-pager>
       </td>
     </tr>
     <tr>
@@ -42,6 +42,7 @@
                Operators:['&&', '||', '<=', '>=', '!=', '==', '>', '<', '+', '-', '*', '/', '^', '(var1==var2) ? val1 : val2'],
       Columns: [
           { name: 'Name', title: 'Variable' },
+          { name: 'Description', title: 'Description' },
           { name: 'Value', title: 'Value' },
           { name: 'Units', title: 'Units' },
           { name: '__slot:actions', title: '' }
@@ -74,10 +75,10 @@
         for(var n in this.vars) Vars.push(this.vars[n].Name);
         $('.hl_textarea').highlightWithinTextarea({
           highlight: [
-            { highlight: RegExp('([0-9]*[.])?[0-9]+', 'g'), className: 'numbers' },
             { highlight: Vars, className: 'variable' },
             { highlight: ['=', '&&', '||', '<=', '>=', '!=', '==', '>', '<', '+', '-', '*', '/', '^', '?', ':'], className: 'operator' },
             { highlight: ['(', ')', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh', 'log2', 'log10', 'log', 'ln', 'exp', 'sqrt', 'sign', 'rint', 'abs', 'min', 'max', 'sum', 'avg'], className: 'function' },
+            { highlight: RegExp('(?<!log)([0-9]*[.])?[0-9]+', 'g'), className: 'numbers' }
           ]
         });
         $('.hl_textarea').focus();
@@ -146,17 +147,17 @@
     color: #5cb85c;
   }
   @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(2) {
+    .table >>> th:nth-child(3) {
       width: 100px;
       text-align: right;
     }
-    .table >>> td:nth-child(2) {
+    .table >>> td:nth-child(3) {
       text-align: right;
     }
-    .table >>> th:nth-child(3) {
+    .table >>> th:nth-child(4) {
       width: 20px;
     }
-    .table >>> th:nth-child(4) {
+    .table >>> th:nth-child(5) {
       width: 30px;
     }
   }

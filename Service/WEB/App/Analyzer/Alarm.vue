@@ -56,6 +56,7 @@
         if(data == null) return Result;
         for(var n in data.Variables) {
           var Var = { Name: n, Value: this.Round(data.Variables[n], 3) };
+          Var.Description = '';
           if(Var.Name == 'Active_Power') Var.Units = 'W';
           if(Var.Name == 'Apparent_Power') Var.Units = 'W';
           if(Var.Name == 'Current') Var.Units = 'A';
@@ -83,10 +84,7 @@
           },
           (fail) => {
             this.ShowSpinner = false;
-            if(fail.status == 400) {
-              this.Data = this.FillValues(fail.body);
-              this.E
-            }
+            if(fail.status == 400) this.Data = this.FillValues(fail.body);
           }
         );
       }
