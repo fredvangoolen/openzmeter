@@ -758,8 +758,6 @@ void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const Agg
   AppendArray("Current", Params->Current, pCurrentChannels);
   AppendArray("Active_Power", Params->Active_Power, pVoltageChannels);
   AppendArray("Reactive_Power", Params->Reactive_Power, pVoltageChannels);
-  AppendArray("Active_Energy", Params->Active_Energy, pVoltageChannels);
-  AppendArray("Reactive_Energy", Params->Reactive_Energy, pVoltageChannels);
   AppendArray("Apparent_Power", Params->Apparent_Power, pVoltageChannels);
   AppendArray("Power_Factor", Params->Power_Factor, pVoltageChannels);
   AppendArray("Voltage_THD", Params->Voltage_THD, pVoltageChannels);
@@ -1908,7 +1906,7 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Parser Evaluator;
   json   Result = json::object();
-  if(pNowDataLock.ConsumerWait(5000) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   InitAlarmParser(Evaluator, params["Expression"], AGGREG_200MS);
   Result["Variables"] = json::object();
   for(auto Var : Evaluator.GetVar()) Result["Variables"][Var.first] = *Var.second;

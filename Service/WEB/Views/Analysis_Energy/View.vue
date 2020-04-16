@@ -20,7 +20,7 @@
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy serie="Active_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedActive?DialogHeight:ActiveHeight"></energy>
+                  <energy serie="Active_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></energy>
                 </portal>
               </div>
             </div>
@@ -44,7 +44,7 @@
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy serie="Reactive_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedReactive?DialogHeight:ReactiveHeight"></energy>
+                  <energy serie="Reactive_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></energy>
                 </portal>
               </div>
             </div>

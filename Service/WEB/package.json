@@ -16,6 +16,7 @@
     "bootstrap-year-calendar": "^1.1.1",
     "chroma-js": "^2.1.0",
     "complex": "^3.0.1",
+    "highlight-within-textarea": "^2.0.5",
     "jquery-bootstrap-scrolling-tabs": "^2.6.1",
     "marked": "^0.8.2",
     "moment-timezone": "^0.5.28",
