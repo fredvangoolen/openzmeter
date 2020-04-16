@@ -1,6 +1,6 @@
 <template>
   <div class="input-math" spellcheck="false">
-    <textarea ref="inputbox" type="text"></textarea>
+    <textarea class="hl_textarea" type="text" :value="value" @input="$emit('input', $event.target.value)"></textarea>
   </div>
 </template>
 
@@ -9,23 +9,40 @@
   import 'highlight-within-textarea/jquery.highlight-within-textarea.css';
 
   export default {
-    props: {  },
+    props: { value: String, vars: Array },
     data: function() {
       return { };
     },
+    watch: {
+      value: function() { this.$nextTick(() => { this.Refresh(); }); },
+      vars: function() { this.Refresh(); }
+    },
     mounted: function() {
-    $(this.$refs.inputbox).highlightWithinTextarea({
-      highlight: [
-       { highlight: RegExp('([0-9]*[.])?[0-9]+'), className: 'numbers' },
-       { highlight: ['Voltage', 'Current'], className: 'variable' },
-       { highlight: ['=', '&&', '||', '<=', '>=', '!=', '==', '>', '<', '+', '-', '*', '/', '^', '?', ':'], className: 'operator' },
-       { highlight: ['(', ')', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh', 'log2', 'log10', 'log', 'ln', 'exp', 'sqrt', 'sign', 'rint', 'abs', 'min', 'max', 'sum', 'avg'], className: 'function' },
-
-      ]
-});
+      this.Refresh();
+    },
+    beboreDestroy: function() {
+      $('.hl_textarea').highlightWithinTextarea('destroy');
+    },
+    methods: {
+      Insert: function(text) {
+        var txt = $('.hl_textarea');
+        var caretPos = txt[0].selectionStart;
+        var textAreaTxt = txt.val();
+        $(txt).focus();
+        this.$emit('input', textAreaTxt.substring(0, caretPos) + text + textAreaTxt.substring(caretPos));
+      },
+      Refresh: function() {
+        $('.hl_textarea').highlightWithinTextarea({
+          highlight: [
+            { highlight: RegExp('([0-9]*[.])?[0-9]+', 'g'), className: 'numbers' },
+            { highlight: this.vars, className: 'variable' },
+            { highlight: ['=', '&&', '||', '<=', '>=', '!=', '==', '>', '<', '+', '-', '*', '/', '^', '?', ':'], className: 'operator' },
+            { highlight: ['(', ')', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh', 'log2', 'log10', 'log', 'ln', 'exp', 'sqrt', 'sign', 'rint', 'abs', 'min', 'max', 'sum', 'avg'], className: 'function' },
+          ]
+        });
+        $('.hl_textarea').focus();
+      }
     }
-
-
   }
 </script>
 
@@ -43,7 +60,7 @@
     color: rgba(0, 0, 0, 0);
   }
   .input-math >>> .hwt-highlights {
-    color: #ddd !important;
+    color: #555 !important;
   }
   .input-math >>> .hwt-backdrop {
     margin: 5px;
@@ -76,22 +93,17 @@
     font-size: 14px;
     background: #FFF;
   }
-  .input-math >>> mark.error {
-    text-decoration-line: underline;
-    text-decoration-style: dotted;
-    text-decoration-color: #d9534f;
-  }
   .input-math >>> mark.variable {
-    color: #e6550d;
+    color: #d9534f;
   }
   .input-math >>> mark.operator {
-    color: #333;
+    color: #f0ad4e;
   }
   .input-math >>> mark.function {
-    color: #5799d0;
+    color: #428bca;
     font-style: italic;
   }
   .input-math >>> mark.numbers {
-    color: #31a354;
+    color: #5cb85c;
   }
 </style>

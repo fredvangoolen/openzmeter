@@ -37,14 +37,14 @@
     <div class="row" v-if="View=='Expression'">
       <div class="col-xs-12">
         <label class="control-label">Expression</label>
-        <input-math ref="expression" v-model="Alarm.Expression" :vars="[]"></input-math>
+        <input-math ref="expression" v-model="Alarm.Expression" :vars="Variables"></input-math>
       </div>
       <div class="col-xs-12">
         <div style="width:100%; height: 200px; overflow-y: auto; margin-top: 5px">
           <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Values" class="table small table-striped">
             <template slot="actions" slot-scope="props">
               <div class="btn-group">
-                <button type="button" class="btn btn-primary btn-xs" v-on:click="Insert(props.rowData)">Insert</button>
+                <button type="button" class="btn btn-primary btn-xs" @click="$refs.expression.Insert(props.rowData.Name)">Insert</button>
               </div>
             </template>
           </vuetable>
@@ -78,15 +78,28 @@
       }
     },
     computed: {
+      Variables: function() {
+        var Vars = [];
+        if(this.Data == null) return Vars;
+        for(var n in this.Data.Variables) Vars.push(n);
+        return Vars;
+      },
       Values: function() {
         var Result = [];
         if(this.Data == null) return Result;
         for(var n in this.Data.Variables) {
           var Var = { Name: n, Value: this.Round(this.Data.Variables[n], 3) };
-          if(Var.Name == 'Voltage') Var.Units = 'V';
-          if(Var.Name == 'NominalVoltage') Var.Units = 'V';
+          if(Var.Name == 'Active_Power') Var.Units = 'W';
+          if(Var.Name == 'Apparent_Power') Var.Units = 'W';
+          if(Var.Name == 'Current') Var.Units = 'A';
+          if(Var.Name == 'Current_THD') Var.Units = '%';
           if(Var.Name == 'Frequency') Var.Units = 'Hz';
-          if(Var.Name == 'NominalFrequency') Var.Units = 'Hz';
+          if(Var.Name == 'Nominal_Frequency') Var.Units = 'Hz';
+          if(Var.Name == 'Nominal_Voltage') Var.Units = 'V';
+          if(Var.Name == 'Phi') Var.Units = '°';
+          if(Var.Name == 'Reactive_Power') Var.Units = 'W';
+          if(Var.Name == 'Voltage') Var.Units = 'V';
+          if(Var.Name == 'Voltage_THD') Var.Units = '%';
           Result.push(Var);
         }
         return Result;
@@ -109,13 +122,6 @@
             if(fail.status == 400) this.Data = fail.body;
           }
         );
-      },
-      Insert: function(row) {
-        var txt = jQuery(this.$refs.expression);
-        var caretPos = txt[0].selectionStart;
-        var textAreaTxt = txt.val();
-        $(txt).focus();
-        this.$set(this.Alarm, 'Expression', textAreaTxt.substring(0, caretPos) + row.Name + textAreaTxt.substring(caretPos));
       }
     },
     components: { vuetable }
