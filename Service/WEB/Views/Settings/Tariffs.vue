@@ -21,7 +21,6 @@
             </template>
           </vuetable>
         </div>
-        <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"></div>
         <div class="col-sm-12">
           <label class="control-label">Price fetch modules</label>
           <vuetable :fields="ColumnsModules" :api-mode="false" :data="Modules" class="table small table-striped modules">

@@ -160,9 +160,15 @@ void ProviderLocks::ProviderWrite() {
   pthread_mutex_unlock(&pMutex);
 }
 void ProviderLocks::ProviderWait() {
+  printf(" M1 ");
   pthread_mutex_lock(&pMutex);
+  printf(" M2 (%u)",pConsumers);
   pDataReady = false;
-  while(pConsumers > 0) pthread_cond_wait(&pProducerCond, &pMutex);
+  while(pConsumers > 0) {
+    printf(" M2 (%u)",pConsumers);
+    pthread_cond_wait(&pProducerCond, &pMutex);
+  }
+  printf(" M3 (%u)",pConsumers);
   pthread_mutex_unlock(&pMutex);
 }
 bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
@@ -171,15 +177,15 @@ bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
   clock_gettime(CLOCK_REALTIME, &To);
   To.tv_sec += timeoutSec;
   pthread_mutex_lock(&pMutex);
-  pConsumers++;
   while((Error == 0) && (pDataReady == false) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumersCond, &pMutex, &To);
-  if((Error != 0) || (pTerminate == true)) {
-    pConsumers--;
-    if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
+  if((Error != 0) && (Error != ETIMEDOUT)) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return false;
+  } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
     pthread_mutex_unlock(&pMutex);
-    if(Error != ETIMEDOUT) LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return false;
   } else {
+    pConsumers++;
     pthread_mutex_unlock(&pMutex);
     return true;
   }
