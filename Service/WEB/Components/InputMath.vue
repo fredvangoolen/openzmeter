@@ -1,29 +1,67 @@
 <template>
-  <div class="input-math" spellcheck="false">
-    <textarea class="hl_textarea" type="text" :value="value" @input="$emit('input', $event.target.value)"></textarea>
-  </div>
+  <table class="vartable">
+    <tr>
+      <td spellcheck="false">
+        <textarea class="hl_textarea" type="text" :value="value" @input="$emit('input', $event.target.value)"></textarea>
+      </td>
+    </tr>
+    <tr>
+      <td class="first-row">
+        <div class="btn-group">
+          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Reload variables and evaluate" @click="$emit('evaluate')"><img :src="require('Imgs/evaluate_formula.png')"></button>
+        </div>
+        <option-adder :icon="require('Imgs/math_functions.png')" :options="Functions" @add="Insert"></option-adder>
+        <option-adder :icon="require('Imgs/sql_join_outer_exclude.png')" :options="Operators" @add="Insert"></option-adder>
+        <toolbar-pager class="pull-right" :pageSize="10" :input="vars" :output.sync="FilterVars" :filtercols="['Name', 'StartDate', 'EndDate']"></toolbar-pager>
+      </td>
+    </tr>
+    <tr>
+      <td class="last-row">
+        <vuetable :fields="Columns" :api-mode="false" :data="FilterVars" class="table small table-striped">
+          <template slot="actions" slot-scope="props">
+            <div class="btn-group">
+              <button type="button" class="btn btn-default btn-xs" @click="Insert(props.rowData.Name)"><img :src="require('Imgs/plus.png')" alt="Add variable"></button>
+            </div>
+          </template>
+        </vuetable>
+      </td>
+    </tr>
+  </table>
 </template>
 
 <script>
   import 'highlight-within-textarea/jquery.highlight-within-textarea.js';
   import 'highlight-within-textarea/jquery.highlight-within-textarea.css';
-
+  import vuetable from 'vuetable-2';
+  import 'CSS/table-responsive.css';
   export default {
     props: { value: String, vars: Array },
     data: function() {
-      return { };
+      return { FilterVars: [],
+               Functions: ['sin(var)', 'cos(var)', 'tan(var)', 'asin(var)', 'acos(var)', 'atan(var)', 'sinh(var)', 'cosh(var)', 'tanh(var)', 'asinh(var)', 'acosh(var)', 'atanh(var)', 'log2(var)', 'log10(var)', 'log(var)', 'ln(var)', 'exp(var)', 'sqrt(var)', 'sign(var)', 'rint(var)', 'abs(var)', 'min(var1, var2, ...)', 'max(var1, var2, ...)', 'sum(var1, var2, ...)', 'avg(var1, var2, ...)'],
+               Operators:['&&', '||', '<=', '>=', '!=', '==', '>', '<', '+', '-', '*', '/', '^', '(var1==var2) ? val1 : val2'],
+      Columns: [
+          { name: 'Name', title: 'Variable' },
+          { name: 'Value', title: 'Value' },
+          { name: 'Units', title: 'Units' },
+          { name: '__slot:actions', title: '' }
+        ]};
     },
     watch: {
       value: function() { this.$nextTick(() => { this.Refresh(); }); },
       vars: function() { this.Refresh(); }
     },
     mounted: function() {
+      this.$emit('evaluate');
       this.Refresh();
     },
     beboreDestroy: function() {
       $('.hl_textarea').highlightWithinTextarea('destroy');
     },
     methods: {
+      ValueFormat: function(val) {
+        return this.Round(val, 2, false);
+      },
       Insert: function(text) {
         var txt = $('.hl_textarea');
         var caretPos = txt[0].selectionStart;
@@ -32,78 +70,94 @@
         this.$emit('input', textAreaTxt.substring(0, caretPos) + text + textAreaTxt.substring(caretPos));
       },
       Refresh: function() {
+        var  Vars = [];
+        for(var n in this.vars) Vars.push(this.vars[n].Name);
         $('.hl_textarea').highlightWithinTextarea({
           highlight: [
             { highlight: RegExp('([0-9]*[.])?[0-9]+', 'g'), className: 'numbers' },
-            { highlight: this.vars, className: 'variable' },
+            { highlight: Vars, className: 'variable' },
             { highlight: ['=', '&&', '||', '<=', '>=', '!=', '==', '>', '<', '+', '-', '*', '/', '^', '?', ':'], className: 'operator' },
             { highlight: ['(', ')', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh', 'log2', 'log10', 'log', 'ln', 'exp', 'sqrt', 'sign', 'rint', 'abs', 'min', 'max', 'sum', 'avg'], className: 'function' },
           ]
         });
         $('.hl_textarea').focus();
       }
-    }
+    },
+    components: { vuetable }
   }
 </script>
 
 <style scoped>
-  .input-math >>> .hwt-container {
-    margin: -5px;
-    padding: 5px;
+  .vartable {
     width: 100%;
-    box-sizing: content-box;
+    border: 1px solid #ccc;
   }
-  .input-math >>> .hwt-input {
+  .vartable .first-row {
+    background: #eee;
+    padding: 2px;
+    border: 1px solid #ccc;
+  }
+  .vartable .last-row {
+    border: 1px solid #ccc;
+    padding: 0px;
+  }
+
+  .vartable >>> .hwt-container {
+    width: 100%;
+    margin-bottom: -5px;
+  }
+  .vartable >>> .hwt-input {
     resize: none;
-    height: 100px;
+    height: 106px;
     caret-color: #555;
     color: rgba(0, 0, 0, 0);
   }
-  .input-math >>> .hwt-highlights {
+  .vartable >>> .hwt-highlights {
     color: #555 !important;
   }
-  .input-math >>> .hwt-backdrop {
-    margin: 5px;
-  }
-  .input-math >>> .hwt-content {
+  .vartable >>> .hwt-content {
+    margin: 0px;
     display: block;
     width: 100%;
-    padding: 6px 12px;
+    padding: 6px;
     font-size: 14px;
     line-height: 18px;
     background-color: #fff;
-    background-image: none;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
-    -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
-    -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
-    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+    border: 0px solid #ccc;
     font-family: monospace;
-  }
-  .input-math >>> .hwt-content:focus {
-    border-color: #66afe9;
     outline: 0;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, 0.6);
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, 0.6);
   }
-  .input-math >>> mark {
+  .vartable >>> mark {
     font-family: monospace;
     font-size: 14px;
     background: #FFF;
   }
-  .input-math >>> mark.variable {
+  .vartable >>> mark.variable {
     color: #d9534f;
   }
-  .input-math >>> mark.operator {
+  .vartable >>> mark.operator {
     color: #f0ad4e;
   }
-  .input-math >>> mark.function {
+  .vartable >>> mark.function {
     color: #428bca;
     font-style: italic;
   }
-  .input-math >>> mark.numbers {
+  .vartable >>> mark.numbers {
     color: #5cb85c;
+  }
+  @media screen and (min-width: 600px) {
+    .table >>> th:nth-child(2) {
+      width: 100px;
+      text-align: right;
+    }
+    .table >>> td:nth-child(2) {
+      text-align: right;
+    }
+    .table >>> th:nth-child(3) {
+      width: 20px;
+    }
+    .table >>> th:nth-child(4) {
+      width: 30px;
+    }
   }
 </style>
