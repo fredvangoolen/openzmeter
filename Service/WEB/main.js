@@ -40,6 +40,8 @@ import DlgFs from 'Components/DialogFullscreen.vue';
 Vue.component('DlgFs', DlgFs);
 import Graph from 'Components/Graph.vue';
 Vue.component('Graph', Graph);
+import InputMath from 'Components/InputMath.vue';
+Vue.component('InputMath', InputMath);
 import InputSpin from 'Components/InputSpin.vue';
 Vue.component('InputSpin', InputSpin);
 import OptionAdder from 'Components/OptionAdder.vue';
