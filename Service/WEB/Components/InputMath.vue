@@ -38,15 +38,16 @@
     props: { value: String, vars: Array },
     data: function() {
       return { FilterVars: [],
-               Functions: ['sin(var)', 'cos(var)', 'tan(var)', 'asin(var)', 'acos(var)', 'atan(var)', 'sinh(var)', 'cosh(var)', 'tanh(var)', 'asinh(var)', 'acosh(var)', 'atanh(var)', 'log2(var)', 'log10(var)', 'log(var)', 'ln(var)', 'exp(var)', 'sqrt(var)', 'sign(var)', 'rint(var)', 'abs(var)', 'min(var1, var2, ...)', 'max(var1, var2, ...)', 'sum(var1, var2, ...)', 'avg(var1, var2, ...)'],
-               Operators:['&&', '||', '<=', '>=', '!=', '==', '>', '<', '+', '-', '*', '/', '^', '(var1==var2) ? val1 : val2'],
-      Columns: [
-          { name: 'Name', title: 'Variable' },
-          { name: 'Description', title: 'Description' },
-          { name: 'Value', title: 'Value' },
-          { name: 'Units', title: 'Units' },
-          { name: '__slot:actions', title: '' }
-        ]};
+               Functions: ['sin(A)', 'cos(A)', 'tan(A)', 'asin(A)', 'acos(A)', 'atan(A)', 'sinh(A)', 'cosh(A)', 'tanh(A)', 'asinh(A)', 'acosh(A)', 'atanh(A)', 'log2(A)', 'log10(A)', 'log(A)', 'ln(A)', 'exp(A)', 'sqrt(A)', 'sign(A)', 'rint(A)', 'abs(A)', 'min(A, B, ...)', 'max(A, B, ...)', 'sum(A, B, ...)', 'avg(A, B, ...)'],
+               Operators:['&&', '||', '<=', '>=', '!=', '==', '>', '<', '+', '-', '*', '/', '^', '(A==B) ? C : D'],
+               Columns: [
+                  { name: 'Name', title: 'Variable' },
+                  { name: 'Description', title: 'Description' },
+                  { name: 'Value', title: 'Value' },
+                  { name: 'Units', title: 'Units' },
+                  { name: '__slot:actions', title: '' }
+                ]
+      };
     },
     watch: {
       value: function() { this.$nextTick(() => { this.Refresh(); }); },

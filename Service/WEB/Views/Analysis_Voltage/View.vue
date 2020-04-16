@@ -77,8 +77,6 @@
       this.Transfer10M.Update(this.analyzer, '10M', 'LastSamples');
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
       this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
-      this.LocalStorage_Set("bliu", 2);
-      this.LocalStorage_Set("blasdadsu", 42);
     },
     beforeDestroy: function() {
       this.TransferGraph.Destroy();
