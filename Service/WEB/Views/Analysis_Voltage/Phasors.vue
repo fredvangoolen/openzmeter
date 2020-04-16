@@ -360,10 +360,9 @@
   .title-warning img {
     margin: -4px 4px 0px 0px;
   }
-    table {
-     width: 100%;
-     border-radius: 6px;
-     border: 1px solid #ccc;
+  table {
+    width: 100%;
+    border: 1px solid #ccc;
   }
   table:not(:first-child), .output-table:not(:first-child) {
     margin-top: 5px;
@@ -376,8 +375,5 @@
     border-bottom: 1px solid #ccc;
     background: #eee;
     font-weight: bold;
-  }
-  table .border-right {
-    border-right: 1px solid #ccc;
   }
 </style>

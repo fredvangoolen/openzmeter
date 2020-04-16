@@ -3,15 +3,13 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Alarms &raquo; Edit</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Reload variables and evaluate" v-if="View=='Expression'" @click="Evaluate"><img :src="require('Imgs/math_functions.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Alarm)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
-      </div>
-      <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Expression' }" @click="View='Expression'">Expression</button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Alarm)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
     <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="(Data!=null)&&(Data.Result!=null)&&(View=='Expression')">Expresion evaluated to: <span v-html="Round(Data.Result, 3, true)"></span><br/>Alarm is {{ (Data.Result==0.0) ? 'NOT' : '' }} triggered</div>
+    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="(Data!=null)&&(Data.Result==null)&&(View=='Expression')">Expresion evaluation fail:<br/>{{ Data.Error }}</div>
     <div class="row" v-if="View=='Main'">
       <div class="col-xs-12">
         <label class="control-label">Name</label>
@@ -36,59 +34,28 @@
     </div>
     <div class="row" v-if="View=='Expression'">
       <div class="col-xs-12">
-        <label class="control-label">Expression</label>
-        <input-math ref="expression" v-model="Alarm.Expression" :vars="Variables"></input-math>
-      </div>
-      <div class="col-xs-12">
-        <div style="width:100%; height: 200px; overflow-y: auto; margin-top: 5px">
-          <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Values" class="table small table-striped">
-            <template slot="actions" slot-scope="props">
-              <div class="btn-group">
-                <button type="button" class="btn btn-primary btn-xs" @click="$refs.expression.Insert(props.rowData.Name)">Insert</button>
-              </div>
-            </template>
-          </vuetable>
-        </div>
+        <label class="control-label">Expresion</label>
+        <input-math v-model="Alarm.Expression" :vars="Vars" @evaluate="Evaluate"></input-math>
       </div>
     </div>
   </dlg>
 </template>
 
 <script>
-  import vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
   export default {
     props: { analyzer: Object, index: Number },
     data: function() {
-      return { ShowSpinner: false, Alarm: null, Data: null, View: 'Main',
-        Columns: [
-          { name: 'Name', title: 'Variable' },
-          { name: 'Value', title: 'Value' },
-          { name: 'Units', title: 'Units' },
-          { name: '__slot:actions', title: '' }
-        ]
-      };
+      return { ShowSpinner: false, Alarm: null, Data: null, Vars: [], View: 'Main' };
     },
     created: function() {
       this.Alarm = Object.assign({}, this.analyzer.Alarms[this.index]);
     },
-    watch: {
-      View: function() {
-        if(this.View =='Expression') this.Evaluate();
-      }
-    },
-    computed: {
-      Variables: function() {
-        var Vars = [];
-        if(this.Data == null) return Vars;
-        for(var n in this.Data.Variables) Vars.push(n);
-        return Vars;
-      },
-      Values: function() {
+    methods: {
+      FillValues: function(data) {
         var Result = [];
-        if(this.Data == null) return Result;
-        for(var n in this.Data.Variables) {
-          var Var = { Name: n, Value: this.Round(this.Data.Variables[n], 3) };
+        if(data == null) return Result;
+        for(var n in data.Variables) {
+          var Var = { Name: n, Value: this.Round(data.Variables[n], 3) };
           if(Var.Name == 'Active_Power') Var.Units = 'W';
           if(Var.Name == 'Apparent_Power') Var.Units = 'W';
           if(Var.Name == 'Current') Var.Units = 'A';
@@ -102,46 +69,27 @@
           if(Var.Name == 'Voltage_THD') Var.Units = '%';
           Result.push(Var);
         }
-        return Result;
-      }
-    },
-    methods: {
-      ValueFormat: function(val) {
-        return this.Round(val, 2, false);
+        this.Vars = Result;
+        return data;
       },
       Evaluate: function() {
         this.ShowSpinner = true;
         this.View = 'Expression';
+        this.Data = [];
         this.$http.post('testAlarm', { Analyzer: this.analyzer.Analyzer, Expression: this.Alarm.Expression }).then(
           (result) => {
             this.ShowSpinner = false;
-            this.Data = result.body;
+            this.Data = this.FillValues(result.body);
           },
           (fail) => {
             this.ShowSpinner = false;
-            if(fail.status == 400) this.Data = fail.body;
+            if(fail.status == 400) {
+              this.Data = this.FillValues(fail.body);
+              this.E
+            }
           }
         );
       }
-    },
-    components: { vuetable }
+    }
   }
 </script>
-
-<style scoped>
-  @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(2) {
-      width: 100px;
-      text-align: right;
-    }
-    .table >>> td:nth-child(2) {
-      text-align: right;
-    }
-    .table >>> th:nth-child(3) {
-      width: 20px;
-    }
-    .table >>> th:nth-child(4) {
-      width: 30px;
-    }
-  }
-</style>
