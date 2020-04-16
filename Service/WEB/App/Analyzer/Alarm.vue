@@ -3,9 +3,12 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Alarms &raquo; Edit</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Expression' }" @click="Evaluate">Expression</button>
+        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Reload variables and evaluate" v-if="View=='Expression'" @click="Evaluate"><img :src="require('Imgs/math_functions.png')"></button>
         <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Alarm)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+      </div>
+      <div class="pull-right btn-group">
+        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
+        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Expression' }" @click="View='Expression'">Expression</button>
       </div>
     </template>
     <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="(Data!=null)&&(Data.Result!=null)&&(View=='Expression')">Expresion evaluated to: <span v-html="Round(Data.Result, 3, true)"></span><br/>Alarm is {{ (Data.Result==0.0) ? 'NOT' : '' }} triggered</div>
@@ -34,12 +37,7 @@
     <div class="row" v-if="View=='Expression'">
       <div class="col-xs-12">
         <label class="control-label">Expression</label>
-        <div class="input-group">
-          <input type="text" class="form-control" ref="expression" v-model="Alarm.Expression">
-          <span class="input-group-btn">
-            <button class="btn btn-default" data-toggle="tooltip" title="Evaluate" type="button" v-on:click="Evaluate"><img :src="require('Imgs/math_functions.png')"></button>
-          </span>
-        </div>
+        <input-math ref="expression" v-model="Alarm.Expression" :vars="[]"></input-math>
       </div>
       <div class="col-xs-12">
         <div style="width:100%; height: 200px; overflow-y: auto; margin-top: 5px">
@@ -73,6 +71,11 @@
     },
     created: function() {
       this.Alarm = Object.assign({}, this.analyzer.Alarms[this.index]);
+    },
+    watch: {
+      View: function() {
+        if(this.View =='Expression') this.Evaluate();
+      }
     },
     computed: {
       Values: function() {

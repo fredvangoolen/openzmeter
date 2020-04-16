@@ -44,7 +44,7 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_POWER" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
-                  <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedReactive?DialogHeight:ReactiveHeight" :range.sync="Range"></power>
+                  <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>

@@ -139,23 +139,19 @@ ProviderLocks::ProviderLocks() {
   pConsumers     = 0;
   pDataReady     = false;
   pTerminate     = false;
-  //pMutex         = PTHREAD_MUTEX_INITIALIZER;
+  pMutex         = PTHREAD_MUTEX_INITIALIZER;
   pProducerCond  = PTHREAD_COND_INITIALIZER;
-  pthread_condattr_t  CondAttr;
-  pthread_mutexattr_t MutexAttr;
-  pthread_condattr_init(&CondAttr);
-  pthread_mutexattr_init(&MutexAttr);
-  pthread_condattr_setclock(&CondAttr, CLOCK_MONOTONIC);
-  pthread_mutexattr_settype(&MutexAttr, PTHREAD_MUTEX_ERRORCHECK);
-  pthread_cond_init(&pConsumersCond, &CondAttr);
-  pthread_mutex_init(&pMutex, &MutexAttr);
+  pConsumersCond = PTHREAD_COND_INITIALIZER;
+//  pthread_condattr_t  CondAttr;
+//  pthread_condattr_init(&CondAttr);
+//  pthread_condattr_setclock(&CondAttr, CLOCK_MONOTONIC);
+//  pthread_cond_init(&pConsumersCond, &CondAttr);
 }
 ProviderLocks::~ProviderLocks() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
   pthread_cond_broadcast(&pConsumersCond);
   pthread_mutex_unlock(&pMutex);
-  pthread_cond_destroy(&pConsumersCond);
 }
 void ProviderLocks::ProviderWrite() {
   pthread_mutex_lock(&pMutex);
@@ -172,7 +168,7 @@ void ProviderLocks::ProviderWait() {
 bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
   int Error = 0;
   timespec To;
-  clock_gettime(CLOCK_MONOTONIC, &To);
+  clock_gettime(CLOCK_REALTIME, &To);
   To.tv_sec += timeoutSec;
   pthread_mutex_lock(&pMutex);
   pConsumers++;
