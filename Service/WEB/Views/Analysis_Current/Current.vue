@@ -20,7 +20,7 @@
         var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
         var Opt = { file: [], axes: { x: {}, y: {} } };
         Opt.panEdgeFraction = 1;
-        Opt.interactionModel = Graph.InteractionModels.Scrollable(this);        
+        Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -44,6 +44,7 @@
         if(this.data != null) {
           for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n]].concat(this.data.Current[n]));
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 10 });
+          Opt.dateWindow = [this.data.From, this.data.To];
         }
         return Opt;
       }
