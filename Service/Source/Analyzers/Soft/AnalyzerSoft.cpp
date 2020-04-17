@@ -69,7 +69,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAlarmsWorker     = NULL;
   pEventsWorker     = NULL;
   pFreqCycles       = NULL;
-  pPrevTimestamp    = 0;
+//  pPrevTimestamp    = 0;
   pSyncThread       = 0;
   pMQTTThread       = 0;
   pMQTTSendBuff     = NULL;
@@ -444,32 +444,8 @@ void AnalyzerSoft::Configure(const json &options) {
   if(pMQTTConfig == true) PublishConfig(options);
 }
 void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
+  memset(&params, 0, sizeof(params));
   params.Type = type;
-  params.AggregSamples = 0;
-  params.Timestamp = 0;
-  params.Frequency = 0;
-  params.Unbalance = 0;
-  params.Flag = false;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage[n] = 0;
-  for(uint8_t n = 0; n < pCurrentChannels; n++) params.Current[n] = 0;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Active_Power[n] = 0;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Reactive_Power[n] = 0;
-  for(uint8_t n = 0; n < pCurrentChannels; n++) params.Current_THD[n] = 0;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Phi[n] = 0;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Power_Factor[n] = 0;
-  for(uint8_t n = 0; n < (50 * pCurrentChannels); n++) params.Current_Harmonics[n] = 0;
-  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) params.Power_Harmonics[n] = 0;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage_THD[n] = 0;
-  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) params.Voltage_Harmonics[n] = 0;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Active_Energy[n] = 0;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage_Phase[n]  = 0;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Reactive_Energy[n] = 0;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Apparent_Power[n] = 0;
-  for(uint8_t n = 0; n < FrequencyRangesLen; n++) params.StatsFrequency[n] = 0;
-  for(uint8_t n = 0; n < VoltageRangesLen; n++) params.StatsVoltage[n] = 0;
-  for(uint8_t n = 0; n < THDRangesLen; n++) params.StatsTHD[n] = 0;
-  for(uint8_t n = 0; n < UnbalanceRangesLen; n++) params.StatsUnbalance[n] = 0;
-  for(uint8_t n = 0; n < 2; n++) params.StatsHarmonics[n] = 0;
 }
 void AnalyzerSoft::InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos) {
   Event_t Event;
@@ -508,7 +484,8 @@ void AnalyzerSoft::InitEvent(const EventType type, const vector<float> &referenc
   pEvents.push_back(Event);
 }
 void AnalyzerSoft::AccumulateAggreg(Params_t &dst, const Params_t &src) {
-  dst.Timestamp = src.Timestamp;
+  if(src.AggregSamples == 0) return;
+  if(dst.Timestamp == 0) dst.Timestamp = src.Timestamp;
   dst.AggregSamples += src.AggregSamples;
   dst.Frequency += src.Frequency;
   dst.Unbalance += src.Unbalance;
@@ -555,6 +532,7 @@ bool AnalyzerSoft::FindRunningEvent(const uint32_t mask) {
   return false;
 }
 void AnalyzerSoft::SaveAggreg(Params_t &params) {
+  if(params.AggregSamples == 0) return;
   SetOnline();
   Database DB(Serial);
   if(params.Type == AGGREG_200MS)
@@ -777,14 +755,10 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   This->pAnalyzerLock.ReadLock();
   uint64_t Start = Tools::GetTime64();
   Aggreg->AggregSamples = 1;
-  printf("1 "); fflush(stdout);
   if(This->pEventsWorker != NULL) This->pEventsWorker->Run(Aggreg);
-  printf("2 "); fflush(stdout);
   This->pFFTSamples = (This->pBlockSamples / 2) + 1;
   for(uint8_t i = 0; i < This->pVoltageChannels; i++) This->pVoltageFFTWorker[i]->Run(&This->pVoltageFFTChannels[i]);
-  printf("3 "); fflush(stdout);
   for(uint8_t i = 0; i < This->pCurrentChannels; i++) This->pCurrentFFTWorker[i]->Run(&This->pCurrentFFTChannels[i]);
-  printf("4 "); fflush(stdout);
   if(This->pNominalFrequency > 0) {
     for(uint8_t n = 0; n < This->pBlockCyclesCount; n++) {
       This->pFreqCycles[This->pFreqCyclesPos] = This->pBlockCycles[n];
@@ -801,7 +775,6 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     }
     Aggreg->Frequency = (Cycles == This->pFreqCyclesLen) ? This->pFreqCyclesLen / ((2.0 * Samples) / This->pSamplerate) : 0;
   }
-  printf("5 "); fflush(stdout);
   for(uint8_t j = 0; j < This->pVoltageChannels; j++) {
     float *ChV = &This->pVoltageSamples[j * This->pMaxSamples];
     float *ChC = &This->pCurrentSamples[j * This->pMaxSamples];
@@ -812,18 +785,14 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     Aggreg->Voltage[j] = sqrt(Aggreg->Voltage[j] / This->pBlockSamples);
     Aggreg->Active_Power[j] = Aggreg->Active_Power[j] / This->pBlockSamples;
   }
-  printf("6 "); fflush(stdout);
   for(uint8_t j = 0; j < This->pCurrentChannels; j++) {
     float *Ch = &This->pCurrentSamples[j * This->pMaxSamples];
     for(uint16_t i = 0; i < This->pBlockSamples; i++) Aggreg->Current[j] += pow(Ch[i], 2.0);
     Aggreg->Current[j] = sqrt(Aggreg->Current[j] / This->pBlockSamples);
   }
-  printf("7 "); fflush(stdout);
   for(uint8_t j = 0; j < This->pVoltageChannels; j++) {
-    printf(" L7 "); fflush(stdout);
     This->pVoltageFFTWorker[j]->Wait();
     This->pCurrentFFTWorker[j]->Wait();
-    printf(" L8 "); fflush(stdout);
     for(uint8_t i = 0; i < 50; i++) {
       Aggreg->Voltage_Harmonics[j * 50 + i] = BinPower(This->pVoltageFFT[j * This->pMaxFFTSamples + (10 + i * 10)]);
       Aggreg->Current_Harmonics[j * 50 + i] = BinPower(This->pCurrentFFT[j * This->pMaxFFTSamples + (10 + i * 10)]);
@@ -842,7 +811,6 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     Aggreg->Power_Factor[j] = Aggreg->Active_Power[j] / Aggreg->Apparent_Power[j];
     Aggreg->Reactive_Energy[j] = (Aggreg->Reactive_Power[j] * This->pBlockSamples) / (This->pSamplerate * 3600.0);
   }
-  printf("8 "); fflush(stdout);
   if(This->pMode != PHASE1) {
     complex<float> A(cos(120.0 * M_PI / 180.0), sin(120.0 * M_PI / 180.0));
     complex<float> V1(This->pVoltageFFT[0 * This->pMaxFFTSamples + 10].Re * M_SQRT2, This->pVoltageFFT[0 * This->pMaxFFTSamples + 10].Im * M_SQRT2);
@@ -850,7 +818,6 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     complex<float> V3(This->pVoltageFFT[2 * This->pMaxFFTSamples + 10].Re * M_SQRT2, This->pVoltageFFT[2 * This->pMaxFFTSamples + 10].Im * M_SQRT2);
     Aggreg->Unbalance = ((abs(V1 + A * A * V2 + A * V3) / 3.0) / (abs(V1 + A * V2 + A * A * V3) / 3.0)) * 100.0;
   }
-  printf("9 "); fflush(stdout);
   if(This->pMode == PHASE3N) {
     This->pCurrentFFTWorker[3]->Wait();
     for(uint i = 0; i < 50; i++) {
@@ -859,115 +826,110 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     }
     Aggreg->Current_THD[3] = (Aggreg->Current_THD[3] / Aggreg->Current_Harmonics[3 * 50]) * 100.0;
   }
-  printf("10 "); fflush(stdout);
   if(This->pEventsWorker != NULL) This->pEventsWorker->Wait();
-  printf("11 "); fflush(stdout);
+  if(This->pSequence < 100) {
+    LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "\n", This->Serial.c_str(), Tools::GetTime64() - Start, This->pSequence);
+    This->InitAggreg(This->pAggreg200MS, AGGREG_200MS);
+    This->pBlockSamples     = 0;
+    This->pBlockCyclesCount = 0;
+    memset(This->pBlockCycles, 0, sizeof(pBlockCycles));
+    This->pSequence++;
+    This->pAnalyzerLock.Unlock();
+  }
   This->pNowDataLock.ProviderWrite();
-  printf("13 "); fflush(stdout);
   if((This->pSequence % 15) == 0) {
-    if(This->pSequence > 50) {
-      LOGFile::Debug("Storing 3S aggregation for analyzer '%s'\n", This->Serial.c_str());
-      This->NormalizeAggreg(This->pAggreg3S);
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg3S);
-      if(This->pAggreg3S.Flag == false) {
-        float Variation = This->CalcChange(This->pAggreg3S.Frequency, This->pNominalFrequency);
-        for(uint8_t Range = 0; Range < FrequencyRangesLen; Range++) {
-          if((Variation >= FrequencyRanges[Range]) && (Variation < FrequencyRanges[Range + 1])) This->pAggreg1H.StatsFrequency[Range]++;
-        }
+    LOGFile::Debug("Storing 3S aggregation for analyzer '%s'\n", This->Serial.c_str());
+    This->NormalizeAggreg(This->pAggreg3S);
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg3S);
+    if(This->pAggreg3S.Flag == false) {
+      float Variation = This->CalcChange(This->pAggreg3S.Frequency, This->pNominalFrequency);
+      for(uint8_t Range = 0; Range < FrequencyRangesLen; Range++) {
+        if((Variation >= FrequencyRanges[Range]) && (Variation < FrequencyRanges[Range + 1])) This->pAggreg1H.StatsFrequency[Range]++;
       }
-      This->SaveAggreg(This->pAggreg3S);
-      if(This->pMQTT3S) This->PublishAggreg(This->pAggreg3S, "3S");
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
     }
+    This->SaveAggreg(This->pAggreg3S);
+    if(This->pMQTT3S) This->PublishAggreg(This->pAggreg3S, "3S");
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
     This->InitAggreg(This->pAggreg3S, AGGREG_3S);
   }
   This->AccumulateAggreg(This->pAggreg3S, This->pAggreg200MS);
 
-  if((This->pAggreg200MS.Timestamp / 60000) > (This->pPrevTimestamp / 60000)) {
-    if(This->pSequence > 50) {
-      LOGFile::Debug("Storing 1M aggregation for analyzer '%s'\n", This->Serial.c_str());
-      This->pAggreg1M.Timestamp = This->pAggreg1M.Timestamp / 60000 * 60000 + 59999;
-      This->NormalizeAggreg(This->pAggreg1M);
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1M);
-      This->SaveAggreg(This->pAggreg1M);
-      if(This->pMQTT1M) This->PublishAggreg(This->pAggreg1M, "1M");
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-    }
+  if((This->pAggreg1M.Timestamp / 60000) < (This->pAggreg200MS.Timestamp / 60000)) {
+    LOGFile::Debug("Storing 1M aggregation for analyzer '%s'\n", This->Serial.c_str());
+    This->pAggreg1M.Timestamp = This->pAggreg1M.Timestamp / 60000 * 60000 + 59999;
+    This->NormalizeAggreg(This->pAggreg1M);
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1M);
+    This->SaveAggreg(This->pAggreg1M);
+    if(This->pMQTT1M) This->PublishAggreg(This->pAggreg1M, "1M");
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
     This->InitAggreg(This->pAggreg1M, AGGREG_1M);
   }
   This->AccumulateAggreg(This->pAggreg1M, This->pAggreg200MS);
 
-  if((This->pAggreg200MS.Timestamp / 600000) > (This->pPrevTimestamp / 600000)) {
-    if(This->pSequence > 50) {
-      LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", This->Serial.c_str());
-      This->pAggreg10M.Timestamp = This->pAggreg10M.Timestamp / 600000 * 600000 + 599999;
-      This->NormalizeAggreg(This->pAggreg10M);
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg10M);
-      if(This->pAggreg10M.Flag == false) {
-        for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
-          if((This->pAggreg10M.Unbalance >= UnbalanceRanges[Range]) && (This->pAggreg10M.Unbalance < UnbalanceRanges[Range + 1])) This->pAggreg1H.StatsUnbalance[Range]++;
+  if((This->pAggreg10M.Timestamp / 600000) < (This->pAggreg200MS.Timestamp / 600000)) {
+    LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", This->Serial.c_str());
+    This->pAggreg10M.Timestamp = This->pAggreg10M.Timestamp / 600000 * 600000 + 599999;
+    This->NormalizeAggreg(This->pAggreg10M);
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg10M);
+    if(This->pAggreg10M.Flag == false) {
+      for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
+        if((This->pAggreg10M.Unbalance >= UnbalanceRanges[Range]) && (This->pAggreg10M.Unbalance < UnbalanceRanges[Range + 1])) This->pAggreg1H.StatsUnbalance[Range]++;
+      }
+      for(uint8_t i = 0; i < This->pVoltageChannels; i++) {
+        float Variation = This->CalcChange(This->pAggreg10M.Voltage[i], This->pNominalVoltage);
+        for(uint8_t Range = 0; Range < VoltageRangesLen; Range++) {
+          if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) This->pAggreg1H.StatsVoltage[Range]++;
         }
-        for(uint8_t i = 0; i < This->pVoltageChannels; i++) {
-          float Variation = This->CalcChange(This->pAggreg10M.Voltage[i], This->pNominalVoltage);
-          for(uint8_t Range = 0; Range < VoltageRangesLen; Range++) {
-            if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) This->pAggreg1H.StatsVoltage[Range]++;
-          }
-          for(uint8_t Range = 0; Range < THDRangesLen; Range++) {
-            if((This->pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (This->pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) This->pAggreg1H.StatsTHD[Range]++;
-          }
-          bool HarmonicsInRange = true;
-          for(uint8_t n = 0; n < HarmonicsAllowedLen; n++) {
-            float Variation = This->CalcChange(This->pAggreg10M.Voltage_Harmonics[i * 50 + n + 1], This->pNominalVoltage);
-              if(Variation > HarmonicsAllowed[n]) {
-                HarmonicsInRange = false;
-                break;
-              }
-          }
-          if(HarmonicsInRange == true) {
-            This->pAggreg1H.StatsHarmonics[0]++;
-          } else {
-            This->pAggreg1H.StatsHarmonics[1]++;
-          }
+        for(uint8_t Range = 0; Range < THDRangesLen; Range++) {
+          if((This->pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (This->pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) This->pAggreg1H.StatsTHD[Range]++;
+        }
+        bool HarmonicsInRange = true;
+        for(uint8_t n = 0; n < HarmonicsAllowedLen; n++) {
+          float Variation = This->CalcChange(This->pAggreg10M.Voltage_Harmonics[i * 50 + n + 1], This->pNominalVoltage);
+            if(Variation > HarmonicsAllowed[n]) {
+              HarmonicsInRange = false;
+              break;
+            }
+        }
+        if(HarmonicsInRange == true) {
+          This->pAggreg1H.StatsHarmonics[0]++;
+        } else {
+          This->pAggreg1H.StatsHarmonics[1]++;
         }
       }
-      This->SaveAggreg(This->pAggreg10M);
-      if(This->pMQTT10M) This->PublishAggreg(This->pAggreg10M, "10M");
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
     }
+    This->SaveAggreg(This->pAggreg10M);
+    if(This->pMQTT10M) This->PublishAggreg(This->pAggreg10M, "10M");
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
     This->InitAggreg(This->pAggreg10M, AGGREG_10M);
   }
   This->AccumulateAggreg(This->pAggreg10M, This->pAggreg200MS);
 
-  if((This->pAggreg200MS.Timestamp / 900000) > (This->pPrevTimestamp / 900000)) {
-    if(This->pSequence > 50) {
-      LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", This->Serial.c_str());
-      This->pAggreg15M.Timestamp = This->pAggreg15M.Timestamp / 900000 * 900000 + 899999;
-      This->NormalizeAggreg(This->pAggreg15M);
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg15M);
-      This->SaveAggreg(This->pAggreg15M);
-      if(This->pMQTT15M) This->PublishAggreg(This->pAggreg15M, "15M");
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-    }
+  if((This->pAggreg15M.Timestamp / 900000) < (This->pAggreg200MS.Timestamp / 900000)) {
+    LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", This->Serial.c_str());
+    This->pAggreg15M.Timestamp = This->pAggreg15M.Timestamp / 900000 * 900000 + 899999;
+    This->NormalizeAggreg(This->pAggreg15M);
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg15M);
+    This->SaveAggreg(This->pAggreg15M);
+    if(This->pMQTT15M) This->PublishAggreg(This->pAggreg15M, "15M");
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
     This->InitAggreg(This->pAggreg15M, AGGREG_15M);
   }
   This->AccumulateAggreg(This->pAggreg15M, This->pAggreg200MS);
 
-  if((This->pAggreg200MS.Timestamp / 3600000) > (This->pPrevTimestamp / 3600000)) {
-    if(This->pSequence > 50) {
-      LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", This->Serial.c_str());
-      This->pAggreg1H.Timestamp = This->pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
-      This->NormalizeAggreg(This->pAggreg1H);
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1H);
-      This->SaveAggreg(This->pAggreg1H);
-      if(This->pMQTT1H) This->PublishAggreg(This->pAggreg1H, "1H");
-      if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
-    }
+  if((This->pAggreg1H.Timestamp / 3600000) < (This->pAggreg200MS.Timestamp / 3600000)) {
+    LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", This->Serial.c_str());
+    This->pAggreg1H.Timestamp = This->pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
+    This->NormalizeAggreg(This->pAggreg1H);
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg1H);
+    This->SaveAggreg(This->pAggreg1H);
+    if(This->pMQTT1H) This->PublishAggreg(This->pAggreg1H, "1H");
+    if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Wait();
     This->InitAggreg(This->pAggreg1H, AGGREG_1H);
   }
   This->AccumulateAggreg(This->pAggreg1H, This->pAggreg200MS);
 
   if(This->pAlarmsWorker != NULL) This->pAlarmsWorker->Run(&This->pAggreg200MS);
-  This->pPrevTimestamp = This->pAggreg200MS.Timestamp;
   if(This->pSave200MS) {
     LOGFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", This->Serial.c_str());
     This->SaveAggreg(This->pAggreg200MS);

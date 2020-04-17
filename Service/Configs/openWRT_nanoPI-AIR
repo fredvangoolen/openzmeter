@@ -12,7 +12,7 @@ TARIFF_ESP  = true
 TARIFF_NONE = true
 
 # Build options --------------------------------------------------------------------------------------------------------
-DEBUG    = true
+DEBUG    = false
 CPP      = arm-openwrt-linux-gcc
 CC       = arm-openwrt-linux-gcc
 LD       = arm-openwrt-linux-ld
