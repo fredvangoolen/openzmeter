@@ -275,9 +275,12 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   return ConfigOUT;
 }
 void AnalyzerSoft::Configure(const json &options) {
+  printf(" CFG1 ");
   ConfigManager::WriteConfig(pConfigPath, options);
   SetName(options["Name"]);
+  printf(" CFG2 ");
   pAnalyzerLock.WriteLock();
+  printf(" CFG3 ");
   pNominalVoltage   = options["NominalVoltage"];
   pNominalFrequency = options["NominalFrequency"];
   pMaxCurrent       = options["MaxCurrent"];
@@ -835,6 +838,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     memset(This->pBlockCycles, 0, sizeof(pBlockCycles));
     This->pSequence++;
     This->pAnalyzerLock.Unlock();
+    return;
   }
   This->pNowDataLock.ProviderWrite();
   if((This->pSequence % 15) == 0) {
@@ -1180,10 +1184,7 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
   pthread_mutex_t Mutex = PTHREAD_MUTEX_INITIALIZER;
   pthread_cond_t  Cond  = PTHREAD_COND_INITIALIZER;
   while(This->pSyncTerminate == false) {
-    if(This->pAnalyzerLock.TryReadLock() == false) {
-      usleep(100000);
-      continue;
-    }
+    This->pAnalyzerLock.ReadLock();
     if((This->pSyncUser != User) || (This->pSyncPass != Pass) || (This->pSyncServer != Server)) {
       Cookie = "";
       User   = This->pSyncUser;
@@ -1293,10 +1294,7 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
   nice(10);
   string User, Pass, Server;
   while(This->pMQTTTerminate == false) {
-    if(This->pAnalyzerLock.TryReadLock() == false) {
-      usleep(100000);
-      continue;
-    }
+    This->pAnalyzerLock.ReadLock();
     if((This->pMQTTUser != User) || (This->pMQTTPass != Pass) || (This->pMQTTServer != Server)) {
       if(This->pMQTTClient.socketfd != -1) {
         close(This->pMQTTClient.socketfd);
