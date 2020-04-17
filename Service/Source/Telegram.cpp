@@ -222,29 +222,30 @@ void Telegram::SendAlarm(const string &analyzer, const string &tz, const uint64_
 void Telegram::HandleUpdate(SSLClient *client, const json &JSON) {
   printf("%s\n", JSON.dump().c_str());
   Database DB;
-  try {
-    if(JSON.contains("message")) {
-      int64_t ChatID = JSON["message"]["chat"]["id"];
-      if(DB.ExecSentenceAsyncResult("SELECT username FROM users WHERE telegram = " + DB.Bind(to_string(ChatID))) == false) return;
-      json Msg = json::object();
-      Msg["chat_id"] = ChatID;
-      if(DB.FecthRow() == false) {
-        Msg["text"] = "Your user ID is not found, please check it is correctly set in user profile and try again\n\n*Your user ID is '" + to_string(ChatID) + "'*";
-        Msg["parse_mode"] = "Markdown";
-        DB.ExecSentenceNoResult("INSERT INTO telegram(msg) VALUES(" + DB.Bind(Msg.dump()) + ")");
-        return;
-      }
-      if(JSON["message"]["text"] == "/start") {
-        Msg["text"] = "*Welcome* to *openZmeter*\n\nYou are ready to receive alarms and query your analyzers information.";
-        Msg["parse_mode"] = "Markdown";
-        DB.ExecSentenceNoResult("INSERT INTO telegram(msg) VALUES(" + DB.Bind(Msg.dump()) + ")");
-        //Envio teclado con analyzers
-        return;
-      }
-      Msg["text"] = "Unknown command";
+  if(JSON.contains("message") && JSON["message"].is_object() &&
+     JSON["message"].contains("chat") && JSON["message"]["chat"].is_object() &&
+     JSON["message"]["chat"].contains("id") && JSON["message"]["chat"]["id"].is_number() &&
+     JSON["message"].contains("text") && JSON["message"]["text"].is_string()) {
+    int64_t ChatID = JSON["message"]["chat"]["id"];
+    if(DB.ExecSentenceAsyncResult("SELECT username FROM users WHERE telegram = " + DB.Bind(to_string(ChatID))) == false) return;
+    json Msg = json::object();
+    Msg["chat_id"] = ChatID;
+    if(DB.FecthRow() == false) {
+      Msg["text"] = "Your user ID is not found, please check it is correctly set in user profile and try again\n\n*Your user ID is '" + to_string(ChatID) + "'*";
+      Msg["parse_mode"] = "Markdown";
       DB.ExecSentenceNoResult("INSERT INTO telegram(msg) VALUES(" + DB.Bind(Msg.dump()) + ")");
+      return;
     }
-  } catch(...) {}
+    if(JSON["message"]["text"] == "/start") {
+      Msg["text"] = "*Welcome* to *openZmeter*\n\nYou are ready to receive alarms and query your analyzers information.";
+      Msg["parse_mode"] = "Markdown";
+      DB.ExecSentenceNoResult("INSERT INTO telegram(msg) VALUES(" + DB.Bind(Msg.dump()) + ")");
+      //Envio teclado con analyzers
+      return;
+    }
+    Msg["text"] = "Unknown command";
+    DB.ExecSentenceNoResult("INSERT INTO telegram(msg) VALUES(" + DB.Bind(Msg.dump()) + ")");
+  }
 }
 
 
