@@ -68,7 +68,8 @@ class ProviderLocks {
     bool             pDataReady;
     uint32_t         pConsumers;
     pthread_mutex_t  pMutex;
-    pthread_cond_t   pConsumersCond;
+    pthread_cond_t   pConsumerEnterCond;
+    pthread_cond_t   pConsumerWaitCond;
     pthread_cond_t   pProducerCond;
   public :
     ProviderLocks();

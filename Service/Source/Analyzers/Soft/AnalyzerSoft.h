@@ -178,7 +178,6 @@ class AnalyzerSoft final : public Analyzer {
     json                       pRates;                   //Applied rates local copy
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private : //Used only in Analyzer_Func
-    uint64_t                   pPrevTimestamp;           //Previous block time
     Params_t                   pAggreg200MS;             //200ms aggregation
     Params_t                   pAggreg3S;                //3 seconds aggregation
     Params_t                   pAggreg1M;                //1 minute aggregation
