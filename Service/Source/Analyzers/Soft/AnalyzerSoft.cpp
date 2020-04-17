@@ -275,73 +275,72 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   return ConfigOUT;
 }
 void AnalyzerSoft::Configure(const json &options) {
-  printf(" CFG1 ");
   ConfigManager::WriteConfig(pConfigPath, options);
   SetName(options["Name"]);
-  printf(" CFG2 ");
   pAnalyzerLock.WriteLock();
-  printf(" CFG3 ");
   pNominalVoltage   = options["NominalVoltage"];
-  pNominalFrequency = options["NominalFrequency"];
   pMaxCurrent       = options["MaxCurrent"];
   pMinCurrent       = options["MinCurrent"];
   pTimeZone         = options["TimeZone"];
   pSave200MS        = options["Save200MS"];
-  if(pNominalFrequency == 0.0) {
-    pFreqCyclesLen  = 1;
-    pMaxSamples = pSamplerate * 0.2;
-  } else if(pNominalFrequency == 50.0) {
-    pFreqCyclesLen  = ZEROCROSSING_SECONDS * 50;
-    pMaxSamples = (10.0 * pSamplerate * 1.15) / pNominalFrequency;
-  } else if(pNominalFrequency == 60.0) {
-    pFreqCyclesLen = ZEROCROSSING_SECONDS * 60;
-    pMaxSamples = (12.0 * pSamplerate * 1.15) / pNominalFrequency;
-  }
-  pMaxFFTSamples    = (pMaxSamples / 2) + 1;
-  pFreqCyclesPos    = 0;
-  pSequence         = 0;
-  pBlockSamples     = 0;
-  pBlockCyclesCount = 0;
-  InitAggreg(pAggreg200MS, AGGREG_200MS);
-  memset(pBlockCycles, 0, sizeof(pBlockCycles));
-  pFreqCycles       = (uint32_t*)realloc(pFreqCycles, pFreqCyclesLen * sizeof(uint32_t));
-  pVoltageSamples   = (float*)realloc(pVoltageSamples, sizeof(float) * pVoltageChannels * pMaxSamples);
-  pCurrentSamples   = (float*)realloc(pCurrentSamples, sizeof(float) * pCurrentChannels * pMaxSamples);
-  pVoltageFFT       = (Complex_t*)realloc(pVoltageFFT, sizeof(Complex_t) * pVoltageChannels * pMaxFFTSamples);
-  pCurrentFFT       = (Complex_t*)realloc(pCurrentFFT, sizeof(Complex_t) * pCurrentChannels * pMaxFFTSamples);
-  for(uint8_t n = 0; n < pVoltageChannels; n++) pLastSamples[n] = 0.0;
-  for(uint8_t i = 0; i < pVoltageChannels; i++) {
-    pVoltageFFTChannels[i].OutPtr = &pVoltageFFT[i * pMaxFFTSamples];
-    pVoltageFFTChannels[i].InPtr  = &pVoltageSamples[i * pMaxSamples];
-  }
-  for(uint8_t i = 0; i < pCurrentChannels; i++) {
-    pCurrentFFTChannels[i].OutPtr = &pCurrentFFT[i * pMaxFFTSamples];
-    pCurrentFFTChannels[i].InPtr  = &pCurrentSamples[i * pMaxSamples];
-  }
-  if(pNominalFrequency != 0.0) {
-    for(uint8_t n = 0; n < FILTERSTAGES; n++) {
-      float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
-      float alpha = sin(w0) / 2.0;
-      pFilters[n].A0 = alpha / (1.0 + alpha);
-      pFilters[n].A1 = 0.0;
-      pFilters[n].A2 = -alpha / (1.0 + alpha);
-      pFilters[n].B1 = (-2.0 * cos(w0)) / (1.0 + alpha);
-      pFilters[n].B2 = (1.0 - alpha) / (1.0 + alpha);
-      memset(pFilters[n].ChannelsZ1, 0, sizeof(Filter_t::ChannelsZ1));
-      memset(pFilters[n].ChannelsZ2, 0, sizeof(Filter_t::ChannelsZ2));
+  if(pNominalFrequency != options["NominalFrequency"]) {
+    pNominalFrequency = options["NominalFrequency"];
+    if(pNominalFrequency == 0.0) {
+      pFreqCyclesLen  = 1;
+      pMaxSamples = pSamplerate * 0.2;
+    } else if(pNominalFrequency == 50.0) {
+      pFreqCyclesLen  = ZEROCROSSING_SECONDS * 50;
+      pMaxSamples = (10.0 * pSamplerate * 1.15) / pNominalFrequency;
+    } else if(pNominalFrequency == 60.0) {
+      pFreqCyclesLen = ZEROCROSSING_SECONDS * 60;
+      pMaxSamples = (12.0 * pSamplerate * 1.15) / pNominalFrequency;
     }
-    pDelaySize = ((pSamplerate / pNominalFrequency) / 2.0) * FILTERSTAGES + 2;
-    pDelayPos = 0;
-    pDelayVoltage = (float*)realloc(pDelayVoltage, sizeof(float) * pDelaySize * pVoltageChannels);
-    pDelayCurrent = (float*)realloc(pDelayCurrent, sizeof(float) * pDelaySize * pCurrentChannels);
-  } else {
-    if(pDelayVoltage != NULL) {
-      free(pDelayVoltage);
-      pDelayVoltage = NULL;
+    pMaxFFTSamples    = (pMaxSamples / 2) + 1;
+    pFreqCyclesPos    = 0;
+    pSequence         = 0;
+    pBlockSamples     = 0;
+    pBlockCyclesCount = 0;
+    InitAggreg(pAggreg200MS, AGGREG_200MS);
+    memset(pBlockCycles, 0, sizeof(pBlockCycles));
+    pFreqCycles       = (uint32_t*)realloc(pFreqCycles, pFreqCyclesLen * sizeof(uint32_t));
+    pVoltageSamples   = (float*)realloc(pVoltageSamples, sizeof(float) * pVoltageChannels * pMaxSamples);
+    pCurrentSamples   = (float*)realloc(pCurrentSamples, sizeof(float) * pCurrentChannels * pMaxSamples);
+    pVoltageFFT       = (Complex_t*)realloc(pVoltageFFT, sizeof(Complex_t) * pVoltageChannels * pMaxFFTSamples);
+    pCurrentFFT       = (Complex_t*)realloc(pCurrentFFT, sizeof(Complex_t) * pCurrentChannels * pMaxFFTSamples);
+    for(uint8_t n = 0; n < pVoltageChannels; n++) pLastSamples[n] = 0.0;
+    for(uint8_t i = 0; i < pVoltageChannels; i++) {
+      pVoltageFFTChannels[i].OutPtr = &pVoltageFFT[i * pMaxFFTSamples];
+      pVoltageFFTChannels[i].InPtr  = &pVoltageSamples[i * pMaxSamples];
     }
-    if(pDelayCurrent != NULL) {
-      free(pDelayCurrent);
-      pDelayCurrent = NULL;
+    for(uint8_t i = 0; i < pCurrentChannels; i++) {
+      pCurrentFFTChannels[i].OutPtr = &pCurrentFFT[i * pMaxFFTSamples];
+      pCurrentFFTChannels[i].InPtr  = &pCurrentSamples[i * pMaxSamples];
+    }
+    if(pNominalFrequency != 0.0) {
+      for(uint8_t n = 0; n < FILTERSTAGES; n++) {
+        float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
+        float alpha = sin(w0) / 2.0;
+        pFilters[n].A0 = alpha / (1.0 + alpha);
+        pFilters[n].A1 = 0.0;
+        pFilters[n].A2 = -alpha / (1.0 + alpha);
+        pFilters[n].B1 = (-2.0 * cos(w0)) / (1.0 + alpha);
+        pFilters[n].B2 = (1.0 - alpha) / (1.0 + alpha);
+        memset(pFilters[n].ChannelsZ1, 0, sizeof(Filter_t::ChannelsZ1));
+        memset(pFilters[n].ChannelsZ2, 0, sizeof(Filter_t::ChannelsZ2));
+      }
+      pDelaySize = ((pSamplerate / pNominalFrequency) / 2.0) * FILTERSTAGES + 2;
+      pDelayPos = 0;
+      pDelayVoltage = (float*)realloc(pDelayVoltage, sizeof(float) * pDelaySize * pVoltageChannels);
+      pDelayCurrent = (float*)realloc(pDelayCurrent, sizeof(float) * pDelaySize * pCurrentChannels);
+    } else {
+      if(pDelayVoltage != NULL) {
+        free(pDelayVoltage);
+        pDelayVoltage = NULL;
+      }
+      if(pDelayCurrent != NULL) {
+        free(pDelayCurrent);
+        pDelayCurrent = NULL;
+      }
     }
   }
   pRates = options["Rates"];
