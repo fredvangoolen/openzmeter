@@ -101,17 +101,17 @@ void RWLocks::ReadLock() {
   pReaders++;
   pthread_mutex_unlock(&pMutex);
 }
-bool RWLocks::TryReadLock() {
-  pthread_mutex_lock(&pMutex);
-  if((pWriters > 0) || (pWriter == true)) {
-    pthread_mutex_unlock(&pMutex);
-    return false;
-  }
-  while((pWriters > 0) || (pWriter == true)) pthread_cond_wait(&pReadersCondition, &pMutex);
-  pReaders++;
-  pthread_mutex_unlock(&pMutex);
-  return true;
-}
+//bool RWLocks::TryReadLock() {
+//  pthread_mutex_lock(&pMutex);
+//  if((pWriters > 0) || (pWriter == true)) {
+//    pthread_mutex_unlock(&pMutex);
+//    return false;
+//  }
+//  while((pWriters > 0) || (pWriter == true)) pthread_cond_wait(&pReadersCondition, &pMutex);
+//  pReaders++;
+//  pthread_mutex_unlock(&pMutex);
+//  return true;
+//}
 void RWLocks::WriteLock() {
   pthread_mutex_lock(&pMutex);
   pWriters++;
@@ -193,13 +193,19 @@ bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
   printf(" C4 %u ",pConsumers);
   pConsumers++;
   printf(" C5 %u ",pConsumers);
-  while((Error == 0) && (pDataReady == false) && (pTerminate == false)) Error = pthread_cond_wait(&pConsumerWaitCond, &pMutex);
-  if((Error != 0) || (pTerminate == true)) {
+  while((Error == 0) && (pDataReady == false) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerWaitCond, &pMutex, &To);
+  if((Error != 0) && (Error != ETIMEDOUT)) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
+  } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
+    printf(" C6 %u ",pConsumers);
+    pConsumers--;
+    if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
+    pthread_mutex_unlock(&pMutex);
+    return false;
   }
-  printf(" C6 %u ",pConsumers);
+  printf(" C7 %u ",pConsumers);
   pthread_mutex_unlock(&pMutex);
   return true;
 }
