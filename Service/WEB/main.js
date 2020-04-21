@@ -66,6 +66,8 @@ import ToolbarPager from 'Components/ToolbarPager.vue';
 Vue.component('ToolbarPager', ToolbarPager);
 import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
 Vue.component('ToolbarPeriod', ToolbarPeriod);
+import ToolbarColorItems from 'Components/ToolbarColorItems.vue';
+Vue.component('ToolbarColorItems', ToolbarColorItems);
 import ToolbarPeriodB from 'Components/ToolbarPeriodB.vue';
 Vue.component('ToolbarPeriodB', ToolbarPeriodB);
 import ToolbarPhases from 'Components/ToolbarPhases.vue';
