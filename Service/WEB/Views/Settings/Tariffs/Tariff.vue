@@ -118,10 +118,7 @@
           <div v-for="(day, idx) in Tariff.Template.Days" :key="idx">
             <div class="panel-other" v-if="ActiveDay=='D'+(idx+1)">
               <div class="panel-heading">
-                <div class="pull-right">
-                  <option-picker :options="[{name: 'P1', value: 0}, {name: 'P2', value: 1}]" v-model="ActivePeriodIdx" prefix="Fill with period"></option-picker>
-                </div>
-                <div class="clearfix"></div>
+                <toolbar-color-items v-model="ActivePeriodIdx" prefix="P" :colors="Tariff.Template.Periods.map((val) => { return val.Color; })" :names="Tariff.Template.Periods.map((val, i) => { return 'P' + (i + 1) + ' - ' + val.Name; })"></toolbar-color-items>
               </div>
               <div class=" col-xs-12" style="display:flex">
                 <div style="flex-grow:2">
@@ -137,7 +134,7 @@
               </div>
               <div class="clearfix"></div>
               <div class="day-stripes-table">
-                <day-config v-model="day.Quarters" :colors="['#fffff0', '#ffc4a2']" :names="['P1', 'P2']" :selected="ActivePeriodIdx"></day-config>
+                <day-config v-model="day.Quarters" :selected="ActivePeriodIdx" :colors="Tariff.Template.Periods.map((val) => { return val.Color; })" :names="Tariff.Template.Periods.map((val, i) => { return 'P' + (i + 1) + ' - ' + val.Name; })"></day-config>
               </div>
             </div>
           </div>
@@ -149,13 +146,10 @@
           <div v-for="(year, idx) in Tariff.Template.Years" :key="idx">
             <div class="panel-other" v-if="ActiveYear==idx">
               <div class="panel-heading">
-                <div class="pull-right">
-                  <option-picker :options="[{name: 'D1', value: 0}, {name: 'D2', value: 1}]" v-model="ActiveDayIdx" prefix="Fill with day"></option-picker>
-                </div>
-                <div class="clearfix"></div>
+                <toolbar-color-items v-model="ActiveDayIdx" prefix="D" :colors="Tariff.Template.Days.map((val) => { return val.Color; })" :names="Tariff.Template.Days.map((val, i) => { return 'D' + (i + 1) + ' - ' + val.Name; })"></toolbar-color-items>
               </div>
               <div class="day-stripes-table">
-                <year-config :year="parseInt(idx)" v-model="Tariff.Template.Years[idx]" :colors="['#fffff0', '#ffc4a2']" :names="['D1', 'D2']" :selected="ActiveDayIdx"></year-config>
+                <year-config v-model="Tariff.Template.Years[idx]" :selected="ActiveDayIdx" :year="parseInt(idx)" :colors="Tariff.Template.Days.map((val) => { return val.Color; })" :names="Tariff.Template.Days.map((val, i) => { return 'D' + (i + 1) + ' - ' + val.Name; })"></year-config>
               </div>
             </div>
           </div>

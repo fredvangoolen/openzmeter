@@ -101,16 +101,18 @@
             this.Tariff = {"TariffID":1,"Name":"No name","UserName":"admin","StartYear": 2019,"EndYear": 2020,
                            "Template":{
                              "Periods":[
-                               {"Color":"#fffff0", DefaultPowerCost: 0.15, DefaultEnergyCost: 0.35, Script: "", Name:"Punta", Concepts: [
+                               {"Color":"#ff7f50", DefaultPowerCost: 0.15, DefaultEnergyCost: 0.15, Script: "", Name:"Punta", Concepts: [
                                  {"Description":"Period that excepts contracted power", "Variable": "ExcessPeriodCount", "Type": "INFO"},
                                  {"Description":"Total cost of power excepts", "Variable": "ExcessPeriodTotal", "Type": "POWER"}
                                  ]},
-                               {"Color":"#55bfb8",DefaultPowerCost: 0.15, DefaultEnergyCost: 0.35, Script: "", Name: "Valle", Concepts: [
+                               {"Color":"#55bfb8",DefaultPowerCost: 0.15, DefaultEnergyCost: 0.05, Script: "", Name: "Valle", Concepts: [
                                  {"Description":"Period that excepts contracted power", "Variable": "ExcessPeriodCount", "Type": "INFO"},
                                  {"Description":"Total cost of power excepts", "Variable": "ExcessPeriodTotal", "Type": "POWER"}
                                  ]}],
-                             "Days": [{Quarters: new Array(1).fill(1).concat(new Array(95).fill(0)), Name: "Fin de semana", Color: "#55bfb8" }],
-                             "Years": {"2019": new Array(365).fill(1), "2020": new Array(366).fill(0)}
+                             "Days": [
+                               { Name: "Invierno", Color: "#55bfb8", Quarters: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1] },
+                               { Name: "Verano", Color: "#ff7f50", Quarters: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1] }],
+                             "Years": {"2019": new Array(365).fill(1), "2020": [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
                             }
                           };
             this.ShowDialog = true;
