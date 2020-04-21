@@ -31,14 +31,18 @@ void SignalHandler(int signal) {
   LOGFile::Info("Shutting down. Please wait while all task ends...\n");
   Terminate = true;
 }
+void signal_handler(int signal)
+{
+    printf("Received signal %d\n", signal);
+}
 int main(int argc, char** argv) {
   Tools::DisableEcho();
   setbuf(stdout, NULL);
-//  signal(SIGPIPE, SIG_IGN);
+  signal(SIGPIPE, signal_handler);
   signal(SIGILL, SIG_IGN);
-//  signal(SIGALRM, SIG_IGN);
-//  signal(SIGINT, SignalHandler);
-//  signal(SIGTERM, SignalHandler);
+  signal(SIGALRM, SIG_IGN);
+  signal(SIGINT, SignalHandler);
+  signal(SIGTERM, SignalHandler);
 
   string ConfigFileName = "/etc/openZmeter.conf";
   for(int i = 1; i != argc; i++) {

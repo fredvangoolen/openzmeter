@@ -252,7 +252,7 @@ void *SysSupport::Bluetooth_Thread(void *params) {
         continue;
       }
     }
-    if(dbus_connection_read_write(DBus, 0) == false) {
+    if(dbus_connection_read_write(DBus, 100) == false) {
       dbus_connection_unref(DBus);
       DBus = NULL;
     }
@@ -335,8 +335,6 @@ void *SysSupport::Bluetooth_Thread(void *params) {
       pBTServerName = "";
       pBT_Enabled = false;
       pSysStatLock.Unlock();
-    } else {
-      usleep(100000);
     }
   }
   if(DBus != NULL) dbus_connection_unref(DBus);

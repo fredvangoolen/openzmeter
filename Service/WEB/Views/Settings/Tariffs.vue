@@ -98,7 +98,21 @@
         this.ShowSpinner = true;
         this.$http.post('getTariff', { TariffID: tariff.TariffID }).then(
           (result) => {
-            this.Tariff = result.data;
+            this.Tariff = {"TariffID":1,"Name":"No name","UserName":"admin","StartYear": 2019,"EndYear": 2020,
+                           "Template":{
+                             "Periods":[
+                               {"Color":"#fffff0", DefaultPowerCost: 0.15, DefaultEnergyCost: 0.35, Script: "", Name:"Punta", Concepts: [
+                                 {"Description":"Period that excepts contracted power", "Variable": "ExcessPeriodCount", "Type": "INFO"},
+                                 {"Description":"Total cost of power excepts", "Variable": "ExcessPeriodTotal", "Type": "POWER"}
+                                 ]},
+                               {"Color":"#55bfb8",DefaultPowerCost: 0.15, DefaultEnergyCost: 0.35, Script: "", Name: "Valle", Concepts: [
+                                 {"Description":"Period that excepts contracted power", "Variable": "ExcessPeriodCount", "Type": "INFO"},
+                                 {"Description":"Total cost of power excepts", "Variable": "ExcessPeriodTotal", "Type": "POWER"}
+                                 ]}],
+                             "Days": [{Quarters: new Array(1).fill(1).concat(new Array(95).fill(0)), Name: "Fin de semana", Color: "#55bfb8" }],
+                             "Years": {"2019": new Array(365).fill(1), "2020": new Array(366).fill(0)}
+                            }
+                          };
             this.ShowDialog = true;
             this.ShowSpinner = false;
           },

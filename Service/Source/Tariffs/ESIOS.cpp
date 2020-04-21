@@ -33,8 +33,8 @@ ESIOS::ESIOS() {
 ESIOS::~ESIOS() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
-  if(pThread != 0) pthread_join(pThread, NULL);
   pthread_mutex_unlock(&pMutex);
+  if(pThread != 0) pthread_join(pThread, NULL);
 }
 json ESIOS::CheckConfig(const json &config) {
   json ConfigOUT = json::object();

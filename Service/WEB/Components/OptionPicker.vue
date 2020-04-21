@@ -1,6 +1,7 @@
 <template>
   <div class="btn-group">
     <div class="input-group" :class="{ 'input-group-xs': (big != true) }">
+      <span class="input-group-addon" v-if="prefix!=null">{{ prefix }}</span>
       <span class="form-control">{{ Selected.name }}</span>
       <div class="input-group-btn" ref="button">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" ><span class="caret"></span></button>
@@ -14,7 +15,7 @@
 
 <script>
   export default {
-    props: { options: Array, value: [Boolean, String, Number], big: Boolean },
+    props: { options: Array, value: [Boolean, String, Number], big: Boolean, prefix: String },
     data() {
       return { Selected: {} };
     },

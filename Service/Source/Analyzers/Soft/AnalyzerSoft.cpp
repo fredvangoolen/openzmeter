@@ -1117,28 +1117,19 @@ void AnalyzerSoft::Events_Func(void *creation, void *run) {
 void AnalyzerSoft::FFT_Func(void *creation, void *run) {
   AnalyzerSoft *This  = (AnalyzerSoft*)creation;
   FFTChannel_t *Ch = (FFTChannel_t*)run;
-  printf(" F1 "); fflush(stdout);
   pthread_mutex_lock(&pFFTMutex);
-  printf(" F2 "); fflush(stdout);
   fftwf_plan Plan = fftwf_plan_dft_r2c_1d(This->pBlockSamples, Ch->InPtr, (fftwf_complex*)Ch->OutPtr, FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
-  printf(" F3 "); fflush(stdout);
   pFFTRunning++;
   pthread_mutex_unlock(&pFFTMutex);
-  printf(" F4 "); fflush(stdout);
   fftwf_execute_dft_r2c(Plan, Ch->InPtr, (fftwf_complex*)Ch->OutPtr);
-  printf(" F5 "); fflush(stdout);
   pthread_mutex_lock(&pFFTMutex);
-  printf(" F6 "); fflush(stdout);
   fftwf_destroy_plan(Plan);
-  printf(" F7 "); fflush(stdout);
   pFFTRunning--;
   pthread_mutex_unlock(&pFFTMutex);
-  printf(" F8 "); fflush(stdout);
   for(uint16_t i = 0; i < This->pFFTSamples; i++) {
     Ch->OutPtr[i].Re = Ch->OutPtr[i].Re / This->pBlockSamples;
     Ch->OutPtr[i].Im = Ch->OutPtr[i].Im / This->pBlockSamples;
   }
-  printf(" F9 "); fflush(stdout);
 }
 void AnalyzerSoft::Alarms_Func(void *creation, void *run) {
   AnalyzerSoft *This   = (AnalyzerSoft*)creation;

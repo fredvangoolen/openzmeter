@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users(
   email         character varying  NOT NULL,
   telegram      bigint             NULL UNIQUE
 ) WITH (OIDS=FALSE);
-INSERT INTO users(username, password, lastlogin, time_zone, name, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'UTC', 'System administrator', '', '', '', '', NULL) ON CONFLICT (username) DO NOTHING;
+INSERT INTO users(username, password, lastlogin, time_zone, name, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'UTC', 'System administrator', '', '', '', '', 0) ON CONFLICT (username) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS sessions(
   id        serial NOT NULL PRIMARY KEY,
