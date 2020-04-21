@@ -35,7 +35,9 @@ Telegram::Telegram() {
 Telegram::~Telegram() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
+  pthread_mutex_unlock(&pMutex);
   if(pThread != 0) pthread_join(pThread, NULL);
+  pthread_mutex_lock(&pMutex);
   while(pUsedWorkers > 0) {
     pthread_mutex_unlock(&pMutex);
     usleep(100000);
@@ -48,7 +50,7 @@ Telegram::~Telegram() {
     pFreeWorkers.pop_front();
     free(Tmp);
   }
-  pthread_mutex_unlock(&pMutex);
+
 }
 void Telegram::Configure(const json &config) {
   ConfigManager::WriteConfig("/Telegram", config);
