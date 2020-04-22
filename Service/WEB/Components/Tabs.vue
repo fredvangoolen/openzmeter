@@ -22,6 +22,7 @@
         }
       },
       tabs: function(val, prev) {
+
         if(val.length == prev.length) {
           var Diff = false;
           for(var i in val) {

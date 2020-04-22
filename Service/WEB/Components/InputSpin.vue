@@ -6,6 +6,9 @@
         <li v-for="item in list" :key="item.name"><a @click="$emit('input', item.value)">{{ item.name }}</a></li>
       </ul>
     </div>
+    <div class="input-group-btn" v-if="$slots['buttons']">
+      <slot name="buttons"></slot>
+    </div>
     <input type="text" class="form-control" :value="Format(value)" @change="Change($event.target.value)">
     <span v-if="prepend" class="input-group-addon" id="basic-addon1">{{ prepend }}</span>
     <div class="input-group-btn-vertical">

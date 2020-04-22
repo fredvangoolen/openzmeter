@@ -65,16 +65,15 @@
   .calendar-container {
     display: flex;
     flex-wrap: wrap;
-    align-content: center;
-    padding: 4px 0px 0px 5px;
+    justify-content: center;
+    padding: 3px;
   }
   .stripe-table {
     width: 136px;
     table-layout: fixed;
     font-size: 11px;
     border: 1px solid #ccc;
-    margin-right: 4px;
-    margin-bottom: 4px;
+    margin: 2px;
   }
   .stripe-table tr td {
     height: 16px;
