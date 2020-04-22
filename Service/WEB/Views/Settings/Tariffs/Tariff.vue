@@ -18,14 +18,6 @@
           <label class="control-label">Name</label>
           <input type="text" class="form-control" v-model="Tariff.Name">
         </div>
-        <div class="col-xs-12 col-sm-6">
-          <label class="control-label">Start year</label>
-          <input-spin :min="1990" :max="Tariff.EndYear" v-model="Tariff.StartYear" :increment="1" :decimals="0" :big="true"></input-spin>
-        </div>
-        <div class="col-xs-12 col-sm-6">
-          <label class="control-label">End year</label>
-          <input-spin :min="Tariff.StartYear" :max="2100" v-model="Tariff.EndYear" :increment="1" :decimals="0" :big="true"></input-spin>
-        </div>
         <div class="col-xs-12">
           <label class="control-label">Description</label>
           <textarea class="form-control" rows="5" v-model="Tariff.Template.Description" style="resize: none"></textarea>
@@ -33,15 +25,14 @@
       </div>
       <div class="row" v-if="View=='Periods'">
         <div class="col-xs-12">
-          <div style="display:flex">
-            <detail-tabs style="flex-grow:2" key="Period_Tabs" :tabs="new Array(Tariff.Template.Periods.length).fill(0).map((n, idx) => { return 'P' + (idx + 1)})" v-model="ActivePeriod"></detail-tabs>
-            <div>
-              <div class="btn-group">
-                <button class="btn btn-default btn-xs" type="button" v-if="Tariff.Template.Periods.length>1" @click="DeletePeriod()" data-toggle="tooltip" title="Delete last period"><img :src="require('Imgs/cross.png')"></button>
-                <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/plus.png')" @click="AddPeriod()" data-toggle="tooltip" title="Add new period"></button>
-              </div>
+          <table style="width: 100%"><tr><td>
+            <detail-tabs key="Period_Tabs" :tabs="new Array(Tariff.Template.Periods.length).fill(0).map((n, idx) => { return 'P' + (idx + 1)})" v-model="ActivePeriod"></detail-tabs>
+          </td><td style="width: 64px; text-align: right;">
+            <div class="btn-group">
+              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Periods.length==1" @click="DeletePeriod" data-toggle="tooltip" title="Delete last period"><img :src="require('Imgs/cross.png')"></button>
+              <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/plus.png')" @click="AddPeriod" data-toggle="tooltip" title="Add new period"></button>
             </div>
-          </div>
+          </td></tr></table>
           <div v-for="(period, idx) in Tariff.Template.Periods" :key="idx">
             <div class="panel-other" v-if="ActivePeriod=='P'+(idx+1)">
               <div class="panel-heading">
@@ -106,15 +97,14 @@
       </div>
       <div class="row" v-if="View=='Days'">
         <div class="col-xs-12">
-          <div style="display: flex">
-            <detail-tabs style="flex-grow:2" key="Day_Tabs" :tabs="new Array(Tariff.Template.Days.length).fill(0).map((n, idx) => { return 'D' + (idx + 1)})" v-model="ActiveDay"></detail-tabs>
-            <div>
-              <div class="btn-group">
-                <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/cross.png')"></button>
-                <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/plus.png')"></button>
-              </div>
+          <table style="width: 100%;"><tr><td>
+            <detail-tabs key="Day_Tabs" :tabs="new Array(Tariff.Template.Days.length).fill(0).map((n, idx) => { return 'D' + (idx + 1)})" v-model="ActiveDay"></detail-tabs>
+          </td><td style="width: 64px; text-align: right">
+            <div class="btn-group">
+              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Days.length==1" data-toggle="tooltip" title="Delete last day"><img :src="require('Imgs/cross.png')" @click="DeleteDay"></button>
+              <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/plus.png')" @click="AddDay" data-toggle="tooltip" title="Add new day"></button>
             </div>
-          </div>
+          </td></tr></table>
           <div v-for="(day, idx) in Tariff.Template.Days" :key="idx">
             <div class="panel-other" v-if="ActiveDay=='D'+(idx+1)">
               <div class="panel-heading">
@@ -142,7 +132,24 @@
       </div>
       <div class="row" v-if="View=='Calendar'">
         <div class="col-xs-12">
-          <detail-tabs key="Year_Tabs" :tabs="['2019', '2020']" v-model="ActiveYear"></detail-tabs>
+          <table>
+            <tr><td>
+              <detail-tabs key="Year_Tabs" :tabs="Object.keys(Tariff.Template.Years).sort()" v-model="ActiveYear"></detail-tabs>
+            </td>
+            <td style="width:130px; text-align: right;">
+              <div class="btn-group">
+                <button class="btn btn-default btn-xs" type="button" :disabled="Object.keys(Tariff.Template.Years).length==1" @click="DeleteYear" data-toggle="tooltip" title="Delete this year"><img :src="require('Imgs/cross.png')"></button>
+              </div>
+              <div class="btn-group">
+                <input-spin :max="2100" :min="2000" :decimals="0" :increment="1" v-model="NewYearSelect" style="width:90px">
+                  <template v-slot:buttons>
+                    <button class="btn btn-default btn-xs" type="button" :disabled="Object.keys(Tariff.Template.Years).includes(String(NewYearSelect))" @click="AddYear" data-toggle="tooltip" title="Add new year"><img :src="require('Imgs/plus.png')"></button>
+                  </template>
+                </input-spin>
+              </div>
+            </td>
+            </tr>
+          </table>
           <div v-for="(year, idx) in Tariff.Template.Years" :key="idx">
             <div class="panel-other" v-if="ActiveYear==idx">
               <div class="panel-heading">
@@ -169,11 +176,14 @@
     props: { tariff: Object },
     data: function() {
       return {
-        ActivePeriod: 'P1', ActiveDay: 'D1', ActivePeriodIdx: 0, ActiveDayIdx: 0, ActiveYear: '2020',
+        ActivePeriod: 'P1', ActiveDay: 'D1', ActivePeriodIdx: 0, ActiveDayIdx: 0, ActiveYear: '2020', NewYearSelect: 2000,
 
 
 
         Tariff: null, View: 'Main', TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false };
+    },
+    watch: {
+
     },
     computed: {
 
@@ -229,11 +239,29 @@
     },
     methods: {
       DeletePeriod: function() {
+        if(this.Tariff.Template.Periods.length == 1) return;
         if(confirm("Delete period 'P" + this.Tariff.Template.Periods.length + "'?")) this.Tariff.Template.Periods.splice(-1);
+      },
+      DeleteDay: function() {
+        if(this.Tariff.Template.Days.length == 1) return;
+        if(confirm("Delete day 'D" + this.Tariff.Template.Days.length + "'?")) this.Tariff.Template.Days.splice(-1);
+      },
+      DeleteYear: function() {
+        if(Object.keys(this.Tariff.Template.Years).length == 1) return;
+        if(confirm("Delete year " + this.ActiveYear + "?")) delete this.Tariff.Template.Years[this.ActiveYear];
+        this.ActiveYear = String(Object.keys(this.Tariff.Template.Years)[0]);
       },
       AddPeriod: function() {
         this.Tariff.Template.Periods.push({ "Color":"#fffff0", DefaultPowerCost: 0.0, DefaultEnergyCost: 0.0, Script: "", Name: "Period " + (this.Tariff.Template.Periods.length + 1), Concepts: [ ]} );
         this.ActivePeriod = 'P' + this.Tariff.Template.Periods.length;
+      },
+      AddDay: function() {
+        this.Tariff.Template.Days.push({ "Color":"#fffff0", Script: "", Name: "Period " + (this.Tariff.Template.Periods.length + 1), Quarters: new Array(96).fill(0) } );
+        this.ActiveDay = 'D' + this.Tariff.Template.Days.length;
+      },
+      AddYear: function() {
+        this.Tariff.Template.Years[String(this.NewYearSelect)] = new Array(moment([this.NewYearSelect, 11, 31]).dayOfYear()).fill(0);
+        this.ActiveYear = String(this.NewYearSelect);
       },
       Save: function() {
         this.$http.post((this.Tariff.TariffID == null) ? 'addTariff' : 'setTariff', this.Tariff).then(
