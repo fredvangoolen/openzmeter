@@ -27,7 +27,6 @@ LDFLAGS += -flto -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
 EXECUTABLE_SOURCE += $(shell find Libs/muParser -name "*.cpp" ! -type d -print)
 EXECUTABLE_SOURCE += $(shell find Libs/mqtt-c -name "*.c" ! -type d -print)
-EXECUTABLE_SOURCE += $(shell find Libs/cpp-httplib -name "*.cpp" ! -type d -print)
 BUILD_DATE ?= $(shell date +%Y%m%d.%H%M)
 BUILD_NAME ?= "custom"
 CFLAGS += -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" -I Libs -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -I Libs/mqtt-c

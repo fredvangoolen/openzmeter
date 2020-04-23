@@ -58,27 +58,20 @@ class HTTPTaskQueue final : public TaskQueue {
       pthread_mutex_t       Mutex;
       pthread_cond_t        Cond;
       HTTPTaskQueue        *Parent;
-
-//    void           *pCreationParam;
-//    void           *pRunParam;
-
-
-
-
     } Worker_t;
   private :
     pthread_mutex_t   pMutex;
     pthread_cond_t    pCond;
-//    static HTTPTaskQueue    *pInstance;
-  private :
     list<Worker_t*>   pFreeWorkers;
     uint32_t          pRunningWorkers;
+    uint64_t          pLastAdjust;
   private:
     static void *Thread(void *params);
   public:
     HTTPTaskQueue();
     ~HTTPTaskQueue();
     void enqueue(std::function<void()> fn) override;
+    void queue_adjust() override;
     void shutdown() override;
     void queue_tasks();
 };
