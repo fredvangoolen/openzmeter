@@ -70,6 +70,7 @@ HTTPTaskQueue::HTTPTaskQueue() {
   pRunningWorkers = 0;
   pMutex          = PTHREAD_MUTEX_INITIALIZER;
   pCond           = PTHREAD_COND_INITIALIZER;
+  pLastAdjust     = Tools::GetTime64();
 }
 HTTPTaskQueue::~HTTPTaskQueue() {
   shutdown();
@@ -138,23 +139,26 @@ void HTTPTaskQueue::shutdown() {
   }
   pthread_mutex_unlock(&pMutex);
 }
-//void HTTPTaskQueue::AdjustWorkers() {
-//  pthread_mutex_lock(&pLocks);
-//  if(pInstance == NULL) {
-//    pthread_mutex_unlock(&pLocks);
-//    return;
-//  }
-//  uint64_t Time = Tools::GetTime64();
-//  while(pInstance->pFreeWorkers.size() > 0) {
-//    auto Tmp = pInstance->pFreeWorkers.back();
-//    if((Time - Tmp->LastTime) < 60000) break;
-//    delete Tmp->Thread;
-//    pInstance->pFreeWorkers.pop_back();
-//    free(Tmp);
-//  }
-//  LOGFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)\n", pInstance->pFreeWorkers.size(), pInstance->pUsedWorkers);
-//  pthread_mutex_unlock(&pLocks);
-//}
+void HTTPTaskQueue::queue_adjust() {
+  pthread_mutex_lock(&pMutex);
+  uint64_t Time = Tools::GetTime64();
+  if((pLastAdjust + 60000) > Time) {
+    pthread_mutex_unlock(&pMutex);
+    return;
+  }
+  while(pFreeWorkers.size() > 0) {
+    auto Tmp = pFreeWorkers.back();
+    if((Time - Tmp->LastTime) < 60000) break;
+    Tmp->Terminate = true;
+    pthread_cond_signal(&Tmp->Cond);
+    pthread_mutex_unlock(&Tmp->Mutex);
+    pthread_join(Tmp->Thread, NULL);
+    pFreeWorkers.pop_back();
+    free(Tmp);
+  }
+  pthread_mutex_unlock(&pMutex);
+  LOGFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)\n", pFreeWorkers.size(), pRunningWorkers);
+}
 //----------------------------------------------------------------------------------------------------------------------
 uint16_t       HTTPServer::pPort   = 8080;
 pthread_t      HTTPServer::pThread = 0;
