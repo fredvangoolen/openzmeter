@@ -25,7 +25,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 queue<string>    SysSupport::pSystemActions;
 pthread_mutex_t  SysSupport::pSystemActionMutex  = PTHREAD_MUTEX_INITIALIZER;
-bool             SysSupport::pTerminate          = false;
+volatile bool    SysSupport::pTerminate          = false;
 RWLocks          SysSupport::pSysStatLock        = RWLocks();
 bool             SysSupport::pBT_Enabled         = false;
 uint64_t         SysSupport::pUpTime             = 0;

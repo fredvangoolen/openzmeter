@@ -752,7 +752,6 @@ void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const Agg
 }
 void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   AnalyzerSoft *This  = (AnalyzerSoft*)creation;
-  printf("Inicio analyzer func (%d) ", This->pBlockSamples); fflush(stdout);
   Params_t     *Aggreg = (Params_t*)run;
   This->pAnalyzerLock.ReadLock();
   uint64_t Start = Tools::GetTime64();
@@ -943,18 +942,14 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
   //  SysStatus->Lock.WriteLock();
   //  SysStatus->Events = This->pAggreg200MS.Flag;
   //  SysStatus->Lock.Unlock();
-  printf("14 "); fflush(stdout);
   This->pNowDataLock.ProviderWait();
-  printf("15 "); fflush(stdout);
   LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")\n", This->Serial.c_str(), Tools::GetTime64() - Start, This->pSequence, This->pAggreg200MS.Timestamp);
   This->InitAggreg(This->pAggreg200MS, AGGREG_200MS);
   This->pBlockSamples     = 0;
   This->pBlockCyclesCount = 0;
   memset(This->pBlockCycles, 0, sizeof(pBlockCycles));
   This->pSequence++;
-printf(" 16 "); fflush(stdout);
   This->pAnalyzerLock.Unlock();
-  printf("17\n"); fflush(stdout);
 }
 void AnalyzerSoft::Events_Func(void *creation, void *run) {
   AnalyzerSoft *This = (AnalyzerSoft*)creation;

@@ -115,7 +115,7 @@ void RWLocks::Unlock() {
   }
   if(pWriters > 0) {
     pthread_cond_signal(&pWritersCondition);
-  } else if(pReaders > 0) {
+  } else {
     pthread_cond_broadcast(&pReadersCondition);
   }
   pthread_mutex_unlock(&pMutex);
@@ -139,79 +139,53 @@ ProviderLocks::~ProviderLocks() {
   pthread_mutex_unlock(&pMutex);
 }
 void ProviderLocks::ProviderWrite() {
-  printf(" P1(%u) ",pConsumers);  fflush(stdout);
   pthread_mutex_lock(&pMutex);
-  printf(" P2(%u) ",pConsumers);  fflush(stdout);
   pDataReady = true;
   pthread_cond_broadcast(&pConsumerWaitCond);
-  printf(" P3(%u) ",pConsumers);  fflush(stdout);
   pthread_mutex_unlock(&pMutex);
-  printf(" P4(%u) ",pConsumers);  fflush(stdout);
 }
 void ProviderLocks::ProviderWait() {
-  printf(" P5(%u) ",pConsumers);  fflush(stdout);
   pthread_mutex_lock(&pMutex);
-  printf(" P6(%u) ",pConsumers);  fflush(stdout);
-  while(pConsumers > 0) {
-    pthread_cond_wait(&pProducerCond, &pMutex);
-    printf(" P7(%u) ",pConsumers);  fflush(stdout);
-  }
-  printf(" P8(%u) ",pConsumers);  fflush(stdout);
+  while(pConsumers > 0) pthread_cond_wait(&pProducerCond, &pMutex);
   pDataReady = false;
   pthread_cond_broadcast(&pConsumerEnterCond);
-  printf(" P9(%u) ",pConsumers);  fflush(stdout);
   pthread_mutex_unlock(&pMutex);
-  printf(" P10(%u) ",pConsumers);  fflush(stdout);
 }
 bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
   int Error = 0;
   timespec To;
   clock_gettime(CLOCK_REALTIME, &To);
   To.tv_sec += timeoutSec;
-  printf(" C1 "); fflush(stdout);
   pthread_mutex_lock(&pMutex);
-  printf(" C2(%u) ",pConsumers);  fflush(stdout);
   while((Error == 0) && (pDataReady == true) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerEnterCond, &pMutex, &To);
   if((Error != 0) && (Error != ETIMEDOUT)) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
   } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
-    printf(" C3(%u) ",pConsumers);  fflush(stdout);
     pthread_mutex_unlock(&pMutex);
     return false;
   }
-  printf(" C4(%u) ",pConsumers);  fflush(stdout);
   pConsumers++;
-  printf(" C5(%u) ",pConsumers);  fflush(stdout);
   while((Error == 0) && (pDataReady == false) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerWaitCond, &pMutex, &To);
   if((Error != 0) && (Error != ETIMEDOUT)) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
   } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
-    printf(" C6(%u) ",pConsumers);  fflush(stdout);
     pConsumers--;
     if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
-    printf(" C7(%u) ",pConsumers);  fflush(stdout);
     pthread_mutex_unlock(&pMutex);
-    printf(" C8(%u) ",pConsumers);  fflush(stdout);
     return false;
   }
-  printf(" C9(%u) ",pConsumers);  fflush(stdout);
   pthread_mutex_unlock(&pMutex);
-  printf(" C10(%u) ",pConsumers);  fflush(stdout);
   return true;
 }
 void ProviderLocks::ConsumerEnds() {
-  printf(" C11(%u) ",pConsumers);  fflush(stdout);
   pthread_mutex_lock(&pMutex);
   pConsumers--;
-  printf(" C12(%u)",pConsumers);
   if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
-  printf(" C11(%u) ",pConsumers);  fflush(stdout);
   pthread_mutex_unlock(&pMutex);
-  printf(" C13(%u) ",pConsumers);  fflush(stdout);
 }
 //----------------------------------------------------------------------------------------------------------------------
 int             ConfigManager::pFile   = -1;

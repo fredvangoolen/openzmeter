@@ -29,7 +29,7 @@ class SysSupport final {
     static queue<string>      pSystemActions;
     static pthread_mutex_t    pSystemActionMutex;
   private :  //System status variables
-    static bool     pTerminate;
+    volatile static bool     pTerminate;
     static RWLocks  pSysStatLock;
     static bool     pBT_Enabled;        //BT network enabled/disabled
     static uint64_t pUpTime;            //Uptime in seconds

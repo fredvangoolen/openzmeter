@@ -24,7 +24,7 @@ class ESIOS final {
     static uint64_t            pSyncDate;
     static pthread_t           pThread;
     static pthread_mutex_t     pMutex;
-    static bool                pTerminate;
+    volatile static bool       pTerminate;
   private :
     static void     GetESIOSCallback(const json &params, Response &response);
     static void     SetESIOSCallback(const json &params, Response &response);

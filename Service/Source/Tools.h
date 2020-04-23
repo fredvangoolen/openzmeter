@@ -27,7 +27,7 @@ class Worker final {
   private :
     void           *pCreationParam;
     void           *pRunParam;
-    bool            pWorking;
+    volatile bool   pWorking;
     volatile bool   pTerminate;
     pthread_t       pThread;
     pthread_mutex_t pMutex;
@@ -46,12 +46,12 @@ class Worker final {
 class RWLocks final {
   //Multiple read access allowed, exclusive access for writing
   private :
-    pthread_mutex_t  pMutex;
-    pthread_cond_t   pReadersCondition;
-    pthread_cond_t   pWritersCondition;
-    uint32_t         pReaders;
-    uint32_t         pWriters;
-    bool             pWriter;
+    pthread_mutex_t   pMutex;
+    pthread_cond_t    pReadersCondition;
+    pthread_cond_t    pWritersCondition;
+    volatile uint32_t pReaders;
+    volatile uint32_t pWriters;
+    bool              pWriter;
   public :
     RWLocks();
     ~RWLocks();
@@ -64,13 +64,13 @@ class RWLocks final {
 class ProviderLocks {
   //Provider wait until all consumers ends, consumers wait until provider write
   private :
-    volatile bool    pTerminate;
-    bool             pDataReady;
-    uint32_t         pConsumers;
-    pthread_mutex_t  pMutex;
-    pthread_cond_t   pConsumerEnterCond;
-    pthread_cond_t   pConsumerWaitCond;
-    pthread_cond_t   pProducerCond;
+    volatile bool     pTerminate;
+    volatile bool     pDataReady;
+    volatile uint32_t pConsumers;
+    pthread_mutex_t   pMutex;
+    pthread_cond_t    pConsumerEnterCond;
+    pthread_cond_t    pConsumerWaitCond;
+    pthread_cond_t    pProducerCond;
   public :
     ProviderLocks();
     ~ProviderLocks();
