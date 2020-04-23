@@ -23,7 +23,7 @@ uint64_t                  ESIOS::pSyncDate    = 1262304000000;
 string                    ESIOS::pToken       = "";
 pthread_t                 ESIOS::pThread      = 0;
 pthread_mutex_t           ESIOS::pMutex       = PTHREAD_MUTEX_INITIALIZER;
-bool                      ESIOS::pTerminate   = false;
+volatile bool             ESIOS::pTerminate   = false;
 // ---------------------------------------------------------------------------------------------------------------------
 ESIOS::ESIOS() {
   HTTPServer::RegisterCallback("getESIOS", GetESIOSCallback);
@@ -93,7 +93,7 @@ void *ESIOS::Thread_Func(void *params) {
     string   Token = This->pToken;
     uint64_t To = pSyncDate + 863999999;
     pthread_mutex_unlock(&pMutex);
-    printf("Pidiendo datos (%llu)\n", To);
+    LOGFile::Debug("ESIOS request start (Up to %" PRIu64 ")\n", To);
     if(FetchIndicator(&Client, Token, "773", "ESIOS_773_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
     if(FetchIndicator(&Client, Token, "792", "ESIOS_792_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
     if(FetchIndicator(&Client, Token, "793", "ESIOS_793_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
@@ -107,6 +107,7 @@ void *ESIOS::Thread_Func(void *params) {
     if(FetchIndicator(&Client, Token, "1277", "ESIOS_1277_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
     if(FetchIndicator(&Client, Token, "1286", "ESIOS_1286_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
     if(FetchIndicator(&Client, Token, "1368", "ESIOS_1368_Precio_Hora_Peninsula", "hour", "8741", To) == false) { usleep(1000000); continue; }
+    LOGFile::Debug("ESIOS request finished\n");
     pthread_mutex_lock(&pMutex);
     pSyncDate = pSyncDate + 864000000;
     pthread_mutex_unlock(&pMutex);
@@ -127,7 +128,6 @@ bool ESIOS::FetchIndicator(SSLClient *client, const string &token, const string 
   Time =  to / 1000;
   strftime(DateBuffTo, sizeof(DateBuffTo), "%Y-%m-%dT%H:%M:%SZ", gmtime_r(&Time, &Timestamp));
   snprintf(URL, sizeof(URL), "/indicators/%s?locale=es&time_trunc=%s&geo_ids=%s&start_date=%s&end_date=%s", indicator.c_str(), time_trunc.c_str(), geo_id.c_str(), DateBuffFrom, DateBuffTo);
-  printf("%s\n", URL);
   auto Response = client->Get(URL, Header);
   if((Response != nullptr) && (Response->status == 200)) {
     json Params = json::parse(Response->body, NULL, false);

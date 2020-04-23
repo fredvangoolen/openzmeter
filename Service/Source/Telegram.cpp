@@ -22,7 +22,7 @@ json                      Telegram::pStatus      = json::object();
 string                    Telegram::pToken       = "";
 pthread_t                 Telegram::pThread      = 0;
 pthread_mutex_t           Telegram::pMutex       = PTHREAD_MUTEX_INITIALIZER;
-bool                      Telegram::pTerminate   = false;
+volatile bool             Telegram::pTerminate   = false;
 uint32_t                  Telegram::pUsedWorkers = 0;
 Headers                   Telegram::pHeaders     = {{"Accept", "application/json"}, {"Host", "api.telegram.org"}, {"Accept-Encoding", "gzip, deflate"}, {"Connection", "keep-alive"}};
 list<Telegram::Worker_t*> Telegram::pFreeWorkers;

@@ -88,7 +88,7 @@ class MODBus {
 class ModbusTCP {
 private :
   pthread_t   pThread;
-  bool        pTerminate;
+  volatile bool        pTerminate;
 private :
   void *Thread(void *args);
   public:

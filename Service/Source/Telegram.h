@@ -38,7 +38,7 @@ class Telegram final {
     static string              pToken;
     static pthread_t           pThread;
     static pthread_mutex_t     pMutex;
-    static bool                pTerminate;
+    volatile static bool       pTerminate;
     static list<Worker_t*>     pFreeWorkers;
     static uint32_t            pUsedWorkers;
     static Headers             pHeaders;
