@@ -25,10 +25,7 @@ CREATE TABLE IF NOT EXISTS tariffs(
   tariff       serial            NOT NULL PRIMARY KEY,
   name         character varying NOT NULL,
   username     varchar           NOT NULL REFERENCES users(username) ON UPDATE CASCADE ON DELETE CASCADE,
-  time_zone    varchar           NOT NULL,
-  template     jsonb             NOT NULL,
-  startdate    bigint            NOT NULL,
-  enddate      bigint            NOT NULL
+  template     jsonb             NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS permissions(

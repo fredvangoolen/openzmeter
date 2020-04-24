@@ -1,6 +1,6 @@
 <template>
   <div>
-    <dlg :loading="ShowSpinner">
+    <dlg :loading="ShowSpinner" v-if="View!='Expresion'">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Tariffs template</h4></div>
         <div class="pull-right btn-group">
@@ -37,8 +37,8 @@
             <div class="panel-other" v-if="ActivePeriod=='P'+(idx+1)">
               <div class="panel-heading">
                 <div class="pull-right btn-group">
-                  <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/math_functions.png')"></button>
-                  <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/plus.png')"></button>
+                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit period concept calculator"><img :src="require('Imgs/math_functions.png')" @click="View='Expresion'"></button>
+                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new period concept" @click="period.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
                 </div>
                 <div class="clearfix"></div>
               </div>
@@ -132,18 +132,18 @@
       </div>
       <div class="row" v-if="View=='Calendar'">
         <div class="col-xs-12">
-          <table>
+          <table style="width: 100%">
             <tr><td>
-              <detail-tabs key="Year_Tabs" :tabs="Object.keys(Tariff.Template.Years).sort()" v-model="ActiveYear"></detail-tabs>
+              <detail-tabs key="Year_Tabs" :tabs="Tariff.Template.Years.map((year) => { return String(year.Year); }).sort()" v-model="ActiveYear"></detail-tabs>
             </td>
             <td style="width:130px; text-align: right;">
               <div class="btn-group">
-                <button class="btn btn-default btn-xs" type="button" :disabled="Object.keys(Tariff.Template.Years).length==1" @click="DeleteYear" data-toggle="tooltip" title="Delete this year"><img :src="require('Imgs/cross.png')"></button>
+                <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Years.length==1" @click="DeleteYear" data-toggle="tooltip" title="Delete this year"><img :src="require('Imgs/cross.png')"></button>
               </div>
               <div class="btn-group">
                 <input-spin :max="2100" :min="2000" :decimals="0" :increment="1" v-model="NewYearSelect" style="width:90px">
                   <template v-slot:buttons>
-                    <button class="btn btn-default btn-xs" type="button" :disabled="Object.keys(Tariff.Template.Years).includes(String(NewYearSelect))" @click="AddYear" data-toggle="tooltip" title="Add new year"><img :src="require('Imgs/plus.png')"></button>
+                    <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Years.map((year) => { return year.Year; }).includes(NewYearSelect)" @click="AddYear" data-toggle="tooltip" title="Add new year"><img :src="require('Imgs/plus.png')"></button>
                   </template>
                 </input-spin>
               </div>
@@ -151,15 +151,29 @@
             </tr>
           </table>
           <div v-for="(year, idx) in Tariff.Template.Years" :key="idx">
-            <div class="panel-other" v-if="ActiveYear==idx">
+            <div class="panel-other" v-if="parseInt(ActiveYear)==year.Year">
               <div class="panel-heading">
                 <toolbar-color-items v-model="ActiveDayIdx" prefix="D" :colors="Tariff.Template.Days.map((val) => { return val.Color; })" :names="Tariff.Template.Days.map((val, i) => { return 'D' + (i + 1) + ' - ' + val.Name; })"></toolbar-color-items>
               </div>
               <div class="day-stripes-table">
-                <year-config v-model="Tariff.Template.Years[idx]" :selected="ActiveDayIdx" :year="parseInt(idx)" :colors="Tariff.Template.Days.map((val) => { return val.Color; })" :names="Tariff.Template.Days.map((val, i) => { return 'D' + (i + 1) + ' - ' + val.Name; })"></year-config>
+                <year-config v-model="Tariff.Template.Years[idx].Days" :selected="ActiveDayIdx" :year="year.Year" :colors="Tariff.Template.Days.map((val) => { return val.Color; })" :names="Tariff.Template.Days.map((val, i) => { return 'D' + (i + 1) + ' - ' + val.Name; })"></year-config>
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </dlg>
+    <dlg v-if="View=='Expresion'">
+      <template v-slot:header>
+        <div class="pull-left"><h4 class="modal-title">Period {{ ActivePeriod }} script</h4></div>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+        </div>
+      </template>
+      <div class="row">
+        <div class="col-xs-12">
+          <label class="control-label">Expresion</label>
+          <input-math v-model="Tariff.Template.Periods[parseInt(ActivePeriod.substr(1)) - 1].Script" :vars="Vars" @evaluate="Evaluate"></input-math>
         </div>
       </div>
     </dlg>
@@ -175,12 +189,7 @@
   export default {
     props: { tariff: Object },
     data: function() {
-      return {
-        ActivePeriod: 'P1', ActiveDay: 'D1', ActivePeriodIdx: 0, ActiveDayIdx: 0, ActiveYear: '2020', NewYearSelect: 2000,
-
-
-
-        Tariff: null, View: 'Main', TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false };
+      return { View: 'Main', ActivePeriod: 'P1', ActivePeriodIdx: 0, ActiveDay: 'D1', ActiveDayIdx: 0, ActiveYear: '2020', NewYearSelect: 2000, Tariff: null, ShowSpinner: false };
     },
     watch: {
 
@@ -266,7 +275,7 @@
       Save: function() {
         this.$http.post((this.Tariff.TariffID == null) ? 'addTariff' : 'setTariff', this.Tariff).then(
           (result) => {
-            this.$emit('close');
+//            this.$emit('close');
           },
           (fail) => {
             this.Error = 'Failed to save tariff!';

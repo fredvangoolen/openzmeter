@@ -87,12 +87,6 @@ ifeq ($(OS_TARGET), DEBIAN)
 	CFLAGS += -DDEBIAN
 	LDFLAGS += -ldbus-1
 endif
-ifeq ($(TARIFF_ESP), true)
-	EXECUTABLE_SOURCE += Source/Tariffs/ESP/TariffPlugin_ESP.cpp
-endif
-ifeq ($(TARIFF_NONE), true)
-	EXECUTABLE_SOURCE += Source/Tariffs/NONE/TariffPlugin_NONE.cpp
-endif
 
 $(WEB_TARGET): $(WEB_SOURCE)
 	@echo "Building WEB interface"
