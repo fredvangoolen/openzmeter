@@ -266,10 +266,10 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
       if((configRate.contains("Name") == false) || (configRate["Name"].is_string() == false)) continue;
       if((configRate.contains("Config") == false) || (configRate["Config"].is_object() == false)) continue;
       if((configRate.contains("Template") == false) || (configRate["Template"].is_object() == false)) continue;
-      Tariff T(configRate["StartDate"], configRate["EndDate"], ConfigOUT["TimeZone"]);
-      if(T.SetTemplate(configRate["Template"]) == false) continue;
-      if(T.SetConfig(configRate["Config"]) == false) continue;
-      ConfigOUT["Rates"].push_back(configRate);
+      //Tariff T(configRate["StartDate"], configRate["EndDate"], ConfigOUT["TimeZone"]);
+      //if(T.SetTemplate(configRate["Template"]) == false) continue;
+      //if(T.SetConfig(configRate["Config"]) == false) continue;
+      //ConfigOUT["Rates"].push_back(configRate);
     }
   }
   return ConfigOUT;

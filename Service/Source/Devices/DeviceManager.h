@@ -52,6 +52,13 @@ class DeviceManager final {
     static void AddPermissionCallback(const json &params, Response &response);
     static void SetPermissionCallback(const json &params, Response &response);
     static void DelPermissionCallback(const json &params, Response &response);
+    static void GetTariffsCallback(const json &params, Response &response);
+    static void GetTariffCallback(const json &params, Response &response);
+    static void SetTariffCallback(const json &params, Response &response);
+    static void DelTariffCallback(const json &params, Response &response);
+    static void AddTariffCallback(const json &params, Response &response);
+    static void TestTariffCallback(const json &params, Response &response);
+    static void TestRateCallback(const json &params, Response &response);
   public :
     static void AddDriver(vector<Device*> (*func)());
   public :
