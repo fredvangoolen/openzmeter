@@ -405,12 +405,13 @@ uint64_t Tools::GetTime64() {
     return 0;
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_nsec / 1000000;
-//  struct timeval Time;
-//  if(gettimeofday(&Time, NULL) != 0) {
-//    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-//    return 0;
-//  }
-//  return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
+}
+string Tools::StrTrim(const string &str) {
+  string chars = "\t\n\v\f\r ";
+  size_t first = str.find_first_not_of(chars);
+  if(first == std::string::npos) return "";
+  size_t last = str.find_last_not_of(chars);
+  return str.substr(first, (last-first+1));
 }
 void Tools::RunDaemon() {
   LOGFile::Info("Move to background task\n");

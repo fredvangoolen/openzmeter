@@ -29,8 +29,8 @@
       <div class="row" v-if="View=='Main'">
         <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error==null">
           {{ Rate.Template.Description }}<br>
-          <span style="font-size: 80%">Tariff contains {{ Rate.Template.Seasons.length }}  seasons, a total of {{ Rate.Template.Periods.length }}  day periods and {{ Rate.Template.Holidays.length }} holidays<br>
-          Rate contains {{ Rate.Config.Taxs.length }}  concepts and {{ Rate.Config.Billing.length + 1 }} bills</span>
+          <!--span style="font-size: 80%">Tariff contains {{ Rate.Template.Seasons.length }}  seasons, a total of {{ Rate.Template.Periods.length }}  day periods and {{ Rate.Template.Holidays.length }} holidays<br>
+          Rate contains {{ Rate.Config.Taxs.length }}  concepts and {{ Rate.Config.Billing.length + 1 }} bills</span-->
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">From</label>
@@ -233,8 +233,8 @@
     computed: {
       Error: function() {
         if(this.Rate.Template == null) return 'Select a base tariff from table before continue';
-        if(this.Rate.StartDate < this.Rate.Template.Seasons[0].StartDate) return 'Date ranges is outside selected tariff ranges';
-        if(this.Rate.EndDate > this.Rate.Template.Seasons.slice(-1)[0].EndDate) return 'Date ranges is outside selected tariff ranges';
+//        if(this.Rate.StartDate < this.Rate.Template.Seasons[0].StartDate) return 'Date ranges is outside selected tariff ranges';
+//        if(this.Rate.EndDate > this.Rate.Template.Seasons.slice(-1)[0].EndDate) return 'Date ranges is outside selected tariff ranges';
         return null;
       },
     },

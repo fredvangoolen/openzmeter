@@ -7,7 +7,7 @@
     </tr>
     <tr>
       <td class="first-row">
-        <div class="btn-group">
+        <div class="btn-group" v-if="this.$listeners.evaluate">
           <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Reload variables and evaluate" @click="$emit('evaluate')"><img :src="require('Imgs/evaluate_formula.png')"></button>
         </div>
         <option-adder :icon="require('Imgs/math_functions.png')" :options="Functions" @add="Insert"></option-adder>
@@ -76,10 +76,10 @@
         for(var n in this.vars) Vars.push(this.vars[n].Name);
         $('.hl_textarea').highlightWithinTextarea({
           highlight: [
-            { highlight: Vars, className: 'variable' },
+            { highlight: RegExp('\\b' + Vars.join('|') + '\\b', 'g'), className: 'variable' },
             { highlight: ['=', '&&', '||', '<=', '>=', '!=', '==', '>', '<', '+', '-', '*', '/', '^', '?', ':'], className: 'operator' },
-            { highlight: ['(', ')', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh', 'log2', 'log10', 'log', 'ln', 'exp', 'sqrt', 'sign', 'rint', 'abs', 'min', 'max', 'sum', 'avg'], className: 'function' },
-            { highlight: RegExp('(?<!log)([0-9]*[.])?[0-9]+', 'g'), className: 'numbers' }
+            { highlight: RegExp('\\(|\\)|\\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|asinh|acosh|atanh|log2|log10|log|ln|exp|sqrt|sign|rint|abs|min|max|sum|avg)\\b', 'g'), className: 'function' },
+            { highlight: RegExp('\\b([0-9]*[.])?[0-9]+\\b', 'g'), className: 'numbers' }
           ]
         });
         $('.hl_textarea').focus();

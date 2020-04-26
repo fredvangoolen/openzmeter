@@ -57,10 +57,8 @@
           { name: '__slot:actions', title: '' }
         ],
         ColumnsTariffs: [
-          { name: 'TimeZone', title: 'Time zone' },
+          { name: 'UserName', title: 'Owner' },
           { name: 'Name', title: 'Name' },
-          { name: 'StartDate', title: 'Start date' },
-          { name: 'EndDate', title: 'End date' },
           { name: '__slot:actions', title: '' }
         ]
       };
@@ -87,7 +85,7 @@
               this.Tariffs[n].EndDate   = moment.tz(this.Tariffs[n].EndDate,   this.Tariffs[n].TimeZone).format('DD/MM/YYYY');
             }
           },
-          (fail) => {}
+          (fail) => { }
         );
       },
       Add: function() {
@@ -98,24 +96,7 @@
         this.ShowSpinner = true;
         this.$http.post('getTariff', { TariffID: tariff.TariffID }).then(
           (result) => {
-            this.Tariff = {"TariffID":1,"Name":"No name","UserName":"admin","StartYear": 2019,"EndYear": 2020,
-                           "Template":{
-                             "Description": "asdasdasdasd",
-                             "Periods":[
-                               {"Color":"#ff7f50", DefaultPowerCost: 0.15, DefaultEnergyCost: 0.15, Script: "", Name:"Punta", Concepts: [
-                                 {"Description":"Period that excepts contracted power", "Variable": "ExcessPeriodCount", "Type": "INFO"},
-                                 {"Description":"Total cost of power excepts", "Variable": "ExcessPeriodTotal", "Type": "POWER"}
-                                 ]},
-                               {"Color":"#55bfb8",DefaultPowerCost: 0.15, DefaultEnergyCost: 0.05, Script: "", Name: "Valle", Concepts: [
-                                 {"Description":"Period that excepts contracted power", "Variable": "ExcessPeriodCount", "Type": "INFO"},
-                                 {"Description":"Total cost of power excepts", "Variable": "ExcessPeriodTotal", "Type": "POWER"}
-                                 ]}],
-                             "Days": [
-                               { Name: "Invierno", Color: "#55bfb8", Quarters: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1] },
-                               { Name: "Verano", Color: "#ff7f50", Quarters: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1] }],
-                             "Years": [{Year: 2019, Days: new Array(365).fill(1)}, {Year: 2020, Days: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}]
-                            }
-                          };
+            this.Tariff = result.body;
             this.ShowDialog = true;
             this.ShowSpinner = false;
           },
@@ -157,17 +138,10 @@
     .table >>> td:nth-child(1) {
       text-align: center;
     }
-    .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
-      width: 150px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(5) {
+    .table >>> th:nth-child(3) {
       width: 100px;
     }
-    .table >>> td:nth-child(5) {
+    .table >>> td:nth-child(3) {
       text-align: right;
     }
     .table.modules >>> th:nth-child(3) {

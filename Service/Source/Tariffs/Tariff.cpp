@@ -23,6 +23,21 @@ Tariff::Tariff(const json &t) {
     return;
   }
   pDescription = t["Description"];
+  if((t.contains("Currency") == false) || (t["Currency"].is_string() == false)) {
+    pParseError = "'Currency' param is required";
+    return;
+  }
+  pCurrency = t["Currency"];
+  if((t.contains("PowerUnits") == false) || (t["PowerUnits"].is_string() == false)) {
+    pParseError = "'PowerUnits' param is required";
+    return;
+  }
+  pPowerUnits = t["PowerUnits"];
+  if((t.contains("EnergyUnits") == false) || (t["EnergyUnits"].is_string() == false)) {
+    pParseError = "'EnergyUnits' param is required";
+    return;
+  }
+  pEnergyUnits = t["EnergyUnits"];
   if((t.contains("Periods") == false) || (t["Periods"].is_array() == false) || (t["Periods"].size() ==0)) {
     pParseError = "'Periods' param is required";
     return;
@@ -49,50 +64,51 @@ Tariff::Tariff(const json &t) {
       return;
     }
     pPeriods[P].Name = t["Periods"][P]["Name"];
-    if((t["Periods"][P].contains("Script") == false) || (t["Periods"][P]["Script"].is_string() == false)) {
-      pParseError = "'Periods/P" + to_string(P + 1) + "/Script' param is required";
+  }
+  if((t.contains("Script") == false) || (t["Script"].is_string() == false)) {
+    pParseError = "'Script' param is required";
+    return;
+  }
+  pScript.SetVarFactory(VariableFactory, &pVariables);
+  try {
+    pScript.DefineVar("Contracted_Power", &pEvalParams.Contracted_Power);
+    pScript.DefineVar("Power_Cost",       &pEvalParams.Power_Cost);
+    pScript.DefineVar("Energy_Cost",      &pEvalParams.Energy_Cost);
+    pScript.DefineVar("Active_Power",     &pEvalParams.Active_Power);
+    pScript.DefineVar("Active_Energy",    &pEvalParams.Active_Energy);
+    pScript.DefineVar("Reactive_Power",   &pEvalParams.Reactive_Power);
+    pScript.DefineVar("Reactive_Energy",  &pEvalParams.Reactive_Energy);
+    ///TODO METER VARIABLES DE LOS PERIODOS
+    pScript.SetExpr(t["Script"]);
+    pScript.Eval();
+  } catch(Parser::exception_type &e) {
+    pParseError = "'Script' parse failed (" + e.GetMsg() + ")";
+    return;
+  }
+  if((t.contains("Concepts") == false) || (t["Concepts"].is_array() == false)) {
+    pParseError = "'Concepts' param is required";
+    return;
+  }
+  pConcepts.resize(t["Concepts"].size());
+  for(uint8_t C = 0; C < t["Concepts"].size(); C++) {
+    if((t["Concepts"][C].contains("Description") == false) || (t["Concepts"][C]["Description"].is_string() == false)) {
+      pParseError = "'Concepts/" + to_string(C) + "/Description' param is required";
       return;
     }
-    pPeriods[P].Script.SetVarFactory(VariableFactory, &pPeriods[P].Variables);
-    try {
-      pPeriods[P].Script.DefineVar("Contracted_Power", &pPeriodEvalParams.Contracted_Power);
-      pPeriods[P].Script.DefineVar("Power_Cost",       &pPeriodEvalParams.Power_Cost);
-      pPeriods[P].Script.DefineVar("Energy_Cost",      &pPeriodEvalParams.Energy_Cost);
-      pPeriods[P].Script.DefineVar("Active_Power",     &pPeriodEvalParams.Active_Power);
-      pPeriods[P].Script.DefineVar("Active_Energy",    &pPeriodEvalParams.Active_Energy);
-      pPeriods[P].Script.DefineVar("Reactive_Power",   &pPeriodEvalParams.Reactive_Power);
-      pPeriods[P].Script.DefineVar("Reactive_Energy",  &pPeriodEvalParams.Reactive_Energy);
-      pPeriods[P].Script.SetExpr(t["Periods"][P]["Script"]);
-      pPeriods[P].Script.Eval();
-    } catch(Parser::exception_type &e) {
-      pParseError = "'Periods/P" + to_string(P + 1) + "/Script' parse failed (" + e.GetMsg() + ")";
+    pConcepts[C].Description = t["Concepts"][C]["Description"];
+    if((t["Concepts"][C].contains("Variable") == false) || (t["Concepts"][C]["Variable"].is_string() == false)) {
+      pParseError = "'Concepts/" + to_string(C) + "/Variable' param is required";
       return;
     }
-    if((t["Periods"][P].contains("Concepts") == false) || (t["Periods"][P]["Concepts"].is_array() == false)) {
-      pParseError = "'Periods/P" + to_string(P + 1) + "/Concepts' param is required";
+    pConcepts[C].Variable = t["Concepts"][C]["Variable"];
+    if((t["Concepts"][C].contains("Type") == false) || (t["Concepts"][C]["Type"].is_string() == false) || ((t["Concepts"][C]["Type"] != "INFO") && (t["Concepts"][C]["Type"] != "INFO_POWER") && (t["Concepts"][C]["Type"] != "INFO_ENERGY") && (t["Concepts"][C]["Type"] != "COST_POWER") && (t["Concepts"][C]["Type"] != "COST_ENERGY") && (t["Concepts"][C]["Type"] != "COST"))) {
+      pParseError = "'Concepts/" + to_string(C) + "/Type' param is required";
       return;
     }
-    pPeriods[P].Concepts.resize(t["Periods"][P]["Concepts"].size());
-    for(uint8_t C = 0; C < t["Periods"][P]["Concepts"].size(); C++) {
-      if((t["Periods"][P]["Concepts"][C].contains("Description") == false) || (t["Periods"][P]["Concepts"][C]["Description"].is_string() == false)) {
-        pParseError = "'Periods/P" + to_string(P + 1) + "/Concepts/" + to_string(C) + "/Description' param is required";
-        return;
-      }
-      pPeriods[P].Concepts[C].Description = t["Periods"][P]["Concepts"][C]["Description"];
-      if((t["Periods"][P]["Concepts"][C].contains("Variable") == false) || (t["Periods"][P]["Concepts"][C]["Variable"].is_string() == false)) {
-        pParseError = "'Periods/P" + to_string(P + 1) + "/Concepts/" + to_string(C) + "/Variable' param is required";
-        return;
-      }
-      pPeriods[P].Concepts[C].Variable = t["Periods"][P]["Concepts"][C]["Variable"];
-      if((t["Periods"][P]["Concepts"][C].contains("Type") == false) || (t["Periods"][P]["Concepts"][C]["Type"].is_string() == false) || ((t["Periods"][P]["Concepts"][C]["Type"] != "INFO") && (t["Periods"][P]["Concepts"][C]["Type"] != "POWER") && (t["Periods"][P]["Concepts"][C]["Type"] != "ENERGY") && (t["Periods"][P]["Concepts"][C]["Type"] != "GENERAL"))) {
-        pParseError = "'Periods/P" + to_string(P + 1) + "/Concepts/" + to_string(C) + "/Type' param is required";
-        return;
-      }
-      pPeriods[P].Concepts[C].Type = (t["Periods"][P]["Concepts"][C]["Type"] == "INFO") ? CONCEPT_INFO : (t["Periods"][P]["Concepts"][C]["Type"] == "POWER") ? CONCEPT_POWER : (t["Periods"][P]["Concepts"][C]["Type"] == "ENERGY") ? CONCEPT_ENERGY : CONCEPT_GENERAL;
-      if(pPeriods[P].Variables.find(pPeriods[P].Concepts[C].Variable) == pPeriods[P].Variables.end()) {
-        pParseError = "'" + pPeriods[P].Concepts[C].Variable + "' is not defined in 'Periods/P" + to_string(P + 1) + "/Script'";
-        return;
-      }
+    pConcepts[C].Type = (t["Concepts"][C]["Type"] == "INFO") ? CONCEPT_INFO : (t["Concepts"][C]["Type"] == "INFO_POWER") ? CONCEPT_INFO_POWER : (t["Concepts"][C]["Type"] == "INFO_ENERGY") ? CONCEPT_INFO_ENERGY : (t["Concepts"][C]["Type"] == "COST_POWER") ? CONCEPT_COST_POWER : (t["Concepts"][C]["Type"] == "COST_ENERGY") ? CONCEPT_COST_ENERGY : CONCEPT_COST;
+    if(pVariables.find(pConcepts[C].Variable) == pVariables.end()) {
+      pParseError = "'" + pConcepts[C].Variable + "' is not defined in 'Script'";
+      return;
     }
   }
   if((t.contains("Days") == false) || (t["Days"].is_array() == false) || (t["Days"].size() == 0)) {
@@ -123,7 +139,6 @@ Tariff::Tariff(const json &t) {
       pDays[D].Quarters[Q] = t["Days"][D]["Quarters"][Q];
     }
   }
-  printf("Dias leidos\n");
   if((t.contains("Years") == false) || (t["Years"].is_array() == false) || (t["Years"].size() == 0)) {
     pParseError = "'Years' param is required";
     return;
@@ -140,7 +155,7 @@ Tariff::Tariff(const json &t) {
       pParseError = "'Years/" + to_string(Y) + "/Days' param is required";
       return;
     }
-    for(uint8_t D = 0; D < YearDays; D++) {
+    for(uint16_t D = 0; D < YearDays; D++) {
       if((t["Years"][Y]["Days"][D].is_number_unsigned() == false) || (t["Years"][Y]["Days"][D] >= pDays.size())) {
         pParseError = "'Years/" + to_string(Y) + "/Days/" + to_string(D) + "' param is required";
         return;
@@ -148,7 +163,6 @@ Tariff::Tariff(const json &t) {
       pYears[Year][D] = t["Years"][Y]["Days"][D];
     }
   }
-
 }
 Tariff::~Tariff() {
 //  for(uint32_t n = 0; n < pPeriods.size(); n++) {
@@ -162,6 +176,59 @@ string Tariff::ParseError() {
 bool Tariff::IsValid() {
   return pParseError.empty();
 }
+json Tariff::GetTemplate() {
+  json T;
+  T["Description"] = pDescription;
+  T["Periods"] = json::array();
+  T["EnergyUnits"] = pEnergyUnits;
+  T["PowerUnits"] = pPowerUnits;
+  T["Currency"] = pCurrency;
+  T["Script"] = Tools::StrTrim(pScript.GetExpr());
+  for(uint8_t P = 0; P < pPeriods.size(); P++) {
+    T["Periods"].push_back(json::object());
+    T["Periods"][P]["Color"] = pPeriods[P].Color;
+    T["Periods"][P]["DefaultPowerCost"] = pPeriods[P].DefaultPowerCost;
+    T["Periods"][P]["DefaultEnergyCost"] = pPeriods[P].DefaultEnergyCost;
+    T["Periods"][P]["Name"] = pPeriods[P].Name;
+  }
+  T["Concepts"] = json::array();
+  for(uint8_t C = 0; C < pConcepts.size(); C++) {
+    T["Concepts"].push_back(json::object());
+    T["Concepts"][C]["Description"] = pConcepts[C].Description;
+    T["Concepts"][C]["Variable"] = pConcepts[C].Variable;
+    T["Concepts"][C]["Type"] = (pConcepts[C].Type == CONCEPT_INFO) ? "INFO" : (pConcepts[C].Type == CONCEPT_INFO_POWER) ? "INFO_POWER" : (pConcepts[C].Type == CONCEPT_INFO_ENERGY) ? "INFO_ENERGY" : (pConcepts[C].Type == CONCEPT_COST_POWER) ? "COST_POWER" : (pConcepts[C].Type == CONCEPT_COST_ENERGY) ? "COST_ENERGY" : "COST";
+  }
+  T["Days"] = json::array();
+  for(uint8_t D = 0; D < pDays.size(); D++) {
+    T["Days"].push_back(json::object());
+    T["Days"][D]["Color"] = pDays[D].Color;
+    T["Days"][D]["Name"] = pDays[D].Name;
+    T["Days"][D]["Quarters"] = json::array();
+    for(uint8_t Q = 0; Q < 96; Q++) T["Days"][D]["Quarters"].push_back(pDays[D].Quarters[Q]);
+  }
+  T["Years"] = json::array();
+  for(auto Y : pYears) {
+    T["Years"].push_back(json::object());
+    T["Years"].back()["Year"] = Y.first;
+    T["Years"].back()["Days"] = Y.second;
+  }
+  return T;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 float *Tariff::VariableFactory(const char_type *name, void *params) {
   map<string, float> *Tmp = (map<string, float>*)params;
   Tmp->emplace(name, 0.0);
@@ -227,41 +294,6 @@ uint8_t Tariff::FindPeriod(uint64_t timestamp) {
 //  }
   return Period;
 }
-//json Tariff::GetTemplate() {
-//  json T;
-//  T["Periods"] = json::array();
-//  for(uint32_t n = 0; n < pPeriods.size(); n++) {
-//    json Period;
-//    Period["PowerMode"] = pPeriods[n].PowerModule->Name();
-//    Period["ReactiveMode"] = pPeriods[n].EnergyModule->Name();
-//    Period["Color"] = pPeriods[n].Color;
-//    T["Periods"].push_back(Period);
-//  }
-//  T["Seasons"] = json::array();
-//  for(uint32_t n = 0; n < pSeasons.size(); n++) {
-//    json Season;
-//    Season["Name"] = pSeasons[n].Name;
-//    Season["StartDate"] = pSeasons[n].StartDate;
-//    Season["EndDate"] = pSeasons[n].EndDate;
-//    Season["DayPeriods"] = json::array();
-//    for(uint8_t p = 0; p < 24; p++) Season["DayPeriods"].push_back(pSeasons[n].DayPeriods[p]);
-//    T["Seasons"].push_back(Season);
-//  }
-//  T["Holidays"] = json::array();
-//  for(uint32_t n = 0; n < pHolidays.size(); n++) {
-//    json Holiday;
-//    Holiday["Name"] = pHolidays[n].Name;
-//    Holiday["StartDate"] = pHolidays[n].StartDate;
-//    Holiday["EndDate"] = pHolidays[n].EndDate;
-//    T["Holidays"].push_back(Holiday);
-//  }
-//  T["Description"] = pDescription;
-//  T["HolidayPeriod"] = nullptr;
-//  if(pHolidayPeriod != UINT8_MAX) T["HolidayPeriod"] = pHolidayPeriod;
-//  T["WeekendPeriod"] = nullptr;
-//  if(pWeekendPeriod != UINT8_MAX) T["WeekendPeriod"] = pWeekendPeriod;
-//  return T;
-//}
 //string Tariff::SetRate(const json &t) {
 //  if(pValidTimeZone == false) return false;
 //  if(!t["Taxs"].is_array()) return false;
