@@ -24,34 +24,9 @@
     data: function() {
       return { };
     },
-    created: function() {
-//      this.Value = this.value;
-    },
-    watch: {
-//      value: function(val) {
-
-//      }
-    },
     methods: {
-//      SetValue: function(val) {
-//        this.Value = parseFloat(val);
-//        if(this.Value > this.max) this.Value = this.max;
-//        this.$emit('change', this.Value);
-//      },
-//      Increment: function(evt) {
-//        $(evt.target).blur();
-//        this.Value = parseFloat(this.Value) + this.increment;
-//        if(this.Value > this.max) this.Value = this.max;
-//        this.$emit('change', this.Value);
-//      },
-//      Decrement: function(evt) {
-//        $(evt.target).blur();
-//        this.Value = parseFloat(this.Value) - this.increment;
-//        if(this.Value < this.min) this.Value = this.min;
-//        this.$emit('change', this.Value);
-//      },
       Change: function(val) {
-        var Value = parseFloat(val);
+        var Value = parseFloat(eval(val));
         if(isNaN(Value) === true) Value = this.min;
         if(Value > this.max) Value = this.max;
         if(Value < this.min) Value = this.min;

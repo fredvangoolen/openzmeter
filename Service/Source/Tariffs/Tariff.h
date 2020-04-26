@@ -27,12 +27,18 @@ using namespace mu;
 //----------------------------------------------------------------------------------------------------------------------
 class Tariff final {
   public :
-    enum Period_Concept_Type { CONCEPT_INFO, CONCEPT_POWER, CONCEPT_ENERGY, CONCEPT_GENERAL };
+    enum Concept_Type { CONCEPT_INFO, CONCEPT_INFO_ENERGY, CONCEPT_INFO_POWER, CONCEPT_COST_ENERGY, CONCEPT_COST_POWER, CONCEPT_COST };
     typedef struct {
       string                     Description;
       string                     Variable;
-      Period_Concept_Type        Type;
-    } Period_Concept_t;
+      Concept_Type               Type;
+    } Concept_t;
+//    enum Concept_Type { CONCEPT_INFO, CONCEPT_POWER, CONCEPT_ENERGY, CONCEPT_GENERAL };
+//    typedef struct {
+//      string  Type;
+//      float   Value;
+//      string  Name;
+//    } Tax_t;
     typedef struct {
       float                      Contracted_Power;
       float                      Power_Cost;
@@ -42,15 +48,12 @@ class Tariff final {
       float                      Active_Energy;
       float                      Reactive_Power;
       float                      Reactive_Energy;
-    } Period_Eval_Params_t;
+    } Eval_Params_t;
     typedef struct {
       string                     Name;
       float                      DefaultPowerCost;
       float                      DefaultEnergyCost;
       string                     Color;
-      Parser                     Script;
-      map<string, float>         Variables;
-      vector<Period_Concept_t>   Concepts;
 //      Parser                   EnergyCost;
 //      Parser                   PowerCost;
 //      float                 ContractedPower;
@@ -71,37 +74,23 @@ class Tariff final {
 //      float    Reactive;
 //      uint8_t  Period;
 //    } Sample_t;
-//  private :
 
-//    typedef struct {
-//      string   Name;
-//      uint64_t StartDate;
-//      uint64_t EndDate;
-//    } Holiday_t;
-//    typedef struct {
-//      string  Type;
-//      float   Value;
-//      string  Name;
-//    } Tax_t;
+
   private :
     string                          pParseError;
     string                          pDescription;
-    Period_Eval_Params_t            pPeriodEvalParams;
+    string                          pCurrency;
+    string                          pPowerUnits;
+    string                          pEnergyUnits;
+    Eval_Params_t                   pEvalParams;
+    Parser                          pScript;
+    vector<Concept_t>               pConcepts;
     vector<Period_t>                pPeriods;
     vector<Day_t>                   pDays;
     map<uint16_t, vector<uint8_t> > pYears;
 
+    map<string, float>              pVariables;
 
-//    bool              pValidTimeZone;
-//    time_zone         pTimeZone;
-//    string            pDescription;
-//    uint8_t           pHolidayPeriod;
-//    uint8_t           pWeekendPeriod;
-//    uint64_t          pStartDate;
-//    uint64_t          pEndDate;
-
-//    vector<Season_t>  pSeasons;
-//    vector<Holiday_t> pHolidays;
 //    vector<Tax_t>     pTaxs;
 //    queue<Sample_t>   pSamples;
 //    vector<uint64_t>  pBillingCycles;
@@ -118,7 +107,6 @@ class Tariff final {
     ~Tariff();
     bool   IsValid();
     string ParseError();
-
     json   GetTemplate();
     json   GetRate();
 

@@ -368,7 +368,7 @@
       options: function(val, prev) {
         if(val.labels == null) val.labels = ['A', 'B'];
         if(val.file == null) val.file = [];
-        if(val.file.length == 0) val.file.push(Array(val.labels.length).fill(0));
+        if(val.file.length == 0) val.file.push(new Array(val.labels.length).fill(0));
         if((this.Graph == null) || ((this.paused == true) && (this.Graph.file_.length > 1))) {
           this.PausedOptions = val;
           return;
@@ -398,7 +398,7 @@
       var Data = [];
       if(this.options.labels == null) this.options.labels = ['A', 'B'];
       if(this.options.file == null) this.options.file = [];
-      if(this.options.file.length == 0) this.options.file.push(Array(this.options.labels.length).fill(0));
+      if(this.options.file.length == 0) this.options.file.push(new Array(this.options.labels.length).fill(0));
       this.Graph = new Dygraph(this.$el, this.options.file, this.options);
       this.$nextTick(() => {
         $(this.Graph.graphDiv).parent().removeAttr('style');

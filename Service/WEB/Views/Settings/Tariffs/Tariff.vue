@@ -6,6 +6,7 @@
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" @click="Save" :class="{disabled: (Error!=null)}"><img :src="require('Imgs/diskette.png')"></button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
+          <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Concepts' }" @click="View='Concepts'">Concepts</button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Days' }" @click="View='Days'">Days</button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Calendar' }" @click="View='Calendar'">Calendar</button>
@@ -23,6 +24,56 @@
           <textarea class="form-control" rows="5" v-model="Tariff.Template.Description" style="resize: none"></textarea>
         </div>
       </div>
+      <div class="row" v-if="View=='Concepts'">
+        <div class="col-xs-4">
+          <label class="small">Currency</label>
+          <div class="input-group input-group-xs" style="width: 100%">
+            <input type="text" class="form-control rounded" v-model="Tariff.Template.Currency">
+          </div>
+        </div>
+        <div class="col-xs-4">
+          <label class="small">Energy units</label>
+          <div class="input-group input-group-xs" style="width: 100%">
+            <input type="text" class="form-control rounded" v-model="Tariff.Template.EnergyUnits">
+          </div>
+        </div>
+        <div class="col-xs-4">
+          <label class="small">Power units</label>
+          <div class="input-group input-group-xs" style="width: 100%">
+            <input type="text" class="form-control rounded" v-model="Tariff.Template.PowerUnits">
+          </div>
+        </div>
+        <div class="col-xs-12" style="margin-top:6px">
+          <div class="panel-other">
+            <div class="panel-heading">
+              <div class="pull-right btn-group">
+                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit tariff script"><img :src="require('Imgs/math_functions.png')" @click="View='Expresion'"></button>
+                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new period concept" @click="Tariff.Template.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
+              </div>
+              <toolbar-pager class="pull-right" :pageSize="10" :input="Tariff.Template.Concepts" :output.sync="FilterConcepts" :filtercols="['Description', 'Variable']"></toolbar-pager>
+              <div class="clearfix"></div>
+            </div>
+            <vuetable :fields="Columns" :api-mode="false" :data="FilterConcepts" class="table small table-striped">
+              <template slot="concept" slot-scope="props">
+                <div class="input-group input-group-xs">
+                  <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" @click="DeleteConcept(props.rowData.ID)"><img :src="require('Imgs/cross.png')"></button>
+                  </span>
+                  <input type="text" class="form-control" v-model="props.rowData.Description">
+                </div>
+              </template>
+              <template slot="variable" slot-scope="props">
+                <div class="input-group input-group-xs" style="width:100%">
+                  <input type="text" class="form-control rounded" v-model="props.rowData.Variable">
+                </div>
+              </template>
+              <template slot="type" slot-scope="props">
+                <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'Energy info', value: 'INFO_ENERGY'}, {name: 'Power info', value: 'INFO_POWER'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
+              </template>
+            </vuetable>
+          </div>
+        </div>
+      </div>
       <div class="row" v-if="View=='Periods'">
         <div class="col-xs-12">
           <table style="width: 100%"><tr><td>
@@ -34,14 +85,7 @@
             </div>
           </td></tr></table>
           <div v-for="(period, idx) in Tariff.Template.Periods" :key="idx">
-            <div class="panel-other" v-if="ActivePeriod=='P'+(idx+1)">
-              <div class="panel-heading">
-                <div class="pull-right btn-group">
-                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit period concept calculator"><img :src="require('Imgs/math_functions.png')" @click="View='Expresion'"></button>
-                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new period concept" @click="period.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
-                </div>
-                <div class="clearfix"></div>
-              </div>
+            <div class="panel-other" v-if="ActivePeriod=='P'+(idx+1)" style="padding-bottom:6px">
               <div class=" col-xs-12" style="display:flex">
                 <div style="flex-grow:2">
                   <label class="small">Period name</label>
@@ -57,40 +101,14 @@
               <div class="col-xs-12" style="display:flex">
                 <div style="flex-grow:2">
                   <label class="small">Default power cost:</label>
-                  <input-spin :max="100000" :min="0" prepend="/kW/Day" :decimals="6" :increment="0.01" v-model="period.DefaultPowerCost" style="padding-right:4px"></input-spin>
+                  <input-spin :max="100000" :min="0" :prepend="Tariff.Template.Currency+'/'+Tariff.Template.PowerUnits+'/Day'" :decimals="6" :increment="0.01" v-model="period.DefaultPowerCost" style="padding-right:4px"></input-spin>
                 </div>
                 <div style="flex-grow:2">
                   <label class="small">Default energy cost:</label>
-                  <input-spin :max="100000" :min="0" prepend="/kWh" :decimals="6" :increment="0.01" v-model="period.DefaultEnergyCost"></input-spin>
+                  <input-spin :max="100000" :min="0" :prepend="Tariff.Template.Currency+'/'+Tariff.Template.EnergyUnits" :decimals="6" :increment="0.01" v-model="period.DefaultEnergyCost"></input-spin>
                 </div>
               </div>
               <div class="clearfix"></div>
-              <table class="period_vars">
-                <tr>
-                  <td><strong>Concept</strong></td>
-                  <td><strong>Variable</strong></td>
-                  <td><strong>Type</strong></td>
-                </tr>
-                <tr><td colspan="3" v-if="period.Concepts.length==0" class="text-center small" style="border-top: 1px solid #ccc">No concepts for this period</td></tr>
-                <tr v-for="(concept, idx) in period.Concepts" :key="idx">
-                  <td>
-                    <div class="input-group input-group-xs">
-                      <span class="input-group-btn">
-                        <button class="btn btn-default" type="button"><img :src="require('Imgs/cross.png')"></button>
-                      </span>
-                      <input type="text" class="form-control" v-model="concept.Description">
-                    </div>
-                  </td>
-                  <td>
-                    <div class="input-group input-group-xs">
-                      <input type="text" class="form-control rounded" v-model="concept.Variable">
-                    </div>
-                  </td>
-                  <td>
-                    <option-picker v-model="concept.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'General', value: 'GENERAL'}, {name: 'Energy', value: 'ENERGY'}, {name: 'Power', value: 'POWER'} ]" ></option-picker>
-                  </td>
-                </tr>
-              </table>
             </div>
           </div>
         </div>
@@ -167,13 +185,13 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Period {{ ActivePeriod }} script</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="View='Concepts'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
         </div>
       </template>
       <div class="row">
         <div class="col-xs-12">
           <label class="control-label">Expresion</label>
-          <input-math v-model="Tariff.Template.Periods[parseInt(ActivePeriod.substr(1)) - 1].Script" :vars="Vars" @evaluate="Evaluate"></input-math>
+          <input-math v-model="Tariff.Template.Script" :vars="Vars"></input-math>
         </div>
       </div>
     </dlg>
@@ -181,22 +199,38 @@
 </template>
 
 <script>
-  import EditPeriods from './Periods.vue';
-  import EditSeasons from './Seasons.vue';
-  import EditHolidays from './Holidays.vue';
+  import vuetable from 'vuetable-2';
   import moment from 'moment';
-  import calendar from 'JS/bootstrap-year-calendar.js';
   export default {
     props: { tariff: Object },
     data: function() {
-      return { View: 'Main', ActivePeriod: 'P1', ActivePeriodIdx: 0, ActiveDay: 'D1', ActiveDayIdx: 0, ActiveYear: '2020', NewYearSelect: 2000, Tariff: null, ShowSpinner: false };
-    },
-    watch: {
-
+      return { Error: null, View: 'Main', ActivePeriod: 'P1', ActivePeriodIdx: 0, ActiveDay: 'D1', ActiveDayIdx: 0, ActiveYear: '2020', NewYearSelect: moment().year(), Tariff: null, ShowSpinner: false, FilterConcepts: [],
+               Columns: [
+                 { name: '__slot:concept', title: 'Concept' },
+                 { name: '__slot:variable', title: 'Variable' },
+                 { name: '__slot:type', title: 'Type' }
+               ]
+      };
     },
     computed: {
-
-      Error: function() {
+      Vars: function() {
+        var Vars = [];
+        Vars.push({ Name: 'Active_Power', Description: 'Active power on evaluated period', Value: null, Units: 'W'});
+        Vars.push({ Name: 'Reactive_Power', Description: 'Reactive power on evaluated period', Value: null, Units: 'var'});
+        Vars.push({ Name: 'Contracted_Power', Description: 'Contracted power on evaluated period', Value: null, Units: 'W'});
+        Vars.push({ Name: 'Power_Cost', Description: 'Power cost on evaluated period', Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.PowerUnits + '/h'});
+        Vars.push({ Name: 'Energy_Cost', Description: 'Energy cost on evaluated period', Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.EnergyUnits});
+        if(this.Tariff.Template.Periods.length>1) {
+          Vars.push({ Name: 'Period', Description: 'Index of evaluated period (From 1 to ' + this.Tariff.Template.Periods.length + ')', Value: null, Units: ''});
+          for(var P = 0; P < this.Tariff.Template.Periods.length; P++) {
+            Vars.push({ Name: 'Contracted_Power_P' + (P + 1), Description: 'Contracted power on period P' + (P + 1), Value: null, Units: 'W'});
+            Vars.push({ Name: 'Power_Cost_P' + (P + 1), Description: 'Power cost on period P' + (P + 1), Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.PowerUnits + '/h'});
+            Vars.push({ Name: 'Energy_Cost_P' + (P + 1), Description: 'Energy cost on period P' + (P + 1), Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.EnergyUnits});
+          }
+        }
+        return Vars;
+      }
+//      Error: function() {
 //        this.Tariff.StartDate = moment(this.Tariff.StartDate).tz(this.Tariff.TimeZone).startOf('day').valueOf();
 //        this.Tariff.EndDate = moment(this.Tariff.EndDate).tz(this.Tariff.TimeZone).endOf('day').valueOf();
 //        var FindSeason = (date) => {
@@ -223,37 +257,37 @@
 //        }
 //        if((Used > 0) || (Date != this.Tariff.EndDate)) return 'Defined tariff period is not correctly covered by defined seasons!';
 //        return null;
-      }
+//      }
     },
     created: function() {
-//      this.Calendar = $(this.$refs.calendar).calendar({ language: "custom" });
       if(this.tariff == null) {
-//        this.Tariff = {
-//          TimeZone: moment.tz.guess(),
-//          StartDate: moment().startOf('year').valueOf(),
-//          EndDate: moment().endOf('year').valueOf(),
-//          Name: 'No name',
-//          Template: {
-//            Description: 'Add tariff description here',
-//            Seasons: [],
-//            Periods: [ { ReactiveMode: 'NONE', PowerMode: 'NONE', Color: '#fffff0' } ],
-//            Holidays: [],
-//            WeekendPeriod: null,
-//            HolidayPeriod: null
-//          }
-//        };
+        this.Tariff = { Name: 'No name', Template: { Description: 'Write a tariff description here', Currency: '€', EnergyUnits: 'kWh', PowerUnits: 'kW', Script: '', Concepts: [], Periods: [], Days: [], Years: [] } };
+        this.AddPeriod();
+        this.AddDay();
+        this.AddYear();
       } else {
         this.Tariff = Object.assign({}, this.tariff);
       }
+      for(var C = 0; C < this.Tariff.Template.Concepts.length; C++) this.$set(this.Tariff.Template.Concepts[C], 'ID', C);
     },
     methods: {
+      DeleteConcept: function(idx) {
+        this.Tariff.Template.Concepts.splice(idx, 1);
+        for(var C = 0; C < this.Tariff.Template.Concepts.length; C++) this.$set(this.Tariff.Template.Concepts[C], 'ID', C);
+      },
       DeletePeriod: function() {
         if(this.Tariff.Template.Periods.length == 1) return;
         if(confirm("Delete period 'P" + this.Tariff.Template.Periods.length + "'?")) this.Tariff.Template.Periods.splice(-1);
+        for(var D in this.Tariff.Template.Days) {
+          for(var Q in this.Tariff.Template.Days[D].Quarters) this.Tariff.Template.Days[D].Quarters[Q] = Math.min(this.Tariff.Template.Days[D].Quarters[Q], this.Tariff.Template.Periods.length - 1);
+        }
       },
       DeleteDay: function() {
         if(this.Tariff.Template.Days.length == 1) return;
         if(confirm("Delete day 'D" + this.Tariff.Template.Days.length + "'?")) this.Tariff.Template.Days.splice(-1);
+        for(var Y in this.Tariff.Template.Years) {
+          for(var D in this.Tariff.Template.Years[Y].Days) this.Tariff.Template.Years[Y].Days[D] = Math.min(this.Tariff.Template.Years[Y].Days[D], this.Tariff.Template.Days.length - 1);
+        }
       },
       DeleteYear: function() {
         if(Object.keys(this.Tariff.Template.Years).length == 1) return;
@@ -261,30 +295,30 @@
         this.ActiveYear = String(Object.keys(this.Tariff.Template.Years)[0]);
       },
       AddPeriod: function() {
-        this.Tariff.Template.Periods.push({ "Color":"#fffff0", DefaultPowerCost: 0.0, DefaultEnergyCost: 0.0, Script: "", Name: "Period " + (this.Tariff.Template.Periods.length + 1), Concepts: [ ]} );
+        this.Tariff.Template.Periods.push({ Color: '#fffff0', DefaultPowerCost: 0.0, DefaultEnergyCost: 0.0, Name: 'Period ' + (this.Tariff.Template.Periods.length + 1) });
         this.ActivePeriod = 'P' + this.Tariff.Template.Periods.length;
       },
       AddDay: function() {
-        this.Tariff.Template.Days.push({ "Color":"#fffff0", Script: "", Name: "Period " + (this.Tariff.Template.Periods.length + 1), Quarters: new Array(96).fill(0) } );
+        this.Tariff.Template.Days.push({ Color: '#fffff0', Name: 'Day ' + (this.Tariff.Template.Days.length + 1), Quarters: new Array(96).fill(0) });
         this.ActiveDay = 'D' + this.Tariff.Template.Days.length;
       },
       AddYear: function() {
-        this.Tariff.Template.Years[String(this.NewYearSelect)] = new Array(moment([this.NewYearSelect, 11, 31]).dayOfYear()).fill(0);
+        this.Tariff.Template.Years.push({Year: this.NewYearSelect, Days: new Array(moment([this.NewYearSelect, 11, 31]).dayOfYear()).fill(0) });
         this.ActiveYear = String(this.NewYearSelect);
       },
       Save: function() {
         this.$http.post((this.Tariff.TariffID == null) ? 'addTariff' : 'setTariff', this.Tariff).then(
           (result) => {
-//            this.$emit('close');
+            this.$emit('close');
           },
           (fail) => {
-            this.Error = 'Failed to save tariff!';
-            setTimeout(() => { this.Error = null; }, 1000);
+            this.Error = fail.body;
+            setTimeout(() => { this.Error = null; }, 5000);
           }
         );
       }
     },
-    components: { EditPeriods, EditSeasons, EditHolidays }
+    components: { vuetable }
   }
 </script>
 
@@ -311,7 +345,7 @@
     width: 100%;
   }
   table.period_vars td:nth-child(3) {
-    width: 80px;
+    width: 110px;
   }
   .rounded {
     border-radius: 4px!important;

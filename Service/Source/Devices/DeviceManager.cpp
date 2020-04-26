@@ -56,8 +56,6 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("setTariff",      SetTariffCallback);
   HTTPServer::RegisterCallback("delTariff",      DelTariffCallback);
   HTTPServer::RegisterCallback("addTariff",      AddTariffCallback);
-  HTTPServer::RegisterCallback("testTariff",     TestTariffCallback);
-  HTTPServer::RegisterCallback("testRate",       TestRateCallback);
 }
 DeviceManager::~DeviceManager() {
   LOGFile::Debug("Stopping DeviceManager\n");
@@ -88,8 +86,6 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("setTariff");
   HTTPServer::UnregisterCallback("delTariff");
   HTTPServer::UnregisterCallback("addTariff");
-  HTTPServer::UnregisterCallback("testTariff");
-  HTTPServer::UnregisterCallback("testRate");
   LOGFile::Info("Stopping devices...\n");
   pDevicesLock.WriteLock();
   while(pDevices.size() > 0) {
@@ -236,54 +232,22 @@ void DeviceManager::SetTariffCallback(const json &params, Response &response) {
   if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
   Tariff Tmp(params["Template"]);
-  return HTTPServer::FillResponse(response, Tmp.ParseError(), "text/plain", HTTP_OK);
-  //Primero verifico, construyo tarifa con los parametros que llegan y evaluo periodo a periodo a ver que sale.
-
-//  uint64_t Start    = params["StartDate"];
-//  uint64_t End      = params["EndDate"];
-//  string   Name     = params["Name"];
-//  string   TimeZone = params["TimeZone"];
-//  uint32_t TariffID = params["TariffID"];
-//  string   UserName = params["UserName"];
-//  Tariff T(Start, End, TimeZone);
-//  if(T.SetTemplate(params["Template"]) == false) {
-//    response.set_content("Invalid template", "text/plain");
-//    response.status = HTTP_BAD_REQUEST;
-//    return;
-//  }
-//  Database DB;
-//  bool Result = DB.ExecSentenceNoResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", time_zone = " + DB.Bind(TimeZone) + ", template = " + DB.Bind(T.GetTemplate().dump()) + ", startdate = " + DB.Bind(Start) + ", enddate = " + DB.Bind(End) + " WHERE tariff = " + DB.Bind(TariffID) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : ""));
-//  response.set_content("", "text/plain");
-//  response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
+  if(Tmp.IsValid() == false) return HTTPServer::FillResponse(response, Tmp.ParseError(), "text/plain", HTTP_BAD_REQUEST);
+  uint32_t TariffID = params["TariffID"];
+  string   UserName = params["UserName"];
+  string   Name     = params["Name"];
+  Database DB;
+  DB.ExecSentenceAsyncResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(Tmp.GetTemplate().dump()) + " WHERE tariff = " + DB.Bind(TariffID) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : "") + " RETURNING tariff");
+  return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
 void DeviceManager::AddTariffCallback(const json &params, Response &response) {
-//  if(!params["Template"].is_object() || !params["StartDate"].is_number_unsigned() || !params["EndDate"].is_number_unsigned() || !params["Name"].is_string() || !params["TimeZone"].is_string()) {
-//    response.set_content("'Template', StartDate', 'EndDate', 'TimeZone' and 'Name' params required", "text/plain");
-//    response.status = HTTP_BAD_REQUEST;
-//    return;
-//  }
-//  string   UserName = params["UserName"];
-//  uint64_t Start    = params["StartDate"];
-//  uint64_t End      = params["EndDate"];
-//  string   Name     = params["Name"];
-//  string   TimeZone = params["TimeZone"];
-//  Tariff T(Start, End, TimeZone);
-//  if(T.SetTemplate(params["Template"]) == false) {
-//    response.set_content("Invalid template", "text/plain");
-//    response.status = HTTP_BAD_REQUEST;
-//  } else {
-//    Database DB;
-//    bool Result = DB.ExecSentenceNoResult("INSERT into tariffs(name, username, time_zone, template, startdate, enddate) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(UserName) + ", " + DB.Bind(TimeZone) + ", " + DB.Bind(T.GetTemplate().dump()) + ", " + DB.Bind(Start) + ", " + DB.Bind(End) + ")");
-//    response.set_content("", "text/plain");
-//    response.status = (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR;
-//  }
-}
-void DeviceManager::TestTariffCallback(const json &params, Response &response) {
   if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
   Tariff Tmp(params["Template"]);
-  return HTTPServer::FillResponse(response, Tmp.ParseError(), "text/plain", HTTP_OK);
-  //Primero verifico, construyo tarifa con los parametros que llegan y evaluo periodo a periodo a ver que sale.
-}
-void DeviceManager::TestRateCallback(const json &params, Response &response) {
-
+  if(Tmp.IsValid() == false) return HTTPServer::FillResponse(response, Tmp.ParseError(), "text/plain", HTTP_BAD_REQUEST);
+  string   UserName = params["UserName"];
+  string   Name     = params["Name"];
+  Database DB;
+  DB.ExecSentenceAsyncResult("INSERT INTO tariffs(name, username, template) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(UserName) + ", " + DB.Bind(Tmp.GetTemplate().dump()) + ") RETURNING tariff");
+  return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
