@@ -71,7 +71,7 @@ class HTTPTaskQueue final : public TaskQueue {
     HTTPTaskQueue();
     ~HTTPTaskQueue();
     void enqueue(std::function<void()> fn) override;
-    void queue_adjust() override;
+    void on_idle() override;
     void shutdown() override;
     void queue_tasks();
 };
