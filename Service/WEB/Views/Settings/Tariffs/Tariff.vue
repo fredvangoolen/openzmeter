@@ -44,20 +44,21 @@
           </div>
         </div>
         <div class="col-xs-12" style="margin-top:6px">
-          <div class="panel-other">
+          <div class="panel-group panel panel-dialog" style="margin-bottom: 0px">
             <div class="panel-heading">
               <div class="pull-right btn-group">
-                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit tariff script"><img :src="require('Imgs/math_functions.png')" @click="View='Expresion'"></button>
-                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new period concept" @click="Tariff.Template.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
+                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit tariff script"><img :src="require('Imgs/math_functions.png')" @click="ActivePeriod=null; View='Expresion'"></button>
+                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new tariff concept" @click="Tariff.Template.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
               </div>
               <toolbar-pager class="pull-right" :pageSize="10" :input="Tariff.Template.Concepts" :output.sync="FilterConcepts" :filtercols="['Description', 'Variable']"></toolbar-pager>
               <div class="clearfix"></div>
             </div>
+            <div class="panel-body">
             <vuetable :fields="Columns" :api-mode="false" :data="FilterConcepts" class="table small table-striped">
               <template slot="concept" slot-scope="props">
                 <div class="input-group input-group-xs">
                   <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" @click="DeleteConcept(props.rowData.ID)"><img :src="require('Imgs/cross.png')"></button>
+                    <button class="btn btn-default" type="button" @click="Tariff.Template.Concepts.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
                   </span>
                   <input type="text" class="form-control" v-model="props.rowData.Description">
                 </div>
@@ -71,13 +72,14 @@
                 <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'Energy info', value: 'INFO_ENERGY'}, {name: 'Power info', value: 'INFO_POWER'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
               </template>
             </vuetable>
+            </div>
           </div>
         </div>
       </div>
       <div class="row" v-if="View=='Periods'">
         <div class="col-xs-12">
           <table style="width: 100%"><tr><td>
-            <detail-tabs key="Period_Tabs" :tabs="new Array(Tariff.Template.Periods.length).fill(0).map((n, idx) => { return 'P' + (idx + 1)})" v-model="ActivePeriod"></detail-tabs>
+            <detail-tabs key="Period_Tabs" :tabs="new Array(Tariff.Template.Periods.length).fill(0).map((n, idx) => { return 'P' + (idx + 1)})" v-model="ActivePeriod" :light="true"></detail-tabs>
           </td><td style="width: 64px; text-align: right;">
             <div class="btn-group">
               <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Periods.length==1" @click="DeletePeriod" data-toggle="tooltip" title="Delete last period"><img :src="require('Imgs/cross.png')"></button>
@@ -85,30 +87,61 @@
             </div>
           </td></tr></table>
           <div v-for="(period, idx) in Tariff.Template.Periods" :key="idx">
-            <div class="panel-other" v-if="ActivePeriod=='P'+(idx+1)" style="padding-bottom:6px">
-              <div class=" col-xs-12" style="display:flex">
-                <div style="flex-grow:2">
-                  <label class="small">Period name</label>
-                  <div class="input-group input-group-xs" style="width: 100%; padding-right: 4px">
-                    <input type="text" class="form-control rounded" v-model="period.Name">
+            <div class="panel panel-dialog panel-tab" v-if="ActivePeriod=='P'+(idx+1)" style="margin-bottom: 0px">
+              <div class="panel-heading">
+                <div class="pull-right btn-group">
+                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit period script"><img :src="require('Imgs/math_functions.png')" @click="View='Expresion'"></button>
+                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new period concept" @click="period.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
+                </div>
+                <toolbar-pager class="pull-right" :pageSize="10" :input="period.Concepts" :output.sync="FilterConcepts" :filtercols="['Description', 'Variable']"></toolbar-pager>
+                <div class="clearfix"></div>
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class=" col-xs-12" style="display:flex">
+                    <div style="flex-grow:2">
+                      <label class="small">Period name</label>
+                      <div class="input-group input-group-xs" style="width: 100%; padding-right: 4px">
+                        <input type="text" class="form-control rounded" v-model="period.Name">
+                      </div>
+                    </div>
+                    <div>
+                      <label class="small">Period color</label><br/>
+                      <color-picker v-model="period.Color" :columns="2" :colors="['#fffff0', '#ffecd6', '#ffd8bc', '#ffc4a2', '#ffae88', '#ff986c', '#ff7f50', '#f0ffff', '#d4f2f1', '#b7e5e2', '#98d8d3', '#78ccc5', '#55bfb8', '#20b2aa']"></color-picker>
+                    </div>
+                  </div>
+                  <div class="col-xs-12" style="display:flex">
+                    <div style="flex-grow:2">
+                      <label class="small">Default power cost:</label>
+                      <input-spin :max="100000" :min="0" :prepend="Tariff.Template.Currency+'/'+Tariff.Template.PowerUnits+'/Day'" :decimals="6" :increment="0.01" v-model="period.DefaultPowerCost" style="padding-right:4px"></input-spin>
+                    </div>
+                    <div style="flex-grow:2">
+                      <label class="small">Default energy cost:</label>
+                      <input-spin :max="100000" :min="0" :prepend="Tariff.Template.Currency+'/'+Tariff.Template.EnergyUnits" :decimals="6" :increment="0.01" v-model="period.DefaultEnergyCost"></input-spin>
+                    </div>
+                  </div>
+                  <div class="col-xs-12">
+                    <vuetable :fields="Columns" :api-mode="false" :data="FilterConcepts" class="table small table-striped">
+                      <template slot="concept" slot-scope="props">
+                        <div class="input-group input-group-xs">
+                          <span class="input-group-btn">
+                            <button class="btn btn-default" type="button" @click="period.Concepts.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
+                          </span>
+                          <input type="text" class="form-control" v-model="props.rowData.Description">
+                        </div>
+                      </template>
+                      <template slot="variable" slot-scope="props">
+                        <div class="input-group input-group-xs" style="width:100%">
+                          <input type="text" class="form-control rounded" v-model="props.rowData.Variable">
+                        </div>
+                      </template>
+                      <template slot="type" slot-scope="props">
+                        <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'Energy info', value: 'INFO_ENERGY'}, {name: 'Power info', value: 'INFO_POWER'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
+                      </template>
+                    </vuetable>
                   </div>
                 </div>
-                <div>
-                  <label class="small">Period color</label><br/>
-                  <color-picker v-model="period.Color" :columns="2" :colors="['#fffff0', '#ffecd6', '#ffd8bc', '#ffc4a2', '#ffae88', '#ff986c', '#ff7f50', '#f0ffff', '#d4f2f1', '#b7e5e2', '#98d8d3', '#78ccc5', '#55bfb8', '#20b2aa']"></color-picker>
-                </div>
               </div>
-              <div class="col-xs-12" style="display:flex">
-                <div style="flex-grow:2">
-                  <label class="small">Default power cost:</label>
-                  <input-spin :max="100000" :min="0" :prepend="Tariff.Template.Currency+'/'+Tariff.Template.PowerUnits+'/Day'" :decimals="6" :increment="0.01" v-model="period.DefaultPowerCost" style="padding-right:4px"></input-spin>
-                </div>
-                <div style="flex-grow:2">
-                  <label class="small">Default energy cost:</label>
-                  <input-spin :max="100000" :min="0" :prepend="Tariff.Template.Currency+'/'+Tariff.Template.EnergyUnits" :decimals="6" :increment="0.01" v-model="period.DefaultEnergyCost"></input-spin>
-                </div>
-              </div>
-              <div class="clearfix"></div>
             </div>
           </div>
         </div>
@@ -116,7 +149,7 @@
       <div class="row" v-if="View=='Days'">
         <div class="col-xs-12">
           <table style="width: 100%;"><tr><td>
-            <detail-tabs key="Day_Tabs" :tabs="new Array(Tariff.Template.Days.length).fill(0).map((n, idx) => { return 'D' + (idx + 1)})" v-model="ActiveDay"></detail-tabs>
+            <detail-tabs key="Day_Tabs" :tabs="new Array(Tariff.Template.Days.length).fill(0).map((n, idx) => { return 'D' + (idx + 1)})" v-model="ActiveDay" :light="true"></detail-tabs>
           </td><td style="width: 64px; text-align: right">
             <div class="btn-group">
               <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Days.length==1" data-toggle="tooltip" title="Delete last day"><img :src="require('Imgs/cross.png')" @click="DeleteDay"></button>
@@ -124,11 +157,11 @@
             </div>
           </td></tr></table>
           <div v-for="(day, idx) in Tariff.Template.Days" :key="idx">
-            <div class="panel-other" v-if="ActiveDay=='D'+(idx+1)">
+            <div class="panel panel-tab panel-dialog" v-if="ActiveDay=='D'+(idx+1)">
               <div class="panel-heading">
                 <toolbar-color-items v-model="ActivePeriodIdx" prefix="P" :colors="Tariff.Template.Periods.map((val) => { return val.Color; })" :names="Tariff.Template.Periods.map((val, i) => { return 'P' + (i + 1) + ' - ' + val.Name; })"></toolbar-color-items>
               </div>
-              <div class=" col-xs-12" style="display:flex">
+              <div class="col-xs-12" style="display:flex">
                 <div style="flex-grow:2">
                   <label class="small">Day name</label>
                   <div class="input-group input-group-xs" style="width: 100%; padding-right: 4px">
@@ -152,7 +185,7 @@
         <div class="col-xs-12">
           <table style="width: 100%">
             <tr><td>
-              <detail-tabs key="Year_Tabs" :tabs="Tariff.Template.Years.map((year) => { return String(year.Year); }).sort()" v-model="ActiveYear"></detail-tabs>
+              <detail-tabs key="Year_Tabs" :tabs="Tariff.Template.Years.map((year) => { return String(year.Year); }).sort()" v-model="ActiveYear" :light="true"></detail-tabs>
             </td>
             <td style="width:130px; text-align: right;">
               <div class="btn-group">
@@ -169,7 +202,7 @@
             </tr>
           </table>
           <div v-for="(year, idx) in Tariff.Template.Years" :key="idx">
-            <div class="panel-other" v-if="parseInt(ActiveYear)==year.Year">
+            <div class="panel panel-tab panel-dialog" v-if="parseInt(ActiveYear)==year.Year">
               <div class="panel-heading">
                 <toolbar-color-items v-model="ActiveDayIdx" prefix="D" :colors="Tariff.Template.Days.map((val) => { return val.Color; })" :names="Tariff.Template.Days.map((val, i) => { return 'D' + (i + 1) + ' - ' + val.Name; })"></toolbar-color-items>
               </div>
@@ -268,13 +301,8 @@
       } else {
         this.Tariff = Object.assign({}, this.tariff);
       }
-      for(var C = 0; C < this.Tariff.Template.Concepts.length; C++) this.$set(this.Tariff.Template.Concepts[C], 'ID', C);
     },
     methods: {
-      DeleteConcept: function(idx) {
-        this.Tariff.Template.Concepts.splice(idx, 1);
-        for(var C = 0; C < this.Tariff.Template.Concepts.length; C++) this.$set(this.Tariff.Template.Concepts[C], 'ID', C);
-      },
       DeletePeriod: function() {
         if(this.Tariff.Template.Periods.length == 1) return;
         if(confirm("Delete period 'P" + this.Tariff.Template.Periods.length + "'?")) this.Tariff.Template.Periods.splice(-1);
@@ -295,7 +323,7 @@
         this.ActiveYear = String(Object.keys(this.Tariff.Template.Years)[0]);
       },
       AddPeriod: function() {
-        this.Tariff.Template.Periods.push({ Color: '#fffff0', DefaultPowerCost: 0.0, DefaultEnergyCost: 0.0, Name: 'Period ' + (this.Tariff.Template.Periods.length + 1) });
+        this.Tariff.Template.Periods.push({ Color: '#fffff0', DefaultPowerCost: 0.0, DefaultEnergyCost: 0.0, Name: 'Period ' + (this.Tariff.Template.Periods.length + 1), Script: '', Concepts: [] });
         this.ActivePeriod = 'P' + this.Tariff.Template.Periods.length;
       },
       AddDay: function() {
@@ -323,6 +351,10 @@
 </script>
 
 <style scoped>
+  .panel-tab {
+    margin-bottom: 0px;
+    border-top-left-radius: 0px;
+  }
   label.small {
     font-size: 85%;
     margin-bottom: 0px;

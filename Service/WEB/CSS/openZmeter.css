@@ -177,6 +177,14 @@ img {
   background-color: #474544;
   color: #FFF;
 }
+.panel-dialog {
+  border: 1px solid #ccc;
+}
+.panel-dialog > .panel-heading {
+  background-color: #eee;
+  border-bottom: 1px solid #ccc;
+  color: #000;
+}
 .panel-cost {
   border: 1px solid #3d648b;
 }
@@ -336,22 +344,6 @@ div.scrtabs-tab-container + div.panel {
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
-.nav-tabs>li>a {
-  border: 1px solid #CCC;
-  border-bottom: 1px solid transparent;
-  color: #474544;
-  background-color: #FFF;
-  border-radius: 0px;
-}
-.nav-tabs>li>a:hover {
-  border: 1px solid #CCC;
-  border-bottom: 1px solid transparent;
-  background-color: #CCC;
-}
-.nav-tabs>li.active>a, .nav-tabs>li.active>a:focus, .nav-tabs>li.active>a:hover {
-  color: #FFF;
-  background-color: #474544;
-}
 .btn-group,.btn-group-vertical {
   vertical-align: text-bottom;
   display: inline-table;

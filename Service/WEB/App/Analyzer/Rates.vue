@@ -54,7 +54,7 @@
         this.View = null;
       },
       Add: function() {
-        this.Analyzer.Rates.push({ Name: 'Unname rate', StartDate: 0, EndDate: 0, Template: null, Config: { Periods:[], Taxs: [], Billing: [] } });
+        this.Analyzer.Rates.push({ Name: 'Unname rate', StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Template: null, Config: { Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxs: [], Billing: [] } });
         this.Index = this.Analyzer.Rates.length - 1;
         this.View = 'Rate';
       },

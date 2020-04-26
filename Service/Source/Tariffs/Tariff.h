@@ -43,7 +43,6 @@ class Tariff final {
       float                      Contracted_Power;
       float                      Power_Cost;
       float                      Energy_Cost;
-
       float                      Active_Power;
       float                      Active_Energy;
       float                      Reactive_Power;
@@ -65,6 +64,8 @@ class Tariff final {
     typedef struct {
       string                     Name;
       string                     Color;
+      Parser                     Script;
+      vector<Concept_t>          Concepts;
       uint8_t                    Quarters[96];
     } Day_t;
 

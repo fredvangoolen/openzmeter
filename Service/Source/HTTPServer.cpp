@@ -139,7 +139,7 @@ void HTTPTaskQueue::shutdown() {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void HTTPTaskQueue::queue_adjust() {
+void HTTPTaskQueue::on_idle() {
   pthread_mutex_lock(&pMutex);
   uint64_t Time = Tools::GetTime64();
   if((pLastAdjust + 60000) > Time) {

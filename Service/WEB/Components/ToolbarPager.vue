@@ -46,6 +46,7 @@
         this.Output = [];
         this.Pages = [];
         for(var row = 0; row < this.input.length; row++) {
+          this.input[row].rowNum = row;
           for(var n = 0; n < this.filtercols.length; n++) {
             var Val = String(this.input[row][this.filtercols[n]]).toLowerCase();
             if(Val == undefined) continue;
@@ -75,6 +76,9 @@
 </script>
 
 <style scoped>
+  .btn-group {
+    width: 150px;
+  }
   .input-group-btn .narrow {
     padding: 1px 0px;
   }
