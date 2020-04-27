@@ -136,7 +136,7 @@
                         </div>
                       </template>
                       <template slot="type" slot-scope="props">
-                        <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'Energy info', value: 'INFO_ENERGY'}, {name: 'Power info', value: 'INFO_POWER'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
+                        <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
                       </template>
                     </vuetable>
                   </div>

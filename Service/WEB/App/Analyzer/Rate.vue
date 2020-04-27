@@ -17,7 +17,7 @@
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
     <div class="row" v-if="Rate.Template==null">
       <spinner v-if="ShowSpinner"></spinner>
-      <vuetable ref="table" :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="tariffs table small table-striped">
+      <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="tariffs table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
             <button class="btn btn-xs btn-default" @click="LoadTariff(props.rowData)">Load</button>
@@ -193,6 +193,24 @@
               <div class="clearfix"></div>
             </div>
             <div class="panel-body">
+              <vuetable :fields="ColumnsCycles" :api-mode="false" :data="FilterCycles" class="taxs table small table-striped">
+                <template slot="from" slot-scope="props">
+                  <div class="input-group input-group-xs">
+                    <span class="input-group-btn">
+                      <button class="btn btn-default" type="button" @click="Rate.Config.Taxs.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
+                    </span>
+                    <input type="text" class="form-control" v-model="props.rowData.Description">
+                  </div>
+                </template>
+                <template slot="to" slot-scope="props">
+                  <option-picker :options="[ {name: 'Total', value: 'PERCENT_TOTAL'}, {name: 'Energy', value: 'PERCENT_ENERGY'}, {name: 'Power', value: 'PERCENT_POWER'}, {name: 'Energy+Power', value: 'PERCENT_ENERGY_POWER'}, {name: 'Fixed', value: 'FIXED_QUANTITY'} ]" v-model="props.rowData.Type"></option-picker>
+                </template>
+                <template slot="days" slot-scope="props">
+                  <input-spin :max="100000" :min="-100000" :prepend="(props.rowData.Type == 'FIXED_QUANTITY') ? '€/Bill cycle' : '%'" :decimals="6" :increment="1" v-model="props.rowData.Value"></input-spin>
+                </template>
+              </vuetable>
+
+
 
 
           <table>
@@ -241,7 +259,7 @@
   export default {
     props: { analyzer: Object, index: Number },
     data() {
-      return { View: 'Main', Rate: null, Day: 0, Period: 0, ShowSpinner: false, FilterTariffs: [], Tariffs: [], FilterTaxs: [],
+      return { View: 'Main', Rate: null, Day: 0, Period: 0, ShowSpinner: false, FilterTariffs: [], Tariffs: [], FilterTaxs: [], FilterCycles: [],
         PeriodNames: ['Each month', 'Each two month', 'Each three month'],
         BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th'],
         ColumnsTariffs: [
@@ -253,8 +271,12 @@
           { name: '__slot:tax', title: 'Concept' },
           { name: '__slot:type', title: 'Type' },
           { name: '__slot:value', title: 'Value' },
+        ],
+        ColumnsCycles: [
+          { name: '__slot:from', title: 'From' },
+          { name: '__slot:to', title: 'To' },
+          { name: '__slot:days', title: 'Days' },
         ]
-
       };
     },
     created: function() {

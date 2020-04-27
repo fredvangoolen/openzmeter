@@ -25,59 +25,38 @@
 using namespace cctz;
 using namespace mu;
 //----------------------------------------------------------------------------------------------------------------------
-class Tariff final {
-  public :
-    enum Concept_Type { CONCEPT_INFO, CONCEPT_INFO_ENERGY, CONCEPT_INFO_POWER, CONCEPT_COST_ENERGY, CONCEPT_COST_POWER, CONCEPT_COST };
+class Tariff {
+  protected :
+    enum Concept_Type { CONCEPT_INFO, CONCEPT_COST_ENERGY, CONCEPT_COST_POWER, CONCEPT_COST };
     typedef struct {
-      string                     Description;
-      string                     Variable;
-      Concept_Type               Type;
+      string                        Description;
+      string                        Variable;
+      Concept_Type                  Type;
     } Concept_t;
-//    enum Concept_Type { CONCEPT_INFO, CONCEPT_POWER, CONCEPT_ENERGY, CONCEPT_GENERAL };
-//    typedef struct {
-//      string  Type;
-//      float   Value;
-//      string  Name;
-//    } Tax_t;
     typedef struct {
-      float                      Contracted_Power;
-      float                      Power_Cost;
-      float                      Energy_Cost;
-      float                      Active_Power;
-      float                      Active_Energy;
-      float                      Reactive_Power;
-      float                      Reactive_Energy;
+      float                         Contracted_Power;
+      float                         Power_Cost;
+      float                         Energy_Cost;
+      float                         Active_Power;
+      float                         Active_Energy;
+      float                         Reactive_Power;
+      float                         Reactive_Energy;
     } Eval_Params_t;
     typedef struct {
-      string                     Name;
-      float                      DefaultPowerCost;
-      float                      DefaultEnergyCost;
-      string                     Color;
-//      Parser                   EnergyCost;
-//      Parser                   PowerCost;
-//      float                 ContractedPower;
-//      float                 PowerCost;
-//      float                 EnergyCost;
-//      TariffPowerPlugin    *PowerModule;
-//      TariffEnergyPlugin   *EnergyModule;
+      string                        Name;
+      float                         DefaultPowerCost;
+      float                         DefaultEnergyCost;
+      string                        Color;
+      Parser                        Script;
+      map<string, float>            Variables;
+      vector<Concept_t>             Concepts;
     } Period_t;
     typedef struct {
-      string                     Name;
-      string                     Color;
-      Parser                     Script;
-      vector<Concept_t>          Concepts;
-      uint8_t                    Quarters[96];
+      string                        Name;
+      string                        Color;
+      uint8_t                       Quarters[96];
     } Day_t;
-
-
-//    typedef struct {
-//      float    Active;
-//      float    Reactive;
-//      uint8_t  Period;
-//    } Sample_t;
-
-
-  private :
+  protected :
     string                          pParseError;
     string                          pDescription;
     string                          pCurrency;
@@ -85,52 +64,94 @@ class Tariff final {
     string                          pEnergyUnits;
     Eval_Params_t                   pEvalParams;
     Parser                          pScript;
+    map<string, float>              pVariables;
     vector<Concept_t>               pConcepts;
     vector<Period_t>                pPeriods;
     vector<Day_t>                   pDays;
     map<uint16_t, vector<uint8_t> > pYears;
+  private :
+    static float *VariableFactory(const char_type *name, void *params);
+  public :
+    Tariff(const json &t);
+    virtual ~Tariff();
+    bool     IsValid();
+    string   ParseError();
+    json     ToJSON();
+};
+//----------------------------------------------------------------------------------------------------------------------
+class Rate final : private Tariff {
+  private :
+    enum Tax_Type { TAX_PERCENT, TAX_PERCENT_POWER, TAX_PERCENT_ENERGY, TAX_PERCENT_ENERGY_POWER, FIXED };
+    enum Price_Source { PRICES_NONE, PRICES_ESIOS };
+    typedef struct {
+      Tax_Type  Type;
+      float     Value;
+      string    Name;
+    } Tax_t;
+//  typedef struct {
+//      Parser                   EnergyCost;
+//      Parser                   PowerCost;
+//      float                 ContractedPower;
+//      float                 PowerCost;
+//      float                 EnergyCost;
+//      TariffPowerPlugin    *PowerModule;
+//      TariffEnergyPlugin   *EnergyModule;
+//  } PeriodExt_t;
+//    typedef struct {
+//      float    Active;
+//      float    Reactive;
+//      uint8_t  Period;
+//    } Sample_t;
+  private :
+    vector<Tax_t>     pTaxs;
+    string            From;
+    string            To;
+    vector<string>    pBillingCycles;
+    bool              pContractedLink;
+    vector<float>     pContracted;
+    Parser            pPowerCostScript;
+    vector<float>     pPowerCosts;
+    Parser            pEnergyCostScript;
+    vector<float>     pEnergyCosts;
 
-    map<string, float>              pVariables;
 
-//    vector<Tax_t>     pTaxs;
+
+
 //    queue<Sample_t>   pSamples;
-//    vector<uint64_t>  pBillingCycles;
+
 //    uint64_t          pFirstSampleTime;
 //    uint64_t          pLastSampletime;
 //    float             pSumPowerCost;
 //    float             pSumEnergyCost;
-  private :
-    static float *VariableFactory(const char_type *name, void *params);
-  private :
-      uint8_t FindPeriod(uint64_t time);
+
+//    uint8_t FindPeriod(uint64_t time);
+//    json GetResume(uint64_t now);
+//    uint64_t StartDate();
+//    bool PushSample(const uint64_t time, const float active, const float reactive);
+//    bool PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower);
   public :
-    Tariff(const json &t);
-    ~Tariff();
-    bool   IsValid();
-    string ParseError();
-    json   GetTemplate();
-    json   GetRate();
+    Rate(const json &t);
+    ~Rate();
+    json ToJSON();
 
-
-    json GetResume(uint64_t now);
-    uint64_t StartDate();
-    bool PushSample(const uint64_t time, const float active, const float reactive);
-    bool PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower);
 };
 //----------------------------------------------------------------------------------------------------------------------
-class TariffList final {
+class RateList final {
   private :
-    vector<Tariff*> pList;
+    list<Rate>      pList;
     time_zone       pTimeZone;
   private :
-    bool PushTariff(const json &tariff);
+//    bool PushTariff(const json &tariff);
   public :
-    TariffList(const json &list, const string &timezone);
-    ~TariffList();
-    Tariff   *Find(const uint64_t time);
-    uint64_t  BillFrom(const uint64_t);
-    uint64_t  BillEnd(const uint64_t);
-    uint64_t  BillTo(const uint64_t to);
+    RateList(const json &list, const string &timezone, uint64_t &from, uint64_t &to, const bool &precise);
+    ~RateList();
+//    void CalcBillRanges(uint64_t &from, uint64_t &to);
+    bool EvaluateSample(const uint64_t &sampletime, const float &active, const float &reactive);
+
+//    Tariff   *Find(const uint64_t time);
+//    uint64_t  BillFrom(const uint64_t);
+//    uint64_t  BillEnd(const uint64_t);
+//    uint64_t  BillTo(const uint64_t to);
 };
 //----------------------------------------------------------------------------------------------------------------------
 //class TariffPowerPlugin {
