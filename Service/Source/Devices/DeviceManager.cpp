@@ -237,7 +237,7 @@ void DeviceManager::SetTariffCallback(const json &params, Response &response) {
   string   UserName = params["UserName"];
   string   Name     = params["Name"];
   Database DB;
-  DB.ExecSentenceAsyncResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(Tmp.GetTemplate().dump()) + " WHERE tariff = " + DB.Bind(TariffID) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : "") + " RETURNING tariff");
+  DB.ExecSentenceAsyncResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(Tmp.ToJSON().dump()) + " WHERE tariff = " + DB.Bind(TariffID) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : "") + " RETURNING tariff");
   return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
 void DeviceManager::AddTariffCallback(const json &params, Response &response) {
@@ -248,6 +248,6 @@ void DeviceManager::AddTariffCallback(const json &params, Response &response) {
   string   UserName = params["UserName"];
   string   Name     = params["Name"];
   Database DB;
-  DB.ExecSentenceAsyncResult("INSERT INTO tariffs(name, username, template) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(UserName) + ", " + DB.Bind(Tmp.GetTemplate().dump()) + ") RETURNING tariff");
+  DB.ExecSentenceAsyncResult("INSERT INTO tariffs(name, username, template) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(UserName) + ", " + DB.Bind(Tmp.ToJSON().dump()) + ") RETURNING tariff");
   return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
