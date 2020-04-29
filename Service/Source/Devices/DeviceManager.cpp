@@ -231,23 +231,23 @@ void DeviceManager::SetTariffCallback(const json &params, Response &response) {
   if((params.contains("TariffID") == false) || (params["TariffID"].is_number() == false)) return HTTPServer::FillResponse(response, "'TariffID' param is required", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
-  Tariff Tmp(params["Template"]);
-  if(Tmp.IsValid() == false) return HTTPServer::FillResponse(response, Tmp.ParseError(), "text/plain", HTTP_BAD_REQUEST);
+  json Conf = Rates::CheckTariffConfig(params["Template"]);
+  if(Conf.is_string()) return HTTPServer::FillResponse(response, Conf, "text/plain", HTTP_BAD_REQUEST);
   uint32_t TariffID = params["TariffID"];
   string   UserName = params["UserName"];
   string   Name     = params["Name"];
   Database DB;
-  DB.ExecSentenceAsyncResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(Tmp.ToJSON().dump()) + " WHERE tariff = " + DB.Bind(TariffID) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : "") + " RETURNING tariff");
+  DB.ExecSentenceAsyncResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(Conf.dump()) + " WHERE tariff = " + DB.Bind(TariffID) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : "") + " RETURNING tariff");
   return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
 void DeviceManager::AddTariffCallback(const json &params, Response &response) {
   if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
-  Tariff Tmp(params["Template"]);
-  if(Tmp.IsValid() == false) return HTTPServer::FillResponse(response, Tmp.ParseError(), "text/plain", HTTP_BAD_REQUEST);
+  json Conf = Rates::CheckTariffConfig(params["Template"]);
+  if(Conf.is_string()) return HTTPServer::FillResponse(response, Conf, "text/plain", HTTP_BAD_REQUEST);
   string   UserName = params["UserName"];
   string   Name     = params["Name"];
   Database DB;
-  DB.ExecSentenceAsyncResult("INSERT INTO tariffs(name, username, template) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(UserName) + ", " + DB.Bind(Tmp.ToJSON().dump()) + ") RETURNING tariff");
+  DB.ExecSentenceAsyncResult("INSERT INTO tariffs(name, username, template) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(UserName) + ", " + DB.Bind(Conf.dump()) + ") RETURNING tariff");
   return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }

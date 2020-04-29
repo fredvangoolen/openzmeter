@@ -1,6 +1,6 @@
 <template>
   <div>
-    <dlg :loading="ShowSpinner" v-if="View!='Expresion'">
+    <dlg :loading="ShowSpinner" v-if="(View!='Expresion') && View!='ExpresionPeriods'">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Tariffs template</h4></div>
         <div class="pull-right btn-group">
@@ -47,7 +47,7 @@
           <div class="panel-group panel panel-dialog" style="margin-bottom: 0px">
             <div class="panel-heading">
               <div class="pull-right btn-group">
-                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit tariff script"><img :src="require('Imgs/math_functions.png')" @click="ActivePeriod=null; View='Expresion'"></button>
+                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit tariff script"><img :src="require('Imgs/math_functions.png')" @click="View='Expresion'"></button>
                 <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new tariff concept" @click="Tariff.Template.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
               </div>
               <toolbar-pager class="pull-right" :pageSize="10" :input="Tariff.Template.Concepts" :output.sync="FilterConcepts" :filtercols="['Description', 'Variable']"></toolbar-pager>
@@ -90,7 +90,7 @@
             <div class="panel panel-dialog panel-tab" v-if="ActivePeriod=='P'+(idx+1)" style="margin-bottom: 0px">
               <div class="panel-heading">
                 <div class="pull-right btn-group">
-                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit period script"><img :src="require('Imgs/math_functions.png')" @click="View='Expresion'"></button>
+                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit period script"><img :src="require('Imgs/math_functions.png')" @click="View='ExpresionPeriods'"></button>
                   <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new period concept" @click="period.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
                 </div>
                 <toolbar-pager class="pull-right" :pageSize="10" :input="period.Concepts" :output.sync="FilterConcepts" :filtercols="['Description', 'Variable']"></toolbar-pager>
@@ -216,7 +216,7 @@
     </dlg>
     <dlg v-if="View=='Expresion'">
       <template v-slot:header>
-        <div class="pull-left"><h4 class="modal-title">Period {{ ActivePeriod }} script</h4></div>
+        <div class="pull-left"><h4 class="modal-title">Tariff script</h4></div>
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" @click="View='Concepts'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
         </div>
@@ -228,6 +228,21 @@
         </div>
       </div>
     </dlg>
+    <dlg v-if="View=='ExpresionPeriods'">
+      <template v-slot:header>
+        <div class="pull-left"><h4 class="modal-title">Period {{ ActivePeriod }} script</h4></div>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+        </div>
+      </template>
+      <div class="row">
+        <div class="col-xs-12">
+          <label class="control-label">Expresion</label>
+          <input-math v-model="Tariff.Template.Periods[parseInt(ActivePeriod.substr(1)) - 1].Script" :vars="Vars"></input-math>
+        </div>
+      </div>
+    </dlg>
+
   </div>
 </template>
 

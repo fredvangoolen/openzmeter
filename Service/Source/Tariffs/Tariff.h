@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <queue>
+#include <set>
 #include "cctz/time_zone.h"
 #include "muParser/muParser.h"
 #include "Database.h"
@@ -25,30 +25,23 @@
 using namespace cctz;
 using namespace mu;
 //----------------------------------------------------------------------------------------------------------------------
-class Tariff {
-  protected :
+class Rates final {
+  friend class RatesEval;
+  private :
     enum Concept_Type { CONCEPT_INFO, CONCEPT_COST_ENERGY, CONCEPT_COST_POWER, CONCEPT_COST };
+    enum Tax_Type { TAX_PERCENT, TAX_PERCENT_POWER, TAX_PERCENT_ENERGY, TAX_PERCENT_ENERGY_POWER, TAX_FIXED };
+    enum Price_Source { PRICES_NONE, PRICES_ESIOS };
     typedef struct {
       string                        Description;
       string                        Variable;
       Concept_Type                  Type;
     } Concept_t;
     typedef struct {
-      float                         Contracted_Power;
-      float                         Power_Cost;
-      float                         Energy_Cost;
-      float                         Active_Power;
-      float                         Active_Energy;
-      float                         Reactive_Power;
-      float                         Reactive_Energy;
-    } Eval_Params_t;
-    typedef struct {
       string                        Name;
       float                         DefaultPowerCost;
       float                         DefaultEnergyCost;
       string                        Color;
-      Parser                        Script;
-      map<string, float>            Variables;
+      string                        Script;
       vector<Concept_t>             Concepts;
     } Period_t;
     typedef struct {
@@ -56,38 +49,104 @@ class Tariff {
       string                        Color;
       uint8_t                       Quarters[96];
     } Day_t;
-  protected :
-    string                          pParseError;
-    string                          pDescription;
-    string                          pCurrency;
-    string                          pPowerUnits;
-    string                          pEnergyUnits;
-    Eval_Params_t                   pEvalParams;
-    Parser                          pScript;
-    map<string, float>              pVariables;
-    vector<Concept_t>               pConcepts;
-    vector<Period_t>                pPeriods;
-    vector<Day_t>                   pDays;
-    map<uint16_t, vector<uint8_t> > pYears;
+    typedef struct {
+      uint16_t                      Year;
+      uint8_t                       Days[366];
+    } Year_t;
+    typedef struct {
+      Tax_Type                      Type;
+      float                         Value;
+      string                        Description;
+    } Tax_t;
+    typedef struct {
+      string                        Name;
+      string                        Description;
+      string                        Currency;
+      string                        PowerUnits;
+      string                        EnergyUnits;
+      string                        Script;
+      vector<Tax_t>                 Taxs;
+      vector<Concept_t>             Concepts;
+      vector<Period_t>              Periods;
+      vector<Day_t>                 Days;
+      vector<Year_t>                Years;
+      vector<float>                 Contracted;
+      string                        PowerCostScript;
+      vector<float>                 PowerCost;
+      string                        EnergyCostScript;
+      vector<float>                 EnergyCost;
+      uint64_t                      StartDate;
+      Price_Source                  PriceSource;
+      uint64_t                      EndDate;
+      vector<uint64_t>              BillingCycles;
+    } Rate_t;
+
   private :
-    static float *VariableFactory(const char_type *name, void *params);
+    vector<Rate_t>                  pRates;
+    time_zone const                *pTimeZone;
+  private :
+    static float                    pTmpVar;
   public :
-    Tariff(const json &t);
-    virtual ~Tariff();
-    bool     IsValid();
-    string   ParseError();
-    json     ToJSON();
+    static json CheckConfig(const json &t);
+    static json CheckTariffConfig(const json &t);
+    static json CheckRateConfig(const json &t);
+  public :
+    Rates(const json &t, const time_zone &timezone);
 };
 //----------------------------------------------------------------------------------------------------------------------
-class Rate final : private Tariff {
-  private :
-    enum Tax_Type { TAX_PERCENT, TAX_PERCENT_POWER, TAX_PERCENT_ENERGY, TAX_PERCENT_ENERGY_POWER, FIXED };
-    enum Price_Source { PRICES_NONE, PRICES_ESIOS };
+class RatesEval final {
+  public :
     typedef struct {
-      Tax_Type  Type;
-      float     Value;
-      string    Name;
-    } Tax_t;
+      uint64_t        SampleTime;
+      float           ActivePower;
+      float           ReactivePower;
+      float           Cost;
+    } SampleOut_t;
+    typedef struct {
+      uint64_t        SampleTime;
+      uint8_t         Period;
+      string          Color;
+      float           ContractedPower;
+    } PeriodOut_t;
+  private :
+    const Rates      *pParent;
+    uint64_t          pFrom;
+    uint64_t          pTo;
+    uint64_t          pCurrent;
+  private:
+    function<void(const PeriodOut_t &)> pPeriodCallback;
+    function<void(const SampleOut_t &)> pSampleCallback;
+    function<void(const json &)>        pBillCallback;
+  private :
+    uint64_t FindStart(const uint64_t from);
+    uint64_t FindEnd(const uint64_t to);
+  public :
+    RatesEval(const Rates *parent, const uint64_t from, const uint64_t to, const bool precise);
+    void     PushSample(const uint64_t time, const float active, const float reactive);
+    void     Finish();
+    void     SetPeriodCallback(function<void(const PeriodOut_t &)> periodOut);
+    void     SetSampleCallback(function<void(const SampleOut_t &)> sampleOut);
+    void     SetBillCallback(function<void(const json &)> billOut);
+    uint64_t StartDate();
+    uint64_t EndDate();
+ };
+//----------------------------------------------------------------------------------------------------------------------
+class PriceModule {
+  public :
+    static PriceModule *CreateInstance(const string &name);
+  public :
+    PriceModule(const uint64_t from, const uint64_t to);
+    virtual ~PriceModule();
+    virtual void GetParams(const uint64_t sampletime, map<string, float> &vars);
+};
+//----------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
 //  typedef struct {
 //      Parser                   EnergyCost;
 //      Parser                   PowerCost;
@@ -102,20 +161,6 @@ class Rate final : private Tariff {
 //      float    Reactive;
 //      uint8_t  Period;
 //    } Sample_t;
-  private :
-    vector<Tax_t>     pTaxs;
-    string            From;
-    string            To;
-    vector<string>    pBillingCycles;
-    bool              pContractedLink;
-    vector<float>     pContracted;
-    Parser            pPowerCostScript;
-    vector<float>     pPowerCosts;
-    Parser            pEnergyCostScript;
-    vector<float>     pEnergyCosts;
-
-
-
 
 //    queue<Sample_t>   pSamples;
 
@@ -129,97 +174,7 @@ class Rate final : private Tariff {
 //    uint64_t StartDate();
 //    bool PushSample(const uint64_t time, const float active, const float reactive);
 //    bool PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower);
-  public :
-    Rate(const json &t);
-    ~Rate();
-    json ToJSON();
 
-};
-//----------------------------------------------------------------------------------------------------------------------
-class RateList final {
-  private :
-    list<Rate>      pList;
-    time_zone       pTimeZone;
-  private :
-//    bool PushTariff(const json &tariff);
-  public :
-    RateList(const json &list, const string &timezone, uint64_t &from, uint64_t &to, const bool &precise);
-    ~RateList();
-//    void CalcBillRanges(uint64_t &from, uint64_t &to);
-    bool EvaluateSample(const uint64_t &sampletime, const float &active, const float &reactive);
 
-//    Tariff   *Find(const uint64_t time);
-//    uint64_t  BillFrom(const uint64_t);
-//    uint64_t  BillEnd(const uint64_t);
-//    uint64_t  BillTo(const uint64_t to);
-};
-//----------------------------------------------------------------------------------------------------------------------
-//class TariffPowerPlugin {
-//  public :
-//    typedef struct {
-//      float    Contracted;
-//      uint32_t Days;
-//      float    Cost;
-//      string   Other;
-//      float    OtherCosts;
-//    } CycleStats_t;
-//  private :
-//    typedef TariffPowerPlugin* (*Func_t)();
-//    typedef struct {
-//      string Name;
-//      Func_t Instance;
-//    } Type_t;
-//  private :
-//    static vector<Type_t> pPlugins;
-//  protected :
-//    static bool Register(const string name, const Func_t instance);
-//  public :
-//    static bool Contains(const string name);
-//    static TariffPowerPlugin *Instance(const string name);
-//  protected :
-//    string       pName;
-//    CycleStats_t pStats;
-//  public :
-//    string       Name();
-//  public :
-//    virtual ~TariffPowerPlugin();
-//    virtual CycleStats_t CycleStats() = 0;
-//    virtual void         Config(const float contracted, const float cost) = 0;
-//    virtual void         PushSample(const float active, const float reactive) = 0;
-//    virtual float        PopSample(const float active, const float reactive) = 0;
-//};
-//----------------------------------------------------------------------------------------------------------------------
-//class TariffEnergyPlugin {
-//  public :
-//    typedef struct {
-//      float    Consumed;
-//      float    Cost;
-//      string   Other;
-//      float    OtherCosts;
-//    } CycleStats_t;
-//  private :
-//    typedef TariffEnergyPlugin* (*Func_t)();
-//    typedef struct {
-//      string Name;
-//      Func_t Instance;
-//    } Type_t;
-//  private :
-//    static vector<Type_t> pPlugins;
-//  protected :
-//    static bool Register(string name, Func_t instance);
-//  public :
-//    static bool Contains(string name);
-//    static TariffEnergyPlugin *Instance(string name);
-//  protected :
-//    string       pName;
-//    CycleStats_t pStats;
-//  public :
-//    string       Name();
-//  public :
-//    virtual ~TariffEnergyPlugin();
-//    virtual CycleStats_t CycleStats() = 0;
-//    virtual void         Config(const float cost) = 0;
-//    virtual void         PushSample(const float active, const float reactive) = 0;
-//    virtual float        PopSample(const float active, const float reactive) = 0;
-//};
+
 //----------------------------------------------------------------------------------------------------------------------

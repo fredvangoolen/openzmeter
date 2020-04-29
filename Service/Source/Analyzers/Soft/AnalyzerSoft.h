@@ -153,7 +153,7 @@ class AnalyzerSoft final : public Analyzer {
     float                      pMaxCurrent;              //Max current, over this value warnings are shown
     float                      pMinCurrent;              //Min current, under this value some analysis are disabled
     uint32_t                   pMaxSamples;              //Max block samples
-    string                     pTimeZone;                //Country code
+    time_zone                  pTimeZone;                //Country code
     uint64_t                   pSequence;                //Sequence number of analyzed blocks
     uint16_t                   pBlockSamples;            //Number of samples in block
     uint16_t                   pBlockCyclesCount;        //Block cycles count
@@ -175,7 +175,7 @@ class AnalyzerSoft final : public Analyzer {
     uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
     uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
     uint32_t                  *pFreqCycles;              //Frequency calc cycles lenghts
-    json                       pRates;                   //Applied rates local copy
+    Rates                     *pRateList;                //Applied rates
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private : //Used only in Analyzer_Func
     Params_t                   pAggreg200MS;             //200ms aggregation
@@ -261,7 +261,7 @@ class AnalyzerSoft final : public Analyzer {
     void GetRemote(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
   public :
-    static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode);
+    static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, string *error);
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();

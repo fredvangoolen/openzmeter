@@ -39,16 +39,16 @@ using namespace cctz;
 #define EVENT_RAWENVELOPETIME            0.5        //Time in seconds before and after event to store RAW samples
 #define EVENT_RMSENVELOPETIME           10.0        //Time in seconds before and after event to store RMS samples
 //----------------------------------------------------------------------------------------------------------------------
-const float   AnalyzerSoft::FrequencyRanges[];
-const uint8_t AnalyzerSoft::FrequencyRangesLen;
-const float   AnalyzerSoft::VoltageRanges[];
-const uint8_t AnalyzerSoft::VoltageRangesLen;
-const float   AnalyzerSoft::THDRanges[];
-const uint8_t AnalyzerSoft::THDRangesLen;
-const float   AnalyzerSoft::HarmonicsAllowed[];
-const uint8_t AnalyzerSoft::HarmonicsAllowedLen;
-const float   AnalyzerSoft::UnbalanceRanges[];
-const uint8_t AnalyzerSoft::UnbalanceRangesLen;
+constexpr float   AnalyzerSoft::FrequencyRanges[];
+const     uint8_t AnalyzerSoft::FrequencyRangesLen;
+constexpr float   AnalyzerSoft::VoltageRanges[];
+const     uint8_t AnalyzerSoft::VoltageRangesLen;
+constexpr float   AnalyzerSoft::THDRanges[];
+const     uint8_t AnalyzerSoft::THDRangesLen;
+constexpr float   AnalyzerSoft::HarmonicsAllowed[];
+const     uint8_t AnalyzerSoft::HarmonicsAllowedLen;
+constexpr float   AnalyzerSoft::UnbalanceRanges[];
+const     uint8_t AnalyzerSoft::UnbalanceRangesLen;
 //----------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t     AnalyzerSoft::pFFTMutex = PTHREAD_MUTEX_INITIALIZER;
 uint32_t            AnalyzerSoft::pFFTRunning = 0;
@@ -69,7 +69,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAlarmsWorker     = NULL;
   pEventsWorker     = NULL;
   pFreqCycles       = NULL;
-//  pPrevTimestamp    = 0;
+  pRateList         = NULL;
   pSyncThread       = 0;
   pMQTTThread       = 0;
   pMQTTSendBuff     = NULL;
@@ -83,7 +83,9 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   InitAggreg(pAggreg1H, AGGREG_1H);
   for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFTWorker[i] = new Worker("FFT_V" + to_string(i), this, &FFT_Func);
   for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFTWorker[i] = new Worker("FFT_I" + to_string(i), this, &FFT_Func);
-  Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode));
+  string Error;
+  Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode, &Error));
+  if(Error.empty() == false) LOGFile::Error("Analyzer '%s' rates failed to parse (%s)\n", Serial.c_str(), Error.c_str());
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", this, &Analyzer_Func);
 }
 AnalyzerSoft::~AnalyzerSoft() {
@@ -101,6 +103,10 @@ AnalyzerSoft::~AnalyzerSoft() {
   if(pCurrentSamples != NULL) free(pCurrentSamples);
   if(pVoltageFFT != NULL) free(pVoltageFFT);
   if(pCurrentFFT != NULL) free(pCurrentFFT);
+  pAnalyzerLock.WriteLock();
+  if(pRateList != NULL) delete pRateList;
+  pRateList = NULL;
+  pAnalyzerLock.Unlock();
   for(uint8_t n = 0; n < pVoltageChannels; n++) {
     if(pVoltageFFTWorker[n] != NULL) delete pVoltageFFTWorker[n];
   }
@@ -160,7 +166,7 @@ bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, co
 bool AnalyzerSoft::IsWorking() {
   return pAnalyzerWorker->IsWorking();
 }
-json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode mode) {
+json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, string *error) {
   json ConfigOUT = json::object();
   ConfigOUT["Name"] = "Unnamed analyzer";
   ConfigOUT["NominalVoltage"] = 230.0;
@@ -260,16 +266,11 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
     }
   }
   if(config.contains("Rates") && config["Rates"].is_array()) {
-    for(auto configRate : config["Rates"]) {
-      if((configRate.contains("StartDate") == false) || (configRate["StartDate"].is_number_unsigned() == false)) continue;
-      if((configRate.contains("EndDate") == false) || (configRate["EndDate"].is_number_unsigned() == false)) continue;
-      if((configRate.contains("Name") == false) || (configRate["Name"].is_string() == false)) continue;
-      if((configRate.contains("Config") == false) || (configRate["Config"].is_object() == false)) continue;
-      if((configRate.contains("Template") == false) || (configRate["Template"].is_object() == false)) continue;
-      //Tariff T(configRate["StartDate"], configRate["EndDate"], ConfigOUT["TimeZone"]);
-      //if(T.SetTemplate(configRate["Template"]) == false) continue;
-      //if(T.SetConfig(configRate["Config"]) == false) continue;
-      //ConfigOUT["Rates"].push_back(configRate);
+    json Tmp = Rates::CheckConfig(config["Rates"]);
+    if(Tmp.is_string()) {
+      if(error != NULL) *error = Tmp;
+    } else {
+      ConfigOUT["Rates"] = Tmp;
     }
   }
   return ConfigOUT;
@@ -281,8 +282,8 @@ void AnalyzerSoft::Configure(const json &options) {
   pNominalVoltage   = options["NominalVoltage"];
   pMaxCurrent       = options["MaxCurrent"];
   pMinCurrent       = options["MinCurrent"];
-  pTimeZone         = options["TimeZone"];
   pSave200MS        = options["Save200MS"];
+  load_time_zone(options["TimeZone"], &pTimeZone);
   if(pNominalFrequency != options["NominalFrequency"]) {
     pNominalFrequency = options["NominalFrequency"];
     if(pNominalFrequency == 0.0) {
@@ -343,7 +344,8 @@ void AnalyzerSoft::Configure(const json &options) {
       }
     }
   }
-  //TODO VERIFICO RATESpRates = options["Rates"];
+  if(pRateList != NULL) delete pRateList;
+  pRateList = new Rates(options["Rates"], pTimeZone);
   bool AlarmsEnabled = options["AlarmsEnabled"];
   bool EventsEnabled = options["EventsEnabled"];
   if((EventsEnabled == false) && (pEventsWorker != NULL)) {
@@ -419,7 +421,6 @@ void AnalyzerSoft::Configure(const json &options) {
       pMQTTSendBuff = (uint8_t*)calloc(pMQTTBuffSize, 1);
       pMQTTRecvBuff = (uint8_t*)calloc(pMQTTBuffSize, 1);
       mqtt_init_reconnect(&pMQTTClient, NULL, NULL, NULL);
-//      mqtt_reinit(&pMQTTClient, -1, pMQTTSendBuff, pMQTTBuffSize, pMQTTRecvBuff, pMQTTBuffSize);
       if(pthread_create(&pMQTTThread, NULL, MQTT_Thread, this) != 0) {
         LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
         pMQTTThread = 0;
@@ -1293,7 +1294,7 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
     mqtt_sync(&This->pMQTTClient);
     if(This->pMQTTClient.error == MQTT_ERROR_CONNECT_NOT_CALLED) {
       mqtt_connect(&This->pMQTTClient, NULL, NULL, NULL, 0, (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
-      if(This->pMQTTConfig == true) This->PublishConfig(CheckConfig(ConfigManager::ReadConfig(This->pConfigPath), This->pMode));
+      if(This->pMQTTConfig == true) This->PublishConfig(CheckConfig(ConfigManager::ReadConfig(This->pConfigPath), This->pMode, NULL));
     } else if(This->pMQTTClient.error == MQTT_ERROR_SOCKET_ERROR) {
       if(This->pMQTTClient.socketfd != -1) {
         close(This->pMQTTClient.socketfd);
@@ -1437,8 +1438,14 @@ void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
   json Config = params;
   if((Config.contains("Alarms") == false) || (Config["Alarms"].is_array() == false)) Config["Alarms"] = ConfigManager::ReadConfig(pConfigPath + "/Alarms");
   if((Config.contains("Rates") == false) || (Config["Rates"].is_array() == false)) Config["Rates"] = ConfigManager::ReadConfig(pConfigPath + "/Rates");
-  Configure(CheckConfig(Config, pMode));
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
+  string Error;
+  json   Conf = CheckConfig(Config, pMode, &Error);
+  if(Error.empty() == true) {
+    Configure(Conf);
+    HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
+  } else {
+    HTTPServer::FillResponse(response, Error, "text/plain", HTTP_BAD_REQUEST);
+  }
 }
 void AnalyzerSoft::GetSeries(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -1729,254 +1736,85 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   uint64_t To              = params["To"];
   uint64_t From            = params["From"];
   string   Aggreg          = params["Aggreg"];
-  uint32_t PeriodSeconds   = 900000;
-  uint64_t BillFrom        = From;
-  uint64_t BillTo          = To;
+  bool     SaveActive      = false;
+  bool     SaveReactive    = false;
+  bool     SaveExpense     = false;
+  bool     SavePeriodName  = false;
+  bool     SavePeriodColor = false;
+  bool     SaveContracted  = false;
+  bool     SaveBills       = false;
+  float    AccActive       = 0.0;
+  float    AccReactive     = 0.0;
+  float    AccCost         = 0.0;
   if(From > To) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
-  if(Aggreg == "1H") PeriodSeconds = 3600000;
-  if(((To - From) / PeriodSeconds) > 100000) return HTTPServer::FillResponse(response, "Returned period to large for this aggregation level", "text/plain", HTTP_BAD_REQUEST);
+  if(((To - From) / ((Aggreg == "1H") ? 3600000 : 900000)) > 100000) return HTTPServer::FillResponse(response, "Returned period to large for this aggregation level", "text/plain", HTTP_BAD_REQUEST);
   for(uint8_t i = 0; i < params["Series"].size(); i++) {
     if(params["Series"][i].is_string() == false) return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
-    if(params["Series"][i] == "POWER") {
-      Result["Power"]               = json::object();
-      Result["Power"]["Sampletime"] = json::array();
-      Result["Power"]["Active"]     = json::array();
-      Result["Power"]["Reactive"]   = json::array();
-      Result["Power"]["Expenses"]   = json::array();
-    } else if(params["Series"][i] == "PERIODS") {
-      Result["Periods"] = json::array();
+    if(params["Series"][i] == "ACTIVE_POWER") {
+      SaveActive = true;
+    } else if(params["Series"][i] == "REACTIVE_POWER") {
+      SaveReactive = true;
+    } else if(params["Series"][i] == "PERIOD_EXPENSE") {
+      SaveExpense = true;
+    } else if(params["Series"][i] == "PERIOD_NAME") {
+      SavePeriodName = true;
+    } else if(params["Series"][i] == "PERIOD_COLOR") {
+      SavePeriodColor = true;
+    } else if(params["Series"][i] == "PERIOD_POWER") {
+      SaveContracted = true;
     } else if(params["Series"][i] == "BILLS") {
-      Result["Bills"] = json::array();
+      SaveBills = true;
     } else {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
     }
   }
-  Database DB(Serial);
   pAnalyzerLock.ReadLock();
-  RateList Rates(pRates, pTimeZone, BillFrom, BillTo, params["Precise"]);
-  pAnalyzerLock.Unlock();
-  DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To) + " ORDER BY sampletime ASC");
-  bool  MoreData    = DB.FecthRow();
-  float AccActive   = 0;
-  float AccReactive = 0;
-  float AccCost     = 0;
-  for(uint64_t Time = From; Time != To; Time = Time + 900000) {
-    float Active   = 0;
-    float Reactive = 0;
-    if((MoreData == true) && (DB.ResultUInt64("sampletime") == Time)) {
-      Active   = DB.ResultFloat("active_power");
-      Reactive = DB.ResultFloat("reactive_power");
-      MoreData = DB.FecthRow();
-    }
-    bool BillDate = Rates.EvaluateSample(Time, Active, Reactive);
-    //si quiero periodos y hay cambio de periodo añado a la lista
-      //      string   Color      = "";
-      //string   Period     = "";
-      //uint64_t Time       = time;
-      //float    Cost       = NAN;
-      //float    Contracted = NAN;
-    //Si quiero potencias añado a la lista {
-      //float    Cost       = NAN;
-
-    //}
-    //si billdate == true
-      //  Si quiero facturas y , añado factura
-      //Reinicio contadores
-    //
-
-
-
-    //Recover/group values
-//    do {
-//      string   Color      = "";
-//      string   Period     = "";
-//      uint64_t Time       = time;
-//      float    Cost       = NAN;
-//      float    Contracted = NAN;
-//      if((Tariff != NULL) && (Tariff->PopSample(Time, Active, Reactive, Period, Color, Cost, Contracted) == false)) {
-//        if(SaveBills == true) Result["Bills"].push_back(Tariff->GetResume(Now));
-//        break;
-//      }
-//      if(Time <= Now) {
-//        AccActive  = isnan(AccActive) ? Active : isnan(Active) ? AccActive : AccActive + Active;
-//        AccReactive = isnan(AccReactive) ? Reactive : isnan(Reactive) ? AccReactive : AccReactive + Reactive;
-//        AccCost = isnan(AccCost) ? Cost : isnan(Cost) ? AccCost : AccCost + Cost;
-//      }
-//      if(Aggreg == "1H") {
-//        if((Time % 3600000) != 3599999) {
-//          if(Tariff != NULL) continue;
-//          break;
-//        }
-//        AccActive = AccActive / 4.0;
-//        AccReactive = AccReactive / 4.0;
-//      }
-//      if((Time >= From) && (Time <= To)) {
-//        if(SaveTime == true)        Result["Sampletime"].push_back(Time);
-//        if(SaveActive == true)      Result["Active_Power"].push_back(AccActive);
-//        if(SaveReactive == true)    Result["Reactive_Power"].push_back(AccReactive);
-//        if(SaveContracted == true)  Result["Period_Power"].push_back(Contracted);
-//        if(SavePeriodColor == true) {
-//          if(Color.empty() == true)
-//            Result["Period_Color"].push_back(nullptr);
-//          else
-//            Result["Period_Color"].push_back(Color);
-//        }
-//        if(SavePeriodName == true) {
-//          if(Period.empty() == true)
-//            Result["Period_Name"].push_back(nullptr);
-//          else
-//            Result["Period_Name"].push_back(Period);
-//        }
-//        if(SaveExpense == true)     Result["Period_Expense"].push_back(AccCost);
-//      }
-//      AccActive = NAN;
-//      AccReactive = NAN;
-//      AccCost = NAN;
-//    } while(Tariff != NULL);
+  RatesEval Eval(pRateList, From, To, params["Precise"]);
+  if(SaveActive || SaveReactive || SaveExpense) {
+    Result["Sampletime"] = json::array();
+    if(SaveActive)      Result["Active_Power"] = json::array();
+    if(SaveReactive)    Result["Reactive_Power"] = json::array();
+    if(SaveExpense)     Result["Expense"] = json::array();
+    Eval.SetSampleCallback([&](const RatesEval::SampleOut_t &out) {
+      AccActive   += out.ActivePower;
+      AccReactive += out.ReactivePower;
+      AccCost     += out.Cost;
+      if(Aggreg == "1H") {
+        if((out.SampleTime % 3600000) != 3599999) return;
+        AccActive = AccActive / 4.0;
+        AccReactive = AccReactive / 4.0;
+      }
+      Result["Sampletime"].push_back(out.SampleTime);
+      if(SaveActive)   Result["Active_Power"].push_back(out.ActivePower);
+      if(SaveReactive) Result["Reactive_Power"].push_back(out.ReactivePower);
+      if(SaveExpense)  Result["Expense"].push_back(out.Cost);
+    });
   }
-
-
-
-//  uint64_t Now             = Tools::GetTime64();
-//  pAnalyzerLock.ReadLock();
-//  TariffList Tariffs(pRates, pTimeZone);
-//  pAnalyzerLock.Unlock();
-  //Find start and end date to retrieve data
-//  uint64_t BillingFrom = Tariffs.BillFrom(From);
-//  uint64_t BillingTo = Tariffs.BillTo(To);
-
-
-
+  if(SavePeriodName || SavePeriodColor || SaveContracted) {
+    Result["Period_Sampletime"] = json::array();
+    if(SavePeriodName)  Result["Period_Name"] = json::array();
+    if(SavePeriodColor) Result["Period_Color"] = json::array();
+    if(SaveContracted)  Result["Period_Power"] = json::array();
+    Eval.SetPeriodCallback([&](const RatesEval::PeriodOut_t &out) {
+      Result["Period_Sampletime"].push_back(out.SampleTime);
+      if(SavePeriodName)  Result["Period_Name"].push_back(out.Period);
+      if(SavePeriodColor) Result["Period_Color"].push_back(out.Color);
+      if(SaveContracted)  Result["Period_Power"].push_back(out.ContractedPower);
+    });
+  }
+  if(SaveBills == true) {
+    Result["Bills"] = json::array();
+    Eval.SetBillCallback([&](const json &out) {
+      Result["Bills"].push_back(out);
+    });
+  }
+  Database DB(Serial);
+  DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime >= " + DB.Bind(Eval.StartDate()) + " AND sampletime <= " + DB.Bind(Eval.EndDate()) + " ORDER BY sampletime ASC");
+  while(DB.FecthRow() == true) Eval.PushSample(DB.ResultUInt64("sampletime"), DB.ResultFloat("active_power"), DB.ResultFloat("reactive_power"));
+  Eval.Finish();
+  pAnalyzerLock.Unlock();
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
-//void AnalyzerSoft::GetPrices(const json &params, Response &response) {
-//  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-//  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-//  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-//  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-//  uint64_t To              = params["To"];
-//  uint64_t From            = params["From"];
-//  string   Aggreg          = params["Aggreg"];
-//  json     Result          = json::object();
-//  bool     SaveActive      = false;
-//  bool     SaveReactive    = false;
-//  bool     SavePeriodName  = false;
-//  bool     SavePeriodColor = false;
-//  bool     SaveContracted  = false;
-//  bool     SaveExpense     = false;
-//  bool     SaveBills       = false;
-//  bool     SaveTime        = false;
-//  uint64_t Now             = Tools::GetTime64();
-//  for(uint8_t i = 0; i < params["Series"].size(); i++) {
-//    if(params["Series"][i].is_string() == false) return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
-//    if(params["Series"][i] == "ACTIVE_POWER") {
-//      SaveActive = true;
-//    } else if(params["Series"][i] == "REACTIVE_POWER") {
-//      SaveReactive = true;
-//    } else if(params["Series"][i] == "PERIOD_NAME") {
-//      SavePeriodName = true;
-//    } else if(params["Series"][i] == "PERIOD_COLOR") {
-//      SavePeriodColor = true;
-//    } else if(params["Series"][i] == "PERIOD_POWER") {
-//      SaveContracted = true;
-//    } else if(params["Series"][i] == "PERIOD_EXPENSE") {
-//      SaveExpense = true;
-//    } else if(params["Series"][i] == "BILLS") {
-//      SaveBills = true;
-//    } else {
-//      return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
-//    }
-//  }
-//  if(SaveActive || SaveReactive || SavePeriodName || SavePeriodColor || SaveContracted || SaveExpense) SaveTime = true;
-//  if(From > To) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
-//  if((Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' param must be '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
-//  if(((To - From) / ((Aggreg == "1H") ? 3600000 : 900000)) > 100000) return HTTPServer::FillResponse(response, "Returned period to large for this aggregation level", "text/plain", HTTP_BAD_REQUEST);
-//  if(SaveTime == true)        Result["Sampletime"] = json::array();
-//  if(SaveActive == true)      Result["Active_Power"]   = json::array();
-//  if(SaveReactive == true)    Result["Reactive_Power"] = json::array();
-//  if(SavePeriodName == true)  Result["Period_Name"]    = json::array();
-//  if(SavePeriodColor == true) Result["Period_Color"]   = json::array();
-//  if(SaveContracted == true)  Result["Period_Power"]   = json::array();
-//  if(SaveExpense == true)     Result["Period_Expense"] = json::array();
-//  if(SaveBills == true)       Result["Bills"]          = json::array();
-//  //Load involved tariffs, currency and timezone
-//  Database DB(Serial);
-////  DB.ExecSentenceAsyncResult("SELECT to_json(array_agg(json_build_object('Name', rates.name, 'StartDate', startdate, 'EndDate', enddate, 'Config', config, 'Template', template) ORDER BY startdate ASC)) as rate FROM rates WHERE enddate >= " + DB.Bind(From) + " AND startdate <= " + DB.Bind(To));
-////  json DBTariffs = json::array();
-////  if(DB.FecthRow()) DBTariffs = DB.ResultJSON("rate");
-//  pAnalyzerLock.ReadLock();
-//  TariffList Tariffs(pRates, pTimeZone);
-//  pAnalyzerLock.Unlock();
-//  //Find start and end date to retrieve data
-//  uint64_t BillingFrom = Tariffs.BillFrom(From);
-//  uint64_t BillingTo = Tariffs.BillTo(To);
-//  //Retrieve active and reactive samples
-//  DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime > " + DB.Bind(BillingFrom) + " AND sampletime <= " + DB.Bind(BillingTo) + " ORDER BY sampletime ASC");
-//  bool MoreData = DB.FecthRow();
-//  //Traverse all samples
-//  float AccActive = NAN;
-//  float AccReactive = NAN;
-//  float AccCost = NAN;
-//  for(uint64_t time = BillingFrom + 899999; time != BillingTo; time = time + 900000) {
-//    float Active = NAN, Reactive = NAN;
-//    if((MoreData == true) && (DB.ResultUInt64("sampletime") == time)) {
-//      Active = DB.ResultFloat("active_power");
-//      Reactive = DB.ResultFloat("reactive_power");
-//      MoreData = DB.FecthRow();
-//    }
-//    Tariff *Tariff = Tariffs.Find(time);
-//    if((Tariff != NULL) && (Tariff->PushSample(time, Active, Reactive) == true) && ((time + 900000) != BillingTo)) continue;  //If under a tariff push samples until bill cycle ends or no more data!
-//    //Recover/group values
-//    do {
-//      string   Color      = "";
-//      string   Period     = "";
-//      uint64_t Time       = time;
-//      float    Cost       = NAN;
-//      float    Contracted = NAN;
-//      if((Tariff != NULL) && (Tariff->PopSample(Time, Active, Reactive, Period, Color, Cost, Contracted) == false)) {
-//        if(SaveBills == true) Result["Bills"].push_back(Tariff->GetResume(Now));
-//        break;
-//      }
-//      if(Time <= Now) {
-//        AccActive  = isnan(AccActive) ? Active : isnan(Active) ? AccActive : AccActive + Active;
-//        AccReactive = isnan(AccReactive) ? Reactive : isnan(Reactive) ? AccReactive : AccReactive + Reactive;
-//        AccCost = isnan(AccCost) ? Cost : isnan(Cost) ? AccCost : AccCost + Cost;
-//      }
-//      if(Aggreg == "1H") {
-//        if((Time % 3600000) != 3599999) {
-//          if(Tariff != NULL) continue;
-//          break;
-//        }
-//        AccActive = AccActive / 4.0;
-//        AccReactive = AccReactive / 4.0;
-//      }
-//      if((Time >= From) && (Time <= To)) {
-//        if(SaveTime == true)        Result["Sampletime"].push_back(Time);
-//        if(SaveActive == true)      Result["Active_Power"].push_back(AccActive);
-//        if(SaveReactive == true)    Result["Reactive_Power"].push_back(AccReactive);
-//        if(SaveContracted == true)  Result["Period_Power"].push_back(Contracted);
-//        if(SavePeriodColor == true) {
-//          if(Color.empty() == true)
-//            Result["Period_Color"].push_back(nullptr);
-//          else
-//            Result["Period_Color"].push_back(Color);
-//        }
-//        if(SavePeriodName == true) {
-//          if(Period.empty() == true)
-//            Result["Period_Name"].push_back(nullptr);
-//          else
-//            Result["Period_Name"].push_back(Period);
-//        }
-//        if(SaveExpense == true)     Result["Period_Expense"].push_back(AccCost);
-//      }
-//      AccActive = NAN;
-//      AccReactive = NAN;
-//      AccCost = NAN;
-//    } while(Tariff != NULL);
-//  }
-//  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
-//}
 void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);

@@ -20,8 +20,8 @@ EXECUTABLE_SOURCE = Source/Tools.cpp \
 										Source/MODBus.cpp \
 										Source/Telegram.cpp \
 										Source/Tariffs/ESIOS.cpp
-CFLAGS += -Wno-psabi -Wall -flto -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs
-LDFLAGS += -flto -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto
+CFLAGS += -Wno-psabi -Wall -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs
+LDFLAGS += -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto
 
 #Add libs (cctz, nlohmann, muparser, httplib, mqtt-c)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
@@ -52,9 +52,10 @@ else
 	@false
 endif
 ifeq ($(DEBUG), true)
-	CFLAGS += -O0 -g
+	CFLAGS += -O0 -g -ggdb3 -fstack-protector-all -fstack-check
 else
-	CFLAGS  += -O2 -Wall -s -ftree-vectorize
+	CFLAGS  += -Os -flto -Wall -s
+	LDFLAGS += -flto
 endif
 ifeq ($(DEVICE_V1), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1/DeviceV1.cpp

@@ -36,3 +36,7 @@ class ESIOS final {
     ESIOS();
     ~ESIOS();
 };
+class ESIOS_Query final {
+
+
+};

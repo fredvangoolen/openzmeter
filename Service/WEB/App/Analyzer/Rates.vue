@@ -9,7 +9,7 @@
           <button type="button" class="btn btn-default btn-xs" @click="$emit('close', Analyzer.Analyzer)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
         </div>
       </template>
-      <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
+      <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null" v-html="Error"></div>
       <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error==null">All dates/times are in analyzer timezone.</div>
       <vuetable key="rates" :fields="Columns" :data="Analyzer.Rates" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
@@ -36,8 +36,8 @@
       return { Error: null, ShowSpinner: false, View: null, Index: null, Analyzer: null,
         Columns: [
           { name: 'Name', title: 'Name' },
-          { name: 'StartDate', title: 'Start date', callback: this.DateFormat },
-          { name: 'EndDate', title: 'End date', callback: this.DateFormat },
+          { name: 'StartDate', title: 'Start date' },
+          { name: 'EndDate', title: 'End date' },
           { name: '__slot:actions', title: '' }
         ]
       };
@@ -54,7 +54,7 @@
         this.View = null;
       },
       Add: function() {
-        this.Analyzer.Rates.push({ Name: 'Unname rate', StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Template: null, Config: { Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxs: [], Billing: [] } });
+        this.Analyzer.Rates.push({ Name: 'Unname rate', Description: '', StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxs: [], Billing: [] });
         this.Index = this.Analyzer.Rates.length - 1;
         this.View = 'Rate';
       },
@@ -71,13 +71,10 @@
           (result) => { this.$emit('close', result.data); },
           (fail) => {
             this.ShowSpinner = false;
-            this.Error = 'Failed to save analyzer!';
+            this.Error = 'Failed to save analyzer!<br/>' + fail.body;
             setTimeout(() => { this.Error = null; }, 5000);
           }
         );
-      },
-      DateFormat: function(val) {
-        return moment.tz(val, this.analyzer.TimeZone).format('DD/MM/YYYY');
       }
     },
     components: { AnalyzerRate, vuetable }

@@ -15,5 +15,5 @@ TARIFF_NONE = true
 DEBUG   = true
 CC      = gcc
 LD      = ld
-CFLAGS += -I /usr/include/postgresql -march=native -funsafe-math-optimizations
+CFLAGS += -I /usr/include/postgresql -march=native
 
