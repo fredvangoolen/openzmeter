@@ -13,10 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "cctz/time_zone.h"
 #include "Telegram.h"
-//----------------------------------------------------------------------------------------------------------------------
-using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 json                      Telegram::pStatus      = json::object();
 string                    Telegram::pToken       = "";
@@ -205,12 +202,12 @@ void Telegram::AdjustWorkers() {
   LOGFile::Debug("Adjusted Telegram workers pool to %d connections (plus %u in use)\n", pFreeWorkers.size(), pUsedWorkers);
   pthread_mutex_unlock(&pMutex);
 }
-void Telegram::SendAlarm(const string &analyzer, const string &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered) {
+void Telegram::SendAlarm(const string &analyzer, const time_zone &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered) {
   Database  DB;
-  time_zone Timezone;
+//  time_zone Timezone;
   json      Tmp = json::object();
-  cctz::load_time_zone(tz, &Timezone);
-  Tmp["text"] = (triggered ? "↗️ *" : "↘️ *") + name + "*\n" + (triggered ? "Triggered" : "Released") + " at " + cctz::format("%H:%M:%S - %Y/%m/%d \n", chrono::system_clock::from_time_t(timestamp / 1000), Timezone);
+//  cctz::load_time_zone(tz, &Timezone);
+  Tmp["text"] = (triggered ? "↗️ *" : "↘️ *") + name + "*\n" + (triggered ? "Triggered" : "Released") + " at " + cctz::format("%H:%M:%S - %Y/%m/%d \n", chrono::system_clock::from_time_t(timestamp / 1000), tz);
   Tmp["parse_mode"] = "Markdown";
   DB.ExecSentenceNoResult("INSERT INTO telegram(msg) SELECT jsonb_build_object('chat_id', telegram) || " + DB.Bind(Tmp.dump()) + "::jsonb FROM permissions NATURAL JOIN users WHERE serial = " + DB.Bind(analyzer) + " AND telegram IS NOT NULL");
 }

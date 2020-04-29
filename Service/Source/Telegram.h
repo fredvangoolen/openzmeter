@@ -15,11 +15,13 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include "cpp-httplib/httplib.h"
+#include "cctz/time_zone.h"
 #include "nlohmann/json.h"
 #include "Tools.h"
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
+using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 #define TELEGRAM_POLLING_SEC    3
 #define TELEGRAM_UPDATE_LIMIT 100
@@ -52,7 +54,7 @@ class Telegram final {
     Telegram();
     ~Telegram();
   public :
-    static void  SendAlarm(const string &analyzer, const string &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered);
+    static void  SendAlarm(const string &analyzer, const time_zone &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered);
     static bool  SendMessage(const json &msg, Client *client);
     static void  AdjustWorkers();
 //----------------------------------------------------------------------------------------------------------------------

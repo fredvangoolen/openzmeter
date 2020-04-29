@@ -2,11 +2,11 @@
   <dlg :loading="ShowSpinner">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
-      <div class="pull-right btn-group" v-if="Rate.Template==null">
+      <div class="pull-right btn-group" v-if="Rate.Periods==null">
         <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
-      <toolbar-pager v-if="Rate.Template==null" class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['Name', 'StartDate', 'EndDate']"></toolbar-pager>
-      <div class="pull-right btn-group" v-if="Rate.Template!=null">
+      <toolbar-pager v-if="Rate.Periods==null" class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['Name', 'StartDate', 'EndDate']"></toolbar-pager>
+      <div class="pull-right btn-group" v-if="Rate.Periods!=null">
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Concepts' }" @click="View='Concepts'">Concepts</button>
@@ -14,8 +14,7 @@
         <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
-    <div class="row" v-if="Rate.Template==null">
+    <div class="row" v-if="Rate.Periods==null">
       <spinner v-if="ShowSpinner"></spinner>
       <vuetable :fields="ColumnsTariffs" :api-mode="false" :data="FilterTariffs" class="tariffs table small table-striped">
         <template slot="actions" slot-scope="props">
@@ -25,7 +24,7 @@
         </template>
       </vuetable>
     </div>
-    <div v-if="Rate.Template!=null">
+    <div v-if="Rate.Periods!=null">
       <div class="row" v-if="View=='Main'">
         <div class="col-xs-12">
           <label class="control-label">Name</label>
@@ -33,7 +32,7 @@
         </div>
         <div class="col-xs-12">
           <label class="control-label">Description</label>
-          <textarea class="form-control" rows="5" v-model="Rate.Template.Description" style="resize: none"></textarea>
+          <textarea class="form-control" rows="5" v-model="Rate.Description" style="resize: none"></textarea>
         </div>
         <div class="col-xs-4">
           <label class="control-label">From</label>
@@ -45,7 +44,7 @@
         </div>
         <div class="col-xs-4">
           <label class="control-label">Price source</label>
-          <option-picker :options="[ {name: 'NONE', value: 'NONE'}, {name: 'ESP - ESIOS', value: 'ESP_ESIOS'} ]" v-model="Rate.Config.Module" :big="true"></option-picker>
+          <option-picker :options="[ {name: 'NONE', value: 'NONE'}, {name: 'ESP - ESIOS', value: 'ESP_ESIOS'} ]" v-model="Rate.Module" :big="true"></option-picker>
         </div>
         <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12" style="margin-top: 5px">
@@ -58,19 +57,19 @@
             <div class="panel-heading">
               Contracted Power
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: !Array.isArray(Rate.Config.ContractedPower) }" @click="Rate.Config.ContractedPower=Array.isArray(Rate.Config.ContractedPower) ? Rate.Config.ContractedPower[0] : Array(Rate.Template.Periods.length).fill(Rate.Config.ContractedPower)" data-toggle="tooltip" title="Link all periods value"><img :src="require('Imgs/link.png')"></button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: !Array.isArray(Rate.ContractedPower) }" @click="Rate.ContractedPower=Array.isArray(Rate.ContractedPower) ? Rate.ContractedPower[0] : Array(Rate.Periods.length).fill(Rate.ContractedPower)" data-toggle="tooltip" title="Link all periods value"><img :src="require('Imgs/link.png')"></button>
               </div>
               <div class="clearfix"></div>
             </div>
-            <div class="panel-body" v-if="!Array.isArray(Rate.Config.ContractedPower)">
-              <input-spin :max="100000" :min="0" :prepend="Rate.Template.PowerUnits" :decimals="6" :increment="0.1" v-model="Rate.Config.ContractedPower"></input-spin>
+            <div class="panel-body" v-if="!Array.isArray(Rate.ContractedPower)">
+              <input-spin :max="100000" :min="0" :prepend="Rate.PowerUnits" :decimals="6" :increment="0.1" v-model="Rate.ContractedPower"></input-spin>
             </div>
-            <div class="panel-body" v-if="Array.isArray(Rate.Config.ContractedPower)">
+            <div class="panel-body" v-if="Array.isArray(Rate.ContractedPower)">
               <table style="width:100%">
-                <tr v-for="(period, idx) in Rate.Config.ContractedPower" :key="idx">
+                <tr v-for="(period, idx) in Rate.ContractedPower" :key="idx">
                   <td class="text-center small" style="width:30px"><strong>P{{ idx + 1 }}</strong></td>
                   <td>
-                    <input-spin :max="100000" :min="0" :prepend="Rate.Template.PowerUnits" :decimals="6" :increment="0.1" v-model="Rate.Config.ContractedPower[idx]"></input-spin>
+                    <input-spin :max="100000" :min="0" :prepend="Rate.PowerUnits" :decimals="6" :increment="0.1" v-model="Rate.ContractedPower[idx]"></input-spin>
                   </td>
                 </tr>
               </table>
@@ -80,31 +79,31 @@
             <div class="panel-heading">
               Power Cost
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.Config.PowerCost) != 'string') }" @click="Rate.Config.PowerCost=Rate.Template.Periods.map((val) => { return val.DefaultPowerCost;})" data-toggle="tooltip" title="Power cost is a fixed value">Fixed</button>
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.Config.PowerCost) == 'string') }" @click="Rate.Config.PowerCost='0'" data-toggle="tooltip" title="Power cost computed from avaliable variables">Computed</button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.PowerCost) != 'string') }" @click="Rate.PowerCost=Rate.Periods.map((val) => { return val.DefaultPowerCost;})" data-toggle="tooltip" title="Power cost is a fixed value">Fixed</button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.PowerCost) == 'string') }" @click="Rate.PowerCost='0'" data-toggle="tooltip" title="Power cost computed from avaliable variables">Computed</button>
               </div>
               <div class="clearfix"></div>
             </div>
-            <div class="panel-body" v-if="Array.isArray(Rate.Config.PowerCost)">
+            <div class="panel-body" v-if="Array.isArray(Rate.PowerCost)">
               <table style="width:100%">
-                <tr v-for="(period, idx) in Rate.Config.PowerCost" :key="idx">
+                <tr v-for="(period, idx) in Rate.PowerCost" :key="idx">
                   <td class="text-center small" style="width:30px"><strong>P{{ idx + 1 }}</strong></td>
                   <td>
-                    <input-spin :max="100000" :min="0" :prepend="Rate.Template.Currency + '/' + Rate.Template.PowerUnits + '/day'" :decimals="6" :increment="0.1" v-model="Rate.Config.PowerCost[idx]"></input-spin>
+                    <input-spin :max="100000" :min="0" :prepend="Rate.Currency + '/' + Rate.PowerUnits + '/day'" :decimals="6" :increment="0.1" v-model="Rate.PowerCost[idx]"></input-spin>
                   </td>
                   <td style="width:30px">
                     <div class="btn-group">
-                      <button type="button" class="btn btn-default btn-xs" @click="$set(Rate.Config.PowerCost, idx, Rate.Template.Periods[idx].DefaultPowerCost)" data-toggle="tooltip" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
+                      <button type="button" class="btn btn-default btn-xs" @click="$set(Rate.PowerCost, idx, Rate.Periods[idx].DefaultPowerCost)" data-toggle="tooltip" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
                     </div>
                   </td>
                 </tr>
               </table>
             </div>
-            <div class="panel-body" v-if="!Array.isArray(Rate.Config.PowerCost)">
+            <div class="panel-body" v-if="!Array.isArray(Rate.PowerCost)">
               <div class="input-group input-group-xs">
                 <input type="text" class="form-control" value="Configured from expression" :disabled="true">
                 <span class="input-group-btn">
-                  <button type="button" class="btn btn-default btn-xs" @click="$set(Rate.Config.PowerCost, idx, Rate.Template.Periods[idx].DefaultPowerCost)" data-toggle="tooltip" title="Set power costs expression"><img :src="require('Imgs/math_functions.png')"></button>
+                  <button type="button" class="btn btn-default btn-xs" @click="$set(Rate.PowerCost, idx, Rate.Periods[idx].DefaultPowerCost)" data-toggle="tooltip" title="Set power costs expression"><img :src="require('Imgs/math_functions.png')"></button>
                 </span>
               </div>
             </div>
@@ -113,31 +112,31 @@
             <div class="panel-heading">
               Energy Cost
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.Config.EnergyCost) != 'string') }" @click="Rate.Config.EnergyCost=Rate.Template.Periods.map((val) => { return val.DefaultEnergyCost;})" data-toggle="tooltip" title="Energy cost is a fixed value">Fixed</button>
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.Config.EnergyCost) == 'string') }" @click="Rate.Config.EnergyCost='0'" data-toggle="tooltip" title="Energy cost computed from avaliable variables">Computed</button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.EnergyCost) != 'string') }" @click="Rate.EnergyCost=Rate.Periods.map((val) => { return val.DefaultEnergyCost;})" data-toggle="tooltip" title="Energy cost is a fixed value">Fixed</button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.EnergyCost) == 'string') }" @click="Rate.EnergyCost='0'" data-toggle="tooltip" title="Energy cost computed from avaliable variables">Computed</button>
               </div>
               <div class="clearfix"></div>
             </div>
-            <div class="panel-body" v-if="Array.isArray(Rate.Config.EnergyCost)">
+            <div class="panel-body" v-if="Array.isArray(Rate.EnergyCost)">
               <table style="width:100%">
-                <tr v-for="(period, idx) in Rate.Config.EnergyCost" :key="idx">
+                <tr v-for="(period, idx) in Rate.EnergyCost" :key="idx">
                   <td class="text-center small" style="width:30px"><strong>P{{ idx + 1 }}</strong></td>
                   <td>
-                    <input-spin :max="100000" :min="0" :prepend="Rate.Template.Currency + '/' + Rate.Template.EnergyUnits" :decimals="6" :increment="0.1" v-model="Rate.Config.EnergyCost[idx]"></input-spin>
+                    <input-spin :max="100000" :min="0" :prepend="Rate.Currency + '/' + Rate.EnergyUnits" :decimals="6" :increment="0.1" v-model="Rate.EnergyCost[idx]"></input-spin>
                   </td>
                   <td style="width:30px">
                     <div class="btn-group">
-                      <button type="button" class="btn btn-default btn-xs" @click="Rate.Config.EnergyCost[idx]=Rate.Template.Periods[idx].DefaultEnergyCost" data-toggle="tooltip" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
+                      <button type="button" class="btn btn-default btn-xs" @click="Rate.EnergyCost[idx]=Rate.Periods[idx].DefaultEnergyCost" data-toggle="tooltip" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
                     </div>
                   </td>
                 </tr>
               </table>
             </div>
-            <div class="panel-body" v-if="!Array.isArray(Rate.Config.EnergyCost)">
+            <div class="panel-body" v-if="!Array.isArray(Rate.EnergyCost)">
               <div class="input-group input-group-xs">
                 <input type="text" class="form-control" value="Configured from expression" :disabled="true">
                 <span class="input-group-btn">
-                  <button type="button" class="btn btn-default btn-xs" @click="Rate.Config.PowerCost[idx]=Rate.Template.Periods[idx].DefaultPowerCost" data-toggle="tooltip" title="Set power costs expression"><img :src="require('Imgs/math_functions.png')"></button>
+                  <button type="button" class="btn btn-default btn-xs" @click="Rate.PowerCost[idx]=Rate.Periods[idx].DefaultPowerCost" data-toggle="tooltip" title="Set power costs expression"><img :src="require('Imgs/math_functions.png')"></button>
                 </span>
               </div>
             </div>
@@ -149,9 +148,9 @@
           <div class="panel panel-dialog" style="margin-bottom: 0px">
             <div class="panel-heading">
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" @click="Rate.Config.Taxs.push({Description: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0})" data-toggle="tooltip" title="Add concept"><img :src="require('Imgs/plus.png')"></button>
+                <button type="button" class="btn btn-default btn-xs" @click="Rate.Taxs.push({Description: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0})" data-toggle="tooltip" title="Add concept"><img :src="require('Imgs/plus.png')"></button>
               </div>
-              <toolbar-pager class="pull-right" :pageSize="10" :input="Rate.Config.Taxs" :output.sync="FilterTaxs" :filtercols="['Description']"></toolbar-pager>
+              <toolbar-pager class="pull-right" :pageSize="10" :input="Rate.Taxs" :output.sync="FilterTaxs" :filtercols="['Description']"></toolbar-pager>
               <div class="clearfix"></div>
             </div>
             <div class="panel-body">
@@ -159,7 +158,7 @@
                 <template slot="tax" slot-scope="props">
                   <div class="input-group input-group-xs">
                     <span class="input-group-btn">
-                      <button class="btn btn-default" type="button" @click="Rate.Config.Taxs.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
+                      <button class="btn btn-default" type="button" @click="Rate.Taxs.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
                     </span>
                     <input type="text" class="form-control" v-model="props.rowData.Description">
                   </div>
@@ -281,15 +280,7 @@
     },
     created: function() {
       this.Rate = this.analyzer.Rates[this.index];
-      if(this.Rate.Template == null) this.LoadTariffs();
-    },
-    computed: {
-      Error: function() {
-//        if(this.Rate.Template == null) return 'Select a base tariff from table before continue';
-//        if(this.Rate.StartDate < this.Rate.Template.Seasons[0].StartDate) return 'Date ranges is outside selected tariff ranges';
-//        if(this.Rate.EndDate > this.Rate.Template.Seasons.slice(-1)[0].EndDate) return 'Date ranges is outside selected tariff ranges';
-        return null;
-      },
+      if(this.Rate.Periods == null) this.LoadTariffs();
     },
     methods: {
       TimestampToDateString: function(val) {
@@ -316,10 +307,11 @@
         this.ShowSpinner = true;
         this.$http.post('getTariff', { TariffID: tariff.TariffID }).then(
           (result) => {
-            this.Rate.Template = result.body.Template;
-            this.Rate.Name = result.body.Name;
-            if(typeof(this.Rate.Config.PowerCost) == 'string') this.$set(this.Rate.Config, 'PowerCost', this.Rate.Template.Periods.map((val) => { return val.DefaultPowerCost; }));
-            if(typeof(this.Rate.Config.EnergyCost) == 'string') this.$set(this.Rate.Config, 'EnergyCost', this.Rate.Template.Periods.map((val) => { return val.DefaultEnergyCost; }));
+            var Rate = Object.assign(this.Rate, result.body.Template);
+            Rate.Name = result.body.Name;
+            if(typeof(Rate.PowerCost) == 'string') Rate.PowerCost = Rate.Periods.map((val) => { return val.DefaultPowerCost; });
+            if(typeof(Rate.EnergyCost) == 'string') Rate.EnergyCost = Rate.Periods.map((val) => { return val.DefaultEnergyCost; });
+            this.Rate = Rate;
             this.ShowSpinner = false;
           },
           (fail) => { }
@@ -385,17 +377,6 @@
         var To = moment(this.EndDate(idx)).add(1, 'ms');
         var From = moment(this.StartDate(idx));
         return To.diff(From, 'days');
-      },
-      Save: function() {
-        this.ShowSpinner = true;
-        this.$http.post((this.Rate.RateID == null) ? 'addRate' : 'setRate', Object.assign({ Analyzer: this.analyzer.Analyzer }, this.Rate)).then(
-          (result) => { this.$emit('close', true); },
-          (fail) => {
-            this.ShowSpinner = false;
-            this.Error = 'Failed to save rate to analyzer!';
-            setTimeout(() => { this.Error = null; }, 1000);
-          }
-        );
       },
 //      SetStartDate: function(date) {
 //        this.Rate.StartDate = date.startOf('day').valueOf();
