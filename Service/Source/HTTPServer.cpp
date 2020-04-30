@@ -85,7 +85,7 @@ void HTTPTaskQueue::enqueue(std::function<void()> fn) {
   }
   pthread_mutex_unlock(&pMutex);
   if(Tmp == NULL) {
-    Tmp = (Worker_t*)calloc(sizeof(Worker_t), 1);
+    Tmp = new Worker_t;
     Tmp->Terminate = false;
     Tmp->Cond      = PTHREAD_COND_INITIALIZER;
     Tmp->Mutex     = PTHREAD_MUTEX_INITIALIZER;
@@ -135,7 +135,7 @@ void HTTPTaskQueue::shutdown() {
     pthread_cond_signal(&Tmp->Cond);
     pthread_mutex_unlock(&Tmp->Mutex);
     pthread_join(Tmp->Thread, NULL);
-    free(Tmp);
+    delete Tmp;
   }
   pthread_mutex_unlock(&pMutex);
 }
@@ -154,7 +154,7 @@ void HTTPTaskQueue::on_idle() {
     pthread_mutex_unlock(&Tmp->Mutex);
     pthread_join(Tmp->Thread, NULL);
     pFreeWorkers.pop_back();
-    free(Tmp);
+    delete Tmp;
   }
   pthread_mutex_unlock(&pMutex);
   LOGFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)\n", pFreeWorkers.size(), pRunningWorkers);

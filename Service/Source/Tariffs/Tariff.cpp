@@ -23,27 +23,27 @@ Rates::Rates(const json &r, const time_zone &timezone) {
   pTimeZone = &timezone;
   pRates.resize(r.size());
   for(uint16_t R = 0; R < r.size(); R++) {
-      printf("%s\n", r[R].dump().c_str());
+    printf("%s\n", r[R].dump().c_str());
     pRates[R].Name = r[R]["Name"];
     pRates[R].Description = r[R]["Description"];
     pRates[R].Currency = r[R]["Currency"];
     pRates[R].PowerUnits = r[R]["PowerUnits"];
     pRates[R].EnergyUnits = r[R]["EnergyUnits"];
     pRates[R].Taxs.resize(r[R]["Taxs"].size());
-    for(uint8_t T = 0; T < r[R]["Taxs"].size(); T++) {
+    for(uint16_t T = 0; T < r[R]["Taxs"].size(); T++) {
       pRates[R].Taxs[T].Description = r[R]["Taxs"][T]["Description"];
       pRates[R].Taxs[T].Value = r[R]["Taxs"][T]["Value"];
       pRates[R].Taxs[T].Type = (r[R]["Taxs"][T]["Type"] == "PERCENT_TOTAL") ? TAX_PERCENT : (r[R]["Taxs"][T]["Type"] == "PERCENT_ENERGY") ? TAX_PERCENT_ENERGY : (r[R]["Taxs"][T]["Type"] == "PERCENT_POWER") ? TAX_PERCENT_POWER : (r[R]["Taxs"][T]["Type"] == "PERCENT_ENERGY_POWER") ? TAX_PERCENT_ENERGY_POWER : TAX_FIXED;
     }
     pRates[R].Periods.resize(r[R]["Periods"].size());
-    for(uint8_t P = 0; P < r[R]["Periods"].size(); P++) {
+    for(uint16_t P = 0; P < r[R]["Periods"].size(); P++) {
       pRates[R].Periods[P].Color = r[R]["Periods"][P]["Color"];
       pRates[R].Periods[P].DefaultPowerCost = r[R]["Periods"][P]["DefaultPowerCost"];
       pRates[R].Periods[P].DefaultEnergyCost = r[R]["Periods"][P]["DefaultEnergyCost"];
       pRates[R].Periods[P].Name = r[R]["Periods"][P]["Name"];
       pRates[R].Periods[P].Script = r[R]["Periods"][P]["Script"];
       pRates[R].Periods[P].Concepts.resize(r[R]["Periods"][P]["Concepts"].size());
-      for(uint8_t C = 0; C < r[R]["Periods"][P]["Concepts"].size(); C++) {
+      for(uint16_t C = 0; C < r[R]["Periods"][P]["Concepts"].size(); C++) {
         pRates[R].Periods[P].Concepts[C].Description = r[R]["Periods"][P]["Concepts"][C]["Description"];
         pRates[R].Periods[P].Concepts[C].Variable = r[R]["Periods"][P]["Concepts"][C]["Variable"];
         pRates[R].Periods[P].Concepts[C].Type = (r[R]["Periods"][P]["Concepts"][C]["Type"] != "INFO") ? CONCEPT_INFO : (r[R]["Periods"][P]["Concepts"][C]["Type"] != "INFO_POWER") ? CONCEPT_COST_POWER : (r[R]["Periods"][P]["Concepts"][C]["Type"] != "COST_ENERGY") ? CONCEPT_COST_ENERGY : CONCEPT_COST;
@@ -51,19 +51,19 @@ Rates::Rates(const json &r, const time_zone &timezone) {
     }
     pRates[R].Script = r[R]["Script"];
     pRates[R].Concepts.resize(r[R]["Concepts"].size());
-    for(uint8_t C = 0; C < r[R]["Concepts"].size(); C++) {
+    for(uint16_t C = 0; C < r[R]["Concepts"].size(); C++) {
       pRates[R].Concepts[C].Description = r[R]["Concepts"][C]["Description"];
       pRates[R].Concepts[C].Variable = r[R]["Concepts"][C]["Variable"];
       pRates[R].Concepts[C].Type = (r[R]["Concepts"][C]["Type"] != "INFO") ? CONCEPT_INFO : (r[R]["Concepts"][C]["Type"] != "INFO_POWER") ? CONCEPT_COST_POWER : (r[R]["Concepts"][C]["Type"] != "COST_ENERGY") ? CONCEPT_COST_ENERGY : CONCEPT_COST;
     }
     pRates[R].Days.resize(r[R]["Days"].size());
-    for(uint8_t D = 0; D < r[R]["Days"].size(); D++) {
+    for(uint16_t D = 0; D < r[R]["Days"].size(); D++) {
       pRates[R].Days[D].Name = r[R]["Days"][D]["Name"];
       pRates[R].Days[D].Color = r[R]["Days"][D]["Color"];
       for(uint8_t Q = 0; Q < 96; Q++) pRates[R].Days[D].Quarters[Q] = r[R]["Days"][D]["Quarters"][Q];
     }
     pRates[R].Years.resize(r[R]["Years"].size());
-    for(uint8_t Y = 0; Y < r[R]["Years"].size(); Y++) {
+    for(uint16_t Y = 0; Y < r[R]["Years"].size(); Y++) {
       pRates[R].Years[Y].Year = r[R]["Years"][Y]["Year"];
       for(uint16_t D = 0; D < r[R]["Years"][Y]["Days"].size(); D++) pRates[R].Years[Y].Days[D] = r[R]["Years"][Y]["Days"][D];
     }
@@ -71,19 +71,19 @@ Rates::Rates(const json &r, const time_zone &timezone) {
     if(r[R]["ContractedPower"].is_number()) {
       pRates[R].Contracted = vector<float>(pRates[R].Periods.size(), r[R]["ContractedPower"]);
     } else if(r[R]["ContractedPower"].is_array()) {
-      for(uint8_t P = 0; P < pRates[R].Periods.size(); P++) pRates[R].Contracted[P] = r[R]["ContractedPower"][P];
+      for(uint16_t P = 0; P < pRates[R].Periods.size(); P++) pRates[R].Contracted[P] = r[R]["ContractedPower"][P];
     }
     if(r[R]["PowerCost"].is_string()) {
       pRates[R].PowerCostScript = r[R]["PowerCost"];
     } else {
       pRates[R].PowerCost.resize(pRates[R].Periods.size());
-      for(uint8_t P = 0; P < pRates[R].Periods.size(); P++) pRates[R].PowerCost[P] = r[R]["PowerCost"][P];
+      for(uint16_t P = 0; P < pRates[R].Periods.size(); P++) pRates[R].PowerCost[P] = r[R]["PowerCost"][P];
     }
     if(r[R]["EnergyCost"].is_string()) {
       pRates[R].EnergyCostScript = r[R]["EnergyCost"];
     } else {
       pRates[R].EnergyCost.resize(pRates[R].Periods.size());
-      for(uint8_t P = 0; P < pRates[R].Periods.size(); P++) pRates[R].EnergyCost[P] = r[R]["EnergyCost"][P];
+      for(uint16_t P = 0; P < pRates[R].Periods.size(); P++) pRates[R].EnergyCost[P] = r[R]["EnergyCost"][P];
     }
     chrono::system_clock::time_point TimePoint;
     cctz::parse("%d/%m/%Y", r[R]["StartDate"], *pTimeZone, &TimePoint);
@@ -116,7 +116,7 @@ json Rates::CheckRateConfig(const json &t) {
   Out["Name"] = t["Name"];
   if((t.contains("Taxs") == false) || (t["Taxs"].is_array() == false)) return "'Taxs' param is required";
   Out["Taxs"] = json::array();
-  for(uint8_t T = 0; T < t["Taxs"].size(); T++) {
+  for(uint16_t T = 0; T < t["Taxs"].size(); T++) {
     Out["Taxs"].push_back(json::object());
     if((t["Taxs"][T].contains("Description") == false) || (t["Taxs"][T]["Description"].is_string() == false)) return "'Taxs/" + to_string(T) + "/Description' param is required";
     Out["Taxs"][T]["Description"] = t["Taxs"][T]["Description"];
@@ -127,7 +127,7 @@ json Rates::CheckRateConfig(const json &t) {
   }
   if((t.contains("ContractedPower") == true) && (t["ContractedPower"].is_array() == true) && (t["ContractedPower"].size() == Out["Periods"].size())) {
     Out["ContractedPower"] = json::array();
-    for(uint8_t P = 0; P < t["ContractedPower"].size(); P++) {
+    for(uint16_t P = 0; P < t["ContractedPower"].size(); P++) {
       if(t["ContractedPower"][P].is_number() == false) return "'ContractedPower/" + to_string(P) + "' param is required";
       Out["ContractedPower"].push_back(t["ContractedPower"][P]);
     }
@@ -138,7 +138,7 @@ json Rates::CheckRateConfig(const json &t) {
   }
   if((t.contains("PowerCost") == true) && (t["PowerCost"].is_array() == true) && (t["PowerCost"].size() == Out["Periods"].size())) {
     Out["PowerCost"] = json::array();
-    for(uint8_t P = 0; P < t["PowerCost"].size(); P++) {
+    for(uint16_t P = 0; P < t["PowerCost"].size(); P++) {
       if(t["PowerCost"][P].is_number() == false) return "'PowerCost/" + to_string(P) + "' param is required";
       Out["PowerCost"].push_back(t["PowerCost"][P]);
     }
@@ -150,7 +150,7 @@ json Rates::CheckRateConfig(const json &t) {
   }
   if((t.contains("EnergyCost") == true) && (t["EnergyCost"].is_array() == true) && (t["EnergyCost"].size() == Out["Periods"].size())) {
     Out["EnergyCost"] = json::array();
-    for(uint8_t P = 0; P < t["EnergyCost"].size(); P++) {
+    for(uint16_t P = 0; P < t["EnergyCost"].size(); P++) {
       if(t["EnergyCost"][P].is_number() == false) return "'EnergyCost/" + to_string(P) + "' param is required";
       Out["EnergyCost"].push_back(t["EnergyCost"][P]);
     }
@@ -198,7 +198,7 @@ json Rates::CheckTariffConfig(const json &t) {
   Out["EnergyUnits"] = t["EnergyUnits"];
   if((t.contains("Periods") == false) || (t["Periods"].is_array() == false) || (t["Periods"].size() == 0)) return "'Periods' param is required";
   Out["Periods"] = json::array();
-  for(uint8_t P = 0; P < t["Periods"].size(); P++) {
+  for(uint16_t P = 0; P < t["Periods"].size(); P++) {
     Parser      TmpParser;
     set<string> TmpVariables;
     Out["Periods"].push_back(json::object());
@@ -229,7 +229,7 @@ json Rates::CheckTariffConfig(const json &t) {
     }
     if((t["Periods"][P].contains("Concepts") == false) || (t["Periods"][P]["Concepts"].is_array() == false)) return "'Periods/P" + to_string(P + 1) + "/Concepts' param is required";
     Out["Periods"][P]["Concepts"] = json::array();
-    for(uint8_t C = 0; C < t["Periods"][P]["Concepts"].size(); C++) {
+    for(uint16_t C = 0; C < t["Periods"][P]["Concepts"].size(); C++) {
       if((t["Periods"][P]["Concepts"][C].contains("Description") == false) || (t["Periods"][P]["Concepts"][C]["Description"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Concepts/" + to_string(C) + "/Description' param is required";
       Out["Periods"][P]["Concepts"][C]["Description"] = t["Periods"][P]["Concepts"][C]["Description"];
       if((t["Periods"][P]["Concepts"][C].contains("Variable") == false) || (t["Periods"][P]["Concepts"][C]["Variable"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Concepts/" + to_string(C) + "/Variable' param is required";
@@ -260,7 +260,7 @@ json Rates::CheckTariffConfig(const json &t) {
   }
   if((t.contains("Concepts") == false) || (t["Concepts"].is_array() == false)) return "'Concepts' param is required";
   Out["Concepts"] = json::array();
-  for(uint8_t C = 0; C < t["Concepts"].size(); C++) {
+  for(uint16_t C = 0; C < t["Concepts"].size(); C++) {
     Out["Concepts"].push_back(json::object());
     if((t["Concepts"][C].contains("Description") == false) || (t["Concepts"][C]["Description"].is_string() == false)) return "'Concepts/" + to_string(C) + "/Description' param is required";
     Out["Concepts"][C]["Description"] = t["Concepts"][C]["Description"];
@@ -272,7 +272,7 @@ json Rates::CheckTariffConfig(const json &t) {
   }
   if((t.contains("Days") == false) || (t["Days"].is_array() == false) || (t["Days"].size() == 0)) return "'Days' param is required";
   Out["Days"] = json::array();
-  for(uint8_t D = 0; D < t["Days"].size(); D++) {
+  for(uint16_t D = 0; D < t["Days"].size(); D++) {
     Out["Days"].push_back(json::object());
     if((t["Days"][D].contains("Name") == false) || (t["Days"][D]["Name"].is_string() == false)) return "'Days/D" + to_string(D + 1) + "/Name' param is required";
     Out["Days"][D]["Name"] = t["Days"][D]["Name"];
@@ -288,7 +288,7 @@ json Rates::CheckTariffConfig(const json &t) {
   if((t.contains("Years") == false) || (t["Years"].is_array() == false) || (t["Years"].size() == 0)) return "'Years' param is required";
   set<uint16_t> DefYears;
   Out["Years"] = json::array();
-  for(uint8_t Y = 0; Y < t["Years"].size(); Y++) {
+  for(uint16_t Y = 0; Y < t["Years"].size(); Y++) {
     Out["Years"].push_back(json::object());
     if((t["Years"][Y].contains("Year") == false) || (t["Years"][Y]["Year"].is_number_integer() == false) || (t["Years"][Y]["Year"] < 2000) || (t["Years"][Y]["Year"] > 2100)) return "'Years/" + to_string(Y) + "/Year' param is required";
     if(DefYears.insert(t["Years"][Y]["Year"].get<uint16_t>()).second == false) return "'Years/" + to_string(Y) + "' duplicated";
@@ -303,32 +303,40 @@ json Rates::CheckTariffConfig(const json &t) {
   return Out;
 }
 //----------------------------------------------------------------------------------------------------------------------
-RatesEval::RatesEval(const Rates *parent, const uint64_t from, const uint64_t to, const bool precise) {
-  pParent  = parent;
-  pFrom    = FindStart(from);
-  pTo      = FindEnd(to);
-  pCurrent = pFrom;
-
+RatesEval::RatesEval(Rates *parent, const uint64_t from, const uint64_t to, const bool precise) {
+  pParent                = parent;
+  pFrom                  = FindStart(from);
+  pTo                    = FindEnd(to);
+  pCurrent               = pFrom;
+  pRatePtr               = pParent->pRates.begin();
+  pPrevPeriod.SampleTime = 0;
+  printf("inicio %lu, fin %lu\n", pFrom, pTo);
+}
+uint64_t RatesEval::StartDate() {
+  return pFrom;
+}
+uint64_t RatesEval::EndDate() {
+  return pTo;
 }
 uint64_t RatesEval::FindStart(const uint64_t from) {
-  uint64_t Time = (from / 3600000) * 3600000;
-  for(uint8_t R = 0; R < pParent->pRates.size(); R++) {
+  uint64_t Time = (from / 3600000) * 3600000 + 899999;
+  for(uint16_t R = 0; R < pParent->pRates.size(); R++) {
     if((Time >= pParent->pRates[R].StartDate) && (Time <= pParent->pRates[R].EndDate)) {
-      Time = pParent->pRates[R].StartDate;
-      for(uint8_t B = 0; B < pParent->pRates[R].BillingCycles.size(); B++) {
+      Time = pParent->pRates[R].StartDate + 899999;
+      for(uint16_t B = 0; B < pParent->pRates[R].BillingCycles.size(); B++) {
         if(pParent->pRates[R].BillingCycles[B] > Time) return Time;
-        Time = pParent->pRates[R].BillingCycles[B] + 1;
+        Time = pParent->pRates[R].BillingCycles[B] + 900000;
       }
     }
   }
   return Time;
 }
 uint64_t RatesEval::FindEnd(const uint64_t to) {
-  uint64_t Time = (to / 3600000) * 3600000 + 359999;
-  for(uint8_t R = 0; R < pParent->pRates.size(); R++) {
+  uint64_t Time = (to / 3600000) * 3600000 + 899999;
+  for(uint16_t R = 0; R < pParent->pRates.size(); R++) {
     if((pParent->pRates[R].StartDate <= Time) && (pParent->pRates[R].EndDate >= Time)) {
       Time = pParent->pRates[R].EndDate;
-      for(uint8_t B = pParent->pRates[R].BillingCycles.size(); B > 0; B--) {
+      for(uint16_t B = pParent->pRates[R].BillingCycles.size(); B > 0; B--) {
         if(pParent->pRates[R].BillingCycles[B - 1] < Time) return Time;
         Time = pParent->pRates[R].BillingCycles[B - 1];
       }
@@ -336,14 +344,98 @@ uint64_t RatesEval::FindEnd(const uint64_t to) {
   }
   return Time;
 }
+float *RatesEval::VariableFactory(const char_type *name, void *params) {
+  map<string, float> *Tmp = (map<string, float>*)params;
+  return &Tmp->emplace(name, 0.0).first->second;
+};
+void RatesEval::LoadRate() {
+  if(pPeriods.size() > 0) return;
+  pYearPtr = pRatePtr->Years.begin();
+  pBillPtr = pRatePtr->BillingCycles.begin();
+  pPeriods.resize(pRatePtr->Periods.size());
+
+  for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) {
+    pPeriods[P].Script.SetVarFactory(VariableFactory, &pPeriods[P].Variables);
+    pPeriods[P].Script.DefineVar("ContractedPower",  &pPeriods[P].Variables.emplace("ContractedPower", 0.0).first->second);
+    pPeriods[P].Script.DefineVar("PowerCost",        &pPeriods[P].Variables.emplace("PowerCost",       0.0).first->second);
+    pPeriods[P].Script.DefineVar("EnergyCost",       &pPeriods[P].Variables.emplace("EnergyCost",      0.0).first->second);
+    pPeriods[P].Script.DefineVar("ActivePower",      &pPeriods[P].Variables.emplace("ActivePower",     0.0).first->second);
+    pPeriods[P].Script.DefineVar("ActiveEnergy",     &pPeriods[P].Variables.emplace("ActiveEnergy",    0.0).first->second);
+    pPeriods[P].Script.DefineVar("ReactivePower",    &pPeriods[P].Variables.emplace("ReactivePower",   0.0).first->second);
+    pPeriods[P].Script.DefineVar("ReactiveEnergy",   &pPeriods[P].Variables.emplace("ReactiveEnergy",  0.0).first->second);
+    pPeriods[P].Script.SetExpr(pRatePtr->Periods[P].Script);
+  }
+  pScript.SetVarFactory(VariableFactory, &pVariables);
+  pScript.DefineVar("Period",         &pVariables.emplace("Period",          0.0).first->second);
+  pScript.DefineVar("ActivePower",    &pVariables.emplace("ActivePower",     0.0).first->second);
+  pScript.DefineVar("ActiveEnergy",   &pVariables.emplace("ActiveEnergy",    0.0).first->second);
+  pScript.DefineVar("ReactivePower",  &pVariables.emplace("ReactivePower",   0.0).first->second);
+  pScript.DefineVar("ReactiveEnergy", &pVariables.emplace("ReactiveEnergy",  0.0).first->second);
+  for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) {
+    pScript.DefineVar("ContractedPower_P" + to_string(P + 1),  &pPeriods[P].Variables.emplace("ContractedPower_P" + to_string(P + 1), 0.0).first->second);
+    pScript.DefineVar("PowerCost_P" + to_string(P + 1),        &pPeriods[P].Variables.emplace("PowerCost_P" + to_string(P + 1),       0.0).first->second);
+    pScript.DefineVar("EnergyCost_P" + to_string(P + 1),       &pPeriods[P].Variables.emplace("EnergyCost_P" + to_string(P + 1),      0.0).first->second);
+  }
+  pScript.SetExpr(pRatePtr->Script);
+}
+void RatesEval::UnloadRate() {
+  if(pPeriods.size() == 0) return;
+  pScript = Parser();
+  pVariables.clear();
+  pPeriods.clear();
+}
+void RatesEval::HandleSample(const float active, const float reactive) {
+  while(pRatePtr != pParent->pRates.end()) {
+    if(pCurrent < pRatePtr->StartDate) break;
+    if((pCurrent > pRatePtr->StartDate) && (pCurrent <= pRatePtr->EndDate)) {
+      LoadRate();
+      break;
+    }
+    UnloadRate();
+    pRatePtr++;
+  }
+  civil_second Time = cctz::convert(chrono::system_clock::from_time_t(pCurrent / 1000), *(pParent->pTimeZone));
+  if(pPeriods.size() > 0) {
+    while(Time.year() != pYearPtr->Year) pYearPtr++;
+    uint16_t         PeriodIdx = pRatePtr->Days[pYearPtr->Days[cctz::get_yearday(civil_day(Time)) - 1]].Quarters[Time.hour() * 4 + Time.minute() / 15];
+    if(pPeriodCallback && ((pPrevPeriod.SampleTime == 0) || (pPrevPeriod.Period != PeriodIdx) || (pPrevPeriod.Color != pRatePtr->Periods[PeriodIdx].Color) || (pPrevPeriod.ContractedPower != pRatePtr->Contracted[PeriodIdx]))) {
+      pPrevPeriod = { .SampleTime = pCurrent, .Period = PeriodIdx, .Color = pRatePtr->Periods[PeriodIdx].Color, .ContractedPower = pRatePtr->Contracted[PeriodIdx] };
+      pPeriodCallback(pPrevPeriod);
+    }
+    if(pSampleCallback || pBillCallback) {
+      //Si tarifa tiene modulo de calculo le pido datos para este instante
+      //Si powercost es un script lo evaluo
+      //Si energycost es un script lo evaluo
+      //cargo las variables usadas globales y llamo a script global
+      //Cargo variables del periodo actual y llamo script periodo actual
+
+      if(pSampleCallback) pSampleCallback( { pCurrent, active, reactive, 0.0 } );
+      if(1 ) { //Si ha terminado el periodo de facturacion
+        if(1/*Quiero factura*/) {
+          //Genero y llamo a pBillCallback();
+        }
+        //UnloadRate();
+      }
+    }
+  } else {
+    if(pSampleCallback) {
+      SampleOut_t SampleOut = { .SampleTime = pCurrent, .ActivePower = active, .ReactivePower = reactive, .Cost = 0.0 };
+      pSampleCallback(SampleOut);
+    }
+    if(pPeriodCallback && ((pPrevPeriod.SampleTime == 0) || (pPrevPeriod.Period != UINT16_MAX))) {
+      pPrevPeriod = { .SampleTime = pCurrent, .Period = UINT16_MAX, .Color = "", .ContractedPower = NAN };
+      pPeriodCallback(pPrevPeriod);
+    }
+  }
+  pCurrent += 900000;
+}
 void RatesEval::PushSample(const uint64_t time, const float active, const float reactive) {
- //Insertar periodos desde donde estoy hasta el final del periodo de facturacion
-
-
-
+  uint64_t Time = (time / 900000) * 900000 + 899999;
+  while(pCurrent < Time) HandleSample(0.0, 0.0);
+  HandleSample(active, reactive);
 }
 void RatesEval::Finish() {
-
+  while(pCurrent < pTo) HandleSample(0.0, 0.0);
 }
 void RatesEval::SetPeriodCallback(function<void(const PeriodOut_t &)> periodOut) {
   pPeriodCallback = periodOut;
@@ -354,12 +446,7 @@ void RatesEval::SetSampleCallback(function<void(const SampleOut_t &)> sampleOut)
 void RatesEval::SetBillCallback(function<void(const json &)> billOut) {
   pBillCallback = billOut;
 }
-uint64_t RatesEval::StartDate() {
-  return pFrom;
-}
-uint64_t RatesEval::EndDate() {
-  return pTo;
-}
+
 
 
 
@@ -369,23 +456,6 @@ uint64_t RatesEval::EndDate() {
 
 
 //void RateList::Evaluate(uint64_t from, uint64_t to, bool precise, function<SampleIn_t(const SampleRange_t &)> sampleIn, function<void(const SampleOut_t &)> sampleOut, function<void(const PeriodOut_t &)>periodOut, function<void(const json &)> billOut) {
-//  SampleRange_t Range;
-//  if(precise == true) {
-
-  //PEDIR DESDE EL INICIO DE LA HORA ANTERIOR
-//  } else {
-//    Range.From = (from / 900000) * 900000 + 899999;
-//    Range.To   = (to / 900000) * 900000 + 899999;
-//  }
-//  for(Range.Sampletime = Range.From; Range.Sampletime != Range.To; Range.Sampletime = Range.Sampletime + 900000) {
-//    printf("%" PRIu64 "\n", Range.Sampletime);
-//    SampleIn_t In = sampleIn(Range);
-//    SampleOut_t Out;
-//    Out.ActivePower = In.ActivePower;
-//    Out.ReactivePower = In.ReactivePower;
-//    Out.SampleTime = Range.Sampletime;
-//    Out.Cost = 0;
-//    sampleOut(Out);
 
 
 

@@ -737,13 +737,13 @@ void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const Agg
   if(pVoltageChannels > 1) parser.DefineVar("Unbalance", &Params->Unbalance);
   AppendArray("Voltage", Params->Voltage, pVoltageChannels);
   AppendArray("Current", Params->Current, pCurrentChannels);
-  AppendArray("Active_Power", Params->Active_Power, pVoltageChannels);
-  AppendArray("Reactive_Power", Params->Reactive_Power, pVoltageChannels);
-  AppendArray("Apparent_Power", Params->Apparent_Power, pVoltageChannels);
-  AppendArray("Power_Factor", Params->Power_Factor, pVoltageChannels);
-  AppendArray("Voltage_THD", Params->Voltage_THD, pVoltageChannels);
-  AppendArray("Current_THD", Params->Current_THD, pCurrentChannels);
-  if(pVoltageChannels > 1) AppendArray("Voltage_Phase", Params->Voltage_Phase, pVoltageChannels);
+  AppendArray("ActivePower", Params->Active_Power, pVoltageChannels);
+  AppendArray("ReactivePower", Params->Reactive_Power, pVoltageChannels);
+  AppendArray("ApparentPower", Params->Apparent_Power, pVoltageChannels);
+  AppendArray("PowerFactor", Params->Power_Factor, pVoltageChannels);
+  AppendArray("VoltageTHD", Params->Voltage_THD, pVoltageChannels);
+  AppendArray("CurrentTHD", Params->Current_THD, pCurrentChannels);
+  if(pVoltageChannels > 1) AppendArray("VoltagePhase", Params->Voltage_Phase, pVoltageChannels);
   AppendArray("Phi", Params->Phi, pVoltageChannels);
   try {
     parser.SetExpr(expr);
@@ -1240,7 +1240,7 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
         if((Content.is_discarded() == true) || (Content.is_object() == false)) return true;
         LOGFile::Debug("Analyzer '%s' receive querie from remote server\n", This->Serial.c_str());
         if((Content["Sequence"].is_number() == false) || (Content["Method"].is_string() == false) || (Content["Params"].is_object() == false)) return false;
-        Sync_t *Request = (Sync_t*)calloc(1, sizeof(Sync_t));
+        Sync_t *Request = new Sync_t;
         Request->Count        = &ThreadsCount;
         Request->Mutex        = &Mutex;
         Request->Cond         = &Cond;
@@ -1254,7 +1254,7 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
         pthread_mutex_lock(&Mutex);
         if(pthread_create(&Thread, NULL, Sync_RespThread, (void*)Request) != 0) {
           LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-          free(Request);
+          delete Request;
         } else {
           pthread_setname_np(Thread, "SyncWorker");
           ThreadsCount++;
@@ -1416,7 +1416,7 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
   *This->Count = *This->Count - 1;
   pthread_cond_signal(This->Cond);
   pthread_mutex_unlock(This->Mutex);
-  free(This);
+  delete This;
   return NULL;
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -1797,8 +1797,8 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
     if(SaveContracted)  Result["Period_Power"] = json::array();
     Eval.SetPeriodCallback([&](const RatesEval::PeriodOut_t &out) {
       Result["Period_Sampletime"].push_back(out.SampleTime);
-      if(SavePeriodName)  Result["Period_Name"].push_back(out.Period);
-      if(SavePeriodColor) Result["Period_Color"].push_back(out.Color);
+      if(SavePeriodName)  Result["Period_Name"].push_back(  (out.Period == UINT16_MAX) ? json::number_integer_t(NAN) : json::number_integer_t(out.Period));
+      if(SavePeriodColor) Result["Period_Color"].push_back(out.Color.empty() ? json::string_t(NULL) : json::string_t(out.Color));
       if(SaveContracted)  Result["Period_Power"].push_back(out.ContractedPower);
     });
   }

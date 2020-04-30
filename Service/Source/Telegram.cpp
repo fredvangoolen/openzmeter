@@ -45,7 +45,7 @@ Telegram::~Telegram() {
     delete Tmp->Thread;
     delete Tmp->Client;
     pFreeWorkers.pop_front();
-    free(Tmp);
+    delete Tmp;
   }
 
 }
@@ -155,7 +155,7 @@ void *Telegram::Thread_Func(void *params) {
           }
           pthread_mutex_unlock(&pMutex);
           if(Tmp == NULL) {
-            Tmp = (Worker_t*)calloc(sizeof(Worker_t), 1);
+            Tmp = new Worker_t;
             Tmp->Client = new SSLClient("api.telegram.org", 443);
             Tmp->Thread = new Worker("TelegramWorker", NULL, [](void *param1, void *param2) {
               Worker_t *Work = (Worker_t*)param2;
@@ -197,7 +197,7 @@ void Telegram::AdjustWorkers() {
     delete Tmp->Thread;
     delete Tmp->Client;
     pFreeWorkers.pop_back();
-    free(Tmp);
+    delete Tmp;
   }
   LOGFile::Debug("Adjusted Telegram workers pool to %d connections (plus %u in use)\n", pFreeWorkers.size(), pUsedWorkers);
   pthread_mutex_unlock(&pMutex);

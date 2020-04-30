@@ -57,17 +57,17 @@
         for(var n in data.Variables) {
           var Var = { Name: n, Value: this.Round(data.Variables[n], 3) };
           Var.Description = '';
-          if(Var.Name == 'Active_Power') Var.Units = 'W';
-          if(Var.Name == 'Apparent_Power') Var.Units = 'W';
+          if(Var.Name == 'ActivePower') Var.Units = 'W';
+          if(Var.Name == 'ApparentPower') Var.Units = 'W';
           if(Var.Name == 'Current') Var.Units = 'A';
-          if(Var.Name == 'Current_THD') Var.Units = '%';
+          if(Var.Name == 'CurrentTHD') Var.Units = '%';
           if(Var.Name == 'Frequency') Var.Units = 'Hz';
-          if(Var.Name == 'Nominal_Frequency') Var.Units = 'Hz';
-          if(Var.Name == 'Nominal_Voltage') Var.Units = 'V';
+          if(Var.Name == 'NominalFrequency') Var.Units = 'Hz';
+          if(Var.Name == 'NominalVoltage') Var.Units = 'V';
           if(Var.Name == 'Phi') Var.Units = '°';
-          if(Var.Name == 'Reactive_Power') Var.Units = 'W';
+          if(Var.Name == 'ReactivePower') Var.Units = 'W';
           if(Var.Name == 'Voltage') Var.Units = 'V';
-          if(Var.Name == 'Voltage_THD') Var.Units = '%';
+          if(Var.Name == 'VoltageTHD') Var.Units = '%';
           Result.push(Var);
         }
         this.Vars = Result;
