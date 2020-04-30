@@ -47,11 +47,11 @@ class Rates final {
     typedef struct {
       string                        Name;
       string                        Color;
-      uint8_t                       Quarters[96];
+      uint16_t                      Quarters[96];
     } Day_t;
     typedef struct {
       uint16_t                      Year;
-      uint8_t                       Days[366];
+      uint16_t                      Days[366];
     } Year_t;
     typedef struct {
       Tax_Type                      Type;
@@ -80,7 +80,6 @@ class Rates final {
       uint64_t                      EndDate;
       vector<uint64_t>              BillingCycles;
     } Rate_t;
-
   private :
     vector<Rate_t>                  pRates;
     time_zone const                *pTimeZone;
@@ -97,31 +96,49 @@ class Rates final {
 class RatesEval final {
   public :
     typedef struct {
-      uint64_t        SampleTime;
-      float           ActivePower;
-      float           ReactivePower;
-      float           Cost;
+      uint64_t                          SampleTime;
+      float                             ActivePower;
+      float                             ReactivePower;
+      float                             Cost;
     } SampleOut_t;
     typedef struct {
-      uint64_t        SampleTime;
-      uint8_t         Period;
-      string          Color;
-      float           ContractedPower;
+      uint64_t                          SampleTime;
+      uint16_t                          Period;
+      string                            Color;
+      float                             ContractedPower;
     } PeriodOut_t;
   private :
-    const Rates      *pParent;
-    uint64_t          pFrom;
-    uint64_t          pTo;
-    uint64_t          pCurrent;
+    typedef struct {
+      Parser             Script;
+      map<string, float> Variables;
+
+    } LoadedPeriod_t;
+  private :
+    Rates                              *pParent;
+    uint64_t                            pFrom;
+    uint64_t                            pTo;
+    uint64_t                            pCurrent;
+    vector<Rates::Rate_t>::iterator     pRatePtr;
+    vector<Rates::Year_t>::iterator     pYearPtr;
+    vector<uint64_t>::iterator          pBillPtr;
+    PeriodOut_t                         pPrevPeriod;
+    Parser                              pScript;
+    map<string, float>                  pVariables;
+    vector<LoadedPeriod_t>              pPeriods;
+  private :
+    static float *VariableFactory(const char_type *name, void *params);
   private:
     function<void(const PeriodOut_t &)> pPeriodCallback;
     function<void(const SampleOut_t &)> pSampleCallback;
     function<void(const json &)>        pBillCallback;
   private :
+    void     LoadRate();
+    void     UnloadRate();
+    void     HandleSample(const float active, const float reactive);
     uint64_t FindStart(const uint64_t from);
     uint64_t FindEnd(const uint64_t to);
   public :
-    RatesEval(const Rates *parent, const uint64_t from, const uint64_t to, const bool precise);
+    RatesEval(Rates *parent, const uint64_t from, const uint64_t to, const bool precise);
     void     PushSample(const uint64_t time, const float active, const float reactive);
     void     Finish();
     void     SetPeriodCallback(function<void(const PeriodOut_t &)> periodOut);

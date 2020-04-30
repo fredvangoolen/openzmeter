@@ -51,20 +51,20 @@ class URL {
 class HTTPTaskQueue final : public TaskQueue {
   private :
     typedef struct {
-      std::function<void()> Function;
-      uint64_t              LastTime;
-      bool                  Terminate;
-      pthread_t             Thread;
-      pthread_mutex_t       Mutex;
-      pthread_cond_t        Cond;
-      HTTPTaskQueue        *Parent;
+      function<void()> Function;
+      uint64_t         LastTime;
+      bool             Terminate;
+      pthread_t        Thread;
+      pthread_mutex_t  Mutex;
+      pthread_cond_t   Cond;
+      HTTPTaskQueue   *Parent;
     } Worker_t;
   private :
-    pthread_mutex_t   pMutex;
-    pthread_cond_t    pCond;
-    list<Worker_t*>   pFreeWorkers;
-    uint32_t          pRunningWorkers;
-    uint64_t          pLastAdjust;
+    pthread_mutex_t    pMutex;
+    pthread_cond_t     pCond;
+    list<Worker_t*>    pFreeWorkers;
+    uint32_t           pRunningWorkers;
+    uint64_t           pLastAdjust;
   private:
     static void *Thread(void *params);
   public:
