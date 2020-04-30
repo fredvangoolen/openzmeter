@@ -47,7 +47,7 @@
           <div class="panel-group panel panel-dialog" style="margin-bottom: 0px">
             <div class="panel-heading">
               <div class="pull-right btn-group">
-                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit tariff script"><img :src="require('Imgs/math_functions.png')" @click="View='Expresion'"></button>
+                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit tariff script" @click="View='Expresion'"><img :src="require('Imgs/math_functions.png')"></button>
                 <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new tariff concept" @click="Tariff.Template.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
               </div>
               <toolbar-pager class="pull-right" :pageSize="10" :input="Tariff.Template.Concepts" :output.sync="FilterConcepts" :filtercols="['Description', 'Variable']"></toolbar-pager>
@@ -69,7 +69,7 @@
                 </div>
               </template>
               <template slot="type" slot-scope="props">
-                <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'Energy info', value: 'INFO_ENERGY'}, {name: 'Power info', value: 'INFO_POWER'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
+                <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
               </template>
             </vuetable>
             </div>
@@ -90,7 +90,7 @@
             <div class="panel panel-dialog panel-tab" v-if="ActivePeriod=='P'+(idx+1)" style="margin-bottom: 0px">
               <div class="panel-heading">
                 <div class="pull-right btn-group">
-                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit period script"><img :src="require('Imgs/math_functions.png')" @click="View='ExpresionPeriods'"></button>
+                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit period script" @click="View='ExpresionPeriods'"><img :src="require('Imgs/math_functions.png')"></button>
                   <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new period concept" @click="period.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
                 </div>
                 <toolbar-pager class="pull-right" :pageSize="10" :input="period.Concepts" :output.sync="FilterConcepts" :filtercols="['Description', 'Variable']"></toolbar-pager>
@@ -152,8 +152,8 @@
             <detail-tabs key="Day_Tabs" :tabs="new Array(Tariff.Template.Days.length).fill(0).map((n, idx) => { return 'D' + (idx + 1)})" v-model="ActiveDay" :light="true"></detail-tabs>
           </td><td style="width: 64px; text-align: right">
             <div class="btn-group">
-              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Days.length==1" data-toggle="tooltip" title="Delete last day"><img :src="require('Imgs/cross.png')" @click="DeleteDay"></button>
-              <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/plus.png')" @click="AddDay" data-toggle="tooltip" title="Add new day"></button>
+              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Days.length==1" data-toggle="tooltip" title="Delete last day" @click="DeleteDay"><img :src="require('Imgs/cross.png')"></button>
+              <button class="btn btn-default btn-xs" type="button" @click="AddDay"><img :src="require('Imgs/plus.png')" data-toggle="tooltip" title="Add new day"></button>
             </div>
           </td></tr></table>
           <div v-for="(day, idx) in Tariff.Template.Days" :key="idx">
@@ -224,7 +224,7 @@
       <div class="row">
         <div class="col-xs-12">
           <label class="control-label">Expresion</label>
-          <input-math v-model="Tariff.Template.Script" :vars="Vars"></input-math>
+          <input-math v-model="Tariff.Template.Script" :vars="VarsMain"></input-math>
         </div>
       </div>
     </dlg>
@@ -238,7 +238,7 @@
       <div class="row">
         <div class="col-xs-12">
           <label class="control-label">Expresion</label>
-          <input-math v-model="Tariff.Template.Periods[parseInt(ActivePeriod.substr(1)) - 1].Script" :vars="Vars"></input-math>
+          <input-math v-model="Tariff.Template.Periods[parseInt(ActivePeriod.substr(1)) - 1].Script" :vars="VarsPeriod"></input-math>
         </div>
       </div>
     </dlg>
@@ -261,20 +261,30 @@
       };
     },
     computed: {
-      Vars: function() {
+      VarsPeriod: function() {
         var Vars = [];
-        Vars.push({ Name: 'Active_Power', Description: 'Active power on evaluated period', Value: null, Units: 'W'});
-        Vars.push({ Name: 'Reactive_Power', Description: 'Reactive power on evaluated period', Value: null, Units: 'var'});
-        Vars.push({ Name: 'Contracted_Power', Description: 'Contracted power on evaluated period', Value: null, Units: 'W'});
-        Vars.push({ Name: 'Power_Cost', Description: 'Power cost on evaluated period', Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.PowerUnits + '/h'});
-        Vars.push({ Name: 'Energy_Cost', Description: 'Energy cost on evaluated period', Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.EnergyUnits});
-        if(this.Tariff.Template.Periods.length>1) {
-          Vars.push({ Name: 'Period', Description: 'Index of evaluated period (From 1 to ' + this.Tariff.Template.Periods.length + ')', Value: null, Units: ''});
-          for(var P = 0; P < this.Tariff.Template.Periods.length; P++) {
-            Vars.push({ Name: 'Contracted_Power_P' + (P + 1), Description: 'Contracted power on period P' + (P + 1), Value: null, Units: 'W'});
-            Vars.push({ Name: 'Power_Cost_P' + (P + 1), Description: 'Power cost on period P' + (P + 1), Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.PowerUnits + '/h'});
-            Vars.push({ Name: 'Energy_Cost_P' + (P + 1), Description: 'Energy cost on period P' + (P + 1), Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.EnergyUnits});
-          }
+        Vars.push({ Name: 'Cost', Description: '<strong>[OUT]</strong> Estimated contribution to period cost', Value: null, Units: this.Tariff.Template.Currency});
+        Vars.push({ Name: 'ActivePower', Description: 'Active power on evaluated period', Value: null, Units: 'W'});
+        Vars.push({ Name: 'ActiveEnergy', Description: 'Active energy of evaluated period', Value: null, Units: 'Wh'});
+        Vars.push({ Name: 'ReactivePower', Description: 'Reactive power on evaluated period', Value: null, Units: 'var'});
+        Vars.push({ Name: 'ReactiveEnergy', Description: 'Reactive energy of evaluated period', Value: null, Units: 'varh'});
+        Vars.push({ Name: 'ContractedPower', Description: 'Contracted power on evaluated period', Value: null, Units: this.Tariff.Template.PowerUnits});
+        Vars.push({ Name: 'PowerCost', Description: 'Power cost on evaluated period', Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.PowerUnits + '/h'});
+        Vars.push({ Name: 'EnergyCost', Description: 'Energy cost on evaluated period', Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.EnergyUnits});
+        return Vars;
+      },
+      VarsMain: function() {
+        var Vars = [];
+        Vars.push({ Name: 'Cost', Description: '<strong>[OUT]</strong> Estimated contribution to period cost', Value: null, Units: this.Tariff.Template.Currency});
+        Vars.push({ Name: 'Period', Description: 'Index of evaluated period (From 1 to ' + this.Tariff.Template.Periods.length + ')', Value: null, Units: ''});
+        Vars.push({ Name: 'ActivePower', Description: 'Active power on evaluated period', Value: null, Units: 'W'});
+        Vars.push({ Name: 'ActiveEnergy', Description: 'Active energy of evaluated period', Value: null, Units: 'Wh'});
+        Vars.push({ Name: 'ReactivePower', Description: 'Reactive power on evaluated period', Value: null, Units: 'var'});
+        Vars.push({ Name: 'ReactiveEnergy', Description: 'Reactive energy of evaluated period', Value: null, Units: 'varh'});
+        for(var P = 0; P < this.Tariff.Template.Periods.length; P++) {
+          Vars.push({ Name: 'ContractedPower_P' + (P + 1), Description: 'Contracted power on period P' + (P + 1), Value: null, Units: this.Tariff.Template.PowerUnits});
+          Vars.push({ Name: 'PowerCost_P' + (P + 1), Description: 'Power cost on period P' + (P + 1), Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.PowerUnits + '/h'});
+          Vars.push({ Name: 'EnergyCost_P' + (P + 1), Description: 'Energy cost on period P' + (P + 1), Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.EnergyUnits});
         }
         return Vars;
       }

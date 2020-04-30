@@ -96,7 +96,7 @@ Rates::Rates(const json &r, const time_zone &timezone) {
       if((Time > pRates[R].StartDate) && (Time < pRates[R].EndDate)) pRates[R].BillingCycles.push_back(Time);
     }
     sort(pRates[R].BillingCycles.begin(), pRates[R].BillingCycles.end(), [](const uint64_t a, const uint64_t b) { return a > b; });
-    pRates[R].PriceSource = (r[R]["Module"] == "NONE") ? PRICES_NONE : PRICES_ESIOS;
+    pRates[R].PriceSource = r[R]["Module"];
   }
 }
 json Rates::CheckConfig(const json &r) {
@@ -303,6 +303,16 @@ json Rates::CheckTariffConfig(const json &t) {
   return Out;
 }
 //----------------------------------------------------------------------------------------------------------------------
+PriceModule *PriceModule::CreateInstance(const string &name, const uint64_t from, const uint64_t to) {
+  /*if(name == "NONE")*/ return new PriceModule(from, to);
+}
+PriceModule::PriceModule(const uint64_t from, const uint64_t to) {
+}
+PriceModule::~PriceModule() {
+}
+void PriceModule::GetParams(const uint64_t sampletime, map<string, float> &vars) {
+}
+//----------------------------------------------------------------------------------------------------------------------
 RatesEval::RatesEval(Rates *parent, const uint64_t from, const uint64_t to, const bool precise) {
   pParent                = parent;
   pFrom                  = FindStart(from);
@@ -310,7 +320,11 @@ RatesEval::RatesEval(Rates *parent, const uint64_t from, const uint64_t to, cons
   pCurrent               = pFrom;
   pRatePtr               = pParent->pRates.begin();
   pPrevPeriod.SampleTime = 0;
+  pPriceModule           = NULL;
   printf("inicio %lu, fin %lu\n", pFrom, pTo);
+}
+RatesEval::~RatesEval() {
+  UnloadRate();
 }
 uint64_t RatesEval::StartDate() {
   return pFrom;
@@ -353,7 +367,6 @@ void RatesEval::LoadRate() {
   pYearPtr = pRatePtr->Years.begin();
   pBillPtr = pRatePtr->BillingCycles.begin();
   pPeriods.resize(pRatePtr->Periods.size());
-
   for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) {
     pPeriods[P].Script.SetVarFactory(VariableFactory, &pPeriods[P].Variables);
     pPeriods[P].Script.DefineVar("ContractedPower",  &pPeriods[P].Variables.emplace("ContractedPower", 0.0).first->second);
@@ -364,22 +377,35 @@ void RatesEval::LoadRate() {
     pPeriods[P].Script.DefineVar("ReactivePower",    &pPeriods[P].Variables.emplace("ReactivePower",   0.0).first->second);
     pPeriods[P].Script.DefineVar("ReactiveEnergy",   &pPeriods[P].Variables.emplace("ReactiveEnergy",  0.0).first->second);
     pPeriods[P].Script.SetExpr(pRatePtr->Periods[P].Script);
+    pScript.DefineVar("ContractedPower_P" + to_string(P + 1),  &pVariables.emplace("ContractedPower_P" + to_string(P + 1), 0.0).first->second);
+    pScript.DefineVar("PowerCost_P" + to_string(P + 1),        &pVariables.emplace("PowerCost_P" + to_string(P + 1),       0.0).first->second);
+    pScript.DefineVar("EnergyCost_P" + to_string(P + 1),       &pVariables.emplace("EnergyCost_P" + to_string(P + 1),      0.0).first->second);
   }
   pScript.SetVarFactory(VariableFactory, &pVariables);
-  pScript.DefineVar("Period",         &pVariables.emplace("Period",          0.0).first->second);
+  pScript.DefineVar("Period",         &pVariables.emplace("Period",          1.0).first->second);
   pScript.DefineVar("ActivePower",    &pVariables.emplace("ActivePower",     0.0).first->second);
   pScript.DefineVar("ActiveEnergy",   &pVariables.emplace("ActiveEnergy",    0.0).first->second);
   pScript.DefineVar("ReactivePower",  &pVariables.emplace("ReactivePower",   0.0).first->second);
   pScript.DefineVar("ReactiveEnergy", &pVariables.emplace("ReactiveEnergy",  0.0).first->second);
-  for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) {
-    pScript.DefineVar("ContractedPower_P" + to_string(P + 1),  &pPeriods[P].Variables.emplace("ContractedPower_P" + to_string(P + 1), 0.0).first->second);
-    pScript.DefineVar("PowerCost_P" + to_string(P + 1),        &pPeriods[P].Variables.emplace("PowerCost_P" + to_string(P + 1),       0.0).first->second);
-    pScript.DefineVar("EnergyCost_P" + to_string(P + 1),       &pPeriods[P].Variables.emplace("EnergyCost_P" + to_string(P + 1),      0.0).first->second);
-  }
   pScript.SetExpr(pRatePtr->Script);
+  pPriceModule = PriceModule::CreateInstance(pRatePtr->PriceSource, pCurrent, (pBillPtr != pRatePtr->BillingCycles.end()) ? *pBillPtr : pRatePtr->EndDate);
+  if(pRatePtr->EnergyCost.size() == 0) {
+    pPriceModule->GetParams(0, pPriceVariables);
+    for(auto &Var : pPriceVariables) pEnergyScript.DefineVar(Var.first, &Var.second);
+    pEnergyScript.SetExpr(pRatePtr->EnergyCostScript);
+  }
+  if(pRatePtr->PowerCost.size() == 0) {
+    pPriceModule->GetParams(0, pPriceVariables);
+    for(auto &Var : pPriceVariables) pEnergyScript.DefineVar(Var.first, &Var.second);
+    pEnergyScript.SetExpr(pRatePtr->PowerCostScript);
+  }
 }
 void RatesEval::UnloadRate() {
   if(pPeriods.size() == 0) return;
+  if(pPriceModule != NULL) {
+    delete pPriceModule;
+    pPriceModule = NULL;
+  }
   pScript = Parser();
   pVariables.clear();
   pPeriods.clear();
@@ -403,18 +429,55 @@ void RatesEval::HandleSample(const float active, const float reactive) {
       pPeriodCallback(pPrevPeriod);
     }
     if(pSampleCallback || pBillCallback) {
-      //Si tarifa tiene modulo de calculo le pido datos para este instante
-      //Si powercost es un script lo evaluo
-      //Si energycost es un script lo evaluo
-      //cargo las variables usadas globales y llamo a script global
-      //Cargo variables del periodo actual y llamo script periodo actual
+      SampleOut_t SampleOut = { .SampleTime = pCurrent, .ActivePower = active, .ReactivePower = reactive, .Cost = 0.0 };
+      pPeriods[PeriodIdx].Variables["ContractedPower"] = pRatePtr->Contracted[PeriodIdx];
+      pPeriods[PeriodIdx].Variables["ActivePower"]     = active;
+      pPeriods[PeriodIdx].Variables["ActiveEnergy"]    = active / 4.0;
+      pPeriods[PeriodIdx].Variables["ReactivePower"]   = reactive;
+      pPeriods[PeriodIdx].Variables["ReactiveEnergy"]  = reactive / 4.0;
+      pVariables["ActivePower"]    = active;
+      pVariables["ActiveEnergy"]   = active / 4.0;
+      pVariables["ReactivePower"]  = reactive;
+      pVariables["ReactiveEnergy"] = reactive / 4.0;
+      pVariables["Period"]         = PeriodIdx + 1;
+      for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) pVariables["ContractedPower_P" + to_string(P + 1)] = pRatePtr->Contracted[P];
+      if(pRatePtr->EnergyCost.size() == 0) {
+        pPriceModule->GetParams(pCurrent, pPriceVariables);
+        float EnergyCost = pEnergyScript.Eval();
+        pPeriods[PeriodIdx].Variables["EnergyCost"] = EnergyCost;
+        for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) pVariables["EnergyCost_P" + to_string(P + 1)] = EnergyCost;
+      } else {
+        pPeriods[PeriodIdx].Variables["EnergyCost"] = pRatePtr->EnergyCost[PeriodIdx];
+        for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) pVariables["EnergyCost_P" + to_string(P + 1)] = pRatePtr->EnergyCost[P];
+      }
+      if(pRatePtr->PowerCost.size() == 0) {
+        pPriceModule->GetParams(pCurrent, pPriceVariables);
+        float PowerCost = pPowerScript.Eval();
+        pPeriods[PeriodIdx].Variables["PowerCost"] = PowerCost;
+        for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) pVariables["PowerCost_P" + to_string(P + 1)] = PowerCost;
+      } else {
+        pPeriods[PeriodIdx].Variables["PowerCost"] = pRatePtr->PowerCost[PeriodIdx];
+        for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) pVariables["PowerCost_P" + to_string(P + 1)] = pRatePtr->PowerCost[P];
+      }
+      pScript.Eval();
+      pPeriods[PeriodIdx].Script.Eval();
+      SampleOut.Cost = pVariables["Cost"] + pPeriods[PeriodIdx].Variables["Cost"];
 
-      if(pSampleCallback) pSampleCallback( { pCurrent, active, reactive, 0.0 } );
-      if(1 ) { //Si ha terminado el periodo de facturacion
-        if(1/*Quiero factura*/) {
+      printf("Global - ");
+      for(auto Var : pVariables) printf("%s: %.10f, ", Var.first.c_str(), Var.second);
+      printf("\nPeriod - ");
+      for(auto Var : pPeriods[PeriodIdx].Variables) printf("%s: %.10f, ", Var.first.c_str(), Var.second);
+      printf("\n");
+
+
+
+      if(pSampleCallback) pSampleCallback(SampleOut);
+      if(pCurrent == ((pBillPtr != pRatePtr->BillingCycles.end()) ? *pBillPtr : pRatePtr->EndDate)) {
+        if(pBillCallback) {
           //Genero y llamo a pBillCallback();
         }
-        //UnloadRate();
+        if(pBillPtr != pRatePtr->BillingCycles.end()) pBillPtr++;
+        UnloadRate();
       }
     }
   } else {

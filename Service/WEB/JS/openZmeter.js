@@ -229,11 +229,12 @@ const openZmeter = {
           }
         );
       };
-      Transfer.UpdatePrices = (analyzer, aggreg, range) => {
+      Transfer.UpdatePrices = (analyzer, aggreg, range, precise) => {
         if((analyzer == null) || (aggreg == null) || (range == null)) return;
         var Cancelled = false;
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+        if(precise == null) precise = false;
         var ReqRange = analyzer.CalcRange(range, aggreg);
         var Data = { };
         if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetDataPrices(null);
@@ -242,19 +243,19 @@ const openZmeter = {
         Transfer.Range     = range;
         Data.Aggreg        = aggreg;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Transfer.This.$http.post('getPrices', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }).then(
+        Transfer.This.$http.post('getPrices', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series, Precise: precise }).then(
           (result) => {
             if(Cancelled == true) return;
             Data = Object.assign(Data, result.body);
             Data.From = ReqRange[0];
             Data.To = ReqRange[1];
             Transfer.SetDataPrices(Data);
-            Transfer.Timer = setTimeout(() => { Transfer.UpdatePrices(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
+            Transfer.Timer = setTimeout(() => { Transfer.UpdatePrices(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range, precise); }, 900000);
           },
           (fail) => {
             if(Cancelled == true) return;
             console.log(fail);
-            Transfer.Timer = setTimeout(() => { Transfer.UpdatePrices(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
+            Transfer.Timer = setTimeout(() => { Transfer.UpdatePrices(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range, precise); }, 900000);
           }
         );
       };
