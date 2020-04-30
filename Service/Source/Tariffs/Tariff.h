@@ -30,7 +30,7 @@ class Rates final {
   private :
     enum Concept_Type { CONCEPT_INFO, CONCEPT_COST_ENERGY, CONCEPT_COST_POWER, CONCEPT_COST };
     enum Tax_Type { TAX_PERCENT, TAX_PERCENT_POWER, TAX_PERCENT_ENERGY, TAX_PERCENT_ENERGY_POWER, TAX_FIXED };
-    enum Price_Source { PRICES_NONE, PRICES_ESIOS };
+//    enum Price_Source { PRICES_NONE, PRICES_ESIOS };
     typedef struct {
       string                        Description;
       string                        Variable;
@@ -76,7 +76,7 @@ class Rates final {
       string                        EnergyCostScript;
       vector<float>                 EnergyCost;
       uint64_t                      StartDate;
-      Price_Source                  PriceSource;
+      string                        PriceSource;
       uint64_t                      EndDate;
       vector<uint64_t>              BillingCycles;
     } Rate_t;
@@ -91,6 +91,16 @@ class Rates final {
     static json CheckRateConfig(const json &t);
   public :
     Rates(const json &t, const time_zone &timezone);
+};
+//----------------------------------------------------------------------------------------------------------------------
+class PriceModule {
+  public :
+    static PriceModule *CreateInstance(const string &name, const uint64_t from, const uint64_t to);
+  private :
+    PriceModule(const uint64_t from, const uint64_t to);
+  public :
+    virtual ~PriceModule();
+    virtual void GetParams(const uint64_t sampletime, map<string, float> &vars);
 };
 //----------------------------------------------------------------------------------------------------------------------
 class RatesEval final {
@@ -111,7 +121,6 @@ class RatesEval final {
     typedef struct {
       Parser             Script;
       map<string, float> Variables;
-
     } LoadedPeriod_t;
   private :
     Rates                              *pParent;
@@ -121,9 +130,13 @@ class RatesEval final {
     vector<Rates::Rate_t>::iterator     pRatePtr;
     vector<Rates::Year_t>::iterator     pYearPtr;
     vector<uint64_t>::iterator          pBillPtr;
+    PriceModule                        *pPriceModule;
     PeriodOut_t                         pPrevPeriod;
+    Parser                              pEnergyScript;
+    Parser                              pPowerScript;
     Parser                              pScript;
     map<string, float>                  pVariables;
+    map<string, float>                  pPriceVariables;
     vector<LoadedPeriod_t>              pPeriods;
   private :
     static float *VariableFactory(const char_type *name, void *params);
@@ -139,6 +152,7 @@ class RatesEval final {
     uint64_t FindEnd(const uint64_t to);
   public :
     RatesEval(Rates *parent, const uint64_t from, const uint64_t to, const bool precise);
+    ~RatesEval();
     void     PushSample(const uint64_t time, const float active, const float reactive);
     void     Finish();
     void     SetPeriodCallback(function<void(const PeriodOut_t &)> periodOut);
@@ -147,15 +161,6 @@ class RatesEval final {
     uint64_t StartDate();
     uint64_t EndDate();
  };
-//----------------------------------------------------------------------------------------------------------------------
-class PriceModule {
-  public :
-    static PriceModule *CreateInstance(const string &name);
-  public :
-    PriceModule(const uint64_t from, const uint64_t to);
-    virtual ~PriceModule();
-    virtual void GetParams(const uint64_t sampletime, map<string, float> &vars);
-};
 //----------------------------------------------------------------------------------------------------------------------
 
 

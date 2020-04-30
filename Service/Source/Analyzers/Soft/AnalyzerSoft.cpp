@@ -1754,7 +1754,7 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
       SaveActive = true;
     } else if(params["Series"][i] == "REACTIVE_POWER") {
       SaveReactive = true;
-    } else if(params["Series"][i] == "PERIOD_EXPENSE") {
+    } else if(params["Series"][i] == "EXPENSE") {
       SaveExpense = true;
     } else if(params["Series"][i] == "PERIOD_NAME") {
       SavePeriodName = true;
@@ -1784,10 +1784,12 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
         AccActive = AccActive / 4.0;
         AccReactive = AccReactive / 4.0;
       }
-      Result["Sampletime"].push_back(out.SampleTime);
-      if(SaveActive)   Result["Active_Power"].push_back(out.ActivePower);
-      if(SaveReactive) Result["Reactive_Power"].push_back(out.ReactivePower);
-      if(SaveExpense)  Result["Expense"].push_back(out.Cost);
+      if((out.SampleTime >= From) && (out.SampleTime <= To)) {
+        Result["Sampletime"].push_back(out.SampleTime);
+        if(SaveActive)   Result["Active_Power"].push_back(out.ActivePower);
+        if(SaveReactive) Result["Reactive_Power"].push_back(out.ReactivePower);
+        if(SaveExpense)  Result["Expense"].push_back(out.Cost);
+      }
     });
   }
   if(SavePeriodName || SavePeriodColor || SaveContracted) {
@@ -1797,8 +1799,20 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
     if(SaveContracted)  Result["Period_Power"] = json::array();
     Eval.SetPeriodCallback([&](const RatesEval::PeriodOut_t &out) {
       Result["Period_Sampletime"].push_back(out.SampleTime);
-      if(SavePeriodName)  Result["Period_Name"].push_back(  (out.Period == UINT16_MAX) ? json::number_integer_t(NAN) : json::number_integer_t(out.Period));
-      if(SavePeriodColor) Result["Period_Color"].push_back(out.Color.empty() ? json::string_t(NULL) : json::string_t(out.Color));
+      if(SavePeriodName) {
+        if(out.Period == UINT16_MAX) {
+          Result["Period_Name"].push_back(nullptr);
+        } else {
+          Result["Period_Name"].push_back(out.Period);
+        }
+      }
+      if(SavePeriodColor) {
+        if(out.Color.empty() == true) {
+          Result["Period_Color"].push_back(nullptr);
+        } else {
+          Result["Period_Color"].push_back(out.Color);
+        }
+      }
       if(SaveContracted)  Result["Period_Power"].push_back(out.ContractedPower);
     });
   }

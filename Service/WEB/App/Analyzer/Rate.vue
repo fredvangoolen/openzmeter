@@ -294,7 +294,7 @@
       },
       LoadTariffs: function() {
         this.ShowSpinner = true;
-        this.Rate.Template = null;
+        this.Rate.Periods = null;
         this.$http.post('getTariffs', {}).then(
           (result) => {
             this.Tariffs = result.body;
