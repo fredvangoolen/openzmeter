@@ -41,7 +41,7 @@
         for(var i in this.data.Active_Power) {
           var Month = moment(this.data.Sampletime[i]).tz(this.analyzer.TimeZone).month();
           if(this.Months[Month] === undefined) this.Months[Month] = { };
-          var Period = (this.data.Period_Name[i] === null) ? 'NONE' : this.data.Period_Name[i];
+          var Period = (this.data.Period_Number[i] === null) ? 'NONE' : 'P' + this.data.Period_Number[i];
           if(this.Periods.includes(Period) === false) this.Periods.push(Period);
           if(this.data.Active_Power[i] != null) this.Months[Month][Period] = (this.Months[Month][Period] == undefined) ? this.data.Active_Power[i] : this.Months[Month][Period] + this.data.Active_Power[i];
         }

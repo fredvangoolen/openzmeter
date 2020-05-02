@@ -70,7 +70,7 @@
     margin-bottom: 4px;
   }
   .stripe-table tr td {
-    height: 30px;
+    height: 14px;
     text-align: center;
     border: 1px solid #ccc;
     cursor: pointer;

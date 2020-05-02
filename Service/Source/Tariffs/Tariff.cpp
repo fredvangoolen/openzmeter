@@ -23,7 +23,6 @@ Rates::Rates(const json &r, const time_zone &timezone) {
   pTimeZone = &timezone;
   pRates.resize(r.size());
   for(uint16_t R = 0; R < r.size(); R++) {
-    printf("%s\n", r[R].dump().c_str());
     pRates[R].Name = r[R]["Name"];
     pRates[R].Description = r[R]["Description"];
     pRates[R].Currency = r[R]["Currency"];
@@ -136,6 +135,13 @@ json Rates::CheckRateConfig(const json &t) {
   } else {
     return "'ContractedPower' param is required";
   }
+  if((t.contains("Module") == false) || (t["Module"].is_string() == false)) return "'Module' param is required";
+  PriceModule *Module = PriceModule::CreateInstance(t["Module"]);
+  if(Module == NULL) return "'Module' param is invalid";
+  Out["Module"] = t["Module"];
+  map<string, float> Variables;
+  Module->GetParams(0, Variables);
+  Variables.insert( {"Period", 0.0 });
   if((t.contains("PowerCost") == true) && (t["PowerCost"].is_array() == true) && (t["PowerCost"].size() == Out["Periods"].size())) {
     Out["PowerCost"] = json::array();
     for(uint16_t P = 0; P < t["PowerCost"].size(); P++) {
@@ -143,8 +149,15 @@ json Rates::CheckRateConfig(const json &t) {
       Out["PowerCost"].push_back(t["PowerCost"][P]);
     }
   } else if((t.contains("PowerCost") == true) && (t["PowerCost"].is_string() == true)) {
+    Parser TmpParser;
     Out["PowerCost"] = t["PowerCost"];
-    //TODO Evaluar script para ver que es valido!
+    for(auto &Var : Variables) TmpParser.DefineVar(Var.first, &Var.second);
+    try {
+      TmpParser.SetExpr(t["PowerCost"]);
+      TmpParser.Eval();
+    } catch(Parser::exception_type &e) {
+      return "'PowerCost' parse failed (" + e.GetMsg() + ")";
+    }
   } else {
     return "'PowerCost' param is required";
   }
@@ -155,8 +168,15 @@ json Rates::CheckRateConfig(const json &t) {
       Out["EnergyCost"].push_back(t["EnergyCost"][P]);
     }
   } else if((t.contains("EnergyCost") == true) && (t["EnergyCost"].is_string() == true)) {
+    Parser TmpParser;
     Out["EnergyCost"] = t["EnergyCost"];
-    //TODO Evaluar script para ver que es valido!
+    for(auto &Var : Variables) TmpParser.DefineVar(Var.first, &Var.second);
+    try {
+      TmpParser.SetExpr(t["EnergyCost"]);
+      TmpParser.Eval();
+    } catch(Parser::exception_type &e) {
+      return "'PowerCost' parse failed (" + e.GetMsg() + ")";
+    }
   } else {
     return "'EnergyCost' param is required";
   }
@@ -176,8 +196,6 @@ json Rates::CheckRateConfig(const json &t) {
     if((t["Billing"][B].is_string() == false) || (cctz::parse("%d/%m/%Y", t["Billing"][B], cctz::utc_time_zone(), &TimePoint) == false)) return "'Billing/" + to_string(B) + "' param is required";
     Out["EndDate"] = cctz::format("%d/%m/%Y", TimePoint, cctz::utc_time_zone());
   }
-  if((t.contains("Module") == false) || (t["Module"].is_string() == false) || ((t["Module"] != "NONE") && (t["Module"] != "ESP_ESIOS"))) return "'Billing' param is required";
-  Out["Module"] = t["Module"];
   return Out;
 }
 json Rates::CheckTariffConfig(const json &t) {
@@ -213,14 +231,13 @@ json Rates::CheckTariffConfig(const json &t) {
     if((t["Periods"][P].contains("Script") == false) || (t["Periods"][P]["Script"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Script' param is required";
     Out["Periods"][P]["Script"] = t["Periods"][P]["Script"];
     TmpParser.SetVarFactory(VariableFactory, &TmpVariables);
-    TmpParser.DefineVar("Contracted_Power",  &pTmpVar);
-    TmpParser.DefineVar("Power_Cost",        &pTmpVar);
-    TmpParser.DefineVar("Energy_Cost",       &pTmpVar);
-    TmpParser.DefineVar("Active_Power",      &pTmpVar);
-    TmpParser.DefineVar("Active_Energy",     &pTmpVar);
-    TmpParser.DefineVar("Reactive_Power",    &pTmpVar);
-    TmpParser.DefineVar("Reactive_Energy",   &pTmpVar);
-///TODO METER VARIABLES DE LOS PERIODOS
+    TmpParser.DefineVar("ContractedPower",  &pTmpVar);
+    TmpParser.DefineVar("PowerCost",        &pTmpVar);
+    TmpParser.DefineVar("EnergyCost",       &pTmpVar);
+    TmpParser.DefineVar("ActivePower",      &pTmpVar);
+    TmpParser.DefineVar("ActiveEnergy",     &pTmpVar);
+    TmpParser.DefineVar("ReactivePower",    &pTmpVar);
+    TmpParser.DefineVar("ReactiveEnergy",   &pTmpVar);
     try {
       TmpParser.SetExpr(t["Periods"][P]["Script"]);
       TmpParser.Eval();
@@ -244,14 +261,16 @@ json Rates::CheckTariffConfig(const json &t) {
   if((t.contains("Script") == false) || (t["Script"].is_string() == false)) return "'Script' param is required";
   Out["Script"] = t["Script"];
   TmpParser.SetVarFactory(VariableFactory, &TmpVariables);
-  TmpParser.DefineVar("Contracted_Power",  &pTmpVar);
-  TmpParser.DefineVar("Power_Cost",        &pTmpVar);
-  TmpParser.DefineVar("Energy_Cost",       &pTmpVar);
-  TmpParser.DefineVar("Active_Power",      &pTmpVar);
-  TmpParser.DefineVar("Active_Energy",     &pTmpVar);
-  TmpParser.DefineVar("Reactive_Power",    &pTmpVar);
-  TmpParser.DefineVar("Reactive_Energy",   &pTmpVar);
-  ///TODO METER VARIABLES DE LOS PERIODOS
+  for(uint16_t P = 0; P < t["Periods"].size(); P++) {
+    TmpParser.DefineVar("ContractedPower_P" + to_string(P + 1),  &pTmpVar);
+    TmpParser.DefineVar("PowerCost_P" + to_string(P + 1),        &pTmpVar);
+    TmpParser.DefineVar("EnergyCost_P" + to_string(P + 1),       &pTmpVar);
+  }
+  TmpParser.DefineVar("Period",           &pTmpVar);
+  TmpParser.DefineVar("ActivePower",      &pTmpVar);
+  TmpParser.DefineVar("ActiveEnergy",     &pTmpVar);
+  TmpParser.DefineVar("ReactivePower",    &pTmpVar);
+  TmpParser.DefineVar("ReactiveEnergy",   &pTmpVar);
   try {
     TmpParser.SetExpr(t["Script"]);
     TmpParser.Eval();
@@ -303,14 +322,39 @@ json Rates::CheckTariffConfig(const json &t) {
   return Out;
 }
 //----------------------------------------------------------------------------------------------------------------------
-PriceModule *PriceModule::CreateInstance(const string &name, const uint64_t from, const uint64_t to) {
-  /*if(name == "NONE")*/ return new PriceModule(from, to);
+map<string, PriceModule::Module_t>  __attribute__((init_priority(200))) PriceModule::pModules;
+//----------------------------------------------------------------------------------------------------------------------
+PriceModule *PriceModule::CreateInstance(const string &name) {
+  auto Tmp = pModules.find(name);
+  if(Tmp == pModules.end()) return NULL;
+  return Tmp->second.Constructor();
 }
-PriceModule::PriceModule(const uint64_t from, const uint64_t to) {
+json PriceModule::GetVarsInfo() {
+  json Result = json::object();
+  for(auto M : pModules) Result[M.first] = M.second.Info();
+  return Result;
+}
+PriceModule::PriceModule() {
 }
 PriceModule::~PriceModule() {
 }
-void PriceModule::GetParams(const uint64_t sampletime, map<string, float> &vars) {
+//----------------------------------------------------------------------------------------------------------------------
+bool  None_PriceModule::pRegistered = Register();
+//----------------------------------------------------------------------------------------------------------------------
+bool None_PriceModule::Register() {
+  pModules.insert( { "NONE", { CreateInstance, GetVarsInfo } } );
+  return true;
+}
+PriceModule *None_PriceModule::CreateInstance() {
+  return new None_PriceModule();
+}
+json None_PriceModule::GetVarsInfo() {
+  json Result = json::array();
+  return Result;
+}
+void None_PriceModule::GetParams(const uint64_t sampletime, map<string, float> &vars) {
+}
+void None_PriceModule::PrepareRange(const uint64_t from, const uint64_t to) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 RatesEval::RatesEval(Rates *parent, const uint64_t from, const uint64_t to, const bool precise) {
@@ -319,9 +363,7 @@ RatesEval::RatesEval(Rates *parent, const uint64_t from, const uint64_t to, cons
   pTo                    = FindEnd(to);
   pCurrent               = pFrom;
   pRatePtr               = pParent->pRates.begin();
-  pPrevPeriod.SampleTime = 0;
   pPriceModule           = NULL;
-  printf("inicio %lu, fin %lu\n", pFrom, pTo);
 }
 RatesEval::~RatesEval() {
   UnloadRate();
@@ -367,6 +409,7 @@ void RatesEval::LoadRate() {
   pYearPtr = pRatePtr->Years.begin();
   pBillPtr = pRatePtr->BillingCycles.begin();
   pPeriods.resize(pRatePtr->Periods.size());
+  pScript.SetVarFactory(VariableFactory, &pVariables);
   for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) {
     pPeriods[P].Script.SetVarFactory(VariableFactory, &pPeriods[P].Variables);
     pPeriods[P].Script.DefineVar("ContractedPower",  &pPeriods[P].Variables.emplace("ContractedPower", 0.0).first->second);
@@ -381,23 +424,23 @@ void RatesEval::LoadRate() {
     pScript.DefineVar("PowerCost_P" + to_string(P + 1),        &pVariables.emplace("PowerCost_P" + to_string(P + 1),       0.0).first->second);
     pScript.DefineVar("EnergyCost_P" + to_string(P + 1),       &pVariables.emplace("EnergyCost_P" + to_string(P + 1),      0.0).first->second);
   }
-  pScript.SetVarFactory(VariableFactory, &pVariables);
   pScript.DefineVar("Period",         &pVariables.emplace("Period",          1.0).first->second);
   pScript.DefineVar("ActivePower",    &pVariables.emplace("ActivePower",     0.0).first->second);
   pScript.DefineVar("ActiveEnergy",   &pVariables.emplace("ActiveEnergy",    0.0).first->second);
   pScript.DefineVar("ReactivePower",  &pVariables.emplace("ReactivePower",   0.0).first->second);
   pScript.DefineVar("ReactiveEnergy", &pVariables.emplace("ReactiveEnergy",  0.0).first->second);
   pScript.SetExpr(pRatePtr->Script);
-  pPriceModule = PriceModule::CreateInstance(pRatePtr->PriceSource, pCurrent, (pBillPtr != pRatePtr->BillingCycles.end()) ? *pBillPtr : pRatePtr->EndDate);
+  pPriceModule = PriceModule::CreateInstance(pRatePtr->PriceSource);
+  pPriceModule->PrepareRange(pCurrent, (pBillPtr != pRatePtr->BillingCycles.end()) ? *pBillPtr : pRatePtr->EndDate);
+  pPriceModule->GetParams(0, pPriceVariables);
+  pPriceVariables.insert( { "Period", 0.0 } );
   if(pRatePtr->EnergyCost.size() == 0) {
-    pPriceModule->GetParams(0, pPriceVariables);
     for(auto &Var : pPriceVariables) pEnergyScript.DefineVar(Var.first, &Var.second);
     pEnergyScript.SetExpr(pRatePtr->EnergyCostScript);
   }
   if(pRatePtr->PowerCost.size() == 0) {
-    pPriceModule->GetParams(0, pPriceVariables);
-    for(auto &Var : pPriceVariables) pEnergyScript.DefineVar(Var.first, &Var.second);
-    pEnergyScript.SetExpr(pRatePtr->PowerCostScript);
+    for(auto &Var : pPriceVariables) pPowerScript.DefineVar(Var.first, &Var.second);
+    pPowerScript.SetExpr(pRatePtr->PowerCostScript);
   }
 }
 void RatesEval::UnloadRate() {
@@ -413,7 +456,7 @@ void RatesEval::UnloadRate() {
 void RatesEval::HandleSample(const float active, const float reactive) {
   while(pRatePtr != pParent->pRates.end()) {
     if(pCurrent < pRatePtr->StartDate) break;
-    if((pCurrent > pRatePtr->StartDate) && (pCurrent <= pRatePtr->EndDate)) {
+    if((pCurrent >= pRatePtr->StartDate) && (pCurrent <= pRatePtr->EndDate)) {
       LoadRate();
       break;
     }
@@ -424,9 +467,9 @@ void RatesEval::HandleSample(const float active, const float reactive) {
   if(pPeriods.size() > 0) {
     while(Time.year() != pYearPtr->Year) pYearPtr++;
     uint16_t         PeriodIdx = pRatePtr->Days[pYearPtr->Days[cctz::get_yearday(civil_day(Time)) - 1]].Quarters[Time.hour() * 4 + Time.minute() / 15];
-    if(pPeriodCallback && ((pPrevPeriod.SampleTime == 0) || (pPrevPeriod.Period != PeriodIdx) || (pPrevPeriod.Color != pRatePtr->Periods[PeriodIdx].Color) || (pPrevPeriod.ContractedPower != pRatePtr->Contracted[PeriodIdx]))) {
-      pPrevPeriod = { .SampleTime = pCurrent, .Period = PeriodIdx, .Color = pRatePtr->Periods[PeriodIdx].Color, .ContractedPower = pRatePtr->Contracted[PeriodIdx] };
-      pPeriodCallback(pPrevPeriod);
+    if(pPeriodCallback) {
+      PeriodOut_t PeriodOut = { .SampleTime = pCurrent, .Period = PeriodIdx, .Color = pRatePtr->Periods[PeriodIdx].Color, .ContractedPower = pRatePtr->Contracted[PeriodIdx] };
+      pPeriodCallback(PeriodOut);
     }
     if(pSampleCallback || pBillCallback) {
       SampleOut_t SampleOut = { .SampleTime = pCurrent, .ActivePower = active, .ReactivePower = reactive, .Cost = 0.0 };
@@ -441,8 +484,11 @@ void RatesEval::HandleSample(const float active, const float reactive) {
       pVariables["ReactiveEnergy"] = reactive / 4.0;
       pVariables["Period"]         = PeriodIdx + 1;
       for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) pVariables["ContractedPower_P" + to_string(P + 1)] = pRatePtr->Contracted[P];
-      if(pRatePtr->EnergyCost.size() == 0) {
+      if((pRatePtr->EnergyCost.size() == 0) || (pRatePtr->PowerCost.size() == 0)) {
+        pPriceVariables["Period"]    = PeriodIdx + 1;
         pPriceModule->GetParams(pCurrent, pPriceVariables);
+      }
+      if(pRatePtr->EnergyCost.size() == 0) {
         float EnergyCost = pEnergyScript.Eval();
         pPeriods[PeriodIdx].Variables["EnergyCost"] = EnergyCost;
         for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) pVariables["EnergyCost_P" + to_string(P + 1)] = EnergyCost;
@@ -451,7 +497,6 @@ void RatesEval::HandleSample(const float active, const float reactive) {
         for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) pVariables["EnergyCost_P" + to_string(P + 1)] = pRatePtr->EnergyCost[P];
       }
       if(pRatePtr->PowerCost.size() == 0) {
-        pPriceModule->GetParams(pCurrent, pPriceVariables);
         float PowerCost = pPowerScript.Eval();
         pPeriods[PeriodIdx].Variables["PowerCost"] = PowerCost;
         for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) pVariables["PowerCost_P" + to_string(P + 1)] = PowerCost;
@@ -463,11 +508,11 @@ void RatesEval::HandleSample(const float active, const float reactive) {
       pPeriods[PeriodIdx].Script.Eval();
       SampleOut.Cost = pVariables["Cost"] + pPeriods[PeriodIdx].Variables["Cost"];
 
-      printf("Global - ");
-      for(auto Var : pVariables) printf("%s: %.10f, ", Var.first.c_str(), Var.second);
-      printf("\nPeriod - ");
-      for(auto Var : pPeriods[PeriodIdx].Variables) printf("%s: %.10f, ", Var.first.c_str(), Var.second);
-      printf("\n");
+//      printf("Global - ");
+//      for(auto Var : pVariables) printf("%s: %.10f, ", Var.first.c_str(), Var.second);
+//      printf("\nPeriod - ");
+//      for(auto Var : pPeriods[PeriodIdx].Variables) printf("%s: %.10f, ", Var.first.c_str(), Var.second);
+//      printf("\n");
 
 
 
@@ -485,9 +530,9 @@ void RatesEval::HandleSample(const float active, const float reactive) {
       SampleOut_t SampleOut = { .SampleTime = pCurrent, .ActivePower = active, .ReactivePower = reactive, .Cost = 0.0 };
       pSampleCallback(SampleOut);
     }
-    if(pPeriodCallback && ((pPrevPeriod.SampleTime == 0) || (pPrevPeriod.Period != UINT16_MAX))) {
-      pPrevPeriod = { .SampleTime = pCurrent, .Period = UINT16_MAX, .Color = "", .ContractedPower = NAN };
-      pPeriodCallback(pPrevPeriod);
+    if(pPeriodCallback) {
+      PeriodOut_t PeriodOut = { .SampleTime = pCurrent, .Period = UINT16_MAX, .Color = "", .ContractedPower = NAN };
+      pPeriodCallback(PeriodOut);
     }
   }
   pCurrent += 900000;

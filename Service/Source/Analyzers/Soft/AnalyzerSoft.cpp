@@ -1427,7 +1427,11 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"] = pSamplerate;
   if((params.contains("Alarms") == false) || (params["Alarms"].is_boolean() == false) || (params["Alarms"] == false)) Response.erase("Alarms");
-  if((params.contains("Rates") == false) || (params["Rates"].is_boolean() == false) || (params["Rates"] == false)) Response.erase("Rates");
+  if((params.contains("Rates") == false) || (params["Rates"].is_boolean() == false) || (params["Rates"] == false)) {
+    Response.erase("Rates");
+  } else {
+    Response["RateModules"] = PriceModule::GetVarsInfo();
+  }
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + DB.Bind(Serial));
   if(DB.FecthRow()) Response["Size"] = DB.ResultUInt64("size");
@@ -1751,18 +1755,25 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   for(uint8_t i = 0; i < params["Series"].size(); i++) {
     if(params["Series"][i].is_string() == false) return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
     if(params["Series"][i] == "ACTIVE_POWER") {
+      Result["Active_Power"] = json::array();
       SaveActive = true;
     } else if(params["Series"][i] == "REACTIVE_POWER") {
+      Result["Reactive_Power"] = json::array();
       SaveReactive = true;
     } else if(params["Series"][i] == "EXPENSE") {
+      Result["Expense"] = json::array();
       SaveExpense = true;
-    } else if(params["Series"][i] == "PERIOD_NAME") {
+    } else if(params["Series"][i] == "PERIOD_NUMBER") {
+      Result["Period_Number"] = json::array();
       SavePeriodName = true;
     } else if(params["Series"][i] == "PERIOD_COLOR") {
+      Result["Period_Color"] = json::array();
       SavePeriodColor = true;
     } else if(params["Series"][i] == "PERIOD_POWER") {
+      Result["Period_Power"] = json::array();
       SaveContracted = true;
     } else if(params["Series"][i] == "BILLS") {
+      Result["Bills"] = json::array();
       SaveBills = true;
     } else {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
@@ -1772,9 +1783,6 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   RatesEval Eval(pRateList, From, To, params["Precise"]);
   if(SaveActive || SaveReactive || SaveExpense) {
     Result["Sampletime"] = json::array();
-    if(SaveActive)      Result["Active_Power"] = json::array();
-    if(SaveReactive)    Result["Reactive_Power"] = json::array();
-    if(SaveExpense)     Result["Expense"] = json::array();
     Eval.SetSampleCallback([&](const RatesEval::SampleOut_t &out) {
       AccActive   += out.ActivePower;
       AccReactive += out.ReactivePower;
@@ -1794,16 +1802,13 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   }
   if(SavePeriodName || SavePeriodColor || SaveContracted) {
     Result["Period_Sampletime"] = json::array();
-    if(SavePeriodName)  Result["Period_Name"] = json::array();
-    if(SavePeriodColor) Result["Period_Color"] = json::array();
-    if(SaveContracted)  Result["Period_Power"] = json::array();
     Eval.SetPeriodCallback([&](const RatesEval::PeriodOut_t &out) {
       Result["Period_Sampletime"].push_back(out.SampleTime);
       if(SavePeriodName) {
         if(out.Period == UINT16_MAX) {
-          Result["Period_Name"].push_back(nullptr);
+          Result["Period_Number"].push_back(nullptr);
         } else {
-          Result["Period_Name"].push_back(out.Period);
+          Result["Period_Number"].push_back(out.Period);
         }
       }
       if(SavePeriodColor) {
@@ -1817,7 +1822,6 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
     });
   }
   if(SaveBills == true) {
-    Result["Bills"] = json::array();
     Eval.SetBillCallback([&](const json &out) {
       Result["Bills"].push_back(out);
     });

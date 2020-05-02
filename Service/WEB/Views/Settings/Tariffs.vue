@@ -94,7 +94,7 @@
       },
       Edit: function(tariff) {
         this.ShowSpinner = true;
-        this.$http.post('getTariff', { TariffID: tariff.TariffID }).then(
+        this.$http.post('getTariff', { Name: tariff.Name }).then(
           (result) => {
             this.Tariff = result.body;
             this.ShowDialog = true;
@@ -105,7 +105,7 @@
       },
       Delete: function(tariff) {
         if(confirm("Delete '" + tariff.Name + "' tariff?")) {
-          this.$http.post('delTariff', { TariffID: tariff.TariffID }).then(
+          this.$http.post('delTariff', { Name: tariff.Name }).then(
             (result) => {
               this.LoadTariffs();
             },

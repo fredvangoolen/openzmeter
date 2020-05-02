@@ -37,7 +37,7 @@
   export default {
     props: { value: String, vars: Array },
     data: function() {
-      return { FilterVars: [],
+      return { FilterVars: [], Timer: null,
                Functions: ['sin(A)', 'cos(A)', 'tan(A)', 'asin(A)', 'acos(A)', 'atan(A)', 'sinh(A)', 'cosh(A)', 'tanh(A)', 'asinh(A)', 'acosh(A)', 'atanh(A)', 'log2(A)', 'log10(A)', 'log(A)', 'ln(A)', 'exp(A)', 'sqrt(A)', 'sign(A)', 'rint(A)', 'abs(A)', 'min(A, B, ...)', 'max(A, B, ...)', 'sum(A, B, ...)', 'avg(A, B, ...)'],
                Operators:['&&', '||', '<=', '>=', '!=', '==', '>', '<', '+', '-', '*', '/', '^', '(A==B) ? C : D'],
                Columns: [
@@ -50,20 +50,18 @@
       };
     },
     watch: {
-      value: function() { this.$nextTick(() => { this.Refresh(); }); },
+      value: function() { this.Refresh(); },
       vars: function() { this.Refresh(); }
     },
     mounted: function() {
       this.$emit('evaluate');
+      $('.hl_textarea').highlightWithinTextarea({ highlight: [ ] });
       this.Refresh();
     },
     beboreDestroy: function() {
       $('.hl_textarea').highlightWithinTextarea('destroy');
     },
     methods: {
-      ValueFormat: function(val) {
-        return this.Round(val, 2, false);
-      },
       Insert: function(text) {
         var txt = $('.hl_textarea');
         var caretPos = txt[0].selectionStart;
@@ -72,17 +70,19 @@
         this.$emit('input', textAreaTxt.substring(0, caretPos) + text + textAreaTxt.substring(caretPos));
       },
       Refresh: function() {
-        var  Vars = [];
-        for(var n in this.vars) Vars.push(this.vars[n].Name);
-        $('.hl_textarea').highlightWithinTextarea({
-          highlight: [
-            { highlight: RegExp('\\b' + Vars.join('|') + '\\b', 'g'), className: 'variable' },
+        clearTimeout(this.Timer);
+        this.Timer = setTimeout(() => {
+          var  Vars = [];
+          for(var n in this.vars) Vars.push(this.vars[n].Name);
+          var Highlight = [
             { highlight: ['=', '&&', '||', '<=', '>=', '!=', '==', '>', '<', '+', '-', '*', '/', '^', '?', ':'], className: 'operator' },
             { highlight: RegExp('\\(|\\)|\\b(sin|cos|tan|asin|acos|atan|sinh|cosh|tanh|asinh|acosh|atanh|log2|log10|log|ln|exp|sqrt|sign|rint|abs|min|max|sum|avg)\\b', 'g'), className: 'function' },
             { highlight: RegExp('\\b([0-9]*[.])?[0-9]+\\b', 'g'), className: 'numbers' }
-          ]
-        });
-        $('.hl_textarea').focus();
+          ];
+          if((Vars != null) && (Vars.length > 0)) Highlight.push({ highlight: RegExp('\\b' + Vars.join('|') + '\\b', 'g'), className: 'variable' });
+          $('.hl_textarea').highlightWithinTextarea( { highlight: Highlight } );
+          $('.hl_textarea').focus();
+        }, 100);
       }
     },
     components: { vuetable }
