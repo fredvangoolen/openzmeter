@@ -33,6 +33,7 @@ class Database final {
     void     ClearAsync();
   public :
     string   Bind(const uint8_t param) const;
+    string   Bind(const uint16_t param) const;
     string   Bind(const uint32_t param) const;
     string   Bind(const int64_t param) const;
     string   Bind(const uint64_t param) const;

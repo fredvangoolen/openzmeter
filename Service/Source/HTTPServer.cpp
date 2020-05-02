@@ -146,6 +146,7 @@ void HTTPTaskQueue::on_idle() {
     pthread_mutex_unlock(&pMutex);
     return;
   }
+  pLastAdjust = Time;
   while(pFreeWorkers.size() > 0) {
     auto Tmp = pFreeWorkers.back();
     if((Time - Tmp->LastTime) < 60000) break;

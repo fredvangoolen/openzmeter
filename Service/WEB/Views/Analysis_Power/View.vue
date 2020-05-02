@@ -87,7 +87,7 @@
                TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'POWER_HARMONICS', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI']),
                Transfer3S: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
                Transfer1M: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
-               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER', 'PERIOD_POWER', 'PERIOD_NAME', 'PERIOD_COLOR', 'BILLS']),
+               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER', 'PERIOD_POWER', 'PERIOD_NUMBER', 'PERIOD_COLOR', 'BILLS']),
                TransferCubism: this.CreateSeriesTransfer(this, ['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'])
       };
     },
@@ -132,7 +132,7 @@
       Export: function() {
         var Data = [['Time', 'Period', 'Contracted', 'Active power', 'Reactive power']];
         if(this.TransferGraph.Data != null) {
-          for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], this.TransferGraph.Data.Period_Name[n], this.Round(this.TransferGraph.Data.Period_Power[n], 3), this.Round(this.TransferGraph.Data.Active_Power[n], 3), this.Round(this.TransferGraph.Data.Reactive_Power[n], 3)]);
+          for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], 'P' + this.TransferGraph.Data.Period_Number[n], this.Round(this.TransferGraph.Data.Period_Power[n], 3), this.Round(this.TransferGraph.Data.Active_Power[n], 3), this.Round(this.TransferGraph.Data.Reactive_Power[n], 3)]);
         }
         return Object.seal(Data);
       }

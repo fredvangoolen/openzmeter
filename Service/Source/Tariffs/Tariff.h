@@ -94,13 +94,34 @@ class Rates final {
 };
 //----------------------------------------------------------------------------------------------------------------------
 class PriceModule {
+  protected :
+    typedef struct {
+      PriceModule* (*Constructor)();
+      json         (*Info)();
+    } Module_t;
+  protected :
+    static map<string, Module_t> pModules;
+  protected :
+    PriceModule();
   public :
-    static PriceModule *CreateInstance(const string &name, const uint64_t from, const uint64_t to);
-  private :
-    PriceModule(const uint64_t from, const uint64_t to);
+    static PriceModule *CreateInstance(const string &name);
+    static json         GetVarsInfo();
   public :
     virtual ~PriceModule();
-    virtual void GetParams(const uint64_t sampletime, map<string, float> &vars);
+    virtual void GetParams(const uint64_t sampletime, map<string, float> &vars) = 0;
+    virtual void PrepareRange(const uint64_t from, const uint64_t to) = 0;
+};
+//----------------------------------------------------------------------------------------------------------------------
+class None_PriceModule final : public PriceModule {
+  private :
+    static bool         pRegistered;
+  private :
+    static bool         Register();
+    static PriceModule *CreateInstance();
+    static json         GetVarsInfo();
+  public :
+    void GetParams(const uint64_t sampletime, map<string, float> &vars) override;
+    void PrepareRange(const uint64_t from, const uint64_t to) override;
 };
 //----------------------------------------------------------------------------------------------------------------------
 class RatesEval final {
@@ -131,7 +152,6 @@ class RatesEval final {
     vector<Rates::Year_t>::iterator     pYearPtr;
     vector<uint64_t>::iterator          pBillPtr;
     PriceModule                        *pPriceModule;
-    PeriodOut_t                         pPrevPeriod;
     Parser                              pEnergyScript;
     Parser                              pPowerScript;
     Parser                              pScript;

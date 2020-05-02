@@ -14,29 +14,55 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-//#include "Tariff.h"
+#include <map>
+#include "Tariff.h"
 #include "nlohmann/json.h"
 #include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
+class ESIOS_PriceModule final : public PriceModule {
+  private :
+    static bool               pRegistered;
+  private :
+    Database                  pDB;
+    bool                      pHaveData;
+    string                    pQueryColumns;
+  private :
+    static bool         Register();
+    static PriceModule *CreateInstance();
+    static json         GetVarsInfo();
+  public :
+    ESIOS_PriceModule();
+    ~ESIOS_PriceModule();
+    void PrepareRange(const uint64_t from, const uint64_t to);
+    void GetParams(const uint64_t sampletime, map<string, float> &vars);
+};
+// ---------------------------------------------------------------------------------------------------------------------
 class ESIOS final {
+  friend class ESIOS_Query;
+  private :
+    typedef struct {
+      uint32_t   IndicatorNum;
+      uint32_t   GeoID;
+      string     TimeTrunc;
+      string     VarName;
+      string     Description;
+    } Variable_t;
   private :
     static string              pToken;
     static uint64_t            pSyncDate;
     static pthread_t           pThread;
     static pthread_mutex_t     pMutex;
     volatile static bool       pTerminate;
+  public :
+    static vector<Variable_t>  pVariables;
   private :
     static void     GetESIOSCallback(const json &params, Response &response);
     static void     SetESIOSCallback(const json &params, Response &response);
     static void     Configure(const json &config);
     static json     CheckConfig(const json &config);
     static void    *Thread_Func(void *params);
-    static bool     FetchIndicator(SSLClient *client, const string &token, const string &indicator, const string &shortName, const string &time_trunc, const string &geo_id, uint64_t to);
+    static bool     FetchIndicator(SSLClient &client, const string &token, const Variable_t &var, uint64_t to);
   public :
     ESIOS();
     ~ESIOS();
-};
-class ESIOS_Query final {
-
-
 };

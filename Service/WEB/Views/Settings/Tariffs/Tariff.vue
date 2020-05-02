@@ -6,9 +6,7 @@
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" @click="Save" :class="{disabled: (Error!=null)}"><img :src="require('Imgs/diskette.png')"></button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
-          <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Concepts' }" @click="View='Concepts'">Concepts</button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
-          <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Days' }" @click="View='Days'">Days</button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Calendar' }" @click="View='Calendar'">Calendar</button>
           <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
         </div>
@@ -17,34 +15,24 @@
       <div class="row" v-if="View=='Main'">
         <div class="col-xs-12">
           <label class="control-label">Name</label>
-          <input type="text" class="form-control" v-model="Tariff.Name">
+          <input type="text" class="form-control" v-model="Tariff.Name" :disabled="tariff!=null">
         </div>
         <div class="col-xs-12">
           <label class="control-label">Description</label>
           <textarea class="form-control" rows="5" v-model="Tariff.Template.Description" style="resize: none"></textarea>
         </div>
       </div>
-      <div class="row" v-if="View=='Concepts'">
-        <div class="col-xs-4">
-          <label class="small">Currency</label>
-          <div class="input-group input-group-xs" style="width: 100%">
-            <input type="text" class="form-control rounded" v-model="Tariff.Template.Currency">
-          </div>
-        </div>
-        <div class="col-xs-4">
-          <label class="small">Energy units</label>
-          <div class="input-group input-group-xs" style="width: 100%">
-            <input type="text" class="form-control rounded" v-model="Tariff.Template.EnergyUnits">
-          </div>
-        </div>
-        <div class="col-xs-4">
-          <label class="small">Power units</label>
-          <div class="input-group input-group-xs" style="width: 100%">
-            <input type="text" class="form-control rounded" v-model="Tariff.Template.PowerUnits">
-          </div>
-        </div>
-        <div class="col-xs-12" style="margin-top:6px">
-          <div class="panel-group panel panel-dialog" style="margin-bottom: 0px">
+      <div class="row" v-if="View=='Periods'">
+        <div class="col-xs-12">
+          <table style="width: 100%"><tr><td>
+            <detail-tabs key="Period_Tabs" :tabs="['General'].concat(Array(Tariff.Template.Periods.length).fill(0).map((n, idx) => { return 'P' + (idx + 1)}))" v-model="ActivePeriod" :light="true"></detail-tabs>
+          </td><td style="width: 64px; text-align: right;">
+            <div class="btn-group">
+              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Periods.length==1" @click="DeletePeriod" data-toggle="tooltip" title="Delete last period"><img :src="require('Imgs/cross.png')"></button>
+              <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/plus.png')" @click="AddPeriod" data-toggle="tooltip" title="Add new period"></button>
+            </div>
+          </td></tr></table>
+          <div class="panel-tab panel panel-dialog" style="margin-bottom: 0px" v-if="ActivePeriod=='General'">
             <div class="panel-heading">
               <div class="pull-right btn-group">
                 <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit tariff script" @click="View='Expresion'"><img :src="require('Imgs/math_functions.png')"></button>
@@ -54,38 +42,46 @@
               <div class="clearfix"></div>
             </div>
             <div class="panel-body">
-            <vuetable :fields="Columns" :api-mode="false" :data="FilterConcepts" class="table small table-striped">
-              <template slot="concept" slot-scope="props">
-                <div class="input-group input-group-xs">
-                  <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" @click="Tariff.Template.Concepts.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
-                  </span>
-                  <input type="text" class="form-control" v-model="props.rowData.Description">
+              <div class="row">
+                <div class="col-xs-4">
+                  <label class="small">Currency</label>
+                  <div class="input-group input-group-xs" style="width: 100%">
+                    <input type="text" class="form-control rounded" v-model="Tariff.Template.Currency">
+                  </div>
                 </div>
-              </template>
-              <template slot="variable" slot-scope="props">
-                <div class="input-group input-group-xs" style="width:100%">
-                  <input type="text" class="form-control rounded" v-model="props.rowData.Variable">
+                <div class="col-xs-4">
+                  <label class="small">Energy units</label>
+                  <div class="input-group input-group-xs" style="width: 100%">
+                    <option-picker v-model="Tariff.Template.EnergyUnits" :options="[ {name: 'kWh', value: 'kWh'} ]" ></option-picker>
+                  </div>
                 </div>
-              </template>
-              <template slot="type" slot-scope="props">
-                <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
-              </template>
-            </vuetable>
+                <div class="col-xs-4">
+                  <label class="small">Power units</label>
+                  <div class="input-group input-group-xs" style="width: 100%">
+                    <option-picker v-model="Tariff.Template.PowerUnits" :options="[ {name: 'kW', value: 'kW'}, {name: 'kvar', value: 'kvar'} ]" ></option-picker>
+                  </div>
+                </div>
+                <vuetable :fields="Columns" :api-mode="false" :data="FilterConcepts" class="table small table-striped">
+                  <template slot="concept" slot-scope="props">
+                    <div class="input-group input-group-xs">
+                      <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" @click="Tariff.Template.Concepts.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
+                      </span>
+                      <input type="text" class="form-control" v-model="props.rowData.Description">
+                    </div>
+                  </template>
+                  <template slot="variable" slot-scope="props">
+                    <div class="input-group input-group-xs" style="width:100%">
+                      <input type="text" class="form-control rounded" v-model="props.rowData.Variable">
+                    </div>
+                  </template>
+                  <template slot="type" slot-scope="props">
+                    <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
+                  </template>
+                </vuetable>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-      <div class="row" v-if="View=='Periods'">
-        <div class="col-xs-12">
-          <table style="width: 100%"><tr><td>
-            <detail-tabs key="Period_Tabs" :tabs="new Array(Tariff.Template.Periods.length).fill(0).map((n, idx) => { return 'P' + (idx + 1)})" v-model="ActivePeriod" :light="true"></detail-tabs>
-          </td><td style="width: 64px; text-align: right;">
-            <div class="btn-group">
-              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Periods.length==1" @click="DeletePeriod" data-toggle="tooltip" title="Delete last period"><img :src="require('Imgs/cross.png')"></button>
-              <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/plus.png')" @click="AddPeriod" data-toggle="tooltip" title="Add new period"></button>
-            </div>
-          </td></tr></table>
           <div v-for="(period, idx) in Tariff.Template.Periods" :key="idx">
             <div class="panel panel-dialog panel-tab" v-if="ActivePeriod=='P'+(idx+1)" style="margin-bottom: 0px">
               <div class="panel-heading">
@@ -120,34 +116,32 @@
                       <input-spin :max="100000" :min="0" :prepend="Tariff.Template.Currency+'/'+Tariff.Template.EnergyUnits" :decimals="6" :increment="0.01" v-model="period.DefaultEnergyCost"></input-spin>
                     </div>
                   </div>
-                  <div class="col-xs-12">
-                    <vuetable :fields="Columns" :api-mode="false" :data="FilterConcepts" class="table small table-striped">
-                      <template slot="concept" slot-scope="props">
-                        <div class="input-group input-group-xs">
-                          <span class="input-group-btn">
-                            <button class="btn btn-default" type="button" @click="period.Concepts.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
-                          </span>
-                          <input type="text" class="form-control" v-model="props.rowData.Description">
-                        </div>
-                      </template>
-                      <template slot="variable" slot-scope="props">
-                        <div class="input-group input-group-xs" style="width:100%">
-                          <input type="text" class="form-control rounded" v-model="props.rowData.Variable">
-                        </div>
-                      </template>
-                      <template slot="type" slot-scope="props">
-                        <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
-                      </template>
-                    </vuetable>
-                  </div>
+                  <vuetable :fields="Columns" :api-mode="false" :data="FilterConcepts" class="table small table-striped">
+                    <template slot="concept" slot-scope="props">
+                      <div class="input-group input-group-xs">
+                        <span class="input-group-btn">
+                          <button class="btn btn-default" type="button" @click="period.Concepts.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
+                        </span>
+                        <input type="text" class="form-control" v-model="props.rowData.Description">
+                      </div>
+                    </template>
+                    <template slot="variable" slot-scope="props">
+                      <div class="input-group input-group-xs" style="width:100%">
+                        <input type="text" class="form-control rounded" v-model="props.rowData.Variable">
+                      </div>
+                    </template>
+                    <template slot="type" slot-scope="props">
+                      <option-picker v-model="props.rowData.Type" :options="[ {name: 'Info', value: 'INFO'}, {name: 'General cost', value: 'COST'}, {name: 'Energy cost', value: 'COST_ENERGY'}, {name: 'Power cost', value: 'COST_POWER'} ]" ></option-picker>
+                    </template>
+                  </vuetable>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="row" v-if="View=='Days'">
-        <div class="col-xs-12">
+      <div class="row" v-if="View=='Calendar'">
+        <div class="col-xs-12" style="margin-bottom: 6px">
           <table style="width: 100%;"><tr><td>
             <detail-tabs key="Day_Tabs" :tabs="new Array(Tariff.Template.Days.length).fill(0).map((n, idx) => { return 'D' + (idx + 1)})" v-model="ActiveDay" :light="true"></detail-tabs>
           </td><td style="width: 64px; text-align: right">
@@ -180,8 +174,7 @@
             </div>
           </div>
         </div>
-      </div>
-      <div class="row" v-if="View=='Calendar'">
+
         <div class="col-xs-12">
           <table style="width: 100%">
             <tr><td>
@@ -218,7 +211,7 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Tariff script</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="View='Concepts'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
         </div>
       </template>
       <div class="row">
@@ -242,7 +235,6 @@
         </div>
       </div>
     </dlg>
-
   </div>
 </template>
 
@@ -288,34 +280,6 @@
         }
         return Vars;
       }
-//      Error: function() {
-//        this.Tariff.StartDate = moment(this.Tariff.StartDate).tz(this.Tariff.TimeZone).startOf('day').valueOf();
-//        this.Tariff.EndDate = moment(this.Tariff.EndDate).tz(this.Tariff.TimeZone).endOf('day').valueOf();
-//        var FindSeason = (date) => {
-//          for(var i = 0; i < this.Tariff.Template.Seasons.length; i++) {
-//            if(this.Tariff.Template.Seasons[i].StartDate === date) return i;
-//          }
-//          return null;
-//        };
-//        for(var i = 0; i < this.Tariff.Template.Seasons.length; i++) {
-//          this.Tariff.Template.Seasons[i].StartDate = moment(this.Tariff.Template.Seasons[i].StartDate).tz(this.Tariff.TimeZone).startOf('day').valueOf();
-//          this.Tariff.Template.Seasons[i].EndDate = moment(this.Tariff.Template.Seasons[i].EndDate).tz(this.Tariff.TimeZone).endOf('day').valueOf();
-//          for(var h = 0; h < 24; h++) {
-//            if((this.Tariff.Template.Seasons[i].DayPeriods[h] < 0) || (this.Tariff.Template.Seasons[i].DayPeriods[h] >= this.Tariff.Template.Periods.length)) return 'Periods in season "' + tariff.Template.Seasons[i].Name + '" out of range!';
-//          }
-//        }
-//        var Used = this.Tariff.Template.Seasons.length;
-//        var Date = this.Tariff.StartDate;
-//        while(Used > 0) {
-//          var Find = FindSeason(Date);
-//          if(Find == null) break;
-//          Date = this.Tariff.Template.Seasons[Find].EndDate;
-//          Used = Used - 1;
-//          if(Used > 0) Date = Date + 1;
-//        }
-//        if((Used > 0) || (Date != this.Tariff.EndDate)) return 'Defined tariff period is not correctly covered by defined seasons!';
-//        return null;
-//      }
     },
     created: function() {
       if(this.tariff == null) {
@@ -344,7 +308,7 @@
       },
       DeleteYear: function() {
         if(Object.keys(this.Tariff.Template.Years).length == 1) return;
-        if(confirm("Delete year " + this.ActiveYear + "?")) delete this.Tariff.Template.Years[this.ActiveYear];
+        if(confirm("Delete year " + this.ActiveYear + "?")) this.Tariff.Template.Years = this.Tariff.Template.Years.filter(year => year.Year != this.ActiveYear);
         this.ActiveYear = String(Object.keys(this.Tariff.Template.Years)[0]);
       },
       AddPeriod: function() {
@@ -356,11 +320,14 @@
         this.ActiveDay = 'D' + this.Tariff.Template.Days.length;
       },
       AddYear: function() {
-        this.Tariff.Template.Years.push({Year: this.NewYearSelect, Days: new Array(moment([this.NewYearSelect, 11, 31]).dayOfYear()).fill(0) });
+        var NewYear = {Year: this.NewYearSelect, Days: new Array(moment([this.NewYearSelect, 11, 31]).dayOfYear()).fill(0) };
+        var PrevYear = this.Tariff.Template.Years.filter(year => year.Year == this.ActiveYear)[0];
+        for(var d = 0; d < NewYear.Days.length; d++) NewYear.Days[d] = (PrevYear.Days[d] == null) ? 0 : PrevYear.Days[d];
+        this.Tariff.Template.Years.push(NewYear);
         this.ActiveYear = String(this.NewYearSelect);
       },
       Save: function() {
-        this.$http.post((this.Tariff.TariffID == null) ? 'addTariff' : 'setTariff', this.Tariff).then(
+        this.$http.post((this.tariff == null) ? 'addTariff' : 'setTariff', this.Tariff).then(
           (result) => {
             this.$emit('close');
           },

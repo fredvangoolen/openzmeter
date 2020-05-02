@@ -147,7 +147,6 @@ bool Database::ExecResource(const string &file) {
   return ExecSentenceNoResult(Script);
 }
 bool Database::ExecSentenceNoResult(const string &sql) {
-//  printf("%s\n", sql.c_str());
   if(pDBConn == NULL) return false;
   ClearAsync();
   PGresult *Result = PQexec(pDBConn, sql.c_str());
@@ -185,6 +184,9 @@ void Database::ClearAsync() {
   } while(pResult != NULL);
 }
 string Database::Bind(const uint8_t param) const {
+  return to_string(param);
+}
+string Database::Bind(const uint16_t param) const {
   return to_string(param);
 }
 string Database::Bind(const uint32_t param) const {

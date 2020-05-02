@@ -71,7 +71,7 @@
       return { Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300,
                Transfer15M: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
                Transfer1H: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
-               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER', 'PERIOD_COLOR', 'PERIOD_NAME', 'BILLS'])
+               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER', 'PERIOD_COLOR', 'PERIOD_NUMBER', 'BILLS'])
       };
     },
     created: function() {
@@ -103,7 +103,7 @@
         var Data = [['Time', 'Period', 'Active energy', 'Reactive energy']];
         if(this.TransferGraph.Data != null) {
           var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
-          for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], this.TransferGraph.Data.Period_Name[n], this.Round(this.TransferGraph.Data.Active_Power[n] / Div, 3), this.Round(this.TransferGraph.Data.Reactive_Power[n] / Div, 3)]);
+          for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], 'P' + this.TransferGraph.Data.Period_Number[n], this.Round(this.TransferGraph.Data.Active_Power[n] / Div, 3), this.Round(this.TransferGraph.Data.Reactive_Power[n] / Div, 3)]);
         }
         return Object.seal(Data);
       }

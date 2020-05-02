@@ -1,5 +1,6 @@
 <template>
-  <dlg :loading="ShowSpinner">
+  <div>
+  <dlg :loading="ShowSpinner" v-if="(View!=='PowerCostExpression')&&(View!=='EnergyCostExpression')">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
       <div class="pull-right btn-group" v-if="Rate.Periods==null">
@@ -103,7 +104,7 @@
               <div class="input-group input-group-xs">
                 <input type="text" class="form-control" value="Configured from expression" :disabled="true">
                 <span class="input-group-btn">
-                  <button type="button" class="btn btn-default btn-xs" @click="$set(Rate.PowerCost, idx, Rate.Periods[idx].DefaultPowerCost)" data-toggle="tooltip" title="Set power costs expression"><img :src="require('Imgs/math_functions.png')"></button>
+                  <button type="button" class="btn btn-default btn-xs" @click="View='PowerCostExpression'" data-toggle="tooltip" title="Set power costs expression"><img :src="require('Imgs/math_functions.png')"></button>
                 </span>
               </div>
             </div>
@@ -136,7 +137,7 @@
               <div class="input-group input-group-xs">
                 <input type="text" class="form-control" value="Configured from expression" :disabled="true">
                 <span class="input-group-btn">
-                  <button type="button" class="btn btn-default btn-xs" @click="Rate.PowerCost[idx]=Rate.Periods[idx].DefaultPowerCost" data-toggle="tooltip" title="Set power costs expression"><img :src="require('Imgs/math_functions.png')"></button>
+                  <button type="button" class="btn btn-default btn-xs" @click="View='EnergyCostExpression'" data-toggle="tooltip" title="Set energy costs expression"><img :src="require('Imgs/math_functions.png')"></button>
                 </span>
               </div>
             </div>
@@ -249,6 +250,35 @@
       </div>
     </div>
   </dlg>
+    <dlg v-if="View=='PowerCostExpression'">
+      <template v-slot:header>
+        <div class="pull-left"><h4 class="modal-title">Power cost expression</h4></div>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+        </div>
+      </template>
+      <div class="row">
+        <div class="col-xs-12">
+          <label class="control-label">Expresion</label>
+          <input-math v-model="Rate.PowerCost" :vars="Vars"></input-math>
+        </div>
+      </div>
+    </dlg>
+    <dlg v-if="View=='EnergyCostExpression'">
+      <template v-slot:header>
+        <div class="pull-left"><h4 class="modal-title">Energy cost expression</h4></div>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" @click="View='Periods'"><img :src="require('Imgs/arrow_undo.png')" alt="Go back"></button>
+        </div>
+      </template>
+      <div class="row">
+        <div class="col-xs-12">
+          <label class="control-label">Expresion</label>
+          <input-math v-model="Rate.EnergyCost" :vars="Vars"></input-math>
+        </div>
+      </div>
+    </dlg>
+  </div>
 </template>
 
 <script>
@@ -282,6 +312,14 @@
       this.Rate = this.analyzer.Rates[this.index];
       if(this.Rate.Periods == null) this.LoadTariffs();
     },
+    computed: {
+      Vars: function() {
+        var Vars = [];
+        Vars.push({ Name: 'Period', Description: 'Index of evaluated period (From 1 to ' + this.Rate.Periods.length + ')', Value: null, Units: ''});
+        for(var V = 0; V < this.analyzer.RateModules[this.Rate.Module].length; V++) Vars.push({ Name: this.analyzer.RateModules[this.Rate.Module][V].Name, Description: this.analyzer.RateModules[this.Rate.Module][V].Description, Value: null, Units: ''});
+        return Vars;
+      },
+    },
     methods: {
       TimestampToDateString: function(val) {
         return moment(val).format('DD/MM/YYYY');
@@ -305,7 +343,7 @@
       },
       LoadTariff: function(tariff) {
         this.ShowSpinner = true;
-        this.$http.post('getTariff', { TariffID: tariff.TariffID }).then(
+        this.$http.post('getTariff', { Name: tariff.Name }).then(
           (result) => {
             var Rate = Object.assign(this.Rate, result.body.Template);
             Rate.Name = result.body.Name;
@@ -417,41 +455,8 @@
           if(Date.valueOf() >= this.Rate.EndDate) break;
           this.Rate.Config.Billing.push(Date.startOf('day').valueOf() - 1);
         }
-      },
-//      FillPeriods: function() {
-//        this.Rate.Config.Periods.length = this.Rate.Template.Periods.length;
-//        for(var n = 0; n < this.Rate.Template.Periods.length; n++) this.Rate.Config.Periods[n] = Object.assign({ Contracted_Power: 0.0, Energy_Cost: 0.0, Power_Cost: 0.0 }, this.Rate.Config.Periods[n]);
-//      },
-//      SelectBase: function(e, keywork) {
-//        this.$refs.StartDate.Enable();
-//        this.$refs.EndDate.Enable();
-//        if(keywork.id === 'CURRENT') {
-//          this.LoadCurrent();
-//          this.Validate();
-//        } else {
-//          this.ShowSpinner = true;
-//          $.ajax({ url: "getTariff", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ TariffID: keywork.id }),
-//            success: function(result) {
-//              this.Rate.Template = result.Template;
-//              this.Rate.Name = result.Name;
-//              this.FillPeriods();
-//              this.Validate();
-//              this.ShowSpinner = false;
-//            }.bind(this)
-//          });
-//        }
-//      },
-//      DeselectBase: function(e) {
-//        this.$refs.StartDate.Disable();
-//        this.$refs.EndDate.Disable();
-//        this.Error = 'Select a base tariff from list';
-//      }
+      }
     },
-//    beforeDestroy: function() {
-//      $(this.$refs.Base).off('onSetSelectValue', this.SelectBase.bind(this));
-//      $(this.$refs.Base).off('onUnsetSelectValue', this.DeselectBase.bind(this));
-//      $(this.$refs.Base).bsSuggest("destroy");
-//    },
     components: { vuetable }
   }
 </script>

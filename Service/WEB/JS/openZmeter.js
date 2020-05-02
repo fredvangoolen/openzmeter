@@ -38,16 +38,16 @@ const openZmeter = {
         if(data.Bills != null) Data.Bills = data.Bills;
         //Group periods
         var LastItem = null;
-        for(var i = 0; i < data.Sampletime.length; i++) {
+        for(var i = 0; i < data.Period_Sampletime.length; i++) {
           if(LastItem == null) {
-            LastItem = { Name: data.Period_Name[i], From: data.Sampletime[i] - ((data.Aggreg === '15M') ? 899999 : 3599999), To: data.Sampletime[i], Color: data.Period_Color[i] };
+            LastItem = { Name: 'P' + data.Period_Number[i], From: data.Period_Sampletime[i] - 899999, To: data.Period_Sampletime[i], Color: data.Period_Color[i] };
             continue;
           }
-          if(data.Period_Name[i] == LastItem.Name) {
-            LastItem.To = data.Sampletime[i];
+          if(('P' + data.Period_Number[i]) == LastItem.Name) {
+            LastItem.To = data.Period_Sampletime[i];
           } else {
             Data.Periods.push(LastItem);
-            LastItem = { Name: data.Period_Name[i], From: data.Sampletime[i] - ((data.Aggreg === '15M') ? 899999 : 3599999), To: data.Sampletime[i], Color: data.Period_Color[i] };
+            LastItem = { Name: 'P' + data.Period_Number[i], From: data.Period_Sampletime[i] - 899999, To: data.Period_Sampletime[i], Color: data.Period_Color[i] };
           }
         }
         if(LastItem != null) Data.Periods.push(LastItem);
