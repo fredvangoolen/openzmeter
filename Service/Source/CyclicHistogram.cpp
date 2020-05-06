@@ -72,7 +72,7 @@ void CyclicHistogram::FlushToDisk()
 
     std::ofstream outputFile;
     outputFile.open("cyclichistogram.txt", std::ios::out);
-    outputFile << "phase,sample,voltage_bin,z" << endl;
+    outputFile << "phase,sample,voltage_bin,count" << endl;
 
     for (size_t i = 0; i < cumulativeCount.size(); i++)
     {
