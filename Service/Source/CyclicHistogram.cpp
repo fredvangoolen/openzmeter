@@ -45,7 +45,7 @@ void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, siz
     if ((arrSize + offset) > cumulativeCount[phaseNumber].size())
     {
         // Resize the cumulative count array to fit all data
-        ResizeCumulativeCount(arrSize + offset);
+        ResizeCumulativeCount(phaseNumber, arrSize + offset);
     }
 
     // Iterate through each point and find its appropriate bin index
