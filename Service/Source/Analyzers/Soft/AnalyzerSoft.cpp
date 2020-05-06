@@ -808,7 +808,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     for (uint8_t channelNumber = 0; channelNumber < This->pVoltageChannels; channelNumber++)
     {
       // Only perform cyclic histogram on phase A
-      if (channelNumber == 0)
+      if (channelNumber == 1)
       {
         uint16_t counter = 0;
         for (uint8_t i = 0; i < This->pBlockCyclesCount; i++)
