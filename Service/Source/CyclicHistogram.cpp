@@ -34,10 +34,12 @@ void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, siz
         return;
     }
 
+    uint8_t num_phases = phaseNumber + 1;
+
     // Check if vector is large enough for number of phases
-    if ((phaseNumber + 1) > cumulativeCount.size())
+    if (num_phases > cumulativeCount.size())
     {
-        CyclicHistogram::ResizePhaseNumber(phaseNumber + 1);
+        CyclicHistogram::ResizePhaseNumber(num_phases);
     }
 
     if ((arrSize + offset) > cumulativeCount[phaseNumber].size())
@@ -86,7 +88,7 @@ void CyclicHistogram::FlushToDisk()
             }
         }
     }
-    
+
     outputFile.close();
 }
 
@@ -108,7 +110,7 @@ void CyclicHistogram::ResizeCumulativeCount(uint8_t phaseNumber, size_t newSize)
     cumulativeCount[phaseNumber].resize(newSize, vector<uint64_t>(voltageBinSize));
 }
 
-vector<vector<uint64_t>> CyclicHistogram::GetCyclicHistogram()
+vector<vector<vector<uint64_t>>> CyclicHistogram::GetCyclicHistogram()
 {
     return cumulativeCount;
 }

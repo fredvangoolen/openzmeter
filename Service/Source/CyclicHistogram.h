@@ -11,7 +11,7 @@ public:
     ~CyclicHistogram();
     void ResetCumulativeCount();
     void AddPoints(uint8_t phaseNumber, float *pVoltageSamples, size_t arrSize, size_t offset);
-    vector<vector<uint64_t>> GetCyclicHistogram();
+    vector<vector<vector<uint64_t>>> GetCyclicHistogram();
     void FlushToDisk();
 
 private:
