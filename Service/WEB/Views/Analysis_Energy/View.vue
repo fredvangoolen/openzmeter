@@ -78,7 +78,7 @@
       this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.Transfer15M.Update(this.analyzer, '15M', 'LastSamples');
       this.Transfer1H.Update(this.analyzer, '1H', 'LastSamples');
-      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
     },
     beforeDestroy: function() {
       this.Transfer15M.Destroy();
@@ -89,13 +89,13 @@
       analyzer: function() {
         this.Transfer15M.Update(this.analyzer, '3S', 'LastHours');
         this.Transfer1H.Update(this.analyzer, '1M', 'LastDay');
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       },
       Aggreg: function(val, prev) {
-        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       },
       Range: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       }
     },
     methods: {

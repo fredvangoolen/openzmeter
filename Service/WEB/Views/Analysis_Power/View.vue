@@ -93,7 +93,7 @@
     },
     created: function() {
       this.TransferGraph.AggregFail = () => { this.Aggreg = null };
-      this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
+      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       this.TransferNow.UpdateNow(this.analyzer);
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
       this.Transfer1M.Update(this.analyzer, '1M', 'LastSamples');
@@ -108,17 +108,17 @@
     },
     watch: {
       analyzer: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
         this.TransferNow.UpdateNow(this.analyzer);
         this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
         this.Transfer1M.Update(this.analyzer, '1M', 'LastSamples');
         this.Transfer3S.Update(this.analyzer, '3S', 'LastSamples');
       },
       Aggreg: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       },
       Range: function(val, prev) {
-        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       },
       Paused: function() {
         if(this.Paused == true) {

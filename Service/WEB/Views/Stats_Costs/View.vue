@@ -15,9 +15,16 @@
           <div class="panel-body">
             <spinner v-if="Bills==null"></spinner>
             <summary-graph :data="Bills" :analyzer="analyzer"></summary-graph>
-            <div class="alert alert-warning text-center" style="margin-bottom: 5px; padding: 5px" v-if="Bills!=null&&Bills.length==0">No bills in selected year. No one generated yet or no rate is assigned for required period.</div>
-            <bill v-for="(bill, idx) in Bills" :bill="bill" :currency="Currency" :key="idx"></bill>
           </div>
+        </div>
+      </div>
+      <div class="col-lg-12" v-if="Bills!=null&&Bills.length==0">
+        <div class="alert alert-warning text-center" style="margin-bottom: 5px; padding: 5px">No bills in selected year. No one generated yet or no rate is assigned for required period.</div>
+      </div>
+      <div class="col-lg-12" v-if="Bills!=null&&Bills.length>0">
+        <detail-tabs :tabs="BillNames" v-model="Active"></detail-tabs>
+        <div v-for="(bill, idx) in Bills" :key="idx">
+          <bill :analyzer="analyzer" :bill="bill" v-if="BillNames[idx]==Active"></bill>
         </div>
       </div>
     </div>
@@ -36,22 +43,36 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Year: null, Bills: null, Currency: '€' };
+      return { Year: null, Bills: null, Active: null };
+    },
+    computed: {
+      BillNames: function() {
+        var Names = [];
+        for(var n in this.Bills) {
+          var Date = moment(this.Bills[n].To).tz(this.analyzer.TimeZone);
+          Names.push(Date.format('DD-MMM'))
+//          var MonthsNames = moment.months();
+//        return MonthsNames[moment(this.bill.To).month()];
+        }
+        return Names;
+      }
     },
     watch: {
       Year: function(val) {
         this.Bills = null;
         var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
         var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getPrices', { From: From, To: To, Analyzer: this.analyzer.Analyzer, Aggreg: '1H', Series: ['BILLS'] }).then(
+        this.$http.post('getPrices', { From: From, To: To, Analyzer: this.analyzer.Analyzer, Aggreg: '1H', Precise: true, Series: ['BILLS'] }).then(
           (result) => {
-            this.Bills = result.data.Bills.filter(function(value) { return value.Complete === true; });
+            this.Bills = result.data.Bills
           },
           (fail) => {}
         );
       }
     },
     methods: {
+
+
       Export: function() {
         var Data = [];
 //        for(var i = 0; i < this.$refs.bills.length; i++) {

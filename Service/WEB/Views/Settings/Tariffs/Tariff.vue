@@ -6,7 +6,7 @@
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" @click="Save" :class="{disabled: (Error!=null)}"><img :src="require('Imgs/diskette.png')"></button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
-          <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
+          <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Billing terms</button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Calendar' }" @click="View='Calendar'">Calendar</button>
           <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
         </div>
@@ -174,7 +174,6 @@
             </div>
           </div>
         </div>
-
         <div class="col-xs-12">
           <table style="width: 100%">
             <tr><td>
@@ -255,19 +254,26 @@
     computed: {
       VarsPeriod: function() {
         var Vars = [];
+        var Concepts = this.Tariff.Template.Periods[parseInt(this.ActivePeriod.substr(1)) - 1].Concepts;
         Vars.push({ Name: 'Cost', Description: '<strong>[OUT]</strong> Estimated contribution to period cost', Value: null, Units: this.Tariff.Template.Currency});
+        for(var C = 0; C < Concepts.length; C++) {
+          if(Concepts[C].Variable.length > 0) Vars.push({ Name: Concepts[C].Variable, Description: '<strong>[OUT]</strong> Defined in concepts', Value: null, Units: ''});
+        }
         Vars.push({ Name: 'ActivePower', Description: 'Active power on evaluated period', Value: null, Units: 'W'});
         Vars.push({ Name: 'ActiveEnergy', Description: 'Active energy of evaluated period', Value: null, Units: 'Wh'});
         Vars.push({ Name: 'ReactivePower', Description: 'Reactive power on evaluated period', Value: null, Units: 'var'});
         Vars.push({ Name: 'ReactiveEnergy', Description: 'Reactive energy of evaluated period', Value: null, Units: 'varh'});
         Vars.push({ Name: 'ContractedPower', Description: 'Contracted power on evaluated period', Value: null, Units: this.Tariff.Template.PowerUnits});
-        Vars.push({ Name: 'PowerCost', Description: 'Power cost on evaluated period', Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.PowerUnits + '/h'});
+        Vars.push({ Name: 'PowerCost', Description: 'Power cost on evaluated period', Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.PowerUnits + '/day'});
         Vars.push({ Name: 'EnergyCost', Description: 'Energy cost on evaluated period', Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.EnergyUnits});
         return Vars;
       },
       VarsMain: function() {
         var Vars = [];
         Vars.push({ Name: 'Cost', Description: '<strong>[OUT]</strong> Estimated contribution to period cost', Value: null, Units: this.Tariff.Template.Currency});
+        for(var C = 0; C < this.Tariff.Template.Concepts.length; C++) {
+          if(this.Tariff.Template.Concepts[C].Variable.length > 0) Vars.push({ Name: this.Tariff.Template.Concepts[C].Variable, Description: '<strong>[OUT]</strong> Defined in concepts', Value: null, Units: ''});
+        }
         Vars.push({ Name: 'Period', Description: 'Index of evaluated period (From 1 to ' + this.Tariff.Template.Periods.length + ')', Value: null, Units: ''});
         Vars.push({ Name: 'ActivePower', Description: 'Active power on evaluated period', Value: null, Units: 'W'});
         Vars.push({ Name: 'ActiveEnergy', Description: 'Active energy of evaluated period', Value: null, Units: 'Wh'});
@@ -275,7 +281,7 @@
         Vars.push({ Name: 'ReactiveEnergy', Description: 'Reactive energy of evaluated period', Value: null, Units: 'varh'});
         for(var P = 0; P < this.Tariff.Template.Periods.length; P++) {
           Vars.push({ Name: 'ContractedPower_P' + (P + 1), Description: 'Contracted power on period P' + (P + 1), Value: null, Units: this.Tariff.Template.PowerUnits});
-          Vars.push({ Name: 'PowerCost_P' + (P + 1), Description: 'Power cost on period P' + (P + 1), Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.PowerUnits + '/h'});
+          Vars.push({ Name: 'PowerCost_P' + (P + 1), Description: 'Power cost on period P' + (P + 1), Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.PowerUnits + '/day'});
           Vars.push({ Name: 'EnergyCost_P' + (P + 1), Description: 'Energy cost on period P' + (P + 1), Value: null, Units: this.Tariff.Template.Currency + '/' + this.Tariff.Template.EnergyUnits});
         }
         return Vars;
@@ -321,8 +327,10 @@
       },
       AddYear: function() {
         var NewYear = {Year: this.NewYearSelect, Days: new Array(moment([this.NewYearSelect, 11, 31]).dayOfYear()).fill(0) };
-        var PrevYear = this.Tariff.Template.Years.filter(year => year.Year == this.ActiveYear)[0];
-        for(var d = 0; d < NewYear.Days.length; d++) NewYear.Days[d] = (PrevYear.Days[d] == null) ? 0 : PrevYear.Days[d];
+        if(this.Tariff.Template.Years.length > 0) {
+          var PrevYear = this.Tariff.Template.Years.filter(year => year.Year == this.ActiveYear)[0];
+          for(var d = 0; d < NewYear.Days.length; d++) NewYear.Days[d] = (PrevYear.Days[d] == null) ? 0 : PrevYear.Days[d];
+        }
         this.Tariff.Template.Years.push(NewYear);
         this.ActiveYear = String(this.NewYearSelect);
       },

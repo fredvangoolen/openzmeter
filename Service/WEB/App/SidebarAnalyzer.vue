@@ -47,6 +47,7 @@
           analyzer.GetSeriesNames = this.GetSeriesNames.bind(this);
           analyzer.FormatAggregation = this.FormatAggregation.bind(this);
           analyzer.FormatTime = this.FormatTime.bind(this);
+          analyzer.FormatDate = this.FormatDate.bind(this);
           analyzer.FormatTimeMS = this.FormatTimeMS.bind(this);
           analyzer.FormatDateTime = this.FormatDateTime.bind(this);
           analyzer.CalcRange = this.CalcRange.bind(this);
@@ -67,6 +68,9 @@
       },
       FormatTime: function(val) {
         return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss');
+      },
+      FormatDate: function(val) {
+        return moment(val).tz(this.analyzer.TimeZone).format('DD/MM/YYYY');
       },
       FormatTimeMS: function(val) {
         return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss.SSS');

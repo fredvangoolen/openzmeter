@@ -30,7 +30,6 @@ class Rates final {
   private :
     enum Concept_Type { CONCEPT_INFO, CONCEPT_COST_ENERGY, CONCEPT_COST_POWER, CONCEPT_COST };
     enum Tax_Type { TAX_PERCENT, TAX_PERCENT_POWER, TAX_PERCENT_ENERGY, TAX_PERCENT_ENERGY_POWER, TAX_FIXED };
-//    enum Price_Source { PRICES_NONE, PRICES_ESIOS };
     typedef struct {
       string                        Description;
       string                        Variable;
@@ -147,6 +146,8 @@ class RatesEval final {
     Rates                              *pParent;
     uint64_t                            pFrom;
     uint64_t                            pTo;
+    uint64_t                            pNowDate;
+    uint64_t                            pLoadedPeriodDate;
     uint64_t                            pCurrent;
     vector<Rates::Rate_t>::iterator     pRatePtr;
     vector<Rates::Year_t>::iterator     pYearPtr;
@@ -167,6 +168,7 @@ class RatesEval final {
   private :
     void     LoadRate();
     void     UnloadRate();
+    json     BuildBill(bool complete);
     void     HandleSample(const float active, const float reactive);
     uint64_t FindStart(const uint64_t from);
     uint64_t FindEnd(const uint64_t to);
@@ -181,42 +183,4 @@ class RatesEval final {
     uint64_t StartDate();
     uint64_t EndDate();
  };
-//----------------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-//  typedef struct {
-//      Parser                   EnergyCost;
-//      Parser                   PowerCost;
-//      float                 ContractedPower;
-//      float                 PowerCost;
-//      float                 EnergyCost;
-//      TariffPowerPlugin    *PowerModule;
-//      TariffEnergyPlugin   *EnergyModule;
-//  } PeriodExt_t;
-//    typedef struct {
-//      float    Active;
-//      float    Reactive;
-//      uint8_t  Period;
-//    } Sample_t;
-
-//    queue<Sample_t>   pSamples;
-
-//    uint64_t          pFirstSampleTime;
-//    uint64_t          pLastSampletime;
-//    float             pSumPowerCost;
-//    float             pSumEnergyCost;
-
-//    uint8_t FindPeriod(uint64_t time);
-//    json GetResume(uint64_t now);
-//    uint64_t StartDate();
-//    bool PushSample(const uint64_t time, const float active, const float reactive);
-//    bool PopSample(uint64_t &time, float &active, float &reactive, string &period, string &color, float &cost, float &contractedPower);
-
-
-
 //----------------------------------------------------------------------------------------------------------------------

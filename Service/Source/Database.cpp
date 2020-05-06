@@ -131,6 +131,7 @@ Database::~Database() {
 }
 bool Database::FecthRow() {
   if(pResult != NULL) PQclear(pResult);
+  if(pDBConn == NULL) return false;
   pResult = PQgetResult(pDBConn);
   if(PQresultStatus(pResult) != PGRES_SINGLE_TUPLE) {
     char *Save;

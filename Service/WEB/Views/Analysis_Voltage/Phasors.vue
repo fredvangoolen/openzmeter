@@ -14,7 +14,7 @@
       <spinner v-if="data==null"></spinner>
       <div class="row" v-if="analyzer.VoltageChannels>1">
         <div class="col-xs-12 col-md-4 panel-body" ref="SequenceContainer">
-          <table>
+          <table class="main-table">
             <tr><td class="border-bottom">Positive sequence</td></tr>
             <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
               <graph class="graph" :options="GraphOptionsSequence.Positive" :height="SequenceHeight" :width="SequenceHeight"></graph>
@@ -22,7 +22,7 @@
           </table>
         </div>
         <div class="col-xs-12 col-md-4 panel-body">
-          <table>
+          <table class="main-table">
             <tr><td class="border-bottom">Negative sequence</td></tr>
             <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
               <graph class="graph" :options="GraphOptionsSequence.Negative" :height="SequenceHeight" :width="SequenceHeight"></graph>
@@ -30,7 +30,7 @@
           </table>
         </div>
         <div class="col-xs-12 col-md-4 panel-body">
-          <table>
+          <table class="main-table">
             <tr><td class="border-bottom">Zero sequence</td></tr>
             <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
               <graph class="graph" :options="GraphOptionsSequence.Zero" :height="SequenceHeight" :width="SequenceHeight"></graph>
@@ -40,7 +40,7 @@
       </div>
       <div class="row">
         <div class="col-sm-12 col-md-8 col-lg-6 panel-body" ref="PhasorContainer">
-          <table>
+          <table class="main-table">
             <tr><td class="border-bottom">Phasor view</td></tr>
             <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
               <graph class="graph" :options="GraphOptionsPhasors" :height="PhasorHeight" :width="PhasorHeight"></graph>
@@ -48,7 +48,7 @@
           </table>
         </div>
         <div class="col-sm-12 col-md-4 col-lg-6 panel-body">
-          <table>
+          <table class="main-table">
             <tr><td class="border-bottom">Voltage and current phase angle</td></tr>
             <tr>
               <td>
@@ -325,9 +325,6 @@
   .graphDiv >>> .graph {
     margin: auto;
   }
-  .table {
-    border: none;
-  }
   @media screen and (min-width: 600px) {
     .table >>> th:nth-child(1)  {
       width: 40px;
@@ -353,27 +350,17 @@
   .header-text {
     font-size: 14px;
   }
-  .title-warning {
-    line-height: 20px;
-    font-size: 14px;
-  }
-  .title-warning img {
-    margin: -4px 4px 0px 0px;
-  }
-  table {
+  .main-table {
     width: 100%;
     border: 1px solid #ccc;
   }
-  table:not(:first-child), .output-table:not(:first-child) {
+  .main-table:not(:first-child) {
     margin-top: 5px;
   }
-  table tr td {
-    border-spacing: 0px;
-    padding: 3px;
-  }
-  table .border-bottom {
+  .main-table .border-bottom {
     border-bottom: 1px solid #ccc;
     background: #eee;
     font-weight: bold;
+    padding: 3px;
   }
 </style>

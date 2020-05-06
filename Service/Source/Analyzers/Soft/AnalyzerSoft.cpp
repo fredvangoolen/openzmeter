@@ -1801,9 +1801,9 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
     });
   }
   if(SavePeriodName || SavePeriodColor || SaveContracted) {
-    Result["Period_Sampletime"] = json::array();
+    if(Aggreg != "15M") Result["Period_Sampletime"] = json::array();
     Eval.SetPeriodCallback([&](const RatesEval::PeriodOut_t &out) {
-      Result["Period_Sampletime"].push_back(out.SampleTime);
+      if(Aggreg != "15M") Result["Period_Sampletime"].push_back(out.SampleTime);
       if(SavePeriodName) {
         if(out.Period == UINT16_MAX) {
           Result["Period_Number"].push_back(nullptr);

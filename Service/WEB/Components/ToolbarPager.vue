@@ -69,8 +69,6 @@
         if(this.Page > (this.Pages.length - 1)) this.Page = (this.Pages.length - 1);
         this.$emit('update:output', this.Output.slice(this.Page * this.pageSize, (this.Page + 1) * this.pageSize));
       }
-
-
     }
   }
 </script>
