@@ -77,7 +77,7 @@
       this.TransferNow.UpdateNow(this.analyzer);
       this.Transfer3S.Update(this.analyzer, '3S', 'LastHours');
       this.Transfer1M.Update(this.analyzer, '1M', 'LastDay');
-      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
     },
     beforeDestroy: function() {
       this.TransferNow.Destroy();
@@ -93,14 +93,14 @@
         this.TransferNow.UpdateNow(this.analyzer);
         this.Transfer3S.Update(this.analyzer, '3S', 'LastHours');
         this.Transfer1M.Update(this.analyzer, '1M', 'LastDay');
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
         this.BindGraphs();
       },
       Aggreg: function(val, prev) {
-        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       },
       Range: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       }
     },
     methods: {

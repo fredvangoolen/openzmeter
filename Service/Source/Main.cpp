@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
   /* Create ESIOS */
   ESIOS Esios;
 
-  pthread_setname_np(pthread_self(), "BackgroundTask");
+  pthread_setname_np(pthread_self(), "openZmeter");
   nice(15);
 
   uint32_t Iter = 0;

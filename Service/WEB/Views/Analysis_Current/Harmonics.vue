@@ -142,11 +142,5 @@
   .header-text {
     font-size: 14px;
   }
-  .title-warning {
-    line-height: 20px;
-    font-size: 14px;
-  }
-  .title-warning img {
-    margin: -4px 4px 0px 0px;
-  }
+
 </style>

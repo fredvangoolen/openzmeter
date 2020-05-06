@@ -103,7 +103,6 @@
     border: 1px solid #ccc;
     padding: 0px;
   }
-
   .vartable >>> .hwt-container {
     width: 100%;
     margin-bottom: -5px;
@@ -122,7 +121,7 @@
     display: block;
     width: 100%;
     padding: 6px;
-    font-size: 14px;
+    font-size: 11px;
     line-height: 18px;
     background-color: #fff;
     border: 0px solid #ccc;
@@ -131,7 +130,7 @@
   }
   .vartable >>> mark {
     font-family: monospace;
-    font-size: 14px;
+    font-size: 11px;
     background: #FFF;
   }
   .vartable >>> mark.variable {

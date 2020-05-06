@@ -179,71 +179,29 @@
         <div class="col-xs-12">
           <div class="panel panel-dialog" style="margin-bottom: 0px">
             <div class="panel-heading">
-              <div class="pull-left">
-                <option-picker style="width: 64px; display:inline-block;" :options="BillDayNames.map((val, idx) => { return { name: val, value: idx }; })" v-model="Day"></option-picker>
-                <option-picker style="width: 140px; display:inline-block;" :options="PeriodNames.map((val, idx) => { return { name: val, value: idx }; })" v-model="Period"></option-picker>
-                <div class="btn-group">
-                  <button type="button" class="btn btn-default btn-xs flex-item" @click="BuildPeriods" data-toggle="tooltip" title="Create or replace bill days according to selections"><img :src="require('Imgs/wand.png')"></button>
-                </div>
+              <div class="btn-group pull-right">
+                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add end bill cycle day" :disabled="ValidBillDate" @click="AddBillDay"><img :src="require('Imgs/plus.png')"></button>
+                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Create bills on selected day of month"><img :src="require('Imgs/wand.png')"><span class="caret"></span></button>
+                <ul class="dropdown-menu" style="max-height: 142px; overflow-y: auto">
+                  <li v-for="(name, idx) in BillDayNames" :key="idx"><a @click="BuildPeriods(idx)">{{ name }}</a></li>
+                </ul>
               </div>
-              <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" @click="Rate.Config.Taxs.push({Description: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0})" data-toggle="tooltip" title="Add concept"><img :src="require('Imgs/plus.png')"></button>
+              <div class="pull-right btn-group" style="width: 110px">
+                <date-picker :big="false" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', minDate: Rate.StartDate, maxDate: Rate.EndDate, disabledDates: Rate.Billing.concat([ Rate.StartDate, Rate.EndDate]), date: SelDate }" @input="SelDate=TimestampToDateString($event)"></date-picker>
               </div>
-              <toolbar-pager class="pull-right" :pageSize="10" :input="Rate.Config.Taxs" :output.sync="FilterTaxs" :filtercols="['Description']"></toolbar-pager>
+              <toolbar-pager class="pull-right" style="width: 120px" :pageSize="10" :input="Cycles" :output.sync="FilterCycles" :filtercols="['From', 'To', 'Days']"></toolbar-pager>
               <div class="clearfix"></div>
             </div>
             <div class="panel-body">
-              <vuetable :fields="ColumnsCycles" :api-mode="false" :data="FilterCycles" class="taxs table small table-striped">
-                <template slot="from" slot-scope="props">
-                  <div class="input-group input-group-xs">
-                    <span class="input-group-btn">
-                      <button class="btn btn-default" type="button" @click="Rate.Config.Taxs.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
-                    </span>
-                    <input type="text" class="form-control" v-model="props.rowData.Description">
-                  </div>
-                </template>
-                <template slot="to" slot-scope="props">
-                  <option-picker :options="[ {name: 'Total', value: 'PERCENT_TOTAL'}, {name: 'Energy', value: 'PERCENT_ENERGY'}, {name: 'Power', value: 'PERCENT_POWER'}, {name: 'Energy+Power', value: 'PERCENT_ENERGY_POWER'}, {name: 'Fixed', value: 'FIXED_QUANTITY'} ]" v-model="props.rowData.Type"></option-picker>
-                </template>
-                <template slot="days" slot-scope="props">
-                  <input-spin :max="100000" :min="-100000" :prepend="(props.rowData.Type == 'FIXED_QUANTITY') ? '€/Bill cycle' : '%'" :decimals="6" :increment="1" v-model="props.rowData.Value"></input-spin>
-                </template>
-              </vuetable>
-
-
-
-
-          <table>
-            <tr>
-              <td style="min-width: 120px"><strong>From</strong></td>
-              <td style="width: 100%"><strong>To</strong></td>
-              <td class="text-right" style="min-width: 120px"><strong>Duration</strong></td>
-            </tr>
-            <tr v-for="(date, idx) in Rate.Config.Billing.concat([Rate.EndDate])" :key="idx">
-              <td>
-                <div class="input-group input-group-xs">
-                  <span class="input-group-btn" v-if="idx!=Rate.Config.Billing.length">
-                    <button class="btn btn-default" type="button" @click="Rate.Config.Billing.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button>
-                  </span>
-                  <input type="text" class="form-control" disabled="" :value="FormatDate(StartDate(idx))">
-                </div>
-              </td>
-              <td>
-                <date-picker :big="false" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :value="EndDate(idx)" @input="SetBillPeriods(idx, $event)" :disabled="idx==Rate.Config.Billing.length"></date-picker>
-              </td>
-              <td class="text-right">
-                <div class="input-group input-group-xs">
-                  <input type="text" class="form-control text-right" disabled="" :value="CalcDays(idx)">
-                  <span class="input-group-addon">Days</span>
-                </div>
-              </td>
-            </tr>
-          </table>
-
-
-
-
-
+              <div class="row">
+                <vuetable :fields="ColumnsCycles" :api-mode="false" :data="FilterCycles" class="bills table small table-striped">
+                  <template slot="actions" slot-scope="props">
+                    <div class="btn-group" v-if="!props.rowData.IsLast">
+                      <button class="btn btn-xs btn-danger" @click="DelBill(props.rowData)">Delete</button>
+                    </div>
+                  </template>
+                </vuetable>
+              </div>
             </div>
           </div>
         </div>
@@ -288,8 +246,7 @@
   export default {
     props: { analyzer: Object, index: Number },
     data() {
-      return { View: 'Main', Rate: null, Day: 0, Period: 0, ShowSpinner: false, FilterTariffs: [], Tariffs: [], FilterTaxs: [], FilterCycles: [],
-        PeriodNames: ['Each month', 'Each two month', 'Each three month'],
+      return { View: 'Main', Rate: null, ShowSpinner: false, FilterTariffs: [], Tariffs: [], FilterTaxs: [], FilterCycles: [], FilterCycles: [], SelDate: null,
         BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th'],
         ColumnsTariffs: [
           { name: 'Name', title: 'Name' },
@@ -302,14 +259,16 @@
           { name: '__slot:value', title: 'Value' },
         ],
         ColumnsCycles: [
-          { name: '__slot:from', title: 'From' },
-          { name: '__slot:to', title: 'To' },
-          { name: '__slot:days', title: 'Days' },
+          { name: 'From', title: 'From' },
+          { name: 'To', title: 'To' },
+          { name: 'Days', title: 'Days' },
+          { name: '__slot:actions', title: '' },
         ]
       };
     },
     created: function() {
       this.Rate = this.analyzer.Rates[this.index];
+      this.SelDate = this.Rate.StartDate;
       if(this.Rate.Periods == null) this.LoadTariffs();
     },
     computed: {
@@ -319,6 +278,27 @@
         for(var V = 0; V < this.analyzer.RateModules[this.Rate.Module].length; V++) Vars.push({ Name: this.analyzer.RateModules[this.Rate.Module][V].Name, Description: this.analyzer.RateModules[this.Rate.Module][V].Description, Value: null, Units: ''});
         return Vars;
       },
+      Cycles: function() {
+        var Bills = [];
+        var Bill = { From: this.Rate.StartDate };
+        for(var B = 0; B < this.Rate.Billing.length; B++) {
+          Bill.To = this.Rate.Billing[B];
+          Bill.Days = moment(Bill.To, 'DD/MM/YYYY').diff(moment(Bill.From, 'DD/MM/YYYY'), 'days') + 1;
+          Bill.ID = B;
+          Bill.IsLast = false;
+          Bills.push(Bill);
+          Bill = { From: moment(this.Rate.Billing[B], 'DD/MM/YYYY').add(1, 'days').format('DD/MM/YYYY')  };
+        }
+        Bill.To = this.Rate.EndDate;
+        Bill.Days = moment(Bill.To, 'DD/MM/YYYY').diff(moment(Bill.From, 'DD/MM/YYYY'), 'days') + 1;
+        Bill.IsLast = true;
+        Bills.push(Bill);
+        return Bills;
+      },
+      ValidBillDate: function() {
+        var Used = this.Rate.Billing.concat([ this.Rate.StartDate, this.Rate.EndDate]);
+        return Used.includes(this.SelDate);
+      }
     },
     methods: {
       TimestampToDateString: function(val) {
@@ -326,9 +306,6 @@
       },
       DateStringToTimestamp: function(val) {
         return moment(val, 'DD/MM/YYYY').valueOf();
-      },
-      FormatDate: function(val) {
-        return moment(val).tz(this.analyzer.TimeZone).format('DD/MM/YYYY');
       },
       LoadTariffs: function() {
         this.ShowSpinner = true;
@@ -347,114 +324,37 @@
           (result) => {
             var Rate = Object.assign(this.Rate, result.body.Template);
             Rate.Name = result.body.Name;
-            if(typeof(Rate.PowerCost) == 'string') Rate.PowerCost = Rate.Periods.map((val) => { return val.DefaultPowerCost; });
-            if(typeof(Rate.EnergyCost) == 'string') Rate.EnergyCost = Rate.Periods.map((val) => { return val.DefaultEnergyCost; });
+            if(Array.isArray(Rate.PowerCost) == true) Rate.PowerCost = Rate.Periods.map((val) => { return val.DefaultPowerCost; });
+            if(Array.isArray(Rate.EnergyCost) == true) Rate.EnergyCost = Rate.Periods.map((val) => { return val.DefaultEnergyCost; });
             this.Rate = Rate;
             this.ShowSpinner = false;
           },
           (fail) => { }
         );
       },
-
-
-
-
-
-
-//      Show: function(analyzer, tariffs, rate) {
-//        this.Analyzer = analyzer;
-//        this.Tariffs = tariffs;
-//        for(var n = 0; n < this.Tariffs.length; n++) {
-//          this.Tariffs[n].id = this.Tariffs[n].TariffID;
-//          this.Tariffs[n].name = this.Tariffs[n].Name;
-//          this.Tariffs[n].description = 'From ' + moment.tz(this.Tariffs[n].StartDate, this.analyzer.TimeZone).format('DD/MM/YYYY') + ' to ' + moment.tz(this.Tariffs[n].EndDate, this.analyzer.TimeZone).format('DD/MM/YYYY');
-//        }
-//        this.Initial = rate;
-//        this.View = 'Main';
-//        if(rate === null) {
-//          this.Rate = this.EmptyRate;
-//        } else {
-//          this.Rate = Object.assign({}, rate);
-//        }
-//        this.$refs.Dialog.Show();
-//        this.$nextTick(() => {
-//          if(this.Rate.RateID !== undefined) {
-//            this.Tariffs.unshift({ id: 'CURRENT', name: '(*) ' + this.Rate.Name, description: 'From ' + moment.tz(this.Rate.StartDate, this.analyzer.TimeZone).format('DD/MM/YYYY') + ' to ' + moment.tz(this.Rate.EndDate, this.analyzer.TimeZone).format('DD/MM/YYYY')});
-//          } else {
-//            $(this.$refs.Base).attr('data-id', '');
-//            $(this.$refs.Base).val('');
-//            this.$refs.StartDate.Disable();
-//            this.$refs.EndDate.Disable();
-//          }
-//          this.SetTariffs();
-//        });
-//      },
-//      Round6: function(val) {
-//        return oZm.RoundPlain(val, 6);
-//      },
-
-      SetBillPeriods: function(idx, val) {
-        var Date = moment(val).tz(this.analyzer.TimeZone).endOf('day').valueOf();
-        if(this.Rate.Config.Billing[idx] == Date) return;
-        this.Rate.Config.Billing[idx] = Date;
-        this.Rate.Config.Billing = this.Rate.Config.Billing.sort();
+      DelBill: function(day) {
+        if(confirm("Delete day '" + day.To + "' ?")) this.Rate.Billing.splice(day.ID);
       },
-      StartDate: function(idx) {
-        if(idx == 0)
-          return moment.tz(this.Rate.StartDate, this.analyzer.TimeZone).valueOf();
-        else if((idx > 0) && (idx <= this.Rate.Config.Billing.length))
-          return moment.tz(this.Rate.Config.Billing[idx - 1] + 1, this.analyzer.TimeZone).valueOf();
-      },
-      EndDate: function(idx) {
-        if((idx >= 0) && (idx < this.Rate.Config.Billing.length))
-          return moment.tz(this.Rate.Config.Billing[idx], this.analyzer.TimeZone).valueOf();
-        else
-          return moment.tz(this.Rate.EndDate, this.analyzer.TimeZone).valueOf();
-      },
-      CalcDays: function(idx) {
-        var To = moment(this.EndDate(idx)).add(1, 'ms');
-        var From = moment(this.StartDate(idx));
-        return To.diff(From, 'days');
-      },
-//      SetStartDate: function(date) {
-//        this.Rate.StartDate = date.startOf('day').valueOf();
-//        this.Validate();
-//      },
-//      SetEndDate: function(date) {
-//        this.Rate.EndDate = date.endOf('day').valueOf();
-//        this.Validate();
-//      },
-//      Back: function() {
-//        this.$refs.Dialog.Close();
-//        this.$parent.$refs.Rates.Show(this.analyzer);
-//      },
-//      PeriodItemChanged: function(value, type, idx) {
-//        var Value = parseFloat(value.target.value);
-//        if(isNaN(Value) === true) Value = 0.0;
-//        if(type === 'Contracted_Power')
-//          Value = Value * 1000;
-//        else
-//          Value = Value / 1000;
-//        this.Rate.Config.Periods[idx][type] = Value;
-//        this.Rate = Object.assign({}, this.Rate);
-//      },
-//      ValueConceptChanged: function(value, idx) {
-//        var Value = parseFloat(value.target.value);
-//        if(isNaN(Value) === true) Value = 0.0;
-//        this.Rate.Config.Taxs[idx].Value = Value;
-        //this.Rate = Object.assign({}, this.Tariff);
-//      },
       AddBillDay: function() {
-        this.Rate.Config.Billing.push(this.Rate.EndDate);
+        this.Rate.Billing.push(this.SelDate);
+        this.Rate.Billing.sort((a, b) => {
+          var A = this.DateStringToTimestamp(a);
+          var B = this.DateStringToTimestamp(b);
+          if(A > B) return 1;
+          if(A < B) return -1;
+          return 0;
+        });
       },
-      BuildPeriods: function() {
-        this.$set(this.Rate.Config, 'Billing', []);
-        var Date = moment.tz(this.Rate.StartDate, this.analyzer.TimeZone);
+      BuildPeriods: function(day) {
+        var Bills = [];
+        var Date = moment(this.Rate.StartDate, 'DD/MM/YYYY');
+        var To   = moment(this.Rate.EndDate, 'DD/MM/YYYY');
         while(true) {
-          Date = Date.add(this.Period + 1, 'M').date(this.Day + 1);
-          if(Date.valueOf() >= this.Rate.EndDate) break;
-          this.Rate.Config.Billing.push(Date.startOf('day').valueOf() - 1);
+          Date.add(1, 'M').date(day + 1);
+          if(Date.isBefore(To) == false) break;
+          Bills.push(Date.format('DD/MM/YYYY'));
         }
+        this.$set(this.Rate, 'Billing', Bills);
       }
     },
     components: { vuetable }
@@ -481,5 +381,10 @@
   table tr td {
     padding: 2px 0px;
   }
-
+  .bills.table >>> th:nth-child(4) {
+    width: 62px;
+  }
+  .bills.table >>> td:nth-child(4) {
+    text-align: right;
+  }
 </style>

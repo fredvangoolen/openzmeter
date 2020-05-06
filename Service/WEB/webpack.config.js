@@ -46,11 +46,12 @@ module.exports = {
         exclude: /node_modules/
       },
       {
-        test: /\.(png|svg|woff2|ttf|eot|woff)$/,
+        test: /\.(png|svg|woff2|ttf|eot|woff)$/i,
         use: [{
             loader: 'url-loader',
             options: {
-              limit: 80000 // Convert images < 80kb to base64 strings
+              limit: 80000,
+              esModule: false
             }
           }]
       }

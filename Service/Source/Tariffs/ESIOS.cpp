@@ -133,7 +133,8 @@ bool ESIOS::FetchIndicator(SSLClient &client, const string &token, const Variabl
   char     DateBuffFrom[64], DateBuffTo[64], URL[256];
   Headers  Header = { {"Accept", "application/json"}, {"Host", "api.esios.ree.es"}, {"Authorization", "Token token=\"" + token + "\""}, {"Content-Type", "application/x-www-form-urlencoded" } };
   DB.ExecSentenceAsyncResult("SELECT GREATEST(COALESCE(MAX(timestamp) + 1, 1262304000000), 1262304000000) AS min FROM esios WHERE " + DB.BindID(var.VarName) +" IS NOT NULL");
-  if(DB.FecthRow()) Time = DB.ResultUInt64("min") / 1000;
+  if(DB.FecthRow() == false) return false;
+  Time = DB.ResultUInt64("min") / 1000;
   if((uint64_t)Time > (to / 1000)) return true;
   strftime(DateBuffFrom, sizeof(DateBuffFrom), "%Y-%m-%dT%H:%M:%SZ", gmtime_r(&Time, &Timestamp));
   Time =  to / 1000;

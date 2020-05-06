@@ -220,7 +220,7 @@ void DeviceManager::GetTariffCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
 void DeviceManager::DelTariffCallback(const json &params, Response &response) {
-  if((params.contains("Name") == false) || (params["Name"].is_number() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
   Database DB;
   string Name = params["Name"];
   string UserName = params["UserName"];

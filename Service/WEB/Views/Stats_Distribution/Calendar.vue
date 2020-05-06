@@ -40,7 +40,7 @@
         this.Days = [];
         for(var i in this.data['Active_Power']) {
           var Day = moment(this.data.Sampletime[i]).tz(this.analyzer.TimeZone).dayOfYear();
-          if(this.data.Active_Power[i] != null) this.Days[Day] = (this.Days[Day] === undefined) ? this.data.Active_Power[i] / 4.0 : this.Days[Day] + this.data.Active_Power[i] / 4.0;
+          if(this.data.Active_Power[i] != null) this.Days[Day] = (this.Days[Day] == null) ? this.data.Active_Power[i] / 4.0 : this.Days[Day] + this.data.Active_Power[i] / 4.0;
         }
         var ColorScale = chroma.bezier(['#00429d', '#96ffea', '#ffffe0', '#ff005e', '#93003a']);
         var Max = -Infinity;
