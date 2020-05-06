@@ -84,6 +84,9 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFTWorker[i] = new Worker("FFT_I" + to_string(i), this, &FFT_Func);
   Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode));
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", this, &Analyzer_Func);
+
+  // Setup cyclic histogram manager
+  cyclicHistogram = new CyclicHistogram(id, 200, 1024);
 }
 AnalyzerSoft::~AnalyzerSoft() {
   pSyncTerminate = true;
@@ -113,6 +116,10 @@ AnalyzerSoft::~AnalyzerSoft() {
     fftwf_cleanup();
   }
   pthread_mutex_unlock(&pFFTMutex);
+
+  // Cleanup cyclic histogram manager
+  if(cyclicHistogram != NULL)
+    delete cyclicHistogram;
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
   pAnalyzerLock.ReadLock();
@@ -797,6 +804,22 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
       Cycles++;
     }
     Aggreg->Frequency = (Cycles == This->pFreqCyclesLen) ? This->pFreqCyclesLen / ((2.0 * Samples) / This->pSamplerate) : 0;
+
+    for (uint8_t channelNumber = 0; channelNumber < This->pVoltageChannels; channelNumber++)
+    {
+      // Only perform cyclic histogram on phase A
+      if (channelNumber == 0)
+      {
+        uint16_t counter = 0;
+        for (uint8_t i = 0; i < This->pBlockCyclesCount; i++)
+        {
+          float *ChV = &This->pVoltageSamples[(channelNumber * This->pMaxSamples) + counter];
+          size_t offset = ((i % 2) == 0) ? 0 : This->pBlockCycles[i - 1];
+          This->cyclicHistogram->AddPoints(ChV, This->pBlockCycles[i], offset);
+          counter += This->pBlockCycles[i];
+        }
+      }
+    }
   }
   for(uint8_t j = 0; j < This->pVoltageChannels; j++) {
     float *ChV = &This->pVoltageSamples[j * This->pMaxSamples];
@@ -1645,6 +1668,10 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
       }
     } else if(Serie == "SYS_STATS") {
       Result["Sys_Stats"] = SysSupport::GetSystemStatusJSON();
+    } else if(Serie == "CYCLIC_HISTOGRAM"){
+      LOGFile::Error("Adding Cyclic Histogram Data...\n");
+      cyclicHistogram->FlushToDisk();
+      LOGFile::Error("  Done.\n");  
     } else {
       pNowDataLock.ConsumerEnds();
       return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);

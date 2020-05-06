@@ -11,6 +11,9 @@ OS_TARGET = OPENWRT
 TARIFF_ESP  = true
 TARIFF_NONE = true
 
+#Enable/Disable cyclic histogram
+CYCLIC_HISTOGRAM = true
+
 # Build options --------------------------------------------------------------------------------------------------------
 DEBUG    = false
 CPP      = arm-openwrt-linux-gcc

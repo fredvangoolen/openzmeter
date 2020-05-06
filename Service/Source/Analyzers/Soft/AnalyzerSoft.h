@@ -26,6 +26,8 @@ extern "C" {
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
 #include "Tariff.h"
+#include "CyclicHistogram.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace httplib;
@@ -263,4 +265,6 @@ class AnalyzerSoft final : public Analyzer {
     ~AnalyzerSoft();
     bool BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage);
     bool IsWorking();
+  private :
+    CyclicHistogram *cyclicHistogram;
 };

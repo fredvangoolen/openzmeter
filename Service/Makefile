@@ -82,6 +82,9 @@ endif
 ifeq ($(TARIFF_NONE), true)
 	EXECUTABLE_SOURCE += Source/Tariffs/NONE/TariffPlugin_NONE.cpp
 endif
+ifeq ($(CYCLIC_HISTOGRAM), true)
+	EXECUTABLE_SOURCE += Source/CyclicHistogram.cpp
+endif
 
 $(WEB_TARGET): $(WEB_SOURCE)
 	@echo "Building WEB interface"
