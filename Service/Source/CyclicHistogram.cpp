@@ -72,7 +72,7 @@ void CyclicHistogram::FlushToDisk()
 
     std::ofstream outputFile;
     outputFile.open("cyclichistogram.txt", std::ios::out);
-    outputFile << "phase,x,y,z" << endl;
+    outputFile << "phase,sample,voltage_bin,z" << endl;
 
     for (size_t i = 0; i < cumulativeCount.size(); i++)
     {
@@ -83,7 +83,7 @@ void CyclicHistogram::FlushToDisk()
                 uint64_t value = cumulativeCount[i][j][k];
                 if (value != 0)
                 {
-                    outputFile << i << "," << k << "," << j << "," << value << endl; // Order needs to be flipped for x, y
+                    outputFile << i << "," << j << "," << k << "," << value << endl;
                 }
             }
         }
