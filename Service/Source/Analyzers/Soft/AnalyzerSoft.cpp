@@ -807,17 +807,13 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
 
     for (uint8_t channelNumber = 0; channelNumber < This->pVoltageChannels; channelNumber++)
     {
-      // Only perform cyclic histogram on phase A
-      if (channelNumber == 1)
+      uint16_t counter = 0;
+      for (uint8_t i = 0; i < This->pBlockCyclesCount; i++)
       {
-        uint16_t counter = 0;
-        for (uint8_t i = 0; i < This->pBlockCyclesCount; i++)
-        {
-          float *ChV = &This->pVoltageSamples[(channelNumber * This->pMaxSamples) + counter];
-          size_t offset = ((i % 2) == 0) ? 0 : This->pBlockCycles[i - 1];
-          This->cyclicHistogram->AddPoints(ChV, This->pBlockCycles[i], offset);
-          counter += This->pBlockCycles[i];
-        }
+        float *ChV = &This->pVoltageSamples[(channelNumber * This->pMaxSamples) + counter];
+        size_t offset = ((i % 2) == 0) ? 0 : This->pBlockCycles[i - 1];
+        This->cyclicHistogram->AddPoints(channelNumber, ChV, This->pBlockCycles[i], offset);
+        counter += This->pBlockCycles[i];
       }
     }
   }

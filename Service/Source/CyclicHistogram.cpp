@@ -24,7 +24,7 @@ void CyclicHistogram::ResetCumulativeCount()
     // std::fill(cumulativeCount->begin(), cumulativeCount->end(), 0);
 }
 
-void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrSize, size_t offset)
+void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, size_t arrSize, size_t offset)
 {
     // Skip the first requested set of data points (tends to be unreliable data)
     if (!skippedFirstPointSet)
@@ -34,7 +34,13 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrSize, size_t o
         return;
     }
 
-    if ((arrSize + offset) > cumulativeCount.size())
+    // Check if vector is large enough for number of phases
+    if ((phaseNumber + 1) > cumulativeCount.size())
+    {
+        CyclicHistogram::ResizePhaseNumber(phaseNumber + 1);
+    }
+
+    if ((arrSize + offset) > cumulativeCount[phaseNumber].size())
     {
         // Resize the cumulative count array to fit all data
         ResizeCumulativeCount(arrSize + offset);
@@ -55,7 +61,7 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrSize, size_t o
         uint32_t binIndex = ((voltage + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
 
         // Perform the incremental count update
-        cumulativeCount[sampleIndex][binIndex] += 1;
+        cumulativeCount[phaseNumber][sampleIndex][binIndex] += 1;
     }
 }
 
@@ -64,30 +70,42 @@ void CyclicHistogram::FlushToDisk()
 
     std::ofstream outputFile;
     outputFile.open("cyclichistogram.txt", std::ios::out);
-    outputFile << "x,y,z" << endl;
+    outputFile << "phase,x,y,z" << endl;
 
     for (size_t i = 0; i < cumulativeCount.size(); i++)
     {
         for (size_t j = 0; j < cumulativeCount[i].size(); j++)
         {
-            uint64_t value = cumulativeCount[i][j];
-            if (value != 0)
+            for (size_t k = 0; k < cumulativeCount[i][j].size(); k++)
             {
-                outputFile << j << "," << i << "," << value << endl; // Order needs to be flipped
+                uint64_t value = cumulativeCount[i][j][k];
+                if (value != 0)
+                {
+                    outputFile << i << "," << k << "," << j << "," << value << endl; // Order needs to be flipped for x, y
+                }
             }
         }
     }
-
+    
     outputFile.close();
 }
 
-void CyclicHistogram::ResizeCumulativeCount(size_t newSize)
+void CyclicHistogram::ResizePhaseNumber(uint8_t numPhases)
 {
-    string message = "[CH] Resizing array from " + to_string(cumulativeCount.size()) + " to " + to_string(newSize) + "\n";
+    string message = "[CH] Resizing to accomodate " + to_string(numPhases) + " phases.\n";
     LOGFile::Warning(message.c_str());
 
     // Resize outer vector
-    cumulativeCount.resize(newSize, vector<uint64_t>(voltageBinSize));
+    cumulativeCount.resize(numPhases);
+}
+
+void CyclicHistogram::ResizeCumulativeCount(uint8_t phaseNumber, size_t newSize)
+{
+    string message = "[CH] Resizing array from " + to_string(cumulativeCount[phaseNumber].size()) + " to " + to_string(newSize) + "\n";
+    LOGFile::Warning(message.c_str());
+
+    // Resize vector
+    cumulativeCount[phaseNumber].resize(newSize, vector<uint64_t>(voltageBinSize));
 }
 
 vector<vector<uint64_t>> CyclicHistogram::GetCyclicHistogram()
