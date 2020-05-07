@@ -9,6 +9,7 @@
               <toolbar-aggregation storage="AggregationEnergy" :options="['15M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <div class="btn-group">
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: ShowContracted }" @click="ShowContracted=!ShowContracted" data-toggle="tooltip" title="Scale includes contracted power limit"><img :src="require('Imgs/tag_blue.png')"></button>
                 <button-export file="Power" :rows="Export"></button-export>
                 <button-expand v-model="ExpandedActive"></button-expand>
               </div>
@@ -17,10 +18,10 @@
           <div class="panel-body">
             <spinner v-if="TransferGraph.Data==null"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="ACTIVE_POWER" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Active_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
-                  <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
+                  <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :showContracted="ShowContracted" :periods="TransferGraph.Periods" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -41,10 +42,34 @@
           <div class="panel-body">
             <spinner v-if="TransferGraph.Data==null"></spinner>
             <div class="row">
-              <counters class="col-md-6 col-lg-4 col-xl-3" serie="REACTIVE_POWER" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Reactive_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
                   <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></power>
+                </portal>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-12">
+        <div class="panel panel-reactive-power">
+          <div class="panel-heading">
+            <div class="header-text">Apparent Power</div>
+            <portal to="fs-toolbar" :disabled="!ExpandedApparent" class="header-buttons">
+              <div class="btn-group">
+                <button-export file="Power" :rows="Export"></button-export>
+                <button-expand v-model="ExpandedApparent"></button-expand>
+              </div>
+            </portal>
+          </div>
+          <div class="panel-body">
+            <spinner v-if="TransferGraph.Data==null"></spinner>
+            <div class="row">
+              <counters class="col-md-6 col-lg-4 col-xl-3" serie="Apparent_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
+              <div class="col-md-6 col-lg-8 col-xl-9">
+                <portal to="fs-body" :disabled="!ExpandedApparent" class="panel-body">
+                  <power serie="Apparent_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedApparent?DialogHeight:AppaerentHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -63,6 +88,7 @@
     </div>
     <dlg-fs v-if="ExpandedActive" title="Active Power" :height.sync="DialogHeight"></dlg-fs>
     <dlg-fs v-if="ExpandedReactive" title="Reactive Power" :height.sync="DialogHeight"></dlg-fs>
+    <dlg-fs v-if="ExpandedApparent" title="Apparent Power" :height.sync="DialogHeight"></dlg-fs>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">
@@ -83,11 +109,12 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { ActiveTab: null, Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300, Paused: false,
+      return { ActiveTab: null, Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300, Paused: false, ShowContracted: true,
+               ExpandedApparent: false, AppaerentHeight: 300,
                TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'POWER_HARMONICS', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI']),
                Transfer3S: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
                Transfer1M: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
-               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER', 'PERIOD_POWER', 'PERIOD_NUMBER', 'PERIOD_COLOR', 'BILLS']),
+               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER', 'PERIOD_POWER_CONTRACTED', 'PERIOD_NUMBER', 'PERIOD_COLOR', 'BILLS']),
                TransferCubism: this.CreateSeriesTransfer(this, ['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'])
       };
     },

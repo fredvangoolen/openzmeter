@@ -12,10 +12,7 @@ CREATE UNLOGGED TABLE IF NOT EXISTS aggreg_200ms (
   thd_i          real[] NOT NULL,
   phi            real[] NOT NULL
 ) WITH (OIDS=FALSE);
---ALTER TABLE aggreg_200ms ADD COLUMN IF NOT EXISTS unbalance real;
---UPDATE aggreg_200ms SET unbalance = 0 WHERE unbalance IS NULL;
---ALTER TABLE aggreg_200ms ALTER COLUMN unbalance SET NOT NULL;
---select count(*) from aggreg_200ms;
+
 CREATE TABLE IF NOT EXISTS aggreg_3s (
   sampletime     bigint NOT NULL PRIMARY KEY,
   rms_v          real[] NOT NULL,
@@ -47,10 +44,6 @@ CREATE TABLE IF NOT EXISTS aggreg_ext_1m (
   harmonics_i    real[] NOT NULL,
   harmonics_p    real[] NOT NULL
 ) WITH (OIDS=FALSE);
---ALTER TABLE aggreg_ext_1m ADD COLUMN IF NOT EXISTS harmonics_p real[];
---UPDATE aggreg_ext_1m SET harmonics_p = array_fill(NULL::real, ARRAY[array_length(harmonics_v, 1), array_length(harmonics_v, 2)]) WHERE harmonics_p IS NULL;
---ALTER TABLE aggreg_ext_1m ALTER COLUMN harmonics_p SET NOT NULL;
---ALTER TABLE aggreg_ext_1m ADD COLUMN IF NOT EXISTS unbalance real;
 
 CREATE TABLE IF NOT EXISTS aggreg_10m (
   sampletime bigint NOT NULL PRIMARY KEY,
@@ -80,9 +73,6 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
   stat_harmonics int4[]  NOT NULL,
   stat_unbalance int4[]  NOT NULL
 ) WITH (OIDS=FALSE);
---ALTER TABLE aggreg_1h ADD COLUMN IF NOT EXISTS stat_unbalance int4[];
---UPDATE aggreg_1h SET stat_unbalance = array_fill(0, ARRAY[31]) WHERE stat_unbalance IS NULL;
---ALTER TABLE aggreg_1h ALTER COLUMN stat_unbalance SET NOT NULL;
 
 CREATE TABLE IF NOT EXISTS events (
   starttime   bigint                NOT NULL,
@@ -102,16 +92,3 @@ CREATE TABLE IF NOT EXISTS events (
   rms3        real[],
   CONSTRAINT events_pkey PRIMARY KEY (starttime, evttype)
 ) WITH (OIDS=FALSE);
---ALTER TABLE events DROP COLUMN IF EXISTS finished;
-
---CREATE TABLE IF NOT EXISTS prices (
---  sampletime bigint NOT NULL PRIMARY KEY,
---  price real NOT NULL
---) WITH (OIDS=FALSE);
-
---CREATE TABLE IF NOT EXISTS alarms(
---  alarmtime     bigint            NOT NULL PRIMARY KEY,
---  name          character varying NOT NULL,
---  trigger       boolean           NOT NULL,
---  priority      smallint          NOT NULL
---) WITH (OIDS=FALSE);

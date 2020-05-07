@@ -128,15 +128,17 @@ class RatesEval final {
     typedef struct {
       uint64_t                          SampleTime;
       float                             ActivePower;
+      float                             ActiveEnergy;
       float                             ReactivePower;
+      float                             ReactiveEnergy;
       float                             Cost;
-    } SampleOut_t;
-    typedef struct {
-      uint64_t                          SampleTime;
       uint16_t                          Period;
+      float                             PeriodF;
       string                            Color;
       float                             ContractedPower;
-    } PeriodOut_t;
+      float                             EnergyCost;
+      float                             PowerCost;
+    } SampleOut_t;
   private :
     typedef struct {
       Parser             Script;
@@ -153,6 +155,7 @@ class RatesEval final {
     vector<Rates::Year_t>::iterator     pYearPtr;
     vector<uint64_t>::iterator          pBillPtr;
     PriceModule                        *pPriceModule;
+    SampleOut_t                         pSampleOut;
     Parser                              pEnergyScript;
     Parser                              pPowerScript;
     Parser                              pScript;
@@ -162,7 +165,6 @@ class RatesEval final {
   private :
     static float *VariableFactory(const char_type *name, void *params);
   private:
-    function<void(const PeriodOut_t &)> pPeriodCallback;
     function<void(const SampleOut_t &)> pSampleCallback;
     function<void(const json &)>        pBillCallback;
   private :
@@ -170,14 +172,14 @@ class RatesEval final {
     void     UnloadRate();
     json     BuildBill(bool complete);
     void     HandleSample(const float active, const float reactive);
-    uint64_t FindStart(const uint64_t from);
-    uint64_t FindEnd(const uint64_t to);
+    uint64_t FindStart(const uint64_t from, bool precise);
+    uint64_t FindEnd(const uint64_t to, bool precise);
   public :
     RatesEval(Rates *parent, const uint64_t from, const uint64_t to, const bool precise);
     ~RatesEval();
     void     PushSample(const uint64_t time, const float active, const float reactive);
     void     Finish();
-    void     SetPeriodCallback(function<void(const PeriodOut_t &)> periodOut);
+//    void     SetPeriodCallback(function<void(const PeriodOut_t &)> periodOut);
     void     SetSampleCallback(function<void(const SampleOut_t &)> sampleOut);
     void     SetBillCallback(function<void(const json &)> billOut);
     uint64_t StartDate();

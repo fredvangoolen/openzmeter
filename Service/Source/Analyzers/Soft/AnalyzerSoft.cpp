@@ -1747,6 +1747,10 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   bool     SavePeriodColor = false;
   bool     SaveContracted  = false;
   bool     SaveBills       = false;
+  bool     SaveEnergyCost  = false;
+  bool     SavePowerCost   = false;
+  bool     SaveSampleTime  = false;
+  bool     SavePeriodTime  = false;
   float    AccActive       = 0.0;
   float    AccReactive     = 0.0;
   float    AccCost         = 0.0;
@@ -1763,14 +1767,20 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
     } else if(params["Series"][i] == "EXPENSE") {
       Result["Expense"] = json::array();
       SaveExpense = true;
+    } else if(params["Series"][i] == "PERIOD_POWER_COST") {
+      Result["Period_Power_Cost"] = json::array();
+      SavePowerCost = true;
+    } else if(params["Series"][i] == "PERIOD_ENERGY_COST") {
+      Result["Period_Energy_Cost"] = json::array();
+      SaveEnergyCost = true;
     } else if(params["Series"][i] == "PERIOD_NUMBER") {
       Result["Period_Number"] = json::array();
       SavePeriodName = true;
     } else if(params["Series"][i] == "PERIOD_COLOR") {
       Result["Period_Color"] = json::array();
       SavePeriodColor = true;
-    } else if(params["Series"][i] == "PERIOD_POWER") {
-      Result["Period_Power"] = json::array();
+    } else if(params["Series"][i] == "PERIOD_POWER_CONTRACTED") {
+      Result["Period_Power_Contracted"] = json::array();
       SaveContracted = true;
     } else if(params["Series"][i] == "BILLS") {
       Result["Bills"] = json::array();
@@ -1779,53 +1789,54 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
     }
   }
+  if((SavePeriodName || SavePeriodColor || SaveContracted || SavePowerCost || SaveEnergyCost) && (Aggreg != "15M")) {
+    Result["Period_Sampletime"] = json::array();
+    SavePeriodTime = true;
+  }
+  if((SaveActive || SaveReactive || SaveExpense) || ((SavePeriodName || SavePeriodColor || SaveContracted || SavePowerCost || SaveEnergyCost) && (Aggreg == "15M"))) {
+    Result["Sampletime"] = json::array();
+    SaveSampleTime = true;
+  }
   pAnalyzerLock.ReadLock();
   RatesEval Eval(pRateList, From, To, params["Precise"]);
-  if(SaveActive || SaveReactive || SaveExpense) {
-    Result["Sampletime"] = json::array();
-    Eval.SetSampleCallback([&](const RatesEval::SampleOut_t &out) {
-      AccActive   += out.ActivePower;
-      AccReactive += out.ReactivePower;
-      AccCost     += out.Cost;
-      if(Aggreg == "1H") {
-        if((out.SampleTime % 3600000) != 3599999) return;
-        AccActive = AccActive / 4.0;
-        AccReactive = AccReactive / 4.0;
+  Eval.SetSampleCallback([&](const RatesEval::SampleOut_t &out) {
+    AccActive   += out.ActivePower;
+    AccReactive += out.ReactivePower;
+    AccCost     += out.Cost;
+    if(SavePeriodTime) Result["Period_Sampletime"].push_back(out.SampleTime);
+    if(SaveContracted) Result["Period_Power_Contracted"].push_back(out.ContractedPower);
+    if(SavePowerCost)  Result["Period_Power_Cost"].push_back(out.PowerCost);
+    if(SaveEnergyCost) Result["Period_Energy_Cost"].push_back(out.EnergyCost);
+    if(SavePeriodName) {
+      if(out.Period == UINT16_MAX) {
+        Result["Period_Number"].push_back(nullptr);
+      } else {
+        Result["Period_Number"].push_back(out.Period);
       }
-      if((out.SampleTime >= From) && (out.SampleTime <= To)) {
-        Result["Sampletime"].push_back(out.SampleTime);
-        if(SaveActive)   Result["Active_Power"].push_back(out.ActivePower);
-        if(SaveReactive) Result["Reactive_Power"].push_back(out.ReactivePower);
-        if(SaveExpense)  Result["Expense"].push_back(out.Cost);
+    }
+    if(SavePeriodColor) {
+      if(out.Color.empty() == true) {
+        Result["Period_Color"].push_back(nullptr);
+      } else {
+        Result["Period_Color"].push_back(out.Color);
       }
-    });
-  }
-  if(SavePeriodName || SavePeriodColor || SaveContracted) {
-    if(Aggreg != "15M") Result["Period_Sampletime"] = json::array();
-    Eval.SetPeriodCallback([&](const RatesEval::PeriodOut_t &out) {
-      if(Aggreg != "15M") Result["Period_Sampletime"].push_back(out.SampleTime);
-      if(SavePeriodName) {
-        if(out.Period == UINT16_MAX) {
-          Result["Period_Number"].push_back(nullptr);
-        } else {
-          Result["Period_Number"].push_back(out.Period);
-        }
-      }
-      if(SavePeriodColor) {
-        if(out.Color.empty() == true) {
-          Result["Period_Color"].push_back(nullptr);
-        } else {
-          Result["Period_Color"].push_back(out.Color);
-        }
-      }
-      if(SaveContracted)  Result["Period_Power"].push_back(out.ContractedPower);
-    });
-  }
-  if(SaveBills == true) {
-    Eval.SetBillCallback([&](const json &out) {
-      Result["Bills"].push_back(out);
-    });
-  }
+    }
+    if(Aggreg == "1H") {
+      if((out.SampleTime % 3600000) != 3599999) return;
+      AccActive = AccActive / 4.0;
+      AccReactive = AccReactive / 4.0;
+    }
+    if(SaveSampleTime) Result["Sampletime"].push_back(out.SampleTime);
+    if(SaveActive)     Result["Active_Power"].push_back(AccActive);
+    if(SaveReactive)   Result["Reactive_Power"].push_back(AccReactive);
+    if(SaveExpense)    Result["Expense"].push_back(out.Cost);
+    AccActive   = 0.0;
+    AccReactive = 0.0;
+    AccCost     = 0.0;
+  });
+  Eval.SetBillCallback([&](const json &out) {
+    if(SaveBills == true) Result["Bills"].push_back(out);
+  });
   Database DB(Serial);
   DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime >= " + DB.Bind(Eval.StartDate()) + " AND sampletime <= " + DB.Bind(Eval.EndDate()) + " ORDER BY sampletime ASC");
   while(DB.FecthRow() == true) Eval.PushSample(DB.ResultUInt64("sampletime"), DB.ResultFloat("active_power"), DB.ResultFloat("reactive_power"));
