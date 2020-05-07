@@ -2,7 +2,7 @@
   <div class="this" v-bind:class="{ expanded: expanded }">
     <img class="icon" :src="require('Imgs/disconnect32.png')">
     <div class="btn-group">
-      <button type="button" class="btn btn-default btn-xs" v-on:click="ShowEvents" data-toggle="tooltip" :title="(EventsCount == 0) ? 'No events since last login' : EventsCount + ' events since last login'"><img v-bind:class="{blink_img: (EventsCount != 0)}" :src="require('Imgs/exclamation.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" @click="ShowEvents" data-toggle="tooltip" :title="(EventsCount == 0) ? 'No events since last login' : EventsCount + ' events since last login'"><img :class="{blink_img: (EventsCount != 0)}" :src="require('Imgs/exclamation.png')"></button>
       <button type="button" class="btn btn-default btn-xs" @click="ShowDialog=true" data-toggle="tooltip" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
     </div>
     <div class="name">{{ (analyzer == null) ? 'None selected' : analyzer.Name }}</div>
@@ -41,7 +41,7 @@
         if(analyzer != null) {
           analyzer.VoltageChannels = (analyzer.Mode == '1PHASE') ? 1 : 3;
           analyzer.CurrentChannels = (analyzer.Mode == '1PHASE') ? 1 : (analyzer.Mode == '3PHASE') ? 3 : 4;
-          analyzer.Color = { Voltage: '#d9534f', Current: '#428bca', Active_Power: '#f0ad4e', Reactive_Power: '#DF842A', Active_Energy: '#3d3d8b', Reactive_Energy: '#643d8b', Frequency: '#5cb85c' };
+          analyzer.Color = { Voltage: '#d9534f', Current: '#428bca', Active_Power: '#f0ad4e', Reactive_Power: '#DF842A', Apparent_Power: '#DF842A', Active_Energy: '#3d3d8b', Reactive_Energy: '#643d8b', Frequency: '#5cb85c' };
           analyzer.Unit = { Voltage: 'V', Current: 'A', Active_Power: 'W', Active_Energy: 'Wh', Frequency: 'Hz'};
           analyzer.HarmonicsNames = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
           analyzer.GetSeriesNames = this.GetSeriesNames.bind(this);

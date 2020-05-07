@@ -14,7 +14,7 @@
         <div class="col-xs-12">
           <label class="control-label" style="line-height: 22px">Events detection</label>
           <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.EventsEnabled"></toggle>
-          <div class="help">Enable standar event detection according to ?</div>
+          <div class="help">Enable standar event detection according to IEC 61000-4-30</div>
         </div>
         <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12">
