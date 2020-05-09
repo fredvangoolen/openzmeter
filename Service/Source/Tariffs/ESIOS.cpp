@@ -155,18 +155,19 @@ bool ESIOS::FetchIndicator(SSLClient &client, const string &token, const Variabl
   return DB.ExecSentenceNoResult(Query);
 }
 //----------------------------------------------------------------------------------------------------------------------
-bool ESIOS_PriceModule::pRegistered = ESIOS_PriceModule::Register();
+string ESIOS_PriceModule::pQueryColumns;
+bool   ESIOS_PriceModule::pRegistered = ESIOS_PriceModule::Register();
 //----------------------------------------------------------------------------------------------------------------------
 bool ESIOS_PriceModule::Register() {
   PriceModule::pModules.insert( { "ESP_ESIOS", { CreateInstance, GetVarsInfo } } );
+  for(uint16_t V = 0; V < ESIOS::pVariables.size(); V++) pQueryColumns += ESIOS::pVariables[V].VarName + ", ";
+  pQueryColumns += "timestamp";
   return true;
 }
 PriceModule *ESIOS_PriceModule::CreateInstance() {
   return new ESIOS_PriceModule();
 }
 ESIOS_PriceModule::ESIOS_PriceModule() {
-  for(uint16_t V = 0; V < ESIOS::pVariables.size(); V++) pQueryColumns += ESIOS::pVariables[V].VarName + ", ";
-  pQueryColumns += "timestamp";
 }
 ESIOS_PriceModule::~ESIOS_PriceModule() {
 }
@@ -177,21 +178,30 @@ void ESIOS_PriceModule::PrepareRange(const uint64_t from, const uint64_t to) {
 void ESIOS_PriceModule::GetParams(const uint64_t sampletime, map<string, float> &vars) {
   while((pHaveData == true) && ((pDB.ResultUInt64("timestamp") / 3600000) < (sampletime / 3600000))) pHaveData = pDB.FecthRow();
   if((pHaveData == true) && ((pDB.ResultUInt64("timestamp") / 3600000) == (sampletime / 3600000))) {
-    for(uint16_t V = 0; V < ESIOS::pVariables.size(); V++) vars[ESIOS::pVariables[V].VarName] = pDB.ResultFloat(ESIOS::pVariables[V].VarName);
+    for(uint16_t V = 0; V < ESIOS::pVariables.size(); V++) {
+      float Tmp = pDB.ResultFloat(ESIOS::pVariables[V].VarName);
+      vars[ESIOS::pVariables[V].VarName] = isnan(Tmp) ? 0 : Tmp;
+    }
   } else {
     for(uint16_t V = 0; V < ESIOS::pVariables.size(); V++) vars[ESIOS::pVariables[V].VarName] = 0.0;
   }
-
-//      printf("ESIOS - ");
-//      for(auto Var : vars) printf("%s: %.10f, ", Var.first.c_str(), Var.second);
-
 }
 json ESIOS_PriceModule::GetVarsInfo() {
   json Tmp = json::array();
+  uint64_t Now = Tools::GetTime64();
+  Database DB;
+  DB.ExecSentenceAsyncResult("SELECT " + pQueryColumns + " FROM esios WHERE timestamp <= " + DB.Bind(Now) + " ORDER BY timestamp DESC LIMIT 1");
+  bool HaveData = DB.FecthRow();
   for(uint16_t V = 0; V < ESIOS::pVariables.size(); V++) {
     json Var = json::object();
     Var["Name"] = ESIOS::pVariables[V].VarName;
     Var["Description"] = ESIOS::pVariables[V].Description;
+    if(HaveData == true) {
+      float Tmp = DB.ResultFloat(ESIOS::pVariables[V].VarName);
+      Var["Value"] = isnan(Tmp) ? 0 : Tmp;
+    } else {
+      Var["Value"] = 0.0;
+    }
     Tmp.push_back(Var);
   }
   return Tmp;
