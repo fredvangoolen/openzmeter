@@ -70,6 +70,7 @@ Rates::Rates(const json &r, const time_zone &timezone) {
     if(r[R]["ContractedPower"].is_number()) {
       pRates[R].Contracted = vector<float>(pRates[R].Periods.size(), r[R]["ContractedPower"]);
     } else if(r[R]["ContractedPower"].is_array()) {
+      pRates[R].Contracted.resize(pRates[R].Periods.size());
       for(uint16_t P = 0; P < pRates[R].Periods.size(); P++) pRates[R].Contracted[P] = r[R]["ContractedPower"][P];
     }
     if(r[R]["PowerCost"].is_string()) {
@@ -214,7 +215,7 @@ json Rates::CheckTariffConfig(const json &t) {
   Out["Description"] = t["Description"];
   if((t.contains("Currency") == false) || (t["Currency"].is_string() == false)) return "'Currency' param is required";
   Out["Currency"] = t["Currency"];
-  if((t.contains("PowerUnits") == false) || (t["PowerUnits"].is_string() == false) || ((t["PowerUnits"] != "kW") && (t["PowerUnits"] != "kvar"))) return "'PowerUnits' param is required";
+  if((t.contains("PowerUnits") == false) || (t["PowerUnits"].is_string() == false) || ((t["PowerUnits"] != "kW") && (t["PowerUnits"] != "kVA"))) return "'PowerUnits' param is required";
   Out["PowerUnits"] = t["PowerUnits"];
   if((t.contains("EnergyUnits") == false) || (t["EnergyUnits"].is_string() == false) || (t["EnergyUnits"] != "kWh")) return "'EnergyUnits' param is required";
   Out["EnergyUnits"] = t["EnergyUnits"];

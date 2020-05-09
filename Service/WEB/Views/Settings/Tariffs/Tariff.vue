@@ -58,7 +58,7 @@
                 <div class="col-xs-4">
                   <label class="small">Power units</label>
                   <div class="input-group input-group-xs" style="width: 100%">
-                    <option-picker v-model="Tariff.Template.PowerUnits" :options="[ {name: 'kW', value: 'kW'}, {name: 'kvar', value: 'kvar'} ]" ></option-picker>
+                    <option-picker v-model="Tariff.Template.PowerUnits" :options="[ {name: 'kW', value: 'kW'}, {name: 'kVA', value: 'kVA'} ]" ></option-picker>
                   </div>
                 </div>
                 <vuetable :fields="Columns" :api-mode="false" :data="FilterConcepts" class="table small table-striped">

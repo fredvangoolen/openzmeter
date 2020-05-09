@@ -273,9 +273,9 @@
     },
     computed: {
       Vars: function() {
-        var Vars = [];
-        Vars.push({ Name: 'Period', Description: 'Index of evaluated period (From 1 to ' + this.Rate.Periods.length + ')', Value: null, Units: ''});
-        for(var V = 0; V < this.analyzer.RateModules[this.Rate.Module].length; V++) Vars.push({ Name: this.analyzer.RateModules[this.Rate.Module][V].Name, Description: this.analyzer.RateModules[this.Rate.Module][V].Description, Value: null, Units: ''});
+        var Vars = [{ Name: 'Period', Description: 'Index of evaluated period (From 1 to ' + this.Rate.Periods.length + ')', Value: null, Units: ''}];
+
+        for(var V = 0; V < this.analyzer.RateModules[this.Rate.Module].length; V++) Vars.push({ Name: this.analyzer.RateModules[this.Rate.Module][V].Name, Description: this.analyzer.RateModules[this.Rate.Module][V].Description, Value: this.Round(this.analyzer.RateModules[this.Rate.Module][V].Value, 4), Units: ''});
         return Vars;
       },
       Cycles: function() {
@@ -333,7 +333,7 @@
         );
       },
       DelBill: function(day) {
-        if(confirm("Delete day '" + day.To + "' ?")) this.Rate.Billing.splice(day.ID);
+        if(confirm("Delete day '" + day.To + "' ?")) this.Rate.Billing.splice(day.ID, 1);
       },
       AddBillDay: function() {
         this.Rate.Billing.push(this.SelDate);
@@ -348,11 +348,12 @@
       BuildPeriods: function(day) {
         var Bills = [];
         var Date = moment(this.Rate.StartDate, 'DD/MM/YYYY');
+        var From = moment(this.Rate.StartDate, 'DD/MM/YYYY');
         var To   = moment(this.Rate.EndDate, 'DD/MM/YYYY');
-        while(true) {
-          Date.add(1, 'M').date(day + 1);
-          if(Date.isBefore(To) == false) break;
-          Bills.push(Date.format('DD/MM/YYYY'));
+        for(var M = 0; ; M++) {
+          Date = moment(From).add(M, 'M').date(day);
+          if(Date.isSameOrAfter(To)) break;
+          if(Date.isAfter(From)) Bills.push(Date.format('DD/MM/YYYY'));
         }
         this.$set(this.Rate, 'Billing', Bills);
       }

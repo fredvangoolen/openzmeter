@@ -22,10 +22,10 @@
 class ESIOS_PriceModule final : public PriceModule {
   private :
     static bool               pRegistered;
+   static  string             pQueryColumns;
   private :
     Database                  pDB;
     bool                      pHaveData;
-    string                    pQueryColumns;
   private :
     static bool         Register();
     static PriceModule *CreateInstance();
