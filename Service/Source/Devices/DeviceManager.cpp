@@ -39,6 +39,7 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("setAnalyzer",    SetAnalyzerCallback);
   HTTPServer::RegisterCallback("getSeries",      GetSeriesCallback);
   HTTPServer::RegisterCallback("getSeriesNow",   GetSeriesNowCallback);
+  HTTPServer::RegisterCallback("getWaveStream",  GetWaveStream);
   HTTPServer::RegisterCallback("getSeriesRange", GetSeriesRangeCallback);
   HTTPServer::RegisterCallback("getEvents",      GetEventsCallback);
   HTTPServer::RegisterCallback("getEvent",       GetEventCallback);
@@ -69,6 +70,7 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("setAnalyzer");
   HTTPServer::UnregisterCallback("getSeries");
   HTTPServer::UnregisterCallback("getSeriesNow");
+  HTTPServer::UnregisterCallback("getWaveStream");
   HTTPServer::UnregisterCallback("getSeriesRange");
   HTTPServer::UnregisterCallback("getEvents");
   HTTPServer::UnregisterCallback("getEvent");
@@ -166,6 +168,9 @@ void DeviceManager::GetSeriesCallback(const json &params, Response &response) {
 }
 void DeviceManager::GetSeriesNowCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetSeriesNow);
+}
+void DeviceManager::GetWaveStream(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::GetWaveStream);
 }
 void DeviceManager::GetSeriesRangeCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetSeriesRange);

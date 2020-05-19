@@ -233,10 +233,9 @@
     },
     Callbacks: {
       Underlay_DrawBorder: function(ctx, area, dygraph) {
-        ctx.strokeStyle = '#000';
+        ctx.save();
         ctx.strokeRect(area.x, area.y, area.w, area.h);
-        ctx.rect(area.x + 1, area.y + 1, area.w - 2, area.h - 2);
-        ctx.clip();
+        ctx.restore();
       },
       Underlay_DrawPeriods: function(canvas, area, g, decoration) {
         if(decoration == null) return;
@@ -308,12 +307,12 @@
           var sep = points[i].canvasx - points[i - 1].canvasx;
           if (sep < min_sep) min_sep = sep;
         }
-        var bar_width = Math.floor(2.0 / 3 * min_sep);
+        var bar_width = Math.floor(2.5 / 3 * min_sep);
         for (var i = 0; i < points.length; i++) {
           var p = points[i];
           var center_x = p.canvasx;
-          ctx.fillRect(center_x - bar_width / 2, p.canvasy, bar_width, y_bottom - p.canvasy);
-          ctx.strokeRect(center_x - bar_width / 2, p.canvasy, bar_width, y_bottom - p.canvasy);
+          ctx.fillRect(center_x, p.canvasy, bar_width, y_bottom - p.canvasy);
+          ctx.strokeRect(center_x, p.canvasy, bar_width, y_bottom - p.canvasy);
         }
       },
       MultiBar: function(e) {

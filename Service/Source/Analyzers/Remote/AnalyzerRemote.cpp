@@ -155,6 +155,9 @@ void AnalyzerRemote::GetSeriesNow(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getSeriesNow", params, response);
 }
+void AnalyzerRemote::GetWaveStream(const json &params, Response &response) {
+
+}
 void AnalyzerRemote::GetSeriesRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getSeriesRange", params, response);

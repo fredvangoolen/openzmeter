@@ -157,7 +157,7 @@ void *Telegram::Thread_Func(void *params) {
           if(Tmp == NULL) {
             Tmp = new Worker_t;
             Tmp->Client = new SSLClient("api.telegram.org", 443);
-            Tmp->Thread = new Worker("TelegramWorker", NULL, [](void *param1, void *param2) {
+            Tmp->Thread = new Worker("TelegramWorker", [](void *param2) {
               Worker_t *Work = (Worker_t*)param2;
               HandleUpdate(Work->Client, Work->JSON);
               Work->Token = "";

@@ -14,7 +14,7 @@
             <table class="main-table">
               <tr><td class="border-bottom">Period P{{ idx + 1 }}
                 <div class="float-right"><strong v-html="Round(p.reduce((sum, i) => { return sum + ((i.Type != 'INFO') ? i.Value : 0.0); }, 0.0), 2, true) + ' ' + bill.Currency"></strong></div>
-                </td></tr>
+              </td></tr>
               <tr v-if="p.reduce((sum, i) => { return sum + i.Value; }, 0.0)!=0"><td>
                 <vuetable :fields="ColumnsInfo" :api-mode="false" v-show="p.filter((v)=>v.Type=='INFO').length>0" :data="p.filter((v) => v.Type == 'INFO')" class="table-info table small table-striped"></vuetable>
                 <vuetable :fields="ColumnsCost" :api-mode="false" v-show="p.filter((v)=>v.Type!='INFO').length>0" :data="p.filter((v) => v.Type != 'INFO')" class="table-cost table small table-striped"></vuetable>
@@ -26,6 +26,9 @@
           <table class="main-table" >
             <tr><td class="border-bottom">Evolution
               <portal to="fs-toolbar" :disabled="!Expanded" class="float-right">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-default btn-xs" :class="{ active: GroupDay }" @click="GroupDay=!GroupDay"><img :src="require('Imgs/calendar_view_day.png')"></button>
+                </div>
                 <div class="btn-group">
                   <button type="button" class="btn btn-default btn-xs" :class="{ active: GraphSeries=='Energy' }" @click="GraphSeries='Energy'">Energy</button>
                   <button type="button" class="btn btn-default btn-xs" :class="{ active: GraphSeries=='Power' }" @click="GraphSeries='Power'">Power</button>
@@ -73,7 +76,7 @@
   export default {
     props: { bill: Object, analyzer: Object },
     data: function() {
-      return { Expanded: false, DialogHeight: 200, GraphSeries: 'Energy',
+      return { Expanded: false, DialogHeight: 200, GraphSeries: 'Energy', GroupDay: true,
         ColumnsCost: [
           { name: 'Description', title: 'Concept' },
           { name: 'Type', title: 'Term', callback: this.TermFormat },
@@ -106,17 +109,50 @@
         Opt.legend = 'follow';
         Opt.selectMode = 'euclidian';
         Opt.includeZero = true;
-        Opt.xAxisHeight = 20;
+
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30;
         Opt.axes.y2.pixelsPerLabel = 15;
         Opt.axes.y2.axisLabelWidth = 30;
         Opt.dateWindow = [this.bill.From, this.bill.To];
+
+        if(this.GroupDay) {
+          Opt.xAxisHeight = 10;
+          Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDate(x); };
+          Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDate(x); };
+          if(this.GraphSeries=='Energy') {
+            var PrevDay     = null;
+            var EnergySum   = 0;
+            var EnergyPrice = 0;
+            var Samples     = 0;
+            for(var n = 0; n < this.bill.Sampletime.length; n++) {
+              var Date = moment(this.bill.Sampletime[n]).tz(this.analyzer.TimeZone);
+              if((PrevDay != null) && (PrevDay.isSame(Date, 'day'))) {
+                EnergySum += this.bill.Active_Power[n] / 4.0;
+                EnergyPrice += this.bill.Period_Energy_Cost[n];
+                Samples++;
+              } else {
+                if(Samples != 0) Opt.file.push([PrevDay.valueOf(), EnergySum, EnergyPrice /Samples]);
+                Samples = 0;
+                EnergySum = this.bill.Active_Power[n] / 4.0;
+                EnergyPrice = this.bill.Period_Energy_Cost[n];
+                PrevDay = Date;
+              }
+            }
+            if(Samples != 0) Opt.file.push([PrevDay.valueOf(), EnergySum, EnergyPrice /Samples]);
+          }
+        } else {
+          Opt.xAxisHeight = 20;
+          Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
+          Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
+          if(this.GraphSeries=='Energy') {
+            for(var n = 0; n < this.bill.Sampletime.length; n++) Opt.file.push([this.bill.Sampletime[n], this.bill.Active_Power[n] / 4.0, this.bill.Period_Energy_Cost[n]]);
+          }
+        }
         if(this.GraphSeries=='Energy') {
           Opt.labels = ['Time', 'Energy', 'Cost'];
           Opt.colors = [this.analyzer.Color.Active_Energy, '#d9534f'];
           Opt.series = { 'Energy': { axis: 'y', plotter: Graph.Plotters.Bar }, 'Cost': { axis: 'y2' } };
-          for(var n = 0; n < this.bill.Sampletime.length; n++) Opt.file.push([this.bill.Sampletime[n], this.bill.Active_Power[n] / 4.0, this.bill.Period_Energy_Cost[n]]);
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true, false], { incZero: 1.0 });
           var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
           Opt.axes.y.valueFormatter = (x) => { return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + this.bill.EnergyUnits; };
@@ -131,8 +167,6 @@
           Opt.axes.y.valueFormatter = (x) => { return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + this.bill.PowerUnits; };
           Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(this.ScaleUnits(x, Units), 2, true); };
         }
-        Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
-        Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
         Opt.axes.y2.valueFormatter = (x) => { return this.Round(x, 2, true) + ' ' + this.bill.Currency + '/' + this.bill.EnergyUnits; };
         Opt.axes.y2.axisLabelFormatter = (x) => { return this.Round(x, 2, true); };
         return Object.seal(Opt);

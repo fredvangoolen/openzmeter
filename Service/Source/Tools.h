@@ -25,26 +25,24 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class Worker final {
   private :
-    void           *pCreationParam;
-    void           *pRunParam;
-    volatile bool   pWorking;
-    volatile bool   pTerminate;
-    pthread_t       pThread;
-    pthread_mutex_t pMutex;
-    pthread_cond_t  pCondWake;
-    pthread_cond_t  pCondWait;
-    void          (*pCallback)(void*, void*);
+    void                 *pRunParam;
+    volatile bool         pWorking;
+    volatile bool         pTerminate;
+    pthread_t             pThread;
+    pthread_mutex_t       pMutex;
+    pthread_cond_t        pCondWake;
+    pthread_cond_t        pCondWait;
+    function<void(void*)> pCallback;
   private :
     static void *Thread(void *args);
   public :
-    Worker(const string &name, void *param, void (*callback)(void*, void*), int8_t nice = 0);
+    Worker(const string &name, function<void(void*)> callback, int8_t nice = 0);
     ~Worker();
     bool IsWorking();
     void Run(void *param);
     void Wait();
 };
 class RWLocks final {
-  //Multiple read access allowed, exclusive access for writing
   private :
     pthread_mutex_t   pMutex;
     pthread_cond_t    pReadersCondition;
@@ -56,7 +54,6 @@ class RWLocks final {
     RWLocks();
     ~RWLocks();
     void ReadLock();
-//    bool TryReadLock();
     void WriteLock();
     void Unlock();
 };
