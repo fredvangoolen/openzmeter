@@ -91,6 +91,9 @@ bool Device::GetSeries(const json &params, Response &response) {
 bool Device::GetSeriesNow(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetSeriesNow);
 }
+bool Device::GetWaveStream(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetWaveStream);
+}
 bool Device::GetSeriesRange(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetSeriesRange);
 }

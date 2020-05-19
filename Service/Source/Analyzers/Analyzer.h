@@ -45,6 +45,7 @@ class Analyzer {
     virtual void SetAnalyzer(const json &params, Response &response) = 0;
     virtual void GetSeries(const json &params, Response &response) = 0;
     virtual void GetSeriesNow(const json &params, Response &response) = 0;
+    virtual void GetWaveStream(const json &params, Response &response) = 0;
     virtual void GetSeriesRange(const json &params, Response &response) = 0;
     virtual void GetEvents(const json &params, Response &response) = 0;
     virtual void GetEvent(const json &params, Response &response) = 0;

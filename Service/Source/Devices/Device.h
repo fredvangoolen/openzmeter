@@ -59,6 +59,7 @@ class Device {
     bool SetAnalyzer(const json &params, Response &response);
     bool GetSeries(const json &params, Response &response);
     bool GetSeriesNow(const json &params, Response &response);
+    bool GetWaveStream(const json &params, Response &response);
     bool GetSeriesRange(const json &params, Response &response);
     bool GetEvents(const json &params, Response &response);
     bool GetEvent(const json &params, Response &response);

@@ -35,9 +35,9 @@ class AnalyzerSoft final : public Analyzer {
     static const uint8_t FILTERSTAGES         =  5;        //Filter stages for zerocrossing
     static const uint8_t ZEROCROSSING_SECONDS = 10;        //Used seconds to calc frequency
   public :
-    enum AggregType  { UNINITIALIZED, AGGREG_200MS, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
+    enum AggregType  { AGGREG_UNINITIALIZED = 0, AGGREG_200MS, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
     enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
-    enum EventState  { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
+    enum EventState  { EVT_PREINIT, EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
     enum SyncState   { NOT_LOGGED, LOGGED, CONNECTED, TERMINATE };
   private :
     static constexpr float   FrequencyRanges[]   = { -INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY };
@@ -109,7 +109,7 @@ class AnalyzerSoft final : public Analyzer {
       bool                     Triggered;
     } Alarm_t;
     typedef struct {
-      vector<float>            RMS;
+      float                    RMS[3];
       uint64_t                 Timestamp;
     } EventCycle_t;
     typedef struct {
@@ -156,7 +156,7 @@ class AnalyzerSoft final : public Analyzer {
     time_zone                  pTimeZone;                //Country code
     uint64_t                   pSequence;                //Sequence number of analyzed blocks
     uint16_t                   pBlockSamples;            //Number of samples in block
-    uint16_t                   pBlockCyclesCount;        //Block cycles count
+    uint8_t                    pBlockCyclesCount;        //Block cycles count
     uint16_t                   pBlockCycles[24];         //Max block sizes
     float                     *pVoltageSamples;          //Voltage samples
     float                     *pCurrentSamples;          //Current samples
@@ -193,10 +193,15 @@ class AnalyzerSoft final : public Analyzer {
   private : //Alarms related (should be locked)
     vector<Alarm_t>            pAlarms;                  //Alarms control object
   private : //Events related (only acceded inside analyzer thread)
-    list<Event_t>              pEvents;                  //Running events
+    Event_t                    pEvent;                   //Running event
+    list<Event_t>              pEvents;                  //Close pending events
     bool                       pPrevStationary;          //Steady state flag
-    deque<vector<float> >      pPrevSamples;             //Previous samples
-    deque<EventCycle_t>        pPrevCycles;              //Previous cycles
+    uint32_t                   pPrevSamplesLen;          //Previous samples count
+    uint32_t                   pPrevSamplesPos;          //Previous samples write pos
+    float                     *pPrevSamples;             //Previous samples
+    uint16_t                   pPrevCyclesLen;           //Previous cycles count
+    uint16_t                   pPrevCyclesPos;           //Previous cycles write pos
+    EventCycle_t              *pPrevCycles;              //Previous cycles
   private : //Readed in thread, changed in configure
     pthread_t                  pSyncThread;              //Export thread
     bool                       pSyncTerminate;           //Sync terminate signal
@@ -222,10 +227,6 @@ class AnalyzerSoft final : public Analyzer {
     bool                       pMQTTAlarms;              //Enable alarms publish
     bool                       pMQTTConfig;              //Enable config publish
   private :
-    static void  Analyzer_Func(void *creation, void *run);
-    static void  Events_Func(void *creation, void *run);
-    static void  FFT_Func(void *creation, void *run);
-    static void  Alarms_Func(void *creation, void *run);
     static void *Sync_Thread(void *params);
     static void *MQTT_Thread(void *params);
     static void *Sync_RespThread(void *params);
@@ -233,6 +234,10 @@ class AnalyzerSoft final : public Analyzer {
     static float CalcAngle(const Complex_t &a, const Complex_t &b);
     static float BinPower(const Complex_t &a);
   private :
+    void Analyzer_Func();
+    void Events_Func();
+    void FFT_Func(FFTChannel_t *ch);
+    void Alarms_Func(Params_t *aggreg);
     void Configure(const json &options);
     void InitAggreg(Params_t &params, AggregType type);
     void InitAlarmParser(Parser &parser, const string &expr, const AggregType &type);
@@ -250,6 +255,7 @@ class AnalyzerSoft final : public Analyzer {
     void SetAnalyzer(const json &params, Response &response) override;
     void GetSeries(const json &params, Response &response) override;
     void GetSeriesNow(const json &params, Response &response) override;
+    void GetWaveStream(const json &params, Response &response) override;
     void GetSeriesRange(const json &params, Response &response) override;
     void GetEvents(const json &params, Response &response) override;
     void GetEvent(const json &params, Response &response) override;

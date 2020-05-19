@@ -63,6 +63,9 @@ DatabasePool::~DatabasePool() {
   pthread_mutex_unlock(&pMutex);
 }
 void DatabasePool::AdjustWorkers() {
+  LOGFile::Debug("Vacuuming database\n");
+  Database DB;
+  DB.ExecSentenceNoResult("VACUUM");
   pthread_mutex_lock(&pMutex);
   uint64_t Time = Tools::GetTime64();
   while(pConnectionPool.size() > 0) {

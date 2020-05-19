@@ -22,16 +22,15 @@
 #include <unistd.h>
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-Worker::Worker(const string &name, void *param, void (*callback)(void*, void*), int8_t nice) {
-  pWorking       = false;
-  pTerminate     = false;
-  pCondWake      = PTHREAD_COND_INITIALIZER;
-  pCondWait      = PTHREAD_COND_INITIALIZER;
-  pMutex         = PTHREAD_MUTEX_INITIALIZER;
-  pCreationParam = param;
-  pRunParam      = NULL;
-  pCallback      = callback;
-  pThread        = 0;
+Worker::Worker(const string &name, function<void(void*)> callback, int8_t nice) {
+  pWorking   = false;
+  pTerminate = false;
+  pCondWake  = PTHREAD_COND_INITIALIZER;
+  pCondWait  = PTHREAD_COND_INITIALIZER;
+  pMutex     = PTHREAD_MUTEX_INITIALIZER;
+  pRunParam  = NULL;
+  pThread    = 0;
+  pCallback = callback;
   if(pthread_create(&pThread, NULL, Thread, (void*)this) != 0) {
     pThread = 0;
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -67,7 +66,7 @@ void *Worker::Thread(void *args) {
     while((This->pTerminate == false) && (This->pWorking == false)) pthread_cond_wait(&This->pCondWake, &This->pMutex);
     if((This->pTerminate == false) && (This->pWorking == true)) {
       pthread_mutex_unlock(&This->pMutex);
-      This->pCallback(This->pCreationParam, This->pRunParam);
+      This->pCallback(This->pRunParam);
       pthread_mutex_lock(&This->pMutex);
     }
     This->pWorking = false;

@@ -40,6 +40,7 @@ class DeviceManager final {
     static void SetAnalyzerCallback(const json &params, Response &response);
     static void GetSeriesCallback(const json &params, Response &response);
     static void GetSeriesNowCallback(const json &params, Response &response);
+    static void GetWaveStream(const json &params, Response &response);
     static void GetSeriesRangeCallback(const json &params, Response &response);
     static void GetEventsCallback(const json &params, Response &response);
     static void GetEventCallback(const json &params, Response &response);

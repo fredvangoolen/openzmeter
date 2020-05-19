@@ -13,6 +13,7 @@
     computed: {
       GraphOptions: function() {
         var Opt = { axes: { x: {}, y: {} } };
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.strokeWidth = 0.5,
         Opt.stepPlot = true;
         Opt.interactionModel = {};
@@ -31,7 +32,7 @@
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30,
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 2, true) + ' €'; };
-        Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x, 2, true); };
+        Opt.axes.y.axisLabelFormatter = (x) => { return Math.round(x); };
         Opt.axes.x.valueFormatter = (x) => { return this.Labels[x]; };
         Opt.axes.x.axisLabelFormatter = (x) => { return this.Labels[x]; };
         if(this.data != null) {

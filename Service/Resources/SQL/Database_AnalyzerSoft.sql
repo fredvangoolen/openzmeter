@@ -1,4 +1,4 @@
-CREATE UNLOGGED TABLE IF NOT EXISTS aggreg_200ms (
+CREATE TABLE IF NOT EXISTS aggreg_200ms (
   sampletime     bigint NOT NULL PRIMARY KEY,
   rms_v          real[] NOT NULL,
   rms_i          real[] NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS aggreg_15m (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS aggreg_1h (
-  sampletime bigint NOT NULL PRIMARY KEY,
+  sampletime     bigint  NOT NULL PRIMARY KEY,
   rms_v          real[]  NOT NULL,
   rms_i          real[]  NOT NULL,
   freq           real,
@@ -75,20 +75,23 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS events (
-  starttime   bigint                NOT NULL,
-  evttype     character varying(16) NOT NULL,
-  duration    bigint                NOT NULL,
-  samplerate  real                  NOT NULL,
-  reference   real[]                NOT NULL,
-  peak        real[]                NOT NULL,
-  change      real[]                NOT NULL,
-  finished    boolean               NOT NULL,
-  notes       text                  NOT NULL,
+  starttime   bigint            NOT NULL PRIMARY KEY,
+  evttype     character varying NOT NULL,
+  samplerate  real              NOT NULL,
+  reference   real[]            NOT NULL,
+  peak        real[]            NOT NULL,
+  change      real[]            NOT NULL,
+  finished    boolean           NOT NULL,
+  notes       text              NOT NULL,
+  duration    bigint
+) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS events_ext (
+  starttime   bigint            NOT NULL REFERENCES events(starttime) ON UPDATE CASCADE ON DELETE CASCADE,
+  sampletype  character varying NOT NULL,
   samples1    real[],
-  rms1        real[],
   samples2    real[],
-  rms2        real[],
   samples3    real[],
-  rms3        real[],
-  CONSTRAINT events_pkey PRIMARY KEY (starttime, evttype)
+  samples4    real[],
+  PRIMARY KEY (starttime, sampletype)
 ) WITH (OIDS=FALSE);
