@@ -346,7 +346,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
   pLock.Unlock();
   FillResponse(response, "Method not found", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
-void HTTPServer::RemoveExpiredSessions() const {
+void HTTPServer::PeriodicTasks() {
   if(Tools::GetTime64() < 1296000000) return;
   Database DB;
   DB.ExecSentenceNoResult("DELETE FROM sessions WHERE timestamp < " + DB.Bind(Tools::GetTime64() - 1296000000));

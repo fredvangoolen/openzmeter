@@ -188,7 +188,7 @@ void *Telegram::Thread_Func(void *params) {
   pthread_mutex_unlock(&pMutex);
   return NULL;
 }
-void Telegram::AdjustWorkers() {
+void Telegram::PeriodicTasks() {
   pthread_mutex_lock(&pMutex);
   uint64_t Time = Tools::GetTime64();
   while(pFreeWorkers.size() > 0) {

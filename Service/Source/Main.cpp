@@ -82,10 +82,10 @@ int main(int argc, char** argv) {
   uint32_t Iter = 0;
   while(!Terminate) {
     SysSupport::PeriodicTask();
-    if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
-    if((Iter % 60) == 10) DatabasePool::AdjustWorkers();
-    if((Iter % 60) == 20) Telegram::AdjustWorkers();
-//    if((Iter % 60) == 30) HTTPTaskQueue::AdjustWorkers();
+    if((Iter % 80) == 0)  HTTPServer::PeriodicTasks();
+    if((Iter % 80) == 20) DeviceManager::PeriodicTasks();
+    if((Iter % 80) == 40) DatabasePool::PeriodicTasks();
+    if((Iter % 80) == 60) Telegram::PeriodicTasks();
     Iter++;
     usleep(1000000);
   }

@@ -88,11 +88,12 @@ class HTTPServer final {
     static pthread_t      pThread;
     static Server        *pServer;
   private :
-    static void   *Listen_Thread(void *params);
+    static void  *Listen_Thread(void *params);
     static string ParseCookie(const string &cookie);
     static void   HandleGet(const Request &request, Response &response);
     static void   HandlePost(const Request &request, Response &response);
   public :
+    static void PeriodicTasks();
     static void RegisterCallback(const string &handleName, const Func_t function);
     static void UnregisterCallback(const string &handleName);
     static void FillResponse(Response &response, const string &body, const char *mime, const int status);
@@ -100,5 +101,4 @@ class HTTPServer final {
   public :
     HTTPServer();
     ~HTTPServer();
-    void RemoveExpiredSessions() const;
 };

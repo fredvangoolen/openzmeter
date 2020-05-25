@@ -74,6 +74,7 @@ class Device {
     bool DelPermission(const json &params, Response &response);
   public :
     virtual ~Device();
+    virtual void PeriodicTasks();
     virtual void GetDevice(const json &params, Response &response) = 0;
     virtual void SetDevice(const json &params, Response &response) = 0;
     virtual void GetRemote(const json &params, Response &response);

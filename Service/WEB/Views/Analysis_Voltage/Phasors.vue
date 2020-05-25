@@ -115,13 +115,20 @@
         var Opt = {Positive: Object.assign({ file: [] }, this.CommonOptions), Negative: Object.assign({ file: [] }, this.CommonOptions), Zero: Object.assign({ file: [] }, this.CommonOptions) };
         if(this.data.Voltage.length == 3) {
           var A = new Complex(Math.cos(120.0 * Math.PI / 180.0), Math.sin(120.0 * Math.PI / 180.0));
+          console.log('A:', A);
           var A2 = A.clone().mult(A);
+          console.log('A²:', A2);
           var V1 = new Complex(this.data.Voltage_Harmonics[0][0][0], this.data.Voltage_Harmonics[0][0][1]);
+          console.log('V1', V1);
           var V2 = new Complex(this.data.Voltage_Harmonics[1][0][0], this.data.Voltage_Harmonics[1][0][1]);
+          console.log('V2', V2);
           var V3 = new Complex(this.data.Voltage_Harmonics[2][0][0], this.data.Voltage_Harmonics[2][0][1]);
-          var Zero = V1.clone().add(V2).add(V3).mult(new Complex(1.0 / 3.0, 0.0));
+          console.log('V3', V3);
           var Positive = V1.clone().add(A.clone().mult(V2)).add(A2.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
+          console.log('Positive', Positive);
           var Negative = V1.clone().add(A2.clone().mult(V2)).add(A.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
+          console.log('Negative', Negative);
+          var Zero = V1.clone().add(V2).add(V3).mult(new Complex(1.0 / 3.0, 0.0));
           var OffsetAngle = Positive.arg() * 180.0 / Math.PI;
           for(var n = 0; n < 3; n++) {
             Opt.Positive.file.push([n * 2, Positive.arg() * 180.0 / Math.PI + (n * 120.0) - OffsetAngle, Positive.abs()]);

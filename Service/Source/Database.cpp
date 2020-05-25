@@ -62,7 +62,7 @@ DatabasePool::~DatabasePool() {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void DatabasePool::AdjustWorkers() {
+void DatabasePool::PeriodicTasks() {
   LOGFile::Debug("Vacuuming database\n");
   Database DB;
   DB.ExecSentenceNoResult("VACUUM");

@@ -69,7 +69,7 @@ class DatabasePool final {
   public :
     static PGconn *PopConnection();
     static void    PushConnection(PGconn *conn);
-    static void    AdjustWorkers();
+    static void    PeriodicTasks();
   public :
     DatabasePool();
     ~DatabasePool();

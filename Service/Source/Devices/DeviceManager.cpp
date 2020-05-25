@@ -101,6 +101,11 @@ DeviceManager::~DeviceManager() {
 void DeviceManager::AddDriver(vector<Device*> (*func)()) {
   pDrivers.push_back(func);
 }
+void DeviceManager::PeriodicTasks() {
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) Dev->PeriodicTasks();
+  pDevicesLock.Unlock();
+}
 void DeviceManager::CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response)) {
   if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   pDevicesLock.ReadLock();
