@@ -60,6 +60,7 @@ class DeviceManager final {
     static void AddTariffCallback(const json &params, Response &response);
   public :
     static void AddDriver(vector<Device*> (*func)());
+    static void PeriodicTasks();
   public :
     DeviceManager();
     ~DeviceManager();

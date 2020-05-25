@@ -81,9 +81,8 @@ CREATE TABLE IF NOT EXISTS events (
   reference   real[]            NOT NULL,
   peak        real[]            NOT NULL,
   change      real[]            NOT NULL,
-  finished    boolean           NOT NULL,
   notes       text              NOT NULL,
-  duration    bigint
+  duration    bigint            NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS events_ext (
@@ -92,6 +91,5 @@ CREATE TABLE IF NOT EXISTS events_ext (
   samples1    real[],
   samples2    real[],
   samples3    real[],
-  samples4    real[],
   PRIMARY KEY (starttime, sampletype)
 ) WITH (OIDS=FALSE);

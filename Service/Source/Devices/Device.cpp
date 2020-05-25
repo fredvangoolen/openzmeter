@@ -25,6 +25,11 @@ Device::Device(const string &serial, const string &driver, const string &name) :
 Device::~Device() {
   ClearAnalyzers();
 }
+void Device::PeriodicTasks() {
+  pAnalyzersLock.ReadLock();
+  for(auto &Tmp : pAnalyzers) Tmp->PeriodicTasks();
+  pAnalyzersLock.Unlock();
+}
 void Device::AddAnalyzer(Analyzer *analyzer) {
   pAnalyzersLock.WriteLock();
   auto Tmp = pAnalyzers.insert(analyzer);

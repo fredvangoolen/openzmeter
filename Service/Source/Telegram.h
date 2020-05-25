@@ -56,7 +56,7 @@ class Telegram final {
   public :
     static void  SendAlarm(const string &analyzer, const time_zone &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered);
     static bool  SendMessage(const json &msg, Client *client);
-    static void  AdjustWorkers();
+    static void  PeriodicTasks();
 //----------------------------------------------------------------------------------------------------------------------
     static void  HandleUpdate(SSLClient *client, const json &JSON);
 };

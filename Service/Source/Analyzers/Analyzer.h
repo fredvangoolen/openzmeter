@@ -33,7 +33,7 @@ class Analyzer {
     uint64_t          pLastSave;                //Timestamp of last save or communication
     string            pName;                    //Analyzer description
   public :
-    const string Serial;                        //Serial number
+    const string      Serial;                   //Serial number
   protected :
     Analyzer(const string &id);
     string GetName();
@@ -41,6 +41,7 @@ class Analyzer {
     void   SetOnline();
     bool   IsOnline();
   public :
+    virtual void PeriodicTasks() = 0;
     virtual void GetAnalyzer(const json &params, Response &response) = 0;
     virtual void SetAnalyzer(const json &params, Response &response) = 0;
     virtual void GetSeries(const json &params, Response &response) = 0;

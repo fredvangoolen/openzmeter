@@ -37,7 +37,7 @@ class AnalyzerSoft final : public Analyzer {
   public :
     enum AggregType  { AGGREG_UNINITIALIZED = 0, AGGREG_200MS, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
     enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
-    enum EventState  { EVT_PREINIT, EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
+//    enum EventState  { EVT_STAGE0 = 0, EVT_STAGE1, EVT_STAGE2 };
     enum SyncState   { NOT_LOGGED, LOGGED, CONNECTED, TERMINATE };
   private :
     static constexpr float   FrequencyRanges[]   = { -INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY };
@@ -114,16 +114,12 @@ class AnalyzerSoft final : public Analyzer {
     } EventCycle_t;
     typedef struct {
       enum EventType           Type;                     //Running event type
-      EventState               State;                    //Events state
       uint64_t                 Start;                    //Event start timestamp
-      uint64_t                 Duration;                 //Event duration in samples
-      vector<float>            Reference;                //Voltage reference for event (Stationary for RVC, nominal for others)
-      vector<float>            PeakValue;                //max/min voltage variation along event
-      vector<float>            ChangeValue;              //diference voltage of event
-      deque<vector<float> >    SamplesRAW_A;             //
-      deque<vector<float> >    SamplesRMS_A;             //
-      deque<vector<float> >    SamplesRAW_B;             //
-      deque<vector<float> >    SamplesRMS_B;             //
+      uint64_t                 SamplesDuration;          //Event duration in samples
+      float                    Reference[3];             //Voltage reference for event (Stationary for RVC, nominal for others)
+      float                    PeakValue[3];             //max/min voltage variation along event
+      float                    ChangeValue[3];           //diference voltage of event
+      uint16_t                 CyclesDuration;           //Event duration in samples
     } Event_t;
     typedef struct {
       pthread_mutex_t         *Mutex;                    //Export list locks
@@ -247,10 +243,9 @@ class AnalyzerSoft final : public Analyzer {
     void PublishAggreg(const Params_t &params, const string &topic);
     void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
     void PublishConfig(const json &options);
-    void InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
     bool FindRunningEvent(const uint32_t mask);
-    void SaveEvent(Event_t &evt);
   private :
+    void PeriodicTasks();
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
     void GetSeries(const json &params, Response &response) override;
