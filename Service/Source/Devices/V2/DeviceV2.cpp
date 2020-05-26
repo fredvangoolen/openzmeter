@@ -126,10 +126,12 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
   }
 }
 DeviceV2::~DeviceV2() {
+  LOGFile::Info("Stopping device with serial '%s'\n", Serial.c_str());
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   if(pBuffer != NULL) free(pBuffer);
   if(pChannelsDelay != NULL) free(pChannelsDelay);
+  LOGFile::Info("Device with serial '%s' stopped\n", Serial.c_str());
 }
 json DeviceV2::CheckConfig(const json &config) {
   json ConfigOUT = json::object();

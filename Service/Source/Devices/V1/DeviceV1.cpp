@@ -118,9 +118,11 @@ DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial
   }
 }
 DeviceV1::~DeviceV1() {
+  LOGFile::Info("Stopping device with serial '%s'\n", Serial.c_str());
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   if(pBuffer != NULL) free(pBuffer);
+  LOGFile::Info("Device with serial '%s' stopped\n", Serial.c_str());
 }
 json DeviceV1::CheckConfig(const json &config) {
   json ConfigOUT = json::object();

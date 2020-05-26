@@ -108,10 +108,10 @@ class AnalyzerSoft final : public Analyzer {
       uint8_t                 *Results;
       bool                     Triggered;
     } Alarm_t;
-    typedef struct {
-      float                    RMS[3];
-      uint64_t                 Timestamp;
-    } EventCycle_t;
+//    typedef struct {
+//      float                    RMS[3];
+//      uint64_t                 Timestamp;
+//    } EventCycle_t;
     typedef struct {
       enum EventType           Type;                     //Running event type
       uint64_t                 Start;                    //Event start timestamp
@@ -119,7 +119,7 @@ class AnalyzerSoft final : public Analyzer {
       float                    Reference[3];             //Voltage reference for event (Stationary for RVC, nominal for others)
       float                    PeakValue[3];             //max/min voltage variation along event
       float                    ChangeValue[3];           //diference voltage of event
-      uint16_t                 CyclesDuration;           //Event duration in samples
+      uint32_t                 CyclesDuration;           //Event duration in samples
     } Event_t;
     typedef struct {
       pthread_mutex_t         *Mutex;                    //Export list locks
@@ -192,12 +192,12 @@ class AnalyzerSoft final : public Analyzer {
     Event_t                    pEvent;                   //Running event
     list<Event_t>              pEvents;                  //Close pending events
     bool                       pPrevStationary;          //Steady state flag
-    uint32_t                   pPrevSamplesLen;          //Previous samples count
-    uint32_t                   pPrevSamplesPos;          //Previous samples write pos
+    uint16_t                   pPrevSamplesLen;          //Previous samples count
+    uint16_t                   pPrevSamplesPos;          //Previous samples write pos
     float                     *pPrevSamples;             //Previous samples
     uint16_t                   pPrevCyclesLen;           //Previous cycles count
     uint16_t                   pPrevCyclesPos;           //Previous cycles write pos
-    EventCycle_t              *pPrevCycles;              //Previous cycles
+    float                     *pPrevCycles;              //Previous cycles
   private : //Readed in thread, changed in configure
     pthread_t                  pSyncThread;              //Export thread
     bool                       pSyncTerminate;           //Sync terminate signal
