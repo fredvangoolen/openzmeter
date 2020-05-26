@@ -12,7 +12,7 @@
     },
     watch: {
       value: function(val) {
-        if(this.storage != null) this.LocalStorage_Set(this.storage, val);
+        if(this.storage != null) localStorage.setItem(this.storage, val);
         var Find = this.tabs.indexOf(this.value);
         if(Find == -1) {
           this.$emit('input', this.tabs[0]);
@@ -22,7 +22,6 @@
         }
       },
       tabs: function(val, prev) {
-
         if(val.length == prev.length) {
           var Diff = false;
           for(var i in val) {
@@ -43,7 +42,7 @@
       for(var i in this.tabs) this.Tabs.push({ paneId: i, title: this.tabs[i], active: (this.tabs[i] == this.value), disabled: false });
       $(this.$el).scrollingTabs({ enableSwiping: true, tabClickHandler: this.TabChange, tabs: this.Tabs, ignoreTabPanes: true });
       if(this.storage != null) {
-        var Find = this.tabs.indexOf(this.LocalStorage_Get(this.storage));
+        var Find = this.tabs.indexOf(localStorage.getItem(this.storage));
       } else {
         var Find = this.tabs.indexOf(this.value);
       }

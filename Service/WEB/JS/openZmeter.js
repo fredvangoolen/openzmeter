@@ -1,4 +1,3 @@
-import objectPath from 'object-path';
 const openZmeter = {
   install: function(Vue, options) {
     Vue.prototype.CreateSeriesTransfer = (parent, series) => {
@@ -433,25 +432,6 @@ const openZmeter = {
     },
     Vue.prototype.BinPower = (complex) => {
       return Math.sqrt(Math.pow(complex[0], 2.0) + Math.pow(complex[1], 2.0));
-    }
-    Vue.prototype.LocalStorage_Get = (path) => {
-      var Conf;
-      try {
-        Conf = JSON.parse(localStorage.getItem('Settings'));
-        return objectPath.get(Conf, path);
-      } catch(err) {
-        return null;
-      }
-    },
-    Vue.prototype.LocalStorage_Set = (path, json) => {
-      var Conf;
-      try {
-        Conf = JSON.parse(localStorage.getItem('Settings'));
-      } catch(err) {
-        Conf = {};
-      }
-      objectPath.set(Conf, path, json);
-      localStorage.setItem('Settings', JSON.stringify(Conf));
     }
   }
 };

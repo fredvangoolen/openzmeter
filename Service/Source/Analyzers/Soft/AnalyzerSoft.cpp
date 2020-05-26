@@ -88,6 +88,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
 }
 AnalyzerSoft::~AnalyzerSoft() {
+  LOGFile::Info("Stopping analyzer with serial '%s'\n", Serial.c_str());
   pSyncTerminate = true;
   if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
   pMQTTTerminate = true;
@@ -120,6 +121,7 @@ AnalyzerSoft::~AnalyzerSoft() {
     fftwf_cleanup();
   }
   pthread_mutex_unlock(&pFFTMutex);
+  LOGFile::Info("Analyzer with serial '%s' stopped\n", Serial.c_str());
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
   pAnalyzerLock.ReadLock();
@@ -362,9 +364,9 @@ void AnalyzerSoft::Configure(const json &options) {
     pPrevSamplesLen = EVENT_RAWENVELOPETIME * pSamplerate;
     pPrevSamplesPos = 0;
     pPrevSamples    = (float*)calloc(pPrevSamplesLen * pVoltageChannels, sizeof(float));
-    pPrevCyclesLen  = pNominalFrequency * 2;
+    pPrevCyclesLen  = (pNominalFrequency * 2) - 1;
     pPrevCyclesPos  = 0;
-    pPrevCycles     = (EventCycle_t*)calloc(pPrevCyclesLen, sizeof(EventCycle_t));
+    pPrevCycles     = (float*)calloc(pPrevCyclesLen * pVoltageChannels, sizeof(float));
     pEventsWorker   = new Worker("EventsDet", [&](void *a) { this->Events_Func(); });
   }
   if((AlarmsEnabled == false) && (pAlarmsWorker != NULL)) {
@@ -462,42 +464,6 @@ void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
   memset(&params, 0, sizeof(params));
   params.Type = type;
 }
-//void AnalyzerSoft::InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos) {
-//  Event_t Event;
-//  Event.Type = type;
-//  Event.Duration = 0;
-//  Event.State = EVT_RUNNING;
-//  Event.Reference = reference;
-//  Event.PeakValue = reference;
-//  Event.ChangeValue = reference;
-//  Event.SamplesRAW_A = deque<vector<float> >();
-//  Event.SamplesRMS_A = deque<vector<float> >();
-//  Event.SamplesRAW_B = deque<vector<float> >();
-//  Event.SamplesRMS_B = deque<vector<float> >();
-//  for(deque<EventCycle_t>::reverse_iterator it = pPrevCycles.rbegin(); it != pPrevCycles.rend(); it++) {
-//    Event.SamplesRMS_A.push_front(it->RMS);
-//    if(Event.SamplesRMS_A.size() == (pNominalFrequency * 2 * EVENT_RMSENVELOPETIME)) break;
-//  }
-//  for(deque<vector<float> >::reverse_iterator it = pPrevSamples.rbegin(); it != pPrevSamples.rend(); it++) {
-//    Event.SamplesRAW_A.push_front(*it);
-//    if(Event.SamplesRAW_A.size() == (EVENT_RAWENVELOPETIME * pSamplerate)) break;
-//  }
-  //A new event destroy any running RVC
-//  if(type != EVT_RVC) {
-//    for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); ) {
-//      if((it->Type == EVT_RVC) && (it->State == EVT_RUNNING)) {
-//        Database DB(Serial);
-//        DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(it->Start) + " AND evttype = 'RVC'");
-//        pEvents.erase(it++);
-//      } else {
-//        it++;
-//      }
-//    }
-//  }
-//  Event.Start = pAggreg200MS.Timestamp + (uint32_t)((pos * 1000) / pSamplerate);
-//  SaveEvent(Event);
-//  pEvents.push_back(Event);
-//}
 void AnalyzerSoft::AccumulateAggreg(Params_t &dst, const Params_t &src) {
   if(src.AggregSamples == 0) return;
   if(dst.Timestamp == 0) dst.Timestamp = src.Timestamp;
@@ -618,35 +584,6 @@ void AnalyzerSoft::SaveAggreg(Params_t &params) {
     DB.Bind(params.StatsUnbalance, UnbalanceRangesLen) + ")");
   }
 }
-//void AnalyzerSoft::SaveEvent(Event_t &evt) {
-//  Database DB(Serial);
-//  string Type = (evt.Type == EVT_RVC) ? "RVC" : (evt.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (evt.Type == EVT_DIP) ? "DIP" : "SWELL";
-//  vector<vector<float> > RMS = vector<vector< float> >(evt.Reference.size(), vector<float>());
-//  vector<vector<float> > RAW = vector<vector< float> >(evt.Reference.size(), vector<float>());
-//  for(deque<vector<float> >::iterator it = evt.SamplesRMS_A.begin(); it != evt.SamplesRMS_A.end(); it++) {
-//    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
-//  }
-//  for(deque<vector<float> >::iterator it = evt.SamplesRMS_B.begin(); it != evt.SamplesRMS_B.end(); it++) {
-//    for(uint8_t ch = 0; ch < it->size(); ch++) RMS[ch].push_back((*it)[ch]);
-//  }
-//  for(deque<vector<float> >::iterator it = evt.SamplesRAW_A.begin(); it != evt.SamplesRAW_A.end(); it++) {
-//    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
-//  }
-//  for(deque<vector<float> >::iterator it = evt.SamplesRAW_B.begin(); it != evt.SamplesRAW_B.end(); it++) {
-//    for(uint8_t ch = 0; ch < it->size(); ch++) RAW[ch].push_back((*it)[ch]);
-//  }
-//  if(evt.State == EVT_RUNNING) {
-//    DB.ExecSentenceNoResult("INSERT INTO events(starttime, duration, samplerate, finished, evttype, reference, peak, change, notes, samples1, rms1) VALUES (" + DB.Bind(evt.Start) + ", 0, " + DB.Bind(pSamplerate) + ", false, " + DB.Bind(Type) + ", " + DB.Bind(evt.Reference) + ", " + DB.Bind(evt.PeakValue) + ", " + DB.Bind(evt.ChangeValue) + ", '', " + DB.Bind(RAW) + ", " + DB.Bind(RMS) + ")");
-//  } else if(evt.State == EVT_CLOSING) {
-//    DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", duration = " + DB.Bind(evt.Duration) + ", peak = " + DB.Bind(evt.PeakValue) + ", change = " + DB.Bind(evt.ChangeValue) + ", samples2 = " + DB.Bind(RAW) + ", rms2 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
-//  } else {
-//    DB.ExecSentenceNoResult("UPDATE events SET finished = TRUE, samples3 = " + DB.Bind(RAW) + ", rms3 = " + DB.Bind(RMS) + " WHERE starttime = " + DB.Bind(evt.Start));
-//  }
-//  evt.SamplesRAW_A = deque<vector<float> >();
-//  evt.SamplesRMS_A = deque<vector<float> >();
-//  evt.SamplesRAW_B = deque<vector<float> >();
-//  evt.SamplesRMS_B = deque<vector<float> >();
-//}
 void AnalyzerSoft::PublishAggreg(const Params_t &params, const string &topic) {
   if(pMQTTClient.socketfd == -1) return;
   json Msg = json::object();
@@ -962,44 +899,49 @@ void AnalyzerSoft::Analyzer_Func() {
   pAnalyzerLock.Unlock();
 }
 void AnalyzerSoft::Events_Func() {
-  uint32_t Pos = 0;
+  auto CopyCycles = [&](float *buff, const uint16_t count) -> float* {
+    buff = (float*)realloc(buff, sizeof(float) * pVoltageChannels * count);
+    for(uint16_t n = 0; n < count; n++) {
+      for(uint8_t i = 0; i < pVoltageChannels; i++) buff[i * count + n] = pPrevCycles[((pPrevCyclesPos + pPrevCyclesLen - count + n) % pPrevCyclesLen) * pVoltageChannels + i];
+    }
+    return buff;
+  };
+  auto CopySamples = [&](float *buff, const uint16_t count) -> float* {
+    buff = (float*)realloc(buff, sizeof(float) * pVoltageChannels * count);
+    for(uint16_t n = 0; n < count; n++) {
+      for(uint8_t i = 0; i < pVoltageChannels; i++) buff[i * count + n] = pPrevSamples[((pPrevSamplesPos + pPrevSamplesLen - count + n) % pPrevSamplesLen) * pVoltageChannels + i];
+    }
+    return buff;
+  };
+  uint32_t  Pos  = 0;
+  float    *Buff = NULL;
   for(uint8_t i = 0; i < pBlockCyclesCount; i++) {
-    float         Tolerance     = EVENT_RVC - ((pPrevStationary == true) ? 0.0 : EVENT_HYSTERESIS);
-    EventCycle_t *Cycle         = &pPrevCycles[pPrevCyclesPos];
-    uint16_t      CycleLen      = pBlockCycles[i];
-    bool          Stationary    = true;
-    float         RMS_Avg[3];
+    float    Tolerance  = EVENT_RVC - ((pPrevStationary == true) ? 0.0 : EVENT_HYSTERESIS);
+    bool     Stationary = true;
+    uint16_t CycleLen   = pBlockCycles[i];
+    float    Cycle[3];
+    float    RMS_Avg[3];
     for(uint8_t n = 0; n < pVoltageChannels; n++) {
-      Cycle->RMS[n] = 0.0;
-      RMS_Avg[n]    = 0.0;
-      float *Ptr    = &pVoltageSamples[n * pMaxSamples + Pos];
-      for(uint16_t j = 0; j < CycleLen; j++) Cycle->RMS[n] += pow(Ptr[j], 2);
-      Cycle->RMS[n] = sqrt(Cycle->RMS[n] / CycleLen);
-      for(uint16_t j = 0; j < pPrevCyclesLen; j++) RMS_Avg[n] += pPrevCycles[j].RMS[n];
-      RMS_Avg[n] = RMS_Avg[n] / pPrevCyclesLen;
+      Cycle[n] = 0.0;
+      float *Ptr   = &pVoltageSamples[n * pMaxSamples + Pos];
+      for(uint16_t j = 0; j < CycleLen; j++) Cycle[n] += pow(Ptr[j], 2);
+      Cycle[n] = sqrt(Cycle[n] / CycleLen);
+      RMS_Avg[n]   = Cycle[n];
+      for(uint16_t j = 0; j < pPrevCyclesLen; j++) RMS_Avg[n] += pPrevCycles[j * pVoltageChannels + n];
+      RMS_Avg[n] = RMS_Avg[n] / (pPrevCyclesLen + 1);
     }
     for(uint8_t n = 0; (n < pVoltageChannels) && (Stationary == true); n++) {
-      for(int j = 0; j < pPrevCyclesLen; j++) {
-        if(fabs(CalcChange(pPrevCycles[j].RMS[n], RMS_Avg[n])) > Tolerance) Stationary = false;
-      }
+      Stationary = (fabs(CalcChange(Cycle[n], RMS_Avg[n])) > Tolerance) ? false : Stationary;
+      for(int j = 0; j < pPrevCyclesLen; j++) Stationary = (fabs(CalcChange(pPrevCycles[j * pVoltageChannels + n], RMS_Avg[n])) > Tolerance) ? false : Stationary;
     }
     if(pEvent.Type != EVT_NONE) {
-      if(pEvent.CyclesDuration == (pPrevCyclesLen - 1)) {
-        Database DB(Serial);
-        float *CyclesValues = (float*)malloc(sizeof(float) * pVoltageChannels * (pPrevCyclesLen - 1));
-        for(uint16_t n = 0; n < (pPrevCyclesLen - 1); n++) {
-          for(uint8_t i = 0; i < pVoltageChannels; i++) CyclesValues[i * (pPrevCyclesLen - 1) + n] = pPrevCycles[(pPrevCyclesPos + 1 + n) % pPrevCyclesLen].RMS[i];
-        }
-        DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CyclesValues, pVoltageChannels, pPrevCyclesLen - 1) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RMS'");
-        free(CyclesValues);
-      }
       bool IsRunning = false;
       if(pEvent.Type == EVT_INTERRUPTION) {
-        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (-CalcChange(Cycle->RMS[n], pNominalVoltage) > (EVENT_INTERRUPTION - EVENT_INTERRUPTION_HYSTERESIS));
+        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (-CalcChange(Cycle[n], pNominalVoltage) > (EVENT_INTERRUPTION - EVENT_INTERRUPTION_HYSTERESIS));
       } else if(pEvent.Type == EVT_DIP) {
-        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (-CalcChange(Cycle->RMS[n], pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS));
+        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (-CalcChange(Cycle[n], pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS));
       } else if(pEvent.Type == EVT_SWELL) {
-        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (CalcChange(Cycle->RMS[n], pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS));
+        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (CalcChange(Cycle[n], pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS));
       } else if(pEvent.Type == EVT_RVC) {
         if(Stationary == true) {
           for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.ChangeValue[n] = RMS_Avg[n];
@@ -1008,152 +950,126 @@ void AnalyzerSoft::Events_Func() {
         }
       }
       if(IsRunning == false) {
-
-
-
-        string Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
-        LOGFile::Debug("Event '%s' finished on analyzer '%s'\n", Type.c_str(), Serial.c_str());
+        string  Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
+        LOGFile::Debug("Event '%s' closed on analyzer '%s'\n", Type.c_str(), Serial.c_str());
         Database DB(Serial);
         DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", reference = " + DB.Bind(pEvent.Reference, pVoltageChannels) + ", peak = " + DB.Bind(pEvent.PeakValue, pVoltageChannels) + ", change = " + DB.Bind(pEvent.ChangeValue, pVoltageChannels) + ", duration = " + DB.Bind(pEvent.SamplesDuration) + " WHERE starttime = " + DB.Bind(pEvent.Start));
-
-//        float *CyclesValues = (float*)malloc(sizeof(float) * pVoltageChannels * (pPrevCyclesLen - 1));
-//        for(uint16_t n = 0; n < (pPrevCyclesLen - 1); n++) {
-//          for(uint8_t i = 0; i < pVoltageChannels; i++) CyclesValues[i * (pPrevCyclesLen - 1) + n] = pPrevCycles[(pPrevCyclesPos + 1 + n) % pPrevCyclesLen].RMS[i];
-//        }
-//        DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples1) VALUES (" + DB.Bind(pEvent.Start) + ", 'RMS', " + DB.Bind(CyclesValues, pVoltageChannels, pPrevCyclesLen - 1) + ")");
-//        free(CyclesValues);
-
-        //Como se guarda un evento?
+        if(pEvent.CyclesDuration < pPrevCyclesLen) {
+          DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RMS'");
+        } else if(pEvent.CyclesDuration > pPrevCyclesLen) {
+          pEvent.CyclesDuration = (pEvent.CyclesDuration < (pPrevCyclesLen * 2)) ? pEvent.CyclesDuration - pPrevCyclesLen : pPrevCyclesLen;
+          DB.ExecSentenceNoResult("WITH tbl as (SELECT starttime as srctime, sampletype as srctype, samples2 as src, " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) +"::real[] as dst, generate_subscripts(samples2, 1) AS idx FROM events_ext) UPDATE events_ext SET samples2 = (SELECT array_agg(array(select unnest(src[idx:idx])) || array(select unnest(dst[idx:idx]))) FROM tbl WHERE srctype = sampletype and srctime = starttime) WHERE sampletype = 'RMS' and starttime = " + DB.Bind(pEvent.Start));
+        }
+        if(pEvent.SamplesDuration < pPrevSamplesLen) {
+          DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RAW'");
+        } else if(pEvent.SamplesDuration > pPrevSamplesLen) {
+          pEvent.SamplesDuration = (pEvent.SamplesDuration < (pPrevSamplesLen * 2)) ? pEvent.SamplesDuration - pPrevSamplesLen : pPrevSamplesLen;
+          DB.ExecSentenceNoResult("WITH tbl as (SELECT starttime as srctime, sampletype as srctype, samples2 as src, " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) +"::real[] as dst, generate_subscripts(samples2, 1) AS idx FROM events_ext) UPDATE events_ext SET samples2 = (SELECT array_agg(array(select unnest(src[idx:idx])) || array(select unnest(dst[idx:idx]))) FROM tbl WHERE srctype = sampletype and srctime = starttime) WHERE sampletype = 'RAW' and starttime = " + DB.Bind(pEvent.Start));
+        }
+        pEvent.CyclesDuration  = 0;
+        pEvent.SamplesDuration = 0;
         pEvents.push_back(pEvent);
         memset(&pEvent, 0, sizeof(pEvent));
       }
     }
     if(pSequence > 100) {
       for(uint8_t n = 0; n < pVoltageChannels; n++) {
-        if((pEvent.Type != EVT_INTERRUPTION) && (-CalcChange(Cycle->RMS[n], pNominalVoltage) > EVENT_INTERRUPTION)) {
+        if((pEvent.Type != EVT_INTERRUPTION) && (-CalcChange(Cycle[n], pNominalVoltage) > EVENT_INTERRUPTION)) {
           pEvent.Type = EVT_INTERRUPTION;
-          for(uint8_t i = 0; i < pVoltageChannels; i++) pEvent.Reference[i] = pNominalVoltage;
-        } else if((pEvent.Type != EVT_DIP) && (pEvent.Type != EVT_INTERRUPTION) && (-CalcChange(Cycle->RMS[n], pNominalVoltage) > EVENT_DIP_SWELL)) {
+          for(uint8_t i = 0; i < pVoltageChannels; i++) {
+            pEvent.Reference[i] = pNominalVoltage;
+            pEvent.PeakValue[i] = Cycle[i];
+          }
+        } else if((pEvent.Type != EVT_DIP) && (pEvent.Type != EVT_INTERRUPTION) && (-CalcChange(Cycle[n], pNominalVoltage) > EVENT_DIP_SWELL)) {
           pEvent.Type = EVT_DIP;
-          for(uint8_t i = 0; i < pVoltageChannels; i++) pEvent.Reference[i] = pNominalVoltage;
-        } else if((pEvent.Type != EVT_SWELL) && (CalcChange(Cycle->RMS[n], pNominalVoltage) > EVENT_DIP_SWELL)) {
+          for(uint8_t i = 0; i < pVoltageChannels; i++) {
+            pEvent.Reference[i] = pNominalVoltage;
+            pEvent.PeakValue[i] = Cycle[i];
+          }
+        } else if((pEvent.Type != EVT_SWELL) && (CalcChange(Cycle[n], pNominalVoltage) > EVENT_DIP_SWELL)) {
           pEvent.Type = EVT_SWELL;
-          for(uint8_t i = 0; i < pVoltageChannels; i++) pEvent.Reference[i] = pNominalVoltage;
+          for(uint8_t i = 0; i < pVoltageChannels; i++) {
+            pEvent.Reference[i] = pNominalVoltage;
+            pEvent.PeakValue[i] = Cycle[i];
+          }
         } else if((pEvent.Type == EVT_NONE) && (Stationary == false) && (pPrevStationary == true)) {
           pEvent.Type = EVT_RVC;
-          for(uint8_t i = 0; i < pVoltageChannels; i++) pEvent.Reference[i] = RMS_Avg[i];
-        }
-      }
-      if(pEvent.Type != EVT_NONE) {
-        pAggreg200MS.Flag = true;
-        if(pEvent.SamplesDuration == 0) {
-          string Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
-          LOGFile::Debug("New event '%s' started on analyzer '%s'\n", Type.c_str(), Serial.c_str());
-          pEvent.SamplesDuration = CycleLen;
-          pEvent.CyclesDuration = 1;
-          pEvent.Start = pAggreg200MS.Timestamp + (uint32_t)((Pos * 1000) / pSamplerate);
-          for(uint8_t i = 0; i < pVoltageChannels; i++) pEvent.PeakValue[i] = Cycle->RMS[i];
-          Database DB(Serial);
-          DB.ExecSentenceNoResult("INSERT INTO events(starttime, evttype, samplerate, reference, peak, change, notes, duration) VALUES (" + DB.Bind(pEvent.Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent.Reference, pVoltageChannels) + ", " + DB.Bind(pEvent.PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent.ChangeValue, pVoltageChannels) + ", '', 0)");
-          float *CyclesValues = (float*)malloc(sizeof(float) * pVoltageChannels * (pPrevCyclesLen - 1));
-          for(uint16_t n = 0; n < (pPrevCyclesLen - 1); n++) {
-            for(uint8_t i = 0; i < pVoltageChannels; i++) CyclesValues[i * (pPrevCyclesLen - 1) + n] = pPrevCycles[(pPrevCyclesPos + 1 + n) % pPrevCyclesLen].RMS[i];
-          }
-          DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples1) VALUES (" + DB.Bind(pEvent.Start) + ", 'RMS', " + DB.Bind(CyclesValues, pVoltageChannels, pPrevCyclesLen - 1) + ")");
-          free(CyclesValues);
-          //Copio muestras de inicio y ciclos
-          //El inicio en cycles esta claro, como estoy escribiendo en POS, tengo que leer
-
-
-
-        } else {
-          pEvent.SamplesDuration += CycleLen;
-          pEvent.CyclesDuration = pEvent.CyclesDuration + ((pEvent.CyclesDuration != (pPrevCyclesLen * 2)) ? 1 : 0);
-          if(pEvent.Type == EVT_INTERRUPTION) {
-            for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.PeakValue[n] = fmin(pEvent.PeakValue[n], Cycle->RMS[n]);
-          } else if(pEvent.Type == EVT_DIP) {
-            for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.PeakValue[n] = fmin(pEvent.PeakValue[n], Cycle->RMS[n]);
-          } else if(pEvent.Type == EVT_SWELL) {
-            for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.PeakValue[n] = fmax(pEvent.PeakValue[n], Cycle->RMS[n]);
-          } else if(pEvent.Type == EVT_RVC) {
-            for(uint8_t n = 0; n < pVoltageChannels; n++) {
-              if(fabs(pEvent.Reference[n] - Cycle->RMS[n]) > fabs(pEvent.Reference[n] - pEvent.PeakValue[n])) pEvent.PeakValue[n] = Cycle->RMS[n];
-            }
+          for(uint8_t i = 0; i < pVoltageChannels; i++) {
+            pEvent.Reference[i] = RMS_Avg[i];
+            pEvent.PeakValue[i] = Cycle[i];
           }
         }
       }
     }
-
-
-
-
-
-//          bool Found = false;
-//          for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
-//            if((it->Type != EVT_DIP) || (it->State != EVT_RUNNING) || (it->Duration > (EVENT_RAWENVELOPETIME * This->pSamplerate))) continue;
-//            it->Type = EVT_INTERRUPTION;
-//            Found = true;
-//            break;
-//          }
-//          if(Found == false) This->InitEvent(EVT_INTERRUPTION, vector<float>(RMS_Avg.size(), This->pNominalVoltage), Pos);
-//          Type = EVT_INTERRUPTION;
-//        }
-
-
-
-
-//        if(it->State == EVT_RUNNING) {
-//          it->Duration += CycleLen;
-//          if(it->Type != EVT_RVC) This->pAggreg200MS.Flag = true;
-//        } else {
-//          This->SaveEvent(*it);
-//        }
-//        it++;
-//      }
-//    }
-
-    //Check events state
-//    for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); ) {
-      //If closed evend finish post event period save it and remove from list
-//      if((it->State == EVT_CLOSING) && (it->SamplesRAW_A.size() == RequiredRAW) && (it->SamplesRMS_A.size() == RequiredRMS)) {
-//        it->State = EVT_CLOSED;
-//        This->SaveEvent(*it);
-//        This->pEvents.erase(it++);
-//      } else if(it->State == EVT_CLOSING) {
-//        it++;
-//      } else {
-//        //Check if RVC event can be closed, or update values
-//
-
-    //Insert current cycle samples in prev data buffers and in running events than need its
-//    for(uint n = 0; n < CycleLen; n++) {
-//      vector<float> Sample;
-//      for(uint j = 0; j < This->pVoltageSamples.size(); j++) Sample.push_back(This->pAggreg200MS.VoltageSamples[j][n + Pos]);
-//      This->pPrevSamples.push_back(Sample);
-//      if(This->pPrevSamples.size() > RequiredRAW) This->pPrevSamples.pop_front();
-//      for(list<Event_t>::iterator it = This->pEvents.begin(); it != This->pEvents.end(); it++) {
-//        if(it->SamplesRAW_A.size() < RequiredRAW) {
-//          it->SamplesRAW_A.push_back(Sample);
-//        } else if(it->State == EVT_RUNNING) {
-//          it->SamplesRAW_B.push_back(Sample);
-//          if(it->SamplesRAW_B.size() > RequiredRAW) it->SamplesRAW_B.pop_front();
-//        }
-//      }
-//    }
-    //Insert current cycle in prev data buffers and in running events than need its
-
-//    for(auto &Event : pEvents) {
-//      if(it->SamplesRMS_A.size() < RequiredRMS) {
-//        it->SamplesRMS_A.push_back(Cycle.RMS);
-//      } else if(it->State == EVT_RUNNING) {
-//        it->SamplesRMS_B.push_back(Cycle.RMS);
-//        if(it->SamplesRMS_B.size() > RequiredRMS) it->SamplesRMS_B.pop_front();
-//      }
-//    }
-    pPrevCyclesPos = (pPrevCyclesPos + 1) % pPrevCyclesLen;
-    Pos = Pos + CycleLen;
+    if(pEvent.Type != EVT_NONE) {
+      pAggreg200MS.Flag = true;
+      if(pEvent.SamplesDuration == 0) {
+        string Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
+        LOGFile::Debug("New event '%s' started on analyzer '%s'\n", Type.c_str(), Serial.c_str());
+        pEvent.Start = pAggreg200MS.Timestamp + (uint32_t)((Pos * 1000) / pSamplerate);
+        Database DB(Serial);
+        DB.ExecSentenceNoResult("INSERT INTO events(starttime, evttype, samplerate, reference, peak, change, notes, duration) VALUES (" + DB.Bind(pEvent.Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent.Reference, pVoltageChannels) + ", " + DB.Bind(pEvent.PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent.ChangeValue, pVoltageChannels) + ", '', 0)");
+        DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples1) VALUES (" + DB.Bind(pEvent.Start) + ", 'RMS', " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + ")");
+        DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples1) VALUES (" + DB.Bind(pEvent.Start) + ", 'RAW', " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) + ")");
+      } else {
+        if(pEvent.Type == EVT_INTERRUPTION) {
+          for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.PeakValue[n] = fmin(pEvent.PeakValue[n], Cycle[n]);
+        } else if(pEvent.Type == EVT_DIP) {
+          for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.PeakValue[n] = fmin(pEvent.PeakValue[n], Cycle[n]);
+        } else if(pEvent.Type == EVT_SWELL) {
+          for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.PeakValue[n] = fmax(pEvent.PeakValue[n], Cycle[n]);
+        } else if(pEvent.Type == EVT_RVC) {
+          for(uint8_t n = 0; n < pVoltageChannels; n++) {
+            if(fabs(pEvent.Reference[n] - Cycle[n]) > fabs(pEvent.Reference[n] - pEvent.PeakValue[n])) pEvent.PeakValue[n] = Cycle[n];
+          }
+        }
+      }
+    }
+    for(uint8_t n = 0; n < pVoltageChannels; n++) pPrevCycles[pPrevCyclesPos * pVoltageChannels + n] =  Cycle[n];
+    pPrevCyclesPos  = (pPrevCyclesPos + 1) % pPrevCyclesLen;
+    if(pEvent.Type != EVT_NONE) {
+      pEvent.CyclesDuration++;
+      if(pEvent.CyclesDuration == pPrevCyclesLen) {
+        Database DB(Serial);
+        DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RMS'");
+      }
+    }
+    for(auto &Event : pEvents) {
+      Event.CyclesDuration++;
+      if(Event.CyclesDuration == pPrevCyclesLen) {
+        Database DB(Serial);
+        DB.ExecSentenceNoResult("UPDATE events_ext SET samples3 = " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + " WHERE starttime = " + DB.Bind(Event.Start) + " AND sampletype = 'RMS'");
+      }
+    }
+    for(uint16_t j = 0; j < CycleLen; j++) {
+      for(uint8_t n = 0; n < pVoltageChannels; n++) pPrevSamples[pPrevSamplesPos * pVoltageChannels + n] = pVoltageSamples[n * pMaxSamples + Pos + j];
+      pPrevSamplesPos = (pPrevSamplesPos + 1) % pPrevSamplesLen;
+      if(pEvent.Type != EVT_NONE) {
+        pEvent.SamplesDuration++;
+        if(pEvent.SamplesDuration == pPrevSamplesLen) {
+          Database DB(Serial);
+          DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RAW'");
+        }
+      }
+      for(auto &Event : pEvents) {
+        Event.SamplesDuration++;
+        if(Event.SamplesDuration == pPrevSamplesLen) {
+          Database DB(Serial);
+          DB.ExecSentenceNoResult("UPDATE events_ext SET samples3 = " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) + " WHERE starttime = " + DB.Bind(Event.Start) + " AND sampletype = 'RAW'");
+        }
+      }
+    }
+    while(pEvents.size() != 0) {
+      Event_t *Tmp = &pEvents.front();
+      if((Tmp->SamplesDuration < pPrevSamplesLen) || (Tmp->CyclesDuration < pPrevCyclesLen)) break;
+      string Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
+      LOGFile::Debug("Event '%s' on analyzer '%s' finished\n", Type.c_str(), Serial.c_str());
+      pEvents.pop_front();
+    }
+    Pos             = Pos + CycleLen;
     pPrevStationary = Stationary && (pEvent.Type == EVT_NONE);
   }
+  free(Buff);
 }
 void AnalyzerSoft::FFT_Func(FFTChannel_t *ch) {
   pthread_mutex_lock(&pFFTMutex);

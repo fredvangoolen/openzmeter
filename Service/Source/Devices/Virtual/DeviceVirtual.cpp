@@ -35,8 +35,10 @@ DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of r
   Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial)));
 }
 DeviceVirtual::~DeviceVirtual() {
+  LOGFile::Info("Stopping device with serial '%s'\n", Serial.c_str());
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
+  LOGFile::Info("Device with serial '%s' stopped\n", Serial.c_str());
 }
 json DeviceVirtual::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
