@@ -96,6 +96,13 @@ class AnalyzerSoft final : public Analyzer {
       float                    ChannelsZ1[3];
       float                    ChannelsZ2[3];
     } Filter_t;
+
+    typedef struct {
+      float PhaseOffset;
+      float FrequencyOffset;
+      float Bandwidth;
+    } PLL_t;
+
     typedef struct {
       string                   Name;
       uint8_t                  Priority;
