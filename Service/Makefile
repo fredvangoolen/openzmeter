@@ -11,6 +11,7 @@ EXECUTABLE_TARGET = Tmp/openZmeter
 EXECUTABLE_SOURCE = Source/Tools.cpp \
                     Source/Main.cpp \
                     Source/Database.cpp \
+										Source/GA.cpp \
 										Source/HTTPServer.cpp \
 										Source/SysSupport.cpp \
 										Source/Devices/DeviceManager.cpp \

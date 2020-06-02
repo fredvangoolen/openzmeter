@@ -27,6 +27,7 @@
 #include "Tools.h"
 #include "SysSupport.h"
 #include "Telegram.h"
+#include "GA.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace cctz;
@@ -506,12 +507,6 @@ void AnalyzerSoft::NormalizeAggreg(Params_t &params) {
   for(uint8_t n = 0; n < pVoltageChannels; n++) params.Apparent_Power[n] = params.Apparent_Power[n] / params.AggregSamples;
   params.AggregSamples = 1;
 }
-//bool AnalyzerSoft::FindRunningEvent(const uint32_t mask) {
-//  for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); it++) {
-//    if((it->Type & mask) && (it->State == EVT_RUNNING)) return true;
-//  }
-//  return false;
-//}
 void AnalyzerSoft::SaveAggreg(Params_t &params) {
   if(params.AggregSamples == 0) return;
   SetOnline();
@@ -741,13 +736,29 @@ void AnalyzerSoft::Analyzer_Func() {
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
     pVoltageFFTWorker[j]->Wait();
     pCurrentFFTWorker[j]->Wait();
+
+    GAVector V;
+    GAVector I;
+
+
     for(uint8_t i = 0; i < 50; i++) {
       pAggreg200MS.Voltage_Harmonics[j * 50 + i] = BinPower(pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)]);
+      V.AddRectPhasor(i * 2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
       pAggreg200MS.Current_Harmonics[j * 50 + i] = BinPower(pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)]);
+      I.AddRectPhasor(i * 2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
+
+
+
       pAggreg200MS.Power_Harmonics[j * 50 + i]   = pAggreg200MS.Current_Harmonics[j * 50 + i] * pAggreg200MS.Voltage_Harmonics[j * 50 + i] * cos(CalcAngle(pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)], pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)]));
       if(i > 0) pAggreg200MS.Voltage_THD[j] += pAggreg200MS.Voltage_Harmonics[j * 50 + i];
       if(i > 0) pAggreg200MS.Current_THD[j] += pAggreg200MS.Current_Harmonics[j * 50 + i];
     }
+
+    GaPoTNumSinglePhaseBivector M = V * I;
+    printf("V = %s\n", V.ToString().c_str());
+    printf("I = %s\n", I.ToString().c_str());
+    printf("M = %s\n", M.ToString().c_str());
+
     pAggreg200MS.Voltage_Phase[j] = (j == 0) ? 0.0 : CalcAngle(pVoltageFFT[j * pMaxFFTSamples + 10], pVoltageFFT[10]) * 180.0 / M_PI;
     pAggreg200MS.Voltage_THD[j] = (pAggreg200MS.Voltage_THD[j] / pAggreg200MS.Voltage_Harmonics[j * 50]) * 100.0;
     pAggreg200MS.Apparent_Power[j] = pAggreg200MS.Voltage[j] * pAggreg200MS.Current[j];

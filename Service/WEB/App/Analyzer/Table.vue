@@ -81,7 +81,7 @@
       OnlineStatus: function(value, close) {
         return (value === true) ? '&#9635;' : '&#9633;';
       },
-      Select: function(analyzer) {
+      Select: function(analyzer, close) {
         this.$emit('update:analyzer', null);
         this.ShowSpinner = true;
         localStorage.setItem('Analyzer', analyzer);
