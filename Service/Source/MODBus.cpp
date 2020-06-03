@@ -1,189 +1,142 @@
-//#include <Arduino.h>
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
+#include <poll.h>
 #include "MODBus.h"
-//
-//
-//ModbusTCPSlave::ModbusTCPSlave(void)
-//#ifdef MB_ETHERNET
-//    MBServer(MB_PORT)
-//    #endif
-//#ifdef MB_CC3000
-//    MBClient(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ, ADAFRUIT_CC3000_VBAT, SPI_CLOCK_DIVIDER),
-//    MBServer(MB_PORT)
-//    #endif
-//#ifdef MB_ESP8266
-//    MBServer(MB_PORT)
-//    #endif
-//{
-//}
-//#ifdef MB_ETHERNET
-//void ModbusTCPSlave::begin(){
-//    byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-//    pinMode(LED_PIN, OUTPUT);
-//    digitalWrite(LED_PIN, LOW);
-//    #ifdef MBDebug
-//    Serial.begin(9600);
-//    Serial.print(F("Requesting DHCP ..."));
-//    #endif
-//    if (Ethernet.begin(mac) == 0) {
-//        #ifdef MBDebug
-//        Serial.println("failed");
-//        #endif
-//        while (1);
-//    }
-//    #ifdef MBDebug
-//    else
-//        Serial.println();
-//
-//    Serial.print(F("Listening on "));
-//    for (byte thisByte = 0; thisByte < 4; thisByte++) {
-//        Serial.print(Ethernet.localIP()[thisByte], DEC);
-//        Serial.print(thisByte < 3 ? "." : "");
-//    }
-//    Serial.print(":");
-//    Serial.print(MB_PORT);
-//    Serial.println(" ...");
-//    #endif
-//    digitalWrite(LED_PIN, HIGH);
-//}
-//void ModbusTCPSlave::begin(byte ip[4],uint8_t gateway[4],uint8_t subnet[4]){
-//    byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-//    pinMode(LED_PIN, OUTPUT);
-//    digitalWrite(LED_PIN, LOW);
-//    Ethernet.begin(mac,ip,gateway,subnet);
-//    #ifdef MBDebug
-//    Serial.begin(9600);
-//    Serial.print(F("Listening on "));
-//    for (byte thisByte = 0; thisByte < 4; thisByte++) {
-//        Serial.print(ip[thisByte], DEC);
-//        Serial.print(thisByte < 3 ? "." : "");
-//    }
-//    Serial.print(F(":"));
-//    Serial.print(MB_PORT);
-//    Serial.println(" ...");
-//    #endif
-//    digitalWrite(LED_PIN, HIGH);
-//}
-//#endif
-//#ifdef MB_CC3000
-//void ModbusTCPSlave::begin(const char *ssid, const char *key, uint8_t secmode){
-//    pinMode(LED_PIN, OUTPUT);
-//    digitalWrite(LED_PIN, LOW);
-//    MBClient.begin();
-//    #ifdef MBDebug
-//    Serial.print(F("Connecting to ")); Serial.print(ssid); Serial.println(F(" ..."));
-//    #endif
-//    MBClient.connectToAP(ssid, key, secmode);
-//    while (!MBClient.checkDHCP())
-//        delay(100);
-//    uint32_t ipAddress, netmask, gateway, dhcpserv, dnsserv;
-//    MBClient.getIPAddress(&ipAddress, &netmask, &gateway, &dhcpserv, &dnsserv);
-//    #ifdef MBDebug
-//    Serial.print(F("Listening on "));
-//    MBClient.printIPdotsRev(ipAddress);
-//    Serial.print(F(":"));
-//    Serial.println(MB_PORT);
-//    #endif
-//    digitalWrite(LED_PIN, HIGH);
-//    MBServer.begin();
-//}
-//#endif
-//#ifdef MB_ESP8266
-//void ModbusTCPSlave::begin(const char *ssid, const char *key){
-//    pinMode(LED_PIN, OUTPUT);
-//    digitalWrite(LED_PIN, LOW);
-//    ledPinStatus = LOW;
-//    #ifdef MBDebug
-//    Serial.begin(115200);
-//    // Connect to WiFi network
-//    Serial.println();
-//    Serial.println();
-//    Serial.print("Connecting to ");
-//    Serial.println(ssid);
-//    #endif
-//
-//    WiFi.begin(ssid, key);
-//
-//    while (WiFi.status() != WL_CONNECTED) {
-//        // Blink the LED
-//        digitalWrite(LED_PIN, ledPinStatus); // Write LED high/low
-//        ledPinStatus = (ledPinStatus == HIGH) ? LOW : HIGH;
-//        delay(100);
-//        #ifdef MBDebug
-//        Serial.print(".");
-//        #endif
-//    }
-//    #ifdef MBDebug
-//    Serial.println("");
-//    Serial.println("WiFi connected");
-//    #endif
-//
-//    #ifdef MBDebug
-//    Serial.print("IP address: ");
-//    Serial.println(WiFi.localIP());
-//    Serial.print("WiFi signal");
-//    Serial.println(WiFi.RSSI());
-//    #endif
-//
-//    // Start the server
-//    digitalWrite(LED_PIN, HIGH);
-//    MBServer.begin();
-//    #ifdef MBDebug
-//    Serial.print(F("Listening on "));
-//    Serial.print(MB_PORT);
-//    Serial.println(" ...");
-//    #endif
-//}
-//void ModbusTCPSlave::begin(const char *ssid, const char *key,uint8_t ip[4],uint8_t gateway[4],uint8_t subnet[4]){
-//    pinMode(LED_PIN, OUTPUT);
-//    digitalWrite(LED_PIN, LOW);
-//    ledPinStatus = LOW;
-//#ifdef MBDebug
-//    Serial.begin(115200);
-//    // Connect to WiFi network
-//    Serial.println();
-//    Serial.println();
-//    Serial.print("Connecting to ");
-//    Serial.println(ssid);
-//#endif
-//
-//    WiFi.config(IPAddress(ip), IPAddress(gateway), IPAddress(subnet));
-//
-//    WiFi.begin(ssid, key);
-//
-//    while (WiFi.status() != WL_CONNECTED) {
-//        // Blink the LED
-//        digitalWrite(LED_PIN, ledPinStatus); // Write LED high/low
-//        ledPinStatus = (ledPinStatus == HIGH) ? LOW : HIGH;
-//        delay(100);
-//#ifdef MBDebug
-//        Serial.print(".");
-//#endif
-//    }
-//#ifdef MBDebug
-//    Serial.println("");
-//    Serial.println("WiFi connected");
-//#endif
-//
-//#ifdef MBDebug
-//    Serial.print("IP address: ");
-//    Serial.println(WiFi.localIP());
-//    Serial.print("WiFi signal");
-//    Serial.println(WiFi.RSSI());
-//#endif
-//
-//    // Start the server
-//    digitalWrite(LED_PIN, HIGH);
-//    MBServer.begin();
-//#ifdef MBDebug
-//    Serial.print(F("Listening on "));
-//    Serial.print(MB_PORT);
-//    Serial.println(" ...");
-//#endif
-//}
-//#endif
-//
-//void ModbusTCP::Thread(void *args) {
-//  ModbusTCP *This = (ModbusTCP*)args;
+// ---------------------------------------------------------------------------------------------------------------------
+pthread_mutex_t            ModbusTCP::pMutex       = PTHREAD_MUTEX_INITIALIZER;
+pthread_t                  ModbusTCP::pThread      = 0;
+volatile bool              ModbusTCP::pTerminate   = false;
+uint16_t                   ModbusTCP::pPort        = 502;
+uint32_t                   ModbusTCP::pUsedWorkers = 0;
+list<ModbusTCP::Worker_t*> ModbusTCP::pFreeWorkers;
+// ---------------------------------------------------------------------------------------------------------------------
+ModbusTCP::ModbusTCP() {
+  Configure(CheckConfig(ConfigManager::ReadConfig("/ModbusTCP")));
+  HTTPServer::RegisterCallback("getModbusTCP", GetModbusTCP);
+  HTTPServer::RegisterCallback("setModbusTCP", SetModbusTCP);
+}
+ModbusTCP::~ModbusTCP() {
+  LOGFile::Info("Stopping ModbusTCP server...\n");
+  HTTPServer::UnregisterCallback("getModbusTCP");
+  HTTPServer::UnregisterCallback("setModbusTCP");
+  if(pThread != 0) {
+    pTerminate = true;
+    pthread_join(pThread, NULL);
+  }
+  LOGFile::Info("ModbusTCP server stoped\n");
+}
+json ModbusTCP::CheckConfig(const json &config) {
+  json ConfigOUT = json::object();
+  ConfigOUT["Port"]    = 502;
+  ConfigOUT["Enabled"] = false;
+  if(config.is_object()) {
+    if(config["Port"].is_number_unsigned()) ConfigOUT["Port"] = config["Port"];
+    if(config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
+  }
+  return ConfigOUT;
+}
+void ModbusTCP::Configure(const json &config) {
+  pthread_mutex_lock(&pMutex);
+  ConfigManager::WriteConfig("/ModbusTCP", config);
+  bool     Enabled = config["Enabled"];
+  uint16_t Port    = config["Port"];
+  if(((Enabled == false) && (pThread != 0)) || (pPort != Port)) {
+    LOGFile::Info("Stopping ModbusTCP server...\n");
+    pTerminate = true;
+    pthread_join(pThread, NULL);
+    pThread = 0;
+    LOGFile::Info("ModbusTCP server stoped\n");
+  }
+  if((Enabled == true) && (pThread == 0)) {
+    pPort      = Port;
+    pTerminate = false;
+    LOGFile::Info("Starting ModbusTCP server on port %u...\n", pPort);
+    if(pthread_create(&pThread, NULL, Thread, NULL) != 0) {
+      pThread = 0;
+      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    } else {
+      pthread_setname_np(pThread, "ModbusTCP");
+    }
+  }
+  pthread_mutex_unlock(&pMutex);
+}
+void ModbusTCP::GetModbusTCP(const json &params, Response &response) {
+
+}
+void ModbusTCP::SetModbusTCP(const json &params, Response &response) {
+
+}
+void *ModbusTCP::Thread(void *) {
+  sockaddr_in Server;
+  pollfd      Poll;
+  int         optval = 1;
+  int         Sock   = socket(AF_INET, SOCK_STREAM, 0);
+	if(Sock < 0) {
+		LOGFile::Error("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return NULL;
+  }
+  setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));
+	Server.sin_family = AF_INET;
+	Server.sin_addr.s_addr = INADDR_ANY;
+	Server.sin_port = htons(pPort);
+	if(bind(Sock, (sockaddr *)&Server, sizeof(Server)) < 0) {
+		LOGFile::Error("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    return NULL;
+  }
+  listen(Sock, 5);
+  Poll.events = POLLIN;
+  Poll.fd = Sock;
+  while(!pTerminate) {
+    Poll.revents = 0;
+    if(poll(&Poll, 1, 100) == 1) {
+      Worker_t *Tmp = NULL;
+      pthread_mutex_lock(&pMutex);
+      pUsedWorkers++;
+      if(pFreeWorkers.size() > 0) {
+        Tmp = pFreeWorkers.front();
+        pFreeWorkers.pop_front();
+      }
+      pthread_mutex_unlock(&pMutex);
+      if(Tmp == NULL) {
+        Tmp         = new Worker_t;
+        Tmp->Thread = new Worker("ModbusTCPWorker", [](void *param) {
+          Worker_t *Work = (Worker_t*)param;
+          Connection_Handle(Work->ClientSock, Work->Client);
+          close(Work->ClientSock);
+          pthread_mutex_lock(&pMutex);
+          Work->LastTime = Tools::GetTime64();
+          pFreeWorkers.push_front(Work);
+          pUsedWorkers--;
+          pthread_mutex_unlock(&pMutex);
+        }, 15);
+      }
+      if(Tmp != NULL) {
+        int Size        = sizeof(sockaddr_in);
+        Tmp->ClientSock = accept(Sock, (sockaddr *)&Tmp->Client, (socklen_t*)&Size);
+        Tmp->Thread->Run(Tmp);
+      }
+    }
+	}
+	return NULL;
+}
+void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &client) {
+  char AddrBuff[INET_ADDRSTRLEN];
+  inet_ntop(AF_INET, &client.sin_addr, AddrBuff, sizeof(AddrBuff));
+  LOGFile::Debug("New Modbus connection from '%s'\n", AddrBuff);
+
 //    boolean flagClientConnected = 0;
 //    byte byteFN = MB_FC_NONE;
 //    int Start;
@@ -336,4 +289,4 @@
 //        #endif
 //        flagClientConnected = 0;
 //  }
-//}
+}

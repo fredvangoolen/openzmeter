@@ -15,11 +15,36 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <pthread.h>
+#include "nlohmann/json.h"
+#include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
-class MODBus {
+using json = nlohmann::json;
+// ---------------------------------------------------------------------------------------------------------------------
+class ModbusTCP final {
+  private :
+    typedef struct {
+      uint64_t       LastTime;     //Last time event
+      Worker        *Thread;
+      sockaddr_in    Client;
+      int            ClientSock;
+    } Worker_t;
+  private :
+    static pthread_mutex_t pMutex;
+    static pthread_t       pThread;
+    static volatile bool   pTerminate;
+    static uint16_t        pPort;
+    static list<Worker_t*> pFreeWorkers;
+    static uint32_t        pUsedWorkers;
+  private :
+    static json  CheckConfig(const json &config);
+    static void  Configure(const json &config);
+    static void *Thread(void *args);
+    static void  Connection_Handle(const int clientSock, const sockaddr_in &client);
+    static void  GetModbusTCP(const json &params, Response &response);
+    static void  SetModbusTCP(const json &params, Response &response);
   public :
-    MODBus();
-    ~MODBus();
+    ModbusTCP();
+    ~ModbusTCP();
 };
 //#ifndef ModbusTCPSlave_h
 //#define ModbusTCPSlave_h
@@ -85,14 +110,13 @@ class MODBus {
 //#define MB_TCP_REGISTER_START         8
 //#define MB_TCP_REGISTER_NUMBER         10
 //
-class ModbusTCP {
-private :
-  pthread_t   pThread;
-  volatile bool        pTerminate;
-private :
-  void *Thread(void *args);
-  public:
-    ModbusTCP();
+
+
+//class ModbusTCP {
+//private :
+
+//  public:
+//    ModbusTCP();
 //#ifdef MB_ETHERNET
 //    void begin();
 //    void begin(uint8_t ip[4],uint8_t gateway[4],uint8_t subnet[4]);
@@ -124,6 +148,6 @@ private :
 //#ifdef MB_ESP8266
 //    WiFiServer MBServer;
 //#endif
-};
+//};
 
 //#endif
