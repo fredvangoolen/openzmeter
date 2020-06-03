@@ -23,6 +23,7 @@
 #include "Devices/DeviceManager.h"
 #include "SysSupport.h"
 #include "Tariffs/ESIOS.h"
+#include "MODBus.h"
 //---------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 volatile bool Terminate = false;
@@ -75,6 +76,8 @@ int main(int argc, char** argv) {
   DeviceManager DeviceManager;
   /* Create ESIOS */
   ESIOS Esios;
+  /* Create ModbusTCP */
+  ModbusTCP Modbus;
 
   pthread_setname_np(pthread_self(), "openZmeter");
   nice(15);
