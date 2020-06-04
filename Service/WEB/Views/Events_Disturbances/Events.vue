@@ -18,7 +18,7 @@
             <button type="button" class="btn btn-xs btn-success" @click="Edit(props.rowData)">Add notes</button>
             <button type="button" class="btn btn-xs btn-default" @click="RMS(props.rowData)">RMS</button>
             <button type="button" class="btn btn-xs btn-default" @click="RAW(props.rowData)">Wave</button>
-            <button type="button" class="btn btn-danger btn-xs"  @click="Delete(props.rowIndex)">Delete</button>
+            <button type="button" class="btn btn-danger btn-xs"  @click="Delete(props.rowData)">Delete</button>
           </div>
         </template>
       </vuetable>
@@ -59,6 +59,7 @@
         var Events = [];
         if(this.events == null) return [];
         for(var x = 0; x < this.events.StartTime.length; x++) {
+          if(this.events.Deleted[x] == true) continue;
           var Event = { id: x,
                         StartTime: this.events.StartTime[x],
                         Date: this.analyzer.FormatDateTime(this.events.StartTime[x]),
@@ -100,12 +101,8 @@
       UpdateEvent: function(event) {
         this.View = null;
         if(event == null) return;
-        for(var x = 0; x < this.Events.length; x++) {
-          if((this.Events[x].StartTime == event.StartTime) && (this.Events[x].Type == event.Type)) {
-            this.Events[x].Notes = event.Notes;
-            break;
-          }
-        }
+        this.events.Notes[event.id] = event.Notes;
+        this.$emit('update:events', this.events);
       },
       RMS: function(evt) {
         this.ShowSpinner = true;
@@ -140,22 +137,25 @@
         if(confirm('Delete ' + Selection.length + ' event(s)?') == false) return;
         this.ShowSpinner = true;
         for(var n = 0; n < Selection.length; n++) {
-          console.log("borrando evento " + this.Events[Selection[n]].StartTime);
+          this.$http.post('delEvent', { StartTime: Selection[n].StartTime, Analyzer: this.analyzer.Analyzer }).then(
+            (result) => {
+              this.events.Deleted[Selection[n].id] = true;
+              this.$emit('update:events', this.events);
+            }
+          );
         }
         this.ShowSpinner = false;
       },
       Delete: function(evt) {
-        var Analyzer = this.$root.SelectedAnalyzer;
-        if(confirm("Delete selected event?")){
-          $.ajax({ url: 'delEvent', timeout: 20000, type: 'POST', dataType: 'text', contentType: 'application/json', data: JSON.stringify({ StartTime: this.Events[evt].StartTime, Analyzer: Analyzer.Analyzer, Type: this.Events[evt].Type }),
-            success: function(result) {
-              this.Events.splice(evt, 1);
-              this.$refs.table.setData( { data: this.Events });
-            }.bind(this)
-          });
+        if(confirm("Delete selected event?")) {
+          this.$http.post('delEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer }).then(
+            (result) => {
+              this.events.Deleted[evt.id] = true;
+              this.$emit('update:events', this.events);
+            }
+          );
         }
       },
-
       Export: function() {
         var Export = [['Date', 'Type', 'Duration', 'ΔU (V)', 'Notes']];
         for(var i = 0; i < this.Events.length; i++) Export.push([this.Events[i].StartTime, this.Events[i].Type, this.Round(this.Events[i].SampleDuration / this.Events[i].SampleRate, 3), this.Round(this.Events[i].Diff, 3), this.Events[i].Notes]);

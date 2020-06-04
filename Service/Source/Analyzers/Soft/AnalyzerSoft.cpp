@@ -737,27 +737,24 @@ void AnalyzerSoft::Analyzer_Func() {
     pVoltageFFTWorker[j]->Wait();
     pCurrentFFTWorker[j]->Wait();
 
-    GAVector V;
-    GAVector I;
-
+//    GAVector V;
+//    GAVector I;
 
     for(uint8_t i = 0; i < 50; i++) {
       pAggreg200MS.Voltage_Harmonics[j * 50 + i] = BinPower(pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)]);
-      V.AddRectPhasor(i * 2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
+//      V.AddRectPhasor(i * 2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
       pAggreg200MS.Current_Harmonics[j * 50 + i] = BinPower(pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)]);
-      I.AddRectPhasor(i * 2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
-
-
+//      I.AddRectPhasor(i * 2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
 
       pAggreg200MS.Power_Harmonics[j * 50 + i]   = pAggreg200MS.Current_Harmonics[j * 50 + i] * pAggreg200MS.Voltage_Harmonics[j * 50 + i] * cos(CalcAngle(pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)], pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)]));
       if(i > 0) pAggreg200MS.Voltage_THD[j] += pAggreg200MS.Voltage_Harmonics[j * 50 + i];
       if(i > 0) pAggreg200MS.Current_THD[j] += pAggreg200MS.Current_Harmonics[j * 50 + i];
     }
 
-    GaPoTNumSinglePhaseBivector M = V * I;
-    printf("V = %s\n", V.ToString().c_str());
-    printf("I = %s\n", I.ToString().c_str());
-    printf("M = %s\n", M.ToString().c_str());
+//    GaPoTNumSinglePhaseBivector M = V * I;
+//    printf("V = %s\n", V.ToString().c_str());
+//    printf("I = %s\n", I.ToString().c_str());
+//    printf("M = %s\n", M.ToString().c_str());
 
     pAggreg200MS.Voltage_Phase[j] = (j == 0) ? 0.0 : CalcAngle(pVoltageFFT[j * pMaxFFTSamples + 10], pVoltageFFT[10]) * 180.0 / M_PI;
     pAggreg200MS.Voltage_THD[j] = (pAggreg200MS.Voltage_THD[j] / pAggreg200MS.Voltage_Harmonics[j * 50]) * 100.0;
@@ -1676,11 +1673,9 @@ void AnalyzerSoft::SetEvent(const json &params, Response &response) {
 void AnalyzerSoft::DelEvent(const json &params, Response &response) {
   if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Type") == false) || (params["Type"].is_string() == false)) return HTTPServer::FillResponse(response, "'Type' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Database DB(Serial);
   uint64_t ID = params["StartTime"];
-  string Type = params["Type"];
-  bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
+  bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID));
   HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::GetPrices(const json &params, Response &response) {

@@ -80,7 +80,7 @@
         <detail-tabs :tabs="['Waveform', 'Harmonics', 'GA', 'Evolution', 'Distribution', 'Parameters', 'Lissajou']" storage="PowerDetailTab" v-model="ActiveTab"></detail-tabs>
         <waveform v-if="ActiveTab=='Waveform'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></waveform>
         <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
-        <ga v-if="ActiveTab=='GA'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
+        <ga v-if="ActiveTab=='GA'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></ga>
         <evolution v-if="ActiveTab=='Evolution'" :data="TransferCubism.Data" :analyzer="analyzer"></evolution>
         <distribution v-if="ActiveTab=='Distribution'" :analyzer="analyzer"></distribution>
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>

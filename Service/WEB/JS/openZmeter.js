@@ -210,7 +210,7 @@ const openZmeter = {
             for(var n in result) {
               var After = ((result[n].body.StartTime.length > 0) && (Data.From != null) && (Data.From > result[n].body.StartTime[0]));
               for(var serie in result[n].body) {
-                if(Array.isArray(result[n].body[serie]) == false) continue
+                if(Array.isArray(result[n].body[serie]) == false) continue;
                 if((Data.From == null) || (Data.To == null))
                   Data[serie] = result[n].body[serie];
                 else if(After == true)
@@ -218,6 +218,12 @@ const openZmeter = {
                 else
                   Data[serie] = Data[serie].concat(result[n].body[serie]);
               }
+              if((Data.From == null) || (Data.To == null))
+                Data.Deleted = Array(result[n].body.StartTime.length).fill(false);
+              else if(After == true)
+                Data.Deleted = Array(result[n].body.StartTime.length).fill(false).concat(Data[serie]);
+              else
+                Data.Deleted = Data.Deleted.concat(Array(result[n].body.StartTime.length).fill(false));
             }
             Data.From = ReqRange[0];
             Data.To = ReqRange[1];

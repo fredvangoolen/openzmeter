@@ -66,7 +66,7 @@
     },
     methods: {
       Resize: function() {
-        this.Height = Math.min(600, this.$refs.Container.clientWidth - 30);
+        if(this.$refs.Container != null) this.Height = Math.min(600, this.$refs.Container.clientWidth - 30);
       },
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];

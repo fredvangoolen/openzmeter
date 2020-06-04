@@ -74,10 +74,16 @@ void ModbusTCP::Configure(const json &config) {
   pthread_mutex_unlock(&pMutex);
 }
 void ModbusTCP::GetModbusTCP(const json &params, Response &response) {
-
+  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  json Config = ConfigManager::ReadConfig("/ModbusTCP");
+  HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void ModbusTCP::SetModbusTCP(const json &params, Response &response) {
-
+  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Port") == false) || (params["Token"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Port' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  Configure(CheckConfig(params));
+  HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
 void *ModbusTCP::Thread(void *) {
   sockaddr_in Server;
@@ -133,9 +139,10 @@ void *ModbusTCP::Thread(void *) {
 	return NULL;
 }
 void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &client) {
-  char AddrBuff[INET_ADDRSTRLEN];
-  inet_ntop(AF_INET, &client.sin_addr, AddrBuff, sizeof(AddrBuff));
-  LOGFile::Debug("New Modbus connection from '%s'\n", AddrBuff);
+  char Buff[128];
+  inet_ntop(AF_INET, &client.sin_addr, Buff, sizeof(Buff));
+  LOGFile::Debug("New Modbus connection from '%s'\n", Buff);
+
 
 //    boolean flagClientConnected = 0;
 //    byte byteFN = MB_FC_NONE;
