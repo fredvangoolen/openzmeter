@@ -137,9 +137,9 @@
         if(confirm('Delete ' + Selection.length + ' event(s)?') == false) return;
         this.ShowSpinner = true;
         for(var n = 0; n < Selection.length; n++) {
-          this.$http.post('delEvent', { StartTime: Selection[n].StartTime, Analyzer: this.analyzer.Analyzer }).then(
+          this.$http.post('delEvent', { StartTime: this.events.StartTime[Selection[n]], Analyzer: this.analyzer.Analyzer }).then(
             (result) => {
-              this.events.Deleted[Selection[n].id] = true;
+              this.events.Deleted[Selection[n]] = true;
               this.$emit('update:events', this.events);
             }
           );
