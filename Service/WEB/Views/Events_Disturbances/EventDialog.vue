@@ -180,8 +180,8 @@
               canvas.textAlign = 'center';
               canvas.fillText("RVC peak", 0 , 0, g.height_);
               canvas.restore();
-              canvas.restore();
             }
+            canvas.restore();
           }
           canvas.restore();
         };
