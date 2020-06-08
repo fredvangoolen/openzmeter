@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
+#include <malloc.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
@@ -472,17 +473,17 @@ void AnalyzerSoft::AccumulateAggreg(Params_t &dst, const Params_t &src) {
   dst.Frequency += src.Frequency;
   dst.Unbalance += src.Unbalance;
   dst.Flag |= src.Flag;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Voltage[n] += pow(src.Voltage[n], 2.0);
-  for(uint8_t n = 0; n < pCurrentChannels; n++) dst.Current[n] += pow(src.Current[n], 2.0);
+  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Voltage[n] += src.Voltage[n] * src.Voltage[n];
+  for(uint8_t n = 0; n < pCurrentChannels; n++) dst.Current[n] += src.Current[n] * src.Current[n];
   for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Active_Power[n] += src.Active_Power[n];
   for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Reactive_Power[n] += src.Reactive_Power[n];
-  for(uint8_t n = 0; n < pCurrentChannels; n++) dst.Current_THD[n] += pow(src.Current_THD[n], 2.0);
+  for(uint8_t n = 0; n < pCurrentChannels; n++) dst.Current_THD[n] += src.Current_THD[n] * src.Current_THD[n];
   for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Phi[n] += src.Phi[n];
   for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Power_Factor[n] += src.Power_Factor[n];
-  for(uint8_t n = 0; n < (50 * pCurrentChannels); n++) dst.Current_Harmonics[n] += pow(src.Current_Harmonics[n], 2.0);
+  for(uint8_t n = 0; n < (50 * pCurrentChannels); n++) dst.Current_Harmonics[n] += src.Current_Harmonics[n] * src.Current_Harmonics[n];
   for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) dst.Power_Harmonics[n] += src.Power_Harmonics[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Voltage_THD[n] += pow(src.Voltage_THD[n], 2.0);
-  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) dst.Voltage_Harmonics[n] += pow(src.Voltage_Harmonics[n], 2.0);
+  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Voltage_THD[n] += src.Voltage_THD[n] * src.Voltage_THD[n];
+  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) dst.Voltage_Harmonics[n] += src.Voltage_Harmonics[n] * src.Voltage_Harmonics[n];
   for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Active_Energy[n] += src.Active_Energy[n];
   for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Voltage_Phase[n] += src.Voltage_Phase[n];
   for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Reactive_Energy[n] += src.Reactive_Energy[n];
@@ -657,7 +658,7 @@ float AnalyzerSoft::CalcAngle(const Complex_t &a, const Complex_t &b) {
   return Tmp;
 }
 float AnalyzerSoft::BinPower(const Complex_t &a) {
-  return sqrt(pow(a.Re, 2.0) + pow(a.Im, 2.0)) / M_SQRT2 * 2.0;
+  return sqrt(a.Re * a.Re + a.Im * a.Im) / M_SQRT2 * 2.0;
 }
 void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const AggregType &type) {
   auto AppendArray = [&](const string &serie, float *data, const uint8_t len) {
@@ -722,7 +723,7 @@ void AnalyzerSoft::Analyzer_Func() {
     float *ChV = &pVoltageSamples[j * pMaxSamples];
     float *ChC = &pCurrentSamples[j * pMaxSamples];
     for(uint16_t i = 0; i < pBlockSamples; i++) {
-      pAggreg200MS.Voltage[j] += pow(ChV[i], 2.0);
+      pAggreg200MS.Voltage[j] += ChV[i] * ChV[i];
       pAggreg200MS.Active_Power[j] += ChV[i] * ChC[i];
     }
     pAggreg200MS.Voltage[j] = sqrt(pAggreg200MS.Voltage[j] / pBlockSamples);
@@ -730,32 +731,19 @@ void AnalyzerSoft::Analyzer_Func() {
   }
   for(uint8_t j = 0; j < pCurrentChannels; j++) {
     float *Ch = &pCurrentSamples[j * pMaxSamples];
-    for(uint16_t i = 0; i < pBlockSamples; i++) pAggreg200MS.Current[j] += pow(Ch[i], 2.0);
+    for(uint16_t i = 0; i < pBlockSamples; i++) pAggreg200MS.Current[j] += Ch[i] * Ch[i];
     pAggreg200MS.Current[j] = sqrt(pAggreg200MS.Current[j] / pBlockSamples);
   }
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
     pVoltageFFTWorker[j]->Wait();
     pCurrentFFTWorker[j]->Wait();
-
-//    GAVector V;
-//    GAVector I;
-
     for(uint8_t i = 0; i < 50; i++) {
       pAggreg200MS.Voltage_Harmonics[j * 50 + i] = BinPower(pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)]);
-//      V.AddRectPhasor(i * 2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
       pAggreg200MS.Current_Harmonics[j * 50 + i] = BinPower(pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)]);
-//      I.AddRectPhasor(i * 2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
-
       pAggreg200MS.Power_Harmonics[j * 50 + i]   = pAggreg200MS.Current_Harmonics[j * 50 + i] * pAggreg200MS.Voltage_Harmonics[j * 50 + i] * cos(CalcAngle(pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)], pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)]));
       if(i > 0) pAggreg200MS.Voltage_THD[j] += pAggreg200MS.Voltage_Harmonics[j * 50 + i];
       if(i > 0) pAggreg200MS.Current_THD[j] += pAggreg200MS.Current_Harmonics[j * 50 + i];
     }
-
-//    GaPoTNumSinglePhaseBivector M = V * I;
-//    printf("V = %s\n", V.ToString().c_str());
-//    printf("I = %s\n", I.ToString().c_str());
-//    printf("M = %s\n", M.ToString().c_str());
-
     pAggreg200MS.Voltage_Phase[j] = (j == 0) ? 0.0 : CalcAngle(pVoltageFFT[j * pMaxFFTSamples + 10], pVoltageFFT[10]) * 180.0 / M_PI;
     pAggreg200MS.Voltage_THD[j] = (pAggreg200MS.Voltage_THD[j] / pAggreg200MS.Voltage_Harmonics[j * 50]) * 100.0;
     pAggreg200MS.Apparent_Power[j] = pAggreg200MS.Voltage[j] * pAggreg200MS.Current[j];
@@ -767,7 +755,7 @@ void AnalyzerSoft::Analyzer_Func() {
     pAggreg200MS.Power_Factor[j] = pAggreg200MS.Active_Power[j] / pAggreg200MS.Apparent_Power[j];
     pAggreg200MS.Reactive_Energy[j] = (pAggreg200MS.Reactive_Power[j] * pBlockSamples) / (pSamplerate * 3600.0);
   }
-  if(pMode != PHASE1) {
+  if((pMode == PHASE3N) || (pMode != PHASE3)) {
     complex<float> A(cos(120.0 * M_PI / 180.0), sin(120.0 * M_PI / 180.0));
     complex<float> V1(pVoltageFFT[0 * pMaxFFTSamples + 10].Re * M_SQRT2, pVoltageFFT[0 * pMaxFFTSamples + 10].Im * M_SQRT2);
     complex<float> V2(pVoltageFFT[1 * pMaxFFTSamples + 10].Re * M_SQRT2, pVoltageFFT[1 * pMaxFFTSamples + 10].Im * M_SQRT2);
@@ -932,7 +920,7 @@ void AnalyzerSoft::Events_Func() {
     for(uint8_t n = 0; n < pVoltageChannels; n++) {
       Cycle[n] = 0.0;
       float *Ptr   = &pVoltageSamples[n * pMaxSamples + Pos];
-      for(uint16_t j = 0; j < CycleLen; j++) Cycle[n] += pow(Ptr[j], 2);
+      for(uint16_t j = 0; j < CycleLen; j++) Cycle[n] += Ptr[j] * Ptr[j];
       Cycle[n] = sqrt(Cycle[n] / CycleLen);
       RMS_Avg[n]   = Cycle[n];
       for(uint16_t j = 0; j < pPrevCyclesLen; j++) RMS_Avg[n] += pPrevCycles[j * pVoltageChannels + n];
@@ -1366,6 +1354,38 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
   delete This;
   return NULL;
 }
+json AnalyzerSoft::CalcGA() {
+  json Result = json::object();
+  GAVector vGA;
+  GAVector iGA;
+  for(uint8_t j = 0; j < pVoltageChannels; j++) {
+    for(uint8_t i = 0; i < 50; i++) {
+      vGA.AddRectPhasor(i * 2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
+      iGA.AddRectPhasor(i * 2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
+    }
+  }
+  Result["vGA"] = vGA.ToString();
+  Result["iGA"] = iGA.ToString();
+  GaPoTNumBivector M = vGA * iGA;
+  Result["M"] = M.ToString();
+  float Ma = M.GetActiveTotal();
+  Result["Ma"] = Ma;
+  GaPoTNumBivector Mn = M.GetNonActivePart();
+  Result["Mn"] = Mn.ToString();
+  float Norm_M = M.Norm();
+  Result["Norm(M)"] = Norm_M;
+  float Norm_iGA = iGA.Norm();
+  Result["Norm(iGA)"] = Norm_iGA;
+  float Norm_vGA = vGA.Norm();
+  Result["Norm(vGA)"] = Norm_vGA;
+  float Norm_Ia = (vGA.Inverse() * Ma).Norm();
+  Result["Ia"] = Norm_Ia;
+  float Norm_In = (vGA.Inverse() * Mn).Norm();
+  Result["In"] = Norm_In;
+  auto PF = Ma / Norm_M;
+  Result["PF"] = PF;
+  return Result;
+}
 void AnalyzerSoft::PeriodicTasks() {
   LOGFile::Debug("Removing old data for analyzer '%s'\n", Serial.c_str());
   Database DB(Serial);
@@ -1594,6 +1614,8 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
         Result["Current_Samples"].push_back(json::array());
         for(uint16_t i = 0; i < pBlockSamples; i++) Result["Current_Samples"][n].push_back(pCurrentSamples[n * pMaxSamples + i]);
       }
+    } else if(Serie == "GA_POWER") {
+      Result["GA_Power"] = CalcGA();
     } else if(Serie == "SYS_STATS") {
       Result["Sys_Stats"] = SysSupport::GetSystemStatusJSON();
     } else {

@@ -18,6 +18,16 @@
 #include "nlohmann/json.h"
 #include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
+#define MODBUS_FUNC_NONE 0x00
+//#define MB_FC_READ_COILS 1
+//#define MB_FC_READ_DISCRETE_INPUT 2
+#define MODBUS_FUNC_READ_REGISTERS 0x03
+//#define MB_FC_READ_INPUT_REGISTERS 4        //implemented
+//#define MB_FC_WRITE_COIL 5
+//#define MB_FC_WRITE_REGISTER 6              //implemented
+//#define MB_FC_WRITE_MULTIPLE_COILS 15
+//#define MB_FC_WRITE_MULTIPLE_REGISTERS 16   //implemented
+// ---------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
 class ModbusTCP final {
@@ -28,6 +38,24 @@ class ModbusTCP final {
       sockaddr_in    Client;
       int            ClientSock;
     } Worker_t;
+    typedef struct {
+      uint16_t       TransactionID;
+      uint16_t       ProtocolID;
+      uint16_t       Length;
+      uint8_t        UnitID;
+      uint8_t        FunctionCode;
+      uint16_t       StartAddress;
+      uint16_t       QuantityRegisters;
+    } PacketIN_t;
+    typedef struct {
+      uint16_t       TransactionID;
+      uint16_t       ProtocolID;
+      uint16_t       Length;
+      uint8_t        UnitID;
+      uint8_t        FunctionCode;
+      uint8_t        ResponseLen;
+      uint8_t        ResponseBuffer[255];
+    } PacketOUT_t;
   private :
     static pthread_mutex_t pMutex;
     static pthread_t       pThread;
