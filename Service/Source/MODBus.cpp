@@ -88,13 +88,13 @@ void ModbusTCP::SetModbusTCP(const json &params, Response &response) {
 void *ModbusTCP::Thread(void *) {
   sockaddr_in Server;
   pollfd      Poll;
-  int         optval = 1;
+  int         Opt = 1;
   int         Sock   = socket(AF_INET, SOCK_STREAM, 0);
 	if(Sock < 0) {
 		LOGFile::Error("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
-  setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval , sizeof(int));
+  setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR, (const void *)&Opt , sizeof(int));
 	Server.sin_family = AF_INET;
 	Server.sin_addr.s_addr = INADDR_ANY;
 	Server.sin_port = htons(pPort);
@@ -132,6 +132,7 @@ void *ModbusTCP::Thread(void *) {
       if(Tmp != NULL) {
         int Size        = sizeof(sockaddr_in);
         Tmp->ClientSock = accept(Sock, (sockaddr *)&Tmp->Client, (socklen_t*)&Size);
+        fcntl(Tmp->ClientSock, F_SETFL, O_NONBLOCK);
         Tmp->Thread->Run(Tmp);
       }
     }
@@ -139,10 +140,40 @@ void *ModbusTCP::Thread(void *) {
 	return NULL;
 }
 void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &client) {
-  char Buff[128];
+  char        Buff[INET_ADDRSTRLEN];
+  PacketIN_t  PacketIN;
+  PacketOUT_t PacketOUT;
+  memset(&PacketIN,  0, sizeof(PacketIN_t));
+  memset(&PacketOUT, 0, sizeof(PacketOUT_t));
   inet_ntop(AF_INET, &client.sin_addr, Buff, sizeof(Buff));
   LOGFile::Debug("New Modbus connection from '%s'\n", Buff);
-
+  while(pTerminate == false) {
+    ssize_t Size = recv(clientSock, &PacketIN, sizeof(PacketIN), MSG_DONTWAIT);
+    if((Size == -1) && (errno == EAGAIN)) {
+      usleep(100000);
+      continue;
+    } else if(Size <= 0) {
+      break;
+    }
+    printf("MODBUS(%d) <- ", Size); for(uint8_t n = 0; n < Size; n++) printf(" %02X", ((uint8_t*)&PacketIN)[n]); printf("\n");
+    PacketIN.Length            = ntohs(PacketIN.Length);
+    PacketIN.StartAddress      = ntohs(PacketIN.StartAddress);
+    PacketIN.QuantityRegisters = ntohs(PacketIN.QuantityRegisters);
+    printf("Size: %u, Length: %u, Proto: %u, Registers: %u\n", Size, PacketIN.Length, PacketIN.ProtocolID, PacketIN.QuantityRegisters);
+    if((Size != 12) || (PacketIN.Length != 6) || (PacketIN.ProtocolID != 0x0000)) continue;
+    PacketOUT.TransactionID = PacketIN.TransactionID;
+    PacketOUT.UnitID        = PacketIN.UnitID;
+    PacketOUT.FunctionCode  = PacketIN.FunctionCode;
+    if(PacketIN.FunctionCode == MODBUS_FUNC_READ_REGISTERS) {
+      PacketOUT.ResponseLen = sizeof(uint16_t) * PacketIN.QuantityRegisters;
+      PacketOUT.Length      = htons(PacketOUT.ResponseLen + 3);
+      uint16_t *Ptr = (uint16_t*)&PacketOUT.ResponseBuffer;
+      for(uint8_t n = 0; n < 120; n++) *Ptr++ = n;
+    }
+    Size = send(clientSock, &PacketOUT, PacketOUT.ResponseLen + 9, 0);
+    printf("MODBUS(%d) -> ", Size);
+    for(uint8_t n = 0; n < Size; n++) printf(" %02X", ((uint8_t*)&PacketOUT)[n]);
+    printf("\n");
 
 //    boolean flagClientConnected = 0;
 //    byte byteFN = MB_FC_NONE;
@@ -151,18 +182,7 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
 //    int ByteDataLength;
 //    int MessageLength;
 //
-//    //****************** Read from socket ****************
-//    #ifdef MB_ETHERNET
-//        EthernetClient client = MBServer.available();
-//    #endif
-//    #ifdef MB_CC3000
-//        Adafruit_CC3000_ClientRef client = MBServer.available();
-//    #endif
-//    #ifdef MB_ESP8266
-//        WiFiClient client = MBServer.available();
-//    #endif
 //
-//  while (!This.pTerminate) {
 //    uint8_t byteFN = MB_FC_NONE;
 //    if(client.available())
 //    {
@@ -208,14 +228,6 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
 //            }
 //            MessageLength = ByteDataLength + 9;
 //            client.write((const uint8_t *)ByteArray,MessageLength);
-//            #ifdef MBDebug
-//                Serial.print("TX: ");
-//                for (byte thisByte = 0; thisByte <= MessageLength; thisByte++) {
-//                    Serial.print(ByteArray[thisByte], DEC);
-//                    Serial.print("-");
-//                }
-//                Serial.println();
-//            #endif
 //            byteFN = MB_FC_NONE;
 //            break;
 //
@@ -232,14 +244,6 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
 //            }
 //            MessageLength = ByteDataLength + 9;
 //            client.write((const uint8_t *)ByteArray,MessageLength);
-//            #ifdef MBDebug
-//                Serial.print("TX: ");
-//                for (byte thisByte = 0; thisByte <= MessageLength; thisByte++) {
-//                    Serial.print(ByteArray[thisByte], DEC);
-//                    Serial.print("-");
-//                }
-//                Serial.println();
-//            #endif
 //            byteFN = MB_FC_NONE;
 //            break;
 //
@@ -248,18 +252,6 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
 //            ByteArray[5] = 6; //Number of bytes after this one.
 //            MessageLength = 12;
 //            client.write((const uint8_t *)ByteArray,MessageLength);
-//            #ifdef MBDebug
-//                Serial.print("TX: ");
-//                for (byte thisByte = 0; thisByte <= MessageLength; thisByte++) {
-//                    Serial.print(ByteArray[thisByte], DEC);
-//                    Serial.print("-");
-//                }
-//                Serial.println();
-//                Serial.print("Write Holding Register: ");
-//                Serial.print(Start);
-//                Serial.print("=");
-//                Serial.println(MBHoldingRegister[Start]);
-//            #endif
 //            byteFN = MB_FC_NONE;
 //            break;
 //
@@ -287,13 +279,6 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
 //            byteFN = MB_FC_NONE;
 //            break;
 //    }
-//    }
-//    client.stop();
-//
-//    if (flagClientConnected == 1){
-//        #ifdef MBDebug
-//        Serial.println("client disonnected");
-//        #endif
-//        flagClientConnected = 0;
-//  }
+  }
+  LOGFile::Debug("Modbus connection terminated\n");
 }

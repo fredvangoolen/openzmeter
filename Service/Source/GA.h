@@ -24,64 +24,69 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class GaPoTNumSinglePhaseBivectorTerm final {
+class GaPoTNumBivectorTerm final {
   public :
     uint8_t TermId1;
     uint8_t TermId2;
-    double  Value;
+    float  Value;
   public :
     bool IsScalar();
-    GaPoTNumSinglePhaseBivectorTerm(uint8_t id1, uint8_t id2, double value);
+    GaPoTNumBivectorTerm(uint8_t id1, uint8_t id2, float value);
     string ToText();
     string ToString();
 };
 //----------------------------------------------------------------------------------------------------------------------
-class GaPoTNumSinglePhaseVectorTerm final {
+class GaPoTNumVectorTerm final {
   public :
     uint8_t TermId;
-    double  Value;
+    float  Value;
   public :
-    GaPoTNumSinglePhaseVectorTerm(uint8_t id, double value);
+    GaPoTNumVectorTerm(uint8_t id, float value);
+    GaPoTNumVectorTerm operator +(const GaPoTNumVectorTerm &t2);
     string ToText();
     string ToString();
 };
 //----------------------------------------------------------------------------------------------------------------------
-class GaPoTNumRectPhasor final {
-  public :
-    uint8_t Id;
-    double  XValue;
-    double  YValue;
-  public :
-    GaPoTNumRectPhasor operator +(const GaPoTNumRectPhasor &p2);
-    GaPoTNumRectPhasor(uint8_t id, double x, double y);
-    vector<GaPoTNumSinglePhaseVectorTerm> GetTerms();
-    string ToText();
-    string ToString();
-};
+//class GaPoTNumRectPhasor final {
+//  public :
+//    uint8_t Id;
+//    float  XValue;
+//    float  YValue;
+//  public :
+//    GaPoTNumRectPhasor operator +(const GaPoTNumRectPhasor &p2);
+//    GaPoTNumRectPhasor(uint8_t id, float x, float y);
+//    vector<GaPoTNumVectorTerm> GetTerms();
+//    string ToText();
+//    string ToString();
+//};
 //----------------------------------------------------------------------------------------------------------------------
-class GaPoTNumSinglePhaseBivector final {
-  private :
-    map<uint16_t, GaPoTNumSinglePhaseBivectorTerm> _termsDictionary;
+class GaPoTNumBivector final {
   public :
-  GaPoTNumSinglePhaseBivector();
-  void AddTerm(GaPoTNumSinglePhaseBivectorTerm term);
-  void AddTerm(uint8_t id1, uint8_t id2, double value);
-  vector<GaPoTNumSinglePhaseBivectorTerm> GetTerms();
-  string TermsToText();
-  string ToString();
+    map<uint16_t, GaPoTNumBivectorTerm> _termsDictionary;
+  public :
+    GaPoTNumBivector();
+    float GetActiveTotal();
+    float Norm();
+    GaPoTNumBivector GetNonActivePart();
+    void AddTerm(GaPoTNumBivectorTerm term);
+    void AddTerm(uint8_t id1, uint8_t id2, float value);
+    vector<GaPoTNumBivectorTerm> GetTerms();
+//    GaPoTNumBivector Inverse();
+    string TermsToText();
+    string ToString();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class GAVector final {
   private :
-    map<uint8_t, GaPoTNumRectPhasor> _phasorsDictionary;
+    map<uint8_t, GaPoTNumVectorTerm> _termsDictionary;
   public :
-    GaPoTNumSinglePhaseBivector operator *(GAVector v2);
-    void AddRectPhasor(uint8_t id, double x, double y);
-    vector<GaPoTNumSinglePhaseVectorTerm> GetTerms();
-//        public IEnumerable<GaPoTNumRectPhasor> GeTRectPhasors()
-//        {
-//            return _phasorsDictionary.Values;
-//        }
+    GaPoTNumBivector operator *(GAVector v2);
+    GAVector operator *(float v2);
+    GAVector operator *(GaPoTNumBivector &bv2);
+    void AddRectPhasor(uint8_t id, float x, float y);
+    GAVector Inverse();
+    float Norm();
+    void AddTerm(int id, float value);
   string ToText();
   string RectPhasorsToText();
   string ToString();

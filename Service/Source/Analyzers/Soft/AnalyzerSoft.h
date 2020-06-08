@@ -251,8 +251,9 @@ class AnalyzerSoft final : public Analyzer {
     void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
     void PublishConfig(const json &options);
     bool FindRunningEvent(const uint32_t mask);
-  private :
+    json CalcGA();
     void PeriodicTasks();
+  private :
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
     void GetSeries(const json &params, Response &response) override;
