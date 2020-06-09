@@ -20,10 +20,10 @@
 #include <cmath>
 #include <vector>
 //----------------------------------------------------------------------------------------------------------------------
-static double Epsilon = pow(2, -25);
-bool IsNearZero(double d) {
-  return (fabs(d) <= Epsilon);
-}
+//static double Epsilon = pow(2, -25);
+//bool IsNearZero(double d) {
+//  return (fabs(d) <= Epsilon);
+//}
 //----------------------------------------------------------------------------------------------------------------------
 //GaPoTNumRectPhasor GaPoTNumRectPhasor::operator +(const GaPoTNumRectPhasor &p2) {
 //  if(Id != p2.Id) throw new exception();
@@ -49,55 +49,71 @@ bool IsNearZero(double d) {
 //  return ToText();
 //}
 //----------------------------------------------------------------------------------------------------------------------
-bool GaPoTNumBivectorTerm::IsScalar() {
-  return TermId1 == TermId2;
-}
-GaPoTNumBivectorTerm::GaPoTNumBivectorTerm(uint8_t id1, uint8_t id2, float value) {
-  if(id1 == id2) {
-    TermId1 = 0;
-    TermId2 = 0;
-    Value = value;
-  } else if(id1 < id2) {
-    TermId1 = id1;
-    TermId2 = id2;
-    Value = value;
-  } else {
-    TermId1 = id2;
-    TermId2 = id1;
-    Value = -value;
-  }
-}
-string GaPoTNumBivectorTerm::ToText() {
-  if(Value == 0) return "0";
-  return IsScalar() ? to_string(Value) : to_string(Value) + " <" + to_string(TermId1 + 1) + ", " + to_string(TermId2 + 1) + ">";
-}
-string GaPoTNumBivectorTerm::ToString() {
-  return ToText();
-}
+//bool GaPoTNumBivectorTerm::IsScalar() {
+//  return TermId1 == TermId2;
+//}
+//GaPoTNumBivectorTerm::GaPoTNumBivectorTerm(uint8_t id1, uint8_t id2, float value) {
+//  if(id1 == id2) {
+//    TermId1 = 0;
+//    TermId2 = 0;
+//    Value = value;
+//  } else if(id1 < id2) {
+//    TermId1 = id1;
+//    TermId2 = id2;
+//    Value = value;
+//  } else {
+//    TermId1 = id2;
+//    TermId2 = id1;
+//    Value = -value;
+//  }
+//}
+//string GaPoTNumBivectorTerm::ToText() {
+//  if(Value == 0) return "0";
+//  return IsScalar() ? to_string(Value) : to_string(Value) + " <" + to_string(TermId1 + 1) + ", " + to_string(TermId2 + 1) + ">";
+//}
+//string GaPoTNumBivectorTerm::ToString() {
+//  return ToText();
+//}
 //----------------------------------------------------------------------------------------------------------------------
-GaPoTNumBivector::GaPoTNumBivector() {
+GABivector::GABivector(uint16_t dims) {
+  pTerms = (float*)calloc((dims * (dims - 1)) / 2 + 1, sizeof(float));
+  pDims  = dims;
 }
-float GaPoTNumBivector::GetActiveTotal() {
-  float Tmp = 0.0;
-  for(auto &Term : _termsDictionary) {
-    if(Term.second.IsScalar()) Tmp += Term.second.Value;
-  }
-  return Tmp;
+GABivector::~GABivector() {
+  if(pTerms != NULL) free(pTerms);
 }
-float GaPoTNumBivector::Norm() {
-  float Tmp = 0.0;
-  for(auto &Term : _termsDictionary) Tmp += Term.second.Value * Term.second.Value;
-  return sqrt(Tmp);
-}
-void GaPoTNumBivector::AddTerm(GaPoTNumBivectorTerm term) {
-  uint16_t Idx = (term.TermId1 << 8) | term.TermId2;
-  auto oldTerm = _termsDictionary.find(Idx);
-  if(oldTerm != _termsDictionary.end()) {
-    oldTerm->second = GaPoTNumBivectorTerm(term.TermId1, term.TermId2, oldTerm->second.Value + term.Value);
+void GABivector::AddTerm(uint16_t id1, uint16_t id2, float value) {
+  if(id1 == id2) {
+    pTerms[0] += value;
+  } else if(id1 < id2) {
+    pTerms[(id2 * (id2 - 1)) / 2 + id1 + 1] += value;
   } else {
-    _termsDictionary.insert({Idx, term});
+    pTerms[(id1 * (id1 - 1)) / 2 + id2 + 1] -= value;
   }
 }
+
+
+//float GABivector::GetActiveTotal() {
+//  float Tmp = 0.0;
+//  for(auto &Term : _termsDictionary) {
+//    if(Term.second.IsScalar()) Tmp += Term.second.Value;
+//  }
+//  return Tmp;
+//}
+//float GABivector::Norm() {
+//  float Tmp = 0.0;
+//  for(auto &Term : _termsDictionary) Tmp += Term.second.Value * Term.second.Value;
+//  return sqrt(Tmp);
+//}
+//void GABivector::AddTerm(GaPoTNumBivectorTerm term) {
+//  uint16_t Idx = (term.TermId1 << 8) | term.TermId2;
+//  auto oldTerm = _termsDictionary.find(Idx);
+//  if(oldTerm != _termsDictionary.end()) {
+//    oldTerm->second = GaPoTNumBivectorTerm(term.TermId1, term.TermId2, oldTerm->second.Value + term.Value);
+//  } else {
+//    _termsDictionary.insert({Idx, term});
+//  }
+//}
 //GaPoTNumBivector GaPoTNumBivector::Inverse() {
 //  GaPoTNumBivector Tmp;
 //  float Scale = 1.0 / Norm();
@@ -107,109 +123,119 @@ void GaPoTNumBivector::AddTerm(GaPoTNumBivectorTerm term) {
 //  }
 //  return Tmp;
 //}
-void GaPoTNumBivector::AddTerm(uint8_t id1, uint8_t id2, float value) {
-  AddTerm(GaPoTNumBivectorTerm(id1, id2, value));
-}
-vector<GaPoTNumBivectorTerm> GaPoTNumBivector::GetTerms() {
-  vector<GaPoTNumBivectorTerm> Tmp;
-  for(auto &Term : _termsDictionary) {
-    if(IsNearZero(Term.second.Value) == false) Tmp.push_back(Term.second);
-  }
-  return Tmp;
-}
-GaPoTNumBivector GaPoTNumBivector::GetNonActivePart() {
-  GaPoTNumBivector Tmp;
-  for(auto &Term : _termsDictionary) {
-    if(Term.second.IsScalar() == false) Tmp.AddTerm(Term.second);
-  }
-  return Tmp;
-}
-string GaPoTNumBivector::TermsToText() {
-  auto Terms = GetTerms();
-  if(Terms.empty()) return "0";
-  string Tmp;
-  for(auto &Term : Terms) {
-    Tmp += Term.ToString() + ", ";
-  }
-  Tmp.resize(Tmp.size() - 2);
-  return Tmp;
-}
-string GaPoTNumBivector::ToString() {
-  return TermsToText();
-}
-//----------------------------------------------------------------------------------------------------------------------
-GaPoTNumVectorTerm::GaPoTNumVectorTerm(uint8_t id, float value) {
-  TermId = id;
-  Value = value;
-}
-GaPoTNumVectorTerm GaPoTNumVectorTerm::operator +(const GaPoTNumVectorTerm &t2) {
-  return GaPoTNumVectorTerm(TermId, Value + t2.Value);
-}
-string GaPoTNumVectorTerm::ToText() {
-  if(Value == 0) return "0";
-  return to_string(Value) + " <" + to_string(TermId + 1) + "> ";
-}
-string GaPoTNumVectorTerm::ToString() {
-  return ToText();
-}
-//----------------------------------------------------------------------------------------------------------------------
-GaPoTNumBivector GAVector::operator *(GAVector v2) {
-  GaPoTNumBivector bivector;
-  for(auto &term1 : _termsDictionary) {
-    for(auto &term2 : v2._termsDictionary) {
-      bivector.AddTerm(term1.second.TermId, term2.second.TermId, term1.second.Value * term2.second.Value);
+//vector<GaPoTNumBivectorTerm> GaPoTNumBivector::GetTerms() {
+//  vector<GaPoTNumBivectorTerm> Tmp;
+//  for(auto &Term : _termsDictionary) {
+//    if(IsNearZero(Term.second.Value) == false) Tmp.push_back(Term.second);
+//  }
+//  return Tmp;
+//}
+//GaPoTNumBivector GaPoTNumBivector::GetNonActivePart() {
+//  GaPoTNumBivector Tmp;
+//  for(auto &Term : _termsDictionary) {
+//    if(Term.second.IsScalar() == false) Tmp.AddTerm(Term.second);
+//  }
+//  return Tmp;
+//}
+//string GaPoTNumBivector::TermsToText() {
+//  auto Terms = GetTerms();
+//  if(Terms.empty()) return "0";
+//  string Tmp;
+//  for(auto &Term : Terms) {
+//    Tmp += Term.ToString() + ", ";
+//  }
+//  Tmp.resize(Tmp.size() - 2);
+//  return Tmp;
+//}
+//string GaPoTNumBivector::ToString() {
+//  return TermsToText();
+//}
+json GABivector::ToJSON() {
+  //returns and array of bivector in form: [230, [100, [1, 2]], ... ]
+  json Tmp = json::array();
+  Tmp.push_back(pTerms[0]);
+  for(uint16_t id1 = 0; id1 < pDims; id1++) {
+    for(uint16_t id2 = (id1 + 1); id2 < pDims; id2++) {
+      json Term  = json::array();
+      json Index = json::array();
+      Term.push_back(pTerms[(id2 * (id2 - 1)) / 2 + id1 + 1]);
+      Index.push_back(id1 + 1);
+      Index.push_back(id2 + 1);
+      Term.push_back(Index);
+      Tmp.push_back(Term);
     }
   }
-  return bivector;
+  return Tmp;
 }
-void GAVector::AddTerm(int id, float value) {
-  auto oldPhasor = _termsDictionary.find(id);
-  if(oldPhasor != _termsDictionary.end()) {
-    oldPhasor->second = (oldPhasor->second + GaPoTNumVectorTerm(id, value));
-  } else {
-    _termsDictionary.insert({id, GaPoTNumVectorTerm(id, value)});
+//----------------------------------------------------------------------------------------------------------------------
+GAVector::GAVector(uint16_t dims) {
+  pTerms = (float*)calloc(dims, sizeof(float));
+  pDims  = dims;
+}
+GAVector::~GAVector() {
+  if(pTerms != NULL) free(pTerms);
+}
+GAVector GAVector::operator *(const float v2) const {
+  GAVector Tmp(pDims);
+  for(uint16_t n = 0; n < pDims; n++) Tmp.AddTerm(n, pTerms[n] * v2);
+  return Tmp;
+}
+GABivector GAVector::operator *(const GAVector &v2) const {
+  GABivector Tmp((v2.pDims > pDims) ? v2.pDims : pDims);
+  for(uint16_t x = 0; x < pDims; x++) {
+    for(uint16_t y = 0; y < v2.pDims; y++) Tmp.AddTerm(x, y, pTerms[x] * v2.pTerms[y]);
   }
+  return Tmp;
 }
-void GAVector::AddRectPhasor(uint8_t id, float x, float y) {
+void GAVector::AddRectPhasor(const uint16_t id, const float x, const float y) {
   AddTerm(id, x);
   AddTerm(id + 1, y);
 }
-GAVector GAVector::Inverse() {
-  float Scale = 1.0 / Norm();
-  GAVector Tmp;
-  for(auto &Term : _termsDictionary) Tmp._termsDictionary.insert({Term.second.TermId, GaPoTNumVectorTerm(Term.second.TermId, Term.second.Value * Scale)});
-  return Tmp;
+void GAVector::AddTerm(const uint16_t id, const float value) {
+  pTerms[id] += value;
 }
-GAVector GAVector::operator *(float v2) {
-  GAVector Tmp;
-  for(auto &Term : _termsDictionary) Tmp._termsDictionary.insert({Term.second.TermId, GaPoTNumVectorTerm(Term.second.TermId, Term.second.Value * v2)});
-  return Tmp;
-}
-GAVector GAVector::operator *(GaPoTNumBivector &bv2) {
-  GAVector Tmp;
-  for(auto &Term1 : _termsDictionary) {
-    for(auto &Term2 : bv2._termsDictionary) {
-      auto scalarValue = Term1.second.Value * Term2.second.Value;
-      if(Term2.second.IsScalar()) {
-        Tmp.AddTerm(Term1.second.TermId, scalarValue);
-      } else if(Term1.second.TermId == Term2.second.TermId1) {
-        Tmp.AddTerm(Term2.second.TermId2, scalarValue);
-      } else if(Term1.second.TermId == Term2.second.TermId2) {
-        Tmp.AddTerm(Term2.second.TermId1, -scalarValue);
-      }
-    }
+//GAVector GAVector::operator *(GaPoTNumBivector &bv2) {
+//  GAVector Tmp;
+//  for(auto &Term1 : _termsDictionary) {
+//    for(auto &Term2 : bv2._termsDictionary) {
+//      auto scalarValue = Term1.second.Value * Term2.second.Value;
+//      if(Term2.second.IsScalar()) {
+//        Tmp.AddTerm(Term1.second.TermId, scalarValue);
+//      } else if(Term1.second.TermId == Term2.second.TermId1) {
+//        Tmp.AddTerm(Term2.second.TermId2, scalarValue);
+//      } else if(Term1.second.TermId == Term2.second.TermId2) {
+//        Tmp.AddTerm(Term2.second.TermId1, -scalarValue);
+//      }
+//    }
+//  }
+//  return Tmp;
+//}
+//GAVector GAVector::Inverse() {
+//  float Scale = 1.0 / Norm();
+//  GAVector Tmp;
+//  for(auto &Term : _termsDictionary) Tmp._termsDictionary.insert({Term.second.TermId, GaPoTNumVectorTerm(Term.second.TermId, Term.second.Value * Scale)});
+//  return Tmp;
+//}
+//string GAVector::ToString() {
+//  if(_termsDictionary.empty()) return "0";
+//  string Tmp;
+//  for(auto &Term : _termsDictionary) Tmp += Term.second.ToString() + ", ";
+//  Tmp.resize(Tmp.size() - 2);
+//  return Tmp;
+//}
+//float GAVector::Norm() {
+//  float Tmp = 0.0;
+//  for(auto &Term : _termsDictionary) Tmp += Term.second.Value * Term.second.Value;
+//  return sqrt(Tmp);
+//}
+json GAVector::ToJSON() {
+  //returns and array of phasors in form: [230, 1], [0.1, 2], ... ]
+  json Tmp = json::array();
+  for(uint16_t n = 0; n < pDims; n++) {
+    json Term  = json::array();
+    Term.push_back(pTerms[n]);
+    Term.push_back(n + 1);
+    Tmp.push_back(Term);
   }
   return Tmp;
-}
-string GAVector::ToString() {
-  if(_termsDictionary.empty()) return "0";
-  string Tmp;
-  for(auto &Term : _termsDictionary) Tmp += Term.second.ToString() + ", ";
-  Tmp.resize(Tmp.size() - 2);
-  return Tmp;
-}
-float GAVector::Norm() {
-  float Tmp = 0.0;
-  for(auto &Term : _termsDictionary) Tmp += Term.second.Value * Term.second.Value;
-  return sqrt(Tmp);
 }

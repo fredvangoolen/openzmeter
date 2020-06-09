@@ -72,6 +72,7 @@ class Device {
     bool AddPermission(const json &params, Response &response);
     bool SetPermission(const json &params, Response &response);
     bool DelPermission(const json &params, Response &response);
+    bool HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len);
   public :
     virtual ~Device();
     virtual void PeriodicTasks();

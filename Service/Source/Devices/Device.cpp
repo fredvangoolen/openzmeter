@@ -71,6 +71,18 @@ void Device::GetRemote(const json &params, Response &response) {
 void Device::SetRemote(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
 }
+bool Device::HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
+  pAnalyzersLock.ReadLock();
+  auto Tmp = pAnalyzers.find(serial);
+  if(Tmp == pAnalyzers.end()) {
+    pAnalyzersLock.Unlock();
+    return false;
+  } else {
+    (*Tmp)->HandleModbus(buff, start, len);
+    pAnalyzersLock.Unlock();
+    return true;
+  }
+}
 bool Device::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
   string Serial = params["Analyzer"];
   pAnalyzersLock.ReadLock();

@@ -57,6 +57,7 @@ class Analyzer {
     virtual void GetAlarms(const json &params, Response &response) = 0;
     virtual void GetRemote(const json &params, Response &response) = 0;
     virtual void SetRemote(const json &params, Response &response) = 0;
+    virtual void HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len) = 0;
   public :
     virtual ~Analyzer();
     json     GetJSONDescriptor();

@@ -106,6 +106,16 @@ void DeviceManager::PeriodicTasks() {
   for(Device *Dev : pDevices) Dev->PeriodicTasks();
   pDevicesLock.Unlock();
 }
+bool DeviceManager::HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) {
+    if(Dev->HandleModbus(buff, serial, start, len) == false) continue;
+    pDevicesLock.Unlock();
+    return true;
+  }
+  pDevicesLock.Unlock();
+  return false;
+}
 void DeviceManager::CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response)) {
   if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   pDevicesLock.ReadLock();
