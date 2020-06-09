@@ -37,7 +37,6 @@ class AnalyzerSoft final : public Analyzer {
   public :
     enum AggregType  { AGGREG_UNINITIALIZED = 0, AGGREG_200MS, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
     enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
-//    enum EventState  { EVT_STAGE0 = 0, EVT_STAGE1, EVT_STAGE2 };
     enum SyncState   { NOT_LOGGED, LOGGED, CONNECTED, TERMINATE };
   private :
     static constexpr float   FrequencyRanges[]   = { -INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY };
@@ -269,6 +268,7 @@ class AnalyzerSoft final : public Analyzer {
     void GetAlarms(const json &params, Response &response) override;
     void GetRemote(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
+    void HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len);
   public :
     static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, string *error);
   public :

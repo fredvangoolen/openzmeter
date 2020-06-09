@@ -50,7 +50,7 @@
     },
     watch: {
       events: function() {
-        if(this.TimeLine != null) {
+        if((this.TimeLine != null) && (this.events != null)) {
           this.SetEvents();
           this.TimeLine.setWindow(this.events.From, this.events.To);
         }
@@ -62,6 +62,7 @@
         if(this.events == null) return;
         var Count = {Interruption: 0, Swell: 0, Dip: 0, RVC: 0 };
         for(var i = 0; i < this.events.StartTime.length; i++) {
+          if(this.events.Deleted[i] == true) continue;
           var Item = {
             id: i,
             start: this.events.StartTime[i],

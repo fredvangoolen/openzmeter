@@ -192,3 +192,9 @@ void AnalyzerRemote::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getAlarms", params, response);
 }
+void AnalyzerRemote::HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len) {
+  uint8_t Pending = len;
+
+
+
+}

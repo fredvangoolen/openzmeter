@@ -21,31 +21,33 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "nlohmann/json.h"
 //----------------------------------------------------------------------------------------------------------------------
+using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class GaPoTNumBivectorTerm final {
-  public :
-    uint8_t TermId1;
-    uint8_t TermId2;
-    float  Value;
-  public :
-    bool IsScalar();
-    GaPoTNumBivectorTerm(uint8_t id1, uint8_t id2, float value);
-    string ToText();
-    string ToString();
-};
+//class GaPoTNumBivectorTerm final {
+//  public :
+//    uint8_t TermId1;
+//    uint8_t TermId2;
+//    float  Value;
+//  public :
+//    bool IsScalar();
+//    GaPoTNumBivectorTerm(uint8_t id1, uint8_t id2, float value);
+//    string ToText();
+//    string ToString();
+//};
 //----------------------------------------------------------------------------------------------------------------------
-class GaPoTNumVectorTerm final {
-  public :
-    uint8_t TermId;
-    float  Value;
-  public :
-    GaPoTNumVectorTerm(uint8_t id, float value);
-    GaPoTNumVectorTerm operator +(const GaPoTNumVectorTerm &t2);
-    string ToText();
-    string ToString();
-};
+//class GaPoTNumVectorTerm final {
+//  public :
+//    uint8_t TermId;
+//    float   Value;
+//  public :
+//    GaPoTNumVectorTerm(uint8_t id, float value);
+//    GaPoTNumVectorTerm operator +(const GaPoTNumVectorTerm &t2);
+//    string ToText();
+//    string ToString();
+//};
 //----------------------------------------------------------------------------------------------------------------------
 //class GaPoTNumRectPhasor final {
 //  public :
@@ -60,35 +62,54 @@ class GaPoTNumVectorTerm final {
 //    string ToString();
 //};
 //----------------------------------------------------------------------------------------------------------------------
-class GaPoTNumBivector final {
+class GABivector final {
+  private :
+    float        *pTerms;
+    uint16_t      pDims;
   public :
-    map<uint16_t, GaPoTNumBivectorTerm> _termsDictionary;
+
+//    map<uint16_t, GaPoTNumBivectorTerm> _termsDictionary;
   public :
-    GaPoTNumBivector();
-    float GetActiveTotal();
-    float Norm();
-    GaPoTNumBivector GetNonActivePart();
-    void AddTerm(GaPoTNumBivectorTerm term);
-    void AddTerm(uint8_t id1, uint8_t id2, float value);
-    vector<GaPoTNumBivectorTerm> GetTerms();
+    GABivector(uint16_t dims);
+    ~GABivector();
+  public :
+    void AddTerm(const uint16_t id1, const uint16_t id2, float value);
+
+  public :
+    json ToJSON();
+
+//    float GetActiveTotal();
+//    float Norm();
+//    GABivector GetNonActivePart();
+//    void AddTerm(GaPoTNumBivectorTerm term);
+
+//    vector<GaPoTNumBivectorTerm> GetTerms();
 //    GaPoTNumBivector Inverse();
-    string TermsToText();
-    string ToString();
+//    string TermsToText();
+//    string ToString();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class GAVector final {
   private :
-    map<uint8_t, GaPoTNumVectorTerm> _termsDictionary;
+    float        *pTerms;
+    uint16_t      pDims;
   public :
-    GaPoTNumBivector operator *(GAVector v2);
-    GAVector operator *(float v2);
-    GAVector operator *(GaPoTNumBivector &bv2);
-    void AddRectPhasor(uint8_t id, float x, float y);
-    GAVector Inverse();
-    float Norm();
-    void AddTerm(int id, float value);
-  string ToText();
-  string RectPhasorsToText();
-  string ToString();
+    GAVector(uint16_t dims);
+    ~GAVector();
+  public :
+    GAVector   operator *(const float v2) const;
+    GABivector operator *(const GAVector &v2) const;
+    GAVector   operator *(const GABivector &bv2) const;
+  public :
+    void     AddRectPhasor(const uint16_t id, const float x, const float y);
+    void     AddTerm(const uint16_t id, const float value);
+//    float    Norm();
+//    GAVector Inverse();
+    json     ToJSON();
+
+
+//    string ToText();
+//    string RectPhasorsToText();
+//    string ToString();
 };
 //----------------------------------------------------------------------------------------------------------------------

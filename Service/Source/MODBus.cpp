@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include <poll.h>
 #include "MODBus.h"
+#include "DeviceManager.h"
 // ---------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t            ModbusTCP::pMutex       = PTHREAD_MUTEX_INITIALIZER;
 pthread_t                  ModbusTCP::pThread      = 0;
@@ -22,6 +23,7 @@ volatile bool              ModbusTCP::pTerminate   = false;
 uint16_t                   ModbusTCP::pPort        = 502;
 uint32_t                   ModbusTCP::pUsedWorkers = 0;
 list<ModbusTCP::Worker_t*> ModbusTCP::pFreeWorkers;
+vector<string>             ModbusTCP::pAnalyzers;
 // ---------------------------------------------------------------------------------------------------------------------
 ModbusTCP::ModbusTCP() {
   Configure(CheckConfig(ConfigManager::ReadConfig("/ModbusTCP")));
@@ -42,27 +44,34 @@ json ModbusTCP::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Port"]    = 502;
   ConfigOUT["Enabled"] = false;
+  ConfigOUT["Analyzers"] = json::array();
   if(config.is_object()) {
     if(config["Port"].is_number_unsigned()) ConfigOUT["Port"] = config["Port"];
     if(config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
+    if(config["Analyzers"].is_array()) {
+      for(uint16_t n = 0; n < config["Analyzers"].size(); n++) {
+        if(config["Analyzers"][n].is_string()) ConfigOUT["Analyzers"].push_back(config["Analyzers"][n]);
+      }
+    }
   }
   return ConfigOUT;
 }
 void ModbusTCP::Configure(const json &config) {
   pthread_mutex_lock(&pMutex);
-  ConfigManager::WriteConfig("/ModbusTCP", config);
-  bool     Enabled = config["Enabled"];
-  uint16_t Port    = config["Port"];
-  if(((Enabled == false) && (pThread != 0)) || (pPort != Port)) {
+  if(pThread != 0) {
     LOGFile::Info("Stopping ModbusTCP server...\n");
     pTerminate = true;
     pthread_join(pThread, NULL);
     pThread = 0;
+    pAnalyzers.clear();
     LOGFile::Info("ModbusTCP server stoped\n");
   }
-  if((Enabled == true) && (pThread == 0)) {
-    pPort      = Port;
+  ConfigManager::WriteConfig("/ModbusTCP", config);
+  bool     Enabled = config["Enabled"];
+  if(Enabled == true) {
+    pPort      = config["Port"];
     pTerminate = false;
+    for(uint16_t n = 0; n < config["Analyzers"].size(); n++) pAnalyzers.push_back(config["Analyzers"][n]);
     LOGFile::Info("Starting ModbusTCP server on port %u...\n", pPort);
     if(pthread_create(&pThread, NULL, Thread, NULL) != 0) {
       pThread = 0;
@@ -164,121 +173,31 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
     PacketOUT.TransactionID = PacketIN.TransactionID;
     PacketOUT.UnitID        = PacketIN.UnitID;
     PacketOUT.FunctionCode  = PacketIN.FunctionCode;
-    if(PacketIN.FunctionCode == MODBUS_FUNC_READ_REGISTERS) {
+    if(PacketOUT.FunctionCode != MODBUS_FUNC_READ_REGISTERS) {
+      PacketOUT.FunctionCode |= 0x80;
+      PacketOUT.ResponseLen = 1;
+      PacketOUT.ResponseBuffer[0] = 1;
+    } else if(PacketIN.UnitID >= pAnalyzers.size()) {
+      PacketOUT.FunctionCode |= 0x80;
+      PacketOUT.ResponseLen = 1;
+      PacketOUT.ResponseBuffer[0] = 10;
+    } else if(PacketIN.QuantityRegisters > 125) {
+      PacketOUT.FunctionCode |= 0x80;
+      PacketOUT.ResponseLen = 1;
+      PacketOUT.ResponseBuffer[0] = 2;
+    } else {
       PacketOUT.ResponseLen = sizeof(uint16_t) * PacketIN.QuantityRegisters;
-      PacketOUT.Length      = htons(PacketOUT.ResponseLen + 3);
-      uint16_t *Ptr = (uint16_t*)&PacketOUT.ResponseBuffer;
-      for(uint8_t n = 0; n < 120; n++) *Ptr++ = n;
+      if(DeviceManager::HandleModbus(PacketOUT.ResponseBuffer, pAnalyzers[PacketOUT.UnitID], PacketIN.StartAddress, PacketIN.QuantityRegisters) == false) {
+        PacketOUT.FunctionCode |= 0x80;
+        PacketOUT.ResponseLen = 1;
+        PacketOUT.ResponseBuffer[0] = 11;
+      }
     }
+    PacketOUT.Length = htons(PacketOUT.ResponseLen + 3);
     Size = send(clientSock, &PacketOUT, PacketOUT.ResponseLen + 9, 0);
     printf("MODBUS(%d) -> ", Size);
     for(uint8_t n = 0; n < Size; n++) printf(" %02X", ((uint8_t*)&PacketOUT)[n]);
     printf("\n");
-
-//    boolean flagClientConnected = 0;
-//    byte byteFN = MB_FC_NONE;
-//    int Start;
-//    int WordDataLength;
-//    int ByteDataLength;
-//    int MessageLength;
-//
-//
-//    uint8_t byteFN = MB_FC_NONE;
-//    if(client.available())
-//    {
-//        flagClientConnected = 1;
-//        int i = 0;
-//        while(client.available())
-//        {
-//            ByteArray[i] = client.read();
-//            i++;
-//        }
-//        #ifdef MB_ESP8266
-//            client.flush();
-//        #endif
-//        byteFN = ByteArray[MB_TCP_FUNC];
-//        Start = word(ByteArray[MB_TCP_REGISTER_START],ByteArray[MB_TCP_REGISTER_START+1]);
-//        WordDataLength = word(ByteArray[MB_TCP_REGISTER_NUMBER],ByteArray[MB_TCP_REGISTER_NUMBER+1]);
-//        #ifdef MBDebug
-//        Serial.println();
-//        Serial.print("RX: ");
-//        for (byte thisByte = 0; thisByte < 20; thisByte++) {
-//            Serial.print(ByteArray[thisByte], DEC);
-//            Serial.print("-");
-//        }
-//        Serial.println();
-//        Serial.print("Ricevuta Funzione: ");
-//        Serial.println(byteFN);
-//        #endif
-//    }
-//
-//    // Handle request
-//
-//    switch(byteFN) {
-//      case MB_FC_NONE :
-//        break;
-//      case MB_FC_READ_REGISTERS :  // 03 Read Holding Registers
-//            ByteDataLength = WordDataLength * 2;
-//            ByteArray[5] = ByteDataLength + 3; //Number of bytes after this one.
-//            ByteArray[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
-//            for(int i = 0; i < WordDataLength; i++)
-//            {
-//                ByteArray[ 9 + i * 2] = highByte(MBHoldingRegister[Start + i]);
-//                ByteArray[10 + i * 2] =  lowByte(MBHoldingRegister[Start + i]);
-//            }
-//            MessageLength = ByteDataLength + 9;
-//            client.write((const uint8_t *)ByteArray,MessageLength);
-//            byteFN = MB_FC_NONE;
-//            break;
-//
-//        case MB_FC_READ_INPUT_REGISTERS:  // 04 Read Input Registers
-//            Start = word(ByteArray[MB_TCP_REGISTER_START],ByteArray[MB_TCP_REGISTER_START+1]);
-//            WordDataLength = word(ByteArray[MB_TCP_REGISTER_NUMBER],ByteArray[MB_TCP_REGISTER_NUMBER+1]);
-//            ByteDataLength = WordDataLength * 2;
-//            ByteArray[5] = ByteDataLength + 3; //Number of bytes after this one.
-//            ByteArray[8] = ByteDataLength;     //Number of bytes after this one (or number of bytes of data).
-//            for(int i = 0; i < WordDataLength; i++)
-//            {
-//                ByteArray[ 9 + i * 2] = highByte(MBInputRegister[Start + i]);
-//                ByteArray[10 + i * 2] =  lowByte(MBInputRegister[Start + i]);
-//            }
-//            MessageLength = ByteDataLength + 9;
-//            client.write((const uint8_t *)ByteArray,MessageLength);
-//            byteFN = MB_FC_NONE;
-//            break;
-//
-//        case MB_FC_WRITE_REGISTER:  // 06 Write Holding Register
-//            MBHoldingRegister[Start] = word(ByteArray[MB_TCP_REGISTER_NUMBER],ByteArray[MB_TCP_REGISTER_NUMBER+1]);
-//            ByteArray[5] = 6; //Number of bytes after this one.
-//            MessageLength = 12;
-//            client.write((const uint8_t *)ByteArray,MessageLength);
-//            byteFN = MB_FC_NONE;
-//            break;
-//
-//        case MB_FC_WRITE_MULTIPLE_REGISTERS:    //16 Write Holding Registers
-//            ByteDataLength = WordDataLength * 2;
-//            ByteArray[5] = ByteDataLength + 3; //Number of bytes after this one.
-//            for(int i = 0; i < WordDataLength; i++)
-//            {
-//                MBHoldingRegister[Start + i] =  word(ByteArray[ 13 + i * 2],ByteArray[14 + i * 2]);
-//            }
-//            MessageLength = 12;
-//            client.write((const uint8_t *)ByteArray,MessageLength);
-//            #ifdef MBDebug
-//                Serial.print("TX: ");
-//                for (byte thisByte = 0; thisByte <= MessageLength; thisByte++) {
-//                    Serial.print(ByteArray[thisByte], DEC);
-//                    Serial.print("-");
-//                }
-//                Serial.println();
-//                Serial.print("Write Holding Registers from: ");
-//                Serial.print(Start);
-//                Serial.print("=");
-//                Serial.println(WordDataLength);
-//            #endif
-//            byteFN = MB_FC_NONE;
-//            break;
-//    }
   }
   LOGFile::Debug("Modbus connection terminated\n");
 }

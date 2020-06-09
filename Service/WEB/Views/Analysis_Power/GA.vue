@@ -1,168 +1,118 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">{{ Time }}</div> <div v-if="ShowWarning" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
-      <div class="header-buttons">
-        <!--toolbar-tools variable="To" ref="tools" :options="['EXPORT', 'PLAY']" v-on:PlayStatus="$parent.PlayStatusChanged" v-on:ExportClick="ExportClick"></toolbar-tools-->
-      </div>
-    </div>
-    <div class="panel-body">
-      <spinner v-if="ShowSpinner"></spinner>
-      <div class="row">
-        <div class="col-sm-12">
-          <h4>Work in progress</h4>
-
+      <div class="header-text">{{ (data==null) ? 'Loading data...' : 'Last update at ' + analyzer.FormatTimeMS(data.Sampletime) }} {{ paused ? '(Paused)' : MouseOver ? '(Graph paused)' : '' }}</div>
+      <div v-if="RmsCurrent<analyzer.MinCurrent" class="title-warning"><img :src="require('Imgs/exclamation.png')">No current or current too low</div>
+      <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
+        <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
+        <toolbar-options storage="DetailsOptions" :options="['Current']" v-model="Options"></toolbar-options>
+        <div class="btn-group">
+          <button-export file="Waveform" :rows="Export"></button-export>
+          <button-expand v-model="Expanded"></button-expand>
+          <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
         </div>
-      </div>
+      </portal>
     </div>
+    <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+      <spinner v-if="data==null"></spinner>
+      <div @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
+        <graph :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver" :analyzer="analyzer"></graph>
+      </div>
+    </portal>
+    <dlg-fs v-if="Expanded" title="Waveform" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import moment from 'moment';
   import Dygraph from 'JS/dygraph.js';
-  import Spinner from 'Components/Spinner.vue';
   import Graph from 'Components/Graph.vue';
-  import vuetable from 'vuetable-2';
-  import 'CSS/table-responsive.css';
   export default {
-    data: function() {
-      return { ShowWarning: true,  ShowSpinner: true, Time: 'Loading data...',
-        Columns: [
-//          {name: 'Color', title: 'Color'},
-          {name: 'Harmonic', title: 'Harmonic'},
-          {name: 'Power', title: 'Active power'},
-          {name: 'Ratio', title: 'Ratio'}
-        ]
-      };
+    props: { analyzer: Object, data: Object, paused: Boolean },
+    data() {
+      return { MouseOver: false, Options: null, Phases: null, Expanded: false, DialogHeight: 300 };
     },
-    created: function() {
-      this.Data = [];
-      this.GraphOptions = {
-        highlightCircleSize: 0,  interactionModel: { }, legend: 'follow', legendFormatter: Graph.LegendFormatter_Follow, plotter: this.Plotter,
-        labels: ['Type', 'Total', 'Fundamental', 'Pos. Harmonics', 'Neg. Harmonics'], colors: ['#f0ad4e', '#DF842A', '#3d3d8b', '#3d3d8b'], dateWindow: [-0.5, 1.5],
-        axes: {
-          y: { pixelsPerLabel: 15, axisLabelWidth: 34,
-               valueFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value + ' <em class="x-small">' + Result.Units + '</em>'; },
-               axisLabelFormatter: function (x) { var Result = oZm.Series['ACTIVE_POWER'].FormatValue(x); return Result.Value; }
-             },
-          x: { axisLabelWidth: 80,
-               axisLabelFormatter: function(x) { return (x == 0) ? 'Active power' : (x == 1) ? 'Breakdown' : '' },
-               valueFormatter: function (x) { return (x == 0) ? 'Active power' : (x == 1) ? 'Breakdown' : '' }
-             }
-        }
-      };
-    },
-    mounted: function() {
-      $(window).on('resize', this.Redraw.bind(this));
-    },
-    updated: function(){
-      oZm.createCaptionsForResponsiveTable(this.$refs.table);
-    },
-    beforeDestroy: function() {
-      $(window).off('resize', this.Redraw);
-    },
-    methods: {
-      Plotter: function(e) {
-        if(e.seriesIndex !== 0) return;
-        var g = e.dygraph;
-        var ctx = e.drawingContext;
-        var sets = e.allSeriesPoints;
-        g.SeriesCount = sets.length;
-        var min_sep = Infinity;
-        for(var j = 0; j < sets.length; j++) {
-          for(var i = 1; i < sets[j].length; i++) min_sep = Math.min(sets[j][i].canvasx - sets[j][i - 1].canvasx, min_sep);
-        }
-        var bar_width = Math.floor(2.8 / 3 * min_sep);
-        for(var i = 0; i < sets[0].length; i++) {
-          var PosSum = 0;
-          var NegSum = 0;
-          for(var j = 0; j < sets.length; j++) {
-            ctx.strokeStyle = g.getColors()[j];
-            ctx.fillStyle = g.getColors()[j];
-            var p = sets[j][i];
-            var x_left = p.canvasx - (bar_width / 2);
-            if(isNaN(p.yval)) {
-              continue;
-            } else if(p.yval < 0) {
-              var From = e.dygraph.toDomYCoord(0 + NegSum);
-              var Height = e.dygraph.toDomYCoord(p.yval) - e.dygraph.toDomYCoord(0);
-              ctx.fillRect(x_left, From, bar_width, Height);
-              NegSum += p.yval;
-            } else {
-              var From = e.dygraph.toDomYCoord(0 + PosSum);
-              var Height = e.dygraph.toDomYCoord(p.yval) - e.dygraph.toDomYCoord(0);
-              ctx.fillRect(x_left, From, bar_width, Height);
-              PosSum += p.yval;
+    computed: {
+      RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
+      GraphOptions: function() {
+        var Opt = {file: [], axes: { y: {}, y2: {}, x: {} } };
+        Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
+        Opt.interactionModel = Graph.InteractionModels.Fixed(this);
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
+        Opt.drawAxesAtZero = true;
+        Opt.gridLineColor = "#DDD";
+        Opt.gridLinePattern = [4, 4];
+        Opt.legend = 'follow';
+        Opt.showRangeSelector = false;
+        Opt.axes.x.ticker = (min, max) => { return Graph.Tickers.WaveTimeTicks(max, this.analyzer); };
+        if((this.Phases == null) || (this.Options == null)) return Opt;
+        Opt.visibility = [];
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
+        var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
+        var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
+        var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
+        for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
+        for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
+        Opt.series = {};
+        for(var n in CurrentNames) Opt.series[CurrentNames[n]] = { axis: 'y2' };
+        Opt.axes = { y: {}, y2: {}, x: {} };
+        Opt.axes.y.pixelsPerLabel = 15;
+        Opt.axes.y.axisLabelWidth = 34;
+        Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 2, true) + ' V'; };
+        Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x, 2, true); };
+        Opt.axes.y.strokeWidth = VoltageStyle.Width;
+        Opt.axes.y2.pixelsPerLabel = 15;
+        Opt.axes.y2.drawAxis = this.Options['Current'];
+        Opt.axes.y2.axisLabelWidth = this.Options['Current'] ? 34 : 0;
+        Opt.axes.y2.strokeWidth = CurrentStyle.Width;
+        Opt.axes.y2.valueFormatter = (x) => { return this.Round(x, 2, true) + ' A'; };
+        Opt.axes.y2.axisLabelFormatter = this.Options['Current'] ? (x) => { return this.Round(x, 2, true); } : (x)  => { return ''};
+        Opt.axes.x.valueFormatter = (x) => { return this.Round((x * 1000) / this.analyzer.SampleRate, 2, true) + ' ms'; };
+        Opt.labels = ['Sample'].concat(VoltageNames).concat(CurrentNames);
+        Opt.colors = VoltageStyle.Colors.concat(CurrentStyle.Colors);
+        if(this.data != null) {
+          var w = (2.0 * Math.PI * this.data.Frequency) / 5.0;
+          var smp = this.data.Voltage_Samples[0].length;
+          console.log(w, smp, this.data.Frequency);
+          for(var i = 0; i < smp; i++) {
+            var Row = [i];
+            var V = 0.0;
+            var I = 0.0;
+            for(var h = 0; h < this.data.GA_Power.Voltage.length; h++) {
+              V += this.data.GA_Power.Voltage[h][0][0] * Math.cos(w * (h + 1) * (i / smp)) - this.data.GA_Power.Voltage[h][0][1] * Math.sin(w * (h + 1) * (i / smp));
+              I += this.data.GA_Power.Current[h][0][0] * Math.cos(w * (h + 1) * (i / smp)) - this.data.GA_Power.Current[h][0][1] * Math.sin(w * (h + 1) * (i / smp));
             }
+            Opt.file.push(Row.concat([V * Math.SQRT2 , I * Math.SQRT2]));
           }
+          var V = [false], I = [false];
+          for(var n in VoltageNames) { V.push(this.Phases[n]); I.push(false); }
+          for(var n in CurrentNames) { I.push(this.Phases[n]); V.push(false); }
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, V, { wave: 1.0 });
+          Opt.axes.y2.valueRange = this.MatrixColsRange(Opt.file, I, { wave: 1.0 });
+          Opt.dateWindow = [0, Opt.file.length];
         }
-      },
-      Redraw: function() {
-        this.$nextTick(function() {
-          if((this.$refs === undefined) || (this.$refs.graphContainer === undefined)) return;
-          var Width = this.$refs.graphContainer.clientWidth - 30;
-          this.$refs.graph.Redraw(Width, 300);
-        });
-      },
-      ExportClick: function() {
-        this.$refs.tools.SaveCVS('PowerHarmonicsDistribution.csv', [['Phase', 'Channel', 'Angle', 'Value']].concat(this.Data));
-      },
-      SetData(result) {
-        var Analyzer = this.$root.SelectedAnalyzer;
-        this.ShowWarning = (oZm.ArrayAbsMax(result.Current) < Analyzer.MinCurrent);
-        this.Time = 'Last update at ' + moment(result.Sampletime).format('HH:mm:ss.SSS');
-        var Total = result.Active_Power[0];
-        var Fundamental = result['Power_Harmonics'][0][0];
-        var Positive = 0;
-        var Negative = 0;
-        for(var i = 1; i < result['Power_Harmonics'][0].length; i++) {
-          if(result['Power_Harmonics'][0][i] > 0) Positive += result['Power_Harmonics'][0][i];
-          if(result['Power_Harmonics'][0][i] < 0) Negative += result['Power_Harmonics'][0][i];
-        }
-        var Harmonics = Positive + Negative;
-        var Noise = Total - Fundamental - Harmonics;
-//        this.$refs.graph.SetOptions({ file: [
-//          [0, Total, null, null, null],
-//          [1, null, Fundamental, Positive, Negative]
-//        ] });
-        this.$refs.table.setData( { data: [
-          { Harmonic: 'Fundamental', Power: oZm.RoundHTML(Fundamental, 2), Ratio: oZm.RoundHTML(Fundamental / Total * 100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #DF842A"></div>' },
-          { Harmonic: 'Harmonics', Power: oZm.RoundHTML(Harmonics, 2), Ratio: oZm.RoundHTML(Harmonics / Total * 100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #3d3d8b"></div>' },
-          { Harmonic: 'Noise+Interharmonics', Power: oZm.RoundHTML(Noise, 2), Ratio: oZm.RoundHTML(Noise / Total * 100, 2) + ' %'},
-          { Harmonic: 'Total active power', Power: oZm.RoundHTML(Total, 2), Ratio: oZm.RoundHTML(100, 2) + ' %', Color: '<div style="height: 10px; width: 100%; background-color: #f0ad4e "></div>' }
-        ] });
-        this.ShowSpinner = false;
+        return Object.seal(Opt);
       }
     },
-    components: { Graph, vuetable }
+    methods: {
+      Export: function() {
+        var Rows = [['Sample'].concat(oZm.Series['VOLTAGE'].Names(this.analyzer).concat(oZm.Series['CURRENT'].Names(this.analyzer)))];
+        if(this.data != null) {
+          for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
+            var Row = [i];
+            for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.Round(this.data.Voltage_Samples[n][i], 3));
+            for(var n = 0; n < this.data.Current_Samples.length; n++) Row.push(this.Round(this.data.Current_Samples[n][i], 3));
+            Rows.push(Row);
+          }
+        }
+        return Object.seal(Rows);
+      }
+    }
   }
 </script>
 
 <style scoped>
-  .graphDiv {
-    text-align: center;
-  }
-  .graphDiv >>> .graph {
-    margin: auto;
-  }
-  @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(1)  {
-      width: 40px;
-      text-align: center;
-    }
-    .table >>> th:nth-child(3), .table >>> th:nth-child(4)  {
-      text-align: right;
-      width: 100px;
-    }
-    .table >>> td {
-      font-size: 16px
-    }
-    .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
-      text-align: right;
-    }
-  }
   .header-text {
     font-size: 14px;
   }

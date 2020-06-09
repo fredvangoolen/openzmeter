@@ -61,6 +61,7 @@ class DeviceManager final {
   public :
     static void AddDriver(vector<Device*> (*func)());
     static void PeriodicTasks();
+    static bool HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len);
   public :
     DeviceManager();
     ~DeviceManager();

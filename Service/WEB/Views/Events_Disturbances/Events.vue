@@ -137,19 +137,16 @@
         if(confirm('Delete ' + Selection.length + ' event(s)?') == false) return;
         this.ShowSpinner = true;
         for(var n = 0; n < Selection.length; n++) {
-          this.$http.post('delEvent', { StartTime: this.events.StartTime[Selection[n]], Analyzer: this.analyzer.Analyzer }).then(
-            (result) => {
-              this.events.Deleted[Selection[n]] = true;
-              this.$emit('update:events', this.events);
-            }
-          );
+          this.$http.post('delEvent', { StartTime: this.events.StartTime[Selection[n]], Analyzer: this.analyzer.Analyzer });
+          this.events.Deleted[Selection[n]] = true;
+          this.$emit('update:events', this.events);
         }
         this.ShowSpinner = false;
       },
       Delete: function(evt) {
         if(confirm("Delete selected event?")) {
           this.$http.post('delEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer }).then(
-            (result) => {
+            (result, n) => {
               this.events.Deleted[evt.id] = true;
               this.$emit('update:events', this.events);
             }

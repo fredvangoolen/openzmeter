@@ -1356,34 +1356,34 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
 }
 json AnalyzerSoft::CalcGA() {
   json Result = json::object();
-  GAVector vGA;
-  GAVector iGA;
+  GAVector vGA(50 * 2 * pVoltageChannels);
+  GAVector iGA(50 * 2 * pVoltageChannels);
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
     for(uint8_t i = 0; i < 50; i++) {
       vGA.AddRectPhasor(i * 2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pVoltageFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
       iGA.AddRectPhasor(i * 2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Re * M_SQRT2, pCurrentFFT[j * pMaxFFTSamples + (10 + i * 10)].Im * M_SQRT2);
     }
   }
-  Result["vGA"] = vGA.ToString();
-  Result["iGA"] = iGA.ToString();
-  GaPoTNumBivector M = vGA * iGA;
-  Result["M"] = M.ToString();
-  float Ma = M.GetActiveTotal();
-  Result["Ma"] = Ma;
-  GaPoTNumBivector Mn = M.GetNonActivePart();
-  Result["Mn"] = Mn.ToString();
-  float Norm_M = M.Norm();
-  Result["Norm(M)"] = Norm_M;
-  float Norm_iGA = iGA.Norm();
-  Result["Norm(iGA)"] = Norm_iGA;
-  float Norm_vGA = vGA.Norm();
-  Result["Norm(vGA)"] = Norm_vGA;
-  float Norm_Ia = (vGA.Inverse() * Ma).Norm();
-  Result["Ia"] = Norm_Ia;
-  float Norm_In = (vGA.Inverse() * Mn).Norm();
-  Result["In"] = Norm_In;
-  auto PF = Ma / Norm_M;
-  Result["PF"] = PF;
+  Result["Voltage"] = vGA.ToJSON();
+  Result["Current"] = iGA.ToJSON();
+  GABivector M = vGA * iGA;
+  Result["Power"] = M.ToJSON();
+//  float Ma = M.GetActiveTotal();
+//  Result["Ma"] = Ma;
+//  GaPoTNumBivector Mn = M.GetNonActivePart();
+//  Result["Mn"] = Mn.ToString();
+//  float Norm_M = M.Norm();
+//  Result["Norm(M)"] = Norm_M;
+//  float Norm_iGA = iGA.Norm();
+//  Result["Norm(iGA)"] = Norm_iGA;
+//  float Norm_vGA = vGA.Norm();
+//  Result["Norm(vGA)"] = Norm_vGA;
+//  float Norm_Ia = (vGA.Inverse() * Ma).Norm();
+//  Result["Ia"] = Norm_Ia;
+//  float Norm_In = (vGA.Inverse() * Mn).Norm();
+//  Result["In"] = Norm_In;
+//  auto PF = Ma / Norm_M;
+//  Result["PF"] = PF;
   return Result;
 }
 void AnalyzerSoft::PeriodicTasks() {
@@ -1853,4 +1853,10 @@ void AnalyzerSoft::GetRemote(const json &params, Response &response) {
 }
 void AnalyzerSoft::SetRemote(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
+}
+void AnalyzerSoft::HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len) {
+  uint8_t Pending = len;
+
+
+
 }

@@ -63,6 +63,7 @@ class ModbusTCP final {
     static uint16_t        pPort;
     static list<Worker_t*> pFreeWorkers;
     static uint32_t        pUsedWorkers;
+    static vector<string>  pAnalyzers;
   private :
     static json  CheckConfig(const json &config);
     static void  Configure(const json &config);

@@ -72,7 +72,6 @@
         Opt.labels = ['Sample'].concat(VoltageNames).concat(CurrentNames);
         Opt.colors = VoltageStyle.Colors.concat(CurrentStyle.Colors);
         if(this.data != null) {
-          Opt.file = [];
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [i];
             for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.data.Voltage_Samples[n][i]);
