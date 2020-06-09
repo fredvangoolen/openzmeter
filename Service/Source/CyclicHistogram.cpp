@@ -34,9 +34,9 @@ void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, siz
         return;
     }
 
-    if(phaseNumber == 0){
-        LOGFile::Error((to_string(pVoltageSamples[0]) + " | " + to_string(pVoltageSamples[1]) + " | " + to_string(pVoltageSamples[2]) + "\n").c_str());
-    }
+    //if(phaseNumber == 0){
+    //    LOGFile::Error((to_string(pVoltageSamples[0]) + " | " + to_string(pVoltageSamples[1]) + " | " + to_string(pVoltageSamples[2]) + "\n").c_str());
+    //}
 
     uint8_t num_phases = phaseNumber + 1;
 
