@@ -66,7 +66,7 @@ class AnalyzerRemote : public Analyzer {
     void GetAlarms(const json &params, Response &response) override;
     void GetRemote(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
-    void HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len);
+    bool HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len);
   public :
     AnalyzerRemote(const string &id);
     ~AnalyzerRemote();

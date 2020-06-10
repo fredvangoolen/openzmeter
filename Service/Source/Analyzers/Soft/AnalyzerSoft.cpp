@@ -22,6 +22,7 @@
 #include <sys/param.h>
 #include <unistd.h>
 #include <fftw3.h>
+#include <endian.h>
 #include "cctz/time_zone.h"
 #include "muParser/muParser.h"
 #include "AnalyzerSoft.h"
@@ -1854,9 +1855,56 @@ void AnalyzerSoft::GetRemote(const json &params, Response &response) {
 void AnalyzerSoft::SetRemote(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
-void AnalyzerSoft::HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len) {
-  uint8_t Pending = len;
-
-
-
+bool AnalyzerSoft::HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len) {
+  uint8_t  Buffer[4096];
+  uint8_t *Ptr = Buffer;
+  auto Append_U32 = [&](const uint32_t val) {
+    uint32_t *Dest = (uint32_t*)Ptr;
+    *Dest = htobe32(val);
+    Ptr += 4;
+  };
+  auto Append_U64 = [&](const uint64_t val) {
+    uint64_t *Dest = (uint64_t*)Ptr;
+    *Dest = htobe64(val);
+    Ptr += 8;
+  };
+  auto Append_Float = [&](const float val) {
+    uint32_t *Dest = (uint32_t*)Ptr;
+    uint32_t *Val  = (uint32_t*)&val;
+    *Dest = htonl(*Val);
+    Ptr += 4;
+  };
+  memset(Buffer, 0, sizeof(Buffer));
+  strcpy((char*)Ptr, Serial.c_str()); Ptr += 32;
+  if(pNowDataLock.ConsumerWait(5) == false) return false;
+  Append_U32(pAggreg200MS.Timestamp / 1000);
+  Append_U64(pAggreg200MS.Timestamp);
+  Append_Float(pAggreg200MS.Frequency);
+  if(pVoltageChannels > 1) Append_Float(pAggreg200MS.Unbalance);
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Voltage[ch]);
+  for(uint8_t ch = 0; ch < pCurrentChannels; ch++) Append_Float(pAggreg200MS.Current[ch]);
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Active_Power[ch]);
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Reactive_Power[ch]);
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Active_Energy[ch]);
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Reactive_Energy[ch]);
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Apparent_Power[ch]);
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Power_Factor[ch]);
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Voltage_THD[ch]);
+  for(uint8_t ch = 0; ch < pCurrentChannels; ch++) Append_Float(pAggreg200MS.Current_THD[ch]);
+  if(pVoltageChannels > 1) {
+    for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Voltage_Phase[ch]);
+  }
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Phi[ch]);
+  for(uint8_t h = 0; h < 50; h++) {
+    for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Voltage_Harmonics[ch * 50 + h]);
+  }
+  for(uint8_t h = 0; h < 50; h++) {
+    for(uint8_t ch = 0; ch < pCurrentChannels; ch++) Append_Float(pAggreg200MS.Current_Harmonics[ch * 50 + h]);
+  }
+  for(uint8_t h = 0; h < 50; h++) {
+    for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Power_Harmonics[ch * 50 + h]);
+  }
+  pNowDataLock.ConsumerEnds();
+  memcpy((void*)buff, &Buffer[start * 2], len * 2);
+  return true;
 }
