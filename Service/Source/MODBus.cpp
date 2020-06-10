@@ -46,9 +46,9 @@ json ModbusTCP::CheckConfig(const json &config) {
   ConfigOUT["Enabled"] = false;
   ConfigOUT["Analyzers"] = json::array();
   if(config.is_object()) {
-    if(config["Port"].is_number_unsigned()) ConfigOUT["Port"] = config["Port"];
-    if(config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
-    if(config["Analyzers"].is_array()) {
+    if(config.contains("Port") && config["Port"].is_number_unsigned()) ConfigOUT["Port"] = config["Port"];
+    if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
+    if(config.contains("Analyzers") && config["Analyzers"].is_array()) {
       for(uint16_t n = 0; n < config["Analyzers"].size(); n++) {
         if(config["Analyzers"][n].is_string()) ConfigOUT["Analyzers"].push_back(config["Analyzers"][n]);
       }
@@ -90,7 +90,8 @@ void ModbusTCP::GetModbusTCP(const json &params, Response &response) {
 void ModbusTCP::SetModbusTCP(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Port") == false) || (params["Token"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Port' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Port") == false) || (params["Port"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Port' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Analyzers") == false) || (params["Analyzers"].is_array() == false)) return HTTPServer::FillResponse(response, "'Analyzers' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Configure(CheckConfig(params));
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
@@ -100,7 +101,7 @@ void *ModbusTCP::Thread(void *) {
   int         Opt = 1;
   int         Sock   = socket(AF_INET, SOCK_STREAM, 0);
 	if(Sock < 0) {
-		LOGFile::Error("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+		LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
   setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR, (const void *)&Opt , sizeof(int));
@@ -108,7 +109,7 @@ void *ModbusTCP::Thread(void *) {
 	Server.sin_addr.s_addr = INADDR_ANY;
 	Server.sin_port = htons(pPort);
 	if(bind(Sock, (sockaddr *)&Server, sizeof(Server)) < 0) {
-		LOGFile::Error("ERROR", "%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+		LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
   listen(Sock, 5);
@@ -164,11 +165,9 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
     } else if(Size <= 0) {
       break;
     }
-    printf("MODBUS(%d) <- ", Size); for(uint8_t n = 0; n < Size; n++) printf(" %02X", ((uint8_t*)&PacketIN)[n]); printf("\n");
     PacketIN.Length            = ntohs(PacketIN.Length);
     PacketIN.StartAddress      = ntohs(PacketIN.StartAddress);
     PacketIN.QuantityRegisters = ntohs(PacketIN.QuantityRegisters);
-    printf("Size: %u, Length: %u, Proto: %u, Registers: %u\n", Size, PacketIN.Length, PacketIN.ProtocolID, PacketIN.QuantityRegisters);
     if((Size != 12) || (PacketIN.Length != 6) || (PacketIN.ProtocolID != 0x0000)) continue;
     PacketOUT.TransactionID = PacketIN.TransactionID;
     PacketOUT.UnitID        = PacketIN.UnitID;
@@ -195,9 +194,6 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
     }
     PacketOUT.Length = htons(PacketOUT.ResponseLen + 3);
     Size = send(clientSock, &PacketOUT, PacketOUT.ResponseLen + 9, 0);
-    printf("MODBUS(%d) -> ", Size);
-    for(uint8_t n = 0; n < Size; n++) printf(" %02X", ((uint8_t*)&PacketOUT)[n]);
-    printf("\n");
   }
   LOGFile::Debug("Modbus connection terminated\n");
 }

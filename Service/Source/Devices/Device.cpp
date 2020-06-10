@@ -78,9 +78,9 @@ bool Device::HandleModbus(const uint8_t *buff, const string &serial, const uint1
     pAnalyzersLock.Unlock();
     return false;
   } else {
-    (*Tmp)->HandleModbus(buff, start, len);
+    bool Result = (*Tmp)->HandleModbus(buff, start, len);
     pAnalyzersLock.Unlock();
-    return true;
+    return Result;
   }
 }
 bool Device::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
