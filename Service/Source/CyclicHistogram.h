@@ -20,6 +20,8 @@ private:
     uint32_t nominalVoltage;
     size_t voltageBinSize;
     Database *DB;
+    uint64_t startTime;
+    uint64_t endTime;
     vector<vector<vector<uint64_t>>> cumulativeCount; // Variable used for storing cyclic histogram cumulative counts
     void ResizePhaseNumber(uint8_t numPhases);
     void ResizeCumulativeCount(uint8_t phaseNumber, size_t newSize);

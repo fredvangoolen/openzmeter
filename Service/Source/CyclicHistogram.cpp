@@ -1,4 +1,5 @@
 #include "CyclicHistogram.h"
+#include <chrono>
 
 CyclicHistogram::CyclicHistogram(const string &analyzer_schema, uint32_t nominalVoltage, size_t voltageBinSize)
 {
@@ -26,6 +27,15 @@ void CyclicHistogram::ResetCumulativeCount()
 
 void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, size_t arrSize, size_t offset)
 {
+    // Log the current time as the end time for this histogram
+    endTime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch());
+
+    if (startTime == 0)
+    {
+        // Log the current time as the start time for this histogram
+        startTime = endTime;
+    }
+
     // Skip the first requested set of data points (tends to be unreliable data)
     if (!skippedFirstPointSet)
     {
@@ -98,7 +108,29 @@ void CyclicHistogram::FlushToDisk()
 
 void CyclicHistogram::FlushToDatabase()
 {
-    
+    DB->ExecSentenceAsyncResult("INSERT INTO cychist (starttime, endtime) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ") RETURNING id");
+
+    if (DB->FecthRow())
+    {
+        uint32_t cychist_id = DB.ResultString("id");
+
+        return;
+
+        for (size_t i = 0; i < cumulativeCount.size(); i++)
+        {
+            for (size_t j = 0; j < cumulativeCount[i].size(); j++)
+            {
+                for (size_t k = 0; k < cumulativeCount[i][j].size(); k++)
+                {
+                    uint64_t value = cumulativeCount[i][j][k];
+                    if (value != 0)
+                    {
+                        outputFile << i << "," << j << "," << k << "," << value << endl;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void CyclicHistogram::ResizePhaseNumber(uint8_t numPhases)
