@@ -109,8 +109,6 @@ void CyclicHistogram::FlushToDatabase()
     {
         uint32_t cychist_id = DB->ResultUInt64("id");
 
-        return;
-        /*
         for (size_t i = 0; i < cumulativeCount.size(); i++)
         {
             for (size_t j = 0; j < cumulativeCount[i].size(); j++)
@@ -120,12 +118,13 @@ void CyclicHistogram::FlushToDatabase()
                     uint64_t value = cumulativeCount[i][j][k];
                     if (value != 0)
                     {
-                        outputFile << i << "," << j << "," << k << "," << value << endl;
+                        DB->ExecSentenceNoResult("INSERT INTO cychist_point (cychist_id, phase, x, y, count) VALUES (" +
+                                                 DB->Bind(cychist_id) + ", " + DB->Bind(i) + ", " + DB->Bind(j) + ", " + DB->Bind(k) + ", " + DB->Bind(value) +
+                                                 ")");
                     }
                 }
             }
         }
-        */
     }
 }
 
