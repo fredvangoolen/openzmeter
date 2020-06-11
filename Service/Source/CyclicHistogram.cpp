@@ -103,6 +103,7 @@ void CyclicHistogram::FlushToDisk()
 
 void CyclicHistogram::FlushToDatabase()
 {
+    DB->ExecSentenceNoResult("BEGIN TRANSACTION");
     DB->ExecSentenceAsyncResult("INSERT INTO cychist (starttime, endtime) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ") RETURNING id");
 
     if (DB->FecthRow())
@@ -126,6 +127,8 @@ void CyclicHistogram::FlushToDatabase()
             }
         }
     }
+
+    DB->ExecSentenceNoResult("COMMIT TRANSACTION");
 }
 
 void CyclicHistogram::Clear(){
