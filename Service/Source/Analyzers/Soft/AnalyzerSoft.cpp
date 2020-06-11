@@ -1686,6 +1686,7 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
     } else if(Serie == "CYCLIC_HISTOGRAM_DB"){
       LOGFile::Error("Flushing Cyclic Histogram to database...\n");
       cyclicHistogram->FlushToDatabase();
+      cyclicHistogram->Clear();
       LOGFile::Error("  Done.\n");  
     } else {
       pNowDataLock.ConsumerEnds();

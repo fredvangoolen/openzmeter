@@ -9,12 +9,11 @@ class CyclicHistogram final
 public:
     CyclicHistogram(const string &analyzer_schema, uint32_t nominalVoltage, size_t voltageBinSize = 512);
     ~CyclicHistogram();
-    void ResetCumulativeCount();
     void AddPoints(uint8_t phaseNumber, float *pVoltageSamples, size_t arrSize, size_t offset);
     vector<vector<vector<uint64_t>>> GetCyclicHistogram();
     void FlushToDisk();
     void FlushToDatabase();
-
+    void Clear();
 private:
     bool skippedFirstPointSet;
     uint32_t nominalVoltage;

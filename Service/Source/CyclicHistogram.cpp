@@ -12,17 +12,12 @@ CyclicHistogram::CyclicHistogram(const string &analyzer_schema, uint32_t nominal
     LOGFile::Debug("Cyclic Histogram database tables created\n");
 
     skippedFirstPointSet = false;
+    startTime = 0;
 }
 
 CyclicHistogram::~CyclicHistogram()
 {
     // Cleanup memory
-}
-
-void CyclicHistogram::ResetCumulativeCount()
-{
-    // Reset all values in histogram to 0
-    // std::fill(cumulativeCount->begin(), cumulativeCount->end(), 0);
 }
 
 void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, size_t arrSize, size_t offset)
@@ -132,6 +127,11 @@ void CyclicHistogram::FlushToDatabase()
         }
         */
     }
+}
+
+void CyclicHistogram::Clear(){
+    startTime = 0;
+    cumulativeCount = vector<vector<vector<uint64_t>>>();
 }
 
 void CyclicHistogram::ResizePhaseNumber(uint8_t numPhases)
