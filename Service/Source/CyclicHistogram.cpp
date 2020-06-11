@@ -28,7 +28,7 @@ void CyclicHistogram::ResetCumulativeCount()
 void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, size_t arrSize, size_t offset)
 {
     // Log the current time as the end time for this histogram
-    endTime = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch());
+    endTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
     if (startTime == 0)
     {
@@ -115,7 +115,7 @@ void CyclicHistogram::FlushToDatabase()
         uint32_t cychist_id = DB.ResultString("id");
 
         return;
-
+        /*
         for (size_t i = 0; i < cumulativeCount.size(); i++)
         {
             for (size_t j = 0; j < cumulativeCount[i].size(); j++)
@@ -130,6 +130,7 @@ void CyclicHistogram::FlushToDatabase()
                 }
             }
         }
+        */
     }
 }
 
