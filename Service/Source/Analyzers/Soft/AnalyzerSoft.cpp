@@ -1683,6 +1683,10 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
       LOGFile::Error("Adding Cyclic Histogram Data...\n");
       cyclicHistogram->FlushToDisk();
       LOGFile::Error("  Done.\n");  
+    } else if(Serie == "CYCLIC_HISTOGRAM_DB"){
+      LOGFile::Error("Flushing Cyclic Histogram to database...\n");
+      cyclicHistogram->FlushToDatabase();
+      LOGFile::Error("  Done.\n");  
     } else {
       pNowDataLock.ConsumerEnds();
       return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);

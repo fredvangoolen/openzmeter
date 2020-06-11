@@ -112,7 +112,7 @@ void CyclicHistogram::FlushToDatabase()
 
     if (DB->FecthRow())
     {
-        uint32_t cychist_id = DB.ResultString("id");
+        uint32_t cychist_id = DB->ResultString("id");
 
         return;
         /*
