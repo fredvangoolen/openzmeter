@@ -96,6 +96,11 @@ void CyclicHistogram::FlushToDisk()
     outputFile.close();
 }
 
+void CyclicHistogram::FlushToDatabase()
+{
+    
+}
+
 void CyclicHistogram::ResizePhaseNumber(uint8_t numPhases)
 {
     string message = "[CH] Resizing to accomodate " + to_string(numPhases) + " phases.\n";

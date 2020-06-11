@@ -13,6 +13,7 @@ public:
     void AddPoints(uint8_t phaseNumber, float *pVoltageSamples, size_t arrSize, size_t offset);
     vector<vector<vector<uint64_t>>> GetCyclicHistogram();
     void FlushToDisk();
+    void FlushToDatabase();
 
 private:
     bool skippedFirstPointSet;
