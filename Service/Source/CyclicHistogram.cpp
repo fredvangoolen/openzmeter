@@ -48,7 +48,7 @@ void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, siz
     // Check if vector is large enough for number of phases
     if (num_phases > cumulativeCount.size())
     {
-        CyclicHistogram::ResizePhaseNumber(num_phases);
+        ResizePhaseNumber(num_phases);
     }
 
     if ((arrSize + offset) > cumulativeCount[phaseNumber].size())

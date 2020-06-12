@@ -814,7 +814,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
       for (uint8_t channelNumber = 0; channelNumber < This->pVoltageChannels; channelNumber++)
       {
         float *ChV = &This->pVoltageSamples[(channelNumber * This->pMaxSamples) + startIdx];
-        This->cyclicHistogram->AddPoints(channelNumber, ChV, arrSize, offset);
+        //This->cyclicHistogram->AddPoints(channelNumber, ChV, arrSize, offset);
       }
 
       startIdx += This->pBlockCycles[i];
