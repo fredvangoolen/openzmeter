@@ -48,7 +48,7 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
     // Check if vector is large enough for number of phases
     if (numPhases > cumulativeCount.size())
     {
-        ResizePhaseNumber(num_phases);
+        ResizePhaseNumber(numPhases);
     }
 
     // Check if inner vectors are large enough to hold individual phase's samples
@@ -92,10 +92,10 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
                 float yNew = (m * (i + cycleXDiff)) + b;
 
                 // Don't attempt to add to cumulative count if the voltage is clipped
-                if (abs(voltage) <= nominalVoltage)
+                if (abs(voltage_current) <= nominalVoltage)
                 {
                     // Convert voltage measurement into a discrete bin number (i.e. quantization)
-                    uint32_t binIndex = ((voltage + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
+                    uint32_t binIndex = ((voltage_current + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
 
                     size_t sampleIdx = i - cycleStartIdx;
                     if (sampleIdx < numSamplesCycle)
