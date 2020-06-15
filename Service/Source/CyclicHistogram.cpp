@@ -61,12 +61,12 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
         }
     }
 
-    int cycleStartIdx = -1;
+    uint32_t cycleStartIdx = -1;
     float cycleXDiff = 0;
     // Find the index of each zero-crossing instance (from - to +)
-    for (size_t i = 0; i < arrBlockSize; i++)
+    for (uint32_t i = 0; i < arrBlockSize; i++)
     {
-        if (i < arrSize - 1)
+        if (i < arrBlockSize - 1)
         {
             float voltage_current = pVoltageSamples[i];
             float voltage_next = pVoltageSamples[i + 1]; // Look-ahead to next voltage
@@ -77,33 +77,30 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
                 cycleStartIdx = i;
             }
 
-            if (cycleStartIdx != -1)
+            float m = voltage_next - voltage_current;
+            float b = voltage_current - (m * i); // b = y - (m * x)
+
+            // Find the x-diff variable (amount to shift the entire waveform by)
+            if (i == cycleStartIdx)
             {
-                float m = voltage_next - voltage_current;
-                float b = voltage_current - (m * i); // b = y - (m * x)
+                float x0 = (0 - b) / m; // x = -b / m (calculates x value where y-intercept is 0)
+                cycleXDiff = x0 - i;
+            }
 
-                // Find the x-diff variable (amount to shift the entire waveform by)
-                if (i == cycleStartIdx)
+            float voltageNew = (m * (i + cycleXDiff)) + b;
+
+            // Don't attempt to add to cumulative count if the voltage is clipped
+            if (abs(voltageNew) <= nominalVoltage)
+            {
+                // Convert voltage measurement into a discrete bin number (i.e. quantization)
+                uint32_t binIndex = ((voltageNew + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
+
+                size_t sampleIdx = i - cycleStartIdx;
+                if (sampleIdx < numSamplesCycle)
                 {
-                    float x0 = (0 - b) / m; // x = -b / m (calculates x value where y-intercept is 0)
-                    cycleXDiff = x0 - i;
-                }
-
-                float voltageNew = (m * (i + cycleXDiff)) + b;
-
-                // Don't attempt to add to cumulative count if the voltage is clipped
-                if (abs(voltageNew) <= nominalVoltage)
-                {
-                    // Convert voltage measurement into a discrete bin number (i.e. quantization)
-                    uint32_t binIndex = ((voltageNew + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
-
-                    size_t sampleIdx = i - cycleStartIdx;
-                    if (sampleIdx < numSamplesCycle)
-                    {
-                        // Perform the incremental count update
-                        uint8_t phaseNumber = 0; // TODO: Include all 3-phase data
-                        cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
-                    }
+                    // Perform the incremental count update
+                    uint8_t phaseNumber = 0; // TODO: Include all 3-phase data
+                    cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
                 }
             }
         }
