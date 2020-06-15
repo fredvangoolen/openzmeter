@@ -20,7 +20,7 @@ CyclicHistogram::~CyclicHistogram()
     // Cleanup memory
 }
 
-void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, size_t arrSize, float sampleRate, float nominalFrequency)
+void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate, float nominalFrequency)
 {
     int numSamplesCycle = sampleRate / nominalFrequency;
 
@@ -45,36 +45,68 @@ void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, siz
     //    LOGFile::Error((to_string(pVoltageSamples[0]) + " | " + to_string(pVoltageSamples[1]) + " | " + to_string(pVoltageSamples[2]) + "\n").c_str());
     //}
 
-    uint8_t num_phases = phaseNumber + 1;
-
     // Check if vector is large enough for number of phases
-    if (num_phases > cumulativeCount.size())
+    if (numPhases > cumulativeCount.size())
     {
         ResizePhaseNumber(num_phases);
     }
 
-    if (numSamplesCycle > cumulativeCount[phaseNumber].size())
+    // Check if inner vectors are large enough to hold individual phase's samples
+    for (uint8_t phaseNumber = 0; i < numPhases; i++)
     {
-        // Resize the cumulative count array to fit all data
-        ResizeCumulativeCount(phaseNumber, numSamplesCycle);
+        if (numSamplesCycle > cumulativeCount[phaseNumber].size())
+        {
+            // Resize the cumulative count array to fit all data
+            ResizeCumulativeCount(phaseNumber, numSamplesCycle);
+        }
     }
 
-    // Iterate through each point and find its appropriate bin index
-    for (size_t i = 0; i < arrSize; i++)
+    int cycleStartIdx = -1;
+    float cycleXDiff = 0;
+    // Find the index of each zero-crossing instance (from - to +)
+    for (size_t i = 0; i < arrBlockSize; i++)
     {
-        float voltage = pVoltageSamples[i];
-        if (abs(voltage) > nominalVoltage)
+        if (i < arrSize - 1)
         {
-            continue; // Skip this point
+            float voltage_current = pVoltageSamples[i];
+            float voltage_next = pVoltageSamples[i + 1]; // Look-ahead to next voltage
+
+            // Attempt to detect zero-crossing location
+            if (voltage_current < 0 && voltage_next > 0)
+            {
+                cycleStartIdx = i;
+            }
+
+            if (cycleStartIdx != -1)
+            {
+                float m = voltage_next - voltage_current;
+                float b = voltage_current - (m * i); // b = y - (m * x)
+
+                // Find the x-diff variable (amount to shift the entire waveform by)
+                if (i == cycleStartIdx)
+                {
+                    float x0 = (0 - b) / m; // x = -b / m (calculates x value where y-intercept is 0)
+                    cycleXDiff = x0 - i;
+                }
+
+                float yNew = (m * (i + cycleXDiff)) + b;
+
+                // Don't attempt to add to cumulative count if the voltage is clipped
+                if (abs(voltage) <= nominalVoltage)
+                {
+                    // Convert voltage measurement into a discrete bin number (i.e. quantization)
+                    uint32_t binIndex = ((voltage + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
+
+                    size_t sampleIdx = i - cycleStartIdx;
+                    if (sampleIdx < numSamplesCycle)
+                    {
+                        // Perform the incremental count update
+                        uint8_t phaseNumber = 0; // TODO: Include all 3-phase data
+                        cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
+                    }
+                }
+            }
         }
-
-        size_t sampleIndex = i % numSamplesCycle;
-
-        // Convert voltage measurement into a discrete bin number (i.e. quantization)
-        uint32_t binIndex = ((voltage + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
-
-        // Perform the incremental count update
-        cumulativeCount[phaseNumber][sampleIndex][binIndex] += 1;
     }
 }
 
@@ -133,7 +165,8 @@ void CyclicHistogram::FlushToDatabase()
     DB->ExecSentenceNoResult("COMMIT TRANSACTION");
 }
 
-void CyclicHistogram::Clear(){
+void CyclicHistogram::Clear()
+{
     startTime = 0;
     cumulativeCount = vector<vector<vector<uint64_t>>>();
 }
