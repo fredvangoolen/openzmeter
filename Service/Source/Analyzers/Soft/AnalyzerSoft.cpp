@@ -805,7 +805,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
     }
     Aggreg->Frequency = (Cycles == This->pFreqCyclesLen) ? This->pFreqCyclesLen / ((2.0 * Samples) / This->pSamplerate) : 0;
     
-    This->cyclicHistogram->AddPoints(pVoltageSamples, This->pMaxSamples, This->pVoltageChannels, This->pSamplerate, This->pNominalFrequency)
+    This->cyclicHistogram->AddPoints(This->pVoltageSamples, This->pMaxSamples, This->pVoltageChannels, This->pSamplerate, This->pNominalFrequency)
   }
   for(uint8_t j = 0; j < This->pVoltageChannels; j++) {
     float *ChV = &This->pVoltageSamples[j * This->pMaxSamples];
