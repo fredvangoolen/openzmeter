@@ -20,8 +20,10 @@ CyclicHistogram::~CyclicHistogram()
     // Cleanup memory
 }
 
-void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, size_t arrSize, size_t offset)
+void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, size_t arrSize, float sampleRate, float nominalFrequency)
 {
+    int numSamplesCycle = sampleRate / nominalFrequency;
+
     // Log the current time as the end time for this histogram
     endTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
@@ -51,10 +53,10 @@ void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, siz
         ResizePhaseNumber(num_phases);
     }
 
-    if ((arrSize + offset) > cumulativeCount[phaseNumber].size())
+    if (numSamplesCycle > cumulativeCount[phaseNumber].size())
     {
         // Resize the cumulative count array to fit all data
-        ResizeCumulativeCount(phaseNumber, arrSize + offset);
+        ResizeCumulativeCount(phaseNumber, numSamplesCycle);
     }
 
     // Iterate through each point and find its appropriate bin index
@@ -66,7 +68,7 @@ void CyclicHistogram::AddPoints(uint8_t phaseNumber, float *pVoltageSamples, siz
             continue; // Skip this point
         }
 
-        size_t sampleIndex = i + offset;
+        size_t sampleIndex = i % numSamplesCycle;
 
         // Convert voltage measurement into a discrete bin number (i.e. quantization)
         uint32_t binIndex = ((voltage + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
