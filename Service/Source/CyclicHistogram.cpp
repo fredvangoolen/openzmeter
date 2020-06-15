@@ -36,9 +36,8 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
     // Skip the first requested set of data points (tends to be unreliable data)
     if (!skippedFirstPointSet)
     {
-        LOGFile::Warning("[CH] Logging first set of data.\n");
+        LOGFile::Warning("[CH] Skipping first set of data.\n");
         skippedFirstPointSet = true;
-    }else{
         return;
     }
 
