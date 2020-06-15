@@ -810,7 +810,7 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
       for (uint8_t i = 0; i < This->pBlockCyclesCount; i++)
       {
         float *ChV = &This->pVoltageSamples[(channelNumber * This->pMaxSamples)];
-        This->cyclicHistogram->AddPoints(channelNumber, ChV, This->pMaxSamples, pSamplerate, pNominalFrequency);
+        This->cyclicHistogram->AddPoints(channelNumber, ChV, This->pMaxSamples, This->pSamplerate, This->pNominalFrequency);
       }
     }
   }
