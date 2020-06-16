@@ -67,44 +67,43 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
     // Find the index of each zero-crossing instance (from - to +)
     for (uint32_t i = 0; i < arrBlockSize; i++)
     {
-        if (i < arrBlockSize - 1)
+        for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
         {
-            float voltage_current = pVoltageSamples[i];
-            float voltage_next = pVoltageSamples[i + 1]; // Look-ahead to next voltage
-
-            // Attempt to detect zero-crossing location
-            if ((voltage_current < 0) && (voltage_current >= -0.05 * nominalVoltage) && (voltage_next > 0) && (voltage_next <= 0.05 * nominalVoltage))
+            if (i < arrBlockSize - 1)
             {
-                foundFirstCycle = true;
-                cycleStartIdx = i;
-            }
+                float voltage_current = pVoltageSamples[(arrBlockSize * phaseNumber) + i];
+                float voltage_next = pVoltageSamples[(arrBlockSize * phaseNumber) + i + 1]; // Look-ahead to next voltage
 
-            float m = voltage_next - voltage_current;
-            float b = voltage_current - (m * i); // b = y - (m * x)
+                float m = voltage_next - voltage_current;
+                float b = voltage_current - (m * i); // b = y - (m * x)
 
-            // Find the x-diff variable (amount to shift the entire waveform by)
-            if (i == cycleStartIdx)
-            {
-                float x0 = (0 - b) / m; // x = -b / m (calculates x value where y-intercept is 0)
-                cycleXDiff = x0 - i;
-            }
-
-            if (foundFirstCycle)
-            {
-                float voltageNew = (m * (i + cycleXDiff)) + b;
-
-                // Don't attempt to add to cumulative count if the voltage is clipped
-                if (abs(voltageNew) <= nominalVoltage)
+                // Attempt to detect zero-crossing location
+                if ((phaseNumber == 0) && (voltage_current < 0) && (voltage_current >= -0.05 * nominalVoltage) && (voltage_next > 0) && (voltage_next <= 0.05 * nominalVoltage))
                 {
-                    // Convert voltage measurement into a discrete bin number (i.e. quantization)
-                    uint32_t binIndex = ((voltageNew + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
+                    foundFirstCycle = true;
+                    cycleStartIdx = i;
 
-                    size_t sampleIdx = i - cycleStartIdx;
-                    if (sampleIdx < numSamplesCycle)
+                    // Find the x-diff variable (amount to shift the entire waveform by)
+                    float x0 = (0 - b) / m; // x = -b / m (calculates x value where y-intercept is 0)
+                    cycleXDiff = x0 - i;
+                }
+
+                if (foundFirstCycle)
+                {
+                    float voltageNew = (m * (i + cycleXDiff)) + b;
+
+                    // Don't attempt to add to cumulative count if the voltage is clipped
+                    if (abs(voltageNew) <= nominalVoltage)
                     {
-                        // Perform the incremental count update
-                        uint8_t phaseNumber = 0; // TODO: Include all 3-phase data
-                        cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
+                        // Convert voltage measurement into a discrete bin number (i.e. quantization)
+                        uint32_t binIndex = ((voltageNew + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
+
+                        size_t sampleIdx = i - cycleStartIdx;
+                        if (sampleIdx < numSamplesCycle)
+                        {
+                            // Perform the incremental count update
+                            cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
+                        }
                     }
                 }
             }
@@ -114,7 +113,6 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
 
 void CyclicHistogram::FlushToDisk()
 {
-
     std::ofstream outputFile;
     outputFile.open("cyclichistogram.txt", std::ios::out);
     outputFile << "phase,sample,voltage_bin,count" << endl;
