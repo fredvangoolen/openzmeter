@@ -8,8 +8,6 @@ CyclicHistogram::CyclicHistogram(const string &analyzer_schema, uint32_t nominal
     // Setup database structure
     DB = new Database(analyzer_schema);
     DB->ExecResource("SQL/Database_CyclicHistogram.sql");
-    DB->ExecSentenceNoResult("DELETE FROM cychist");
-    LOGFile::Debug("Cyclic Histogram database tables created\n");
 
     skippedFirstPointSet = false;
     startTime = 0;

@@ -1660,7 +1660,7 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
       LOGFile::Error("  Done.\n");  
     } else if(Serie == "CYCLIC_HISTOGRAM_DB"){
       LOGFile::Error("Flushing Cyclic Histogram to database...\n");
-      cyclicHistogram->FlushToDatabase(1591905420759, "DIP");
+      cyclicHistogram->FlushToDatabase();
       cyclicHistogram->Clear();
       LOGFile::Error("  Done.\n");  
     } else {
