@@ -723,8 +723,11 @@ void AnalyzerSoft::Analyzer_Func() {
       Cycles++;
     }
     pAggreg200MS.Frequency = (Cycles == pFreqCyclesLen) ? pFreqCyclesLen / ((2.0 * Samples) / pSamplerate) : 0;
-    
-    This->cyclicHistogram->AddPoints(This->pVoltageSamples, This->pMaxSamples, This->pVoltageChannels, This->pSamplerate, This->pNominalFrequency);
+
+    if (cyclicHistogram != NULL)
+    {
+      cyclicHistogram->AddPoints(This->pVoltageSamples, This->pMaxSamples, This->pVoltageChannels, This->pSamplerate, This->pNominalFrequency);
+    }
   }
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
     float *ChV = &pVoltageSamples[j * pMaxSamples];
