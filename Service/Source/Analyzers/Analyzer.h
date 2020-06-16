@@ -33,7 +33,7 @@ class Analyzer {
     uint64_t          pLastSave;                //Timestamp of last save or communication
     string            pName;                    //Analyzer description
   public :
-    const string Serial;                        //Serial number
+    const string      Serial;                   //Serial number
   protected :
     Analyzer(const string &id);
     string GetName();
@@ -41,10 +41,12 @@ class Analyzer {
     void   SetOnline();
     bool   IsOnline();
   public :
+    virtual void PeriodicTasks() = 0;
     virtual void GetAnalyzer(const json &params, Response &response) = 0;
     virtual void SetAnalyzer(const json &params, Response &response) = 0;
     virtual void GetSeries(const json &params, Response &response) = 0;
     virtual void GetSeriesNow(const json &params, Response &response) = 0;
+    virtual void GetWaveStream(const json &params, Response &response) = 0;
     virtual void GetSeriesRange(const json &params, Response &response) = 0;
     virtual void GetEvents(const json &params, Response &response) = 0;
     virtual void GetEvent(const json &params, Response &response) = 0;
@@ -55,6 +57,7 @@ class Analyzer {
     virtual void GetAlarms(const json &params, Response &response) = 0;
     virtual void GetRemote(const json &params, Response &response) = 0;
     virtual void SetRemote(const json &params, Response &response) = 0;
+    virtual bool HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len) = 0;
   public :
     virtual ~Analyzer();
     json     GetJSONDescriptor();

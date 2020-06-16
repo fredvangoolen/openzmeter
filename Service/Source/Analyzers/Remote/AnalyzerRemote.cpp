@@ -95,6 +95,8 @@ void AnalyzerRemote::SetRemote(const json &params, Response &response) {
   pthread_mutex_unlock(&pMutex);
   return HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
+void AnalyzerRemote::PeriodicTasks() {
+}
 void AnalyzerRemote::HandleRequest(const string &url, const json &params, Response &response) {
   pthread_mutex_lock(&pMutex);
   if(pConsumerReady == false) {
@@ -155,6 +157,9 @@ void AnalyzerRemote::GetSeriesNow(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getSeriesNow", params, response);
 }
+void AnalyzerRemote::GetWaveStream(const json &params, Response &response) {
+
+}
 void AnalyzerRemote::GetSeriesRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getSeriesRange", params, response);
@@ -186,4 +191,10 @@ void AnalyzerRemote::TestAlarm(const json &params, Response &response) {
 void AnalyzerRemote::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getAlarms", params, response);
+}
+bool AnalyzerRemote::HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len) {
+//  uint8_t Pending = len;
+
+  return false;
+
 }

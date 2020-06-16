@@ -47,8 +47,8 @@
         Opt.visibility = [];
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, ((this.Options['Voltage'] == true) ? 1 : 0));
-        var VoltageNames = this.analyzer.PhaseNames.slice(0, this.analyzer.VoltageChannels).map((val) => { return 'Voltage' + ' (' + val + ')'});
-        var CurrentNames = this.analyzer.PhaseNames.slice(0, this.analyzer.CurrentChannels).map((val) => { return 'Current' + ' (' + val + ')'});
+        var VoltageNames = (this.analyzer.PhaseNames == null) ? ['Voltage'] : this.analyzer.PhaseNames.slice(0, this.analyzer.VoltageChannels).map((val) => { return 'Voltage' + ' (' + val + ')'});
+        var CurrentNames = (this.analyzer.PhaseNames == null) ? ['Current'] : this.analyzer.PhaseNames.slice(0, this.analyzer.CurrentChannels).map((val) => { return 'Current' + ' (' + val + ')'});
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n]);
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n] && this.Options['Voltage']);
         Opt.series = {};
@@ -106,12 +106,5 @@
 <style scoped>
   .header-text {
     font-size: 14px;
-  }
-  .title-warning {
-    line-height: 20px;
-    font-size: 14px;
-  }
-  .title-warning img {
-    margin: -4px 4px 0px 0px;
   }
 </style>

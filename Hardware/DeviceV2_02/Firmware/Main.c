@@ -124,7 +124,6 @@ void DMA_CH1_ISR() {
     } else {
       Samples_Buffer.Head = 0;
       Samples_Buffer.Tail = 0;
-//     __asm("BKPT #0\n") ; // Break into the debugger
     }
   }
   //const uint16_t Temp30 = *(uint16_t*)0x1FFFF7B8;

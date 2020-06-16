@@ -57,7 +57,7 @@
   import Harmonics from './Harmonics.vue';
   import Parameters from './Parameters.vue';
   import Waveform from './Waveform.vue';
-  import Events from './Events.vue';
+  import Events from '../Events_Disturbances/Events.vue';
   import Phasors from './Phasors.vue';
   export default {
     props: { analyzer: { type: Object } },
@@ -77,8 +77,6 @@
       this.Transfer10M.Update(this.analyzer, '10M', 'LastSamples');
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
       this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
-      this.LocalStorage_Set("bliu", 2);
-      this.LocalStorage_Set("blasdadsu", 42);
     },
     beforeDestroy: function() {
       this.TransferGraph.Destroy();

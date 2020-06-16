@@ -14,7 +14,7 @@
       <spinner v-if="data==null"></spinner>
       <div class="row" v-if="analyzer.VoltageChannels>1">
         <div class="col-xs-12 col-md-4 panel-body" ref="SequenceContainer">
-          <table>
+          <table class="main-table">
             <tr><td class="border-bottom">Positive sequence</td></tr>
             <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
               <graph class="graph" :options="GraphOptionsSequence.Positive" :height="SequenceHeight" :width="SequenceHeight"></graph>
@@ -22,7 +22,7 @@
           </table>
         </div>
         <div class="col-xs-12 col-md-4 panel-body">
-          <table>
+          <table class="main-table">
             <tr><td class="border-bottom">Negative sequence</td></tr>
             <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
               <graph class="graph" :options="GraphOptionsSequence.Negative" :height="SequenceHeight" :width="SequenceHeight"></graph>
@@ -30,7 +30,7 @@
           </table>
         </div>
         <div class="col-xs-12 col-md-4 panel-body">
-          <table>
+          <table class="main-table">
             <tr><td class="border-bottom">Zero sequence</td></tr>
             <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
               <graph class="graph" :options="GraphOptionsSequence.Zero" :height="SequenceHeight" :width="SequenceHeight"></graph>
@@ -40,7 +40,7 @@
       </div>
       <div class="row">
         <div class="col-sm-12 col-md-8 col-lg-6 panel-body" ref="PhasorContainer">
-          <table>
+          <table class="main-table">
             <tr><td class="border-bottom">Phasor view</td></tr>
             <tr><td class="graphDiv" @mouseenter="MouseOver=true" @mouseleave="MouseOver=false">
               <graph class="graph" :options="GraphOptionsPhasors" :height="PhasorHeight" :width="PhasorHeight"></graph>
@@ -48,7 +48,7 @@
           </table>
         </div>
         <div class="col-sm-12 col-md-4 col-lg-6 panel-body">
-          <table>
+          <table class="main-table">
             <tr><td class="border-bottom">Voltage and current phase angle</td></tr>
             <tr>
               <td>
@@ -115,13 +115,20 @@
         var Opt = {Positive: Object.assign({ file: [] }, this.CommonOptions), Negative: Object.assign({ file: [] }, this.CommonOptions), Zero: Object.assign({ file: [] }, this.CommonOptions) };
         if(this.data.Voltage.length == 3) {
           var A = new Complex(Math.cos(120.0 * Math.PI / 180.0), Math.sin(120.0 * Math.PI / 180.0));
+          console.log('A:', A);
           var A2 = A.clone().mult(A);
+          console.log('A²:', A2);
           var V1 = new Complex(this.data.Voltage_Harmonics[0][0][0], this.data.Voltage_Harmonics[0][0][1]);
+          console.log('V1', V1);
           var V2 = new Complex(this.data.Voltage_Harmonics[1][0][0], this.data.Voltage_Harmonics[1][0][1]);
+          console.log('V2', V2);
           var V3 = new Complex(this.data.Voltage_Harmonics[2][0][0], this.data.Voltage_Harmonics[2][0][1]);
-          var Zero = V1.clone().add(V2).add(V3).mult(new Complex(1.0 / 3.0, 0.0));
+          console.log('V3', V3);
           var Positive = V1.clone().add(A.clone().mult(V2)).add(A2.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
+          console.log('Positive', Positive);
           var Negative = V1.clone().add(A2.clone().mult(V2)).add(A.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
+          console.log('Negative', Negative);
+          var Zero = V1.clone().add(V2).add(V3).mult(new Complex(1.0 / 3.0, 0.0));
           var OffsetAngle = Positive.arg() * 180.0 / Math.PI;
           for(var n = 0; n < 3; n++) {
             Opt.Positive.file.push([n * 2, Positive.arg() * 180.0 / Math.PI + (n * 120.0) - OffsetAngle, Positive.abs()]);
@@ -153,8 +160,8 @@
         if(this.data == null) return [];
         var Phasors = [];
         for(var i in this.data.Voltage) {
-          Phasors.push( { Phase: this.analyzer.PhaseNames[i], Channel: "Voltage", Angle: this.Round(this.data.Voltage_Phase[i], 2, true) + '°', Value: this.Round(this.data.Voltage[i], 2, true) + ' V' } );
-          Phasors.push( { Phase: this.analyzer.PhaseNames[i], Channel: "Current", Angle: this.Round(((this.data.Phi[i] == null) || (this.data.Voltage_Phase[i] == null)) ? null : this.data.Voltage_Phase[i] + this.data.Phi[i], 2, true) + '°', SecAngle: '(' + this.Round(this.data.Phi[i], 2, true) + '°)', Value: this.Round(this.data.Current[i], 2, true) + ' A'} );
+          Phasors.push( { Phase: (this.analyzer.PhaseNames == null) ? '-' : this.analyzer.PhaseNames[i], Channel: "Voltage", Angle: this.Round(this.data.Voltage_Phase[i], 2, true) + '°', Value: this.Round(this.data.Voltage[i], 2, true) + ' V' } );
+          Phasors.push( { Phase: (this.analyzer.PhaseNames == null) ? '-' : this.analyzer.PhaseNames[i], Channel: "Current", Angle: this.Round(((this.data.Phi[i] == null) || (this.data.Voltage_Phase[i] == null)) ? null : this.data.Voltage_Phase[i] + this.data.Phi[i], 2, true) + '°', SecAngle: '(' + this.Round(this.data.Phi[i], 2, true) + '°)', Value: this.Round(this.data.Current[i], 2, true) + ' A'} );
         }
         return Phasors;
       }
@@ -171,8 +178,8 @@
         if(this.data == null) return [];
         var Data = [['Phase', 'Channel', 'Angle', 'Value']];
         for(var i in this.data.Voltage) {
-          Data.push([this.analyzer.PhaseNames[i], "Voltage", this.Round(this.data.Voltage_Phase[i], 3), this.Round(this.data.Voltage[i], 3)]);
-          Data.push([this.analyzer.PhaseNames[i], "Current", this.Round(this.data.Voltage_Phase[i] + this.data.Phi[i], 3), this.Round(this.data.Current[i], 3)]);
+          Data.push([(this.analyzer.PhaseNames == null) ? '-' : this.analyzer.PhaseNames[i], "Voltage", this.Round(this.data.Voltage_Phase[i], 3), this.Round(this.data.Voltage[i], 3)]);
+          Data.push([(this.analyzer.PhaseNames == null) ? '-' : this.analyzer.PhaseNames[i], "Current", this.Round(this.data.Voltage_Phase[i] + this.data.Phi[i], 3), this.Round(this.data.Current[i], 3)]);
         }
         return Object.seal(Data);
       },
@@ -325,9 +332,6 @@
   .graphDiv >>> .graph {
     margin: auto;
   }
-  .table {
-    border: none;
-  }
   @media screen and (min-width: 600px) {
     .table >>> th:nth-child(1)  {
       width: 40px;
@@ -353,31 +357,17 @@
   .header-text {
     font-size: 14px;
   }
-  .title-warning {
-    line-height: 20px;
-    font-size: 14px;
+  .main-table {
+    width: 100%;
+    border: 1px solid #ccc;
   }
-  .title-warning img {
-    margin: -4px 4px 0px 0px;
-  }
-    table {
-     width: 100%;
-     border-radius: 6px;
-     border: 1px solid #ccc;
-  }
-  table:not(:first-child), .output-table:not(:first-child) {
+  .main-table:not(:first-child) {
     margin-top: 5px;
   }
-  table tr td {
-    border-spacing: 0px;
-    padding: 3px;
-  }
-  table .border-bottom {
+  .main-table .border-bottom {
     border-bottom: 1px solid #ccc;
     background: #eee;
     font-weight: bold;
-  }
-  table .border-right {
-    border-right: 1px solid #ccc;
+    padding: 3px;
   }
 </style>

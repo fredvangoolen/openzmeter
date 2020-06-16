@@ -50,8 +50,8 @@
         Opt.visibility = [];
         var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
-        var VoltageNames = this.analyzer.PhaseNames.slice(0, this.analyzer.VoltageChannels).map((val) => { return 'Voltage' + ' (' + val + ')'});
-        var CurrentNames = this.analyzer.PhaseNames.slice(0, this.analyzer.CurrentChannels).map((val) => { return 'Current' + ' (' + val + ')'});
+        var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
+        var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
         Opt.series = {};
@@ -72,7 +72,6 @@
         Opt.labels = ['Sample'].concat(VoltageNames).concat(CurrentNames);
         Opt.colors = VoltageStyle.Colors.concat(CurrentStyle.Colors);
         if(this.data != null) {
-          Opt.file = [];
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [i];
             for(var n = 0; n < this.data.Voltage_Samples.length; n++) Row.push(this.data.Voltage_Samples[n][i]);
@@ -109,12 +108,5 @@
 <style scoped>
   .header-text {
     font-size: 14px;
-  }
-  .title-warning {
-    line-height: 20px;
-    font-size: 14px;
-  }
-  .title-warning img {
-    margin: -4px 4px 0px 0px;
   }
 </style>

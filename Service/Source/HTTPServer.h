@@ -51,25 +51,29 @@ class URL {
 class HTTPTaskQueue final : public TaskQueue {
   private :
     typedef struct {
-      std::function<void()> Function;
-      uint64_t              LastTime;     //Last time event
-      Worker               *Thread;
+      function<void()> Function;
+      uint64_t         LastTime;
+      bool             Terminate;
+      pthread_t        Thread;
+      pthread_mutex_t  Mutex;
+      pthread_cond_t   Cond;
+      HTTPTaskQueue   *Parent;
     } Worker_t;
   private :
-    static pthread_mutex_t   pLocks;
-    static HTTPTaskQueue    *pInstance;
-  private :
-    list<Worker_t*>   pFreeWorkers;
-    uint32_t          pUsedWorkers;
+    pthread_mutex_t    pMutex;
+    pthread_cond_t     pCond;
+    list<Worker_t*>    pFreeWorkers;
+    uint32_t           pRunningWorkers;
+    uint64_t           pLastAdjust;
   private:
-    static void Thread(void *param1, void *param2);
-  public :
-    static void AdjustWorkers();
+    static void *Thread(void *params);
   public:
     HTTPTaskQueue();
     ~HTTPTaskQueue();
     void enqueue(std::function<void()> fn) override;
+    void on_idle() override;
     void shutdown() override;
+    void queue_tasks();
 };
 //----------------------------------------------------------------------------------------------------------------------
 class HTTPServer final {
@@ -84,11 +88,12 @@ class HTTPServer final {
     static pthread_t      pThread;
     static Server        *pServer;
   private :
-    static void   *Listen_Thread(void *params);
+    static void  *Listen_Thread(void *params);
     static string ParseCookie(const string &cookie);
     static void   HandleGet(const Request &request, Response &response);
     static void   HandlePost(const Request &request, Response &response);
   public :
+    static void PeriodicTasks();
     static void RegisterCallback(const string &handleName, const Func_t function);
     static void UnregisterCallback(const string &handleName);
     static void FillResponse(Response &response, const string &body, const char *mime, const int status);
@@ -96,5 +101,4 @@ class HTTPServer final {
   public :
     HTTPServer();
     ~HTTPServer();
-    void RemoveExpiredSessions() const;
 };

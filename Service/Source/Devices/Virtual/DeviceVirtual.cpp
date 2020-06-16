@@ -35,8 +35,10 @@ DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of r
   Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial)));
 }
 DeviceVirtual::~DeviceVirtual() {
+  LOGFile::Info("Stopping device with serial '%s'\n", Serial.c_str());
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
+  LOGFile::Info("Device with serial '%s' stopped\n", Serial.c_str());
 }
 json DeviceVirtual::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
@@ -47,7 +49,7 @@ json DeviceVirtual::CheckConfig(const json &config) {
   ConfigOUT["CurrentPhase"] = 0.0;
   ConfigOUT["Mode"] = "1PHASE";
   ConfigOUT["Enabled"] = false;
-  ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1);
+  ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1, NULL);
   if(config.is_object()) {
     if(config.contains("Voltage") && config["Voltage"].is_number() && (config["Voltage"] >= 10) && (config["Voltage"] <= 1000)) ConfigOUT["Voltage"] = config["Voltage"];
     if(config.contains("Frequency") && config["Frequency"].is_number() && (((config["Frequency"] >= 10) && (config["Frequency"] <= 100)) || (config["Frequency"] == 0.0))) ConfigOUT["Frequency"] = config["Frequency"];
@@ -56,7 +58,7 @@ json DeviceVirtual::CheckConfig(const json &config) {
     if(config.contains("CurrentPhase") && config["CurrentPhase"].is_number() && (config["CurrentPhase"] >= -180.0) && (config["CurrentPhase"] <= 180.0)) ConfigOUT["CurrentPhase"] = config["CurrentPhase"];
     if(config.contains("Mode") && config["Mode"].is_string() && ((config["Mode"] == "1PHASE") || (config["Mode"] == "3PHASE") || (config["Mode"] == "3PHASE+N"))) ConfigOUT["Mode"] = config["Mode"];
     if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
-    if(config.contains("Analyzer") && config["Analyzer"].is_object()) ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(config["Analyzer"], (ConfigOUT["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (ConfigOUT["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N);
+    if(config.contains("Analyzer") && config["Analyzer"].is_object()) ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(config["Analyzer"], (ConfigOUT["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (ConfigOUT["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N, NULL);
   }
   return ConfigOUT;
 }
@@ -107,15 +109,17 @@ void DeviceVirtual::SetDevice(const json &params, Response &response) {
 }
 void *DeviceVirtual::Capture_Thread(void *args) {
   DeviceVirtual *This = (DeviceVirtual*)args;
-  uint64_t       StartTime        = Tools::GetTime();
+  uint64_t       StartTime        = Tools::GetTime64();
   uint64_t       GeneratedSamples = 0;
   int32_t        Phase            = (This->pSampleRate / This->pFrequency) * (This->pCurrentPhase / 360.0);
   while(!This->pTerminate) {
     float Voltage[3], Current[4];
-    uint64_t Sampletime = Tools::GetTime();
+    uint64_t Sampletime = Tools::GetTime64();
     if((This->pAnalyzer->IsWorking() == false) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
       Voltage[0] = (This->pFrequency > 0.0) ? This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency) : This->pVoltage;
       Current[0] = (This->pFrequency > 0.0) ? This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples + Phase) / This->pSampleRate * This->pFrequency) : This->pCurrent;
+      if(((Sampletime - StartTime) > 60000) && ((Sampletime - StartTime) < 65000))
+        Voltage[0] = Voltage[0] * 0.8;
       if((This->pMode == Analyzer::PHASE3) || (This->pMode == Analyzer::PHASE3N)) {
         Voltage[1] = (This->pFrequency > 0.0) ? This->pVoltage * M_SQRT2 * sin(2.0 * M_PI * GeneratedSamples / This->pSampleRate * This->pFrequency - 2.0 * M_PI / 3.0) : This->pVoltage;
         Current[1] = (This->pFrequency > 0.0) ? This->pCurrent * M_SQRT2 * sin(2.0 * M_PI * (GeneratedSamples + Phase) / This->pSampleRate * This->pFrequency - 2.0 * M_PI / 3.0) : This->pCurrent;

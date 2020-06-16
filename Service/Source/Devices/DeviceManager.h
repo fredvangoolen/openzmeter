@@ -40,6 +40,7 @@ class DeviceManager final {
     static void SetAnalyzerCallback(const json &params, Response &response);
     static void GetSeriesCallback(const json &params, Response &response);
     static void GetSeriesNowCallback(const json &params, Response &response);
+    static void GetWaveStream(const json &params, Response &response);
     static void GetSeriesRangeCallback(const json &params, Response &response);
     static void GetEventsCallback(const json &params, Response &response);
     static void GetEventCallback(const json &params, Response &response);
@@ -52,8 +53,15 @@ class DeviceManager final {
     static void AddPermissionCallback(const json &params, Response &response);
     static void SetPermissionCallback(const json &params, Response &response);
     static void DelPermissionCallback(const json &params, Response &response);
+    static void GetTariffsCallback(const json &params, Response &response);
+    static void GetTariffCallback(const json &params, Response &response);
+    static void SetTariffCallback(const json &params, Response &response);
+    static void DelTariffCallback(const json &params, Response &response);
+    static void AddTariffCallback(const json &params, Response &response);
   public :
     static void AddDriver(vector<Device*> (*func)());
+    static void PeriodicTasks();
+    static bool HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len);
   public :
     DeviceManager();
     ~DeviceManager();

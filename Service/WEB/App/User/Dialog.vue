@@ -60,7 +60,7 @@
       <div class="row">
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">Telegram ID</label>
-          <input type="text" class="form-control" v-model="User.Telegram">
+          <input-spin :big="true" :decimals="0" :min="-100000000000000" :max="100000000000000" v-model="User.Telegram"></input-spin>
         </div>
         <div class="col-xs-12 col-sm-6">
           <label class="control-label">E-Mail</label>

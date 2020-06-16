@@ -46,11 +46,12 @@ module.exports = {
         exclude: /node_modules/
       },
       {
-        test: /\.(png|svg|woff2|ttf|eot|woff)$/,
+        test: /\.(png|svg|woff2|ttf|eot|woff)$/i,
         use: [{
             loader: 'url-loader',
             options: {
-              limit: 80000 // Convert images < 80kb to base64 strings
+              limit: 80000,
+              esModule: false
             }
           }]
       }
@@ -73,7 +74,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*': { target: 'http://195.77.159.50:8704'}
+      '*': { target: 'http://192.168.8.3:80/'}
     }
   },
   performance: {

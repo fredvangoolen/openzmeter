@@ -15,13 +15,15 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include "cpp-httplib/httplib.h"
+#include "cctz/time_zone.h"
 #include "nlohmann/json.h"
 #include "Tools.h"
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
+using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
-#define TELEGRAM_POLLING_SEC    5
+#define TELEGRAM_POLLING_SEC    3
 #define TELEGRAM_UPDATE_LIMIT 100
 //----------------------------------------------------------------------------------------------------------------------
 class Telegram final {
@@ -34,10 +36,11 @@ class Telegram final {
       SSLClient            *Client;
     } Worker_t;
   private :
+    static json                pStatus;
     static string              pToken;
     static pthread_t           pThread;
     static pthread_mutex_t     pMutex;
-    static bool                pTerminate;
+    volatile static bool       pTerminate;
     static list<Worker_t*>     pFreeWorkers;
     static uint32_t            pUsedWorkers;
     static Headers             pHeaders;
@@ -48,13 +51,12 @@ class Telegram final {
     static json  CheckConfig(const json &config);
     static void *Thread_Func(void *params);
   public :
-    static bool  SendMessage(const json &msg);
-    static void  AdjustWorkers();
-  public :
     Telegram();
     ~Telegram();
-//----------------------------------------------------------------------------------------------------------------------
   public :
-      static void  HandleUpdate(SSLClient *client, const json &JSON);
-
+    static void  SendAlarm(const string &analyzer, const time_zone &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered);
+    static bool  SendMessage(const json &msg, Client *client);
+    static void  PeriodicTasks();
+//----------------------------------------------------------------------------------------------------------------------
+    static void  HandleUpdate(SSLClient *client, const json &JSON);
 };

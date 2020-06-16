@@ -59,6 +59,7 @@ class Device {
     bool SetAnalyzer(const json &params, Response &response);
     bool GetSeries(const json &params, Response &response);
     bool GetSeriesNow(const json &params, Response &response);
+    bool GetWaveStream(const json &params, Response &response);
     bool GetSeriesRange(const json &params, Response &response);
     bool GetEvents(const json &params, Response &response);
     bool GetEvent(const json &params, Response &response);
@@ -71,8 +72,10 @@ class Device {
     bool AddPermission(const json &params, Response &response);
     bool SetPermission(const json &params, Response &response);
     bool DelPermission(const json &params, Response &response);
+    bool HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len);
   public :
     virtual ~Device();
+    virtual void PeriodicTasks();
     virtual void GetDevice(const json &params, Response &response) = 0;
     virtual void SetDevice(const json &params, Response &response) = 0;
     virtual void GetRemote(const json &params, Response &response);

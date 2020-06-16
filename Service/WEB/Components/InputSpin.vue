@@ -6,6 +6,9 @@
         <li v-for="item in list" :key="item.name"><a @click="$emit('input', item.value)">{{ item.name }}</a></li>
       </ul>
     </div>
+    <div class="input-group-btn" v-if="$slots['buttons']">
+      <slot name="buttons"></slot>
+    </div>
     <input type="text" class="form-control" :value="Format(value)" @change="Change($event.target.value)">
     <span v-if="prepend" class="input-group-addon" id="basic-addon1">{{ prepend }}</span>
     <div class="input-group-btn-vertical">
@@ -21,34 +24,9 @@
     data: function() {
       return { };
     },
-    created: function() {
-//      this.Value = this.value;
-    },
-    watch: {
-//      value: function(val) {
-
-//      }
-    },
     methods: {
-//      SetValue: function(val) {
-//        this.Value = parseFloat(val);
-//        if(this.Value > this.max) this.Value = this.max;
-//        this.$emit('change', this.Value);
-//      },
-//      Increment: function(evt) {
-//        $(evt.target).blur();
-//        this.Value = parseFloat(this.Value) + this.increment;
-//        if(this.Value > this.max) this.Value = this.max;
-//        this.$emit('change', this.Value);
-//      },
-//      Decrement: function(evt) {
-//        $(evt.target).blur();
-//        this.Value = parseFloat(this.Value) - this.increment;
-//        if(this.Value < this.min) this.Value = this.min;
-//        this.$emit('change', this.Value);
-//      },
       Change: function(val) {
-        var Value = parseFloat(val);
+        var Value = parseFloat(eval(val));
         if(isNaN(Value) === true) Value = this.min;
         if(Value > this.max) Value = this.max;
         if(Value < this.min) Value = this.min;

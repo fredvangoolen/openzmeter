@@ -3,21 +3,19 @@
     <dlg :loading="ShowSpinner" v-if="View==null">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Analyzers</h4></div>
-        <div class="pull-right input-group input-group-xs" style="width:200px">
-          <input type="text" class="form-control" placeholder="Filter..." v-model="Filter">
-          <span class="input-group-btn">
-            <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
-          </span>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
+        <toolbar-pager class="pull-right" :pageSize="10" :input="Analyzers" :output.sync="FilterAnalyzers" :filtercols="['Name', 'Analyzer']"></toolbar-pager>
       </template>
       <div class="alert alert-danger text-center" v-if="Analyzers.length == 0" style="margin-bottom: 5px; padding: 5px">
         <p>There are no analyzers available.</p>
         <p>If you are an administrator, check device settings, otherwise request permission.</p>
       </div>
-      <vuetable key="analyzers" :fields="Columns" :data="Analyzers" :api-mode="false" class="table small table-striped">
+      <vuetable key="analyzers" :fields="Columns" :data="FilterAnalyzers" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-success btn-xs" :disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" @click="Select(props.rowData.Analyzer)">Select</button>
+            <button type="button" class="btn btn-success btn-xs" :disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" @click="Select(props.rowData.Analyzer, true)">Select</button>
             <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
             <ul class="dropdown-menu pull-right">
               <li><a @click="Alarms(props.rowData.Analyzer)">Alarms and events</a></li>
@@ -55,7 +53,7 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { View: null, Analyzers: [], ShowSpinner: false, Analyzer: null, Filter: '',
+      return { View: null, Analyzers: [], FilterAnalyzers: [], ShowSpinner: false, Analyzer: null, Filter: '',
         Columns: [
           {name: 'Online', title: 'Online', callback: this.OnlineStatus},
           {name: 'Name', title: 'Description'},
@@ -80,10 +78,10 @@
           }
         });
       },
-      OnlineStatus: function(value) {
+      OnlineStatus: function(value, close) {
         return (value === true) ? '&#9635;' : '&#9633;';
       },
-      Select: function(analyzer) {
+      Select: function(analyzer, close) {
         this.$emit('update:analyzer', null);
         this.ShowSpinner = true;
         localStorage.setItem('Analyzer', analyzer);
@@ -91,7 +89,7 @@
           (result) => {
             result.data.Analyzer = analyzer;
             this.$emit('update:analyzer', result.data);
-            this.$emit('close');
+            if(close == true) this.$emit('close');
             this.ShowSpinner = false;
           },
           (fail) => {}
@@ -101,7 +99,7 @@
         this.View = null;
         if(analyzer == null) return;
         this.GetAnalyzers();
-        if(analyzer == this.analyzer.Analyzer) this.Select(analyzer);
+        if(analyzer == this.analyzer.Analyzer) this.Select(analyzer, false);
       },
       Configure: function(analyzer) {
         this.ShowSpinner = true;

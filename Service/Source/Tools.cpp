@@ -22,14 +22,15 @@
 #include <unistd.h>
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-Worker::Worker(const string &name, void *param, void (*callback)(void*, void*), int8_t nice) {
-  pWorking       = false;
-  pTerminate     = false;
-  pCond          = PTHREAD_COND_INITIALIZER;
-  pMutex         = PTHREAD_MUTEX_INITIALIZER;
-  pCreationParam = param;
-  pRunParam      = NULL;
-  pCallback      = callback;
+Worker::Worker(const string &name, function<void(void*)> callback, int8_t nice) {
+  pWorking   = false;
+  pTerminate = false;
+  pCondWake  = PTHREAD_COND_INITIALIZER;
+  pCondWait  = PTHREAD_COND_INITIALIZER;
+  pMutex     = PTHREAD_MUTEX_INITIALIZER;
+  pRunParam  = NULL;
+  pThread    = 0;
+  pCallback = callback;
   if(pthread_create(&pThread, NULL, Thread, (void*)this) != 0) {
     pThread = 0;
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
@@ -39,26 +40,22 @@ Worker::Worker(const string &name, void *param, void (*callback)(void*, void*), 
   pthread_setname_np(pThread, name.c_str());
 }
 Worker::~Worker() {
+  pthread_mutex_lock(&pMutex);
   pTerminate = true;
-  pthread_cond_signal(&pCond);
-  if(pThread == 0) return;
-  if(pthread_join(pThread, NULL) != 0) LOGFile::Error("%s:%d -> (Unknown)\n", __func__, __LINE__);
+  pthread_cond_signal(&pCondWake);
+  pthread_mutex_unlock(&pMutex);
+  if(pThread != 0) pthread_join(pThread, NULL);
 }
 void Worker::Run(void *param) {
   pthread_mutex_lock(&pMutex);
-  if(pTerminate == true) {
-    pthread_mutex_unlock(&pMutex);
-    return;
-  }
   pWorking = true;
   pRunParam = param;
+  pthread_cond_signal(&pCondWake);
   pthread_mutex_unlock(&pMutex);
-  pthread_cond_signal(&pCond);
 }
 bool Worker::IsWorking() {
-  bool Result;
   pthread_mutex_lock(&pMutex);
-  Result = pWorking;
+  bool Result = pWorking;
   pthread_mutex_unlock(&pMutex);
   return Result;
 }
@@ -66,26 +63,21 @@ void *Worker::Thread(void *args) {
   Worker *This = (Worker*)args;
   while(This->pTerminate == false) {
     pthread_mutex_lock(&This->pMutex);
-    while(This->pWorking == false) {
-      if(This->pTerminate == true) {
-        This->pWorking = false;
-        pthread_mutex_unlock(&This->pMutex);
-        return NULL;
-      }
-      pthread_cond_wait(&This->pCond, &This->pMutex);
+    while((This->pTerminate == false) && (This->pWorking == false)) pthread_cond_wait(&This->pCondWake, &This->pMutex);
+    if((This->pTerminate == false) && (This->pWorking == true)) {
+      pthread_mutex_unlock(&This->pMutex);
+      This->pCallback(This->pRunParam);
+      pthread_mutex_lock(&This->pMutex);
     }
-    pthread_mutex_unlock(&This->pMutex);
-    This->pCallback(This->pCreationParam, This->pRunParam);
-    pthread_mutex_lock(&This->pMutex);
     This->pWorking = false;
+    pthread_cond_broadcast(&This->pCondWait);
     pthread_mutex_unlock(&This->pMutex);
-    pthread_cond_signal(&This->pCond);
   }
   return NULL;
 }
 void Worker::Wait() {
   pthread_mutex_lock(&pMutex);
-  while(pWorking == true) pthread_cond_wait(&pCond, &pMutex);
+  while((pTerminate == false) && (pWorking == true)) pthread_cond_wait(&pCondWait, &pMutex);
   pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -98,26 +90,12 @@ RWLocks::RWLocks() {
   pWriter           = false;
 }
 RWLocks::~RWLocks() {
-  pthread_mutex_destroy(&pMutex);
-  pthread_cond_destroy(&pReadersCondition);
-  pthread_cond_destroy(&pWritersCondition);
 }
 void RWLocks::ReadLock() {
   pthread_mutex_lock(&pMutex);
   while((pWriters > 0) || (pWriter == true)) pthread_cond_wait(&pReadersCondition, &pMutex);
   pReaders++;
   pthread_mutex_unlock(&pMutex);
-}
-bool RWLocks::TryReadLock() {
-  pthread_mutex_lock(&pMutex);
-  if((pWriters > 0) || (pWriter == true)) {
-    pthread_mutex_unlock(&pMutex);
-    return false;
-  }
-  while((pWriters > 0) || (pWriter == true)) pthread_cond_wait(&pReadersCondition, &pMutex);
-  pReaders++;
-  pthread_mutex_unlock(&pMutex);
-  return true;
 }
 void RWLocks::WriteLock() {
   pthread_mutex_lock(&pMutex);
@@ -136,65 +114,71 @@ void RWLocks::Unlock() {
   }
   if(pWriters > 0) {
     pthread_cond_signal(&pWritersCondition);
-  } else if(pReaders > 0) {
+  } else {
     pthread_cond_broadcast(&pReadersCondition);
   }
   pthread_mutex_unlock(&pMutex);
 }
 //----------------------------------------------------------------------------------------------------------------------
 ProviderLocks::ProviderLocks() {
-  pConsumers     = 0;
-  pDataReady     = false;
-  pTerminate     = false;
-  pMutex         = PTHREAD_MUTEX_INITIALIZER;
-  pProducerCond  = PTHREAD_COND_INITIALIZER;
-  pConsumersCond = PTHREAD_COND_INITIALIZER;
+  pConsumers         = 0;
+  pDataReady         = false;
+  pTerminate         = false;
+  pMutex             = PTHREAD_MUTEX_INITIALIZER;
+  pConsumerEnterCond = PTHREAD_COND_INITIALIZER;
+  pConsumerWaitCond  = PTHREAD_COND_INITIALIZER;
+  pProducerCond      = PTHREAD_COND_INITIALIZER;
 }
-void ProviderLocks::Abort() {
+ProviderLocks::~ProviderLocks() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
+  pthread_cond_broadcast(&pConsumerEnterCond);
+  pthread_cond_broadcast(&pConsumerWaitCond);
+  pthread_cond_broadcast(&pProducerCond);
   pthread_mutex_unlock(&pMutex);
-  pthread_cond_broadcast(&pConsumersCond);
 }
 void ProviderLocks::ProviderWrite() {
   pthread_mutex_lock(&pMutex);
   pDataReady = true;
-  pthread_cond_broadcast(&pConsumersCond);
+  pthread_cond_broadcast(&pConsumerWaitCond);
   pthread_mutex_unlock(&pMutex);
 }
 void ProviderLocks::ProviderWait() {
   pthread_mutex_lock(&pMutex);
   while(pConsumers > 0) pthread_cond_wait(&pProducerCond, &pMutex);
   pDataReady = false;
+  pthread_cond_broadcast(&pConsumerEnterCond);
   pthread_mutex_unlock(&pMutex);
 }
-bool ProviderLocks::ConsumerWait(uint32_t timeoutMS) {
+bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
+  int Error = 0;
+  timespec To;
+  clock_gettime(CLOCK_REALTIME, &To);
+  To.tv_sec += timeoutSec;
   pthread_mutex_lock(&pMutex);
-  pConsumers++;
-  struct timeval  Current;
-  struct timespec Timeout;
-  gettimeofday(&Current, NULL);
-  Timeout.tv_sec  = Current.tv_sec + (timeoutMS / 1000);
-  Timeout.tv_nsec = (timeoutMS % 1000) * 1000000;
-  while((pDataReady == false) && (pTerminate == false)) {
-    int Error = pthread_cond_timedwait(&pConsumersCond, &pMutex, &Timeout);
-    if((Error == ETIMEDOUT) || (pTerminate == true)){
-      pConsumers--;
-      if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
-      pthread_mutex_unlock(&pMutex);
-      return false;
-    } else if(Error != 0) {
-      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
-      return false;
-    }
-  }
-  if(pTerminate == true) {
+  while((Error == 0) && (pDataReady == true) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerEnterCond, &pMutex, &To);
+  if((Error != 0) && (Error != ETIMEDOUT)) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
-  } else {
+  } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
     pthread_mutex_unlock(&pMutex);
-    return true;
+    return false;
   }
+  pConsumers++;
+  while((Error == 0) && (pDataReady == false) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerWaitCond, &pMutex, &To);
+  if((Error != 0) && (Error != ETIMEDOUT)) {
+    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
+    pConsumers--;
+    if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
+    pthread_mutex_unlock(&pMutex);
+    return false;
+  }
+  pthread_mutex_unlock(&pMutex);
+  return true;
 }
 void ProviderLocks::ConsumerEnds() {
   pthread_mutex_lock(&pMutex);
@@ -289,6 +273,7 @@ LOGFile::Type   LOGFile::pLevel    = LOGFile::DEBUG;
 bool            LOGFile::pConsole  = true;
 pthread_mutex_t LOGFile::pMutex    = PTHREAD_MUTEX_INITIALIZER;
 bool            LOGFile::pDebug    = false;
+//----------------------------------------------------------------------------------------------------------------------
 LOGFile::LOGFile() {
   string Name = "/var/log/openZmeter.log";
   json Config = ConfigManager::ReadConfig("/Log");
@@ -342,15 +327,15 @@ void LOGFile::CloseConsole() {
   pConsole = false;
 }
 void LOGFile::Msg(Type type, const char *msg, va_list params) {
+  if(((type > pLevel) || (pFile == NULL)) && (pConsole == false)) return;
+  char   DateStr[32];
+  char   MsgStr[1024];
   time_t Now;
-  struct tm *TimeStamp;
-  char DateStr[32];
-  char MsgStr[1024];
-  pthread_mutex_lock(&pMutex);
+  tm     TimeStamp;
   time(&Now);
-  TimeStamp = localtime(&Now);
-  strftime(DateStr, 80, "[%d/%m/%Y - %X]", TimeStamp);
+  strftime(DateStr, 80, "[%d/%m/%Y - %X]", localtime_r(&Now, &TimeStamp));
   vsnprintf(MsgStr, sizeof(MsgStr), msg, params);
+  pthread_mutex_lock(&pMutex);
   if(pConsole == true) {
     if(type == ERROR) {
       printf("\033[1;31m%s\033[0m %s", DateStr, MsgStr);
@@ -412,13 +397,20 @@ void Tools::DisableEcho() {
   tattr.c_cc[VTIME] = 0;
   tcsetattr (STDIN_FILENO, TCSAFLUSH, &tattr);
 }
-uint64_t Tools::GetTime() {
-  struct timeval Time;
-  if(gettimeofday(&Time, NULL) != 0) {
+uint64_t Tools::GetTime64() {
+  struct timespec Time;
+  if(clock_gettime(CLOCK_REALTIME, &Time) != 0) {
     LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return 0;
   }
-  return (uint64_t)Time.tv_sec * 1000 + Time.tv_usec / 1000;
+  return (uint64_t)Time.tv_sec * 1000 + Time.tv_nsec / 1000000;
+}
+string Tools::StrTrim(const string &str) {
+  string chars = "\t\n\v\f\r ";
+  size_t first = str.find_first_not_of(chars);
+  if(first == std::string::npos) return "";
+  size_t last = str.find_last_not_of(chars);
+  return str.substr(first, (last-first+1));
 }
 void Tools::RunDaemon() {
   LOGFile::Info("Move to background task\n");

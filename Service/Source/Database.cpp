@@ -62,9 +62,12 @@ DatabasePool::~DatabasePool() {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void DatabasePool::AdjustWorkers() {
+void DatabasePool::PeriodicTasks() {
+  LOGFile::Debug("Vacuuming database\n");
+  Database DB;
+  DB.ExecSentenceNoResult("VACUUM");
   pthread_mutex_lock(&pMutex);
-  uint64_t Time = Tools::GetTime();
+  uint64_t Time = Tools::GetTime64();
   while(pConnectionPool.size() > 0) {
     auto Tmp = pConnectionPool.back();
     if((Time - Tmp.LastTime) < 60000) break;
@@ -111,7 +114,7 @@ void DatabasePool::PushConnection(PGconn *conn) {
   if(conn == NULL) return;
   pthread_mutex_lock(&pMutex);
   Connection_t Connection;
-  Connection.LastTime = Tools::GetTime();
+  Connection.LastTime = Tools::GetTime64();
   Connection.Connection = conn;
   pConnectionPool.push_front(Connection);
   pthread_mutex_unlock(&pMutex);
@@ -131,6 +134,7 @@ Database::~Database() {
 }
 bool Database::FecthRow() {
   if(pResult != NULL) PQclear(pResult);
+  if(pDBConn == NULL) return false;
   pResult = PQgetResult(pDBConn);
   if(PQresultStatus(pResult) != PGRES_SINGLE_TUPLE) {
     char *Save;
@@ -147,7 +151,6 @@ bool Database::ExecResource(const string &file) {
   return ExecSentenceNoResult(Script);
 }
 bool Database::ExecSentenceNoResult(const string &sql) {
-//  printf("%s\n", sql.c_str());
   if(pDBConn == NULL) return false;
   ClearAsync();
   PGresult *Result = PQexec(pDBConn, sql.c_str());
@@ -185,6 +188,9 @@ void Database::ClearAsync() {
   } while(pResult != NULL);
 }
 string Database::Bind(const uint8_t param) const {
+  return to_string(param);
+}
+string Database::Bind(const uint16_t param) const {
   return to_string(param);
 }
 string Database::Bind(const uint32_t param) const {

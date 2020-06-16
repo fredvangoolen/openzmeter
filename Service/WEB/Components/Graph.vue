@@ -233,10 +233,9 @@
     },
     Callbacks: {
       Underlay_DrawBorder: function(ctx, area, dygraph) {
-        ctx.strokeStyle = '#000';
+        ctx.save();
         ctx.strokeRect(area.x, area.y, area.w, area.h);
-        ctx.rect(area.x + 1, area.y + 1, area.w - 2, area.h - 2);
-        ctx.clip();
+        ctx.restore();
       },
       Underlay_DrawPeriods: function(canvas, area, g, decoration) {
         if(decoration == null) return;
@@ -298,6 +297,24 @@
       }
     },
     Plotters: {
+      Bar: function(e) {
+        var ctx = e.drawingContext;
+        var points = e.points;
+        var y_bottom = e.dygraph.toDomYCoord(0);
+        ctx.fillStyle = e.color;
+        var min_sep = Infinity;
+        for (var i = 1; i < points.length; i++) {
+          var sep = points[i].canvasx - points[i - 1].canvasx;
+          if (sep < min_sep) min_sep = sep;
+        }
+        var bar_width = Math.floor(2.5 / 3 * min_sep);
+        for (var i = 0; i < points.length; i++) {
+          var p = points[i];
+          var center_x = p.canvasx;
+          ctx.fillRect(center_x, p.canvasy, bar_width, y_bottom - p.canvasy);
+          ctx.strokeRect(center_x, p.canvasy, bar_width, y_bottom - p.canvasy);
+        }
+      },
       MultiBar: function(e) {
         if(e.seriesIndex != 0) return;
         var g = e.dygraph;
@@ -323,7 +340,7 @@
             ctx.fillRect(x_left, p.canvasy, g.subbar_width, y_bottom - p.canvasy);
           }
         }
-      },
+      }
     },
     InteractionModels: {
       Scrollable: function(parent) {
@@ -337,7 +354,7 @@
                  touchend: touchEnd*/
         };
       },
-      Fixed: function() {
+      Fixed: function(parent) {
         return { mousedown: mouseDown.bind(parent),
                  mousemove: mouseMove.bind(parent),
                  mouseup: mouseUp.bind(parent),
@@ -368,7 +385,7 @@
       options: function(val, prev) {
         if(val.labels == null) val.labels = ['A', 'B'];
         if(val.file == null) val.file = [];
-        if(val.file.length == 0) val.file.push(Array(val.labels.length).fill(0));
+        if(val.file.length == 0) val.file.push(new Array(val.labels.length).fill(0));
         if((this.Graph == null) || ((this.paused == true) && (this.Graph.file_.length > 1))) {
           this.PausedOptions = val;
           return;
@@ -398,7 +415,7 @@
       var Data = [];
       if(this.options.labels == null) this.options.labels = ['A', 'B'];
       if(this.options.file == null) this.options.file = [];
-      if(this.options.file.length == 0) this.options.file.push(Array(this.options.labels.length).fill(0));
+      if(this.options.file.length == 0) this.options.file.push(new Array(this.options.labels.length).fill(0));
       this.Graph = new Dygraph(this.$el, this.options.file, this.options);
       this.$nextTick(() => {
         $(this.Graph.graphDiv).parent().removeAttr('style');
