@@ -804,33 +804,8 @@ void AnalyzerSoft::Analyzer_Func(void *creation, void *run) {
       Cycles++;
     }
     Aggreg->Frequency = (Cycles == This->pFreqCyclesLen) ? This->pFreqCyclesLen / ((2.0 * Samples) / This->pSamplerate) : 0;
-
-    uint16_t startIdx = 0;
-    for (uint8_t i = 0; i < This->pBlockCyclesCount; i++)
-    {
-      uint16_t arrSize = This->pBlockCycles[i];
-      size_t offset = ((i % 2) == 0) ? 0 : This->pBlockCycles[i - 1];
-
-      for (uint8_t channelNumber = 0; channelNumber < This->pVoltageChannels; channelNumber++)
-      {
-        float *ChV = &This->pVoltageSamples[(channelNumber * This->pMaxSamples) + startIdx];
-        //This->cyclicHistogram->AddPoints(channelNumber, ChV, arrSize, offset);
-      }
-
-      startIdx += This->pBlockCycles[i];
-    }
-
-    for (uint8_t channelNumber = 0; channelNumber < This->pVoltageChannels; channelNumber++)
-    {
-      uint16_t startIdx = 0;
-      for (uint8_t i = 0; i < This->pBlockCyclesCount; i++)
-      {
-        float *ChV = &This->pVoltageSamples[(channelNumber * This->pMaxSamples) + startIdx];
-        size_t offset = ((i % 2) == 0) ? 0 : This->pBlockCycles[i - 1];
-        This->cyclicHistogram->AddPoints(channelNumber, ChV, This->pBlockCycles[i], offset);
-        startIdx += This->pBlockCycles[i];
-      }
-    }
+    
+    This->cyclicHistogram->AddPoints(This->pVoltageSamples, This->pMaxSamples, This->pVoltageChannels, This->pSamplerate, This->pNominalFrequency);
   }
   for(uint8_t j = 0; j < This->pVoltageChannels; j++) {
     float *ChV = &This->pVoltageSamples[j * This->pMaxSamples];

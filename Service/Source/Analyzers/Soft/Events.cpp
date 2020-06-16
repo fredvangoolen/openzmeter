@@ -104,6 +104,14 @@ void AnalyzerSoft::Events::InitEvent(const EventType type, const float *referenc
   Event.SamplesRAW_B = deque<vector<float> >();
   Event.SamplesRMS_B = deque<vector<float> >();
   pEvents.push_back(Event);
+
+  // Flush Cyclic Histogram to database
+  if (pParent->cyclicHistogram != NULL)
+  {
+    LOGFile::Warning("[CH] Event Trigger: Writing CH to database.");
+    cyclicHistogram->FlushToDatabase(Event.Start, Type);
+    cyclicHistogram->Clear();
+  }
 }
 bool AnalyzerSoft::Events::FindRunningEvent(const uint32_t mask) {
   for(list<Event_t>::iterator it = pEvents.begin(); it != pEvents.end(); it++) {
