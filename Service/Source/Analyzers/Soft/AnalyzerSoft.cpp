@@ -726,7 +726,7 @@ void AnalyzerSoft::Analyzer_Func() {
 
     if (cyclicHistogram != NULL)
     {
-      cyclicHistogram->AddPoints(This->pVoltageSamples, This->pMaxSamples, This->pVoltageChannels, This->pSamplerate, This->pNominalFrequency);
+      cyclicHistogram->AddPoints(pVoltageSamples, pMaxSamples, pVoltageChannels, pSamplerate, pNominalFrequency);
     }
   }
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
