@@ -64,14 +64,14 @@ int main(int argc, char** argv) {
   PIDFile PIDFile;
   /* Create LOG file */
   LOGFile LOGFile;
+  /* Create system manager */
+  SysSupport SystemManager;
   /* Create database tables */
   DatabasePool DBPool;
   /* Create WEB service */
   HTTPServer HTTPServer;
   /* Create Telegram manager */
   Telegram TG;
-  /* Create system manager */
-  SysSupport SystemManager;
   /* Create devices interface */
   DeviceManager DeviceManager;
   /* Create ESIOS */

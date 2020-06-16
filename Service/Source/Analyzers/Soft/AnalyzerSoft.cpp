@@ -1871,7 +1871,7 @@ bool AnalyzerSoft::HandleModbus(const uint8_t *buff, const uint16_t start, const
   auto Append_Float = [&](const float val) {
     uint32_t *Dest = (uint32_t*)Ptr;
     uint32_t *Val  = (uint32_t*)&val;
-    *Dest = htonl(*Val);
+    *Dest = htobe32(*Val);
     Ptr += 4;
   };
   memset(Buffer, 0, sizeof(Buffer));
@@ -1880,6 +1880,7 @@ bool AnalyzerSoft::HandleModbus(const uint8_t *buff, const uint16_t start, const
   Append_U32(pAggreg200MS.Timestamp / 1000);
   Append_U64(pAggreg200MS.Timestamp);
   Append_Float(pAggreg200MS.Frequency);
+  printf("%f - %f\n", pAggreg200MS.Frequency, pAggreg200MS.Voltage[0]);
   if(pVoltageChannels > 1) Append_Float(pAggreg200MS.Unbalance);
   for(uint8_t ch = 0; ch < pVoltageChannels; ch++) Append_Float(pAggreg200MS.Voltage[ch]);
   for(uint8_t ch = 0; ch < pCurrentChannels; ch++) Append_Float(pAggreg200MS.Current[ch]);
