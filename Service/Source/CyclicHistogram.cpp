@@ -135,6 +135,11 @@ void CyclicHistogram::FlushToDisk()
     outputFile.close();
 }
 
+void CyclicHistogram::FlushToDatabase()
+{
+    FlushToDatabase(0, "");
+}
+
 void CyclicHistogram::FlushToDatabase(uint64_t event_starttime, string event_type)
 {
     DB->ExecSentenceNoResult("BEGIN TRANSACTION;");
