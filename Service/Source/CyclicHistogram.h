@@ -12,8 +12,9 @@ public:
     void AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate, float nominalFrequency);
     vector<vector<vector<uint64_t>>> GetCyclicHistogram();
     void FlushToDisk();
-    void FlushToDatabase();
+    void FlushToDatabase(uint64_t event_starttime = NULL, string event_type = NULL);
     void Clear();
+
 private:
     bool skippedFirstPointSet;
     uint32_t nominalVoltage;

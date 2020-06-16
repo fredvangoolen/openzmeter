@@ -135,10 +135,10 @@ void CyclicHistogram::FlushToDisk()
     outputFile.close();
 }
 
-void CyclicHistogram::FlushToDatabase()
+void CyclicHistogram::FlushToDatabase(uint64_t event_starttime, string event_type)
 {
-    DB->ExecSentenceNoResult("BEGIN TRANSACTION");
-    DB->ExecSentenceAsyncResult("INSERT INTO cychist (starttime, endtime) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ") RETURNING id");
+    DB->ExecSentenceNoResult("BEGIN TRANSACTION;");
+    DB->ExecSentenceAsyncResult("INSERT INTO cychist (starttime, endtime, event_starttime, event_type) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ", " + DB->Bind(event_starttime != NULL ? event_starttime : "NULL") + ", " + DB->Bind(event_type != NULL ? event_type : "NULL") + ") RETURNING id;");
 
     if (DB->FecthRow())
     {
@@ -155,14 +155,14 @@ void CyclicHistogram::FlushToDatabase()
                     {
                         DB->ExecSentenceNoResult("INSERT INTO cychist_point (cychist_id, phase, x, y, count) VALUES (" +
                                                  DB->Bind(cychist_id) + ", " + DB->Bind(i) + ", " + DB->Bind(j) + ", " + DB->Bind(k) + ", " + DB->Bind(value) +
-                                                 ")");
+                                                 ");");
                     }
                 }
             }
         }
     }
 
-    DB->ExecSentenceNoResult("COMMIT TRANSACTION");
+    DB->ExecSentenceNoResult("COMMIT TRANSACTION;");
 }
 
 void CyclicHistogram::Clear()

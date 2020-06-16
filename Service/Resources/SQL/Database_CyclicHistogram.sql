@@ -1,15 +1,18 @@
 CREATE TABLE IF NOT EXISTS "cychist" (
 	"id" SERIAL PRIMARY KEY,
+	"event_starttime" BIGINT NULL,
+	"event_type" VARCHAR(16) NULL,
 	"starttime" BIGINT NOT NULL,
-	"endtime" BIGINT NULL
+	"endtime" BIGINT NULL,
+	CONSTRAINT "FKEvent" FOREIGN KEY ("event_starttime", "event_type") REFERENCES "events" ("starttime", "evttype") ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "cychist_point" (
 	"id" SERIAL PRIMARY KEY,
+	"cychist_id" INTEGER NOT NULL,
 	"phase" INTEGER NOT NULL,
 	"x" INTEGER NOT NULL,
 	"y" INTEGER NOT NULL,
 	"count" BIGINT NOT NULL DEFAULT 0,
-	"cychist_id" INTEGER NOT NULL,
 	CONSTRAINT "FKCyclicHistogram" FOREIGN KEY ("cychist_id") REFERENCES "cychist" ("id") ON UPDATE CASCADE ON DELETE CASCADE
 );
