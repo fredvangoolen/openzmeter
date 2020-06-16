@@ -189,7 +189,7 @@ GABivector GAVector::operator *(const GAVector &v2) const {
 }
 void GAVector::AddRectPhasor(const uint16_t id, const float x, const float y) {
   AddTerm(id, x);
-  AddTerm(id + 1, y);
+  AddTerm(id + 1, -y);
 }
 void GAVector::AddTerm(const uint16_t id, const float value) {
   pTerms[id] += value;

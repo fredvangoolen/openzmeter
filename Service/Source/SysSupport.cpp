@@ -16,6 +16,7 @@
 #ifdef OPENWRT
   #include <sys/sysinfo.h>
   #include <sys/statvfs.h>
+  #include <linux/watchdog.h>
 #endif
 #ifndef __BUILD__
   #define __BUILD__ "UNKNOWN"
@@ -235,7 +236,17 @@ void SysSupport::PeriodicTask() {
 void *SysSupport::Bluetooth_Thread(void *params) {
   DBusConnection *DBus = NULL;
   nice(5);
+  int WatchdogFD = open("/dev/watchdog", O_WRONLY);
+  if(WatchdogFD == -1) {
+    LOGFile::Error("Watchdog is not avaliable (%s)\n", strerror(errno));
+    fprintf(stderr, "Error: %s\n", strerror(errno));
+    WatchdogFD = 0;
+  } else {
+    int Timeout = 20;
+    ioctl(WatchdogFD, WDIOC_SETTIMEOUT, &Timeout);
+  }
   while(true) {
+    if(WatchdogFD != 0) write(WatchdogFD, "\0", 1);
     pSysStatLock.ReadLock();
     bool   PrevEnable = pBT_Enabled;
     bool   Enable     = (pTerminate == false) ? pBTEnable : false;
@@ -338,6 +349,11 @@ void *SysSupport::Bluetooth_Thread(void *params) {
     }
   }
   if(DBus != NULL) dbus_connection_unref(DBus);
+  if(WatchdogFD != 0) {
+    write(WatchdogFD, "V", 1);
+    close(WatchdogFD);
+  }
+  LOGFile::Debug("Watchdog stopped\n");
   return NULL;
 }
 string SysSupport::GetMacBT(DBusConnection *bus) {

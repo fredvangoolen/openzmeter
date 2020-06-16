@@ -79,9 +79,9 @@
             var Row = [i];
             var V = 0.0;
             var I = 0.0;
-            for(var h = 0; h < this.data.GA_Power.Voltage.length; h++) {
-              V += this.data.GA_Power.Voltage[h][0][0] * Math.cos(w * (h + 1) * (i / smp)) - this.data.GA_Power.Voltage[h][0][1] * Math.sin(w * (h + 1) * (i / smp));
-              I += this.data.GA_Power.Current[h][0][0] * Math.cos(w * (h + 1) * (i / smp)) - this.data.GA_Power.Current[h][0][1] * Math.sin(w * (h + 1) * (i / smp));
+            for(var h = 0; h < this.data.GA_Power.Voltage.length; h += 2) {
+              V += this.data.GA_Power.Voltage[h][0] * Math.cos(w * ((h / 2) + 1) * (i / smp)) + this.data.GA_Power.Voltage[h + 1][0] * Math.sin(w * ((h / 2) + 1) * (i / smp));
+              I += this.data.GA_Power.Current[h][0] * Math.cos(w * ((h / 2) + 1) * (i / smp)) + this.data.GA_Power.Current[h + 1][0] * Math.sin(w * ((h / 2) + 1) * (i / smp));
             }
             Opt.file.push(Row.concat([V * Math.SQRT2 , I * Math.SQRT2]));
           }
