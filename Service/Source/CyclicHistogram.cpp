@@ -61,7 +61,8 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
         }
     }
 
-    uint32_t cycleStartIdx = -1;
+    bool foundFirstCycle = false;
+    uint32_t cycleStartIdx = 0;
     float cycleXDiff = 0;
     // Find the index of each zero-crossing instance (from - to +)
     for (uint32_t i = 0; i < arrBlockSize; i++)
@@ -74,6 +75,7 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
             // Attempt to detect zero-crossing location
             if (voltage_current < 0 && voltage_next > 0)
             {
+                foundFirstCycle = true;
                 cycleStartIdx = i;
             }
 
@@ -86,21 +88,24 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
                 float x0 = (0 - b) / m; // x = -b / m (calculates x value where y-intercept is 0)
                 cycleXDiff = x0 - i;
             }
-
-            float voltageNew = (m * (i + cycleXDiff)) + b;
-
-            // Don't attempt to add to cumulative count if the voltage is clipped
-            if (abs(voltageNew) <= nominalVoltage)
+            
+            if (foundFirstCycle)
             {
-                // Convert voltage measurement into a discrete bin number (i.e. quantization)
-                uint32_t binIndex = ((voltageNew + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
+                float voltageNew = (m * (i + cycleXDiff)) + b;
 
-                size_t sampleIdx = i - cycleStartIdx;
-                if (sampleIdx < numSamplesCycle)
+                // Don't attempt to add to cumulative count if the voltage is clipped
+                if (abs(voltageNew) <= nominalVoltage)
                 {
-                    // Perform the incremental count update
-                    uint8_t phaseNumber = 0; // TODO: Include all 3-phase data
-                    cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
+                    // Convert voltage measurement into a discrete bin number (i.e. quantization)
+                    uint32_t binIndex = ((voltageNew + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
+
+                    size_t sampleIdx = i - cycleStartIdx;
+                    if (sampleIdx < numSamplesCycle)
+                    {
+                        // Perform the incremental count update
+                        uint8_t phaseNumber = 0; // TODO: Include all 3-phase data
+                        cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
+                    }
                 }
             }
         }
