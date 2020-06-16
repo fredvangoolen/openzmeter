@@ -73,7 +73,7 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
             float voltage_next = pVoltageSamples[i + 1]; // Look-ahead to next voltage
 
             // Attempt to detect zero-crossing location
-            if (voltage_current < 0 && voltage_next > 0)
+            if ((voltage_current < 0) && (voltage_current >= -0.05 * nominalVoltage) && (voltage_next > 0) && (voltage_next <= 0.05 * nominalVoltage))
             {
                 foundFirstCycle = true;
                 cycleStartIdx = i;
@@ -88,7 +88,7 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
                 float x0 = (0 - b) / m; // x = -b / m (calculates x value where y-intercept is 0)
                 cycleXDiff = x0 - i;
             }
-            
+
             if (foundFirstCycle)
             {
                 float voltageNew = (m * (i + cycleXDiff)) + b;
