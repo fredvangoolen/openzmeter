@@ -13,7 +13,7 @@ public:
     vector<vector<vector<uint64_t>>> GetCyclicHistogram();
     void FlushToDisk();
     void FlushToDatabase();
-    void FlushToDatabase(uint64_t event_starttime, string event_type);
+    void FlushToDatabase(uint64_t event_starttime);
     void Clear();
 
 private:

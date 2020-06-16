@@ -1,10 +1,9 @@
 CREATE TABLE IF NOT EXISTS "cychist" (
 	"id" SERIAL PRIMARY KEY,
 	"event_starttime" BIGINT NULL,
-	"event_type" VARCHAR(16) NULL,
 	"starttime" BIGINT NOT NULL,
 	"endtime" BIGINT NULL,
-	CONSTRAINT "FKEvent" FOREIGN KEY ("event_starttime", "event_type") REFERENCES "events" ("starttime", "evttype") ON UPDATE CASCADE ON DELETE CASCADE
+	CONSTRAINT "FKEvent" FOREIGN KEY ("event_starttime") REFERENCES "events" ("starttime") ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "cychist_point" (

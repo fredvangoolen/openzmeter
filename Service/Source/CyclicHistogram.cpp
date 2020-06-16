@@ -135,14 +135,14 @@ void CyclicHistogram::FlushToDisk()
 
 void CyclicHistogram::FlushToDatabase()
 {
-    FlushToDatabase(0, "");
+    FlushToDatabase(0);
 }
 
-void CyclicHistogram::FlushToDatabase(uint64_t event_starttime, string event_type)
+void CyclicHistogram::FlushToDatabase(uint64_t event_starttime)
 {
     DB->ExecSentenceNoResult("BEGIN TRANSACTION;");
 
-    string sentence = "INSERT INTO cychist (starttime, endtime, event_starttime, event_type) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ", " + (event_starttime != 0 ? DB->Bind(event_starttime) : "NULL") + ", " + (event_type != "" ? DB->Bind(event_type) : "NULL") + ") RETURNING id;";
+    string sentence = "INSERT INTO cychist (starttime, endtime, event_starttime) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ", " + (event_starttime != 0 ? DB->Bind(event_starttime) : "NULL") + ") RETURNING id;";
     LOGFile::Warning(sentence.c_str());
     DB->ExecSentenceAsyncResult(sentence);
 
