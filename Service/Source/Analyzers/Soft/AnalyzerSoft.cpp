@@ -89,6 +89,9 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode, &Error));
   if(Error.empty() == false) LOGFile::Error("Analyzer '%s' rates failed to parse (%s)\n", Serial.c_str(), Error.c_str());
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
+
+  // Setup cyclic histogram manager
+  cyclicHistogram = new CyclicHistogram(id, 200, 1024);
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LOGFile::Info("Stopping analyzer with serial '%s'\n", Serial.c_str());
