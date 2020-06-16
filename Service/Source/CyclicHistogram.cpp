@@ -138,7 +138,7 @@ void CyclicHistogram::FlushToDisk()
 void CyclicHistogram::FlushToDatabase(uint64_t event_starttime, string event_type)
 {
     DB->ExecSentenceNoResult("BEGIN TRANSACTION;");
-    DB->ExecSentenceAsyncResult("INSERT INTO cychist (starttime, endtime, event_starttime, event_type) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ", " + DB->Bind(event_starttime != 0 ? event_starttime : "NULL") + ", " + DB->Bind(event_type != "" ? event_type : "NULL") + ") RETURNING id;");
+    DB->ExecSentenceAsyncResult("INSERT INTO cychist (starttime, endtime, event_starttime, event_type) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ", " + (event_starttime != 0 ? DB->Bind(event_starttime) : "NULL") + ", " + (event_type != "" ? DB->Bind(event_type) : "NULL") + ") RETURNING id;");
 
     if (DB->FecthRow())
     {
