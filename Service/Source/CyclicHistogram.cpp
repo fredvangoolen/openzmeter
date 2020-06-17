@@ -21,14 +21,6 @@ CyclicHistogram::~CyclicHistogram()
 
 void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate, float nominalFrequency)
 {
-    if (endTime - startTime > 120000)
-    {
-        LOGFile::Warning("[CH] Storing periodic data to database.\n");
-        FlushToDatabase();
-        Clear();
-        return;
-    }
-
     uint32_t numSamplesCycle = sampleRate / nominalFrequency;
 
     // Log the current time as the end time for this histogram
@@ -43,7 +35,7 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
     // Skip the first requested set of data points (tends to be unreliable data)
     if (!skippedFirstPointSet)
     {
-        LOGFile::Warning("[CH] Skipping first set of data.\n");
+        LOGFile::Debug("[CH] Skipping first set of data.\n");
         skippedFirstPointSet = true;
         return;
     }
@@ -154,7 +146,6 @@ void CyclicHistogram::FlushToDatabase(uint64_t event_starttime)
     DB->ExecSentenceNoResult("BEGIN TRANSACTION;");
 
     string sentence = "INSERT INTO cychist (starttime, endtime, event_starttime) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ", " + (event_starttime != 0 ? DB->Bind(event_starttime) : "NULL") + ") RETURNING id;";
-    LOGFile::Warning(sentence.c_str());
     DB->ExecSentenceAsyncResult(sentence);
 
     if (DB->FecthRow())
@@ -202,7 +193,7 @@ void CyclicHistogram::Clear()
 void CyclicHistogram::ResizePhaseNumber(uint8_t numPhases)
 {
     string message = "[CH] Resizing to accomodate " + to_string(numPhases) + " phases.\n";
-    LOGFile::Warning(message.c_str());
+    LOGFile::Debug(message.c_str());
 
     // Resize outer vector
     cumulativeCount.resize(numPhases);
@@ -211,7 +202,7 @@ void CyclicHistogram::ResizePhaseNumber(uint8_t numPhases)
 void CyclicHistogram::ResizeCumulativeCount(uint8_t phaseNumber, size_t newSize)
 {
     string message = "[CH] Resizing array from " + to_string(cumulativeCount[phaseNumber].size()) + " to " + to_string(newSize) + "\n";
-    LOGFile::Warning(message.c_str());
+    LOGFile::Debug(message.c_str());
 
     // Resize vector
     cumulativeCount[phaseNumber].resize(newSize, vector<uint64_t>(voltageBinSize));
