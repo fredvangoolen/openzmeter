@@ -1321,7 +1321,6 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
   This->Params["UserName"] = "admin";
   LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
   Response Resp;
-  LOGFile::Error((This->Method + "\n").c_str());
   if(This->Method == "getAnalyzer") {
     This->Analyzer->GetAnalyzer(This->Params, Resp);
   } else if(This->Method == "setAnalyzer") {
@@ -1346,16 +1345,6 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
     This->Analyzer->TestAlarm(This->Params, Resp);
   } else if(This->Method == "getAlarms") {
     This->Analyzer->GetAlarms(This->Params, Resp);
-  } else if (This->Method == "flushCyclicHistogram") {
-    LOGFile::Error("[CH] Method triggered.\n");
-    if (This->Analyzer->cyclicHistogram != NULL)
-    {
-      LOGFile::Error("Flushing Cyclic Histogram to database...\n");
-      This->Analyzer->cyclicHistogram->FlushToDatabase();
-      This->Analyzer->cyclicHistogram->Clear();
-      LOGFile::Error("  Done.\n");
-    }
-    HTTPServer::FillResponse(Resp, "OK", "application/json", HTTP_OK);
   }
   URL Url(This->Server);
   Headers Header  = {{"Accept", "application/json"}, {"Cookie", This->Cookie}};
