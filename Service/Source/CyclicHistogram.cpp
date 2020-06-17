@@ -21,15 +21,16 @@ CyclicHistogram::~CyclicHistogram()
 
 void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate, float nominalFrequency)
 {
+    if (endTime - startTime > 120000)
+    {
+        FlushToDatabase();
+        Clear();
+    }
+
     uint32_t numSamplesCycle = sampleRate / nominalFrequency;
 
     // Log the current time as the end time for this histogram
     endTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-
-    if (endTime - startTime > 120000)
-    {
-        FlushToDatabase();
-    }
 
     if (startTime == 0)
     {
