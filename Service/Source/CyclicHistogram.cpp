@@ -160,6 +160,9 @@ void CyclicHistogram::FlushToDatabase(uint64_t event_starttime)
     if (DB->FecthRow())
     {
         uint32_t cychist_id = DB->ResultUInt64("id");
+        string sql_points = "";
+        bool shouldExec = false;
+        sql_points += "INSERT INTO cychist_point (cychist_id, phase, x, y, count) VALUES ";
 
         for (size_t i = 0; i < cumulativeCount.size(); i++)
         {
@@ -170,16 +173,23 @@ void CyclicHistogram::FlushToDatabase(uint64_t event_starttime)
                     uint64_t value = cumulativeCount[i][j][k];
                     if (value != 0)
                     {
-                        DB->ExecSentenceNoResult("INSERT INTO cychist_point (cychist_id, phase, x, y, count) VALUES (" +
-                                                 DB->Bind(cychist_id) + ", " + DB->Bind(i) + ", " + DB->Bind(j) + ", " + DB->Bind(k) + ", " + DB->Bind(value) +
-                                                 ");");
+                        sql_points += "(" + DB->Bind(cychist_id) + "," + DB->Bind(i) + "," + DB->Bind(j) + "," + DB->Bind(k) + "," + DB->Bind(value) + "),";
+                        shouldExec = true;
                     }
                 }
             }
         }
-    }
 
-    DB->ExecSentenceNoResult("COMMIT TRANSACTION;");
+        if (shouldExec)
+        {
+            sql_points = sql_points.substr(0, sql_points.size() - 1); // Remove last comma from the SQL statement
+            sql_points += ";";
+            DB->ExecSentenceNoResult(sql_points);
+            DB->ExecSentenceNoResult("COMMIT TRANSACTION;");
+        }else{
+            DB->ExecSentenceNoResult("ROLLBACK TRANSACTION;");
+        }
+    }
 }
 
 void CyclicHistogram::Clear()
