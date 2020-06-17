@@ -26,6 +26,7 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
         LOGFile::Warning("[CH] Storing periodic data to database.\n");
         FlushToDatabase();
         Clear();
+        return;
     }
 
     uint32_t numSamplesCycle = sampleRate / nominalFrequency;
