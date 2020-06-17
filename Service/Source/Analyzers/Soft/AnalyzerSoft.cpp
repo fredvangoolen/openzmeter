@@ -1345,6 +1345,15 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
     This->Analyzer->TestAlarm(This->Params, Resp);
   } else if(This->Method == "getAlarms") {
     This->Analyzer->GetAlarms(This->Params, Resp);
+  } else if (This->Method == "flushCyclicHistogram") {
+    if (This->Analyzer->cyclicHistogram != NULL)
+    {
+      LOGFile::Error("Flushing Cyclic Histogram to database...\n");
+      This->Analyzer->cyclicHistogram->FlushToDatabase();
+      This->Analyzer->cyclicHistogram->Clear();
+      LOGFile::Error("  Done.\n");
+    }
+    HTTPServer::FillResponse(Resp, "OK", "application/json", HTTP_OK);
   }
   URL Url(This->Server);
   Headers Header  = {{"Accept", "application/json"}, {"Cookie", This->Cookie}};
@@ -1637,15 +1646,6 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
       Result["GA_Power"] = CalcGA();
     } else if(Serie == "SYS_STATS") {
       Result["Sys_Stats"] = SysSupport::GetSystemStatusJSON();
-    } else if(Serie == "CYCLIC_HISTOGRAM"){
-      LOGFile::Error("Adding Cyclic Histogram Data...\n");
-      cyclicHistogram->FlushToDisk();
-      LOGFile::Error("  Done.\n");  
-    } else if(Serie == "CYCLIC_HISTOGRAM_DB"){
-      LOGFile::Error("Flushing Cyclic Histogram to database...\n");
-      cyclicHistogram->FlushToDatabase();
-      cyclicHistogram->Clear();
-      LOGFile::Error("  Done.\n");  
     } else {
       pNowDataLock.ConsumerEnds();
       return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);

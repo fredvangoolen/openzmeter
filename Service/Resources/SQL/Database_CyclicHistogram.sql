@@ -15,3 +15,6 @@ CREATE TABLE IF NOT EXISTS "cychist_point" (
 	"count" BIGINT NOT NULL DEFAULT 0,
 	CONSTRAINT "FKCyclicHistogram" FOREIGN KEY ("cychist_id") REFERENCES "cychist" ("id") ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+ALTER TABLE "cychist" SET UNLOGGED;
+ALTER TABLE "cychist_point" SET UNLOGGED;
