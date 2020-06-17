@@ -23,6 +23,7 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
 {
     if (endTime - startTime > 120000)
     {
+        LOGFile::Warning("[CH] Storing periodic data to database.\n");
         FlushToDatabase();
         Clear();
     }
