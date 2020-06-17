@@ -1321,7 +1321,7 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
   This->Params["UserName"] = "admin";
   LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
   Response Resp;
-  LOGFile::Error(This->Method.c_str() + "\n");
+  LOGFile::Error((This->Method + "\n").c_str());
   if(This->Method == "getAnalyzer") {
     This->Analyzer->GetAnalyzer(This->Params, Resp);
   } else if(This->Method == "setAnalyzer") {
