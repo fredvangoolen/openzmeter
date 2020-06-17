@@ -1346,6 +1346,7 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
   } else if(This->Method == "getAlarms") {
     This->Analyzer->GetAlarms(This->Params, Resp);
   } else if (This->Method == "flushCyclicHistogram") {
+    LOGFile::Error("[CH] Method triggered.\n");
     if (This->Analyzer->cyclicHistogram != NULL)
     {
       LOGFile::Error("Flushing Cyclic Histogram to database...\n");
