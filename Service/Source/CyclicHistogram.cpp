@@ -11,6 +11,7 @@ CyclicHistogram::CyclicHistogram(const string &analyzer_schema, uint32_t nominal
 
     skippedFirstPointSet = false;
     startTime = 0;
+    endTime = 0;
 }
 
 CyclicHistogram::~CyclicHistogram()
@@ -38,10 +39,6 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
         skippedFirstPointSet = true;
         return;
     }
-
-    //if(phaseNumber == 0){
-    //    LOGFile::Error((to_string(pVoltageSamples[0]) + " | " + to_string(pVoltageSamples[1]) + " | " + to_string(pVoltageSamples[2]) + "\n").c_str());
-    //}
 
     // Check if vector is large enough for number of phases
     if (numPhases > cumulativeCount.size())
@@ -140,6 +137,12 @@ void CyclicHistogram::FlushToDatabase()
 
 void CyclicHistogram::FlushToDatabase(uint64_t event_starttime)
 {
+    if (startTime == 0 && endTime == 0)
+    {
+        // No data has been added to the CH. Don't store anything in database.
+        return;
+    }
+
     DB->ExecSentenceNoResult("BEGIN TRANSACTION;");
 
     string sentence = "INSERT INTO cychist (starttime, endtime, event_starttime) VALUES (" + DB->Bind(startTime) + ", " + DB->Bind(endTime) + ", " + (event_starttime != 0 ? DB->Bind(event_starttime) : "NULL") + ") RETURNING id;";
@@ -174,6 +177,7 @@ void CyclicHistogram::FlushToDatabase(uint64_t event_starttime)
 void CyclicHistogram::Clear()
 {
     startTime = 0;
+    endTime = 0;
     cumulativeCount = vector<vector<vector<uint64_t>>>();
 }
 
