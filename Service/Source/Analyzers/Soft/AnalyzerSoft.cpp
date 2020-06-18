@@ -92,6 +92,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
 
   // Setup cyclic histogram manager
   cyclicHistogram = new CyclicHistogram(id, 200, 1024);
+  jerkAlgorithm = new JerkAlgorithm();
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LOGFile::Info("Stopping analyzer with serial '%s'\n", Serial.c_str());
@@ -130,8 +131,14 @@ AnalyzerSoft::~AnalyzerSoft() {
   LOGFile::Info("Analyzer with serial '%s' stopped\n", Serial.c_str());
 
   // Cleanup cyclic histogram manager
-  if(cyclicHistogram != NULL)
+  if (cyclicHistogram != NULL)
     delete cyclicHistogram;
+  cyclicHistogram = NULL;
+
+  // Cleanup jerk algorithm manager
+  if (jerkAlgorithm != NULL)
+    delete jerkAlgorithm;
+  jerkAlgorithm = NULL;
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
   pAnalyzerLock.ReadLock();
@@ -730,6 +737,10 @@ void AnalyzerSoft::Analyzer_Func() {
     if (cyclicHistogram != NULL)
     {
       cyclicHistogram->AddPoints(pVoltageSamples, pMaxSamples, pVoltageChannels, pSamplerate, pNominalFrequency);
+    }
+    if (jerkAlgorithm != NULL)
+    {
+      jerkAlgorithm->AddPoints(pVoltageSamples, pMaxSamples, pVoltageSamples);
     }
   }
   for(uint8_t j = 0; j < pVoltageChannels; j++) {

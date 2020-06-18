@@ -27,6 +27,7 @@ extern "C" {
 #include "Analyzer.h"
 #include "Tariff.h"
 #include "CyclicHistogram.h"
+#include "JerkAlgorithm.h"
 
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
@@ -280,4 +281,5 @@ class AnalyzerSoft final : public Analyzer {
     bool IsWorking();
   private :
     CyclicHistogram *cyclicHistogram;
+    JerkAlgorithm *jerkAlgorithm;
 };

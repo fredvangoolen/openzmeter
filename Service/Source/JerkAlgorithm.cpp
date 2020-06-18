@@ -3,7 +3,6 @@
 
 JerkAlgorithm::JerkAlgorithm()
 {
-    stats = JerkStats();
     ClearStats();
 }
 
@@ -21,43 +20,55 @@ vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
     return result;
 }
 
-void JerkAlgorithm::AddWaveform(vector<float> waveform)
+void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases)
 {
-    // Compute the third-order DVDT of the input waveform
-    vector<float> jerk = ComputeDVDT(ComputeDVDT(ComputeDVDT(waveform)));
-
-    for (size_t i = 0; i < jerk.size(); i++)
+    if (stats.size() < numPhases)
     {
-        float jerkElement = jerk[i];
+        stats.resize(numPhases);
+    }
 
-        // Update the cumulative stats with new data
-        if (stats.numPoints == 0)
+    for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
+    {
+        // Convert float pointer array to vector of floats
+        vector<float> waveform;
+        for (size_t i = 0; i < arrBlockSize; i++)
         {
-            stats.min = jerkElement;
-            stats.max = jerkElement;
-            stats.avg = jerkElement;
-        }
-        else
-        {
-            if (jerkElement < stats.min)
-                stats.min = jerkElement;
-
-            if (jerkElement > stats.max)
-                stats.max = jerkElement;
-
-            // Calcuate the Cumulative Moving Average (CMA)
-            // Source: https://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
-            stats.avg = (jerkElement + (stats.numPoints * stats.avg)) / (stats.numPoints + 1);
+            waveform.push_back(pVoltageSamples[(phaseNumber * arrBlockSize) + i]);
         }
 
-        ++stats.numPoints;
+        // Compute the third-order DVDT of the input waveform
+        vector<float> jerk = ComputeDVDT(ComputeDVDT(ComputeDVDT(waveform)));
+
+        for (size_t i = 0; i < jerk.size(); i++)
+        {
+            float jerkElement = jerk[i];
+
+            // Update the cumulative stats with new data
+            if (stats[phaseNumber].numPoints == 0)
+            {
+                stats[phaseNumber].min = jerkElement;
+                stats[phaseNumber].max = jerkElement;
+                stats[phaseNumber].avg = jerkElement;
+            }
+            else
+            {
+                if (jerkElement < stats[phaseNumber].min)
+                    stats[phaseNumber].min = jerkElement;
+
+                if (jerkElement > stats[phaseNumber].max)
+                    stats[phaseNumber].max = jerkElement;
+
+                // Calcuate the Cumulative Moving Average (CMA)
+                // Algorithm Source: https://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
+                stats[phaseNumber].avg = (jerkElement + (stats[phaseNumber].numPoints * stats[phaseNumber].avg)) / (stats[phaseNumber].numPoints + 1);
+            }
+
+            ++stats[phaseNumber].numPoints;
+        }
     }
 }
 
 void JerkAlgorithm::ClearStats()
 {
-    stats.numPoints = 0;
-    stats.min = 0;
-    stats.avg = 0;
-    stats.max = 0;
+    stats.clear();
 }
