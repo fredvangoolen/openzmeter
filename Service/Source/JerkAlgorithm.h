@@ -15,11 +15,17 @@ struct JerkStats
 class JerkAlgorithm final
 {
 public:
-    JerkAlgorithm();
+    JerkAlgorithm(const string &analyzer_schema);
+    ~JerkAlgorithm();
     vector<float> ComputeDVDT(vector<float> input);
     void AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases);
+    void WriteToDatabase();
+    void WriteToDatabase(uint64_t event_starttime);
     void ClearStats();
 
 private:
+    Database *DB;
+    uint64_t startTime;
+    uint64_t endTime;
     vector<JerkStats> stats;
 };

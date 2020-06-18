@@ -1034,7 +1034,7 @@ void AnalyzerSoft::Events_Func() {
 
         if (cyclicHistogram != NULL)
         {
-          cyclicHistogram->FlushToDatabase(pEvent.Start);
+          cyclicHistogram->WriteToDatabase(pEvent.Start);
           cyclicHistogram->Clear();
         }
       } else {

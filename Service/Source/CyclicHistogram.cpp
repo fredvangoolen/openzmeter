@@ -17,6 +17,11 @@ CyclicHistogram::CyclicHistogram(const string &analyzer_schema, uint32_t nominal
 CyclicHistogram::~CyclicHistogram()
 {
     // Cleanup memory
+    if (DB != NULL)
+    {
+        delete DB;
+    }
+    DB = NULL;
 }
 
 void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate, float nominalFrequency)
@@ -106,7 +111,7 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
     }
 }
 
-void CyclicHistogram::FlushToDisk()
+void CyclicHistogram::WriteToDisk()
 {
     std::ofstream outputFile;
     outputFile.open("cyclichistogram.txt", std::ios::out);
@@ -130,12 +135,12 @@ void CyclicHistogram::FlushToDisk()
     outputFile.close();
 }
 
-void CyclicHistogram::FlushToDatabase()
+void CyclicHistogram::WriteToDatabase()
 {
-    FlushToDatabase(0);
+    WriteToDatabase(0);
 }
 
-void CyclicHistogram::FlushToDatabase(uint64_t event_starttime)
+void CyclicHistogram::WriteToDatabase(uint64_t event_starttime)
 {
     if (startTime == 0 && endTime == 0)
     {
@@ -177,7 +182,9 @@ void CyclicHistogram::FlushToDatabase(uint64_t event_starttime)
             sql_points += ";";
             DB->ExecSentenceNoResult(sql_points);
             DB->ExecSentenceNoResult("COMMIT TRANSACTION;");
-        }else{
+        }
+        else
+        {
             DB->ExecSentenceNoResult("ROLLBACK TRANSACTION;");
         }
     }

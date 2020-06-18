@@ -11,9 +11,9 @@ public:
     ~CyclicHistogram();
     void AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate, float nominalFrequency);
     vector<vector<vector<uint64_t>>> GetCyclicHistogram();
-    void FlushToDisk();
-    void FlushToDatabase();
-    void FlushToDatabase(uint64_t event_starttime);
+    void WriteToDisk();
+    void WriteToDatabase();
+    void WriteToDatabase(uint64_t event_starttime);
     void Clear();
 
 private:

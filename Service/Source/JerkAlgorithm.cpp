@@ -1,9 +1,22 @@
 #include "JerkAlgorithm.h"
 #include <chrono>
 
-JerkAlgorithm::JerkAlgorithm()
+JerkAlgorithm::JerkAlgorithm(const string &analyzer_schema)
 {
+    DB = new Database(analyzer_schema);
+    DB->ExecResource("SQL/Database_Jerk.sql");
+
     ClearStats();
+}
+
+JerkAlgorithm::~JerkAlgorithm()
+{
+    // Cleanup memory
+    if (DB != NULL)
+    {
+        delete DB;
+    }
+    DB = NULL;
 }
 
 vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
@@ -22,6 +35,15 @@ vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
 
 void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases)
 {
+    // Log the current time as the end time for this histogram
+    endTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+    if (startTime == 0)
+    {
+        // Log the current time as the start time for this histogram
+        startTime = endTime;
+    }
+
     if (stats.size() < numPhases)
     {
         stats.resize(numPhases);
@@ -68,7 +90,41 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
     }
 }
 
+void JerkAlgorithm::WriteToDatabase()
+{
+    WriteToDatabase(0);
+}
+
+void JerkAlgorithm::WriteToDatabase(uint64_t event_starttime)
+{
+    if (startTime == 0 && endTime == 0)
+    {
+        // No data has been added to the CH. Don't store anything in database.
+        return;
+    }
+
+    DB->ExecSentenceNoResult("BEGIN TRANSACTION;");
+
+    for (int phaseNumber = 0; phaseNumber < stats.size(); phaseNumber++)
+    {
+        string sentence = "INSERT INTO jerk (starttime, endtime, event_starttime, phase, num_points, min, max, avg) VALUES (";
+        sentence += DB->Bind(startTime) + ",";
+        sentence += DB->Bind(endTime) + ",";
+        sentence += (event_starttime != 0 ? DB->Bind(event_starttime) : "NULL") + ",";
+        sentence += phaseNumber + ",";
+        sentence += DB->Bind(stats[phaseNumber].numPoints) + ",";
+        sentence += DB->Bind(stats[phaseNumber].min) + ",";
+        sentence += DB->Bind(stats[phaseNumber].max) + ",";
+        sentence += DB->Bind(stats[phaseNumber].avg) + ");";
+        DB->ExecSentenceNoResult(sentence);
+    }
+    
+    DB->ExecSentenceNoResult("COMMIT TRANSACTION;");
+}
+
 void JerkAlgorithm::ClearStats()
 {
     stats.clear();
+    startTime = 0;
+    endTime = 0;
 }
