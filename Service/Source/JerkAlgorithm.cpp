@@ -11,7 +11,7 @@ vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
 {
     vector<float> result = vector<float>();
 
-    for (uint32_t i = 1; i < input.size(); i++)
+    for (size_t i = 1; i < input.size(); i++)
     {
         float e1 = input[i - 1];
         float e2 = input[i];
@@ -26,7 +26,7 @@ void JerkAlgorithm::AddWaveform(vector<float> waveform)
     // Compute the third-order DVDT of the input waveform
     vector<float> jerk = ComputeDVDT(ComputeDVDT(ComputeDVDT(waveform)));
 
-    for (int i = 0; i < jerk.size(); i++)
+    for (size_t i = 0; i < jerk.size(); i++)
     {
         float jerkElement = jerk[i];
 

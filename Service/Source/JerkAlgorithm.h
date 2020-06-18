@@ -9,7 +9,7 @@ struct JerkStats{
     float min;
     float avg;
     float max;
-}
+};
 
 class JerkAlgorithm final
 {
