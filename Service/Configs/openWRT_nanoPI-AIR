@@ -11,8 +11,9 @@ OS_TARGET = OPENWRT
 TARIFF_ESP  = true
 TARIFF_NONE = true
 
-#Enable/Disable cyclic histogram
+#Enable/Disable cyclic histogram and jerk algorithms
 CYCLIC_HISTOGRAM = true
+JERK_ALGORITHM = true
 
 # Build options --------------------------------------------------------------------------------------------------------
 DEBUG    = false
