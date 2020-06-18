@@ -105,7 +105,7 @@ void JerkAlgorithm::WriteToDatabase(uint64_t event_starttime)
 
     DB->ExecSentenceNoResult("BEGIN TRANSACTION;");
 
-    for (int phaseNumber = 0; phaseNumber < stats.size(); phaseNumber++)
+    for (size_t phaseNumber = 0; phaseNumber < stats.size(); phaseNumber++)
     {
         string sentence = "INSERT INTO jerk (starttime, endtime, event_starttime, phase, num_points, min, max, avg) VALUES (";
         sentence += DB->Bind(startTime) + ",";
@@ -118,7 +118,7 @@ void JerkAlgorithm::WriteToDatabase(uint64_t event_starttime)
         sentence += DB->Bind(stats[phaseNumber].avg) + ");";
         DB->ExecSentenceNoResult(sentence);
     }
-    
+
     DB->ExecSentenceNoResult("COMMIT TRANSACTION;");
 }
 
