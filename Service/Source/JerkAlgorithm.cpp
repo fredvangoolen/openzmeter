@@ -35,6 +35,14 @@ vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
 
 void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases)
 {
+    if(endTime - startTime > 120000){
+        LOGFile::Warning("Logging JA data...\n");
+        WriteToDatabase();
+        ClearStats();
+        LOGFile::Warning("  - Done.\n");
+        return;
+    }
+
     // Log the current time as the end time for this histogram
     endTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
