@@ -92,7 +92,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
 
   // Setup cyclic histogram manager
   cyclicHistogram = new CyclicHistogram(id, 200, 1024);
-  jerkAlgorithm = new JerkAlgorithm();
+  jerkAlgorithm = new JerkAlgorithm(id);
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LOGFile::Info("Stopping analyzer with serial '%s'\n", Serial.c_str());
