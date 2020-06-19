@@ -119,7 +119,7 @@ void JerkAlgorithm::WriteToDatabase(uint64_t event_starttime)
         sentence += DB->Bind(startTime) + ",";
         sentence += DB->Bind(endTime) + ",";
         sentence += (event_starttime != 0 ? DB->Bind(event_starttime) : "NULL") + ",";
-        sentence += phaseNumber + ",";
+        sentence += DB->Bind(phaseNumber) + ",";
         sentence += DB->Bind(stats[phaseNumber].numPoints) + ",";
         sentence += DB->Bind(stats[phaseNumber].min) + ",";
         sentence += DB->Bind(stats[phaseNumber].max) + ",";
