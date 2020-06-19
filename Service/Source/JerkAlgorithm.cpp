@@ -95,16 +95,6 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
                 stats[phaseNumber].min = jerkElement;
                 stats[phaseNumber].max = jerkElement;
                 stats[phaseNumber].avg = jerkElement;
-
-                if (jerkElement < -50.0){
-                    flag = true;
-                    std::ofstream outputFile;
-                    outputFile.open("ja.txt", ios::out);
-                    for (size_t z = 0; z < waveform.size(); z++)
-                    {
-                        outputFile << phaseNumber << "," << waveform[z] << endl;
-                    }
-                }
             }
             else
             {
@@ -112,6 +102,17 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
                 {
                     LOGFile::Warning(("[JA] Found new min: " + to_string(stats[phaseNumber].min) + " -> " + to_string(jerkElement) + "\n").c_str());
                     stats[phaseNumber].min = jerkElement;
+
+                    if (jerkElement < -50.0)
+                    {
+                        flag = true;
+                        std::ofstream outputFile;
+                        outputFile.open("ja.txt", ios::out);
+                        for (size_t z = 0; z < waveform.size(); z++)
+                        {
+                            outputFile << phaseNumber << "," << waveform[z] << endl;
+                        }
+                    }
                 }
 
                 if (jerkElement > stats[phaseNumber].max)
