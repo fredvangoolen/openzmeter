@@ -116,9 +116,9 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
                         flag = true;
                         std::ofstream outputFile;
                         outputFile.open("ja.txt", ios::out);
-                        for (size_t z = 0; z < waveform.size(); z++)
+                        for (size_t z = 0; z < jerk.size(); z++)
                         {
-                            outputFile << to_string(phaseNumber) << "," << to_string(waveform[z]) << endl;
+                            outputFile << to_string(phaseNumber) << "," << to_string(jerk[z]) << endl;
                         }
                     }
                 }
