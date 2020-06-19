@@ -7,6 +7,7 @@ JerkAlgorithm::JerkAlgorithm(const string &analyzer_schema)
     DB->ExecResource("SQL/Database_Jerk.sql");
 
     ClearStats();
+    flag = false;
 }
 
 JerkAlgorithm::~JerkAlgorithm()
@@ -43,6 +44,9 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
         LOGFile::Warning("  - Done.\n");
         return;
     }
+
+    if (flag)
+        return;
 
     // Log the current time as the end time for this histogram
     endTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -91,6 +95,16 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
                 stats[phaseNumber].min = jerkElement;
                 stats[phaseNumber].max = jerkElement;
                 stats[phaseNumber].avg = jerkElement;
+
+                if (jerkElement < -50.0){
+                    flag = true;
+                    std::ofstream outputFile;
+                    outputFile.open("ja.txt", ios::out);
+                    for (size_t z = 0; z < waveform.size(); z++)
+                    {
+                        outputFile << phaseNumber << "," << waveform[z] << endl;
+                    }
+                }
             }
             else
             {
