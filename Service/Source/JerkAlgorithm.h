@@ -24,8 +24,6 @@ public:
     void ClearStats();
 
 private:
-    bool skippedFirstPointSet;
-    bool flag;
     Database *DB;
     uint64_t startTime;
     uint64_t endTime;

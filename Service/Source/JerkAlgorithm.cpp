@@ -7,9 +7,6 @@ JerkAlgorithm::JerkAlgorithm(const string &analyzer_schema)
     DB->ExecResource("SQL/Database_Jerk.sql");
 
     ClearStats();
-
-    flag = false;
-    skippedFirstPointSet = false;
 }
 
 JerkAlgorithm::~JerkAlgorithm()
@@ -38,19 +35,6 @@ vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
 
 void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases)
 {
-    // Skip the first requested set of data points (tends to be unreliable data)
-    if (!skippedFirstPointSet)
-    {
-        LOGFile::Warning("[JA] Skipping first set of data.\n");
-        skippedFirstPointSet = true;
-        return;
-    }
-
-    if (flag)
-        return;
-    else
-        flag = true;
-
     if (endTime - startTime > 120000)
     {
         LOGFile::Warning("Logging JA data...\n");
@@ -74,21 +58,34 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
         stats.resize(numPhases);
     }
 
-    std::ofstream outputFile;
-    outputFile.open("ja.txt", std::ios::out);
-
     for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
     {
+        uint32_t zeroCounter = 0; // Keeps track of how many consecutive 0's are seen. If there are too many, then missing data has been detected and therefore should not be used.
+        bool zeroSeenLastLoop = false;
+
         // Convert float pointer array to vector of floats
         vector<float> waveform;
         for (size_t i = 0; i < arrBlockSize; i++)
         {
-            waveform.push_back(pVoltageSamples[(phaseNumber * arrBlockSize) + i]);
-        }
+            if (zeroSeenLastLoop)
+            {
+                ++zeroCounter;
+            }
+            else
+            {
+                zeroCounter = 0;
+            }
 
-        for (size_t i = 0; i < waveform.size(); i++)
-        {
-            outputFile << unsigned(phaseNumber) << "," << waveform[i] << endl;
+            if (zeroCounter > 10)
+            {
+                LOGFile::Warning("[JA] Found too many zeros in samples; skipping this set of data.\n");
+                return;
+            }
+
+            float sampleVal = pVoltageSamples[(phaseNumber * arrBlockSize) + i];
+            if (sampleVal == 0.0)
+                zeroSeenLastLoop = true;
+            waveform.push_back(sampleVal);
         }
 
         // Compute the third-order DVDT of the input waveform
@@ -127,8 +124,6 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
             ++stats[phaseNumber].numPoints;
         }
     }
-
-    outputFile.close();
 }
 
 void JerkAlgorithm::WriteToDatabase()
