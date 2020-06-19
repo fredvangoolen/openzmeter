@@ -7,6 +7,8 @@ JerkAlgorithm::JerkAlgorithm(const string &analyzer_schema)
     DB->ExecResource("SQL/Database_Jerk.sql");
 
     ClearStats();
+
+    flag = false;
 }
 
 JerkAlgorithm::~JerkAlgorithm()
@@ -35,6 +37,9 @@ vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
 
 void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases)
 {
+    if (flag)
+        return;
+
     if (endTime - startTime > 120000)
     {
         LOGFile::Warning("Logging JA data...\n");
@@ -58,6 +63,9 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
         stats.resize(numPhases);
     }
 
+    std::ofstream outputFile;
+    outputFile.open("ja.txt", std::ios::out);
+
     for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
     {
         // Convert float pointer array to vector of floats
@@ -65,6 +73,11 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
         for (size_t i = 0; i < arrBlockSize; i++)
         {
             waveform.push_back(pVoltageSamples[(phaseNumber * arrBlockSize) + i]);
+        }
+
+        for (size_t i = 0; i < waveform.size(); i++)
+        {
+            outputFile << phaseNumber << "," << waveform[i] << endl;
         }
 
         // Compute the third-order DVDT of the input waveform
@@ -103,6 +116,9 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
             ++stats[phaseNumber].numPoints;
         }
     }
+
+    outputFile.close();
+    flag = true;
 }
 
 void JerkAlgorithm::WriteToDatabase()
