@@ -7,6 +7,7 @@ JerkAlgorithm::JerkAlgorithm(const string &analyzer_schema)
     DB->ExecResource("SQL/Database_Jerk.sql");
 
     ClearStats();
+    flag = false;
 }
 
 JerkAlgorithm::~JerkAlgorithm()
@@ -46,8 +47,10 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
 
     for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
     {
-        uint32_t zeroCounter = 0;
+        if (flag)
+            return;
 
+        uint32_t zeroCounter = 0;
         for (size_t i = 0; i < arrBlockSize; i++)
         {
             float sample = pVoltageSamples[(phaseNumber * arrBlockSize) + i];
@@ -63,6 +66,18 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
             if (zeroCounter > 10)
             {
                 LOGFile::Warning("[JA] Skipping data set due to large number of consecutive zeros being detected.\n");
+
+                std::ofstream outputFile;
+                outputFile.open("ja.txt", std::ios::out);
+                for (int x = 0; x < numPhases; x++)
+                {
+                    for (int y = 0; y < arrBlockSize; y++)
+                    {
+                        outputFile << x << "," << pVoltageSamples[(x * arrBlockSize) + y] << endl;
+                    }
+                }
+                outputFile.close();
+                flag = true;
                 return;
             }
         }
