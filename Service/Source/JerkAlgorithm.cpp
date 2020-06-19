@@ -85,13 +85,13 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
             {
                 if (jerkElement < stats[phaseNumber].min)
                 {
-                    LOGFile::Warning(("[JA] Found new min: " stats[phaseNumber].min + " -> " + jerkElement + "\n").c_str());
+                    LOGFile::Warning(("[JA] Found new min: " + stats[phaseNumber].min + " -> " + jerkElement + "\n").c_str());
                     stats[phaseNumber].min = jerkElement;
                 }
 
                 if (jerkElement > stats[phaseNumber].max)
                 {
-                    LOGFile::Warning(("[JA] Found new max: " stats[phaseNumber].max + " -> " + jerkElement + "\n").c_str());
+                    LOGFile::Warning(("[JA] Found new max: " + stats[phaseNumber].max + " -> " + jerkElement + "\n").c_str());
                     stats[phaseNumber].max = jerkElement;
                 }
 
