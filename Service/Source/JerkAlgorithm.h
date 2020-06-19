@@ -24,7 +24,7 @@ public:
     void ClearStats();
 
 private:
-    bool flag;
+    vector<float> jerkMaxTemp;
     Database *DB;
     uint64_t startTime;
     uint64_t endTime;

@@ -7,7 +7,6 @@ JerkAlgorithm::JerkAlgorithm(const string &analyzer_schema)
     DB->ExecResource("SQL/Database_Jerk.sql");
 
     ClearStats();
-    flag = false;
 }
 
 JerkAlgorithm::~JerkAlgorithm()
@@ -40,15 +39,19 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
 
     if (endTime - startTime > 120000)
     {
+        std::ofstream outputFile;
+        outputFile.open("ja.txt", ios::out);
+        for (size_t z = 0; z < jerkMaxTemp.size(); z++)
+        {
+            outputFile << to_string(jerkMaxTemp[z]) << endl;
+        }
+
         LOGFile::Warning("Logging JA data...\n");
         WriteToDatabase();
         ClearStats();
         LOGFile::Warning("  - Done.\n");
         return;
     }
-
-    if (flag)
-        return;
 
     // Log the current time as the end time for this histogram
     endTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -110,23 +113,13 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
                 {
                     LOGFile::Warning(("[JA] Found new min: " + to_string(stats[phaseNumber].min) + " -> " + to_string(jerkElement) + "\n").c_str());
                     stats[phaseNumber].min = jerkElement;
-
-                    if (jerkElement < -9.0)
-                    {
-                        flag = true;
-                        std::ofstream outputFile;
-                        outputFile.open("ja.txt", ios::out);
-                        for (size_t z = 0; z < jerk.size(); z++)
-                        {
-                            outputFile << to_string(phaseNumber) << "," << to_string(jerk[z]) << endl;
-                        }
-                    }
                 }
 
                 if (jerkElement > stats[phaseNumber].max)
                 {
                     LOGFile::Warning(("[JA] Found new max: " + to_string(stats[phaseNumber].max) + " -> " + to_string(jerkElement) + "\n").c_str());
                     stats[phaseNumber].max = jerkElement;
+                    jerkMaxTemp = jerk;
                 }
 
                 // Calcuate the Cumulative Moving Average (CMA)
