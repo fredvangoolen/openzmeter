@@ -9,6 +9,7 @@ JerkAlgorithm::JerkAlgorithm(const string &analyzer_schema)
     ClearStats();
 
     flag = false;
+    skippedFirstPointSet = false;
 }
 
 JerkAlgorithm::~JerkAlgorithm()
@@ -37,6 +38,14 @@ vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
 
 void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases)
 {
+    // Skip the first requested set of data points (tends to be unreliable data)
+    if (!skippedFirstPointSet)
+    {
+        LOGFile::Debug("[JA] Skipping first set of data.\n");
+        skippedFirstPointSet = true;
+        return;
+    }
+
     if (flag)
         return;
 
