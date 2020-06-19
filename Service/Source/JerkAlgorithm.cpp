@@ -35,7 +35,8 @@ vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
 
 void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases)
 {
-    if(endTime - startTime > 120000){
+    if (endTime - startTime > 120000)
+    {
         LOGFile::Warning("Logging JA data...\n");
         WriteToDatabase();
         ClearStats();
@@ -83,10 +84,16 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
             else
             {
                 if (jerkElement < stats[phaseNumber].min)
+                {
+                    LOGFile::Warning(("[JA] Found new min: " stats[phaseNumber].min + " -> " + jerkElement + "\n").c_str());
                     stats[phaseNumber].min = jerkElement;
+                }
 
                 if (jerkElement > stats[phaseNumber].max)
+                {
+                    LOGFile::Warning(("[JA] Found new max: " stats[phaseNumber].max + " -> " + jerkElement + "\n").c_str());
                     stats[phaseNumber].max = jerkElement;
+                }
 
                 // Calcuate the Cumulative Moving Average (CMA)
                 // Algorithm Source: https://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
