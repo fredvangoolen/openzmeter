@@ -8,6 +8,7 @@ JerkAlgorithm::JerkAlgorithm(const string &analyzer_schema)
 
     ClearStats();
     flag = false;
+    skippedFirstPointSet = false;
 }
 
 JerkAlgorithm::~JerkAlgorithm()
@@ -45,11 +46,19 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
         return;
     }
 
+    // Skip the first requested set of data points (tends to be unreliable data)
+    if (!skippedFirstPointSet)
+    {
+        LOGFile::Debug("[JA] Skipping first set of data.\n");
+        skippedFirstPointSet = true;
+        return;
+    }
+
+    if (flag)
+        return;
+
     for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
     {
-        if (flag)
-            return;
-
         uint32_t zeroCounter = 0;
         for (size_t i = 0; i < arrBlockSize; i++)
         {
