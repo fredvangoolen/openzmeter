@@ -36,7 +36,7 @@ vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
 
 void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate)
 {
-    size_t numUsableSamplesPerPhase = min((size_t)samplerate / 5, arrBlockSize);
+    size_t numUsableSamplesPerPhase = min((size_t)sampleRate / 5, arrBlockSize);
 
     if (endTime - startTime > 120000)
     {
