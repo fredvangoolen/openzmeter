@@ -7,8 +7,6 @@ JerkAlgorithm::JerkAlgorithm(const string &analyzer_schema)
     DB->ExecResource("SQL/Database_Jerk.sql");
 
     ClearStats();
-    flag = false;
-    skippedFirstPointSet = false;
 }
 
 JerkAlgorithm::~JerkAlgorithm()
@@ -46,52 +44,6 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
         return;
     }
 
-    // Skip the first requested set of data points (tends to be unreliable data)
-    if (!skippedFirstPointSet)
-    {
-        LOGFile::Debug("[JA] Skipping first set of data.\n");
-        skippedFirstPointSet = true;
-        return;
-    }
-
-    if (flag)
-        return;
-
-    for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
-    {
-        uint32_t zeroCounter = 0;
-        for (size_t i = 0; i < arrBlockSize; i++)
-        {
-            float sample = pVoltageSamples[(phaseNumber * arrBlockSize) + i];
-            if (sample == 0.0)
-            {
-                ++zeroCounter;
-            }
-            else
-            {
-                zeroCounter = 0;
-            }
-
-            if (zeroCounter > 10)
-            {
-                LOGFile::Warning("[JA] Skipping data set due to large number of consecutive zeros being detected.\n");
-
-                std::ofstream outputFile;
-                outputFile.open("ja.txt", std::ios::out);
-                for (int x = 0; x < numPhases; x++)
-                {
-                    for (int y = 0; y < arrBlockSize; y++)
-                    {
-                        outputFile << x << "," << pVoltageSamples[(x * arrBlockSize) + y] << endl;
-                    }
-                }
-                outputFile.close();
-                flag = true;
-                return;
-            }
-        }
-    }
-
     // Log the current time as the end time for this histogram
     endTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
@@ -110,9 +62,20 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
     {
         // Convert float pointer array to vector of floats
         vector<float> waveform;
-        for (size_t i = 0; i < arrBlockSize; i++)
+        for (size_t i = 0; i < (arrBlockSize - 1); i++)
         {
-            waveform.push_back(pVoltageSamples[(phaseNumber * arrBlockSize) + i]);
+            float sample = pVoltageSamples[(phaseNumber * arrBlockSize) + i];
+
+            // Look ahead at the next sample. If it also has a value of 0, then don't include any additional samples for this phase (to prevent any discontinuous jumps).
+            float sample_next = pVoltageSamples[(phaseNumber * arrBlockSize) + i + 1];
+            if (sample == 0.0 && sample_next == 0.0)
+            {
+                break;
+            }
+            else
+            {
+                waveform.push_back(sample);
+            }
         }
 
         // Compute the third-order DVDT of the input waveform
