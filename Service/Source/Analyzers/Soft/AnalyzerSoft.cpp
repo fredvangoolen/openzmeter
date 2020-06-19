@@ -740,7 +740,7 @@ void AnalyzerSoft::Analyzer_Func() {
     }
     if (jerkAlgorithm != NULL)
     {
-      jerkAlgorithm->AddPoints(pVoltageSamples, pMaxSamples, pVoltageChannels);
+      jerkAlgorithm->AddPoints(pVoltageSamples, pMaxSamples, pVoltageChannels, pSamplerate);
     }
   }
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
