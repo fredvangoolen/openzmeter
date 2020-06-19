@@ -44,6 +44,30 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
         return;
     }
 
+    for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
+    {
+        uint32_t zeroCounter = 0;
+
+        for (size_t i = 0; i < arrBlockSize; i++)
+        {
+            float sample = pVoltageSamples[(phaseNumber * arrBlockSize) + i];
+            if (sample == 0.0)
+            {
+                ++zeroCounter;
+            }
+            else
+            {
+                zeroCounter = 0;
+            }
+
+            if (zeroCounter > 10)
+            {
+                LOGFile::Warning("[JA] Skipping data set due to large number of consecutive zeros being detected.\n");
+                return;
+            }
+        }
+    }
+
     // Log the current time as the end time for this histogram
     endTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
@@ -60,32 +84,11 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
 
     for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
     {
-        uint32_t zeroCounter = 0; // Keeps track of how many consecutive 0's are seen. If there are too many, then missing data has been detected and therefore should not be used.
-        bool zeroSeenLastLoop = false;
-
         // Convert float pointer array to vector of floats
         vector<float> waveform;
         for (size_t i = 0; i < arrBlockSize; i++)
         {
-            if (zeroSeenLastLoop)
-            {
-                ++zeroCounter;
-            }
-            else
-            {
-                zeroCounter = 0;
-            }
-
-            if (zeroCounter > 10)
-            {
-                LOGFile::Warning("[JA] Found too many zeros in samples; skipping this set of data.\n");
-                return;
-            }
-
-            float sampleVal = pVoltageSamples[(phaseNumber * arrBlockSize) + i];
-            if (sampleVal == 0.0)
-                zeroSeenLastLoop = true;
-            waveform.push_back(sampleVal);
+            waveform.push_back(pVoltageSamples[(phaseNumber * arrBlockSize) + i]);
         }
 
         // Compute the third-order DVDT of the input waveform
