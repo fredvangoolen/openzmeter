@@ -111,7 +111,7 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
                     LOGFile::Warning(("[JA] Found new min: " + to_string(stats[phaseNumber].min) + " -> " + to_string(jerkElement) + "\n").c_str());
                     stats[phaseNumber].min = jerkElement;
 
-                    if (jerkElement < -50.0)
+                    if (jerkElement < -9.0)
                     {
                         flag = true;
                         std::ofstream outputFile;
