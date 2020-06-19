@@ -41,13 +41,15 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
     // Skip the first requested set of data points (tends to be unreliable data)
     if (!skippedFirstPointSet)
     {
-        LOGFile::Debug("[JA] Skipping first set of data.\n");
+        LOGFile::Warning("[JA] Skipping first set of data.\n");
         skippedFirstPointSet = true;
         return;
     }
 
     if (flag)
         return;
+    else
+        flag = true;
 
     if (endTime - startTime > 120000)
     {
@@ -86,7 +88,7 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
 
         for (size_t i = 0; i < waveform.size(); i++)
         {
-            outputFile << phaseNumber << "," << waveform[i] << endl;
+            outputFile << unsigned(phaseNumber) << "," << waveform[i] << endl;
         }
 
         // Compute the third-order DVDT of the input waveform
@@ -127,7 +129,6 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
     }
 
     outputFile.close();
-    flag = true;
 }
 
 void JerkAlgorithm::WriteToDatabase()
