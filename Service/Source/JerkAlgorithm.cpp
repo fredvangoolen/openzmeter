@@ -34,8 +34,10 @@ vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
     return result;
 }
 
-void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases)
+void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate)
 {
+    size_t numUsableSamplesPerPhase = min((size_t)samplerate / 5, arrBlockSize);
+
     if (endTime - startTime > 120000)
     {
         LOGFile::Warning("Logging JA data...\n");
@@ -66,7 +68,7 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
     {
         // Convert float pointer array to vector of floats
         vector<float> waveform;
-        for (size_t i = 0; i < (arrBlockSize - 1); i++)
+        for (size_t i = 0; i < (numUsableSamplesPerPhase - 1); i++)
         {
             float sample = pVoltageSamples[(phaseNumber * arrBlockSize) + i];
 
@@ -79,6 +81,12 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
             else
             {
                 waveform.push_back(sample);
+
+                // If the last iteration, make sure to include the very last sample
+                if (i == (numUsableSamplesPerPhase - 2))
+                {
+                    waveform.push_back(sample_next);
+                }
             }
         }
 

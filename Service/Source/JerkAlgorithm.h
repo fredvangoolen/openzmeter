@@ -18,7 +18,7 @@ public:
     JerkAlgorithm(const string &analyzer_schema);
     ~JerkAlgorithm();
     vector<float> ComputeDVDT(vector<float> input);
-    void AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases);
+    void AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate);
     void WriteToDatabase();
     void WriteToDatabase(uint64_t event_starttime);
     void ClearStats();
