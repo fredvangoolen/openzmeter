@@ -30,7 +30,6 @@ class DeviceManager final {
     static void CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response));
     static void CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response));
     static void GetDevicesCallback(const json &params, Response &response);
-    static void SetDevicesCallback(const json &params, Response &response);
     static void GetDeviceCallback(const json &params, Response &response);
     static void SetDeviceCallback(const json &params, Response &response);
     static void GetRemoteCallback(const json &params, Response &response);
@@ -42,13 +41,19 @@ class DeviceManager final {
     static void GetSeriesNowCallback(const json &params, Response &response);
     static void GetWaveStream(const json &params, Response &response);
     static void GetSeriesRangeCallback(const json &params, Response &response);
+    static void DelSeriesRangeCallback(const json &params, Response &response);
     static void GetEventsCallback(const json &params, Response &response);
+    static void GetEventsRangeCallback(const json &params, Response &response);
+    static void DelEventsRangeCallback(const json &params, Response &response);
     static void GetEventCallback(const json &params, Response &response);
     static void SetEventCallback(const json &params, Response &response);
     static void DelEventCallback(const json &params, Response &response);
     static void GetPricesCallback(const json &params, Response &response);
     static void TestAlarmCallback(const json &params, Response &response);
     static void GetAlarmsCallback(const json &params, Response &response);
+    static void GetAlarmsRangeCallback(const json &params, Response &response);
+    static void DelAlarmsRangeCallback(const json &params, Response &response);
+    static void DelAlarmCallback(const json &params, Response &response);
     static void GetPermissionsCallback(const json &params, Response &response);
     static void AddPermissionCallback(const json &params, Response &response);
     static void SetPermissionCallback(const json &params, Response &response);

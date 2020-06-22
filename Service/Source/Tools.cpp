@@ -354,31 +354,29 @@ void LOGFile::Msg(Type type, const char *msg, va_list params) {
 //----------------------------------------------------------------------------------------------------------------------
 extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
-vector<ResourceLoader::File_t> ResourceLoader::pFiles;
+map<string, ResourceLoader::File_t> ResourceLoader::pFiles;
+//----------------------------------------------------------------------------------------------------------------------
 uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
   *size = 0;
   if(pFiles.size() == 0) {
     char *Ptr = _binary_ResourceFiles_start;
     uint32_t FileCount = atoi(Ptr);
-    pFiles.reserve(FileCount);
     Ptr = &Ptr[strlen(Ptr) + 1];
     for(uint32_t i = 0; i < FileCount; i++) {
       File_t File;
-      File.Name = Ptr;
+      string Name = Ptr;
       Ptr = &Ptr[strlen(Ptr) + 1];
       File.Size = atoi(Ptr);
       Ptr = &Ptr[strlen(Ptr) + 1];
       File.Ptr = (uint8_t*)Ptr;
       Ptr = &Ptr[File.Size];
-      pFiles.push_back(File);
+      pFiles.insert({Name, File});
     }
   }
-  for(File_t &File : pFiles) {
-    if(File.Name != name) continue;
-    *size = File.Size;
-    return File.Ptr;
-  }
-  return NULL;
+  auto File = pFiles.find(name);
+  if(File == pFiles.end()) return NULL;
+  *size = File->second.Size;
+  return File->second.Ptr;
 }
 //----------------------------------------------------------------------------------------------------------------------
 termios Tools::pConsoleAttr;

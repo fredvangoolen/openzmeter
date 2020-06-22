@@ -42,7 +42,10 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
   response.set_header("Content-Type", "text/event-stream");
   response.set_chunked_content_provider(
     [&](uint64_t offset, DataSink &sink) {
-      if((pTerminate == true) || (sink.is_writable() == false)) return sink.done();
+      if(pTerminate == true) {
+        sink.done();
+        return false;
+      }
       SetOnline();
       pthread_mutex_lock(&pMutex);
       pConsumerReady = true;
@@ -66,6 +69,7 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
       }
       pthread_cond_signal(&pProducerCond);
       pthread_mutex_unlock(&pMutex);
+      return true;
     },
     [&]() {
       pthread_mutex_lock(&pMutex);
@@ -164,9 +168,21 @@ void AnalyzerRemote::GetSeriesRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getSeriesRange", params, response);
 }
+void AnalyzerRemote::DelSeriesRange(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("delSeriesRange", params, response);
+}
 void AnalyzerRemote::GetEvents(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getEvents", params, response);
+}
+void AnalyzerRemote::GetEventsRange(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getEventsRange", params, response);
+}
+void AnalyzerRemote::DelEventsRange(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("delEventsRange", params, response);
 }
 void AnalyzerRemote::GetEvent(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -191,6 +207,18 @@ void AnalyzerRemote::TestAlarm(const json &params, Response &response) {
 void AnalyzerRemote::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getAlarms", params, response);
+}
+void AnalyzerRemote::GetAlarmsRange(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getAlarmsRange", params, response);
+}
+void AnalyzerRemote::DelAlarmsRange(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("delAlarmsRange", params, response);
+}
+void AnalyzerRemote::DelAlarm(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("delAlarm", params, response);
 }
 bool AnalyzerRemote::HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len) {
 //  uint8_t Pending = len;

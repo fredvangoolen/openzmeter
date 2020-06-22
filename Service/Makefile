@@ -21,7 +21,7 @@ EXECUTABLE_SOURCE = Source/Tools.cpp \
 										Source/MODBus.cpp \
 										Source/Telegram.cpp \
 										Source/Tariffs/ESIOS.cpp
-CFLAGS += -Wno-psabi -Wall -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs
+CFLAGS += -DCPPHTTPLIB_USE_POLL -Wno-psabi -Wall -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs
 LDFLAGS += -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto
 
 #Add libs (cctz, nlohmann, muparser, httplib, mqtt-c)

@@ -95,13 +95,6 @@ class AnalyzerSoft final : public Analyzer {
       float                    ChannelsZ1[3];
       float                    ChannelsZ2[3];
     } Filter_t;
-
-    typedef struct {
-      float PhaseOffset;
-      float FrequencyOffset;
-      float Bandwidth;
-    } PLL_t;
-
     typedef struct {
       string                   Name;
       uint8_t                  Priority;
@@ -114,10 +107,6 @@ class AnalyzerSoft final : public Analyzer {
       uint8_t                 *Results;
       bool                     Triggered;
     } Alarm_t;
-//    typedef struct {
-//      float                    RMS[3];
-//      uint64_t                 Timestamp;
-//    } EventCycle_t;
     typedef struct {
       enum EventType           Type;                     //Running event type
       uint64_t                 Start;                    //Event start timestamp
@@ -259,13 +248,19 @@ class AnalyzerSoft final : public Analyzer {
     void GetSeriesNow(const json &params, Response &response) override;
     void GetWaveStream(const json &params, Response &response) override;
     void GetSeriesRange(const json &params, Response &response) override;
+    void DelSeriesRange(const json &params, Response &response) override;
     void GetEvents(const json &params, Response &response) override;
+    void GetEventsRange(const json &params, Response &response) override;
+    void DelEventsRange(const json &params, Response &response) override;
     void GetEvent(const json &params, Response &response) override;
     void SetEvent(const json &params, Response &response) override;
     void DelEvent(const json &params, Response &response) override;
     void GetPrices(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;
+    void GetAlarmsRange(const json &params, Response &response) override;
+    void DelAlarmsRange(const json &params, Response &response) override;
+    void DelAlarm(const json &params, Response &response) override;
     void GetRemote(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
     bool HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len);

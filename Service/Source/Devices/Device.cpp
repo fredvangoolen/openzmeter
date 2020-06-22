@@ -114,8 +114,17 @@ bool Device::GetWaveStream(const json &params, Response &response) {
 bool Device::GetSeriesRange(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetSeriesRange);
 }
+bool Device::DelSeriesRange(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::DelSeriesRange);
+}
 bool Device::GetEvents(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetEvents);
+}
+bool Device::GetEventsRange(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetEventsRange);
+}
+bool Device::DelEventsRange(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::DelEventsRange);
 }
 bool Device::GetEvent(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetEvent);
@@ -134,6 +143,15 @@ bool Device::TestAlarm(const json &params, Response &response) {
 }
 bool Device::GetAlarms(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetAlarms);
+}
+bool Device::GetAlarmsRange(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetAlarmsRange);
+}
+bool Device::DelAlarmsRange(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::DelAlarmsRange);
+}
+bool Device::DelAlarm(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::DelAlarm);
 }
 bool Device::GetPermissions(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetPermissions);

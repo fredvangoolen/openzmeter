@@ -431,6 +431,17 @@ const openZmeter = {
       while(Fraction.length < decimals) Fraction = '0' + Fraction;
       return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + (html ? "<span style='font-size:80%'>." + Fraction + '</span>' : '.' + Fraction);
     },
+    Vue.prototype.GetBestUnitsBin = (val, dec, html) => {
+      if(val > 1024 * 1024 * 1024) {
+        return Vue.prototype.Round(val / (1024 * 1024 * 1024), dec, html) + ' GB';
+      } else if(val > 1024 * 1024) {
+        return Vue.prototype.Round(val / (1024 * 1024), dec, html) + ' MB';
+      } else if(val > 1024) {
+        return Vue.prototype.Round(val / 1024) + ' kB';
+      } else {
+        return val + ' B';
+      }
+    },
     Vue.prototype.ArrayAbsMax = (array) => {
       var Max = 0;
       for(var i in array) Max = Math.max(Max, Array.isArray(array[i]) ? ArrayMax(array[i]) : Math.abs(array[i]));
@@ -884,18 +895,7 @@ export function ColorArray(base, items) {
   return Array;
 }
 
-///* Format memory size with best units */
-export function GetBestUnitsBin(value) {
-  if(value > 1024 * 1024 * 1024) {
-    return Round2Plain(value / (1024 * 1024 * 1024)) + ' GB';
-  } else if(value > 1024 * 1024) {
-    return Round2Plain(value / (1024 * 1024)) + ' MB';
-  } else if(value > 1024) {
-    return Round2Plain(value / 1024) + ' kB';
-  } else {
-    return value + ' B';
-  }
-}
+
 
 ///* Retorna un numero como cadena con dos decimales */
 export function Round2(value) {

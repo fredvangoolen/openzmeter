@@ -58,13 +58,13 @@
         return (this.Transfer1.Data != null) ? moment(this.Transfer1.Data.Sampletime).format('HH:mm:ss') : null;
       },
       SDTip: function() {
-        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.Disk_Total != null) && (this.Transfer1.Data.Sys_Stats.Disk_Usage != null)) ? oZm.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.Disk_Total * this.Transfer1.Data.Sys_Stats.Disk_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.Disk_Total) : null;
+        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.Disk_Total != null) && (this.Transfer1.Data.Sys_Stats.Disk_Usage != null)) ? this.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.Disk_Total * this.Transfer1.Data.Sys_Stats.Disk_Usage / 100.0) + ' of ' + this.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.Disk_Total) : null;
       },
       SDUse: function() {
         return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.Disk_Usage != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.Disk_Usage) + '%' : null;
       },
       RAMTip: function() {
-        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.RAM_Total != null) && (this.Transfer1.Data.Sys_Stats.RAM_Usage != null)) ? oZm.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.RAM_Total * this.Transfer1.Data.Sys_Stats.RAM_Usage / 100.0) + ' of ' + oZm.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.RAM_Total) : null;
+        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.RAM_Total != null) && (this.Transfer1.Data.Sys_Stats.RAM_Usage != null)) ? this.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.RAM_Total * this.Transfer1.Data.Sys_Stats.RAM_Usage / 100.0) + ' of ' + this.GetBestUnitsBin(this.Transfer1.Data.Sys_Stats.RAM_Total) : null;
       },
       RAMUse: function() {
         return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.RAM_Usage != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.RAM_Usage) + '%' : null;

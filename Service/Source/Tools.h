@@ -42,6 +42,7 @@ class Worker final {
     void Run(void *param);
     void Wait();
 };
+//----------------------------------------------------------------------------------------------------------------------
 class RWLocks final {
   private :
     pthread_mutex_t   pMutex;
@@ -101,12 +102,11 @@ class PIDFile {
 class ResourceLoader {
   private :
     typedef struct {
-      string   Name;
       uint32_t Size;
       uint8_t *Ptr;
     } File_t;
   private :
-    static vector<File_t> pFiles;
+    static map<string, File_t> pFiles;
   public :
     static uint8_t *GetFile(const string name, size_t *size);
 };

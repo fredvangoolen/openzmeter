@@ -7,6 +7,7 @@
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Current']" v-model="Options"></toolbar-options>
         <div class="btn-group">
+          <button type="button" class="btn btn-default btn-xs" @click="ShowStream=true" data-toggle="tooltip" title="Stream waves in realtime"><img :src="require('Imgs/diskette.png')"></button>
           <button-export file="Waveform" :rows="Export"></button-export>
           <button-expand v-model="Expanded"></button-expand>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>
@@ -19,6 +20,20 @@
         <graph :options="GraphOptions" :height="Expanded?DialogHeight:300" :paused="MouseOver" :analyzer="analyzer"></graph>
       </div>
     </portal>
+    <dlg v-if="ShowStream">
+      <template v-slot:header>
+        <div class="pull-left"><h4 class="modal-title">Waveform stream</h4></div>
+        <div class="pull-right btn-group">
+          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Close dialog" v-if="Streaming==false" @click="ShowStream=false"><img :src="require('Imgs/arrow_undo.png')"></button>
+        </div>
+      </template>
+      <div class="row">
+        <div class="col-xs-12">
+          <button type="button" class="btn btn-default btn-xs" v-if="Streaming==false" data-toggle="tooltip" title="Close dialog" @click="StartStream">Start</button>
+          <button type="button" class="btn btn-default btn-xs" v-if="Streaming==true" data-toggle="tooltip" title="Close dialog" @click="StopStream=false">Stop</button>
+        </div>
+      </div>
+    </dlg>
     <dlg-fs v-if="Expanded" title="Waveform" :height.sync="DialogHeight"></dlg-fs>
   </div>
 </template>
@@ -30,7 +45,7 @@
   export default {
     props: { analyzer: Object, data: Object, paused: Boolean },
     data() {
-      return { MouseOver: false, Options: null, Phases: null, Expanded: false, DialogHeight: 300 };
+      return { MouseOver: false, Options: null, Phases: null, Expanded: false, DialogHeight: 300, ShowStream: false, Streaming: false };
     },
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
@@ -89,6 +104,77 @@
       }
     },
     methods: {
+      StartStream: function() {
+        //this.$http.post(, { Analyzer: this.analyzer.Analyzer }, )
+        var Req = new XMLHttpRequest();
+        Req.open('POST', 'getWaveStream', true);
+        Req.setRequestHeader('Content-type', 'application/json');
+        Req.overrideMimeType('text/plain');
+        var receivedIndex = 0;
+        Req.onprogress = (pe) => {
+//            console.log("PROGRESS: response: " + Req.response);
+//            console.log("PROGRESS: responseType: " + Req.responseType);
+            console.log("PROGRESS: allResponseHeaders: " + Req.getAllResponseHeaders());
+
+            if (pe.lengthComputable) {
+                console.log("PROGRESS: loaded: " + pe.loaded );
+                console.log("PROGRESS: total: " + pe.total );
+
+            }
+
+            if((Req.readyState == 3 || Req.readyState == 2) && Req.status == 200) {
+                //slice the response(Text) to show chunk by chunk
+                var chunk = Req.response.slice(receivedIndex);
+                if(chunk) { //not empty
+                    //$("#myList").append("<li>"+ chunk +"</li>");
+ console.log("Nuevo bloque");
+                }
+                receivedIndex = Req.response.length; //if Blob or other use size
+            } else {
+                console.error("PROGRESS: Chrome! don't call onprogress for readyState ==  " +
+                Req.readyState + " and status == "+ Req.status);
+            }
+        };
+        Req.onerror = function () {
+            console.log("An error occurred...");
+            $("#myDiv").html("An error occurred...");
+        };
+        Req.ontimeout = function () {
+            console.log("The request timed out...");
+            $("#myDiv").html("The request timed out...");
+        };
+        Req.onabort = function () {
+            console.log("The request aborted by the user....");
+            $("#myDiv").html("The request aborted by the user...");
+        };
+
+        Req.responseType = "text";
+        Req.onreadystatechange = function () {
+        if(Req.readyState === 4 && Req.status === 200) {
+          var filename = "WaveStream.csv";
+          if(typeof window.chrome !== 'undefined') {
+                // Chrome version
+                var link = document.createElement('a');
+                link.href = window.URL.createObjectURL(Req.response);
+//                link.download = filename;
+//                link.click();
+            } else if (typeof window.navigator.msSaveBlob !== 'undefined') {
+                // IE version
+                var blob = new Blob([Req.response], { type: 'application/force-download' });
+                window.navigator.msSaveBlob(blob, filename);
+            } else {
+                // Firefox version
+                var file = new File([Req.response], filename, { type: 'application/force-download' });
+                window.open(URL.createObjectURL(file));
+            }
+        }
+    };
+    Req.timeout = 5000000000000;
+        Req.send(JSON.stringify({ Analyzer: this.analyzer.Analyzer, Series: ['VOLTAGE'] }));
+      },
+      StopStream: function() {
+
+      },
       Export: function() {
         var Rows = [['Sample'].concat(oZm.Series['VOLTAGE'].Names(this.analyzer).concat(oZm.Series['CURRENT'].Names(this.analyzer)))];
         if(this.data != null) {

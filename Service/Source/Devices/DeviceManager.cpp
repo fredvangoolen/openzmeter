@@ -41,13 +41,19 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("getSeriesNow",   GetSeriesNowCallback);
   HTTPServer::RegisterCallback("getWaveStream",  GetWaveStream);
   HTTPServer::RegisterCallback("getSeriesRange", GetSeriesRangeCallback);
+  HTTPServer::RegisterCallback("delSeriesRange", DelSeriesRangeCallback);
   HTTPServer::RegisterCallback("getEvents",      GetEventsCallback);
+  HTTPServer::RegisterCallback("getEventsRange", GetEventsRangeCallback);
+  HTTPServer::RegisterCallback("delEventsRange", DelEventsRangeCallback);
   HTTPServer::RegisterCallback("getEvent",       GetEventCallback);
   HTTPServer::RegisterCallback("setEvent",       SetEventCallback);
   HTTPServer::RegisterCallback("delEvent",       DelEventCallback);
   HTTPServer::RegisterCallback("getPrices",      GetPricesCallback);
   HTTPServer::RegisterCallback("testAlarm",      TestAlarmCallback);
   HTTPServer::RegisterCallback("getAlarms",      GetAlarmsCallback);
+  HTTPServer::RegisterCallback("getAlarmsRange", GetAlarmsRangeCallback);
+  HTTPServer::RegisterCallback("delAlarmsRange", DelAlarmsRangeCallback);
+  HTTPServer::RegisterCallback("delAlarm",       DelAlarmCallback);
   HTTPServer::RegisterCallback("getPermissions", GetPermissionsCallback);
   HTTPServer::RegisterCallback("addPermission",  AddPermissionCallback);
   HTTPServer::RegisterCallback("setPermission",  SetPermissionCallback);
@@ -72,13 +78,19 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("getSeriesNow");
   HTTPServer::UnregisterCallback("getWaveStream");
   HTTPServer::UnregisterCallback("getSeriesRange");
+  HTTPServer::UnregisterCallback("delSeriesRange");
   HTTPServer::UnregisterCallback("getEvents");
+  HTTPServer::UnregisterCallback("getEventsRange");
+  HTTPServer::UnregisterCallback("delEventsRange");
   HTTPServer::UnregisterCallback("getEvent");
   HTTPServer::UnregisterCallback("setEvent");
   HTTPServer::UnregisterCallback("delEvent");
   HTTPServer::UnregisterCallback("getPrices");
   HTTPServer::UnregisterCallback("testAlarm");
   HTTPServer::UnregisterCallback("getAlarms");
+  HTTPServer::UnregisterCallback("getAlarmsRange");
+  HTTPServer::UnregisterCallback("delAlarmsRange");
+  HTTPServer::UnregisterCallback("delAlarm");
   HTTPServer::UnregisterCallback("getPermissions");
   HTTPServer::UnregisterCallback("addPermission");
   HTTPServer::UnregisterCallback("setPermission");
@@ -190,8 +202,17 @@ void DeviceManager::GetWaveStream(const json &params, Response &response) {
 void DeviceManager::GetSeriesRangeCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetSeriesRange);
 }
+void DeviceManager::DelSeriesRangeCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::DelSeriesRange);
+}
 void DeviceManager::GetEventsCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetEvents);
+}
+void DeviceManager::GetEventsRangeCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::GetEventsRange);
+}
+void DeviceManager::DelEventsRangeCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::DelEventsRange);
 }
 void DeviceManager::GetEventCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetEvent);
@@ -210,6 +231,15 @@ void DeviceManager::TestAlarmCallback(const json &params, Response &response) {
 }
 void DeviceManager::GetAlarmsCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetAlarms);
+}
+void DeviceManager::GetAlarmsRangeCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::GetAlarmsRange);
+}
+void DeviceManager::DelAlarmsRangeCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::DelAlarmsRange);
+}
+void DeviceManager::DelAlarmCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::DelAlarm);
 }
 void DeviceManager::GetPermissionsCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetPermissions);
