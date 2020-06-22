@@ -100,6 +100,9 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
         {
             float jerkElement = jerk[i];
 
+            // Compute the absolute value of the element
+            jerkElement = abs(jerkElement);
+
             // Update the cumulative stats with new data
             if (stats[phaseNumber].numPoints == 0)
             {
