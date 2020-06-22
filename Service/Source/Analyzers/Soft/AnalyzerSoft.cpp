@@ -1649,15 +1649,15 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
     bool     Current;
     bool     Voltage;
   } WaveStream_t;
-  WaveStream_t *Params = new WaveStream_t;
+  WaveStream_t *Params = (WaveStream_t *)calloc(sizeof(WaveStream_t), 1);
   Params->Block = 0;
   for(uint8_t i = 0; i < params["Series"].size(); i++) {
     if(params["Series"][i].is_string() == false) {
       return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    } else if(params["Series"][i] == "CURRENT") {
+    } else if(params["Series"][i] == "CURRENT_SAMPLES") {
       Params->Current = true;
-    } else if(params["Series"][i] == "VOLTAGE") {
-      Params->Current = true;
+    } else if(params["Series"][i] == "VOLTAGE_SAMPLES") {
+      Params->Voltage = true;
     } else {
       return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);
     }
@@ -1675,8 +1675,8 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
         sink.done();
         return false;
       }
-      printf("Capture block: %llu\n", pSequence);
       json Result = json::object();
+      Result["Samples"] = pBlockSamples;
       if(Params->Voltage) {
         Result["Voltage_Samples"] = json::array();
         for(uint8_t n = 0; n < pVoltageChannels; n++) {
@@ -1692,14 +1692,12 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
         }
       }
       pNowDataLock.ConsumerEnds();
-
-      string Data = Result.dump();
+      string Data = Result.dump() + "\n\n";
       sink.write(Data.c_str(), Data.size());
-      printf("Block size: %u\n", Data.size());
       return true;
     },
     [Params]() {
-      delete Params;
+      free(Params);
     }
   );
 }
