@@ -122,5 +122,4 @@ const AppRouter = new Router({
     { path: '*', component: PageNotFound }
   ]
 });
-
 new Vue( { el: '#app', render: h => h(App), router: AppRouter } );

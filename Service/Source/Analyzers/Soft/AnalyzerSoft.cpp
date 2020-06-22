@@ -1408,8 +1408,22 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
     Response["RateModules"] = PriceModule::GetVarsInfo();
   }
   Database DB;
-  DB.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename))) AS size from pg_tables WHERE schemaname = " + DB.Bind(Serial));
-  if(DB.FecthRow()) Response["Size"] = DB.ResultUInt64("size");
+  Response["DatabaseSize"] = json::array();
+  DB.ExecSentenceAsyncResult("WITH sizes AS (SELECT tablename, pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)) AS size from pg_tables WHERE schemaname = " + DB.Bind(Serial) + ") "
+    "SELECT 'Aggreg_3S' AS name, size FROM sizes WHERE tablename = 'aggreg_3s' UNION "
+    "SELECT 'Aggreg_1M' AS name, SUM(size) FROM sizes WHERE tablename IN ('aggreg_1m', 'aggreg_ext_1m') UNION "
+    "SELECT 'Aggreg_10M' AS name, size FROM sizes WHERE tablename = 'aggreg_10m' UNION "
+    "SELECT 'Aggreg_15M' AS name, size FROM sizes WHERE tablename = 'aggreg_15m' UNION "
+    "SELECT 'Aggreg_1H' AS name, size FROM sizes WHERE tablename = 'aggreg_1h' UNION "
+    "SELECT 'Events_Stats' AS name, size FROM sizes WHERE tablename = 'events' UNION "
+    "SELECT 'Events_Samples' AS name, size FROM sizes WHERE tablename = 'events_ext' UNION "
+    "SELECT 'Alarms' AS name, size FROM sizes WHERE tablename = 'alarms'");
+  while(DB.FecthRow()) {
+    json Row = json::object();
+    Row["Table"] = DB.ResultString("name");
+    Row["Size"]  = DB.ResultUInt64("size");
+    Response["DatabaseSize"].push_back(Row);
+  }
   HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
@@ -1628,7 +1642,66 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
   return HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  typedef struct {
+    uint64_t Block;
+    bool     Current;
+    bool     Voltage;
+  } WaveStream_t;
+  WaveStream_t *Params = new WaveStream_t;
+  Params->Block = 0;
+  for(uint8_t i = 0; i < params["Series"].size(); i++) {
+    if(params["Series"][i].is_string() == false) {
+      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    } else if(params["Series"][i] == "CURRENT") {
+      Params->Current = true;
+    } else if(params["Series"][i] == "VOLTAGE") {
+      Params->Current = true;
+    } else {
+      return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);
+    }
+  }
+  response.set_header("Content-Type", "application/json");
+  response.set_chunked_content_provider(
+    [this, Params](uint64_t offset, DataSink &sink) {
+      if(pNowDataLock.ConsumerWait(5) == false) {
+        sink.done();
+        return false;
+      }
+      Params->Block = (Params->Block == 0) ? pSequence : Params->Block + 1;
+      if(Params->Block != pSequence) {
+        pNowDataLock.ConsumerEnds();
+        sink.done();
+        return false;
+      }
+      printf("Capture block: %llu\n", pSequence);
+      json Result = json::object();
+      if(Params->Voltage) {
+        Result["Voltage_Samples"] = json::array();
+        for(uint8_t n = 0; n < pVoltageChannels; n++) {
+          Result["Voltage_Samples"].push_back(json::array());
+          for(uint16_t i = 0; i < pBlockSamples; i++) Result["Voltage_Samples"][n].push_back(pVoltageSamples[n * pMaxSamples + i]);
+        }
+      }
+      if(Params->Current) {
+        Result["Current_Samples"] = json::array();
+        for(uint8_t n = 0; n < pCurrentChannels; n++) {
+          Result["Current_Samples"].push_back(json::array());
+          for(uint16_t i = 0; i < pBlockSamples; i++) Result["Current_Samples"][n].push_back(pCurrentSamples[n * pMaxSamples + i]);
+        }
+      }
+      pNowDataLock.ConsumerEnds();
 
+      string Data = Result.dump();
+      sink.write(Data.c_str(), Data.size());
+      printf("Block size: %u\n", Data.size());
+      return true;
+    },
+    [Params]() {
+      delete Params;
+    }
+  );
 }
 void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -1639,6 +1712,18 @@ void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
   DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ");
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::DelSeriesRange(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  string   Aggreg = params["Aggreg"];
+  uint64_t From   = params["From"];
+  uint64_t To     = params["To"];
+  if((Aggreg != "200MS") && (Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' param must be '200MS', 3S', '1M', '10M', '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
+  Database DB(Serial);
+  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM aggreg_" + Aggreg + " WHERE sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::GetEvents(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -1659,6 +1744,22 @@ void AnalyzerSoft::GetEvents(const json &params, Response &response) {
                              "FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("evt"), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::GetEventsRange(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  Database DB(Serial);
+  DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM events) AS t1) AS t2 ");
+  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::DelEventsRange(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  uint64_t From   = params["From"];
+  uint64_t To     = params["To"];
+  Database DB(Serial);
+  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::GetEvent(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -1848,6 +1949,24 @@ void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
                               "FROM alarms WHERE alarmtime >= " + DB.Bind(From) + " AND alarmtime <= " + DB.Bind(To));
   if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::GetAlarmsRange(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  Database DB(Serial);
+  DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(alarmtime) AS max, min(alarmtime) AS min FROM alarms) AS t1) AS t2 ");
+  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::DelAlarmsRange(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  uint64_t From   = params["From"];
+  uint64_t To     = params["To"];
+  Database DB(Serial);
+  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms WHERE alarmtime >= " + DB.Bind(From) + " AND alarmtime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+}
+void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
 }
 void AnalyzerSoft::GetRemote(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);

@@ -93,3 +93,10 @@ CREATE TABLE IF NOT EXISTS events_ext (
   samples3    real[],
   PRIMARY KEY (starttime, sampletype)
 ) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS alarms (
+  alarmtime   bigint            NOT NULL PRIMARY KEY,
+  name        character varying NOT NULL,
+  trigger     boolean           NOT NULL,
+  priority    smallint          NOT NULL
+) WITH (OIDS=FALSE);

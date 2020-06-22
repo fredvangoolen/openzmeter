@@ -8,30 +8,36 @@
     </template>
     <input type="file" name="name" style="display: none;" ref="filename" @change="FileSet" accept="application/gzip, .gz"/>
     <div v-if="View == 'Main'">
-      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Analyzer data takes currently <strong>{{ FormatBinary(analyzer.Size) }}</strong></div>
       <div class="row">
-        <div class="col-xs-12 col-sm-6">
+        <div class="col-xs-12">
+          <div class="alert-info alert alert text-center" style="margin-bottom: 5px; padding: 5px">
+            Analyzer data takes currently <strong>{{ GetBestUnitsBin(TotalSize) }}</strong>
+          </div>
+        </div>
+        <div class="col-xs-12">
+          <label class="control-label">Action</label>
+          <div style="display: flex">
+            <option-picker :options="[{name: 'Clear all', value: 'Clear all'}, {name: 'Clear range', value: 'Clear range'}]" v-model="Action"></option-picker>
+            <button type="button" class="btn btn-danger btn-xs" @click="Execute">Execute</button>
+          </div>
+        </div>
+        <div class="col-xs-12">
+          <div class="alert-warning alert alert text-center help" style="margin: 5px 0px; padding: 5px">
+            <div v-if="Action=='Clear all'">Delete all data in selected aggregation or storage group. This action recover disk space.</div>
+            <div v-if="Action=='Clear range'">Delete data in selected aggregation or storage group between a date range. This action will not recover disk space, but mark deleted rows for reusage</div>
+          </div>
+        </div>
+        <div class="col-xs-12 col-sm-6" v-if="Action=='Clear range'">
           <label class="control-label">From</label>
-          <date-picker ref="StartDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" @change="SetStartDate"></date-picker>
+          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From"></date-picker>
         </div>
-        <div class="col-xs-12 col-sm-6">
+        <div class="col-xs-12 col-sm-6" v-if="Action=='Clear range'">
           <label class="control-label">To</label>
-          <date-picker ref="EndDate" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" @change="SetEndDate"></date-picker>
+          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To"></date-picker>
         </div>
-      </div>
-      <hr style="margin-top: 10px; margin-bottom: 10px;"/>
-      <div class="row" style="margin-top:5px; margin-bottom: 5px">
-        <div class="col-xs-6"><button type="button" class="btn btn-default btn-block btn-xs" @click="BackupRange">Backup range</button></div>
-        <div class="col-xs-6"><button type="button" class="btn btn-default btn-block btn-xs" @click="BackupAll">Backup all</button></div>
-      </div>
-      <hr style="margin-top: 10px; margin-bottom: 10px;"/>
-      <div class="row" style="margin-top:5px; margin-bottom: 5px">
-        <div class="col-xs-6"><button type="button" class="btn btn-default btn-block btn-danger btn-xs" @click="ClearRange">Clear range</button></div>
-        <div class="col-xs-6"><button type="button" class="btn btn-default btn-block btn-danger btn-xs" @click="ClearAll">Clear all</button></div>
-      </div>
-      <hr style="margin-top: 10px; margin-bottom: 10px;"/>
-      <div class="row" style="margin-top:5px; margin-bottom: 5px">
-        <div class="col-xs-12"><button type="button" class="btn btn-default btn-block btn-xs" @click="Restore">Restore backup</button></div>
+        <div class="col-xs-12">
+          <vuetable ref="table" :fields="Columns" :api-mode="false" :data="Tables" class="table small table-striped"></vuetable>
+        </div>
       </div>
     </div>
     <div v-if="View == 'Save'">
@@ -44,23 +50,43 @@
 </template>
 
 <script>
-  import moment from 'moment';
-  import DatePicker from 'Components/DatePicker.vue';
-  import ProgressBar from 'Components/ProgressBar.vue';
+  import vuetable from 'vuetable-2';
   import * as oZm from 'JS/openZmeter.js';
-  import Dlg from 'Components/Dialog.vue';
-//  import Oboe from 'JS/oboe.js';
-  import FileSaver from 'JS/FileSaver.js';
-  import Pako from 'JS/pako.js';
   export default {
     props: { analyzer: Object },
     data() {
-      return { DBSize: '', DateText: '', Progress: 0, View: 'Main', SizeText: '', Range: 0 };
+      return { View: 'Main', Action: 'Clear all', From: 0, To: 0,
+        Columns: [
+          { name: '__checkbox' },
+          { name: 'id', title: 'Name' },
+          { name: 'Size', title: 'Size' }
+        ]
+      };
+    },
+    computed: {
+      TotalSize: function() {
+        var TotalSize = 0;
+        for(var n = 0; n < this.analyzer.DatabaseSize.length; n++) TotalSize += this.analyzer.DatabaseSize[n].Size;
+        return TotalSize;
+      },
+      Tables: function() {
+        var Tables = [];
+        for(var n = 0; n < this.analyzer.DatabaseSize.length; n++) Tables.push({ id: this.analyzer.DatabaseSize[n].Table, Size: this.GetBestUnitsBin(this.analyzer.DatabaseSize[n].Size)});
+        return Tables.sort((a, b) => { return (a.id == b.id) ? 0 : (a.id > b.id) ? 1 : -1; });
+      }
     },
     methods: {
-      FormatBinary: function(val) {
-        return oZm.GetBestUnitsBin(val);
+      Execute: function() {
+        var Selection = this.$refs.table.selectedTo;
+        for(var n = 0; n < Selection.length; n++) {
+          if(this.Action == 'Clear table') {
+            this.$http.post('delSeries', { Analyzer: this.analyzer.Analyzer, Aggreg: this.$refs.table.selectedTo }).then();
+          } else if(this.Action == 'Clear range') {
+
+          }
+        }
       },
+
 //      Show: function (analyzer) {
 
 //        this.DBSize = oZm.GetBestUnitsBin(analyzer.Size);
@@ -172,15 +198,26 @@
       BackupAll: function () {},
       ClearAll: function () {}
     },
-    created: function () {
-      this.Backup = {Voltage: []};
-      this.Days = 0;
-    },
-    components: {Dlg, DatePicker, ProgressBar}
+    components: { vuetable }
   }
 </script>
 
 <style scoped>
+  .table >>> th:nth-child(1) {
+    width: 20px;
+  }
+  .table >>> th:nth-child(3) {
+    width: 94px;
+    text-align: right;
+  }
+  .table >>> td:nth-child(3) {
+    text-align: right;
+  }
+  .help {
+    font-size: 85%;
+  }
+
+
   div .progress {
     height: 12px;
     background-color: #FFFFFF;

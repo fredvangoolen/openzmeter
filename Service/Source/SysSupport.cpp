@@ -236,10 +236,10 @@ void SysSupport::PeriodicTask() {
 void *SysSupport::Bluetooth_Thread(void *params) {
   DBusConnection *DBus = NULL;
   nice(5);
+  chmod("/dev/watchdog", S_IWUSR | S_IWGRP | S_IWOTH);
   int WatchdogFD = open("/dev/watchdog", O_WRONLY);
   if(WatchdogFD == -1) {
     LOGFile::Error("Watchdog is not avaliable (%s)\n", strerror(errno));
-    fprintf(stderr, "Error: %s\n", strerror(errno));
     WatchdogFD = 0;
   } else {
     int Timeout = 20;
