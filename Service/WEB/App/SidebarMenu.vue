@@ -20,15 +20,16 @@
     </div>
     <div class="item" @click="Submenu = (Submenu == 'Events') ? null : 'Events'" v-if="analyzer!=null">
       <img class="icon" :src="require('Imgs/warning.png')">
+      <span class="badge badge-menu" v-if="(UnreadEvents+UnreadAlarms)>0">{{ UnreadEvents+UnreadAlarms }}</span>
       <div class="name">Events</div>
       <span class="dropdown-icon" :class="{ show: (Submenu != 'Events') }"><img :src="require('Imgs/bullet_arrow_down.png')"></span>
       <span class="dropdown-icon" :class="{ show: (Submenu == 'Events') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
     </div>
     <div class="submenu" :class="{ show: (Submenu == 'Events') }" v-if="analyzer!=null">
       <router-link to="/Events/ITIC">ITIC</router-link>
-      <router-link to="/Events/Disturbances">Disturbances</router-link>
+      <a @click="ShowDisturbances">Disturbances<span class="badge badge-submenu" v-if="UnreadEvents>0">{{ UnreadEvents }}</span></a>
       <router-link to="/Events/EN50160">EN50160</router-link>
-      <router-link to="/Events/Alarms">Alarms</router-link>
+      <a @click="ShowAlarms">Alarms<span class="badge badge-submenu" v-if="UnreadAlarms>0">{{ UnreadAlarms }}</span></a>
     </div>
     <div class="item" @click="Submenu = (Submenu == 'Costs') ? null : 'Costs'" v-if="analyzer!=null">
       <img class="icon" :src="require('Imgs/table_money.png')">
@@ -53,14 +54,47 @@
 </template>
 
 <script>
+  import moment from 'moment';
   export default {
     props: { analyzer:Object, expanded: Boolean },
     data() {
-      return { Submenu: null, AnalyzerSelected: false }
+      return { Submenu: null, AnalyzerSelected: false, TransferNow: this.CreateSeriesTransfer(this, ['UNREAD']), }
+    },
+    created: function() {
+      this.TransferNow.UpdateNow(this.analyzer);
+    },
+    computed: {
+      UnreadEvents: function() {
+        if(this.TransferNow.Data == null) return 0;
+        return this.TransferNow.Data.Unread.Events;
+      },
+      UnreadAlarms: function() {
+        if(this.TransferNow.Data == null) return 0;
+        return this.TransferNow.Data.Unread.Alarms;
+      }
     },
     watch: {
       expanded: function(val) {
         if(val == false) this.Submenu = null;
+      },
+      analyzer: function() {
+        this.TransferNow.UpdateNow(this.analyzer);
+      }
+    },
+    methods: {
+      ShowDisturbances: function() {
+        if(this.UnreadEvents != 0) {
+          this.$router.push({ path: '/Events/Disturbances', query: { From: this.TransferNow.Data.Unread.EventsFrom, To: this.TransferNow.Data.Sampletime } });
+        } else {
+          this.$router.push('/Events/Disturbances');
+        }
+      },
+      ShowAlarms: function() {
+        if(this.UnreadAlarms != 0) {
+          this.$router.push({ path: '/Events/Alarms', query: { From: this.TransferNow.Data.Unread.AlarmsFrom, To: this.TransferNow.Data.Sampletime } });
+        } else {
+          this.$router.push('/Events/Alarms');
+        }
       }
     },
     mounted: function() {
@@ -70,12 +104,9 @@
         $(this).find('[data-sidenav-dropdown-icon]').toggleClass('show');
         e.preventDefault();
       });
-      this.$root.$on('AnalyzerChanged', this.SetAnalyzer);
     },
-    methods: {
-      SetAnalyzer: function() {
-        this.AnalyzerSelected = (this.$root.SelectedAnalyzer !== null);
-      }
+    beforeDestroy: function() {
+      this.TransferNow.Destroy();
     }
   }
 </script>
@@ -90,6 +121,7 @@
     margin-left: 0;
     transition: margin-left 0.2s;
     text-decoration: none;
+    position: relative;
   }
   .icon {
     height: 24px;
@@ -115,10 +147,6 @@
     background: #616161;
     color: #BDBDBD
   }
-  /*.item.active, .submenu a.active {
-    color: #FAFAFA;
-    background: #474544;
-  }*/
   .submenu {
     display: block;
     padding: 0px;
@@ -136,5 +164,22 @@
     color: #BDBDBD;
     padding: 6px 42px;
     text-decoration: none;
+    position: relative;
+  }
+  .badge-menu {
+    position: absolute;
+    top: 24px;
+    right: 260px;
+    font-size: 9px;
+    padding: 1px 2px;
+    background: #c9302c;
+    border-radius: 3px;
+  }
+  .badge-submenu {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border-radius: 3px;
+    background: #c9302c;
   }
 </style>

@@ -5,7 +5,7 @@
         <div class="panel-heading">
           <span class="header-text">Disturbances</span>
           <div class="header-buttons clearfix">
-            <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
+            <toolbar-period storage="PeriodEvents" v-model="Range" :analyzer="analyzer"></toolbar-period>
           </div>
         </div>
         <div class="panel-body">
@@ -34,6 +34,11 @@
       return { Range: null, TransferEvents: this.CreateSeriesTransfer(this) };
     },
     created: function() {
+      if((this.$route.query.From != null) && (this.$route.query.To != null)) {
+        localStorage.setItem('PeriodEvents', JSON.stringify([this.$route.query.From, this.$route.query.To]));
+        this.TransferEvents.UpdateUnread = true;
+      }
+      history.pushState({}, null, this.$route.path);
       this.TransferEvents.SingleShot = true;
       this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
     },

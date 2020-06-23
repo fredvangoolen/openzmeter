@@ -1397,6 +1397,7 @@ void AnalyzerSoft::PeriodicTasks() {
 //----------------------------------------------------------------------------------------------------------------------
 void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  string UserName = params["UserName"];
   json Response = ConfigManager::ReadConfig(pConfigPath);
   Response["Online"] = IsOnline();
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
@@ -1408,6 +1409,8 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
     Response["RateModules"] = PriceModule::GetVarsInfo();
   }
   Database DB;
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('Read', read, 'Write', write, 'Configure', config, 'EventsRead', eventsread, 'AlarmsRead', alarmsread) as access FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(Serial));
+  if(DB.FecthRow() == true) Response["Access"] = DB.ResultJSON("access");
   Response["DatabaseSize"] = json::array();
   DB.ExecSentenceAsyncResult("WITH sizes AS (SELECT tablename, pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)) AS size from pg_tables WHERE schemaname = " + DB.Bind(Serial) + ") "
     "SELECT 'Aggreg_3S' AS name, size FROM sizes WHERE tablename = 'aggreg_3s' UNION "
@@ -1633,6 +1636,22 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
       Result["GA_Power"] = CalcGA();
     } else if(Serie == "SYS_STATS") {
       Result["Sys_Stats"] = SysSupport::GetSystemStatusJSON();
+    } else if(Serie == "UNREAD") {
+      string UserName = params["UserName"];
+      Result["Unread"] = json::object();
+      Database DB(Serial);
+      DB.ExecSentenceAsyncResult("SELECT eventsread, (SELECT count(*) FROM events WHERE starttime > eventsread) AS events, alarmsread, (SELECT count(*) FROM alarms WHERE alarmtime > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(Serial));
+      if(DB.FecthRow() == false) {
+        Result["Unread"]["EventsFrom"] = 0;
+        Result["Unread"]["Events"] = 0;
+        Result["Unread"]["AlarmsFrom"] = 0;
+        Result["Unread"]["Alarms"] = 0;
+      } else {
+        Result["Unread"]["EventsFrom"] = DB.ResultUInt64("eventsread");
+        Result["Unread"]["Events"] = DB.ResultUInt64("events");
+        Result["Unread"]["AlarmsFrom"] = DB.ResultUInt64("alarmsread");
+        Result["Unread"]["Alarms"] = DB.ResultUInt64("alarms");
+      }
     } else {
       pNowDataLock.ConsumerEnds();
       return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);
@@ -1730,6 +1749,10 @@ void AnalyzerSoft::GetEvents(const json &params, Response &response) {
   uint64_t To = params["To"];
   uint64_t From = params["From"];
   Database DB(Serial);
+  if((params.contains("Update") == true) && (params["Update"].is_boolean() == true) && (params["Update"] == true)) {
+    string UserName = params["UserName"];
+    DB.ExecSentenceNoResult("UPDATE permissions SET eventsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(Serial));
+  }
   DB.ExecSentenceAsyncResult("SELECT json_build_object("
                              "'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), "
                              "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), "
@@ -1936,9 +1959,13 @@ void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t To = params["To"];
-  uint64_t From = params["From"];
+  uint64_t To         = params["To"];
+  uint64_t From       = params["From"];
   Database DB(Serial);
+  if((params.contains("Update") == true) && (params["Update"].is_boolean() == true) && (params["Update"] == true)) {
+    string UserName = params["UserName"];
+    DB.ExecSentenceNoResult("UPDATE permissions SET alarmsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(Serial));
+  }
   DB.ExecSentenceAsyncResult("SELECT json_build_object("
                               "'AlarmTime', COALESCE(ARRAY_AGG(alarmtime ORDER BY alarmtime ASC), '{}'), "
                               "'Name', COALESCE(ARRAY_AGG(name ORDER BY alarmtime ASC), '{}'), "

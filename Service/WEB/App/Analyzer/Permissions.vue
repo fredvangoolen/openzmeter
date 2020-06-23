@@ -10,7 +10,7 @@
       </template>
       <vuetable :fields="Columns" :api-mode="false" :data="Permissions" class="table small table-striped">
         <template slot="actions" slot-scope="props">
-          <div class="btn-group">
+          <div class="btn-group" v-if="props.rowData.User!='admin'">
             <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowData)">Edit</button>
             <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData)">Delete</button>
           </div>

@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS permissions (
   read       boolean           NOT NULL,
   write      boolean           NOT NULL,
   config     boolean           NOT NULL,
+  eventsread bigint            NOT NULL,
+  alarmsread bigint            NOT NULL,
   UNIQUE(username, serial)
 ) WITH (OIDS=FALSE);
 
