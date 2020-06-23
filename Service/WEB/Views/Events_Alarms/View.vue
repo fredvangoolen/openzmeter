@@ -5,7 +5,7 @@
         <div class="panel-heading">
           <span class="header-text">Alarms</span>
           <div class="header-buttons clearfix">
-            <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
+            <toolbar-period storage="PeriodAlarms" v-model="Range" :analyzer="analyzer"></toolbar-period>
           </div>
         </div>
         <div class="panel-body">
@@ -34,6 +34,11 @@
       return { Analyzer: null, Range: null, Alarms: null, TransferAlarms: this.CreateSeriesTransfer(this) };
     },
     created: function () {
+      if((this.$route.query.From != null) && (this.$route.query.To != null)) {
+        localStorage.setItem('PeriodAlarms', JSON.stringify([this.$route.query.From, this.$route.query.To]));
+        this.TransferAlarms.UpdateUnread = true;
+      }
+      history.pushState({}, null, this.$route.path);
       this.TransferAlarms.SingleShot = true;
       this.TransferAlarms.UpdateAlarms(this.analyzer, this.Range);
       if(this.analyzer != null) {

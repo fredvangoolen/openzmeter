@@ -1,7 +1,7 @@
 const openZmeter = {
   install: function(Vue, options) {
     Vue.prototype.CreateSeriesTransfer = (parent, series) => {
-      var Transfer = { This: parent, SingleShot: false, Timer: null, CancelFunc: null, Data: null, LastData: null, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null, AggregFail: null };
+      var Transfer = { This: parent, SingleShot: false, Timer: null, CancelFunc: null, Data: null, LastData: null, UpdateUnread: false, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null, AggregFail: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -109,7 +109,8 @@ const openZmeter = {
         }
         var Promises = [];
         if((Data.From == null) || (Data.To == null)) {
-          Promises.push(Transfer.This.$http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1] }));
+          Promises.push(Transfer.This.$http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread }));
+          Transfer.UpdateUnread = false;
         } else {
           if(ReqRange[0] < Data.From) Promises.push(Transfer.This.$http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Data.From - 1, Series: series }));
           if(ReqRange[1] > Data.To) Promises.push(Transfer.This.$http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: Data.To + 1, To: ReqRange[1], Series: series }));
@@ -191,7 +192,8 @@ const openZmeter = {
         }
         var Promises = [];
         if((Data.From == null) || (Data.To == null)) {
-          Promises.push(Transfer.This.$http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1] }));
+          Promises.push(Transfer.This.$http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread }));
+          Transfer.UpdateUnread = false;
         } else {
           if(ReqRange[0] < Data.From) Promises.push(Transfer.This.$http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Data.From - 1, Series: series }));
           if(ReqRange[1] > Data.To) Promises.push(Transfer.This.$http.post('getEvents', { Analyzer: analyzer.Analyzer, From: Data.To + 1, To: ReqRange[1], Series: series }));

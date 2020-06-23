@@ -1,11 +1,10 @@
 <template>
   <div class="this" v-bind:class="{ expanded: expanded }">
     <img class="icon" :src="require('Imgs/disconnect32.png')">
+    <div class="name">{{ (analyzer == null) ? 'None selected' : analyzer.Name }}</div>
     <div class="btn-group">
-      <button type="button" class="btn btn-default btn-xs" @click="ShowEvents" data-toggle="tooltip" :title="(EventsCount == 0) ? 'No events since last login' : EventsCount + ' events since last login'"><img :class="{blink_img: (EventsCount != 0)}" :src="require('Imgs/exclamation.png')"></button>
       <button type="button" class="btn btn-default btn-xs" @click="ShowDialog=true" data-toggle="tooltip" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
     </div>
-    <div class="name">{{ (analyzer == null) ? 'None selected' : analyzer.Name }}</div>
     <analyzer-table v-if="ShowDialog" :analyzer="analyzer" @update:analyzer="SetAnalyzer($event)" @close="ShowDialog=false"></analyzer-table>
   </div>
 </template>
@@ -17,7 +16,7 @@
   export default {
     props: { analyzer: Object, expanded: Boolean },
     data() {
-      return { ShowDialog: false, EventsCount: 0 };
+      return { ShowDialog: false };
     },
     created: function() {
       if(localStorage.getItem("Analyzer") == null) {
@@ -53,9 +52,6 @@
           analyzer.CalcRange = this.CalcRange.bind(this);
         }
         this.$emit('update:analyzer', analyzer);
-//        this.LastSample = 0;
-//        this.EventsCount = 0;
-//        this.GetEvents();
       },
       GetSeriesNames: function(serie, len) {
         if(len == 1) return [serie];
@@ -117,32 +113,9 @@
         else if(Array.isArray(range))
           return Array.from(range);
       },
-
-
-
-
-
-
-
-      ShowEvents: function() {
+      ShowDisturbances: function() {
         localStorage.setItem('Period', JSON.stringify({Period: moment().valueOf() - parseInt(localStorage.getItem('LastLogin')), To: moment().valueOf() }));
         this.$router.push({path: '/Events/Disturbances'});
-      },
-      GetEvents: function() {
-        clearInterval(this.Timer);
-        var Analyzer = this.$root.SelectedAnalyzer;
-        if(Analyzer === null) return;
-        $.ajax({ url: 'getEvents', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({ To: moment().valueOf(), LastSample: this.LastSample, Analyzer: Analyzer.Analyzer, Period: moment().valueOf() - parseInt(localStorage.getItem('LastLogin')) }),
-          success: function(result) {
-            if(result.StartTime.length > 0) {
-              this.EventsCount += result.StartTime.length;
-              this.LastSample = result.StartTime.slice(-1)[0];
-            }
-          }.bind(this),
-          complete: function() {
-            this.Timer = setTimeout(this.GetEvents.bind(this), 60000);
-          }.bind(this)
-        });
       }
     },
     components: { AnalyzerTable }
@@ -171,17 +144,17 @@
     margin: 4px 12px;
   }
   .name {
-    width: 192px;
+    width: 226px;
     padding-left: 2px;
     line-height: 24px;
     padding-top: 4px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
   .btn-group {
     margin-top: 4px;
-    margin-left: -2px;
-  }
-  .blink_img {
-    animation: blinker_img 1s linear infinite;
+    margin-right: -3px;
   }
   .btn-group > .btn {
     background: #444;
@@ -194,8 +167,5 @@
   .btn-group > .btn:hover {
     background: #555;
     border-color: #333;
-  }
-  @keyframes blinker_img {
-    20% { opacity: 0.2; }
   }
 </style>
