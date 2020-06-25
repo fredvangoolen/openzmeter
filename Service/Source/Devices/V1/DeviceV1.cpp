@@ -164,9 +164,9 @@ void DeviceV1::Configure(const json& config) {
 void *DeviceV1::Capture_Thread(void *args) {
   DeviceV1 *This = (DeviceV1*)args;
   nice(-20);
-  for(uint8_t n = 0; n < DEVICEV1_TRANSFERS; n++) This->pTransfers[n].Init(This, 32768);
+  for(uint8_t n = 0; n < DEVICEV1_TRANSFERS; n++) This->pTransfers[n].Init(This, 8192);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
-    struct timeval tv = { 0, 100000 };
+    struct timeval tv = { 5, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) LOGFile::Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
     if(This->pTerminate == true) continue;

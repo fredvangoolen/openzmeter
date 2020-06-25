@@ -84,7 +84,7 @@
         for(var i = 0; i < data.Voltage.length; i++) ToShow.push([i, data.Voltage[i]]);
         this.Warning = (In < 95);
         this.Voltage = (In - 90) * 10;
-        this.VoltageText = oZm.Round2Plain(In) + '% of time in range';
+        this.VoltageText = this.Round(In, 2, false) + '% of time in range';
       }
     }
   }

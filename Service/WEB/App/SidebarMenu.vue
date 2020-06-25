@@ -58,10 +58,11 @@
   export default {
     props: { analyzer:Object, expanded: Boolean },
     data() {
-      return { Submenu: null, AnalyzerSelected: false, TransferNow: this.CreateSeriesTransfer(this, ['UNREAD']), }
+      return { Submenu: null, AnalyzerSelected: false, TransferNow: this.CreateSeriesTransfer(this, ['UNREAD']), TitleFrame: 0 }
     },
     created: function() {
       this.TransferNow.UpdateNow(this.analyzer);
+      setInterval(() => { this.SetTitle(), 5000 })
     },
     computed: {
       UnreadEvents: function() {
@@ -82,6 +83,22 @@
       }
     },
     methods: {
+      SetTitle: function() {
+        if(this.TitleFrame == 0) {
+          document.title = "openZmeter";
+          this.TitleFrame = 1;
+        } else if(this.TitleFrame == 1) {
+          if((this.UnreadEvents != 0) && (this.UnreadAlarms != 0))
+            document.title = '[' + this.UnreadEvents + ' new events and ' + this.UnreadAlarms + ' new alarms]';
+          else if(this.UnreadEvents != 0)
+            document.title = '[' + this.UnreadEvents + ' new events]';
+          else if(this.UnreadAlarms != 0)
+            document.title = '[' + this.UnreadAlarms + ' new alarms]';
+        } else {
+          document.title = "openZmeter";
+        }
+        this.TitleFrame = 0;
+      },
       ShowDisturbances: function() {
         if(this.UnreadEvents != 0) {
           this.$router.push({ path: '/Events/Disturbances', query: { From: this.TransferNow.Data.Unread.EventsFrom, To: this.TransferNow.Data.Sampletime } });

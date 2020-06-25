@@ -96,7 +96,7 @@
     },
     methods: {
       FormatHTML: function(val) {
-        var Units = oZm.GetBestUnits(val);
+        var Units = this.BestUnits(val);
         return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'Active_Power') ? 'W' : (this.serie == 'Reactive_Power') ? 'VAr' : 'VA');
       },
       FormatSum: function(val) {

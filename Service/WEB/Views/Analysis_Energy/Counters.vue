@@ -87,7 +87,7 @@
     },
     methods: {
       FormatHTML: function(val) {
-        var Units = oZm.GetBestUnits(val);
+        var Units = this.BestUnits(val);
         return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'ACTIVE_ENERGY') ? 'Wh' : 'VArh');
       },
       FormatSum: function(val) {
@@ -100,7 +100,7 @@
       FormatPhases: function(val) {
         var Val = (this.serie == 'ACTIVE_ENERGY') ? val.Active_Power : val.Reactive_Power;
         var Div = (val.Aggregation_Source == '15M') ? 4 : 1;
-        var Units = oZm.GetBestUnits(oZm.ArrayAbsMax(Val));
+        var Units = this.BestUnits(oZm.ArrayAbsMax(Val));
         var Result = [];
         for(var n in Val) Result.push(this.FormatHTML(Val[n] / Div));
         return Result;

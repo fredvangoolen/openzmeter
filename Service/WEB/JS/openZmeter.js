@@ -433,7 +433,7 @@ const openZmeter = {
       while(Fraction.length < decimals) Fraction = '0' + Fraction;
       return (((Integer == 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + (html ? "<span style='font-size:80%'>." + Fraction + '</span>' : '.' + Fraction);
     },
-    Vue.prototype.GetBestUnitsBin = (val, dec, html) => {
+    Vue.prototype.BestUnitsBin = (val, dec, html) => {
       if(val > 1024 * 1024 * 1024) {
         return Vue.prototype.Round(val / (1024 * 1024 * 1024), dec, html) + ' GB';
       } else if(val > 1024 * 1024) {
@@ -498,10 +498,6 @@ export function RoundPlain(val, decimals) {
     return (((Integer === 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + '.' + Fraction;
   }
 }
-export function FormatSerieValue(val, serie, units) {
-  if(units === undefined) units = GetBestUnits(val);
-  return { Units: units + serie.Units, ValuePlain: RoundPlain(ScaleToUnits(val, units), serie.Decimals), ValueHTML: RoundHTML(ScaleToUnits(val, units), serie.Decimals) };
-}
 export function SerieStyle(serie, analyzer, order) {
   var SerieLen = serie.Names(analyzer).length;
   if(SerieLen === 1) return { Colors: [serie.Color], Width: 0.5 };
@@ -530,7 +526,6 @@ export function MergeSeriesResult(result, previous) {
 
 export var Series = {
   'VOLTAGE': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V',  Link: '/Analysis/Voltage', Color: '#d9534f', Decimals: 2,
-    FormatValue: function(val, units) { return FormatSerieValue(val, this, units) },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)']; },
     Range: function(values, phases) {
       var UpperRange = -Infinity;
@@ -828,33 +823,6 @@ export function createCaptionsForResponsiveTable (tableVue) {
   }
 }
 
-///* append samples of given series to array of graph data, and shift if needed */
-export function GraphDataAppend(result, serie, data) {
-  var Out = data;
-  if(result['Sampletime'] !== null && result['Sampletime'].length > 0) {
-    if((data.length === 0) || data[data.length - 1][0] < result['Sampletime'][0]) {
-      for(var i = 0; i < result['Sampletime'].length; i++) {
-        data.push([moment(result['Sampletime'][i]).valueOf()].concat(result[serie][i]));
-      }
-      Out = [];
-      for(var n = 0; n < data.length; n++) {
-        if((data[n][0] >= result['From']) && (data[n][0] <= result['To'])) Out.push(data[n]);
-      }
-
-     // ShiftArray(data, result['MaxSamples']);
-    }
-  }
-  return Out;
-}
-///* remove old items from array*/
-function ShiftArray(array, len) {
-  while(array.length > len) array.shift();
-}
-///* return last timestamp from results obtained with GetSeries and others */
-export function LastSampletime(result, prev) {
-  if(result['Sampletime'].length === 0) return prev;
-  return Math.max(prev, result['Sampletime'][result['Sampletime'].length - 1]);
-}
 ///* find abs max value of array (maybe array of arrays) */
 export function ArrayAbsMax(array) {
   var Max = 0;
@@ -877,16 +845,6 @@ export function ScaleToUnits(val, units) {
     return val / 1000000;
   }
 }
-///* Find units for high values of energy */
-export function GetBestUnits(value) {
-  if(Math.abs(value) > 1000000) {
-   return 'M';
-  } else if(Math.abs(value) > 1000) {
-    return 'k';
-  } else {
-    return '';
-  }
-}
 ///* Generate an array of colors from a base */
 export function ColorArray(base, items) {
   var Array = [];
@@ -896,60 +854,6 @@ export function ColorArray(base, items) {
   }
   return Array;
 }
-
-
-
-///* Retorna un numero como cadena con dos decimales */
-export function Round2(value) {
-  if(value === null) {
-    return '~';
-  } else {
-    value = Math.round(value * 100);
-    var Integer = Math.trunc(value / 100);
-    var Fraction = Math.abs(value % 100);
-    Fraction = Fraction.toString();
-    while(Fraction.length < 2) Fraction = '0' + Fraction;
-    return ((value < 0) ? '-' : '') + Math.abs(Integer.toString()) + "<span style='font-size:80%'>." + Fraction + '</span>';
-  }
-}
-export function Round3(value) {
-  if(value === null) {
-    return '~';
-  } else {
-    value = Math.round(value * 1000);
-    var Integer = Math.trunc(value / 1000);
-    var Fraction = Math.abs(value % 1000);
-    Fraction = Fraction.toString();
-    while(Fraction.length < 3) Fraction = '0' + Fraction;
-    return ((value < 0) ? '-' : '') + Math.abs(Integer.toString()) + "<span style='font-size:80%'>." + Fraction + '</span>';
-  }
-}
-/* Retorna un numero como cadena con dos decimales pero sin formato html */
-export function Round2Plain(value) {
-  if(value === null) {
-    return '-';
-  } else {
-    value = Math.round(value * 100);
-    var Integer = Math.trunc(value / 100);
-    var Fraction = Math.abs(value % 100);
-    Fraction = Fraction.toString();
-    while(Fraction.length < 2) Fraction = '0' + Fraction;
-    return Integer.toString() + '.' + Fraction;
-  }
-}
-export function Round6Plain(value) {
-  if(isNaN(parseFloat(value)) || !isFinite(value)) return "0.000000";
-  value = Math.round(value * 1000000);
-  var Integer = Math.trunc(value / 1000000);
-  var Fraction = Math.abs(value % 1000000);
-  Fraction = Fraction.toString();
-  while(Fraction.length < 6) Fraction = '0' + Fraction;
-  return Integer.toString() + '.' + Fraction;
-}
-
-
-
-
 
 
 ////1446
