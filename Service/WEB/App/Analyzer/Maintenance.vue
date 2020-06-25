@@ -11,7 +11,7 @@
       <div class="row">
         <div class="col-xs-12">
           <div class="alert-info alert alert text-center" style="margin-bottom: 5px; padding: 5px">
-            Analyzer data takes currently <strong>{{ GetBestUnitsBin(TotalSize) }}</strong>
+            Analyzer data takes currently <strong>{{ BestUnitsBin(TotalSize) }}</strong>
           </div>
         </div>
         <div class="col-xs-12">
@@ -71,7 +71,7 @@
       },
       Tables: function() {
         var Tables = [];
-        for(var n = 0; n < this.analyzer.DatabaseSize.length; n++) Tables.push({ id: this.analyzer.DatabaseSize[n].Table, Size: this.GetBestUnitsBin(this.analyzer.DatabaseSize[n].Size)});
+        for(var n = 0; n < this.analyzer.DatabaseSize.length; n++) Tables.push({ id: this.analyzer.DatabaseSize[n].Table, Size: this.BestUnitsBin(this.analyzer.DatabaseSize[n].Size)});
         return Tables.sort((a, b) => { return (a.id == b.id) ? 0 : (a.id > b.id) ? 1 : -1; });
       }
     },
@@ -89,7 +89,7 @@
 
 //      Show: function (analyzer) {
 
-//        this.DBSize = oZm.GetBestUnitsBin(analyzer.Size);
+//        this.DBSize = this.BestUnitsBin(analyzer.Size);
 //        this.StartDate = moment.tz(this.Analyzer.TimeZone).startOf('year').valueOf();
 //        this.EndDate = moment.tz(this.Analyzer.TimeZone).endOf('year').valueOf();
 //        this.View = 'Main';
@@ -143,7 +143,7 @@
         this.DateText = moment.tz(this.StartDate, this.Analyzer.TimeZone).format('DD/MM/YYYY');
         this.Chunks = [];
         this.TotalSize = 0;
-        this.SizeText = oZm.GetBestUnitsBin(this.TotalSize);
+        this.SizeText = this.BestUnitsBin(this.TotalSize);
         this.Progress = 0;
         this.Range = this.EndDate - this.StartDate;
         this.Deflator.onEnd = () => {
@@ -152,7 +152,7 @@
         };
         this.Deflator.onData = (chunk) => {
           this.TotalSize += chunk.length;
-          this.SizeText = oZm.GetBestUnitsBin(this.TotalSize);
+          this.SizeText = this.BestUnitsBin(this.TotalSize);
           this.Chunks.push(chunk);
         };
         this.FetchDay();

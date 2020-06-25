@@ -128,13 +128,8 @@
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.1 });
         }
         var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
-        Opt.axes.y.valueFormatter = (x) => {
-          var Result = oZm.FormatSerieValue(x, this.SerieProps);
-          return Result.ValuePlain + ' ' + Result.Units;
-        };
-        Opt.axes.y.axisLabelFormatter = (x) => {
-          return oZm.FormatSerieValue(x, this.SerieProps, Units).ValuePlain;
-        };
+        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, this.SerieProps.Units, 2, true); };
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         return Object.seal(Opt);
       }
     },

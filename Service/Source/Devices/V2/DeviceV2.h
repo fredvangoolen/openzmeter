@@ -27,7 +27,7 @@
 #define DEVICEV2_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
 #define DEVICEV2_ENDPOINT_OUT      0x02                          //Endpoint de escritura de datos
 #define DEVICEV2_SAMPLEFREQ       24000                          //Frequencia de muestreo
-#define DEVICEV2_TRANSFERS           16                          //Numero de transferencias a encolar
+#define DEVICEV2_TRANSFERS           24                          //Numero de transferencias a encolar
 #define DEVICEV2_BUFFERSIZE    0x040000
 #define DEVICEV2_CONTROL_SETSTATUS 0x20
 //----------------------------------------------------------------------------------------------------------------------

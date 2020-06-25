@@ -70,7 +70,7 @@
                         SampleDuration: this.events.Duration[x],
                         SampleRate: this.events.SampleRate[x],
                         Notes: this.events.Notes[x],
-                        Duration: (this.events.Duration == 0) ? 'RUNNNING' : oZm.Round2Plain(this.events.Duration[x] / this.events.SampleRate[x])
+                        Duration: (this.events.Duration == 0) ? 'RUNNNING' : this.Round(this.events.Duration[x] / this.events.SampleRate[x], 2, false)
           };
           var Max = 0;
           for(var i = 0; i < this.events.Reference[x].length; i++) {
@@ -81,12 +81,12 @@
             for(var i = 0; i < this.events.Reference[x].length; i++) {
               if(Math.abs(this.events.Reference[x][i] - this.events.Change[x][i]) > Math.abs(Event.Diff)) Event.Diff = this.events.Change[x][i] - this.events.Reference[x][i];
             }
-            Event.Change = oZm.Round2Plain(Event.Diff) + '<br>(' + oZm.Round2Plain(Max) + ' Max)';
-            Event.Percent = oZm.Round2Plain(Event.Diff / this.events.Reference[x][0] * 100.0);
+            Event.Change = this.Round(Event.Diff, 2, false) + '<br>(' + this.Round(Max, 2, false) + ' Max)';
+            Event.Percent = this.Round(Event.Diff / this.events.Reference[x][0] * 100.0, 2, false);
           } else {
             Event.Diff = Max;
-            Event.Change = oZm.Round2Plain(Max);
-            Event.Percent = oZm.Round2Plain(Max / this.events.Reference[x][0] * 100.0);
+            Event.Change = this.Round(Max, 2, false);
+            Event.Percent = this.Round(Max / this.events.Reference[x][0] * 100.0, 2, false);
           }
           Events.push(Event);
         }

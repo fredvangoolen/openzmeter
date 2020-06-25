@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.\n\n", argv[i]);
     }
   }
+  pthread_setname_np(pthread_self(), "openZmeter");
   /* Load config file */
   ConfigManager ConfigManager(ConfigFileName);
   /* Create PID File */
@@ -78,10 +79,7 @@ int main(int argc, char** argv) {
   ESIOS Esios;
   /* Create ModbusTCP */
   ModbusTCP Modbus;
-
-  pthread_setname_np(pthread_self(), "openZmeter");
-  nice(15);
-
+  nice(-20);
   uint32_t Iter = 0;
   while(!Terminate) {
     SysSupport::PeriodicTask();

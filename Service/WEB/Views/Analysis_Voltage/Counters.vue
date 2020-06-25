@@ -132,7 +132,7 @@
     },
     methods: {
       FormatHTML: function(val) {
-        var Units = oZm.GetBestUnits(val);
+        var Units = this.BestUnits(val);
         return this.Round(oZm.ScaleToUnits(val, Units), 2, true) + ' ' + Units + 'V';
       },
       FormatRMS: function(val) {

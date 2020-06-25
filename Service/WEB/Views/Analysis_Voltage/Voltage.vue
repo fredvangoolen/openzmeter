@@ -37,8 +37,8 @@
         Opt.visibility = this.phases;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
-        Opt.axes.y.valueFormatter = (x) => { var Result = oZm.FormatSerieValue(x, oZm.Series['VOLTAGE']); return Result.ValueHTML + ' <em class="x-small">' + Result.Units + '</em>'; };
-        Opt.axes.y.axisLabelFormatter = (x) => { return oZm.FormatSerieValue(x, oZm.Series['VOLTAGE']).ValueHTML; };
+        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, 'V', 2, true); };
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         Opt.axes.x.axisLabelFormatter = (x) => { return moment(x).format('DD/MM/YYYY [<br/>] HH:mm:ss'); };
         Opt.axes.x.valueFormatter = (x) => { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); };
         Opt.labels = ['Time'].concat(VoltageNames);

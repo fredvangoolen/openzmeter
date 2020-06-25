@@ -34,7 +34,7 @@
     computed: {
       RmsCurrent: function() { return (this.data == null) ? 0.0 : oZm.ArrayAbsMax(this.data.Current); },
       GraphOptions: function() {
-        var Opt = { };
+        var Opt = { file: [] };
         Opt.showRangeSelector = false;
         Opt.plugins = [ Graph.Plugins.Vertical_Crosshair() ];
         Opt.interactionModel = Graph.InteractionModels.Fixed(this);
@@ -70,7 +70,6 @@
         Opt.labels = ['Sample'].concat(CurrentNames).concat(VoltageNames);
         Opt.colors = CurrentStyle.Colors.concat(VoltageStyle.Colors);
         if(this.data != null) {
-          Opt.file = [];
           for(var i = 0; i < this.data.Current_Samples[0].length; i++) {
             var Row = [i];
             for(var n = 0; n < this.data.Current_Samples.length; n++) Row.push(this.data.Current_Samples[n][i]);

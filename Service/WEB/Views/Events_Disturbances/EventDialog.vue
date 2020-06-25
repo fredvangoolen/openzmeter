@@ -43,8 +43,8 @@
         Opt.colors = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, false).Colors;//  oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
-        Opt.axes.y.valueFormatter = (x) => { return oZm.Round2(x) + ' V'; };
-        Opt.axes.y.axisLabelFormatter = (x) => { return oZm.Round2(x); };
+        Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 2, true) + ' V'; };
+        Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x, 2, true); };
         Opt.axes.x.pixelsPerLabel = 25;
         Opt.axes.x.axisLabelFormatter = (x) => {
           var EventDuration = this.event.SampleDuration / this.analyzer.SampleRate;
