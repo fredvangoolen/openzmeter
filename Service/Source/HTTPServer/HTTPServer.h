@@ -37,46 +37,7 @@ using namespace std;
 #define HTTP_SERVICE_UNAVAILABLE   503
 #define HTTP_GATEWAY_TIMEOUT       504
 //----------------------------------------------------------------------------------------------------------------------
-class URL {
-  public :
-    string   Protocol;
-    string   Host;
-    string   Path;
-    string   Query;
-    uint16_t Port;
-  public :
-    URL(const string &url);
-};
-//----------------------------------------------------------------------------------------------------------------------
-class HTTPTaskQueue final : public TaskQueue {
-  private :
-    typedef struct {
-      function<void()> Function;
-      uint64_t         LastTime;
-      bool             Terminate;
-      pthread_t        Thread;
-      pthread_mutex_t  Mutex;
-      pthread_cond_t   Cond;
-      HTTPTaskQueue   *Parent;
-    } Worker_t;
-  private :
-    pthread_mutex_t    pMutex;
-    pthread_cond_t     pCond;
-    list<Worker_t*>    pFreeWorkers;
-    uint32_t           pRunningWorkers;
-    uint64_t           pLastAdjust;
-  private:
-    static void *Thread(void *params);
-  public:
-    HTTPTaskQueue();
-    ~HTTPTaskQueue();
-    void enqueue(std::function<void()> fn) override;
-    void on_idle() override;
-    void shutdown() override;
-    void queue_tasks();
-};
-//----------------------------------------------------------------------------------------------------------------------
-class HTTPServer final {
+class HTTPServer final : private Server {
   private :
     typedef void (*Func_t)(const json &params, Response &response);
   private :
@@ -84,20 +45,24 @@ class HTTPServer final {
     static map<string, Func_t>  pCallbacks;       //List of callbacks URLs
     static string               pRelativePath;    //Relative path of server
   private:
-    static uint16_t       pPort;
-    static pthread_t      pThread;
-    static Server        *pServer;
+    static uint16_t             pPort;
+    static pthread_t            pThread;
   private :
-    static void  *Listen_Thread(void *params);
-    static string ParseCookie(const string &cookie);
-    static void   HandleGet(const Request &request, Response &response);
-    static void   HandlePost(const Request &request, Response &response);
+    static void       *Listen_Thread(void *params);
+    static string      ParseCookie(const string &cookie);
+    static string      PatchFile(const string &file, const string &find, const string &replace);
+    static string      PatchString(string &src, const string &find, const string &replace);
+    static const char *MimeType(const string &file);
+    static void        HandleGet(const Request &request, Response &response);
+    static void        HandlePost(const Request &request, Response &response);
+    static void        LogIn(const json &params, Response &response);
+    static void        LogOut(const Request &request, Response &response);
   public :
-    static void PeriodicTasks();
-    static void RegisterCallback(const string &handleName, const Func_t function);
-    static void UnregisterCallback(const string &handleName);
-    static void FillResponse(Response &response, const string &body, const char *mime, const int status);
-    static void FillResponse(Response &response, const char *body, const size_t size, const char *mime, const int status);
+    static void   PeriodicTasks();
+    static void   RegisterCallback(const string &handleName, const Func_t function);
+    static void   UnregisterCallback(const string &handleName);
+    static void   FillResponse(Response &response, const string &body, const char *mime, const int status);
+    static void   FillResponse(Response &response, const char *body, const size_t size, const char *mime, const int status);
   public :
     HTTPServer();
     ~HTTPServer();

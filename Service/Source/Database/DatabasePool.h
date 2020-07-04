@@ -1,0 +1,43 @@
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
+#pragma once
+#include <string>
+#include <libpq-fe.h>
+#include <pthread.h>
+#include <stdint.h>
+#include <list>
+// ---------------------------------------------------------------------------------------------------------------------
+using namespace std;
+// ---------------------------------------------------------------------------------------------------------------------
+class DatabasePool final {
+  private :
+    typedef struct {
+      PGconn   *Connection;
+      uint64_t  LastTime;
+    } Connection_t;
+  private :
+    static string              pConnectionString;
+    static pthread_mutex_t     pMutex;
+    static list<Connection_t>  pConnectionPool;
+  public :
+    static PGconn *PopConnection();
+    static void    PushConnection(PGconn *conn);
+    static void    PeriodicTasks();
+  public :
+    DatabasePool();
+    ~DatabasePool();
+};
+// ---------------------------------------------------------------------------------------------------------------------

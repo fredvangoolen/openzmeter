@@ -23,18 +23,21 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceRemote final : public Device {
   private :
-    static bool            pRegistered;
+    static bool     pRegistered;
   private :
-    static bool            Register();
-    static vector<Device*> GetInstances();
-    static json            CheckConfig(const json &config);
+    pthread_mutex_t pAnalyzersLock;
+  private :
+    static bool  Register();
+    static void  GetInstances();
+    static json  CheckConfig(const json &config);
   private :
     DeviceRemote();
-    void Configure(const json &config);
-    void GetDevice(const json &params, Response &response) override;
-    void SetDevice(const json &params, Response &response) override;
-    void GetRemote(const json &params, Response &response) override;
-    void SetRemote(const json &params, Response &response) override;
+    uint32_t AnalyzersCount();
+    void     Configure(const json &config);
+    void     GetDevice(const json &params, Response &response) override;
+    void     SetDevice(const json &params, Response &response) override;
+    void     GetRemote(const json &params, Response &response);
+    void     SetRemote(const json &params, Response &response);
   public :
     ~DeviceRemote();
 };

@@ -71,12 +71,13 @@
     methods: {
       GetAnalyzers: function() {
         this.ShowSpinner = true;
-        $.ajax({ url: "getAnalyzers", timeout: 20000, type: "POST", dataType: "json", contentType: 'application/json', data: JSON.stringify({ }),
-          success: (result) => {
-            this.Analyzers = result;
+        this.$http.post("getAnalyzers", {}).then(
+          (result) => {
+            this.Analyzers = result.data;
             this.ShowSpinner = false;
-          }
-        });
+          },
+          (fail) => {}
+        );
       },
       OnlineStatus: function(value, close) {
         return (value === true) ? '&#9635;' : '&#9633;';

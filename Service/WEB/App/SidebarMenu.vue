@@ -62,7 +62,7 @@
     },
     created: function() {
       this.TransferNow.UpdateNow(this.analyzer);
-      setInterval(() => { this.SetTitle(), 5000 })
+      setInterval(() => { this.SetTitle(); }, 2000)
     },
     computed: {
       UnreadEvents: function() {
@@ -88,16 +88,17 @@
           document.title = "openZmeter";
           this.TitleFrame = 1;
         } else if(this.TitleFrame == 1) {
-          if((this.UnreadEvents != 0) && (this.UnreadAlarms != 0))
+          if((this.UnreadEvents != 0) && (this.UnreadAlarms != 0)) {
             document.title = '[' + this.UnreadEvents + ' new events and ' + this.UnreadAlarms + ' new alarms]';
-          else if(this.UnreadEvents != 0)
+          } else if(this.UnreadEvents != 0) {
             document.title = '[' + this.UnreadEvents + ' new events]';
-          else if(this.UnreadAlarms != 0)
+          } else if(this.UnreadAlarms != 0) {
             document.title = '[' + this.UnreadAlarms + ' new alarms]';
-        } else {
-          document.title = "openZmeter";
+          } else {
+            document.title = "openZmeter";
+          }
+          this.TitleFrame = 0;
         }
-        this.TitleFrame = 0;
       },
       ShowDisturbances: function() {
         if(this.UnreadEvents != 0) {

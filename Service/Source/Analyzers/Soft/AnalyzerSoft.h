@@ -30,7 +30,7 @@ extern "C" {
 using namespace mu;
 using namespace httplib;
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoft final : public Analyzer {
+class AnalyzerSoft : public Analyzer {
   private :
     static const uint8_t FILTERSTAGES         =  5;        //Filter stages for zerocrossing
     static const uint8_t ZEROCROSSING_SECONDS = 10;        //Used seconds to calc frequency
@@ -272,3 +272,4 @@ class AnalyzerSoft final : public Analyzer {
     bool BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage);
     bool IsWorking();
 };
+//----------------------------------------------------------------------------------------------------------------------

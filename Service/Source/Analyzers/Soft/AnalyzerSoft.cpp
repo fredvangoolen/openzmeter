@@ -30,6 +30,7 @@
 #include "SysSupport.h"
 #include "Telegram.h"
 #include "GA.h"
+#include "URL.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace cctz;
@@ -87,11 +88,11 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFTWorker[i] = new Worker("FFT_I" + to_string(i), [&](void *a) { this->FFT_Func((FFTChannel_t*)a); });
   string Error;
   Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode, &Error));
-  if(Error.empty() == false) LOGFile::Error("Analyzer '%s' rates failed to parse (%s)\n", Serial.c_str(), Error.c_str());
+  if(Error.empty() == false) LOGFile::Error("Analyzer '%s' rates failed to parse (%s)\n", pSerial.c_str(), Error.c_str());
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
 }
 AnalyzerSoft::~AnalyzerSoft() {
-  LOGFile::Info("Stopping analyzer with serial '%s'\n", Serial.c_str());
+  LOGFile::Info("Stopping analyzer with serial '%s'\n", pSerial.c_str());
   pSyncTerminate = true;
   if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
   pMQTTTerminate = true;
@@ -124,7 +125,7 @@ AnalyzerSoft::~AnalyzerSoft() {
     fftwf_cleanup();
   }
   pthread_mutex_unlock(&pFFTMutex);
-  LOGFile::Info("Analyzer with serial '%s' stopped\n", Serial.c_str());
+  LOGFile::Info("Analyzer with serial '%s' stopped\n", pSerial.c_str());
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
   pAnalyzerLock.ReadLock();
@@ -149,8 +150,8 @@ bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, co
     }
     pDelayPos = (pDelayPos + 1) % pDelaySize;
     pBlockSamples++;
-    for(unsigned i = 0; i < pVoltageChannels; i++) {
-      for(unsigned n = 0; n < FILTERSTAGES; n++) {
+    for(uint8_t i = 0; i < pVoltageChannels; i++) {
+      for(uint8_t n = 0; n < FILTERSTAGES; n++) {
         float Out = voltageSamples[i] * pFilters[n].A0 + pFilters[n].ChannelsZ1[i];
         pFilters[n].ChannelsZ1[i] = voltageSamples[i] * pFilters[n].A1 + pFilters[n].ChannelsZ2[i] - pFilters[n].B1 * Out;
         pFilters[n].ChannelsZ2[i] = voltageSamples[i] * pFilters[n].A2 - pFilters[n].B2 * Out;
@@ -512,7 +513,7 @@ void AnalyzerSoft::NormalizeAggreg(Params_t &params) {
 void AnalyzerSoft::SaveAggreg(Params_t &params) {
   if(params.AggregSamples == 0) return;
   SetOnline();
-  Database DB(Serial);
+  Database DB(pSerial);
   if(params.Type == AGGREG_200MS) {
     DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance) VALUES(" +
     DB.Bind(params.Timestamp) + ", " +
@@ -613,9 +614,9 @@ void AnalyzerSoft::PublishAggreg(const Params_t &params, const string &topic) {
   Msg["Voltage_Phase"] = json::array();
   for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage_Phase"].push_back(params.Voltage_Phase[n]);
   string TextMsg = Msg.dump();
-  string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + Serial + "/" + topic : Serial + "/" + topic;
+  string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/" + topic : pSerial + "/" + topic;
   mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
-  LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", Serial.c_str());
+  LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", pSerial.c_str());
 }
 void AnalyzerSoft::PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered) {
   if(pMQTTClient.socketfd == -1) return;
@@ -625,16 +626,16 @@ void AnalyzerSoft::PublishAlarm(const uint64_t time, const string &name, const u
   Msg["Priority"] = prio;
   Msg["Triggered"] = triggered;
   string TextMsg = Msg.dump();
-  string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + Serial + "/Alarms" : Serial + "/Alarms";
+  string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/Alarms" : pSerial + "/Alarms";
   mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1);
-  LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", Serial.c_str());
+  LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", pSerial.c_str());
 }
 void AnalyzerSoft::PublishConfig(const json &options) {
   if(pMQTTClient.socketfd != -1) {
     string TextMsg = options.dump();
-    string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + Serial + "/Config" : Serial + "/Config";
+    string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/Config" : pSerial + "/Config";
     mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
-    LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", Serial.c_str());
+    LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", pSerial.c_str());
   }
 }
 float AnalyzerSoft::CalcChange(const float in, const float reference) {
@@ -693,7 +694,7 @@ void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const Agg
   try {
     parser.SetExpr(expr);
   } catch(Parser::exception_type &e) {
-    LOGFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", Serial.c_str());
+    LOGFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", pSerial.c_str());
   }
 }
 void AnalyzerSoft::Analyzer_Func() {
@@ -773,7 +774,7 @@ void AnalyzerSoft::Analyzer_Func() {
   }
   if(pEventsWorker != NULL) pEventsWorker->Wait();
   if(pSequence < 100) {
-    LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "\n", Serial.c_str(), Tools::GetTime64() - Start, pSequence);
+    LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "\n", pSerial.c_str(), Tools::GetTime64() - Start, pSequence);
     InitAggreg(pAggreg200MS, AGGREG_200MS);
     pBlockSamples     = 0;
     pBlockCyclesCount = 0;
@@ -784,7 +785,7 @@ void AnalyzerSoft::Analyzer_Func() {
   }
   pNowDataLock.ProviderWrite();
   if((pSequence % 15) == 0) {
-    LOGFile::Debug("Storing 3S aggregation for analyzer '%s'\n", Serial.c_str());
+    LOGFile::Debug("Storing 3S aggregation for analyzer '%s'\n", pSerial.c_str());
     NormalizeAggreg(pAggreg3S);
     if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg3S);
     if(pAggreg3S.Flag == false) {
@@ -801,7 +802,7 @@ void AnalyzerSoft::Analyzer_Func() {
   AccumulateAggreg(pAggreg3S, pAggreg200MS);
 
   if((pAggreg1M.Timestamp != 0) && ((pAggreg1M.Timestamp / 60000) < (pAggreg200MS.Timestamp / 60000))) {
-    LOGFile::Debug("Storing 1M aggregation for analyzer '%s'\n", Serial.c_str());
+    LOGFile::Debug("Storing 1M aggregation for analyzer '%s'\n", pSerial.c_str());
     pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
     NormalizeAggreg(pAggreg1M);
     if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg1M);
@@ -813,7 +814,7 @@ void AnalyzerSoft::Analyzer_Func() {
   AccumulateAggreg(pAggreg1M, pAggreg200MS);
 
   if((pAggreg10M.Timestamp != 0) && ((pAggreg10M.Timestamp / 600000) < (pAggreg200MS.Timestamp / 600000))) {
-    LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", Serial.c_str());
+    LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", pSerial.c_str());
     pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
     NormalizeAggreg(pAggreg10M);
     if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg10M);
@@ -852,7 +853,7 @@ void AnalyzerSoft::Analyzer_Func() {
   AccumulateAggreg(pAggreg10M, pAggreg200MS);
 
   if((pAggreg15M.Timestamp != 0) && ((pAggreg15M.Timestamp / 900000) < (pAggreg200MS.Timestamp / 900000))) {
-    LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", Serial.c_str());
+    LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", pSerial.c_str());
     pAggreg15M.Timestamp = pAggreg15M.Timestamp / 900000 * 900000 + 899999;
     NormalizeAggreg(pAggreg15M);
     if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg15M);
@@ -864,7 +865,7 @@ void AnalyzerSoft::Analyzer_Func() {
   AccumulateAggreg(pAggreg15M, pAggreg200MS);
 
   if((pAggreg1H.Timestamp != 0) && ((pAggreg1H.Timestamp / 3600000) < (pAggreg200MS.Timestamp / 3600000))) {
-    LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", Serial.c_str());
+    LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", pSerial.c_str());
     pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
     NormalizeAggreg(pAggreg1H);
     if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg1H);
@@ -877,7 +878,7 @@ void AnalyzerSoft::Analyzer_Func() {
 
   if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg200MS);
   if(pSave200MS) {
-    LOGFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", Serial.c_str());
+    LOGFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", pSerial.c_str());
     SaveAggreg(pAggreg200MS);
   }
   if(pAlarmsWorker != NULL) pAlarmsWorker->Wait();
@@ -887,7 +888,7 @@ void AnalyzerSoft::Analyzer_Func() {
   //  SysStatus->Events = This->pAggreg200MS.Flag;
   //  SysStatus->Lock.Unlock();
   pNowDataLock.ProviderWait();
-  LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")\n", Serial.c_str(), Tools::GetTime64() - Start, pSequence, pAggreg200MS.Timestamp);
+  LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")\n", pSerial.c_str(), Tools::GetTime64() - Start, pSequence, pAggreg200MS.Timestamp);
   InitAggreg(pAggreg200MS, AGGREG_200MS);
   pBlockSamples     = 0;
   pBlockCyclesCount = 0;
@@ -948,8 +949,8 @@ void AnalyzerSoft::Events_Func() {
       }
       if(IsRunning == false) {
         string  Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
-        LOGFile::Debug("Event '%s' closed on analyzer '%s'\n", Type.c_str(), Serial.c_str());
-        Database DB(Serial);
+        LOGFile::Debug("Event '%s' closed on analyzer '%s'\n", Type.c_str(), pSerial.c_str());
+        Database DB(pSerial);
         DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", reference = " + DB.Bind(pEvent.Reference, pVoltageChannels) + ", peak = " + DB.Bind(pEvent.PeakValue, pVoltageChannels) + ", change = " + DB.Bind(pEvent.ChangeValue, pVoltageChannels) + ", duration = " + DB.Bind(pEvent.SamplesDuration) + " WHERE starttime = " + DB.Bind(pEvent.Start));
         if(pEvent.CyclesDuration < pPrevCyclesLen) {
           DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RMS'");
@@ -1002,9 +1003,9 @@ void AnalyzerSoft::Events_Func() {
       pAggreg200MS.Flag = true;
       if(pEvent.SamplesDuration == 0) {
         string Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
-        LOGFile::Debug("New event '%s' started on analyzer '%s'\n", Type.c_str(), Serial.c_str());
+        LOGFile::Debug("New event '%s' started on analyzer '%s'\n", Type.c_str(), pSerial.c_str());
         pEvent.Start = pAggreg200MS.Timestamp + (uint32_t)((Pos * 1000) / pSamplerate);
-        Database DB(Serial);
+        Database DB(pSerial);
         DB.ExecSentenceNoResult("INSERT INTO events(starttime, evttype, samplerate, reference, peak, change, notes, duration) VALUES (" + DB.Bind(pEvent.Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent.Reference, pVoltageChannels) + ", " + DB.Bind(pEvent.PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent.ChangeValue, pVoltageChannels) + ", '', 0)");
         DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples1) VALUES (" + DB.Bind(pEvent.Start) + ", 'RMS', " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + ")");
         DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples1) VALUES (" + DB.Bind(pEvent.Start) + ", 'RAW', " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) + ")");
@@ -1027,14 +1028,14 @@ void AnalyzerSoft::Events_Func() {
     if(pEvent.Type != EVT_NONE) {
       pEvent.CyclesDuration++;
       if(pEvent.CyclesDuration == pPrevCyclesLen) {
-        Database DB(Serial);
+        Database DB(pSerial);
         DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RMS'");
       }
     }
     for(auto &Event : pEvents) {
       Event.CyclesDuration++;
       if(Event.CyclesDuration == pPrevCyclesLen) {
-        Database DB(Serial);
+        Database DB(pSerial);
         DB.ExecSentenceNoResult("UPDATE events_ext SET samples3 = " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + " WHERE starttime = " + DB.Bind(Event.Start) + " AND sampletype = 'RMS'");
       }
     }
@@ -1044,14 +1045,14 @@ void AnalyzerSoft::Events_Func() {
       if(pEvent.Type != EVT_NONE) {
         pEvent.SamplesDuration++;
         if(pEvent.SamplesDuration == pPrevSamplesLen) {
-          Database DB(Serial);
+          Database DB(pSerial);
           DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RAW'");
         }
       }
       for(auto &Event : pEvents) {
         Event.SamplesDuration++;
         if(Event.SamplesDuration == pPrevSamplesLen) {
-          Database DB(Serial);
+          Database DB(pSerial);
           DB.ExecSentenceNoResult("UPDATE events_ext SET samples3 = " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) + " WHERE starttime = " + DB.Bind(Event.Start) + " AND sampletype = 'RAW'");
         }
       }
@@ -1060,7 +1061,7 @@ void AnalyzerSoft::Events_Func() {
       Event_t *Tmp = &pEvents.front();
       if((Tmp->SamplesDuration < pPrevSamplesLen) || (Tmp->CyclesDuration < pPrevCyclesLen)) break;
       string Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
-      LOGFile::Debug("Event '%s' on analyzer '%s' finished\n", Type.c_str(), Serial.c_str());
+      LOGFile::Debug("Event '%s' on analyzer '%s' finished\n", Type.c_str(), pSerial.c_str());
       pEvents.pop_front();
     }
     Pos             = Pos + CycleLen;
@@ -1096,23 +1097,23 @@ void AnalyzerSoft::Alarms_Func(Params_t *aggreg) {
         *Byte |= (1 << Bit);
       }
     } catch (Parser::exception_type &e) {
-      LOGFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", Serial.c_str());
+      LOGFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", pSerial.c_str());
     }
     Alarm.ResultPos = (Alarm.ResultPos + 1) % Alarm.Window;
     if((Alarm.ResultCount == Alarm.Samples) && (Alarm.Triggered == false)) {
       Alarm.Triggered = true;
-      LOGFile::Debug("Alarm triggered on analyzer '%s'\n", Serial.c_str());
-      Database DB(Serial);
+      LOGFile::Debug("Alarm triggered on analyzer '%s'\n", pSerial.c_str());
+      Database DB(pSerial);
       DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", true, " + DB.Bind(Alarm.Priority) + ")");
       if(pMQTTAlarms == true) PublishAlarm(aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
-      Telegram::SendAlarm(Serial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
+      Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
     } else if((Alarm.ResultCount == 0) && (Alarm.Triggered == true)) {
       Alarm.Triggered = false;
-      LOGFile::Debug("Alarm reseted on analyzer '%s'\n", Serial.c_str());
-      Database DB(Serial);
+      LOGFile::Debug("Alarm reseted on analyzer '%s'\n", pSerial.c_str());
+      Database DB(pSerial);
       DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", false, " + DB.Bind(Alarm.Priority) + ")");
       if(pMQTTAlarms == true) PublishAlarm(aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
-      Telegram::SendAlarm(Serial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
+      Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
     }
   }
 }
@@ -1133,17 +1134,18 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
     }
     This->pAnalyzerLock.Unlock();
     URL Url(Server);
-    Client HTTPClient(Url.Host, Url.Port);
+    Client HTTPClient(Url.Host(), Url.Port());
     HTTPClient.set_compress(true);
-    HTTPClient.set_read_timeout(3, 0);
-    HTTPClient.set_timeout_sec(5);
+    HTTPClient.set_read_timeout(30);
+    HTTPClient.set_write_timeout(30);
+    HTTPClient.set_connection_timeout(30);
     if(Cookie == "") {
       Headers Header  = {{"Accept", "application/json"}};
       json    Content = json::object();
       Content["Username"] = User;
       Content["Password"] = Pass;
       Content["UpdateLastLogin"] = false;
-      auto Response = HTTPClient.Post(string(Url.Path + "/logIn").c_str(), Header, Content.dump(), "application/json");
+      auto Response = HTTPClient.Post(string(Url.Path() + "/logIn").c_str(), Header, Content.dump(), "application/json");
       if((Response != nullptr) && (Response->status == HTTP_OK)) {
         json Content = json::parse(Response->body, NULL, false);
         if((Response->has_header("Set-Cookie") == true) && (Content.is_discarded() == false) && Content.is_object() && Content["Result"].is_boolean() && (Content["Result"] == true)) {
@@ -1155,19 +1157,19 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
         }
       }
       if(Cookie != "") {
-        LOGFile::Debug("Analyzer '%s' logged on remote server\n", This->Serial.c_str());
+        LOGFile::Debug("Analyzer '%s' logged on remote server\n", This->pSerial.c_str());
       } else {
-        LOGFile::Debug("Analyzer '%s' can not login on remote server\n", This->Serial.c_str());
+        LOGFile::Debug("Analyzer '%s' can not login on remote server\n", This->pSerial.c_str());
         usleep(1000000);
       }
     } else {
       json   Content = json::object();
       Content["Serial"] = "REMOTE";
-      Content["Analyzer"] = This->Serial;
+      Content["Analyzer"] = This->pSerial;
       Content["Name"] = This->GetName();
       Request Req;
       Req.method = "POST";
-      Req.path = Url.Path + "/getRemote";
+      Req.path = Url.Path() + "/getRemote";
       Req.headers =  {{"Accept", "application/json"}, {"Cookie", Cookie}, { "Accept", "text/event-stream" }, {"Content-Type", "application/json"}};
       Req.body = Content.dump();
       Req.progress = nullptr;
@@ -1175,13 +1177,13 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
         if(This->pSyncTerminate == true) return false;
         if(response.status == HTTP_UNAUTHORIZED) {
           Cookie = "";
-          LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->Serial.c_str());
+          LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pSerial.c_str());
           usleep(1000000);
           return false;
         } else if(response.status == HTTP_OK) {
           return true;
         } else {
-          LOGFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)\n", This->Serial.c_str(), response.status);
+          LOGFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)\n", This->pSerial.c_str(), response.status);
           usleep(1000000);
           return false;
         }
@@ -1192,7 +1194,7 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
         string Msg(&data[5], len - 5);
         json Content = json::parse(Msg, NULL, false);
         if((Content.is_discarded() == true) || (Content.is_object() == false)) return true;
-        LOGFile::Debug("Analyzer '%s' receive querie from remote server\n", This->Serial.c_str());
+        LOGFile::Debug("Analyzer '%s' receive querie from remote server\n", This->pSerial.c_str());
         if((Content["Sequence"].is_number() == false) || (Content["Method"].is_string() == false) || (Content["Params"].is_object() == false)) return false;
         Sync_t *Request = new Sync_t;
         Request->Count        = &ThreadsCount;
@@ -1223,7 +1225,7 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
   }
   pthread_mutex_lock(&Mutex);
   while(ThreadsCount > 0) {
-    LOGFile::Debug("Analyzer '%s' flusing remote request (%d pending)\n", This->Serial.c_str(), ThreadsCount);
+    LOGFile::Debug("Analyzer '%s' flusing remote request (%d pending)\n", This->pSerial.c_str(), ThreadsCount);
     pthread_cond_wait(&Cond, &Mutex);
   }
   pthread_mutex_unlock(&Mutex);
@@ -1258,8 +1260,8 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
       char Port[16];
       addrinfo Hints = { .ai_flags = 0, .ai_family = AF_UNSPEC, .ai_socktype = SOCK_STREAM };
       addrinfo *ServInfo;
-      sprintf(Port, "%u", Url.Port);
-      int Error = getaddrinfo(Url.Host.c_str(), Port, &Hints, &ServInfo);
+      sprintf(Port, "%u", Url.Port());
+      int Error = getaddrinfo(Url.Host().c_str(), Port, &Hints, &ServInfo);
       if(Error != 0) {
         LOGFile::Error("%s:%d -> %d\n", __func__, __LINE__, Error);
         usleep(1000000);
@@ -1281,7 +1283,7 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
       }
       freeaddrinfo(ServInfo);
       if(This->pMQTTClient.socketfd == -1) {
-        LOGFile::Debug("Analyzer '%s' can not connect to MQTT broker\n", This->Serial.c_str());
+        LOGFile::Debug("Analyzer '%s' can not connect to MQTT broker\n", This->pSerial.c_str());
         usleep(1000000);
         continue;
       } else {
@@ -1301,7 +1303,7 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
 void *AnalyzerSoft::Sync_RespThread(void *args) {
   Sync_t *This = (Sync_t*)args;
   This->Params["UserName"] = "admin";
-  LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
+  LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
   Response Resp;
   if(This->Method == "getAnalyzer") {
     This->Analyzer->GetAnalyzer(This->Params, Resp);
@@ -1334,19 +1336,19 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
   Content["Code"] = Resp.status;
   Content["Sequence"] = This->Sequence;
   Content["Serial"] = "REMOTE";
-  Content["Analyzer"] = This->Analyzer->Serial;
+  Content["Analyzer"] = This->Analyzer->pSerial;
   Content["Response"] = Resp.body;
   Content["Mime"] = Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type") : "text/plain";
-  Client HTTPClient(Url.Host.c_str(), Url.Port);
+  Client HTTPClient(Url.Host().c_str(), Url.Port());
   HTTPClient.set_compress(true);
-  auto Response = HTTPClient.Post(string(Url.Path + "/setRemote").c_str(), Header, Content.dump(), "application/json");
+  auto Response = HTTPClient.Post(string(Url.Path() + "/setRemote").c_str(), Header, Content.dump(), "application/json");
   if((Response != nullptr) && (Response->status == HTTP_OK)) {
-    LOGFile::Debug("Remote request '%s' for analyzer '%s' completed\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
+    LOGFile::Debug("Remote request '%s' for analyzer '%s' completed\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
   } else {
     if(Response != nullptr)
-      LOGFile::Error("Remote request '%s' for analyzer '%s' failed (ERROR: %d)\n", This->Method.c_str(), This->Analyzer->Serial.c_str(), Response->status);
+      LOGFile::Error("Remote request '%s' for analyzer '%s' failed (ERROR: %d)\n", This->Method.c_str(), This->Analyzer->pSerial.c_str(), Response->status);
     else
-      LOGFile::Error("Remote request '%s' for analyzer '%s' failed (can not connect)\n", This->Method.c_str(), This->Analyzer->Serial.c_str());
+      LOGFile::Error("Remote request '%s' for analyzer '%s' failed (can not connect)\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
   }
   pthread_mutex_lock(This->Mutex);
   *This->Count = *This->Count - 1;
@@ -1388,8 +1390,8 @@ json AnalyzerSoft::CalcGA() {
   return Result;
 }
 void AnalyzerSoft::PeriodicTasks() {
-  LOGFile::Debug("Removing old data for analyzer '%s'\n", Serial.c_str());
-  Database DB(Serial);
+  LOGFile::Debug("Removing old data for analyzer '%s'\n", pSerial.c_str());
+  Database DB(pSerial);
   uint64_t Now = Tools::GetTime64();
   if(Now > 86400000) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Now - 86400000));   //Delete 1 day old
   if(Now > 3600000)  DB.ExecSentenceNoResult("DELETE FROM aggreg_200ms WHERE sampletime < " + DB.Bind(Now - 3600000));     //Delete 1 hour old
@@ -1409,10 +1411,10 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
     Response["RateModules"] = PriceModule::GetVarsInfo();
   }
   Database DB;
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('Read', read, 'Write', write, 'Configure', config, 'EventsRead', eventsread, 'AlarmsRead', alarmsread) as access FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(Serial));
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('Read', read, 'Write', write, 'Configure', config, 'EventsRead', eventsread, 'AlarmsRead', alarmsread) as access FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
   if(DB.FecthRow() == true) Response["Access"] = DB.ResultJSON("access");
   Response["DatabaseSize"] = json::array();
-  DB.ExecSentenceAsyncResult("WITH sizes AS (SELECT tablename, pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)) AS size from pg_tables WHERE schemaname = " + DB.Bind(Serial) + ") "
+  DB.ExecSentenceAsyncResult("WITH sizes AS (SELECT tablename, pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)) AS size from pg_tables WHERE schemaname = " + DB.Bind(pSerial) + ") "
     "SELECT 'Aggreg_3S' AS name, size FROM sizes WHERE tablename = 'aggreg_3s' UNION "
     "SELECT 'Aggreg_1M' AS name, SUM(size) FROM sizes WHERE tablename IN ('aggreg_1m', 'aggreg_ext_1m') UNION "
     "SELECT 'Aggreg_10M' AS name, size FROM sizes WHERE tablename = 'aggreg_10m' UNION "
@@ -1460,7 +1462,7 @@ void AnalyzerSoft::GetSeries(const json &params, Response &response) {
   if(Aggreg == "15M") PeriodSeconds = 900000;
   if(Aggreg == "1H") PeriodSeconds = 3600000;
   if(((To - From) / PeriodSeconds) > 100000) return HTTPServer::FillResponse(response, "Returned period to large for this aggregation level", "text/plain", HTTP_BAD_REQUEST);
-  Database DB(Serial);
+  Database DB(pSerial);
   string Query = "SELECT ROW_TO_JSON(Result) AS result FROM ( SELECT ";
   float Default[200];
   for(uint8_t n = 0; n < 200; n++) Default[n] = 0.0;
@@ -1639,8 +1641,8 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
     } else if(Serie == "UNREAD") {
       string UserName = params["UserName"];
       Result["Unread"] = json::object();
-      Database DB(Serial);
-      DB.ExecSentenceAsyncResult("SELECT eventsread, (SELECT count(*) FROM events WHERE starttime > eventsread) AS events, alarmsread, (SELECT count(*) FROM alarms WHERE alarmtime > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(Serial));
+      Database DB(pSerial);
+      DB.ExecSentenceAsyncResult("SELECT eventsread, (SELECT count(*) FROM events WHERE starttime > eventsread) AS events, alarmsread, (SELECT count(*) FROM alarms WHERE alarmtime > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
       if(DB.FecthRow() == false) {
         Result["Unread"]["EventsFrom"] = 0;
         Result["Unread"]["Events"] = 0;
@@ -1725,7 +1727,7 @@ void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
   if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string Aggreg = params["Aggreg"];
   if((Aggreg != "200MS") && (Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' param must be '200MS', 3S', '1M', '10M', '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
-  Database DB(Serial);
+  Database DB(pSerial);
   DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ");
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
@@ -1739,7 +1741,7 @@ void AnalyzerSoft::DelSeriesRange(const json &params, Response &response) {
   uint64_t From   = params["From"];
   uint64_t To     = params["To"];
   if((Aggreg != "200MS") && (Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' param must be '200MS', 3S', '1M', '10M', '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
-  Database DB(Serial);
+  Database DB(pSerial);
   HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM aggreg_" + Aggreg + " WHERE sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::GetEvents(const json &params, Response &response) {
@@ -1748,10 +1750,10 @@ void AnalyzerSoft::GetEvents(const json &params, Response &response) {
   if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint64_t To = params["To"];
   uint64_t From = params["From"];
-  Database DB(Serial);
+  Database DB(pSerial);
   if((params.contains("Update") == true) && (params["Update"].is_boolean() == true) && (params["Update"] == true)) {
     string UserName = params["UserName"];
-    DB.ExecSentenceNoResult("UPDATE permissions SET eventsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(Serial));
+    DB.ExecSentenceNoResult("UPDATE permissions SET eventsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
   }
   DB.ExecSentenceAsyncResult("SELECT json_build_object("
                              "'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), "
@@ -1768,7 +1770,7 @@ void AnalyzerSoft::GetEvents(const json &params, Response &response) {
 }
 void AnalyzerSoft::GetEventsRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB(Serial);
+  Database DB(pSerial);
   DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM events) AS t1) AS t2 ");
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
@@ -1779,14 +1781,14 @@ void AnalyzerSoft::DelEventsRange(const json &params, Response &response) {
   if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint64_t From   = params["From"];
   uint64_t To     = params["To"];
-  Database DB(Serial);
+  Database DB(pSerial);
   HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::GetEvent(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Samples") == false) || (params["Samples"].is_string() == false)) return HTTPServer::FillResponse(response, "'Samples' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Database DB(Serial);
+  Database DB(pSerial);
   if((params["Samples"] != "RMS") && (params["Samples"] != "RAW")) {
     response.set_content("'Samples' params must be 'RMS' or 'RAW'", "text/plain");
     response.status = HTTP_BAD_REQUEST;
@@ -1808,7 +1810,7 @@ void AnalyzerSoft::SetEvent(const json &params, Response &response) {
   if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Type") == false) || (params["Type"].is_string() == false)) return HTTPServer::FillResponse(response, "'Type' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Notes") == false) || (params["Notes"].is_string() == false)) return HTTPServer::FillResponse(response, "'Notes' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Database DB(Serial);
+  Database DB(pSerial);
   uint64_t ID    = params["StartTime"];
   string   Type  = params["Type"];
   string   Notes = params["Notes"];
@@ -1818,7 +1820,7 @@ void AnalyzerSoft::SetEvent(const json &params, Response &response) {
 void AnalyzerSoft::DelEvent(const json &params, Response &response) {
   if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Database DB(Serial);
+  Database DB(pSerial);
   uint64_t ID = params["StartTime"];
   bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID));
   HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
@@ -1931,7 +1933,7 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   Eval.SetBillCallback([&](const json &out) {
     if(SaveBills == true) Result["Bills"].push_back(out);
   });
-  Database DB(Serial);
+  Database DB(pSerial);
   DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime >= " + DB.Bind(Eval.StartDate()) + " AND sampletime <= " + DB.Bind(Eval.EndDate()) + " ORDER BY sampletime ASC");
   while(DB.FecthRow() == true) Eval.PushSample(DB.ResultUInt64("sampletime"), DB.ResultFloat("active_power"), DB.ResultFloat("reactive_power"));
   Eval.Finish();
@@ -1961,10 +1963,10 @@ void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint64_t To         = params["To"];
   uint64_t From       = params["From"];
-  Database DB(Serial);
+  Database DB(pSerial);
   if((params.contains("Update") == true) && (params["Update"].is_boolean() == true) && (params["Update"] == true)) {
     string UserName = params["UserName"];
-    DB.ExecSentenceNoResult("UPDATE permissions SET alarmsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(Serial));
+    DB.ExecSentenceNoResult("UPDATE permissions SET alarmsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
   }
   DB.ExecSentenceAsyncResult("SELECT json_build_object("
                               "'AlarmTime', COALESCE(ARRAY_AGG(alarmtime ORDER BY alarmtime ASC), '{}'), "
@@ -1977,7 +1979,7 @@ void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
 }
 void AnalyzerSoft::GetAlarmsRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB(Serial);
+  Database DB(pSerial);
   DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(alarmtime) AS max, min(alarmtime) AS min FROM alarms) AS t1) AS t2 ");
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
@@ -1988,7 +1990,7 @@ void AnalyzerSoft::DelAlarmsRange(const json &params, Response &response) {
   if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint64_t From   = params["From"];
   uint64_t To     = params["To"];
-  Database DB(Serial);
+  Database DB(pSerial);
   HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms WHERE alarmtime >= " + DB.Bind(From) + " AND alarmtime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
@@ -2019,7 +2021,7 @@ bool AnalyzerSoft::HandleModbus(const uint8_t *buff, const uint16_t start, const
     Ptr += 4;
   };
   memset(Buffer, 0, sizeof(Buffer));
-  strcpy((char*)Ptr, Serial.c_str()); Ptr += 32;
+  strcpy((char*)Ptr, pSerial.c_str()); Ptr += 32;
   if(pNowDataLock.ConsumerWait(5) == false) return false;
   Append_U32(pAggreg200MS.Timestamp / 1000);
   Append_U64(pAggreg200MS.Timestamp);
@@ -2053,3 +2055,4 @@ bool AnalyzerSoft::HandleModbus(const uint8_t *buff, const uint16_t start, const
   memcpy((void*)buff, &Buffer[start * 2], len * 2);
   return true;
 }
+//----------------------------------------------------------------------------------------------------------------------

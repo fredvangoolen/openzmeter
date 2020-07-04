@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 INSERT INTO users(username, password, lastlogin, time_zone, name, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'UTC', 'System administrator', '', '', '', '', 0) ON CONFLICT (username) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS sessions (
-  id        serial            NOT NULL PRIMARY KEY,
+  id        character varying NOT NULL PRIMARY KEY,
   username  character varying NOT NULL REFERENCES users ON UPDATE CASCADE ON DELETE CASCADE,
   timestamp bigint            NOT NULL
 ) WITH (OIDS=FALSE);

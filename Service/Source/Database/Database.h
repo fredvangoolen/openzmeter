@@ -29,6 +29,7 @@ class Database final {
   private :
     PGconn      *pDBConn;
     PGresult    *pResult;
+    uint64_t     pLastTime;
   private :
     void     ClearAsync();
   public :
@@ -45,6 +46,8 @@ class Database final {
     string   Bind(const string &string) const;
     string   BindID(const string &string) const;
   public :
+    Database(const string &schema = "public");
+    ~Database();
     bool     ExecSentenceNoResult(const string &sql);
     bool     ExecSentenceAsyncResult(const string &sql);
     bool     ExecResource(const string &file);
@@ -53,24 +56,6 @@ class Database final {
     float    ResultFloat(const string &name) const;
     uint64_t ResultUInt64(const string &name) const;
     json     ResultJSON(const string &name) const;
-    Database(const string &schema = "public");
-    ~Database();
+    uint64_t LastUse();
 };
-class DatabasePool final {
-  private :
-    typedef struct {
-      PGconn   *Connection;
-      uint64_t  LastTime;
-    } Connection_t;
-  private :
-    static string              pConnectionString;
-    static pthread_mutex_t     pMutex;
-    static list<Connection_t>  pConnectionPool;
-  public :
-    static PGconn *PopConnection();
-    static void    PushConnection(PGconn *conn);
-    static void    PeriodicTasks();
-  public :
-    DatabasePool();
-    ~DatabasePool();
-};
+//----------------------------------------------------------------------------------------------------------------------

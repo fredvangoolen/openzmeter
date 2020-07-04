@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "DeviceVirtual.h"
 #include "DeviceManager.h"
+#include "AnalyzerManager.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceVirtual::pRegistered = DeviceVirtual::Register();
@@ -23,22 +24,31 @@ bool DeviceVirtual::Register() {
   DeviceManager::AddDriver(GetInstances);
   return true;
 }
-vector<Device*> DeviceVirtual::GetInstances() {
+void DeviceVirtual::GetInstances() {
   LOGFile::Info("Adding 'Virtual' device driver instance with serial 'VIRTUAL'\n");
-  vector<Device*> Result;
-  Result.push_back(new DeviceVirtual());
-  return Result;
+  DeviceManager::AddDevice(new DeviceVirtual());
 }
 DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of real capture device for testing") {
-  pThread = 0;
+  pThread   = 0;
+  pLock     = PTHREAD_MUTEX_INITIALIZER;
   pAnalyzer = NULL;
-  Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial)));
+  Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial)));
 }
 DeviceVirtual::~DeviceVirtual() {
-  LOGFile::Info("Stopping device with serial '%s'\n", Serial.c_str());
+  LOGFile::Info("Stopping device with serial '%s'\n", pSerial.c_str());
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
-  LOGFile::Info("Device with serial '%s' stopped\n", Serial.c_str());
+  ClearAnalyzers();
+  LOGFile::Info("Device with serial '%s' stopped\n", pSerial.c_str());
+}
+void DeviceVirtual::ClearAnalyzers() {
+  pthread_mutex_lock(&pLock);
+  if(pAnalyzer != NULL) {
+    AnalyzerManager::DelAnalyzer(pAnalyzer->Serial());
+    delete pAnalyzer;
+    pAnalyzer = NULL;
+  }
+  pthread_mutex_unlock(&pLock);
 }
 json DeviceVirtual::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
@@ -62,25 +72,32 @@ json DeviceVirtual::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
+uint32_t DeviceVirtual::AnalyzersCount() {
+  pthread_mutex_lock(&pLock);
+  uint32_t Count = (pAnalyzer != NULL) ? 1 : 0;
+  pthread_mutex_unlock(&pLock);
+  return Count;
+}
 void DeviceVirtual::Configure(const json &config) {
-  ConfigManager::WriteConfig("/Devices/" + Serial, config);
+  ConfigManager::WriteConfig("/Devices/" + pSerial, config);
   if(pThread != 0) {
     pTerminate = true;
     pthread_join(pThread, NULL);
     pThread = 0;
   }
   ClearAnalyzers();
-  pAnalyzer         = NULL;
+  pthread_mutex_lock(&pLock);
+  string ModeString = config["Mode"];
   pVoltage          = config["Voltage"];
   pFrequency        = config["Frequency"];
   pSampleRate       = config["SampleRate"];
   pCurrent          = config["Current"];
   pCurrentPhase     = config["CurrentPhase"];
   pMode             = (config["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (config["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
-  string ModeString = config["Mode"];
-  pAnalyzer         = new AnalyzerSoft(Serial + "_" + ModeString, pMode, "/Devices/" + Serial + "/Analyzer", pSampleRate);
   pEnabled          = config["Enabled"];
-  AddAnalyzer(pAnalyzer);
+  pAnalyzer         = new AnalyzerSoft(pSerial + "_" + ModeString, pMode, "/Devices/" + pSerial + "/Analyzer", pSampleRate);
+  AnalyzerManager::AddAnalyzer(pAnalyzer);
+  pthread_mutex_unlock(&pLock);
   if(pEnabled == true) {
     pTerminate = false;
     if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
@@ -95,7 +112,7 @@ void DeviceVirtual::Configure(const json &config) {
 void DeviceVirtual::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
+  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
   Config.erase("Analyzer");
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
@@ -103,7 +120,7 @@ void DeviceVirtual::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = params;
-  Config["Analyzer"] = ConfigManager::ReadConfig("/Devices/" + Serial + "/Analyzer");
+  Config["Analyzer"] = ConfigManager::ReadConfig("/Devices/" + pSerial + "/Analyzer");
   Configure(Config);
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }

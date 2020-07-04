@@ -158,26 +158,22 @@
           if(Request.readyState === 4) {
             if(Request.status === 200) {
               var Response = JSON.parse(Request.responseText);
-              if(Response.Result === true) {
-                localStorage.setItem('LastLogin', Response.LastLogin);
-                localStorage.setItem('UserName', document.getElementById('username').value);
-                setTimeout(function() {
-                  location.reload();
-                }, 500);
-              } else {
-                removeClass(document.getElementById('error'), 'hide');
-                addClass(document.getElementById('filler'), 'hide');
-                localStorage.removeItem('UserName');
-                setTimeout(function() {
-                  addClass(document.getElementById('error'), 'hide');
-                  removeClass(document.getElementById('filler'), 'hide');
-                  removeClass(document.getElementById('button'), 'disabled');
-                }, 2000);
-              }
+              localStorage.setItem('LastLogin', Response.LastLogin);
+              localStorage.setItem('UserName', document.getElementById('username').value);
+              setTimeout(() => { location.reload(); }, 500);
+            } else {
+              removeClass(document.getElementById('error'), 'hide');
+              addClass(document.getElementById('filler'), 'hide');
+              localStorage.removeItem('UserName');
+              setTimeout(() => {
+                addClass(document.getElementById('error'), 'hide');
+                removeClass(document.getElementById('filler'), 'hide');
+                removeClass(document.getElementById('button'), 'disabled');
+              }, 2000);
             }
           }
         };
-        Request.send(JSON.stringify({ Username: document.getElementById('username').value, Password: document.getElementById('password').value }));
+        Request.send(JSON.stringify({ UserName: document.getElementById('username').value, Password: document.getElementById('password').value }));
       }
       document.getElementById('button').onclick = SendLogin;
       window.addEventListener("keyup", function(event) {

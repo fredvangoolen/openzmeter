@@ -19,149 +19,21 @@
 #include "HTTPServer.h"
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
-Device::Device(const string &serial, const string &driver, const string &name) : Serial(serial), Driver(driver), Name(name) {
+Device::Device(const string &serial, const string &driver, const string &name) : pSerial(serial), pDriver(driver), pName(name) {
   pEnabled = false;
 }
 Device::~Device() {
-  ClearAnalyzers();
-}
-void Device::PeriodicTasks() {
-  pAnalyzersLock.ReadLock();
-  for(auto &Tmp : pAnalyzers) Tmp->PeriodicTasks();
-  pAnalyzersLock.Unlock();
-}
-void Device::AddAnalyzer(Analyzer *analyzer) {
-  pAnalyzersLock.WriteLock();
-  auto Tmp = pAnalyzers.insert(analyzer);
-  if(Tmp.second == false) delete analyzer;
-  pAnalyzersLock.Unlock();
-}
-void Device::ClearAnalyzers() {
-  pAnalyzersLock.WriteLock();
-  while(pAnalyzers.size() > 0) {
-    auto Tmp = pAnalyzers.begin();
-    delete *Tmp;
-    pAnalyzers.erase(Tmp);
-  }
-  pAnalyzersLock.Unlock();
 }
 json Device::GetJSONDescriptor() {
   json Device = json::object();
-  Device["Driver"]    = Driver;
-  Device["Name"]      = Name;
-  Device["Serial"]    = Serial;
+  Device["Driver"]    = pDriver;
+  Device["Name"]      = pName;
+  Device["Serial"]    = pSerial;
   Device["Enabled"]   = pEnabled;
-  pAnalyzersLock.ReadLock();
-  Device["Analyzers"] = pAnalyzers.size();
-  pAnalyzersLock.Unlock();
+  Device["Analyzers"] = AnalyzersCount();
   return Device;
 }
-json Device::GetJSONAnalyzers(const string &user) {
-  json Result = json::array();
-  pAnalyzersLock.ReadLock();
-  for(auto &Tmp : pAnalyzers) {
-    if(Tmp->CheckRights(user, Analyzer::READ)) Result.push_back(Tmp->GetJSONDescriptor());
-  }
-  pAnalyzersLock.Unlock();
-  return Result;
+string Device::Serial() const {
+  return pSerial;
 }
-void Device::GetRemote(const json &params, Response &response) {
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
-}
-void Device::SetRemote(const json &params, Response &response) {
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
-}
-bool Device::HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
-  pAnalyzersLock.ReadLock();
-  auto Tmp = pAnalyzers.find(serial);
-  if(Tmp == pAnalyzers.end()) {
-    pAnalyzersLock.Unlock();
-    return false;
-  } else {
-    bool Result = (*Tmp)->HandleModbus(buff, start, len);
-    pAnalyzersLock.Unlock();
-    return Result;
-  }
-}
-bool Device::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
-  string Serial = params["Analyzer"];
-  pAnalyzersLock.ReadLock();
-  auto Tmp = pAnalyzers.find(Serial);
-  if(Tmp == pAnalyzers.end()) {
-    pAnalyzersLock.Unlock();
-    return false;
-  } else {
-    ((*Tmp)->*method)(params, response);
-    pAnalyzersLock.Unlock();
-    return true;
-  }
-}
-bool Device::GetAnalyzer(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetAnalyzer);
-}
-bool Device::SetAnalyzer(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::SetAnalyzer);
-}
-bool Device::GetSeries(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetSeries);
-}
-bool Device::GetSeriesNow(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetSeriesNow);
-}
-bool Device::GetWaveStream(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetWaveStream);
-}
-bool Device::GetSeriesRange(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetSeriesRange);
-}
-bool Device::DelSeriesRange(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::DelSeriesRange);
-}
-bool Device::GetEvents(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetEvents);
-}
-bool Device::GetEventsRange(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetEventsRange);
-}
-bool Device::DelEventsRange(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::DelEventsRange);
-}
-bool Device::GetEvent(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetEvent);
-}
-bool Device::SetEvent(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::SetEvent);
-}
-bool Device::DelEvent(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::DelEvent);
-}
-bool Device::GetPrices(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetPrices);
-}
-bool Device::TestAlarm(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::TestAlarm);
-}
-bool Device::GetAlarms(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetAlarms);
-}
-bool Device::GetAlarmsRange(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetAlarmsRange);
-}
-bool Device::DelAlarmsRange(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::DelAlarmsRange);
-}
-bool Device::DelAlarm(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::DelAlarm);
-}
-bool Device::GetPermissions(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::GetPermissions);
-}
-bool Device::AddPermission(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::AddPermission);
-}
-bool Device::SetPermission(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::SetPermission);
-}
-bool Device::DelPermission(const json &params, Response &response) {
-  return CallAnalyzerFunction(params, response, &Analyzer::DelPermission);
-}
+//----------------------------------------------------------------------------------------------------------------------
