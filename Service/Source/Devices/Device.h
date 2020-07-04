@@ -25,66 +25,21 @@ using namespace std;
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class Device {
-  private :
-    struct Comp {
-      using is_transparent = void;
-      bool operator()(const Analyzer *a1, const Analyzer *a2) const {
-        return a1->Serial < a2->Serial;
-      }
-      bool operator()(const string &serial, const Analyzer *a) const {
-        return serial < a->Serial;
-      }
-      bool operator()(const Analyzer *a, const string &serial) const {
-        return a->Serial < serial;
-      }
-    };
   protected :
-    bool                   pEnabled;           //Enable flag
-    RWLocks                pAnalyzersLock;     //Analyzer list lock
-    set<Analyzer*, Comp>   pAnalyzers;         //Analyzers list
-  public :
-    const string           Serial;             //Device serial
-    const string           Driver;             //Driver name
-    const string           Name;               //Driver description
-  private :
-    bool CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response));
+    bool                   pEnabled;            //Enable flag
+    const string           pSerial;             //Device serial
+    const string           pDriver;             //Driver name
+    const string           pName;               //Driver description
   protected :
     Device(const string &serial, const string &driver, const string &name);
-    void AddAnalyzer(Analyzer *analyzer);
-    void ClearAnalyzers();
+  protected :
+    virtual uint32_t AnalyzersCount() = 0;
   public :
-    json GetJSONDescriptor();
-    json GetJSONAnalyzers(const string &user);
-    bool GetAnalyzer(const json &params, Response &response);
-    bool SetAnalyzer(const json &params, Response &response);
-    bool GetSeries(const json &params, Response &response);
-    bool GetSeriesNow(const json &params, Response &response);
-    bool GetWaveStream(const json &params, Response &response);
-    bool GetSeriesRange(const json &params, Response &response);
-    bool DelSeriesRange(const json &params, Response &response);
-    bool GetEvents(const json &params, Response &response);
-    bool GetEventsRange(const json &params, Response &response);
-    bool DelEventsRange(const json &params, Response &response);
-    bool GetEvent(const json &params, Response &response);
-    bool SetEvent(const json &params, Response &response);
-    bool DelEvent(const json &params, Response &response);
-    bool GetPrices(const json &params, Response &response);
-    bool TestAlarm(const json &params, Response &response);
-    bool GetAlarms(const json &params, Response &response);
-    bool GetAlarmsRange(const json &params, Response &response);
-    bool DelAlarmsRange(const json &params, Response &response);
-    bool DelAlarm(const json &params, Response &response);
-    bool GetPermissions(const json &params, Response &response);
-    bool AddPermission(const json &params, Response &response);
-    bool SetPermission(const json &params, Response &response);
-    bool DelPermission(const json &params, Response &response);
-    bool HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len);
+    json   GetJSONDescriptor();
+    string Serial() const;
   public :
     virtual ~Device();
-    virtual void PeriodicTasks();
     virtual void GetDevice(const json &params, Response &response) = 0;
     virtual void SetDevice(const json &params, Response &response) = 0;
-    virtual void GetRemote(const json &params, Response &response);
-    virtual void SetRemote(const json &params, Response &response);
-
 };
+//----------------------------------------------------------------------------------------------------------------------

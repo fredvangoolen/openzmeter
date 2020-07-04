@@ -26,27 +26,12 @@
 #define DEVICEV1_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
 #define DEVICEV1_SAMPLEFREQ    15625.00                          //Frequencia de muestreo
 #define DEVICEV1_BUFFERSECONDS       10                          //Tamaño del buffer (10 segundos)
-#define DEVICEV1_TRANSFERS           32                          //Numero de transferencias a encolar
+#define DEVICEV1_TRANSFERS            8                          //Numero de transferencias a encolar
 #define DEVICEV1_BUFFERSIZE    0x040000
 #define DEVICEV1_VOLTAGEDELAY         2                          //Samples to delay
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 class DeviceV1 final : public Device {
-  private :
-    class Transfer {
-      private :
-        libusb_transfer *pTransfer;
-        uint8_t         *pBuffer;
-        uint32_t         pBufferSize;
-        DeviceV1        *pParent;
-      public :
-        Transfer();
-        void Init(DeviceV1 *parent, uint32_t size);
-        ~Transfer();
-        int Submit();
-        int Submit(libusb_device_handle *deviceHandle, uint8_t endpoint, libusb_transfer_cb_fn callback, int32_t timeout);
-        uint32_t BufferSize();
-    };
   private :
     static bool                  pRegistered;
   private :
@@ -72,21 +57,22 @@ class DeviceV1 final : public Device {
     RWLocks                      pAverageLocks;            //Lock access to average values
     AnalyzerSoft                *pAnalyzer;
     uint8_t                      pVoltageDelayPos;
-    Transfer                     pTransfers[DEVICEV1_TRANSFERS];
     int16_t                      pVoltageDelay[DEVICEV1_VOLTAGEDELAY];
   private :
     static bool  Register();
-    static vector<Device*> GetInstances();
+    static void  GetInstances();
     static void *Capture_Thread(void *args);
     static void  ReadCallback(struct libusb_transfer *transfer);
     static int   PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
     static json  CheckConfig(const json &config);
   private :
     DeviceV1(const string &serial, const uint16_t version);
-    void Configure(const json &config);
-    void GetDevice(const json &params, Response &response) override;
-    void SetDevice(const json &params, Response &response) override;
-    void BufferAppend(int16_t *sample);
+    void     ClearAnalyzers();
+    void     Configure(const json &config);
+    uint32_t AnalyzersCount();
+    void     GetDevice(const json &params, Response &response) override;
+    void     SetDevice(const json &params, Response &response) override;
+    void     BufferAppend(int16_t *sample);
   public :
     ~DeviceV1();
 };

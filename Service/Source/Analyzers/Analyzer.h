@@ -33,7 +33,7 @@ class Analyzer {
     uint64_t          pLastSave;                //Timestamp of last save or communication
     string            pName;                    //Analyzer description
   public :
-    const string      Serial;                   //Serial number
+    const string      pSerial;                  //Serial number
   protected :
     Analyzer(const string &id);
     string GetName();
@@ -66,6 +66,7 @@ class Analyzer {
     virtual bool HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len) = 0;
   public :
     virtual ~Analyzer();
+    string   Serial();
     json     GetJSONDescriptor();
     bool     CheckRights(const string &user, const AnalyzerRights neededAccess);
     void     GetPermissions(const json &params, Response &response);
@@ -73,3 +74,4 @@ class Analyzer {
     void     SetPermission(const json &params, Response &response);
     void     DelPermission(const json &params, Response &response);
 };
+//----------------------------------------------------------------------------------------------------------------------

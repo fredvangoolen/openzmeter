@@ -9,31 +9,37 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
 EXECUTABLE_SOURCE = Source/Tools.cpp \
+                    Source/Database/Database.cpp Source/Database/DatabasePool.cpp \
+                    Source/HTTPServer/HTTPServer.cpp Source/HTTPServer/URL.cpp Source/HTTPServer/HTTPTaskQueue.cpp Source/HTTPServer/HTTPWorker.cpp \
                     Source/Main.cpp \
-                    Source/Database.cpp \
 										Source/GA.cpp \
-										Source/HTTPServer.cpp \
 										Source/SysSupport.cpp \
-										Source/Devices/DeviceManager.cpp \
-										Source/Devices/Device.cpp \
-										Source/Analyzers/Analyzer.cpp \
+										Source/Devices/DeviceManager.cpp Source/Devices/Device.cpp \
+										Source/Analyzers/AnalyzerManager.cpp Source/Analyzers/Analyzer.cpp \
 										Source/Tariffs/Tariff.cpp \
 										Source/MODBus.cpp \
 										Source/Telegram.cpp \
 										Source/Tariffs/ESIOS.cpp
-CFLAGS += -DCPPHTTPLIB_USE_POLL -Wno-psabi -Wall -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs
+CFLAGS  += -DCPPHTTPLIB_USE_POLL -Wno-psabi -Wall -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools
 LDFLAGS += -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto
 
 #Add libs (cctz, nlohmann, muparser, httplib, mqtt-c)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
 EXECUTABLE_SOURCE += $(shell find Libs/muParser -name "*.cpp" ! -type d -print)
 EXECUTABLE_SOURCE += $(shell find Libs/mqtt-c -name "*.c" ! -type d -print)
+
+#Fill date and version if not provided
 BUILD_DATE ?= $(shell date +%Y%m%d.%H%M)
 BUILD_NAME ?= "custom"
+
+#Default flags and programs
 CFLAGS += -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" -I Libs -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -I Libs/mqtt-c
 CC  ?= gcc
 LD  ?= ld
-EXECUTABLE_OBJS	+= $(EXECUTABLE_SOURCE:%=Tmp/%.o)
+
+#Objects and depends
+EXECUTABLE_OBJS	 = $(EXECUTABLE_SOURCE:%=Tmp/%.o)
+DEPENDS          = $(EXECUTABLE_OBJS:%.o=%.d)
 #=======================================================================================================================
 default: READCONFIG $(EXECUTABLE_TARGET)
 
@@ -59,12 +65,12 @@ else
 	LDFLAGS += -flto
 endif
 ifeq ($(DEVICE_V1), true)
-	EXECUTABLE_SOURCE += Source/Devices/V1/DeviceV1.cpp
+	EXECUTABLE_SOURCE += Source/Devices/V1/DeviceV1.cpp Source/Devices/USBTransfer.cpp
 	ANALYZER_SOFT = true
 	LDFLAGS += -lusb-1.0
 endif
 ifeq ($(DEVICE_V2), true)
-	EXECUTABLE_SOURCE += Source/Devices/V2/DeviceV2.cpp
+	EXECUTABLE_SOURCE += Source/Devices/V2/DeviceV2.cpp Source/Devices/V2/DeviceV2Analyzer.cpp Source/Devices/USBTransfer.cpp
 	ANALYZER_SOFT = true
 	LDFLAGS += -lusb-1.0
 endif
@@ -89,7 +95,7 @@ ifeq ($(OS_TARGET), DEBIAN)
 	CFLAGS += -DDEBIAN
 	LDFLAGS += -ldbus-1
 endif
-
+# Build steps
 $(WEB_TARGET): $(WEB_SOURCE)
 	@echo "Building WEB interface"
 	@if [ ! -d "WEB/node_modules" ]; then cd WEB; npm install; fi
@@ -110,12 +116,14 @@ $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 
 $(EXECUTABLE_TARGET): $(RESOURCES_TARGET) $(EXECUTABLE_OBJS)
 	@echo "Linking target" $(TARGET_EXEC)
-	@$(CC) $(EXECUTABLE_OBJS) $(RESOURCES_TARGET) -o $(EXECUTABLE_TARGET) $(LDFLAGS)
+	@$(CC) $^ -o $(EXECUTABLE_TARGET) $(LDFLAGS)
 
+-include $(DEPENDS)
+# File types
 Tmp/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "Building" $@
-	@$(CC) $(CFLAGS) -std=c++14 -c $< -o $@
+	@$(CC) $(CFLAGS) -MMD -std=c++14 -c $< -o $@
 
 Tmp/%.c.o: %.c
 	@mkdir -p $(dir $@)

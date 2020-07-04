@@ -19,145 +19,54 @@
 #include "HTTPServer.h"
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
-vector<vector<Device*> (*)()> __attribute__((init_priority(200))) DeviceManager::pDrivers;
-vector<Device*>  DeviceManager::pDevices;
-RWLocks          DeviceManager::pDevicesLock;
+vector<void (*)()> __attribute__((init_priority(200))) DeviceManager::pDrivers;
+map<string, Device*>                                   DeviceManager::pDevices;
+RWLocks                                                DeviceManager::pDevicesLock;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
-  pDevicesLock.WriteLock();
-  for(auto Func : pDrivers) {
-    for(auto Dev : Func()) pDevices.push_back(Dev);
-  }
-  pDevicesLock.Unlock();
+  for(auto Func : pDrivers) Func();
   HTTPServer::RegisterCallback("getDevices",     GetDevicesCallback);
   HTTPServer::RegisterCallback("getDevice",      GetDeviceCallback);
   HTTPServer::RegisterCallback("setDevice",      SetDeviceCallback);
-  HTTPServer::RegisterCallback("setRemote",      SetRemoteCallback);
-  HTTPServer::RegisterCallback("getRemote",      GetRemoteCallback);
-  HTTPServer::RegisterCallback("getAnalyzers",   GetAnalyzersCallback);
-  HTTPServer::RegisterCallback("getAnalyzer",    GetAnalyzerCallback);
-  HTTPServer::RegisterCallback("setAnalyzer",    SetAnalyzerCallback);
-  HTTPServer::RegisterCallback("getSeries",      GetSeriesCallback);
-  HTTPServer::RegisterCallback("getSeriesNow",   GetSeriesNowCallback);
-  HTTPServer::RegisterCallback("getWaveStream",  GetWaveStream);
-  HTTPServer::RegisterCallback("getSeriesRange", GetSeriesRangeCallback);
-  HTTPServer::RegisterCallback("delSeriesRange", DelSeriesRangeCallback);
-  HTTPServer::RegisterCallback("getEvents",      GetEventsCallback);
-  HTTPServer::RegisterCallback("getEventsRange", GetEventsRangeCallback);
-  HTTPServer::RegisterCallback("delEventsRange", DelEventsRangeCallback);
-  HTTPServer::RegisterCallback("getEvent",       GetEventCallback);
-  HTTPServer::RegisterCallback("setEvent",       SetEventCallback);
-  HTTPServer::RegisterCallback("delEvent",       DelEventCallback);
-  HTTPServer::RegisterCallback("getPrices",      GetPricesCallback);
-  HTTPServer::RegisterCallback("testAlarm",      TestAlarmCallback);
-  HTTPServer::RegisterCallback("getAlarms",      GetAlarmsCallback);
-  HTTPServer::RegisterCallback("getAlarmsRange", GetAlarmsRangeCallback);
-  HTTPServer::RegisterCallback("delAlarmsRange", DelAlarmsRangeCallback);
-  HTTPServer::RegisterCallback("delAlarm",       DelAlarmCallback);
-  HTTPServer::RegisterCallback("getPermissions", GetPermissionsCallback);
-  HTTPServer::RegisterCallback("addPermission",  AddPermissionCallback);
-  HTTPServer::RegisterCallback("setPermission",  SetPermissionCallback);
-  HTTPServer::RegisterCallback("delPermission",  DelPermissionCallback);
-  HTTPServer::RegisterCallback("getTariffs",     GetTariffsCallback);
-  HTTPServer::RegisterCallback("getTariff",      GetTariffCallback);
-  HTTPServer::RegisterCallback("setTariff",      SetTariffCallback);
-  HTTPServer::RegisterCallback("delTariff",      DelTariffCallback);
-  HTTPServer::RegisterCallback("addTariff",      AddTariffCallback);
 }
 DeviceManager::~DeviceManager() {
   LOGFile::Debug("Stopping DeviceManager\n");
   HTTPServer::UnregisterCallback("getDevices");
   HTTPServer::UnregisterCallback("getDevice");
   HTTPServer::UnregisterCallback("setDevice");
-  HTTPServer::UnregisterCallback("setRemote");
-  HTTPServer::UnregisterCallback("getRemote");
-  HTTPServer::UnregisterCallback("getAnalyzers");
-  HTTPServer::UnregisterCallback("getAnalyzer");
-  HTTPServer::UnregisterCallback("setAnalyzer");
-  HTTPServer::UnregisterCallback("getSeries");
-  HTTPServer::UnregisterCallback("getSeriesNow");
-  HTTPServer::UnregisterCallback("getWaveStream");
-  HTTPServer::UnregisterCallback("getSeriesRange");
-  HTTPServer::UnregisterCallback("delSeriesRange");
-  HTTPServer::UnregisterCallback("getEvents");
-  HTTPServer::UnregisterCallback("getEventsRange");
-  HTTPServer::UnregisterCallback("delEventsRange");
-  HTTPServer::UnregisterCallback("getEvent");
-  HTTPServer::UnregisterCallback("setEvent");
-  HTTPServer::UnregisterCallback("delEvent");
-  HTTPServer::UnregisterCallback("getPrices");
-  HTTPServer::UnregisterCallback("testAlarm");
-  HTTPServer::UnregisterCallback("getAlarms");
-  HTTPServer::UnregisterCallback("getAlarmsRange");
-  HTTPServer::UnregisterCallback("delAlarmsRange");
-  HTTPServer::UnregisterCallback("delAlarm");
-  HTTPServer::UnregisterCallback("getPermissions");
-  HTTPServer::UnregisterCallback("addPermission");
-  HTTPServer::UnregisterCallback("setPermission");
-  HTTPServer::UnregisterCallback("delPermission");
-  HTTPServer::UnregisterCallback("getTariffs");
-  HTTPServer::UnregisterCallback("getTariff");
-  HTTPServer::UnregisterCallback("setTariff");
-  HTTPServer::UnregisterCallback("delTariff");
-  HTTPServer::UnregisterCallback("addTariff");
   LOGFile::Info("Stopping devices...\n");
   pDevicesLock.WriteLock();
-  while(pDevices.size() > 0) {
-    Device *Dev = pDevices.back();
-    pDevices.pop_back();
-    delete Dev;
-  }
+  for(auto &Device : pDevices) delete Device.second;
+  pDevices.clear();
   pDevicesLock.Unlock();
   LOGFile::Debug("DeviceManager stopped\n");
 }
-void DeviceManager::AddDriver(vector<Device*> (*func)()) {
+void DeviceManager::AddDevice(Device *dev) {
+  pDevicesLock.WriteLock();
+  pDevices.insert({ dev->Serial(), dev });
+  pDevicesLock.Unlock();
+}
+void DeviceManager::AddDriver(void (*func)()) {
   pDrivers.push_back(func);
-}
-void DeviceManager::PeriodicTasks() {
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) Dev->PeriodicTasks();
-  pDevicesLock.Unlock();
-}
-bool DeviceManager::HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->HandleModbus(buff, serial, start, len) == false) continue;
-    pDevicesLock.Unlock();
-    return true;
-  }
-  pDevicesLock.Unlock();
-  return false;
-}
-void DeviceManager::CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response)) {
-  if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if((Dev->*method)(params, response) == false) continue;
-    pDevicesLock.Unlock();
-    return;
-  }
-  pDevicesLock.Unlock();
-  HTTPServer::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
 }
 void DeviceManager::CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response)) {
   if((params.contains("Serial") == false) || (params["Serial"].is_string() == false)) return HTTPServer::FillResponse(response, "'Serial' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string Serial = params["Serial"];
   pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    if(Dev->Serial != Serial) continue;
-    (Dev->*method)(params, response);
-    pDevicesLock.Unlock();
-    return;
+  auto Device = pDevices.find(Serial);
+  if(Device == pDevices.end()) {
+    HTTPServer::FillResponse(response, "Device not found", "text/plain", HTTP_BAD_REQUEST);
+  } else {
+    (Device->second->*method)(params, response);
   }
   pDevicesLock.Unlock();
-  HTTPServer::FillResponse(response, "Device not found", "text/plain", HTTP_BAD_REQUEST);
 }
 void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Response = json::array();
   pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) Response.push_back(Dev->GetJSONDescriptor());
+  for(auto &Device : pDevices) Response.push_back(Device.second->GetJSONDescriptor());
   pDevicesLock.Unlock();
   HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
@@ -167,135 +76,4 @@ void DeviceManager::GetDeviceCallback(const json &params, Response &response) {
 void DeviceManager::SetDeviceCallback(const json &params, Response &response) {
   CallDeviceFunction(params, response, &Device::SetDevice);
 }
-void DeviceManager::GetRemoteCallback(const json &params, Response &response) {
-  CallDeviceFunction(params, response, &Device::GetRemote);
-}
-void DeviceManager::SetRemoteCallback(const json &params, Response &response) {
-  CallDeviceFunction(params, response, &Device::SetRemote);
-}
-void DeviceManager::GetAnalyzersCallback(const json &params, Response &response) {
-  json Response = json::array();
-  string UserName = params["UserName"];
-  pDevicesLock.ReadLock();
-  for(Device *Dev : pDevices) {
-    json Analyzers = Dev->GetJSONAnalyzers(UserName);
-    Response.insert(Response.end(), Analyzers.begin(), Analyzers.end());
-  }
-  pDevicesLock.Unlock();
-  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
-}
-void DeviceManager::GetAnalyzerCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetAnalyzer);
-}
-void DeviceManager::SetAnalyzerCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::SetAnalyzer);
-}
-void DeviceManager::GetSeriesCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetSeries);
-}
-void DeviceManager::GetSeriesNowCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetSeriesNow);
-}
-void DeviceManager::GetWaveStream(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetWaveStream);
-}
-void DeviceManager::GetSeriesRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetSeriesRange);
-}
-void DeviceManager::DelSeriesRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::DelSeriesRange);
-}
-void DeviceManager::GetEventsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetEvents);
-}
-void DeviceManager::GetEventsRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetEventsRange);
-}
-void DeviceManager::DelEventsRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::DelEventsRange);
-}
-void DeviceManager::GetEventCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetEvent);
-}
-void DeviceManager::SetEventCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::SetEvent);
-}
-void DeviceManager::DelEventCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::DelEvent);
-}
-void DeviceManager::GetPricesCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetPrices);
-}
-void DeviceManager::TestAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::TestAlarm);
-}
-void DeviceManager::GetAlarmsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetAlarms);
-}
-void DeviceManager::GetAlarmsRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetAlarmsRange);
-}
-void DeviceManager::DelAlarmsRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::DelAlarmsRange);
-}
-void DeviceManager::DelAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::DelAlarm);
-}
-void DeviceManager::GetPermissionsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::GetPermissions);
-}
-void DeviceManager::AddPermissionCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::AddPermission);
-}
-void DeviceManager::SetPermissionCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::SetPermission);
-}
-void DeviceManager::DelPermissionCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Device::DelPermission);
-}
-void DeviceManager::GetTariffsCallback(const json &params, Response &response) {
-  Database DB;
-  string   UserName = params["UserName"];
-  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('Name', name, 'UserName', username))), '[]') as result FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ")"));
-  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
-}
-void DeviceManager::GetTariffCallback(const json &params, Response &response) {
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
-  Database DB;
-  string Name = params["Name"];
-  string UserName = params["UserName"];
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'UserName', username, 'Template', template) as result FROM tariffs WHERE name = " + DB.Bind(Name) + ((UserName == "admin") ? "" : " AND username = " + DB.Bind(UserName)));
-  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
-}
-void DeviceManager::DelTariffCallback(const json &params, Response &response) {
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
-  Database DB;
-  string Name = params["Name"];
-  string UserName = params["UserName"];
-  DB.ExecSentenceAsyncResult("DELETE FROM tariffs WHERE name = " + DB.Bind(Name) + ((UserName == "admin") ? "" : " AND username = " + DB.Bind(UserName)) + " RETURNING name");
-  return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
-}
-void DeviceManager::SetTariffCallback(const json &params, Response &response) {
-  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
-  json Conf = Rates::CheckTariffConfig(params["Template"]);
-  if(Conf.is_string()) return HTTPServer::FillResponse(response, Conf, "text/plain", HTTP_BAD_REQUEST);
-  string   UserName = params["UserName"];
-  string   Name     = params["Name"];
-  Database DB;
-  DB.ExecSentenceAsyncResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(Conf.dump()) + " WHERE name = " + DB.Bind(Name) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : "") + " RETURNING name");
-  return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
-}
-void DeviceManager::AddTariffCallback(const json &params, Response &response) {
-  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
-  json Conf = Rates::CheckTariffConfig(params["Template"]);
-  if(Conf.is_string()) return HTTPServer::FillResponse(response, Conf, "text/plain", HTTP_BAD_REQUEST);
-  string   UserName = params["UserName"];
-  string   Name     = params["Name"];
-  Database DB;
-  DB.ExecSentenceAsyncResult("INSERT INTO tariffs(name, username, template) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(UserName) + ", " + DB.Bind(Conf.dump()) + ") RETURNING name");
-  return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
-}
+//----------------------------------------------------------------------------------------------------------------------

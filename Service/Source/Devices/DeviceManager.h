@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <vector>
+#include <map>
 #include "Device.h"
 #include "HTTPServer.h"
 #include "Tools.h"
@@ -23,51 +24,19 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceManager final {
   private :
-    static vector<vector<Device*> (*)()> pDrivers;
-    static vector<Device*>               pDevices;         //Initiated by devices, cleared on destroy
-    static RWLocks                       pDevicesLock;     //Control access to critical sections
+    static vector<void (*)()>   pDrivers;
+    static map<string, Device*> pDevices;         //Initiated by devices, cleared on destroy
+    static RWLocks              pDevicesLock;     //Control access to critical sections
   private :
-    static void CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response));
     static void CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response));
     static void GetDevicesCallback(const json &params, Response &response);
     static void GetDeviceCallback(const json &params, Response &response);
     static void SetDeviceCallback(const json &params, Response &response);
-    static void GetRemoteCallback(const json &params, Response &response);
-    static void SetRemoteCallback(const json &params, Response &response);
-    static void GetAnalyzersCallback(const json &params, Response &response);
-    static void GetAnalyzerCallback(const json &params, Response &response);
-    static void SetAnalyzerCallback(const json &params, Response &response);
-    static void GetSeriesCallback(const json &params, Response &response);
-    static void GetSeriesNowCallback(const json &params, Response &response);
-    static void GetWaveStream(const json &params, Response &response);
-    static void GetSeriesRangeCallback(const json &params, Response &response);
-    static void DelSeriesRangeCallback(const json &params, Response &response);
-    static void GetEventsCallback(const json &params, Response &response);
-    static void GetEventsRangeCallback(const json &params, Response &response);
-    static void DelEventsRangeCallback(const json &params, Response &response);
-    static void GetEventCallback(const json &params, Response &response);
-    static void SetEventCallback(const json &params, Response &response);
-    static void DelEventCallback(const json &params, Response &response);
-    static void GetPricesCallback(const json &params, Response &response);
-    static void TestAlarmCallback(const json &params, Response &response);
-    static void GetAlarmsCallback(const json &params, Response &response);
-    static void GetAlarmsRangeCallback(const json &params, Response &response);
-    static void DelAlarmsRangeCallback(const json &params, Response &response);
-    static void DelAlarmCallback(const json &params, Response &response);
-    static void GetPermissionsCallback(const json &params, Response &response);
-    static void AddPermissionCallback(const json &params, Response &response);
-    static void SetPermissionCallback(const json &params, Response &response);
-    static void DelPermissionCallback(const json &params, Response &response);
-    static void GetTariffsCallback(const json &params, Response &response);
-    static void GetTariffCallback(const json &params, Response &response);
-    static void SetTariffCallback(const json &params, Response &response);
-    static void DelTariffCallback(const json &params, Response &response);
-    static void AddTariffCallback(const json &params, Response &response);
   public :
-    static void AddDriver(vector<Device*> (*func)());
-    static void PeriodicTasks();
-    static bool HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len);
+    static void AddDriver(void (*func)());
+    static void AddDevice(Device *dev);
   public :
     DeviceManager();
     ~DeviceManager();
 };
+//----------------------------------------------------------------------------------------------------------------------

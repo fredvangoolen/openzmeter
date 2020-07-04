@@ -21,104 +21,8 @@
 #include <fstream>
 #include "Database.h"
 #include "Tools.h"
+#include "DatabasePool.h"
 //----------------------------------------------------------------------------------------------------------------------
-string                            DatabasePool::pConnectionString;
-list<DatabasePool::Connection_t>  DatabasePool::pConnectionPool;
-pthread_mutex_t                   DatabasePool::pMutex = PTHREAD_MUTEX_INITIALIZER;
-//----------------------------------------------------------------------------------------------------------------------
-DatabasePool::DatabasePool() {
-  json Config = ConfigManager::ReadConfig("/Database");
-  uint16_t Port     = 5432;
-  string   Hostname = "localhost";
-  string   DataBase = "openzmeter";
-  string   Username = "openzmeter";
-  string   Password = "openzmeter";
-  if(Config.is_object()) {
-    if(Config["Hostname"].is_string())      Hostname = Config["Hostname"];
-    if(Config["Port"].is_number_unsigned()) Port     = Config["Port"];
-    if(Config["Database"].is_string())      DataBase = Config["Database"];
-    if(Config["Username"].is_string())      Username = Config["Username"];
-    if(Config["Password"].is_string())      Password = Config["Password"];
-  }
-  Config = json::object();
-  Config["Hostname"] = Hostname;
-  Config["Port"]     = Port;
-  Config["Database"] = DataBase;
-  Config["Username"] = Username;
-  Config["Password"] = Password;
-  ConfigManager::WriteConfig("/Database", Config);
-  pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase + " sslmode=allow";
-
-  LOGFile::Debug("Creating database tables\n");
-  Database DB;
-  if(DB.ExecResource("SQL/Database.sql") == false) LOGFile::Error("Database is damaged, manual repair is nedded\n");
-}
-DatabasePool::~DatabasePool() {
-  pthread_mutex_lock(&pMutex);
-  while(pConnectionPool.size() > 0) {
-    Connection_t Connection = pConnectionPool.front();
-    pConnectionPool.pop_front();
-    PQfinish(Connection.Connection);
-  }
-  pthread_mutex_unlock(&pMutex);
-}
-void DatabasePool::PeriodicTasks() {
-  LOGFile::Debug("Vacuuming database\n");
-  Database DB;
-  DB.ExecSentenceNoResult("VACUUM");
-  pthread_mutex_lock(&pMutex);
-  uint64_t Time = Tools::GetTime64();
-  while(pConnectionPool.size() > 0) {
-    auto Tmp = pConnectionPool.back();
-    if((Time - Tmp.LastTime) < 60000) break;
-    PQfinish(Tmp.Connection);
-    pConnectionPool.pop_back();
-  }
-  LOGFile::Debug("Adjusted database queries pool to %d connections\n", pConnectionPool.size());
-  pthread_mutex_unlock(&pMutex);
-}
-PGconn *DatabasePool::PopConnection() {
-  PGconn *Tmp = NULL;
-  bool    New = false;
-  pthread_mutex_lock(&pMutex);
-  if(pConnectionPool.size() > 0) {
-    Tmp = pConnectionPool.front().Connection;
-    pConnectionPool.pop_front();
-  }
-  pthread_mutex_unlock(&pMutex);
-  if(Tmp == NULL) {
-    Tmp = PQconnectdb(pConnectionString.c_str());
-    New = true;
-  }
-  if((Tmp != NULL) && (PQstatus(Tmp) != CONNECTION_OK)) {
-    char *Save;
-    LOGFile::Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(Tmp), "\r\n", &Save));
-    PQfinish(Tmp);
-    return NULL;
-  }
-  if((Tmp != NULL) && (New == true)) {
-    PGresult *Result = PQexec(Tmp, "SET synchronous_commit TO OFF; SET client_min_messages = error;");
-    if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
-      char *Save;
-      LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(Tmp), "\r\n", &Save));
-      PQclear(Result);
-      PQfinish(Tmp);
-      return NULL;
-    } else {
-      PQclear(Result);
-    }
-  }
-  return Tmp;
-}
-void DatabasePool::PushConnection(PGconn *conn) {
-  if(conn == NULL) return;
-  pthread_mutex_lock(&pMutex);
-  Connection_t Connection;
-  Connection.LastTime = Tools::GetTime64();
-  Connection.Connection = conn;
-  pConnectionPool.push_front(Connection);
-  pthread_mutex_unlock(&pMutex);
-}
 Database::Database(const string &schema) {
   pResult    = NULL;
   pDBConn    = DatabasePool::PopConnection();
@@ -130,7 +34,7 @@ Database::Database(const string &schema) {
 }
 Database::~Database() {
   ClearAsync();
-  DatabasePool::PushConnection(pDBConn);
+  if(pDBConn != NULL) DatabasePool::PushConnection(pDBConn);
 }
 bool Database::FecthRow() {
   if(pResult != NULL) PQclear(pResult);
@@ -205,20 +109,6 @@ string Database::Bind(const uint64_t param) const {
 string Database::Bind(const float param) const {
   return isfinite(param) ? to_string(param) : string("NULL");
 }
-//string Database::Bind(const vector< vector<float> > &params) const {
-//  string Result = "'{";
-//  for(uint32_t i = 0; i < params.size(); i++) {
-//    Result.append("{");
-//    for(uint32_t n = 0; n < params[i].size(); n++) {
-//      Result.append(isfinite(params[i][n]) ? to_string(params[i][n]) : string("NULL"));
-//      if(n < (params[i].size() - 1)) Result.append(", ");
-//    }
-//    Result.append("}");
-//    if(i < (params.size() - 1)) Result.append(", ");
-//  }
-//  Result.append("}'");
-//  return Result;
-//}
 string Database::Bind(const float *params, const uint32_t lenA, const uint32_t lenB) const {
   string Result = "'{";
   for(uint32_t i = 0; i < lenA; i++) {
@@ -232,14 +122,6 @@ string Database::Bind(const float *params, const uint32_t lenA, const uint32_t l
   Result.append("}'");
   return Result;
 }
-//string Database::Bind(const vector<uint16_t> &params) const {
-//  string Result = "'{";
-//  for(uint i = 0; i < params.size(); i++) {
-//    Result.append(isfinite(params[i]) ? to_string(params[i]) : string("NULL"));
-//    Result.append((i < (params.size() - 1)) ? ", " : "}'");
-//  }
-//  return Result;
-//}
 string Database::Bind(const uint16_t *params, const uint32_t len) const {
   string Result = "'{";
   for(uint i = 0; i < len; i++) {
@@ -248,14 +130,6 @@ string Database::Bind(const uint16_t *params, const uint32_t len) const {
   }
   return Result;
 }
-//string Database::Bind(const vector<float> &params) const {
-//  string Result = "'{";
-//  for(uint i = 0; i < params.size(); i++) {
-//    Result.append(isfinite(params[i]) ? to_string(params[i]) : string("NULL"));
-//    Result.append((i < (params.size() - 1)) ? ", " : "}'");
-//  }
-//  return Result;
-//}
 string Database::Bind(const float *params, const uint32_t len) const {
   string Result = "'{";
   for(uint32_t i = 0; i < len; i++) {
@@ -307,4 +181,4 @@ uint64_t Database::ResultUInt64(const string &name) const {
   if(PQgetisnull(pResult, 0, Col) == 1) return 0;
   return strtoull(PQgetvalue(pResult, 0, Col), NULL, 10);
 }
-//======================================================================================================================
+//----------------------------------------------------------------------------------------------------------------------

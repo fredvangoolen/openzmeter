@@ -74,7 +74,6 @@
         if(this.data != null) {
           var w = (2.0 * Math.PI * this.data.Frequency) / 5.0;
           var smp = this.data.Voltage_Samples[0].length;
-          console.log(w, smp, this.data.Frequency);
           for(var i = 0; i < smp; i++) {
             var Row = [i];
             var V = 0.0;

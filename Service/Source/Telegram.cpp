@@ -100,9 +100,10 @@ void *Telegram::Thread_Func(void *params) {
   bool       Connected  = false;
   int32_t    LastUpdate = 0;
   SSLClient  Client("api.telegram.org", 443);
-  Client.set_keep_alive_max_count(100);
-  Client.set_read_timeout(20, 0);
-  Client.set_timeout_sec(30);
+  Client.set_keep_alive(true);
+  Client.set_connection_timeout(30);
+  Client.set_write_timeout(30);
+  Client.set_read_timeout(30);
   Client.set_compress(true);
   while(pTerminate == false) {
     if(Connected == false) {

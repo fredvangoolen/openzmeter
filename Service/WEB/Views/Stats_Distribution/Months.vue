@@ -50,7 +50,6 @@
           for(var Period in this.Months[Month]) Max = Math.max(Max, this.Months[Month][Period]);
         }
         this.Units = this.BestUnits(Max);
-        console.log(Max);
         this.Periods = this.Periods.sort();
         this.Columns = [ { name: 'Month', title: 'Month' } ];
         for(var Period in this.Periods) this.Columns.push({ name: this.Periods[Period], title: this.Periods[Period] });

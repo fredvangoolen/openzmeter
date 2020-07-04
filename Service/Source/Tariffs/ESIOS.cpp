@@ -102,9 +102,10 @@ void ESIOS::SetESIOSCallback(const json &params, Response &response) {
 void *ESIOS::Thread_Func(void *params) {
   ESIOS    *This = (ESIOS*)params;
   SSLClient Client("api.esios.ree.es", 443);
-  Client.set_keep_alive_max_count(100);
-  Client.set_read_timeout(20, 0);
-  Client.set_timeout_sec(30);
+  Client.set_keep_alive(true);
+  Client.set_connection_timeout(30);
+  Client.set_read_timeout(30);
+  Client.set_write_timeout(30);
   Client.set_compress(true);
   while(pTerminate == false) {
     pthread_mutex_lock(&pMutex);

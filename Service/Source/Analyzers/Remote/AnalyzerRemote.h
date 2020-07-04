@@ -77,3 +77,4 @@ class AnalyzerRemote : public Analyzer {
     AnalyzerRemote(const string &id);
     ~AnalyzerRemote();
 };
+//----------------------------------------------------------------------------------------------------------------------

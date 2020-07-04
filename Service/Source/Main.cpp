@@ -20,10 +20,12 @@
 #include "Tools.h"
 #include "HTTPServer.h"
 #include "Telegram.h"
-#include "Devices/DeviceManager.h"
+#include "DeviceManager.h"
+#include "AnalyzerManager.h"
 #include "SysSupport.h"
 #include "Tariffs/ESIOS.h"
 #include "MODBus.h"
+#include "DatabasePool.h"
 //---------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 volatile bool Terminate = false;
@@ -65,14 +67,18 @@ int main(int argc, char** argv) {
   PIDFile PIDFile;
   /* Create LOG file */
   LOGFile LOGFile;
-  /* Create system manager */
-  SysSupport SystemManager;
   /* Create database tables */
   DatabasePool DBPool;
   /* Create WEB service */
   HTTPServer HTTPServer;
+  /* Create system manager */
+  SysSupport SystemManager;
   /* Create Telegram manager */
   Telegram TG;
+  /* Create tariffs interface */
+//  TariffsManager TariffsManager;
+  /* Create analyzers interface */
+  AnalyzerManager AnalyzerManager;
   /* Create devices interface */
   DeviceManager DeviceManager;
   /* Create ESIOS */
@@ -84,7 +90,7 @@ int main(int argc, char** argv) {
   while(!Terminate) {
     SysSupport::PeriodicTask();
     if((Iter % 80) == 0)  HTTPServer::PeriodicTasks();
-    if((Iter % 80) == 20) DeviceManager::PeriodicTasks();
+//    if((Iter % 80) == 20) DeviceManager::PeriodicTasks();
     if((Iter % 80) == 40) DatabasePool::PeriodicTasks();
     if((Iter % 80) == 60) Telegram::PeriodicTasks();
     Iter++;

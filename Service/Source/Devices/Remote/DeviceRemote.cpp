@@ -28,18 +28,19 @@ bool DeviceRemote::Register() {
   DeviceManager::AddDriver(GetInstances);
   return true;
 }
-vector<Device*> DeviceRemote::GetInstances() {
+void DeviceRemote::GetInstances() {
   LOGFile::Info("Adding 'Remote' device driver instance with serial 'REMOTE'\n");
-  vector<Device*> Result;
-  Result.push_back(new DeviceRemote());
-  return Result;
+  DeviceManager::AddDevice(new DeviceRemote());
 }
 DeviceRemote::DeviceRemote() : Device("REMOTE", "Remote", "Allow repplication of remote openZmeter devices in local machine") {
-  Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial)));
+  Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial)));
 }
 DeviceRemote::~DeviceRemote() {
-  LOGFile::Info("Stopping device with serial '%s'\n", Serial.c_str());
-  LOGFile::Info("Device with serial '%s' stopped\n", Serial.c_str());
+  LOGFile::Info("Stopping device with serial '%s'\n", pSerial.c_str());
+  LOGFile::Info("Device with serial '%s' stopped\n", pSerial.c_str());
+}
+uint32_t DeviceRemote::AnalyzersCount() {
+  return 0;
 }
 json DeviceRemote::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
@@ -50,9 +51,18 @@ json DeviceRemote::CheckConfig(const json &config) {
   return ConfigOUT;
 }
 void DeviceRemote::Configure(const json &config) {
-  ConfigManager::WriteConfig("/Devices/" + Serial, config);
+  ConfigManager::WriteConfig("/Devices/" + pSerial, config);
   pEnabled = config["Enabled"];
+
+//  HTTPServer::RegisterCallback("setRemote",      SetRemoteCallback);
+//  HTTPServer::RegisterCallback("getRemote",      GetRemoteCallback);
+//  HTTPServer::UnregisterCallback("setRemote");
+//  HTTPServer::UnregisterCallback("getRemote");
+
+
+
 //  if(pState == RUNNING) {
+
 //    pMembersLock.Unlock();
 //    return false;
 //  }
@@ -99,7 +109,7 @@ void DeviceRemote::Configure(const json &config) {
 void DeviceRemote::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = ConfigManager::ReadConfig("/Devices/" + Serial);
+  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void DeviceRemote::SetDevice(const json &params, Response &response) {
@@ -109,39 +119,39 @@ void DeviceRemote::SetDevice(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void DeviceRemote::GetRemote(const json &params, Response &response) {
-  if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string Serial = params["Analyzer"];
-  pAnalyzersLock.ReadLock();
-  auto Tmp = pAnalyzers.find(Serial);
-  if(Tmp != pAnalyzers.end()) {
-    (*Tmp)->GetRemote(params, response);
-    pAnalyzersLock.Unlock();
-    return;
-  } else {
-    LOGFile::Info("Added remote analyzer '%s'\n", Serial.c_str());
-  }
-  pAnalyzersLock.Unlock();
-  AddAnalyzer(new AnalyzerRemote(Serial));
-  pAnalyzersLock.ReadLock();
-  Tmp = pAnalyzers.find(Serial);
-  if(Tmp != pAnalyzers.end()) {
-    (*Tmp)->GetRemote(params, response);
-    pAnalyzersLock.Unlock();
-    return;
-  }
-  pAnalyzersLock.Unlock();
+//  if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//  string Serial = params["Analyzer"];
+//  pAnalyzersLock.ReadLock();
+//  auto Tmp = pAnalyzers.find(Serial);
+//  if(Tmp != pAnalyzers.end()) {
+//    (*Tmp)->GetRemote(params, response);
+//    pAnalyzersLock.Unlock();
+//    return;
+//  } else {
+//    LOGFile::Info("Added remote analyzer '%s'\n", Serial.c_str());
+//  }
+//  pAnalyzersLock.Unlock();
+//  AddAnalyzer(new AnalyzerRemote(Serial));
+//  pAnalyzersLock.ReadLock();
+//  Tmp = pAnalyzers.find(Serial);
+//  if(Tmp != pAnalyzers.end()) {
+//    (*Tmp)->GetRemote(params, response);
+//    pAnalyzersLock.Unlock();
+//    return;
+//  }
+//  pAnalyzersLock.Unlock();
   HTTPServer::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
 }
 void DeviceRemote::SetRemote(const json &params, Response &response) {
-  if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string Serial = params["Analyzer"];
-  pAnalyzersLock.ReadLock();
-  auto Tmp = pAnalyzers.find(Serial);
-  if(Tmp != pAnalyzers.end()) {
-    (*Tmp)->SetRemote(params, response);
-    pAnalyzersLock.Unlock();
-    return;
-  }
-  pAnalyzersLock.Unlock();
+//  if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//  string Serial = params["Analyzer"];
+//  pAnalyzersLock.ReadLock();
+//  auto Tmp = pAnalyzers.find(Serial);
+//  if(Tmp != pAnalyzers.end()) {
+//    (*Tmp)->SetRemote(params, response);
+//    pAnalyzersLock.Unlock();
+//    return;
+//  }
+//  pAnalyzersLock.Unlock();
   HTTPServer::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
 }

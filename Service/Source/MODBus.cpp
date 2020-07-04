@@ -186,11 +186,11 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
       PacketOUT.ResponseBuffer[0] = 2;
     } else {
       PacketOUT.ResponseLen = sizeof(uint16_t) * PacketIN.QuantityRegisters;
-      if(DeviceManager::HandleModbus(PacketOUT.ResponseBuffer, pAnalyzers[PacketOUT.UnitID], PacketIN.StartAddress, PacketIN.QuantityRegisters) == false) {
-        PacketOUT.FunctionCode |= 0x80;
-        PacketOUT.ResponseLen = 1;
-        PacketOUT.ResponseBuffer[0] = 11;
-      }
+//      if(DeviceManager::HandleModbus(PacketOUT.ResponseBuffer, pAnalyzers[PacketOUT.UnitID], PacketIN.StartAddress, PacketIN.QuantityRegisters) == false) {
+//        PacketOUT.FunctionCode |= 0x80;
+//        PacketOUT.ResponseLen = 1;
+//        PacketOUT.ResponseBuffer[0] = 11;
+//      }
     }
     PacketOUT.Length = htons(PacketOUT.ResponseLen + 3);
     Size = send(clientSock, &PacketOUT, PacketOUT.ResponseLen + 9, 0);
