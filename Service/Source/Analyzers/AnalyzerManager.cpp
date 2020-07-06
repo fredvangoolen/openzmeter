@@ -16,7 +16,9 @@
 #include <string.h>
 #include <math.h>
 #include "AnalyzerManager.h"
+#include "HTTPChunkedWriter.h"
 #include "HTTPServer.h"
+#include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 map<string, Analyzer*>  AnalyzerManager::pAnalyzers;
 RWLocks                 AnalyzerManager::pAnalyzersLock;
@@ -48,7 +50,7 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("delPermission",  DelPermissionCallback);
 }
 AnalyzerManager::~AnalyzerManager() {
-  LOGFile::Debug("Stopping AnalyzerManager\n");
+  LogFile::Debug("Stopping AnalyzerManager\n");
   HTTPServer::UnregisterCallback("getAnalyzers");
   HTTPServer::UnregisterCallback("getAnalyzer");
   HTTPServer::UnregisterCallback("setAnalyzer");
@@ -73,7 +75,7 @@ AnalyzerManager::~AnalyzerManager() {
   HTTPServer::UnregisterCallback("addPermission");
   HTTPServer::UnregisterCallback("setPermission");
   HTTPServer::UnregisterCallback("delPermission");
-  LOGFile::Debug("AnalyzerManager stopped\n");
+  LogFile::Debug("AnalyzerManager stopped\n");
 }
 void AnalyzerManager::AddAnalyzer(Analyzer *analyzer) {
   pAnalyzersLock.WriteLock();
@@ -114,40 +116,28 @@ void AnalyzerManager::CallAnalyzerFunction(const json &params, Response &respons
   pAnalyzersLock.Unlock();
 }
 void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &response) {
-  response.set_header("Content-Type", "application/json");
-  response.status = HTTP_OK;
-  response.set_chunked_content_provider(
-    [=](size_t offset, DataSink &sink) -> bool {
-      string   UserName = params["UserName"];
-      uint32_t Items    = 0;
-      sink.write("[\n  ", 4);
+  string UserName = params["UserName"];
+  new HTTPChunkedWriter(response, "application/json",
+    [UserName](HTTPChunkedWriter *writer) -> bool {
+      uint32_t Items = 0;
+      writer->Write("[\n  ");
       if(UserName != "admin") {
         Database DB;
         DB.ExecSentenceAsyncResult("SELECT serial FROM permissions WHERE username = " + DB.Bind(UserName) + " AND (read = true OR write = true OR config = true)");
         while(DB.FecthRow()) {
           pAnalyzersLock.ReadLock();
           auto Tmp = pAnalyzers.find(DB.ResultString("serial"));
-          if(Tmp != pAnalyzers.end()) {
-            string Send = Tmp->second->GetJSONDescriptor().dump();
-            if(Items++ != 0) sink.write(",\n  ", 4);
-            sink.write(Send.c_str(), Send.size());
-          }
+          if(Tmp != pAnalyzers.end()) writer->Write(((Items++ != 0) ? ",\n  " : "") + Tmp->second->GetJSONDescriptor().dump());
           pAnalyzersLock.Unlock();
         }
       } else {
         pAnalyzersLock.ReadLock();
-        for(auto &Tmp : pAnalyzers) {
-          string Send = Tmp.second->GetJSONDescriptor().dump();
-          if(Items++ != 0) sink.write(",\n  ", 4);
-          sink.write(Send.c_str(), Send.size());
-        }
+        for(auto Tmp : pAnalyzers) writer->Write(((Items++ != 0) ? ",\n  " : "") + Tmp.second->GetJSONDescriptor().dump());
         pAnalyzersLock.Unlock();
       }
-      sink.write("\n]", 2);
-      sink.done();
-      return true;
-    },
-    [=]() { }
+      writer->Write("\n]", true);
+      return false;
+    }
   );
 }
 void AnalyzerManager::GetAnalyzerCallback(const json &params, Response &response) {

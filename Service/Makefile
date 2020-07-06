@@ -8,18 +8,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
-EXECUTABLE_SOURCE = Source/Tools.cpp \
-                    Source/Database/Database.cpp Source/Database/DatabasePool.cpp \
-                    Source/HTTPServer/HTTPServer.cpp Source/HTTPServer/URL.cpp Source/HTTPServer/HTTPTaskQueue.cpp Source/HTTPServer/HTTPWorker.cpp \
-                    Source/Main.cpp \
-										Source/GA.cpp \
-										Source/SysSupport.cpp \
-										Source/Devices/DeviceManager.cpp Source/Devices/Device.cpp \
-										Source/Analyzers/AnalyzerManager.cpp Source/Analyzers/Analyzer.cpp \
-										Source/Tariffs/Tariff.cpp \
-										Source/MODBus.cpp \
-										Source/Telegram.cpp \
-										Source/Tariffs/ESIOS.cpp
+EXECUTABLE_SOURCE = $(shell find Source -name "*.cpp" ! -type d -print)
 CFLAGS  += -DCPPHTTPLIB_USE_POLL -Wno-psabi -Wall -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools
 LDFLAGS += -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto
 

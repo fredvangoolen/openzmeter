@@ -27,7 +27,9 @@
 #include <sys/time.h>
 #include "DeviceV2.h"
 #include "AnalyzerManager.h"
+#include "ConfigManager.h"
 #include "DeviceManager.h"
+#include "LogFile.h"
 #include "Tools.h"
 #include "SysSupport.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -40,19 +42,19 @@ bool DeviceV2::Register() {
 void DeviceV2::GetInstances() {
   libusb_context *Context;
   if(libusb_init(&Context) < 0) {
-    LOGFile::Error("Can not open libUSB...\n");
+    LogFile::Error("Can not open libUSB...\n");
     return;
   }
   libusb_device **Devs;
   int Count = libusb_get_device_list(NULL, &Devs);
   if(Count < 0) {
-    LOGFile::Error("Can not enumerate USB devices...\n");
+    LogFile::Error("Can not enumerate USB devices...\n");
     return;
   }
   for(int i = 0; i < Count; ++i) {
     libusb_device_descriptor Descriptor;
     if(libusb_get_device_descriptor(Devs[i], &Descriptor) < 0) {
-      LOGFile::Error("Can not load USB descriptor...\n");
+      LogFile::Error("Can not load USB descriptor...\n");
       return;
     }
     if(Descriptor.idVendor != DEVICEV2_VID) continue;
@@ -60,29 +62,29 @@ void DeviceV2::GetInstances() {
     if(Descriptor.bcdDevice != DEVICEV2_VERSION) continue;
     libusb_device_handle *Dev_Handle = NULL;
     if(libusb_open(Devs[i], &Dev_Handle) != LIBUSB_SUCCESS) {
-      LOGFile::Error("Can not open USB device...\n");
+      LogFile::Error("Can not open USB device...\n");
       continue;
     }
     char String[256];
     if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iManufacturer, (unsigned char*)String, sizeof(String)) < 0) {
-      LOGFile::Error("Can not load USB string...\n");
+      LogFile::Error("Can not load USB string...\n");
       libusb_close(Dev_Handle);
       continue;
     }
     if(strcmp(String, DEVICEV2_MANSTRING) != 0) continue;
     if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iProduct, (unsigned char*)String, sizeof(String)) < 0) {
-      LOGFile::Error("Can not load USB string...\n");
+      LogFile::Error("Can not load USB string...\n");
       libusb_close(Dev_Handle);
       continue;
     }
     if(strcmp(String, DEVICEV2_PRODSTRING) != 0) continue;
     if(libusb_get_string_descriptor_ascii(Dev_Handle, Descriptor.iSerialNumber, (unsigned char*)String, sizeof(String)) < 0) {
-      LOGFile::Error("Can not load USB string...\n");
+      LogFile::Error("Can not load USB string...\n");
       libusb_close(Dev_Handle);
       continue;
     }
     libusb_close(Dev_Handle);
-    LOGFile::Info("Adding 'V2' device driver instance with serial '%s'\n", String);
+    LogFile::Info("Adding 'V2' device driver instance with serial '%s'\n", String);
     DeviceManager::AddDevice(new DeviceV2(String));
   }
   libusb_free_device_list(Devs, Count);
@@ -108,17 +110,17 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
   memset(pAverageValues, 0 , sizeof(pAverageValues));
   Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial)));
   if(libusb_init(&pContext) < 0) {
-    LOGFile::Error("Can not open libUSB...\n");
+    LogFile::Error("Can not open libUSB...\n");
     return;
   }
   if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     libusb_exit(pContext);
     return;
   }
   pthread_setname_np(pThread, "DeviceV2");
   if(libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE, DEVICEV2_VID, DEVICEV2_PID, LIBUSB_HOTPLUG_MATCH_ANY, PlugCallback, this, NULL) < 0) {
-    LOGFile::Error("Failed to register libUSB calback...\n");
+    LogFile::Error("Failed to register libUSB calback...\n");
     pTerminate = true;
     pthread_join(pThread, NULL);
     pThread = 0;
@@ -142,13 +144,13 @@ void DeviceV2::ClearAnalyzers() {
   pthread_mutex_unlock(&pConfigLock);
 }
 DeviceV2::~DeviceV2() {
-  LOGFile::Info("Stopping device with serial '%s'\n", pSerial.c_str());
+  LogFile::Info("Stopping device with serial '%s'\n", pSerial.c_str());
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   ClearAnalyzers();
   if(pBuffer != NULL) free(pBuffer);
   if(pChannelsDelay != NULL) free(pChannelsDelay);
-  LOGFile::Info("Device with serial '%s' stopped\n", pSerial.c_str());
+  LogFile::Info("Device with serial '%s' stopped\n", pSerial.c_str());
 }
 json DeviceV2::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
@@ -305,7 +307,7 @@ void *DeviceV2::Capture_Thread(void *args) {
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
     struct timeval tv = { 5, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
-    if(Result < LIBUSB_SUCCESS) LOGFile::Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
+    if(Result < LIBUSB_SUCCESS) LogFile::Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
     if(This->pTerminate == true) continue;
     if((This->pDeviceHandle != NULL) && (LastSignalSend < (Tools::GetTime64() - 500))) {
       uint16_t Status = 0x0006; //Stat=GREEN y Wifi=RED
@@ -328,13 +330,13 @@ void *DeviceV2::Capture_Thread(void *args) {
       struct libusb_device_descriptor Descriptor;
       Result = libusb_get_device_descriptor(This->pNewDevice, &Descriptor);
       if(Result < LIBUSB_SUCCESS) {
-        LOGFile::Error("libusb_get_device_descriptor return code %d\n", Result);
+        LogFile::Error("libusb_get_device_descriptor return code %d\n", Result);
         This->pNewDevice = NULL;
         continue;
       }
       Result = libusb_open(This->pNewDevice, &This->pDeviceHandle);
       if(Result != LIBUSB_SUCCESS) {
-        LOGFile::Error("libusb_open return %d\n", Result);
+        LogFile::Error("libusb_open return %d\n", Result);
         This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
         continue;
@@ -342,7 +344,7 @@ void *DeviceV2::Capture_Thread(void *args) {
       char Serial[256];
       Result = libusb_get_string_descriptor_ascii(This->pDeviceHandle, Descriptor.iSerialNumber, (unsigned char*)Serial, sizeof(Serial));
       if(Result < 0) {
-        LOGFile::Error("libusb_get_string_descriptor_ascii returns %d\n", Result);
+        LogFile::Error("libusb_get_string_descriptor_ascii returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
@@ -356,7 +358,7 @@ void *DeviceV2::Capture_Thread(void *args) {
       }
       Result = libusb_kernel_driver_active(This->pDeviceHandle, 0);
       if(Result < LIBUSB_SUCCESS) {
-        LOGFile::Error("libusb_kernel_driver_active returns %d\n", Result);
+        LogFile::Error("libusb_kernel_driver_active returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
@@ -364,24 +366,24 @@ void *DeviceV2::Capture_Thread(void *args) {
       } else if(Result == 1) {
         Result = libusb_detach_kernel_driver(This->pDeviceHandle, 0);
         if(Result < LIBUSB_SUCCESS) {
-          LOGFile::Error("libusb_detach_kernel_driver returns %d\n", Result);
+          LogFile::Error("libusb_detach_kernel_driver returns %d\n", Result);
           libusb_close(This->pDeviceHandle);
           This->pDeviceHandle = NULL;
           This->pNewDevice = NULL;
           continue;
         } else {
-          LOGFile::Info("Kernel driver dettached for DeviceV2 with serial '%s'\n", This->pSerial.c_str());
+          LogFile::Info("Kernel driver dettached for DeviceV2 with serial '%s'\n", This->pSerial.c_str());
         }
       }
       Result = libusb_claim_interface(This->pDeviceHandle, 0);
       if(Result != LIBUSB_SUCCESS) {
-        LOGFile::Error("libusb_claim_interface returns %d\n", Result);
+        LogFile::Error("libusb_claim_interface returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
         continue;
       } else {
-        LOGFile::Info("Claimed interface 0 for DeviceV2 with serial '%s'\n", This->pSerial.c_str());
+        LogFile::Info("Claimed interface 0 for DeviceV2 with serial '%s'\n", This->pSerial.c_str());
       }
       SignalTransfer->Setup(This->pDeviceHandle, DEVICEV2_ENDPOINT_OUT, ReadCallback, 1000);
       for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) {
@@ -389,13 +391,13 @@ void *DeviceV2::Capture_Thread(void *args) {
         This->pSubmittedTransfers++;
       }
       if(Result != LIBUSB_SUCCESS) {
-        LOGFile::Error("libusb_submit_transfer returns %d\n", Result);
+        LogFile::Error("libusb_submit_transfer returns %d\n", Result);
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
         This->pNewDevice = NULL;
         continue;
       }
-      LOGFile::Info("Capture started on DeviceV2 with serial '%s'\n", This->pSerial.c_str());
+      LogFile::Info("Capture started on DeviceV2 with serial '%s'\n", This->pSerial.c_str());
       This->pNewDevice = NULL;
       LastSignalSend = 0;
     }
@@ -435,7 +437,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
         This->pButtonAction = (Action == NONE);
         StatusRecv = true;
       } else if(This->pCaptureSize != Seq) {
-        LOGFile::Debug("Lost sample, restarting adquisition\n");
+        LogFile::Debug("Lost sample, restarting adquisition\n");
         This->pCaptureSize = 0;
         break;
       } else {
@@ -468,7 +470,7 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
     if(This->pDeviceHandle != NULL) {
       libusb_device *CurrentDev = libusb_get_device(This->pDeviceHandle);
       if(dev == CurrentDev) {
-        LOGFile::Info("DeviceV2 with serial '%s' disconnected\n", This->pSerial.c_str());
+        LogFile::Info("DeviceV2 with serial '%s' disconnected\n", This->pSerial.c_str());
         libusb_close(This->pDeviceHandle);
         This->pDeviceHandle = NULL;
       }
@@ -526,7 +528,7 @@ void  DeviceV2::BufferAppend() {
   } else {
     pBufferHead = 0;
     pBufferTail = 0;
-    LOGFile::Error("Capture buffer overflow in device '%s'\n", pSerial.c_str());
+    LogFile::Error("Capture buffer overflow in device '%s'\n", pSerial.c_str());
   }
   for(uint8_t n = 0; n < pAnalyzersCount; n++) {
     if(pAnalyzers[n]->IsWorking() == true) return;

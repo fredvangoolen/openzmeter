@@ -20,7 +20,10 @@
 #include <math.h>
 #include <fstream>
 #include "Database.h"
-#include "Tools.h"
+#include "LogFile.h"
+#include "ResourceManager.h"
+#include "ConfigManager.h"
+#include "ResourceManager.h"
 #include "DatabasePool.h"
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(const string &schema) {
@@ -42,7 +45,7 @@ bool Database::FecthRow() {
   pResult = PQgetResult(pDBConn);
   if(PQresultStatus(pResult) != PGRES_SINGLE_TUPLE) {
     char *Save;
-    if(PQresultStatus(pResult) != PGRES_TUPLES_OK) LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    if(PQresultStatus(pResult) != PGRES_TUPLES_OK) LogFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   }
   return true;
@@ -50,7 +53,7 @@ bool Database::FecthRow() {
 bool Database::ExecResource(const string &file) {
   size_t Len;
   ClearAsync();
-  char *Script = (char*)ResourceLoader::GetFile(file, &Len);
+  char *Script = (char*)ResourceManager::GetFile(file, &Len);
   Script[Len - 1] = 0;
   return ExecSentenceNoResult(Script);
 }
@@ -60,7 +63,7 @@ bool Database::ExecSentenceNoResult(const string &sql) {
   PGresult *Result = PQexec(pDBConn, sql.c_str());
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
     char *Save;
-    LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LogFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     printf("%s\n", sql.c_str());
     PQclear(Result);
     return false;
@@ -74,12 +77,12 @@ bool Database::ExecSentenceAsyncResult(const string &sql) {
   ClearAsync();
   if(PQsendQuery(pDBConn, sql.c_str()) == 0) {
     char *Save;
-    LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LogFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   }
   if(PQsetSingleRowMode(pDBConn) == 0) {
     char *Save;
-    LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LogFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   }
   return true;

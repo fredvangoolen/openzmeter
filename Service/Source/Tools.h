@@ -78,61 +78,11 @@ class ProviderLocks {
     void ConsumerEnds();
 };
 //----------------------------------------------------------------------------------------------------------------------
-class ConfigManager {
-  private :
-    static pthread_mutex_t   pMutex;
-    static int               pFile;
-    static json              pConfig;
-  public :
-    ConfigManager(const string &name);
-    virtual ~ConfigManager();
-  public :
-    static json ReadConfig(const string &path);
-    static bool WriteConfig(const string &path, const json &val);
-};
+
 //----------------------------------------------------------------------------------------------------------------------
-class PIDFile {
-  private :
-    string pFile;
-  public :
-    PIDFile();
-    virtual ~PIDFile();
-};
+
 //----------------------------------------------------------------------------------------------------------------------
-class ResourceLoader {
-  private :
-    typedef struct {
-      uint32_t Size;
-      uint8_t *Ptr;
-    } File_t;
-  private :
-    static map<string, File_t> pFiles;
-  public :
-    static uint8_t *GetFile(const string name, size_t *size);
-};
-//----------------------------------------------------------------------------------------------------------------------
-class LOGFile {
-  private :
-    enum Type {ERROR = 0, WARNING = 1, INFO = 2, DEBUG = 3};
-  private :
-    static pthread_mutex_t  pMutex;
-    static bool             pConsole;
-    static FILE            *pFile;
-    static Type             pLevel;
-    static bool             pDebug;
-  private :
-    static void Msg(Type type, const char *msg, va_list params);
-  public :
-    LOGFile();
-    virtual ~LOGFile();
-  public :
-    static void EnableDebug();
-    static void CloseConsole();
-    static void Info(const char *msg, ...);
-    static void Warning(const char *msg, ...);
-    static void Error(const char *msg, ...);
-    static void Debug(const char *msg, ...);
-};
+
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :

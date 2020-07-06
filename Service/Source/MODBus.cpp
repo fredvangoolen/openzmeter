@@ -14,6 +14,8 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include <poll.h>
+#include "LogFile.h"
+#include "ConfigManager.h"
 #include "MODBus.h"
 #include "DeviceManager.h"
 // ---------------------------------------------------------------------------------------------------------------------
@@ -31,14 +33,14 @@ ModbusTCP::ModbusTCP() {
   HTTPServer::RegisterCallback("setModbusTCP", SetModbusTCP);
 }
 ModbusTCP::~ModbusTCP() {
-  LOGFile::Info("Stopping ModbusTCP server...\n");
+  LogFile::Info("Stopping ModbusTCP server...\n");
   HTTPServer::UnregisterCallback("getModbusTCP");
   HTTPServer::UnregisterCallback("setModbusTCP");
   if(pThread != 0) {
     pTerminate = true;
     pthread_join(pThread, NULL);
   }
-  LOGFile::Info("ModbusTCP server stoped\n");
+  LogFile::Info("ModbusTCP server stoped\n");
 }
 json ModbusTCP::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
@@ -59,12 +61,12 @@ json ModbusTCP::CheckConfig(const json &config) {
 void ModbusTCP::Configure(const json &config) {
   pthread_mutex_lock(&pMutex);
   if(pThread != 0) {
-    LOGFile::Info("Stopping ModbusTCP server...\n");
+    LogFile::Info("Stopping ModbusTCP server...\n");
     pTerminate = true;
     pthread_join(pThread, NULL);
     pThread = 0;
     pAnalyzers.clear();
-    LOGFile::Info("ModbusTCP server stoped\n");
+    LogFile::Info("ModbusTCP server stoped\n");
   }
   ConfigManager::WriteConfig("/ModbusTCP", config);
   bool     Enabled = config["Enabled"];
@@ -72,10 +74,10 @@ void ModbusTCP::Configure(const json &config) {
     pPort      = config["Port"];
     pTerminate = false;
     for(uint16_t n = 0; n < config["Analyzers"].size(); n++) pAnalyzers.push_back(config["Analyzers"][n]);
-    LOGFile::Info("Starting ModbusTCP server on port %u...\n", pPort);
+    LogFile::Info("Starting ModbusTCP server on port %u...\n", pPort);
     if(pthread_create(&pThread, NULL, Thread, NULL) != 0) {
       pThread = 0;
-      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     } else {
       pthread_setname_np(pThread, "ModbusTCP");
     }
@@ -101,7 +103,7 @@ void *ModbusTCP::Thread(void *) {
   int         Opt = 1;
   int         Sock   = socket(AF_INET, SOCK_STREAM, 0);
 	if(Sock < 0) {
-		LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+		LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
   setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR, (const void *)&Opt , sizeof(int));
@@ -109,7 +111,7 @@ void *ModbusTCP::Thread(void *) {
 	Server.sin_addr.s_addr = INADDR_ANY;
 	Server.sin_port = htons(pPort);
 	if(bind(Sock, (sockaddr *)&Server, sizeof(Server)) < 0) {
-		LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+		LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return NULL;
   }
   listen(Sock, 5);
@@ -156,7 +158,7 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
   memset(&PacketIN,  0, sizeof(PacketIN_t));
   memset(&PacketOUT, 0, sizeof(PacketOUT_t));
   inet_ntop(AF_INET, &client.sin_addr, Buff, sizeof(Buff));
-  LOGFile::Debug("New Modbus connection from '%s'\n", Buff);
+  LogFile::Debug("New Modbus connection from '%s'\n", Buff);
   while(pTerminate == false) {
     ssize_t Size = recv(clientSock, &PacketIN, sizeof(PacketIN), MSG_DONTWAIT);
     if((Size == -1) && (errno == EAGAIN)) {
@@ -195,5 +197,5 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
     PacketOUT.Length = htons(PacketOUT.ResponseLen + 3);
     Size = send(clientSock, &PacketOUT, PacketOUT.ResponseLen + 9, 0);
   }
-  LOGFile::Debug("Modbus connection terminated\n");
+  LogFile::Debug("Modbus connection terminated\n");
 }

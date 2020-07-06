@@ -18,6 +18,7 @@
 #include "DeviceManager.h"
 #include "HTTPServer.h"
 #include "Tariff.h"
+#include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 vector<void (*)()> __attribute__((init_priority(200))) DeviceManager::pDrivers;
 map<string, Device*>                                   DeviceManager::pDevices;
@@ -30,16 +31,16 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("setDevice",      SetDeviceCallback);
 }
 DeviceManager::~DeviceManager() {
-  LOGFile::Debug("Stopping DeviceManager\n");
+  LogFile::Debug("Stopping DeviceManager\n");
   HTTPServer::UnregisterCallback("getDevices");
   HTTPServer::UnregisterCallback("getDevice");
   HTTPServer::UnregisterCallback("setDevice");
-  LOGFile::Info("Stopping devices...\n");
+  LogFile::Info("Stopping devices...\n");
   pDevicesLock.WriteLock();
   for(auto &Device : pDevices) delete Device.second;
   pDevices.clear();
   pDevicesLock.Unlock();
-  LOGFile::Debug("DeviceManager stopped\n");
+  LogFile::Debug("DeviceManager stopped\n");
 }
 void DeviceManager::AddDevice(Device *dev) {
   pDevicesLock.WriteLock();

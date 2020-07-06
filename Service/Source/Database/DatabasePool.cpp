@@ -15,6 +15,8 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "DatabasePool.h"
 #include "nlohmann/json.h"
+#include "ConfigManager.h"
+#include "LogFile.h"
 #include "Tools.h"
 #include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
@@ -47,9 +49,9 @@ DatabasePool::DatabasePool() {
   ConfigManager::WriteConfig("/Database", Config);
   pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase + " sslmode=allow";
 
-  LOGFile::Debug("Creating database tables\n");
+  LogFile::Debug("Creating database tables\n");
   Database DB;
-  if(DB.ExecResource("SQL/Database.sql") == false) LOGFile::Error("Database is damaged, manual repair is nedded\n");
+  if(DB.ExecResource("SQL/Database.sql") == false) LogFile::Error("Database is damaged, manual repair is nedded\n");
 }
 DatabasePool::~DatabasePool() {
   pthread_mutex_lock(&pMutex);
@@ -61,7 +63,7 @@ DatabasePool::~DatabasePool() {
   pthread_mutex_unlock(&pMutex);
 }
 void DatabasePool::PeriodicTasks() {
-  LOGFile::Debug("Vacuuming database\n");
+  LogFile::Debug("Vacuuming database\n");
   Database DB;
   DB.ExecSentenceNoResult("VACUUM");
   pthread_mutex_lock(&pMutex);
@@ -72,7 +74,7 @@ void DatabasePool::PeriodicTasks() {
     PQfinish(Tmp.Connection);
     pConnectionPool.pop_back();
   }
-  LOGFile::Debug("Adjusted database queries pool to %d connections\n", pConnectionPool.size());
+  LogFile::Debug("Adjusted database queries pool to %d connections\n", pConnectionPool.size());
   pthread_mutex_unlock(&pMutex);
 }
 PGconn *DatabasePool::PopConnection() {
@@ -90,7 +92,7 @@ PGconn *DatabasePool::PopConnection() {
   }
   if((Tmp != NULL) && (PQstatus(Tmp) != CONNECTION_OK)) {
     char *Save;
-    LOGFile::Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(Tmp), "\r\n", &Save));
+    LogFile::Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(Tmp), "\r\n", &Save));
     PQfinish(Tmp);
     return NULL;
   }
@@ -98,7 +100,7 @@ PGconn *DatabasePool::PopConnection() {
     PGresult *Result = PQexec(Tmp, "SET synchronous_commit TO OFF; SET client_min_messages = error;");
     if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
       char *Save;
-      LOGFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(Tmp), "\r\n", &Save));
+      LogFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(Tmp), "\r\n", &Save));
       PQclear(Result);
       PQfinish(Tmp);
       return NULL;
