@@ -14,6 +14,8 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "Telegram.h"
+#include "ConfigManager.h"
+#include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 json                      Telegram::pStatus      = json::object();
 string                    Telegram::pToken       = "";
@@ -58,7 +60,7 @@ void Telegram::Configure(const json &config) {
     pTerminate = false;
     if(pthread_create(&pThread, NULL, Thread_Func, NULL) != 0) {
       pThread = 0;
-      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     } else {
       pthread_setname_np(pThread, "TelegramServer");
     }
@@ -95,7 +97,7 @@ void Telegram::SetTelegramCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
 void *Telegram::Thread_Func(void *params) {
-  LOGFile::Debug("Telegram BOT started\n");
+  LogFile::Debug("Telegram BOT started\n");
   nice(10);
   bool       Connected  = false;
   int32_t    LastUpdate = 0;
@@ -183,7 +185,7 @@ void *Telegram::Thread_Func(void *params) {
       Connected = false;
     }
   }
-  LOGFile::Debug("Telegram BOT stopped\n");
+  LogFile::Debug("Telegram BOT stopped\n");
   pthread_mutex_lock(&pMutex);
   pStatus = json::object();
   pthread_mutex_unlock(&pMutex);
@@ -200,7 +202,7 @@ void Telegram::PeriodicTasks() {
     pFreeWorkers.pop_back();
     delete Tmp;
   }
-  LOGFile::Debug("Adjusted Telegram workers pool to %d connections (plus %u in use)\n", pFreeWorkers.size(), pUsedWorkers);
+  LogFile::Debug("Adjusted Telegram workers pool to %d connections (plus %u in use)\n", pFreeWorkers.size(), pUsedWorkers);
   pthread_mutex_unlock(&pMutex);
 }
 void Telegram::SendAlarm(const string &analyzer, const time_zone &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered) {

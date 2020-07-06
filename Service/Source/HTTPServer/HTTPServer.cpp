@@ -51,22 +51,22 @@ HTTPServer::HTTPServer() {
   ConfigManager::WriteConfig("/HTTPServer", Config);
   if(pthread_create(&pThread, NULL, Listen_Thread, (void*)this) != 0) {
     pThread = 0;
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   } else {
     pthread_setname_np(pThread, "HTTPServer");
   }
 }
 HTTPServer::~HTTPServer() {
-  LOGFile::Debug("Stopping HTTPServer\n");
+  LogFile::Debug("Stopping HTTPServer\n");
   stop();
   if(pThread != 0) pthread_join(pThread, NULL);
-  LOGFile::Debug("HTTPServer stopped\n");
+  LogFile::Debug("HTTPServer stopped\n");
 }
 void *HTTPServer::Listen_Thread(void *params) {
   HTTPServer *This = (HTTPServer*)params;
   nice(10);
-  LOGFile::Info("HTTP server starting on port %hu with relative path '%s'\n", This->pPort, This->pRelativePath.c_str());
-  if(This->listen("0.0.0.0", This->pPort) == false) LOGFile::Error("HTTP port (%hu) already in use\n", This->pPort);
+  LogFile::Info("HTTP server starting on port %hu with relative path '%s'\n", This->pPort, This->pRelativePath.c_str());
+  if(This->listen("0.0.0.0", This->pPort) == false) LogFile::Error("HTTP port (%hu) already in use\n", This->pPort);
   return NULL;
 }
 void HTTPServer::FillResponse(Response &response, const string &body, const char *mime, const int status) {
@@ -176,6 +176,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
 }
 void HTTPServer::HandlePost(const Request &request, Response &response) {
   string URL = string(request.path).erase(0, pRelativePath.size());
+
   LOGFile::Debug("HTTP POST '%s'\n", URL.c_str());
   response.set_header("Connection", "Keep-Alive");
   json Params = json::parse(request.body, NULL, false);

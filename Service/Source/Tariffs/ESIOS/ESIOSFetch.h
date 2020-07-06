@@ -14,31 +14,18 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <map>
-#include "Tariff.h"
+#include <vector>
+#include <stdint.h>
+#include <string>
 #include "nlohmann/json.h"
 #include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
-class ESIOS_PriceModule final : public PriceModule {
-  private :
-    static bool               pRegistered;
-   static  string             pQueryColumns;
-  private :
-    Database                  pDB;
-    bool                      pHaveData;
-  private :
-    static bool         Register();
-    static PriceModule *CreateInstance();
-    static json         GetVarsInfo();
-  public :
-    ESIOS_PriceModule();
-    ~ESIOS_PriceModule();
-    void PrepareRange(const uint64_t from, const uint64_t to);
-    void GetParams(const uint64_t sampletime, map<string, float> &vars);
-};
+using namespace std;
+using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
-class ESIOS final {
-  friend class ESIOS_Query;
+class PriceSourceESIOS;
+class ESIOSFetch final {
+  friend class PriceSourceESIOS;
   private :
     typedef struct {
       uint32_t   IndicatorNum;
@@ -63,6 +50,7 @@ class ESIOS final {
     static void    *Thread_Func(void *params);
     static bool     FetchIndicator(SSLClient &client, const string &token, const Variable_t &var, uint64_t to);
   public :
-    ESIOS();
-    ~ESIOS();
+    ESIOSFetch();
+    ~ESIOSFetch();
 };
+// ---------------------------------------------------------------------------------------------------------------------

@@ -21,83 +21,7 @@ float Rates::pTmpVar = 0.0;
 //----------------------------------------------------------------------------------------------------------------------
 Rates::Rates(const json &r, const time_zone &timezone) {
   pTimeZone = &timezone;
-  pRates.resize(r.size());
-  for(uint16_t R = 0; R < r.size(); R++) {
-    pRates[R].Name = r[R]["Name"];
-    pRates[R].Description = r[R]["Description"];
-    pRates[R].Currency = r[R]["Currency"];
-    pRates[R].PowerUnits = r[R]["PowerUnits"];
-    pRates[R].EnergyUnits = r[R]["EnergyUnits"];
-    pRates[R].Taxs.resize(r[R]["Taxs"].size());
-    for(uint16_t T = 0; T < r[R]["Taxs"].size(); T++) {
-      pRates[R].Taxs[T].Description = r[R]["Taxs"][T]["Description"];
-      pRates[R].Taxs[T].Value = r[R]["Taxs"][T]["Value"];
-      pRates[R].Taxs[T].Type = (r[R]["Taxs"][T]["Type"] == "PERCENT_TOTAL") ? TAX_PERCENT : (r[R]["Taxs"][T]["Type"] == "PERCENT_ENERGY") ? TAX_PERCENT_ENERGY : (r[R]["Taxs"][T]["Type"] == "PERCENT_POWER") ? TAX_PERCENT_POWER : (r[R]["Taxs"][T]["Type"] == "PERCENT_ENERGY_POWER") ? TAX_PERCENT_ENERGY_POWER : TAX_FIXED;
-    }
-    pRates[R].Periods.resize(r[R]["Periods"].size());
-    for(uint16_t P = 0; P < r[R]["Periods"].size(); P++) {
-      pRates[R].Periods[P].Color = r[R]["Periods"][P]["Color"];
-      pRates[R].Periods[P].DefaultPowerCost = r[R]["Periods"][P]["DefaultPowerCost"];
-      pRates[R].Periods[P].DefaultEnergyCost = r[R]["Periods"][P]["DefaultEnergyCost"];
-      pRates[R].Periods[P].Name = r[R]["Periods"][P]["Name"];
-      pRates[R].Periods[P].Script = r[R]["Periods"][P]["Script"];
-      pRates[R].Periods[P].Concepts.resize(r[R]["Periods"][P]["Concepts"].size());
-      for(uint16_t C = 0; C < r[R]["Periods"][P]["Concepts"].size(); C++) {
-        pRates[R].Periods[P].Concepts[C].Description = r[R]["Periods"][P]["Concepts"][C]["Description"];
-        pRates[R].Periods[P].Concepts[C].Variable = r[R]["Periods"][P]["Concepts"][C]["Variable"];
-        pRates[R].Periods[P].Concepts[C].Type = (r[R]["Periods"][P]["Concepts"][C]["Type"] == "INFO") ? CONCEPT_INFO : (r[R]["Periods"][P]["Concepts"][C]["Type"] == "COST_POWER") ? CONCEPT_COST_POWER : (r[R]["Periods"][P]["Concepts"][C]["Type"] == "COST_ENERGY") ? CONCEPT_COST_ENERGY : CONCEPT_COST;
-      }
-    }
-    pRates[R].Script = r[R]["Script"];
-    pRates[R].Concepts.resize(r[R]["Concepts"].size());
-    for(uint16_t C = 0; C < r[R]["Concepts"].size(); C++) {
-      pRates[R].Concepts[C].Description = r[R]["Concepts"][C]["Description"];
-      pRates[R].Concepts[C].Variable = r[R]["Concepts"][C]["Variable"];
-      pRates[R].Concepts[C].Type = (r[R]["Concepts"][C]["Type"] == "INFO") ? CONCEPT_INFO : (r[R]["Concepts"][C]["Type"] == "COST_POWER") ? CONCEPT_COST_POWER : (r[R]["Concepts"][C]["Type"] == "COST_ENERGY") ? CONCEPT_COST_ENERGY : CONCEPT_COST;
-    }
-    pRates[R].Days.resize(r[R]["Days"].size());
-    for(uint16_t D = 0; D < r[R]["Days"].size(); D++) {
-      pRates[R].Days[D].Name = r[R]["Days"][D]["Name"];
-      pRates[R].Days[D].Color = r[R]["Days"][D]["Color"];
-      for(uint8_t Q = 0; Q < 96; Q++) pRates[R].Days[D].Quarters[Q] = r[R]["Days"][D]["Quarters"][Q];
-    }
-    pRates[R].Years.resize(r[R]["Years"].size());
-    for(uint16_t Y = 0; Y < r[R]["Years"].size(); Y++) {
-      pRates[R].Years[Y].Year = r[R]["Years"][Y]["Year"];
-      for(uint16_t D = 0; D < r[R]["Years"][Y]["Days"].size(); D++) pRates[R].Years[Y].Days[D] = r[R]["Years"][Y]["Days"][D];
-    }
-    sort(pRates[R].Years.begin(), pRates[R].Years.end(), [](Year_t &a, Year_t &b) { return a.Year < b.Year; });
-    if(r[R]["ContractedPower"].is_number()) {
-      pRates[R].Contracted = vector<float>(pRates[R].Periods.size(), r[R]["ContractedPower"]);
-    } else if(r[R]["ContractedPower"].is_array()) {
-      pRates[R].Contracted.resize(pRates[R].Periods.size());
-      for(uint16_t P = 0; P < pRates[R].Periods.size(); P++) pRates[R].Contracted[P] = r[R]["ContractedPower"][P];
-    }
-    if(r[R]["PowerCost"].is_string()) {
-      pRates[R].PowerCostScript = r[R]["PowerCost"];
-    } else {
-      pRates[R].PowerCost.resize(pRates[R].Periods.size());
-      for(uint16_t P = 0; P < pRates[R].Periods.size(); P++) pRates[R].PowerCost[P] = r[R]["PowerCost"][P];
-    }
-    if(r[R]["EnergyCost"].is_string()) {
-      pRates[R].EnergyCostScript = r[R]["EnergyCost"];
-    } else {
-      pRates[R].EnergyCost.resize(pRates[R].Periods.size());
-      for(uint16_t P = 0; P < pRates[R].Periods.size(); P++) pRates[R].EnergyCost[P] = r[R]["EnergyCost"][P];
-    }
-    chrono::system_clock::time_point TimePoint;
-    parse("%d/%m/%Y", r[R]["StartDate"], *pTimeZone, &TimePoint);
-    pRates[R].StartDate = TimePoint.time_since_epoch().count() / 1000000;
-    parse("%d/%m/%Y", r[R]["EndDate"], *pTimeZone, &TimePoint);
-    pRates[R].EndDate = TimePoint.time_since_epoch().count() / 1000000 + 86399999;
-    for(uint16_t B = 0; B < r[R]["Billing"].size(); B++) {
-      parse("%d/%m/%Y", r[R]["Billing"][B], *pTimeZone, &TimePoint);
-      uint64_t Time = TimePoint.time_since_epoch().count() / 1000000 + 86399999;
-      if((Time > pRates[R].StartDate) && (Time < pRates[R].EndDate)) pRates[R].BillingCycles.push_back(Time);
-    }
-    sort(pRates[R].BillingCycles.begin(), pRates[R].BillingCycles.end());
-    pRates[R].PriceSource = r[R]["Module"];
-  }
+  for(uint16_t R = 0; R < r.size(); R++) pRates.emplace_back(r[R]);
 }
 json Rates::CheckConfig(const json &r) {
   json Out = json::array();
@@ -137,7 +61,7 @@ json Rates::CheckRateConfig(const json &t) {
     return "'ContractedPower' param is required";
   }
   if((t.contains("Module") == false) || (t["Module"].is_string() == false)) return "'Module' param is required";
-  PriceModule *Module = PriceModule::CreateInstance(t["Module"]);
+  PriceSource *Module = PriceSource::CreateInstance(t["Module"]);
   if(Module == NULL) return "'Module' param is invalid";
   Out["Module"] = t["Module"];
   map<string, float> Variables;
@@ -328,41 +252,8 @@ json Rates::CheckTariffConfig(const json &t) {
   }
   return Out;
 }
-//----------------------------------------------------------------------------------------------------------------------
-map<string, PriceModule::Module_t>  __attribute__((init_priority(200))) PriceModule::pModules;
-//----------------------------------------------------------------------------------------------------------------------
-PriceModule *PriceModule::CreateInstance(const string &name) {
-  auto Tmp = pModules.find(name);
-  if(Tmp == pModules.end()) return NULL;
-  return Tmp->second.Constructor();
-}
-json PriceModule::GetVarsInfo() {
-  json Result = json::object();
-  for(auto M : pModules) Result[M.first] = M.second.Info();
-  return Result;
-}
-PriceModule::PriceModule() {
-}
-PriceModule::~PriceModule() {
-}
-//----------------------------------------------------------------------------------------------------------------------
-bool  None_PriceModule::pRegistered = Register();
-//----------------------------------------------------------------------------------------------------------------------
-bool None_PriceModule::Register() {
-  pModules.insert( { "NONE", { CreateInstance, GetVarsInfo } } );
-  return true;
-}
-PriceModule *None_PriceModule::CreateInstance() {
-  return new None_PriceModule();
-}
-json None_PriceModule::GetVarsInfo() {
-  json Result = json::array();
-  return Result;
-}
-void None_PriceModule::GetParams(const uint64_t sampletime, map<string, float> &vars) {
-}
-void None_PriceModule::PrepareRange(const uint64_t from, const uint64_t to) {
-}
+
+
 //----------------------------------------------------------------------------------------------------------------------
 RatesEval::RatesEval(Rates *parent, const uint64_t from, const uint64_t to, const bool precise) {
   pParent      = parent;
@@ -535,17 +426,17 @@ json RatesEval::BuildBill(bool complete) {
     for(uint16_t C = 0; C < pRatePtr->Periods[P].Concepts.size(); C++) {
       Result["Periods"][P].push_back(json::object());
       Result["Periods"][P][C]["Description"] = pRatePtr->Periods[P].Concepts[C].Description;
-      if(pRatePtr->Periods[P].Concepts[C].Type == Rates::CONCEPT_COST) {
+      if(pRatePtr->Periods[P].Concepts[C].Type == RateConcept::CONCEPT_COST) {
         float Cost = pPeriods[P].Variables[pRatePtr->Periods[P].Concepts[C].Variable];
         Result["Periods"][P][C]["Value"] = Cost;
         Result["Periods"][P][C]["Type"] = "COST";
         GeneralTerm += Cost;
-      } else if(pRatePtr->Periods[P].Concepts[C].Type == Rates::CONCEPT_COST_ENERGY) {
+      } else if(pRatePtr->Periods[P].Concepts[C].Type == RateConcept::CONCEPT_COST_ENERGY) {
         float Cost = pPeriods[P].Variables[pRatePtr->Periods[P].Concepts[C].Variable];
         Result["Periods"][P][C]["Value"] = Cost;
         Result["Periods"][P][C]["Type"] = "COST_ENERGY";
         EnergyTerm += Cost;
-      } else if(pRatePtr->Periods[P].Concepts[C].Type == Rates::CONCEPT_COST_POWER) {
+      } else if(pRatePtr->Periods[P].Concepts[C].Type == RateConcept::CONCEPT_COST_POWER) {
         float Cost = pPeriods[P].Variables[pRatePtr->Periods[P].Concepts[C].Variable];
         Result["Periods"][P][C]["Value"] = Cost;
         Result["Periods"][P][C]["Type"] = "COST_POWER";
@@ -560,17 +451,17 @@ json RatesEval::BuildBill(bool complete) {
   for(uint16_t C = 0; C < pRatePtr->Concepts.size(); C++) {
     Result["General"].push_back(json::object());
     Result["General"][C]["Description"] = pRatePtr->Concepts[C].Description;
-    if(pRatePtr->Concepts[C].Type == Rates::CONCEPT_COST) {
+    if(pRatePtr->Concepts[C].Type == RateConcept::CONCEPT_COST) {
       float Cost = pVariables[pRatePtr->Concepts[C].Variable];
       Result["General"][C]["Value"] = Cost;
       Result["General"][C]["Type"] = "COST";
       GeneralTerm += Cost;
-    } else if(pRatePtr->Concepts[C].Type == Rates::CONCEPT_COST_ENERGY) {
+    } else if(pRatePtr->Concepts[C].Type == RateConcept::CONCEPT_COST_ENERGY) {
       float Cost = pVariables[pRatePtr->Concepts[C].Variable];
       Result["General"][C]["Value"] = Cost;
       Result["General"][C]["Type"] = "COST_ENERGY";
       EnergyTerm += Cost;
-    } else if(pRatePtr->Concepts[C].Type == Rates::CONCEPT_COST_POWER) {
+    } else if(pRatePtr->Concepts[C].Type == RateConcept::CONCEPT_COST_POWER) {
       float Cost = pVariables[pRatePtr->Concepts[C].Variable];
       Result["General"][C]["Value"] = Cost;
       Result["General"][C]["Type"] = "COST_POWER";
@@ -643,3 +534,4 @@ void RatesEval::SetBillCallback(function<void(const json &)> billOut) {
   pBillCallback = billOut;
 }
 //----------------------------------------------------------------------------------------------------------------------
+//650

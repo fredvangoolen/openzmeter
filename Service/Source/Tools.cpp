@@ -21,6 +21,7 @@
 #include <sys/resource.h>
 #include <unistd.h>
 #include "Tools.h"
+#include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 Worker::Worker(const string &name, function<void(void*)> callback, int8_t nice) {
   pWorking   = false;
@@ -33,7 +34,7 @@ Worker::Worker(const string &name, function<void(void*)> callback, int8_t nice) 
   pCallback = callback;
   if(pthread_create(&pThread, NULL, Thread, (void*)this) != 0) {
     pThread = 0;
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
   }
   if(nice != 0) setpriority(PRIO_PROCESS, pThread, -nice);
@@ -158,7 +159,7 @@ bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
   pthread_mutex_lock(&pMutex);
   while((Error == 0) && (pDataReady == true) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerEnterCond, &pMutex, &To);
   if((Error != 0) && (Error != ETIMEDOUT)) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
   } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
@@ -168,7 +169,7 @@ bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
   pConsumers++;
   while((Error == 0) && (pDataReady == false) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerWaitCond, &pMutex, &To);
   if((Error != 0) && (Error != ETIMEDOUT)) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
   } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
@@ -186,198 +187,8 @@ void ProviderLocks::ConsumerEnds() {
   if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
   pthread_mutex_unlock(&pMutex);
 }
-//----------------------------------------------------------------------------------------------------------------------
-int             ConfigManager::pFile   = -1;
-pthread_mutex_t ConfigManager::pMutex  = PTHREAD_MUTEX_INITIALIZER;
-json            ConfigManager::pConfig = nullptr;
-//----------------------------------------------------------------------------------------------------------------------
-ConfigManager::ConfigManager(const string &name) {
-  pthread_mutex_lock(&pMutex);
-  pFile = open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-  if(pFile < 0) {
-    LOGFile::Error("Can not open config file (%s)\n", strerror(errno));
-    pFile = -1;
-    pthread_mutex_unlock(&pMutex);
-    return;
-  }
-  string Read;
-  char Buff[256];
-  ssize_t Len;
-  do {
-    Len = read(pFile, Buff, sizeof(Buff));
-    Read += string(Buff, Len);
-  } while(Len > 0);
-  pConfig = json::parse(Read, NULL, false);
-  if(pConfig.is_discarded()) pConfig = json::object();
-  pthread_mutex_unlock(&pMutex);
-}
-ConfigManager::~ConfigManager() {
-  pthread_mutex_lock(&pMutex);
-  if(pFile != -1) close(pFile);
-  pFile = -1;
-  pthread_mutex_unlock(&pMutex);
-}
-bool ConfigManager::WriteConfig(const string &path, const json &val) {
-  pthread_mutex_lock(&pMutex);
-  LOGFile::Debug("Saving '%s' settings\n", path.c_str());
-  if(pFile == -1) {
-    pthread_mutex_unlock(&pMutex);
-    return false;
-  }
-  pConfig[json::json_pointer(path)] = val;
-  lseek(pFile, 0, SEEK_SET);
-  string Write = pConfig.dump(2);
-  if(write(pFile, Write.c_str(), Write.size()) < 0) {
-    LOGFile::Error("Can not write configuration to file (%s)\n", strerror(errno));
-    pthread_mutex_unlock(&pMutex);
-    return false;
-  }
-  if(ftruncate(pFile, Write.size()) < 0 ) {
-    LOGFile::Error("Can not write configuration to file (%s)\n", strerror(errno));
-    pthread_mutex_unlock(&pMutex);
-    return false;
-  }
-  pthread_mutex_unlock(&pMutex);
-  return true;
-}
-json ConfigManager::ReadConfig(const string &path) {
-  pthread_mutex_lock(&pMutex);
-  LOGFile::Debug("Reading '%s' settings\n", path.c_str());
-  if((pFile == -1) || (pConfig.is_object() == false)) {
-    pthread_mutex_unlock(&pMutex);
-    return nullptr;
-  }
-  json Result = pConfig[json::json_pointer(path)];
-  pthread_mutex_unlock(&pMutex);
-  return Result;
-}
-//----------------------------------------------------------------------------------------------------------------------
-PIDFile::PIDFile() {
-  pFile = "/var/run/openZmeter.pid";
-  json Config = ConfigManager::ReadConfig("/PidFile");
-  if(Config.is_string()) pFile = Config;
-  char PID_Number[16];
-  int Len = sprintf(PID_Number, "%d", getpid());
-  if(!pFile.empty()) remove(pFile.c_str());
-  int File = open(pFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
-  if(File < 0) LOGFile::Warning("Can not create PID file (%s)\n", strerror(errno));
-  if(write(File, PID_Number, Len) <= 0) LOGFile::Warning("Can not create PID file (%s)\n", strerror(errno));
-  if(File > 0) close(File);
-}
-PIDFile::~PIDFile() {
-  if(!pFile.empty()) remove(pFile.c_str());
-}
-//----------------------------------------------------------------------------------------------------------------------
-FILE           *LOGFile::pFile     = NULL;
-LOGFile::Type   LOGFile::pLevel    = LOGFile::DEBUG;
-bool            LOGFile::pConsole  = true;
-pthread_mutex_t LOGFile::pMutex    = PTHREAD_MUTEX_INITIALIZER;
-bool            LOGFile::pDebug    = false;
-//----------------------------------------------------------------------------------------------------------------------
-LOGFile::LOGFile() {
-  string Name = "/var/log/openZmeter.log";
-  json Config = ConfigManager::ReadConfig("/Log");
-  if(Config.is_object()) {
-    if(Config["File"].is_string()) Name = Config["File"];
-    if(Config["Level"].is_number_unsigned()) pLevel = Config["Level"];
-  }
-  Config = json::object();
-  Config["File"] = Name;
-  Config["Level"] = pLevel;
-  ConfigManager::WriteConfig("/Log", Config);
-  if(Name.empty() == false) {
-    pFile = fopen(Name.c_str(), "at");
-    if(!pFile) pFile = fopen(Name.c_str(), "wt");
-    if(pFile == NULL) LOGFile::Warning("Can not create or open log file (%s)\n", strerror(errno));
-  }
-}
-LOGFile::~LOGFile() {
-  pthread_mutex_lock(&pMutex);
-  if(pFile != NULL) fclose(pFile);
-  pthread_mutex_unlock(&pMutex);
-}
-void LOGFile::EnableDebug() {
-  pDebug = true;
-}
-void LOGFile::Debug(const char* msg, ...) {
-  va_list args;
-  va_start(args, msg);
-  Msg(DEBUG, msg, args);
-  va_end(args);
-}
-void LOGFile::Info(const char* msg, ...) {
-  va_list args;
-  va_start(args, msg);
-  Msg(INFO, msg, args);
-  va_end(args);
-}
-void LOGFile::Warning(const char* msg, ...) {
-  va_list args;
-  va_start(args, msg);
-  Msg(WARNING, msg, args);
-  va_end(args);
-}
-void LOGFile::Error(const char* msg, ...) {
-  va_list args;
-  va_start(args, msg);
-  Msg(ERROR, msg, args);
-  va_end(args);
-}
-void LOGFile::CloseConsole() {
-  pConsole = false;
-}
-void LOGFile::Msg(Type type, const char *msg, va_list params) {
-  if(((type > pLevel) || (pFile == NULL)) && (pConsole == false)) return;
-  char   DateStr[32];
-  char   MsgStr[1024];
-  time_t Now;
-  tm     TimeStamp;
-  time(&Now);
-  strftime(DateStr, 80, "[%d/%m/%Y - %X]", localtime_r(&Now, &TimeStamp));
-  vsnprintf(MsgStr, sizeof(MsgStr), msg, params);
-  pthread_mutex_lock(&pMutex);
-  if(pConsole == true) {
-    if(type == ERROR) {
-      printf("\033[1;31m%s\033[0m %s", DateStr, MsgStr);
-    } else if(type == WARNING) {
-      printf("\033[1;33m%s\033[0m %s", DateStr, MsgStr);
-    } else if((type == DEBUG) && (pDebug == true)) {
-      printf("\033[1;37m%s\033[0m %s", DateStr, MsgStr);
-    } else if(type == INFO) {
-      printf("\033[1;34m%s\033[0m %s", DateStr, MsgStr);
-    }
-    fflush(stdout);
-  }
-  if((type <= pLevel) && (pFile != NULL)) fprintf(pFile, "[%s]  %s", DateStr, MsgStr);
-  pthread_mutex_unlock(&pMutex);
-}
-//----------------------------------------------------------------------------------------------------------------------
-extern char _binary_ResourceFiles_start[];
-extern char _binary_ResourceFiles_end[];
-map<string, ResourceLoader::File_t> ResourceLoader::pFiles;
-//----------------------------------------------------------------------------------------------------------------------
-uint8_t *ResourceLoader::GetFile(string name, size_t *size) {
-  *size = 0;
-  if(pFiles.size() == 0) {
-    char *Ptr = _binary_ResourceFiles_start;
-    uint32_t FileCount = atoi(Ptr);
-    Ptr = &Ptr[strlen(Ptr) + 1];
-    for(uint32_t i = 0; i < FileCount; i++) {
-      File_t File;
-      string Name = Ptr;
-      Ptr = &Ptr[strlen(Ptr) + 1];
-      File.Size = atoi(Ptr);
-      Ptr = &Ptr[strlen(Ptr) + 1];
-      File.Ptr = (uint8_t*)Ptr;
-      Ptr = &Ptr[File.Size];
-      pFiles.insert({Name, File});
-    }
-  }
-  auto File = pFiles.find(name);
-  if(File == pFiles.end()) return NULL;
-  *size = File->second.Size;
-  return File->second.Ptr;
-}
+
+
 //----------------------------------------------------------------------------------------------------------------------
 termios Tools::pConsoleAttr;
 //----------------------------------------------------------------------------------------------------------------------
@@ -398,7 +209,7 @@ void Tools::DisableEcho() {
 uint64_t Tools::GetTime64() {
   struct timespec Time;
   if(clock_gettime(CLOCK_REALTIME, &Time) != 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return 0;
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_nsec / 1000000;
@@ -411,20 +222,20 @@ string Tools::StrTrim(const string &str) {
   return str.substr(first, (last-first+1));
 }
 void Tools::RunDaemon() {
-  LOGFile::Info("Move to background task\n");
+  LogFile::Info("Move to background task\n");
   pid_t ProcID = fork();
   if(ProcID < 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     exit(1);
   }
   if(ProcID > 0) exit(0);
   umask(0);
   pid_t SID = setsid();
   if(SID < 0) {
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     exit(1);
   }
-  LOGFile::CloseConsole();
+  LogFile::CloseConsole();
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
   close(STDERR_FILENO);

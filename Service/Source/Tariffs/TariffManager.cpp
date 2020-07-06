@@ -14,28 +14,30 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "TariffManager.h"
+#include "Tariff.h"
 // ---------------------------------------------------------------------------------------------------------------------
-
+TariffManager::TariffManager() {
   HTTPServer::RegisterCallback("getTariffs",     GetTariffsCallback);
   HTTPServer::RegisterCallback("getTariff",      GetTariffCallback);
   HTTPServer::RegisterCallback("setTariff",      SetTariffCallback);
   HTTPServer::RegisterCallback("delTariff",      DelTariffCallback);
   HTTPServer::RegisterCallback("addTariff",      AddTariffCallback);
-
+}
+TariffManager::~TariffManager() {
   HTTPServer::UnregisterCallback("getTariffs");
   HTTPServer::UnregisterCallback("getTariff");
   HTTPServer::UnregisterCallback("setTariff");
   HTTPServer::UnregisterCallback("delTariff");
   HTTPServer::UnregisterCallback("addTariff");
-
-void DeviceManager::GetTariffsCallback(const json &params, Response &response) {
+}
+void TariffManager::GetTariffsCallback(const json &params, Response &response) {
   Database DB;
   string   UserName = params["UserName"];
   DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('Name', name, 'UserName', username))), '[]') as result FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ")"));
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
-void DeviceManager::GetTariffCallback(const json &params, Response &response) {
+void TariffManager::GetTariffCallback(const json &params, Response &response) {
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
   Database DB;
   string Name = params["Name"];
@@ -44,7 +46,7 @@ void DeviceManager::GetTariffCallback(const json &params, Response &response) {
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
-void DeviceManager::DelTariffCallback(const json &params, Response &response) {
+void TariffManager::DelTariffCallback(const json &params, Response &response) {
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
   Database DB;
   string Name = params["Name"];
@@ -52,7 +54,7 @@ void DeviceManager::DelTariffCallback(const json &params, Response &response) {
   DB.ExecSentenceAsyncResult("DELETE FROM tariffs WHERE name = " + DB.Bind(Name) + ((UserName == "admin") ? "" : " AND username = " + DB.Bind(UserName)) + " RETURNING name");
   return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
-void DeviceManager::SetTariffCallback(const json &params, Response &response) {
+void TariffManager::SetTariffCallback(const json &params, Response &response) {
   if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
   json Conf = Rates::CheckTariffConfig(params["Template"]);
@@ -63,7 +65,7 @@ void DeviceManager::SetTariffCallback(const json &params, Response &response) {
   DB.ExecSentenceAsyncResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(Conf.dump()) + " WHERE name = " + DB.Bind(Name) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : "") + " RETURNING name");
   return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
-void DeviceManager::AddTariffCallback(const json &params, Response &response) {
+void TariffManager::AddTariffCallback(const json &params, Response &response) {
   if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
   json Conf = Rates::CheckTariffConfig(params["Template"]);

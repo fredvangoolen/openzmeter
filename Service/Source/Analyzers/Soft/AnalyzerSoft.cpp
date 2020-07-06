@@ -26,7 +26,8 @@
 #include "cctz/time_zone.h"
 #include "muParser/muParser.h"
 #include "AnalyzerSoft.h"
-#include "Tools.h"
+#include "ConfigManager.h"
+#include "LogFile.h"
 #include "SysSupport.h"
 #include "Telegram.h"
 #include "GA.h"
@@ -57,10 +58,10 @@ pthread_mutex_t     AnalyzerSoft::pFFTMutex = PTHREAD_MUTEX_INITIALIZER;
 uint32_t            AnalyzerSoft::pFFTRunning = 0;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pMode(mode) {
-  LOGFile::Debug("Creating AnalyzerSoft database tables\n");
+  LogFile::Debug("Creating AnalyzerSoft database tables\n");
   Database DB(id);
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
-  LOGFile::Debug("AnalyzerSoft database tables created\n");
+  LogFile::Debug("AnalyzerSoft database tables created\n");
   pDelayVoltage     = NULL;
   pDelayCurrent     = NULL;
   pVoltageSamples   = NULL;
@@ -88,11 +89,11 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFTWorker[i] = new Worker("FFT_I" + to_string(i), [&](void *a) { this->FFT_Func((FFTChannel_t*)a); });
   string Error;
   Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode, &Error));
-  if(Error.empty() == false) LOGFile::Error("Analyzer '%s' rates failed to parse (%s)\n", pSerial.c_str(), Error.c_str());
+  if(Error.empty() == false) LogFile::Error("Analyzer '%s' rates failed to parse (%s)\n", pSerial.c_str(), Error.c_str());
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
 }
 AnalyzerSoft::~AnalyzerSoft() {
-  LOGFile::Info("Stopping analyzer with serial '%s'\n", pSerial.c_str());
+  LogFile::Info("Stopping analyzer with serial '%s'\n", pSerial.c_str());
   pSyncTerminate = true;
   if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
   pMQTTTerminate = true;
@@ -121,11 +122,11 @@ AnalyzerSoft::~AnalyzerSoft() {
   }
   pthread_mutex_lock(&pFFTMutex);
   if(pFFTRunning == 0) {
-    LOGFile::Debug("Clearing FFT cached plans\n");
+    LogFile::Debug("Clearing FFT cached plans\n");
     fftwf_cleanup();
   }
   pthread_mutex_unlock(&pFFTMutex);
-  LOGFile::Info("Analyzer with serial '%s' stopped\n", pSerial.c_str());
+  LogFile::Info("Analyzer with serial '%s' stopped\n", pSerial.c_str());
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
   pAnalyzerLock.ReadLock();
@@ -410,7 +411,7 @@ void AnalyzerSoft::Configure(const json &options) {
     pSyncTerminate = false;
     if(pSyncThread == 0) {
       if(pthread_create(&pSyncThread, NULL, Sync_Thread, this) != 0) {
-        LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+        LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
         pSyncThread = 0;
       } else {
         pthread_setname_np(pSyncThread, "Sync");
@@ -440,7 +441,7 @@ void AnalyzerSoft::Configure(const json &options) {
       pMQTTRecvBuff = (uint8_t*)calloc(pMQTTBuffSize, 1);
       mqtt_init_reconnect(&pMQTTClient, NULL, NULL, NULL);
       if(pthread_create(&pMQTTThread, NULL, MQTT_Thread, this) != 0) {
-        LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+        LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
         pMQTTThread = 0;
       } else {
         pthread_setname_np(pMQTTThread, "MQTT");
@@ -616,7 +617,7 @@ void AnalyzerSoft::PublishAggreg(const Params_t &params, const string &topic) {
   string TextMsg = Msg.dump();
   string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/" + topic : pSerial + "/" + topic;
   mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
-  LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", pSerial.c_str());
+  LogFile::Debug("Analyzer '%s' publish message to MQTT broker\n", pSerial.c_str());
 }
 void AnalyzerSoft::PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered) {
   if(pMQTTClient.socketfd == -1) return;
@@ -628,14 +629,14 @@ void AnalyzerSoft::PublishAlarm(const uint64_t time, const string &name, const u
   string TextMsg = Msg.dump();
   string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/Alarms" : pSerial + "/Alarms";
   mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1);
-  LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", pSerial.c_str());
+  LogFile::Debug("Analyzer '%s' publish message to MQTT broker\n", pSerial.c_str());
 }
 void AnalyzerSoft::PublishConfig(const json &options) {
   if(pMQTTClient.socketfd != -1) {
     string TextMsg = options.dump();
     string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/Config" : pSerial + "/Config";
     mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
-    LOGFile::Debug("Analyzer '%s' publish message to MQTT broker\n", pSerial.c_str());
+    LogFile::Debug("Analyzer '%s' publish message to MQTT broker\n", pSerial.c_str());
   }
 }
 float AnalyzerSoft::CalcChange(const float in, const float reference) {
@@ -694,7 +695,7 @@ void AnalyzerSoft::InitAlarmParser(Parser &parser, const string &expr, const Agg
   try {
     parser.SetExpr(expr);
   } catch(Parser::exception_type &e) {
-    LOGFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", pSerial.c_str());
+    LogFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", pSerial.c_str());
   }
 }
 void AnalyzerSoft::Analyzer_Func() {
@@ -774,7 +775,7 @@ void AnalyzerSoft::Analyzer_Func() {
   }
   if(pEventsWorker != NULL) pEventsWorker->Wait();
   if(pSequence < 100) {
-    LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "\n", pSerial.c_str(), Tools::GetTime64() - Start, pSequence);
+    LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "\n", pSerial.c_str(), Tools::GetTime64() - Start, pSequence);
     InitAggreg(pAggreg200MS, AGGREG_200MS);
     pBlockSamples     = 0;
     pBlockCyclesCount = 0;
@@ -785,7 +786,7 @@ void AnalyzerSoft::Analyzer_Func() {
   }
   pNowDataLock.ProviderWrite();
   if((pSequence % 15) == 0) {
-    LOGFile::Debug("Storing 3S aggregation for analyzer '%s'\n", pSerial.c_str());
+    LogFile::Debug("Storing 3S aggregation for analyzer '%s'\n", pSerial.c_str());
     NormalizeAggreg(pAggreg3S);
     if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg3S);
     if(pAggreg3S.Flag == false) {
@@ -802,7 +803,7 @@ void AnalyzerSoft::Analyzer_Func() {
   AccumulateAggreg(pAggreg3S, pAggreg200MS);
 
   if((pAggreg1M.Timestamp != 0) && ((pAggreg1M.Timestamp / 60000) < (pAggreg200MS.Timestamp / 60000))) {
-    LOGFile::Debug("Storing 1M aggregation for analyzer '%s'\n", pSerial.c_str());
+    LogFile::Debug("Storing 1M aggregation for analyzer '%s'\n", pSerial.c_str());
     pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
     NormalizeAggreg(pAggreg1M);
     if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg1M);
@@ -814,7 +815,7 @@ void AnalyzerSoft::Analyzer_Func() {
   AccumulateAggreg(pAggreg1M, pAggreg200MS);
 
   if((pAggreg10M.Timestamp != 0) && ((pAggreg10M.Timestamp / 600000) < (pAggreg200MS.Timestamp / 600000))) {
-    LOGFile::Debug("Storing 10M aggregation for analyzer '%s\n", pSerial.c_str());
+    LogFile::Debug("Storing 10M aggregation for analyzer '%s\n", pSerial.c_str());
     pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
     NormalizeAggreg(pAggreg10M);
     if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg10M);
@@ -853,7 +854,7 @@ void AnalyzerSoft::Analyzer_Func() {
   AccumulateAggreg(pAggreg10M, pAggreg200MS);
 
   if((pAggreg15M.Timestamp != 0) && ((pAggreg15M.Timestamp / 900000) < (pAggreg200MS.Timestamp / 900000))) {
-    LOGFile::Debug("Storing 15M aggregation for analyzer '%s'\n", pSerial.c_str());
+    LogFile::Debug("Storing 15M aggregation for analyzer '%s'\n", pSerial.c_str());
     pAggreg15M.Timestamp = pAggreg15M.Timestamp / 900000 * 900000 + 899999;
     NormalizeAggreg(pAggreg15M);
     if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg15M);
@@ -865,7 +866,7 @@ void AnalyzerSoft::Analyzer_Func() {
   AccumulateAggreg(pAggreg15M, pAggreg200MS);
 
   if((pAggreg1H.Timestamp != 0) && ((pAggreg1H.Timestamp / 3600000) < (pAggreg200MS.Timestamp / 3600000))) {
-    LOGFile::Debug("Storing 1H aggregation for analyzer '%s'\n", pSerial.c_str());
+    LogFile::Debug("Storing 1H aggregation for analyzer '%s'\n", pSerial.c_str());
     pAggreg1H.Timestamp = pAggreg1H.Timestamp / 3600000 * 3600000 + 3599999;
     NormalizeAggreg(pAggreg1H);
     if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg1H);
@@ -878,7 +879,7 @@ void AnalyzerSoft::Analyzer_Func() {
 
   if(pAlarmsWorker != NULL) pAlarmsWorker->Run(&pAggreg200MS);
   if(pSave200MS) {
-    LOGFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", pSerial.c_str());
+    LogFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", pSerial.c_str());
     SaveAggreg(pAggreg200MS);
   }
   if(pAlarmsWorker != NULL) pAlarmsWorker->Wait();
@@ -888,7 +889,7 @@ void AnalyzerSoft::Analyzer_Func() {
   //  SysStatus->Events = This->pAggreg200MS.Flag;
   //  SysStatus->Lock.Unlock();
   pNowDataLock.ProviderWait();
-  LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")\n", pSerial.c_str(), Tools::GetTime64() - Start, pSequence, pAggreg200MS.Timestamp);
+  LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")\n", pSerial.c_str(), Tools::GetTime64() - Start, pSequence, pAggreg200MS.Timestamp);
   InitAggreg(pAggreg200MS, AGGREG_200MS);
   pBlockSamples     = 0;
   pBlockCyclesCount = 0;
@@ -949,7 +950,7 @@ void AnalyzerSoft::Events_Func() {
       }
       if(IsRunning == false) {
         string  Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
-        LOGFile::Debug("Event '%s' closed on analyzer '%s'\n", Type.c_str(), pSerial.c_str());
+        LogFile::Debug("Event '%s' closed on analyzer '%s'\n", Type.c_str(), pSerial.c_str());
         Database DB(pSerial);
         DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", reference = " + DB.Bind(pEvent.Reference, pVoltageChannels) + ", peak = " + DB.Bind(pEvent.PeakValue, pVoltageChannels) + ", change = " + DB.Bind(pEvent.ChangeValue, pVoltageChannels) + ", duration = " + DB.Bind(pEvent.SamplesDuration) + " WHERE starttime = " + DB.Bind(pEvent.Start));
         if(pEvent.CyclesDuration < pPrevCyclesLen) {
@@ -1003,7 +1004,7 @@ void AnalyzerSoft::Events_Func() {
       pAggreg200MS.Flag = true;
       if(pEvent.SamplesDuration == 0) {
         string Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
-        LOGFile::Debug("New event '%s' started on analyzer '%s'\n", Type.c_str(), pSerial.c_str());
+        LogFile::Debug("New event '%s' started on analyzer '%s'\n", Type.c_str(), pSerial.c_str());
         pEvent.Start = pAggreg200MS.Timestamp + (uint32_t)((Pos * 1000) / pSamplerate);
         Database DB(pSerial);
         DB.ExecSentenceNoResult("INSERT INTO events(starttime, evttype, samplerate, reference, peak, change, notes, duration) VALUES (" + DB.Bind(pEvent.Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent.Reference, pVoltageChannels) + ", " + DB.Bind(pEvent.PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent.ChangeValue, pVoltageChannels) + ", '', 0)");
@@ -1061,7 +1062,7 @@ void AnalyzerSoft::Events_Func() {
       Event_t *Tmp = &pEvents.front();
       if((Tmp->SamplesDuration < pPrevSamplesLen) || (Tmp->CyclesDuration < pPrevCyclesLen)) break;
       string Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
-      LOGFile::Debug("Event '%s' on analyzer '%s' finished\n", Type.c_str(), pSerial.c_str());
+      LogFile::Debug("Event '%s' on analyzer '%s' finished\n", Type.c_str(), pSerial.c_str());
       pEvents.pop_front();
     }
     Pos             = Pos + CycleLen;
@@ -1097,19 +1098,19 @@ void AnalyzerSoft::Alarms_Func(Params_t *aggreg) {
         *Byte |= (1 << Bit);
       }
     } catch (Parser::exception_type &e) {
-      LOGFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", pSerial.c_str());
+      LogFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", pSerial.c_str());
     }
     Alarm.ResultPos = (Alarm.ResultPos + 1) % Alarm.Window;
     if((Alarm.ResultCount == Alarm.Samples) && (Alarm.Triggered == false)) {
       Alarm.Triggered = true;
-      LOGFile::Debug("Alarm triggered on analyzer '%s'\n", pSerial.c_str());
+      LogFile::Debug("Alarm triggered on analyzer '%s'\n", pSerial.c_str());
       Database DB(pSerial);
       DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", true, " + DB.Bind(Alarm.Priority) + ")");
       if(pMQTTAlarms == true) PublishAlarm(aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
       Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
     } else if((Alarm.ResultCount == 0) && (Alarm.Triggered == true)) {
       Alarm.Triggered = false;
-      LOGFile::Debug("Alarm reseted on analyzer '%s'\n", pSerial.c_str());
+      LogFile::Debug("Alarm reseted on analyzer '%s'\n", pSerial.c_str());
       Database DB(pSerial);
       DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", false, " + DB.Bind(Alarm.Priority) + ")");
       if(pMQTTAlarms == true) PublishAlarm(aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
@@ -1157,9 +1158,9 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
         }
       }
       if(Cookie != "") {
-        LOGFile::Debug("Analyzer '%s' logged on remote server\n", This->pSerial.c_str());
+        LogFile::Debug("Analyzer '%s' logged on remote server\n", This->pSerial.c_str());
       } else {
-        LOGFile::Debug("Analyzer '%s' can not login on remote server\n", This->pSerial.c_str());
+        LogFile::Debug("Analyzer '%s' can not login on remote server\n", This->pSerial.c_str());
         usleep(1000000);
       }
     } else {
@@ -1177,13 +1178,13 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
         if(This->pSyncTerminate == true) return false;
         if(response.status == HTTP_UNAUTHORIZED) {
           Cookie = "";
-          LOGFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pSerial.c_str());
+          LogFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...\n", This->pSerial.c_str());
           usleep(1000000);
           return false;
         } else if(response.status == HTTP_OK) {
           return true;
         } else {
-          LOGFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)\n", This->pSerial.c_str(), response.status);
+          LogFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)\n", This->pSerial.c_str(), response.status);
           usleep(1000000);
           return false;
         }
@@ -1194,7 +1195,7 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
         string Msg(&data[5], len - 5);
         json Content = json::parse(Msg, NULL, false);
         if((Content.is_discarded() == true) || (Content.is_object() == false)) return true;
-        LOGFile::Debug("Analyzer '%s' receive querie from remote server\n", This->pSerial.c_str());
+        LogFile::Debug("Analyzer '%s' receive querie from remote server\n", This->pSerial.c_str());
         if((Content["Sequence"].is_number() == false) || (Content["Method"].is_string() == false) || (Content["Params"].is_object() == false)) return false;
         Sync_t *Request = new Sync_t;
         Request->Count        = &ThreadsCount;
@@ -1209,7 +1210,7 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
         pthread_t Thread;
         pthread_mutex_lock(&Mutex);
         if(pthread_create(&Thread, NULL, Sync_RespThread, (void*)Request) != 0) {
-          LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+          LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
           delete Request;
         } else {
           pthread_setname_np(Thread, "SyncWorker");
@@ -1225,7 +1226,7 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
   }
   pthread_mutex_lock(&Mutex);
   while(ThreadsCount > 0) {
-    LOGFile::Debug("Analyzer '%s' flusing remote request (%d pending)\n", This->pSerial.c_str(), ThreadsCount);
+    LogFile::Debug("Analyzer '%s' flusing remote request (%d pending)\n", This->pSerial.c_str(), ThreadsCount);
     pthread_cond_wait(&Cond, &Mutex);
   }
   pthread_mutex_unlock(&Mutex);
@@ -1263,14 +1264,14 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
       sprintf(Port, "%u", Url.Port());
       int Error = getaddrinfo(Url.Host().c_str(), Port, &Hints, &ServInfo);
       if(Error != 0) {
-        LOGFile::Error("%s:%d -> %d\n", __func__, __LINE__, Error);
+        LogFile::Error("%s:%d -> %d\n", __func__, __LINE__, Error);
         usleep(1000000);
         continue;
       }
       for(addrinfo *p = ServInfo; p != NULL; p = p->ai_next) {
         This->pMQTTClient.socketfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
         if(This->pMQTTClient.socketfd == -1) {
-          LOGFile::Error("%s:%d -> (%s)\n", __func__, __LINE__, strerror(errno));
+          LogFile::Error("%s:%d -> (%s)\n", __func__, __LINE__, strerror(errno));
           continue;
         }
         if(connect(This->pMQTTClient.socketfd, p->ai_addr, p->ai_addrlen) == -1) {
@@ -1283,14 +1284,14 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
       }
       freeaddrinfo(ServInfo);
       if(This->pMQTTClient.socketfd == -1) {
-        LOGFile::Debug("Analyzer '%s' can not connect to MQTT broker\n", This->pSerial.c_str());
+        LogFile::Debug("Analyzer '%s' can not connect to MQTT broker\n", This->pSerial.c_str());
         usleep(1000000);
         continue;
       } else {
         mqtt_reinit(&This->pMQTTClient, This->pMQTTClient.socketfd, This->pMQTTSendBuff, This->pMQTTBuffSize, This->pMQTTRecvBuff, This->pMQTTBuffSize);
       }
     } else if(This->pMQTTClient.error != MQTT_OK) {
-      LOGFile::Error("MQTT ERROR: %s (%d)\n", mqtt_error_str(This->pMQTTClient.error), This->pMQTTClient.error);
+      LogFile::Error("MQTT ERROR: %s (%d)\n", mqtt_error_str(This->pMQTTClient.error), This->pMQTTClient.error);
     }
     usleep(100000);
   }
@@ -1303,7 +1304,7 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
 void *AnalyzerSoft::Sync_RespThread(void *args) {
   Sync_t *This = (Sync_t*)args;
   This->Params["UserName"] = "admin";
-  LOGFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
+  LogFile::Debug("Remote server request query '%s' for analyzar '%s'\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
   Response Resp;
   if(This->Method == "getAnalyzer") {
     This->Analyzer->GetAnalyzer(This->Params, Resp);
@@ -1343,12 +1344,12 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
   HTTPClient.set_compress(true);
   auto Response = HTTPClient.Post(string(Url.Path() + "/setRemote").c_str(), Header, Content.dump(), "application/json");
   if((Response != nullptr) && (Response->status == HTTP_OK)) {
-    LOGFile::Debug("Remote request '%s' for analyzer '%s' completed\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
+    LogFile::Debug("Remote request '%s' for analyzer '%s' completed\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
   } else {
     if(Response != nullptr)
-      LOGFile::Error("Remote request '%s' for analyzer '%s' failed (ERROR: %d)\n", This->Method.c_str(), This->Analyzer->pSerial.c_str(), Response->status);
+      LogFile::Error("Remote request '%s' for analyzer '%s' failed (ERROR: %d)\n", This->Method.c_str(), This->Analyzer->pSerial.c_str(), Response->status);
     else
-      LOGFile::Error("Remote request '%s' for analyzer '%s' failed (can not connect)\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
+      LogFile::Error("Remote request '%s' for analyzer '%s' failed (can not connect)\n", This->Method.c_str(), This->Analyzer->pSerial.c_str());
   }
   pthread_mutex_lock(This->Mutex);
   *This->Count = *This->Count - 1;
@@ -1390,7 +1391,7 @@ json AnalyzerSoft::CalcGA() {
   return Result;
 }
 void AnalyzerSoft::PeriodicTasks() {
-  LOGFile::Debug("Removing old data for analyzer '%s'\n", pSerial.c_str());
+  LogFile::Debug("Removing old data for analyzer '%s'\n", pSerial.c_str());
   Database DB(pSerial);
   uint64_t Now = Tools::GetTime64();
   if(Now > 86400000) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Now - 86400000));   //Delete 1 day old
@@ -1408,7 +1409,7 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   if((params.contains("Rates") == false) || (params["Rates"].is_boolean() == false) || (params["Rates"] == false)) {
     Response.erase("Rates");
   } else {
-    Response["RateModules"] = PriceModule::GetVarsInfo();
+    Response["RateModules"] = PriceSource::GetVarsInfo();
   }
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT json_build_object('Read', read, 'Write', write, 'Configure', config, 'EventsRead', eventsread, 'AlarmsRead', alarmsread) as access FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));

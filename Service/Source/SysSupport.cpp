@@ -21,6 +21,8 @@
 #ifndef __BUILD__
   #define __BUILD__ "UNKNOWN"
 #endif
+#include "ConfigManager.h"
+#include "LogFile.h"
 #include "SysSupport.h"
 #include "HTTPServer.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -74,7 +76,7 @@ SysSupport::SysSupport() {
   ConfigManager::WriteConfig("/Bluetooth", Config);
   if(pthread_create(&pBTThread, NULL, Bluetooth_Thread, NULL) != 0) {
     pBTThread = 0;
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   } else {
     pthread_setname_np(pBTThread, "Bluetooth");
   }
@@ -99,7 +101,7 @@ SysSupport::SysSupport() {
   #endif
 }
 SysSupport::~SysSupport() {
-  LOGFile::Debug("Stopping SysSupport\n");
+  LogFile::Debug("Stopping SysSupport\n");
   HTTPServer::UnregisterCallback("getVersion");
   HTTPServer::UnregisterCallback("getUsers");
   HTTPServer::UnregisterCallback("getUser");
@@ -121,7 +123,7 @@ SysSupport::~SysSupport() {
   if(pBTThread != 0) pthread_join(pBTThread, NULL);
   pBTThread = 0;
   #endif
-  LOGFile::Debug("SysSupport stopped\n");
+  LogFile::Debug("SysSupport stopped\n");
 }
 json SysSupport::GetSystemStatusJSON() {
   json Result = json::object();
@@ -158,7 +160,7 @@ void SysSupport::PeriodicTask() {
     pSystemActions.pop();
     pthread_mutex_unlock(&pSystemActionMutex);
     #ifdef OPENWRT
-    if(Action != "") LOGFile::Info("Received '%s' action\n", Action.c_str());
+    if(Action != "") LogFile::Info("Received '%s' action\n", Action.c_str());
     if(Action == "PowerOff") {
       Run("poweroff");
     } else if(Action == "ToogleBluetooth") {
@@ -178,9 +180,9 @@ void SysSupport::PeriodicTask() {
   struct sysinfo Info;
   struct statvfs Disk;
   int Error1 = sysinfo(&Info);
-  if(Error1 != 0) LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  if(Error1 != 0) LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   int Error2 = statvfs("/", &Disk);
-  if(Error2 != 0) LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+  if(Error2 != 0) LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
   pSysStatLock.WriteLock();
   pUpTime = (Error1 != 0) ? 0 : Info.uptime;
   pSwap_Total = (Error1 != 0) ? 0 : (uint64_t)Info.totalswap * Info.mem_unit;
@@ -239,7 +241,7 @@ void *SysSupport::Bluetooth_Thread(void *params) {
   chmod("/dev/watchdog", S_IWUSR | S_IWGRP | S_IWOTH);
   int WatchdogFD = open("/dev/watchdog", O_WRONLY);
   if(WatchdogFD == -1) {
-    LOGFile::Error("Watchdog is not avaliable (%s)\n", strerror(errno));
+    LogFile::Error("Watchdog is not avaliable (%s)\n", strerror(errno));
     WatchdogFD = 0;
   } else {
     int Timeout = 20;
@@ -257,7 +259,7 @@ void *SysSupport::Bluetooth_Thread(void *params) {
       dbus_error_init(&Error);
       DBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
       if(dbus_error_is_set(&Error)) {
-        LOGFile::Error("Can not open DBus connection (%s)\n", Error.message);
+        LogFile::Error("Can not open DBus connection (%s)\n", Error.message);
         dbus_error_free(&Error);
         usleep(1000000);
         continue;
@@ -275,7 +277,7 @@ void *SysSupport::Bluetooth_Thread(void *params) {
         DBusMessageIter Args;
         dbus_message_iter_init(Msg, &Args);
         dbus_message_iter_get_basic(&Args, &Param);
-        LOGFile::Info("Authorized BT client: '%s'\n", Param);
+        LogFile::Info("Authorized BT client: '%s'\n", Param);
         DBusMessage *Reply = dbus_message_new_method_return(Msg);
         dbus_connection_send(DBus, Reply, &Serial);
         dbus_connection_flush(DBus);
@@ -319,7 +321,7 @@ void *SysSupport::Bluetooth_Thread(void *params) {
       Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
       if(Reply) dbus_message_unref(Reply);
       dbus_message_unref(Msg);
-      LOGFile::Info("Bluetooth interface UP\n");
+      LogFile::Info("Bluetooth interface UP\n");
       pSysStatLock.WriteLock();
       pBTServerName = NetName;
       pBT_Enabled = true;
@@ -341,7 +343,7 @@ void *SysSupport::Bluetooth_Thread(void *params) {
       Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
       if(Reply) dbus_message_unref(Reply);
       dbus_message_unref(Msg);
-      LOGFile::Info("Bluetooth interface DOWN\n");
+      LogFile::Info("Bluetooth interface DOWN\n");
       pSysStatLock.WriteLock();
       pBTServerName = "";
       pBT_Enabled = false;
@@ -353,7 +355,7 @@ void *SysSupport::Bluetooth_Thread(void *params) {
     write(WatchdogFD, "V", 1);
     close(WatchdogFD);
   }
-  LOGFile::Debug("Watchdog stopped\n");
+  LogFile::Debug("Watchdog stopped\n");
   return NULL;
 }
 string SysSupport::GetMacBT(DBusConnection *bus) {
@@ -431,7 +433,7 @@ string SysSupport::Run(string command, int *resultCode) {
   string Result = "";
   FILE *Pipe = popen(command.c_str(), "r");
   if(!Pipe) {
-    LOGFile::Error("Can not exec '%s' (%s)\n", command.c_str(), strerror(errno));
+    LogFile::Error("Can not exec '%s' (%s)\n", command.c_str(), strerror(errno));
     if(resultCode != NULL) *resultCode = -1;
     return "";
   }
@@ -780,7 +782,7 @@ void SysSupport::SetNTPCallback(const json &params, Response &response) {
     TimeVal.tv_usec = Time % 1000;
     if(settimeofday(&TimeVal, NULL) != 0) {
       Result["Status"] = false;
-      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     }
   }
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);

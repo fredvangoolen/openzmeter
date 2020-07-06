@@ -18,12 +18,16 @@
 #include <errno.h>
 #include <cctz/time_zone.h>
 #include "Tools.h"
+#include "LogFile.h"
+#include "PidFile.h"
 #include "HTTPServer.h"
 #include "Telegram.h"
 #include "DeviceManager.h"
 #include "AnalyzerManager.h"
+#include "TariffManager.h"
 #include "SysSupport.h"
-#include "Tariffs/ESIOS.h"
+#include "Tariffs/ESIOS/ESIOSFetch.h"
+#include "ConfigManager.h"
 #include "MODBus.h"
 #include "DatabasePool.h"
 //---------------------------------------------------------------------------------------------------------------------
@@ -31,7 +35,7 @@ using namespace cctz;
 volatile bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
-  LOGFile::Info("Shutting down. Please wait while all task ends...\n");
+  LogFile::Info("Shutting down. Please wait while all task ends...\n");
   Terminate = true;
 }
 int main(int argc, char** argv) {
@@ -48,7 +52,7 @@ int main(int argc, char** argv) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
       ConfigFileName = &argv[i][9];
     } else if(strcmp(argv[i], "--debug") == 0) {
-      LOGFile::EnableDebug();
+      LogFile::EnableDebug();
     } else if(strcmp(argv[i], "--daemon") == 0) {
       Tools::RunDaemon();
     } else if(strcmp(argv[i], "--help") == 0) {
@@ -64,9 +68,9 @@ int main(int argc, char** argv) {
   /* Load config file */
   ConfigManager ConfigManager(ConfigFileName);
   /* Create PID File */
-  PIDFile PIDFile;
+  PidFile PIDFile;
   /* Create LOG file */
-  LOGFile LOGFile;
+  LogFile LogFile;
   /* Create database tables */
   DatabasePool DBPool;
   /* Create WEB service */
@@ -76,13 +80,13 @@ int main(int argc, char** argv) {
   /* Create Telegram manager */
   Telegram TG;
   /* Create tariffs interface */
-//  TariffsManager TariffsManager;
+  TariffManager TariffManager;
   /* Create analyzers interface */
   AnalyzerManager AnalyzerManager;
   /* Create devices interface */
   DeviceManager DeviceManager;
   /* Create ESIOS */
-  ESIOS Esios;
+  ESIOSFetch Esios;
   /* Create ModbusTCP */
   ModbusTCP Modbus;
   nice(-20);

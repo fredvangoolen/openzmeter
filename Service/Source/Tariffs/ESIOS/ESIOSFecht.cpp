@@ -13,19 +13,17 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "cctz/time_zone.h"
-#include "Database.h"
-#include "ESIOS.h"
+#include "ESIOSFetch.h"
+#include "ConfigManager.h"
+#include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
-using namespace cctz;
+uint64_t                  ESIOSFetch::pSyncDate    = 1262304000000;
+string                    ESIOSFetch::pToken       = "";
+pthread_t                 ESIOSFetch::pThread      = 0;
+pthread_mutex_t           ESIOSFetch::pMutex       = PTHREAD_MUTEX_INITIALIZER;
+volatile bool             ESIOSFetch::pTerminate   = false;
 // ---------------------------------------------------------------------------------------------------------------------
-uint64_t                  ESIOS::pSyncDate    = 1262304000000;
-string                    ESIOS::pToken       = "";
-pthread_t                 ESIOS::pThread      = 0;
-pthread_mutex_t           ESIOS::pMutex       = PTHREAD_MUTEX_INITIALIZER;
-volatile bool             ESIOS::pTerminate   = false;
-// ---------------------------------------------------------------------------------------------------------------------
-vector<ESIOS::Variable_t> ESIOS::pVariables = {
+vector<ESIOSFetch::Variable_t> ESIOSFetch::pVariables = {
   {  773, 8741, "hour", "v773",  "(773) Pagos por capacidad tarifa seis periodos" },
   {  792, 8741, "hour", "v792",  "(792) Precio medio horario componente mercado diario contratación libre" },
   {  793, 8741, "hour", "v793",  "(793) Precio medio horario componente restricciones PBF contratación libre" },
@@ -41,20 +39,20 @@ vector<ESIOS::Variable_t> ESIOS::pVariables = {
   { 1368, 8741, "hour", "v1368", "(1368) Precio medio horario componente incumplimiento energía de balance " },
 };
 // ---------------------------------------------------------------------------------------------------------------------
-ESIOS::ESIOS() {
+ESIOSFetch::ESIOSFetch() {
   Database DB;
   for(uint16_t V = 0; V < pVariables.size(); V++) DB.ExecSentenceNoResult("ALTER TABLE esios ADD COLUMN IF NOT EXISTS " + DB.BindID(pVariables[V].VarName) + " real NULL");
   HTTPServer::RegisterCallback("getESIOS", GetESIOSCallback);
   HTTPServer::RegisterCallback("setESIOS", SetESIOSCallback);
   Configure(CheckConfig(ConfigManager::ReadConfig("/ESIOS")));
 }
-ESIOS::~ESIOS() {
+ESIOSFetch::~ESIOSFetch() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
   pthread_mutex_unlock(&pMutex);
   if(pThread != 0) pthread_join(pThread, NULL);
 }
-json ESIOS::CheckConfig(const json &config) {
+json ESIOSFetch::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Token"] = "";
   ConfigOUT["Enabled"] = false;
@@ -64,7 +62,7 @@ json ESIOS::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-void ESIOS::Configure(const json &config) {
+void ESIOSFetch::Configure(const json &config) {
   ConfigManager::WriteConfig("/ESIOS", config);
   bool Enable = config["Enabled"];
   pthread_mutex_lock(&pMutex);
@@ -73,7 +71,7 @@ void ESIOS::Configure(const json &config) {
     pTerminate = false;
     if(pthread_create(&pThread, NULL, Thread_Func, NULL) != 0) {
       pThread = 0;
-      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     } else {
       pthread_setname_np(pThread, "ESIOSClient");
     }
@@ -84,7 +82,7 @@ void ESIOS::Configure(const json &config) {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void ESIOS::GetESIOSCallback(const json &params, Response &response) {
+void ESIOSFetch::GetESIOSCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = ConfigManager::ReadConfig("/ESIOS");
   pthread_mutex_lock(&pMutex);
@@ -92,15 +90,15 @@ void ESIOS::GetESIOSCallback(const json &params, Response &response) {
   pthread_mutex_unlock(&pMutex);
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
-void ESIOS::SetESIOSCallback(const json &params, Response &response) {
+void ESIOSFetch::SetESIOSCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Token") == false) || (params["Token"].is_string() == false)) return HTTPServer::FillResponse(response, "'Token' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Configure(CheckConfig(params));
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
-void *ESIOS::Thread_Func(void *params) {
-  ESIOS    *This = (ESIOS*)params;
+void *ESIOSFetch::Thread_Func(void *params) {
+  ESIOSFetch *This = (ESIOSFetch*)params;
   SSLClient Client("api.esios.ree.es", 443);
   Client.set_keep_alive(true);
   Client.set_connection_timeout(30);
@@ -112,13 +110,13 @@ void *ESIOS::Thread_Func(void *params) {
     string   Token = This->pToken;
     uint64_t To    = pSyncDate + 863999999;
     pthread_mutex_unlock(&pMutex);
-    LOGFile::Debug("ESIOS request start (Up to %" PRIu64 ")\n", To);
+    LogFile::Debug("ESIOS request start (Up to %" PRIu64 ")\n", To);
     bool     Fail   = false;
     for(uint16_t V = 0; (Fail == false) && (V < pVariables.size()); V++) Fail = !FetchIndicator(Client, Token, pVariables[V], To);
     if(Fail == true) {
       usleep(1000000);
     } else {
-      LOGFile::Debug("ESIOS request finished\n");
+      LogFile::Debug("ESIOS request finished\n");
       pthread_mutex_lock(&pMutex);
       if(pSyncDate < (Tools::GetTime64() + 864000000)) pSyncDate = pSyncDate + 864000000;
       pthread_mutex_unlock(&pMutex);
@@ -127,7 +125,7 @@ void *ESIOS::Thread_Func(void *params) {
   }
   return NULL;
 }
-bool ESIOS::FetchIndicator(SSLClient &client, const string &token, const Variable_t &var, uint64_t to) {
+bool ESIOSFetch::FetchIndicator(SSLClient &client, const string &token, const Variable_t &var, uint64_t to) {
   Database DB;
   time_t   Time;
   tm       Timestamp;
@@ -155,55 +153,4 @@ bool ESIOS::FetchIndicator(SSLClient &client, const string &token, const Variabl
   Query += " ON CONFLICT(timestamp) DO UPDATE SET " + DB.BindID(var.VarName) + " = EXCLUDED." + DB.BindID(var.VarName);
   return DB.ExecSentenceNoResult(Query);
 }
-//----------------------------------------------------------------------------------------------------------------------
-string ESIOS_PriceModule::pQueryColumns;
-bool   ESIOS_PriceModule::pRegistered = ESIOS_PriceModule::Register();
-//----------------------------------------------------------------------------------------------------------------------
-bool ESIOS_PriceModule::Register() {
-  PriceModule::pModules.insert( { "ESP_ESIOS", { CreateInstance, GetVarsInfo } } );
-  for(uint16_t V = 0; V < ESIOS::pVariables.size(); V++) pQueryColumns += ESIOS::pVariables[V].VarName + ", ";
-  pQueryColumns += "timestamp";
-  return true;
-}
-PriceModule *ESIOS_PriceModule::CreateInstance() {
-  return new ESIOS_PriceModule();
-}
-ESIOS_PriceModule::ESIOS_PriceModule() {
-}
-ESIOS_PriceModule::~ESIOS_PriceModule() {
-}
-void ESIOS_PriceModule::PrepareRange(const uint64_t from, const uint64_t to) {
-  pDB.ExecSentenceAsyncResult("SELECT " + pQueryColumns + " FROM esios WHERE timestamp >= " + pDB.Bind(from) + " AND timestamp <=" + pDB.Bind(to) + " ORDER BY timestamp ASC");
-  pHaveData = pDB.FecthRow();
-}
-void ESIOS_PriceModule::GetParams(const uint64_t sampletime, map<string, float> &vars) {
-  while((pHaveData == true) && ((pDB.ResultUInt64("timestamp") / 3600000) < (sampletime / 3600000))) pHaveData = pDB.FecthRow();
-  if((pHaveData == true) && ((pDB.ResultUInt64("timestamp") / 3600000) == (sampletime / 3600000))) {
-    for(uint16_t V = 0; V < ESIOS::pVariables.size(); V++) {
-      float Tmp = pDB.ResultFloat(ESIOS::pVariables[V].VarName);
-      vars[ESIOS::pVariables[V].VarName] = isnan(Tmp) ? 0 : Tmp;
-    }
-  } else {
-    for(uint16_t V = 0; V < ESIOS::pVariables.size(); V++) vars[ESIOS::pVariables[V].VarName] = 0.0;
-  }
-}
-json ESIOS_PriceModule::GetVarsInfo() {
-  json Tmp = json::array();
-  uint64_t Now = Tools::GetTime64();
-  Database DB;
-  DB.ExecSentenceAsyncResult("SELECT " + pQueryColumns + " FROM esios WHERE timestamp <= " + DB.Bind(Now) + " ORDER BY timestamp DESC LIMIT 1");
-  bool HaveData = DB.FecthRow();
-  for(uint16_t V = 0; V < ESIOS::pVariables.size(); V++) {
-    json Var = json::object();
-    Var["Name"] = ESIOS::pVariables[V].VarName;
-    Var["Description"] = ESIOS::pVariables[V].Description;
-    if(HaveData == true) {
-      float Tmp = DB.ResultFloat(ESIOS::pVariables[V].VarName);
-      Var["Value"] = isnan(Tmp) ? 0 : Tmp;
-    } else {
-      Var["Value"] = 0.0;
-    }
-    Tmp.push_back(Var);
-  }
-  return Tmp;
-}
+// ---------------------------------------------------------------------------------------------------------------------

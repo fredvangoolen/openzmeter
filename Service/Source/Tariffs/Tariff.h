@@ -21,6 +21,8 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 #include "Analyzer.h"
+#include "Rate.h"
+#include "PriceSource.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 using namespace mu;
@@ -28,59 +30,7 @@ using namespace mu;
 class Rates final {
   friend class RatesEval;
   private :
-    enum Concept_Type { CONCEPT_INFO, CONCEPT_COST_ENERGY, CONCEPT_COST_POWER, CONCEPT_COST };
-    enum Tax_Type { TAX_PERCENT, TAX_PERCENT_POWER, TAX_PERCENT_ENERGY, TAX_PERCENT_ENERGY_POWER, TAX_FIXED };
-    typedef struct {
-      string                        Description;
-      string                        Variable;
-      Concept_Type                  Type;
-    } Concept_t;
-    typedef struct {
-      string                        Name;
-      float                         DefaultPowerCost;
-      float                         DefaultEnergyCost;
-      string                        Color;
-      string                        Script;
-      vector<Concept_t>             Concepts;
-    } Period_t;
-    typedef struct {
-      string                        Name;
-      string                        Color;
-      uint16_t                      Quarters[96];
-    } Day_t;
-    typedef struct {
-      uint16_t                      Year;
-      uint16_t                      Days[366];
-    } Year_t;
-    typedef struct {
-      Tax_Type                      Type;
-      float                         Value;
-      string                        Description;
-    } Tax_t;
-    typedef struct {
-      string                        Name;
-      string                        Description;
-      string                        Currency;
-      string                        PowerUnits;
-      string                        EnergyUnits;
-      string                        Script;
-      vector<Tax_t>                 Taxs;
-      vector<Concept_t>             Concepts;
-      vector<Period_t>              Periods;
-      vector<Day_t>                 Days;
-      vector<Year_t>                Years;
-      vector<float>                 Contracted;
-      string                        PowerCostScript;
-      vector<float>                 PowerCost;
-      string                        EnergyCostScript;
-      vector<float>                 EnergyCost;
-      uint64_t                      StartDate;
-      string                        PriceSource;
-      uint64_t                      EndDate;
-      vector<uint64_t>              BillingCycles;
-    } Rate_t;
-  private :
-    vector<Rate_t>                  pRates;
+    vector<Rate>                    pRates;
     time_zone const                *pTimeZone;
   private :
     static float                    pTmpVar;
@@ -90,37 +40,6 @@ class Rates final {
     static json CheckRateConfig(const json &t);
   public :
     Rates(const json &t, const time_zone &timezone);
-};
-//----------------------------------------------------------------------------------------------------------------------
-class PriceModule {
-  protected :
-    typedef struct {
-      PriceModule* (*Constructor)();
-      json         (*Info)();
-    } Module_t;
-  protected :
-    static map<string, Module_t> pModules;
-  protected :
-    PriceModule();
-  public :
-    static PriceModule *CreateInstance(const string &name);
-    static json         GetVarsInfo();
-  public :
-    virtual ~PriceModule();
-    virtual void GetParams(const uint64_t sampletime, map<string, float> &vars) = 0;
-    virtual void PrepareRange(const uint64_t from, const uint64_t to) = 0;
-};
-//----------------------------------------------------------------------------------------------------------------------
-class None_PriceModule final : public PriceModule {
-  private :
-    static bool         pRegistered;
-  private :
-    static bool         Register();
-    static PriceModule *CreateInstance();
-    static json         GetVarsInfo();
-  public :
-    void GetParams(const uint64_t sampletime, map<string, float> &vars) override;
-    void PrepareRange(const uint64_t from, const uint64_t to) override;
 };
 //----------------------------------------------------------------------------------------------------------------------
 class RatesEval final {
@@ -151,10 +70,10 @@ class RatesEval final {
     uint64_t                            pNowDate;
     uint64_t                            pLoadedPeriodDate;
     uint64_t                            pCurrent;
-    vector<Rates::Rate_t>::iterator     pRatePtr;
-    vector<Rates::Year_t>::iterator     pYearPtr;
+    vector<Rate>::iterator              pRatePtr;
+    vector<RateYear>::iterator          pYearPtr;
     vector<uint64_t>::iterator          pBillPtr;
-    PriceModule                        *pPriceModule;
+    PriceSource                        *pPriceModule;
     SampleOut_t                         pSampleOut;
     Parser                              pEnergyScript;
     Parser                              pPowerScript;
