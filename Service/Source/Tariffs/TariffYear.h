@@ -13,13 +13,18 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "RateDay.h"
+#pragma once
+#include "nlohmann/json.h"
 // ---------------------------------------------------------------------------------------------------------------------
-RateDay::RateDay(const json &config) {
-  Name = config["Name"];
-  Color = config["Color"];
-  for(uint8_t Q = 0; Q < 96; Q++) Quarters[Q] = config["Quarters"][Q];
-}
-RateDay::~RateDay() {
-}
+using json = nlohmann::json;
+// ---------------------------------------------------------------------------------------------------------------------
+class TariffYear final {
+  public :
+    uint16_t     Year;
+    uint16_t     Days[366];
+  public :
+    static json CheckConfig(const json &config, const uint8_t dayTypes);
+  public :
+    TariffYear(const json &config);
+};
 // ---------------------------------------------------------------------------------------------------------------------

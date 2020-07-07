@@ -21,87 +21,43 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 #include "Analyzer.h"
-#include "Rate.h"
 #include "PriceSource.h"
+
+#include "TariffConcept.h"
+#include "TariffPeriod.h"
+#include "TariffDay.h"
+#include "TariffYear.h"
+
+
+
+
 //----------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 using namespace mu;
 //----------------------------------------------------------------------------------------------------------------------
-class Rates final {
-  friend class RatesEval;
-  private :
-    vector<Rate>                    pRates;
-    time_zone const                *pTimeZone;
-  private :
-    static float                    pTmpVar;
+class Tariff {
   public :
-    static json CheckConfig(const json &t);
-    static json CheckTariffConfig(const json &t);
-    static json CheckRateConfig(const json &t);
+    string                        Name;
+    string                        Description;
+    string                        Currency;
+    string                        PowerUnits;
+    string                        EnergyUnits;
+
+
+        vector<TariffConcept>           Concepts;
+    vector<TariffPeriod>            Periods;
+    vector<TariffDay>               Days;
+    vector<TariffYear>              Years;
+
   public :
-    Rates(const json &t, const time_zone &timezone);
+    static json CheckConfig(const json &config);
+  public :
+    Tariff(const json &config);
 };
+
+
+
+
 //----------------------------------------------------------------------------------------------------------------------
-class RatesEval final {
-  public :
-    typedef struct {
-      uint64_t                          SampleTime;
-      float                             ActivePower;
-      float                             ActiveEnergy;
-      float                             ReactivePower;
-      float                             ReactiveEnergy;
-      float                             Cost;
-      uint16_t                          Period;
-      float                             PeriodF;
-      string                            Color;
-      float                             ContractedPower;
-      float                             EnergyCost;
-      float                             PowerCost;
-    } SampleOut_t;
-  private :
-    typedef struct {
-      Parser             Script;
-      map<string, float> Variables;
-    } LoadedPeriod_t;
-  private :
-    Rates                              *pParent;
-    uint64_t                            pFrom;
-    uint64_t                            pTo;
-    uint64_t                            pNowDate;
-    uint64_t                            pLoadedPeriodDate;
-    uint64_t                            pCurrent;
-    vector<Rate>::iterator              pRatePtr;
-    vector<RateYear>::iterator          pYearPtr;
-    vector<uint64_t>::iterator          pBillPtr;
-    PriceSource                        *pPriceModule;
-    SampleOut_t                         pSampleOut;
-    Parser                              pEnergyScript;
-    Parser                              pPowerScript;
-    Parser                              pScript;
-    map<string, float>                  pVariables;
-    map<string, float>                  pPriceVariables;
-    vector<LoadedPeriod_t>              pPeriods;
-  private :
-    static float *VariableFactory(const char_type *name, void *params);
-  private:
-    function<void(const SampleOut_t &)> pSampleCallback;
-    function<void(const json &)>        pBillCallback;
-  private :
-    void     LoadRate();
-    void     UnloadRate();
-    json     BuildBill(bool complete);
-    void     HandleSample(const float active, const float reactive);
-    uint64_t FindStart(const uint64_t from, bool precise);
-    uint64_t FindEnd(const uint64_t to, bool precise);
-  public :
-    RatesEval(Rates *parent, const uint64_t from, const uint64_t to, const bool precise);
-    ~RatesEval();
-    void     PushSample(const uint64_t time, const float active, const float reactive);
-    void     Finish();
-//    void     SetPeriodCallback(function<void(const PeriodOut_t &)> periodOut);
-    void     SetSampleCallback(function<void(const SampleOut_t &)> sampleOut);
-    void     SetBillCallback(function<void(const json &)> billOut);
-    uint64_t StartDate();
-    uint64_t EndDate();
- };
+
 //----------------------------------------------------------------------------------------------------------------------

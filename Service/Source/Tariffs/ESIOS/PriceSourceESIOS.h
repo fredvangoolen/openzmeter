@@ -31,8 +31,6 @@ class PriceSourceESIOS final : public PriceSource {
     static PriceSource *CreateInstance();
     static json         GetVarsInfo();
   public :
-    PriceSourceESIOS();
-    ~PriceSourceESIOS();
     void PrepareRange(const uint64_t from, const uint64_t to);
     void GetParams(const uint64_t sampletime, map<string, float> &vars);
 };

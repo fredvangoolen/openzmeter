@@ -14,21 +14,22 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
+#include <string>
 #include "nlohmann/json.h"
 // ---------------------------------------------------------------------------------------------------------------------
+using namespace std;
 using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
 class RateTax final {
   public :
     enum Tax_Type { TAX_PERCENT, TAX_PERCENT_POWER, TAX_PERCENT_ENERGY, TAX_PERCENT_ENERGY_POWER, TAX_FIXED };
   public :
-    Tax_Type                      Type;
-    float                         Value;
-    string                        Description;
+    Tax_Type    Type;
+    float       Value;
+    string      Description;
   public :
     static json CheckConfig(const json &config);
   public :
     RateTax(const json &config);
-    ~RateTax();
 };
 // ---------------------------------------------------------------------------------------------------------------------

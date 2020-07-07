@@ -13,14 +13,15 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "PriceSourceNone.h"
+#pragma once
+#include "PriceSource.h"
 //----------------------------------------------------------------------------------------------------------------------
-class None_PriceModule final : public PriceModule {
+class PriceSourceNone final : public PriceSource {
   private :
     static bool         pRegistered;
   private :
     static bool         Register();
-    static PriceModule *CreateInstance();
+    static PriceSource *CreateInstance();
     static json         GetVarsInfo();
   public :
     void GetParams(const uint64_t sampletime, map<string, float> &vars) override;

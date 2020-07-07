@@ -16,6 +16,7 @@
 #include "HTTPWorker.h"
 #include "HTTPTaskQueue.h"
 #include "Tools.h"
+#include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 HTTPWorker::HTTPWorker(HTTPTaskQueue *parent) {
   pTerminate = false;
@@ -25,7 +26,7 @@ HTTPWorker::HTTPWorker(HTTPTaskQueue *parent) {
   pFunction  = NULL;
   if(pthread_create(&pThread, NULL, Thread, (void*)this) != 0) {
     pThread = 0;
-    LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
     return;
   }
   pthread_setname_np(pThread, "HTTPWorker");

@@ -13,14 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "RatePeriod.h"
+#include "TariffConcept.h"
 // ---------------------------------------------------------------------------------------------------------------------
-RatePeriod::RatePeriod(const json &config) {
-  Color = config["Color"];
-  DefaultPowerCost = config["DefaultPowerCost"];
-  DefaultEnergyCost = config["DefaultEnergyCost"];
-  Name = config["Name"];
-  Script = config["Script"];
-  for(uint16_t C = 0; C < config["Concepts"].size(); C++) Concepts.emplace_back(config["Concepts"][C]);
+TariffConcept::TariffConcept(const json &config) {
+  Description = config["Description"];
+  Variable = config["Variable"];
+  Type = (config["Type"] == "INFO") ? CONCEPT_INFO : (config["Type"] == "COST_POWER") ? CONCEPT_COST_POWER : (config["Type"] == "COST_ENERGY") ? CONCEPT_COST_ENERGY : CONCEPT_COST;
 }
 // ---------------------------------------------------------------------------------------------------------------------

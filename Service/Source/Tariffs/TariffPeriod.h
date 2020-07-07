@@ -13,13 +13,25 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "RateConcept.h"
+#pragma once
+#include <stdlib.h>
+#include "nlohmann/json.h"
+#include "TariffConcept.h"
 // ---------------------------------------------------------------------------------------------------------------------
-RateConcept::RateConcept(const json &config) {
-  Description = config["Description"];
-  Variable = config["Variable"];
-  Type = (config["Type"] == "INFO") ? CONCEPT_INFO : (config["Type"] == "COST_POWER") ? CONCEPT_COST_POWER : (config["Type"] == "COST_ENERGY") ? CONCEPT_COST_ENERGY : CONCEPT_COST;
-}
-RateConcept::~RateConcept() {
-}
+using namespace std;
+using json = nlohmann::json;
+// ---------------------------------------------------------------------------------------------------------------------
+class TariffPeriod final {
+  public :
+    string                        Name;
+    float                         DefaultPowerCost;
+    float                         DefaultEnergyCost;
+    string                        Color;
+    string                        Script;
+    vector<TariffConcept>         Concepts;
+  public :
+    static json CheckConfig(const json &config);
+  public :
+    TariffPeriod(const json &config);
+};
 // ---------------------------------------------------------------------------------------------------------------------

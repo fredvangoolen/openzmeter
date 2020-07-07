@@ -20,17 +20,14 @@
 using json = nlohmann::json;
 using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
-class RateConcept final {
+class TariffDay {
   public :
-    enum Concept_Type { CONCEPT_INFO, CONCEPT_COST_ENERGY, CONCEPT_COST_POWER, CONCEPT_COST };
-  public :
-    string                        Description;
-    string                        Variable;
-    Concept_Type                  Type;
+      string                        Name;
+      string                        Color;
+      uint16_t                      Quarters[96];
   public :
     static json CheckConfig(const json &config);
   public :
-    RateConcept(const json &config);
-    ~RateConcept();
+    TariffDay(const json &config);
 };
 // ---------------------------------------------------------------------------------------------------------------------

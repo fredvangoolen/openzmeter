@@ -25,7 +25,7 @@ extern "C" {
 #include "muParser/muParser.h"
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
-#include "Tariff.h"
+#include "RateList.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace httplib;
@@ -166,7 +166,7 @@ class AnalyzerSoft : public Analyzer {
     uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
     uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
     uint32_t                  *pFreqCycles;              //Frequency calc cycles lenghts
-    Rates                     *pRateList;                //Applied rates
+    RateList                  *pRateList;                //Applied rates
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private : //Used only in Analyzer_Func
     Params_t                   pAggreg200MS;             //200ms aggregation
