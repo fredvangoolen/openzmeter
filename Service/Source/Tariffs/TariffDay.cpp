@@ -13,25 +13,15 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#pragma once
-#include <stdlib.h>
-#include "nlohmann/json.h"
+#include "TariffDay.h"
 // ---------------------------------------------------------------------------------------------------------------------
-using namespace std;
-using json = nlohmann::json;
-// ---------------------------------------------------------------------------------------------------------------------
-class RatePeriod final {
-  public :
-    string                        Name;
-    float                         DefaultPowerCost;
-    float                         DefaultEnergyCost;
-    string                        Color;
-    string                        Script;
-    vector<RateConcept>             Concepts;
-  public :
-    static json CheckConfig(const json &config);
-  public :
-    RatePeriod(const json &config);
-    ~RatePeriod();
-};
+TariffDay::TariffDay(const json &config) {
+  Name = config["Name"];
+  Color = config["Color"];
+  for(uint8_t Q = 0; Q < 96; Q++) Quarters[Q] = config["Quarters"][Q];
+}
+json TariffDay::CheckConfig(const json &config) {
+  json ConfigOUT = json::object();
+  return ConfigOUT;
+}
 // ---------------------------------------------------------------------------------------------------------------------

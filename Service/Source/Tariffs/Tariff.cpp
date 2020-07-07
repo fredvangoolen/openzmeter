@@ -17,11 +17,123 @@
 #include <errno.h>
 #include "Tariff.h"
 //----------------------------------------------------------------------------------------------------------------------
+Tariff::Tariff(const json &config) {
+  Name = config["Name"];
+  Description = config["Description"];
+  Currency = config["Currency"];
+  PowerUnits = config["PowerUnits"];
+  EnergyUnits = config["EnergyUnits"];
+
+
+  for(uint16_t P = 0; P < config["Periods"].size(); P++) Periods.emplace_back(config["Periods"][P]);
+  for(uint16_t C = 0; C < config["Concepts"].size(); C++) Concepts.emplace_back(config["Concepts"][C]);
+  for(uint16_t D = 0; D < config["Days"].size(); D++) Days.emplace_back(config["Days"][D]);
+  for(uint16_t Y = 0; Y < config["Years"].size(); Y++) Years.emplace_back(config["Years"][Y]);
+  sort(Years.begin(), Years.end(), [](TariffYear &a, TariffYear &b) { return a.Year < b.Year; });
+
+}
+json Tariff::CheckConfig(const json &config) {
+  auto VariableFactory = [](const char_type *name, void *params) -> float* {
+    set<string> *Tmp = (set<string>*)params;
+    Tmp->emplace(name);
+    return &pTmpVar;
+  };
+  if(config.is_object() == false) return "Tariff template is not an object";
+  json Out = json::object();
+  if((config.contains("Description") == false) || (config["Description"].is_string() == false)) return "'Description' param is required";
+  Out["Description"] = config["Description"];
+  if((config.contains("Currency") == false) || (config["Currency"].is_string() == false)) return "'Currency' param is required";
+  Out["Currency"] = config["Currency"];
+  if((config.contains("PowerUnits") == false) || (config["PowerUnits"].is_string() == false) || ((config["PowerUnits"] != "kW") && (t["PowerUnits"] != "kVA"))) return "'PowerUnits' param is required";
+  Out["PowerUnits"] = config["PowerUnits"];
+  if((config.contains("EnergyUnits") == false) || (config["EnergyUnits"].is_string() == false) || (config["EnergyUnits"] != "kWh")) return "'EnergyUnits' param is required";
+  Out["EnergyUnits"] = config["EnergyUnits"];
+
+  if((t.contains("Periods") == false) || (t["Periods"].is_array() == false) || (t["Periods"].size() == 0)) return "'Periods' param is required";
+  Out["Periods"] = json::array();
+  for(uint16_t P = 0; P < t["Periods"].size(); P++) {
+    json Period = RatePeriod::CheckConfig(t["Periods"][P]);
+    if(Period.is_string()) return Period;
+    Out["Periods"].emplace_back(RatePeriod(Period));
+  }
+  Parser      TmpParser;
+  set<string> TmpVariables;
+  if((t.contains("Script") == false) || (t["Script"].is_string() == false)) return "'Script' param is required";
+  Out["Script"] = t["Script"];
+  TmpParser.SetVarFactory(VariableFactory, &TmpVariables);
+  for(uint16_t P = 0; P < t["Periods"].size(); P++) {
+    TmpParser.DefineVar("ContractedPower_P" + to_string(P + 1),  &pTmpVar);
+    TmpParser.DefineVar("PowerCost_P" + to_string(P + 1),        &pTmpVar);
+    TmpParser.DefineVar("EnergyCost_P" + to_string(P + 1),       &pTmpVar);
+  }
+  TmpParser.DefineVar("Period",           &pTmpVar);
+  TmpParser.DefineVar("ActivePower",      &pTmpVar);
+  TmpParser.DefineVar("ActiveEnergy",     &pTmpVar);
+  TmpParser.DefineVar("ReactivePower",    &pTmpVar);
+  TmpParser.DefineVar("ReactiveEnergy",   &pTmpVar);
+  try {
+    TmpParser.SetExpr(t["Script"]);
+    TmpParser.Eval();
+  } catch(Parser::exception_type &e) {
+    return "'Script' parse failed (" + e.GetMsg() + ")";
+  }
+  if(TmpVariables.find("Cost") == TmpVariables.end()) return "'Cost' is not defined in 'Script'";
+  if((t.contains("Concepts") == false) || (t["Concepts"].is_array() == false)) return "'Concepts' param is required";
+  Out["Concepts"] = json::array();
+  for(uint16_t C = 0; C < t["Concepts"].size(); C++) {
+    Out["Concepts"].push_back(json::object());
+    if((t["Concepts"][C].contains("Description") == false) || (t["Concepts"][C]["Description"].is_string() == false)) return "'Concepts/" + to_string(C) + "/Description' param is required";
+    Out["Concepts"][C]["Description"] = t["Concepts"][C]["Description"];
+    if((t["Concepts"][C].contains("Variable") == false) || (t["Concepts"][C]["Variable"].is_string() == false)) return "'Concepts/" + to_string(C) + "/Variable' param is required";
+    Out["Concepts"][C]["Variable"] = t["Concepts"][C]["Variable"];
+    if((t["Concepts"][C].contains("Type") == false) || (t["Concepts"][C]["Type"].is_string() == false)) return "'Concepts/" + to_string(C) + "/Type' param is required";
+    Out["Concepts"][C]["Type"] = t["Concepts"][C]["Type"];
+    if(TmpVariables.find(t["Concepts"][C]["Variable"]) == TmpVariables.end()) return "'" + t["Concepts"][C]["Variable"].get<string>() + "' is not defined in 'Script'";
+  }
+  if((t.contains("Days") == false) || (t["Days"].is_array() == false) || (t["Days"].size() == 0)) return "'Days' param is required";
+  Out["Days"] = json::array();
+  for(uint16_t D = 0; D < t["Days"].size(); D++) {
+    Out["Days"].push_back(json::object());
+    if((t["Days"][D].contains("Name") == false) || (t["Days"][D]["Name"].is_string() == false)) return "'Days/D" + to_string(D + 1) + "/Name' param is required";
+    Out["Days"][D]["Name"] = t["Days"][D]["Name"];
+    if((t["Days"][D].contains("Color") == false) || (t["Days"][D]["Color"].is_string() == false)) return "'Days/D" + to_string(D + 1) + "/Color' param is required";
+    Out["Days"][D]["Color"] = t["Days"][D]["Color"];
+    if((t["Days"][D].contains("Quarters") == false) || (t["Days"][D]["Quarters"].is_array() == false) || (t["Days"][D]["Quarters"].size() != 96)) return "'Days/D" + to_string(D + 1) + "/Quarters' param is required";
+    Out["Days"][D]["Quarters"] = json::array();
+    for(uint8_t Q = 0; Q < 96; Q++) {
+      if((t["Days"][D]["Quarters"][Q].is_number_unsigned() == false) || (t["Days"][D]["Quarters"][Q] >= t["Periods"].size())) return "'Days/D" + to_string(D + 1) + "/Quarters/" + to_string(Q) + "' param is required";
+      Out["Days"][D]["Quarters"].push_back(t["Days"][D]["Quarters"][Q]);
+    }
+  }
+  if((config.contains("Years") == false) || (config["Years"].is_array() == false) || (config["Years"].size() == 0)) return "'Years' param is required";
+  set<uint16_t> DefYears;
+  Out["Years"] = json::array();
+  for(uint16_t Y = 0; Y < t["Years"].size(); Y++) {
+    json Year = RateYear::CheckConfig(config["Years"][Y]);
+    if(Year.is_string()) return Year;
+    Out["Years"].push_back(Year);
+    if(DefYears.insert(t["Years"][Y]["Year"].get<uint16_t>()).second == false) return "'Years/" + to_string(Y) + "' duplicated";
+    Out["Years"][Y]["Year"] = t["Years"][Y]["Year"];
+    if((t["Years"][Y].contains("Days") == false) || (t["Years"][Y]["Days"].is_array() == false) || (t["Years"][Y]["Days"].size() != (size_t)get_yearday(civil_day(t["Years"][Y]["Year"], 12, 31)))) return "'Years/" + to_string(Y) + "/Days' param is required";
+    Out["Years"][Y]["Days"] = json::array();
+    for(uint16_t D = 0; D < t["Years"][Y]["Days"].size(); D++) {
+      if((t["Years"][Y]["Days"][D].is_number_unsigned() == false) || (t["Years"][Y]["Days"][D] >= t["Days"].size())) return "'Years/" + to_string(Y) + "/Days/" + to_string(D) + "' param is required";
+      Out["Years"][Y]["Days"].push_back(t["Years"][Y]["Days"][D]);
+    }
+  }
+  return Out;
+}
+
+
+
+
+
+
 float Rates::pTmpVar = 0.0;
 //----------------------------------------------------------------------------------------------------------------------
 Rates::Rates(const json &r, const time_zone &timezone) {
   pTimeZone = &timezone;
-  for(uint16_t R = 0; R < r.size(); R++) pRates.emplace_back(r[R]);
+  for(uint16_t R = 0; R < r.size(); R++) pRates.emplace_back(r[R], timezone);
 }
 json Rates::CheckConfig(const json &r) {
   json Out = json::array();
@@ -34,20 +146,16 @@ json Rates::CheckConfig(const json &r) {
   return Out;
 }
 json Rates::CheckRateConfig(const json &t) {
-  json Out = CheckTariffConfig(t);
+  json Out = Tariff::CheckConfig(t);
   if(Out.is_string()) return Out;
   if((t.contains("Name") == false) || (t["Name"].is_string() == false)) return "'Name' param is required";
   Out["Name"] = t["Name"];
   if((t.contains("Taxs") == false) || (t["Taxs"].is_array() == false)) return "'Taxs' param is required";
   Out["Taxs"] = json::array();
   for(uint16_t T = 0; T < t["Taxs"].size(); T++) {
-    Out["Taxs"].push_back(json::object());
-    if((t["Taxs"][T].contains("Description") == false) || (t["Taxs"][T]["Description"].is_string() == false)) return "'Taxs/" + to_string(T) + "/Description' param is required";
-    Out["Taxs"][T]["Description"] = t["Taxs"][T]["Description"];
-    if((t["Taxs"][T].contains("Value") == false) || (t["Taxs"][T]["Value"].is_number() == false)) return "'Taxs/" + to_string(T) + "/Value' param is required";
-    Out["Taxs"][T]["Value"] = t["Taxs"][T]["Value"];
-    if((t["Taxs"][T].contains("Type") == false) || (t["Taxs"][T]["Type"].is_string() == false) || ((t["Taxs"][T]["Type"] != "PERCENT_TOTAL") && (t["Taxs"][T]["Type"] != "PERCENT_ENERGY") && (t["Taxs"][T]["Type"] != "PERCENT_POWER") && (t["Taxs"][T]["Type"] != "PERCENT_ENERGY_POWER") && (t["Taxs"][T]["Type"] != "FIXED_QUANTITY"))) return "'Taxs/" + to_string(T) + "/Type' param is required";
-    Out["Taxs"][T]["Type"] = t["Taxs"][T]["Type"];
+    json Tax = RateTax::CheckConfig(t["Taxs"][T]);
+    if(Tax.is_string()) return Tax;
+    Out["Taxs"].emplace_back(Tax);
   }
   if((t.contains("ContractedPower") == true) && (t["ContractedPower"].is_array() == true) && (t["ContractedPower"].size() == Out["Periods"].size())) {
     Out["ContractedPower"] = json::array();
@@ -127,411 +235,8 @@ json Rates::CheckRateConfig(const json &t) {
   }
   return Out;
 }
-json Rates::CheckTariffConfig(const json &t) {
-  auto VariableFactory = [](const char_type *name, void *params) -> float* {
-    set<string> *Tmp = (set<string>*)params;
-    Tmp->emplace(name);
-    return &pTmpVar;
-  };
-  if(t.is_object() == false) return "Tariff template is not an object";
-  json Out = json::object();
-  if((t.contains("Description") == false) || (t["Description"].is_string() == false)) return "'Description' param is required";
-  Out["Description"] = t["Description"];
-  if((t.contains("Currency") == false) || (t["Currency"].is_string() == false)) return "'Currency' param is required";
-  Out["Currency"] = t["Currency"];
-  if((t.contains("PowerUnits") == false) || (t["PowerUnits"].is_string() == false) || ((t["PowerUnits"] != "kW") && (t["PowerUnits"] != "kVA"))) return "'PowerUnits' param is required";
-  Out["PowerUnits"] = t["PowerUnits"];
-  if((t.contains("EnergyUnits") == false) || (t["EnergyUnits"].is_string() == false) || (t["EnergyUnits"] != "kWh")) return "'EnergyUnits' param is required";
-  Out["EnergyUnits"] = t["EnergyUnits"];
-  if((t.contains("Periods") == false) || (t["Periods"].is_array() == false) || (t["Periods"].size() == 0)) return "'Periods' param is required";
-  Out["Periods"] = json::array();
-  for(uint16_t P = 0; P < t["Periods"].size(); P++) {
-    Parser      TmpParser;
-    set<string> TmpVariables;
-    Out["Periods"].push_back(json::object());
-    if((t["Periods"][P].contains("Color") == false) || (t["Periods"][P]["Color"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Color' param is required";
-    Out["Periods"][P]["Color"] = t["Periods"][P]["Color"];
-    if((t["Periods"][P].contains("DefaultPowerCost") == false) || (t["Periods"][P]["DefaultPowerCost"].is_number() == false)) return "'Periods/P" + to_string(P + 1) + "/DefaultPowerCost' param is required";
-    Out["Periods"][P]["DefaultPowerCost"] = t["Periods"][P]["DefaultPowerCost"];
-    if((t["Periods"][P].contains("DefaultEnergyCost") == false) || (t["Periods"][P]["DefaultEnergyCost"].is_number() == false)) return "'Periods/P" + to_string(P + 1) + "/DefaultEnergyCost' param is required";
-    Out["Periods"][P]["DefaultEnergyCost"] = t["Periods"][P]["DefaultEnergyCost"];
-    if((t["Periods"][P].contains("Name") == false) || (t["Periods"][P]["Name"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Name' param is required";
-    Out["Periods"][P]["Name"] = t["Periods"][P]["Name"];
-    if((t["Periods"][P].contains("Script") == false) || (t["Periods"][P]["Script"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Script' param is required";
-    Out["Periods"][P]["Script"] = t["Periods"][P]["Script"];
-    TmpParser.SetVarFactory(VariableFactory, &TmpVariables);
-    TmpParser.DefineVar("ContractedPower",  &pTmpVar);
-    TmpParser.DefineVar("PowerCost",        &pTmpVar);
-    TmpParser.DefineVar("EnergyCost",       &pTmpVar);
-    TmpParser.DefineVar("ActivePower",      &pTmpVar);
-    TmpParser.DefineVar("ActiveEnergy",     &pTmpVar);
-    TmpParser.DefineVar("ReactivePower",    &pTmpVar);
-    TmpParser.DefineVar("ReactiveEnergy",   &pTmpVar);
-    try {
-      TmpParser.SetExpr(t["Periods"][P]["Script"]);
-      TmpParser.Eval();
-    } catch(Parser::exception_type &e) {
-      return "'Periods/P" + to_string(P + 1) + "/Script' parse failed (" + e.GetMsg() + ")";
-    }
-    if(TmpVariables.find("Cost") == TmpVariables.end()) return "'Cost' is not defined in 'Periods/P" + to_string(P + 1) + "/Script'";
-    if((t["Periods"][P].contains("Concepts") == false) || (t["Periods"][P]["Concepts"].is_array() == false)) return "'Periods/P" + to_string(P + 1) + "/Concepts' param is required";
-    Out["Periods"][P]["Concepts"] = json::array();
-    for(uint16_t C = 0; C < t["Periods"][P]["Concepts"].size(); C++) {
-      if((t["Periods"][P]["Concepts"][C].contains("Description") == false) || (t["Periods"][P]["Concepts"][C]["Description"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Concepts/" + to_string(C) + "/Description' param is required";
-      Out["Periods"][P]["Concepts"][C]["Description"] = t["Periods"][P]["Concepts"][C]["Description"];
-      if((t["Periods"][P]["Concepts"][C].contains("Variable") == false) || (t["Periods"][P]["Concepts"][C]["Variable"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Concepts/" + to_string(C) + "/Variable' param is required";
-      Out["Periods"][P]["Concepts"][C]["Variable"] = t["Periods"][P]["Concepts"][C]["Variable"];
-      if((t["Periods"][P]["Concepts"][C].contains("Type") == false) || (t["Periods"][P]["Concepts"][C]["Type"].is_string() == false) || ((t["Periods"][P]["Concepts"][C]["Type"] != "INFO") && (t["Periods"][P]["Concepts"][C]["Type"] != "COST_POWER") && (t["Periods"][P]["Concepts"][C]["Type"] != "COST_ENERGY") && (t["Periods"][P]["Concepts"][C]["Type"] != "COST"))) return "'Periods/P" + to_string(P + 1) + "/Concepts/" + to_string(C) + "/Type' param is required";
-      Out["Periods"][P]["Concepts"][C]["Type"] = t["Periods"][P]["Concepts"][C]["Type"];
-      if(TmpVariables.find(t["Periods"][P]["Concepts"][C]["Variable"]) == TmpVariables.end()) return "'" + t["Periods"][P]["Concepts"][C]["Variable"].get<string>() + "' is not defined in 'Periods/P" + to_string(P + 1) + "/Script'";
-    }
-  }
-  Parser      TmpParser;
-  set<string> TmpVariables;
-  if((t.contains("Script") == false) || (t["Script"].is_string() == false)) return "'Script' param is required";
-  Out["Script"] = t["Script"];
-  TmpParser.SetVarFactory(VariableFactory, &TmpVariables);
-  for(uint16_t P = 0; P < t["Periods"].size(); P++) {
-    TmpParser.DefineVar("ContractedPower_P" + to_string(P + 1),  &pTmpVar);
-    TmpParser.DefineVar("PowerCost_P" + to_string(P + 1),        &pTmpVar);
-    TmpParser.DefineVar("EnergyCost_P" + to_string(P + 1),       &pTmpVar);
-  }
-  TmpParser.DefineVar("Period",           &pTmpVar);
-  TmpParser.DefineVar("ActivePower",      &pTmpVar);
-  TmpParser.DefineVar("ActiveEnergy",     &pTmpVar);
-  TmpParser.DefineVar("ReactivePower",    &pTmpVar);
-  TmpParser.DefineVar("ReactiveEnergy",   &pTmpVar);
-  try {
-    TmpParser.SetExpr(t["Script"]);
-    TmpParser.Eval();
-  } catch(Parser::exception_type &e) {
-    return "'Script' parse failed (" + e.GetMsg() + ")";
-  }
-  if(TmpVariables.find("Cost") == TmpVariables.end()) return "'Cost' is not defined in 'Script'";
-  if((t.contains("Concepts") == false) || (t["Concepts"].is_array() == false)) return "'Concepts' param is required";
-  Out["Concepts"] = json::array();
-  for(uint16_t C = 0; C < t["Concepts"].size(); C++) {
-    Out["Concepts"].push_back(json::object());
-    if((t["Concepts"][C].contains("Description") == false) || (t["Concepts"][C]["Description"].is_string() == false)) return "'Concepts/" + to_string(C) + "/Description' param is required";
-    Out["Concepts"][C]["Description"] = t["Concepts"][C]["Description"];
-    if((t["Concepts"][C].contains("Variable") == false) || (t["Concepts"][C]["Variable"].is_string() == false)) return "'Concepts/" + to_string(C) + "/Variable' param is required";
-    Out["Concepts"][C]["Variable"] = t["Concepts"][C]["Variable"];
-    if((t["Concepts"][C].contains("Type") == false) || (t["Concepts"][C]["Type"].is_string() == false)) return "'Concepts/" + to_string(C) + "/Type' param is required";
-    Out["Concepts"][C]["Type"] = t["Concepts"][C]["Type"];
-    if(TmpVariables.find(t["Concepts"][C]["Variable"]) == TmpVariables.end()) return "'" + t["Concepts"][C]["Variable"].get<string>() + "' is not defined in 'Script'";
-  }
-  if((t.contains("Days") == false) || (t["Days"].is_array() == false) || (t["Days"].size() == 0)) return "'Days' param is required";
-  Out["Days"] = json::array();
-  for(uint16_t D = 0; D < t["Days"].size(); D++) {
-    Out["Days"].push_back(json::object());
-    if((t["Days"][D].contains("Name") == false) || (t["Days"][D]["Name"].is_string() == false)) return "'Days/D" + to_string(D + 1) + "/Name' param is required";
-    Out["Days"][D]["Name"] = t["Days"][D]["Name"];
-    if((t["Days"][D].contains("Color") == false) || (t["Days"][D]["Color"].is_string() == false)) return "'Days/D" + to_string(D + 1) + "/Color' param is required";
-    Out["Days"][D]["Color"] = t["Days"][D]["Color"];
-    if((t["Days"][D].contains("Quarters") == false) || (t["Days"][D]["Quarters"].is_array() == false) || (t["Days"][D]["Quarters"].size() != 96)) return "'Days/D" + to_string(D + 1) + "/Quarters' param is required";
-    Out["Days"][D]["Quarters"] = json::array();
-    for(uint8_t Q = 0; Q < 96; Q++) {
-      if((t["Days"][D]["Quarters"][Q].is_number_unsigned() == false) || (t["Days"][D]["Quarters"][Q] >= t["Periods"].size())) return "'Days/D" + to_string(D + 1) + "/Quarters/" + to_string(Q) + "' param is required";
-      Out["Days"][D]["Quarters"].push_back(t["Days"][D]["Quarters"][Q]);
-    }
-  }
-  if((t.contains("Years") == false) || (t["Years"].is_array() == false) || (t["Years"].size() == 0)) return "'Years' param is required";
-  set<uint16_t> DefYears;
-  Out["Years"] = json::array();
-  for(uint16_t Y = 0; Y < t["Years"].size(); Y++) {
-    Out["Years"].push_back(json::object());
-    if((t["Years"][Y].contains("Year") == false) || (t["Years"][Y]["Year"].is_number_integer() == false) || (t["Years"][Y]["Year"] < 2000) || (t["Years"][Y]["Year"] > 2100)) return "'Years/" + to_string(Y) + "/Year' param is required";
-    if(DefYears.insert(t["Years"][Y]["Year"].get<uint16_t>()).second == false) return "'Years/" + to_string(Y) + "' duplicated";
-    Out["Years"][Y]["Year"] = t["Years"][Y]["Year"];
-    if((t["Years"][Y].contains("Days") == false) || (t["Years"][Y]["Days"].is_array() == false) || (t["Years"][Y]["Days"].size() != (size_t)get_yearday(civil_day(t["Years"][Y]["Year"], 12, 31)))) return "'Years/" + to_string(Y) + "/Days' param is required";
-    Out["Years"][Y]["Days"] = json::array();
-    for(uint16_t D = 0; D < t["Years"][Y]["Days"].size(); D++) {
-      if((t["Years"][Y]["Days"][D].is_number_unsigned() == false) || (t["Years"][Y]["Days"][D] >= t["Days"].size())) return "'Years/" + to_string(Y) + "/Days/" + to_string(D) + "' param is required";
-      Out["Years"][Y]["Days"].push_back(t["Years"][Y]["Days"][D]);
-    }
-  }
-  return Out;
-}
 
 
 //----------------------------------------------------------------------------------------------------------------------
-RatesEval::RatesEval(Rates *parent, const uint64_t from, const uint64_t to, const bool precise) {
-  pParent      = parent;
-  pFrom        = FindStart(from, precise);
-  pTo          = FindEnd(to, precise);
-  pCurrent     = pFrom;
-  pRatePtr     = pParent->pRates.begin();
-  pPriceModule = NULL;
-  pNowDate     = Tools::GetTime64();
-}
-RatesEval::~RatesEval() {
-  UnloadRate();
-}
-uint64_t RatesEval::StartDate() {
-  return pFrom;
-}
-uint64_t RatesEval::EndDate() {
-  return pTo;
-}
-uint64_t RatesEval::FindStart(const uint64_t from, bool precise) {
-  uint64_t Time = (from / 3600000) * 3600000 + 899999;
-  if(precise == false) return Time;
-  for(uint16_t R = 0; R < pParent->pRates.size(); R++) {
-    if((Time < pParent->pRates[R].StartDate) || (Time > pParent->pRates[R].EndDate)) continue;
-    Time = pParent->pRates[R].StartDate + 899999;
-    for(uint16_t B = 0; B < pParent->pRates[R].BillingCycles.size(); B++) {
-      if(pParent->pRates[R].BillingCycles[B] > Time) return Time;
-      Time = pParent->pRates[R].BillingCycles[B] + 900000;
-    }
-  }
-  return Time;
-}
-uint64_t RatesEval::FindEnd(const uint64_t to, bool precise) {
-  uint64_t Time = (to / 3600000) * 3600000 + 899999;
-  if(precise == false) return Time;
-  for(uint16_t R = 0; R < pParent->pRates.size(); R++) {
-    if((Time < pParent->pRates[R].StartDate) || (Time > pParent->pRates[R].EndDate)) continue;
-    Time = pParent->pRates[R].EndDate;
-    for(uint16_t B = pParent->pRates[R].BillingCycles.size(); B > 0; B--) {
-      if(pParent->pRates[R].BillingCycles[B - 1] < Time) return Time;
-      Time = pParent->pRates[R].BillingCycles[B - 1];
-    }
-  }
-  return Time;
-}
-float *RatesEval::VariableFactory(const char_type *name, void *params) {
-  map<string, float> *Tmp = (map<string, float>*)params;
-  return &Tmp->emplace(name, 0.0).first->second;
-};
-void RatesEval::LoadRate() {
-  if(pPeriods.size() > 0) return;
-  pYearPtr = pRatePtr->Years.begin();
-  pBillPtr = pRatePtr->BillingCycles.begin();
-  pLoadedPeriodDate = pRatePtr->StartDate;
-  while((pBillPtr != pRatePtr->BillingCycles.end()) && (*pBillPtr < pCurrent)) {
-    pLoadedPeriodDate = *pBillPtr;
-    pBillPtr++;
-  }
-  pPeriods.resize(pRatePtr->Periods.size());
-  pScript.SetVarFactory(VariableFactory, &pVariables);
-  for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) {
-    pPeriods[P].Script.SetVarFactory(VariableFactory, &pPeriods[P].Variables);
-    pPeriods[P].Script.DefineVar("ContractedPower",   &pSampleOut.ContractedPower);
-    pPeriods[P].Script.DefineVar("PowerCost",         &pSampleOut.PowerCost);
-    pPeriods[P].Script.DefineVar("EnergyCost",        &pSampleOut.EnergyCost);
-    pPeriods[P].Script.DefineVar("ActivePower",       &pSampleOut.ActivePower);
-    pPeriods[P].Script.DefineVar("ActiveEnergy",      &pSampleOut.ActiveEnergy);
-    pPeriods[P].Script.DefineVar("ReactivePower",     &pSampleOut.ReactivePower);
-    pPeriods[P].Script.DefineVar("ReactiveEnergy",    &pSampleOut.ReactiveEnergy);
-    pPeriods[P].Script.SetExpr(pRatePtr->Periods[P].Script);
-    pScript.DefineVar("ContractedPower_P" + to_string(P + 1),  &pRatePtr->Contracted[P]);
-    pScript.DefineVar("EnergyCost_P" + to_string(P + 1),       (pRatePtr->EnergyCost.size() == 0) ? &pSampleOut.EnergyCost : &pRatePtr->EnergyCost[P]);
-    pScript.DefineVar("PowerCost_P" + to_string(P + 1),        (pRatePtr->PowerCost.size() == 0)  ? &pSampleOut.PowerCost  : &pRatePtr->PowerCost[P]);
-  }
-  pScript.DefineVar("Period",         &pSampleOut.PeriodF);
-  pScript.DefineVar("ActivePower",    &pSampleOut.ActivePower);
-  pScript.DefineVar("ActiveEnergy",   &pSampleOut.ActiveEnergy);
-  pScript.DefineVar("ReactivePower",  &pSampleOut.ReactivePower);
-  pScript.DefineVar("ReactiveEnergy", &pSampleOut.ReactiveEnergy);
-  pScript.SetExpr(pRatePtr->Script);
-  pPriceModule = PriceModule::CreateInstance(pRatePtr->PriceSource);
-  pPriceModule->PrepareRange(pCurrent, (pBillPtr != pRatePtr->BillingCycles.end()) ? *pBillPtr : pRatePtr->EndDate);
-  pPriceModule->GetParams(0, pPriceVariables);
-  if(pRatePtr->EnergyCost.size() == 0) {
-    for(auto &Var : pPriceVariables) pEnergyScript.DefineVar(Var.first, &Var.second);
-    pEnergyScript.DefineVar("Period", &pSampleOut.PeriodF);
-    pEnergyScript.SetExpr(pRatePtr->EnergyCostScript);
-  }
-  if(pRatePtr->PowerCost.size() == 0) {
-    for(auto &Var : pPriceVariables) pPowerScript.DefineVar(Var.first, &Var.second);
-    pPowerScript.DefineVar("Period", &pSampleOut.PeriodF);
-    pPowerScript.SetExpr(pRatePtr->PowerCostScript);
-  }
-}
-void RatesEval::UnloadRate() {
-  if(pPeriods.size() == 0) return;
-  if(pPriceModule != NULL) {
-    delete pPriceModule;
-    pPriceModule = NULL;
-  }
-  pScript = Parser();
-  pVariables.clear();
-  pPeriods.clear();
-}
-void RatesEval::HandleSample(const float active, const float reactive) {
-  while(pRatePtr != pParent->pRates.end()) {
-    if(pCurrent < pRatePtr->StartDate) break;
-    if((pCurrent >= pRatePtr->StartDate) && (pCurrent <= pRatePtr->EndDate)) {
-      LoadRate();
-      break;
-    }
-    pRatePtr++;
-  }
-  civil_second Time = convert(chrono::system_clock::from_time_t(pCurrent / 1000), *(pParent->pTimeZone));
-  if(pPeriods.size() > 0) {
-    while(Time.year() > pYearPtr->Year) pYearPtr++;
-    pSampleOut.Period  = pRatePtr->Days[pYearPtr->Days[get_yearday(civil_day(Time)) - 1]].Quarters[Time.hour() * 4 + Time.minute() / 15];
-    pSampleOut.PeriodF = (pSampleOut.Period + 1.0);
-    if((pRatePtr->EnergyCost.size() == 0) || (pRatePtr->PowerCost.size() == 0)) pPriceModule->GetParams(pCurrent, pPriceVariables);
-    pSampleOut.SampleTime      = pCurrent;
-    pSampleOut.ActivePower     = active;
-    pSampleOut.ActiveEnergy    = active / 4.0;
-    pSampleOut.ReactivePower   = reactive;
-    pSampleOut.ReactiveEnergy  = reactive / 4.0;
-    pSampleOut.Color           = pRatePtr->Periods[pSampleOut.Period].Color;
-    pSampleOut.ContractedPower = pRatePtr->Contracted[pSampleOut.Period];
-    pSampleOut.EnergyCost      = (pRatePtr->EnergyCost.size() == 0) ? pEnergyScript.Eval() : pRatePtr->EnergyCost[pSampleOut.Period];
-    pSampleOut.PowerCost       = (pRatePtr->PowerCost.size() == 0)  ? pPowerScript.Eval()  : pRatePtr->PowerCost[pSampleOut.Period];
-    pScript.Eval();
-    pPeriods[pSampleOut.Period].Script.Eval();
-    pSampleOut.Cost = pVariables["Cost"] + pPeriods[pSampleOut.Period].Variables["Cost"];
-    if(pSampleCallback) pSampleCallback(pSampleOut);
-    if(pCurrent == ((pBillPtr != pRatePtr->BillingCycles.end()) ? *pBillPtr : pRatePtr->EndDate)) {
-      if(pBillCallback) pBillCallback(BuildBill(true));
-      UnloadRate();
-    }
-  } else if(pSampleCallback) {
-    pSampleOut.Period = UINT16_MAX;
-    pSampleOut.PeriodF = NAN;
-    pSampleOut.SampleTime = pCurrent;
-    pSampleOut.ActivePower = active;
-    pSampleOut.ActiveEnergy = active / 4.0;
-    pSampleOut.ReactivePower = reactive;
-    pSampleOut.ReactiveEnergy = reactive / 4.0;
-    pSampleOut.Color = "";
-    pSampleOut.ContractedPower = NAN;
-    pSampleOut.EnergyCost = NAN;
-    pSampleOut.PowerCost = NAN;
-    pSampleOut.Cost = NAN;
-    pSampleCallback(pSampleOut);
-  }
-  pCurrent += 900000;
-}
-json RatesEval::BuildBill(bool complete) {
-  float EnergyTerm      = 0.0;
-  float PowerTerm       = 0.0;
-  float GeneralTerm     = 0.0;
-  json Result           = json::object();
-  Result["From"]        = pLoadedPeriodDate;
-  Result["To"]          = pCurrent;
-  Result["Currency"]    = pRatePtr->Currency;
-  Result["PowerUnits"]  = pRatePtr->PowerUnits;
-  Result["EnergyUnits"] = pRatePtr->EnergyUnits;
-  Result["Name"]        = pRatePtr->Name;
-  Result["Description"] = pRatePtr->Description;
-  Result["Periods"]     = json::array();
-  Result["Complete"]    = (pNowDate > pCurrent) && complete;
-  for(uint16_t P = 0; P < pRatePtr->Periods.size(); P++) {
-    Result["Periods"].push_back(json::array());
-    for(uint16_t C = 0; C < pRatePtr->Periods[P].Concepts.size(); C++) {
-      Result["Periods"][P].push_back(json::object());
-      Result["Periods"][P][C]["Description"] = pRatePtr->Periods[P].Concepts[C].Description;
-      if(pRatePtr->Periods[P].Concepts[C].Type == RateConcept::CONCEPT_COST) {
-        float Cost = pPeriods[P].Variables[pRatePtr->Periods[P].Concepts[C].Variable];
-        Result["Periods"][P][C]["Value"] = Cost;
-        Result["Periods"][P][C]["Type"] = "COST";
-        GeneralTerm += Cost;
-      } else if(pRatePtr->Periods[P].Concepts[C].Type == RateConcept::CONCEPT_COST_ENERGY) {
-        float Cost = pPeriods[P].Variables[pRatePtr->Periods[P].Concepts[C].Variable];
-        Result["Periods"][P][C]["Value"] = Cost;
-        Result["Periods"][P][C]["Type"] = "COST_ENERGY";
-        EnergyTerm += Cost;
-      } else if(pRatePtr->Periods[P].Concepts[C].Type == RateConcept::CONCEPT_COST_POWER) {
-        float Cost = pPeriods[P].Variables[pRatePtr->Periods[P].Concepts[C].Variable];
-        Result["Periods"][P][C]["Value"] = Cost;
-        Result["Periods"][P][C]["Type"] = "COST_POWER";
-        PowerTerm += Cost;
-      } else {
-        Result["Periods"][P][C]["Type"] = "INFO";
-        Result["Periods"][P][C]["Value"] = pPeriods[P].Variables[pRatePtr->Periods[P].Concepts[C].Variable];
-      }
-    }
-  }
-  Result["General"] = json::array();
-  for(uint16_t C = 0; C < pRatePtr->Concepts.size(); C++) {
-    Result["General"].push_back(json::object());
-    Result["General"][C]["Description"] = pRatePtr->Concepts[C].Description;
-    if(pRatePtr->Concepts[C].Type == RateConcept::CONCEPT_COST) {
-      float Cost = pVariables[pRatePtr->Concepts[C].Variable];
-      Result["General"][C]["Value"] = Cost;
-      Result["General"][C]["Type"] = "COST";
-      GeneralTerm += Cost;
-    } else if(pRatePtr->Concepts[C].Type == RateConcept::CONCEPT_COST_ENERGY) {
-      float Cost = pVariables[pRatePtr->Concepts[C].Variable];
-      Result["General"][C]["Value"] = Cost;
-      Result["General"][C]["Type"] = "COST_ENERGY";
-      EnergyTerm += Cost;
-    } else if(pRatePtr->Concepts[C].Type == RateConcept::CONCEPT_COST_POWER) {
-      float Cost = pVariables[pRatePtr->Concepts[C].Variable];
-      Result["General"][C]["Value"] = Cost;
-      Result["General"][C]["Type"] = "COST_POWER";
-      PowerTerm += Cost;
-    } else {
-      Result["General"][C]["Type"] = "INFO";
-      Result["General"][C]["Value"] = pVariables[pRatePtr->Concepts[C].Variable];
-    }
-  }
-  float Total = EnergyTerm + PowerTerm + GeneralTerm;
-  Result["Taxes"] = json::array();
-  for(uint16_t T = 0; T < pRatePtr->Taxs.size(); T++) {
-    json Tax = json::object();
-    if(pRatePtr->Taxs[T].Type == Rates::TAX_PERCENT_ENERGY) {
-      Tax["Type"] = "PERCENT_ENERGY";
-      Tax["Value"] = EnergyTerm * (pRatePtr->Taxs[T].Value / 100.0);
-      Total += EnergyTerm * (pRatePtr->Taxs[T].Value / 100.0);
-    } else if(pRatePtr->Taxs[T].Type == Rates::TAX_PERCENT_POWER) {
-      Tax["Type"] = "PERCENT_POWER";
-      Tax["Value"] = PowerTerm * (pRatePtr->Taxs[T].Value / 100.0);
-      Total += PowerTerm * (pRatePtr->Taxs[T].Value / 100.0);
-    } else if(pRatePtr->Taxs[T].Type == Rates::TAX_PERCENT_ENERGY_POWER) {
-      Tax["Type"] = "PERCENT_ENERGY_POWER";
-      Tax["Value"] = (EnergyTerm + PowerTerm) * (pRatePtr->Taxs[T].Value / 100.0);
-      Total += (EnergyTerm + PowerTerm) * (pRatePtr->Taxs[T].Value / 100.0);
-    } else if(pRatePtr->Taxs[T].Type == Rates::TAX_FIXED) {
-      Tax["Type"] = "FIXED_QUANTITY";
-      Tax["Value"] = pRatePtr->Taxs[T].Value;
-      GeneralTerm += pRatePtr->Taxs[T].Value;
-      Total += pRatePtr->Taxs[T].Value;
-    } else {
-      continue;
-    }
-    Tax["Description"] = pRatePtr->Taxs[T].Description;
-    Result["Taxes"].push_back(Tax);
-  }
-  float Tmp = 0.0;
-  for(uint16_t T = 0; T < pRatePtr->Taxs.size(); T++) {
-    if(pRatePtr->Taxs[T].Type == Rates::TAX_PERCENT) {
-      json Tax = json::object();
-      Tax["Description"] = pRatePtr->Taxs[T].Description;
-      Tax["Type"] = "PERCENT_TOTAL";
-      Tax["Value"] = Total * (pRatePtr->Taxs[T].Value / 100.0);
-      Result["Taxes"].push_back(Tax);
-      Tmp += Total * (pRatePtr->Taxs[T].Value / 100.0);
-    }
-  }
-  Result["Total"] = Total + Tmp;
-  return Result;
-}
-void RatesEval::PushSample(const uint64_t time, const float active, const float reactive) {
-  uint64_t Time = (time / 900000) * 900000 + 899999;
-  while(pCurrent < Time) HandleSample(0.0, 0.0);
-  HandleSample(active, reactive);
-}
-void RatesEval::Finish() {
-  while(pCurrent < pTo) HandleSample(0.0, 0.0);
-  if(pPeriods.size() > 0) {
-    if(pBillCallback) pBillCallback(BuildBill(true));
-    UnloadRate();
-  }
-}
-//void RatesEval::SetPeriodCallback(function<void(const PeriodOut_t &)> periodOut) {
-//  pPeriodCallback = periodOut;
-//}
-void RatesEval::SetSampleCallback(function<void(const SampleOut_t &)> sampleOut) {
-  pSampleCallback = sampleOut;
-}
-void RatesEval::SetBillCallback(function<void(const json &)> billOut) {
-  pBillCallback = billOut;
-}
 //----------------------------------------------------------------------------------------------------------------------
 //650

@@ -13,22 +13,22 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#pragma once
+#include "PriceSourceNone.h"
 //----------------------------------------------------------------------------------------------------------------------
-bool  None_PriceModule::pRegistered = Register();
+bool  PriceSourceNone::pRegistered = Register();
 //----------------------------------------------------------------------------------------------------------------------
-bool None_PriceModule::Register() {
+bool PriceSourceNone::Register() {
   pModules.insert( { "NONE", { CreateInstance, GetVarsInfo } } );
   return true;
 }
-PriceModule *None_PriceModule::CreateInstance() {
-  return new None_PriceModule();
+PriceSource *PriceSourceNone::CreateInstance() {
+  return new PriceSourceNone();
 }
-json None_PriceModule::GetVarsInfo() {
+json PriceSourceNone::GetVarsInfo() {
   json Result = json::array();
   return Result;
 }
-void None_PriceModule::GetParams(const uint64_t sampletime, map<string, float> &vars) {
+void PriceSourceNone::GetParams(const uint64_t sampletime, map<string, float> &vars) {
 }
-void None_PriceModule::PrepareRange(const uint64_t from, const uint64_t to) {
+void PriceSourceNone::PrepareRange(const uint64_t from, const uint64_t to) {
 }

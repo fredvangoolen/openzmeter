@@ -33,10 +33,6 @@ bool PriceSourceESIOS::Register() {
 PriceSource *PriceSourceESIOS::CreateInstance() {
   return new PriceSourceESIOS();
 }
-PriceSourceESIOS::PriceSourceESIOS() {
-}
-PriceSourceESIOS::~PriceSourceESIOS() {
-}
 void PriceSourceESIOS::PrepareRange(const uint64_t from, const uint64_t to) {
   pDB.ExecSentenceAsyncResult("SELECT " + pQueryColumns + " FROM esios WHERE timestamp >= " + pDB.Bind(from) + " AND timestamp <=" + pDB.Bind(to) + " ORDER BY timestamp ASC");
   pHaveData = pDB.FecthRow();

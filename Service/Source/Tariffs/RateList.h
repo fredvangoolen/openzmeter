@@ -14,18 +14,20 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "nlohmann/json.h"
+#include "Rate.h"
 // ---------------------------------------------------------------------------------------------------------------------
-using json = nlohmann::json;
-// ---------------------------------------------------------------------------------------------------------------------
-class RateYear final {
+class RateList final {
+  friend class RatesEval;
+  private :
+    vector<Rate>                    pRates;
+    time_zone const                *pTimeZone;
+  private :
+    static float                    pTmpVar;
   public :
-    uint16_t     Year;
-    uint16_t     Days[366];
+    static json CheckConfig(const json &t);
+    static json CheckTariffConfig(const json &t);
+    static json CheckRateConfig(const json &t);
   public :
-    static json CheckConfig(const json &config);
-  public :
-    RateYear(const json &config);
-    ~RateYear();
+    RateList(const json &t, const time_zone &timezone);
 };
 // ---------------------------------------------------------------------------------------------------------------------

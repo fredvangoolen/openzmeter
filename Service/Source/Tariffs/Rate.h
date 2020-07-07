@@ -18,22 +18,20 @@
 #include <vector>
 #include <stdint.h>
 #include "nlohmann/json.h"
+#include "cctz/time_zone.h"
+#include "Tariff.h"
 #include "RateTax.h"
-#include "RateConcept.h"
-#include "RatePeriod.h"
-#include "RateDay.h"
-#include "RateYear.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
+using namespace cctz;
 using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
-class Rate final {
-  private :
-    string                        Name;
-    string                        Description;
-    string                        Currency;
-    string                        PowerUnits;
-    string                        EnergyUnits;
+class Rate final : public Tariff {
+  public :
+
+
+
+
     string                        Script;
     string                        PowerCostScript;
     vector<float>                 PowerCost;
@@ -44,15 +42,10 @@ class Rate final {
     uint64_t                      EndDate;
     vector<uint64_t>              BillingCycles;
     vector<RateTax>               Taxs;
-    vector<RateConcept>           Concepts;
-    vector<RatePeriod>            Periods;
-    vector<RateDay>               Days;
-    vector<RateYear>              Years;
     vector<float>                 Contracted;
   public :
     static json CheckConfig(const json &config);
   public :
-    Rate(const json &config);
-    ~Rate();
+    Rate(const json &config, const time_zone &tz);
 };
 // ---------------------------------------------------------------------------------------------------------------------

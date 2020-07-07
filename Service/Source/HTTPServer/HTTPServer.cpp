@@ -25,6 +25,9 @@
 #include <netinet/in.h>
 #include "HTTPServer.h"
 #include "Tools.h"
+#include "LogFile.h"
+#include "ConfigManager.h"
+#include "ResourceManager.h"
 #include "HTTPTaskQueue.h"
 //----------------------------------------------------------------------------------------------------------------------
 map<string, HTTPServer::Func_t>  __attribute__((init_priority(200))) HTTPServer::pCallbacks;
@@ -32,7 +35,6 @@ RWLocks                                                              HTTPServer:
 string                                                               HTTPServer::pRelativePath = "/";
 uint16_t                                                              HTTPServer::pPort   = 8080;
 pthread_t                        HTTPServer::pThread = 0;
-//Server                          *HTTPServer::pServer = NULL;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   json Config = ConfigManager::ReadConfig("/HTTPServer");
@@ -108,12 +110,12 @@ const char *HTTPServer::MimeType(const string &file) {
   } else if((FileNameLen >= 5) && (file.compare(FileNameLen - 3, 3, ".md")) == 0) {
     return "text/markdown";
   }
-  LOGFile::Debug("No mimetype defined for request '%s'\n", file.c_str());
+  LogFile::Debug("No mimetype defined for request '%s'\n", file.c_str());
   return "text/plain";
 }
 string HTTPServer::PatchFile(const string &file, const string &find, const string &replace) {
   size_t Len;
-  const char *Content = (const char *)ResourceLoader::GetFile(file, &Len);
+  const char *Content = (const char *)ResourceManager::GetFile(file, &Len);
   string Tmp = string(Content, Len);
   return PatchString(Tmp, find, replace);
 }
@@ -155,8 +157,8 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   string URL      = string(request.path).erase(0, pRelativePath.size());
   size_t Size     = 0;
   string UserName = "";
-  LOGFile::Debug("HTTP GET '%s'\n", URL.c_str());
-  const char *Tmp = (const char*)ResourceLoader::GetFile(string("WEB/") + URL, &Size);
+  LogFile::Debug("HTTP GET '%s'\n", URL.c_str());
+  const char *Tmp = (const char*)ResourceManager::GetFile(string("WEB/") + URL, &Size);
   if(Size != 0) return FillResponse(response, Tmp, Size, MimeType(URL), HTTP_OK);
   if(request.has_header("Cookie")) {
     string Cookie = ParseCookie(request.get_header_value("Cookie"));
@@ -176,8 +178,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
 }
 void HTTPServer::HandlePost(const Request &request, Response &response) {
   string URL = string(request.path).erase(0, pRelativePath.size());
-
-  LOGFile::Debug("HTTP POST '%s'\n", URL.c_str());
+  LogFile::Debug("HTTP POST '%s'\n", URL.c_str());
   response.set_header("Connection", "Keep-Alive");
   json Params = json::parse(request.body, NULL, false);
   if(Params.is_discarded()) return FillResponse(response, "Malformed JSON params", "text/plain", HTTP_BAD_REQUEST);
