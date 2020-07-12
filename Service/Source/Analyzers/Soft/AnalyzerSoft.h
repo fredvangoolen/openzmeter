@@ -25,7 +25,7 @@ extern "C" {
 #include "muParser/muParser.h"
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
-#include "RateList.h"
+#include "RatesEval.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace httplib;
@@ -49,12 +49,8 @@ class AnalyzerSoft : public Analyzer {
     static constexpr uint8_t UnbalanceRangesLen  = (sizeof(UnbalanceRanges) / sizeof(float)) - 1;
     static constexpr float   HarmonicsAllowed[]  = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
     static constexpr uint8_t HarmonicsAllowedLen = (sizeof(HarmonicsAllowed) / sizeof(float));
-  private :
-    typedef struct {
-      float Re;
-      float Im;
-    } Complex_t;
-    typedef struct {
+  public :
+      typedef struct {
       AggregType               Type;                               //Aggregation type
       bool                     Flag;                               //Flagged period
       float                    Frequency;                          //Frecuency
@@ -82,6 +78,12 @@ class AnalyzerSoft : public Analyzer {
       float                    Current_Harmonics[200];             //Harmonicos del canal de corriente
       float                    Power_Harmonics[150];               //Power harmonics
     } Params_t;
+  private :
+    typedef struct {
+      float Re;
+      float Im;
+    } Complex_t;
+
     typedef struct {
      float                    *InPtr;
      Complex_t                *OutPtr;
@@ -166,7 +168,7 @@ class AnalyzerSoft : public Analyzer {
     uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
     uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
     uint32_t                  *pFreqCycles;              //Frequency calc cycles lenghts
-    RateList                  *pRateList;                //Applied rates
+    json                      *pRates;                   //Applied rates
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private : //Used only in Analyzer_Func
     Params_t                   pAggreg200MS;             //200ms aggregation

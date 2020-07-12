@@ -83,7 +83,7 @@ void LogFile::CloseConsole() {
   pConsole = false;
 }
 void LogFile::Msg(Type type, const char *msg, va_list params) {
-  if(((type > pLevel) || (pFile == NULL)) && (pConsole == false)) return;
+  if(((type > pLevel) || (pFile == -1)) && (pConsole == false)) return;
   char   DateStr[32];
   char   MsgStr[1024];
   time_t Now;
@@ -104,7 +104,7 @@ void LogFile::Msg(Type type, const char *msg, va_list params) {
     }
     fflush(stdout);
   }
-  if((type <= pLevel) && (pFile != NULL)) {
+  if((type <= pLevel) && (pFile != -1)) {
     write(pFile, DateStr, TimeLen);
     write(pFile, " ", 1);
     write(pFile, MsgStr, MsgLen);

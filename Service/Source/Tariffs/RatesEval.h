@@ -17,8 +17,11 @@
 #include <stdint.h>
 #include <string>
 #include <map>
+#include "muParser/muParser.h"
+#include "Rate.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
+using namespace mu;
 // ---------------------------------------------------------------------------------------------------------------------
 class RatesEval final {
   public :
@@ -42,14 +45,13 @@ class RatesEval final {
       map<string, float> Variables;
     } LoadedPeriod_t;
   private :
-    Rates                              *pParent;
     uint64_t                            pFrom;
     uint64_t                            pTo;
     uint64_t                            pNowDate;
     uint64_t                            pLoadedPeriodDate;
     uint64_t                            pCurrent;
     vector<Rate>::iterator              pRatePtr;
-    vector<RateYear>::iterator          pYearPtr;
+    vector<TariffYear>::iterator        pYearPtr;
     vector<uint64_t>::iterator          pBillPtr;
     PriceSource                        *pPriceModule;
     SampleOut_t                         pSampleOut;
@@ -72,7 +74,7 @@ class RatesEval final {
     uint64_t FindStart(const uint64_t from, bool precise);
     uint64_t FindEnd(const uint64_t to, bool precise);
   public :
-    RatesEval(Rates *parent, const uint64_t from, const uint64_t to, const bool precise);
+    RatesEval(const json &rates, const uint64_t from, const uint64_t to, const bool precise);
     ~RatesEval();
     void     PushSample(const uint64_t time, const float active, const float reactive);
     void     Finish();
@@ -83,3 +85,18 @@ class RatesEval final {
     uint64_t EndDate();
  };
  // ---------------------------------------------------------------------------------------------------------------------
+
+/*
+   friend class RatesEval;
+  private :
+    vector<Rate>                    pRates;
+    time_zone const                *pTimeZone;
+  private :
+    static float                    pTmpVar;
+  public :
+    static json CheckConfig(const json &t);
+    static json CheckTariffConfig(const json &t);
+    static json CheckRateConfig(const json &t);
+  public :
+    RateList(const json &t, const time_zone &timezone);
+    */

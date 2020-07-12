@@ -23,7 +23,7 @@ TariffPeriod::TariffPeriod(const json &config) {
   Script = config["Script"];
   for(uint16_t C = 0; C < config["Concepts"].size(); C++) Concepts.emplace_back(config["Concepts"][C]);
 }
-json RatePeriod::CheckConfig(const json &config) {
+json TariffPeriod::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   Parser      TmpParser;
     set<string> TmpVariables;
