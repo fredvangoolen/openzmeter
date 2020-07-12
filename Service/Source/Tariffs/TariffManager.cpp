@@ -57,7 +57,7 @@ void TariffManager::DelTariffCallback(const json &params, Response &response) {
 void TariffManager::SetTariffCallback(const json &params, Response &response) {
   if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
-  json Conf = Rates::CheckTariffConfig(params["Template"]);
+  json Conf = Tariff::CheckConfig(params["Template"]);
   if(Conf.is_string()) return HTTPServer::FillResponse(response, Conf, "text/plain", HTTP_BAD_REQUEST);
   string   UserName = params["UserName"];
   string   Name     = params["Name"];
@@ -68,7 +68,7 @@ void TariffManager::SetTariffCallback(const json &params, Response &response) {
 void TariffManager::AddTariffCallback(const json &params, Response &response) {
   if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
-  json Conf = Rates::CheckTariffConfig(params["Template"]);
+  json Conf = Tariff::CheckConfig(params["Template"]);
   if(Conf.is_string()) return HTTPServer::FillResponse(response, Conf, "text/plain", HTTP_BAD_REQUEST);
   string   UserName = params["UserName"];
   string   Name     = params["Name"];

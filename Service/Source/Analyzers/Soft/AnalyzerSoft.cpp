@@ -70,14 +70,14 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pCurrentFFT       = NULL;
   pAlarmsWorker     = NULL;
   pEventsWorker     = NULL;
-  pFreqCycles       = NULL;
-  pRateList         = NULL;
   pPrevSamples      = NULL;
   pPrevCycles       = NULL;
   pSyncThread       = 0;
   pMQTTThread       = 0;
   pMQTTSendBuff     = NULL;
   pMQTTRecvBuff     = NULL;
+  pFreqCycles       = NULL;
+  pRates            = json::array();
   pMQTTBuffSize     = 0x00020000;
   InitAggreg(pAggreg200MS, AGGREG_200MS);
   InitAggreg(pAggreg3S, AGGREG_3S);
@@ -274,7 +274,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
     }
   }
   if(config.contains("Rates") && config["Rates"].is_array()) {
-    json Tmp = Rates::CheckConfig(config["Rates"]);
+    json Tmp = RateList::CheckConfig(config["Rates"]);
     if(Tmp.is_string()) {
       if(error != NULL) *error = Tmp;
     } else {
@@ -353,7 +353,7 @@ void AnalyzerSoft::Configure(const json &options) {
     }
   }
   if(pRateList != NULL) delete pRateList;
-  pRateList = new Rates(options["Rates"], pTimeZone);
+  pRateList = new RateList(options["Rates"], pTimeZone);
   bool AlarmsEnabled = options["AlarmsEnabled"];
   bool EventsEnabled = options["EventsEnabled"];
   if((EventsEnabled == false) && (pEventsWorker != NULL)) {
