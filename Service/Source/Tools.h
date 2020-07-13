@@ -75,6 +75,7 @@ class Tools {
     static void      DisableEcho();
     static void      RunDaemon();
     static uint64_t  GetTime64();
+    static string    GetUUID();
     static string    StrTrim(const string &str);
     static void      SendUDP(const json &obj);
 };

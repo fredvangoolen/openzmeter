@@ -27,6 +27,7 @@ extern "C" {
 #include "Analyzer.h"
 #include "RatesEval.h"
 #include "Worker.h"
+#include "AnalyzerSoftFFT.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace httplib;
@@ -82,15 +83,6 @@ class AnalyzerSoft : public Analyzer {
     } Params_t;
   private :
     typedef struct {
-      float Re;
-      float Im;
-    } Complex_t;
-
-    typedef struct {
-     float                    *InPtr;
-     Complex_t                *OutPtr;
-    } FFTChannel_t;
-    typedef struct {
       float                    A0;
       float                    A1;
       float                    A2;
@@ -120,9 +112,7 @@ class AnalyzerSoft : public Analyzer {
       uint64_t                 Sequence;                 //
       AnalyzerSoft            *Analyzer;                 //
     } Sync_t;
-  private :
-    static pthread_mutex_t     pFFTMutex;                //Planer mutex
-    static uint32_t            pFFTRunning;              //Currently running FFTs
+
   private : //Not modified after creation
     const float                pSamplerate;              //Velocidad de muestreo
     const string               pConfigPath;              //Path to configuration
@@ -144,12 +134,9 @@ class AnalyzerSoft : public Analyzer {
     uint16_t                   pBlockCycles[24];         //Max block sizes
     float                     *pVoltageSamples;          //Voltage samples
     float                     *pCurrentSamples;          //Current samples
-    uint32_t                   pMaxFFTSamples;           //Max FFT block samples
-    uint16_t                   pFFTSamples;              //FFT result samples
-    Complex_t                 *pVoltageFFT;              //FFT voltage output (complex)
-    Complex_t                 *pCurrentFFT;              //FFT current output (complex)
-    FFTChannel_t               pVoltageFFTChannels[3];   //FFT configuration channels
-    FFTChannel_t               pCurrentFFTChannels[4];   //FFT configuration channels
+//    uint32_t                   pMaxFFTSamples;           //Max FFT block samples
+//    uint16_t                   pFFTSamples;              //FFT result samples
+
     float                      pLastSamples[3];          //Filter samples backup
     Filter_t                   pFilters[FILTERSTAGES];   //Filter bank
     float                     *pDelayVoltage;            //Delay buffer for samples
@@ -171,8 +158,8 @@ class AnalyzerSoft : public Analyzer {
     Params_t                   pAggreg1H;                //1 hour aggregation
   private : //Workers
     Worker                    *pAnalyzerWorker;          //Analyzer worker
-    Worker                    *pVoltageFFTWorker[3];     //Voltage FFT worker
-    Worker                    *pCurrentFFTWorker[4];     //Current FFT worker
+    AnalyzerSoftFFT           *pVoltageFFT[3];           //Voltage FFT worker
+    AnalyzerSoftFFT           *pCurrentFFT[4];           //Current FFT worker
 
     Worker                    *pEventsWorker;            //Events detector
   private : //Events related (only acceded inside analyzer thread)
@@ -214,12 +201,9 @@ class AnalyzerSoft : public Analyzer {
     static void *MQTT_Thread(void *params);
     static void *Sync_RespThread(void *params);
     static float CalcChange(const float in, const float reference);
-    static float CalcAngle(const Complex_t &a, const Complex_t &b);
-    static float BinPower(const Complex_t &a);
   private :
     void Analyzer_Func();
     void Events_Func();
-    void FFT_Func(FFTChannel_t *ch);
     void Alarms_Func(Params_t *aggreg);
     void Configure(const json &options);
     void InitAggreg(Params_t &params, AggregType type);

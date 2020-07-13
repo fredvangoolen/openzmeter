@@ -10,7 +10,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 EXECUTABLE_TARGET = Tmp/openZmeter
 EXECUTABLE_SOURCE = $(shell find Source -name "*.cpp" ! -type d -print)
 CFLAGS  += -DCPPHTTPLIB_USE_POLL -Wno-psabi -Wall -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/AnalyzerSoft -I Source/Analyzers/AnalyzerRemote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools
-LDFLAGS += -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto
+LDFLAGS += -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto -luuid
 
 #Add libs (cctz, nlohmann, muparser, httplib, mqtt-c)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)
