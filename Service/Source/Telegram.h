@@ -19,6 +19,7 @@
 #include "nlohmann/json.h"
 #include "Tools.h"
 #include "HTTPServer/HTTPServer.h"
+#include "Worker.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using namespace cctz;

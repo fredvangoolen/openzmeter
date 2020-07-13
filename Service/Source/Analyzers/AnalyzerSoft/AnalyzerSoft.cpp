@@ -207,8 +207,8 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   ConfigOUT["Save200MS"] = false;
   ConfigOUT["EventsEnabled"] = false;
   ConfigOUT["AlarmsEnabled"] = false;
-//  ConfigOUT["Alarms"] = json::array();
-//  ConfigOUT["Rates"] = json::array();
+  ConfigOUT["Alarms"] = json::array();
+  ConfigOUT["Rates"] = json::array();
   if(!config.is_object()) return ConfigOUT;
   if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
   if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
@@ -1853,6 +1853,9 @@ void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   pNowDataLock.ConsumerEnds();
   return HTTPServer::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
 }
+void AnalyzerSoft::ListAlarms(const json &params, Response &response) {
+
+}
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -1873,6 +1876,10 @@ void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
+void AnalyzerSoft::AddAlarm(const json &params, Response &response) {}
+void AnalyzerSoft::GetAlarm(const json &params, Response &response) {}
+void AnalyzerSoft::SetAlarm(const json &params, Response &response) {}
+void AnalyzerSoft::DelAlarm(const json &params, Response &response) {}
 void AnalyzerSoft::GetAlarmsRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB(pSerial);
@@ -1889,8 +1896,11 @@ void AnalyzerSoft::DelAlarmsRange(const json &params, Response &response) {
   Database DB(pSerial);
   HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms WHERE alarmtime >= " + DB.Bind(From) + " AND alarmtime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
-void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
-}
+void AnalyzerSoft::GetRates(const json &params, Response &response) {}
+void AnalyzerSoft::AddRate(const json &params, Response &response) {}
+void AnalyzerSoft::GetRate(const json &params, Response &response) {}
+void AnalyzerSoft::SetRate(const json &params, Response &response) {}
+void AnalyzerSoft::DelRate(const json &params, Response &response) {}
 void AnalyzerSoft::GetRemote(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }

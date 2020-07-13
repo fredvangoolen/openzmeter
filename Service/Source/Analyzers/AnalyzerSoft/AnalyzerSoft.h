@@ -26,6 +26,7 @@ extern "C" {
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
 #include "RatesEval.h"
+#include "Worker.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace httplib;
