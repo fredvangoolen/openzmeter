@@ -30,6 +30,7 @@ extern "C" {
 using namespace mu;
 using namespace httplib;
 //----------------------------------------------------------------------------------------------------------------------
+class AnalyzerSoftAlarms;
 class AnalyzerSoft : public Analyzer {
   private :
     static const uint8_t FILTERSTAGES         =  5;        //Filter stages for zerocrossing
@@ -97,18 +98,7 @@ class AnalyzerSoft : public Analyzer {
       float                    ChannelsZ1[3];
       float                    ChannelsZ2[3];
     } Filter_t;
-    typedef struct {
-      string                   Name;
-      uint8_t                  Priority;
-      uint16_t                 Samples;
-      uint16_t                 Window;
-      uint16_t                 ResultPos;
-      uint16_t                 ResultCount;
-      AggregType               Aggreg;
-      Parser                   Evaluator;
-      uint8_t                 *Results;
-      bool                     Triggered;
-    } Alarm_t;
+
     typedef struct {
       enum EventType           Type;                     //Running event type
       uint64_t                 Start;                    //Event start timestamp
@@ -168,8 +158,9 @@ class AnalyzerSoft : public Analyzer {
     uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
     uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
     uint32_t                  *pFreqCycles;              //Frequency calc cycles lenghts
-    json                      *pRates;                   //Applied rates
+    json                       pRates;                   //Applied rates
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
+    AnalyzerSoftAlarms        *pAlarms;                  //Alarms control
   private : //Used only in Analyzer_Func
     Params_t                   pAggreg200MS;             //200ms aggregation
     Params_t                   pAggreg3S;                //3 seconds aggregation
@@ -181,10 +172,8 @@ class AnalyzerSoft : public Analyzer {
     Worker                    *pAnalyzerWorker;          //Analyzer worker
     Worker                    *pVoltageFFTWorker[3];     //Voltage FFT worker
     Worker                    *pCurrentFFTWorker[4];     //Current FFT worker
-    Worker                    *pAlarmsWorker;            //Alarms detection worker
+
     Worker                    *pEventsWorker;            //Events detector
-  private : //Alarms related (should be locked)
-    vector<Alarm_t>            pAlarms;                  //Alarms control object
   private : //Events related (only acceded inside analyzer thread)
     Event_t                    pEvent;                   //Running event
     list<Event_t>              pEvents;                  //Close pending events
@@ -233,12 +222,11 @@ class AnalyzerSoft : public Analyzer {
     void Alarms_Func(Params_t *aggreg);
     void Configure(const json &options);
     void InitAggreg(Params_t &params, AggregType type);
-    void InitAlarmParser(Parser &parser, const string &expr, const AggregType &type);
+
     void AccumulateAggreg(Params_t &src, const Params_t &dst);
     void NormalizeAggreg(Params_t &src);
     void SaveAggreg(Params_t &params);
     void PublishAggreg(const Params_t &params, const string &topic);
-    void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
     void PublishConfig(const json &options);
     bool FindRunningEvent(const uint32_t mask);
     json CalcGA();
@@ -248,6 +236,7 @@ class AnalyzerSoft : public Analyzer {
     void SetAnalyzer(const json &params, Response &response) override;
     void GetSeries(const json &params, Response &response) override;
     void GetSeriesNow(const json &params, Response &response) override;
+    void GetPrices(const json &params, Response &response) override;
     void GetWaveStream(const json &params, Response &response) override;
     void GetSeriesRange(const json &params, Response &response) override;
     void DelSeriesRange(const json &params, Response &response) override;
@@ -257,12 +246,20 @@ class AnalyzerSoft : public Analyzer {
     void GetEvent(const json &params, Response &response) override;
     void SetEvent(const json &params, Response &response) override;
     void DelEvent(const json &params, Response &response) override;
-    void GetPrices(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
+    void ListAlarms(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;
+    void AddAlarm(const json &params, Response &response) override;
+    void GetAlarm(const json &params, Response &response) override;
+    void SetAlarm(const json &params, Response &response) override;
+    void DelAlarm(const json &params, Response &response) override;
     void GetAlarmsRange(const json &params, Response &response) override;
     void DelAlarmsRange(const json &params, Response &response) override;
-    void DelAlarm(const json &params, Response &response) override;
+    void GetRates(const json &params, Response &response) override;
+    void AddRate(const json &params, Response &response) override;
+    void GetRate(const json &params, Response &response) override;
+    void SetRate(const json &params, Response &response) override;
+    void DelRate(const json &params, Response &response) override;
     void GetRemote(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
     bool HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len);

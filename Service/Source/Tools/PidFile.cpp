@@ -32,8 +32,8 @@ PidFile::PidFile() {
   int Len = sprintf(PID_Number, "%d", getpid());
   if(!pFile.empty()) remove(pFile.c_str());
   int File = open(pFile.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
-  if(File < 0) LogFile::Warning("Can not create PID file (%s)\n", strerror(errno));
-  if(write(File, PID_Number, Len) <= 0) LogFile::Warning("Can not create PID file (%s)\n", strerror(errno));
+  if(File < 0) LogFile::Warning("Can not create PID file (%s)", strerror(errno));
+  if(write(File, PID_Number, Len) <= 0) LogFile::Warning("Can not create PID file (%s)", strerror(errno));
   if(File > 0) close(File);
 }
 PidFile::~PidFile() {

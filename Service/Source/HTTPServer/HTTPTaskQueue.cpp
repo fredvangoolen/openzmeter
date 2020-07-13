@@ -74,6 +74,6 @@ void HTTPTaskQueue::on_idle() {
     delete Tmp;
   }
   pthread_mutex_unlock(&pMutex);
-  LogFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)\n", pFreeWorkers.size(), pRunningWorkers);
+  LogFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)", pFreeWorkers.size(), pRunningWorkers);
 }
 //----------------------------------------------------------------------------------------------------------------------

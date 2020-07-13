@@ -30,15 +30,15 @@ bool DeviceRemote::Register() {
   return true;
 }
 void DeviceRemote::GetInstances() {
-  LogFile::Info("Adding 'Remote' device driver instance with serial 'REMOTE'\n");
+  LogFile::Info("Adding 'Remote' device driver instance with serial 'REMOTE'");
   DeviceManager::AddDevice(new DeviceRemote());
 }
 DeviceRemote::DeviceRemote() : Device("REMOTE", "Remote", "Allow repplication of remote openZmeter devices in local machine") {
   Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial)));
 }
 DeviceRemote::~DeviceRemote() {
-  LogFile::Info("Stopping device with serial '%s'\n", pSerial.c_str());
-  LogFile::Info("Device with serial '%s' stopped\n", pSerial.c_str());
+  LogFile::Info("Stopping device with serial '%s'", pSerial.c_str());
+  LogFile::Info("Device with serial '%s' stopped", pSerial.c_str());
 }
 uint32_t DeviceRemote::AnalyzersCount() {
   return 0;

@@ -25,45 +25,28 @@ TariffPeriod::TariffPeriod(const json &config) {
 }
 json TariffPeriod::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
-  Parser      TmpParser;
-    set<string> TmpVariables;
-    Out["Periods"].push_back(json::object());
-    if((t["Periods"][P].contains("Color") == false) || (t["Periods"][P]["Color"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Color' param is required";
-    Out["Periods"][P]["Color"] = t["Periods"][P]["Color"];
-    if((t["Periods"][P].contains("DefaultPowerCost") == false) || (t["Periods"][P]["DefaultPowerCost"].is_number() == false)) return "'Periods/P" + to_string(P + 1) + "/DefaultPowerCost' param is required";
-    Out["Periods"][P]["DefaultPowerCost"] = t["Periods"][P]["DefaultPowerCost"];
-    if((t["Periods"][P].contains("DefaultEnergyCost") == false) || (t["Periods"][P]["DefaultEnergyCost"].is_number() == false)) return "'Periods/P" + to_string(P + 1) + "/DefaultEnergyCost' param is required";
-    Out["Periods"][P]["DefaultEnergyCost"] = t["Periods"][P]["DefaultEnergyCost"];
-    if((t["Periods"][P].contains("Name") == false) || (t["Periods"][P]["Name"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Name' param is required";
-    Out["Periods"][P]["Name"] = t["Periods"][P]["Name"];
-    if((t["Periods"][P].contains("Script") == false) || (t["Periods"][P]["Script"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Script' param is required";
-    Out["Periods"][P]["Script"] = t["Periods"][P]["Script"];
-    TmpParser.SetVarFactory(VariableFactory, &TmpVariables);
-    TmpParser.DefineVar("ContractedPower",  &pTmpVar);
-    TmpParser.DefineVar("PowerCost",        &pTmpVar);
-    TmpParser.DefineVar("EnergyCost",       &pTmpVar);
-    TmpParser.DefineVar("ActivePower",      &pTmpVar);
-    TmpParser.DefineVar("ActiveEnergy",     &pTmpVar);
-    TmpParser.DefineVar("ReactivePower",    &pTmpVar);
-    TmpParser.DefineVar("ReactiveEnergy",   &pTmpVar);
-    try {
-      TmpParser.SetExpr(t["Periods"][P]["Script"]);
-      TmpParser.Eval();
-    } catch(Parser::exception_type &e) {
-      return "'Periods/P" + to_string(P + 1) + "/Script' parse failed (" + e.GetMsg() + ")";
-    }
-    if(TmpVariables.find("Cost") == TmpVariables.end()) return "'Cost' is not defined in 'Periods/P" + to_string(P + 1) + "/Script'";
-    if((t["Periods"][P].contains("Concepts") == false) || (t["Periods"][P]["Concepts"].is_array() == false)) return "'Periods/P" + to_string(P + 1) + "/Concepts' param is required";
-    Out["Periods"][P]["Concepts"] = json::array();
-    for(uint16_t C = 0; C < t["Periods"][P]["Concepts"].size(); C++) {
-      if((t["Periods"][P]["Concepts"][C].contains("Description") == false) || (t["Periods"][P]["Concepts"][C]["Description"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Concepts/" + to_string(C) + "/Description' param is required";
-      Out["Periods"][P]["Concepts"][C]["Description"] = t["Periods"][P]["Concepts"][C]["Description"];
-      if((t["Periods"][P]["Concepts"][C].contains("Variable") == false) || (t["Periods"][P]["Concepts"][C]["Variable"].is_string() == false)) return "'Periods/P" + to_string(P + 1) + "/Concepts/" + to_string(C) + "/Variable' param is required";
-      Out["Periods"][P]["Concepts"][C]["Variable"] = t["Periods"][P]["Concepts"][C]["Variable"];
-      if((t["Periods"][P]["Concepts"][C].contains("Type") == false) || (t["Periods"][P]["Concepts"][C]["Type"].is_string() == false) || ((t["Periods"][P]["Concepts"][C]["Type"] != "INFO") && (t["Periods"][P]["Concepts"][C]["Type"] != "COST_POWER") && (t["Periods"][P]["Concepts"][C]["Type"] != "COST_ENERGY") && (t["Periods"][P]["Concepts"][C]["Type"] != "COST"))) return "'Periods/P" + to_string(P + 1) + "/Concepts/" + to_string(C) + "/Type' param is required";
-      Out["Periods"][P]["Concepts"][C]["Type"] = t["Periods"][P]["Concepts"][C]["Type"];
-      if(TmpVariables.find(t["Periods"][P]["Concepts"][C]["Variable"]) == TmpVariables.end()) return "'" + t["Periods"][P]["Concepts"][C]["Variable"].get<string>() + "' is not defined in 'Periods/P" + to_string(P + 1) + "/Script'";
-    }
-
+  if(config.is_object() == false) return "'Concept' must be an object";
+  if((config.contains("Color") == false) || (config["Color"].is_string() == false)) return "'Color' param is required";
+  ConfigOUT["Color"] = config["Color"];
+  if((config.contains("DefaultPowerCost") == false) || (config["DefaultPowerCost"].is_number() == false)) return "'DefaultPowerCost' param is required";
+  ConfigOUT["DefaultPowerCost"] = config["DefaultPowerCost"];
+  if((config.contains("DefaultEnergyCost") == false) || (config["DefaultEnergyCost"].is_number() == false)) return "'DefaultEnergyCost' param is required";
+  ConfigOUT["DefaultEnergyCost"] = config["DefaultEnergyCost"];
+  if((config.contains("Name") == false) || (config["Name"].is_string() == false)) return "'Name' param is required";
+  ConfigOUT["Name"] = config["Name"];
+  if((config.contains("Script") == false) || (config["Script"].is_string() == false)) return "'Script' param is required";
+  set<string> Variables = {"ContractedPower", "PowerCost", "EnergyCost", "ActivePower", "ActiveEnergy", "ReactivePower", "ReactiveEnergy"};
+  string Res = TariffScript::CheckConfig(config["Script"], Variables);
+  if(Res.empty() == false) return Res;
+  if(Variables.find("Cost") == Variables.end()) return "'Cost' is not defined in 'Script'";
+  ConfigOUT["Script"] = config["Script"];
+  if((config.contains("Concepts") == false) || (config["Concepts"].is_array() == false)) return "'Concepts' param is required";
+  ConfigOUT["Concepts"] = json::array();
+  for(uint16_t C = 0; C < config["Concepts"].size(); C++) {
+    json Concept = TariffConcept::CheckConfig(config["Concepts"][C], Variables);
+    if(Concept.is_string()) return Concept;
+    ConfigOUT["Concepts"].push_back(Concept);
+  }
+  return ConfigOUT;
 }
 // ---------------------------------------------------------------------------------------------------------------------

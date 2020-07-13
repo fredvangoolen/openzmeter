@@ -44,7 +44,7 @@ LogFile::LogFile() {
   ConfigManager::WriteConfig("/Log", Config);
   if(Name.empty() == false) {
     pFile = open(Name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-    if(pFile < 0) LogFile::Warning("Can not create or open log file (%s)\n", strerror(errno));
+    if(pFile < 0) LogFile::Warning("Can not create or open log file (%s)", strerror(errno));
   }
 }
 LogFile::~LogFile() {
@@ -112,3 +112,4 @@ void LogFile::Msg(Type type, const char *msg, va_list params) {
   }
   pthread_mutex_unlock(&pMutex);
 }
+//----------------------------------------------------------------------------------------------------------------------

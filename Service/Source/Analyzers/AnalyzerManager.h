@@ -28,13 +28,12 @@ class AnalyzerManager final {
     static RWLocks                 pAnalyzersLock;   //Control access to critical sections
   private :
     static void CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response));
-    static void GetRemoteCallback(const json &params, Response &response);
-    static void SetRemoteCallback(const json &params, Response &response);
     static void GetAnalyzersCallback(const json &params, Response &response);
     static void GetAnalyzerCallback(const json &params, Response &response);
     static void SetAnalyzerCallback(const json &params, Response &response);
     static void GetSeriesCallback(const json &params, Response &response);
     static void GetSeriesNowCallback(const json &params, Response &response);
+    static void GetPricesCallback(const json &params, Response &response);
     static void GetWaveStream(const json &params, Response &response);
     static void GetSeriesRangeCallback(const json &params, Response &response);
     static void DelSeriesRangeCallback(const json &params, Response &response);
@@ -44,12 +43,20 @@ class AnalyzerManager final {
     static void GetEventCallback(const json &params, Response &response);
     static void SetEventCallback(const json &params, Response &response);
     static void DelEventCallback(const json &params, Response &response);
-    static void GetPricesCallback(const json &params, Response &response);
-    static void TestAlarmCallback(const json &params, Response &response);
+    static void ListAlarmsCallback(const json &params, Response &response);
     static void GetAlarmsCallback(const json &params, Response &response);
+    static void TestAlarmCallback(const json &params, Response &response);
+    static void AddAlarmCallback(const json &params, Response &response);
+    static void GetAlarmCallback(const json &params, Response &response);
+    static void SetAlarmCallback(const json &params, Response &response);
+    static void DelAlarmCallback(const json &params, Response &response);
     static void GetAlarmsRangeCallback(const json &params, Response &response);
     static void DelAlarmsRangeCallback(const json &params, Response &response);
-    static void DelAlarmCallback(const json &params, Response &response);
+    static void GetRatesCallback(const json &params, Response &response);
+    static void GetRateCallback(const json &params, Response &response);
+    static void AddRateCallback(const json &params, Response &response);
+    static void SetRateCallback(const json &params, Response &response);
+    static void DelRateCallback(const json &params, Response &response);
     static void GetPermissionsCallback(const json &params, Response &response);
     static void AddPermissionCallback(const json &params, Response &response);
     static void SetPermissionCallback(const json &params, Response &response);

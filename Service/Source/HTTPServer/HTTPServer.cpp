@@ -53,22 +53,22 @@ HTTPServer::HTTPServer() {
   ConfigManager::WriteConfig("/HTTPServer", Config);
   if(pthread_create(&pThread, NULL, Listen_Thread, (void*)this) != 0) {
     pThread = 0;
-    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
   } else {
     pthread_setname_np(pThread, "HTTPServer");
   }
 }
 HTTPServer::~HTTPServer() {
-  LogFile::Debug("Stopping HTTPServer\n");
+  LogFile::Debug("Stopping HTTPServer");
   stop();
   if(pThread != 0) pthread_join(pThread, NULL);
-  LogFile::Debug("HTTPServer stopped\n");
+  LogFile::Debug("HTTPServer stopped");
 }
 void *HTTPServer::Listen_Thread(void *params) {
   HTTPServer *This = (HTTPServer*)params;
   nice(10);
-  LogFile::Info("HTTP server starting on port %hu with relative path '%s'\n", This->pPort, This->pRelativePath.c_str());
-  if(This->listen("0.0.0.0", This->pPort) == false) LogFile::Error("HTTP port (%hu) already in use\n", This->pPort);
+  LogFile::Info("HTTP server starting on port %hu with relative path '%s'", This->pPort, This->pRelativePath.c_str());
+  if(This->listen("0.0.0.0", This->pPort) == false) LogFile::Error("HTTP port (%hu) already in use", This->pPort);
   return NULL;
 }
 void HTTPServer::FillResponse(Response &response, const string &body, const char *mime, const int status) {
@@ -110,7 +110,7 @@ const char *HTTPServer::MimeType(const string &file) {
   } else if((FileNameLen >= 5) && (file.compare(FileNameLen - 3, 3, ".md")) == 0) {
     return "text/markdown";
   }
-  LogFile::Debug("No mimetype defined for request '%s'\n", file.c_str());
+  LogFile::Debug("No mimetype defined for request '%s'", file.c_str());
   return "text/plain";
 }
 string HTTPServer::PatchFile(const string &file, const string &find, const string &replace) {
@@ -157,7 +157,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   string URL      = string(request.path).erase(0, pRelativePath.size());
   size_t Size     = 0;
   string UserName = "";
-  LogFile::Debug("HTTP GET '%s'\n", URL.c_str());
+  LogFile::Debug("HTTP GET '%s'", URL.c_str());
   const char *Tmp = (const char*)ResourceManager::GetFile(string("WEB/") + URL, &Size);
   if(Size != 0) return FillResponse(response, Tmp, Size, MimeType(URL), HTTP_OK);
   if(request.has_header("Cookie")) {
@@ -178,7 +178,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
 }
 void HTTPServer::HandlePost(const Request &request, Response &response) {
   string URL = string(request.path).erase(0, pRelativePath.size());
-  LogFile::Debug("HTTP POST '%s'\n", URL.c_str());
+  LogFile::Debug("HTTP POST '%s'", URL.c_str());
   response.set_header("Connection", "Keep-Alive");
   json Params = json::parse(request.body, NULL, false);
   if(Params.is_discarded()) return FillResponse(response, "Malformed JSON params", "text/plain", HTTP_BAD_REQUEST);

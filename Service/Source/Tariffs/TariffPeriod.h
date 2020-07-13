@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include "nlohmann/json.h"
 #include "TariffConcept.h"
+#include "TariffScript.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using json = nlohmann::json;

@@ -27,7 +27,7 @@ bool DeviceVirtual::Register() {
   return true;
 }
 void DeviceVirtual::GetInstances() {
-  LogFile::Info("Adding 'Virtual' device driver instance with serial 'VIRTUAL'\n");
+  LogFile::Info("Adding 'Virtual' device driver instance with serial 'VIRTUAL'");
   DeviceManager::AddDevice(new DeviceVirtual());
 }
 DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of real capture device for testing") {
@@ -37,11 +37,11 @@ DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of r
   Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial)));
 }
 DeviceVirtual::~DeviceVirtual() {
-  LogFile::Info("Stopping device with serial '%s'\n", pSerial.c_str());
+  LogFile::Info("Stopping device with serial '%s'", pSerial.c_str());
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   ClearAnalyzers();
-  LogFile::Info("Device with serial '%s' stopped\n", pSerial.c_str());
+  LogFile::Info("Device with serial '%s' stopped", pSerial.c_str());
 }
 void DeviceVirtual::ClearAnalyzers() {
   pthread_mutex_lock(&pLock);
@@ -103,7 +103,7 @@ void DeviceVirtual::Configure(const json &config) {
   if(pEnabled == true) {
     pTerminate = false;
     if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
-      LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
       ClearAnalyzers();
       pThread = 0;
     } else {

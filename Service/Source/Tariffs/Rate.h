@@ -28,21 +28,18 @@ using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
 class Rate final : public Tariff {
   public :
-
-
-
-
-    string                        Script;
-    string                        PowerCostScript;
-    vector<float>                 PowerCost;
-    string                        EnergyCostScript;
-    vector<float>                 EnergyCost;
-    uint64_t                      StartDate;
-    string                        PriceSource;
-    uint64_t                      EndDate;
-    vector<uint64_t>              BillingCycles;
-    vector<RateTax>               Taxs;
-    vector<float>                 Contracted;
+    string             Name;
+    string             Script;
+    string             PowerCostScript;
+    vector<float>      PowerCost;
+    string             EnergyCostScript;
+    vector<float>      EnergyCost;
+    uint64_t           StartDate;
+    string             pPriceSource;
+    uint64_t           EndDate;
+    vector<uint64_t>   BillingCycles;
+    vector<RateTax>    Taxs;
+    vector<float>      Contracted;
   public :
     static json CheckConfig(const json &config);
   public :

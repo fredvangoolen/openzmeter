@@ -34,7 +34,7 @@ Worker::Worker(const string &name, function<void(void*)> callback, int8_t nice) 
   pCallback = callback;
   if(pthread_create(&pThread, NULL, Thread, (void*)this) != 0) {
     pThread = 0;
-    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
     return;
   }
   if(nice != 0) setpriority(PRIO_PROCESS, pThread, -nice);
@@ -159,7 +159,7 @@ bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
   pthread_mutex_lock(&pMutex);
   while((Error == 0) && (pDataReady == true) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerEnterCond, &pMutex, &To);
   if((Error != 0) && (Error != ETIMEDOUT)) {
-    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
   } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
@@ -169,7 +169,7 @@ bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
   pConsumers++;
   while((Error == 0) && (pDataReady == false) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerWaitCond, &pMutex, &To);
   if((Error != 0) && (Error != ETIMEDOUT)) {
-    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
   } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
@@ -209,7 +209,7 @@ void Tools::DisableEcho() {
 uint64_t Tools::GetTime64() {
   struct timespec Time;
   if(clock_gettime(CLOCK_REALTIME, &Time) != 0) {
-    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
     return 0;
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_nsec / 1000000;
@@ -222,17 +222,17 @@ string Tools::StrTrim(const string &str) {
   return str.substr(first, (last-first+1));
 }
 void Tools::RunDaemon() {
-  LogFile::Info("Move to background task\n");
+  LogFile::Info("Move to background task");
   pid_t ProcID = fork();
   if(ProcID < 0) {
-    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
     exit(1);
   }
   if(ProcID > 0) exit(0);
   umask(0);
   pid_t SID = setsid();
   if(SID < 0) {
-    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
     exit(1);
   }
   LogFile::CloseConsole();

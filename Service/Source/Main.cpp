@@ -35,7 +35,7 @@ using namespace cctz;
 volatile bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
-  LogFile::Info("Shutting down. Please wait while all task ends...\n");
+  LogFile::Info("Shutting down. Please wait while all task ends...");
   Terminate = true;
 }
 int main(int argc, char** argv) {

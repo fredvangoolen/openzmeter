@@ -1,16 +1,31 @@
 #include "RatesEval.h"
-RatesEval::RatesEval(Rates *parent, const uint64_t from, const uint64_t to, const bool precise) {
-  pParent      = parent;
+RatesEval::RatesEval(const json &t, const time_zone &timezone, const uint64_t from, const uint64_t to, const bool precise) {
+  if(t.is_array() == false)
+  for(uint16_t R = 0; R < t.size(); R++) pRates.emplace_back(t[R], timezone);
+  pTimeZone    = timezone;
   pFrom        = FindStart(from, precise);
   pTo          = FindEnd(to, precise);
   pCurrent     = pFrom;
-  pRatePtr     = pParent->pRates.begin();
+  pRatePtr     = pRates.begin();
   pPriceModule = NULL;
   pNowDate     = Tools::GetTime64();
 }
 RatesEval::~RatesEval() {
   UnloadRate();
 }
+json RatesEval::CheckConfig(const json &r) {
+  json ConfigOUT = json::array();
+  if(r.is_array() == false) return "Rate list is not an array";
+  for(uint16_t R = 0; R < r.size(); R++) {
+    json Tmp = Rate::CheckConfig(r[R]);
+    if(Tmp.is_string() == true) return Tmp;
+    ConfigOUT.push_back(Tmp);
+  }
+  return ConfigOUT;
+}
+
+
+
 uint64_t RatesEval::StartDate() {
   return pFrom;
 }
@@ -20,12 +35,12 @@ uint64_t RatesEval::EndDate() {
 uint64_t RatesEval::FindStart(const uint64_t from, bool precise) {
   uint64_t Time = (from / 3600000) * 3600000 + 899999;
   if(precise == false) return Time;
-  for(uint16_t R = 0; R < pParent->pRates.size(); R++) {
-    if((Time < pParent->pRates[R].StartDate) || (Time > pParent->pRates[R].EndDate)) continue;
-    Time = pParent->pRates[R].StartDate + 899999;
-    for(uint16_t B = 0; B < pParent->pRates[R].BillingCycles.size(); B++) {
-      if(pParent->pRates[R].BillingCycles[B] > Time) return Time;
-      Time = pParent->pRates[R].BillingCycles[B] + 900000;
+  for(uint16_t R = 0; R < pRates.size(); R++) {
+    if((Time < pRates[R].StartDate) || (Time > pRates[R].EndDate)) continue;
+    Time = pRates[R].StartDate + 899999;
+    for(uint16_t B = 0; B < pRates[R].BillingCycles.size(); B++) {
+      if(pRates[R].BillingCycles[B] > Time) return Time;
+      Time = pRates[R].BillingCycles[B] + 900000;
     }
   }
   return Time;
@@ -33,12 +48,12 @@ uint64_t RatesEval::FindStart(const uint64_t from, bool precise) {
 uint64_t RatesEval::FindEnd(const uint64_t to, bool precise) {
   uint64_t Time = (to / 3600000) * 3600000 + 899999;
   if(precise == false) return Time;
-  for(uint16_t R = 0; R < pParent->pRates.size(); R++) {
-    if((Time < pParent->pRates[R].StartDate) || (Time > pParent->pRates[R].EndDate)) continue;
-    Time = pParent->pRates[R].EndDate;
-    for(uint16_t B = pParent->pRates[R].BillingCycles.size(); B > 0; B--) {
-      if(pParent->pRates[R].BillingCycles[B - 1] < Time) return Time;
-      Time = pParent->pRates[R].BillingCycles[B - 1];
+  for(uint16_t R = 0; R < pRates.size(); R++) {
+    if((Time < pRates[R].StartDate) || (Time > pRates[R].EndDate)) continue;
+    Time = pRates[R].EndDate;
+    for(uint16_t B = pRates[R].BillingCycles.size(); B > 0; B--) {
+      if(pRates[R].BillingCycles[B - 1] < Time) return Time;
+      Time = pRates[R].BillingCycles[B - 1];
     }
   }
   return Time;
@@ -78,7 +93,7 @@ void RatesEval::LoadRate() {
   pScript.DefineVar("ReactivePower",  &pSampleOut.ReactivePower);
   pScript.DefineVar("ReactiveEnergy", &pSampleOut.ReactiveEnergy);
   pScript.SetExpr(pRatePtr->Script);
-  pPriceModule = PriceSource::CreateInstance(pRatePtr->PriceSource);
+  pPriceModule = PriceSource::CreateInstance(pRatePtr->pPriceSource);
   pPriceModule->PrepareRange(pCurrent, (pBillPtr != pRatePtr->BillingCycles.end()) ? *pBillPtr : pRatePtr->EndDate);
   pPriceModule->GetParams(0, pPriceVariables);
   if(pRatePtr->EnergyCost.size() == 0) {
@@ -103,7 +118,7 @@ void RatesEval::UnloadRate() {
   pPeriods.clear();
 }
 void RatesEval::HandleSample(const float active, const float reactive) {
-  while(pRatePtr != pParent->pRates.end()) {
+  while(pRatePtr != pRates.end()) {
     if(pCurrent < pRatePtr->StartDate) break;
     if((pCurrent >= pRatePtr->StartDate) && (pCurrent <= pRatePtr->EndDate)) {
       LoadRate();
@@ -111,7 +126,7 @@ void RatesEval::HandleSample(const float active, const float reactive) {
     }
     pRatePtr++;
   }
-  civil_second Time = convert(chrono::system_clock::from_time_t(pCurrent / 1000), *(pParent->pTimeZone));
+  civil_second Time = convert(chrono::system_clock::from_time_t(pCurrent / 1000), pTimeZone);
   if(pPeriods.size() > 0) {
     while(Time.year() > pYearPtr->Year) pYearPtr++;
     pSampleOut.Period  = pRatePtr->Days[pYearPtr->Days[get_yearday(civil_day(Time)) - 1]].Quarters[Time.hour() * 4 + Time.minute() / 15];
@@ -170,17 +185,17 @@ json RatesEval::BuildBill(bool complete) {
     for(uint16_t C = 0; C < pRatePtr->Periods[P].Concepts.size(); C++) {
       Result["Periods"][P].push_back(json::object());
       Result["Periods"][P][C]["Description"] = pRatePtr->Periods[P].Concepts[C].Description;
-      if(pRatePtr->Periods[P].Concepts[C].Type == RateConcept::CONCEPT_COST) {
+      if(pRatePtr->Periods[P].Concepts[C].Type == TariffConcept::CONCEPT_COST) {
         float Cost = pPeriods[P].Variables[pRatePtr->Periods[P].Concepts[C].Variable];
         Result["Periods"][P][C]["Value"] = Cost;
         Result["Periods"][P][C]["Type"] = "COST";
         GeneralTerm += Cost;
-      } else if(pRatePtr->Periods[P].Concepts[C].Type == RateConcept::CONCEPT_COST_ENERGY) {
+      } else if(pRatePtr->Periods[P].Concepts[C].Type == TariffConcept::CONCEPT_COST_ENERGY) {
         float Cost = pPeriods[P].Variables[pRatePtr->Periods[P].Concepts[C].Variable];
         Result["Periods"][P][C]["Value"] = Cost;
         Result["Periods"][P][C]["Type"] = "COST_ENERGY";
         EnergyTerm += Cost;
-      } else if(pRatePtr->Periods[P].Concepts[C].Type == RateConcept::CONCEPT_COST_POWER) {
+      } else if(pRatePtr->Periods[P].Concepts[C].Type == TariffConcept::CONCEPT_COST_POWER) {
         float Cost = pPeriods[P].Variables[pRatePtr->Periods[P].Concepts[C].Variable];
         Result["Periods"][P][C]["Value"] = Cost;
         Result["Periods"][P][C]["Type"] = "COST_POWER";
@@ -195,17 +210,17 @@ json RatesEval::BuildBill(bool complete) {
   for(uint16_t C = 0; C < pRatePtr->Concepts.size(); C++) {
     Result["General"].push_back(json::object());
     Result["General"][C]["Description"] = pRatePtr->Concepts[C].Description;
-    if(pRatePtr->Concepts[C].Type == RateConcept::CONCEPT_COST) {
+    if(pRatePtr->Concepts[C].Type == TariffConcept::CONCEPT_COST) {
       float Cost = pVariables[pRatePtr->Concepts[C].Variable];
       Result["General"][C]["Value"] = Cost;
       Result["General"][C]["Type"] = "COST";
       GeneralTerm += Cost;
-    } else if(pRatePtr->Concepts[C].Type == RateConcept::CONCEPT_COST_ENERGY) {
+    } else if(pRatePtr->Concepts[C].Type == TariffConcept::CONCEPT_COST_ENERGY) {
       float Cost = pVariables[pRatePtr->Concepts[C].Variable];
       Result["General"][C]["Value"] = Cost;
       Result["General"][C]["Type"] = "COST_ENERGY";
       EnergyTerm += Cost;
-    } else if(pRatePtr->Concepts[C].Type == RateConcept::CONCEPT_COST_POWER) {
+    } else if(pRatePtr->Concepts[C].Type == TariffConcept::CONCEPT_COST_POWER) {
       float Cost = pVariables[pRatePtr->Concepts[C].Variable];
       Result["General"][C]["Value"] = Cost;
       Result["General"][C]["Type"] = "COST_POWER";

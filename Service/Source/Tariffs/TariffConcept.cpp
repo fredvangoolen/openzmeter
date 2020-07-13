@@ -20,4 +20,14 @@ TariffConcept::TariffConcept(const json &config) {
   Variable = config["Variable"];
   Type = (config["Type"] == "INFO") ? CONCEPT_INFO : (config["Type"] == "COST_POWER") ? CONCEPT_COST_POWER : (config["Type"] == "COST_ENERGY") ? CONCEPT_COST_ENERGY : CONCEPT_COST;
 }
+json TariffConcept::CheckConfig(const json &config, const set<string> &variables) {
+  json ConfigOUT = json::object();
+  if((config.contains("Description") == false) || (config["Description"].is_string() == false)) return "'Description' param is required";
+  ConfigOUT["Description"] = config["Description"];
+  if((config.contains("Type") == false) || (config["Type"].is_string() == false) || ((config["Type"] != "INFO") && (config["Type"] != "COST_POWER") && (config["Type"] != "COST_ENERGY") && (config["Type"] != "COST"))) return "'Type' param is required";
+  ConfigOUT["Type"] = config["Type"];
+  if((config.contains("Variable") == false) || (config["Variable"].is_string() == false) || (variables.find(config["Variable"]) == variables.end())) return "'Variable' param is required";
+  ConfigOUT["Variable"] = config["Variable"];
+  return ConfigOUT;
+}
 // ---------------------------------------------------------------------------------------------------------------------

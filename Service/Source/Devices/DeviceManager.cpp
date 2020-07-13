@@ -31,16 +31,16 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("setDevice",      SetDeviceCallback);
 }
 DeviceManager::~DeviceManager() {
-  LogFile::Debug("Stopping DeviceManager\n");
+  LogFile::Debug("Stopping DeviceManager");
   HTTPServer::UnregisterCallback("getDevices");
   HTTPServer::UnregisterCallback("getDevice");
   HTTPServer::UnregisterCallback("setDevice");
-  LogFile::Info("Stopping devices...\n");
+  LogFile::Info("Stopping devices...");
   pDevicesLock.WriteLock();
   for(auto &Device : pDevices) delete Device.second;
   pDevices.clear();
   pDevicesLock.Unlock();
-  LogFile::Debug("DeviceManager stopped\n");
+  LogFile::Debug("DeviceManager stopped");
 }
 void DeviceManager::AddDevice(Device *dev) {
   pDevicesLock.WriteLock();

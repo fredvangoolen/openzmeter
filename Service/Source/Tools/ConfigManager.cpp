@@ -28,7 +28,7 @@ ConfigManager::ConfigManager(const string &name) {
   pthread_mutex_lock(&pMutex);
   pFile = open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
   if(pFile < 0) {
-    LogFile::Error("Can not open config file (%s)\n", strerror(errno));
+    LogFile::Error("Can not open config file (%s)", strerror(errno));
     pFile = -1;
     pthread_mutex_unlock(&pMutex);
     return;
@@ -52,7 +52,7 @@ ConfigManager::~ConfigManager() {
 }
 bool ConfigManager::WriteConfig(const string &path, const json &val) {
   pthread_mutex_lock(&pMutex);
-  LogFile::Debug("Saving '%s' settings\n", path.c_str());
+  LogFile::Debug("Saving '%s' settings", path.c_str());
   if(pFile == -1) {
     pthread_mutex_unlock(&pMutex);
     return false;
@@ -61,12 +61,12 @@ bool ConfigManager::WriteConfig(const string &path, const json &val) {
   lseek(pFile, 0, SEEK_SET);
   string Write = pConfig.dump(2);
   if(write(pFile, Write.c_str(), Write.size()) < 0) {
-    LogFile::Error("Can not write configuration to file (%s)\n", strerror(errno));
+    LogFile::Error("Can not write configuration to file (%s)", strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
   }
   if(ftruncate(pFile, Write.size()) < 0 ) {
-    LogFile::Error("Can not write configuration to file (%s)\n", strerror(errno));
+    LogFile::Error("Can not write configuration to file (%s)", strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
   }
@@ -75,7 +75,7 @@ bool ConfigManager::WriteConfig(const string &path, const json &val) {
 }
 json ConfigManager::ReadConfig(const string &path) {
   pthread_mutex_lock(&pMutex);
-  LogFile::Debug("Reading '%s' settings\n", path.c_str());
+  LogFile::Debug("Reading '%s' settings", path.c_str());
   if((pFile == -1) || (pConfig.is_object() == false)) {
     pthread_mutex_unlock(&pMutex);
     return nullptr;

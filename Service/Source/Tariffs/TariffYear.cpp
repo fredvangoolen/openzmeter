@@ -22,7 +22,7 @@ TariffYear::TariffYear(const json &config) {
   Year = config["Year"];
   for(uint16_t D = 0; D < config["Days"].size(); D++) Days[D] = config["Days"][D];
 }
-json TariffYear::CheckConfig(const json &config, const uint8_t dayTypes) {
+json TariffYear::CheckConfig(const json &config, const uint16_t dayTypes) {
   json ConfigOUT = json::object();
   if((config.contains("Year") == false) || (config["Year"].is_number_integer() == false) || (config["Year"] < 2000) || (config["Year"] > 2100)) return "'Year' param is required";
   ConfigOUT["Year"] = config["Year"];
@@ -34,3 +34,4 @@ json TariffYear::CheckConfig(const json &config, const uint8_t dayTypes) {
   }
   return ConfigOUT;
 }
+// ---------------------------------------------------------------------------------------------------------------------
