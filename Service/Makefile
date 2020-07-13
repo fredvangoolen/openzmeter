@@ -9,7 +9,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort) $(WEB_TARGET)
 #Executable related components
 EXECUTABLE_TARGET = Tmp/openZmeter
 EXECUTABLE_SOURCE = $(shell find Source -name "*.cpp" ! -type d -print)
-CFLAGS  += -DCPPHTTPLIB_USE_POLL -Wno-psabi -Wall -I Source -I Source/Devices -I Source/Analyzers -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools
+CFLAGS  += -DCPPHTTPLIB_USE_POLL -Wno-psabi -Wall -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/AnalyzerSoft -I Source/Analyzers/AnalyzerRemote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools
 LDFLAGS += -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto
 
 #Add libs (cctz, nlohmann, muparser, httplib, mqtt-c)
@@ -67,13 +67,13 @@ ifeq ($(DEVICE_VIRTUAL), true)
 	EXECUTABLE_SOURCE += Source/Devices/Virtual/DeviceVirtual.cpp
 	ANALYZER_SOFT = true
 endif
-ifeq ($(DEVICE_REMOTE), true)
-	EXECUTABLE_SOURCE += Source/Devices/Remote/DeviceRemote.cpp Source/Analyzers/Remote/AnalyzerRemote.cpp
-	CFLAGS += -I Source/Analyzers/Remote
-endif
+#ifeq ($(DEVICE_REMOTE), true)
+#	EXECUTABLE_SOURCE += Source/Devices/Remote/DeviceRemote.cpp Source/Analyzers/Remote/AnalyzerRemote.cpp
+#	CFLAGS += -I Source/Analyzers/Remote
+#endif
 ifeq ($(ANALYZER_SOFT), true)
-	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp
-	CFLAGS += -I Source/Analyzers/Soft
+#	EXECUTABLE_SOURCE += Source/Analyzers/Soft/AnalyzerSoft.cpp
+#	CFLAGS += -I Source/Analyzers/Soft
 	LDFLAGS += -lfftw3f
 endif
 ifeq ($(OS_TARGET), OPENWRT)

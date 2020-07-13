@@ -37,7 +37,7 @@ void TariffManager::GetTariffsCallback(const json &params, Response &response) {
     uint32_t Items = 0;
     writer->Write("[\n  ");
     Database DB;
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'UserName', username) as result FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ")"));
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'UserName', username) as result FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ") ORDER BY name ASC"));
     while(DB.FecthRow()) writer->Write(((Items++ != 0) ? ",\n  " : "") + DB.ResultString("result"));
     writer->Write("\n]", true);
     return false;

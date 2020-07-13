@@ -19,9 +19,9 @@ AnalyzerSoftAlarms::AnalyzerSoftAlarms(AnalyzerSoft *parent) {
   //Cargo las alarmas desde la DB
   pWorker = new Worker("AlarmsDet", [&](void *a) { this->Alarms_Func((AnalyzerSoft::Params_t*)a); });
 }
+AnalyzerSoftAlarms::~AnalyzerSoftAlarms() {}
 //  pAlarms = new Worker("AlarmsDet", [&](void *a) { this->Alarms_Func((Params_t*)a); });
-
-  //  if(config.contains("Alarms") && config["Alarms"].is_array()) {
+//  if(config.contains("Alarms") && config["Alarms"].is_array()) {
 //    for(auto configAlarm : config["Alarms"]) {
 //      if((configAlarm.contains("Name") == false) || (configAlarm["Name"].is_string() == false)) continue;
 //      if((configAlarm.contains("Priority") == false) || (configAlarm["Priority"].is_number_unsigned() == false) || (configAlarm["Priority"] > 2)) continue;
@@ -159,6 +159,7 @@ void AnalyzerSoft::Alarms_Func(Params_t *aggreg) {
     }
   }
 }*/
+void AnalyzerSoftAlarms::Alarms_Func(AnalyzerSoft::Params_t *aggreg) {}
 void AnalyzerSoftAlarms::Run(const AnalyzerSoft::Params_t &params) {
 
 }

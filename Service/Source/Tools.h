@@ -23,25 +23,7 @@
 using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class Worker {
-  private :
-    void                 *pRunParam;
-    volatile bool         pWorking;
-    volatile bool         pTerminate;
-    pthread_t             pThread;
-    pthread_mutex_t       pMutex;
-    pthread_cond_t        pCondWake;
-    pthread_cond_t        pCondWait;
-    function<void(void*)> pCallback;
-  private :
-    static void *Thread(void *args);
-  public :
-    Worker(const string &name, function<void(void*)> callback, int8_t nice = 0);
-    ~Worker();
-    bool IsWorking();
-    void Run(void *param);
-    void Wait();
-};
+
 //----------------------------------------------------------------------------------------------------------------------
 class RWLocks final {
   private :

@@ -17,6 +17,7 @@
 #include <pthread.h>
 #include "nlohmann/json.h"
 #include "HTTPServer.h"
+#include "Worker.h"
 // ---------------------------------------------------------------------------------------------------------------------
 #define MODBUS_FUNC_NONE 0x00
 //#define MB_FC_READ_COILS 1
