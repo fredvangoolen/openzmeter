@@ -26,7 +26,7 @@ class TariffDay {
       string                        Color;
       uint16_t                      Quarters[96];
   public :
-    static json CheckConfig(const json &config);
+    static json CheckConfig(const json &config, const uint16_t periods);
   public :
     TariffDay(const json &config);
 };

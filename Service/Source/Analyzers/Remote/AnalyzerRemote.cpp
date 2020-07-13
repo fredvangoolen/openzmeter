@@ -66,7 +66,7 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
         sink.write(Data.c_str(), Data.size());
         pProducerRequest = NULL;
       } else {
-        LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+        LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
       }
       pthread_cond_signal(&pProducerCond);
       pthread_mutex_unlock(&pMutex);
@@ -142,7 +142,7 @@ void AnalyzerRemote::HandleRequest(const string &url, const json &params, Respon
     return HTTPServer::FillResponse(response, Request.Response["Response"], Mime.c_str(), Code);
   } else {
     pthread_mutex_unlock(&pMutex);
-    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
     return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   }
 }

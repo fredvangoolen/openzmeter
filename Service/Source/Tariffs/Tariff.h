@@ -37,18 +37,14 @@ using namespace mu;
 //----------------------------------------------------------------------------------------------------------------------
 class Tariff {
   public :
-    string                        Name;
     string                        Description;
     string                        Currency;
     string                        PowerUnits;
     string                        EnergyUnits;
-
-
-        vector<TariffConcept>           Concepts;
-    vector<TariffPeriod>            Periods;
-    vector<TariffDay>               Days;
-    vector<TariffYear>              Years;
-
+    vector<TariffConcept>         Concepts;
+    vector<TariffPeriod>          Periods;
+    vector<TariffDay>             Days;
+    vector<TariffYear>            Years;
   public :
     static json CheckConfig(const json &config);
   public :

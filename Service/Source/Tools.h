@@ -23,7 +23,7 @@
 using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-class Worker final {
+class Worker {
   private :
     void                 *pRunParam;
     volatile bool         pWorking;

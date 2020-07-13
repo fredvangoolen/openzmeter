@@ -27,8 +27,6 @@ json PriceSource::GetVarsInfo() {
   for(auto M : pModules) Result[M.first] = M.second.Info();
   return Result;
 }
-PriceSource::PriceSource() {
-}
 PriceSource::~PriceSource() {
 }
 //----------------------------------------------------------------------------------------------------------------------

@@ -22,6 +22,7 @@ RateTax::RateTax(const json &config) {
 }
 json RateTax::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
+  if(config.is_object() == false) return "'Tax' is not an object";
   if((config.contains("Description") == false) || (config["Description"].is_string() == false)) return "'Description' param is required";
   ConfigOUT["Description"] = config["Description"];
   if((config.contains("Value") == false) || (config["Value"].is_number() == false)) return "'Value' param is required";

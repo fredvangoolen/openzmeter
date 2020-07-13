@@ -45,6 +45,8 @@ class RatesEval final {
       map<string, float> Variables;
     } LoadedPeriod_t;
   private :
+    time_zone                           pTimeZone;
+    vector<Rate>                        pRates;
     uint64_t                            pFrom;
     uint64_t                            pTo;
     uint64_t                            pNowDate;
@@ -74,8 +76,13 @@ class RatesEval final {
     uint64_t FindStart(const uint64_t from, bool precise);
     uint64_t FindEnd(const uint64_t to, bool precise);
   public :
-    RatesEval(const json &rates, const uint64_t from, const uint64_t to, const bool precise);
+    static json CheckConfig(const json &t);
+  public :
+    RatesEval(const json &t, const time_zone &timezone, const uint64_t from, const uint64_t to, const bool precise);
     ~RatesEval();
+
+
+
     void     PushSample(const uint64_t time, const float active, const float reactive);
     void     Finish();
 //    void     SetPeriodCallback(function<void(const PeriodOut_t &)> periodOut);

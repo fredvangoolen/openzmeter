@@ -28,8 +28,6 @@ class PriceSource {
     } Module_t;
   protected :
     static map<string, Module_t> pModules;
-  protected :
-    PriceSource();
   public :
     static PriceSource *CreateInstance(const string &name);
     static json         GetVarsInfo();

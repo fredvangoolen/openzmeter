@@ -23,7 +23,7 @@ class TariffYear final {
     uint16_t     Year;
     uint16_t     Days[366];
   public :
-    static json CheckConfig(const json &config, const uint8_t dayTypes);
+    static json CheckConfig(const json &config, const uint16_t dayTypes);
   public :
     TariffYear(const json &config);
 };

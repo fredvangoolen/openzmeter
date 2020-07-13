@@ -71,7 +71,7 @@ void ESIOSFetch::Configure(const json &config) {
     pTerminate = false;
     if(pthread_create(&pThread, NULL, Thread_Func, NULL) != 0) {
       pThread = 0;
-      LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
     } else {
       pthread_setname_np(pThread, "ESIOSClient");
     }
@@ -110,13 +110,13 @@ void *ESIOSFetch::Thread_Func(void *params) {
     string   Token = This->pToken;
     uint64_t To    = pSyncDate + 863999999;
     pthread_mutex_unlock(&pMutex);
-    LogFile::Debug("ESIOS request start (Up to %" PRIu64 ")\n", To);
+    LogFile::Debug("ESIOS request start (Up to %" PRIu64 ")", To);
     bool     Fail   = false;
     for(uint16_t V = 0; (Fail == false) && (V < pVariables.size()); V++) Fail = !FetchIndicator(Client, Token, pVariables[V], To);
     if(Fail == true) {
       usleep(1000000);
     } else {
-      LogFile::Debug("ESIOS request finished\n");
+      LogFile::Debug("ESIOS request finished");
       pthread_mutex_lock(&pMutex);
       if(pSyncDate < (Tools::GetTime64() + 864000000)) pSyncDate = pSyncDate + 864000000;
       pthread_mutex_unlock(&pMutex);

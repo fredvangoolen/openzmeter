@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <stdlib.h>
+#include <set>
 #include "nlohmann/json.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
@@ -24,11 +25,11 @@ class TariffConcept final {
   public :
     enum Concept_Type { CONCEPT_INFO, CONCEPT_COST_ENERGY, CONCEPT_COST_POWER, CONCEPT_COST };
   public :
-    string                        Description;
-    string                        Variable;
-    Concept_Type                  Type;
+    string        Description;
+    string        Variable;
+    Concept_Type  Type;
   public :
-    static json CheckConfig(const json &config);
+    static json CheckConfig(const json &config, const set<string> &variables);
   public :
     TariffConcept(const json &config);
 };

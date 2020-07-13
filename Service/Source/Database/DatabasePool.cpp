@@ -49,9 +49,9 @@ DatabasePool::DatabasePool() {
   ConfigManager::WriteConfig("/Database", Config);
   pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase + " sslmode=allow";
 
-  LogFile::Debug("Creating database tables\n");
+  LogFile::Debug("Creating database tables");
   Database DB;
-  if(DB.ExecResource("SQL/Database.sql") == false) LogFile::Error("Database is damaged, manual repair is nedded\n");
+  if(DB.ExecResource("SQL/Database.sql") == false) LogFile::Error("Database is damaged, manual repair is nedded");
 }
 DatabasePool::~DatabasePool() {
   pthread_mutex_lock(&pMutex);
@@ -63,7 +63,7 @@ DatabasePool::~DatabasePool() {
   pthread_mutex_unlock(&pMutex);
 }
 void DatabasePool::PeriodicTasks() {
-  LogFile::Debug("Vacuuming database\n");
+  LogFile::Debug("Vacuuming database");
   Database DB;
   DB.ExecSentenceNoResult("VACUUM");
   pthread_mutex_lock(&pMutex);
@@ -74,7 +74,7 @@ void DatabasePool::PeriodicTasks() {
     PQfinish(Tmp.Connection);
     pConnectionPool.pop_back();
   }
-  LogFile::Debug("Adjusted database queries pool to %d connections\n", pConnectionPool.size());
+  LogFile::Debug("Adjusted database queries pool to %d connections", pConnectionPool.size());
   pthread_mutex_unlock(&pMutex);
 }
 PGconn *DatabasePool::PopConnection() {
@@ -92,7 +92,7 @@ PGconn *DatabasePool::PopConnection() {
   }
   if((Tmp != NULL) && (PQstatus(Tmp) != CONNECTION_OK)) {
     char *Save;
-    LogFile::Error("Cant open database (%s)\n", strtok_r(PQerrorMessage(Tmp), "\r\n", &Save));
+    LogFile::Error("Cant open database (%s)", strtok_r(PQerrorMessage(Tmp), "\r\n", &Save));
     PQfinish(Tmp);
     return NULL;
   }
@@ -100,7 +100,7 @@ PGconn *DatabasePool::PopConnection() {
     PGresult *Result = PQexec(Tmp, "SET synchronous_commit TO OFF; SET client_min_messages = error;");
     if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
       char *Save;
-      LogFile::Error("Error in SQL query (%s)\n", strtok_r(PQerrorMessage(Tmp), "\r\n", &Save));
+      LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(Tmp), "\r\n", &Save));
       PQclear(Result);
       PQfinish(Tmp);
       return NULL;

@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "TariffManager.h"
 #include "Tariff.h"
+#include "HTTPChunkedWriter.h"
 // ---------------------------------------------------------------------------------------------------------------------
 TariffManager::TariffManager() {
   HTTPServer::RegisterCallback("getTariffs",     GetTariffsCallback);
@@ -31,11 +32,17 @@ TariffManager::~TariffManager() {
   HTTPServer::UnregisterCallback("addTariff");
 }
 void TariffManager::GetTariffsCallback(const json &params, Response &response) {
-  Database DB;
-  string   UserName = params["UserName"];
-  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('Name', name, 'UserName', username))), '[]') as result FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ")"));
-  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+  string UserName = params["UserName"];
+  auto WriteFunc  = [UserName](HTTPChunkedWriter *writer) -> bool {
+    uint32_t Items = 0;
+    writer->Write("[\n  ");
+    Database DB;
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'UserName', username) as result FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ")"));
+    while(DB.FecthRow()) writer->Write(((Items++ != 0) ? ",\n  " : "") + DB.ResultString("result"));
+    writer->Write("\n]", true);
+    return false;
+  };
+  new HTTPChunkedWriter(response, "application/json", WriteFunc);
 }
 void TariffManager::GetTariffCallback(const json &params, Response &response) {
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
