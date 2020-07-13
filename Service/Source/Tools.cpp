@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/resource.h>
+#include <uuid/uuid.h>
 #include <unistd.h>
 #include "Tools.h"
 #include "LogFile.h"
@@ -155,6 +156,13 @@ uint64_t Tools::GetTime64() {
     return 0;
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_nsec / 1000000;
+}
+string Tools::GetUUID() {
+  uuid_t SessionID;
+  char   SessionIDText[37];
+  uuid_generate(SessionID);
+  uuid_unparse_upper(SessionID, SessionIDText);
+  return SessionIDText;
 }
 string Tools::StrTrim(const string &str) {
   string chars = "\t\n\v\f\r ";

@@ -135,7 +135,7 @@ void HTTPServer::LogIn(const json &params, Response &response) {
   if(DB.FecthRow()) {
     Response["LastLogin"] = DB.ResultUInt64("lastlogin");
     if((params.contains("UpdateLastLogin") == true) && (params["UpdateLastLogin"].is_boolean() == true)) UpdateLastLogin = params["UpdateLastLogin"];
-    DB.ExecSentenceAsyncResult("INSERT INTO sessions(id, username, timestamp) VALUES ((SELECT string_agg(substr('ABCDEF0123456789', ceil (random() * 16)::integer, 1), '') FROM generate_series(1, 128))," + DB.Bind(User) + ", " + DB.Bind(Tools::GetTime64()) + ") RETURNING id");
+    DB.ExecSentenceAsyncResult("INSERT INTO sessions(id, username, timestamp) VALUES (" + DB.Bind(Tools::GetUUID()) + "," + DB.Bind(User) + ", " + DB.Bind(Tools::GetTime64()) + ") RETURNING id");
     if(DB.FecthRow()) response.set_header("Set-Cookie", "SESSION=" + DB.ResultString("id"));
     if(UpdateLastLogin) DB.ExecSentenceNoResult("UPDATE users SET lastlogin = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(User));
     return FillResponse(response, Response.dump(), "application/json", HTTP_OK);
