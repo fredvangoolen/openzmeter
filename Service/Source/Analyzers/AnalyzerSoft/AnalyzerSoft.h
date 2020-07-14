@@ -28,6 +28,7 @@ extern "C" {
 #include "RatesEval.h"
 #include "Worker.h"
 #include "AnalyzerSoftFFT.h"
+#include "AnalyzerSoftRates.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace httplib;
@@ -119,6 +120,9 @@ class AnalyzerSoft : public Analyzer {
     const uint8_t              pVoltageChannels;         //Voltage channels
     const uint8_t              pCurrentChannels;         //Current channels
     const AnalyzerMode         pMode;                    //Operation mode
+
+    AnalyzerSoftRates         *pRates;                   //Rate handle class
+
   private : //Used in BufferAppend, Configure and Analyzer_Func and some callbacks
     RWLocks                    pAnalyzerLock;            //Locks access to analysis shared variables
     bool                       pSave200MS;               //Save 10 cycles aggregation to database
@@ -144,7 +148,7 @@ class AnalyzerSoft : public Analyzer {
     uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
     uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
     uint32_t                  *pFreqCycles;              //Frequency calc cycles lenghts
-    json                       pRates;                   //Applied rates
+//    json                       pRates;                   //Applied rates
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
     AnalyzerSoftAlarms        *pAlarms;                  //Alarms control
   private : //Used only in Analyzer_Func
