@@ -17,7 +17,19 @@
 #include "AnalyzerSoft.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftZeroCrossing {
+  private :
+    typedef struct {
+      float                    A0;
+      float                    A1;
+      float                    A2;
+      float                    B1;
+      float                    B2;
+      float                    ChannelsZ1[3];
+      float                    ChannelsZ2[3];
+    } Filter_t;
   public :
-    AnalyzerSoftZeroCrossing(const AnalyzerSoft::AnalyzerMode mode, const float samplerate);
+    AnalyzerSoftZeroCrossing(const AnalyzerSoft::AnalyzerMode mode, const float samplerate, const float nominal);
+    void Clear();
+    bool PushSample(float *sample);
 };
 // ---------------------------------------------------------------------------------------------------------------------

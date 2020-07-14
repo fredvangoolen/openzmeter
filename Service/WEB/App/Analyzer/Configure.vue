@@ -31,7 +31,7 @@
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Nominal frequency</label>
-        <input-spin prepend="Hz" :big="true" :list="[{name: 'DC', value: 0}, {name: '50 Hz', value: 50}, {name: '60 Hz', value: 60}]" :decimals="1" :min="0" :max="500" :increment="1" v-model="Analyzer.NominalFrequency"></input-spin>
+        <option-picker :big="true" :options="[{name: 'DC', value: 0}, {name: '50 Hz', value: 50}, {name: '60 Hz', value: 60}]" v-model="Analyzer.NominalFrequency"></option-picker>
       </div>
       <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12 col-sm-6">
