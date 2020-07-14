@@ -16,6 +16,7 @@
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
             <button type="button" class="btn btn-xs btn-success" @click="Edit(props.rowData)">Add notes</button>
+            <button type="button" class="btn btn-xs btn-success" @click="CyclicHistogram(props.rowData)">Cyclic Histogram</button>
             <button type="button" class="btn btn-xs btn-default" @click="RMS(props.rowData)">RMS</button>
             <button type="button" class="btn btn-xs btn-default" @click="RAW(props.rowData)">Wave</button>
             <button type="button" class="btn btn-danger btn-xs"  @click="Delete(props.rowData)">Delete</button>
@@ -157,6 +158,11 @@
         var Export = [['Date', 'Type', 'Duration', 'ΔU (V)', 'Notes']];
         for(var i = 0; i < this.Events.length; i++) Export.push([this.Events[i].StartTime, this.Events[i].Type, this.Round(this.Events[i].SampleDuration / this.Events[i].SampleRate, 3), this.Round(this.Events[i].Diff, 3), this.Events[i].Notes]);
         return Object.seal(Export);
+      },
+      CyclicHistogram: function(evt){
+        this.Event = evt;
+        this.View = 'About';
+        return;
       }
     },
     components: { Vuetable, EventDialog, EventNotes }
