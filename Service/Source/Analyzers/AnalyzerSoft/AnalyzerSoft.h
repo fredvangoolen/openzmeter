@@ -134,8 +134,6 @@ class AnalyzerSoft : public Analyzer {
     uint16_t                   pBlockCycles[24];         //Max block sizes
     float                     *pVoltageSamples;          //Voltage samples
     float                     *pCurrentSamples;          //Current samples
-//    uint32_t                   pMaxFFTSamples;           //Max FFT block samples
-//    uint16_t                   pFFTSamples;              //FFT result samples
 
     float                      pLastSamples[3];          //Filter samples backup
     Filter_t                   pFilters[FILTERSTAGES];   //Filter bank

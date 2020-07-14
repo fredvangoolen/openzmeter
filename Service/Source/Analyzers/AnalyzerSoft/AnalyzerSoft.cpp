@@ -113,6 +113,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   LogFile::Info("Analyzer with serial '%s' stopped", pSerial.c_str());
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
+
   pAnalyzerLock.ReadLock();
   if(pBlockSamples == 0) {
     pAggreg200MS.Timestamp = Tools::GetTime64();
@@ -200,7 +201,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   if(!config.is_object()) return ConfigOUT;
   if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
   if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
-  if(config.contains("NominalFrequency") && config["NominalFrequency"].is_number() && (config["NominalFrequency"] >= 0) && (config["NominalFrequency"] <= 400)) ConfigOUT["NominalFrequency"] = config["NominalFrequency"];
+  if(config.contains("NominalFrequency") && config["NominalFrequency"].is_number() && ((config["NominalFrequency"] == 50.0) || (config["NominalFrequency"] == 60.0) || (config["NominalFrequency"] == 0.0))) ConfigOUT["NominalFrequency"] = config["NominalFrequency"];
   if(config.contains("MaxCurrent") && config["MaxCurrent"].is_number() && (config["MaxCurrent"] >= 1) && (config["MaxCurrent"] <= 100000)) ConfigOUT["MaxCurrent"] = config["MaxCurrent"];
   if(config.contains("MinCurrent") && config["MinCurrent"].is_number() && (config["MinCurrent"] >= 0.01) && (config["MinCurrent"] <= 100)) ConfigOUT["MinCurrent"] = config["MinCurrent"];
   if((mode != Analyzer::PHASE1) && config.contains("PhaseNames") && config["PhaseNames"].is_array() && (config["PhaseNames"].size() == ConfigOUT["PhaseNames"].size())) {
@@ -288,7 +289,6 @@ void AnalyzerSoft::Configure(const json &options) {
       pFreqCyclesLen = ZEROCROSSING_SECONDS * 60;
       pMaxSamples = (12.0 * pSamplerate * 1.15) / pNominalFrequency;
     }
-//    pMaxFFTSamples    = (pMaxSamples / 2) + 1;
     pFreqCyclesPos    = 0;
     pSequence         = 0;
     pBlockSamples     = 0;
