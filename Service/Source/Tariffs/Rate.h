@@ -41,7 +41,7 @@ class Rate final : public Tariff {
     vector<RateTax>    Taxs;
     vector<float>      Contracted;
   public :
-    static json CheckConfig(const json &config);
+    static json CheckConfig(const json &config, const bool primary);
   public :
     Rate(const json &config, const time_zone &tz);
 };

@@ -52,8 +52,6 @@
       GetPermissions: function() {
         this.View = null;
         this.ShowSpinner = true;
-        this.ShowSpinner = true;
-        if(this.analyzer == null) return;
         this.$http.post('getPermissions', { Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
             this.Permissions = result.data;
@@ -72,7 +70,7 @@
       },
       Delete: function(row) {
         //Elimino
-        if(confirm("Delete '"+this.serial+"' device?")){
+        if(confirm("Delete '" + this.serial + "' device?")){
           this.Load(this.Serial);
         }
       }

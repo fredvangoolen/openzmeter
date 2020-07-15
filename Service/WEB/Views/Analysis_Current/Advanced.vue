@@ -67,16 +67,8 @@
         Opt.axes.y2.axisLabelFormatter = (x) => { return this.Round(x - this.COffset, 2, true); };
         Opt.axes.y2.ticker = this.Options['Current'] ? this.Options['Log'] ? (min, max) => { return Graph.Tickers.DBTicks(min, max, this.COffset) } : Graph.Tickers.Default : () => { return []; };
         Opt.axes.x.drawGrid = false;
-
-        Opt.axes.x.axisLabelFormatter = (y) => {
-          y = (y / 10 * this.analyzer.NominalFrequency);
-          if(y >= 1000) {
-            return (((y / 1000) % 1) !== 0) ? "" : (y / 1000) + ' kHz';
-          } else {
-            return ((y % 1) !== 0) ? "" : y + ' Hz';
-          }
-        };
-        Opt.axes.x.valueFormatter = (y) => { return this.Round(y / 10 * this.analyzer.NominalFrequency, 0, true) + ' Hz'; };
+        Opt.axes.x.axisLabelFormatter = (y) => { return Graph.Formatters.FFTAxis(this.analyzer, y); };
+        Opt.axes.x.valueFormatter = (y) => { return Graph.Formatters.FFTVal(this.analyzer, y); };
         Opt.labels = ['Bin'].concat(VoltageNames).concat(CurrentNames);
         Opt.colors = CurrentStyle.Colors.concat(VoltageStyle.Colors);
         if(this.data != null) {

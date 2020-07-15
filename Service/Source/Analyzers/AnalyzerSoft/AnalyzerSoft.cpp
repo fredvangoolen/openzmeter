@@ -54,34 +54,34 @@ constexpr float   AnalyzerSoft::UnbalanceRanges[];
 const     uint8_t AnalyzerSoft::UnbalanceRangesLen;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pMode(mode) {
-  LogFile::Debug("Creating AnalyzerSoft database tables");
   Database DB(id);
+  LogFile::Debug("Creating AnalyzerSoft database tables");
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
-  LogFile::Debug("AnalyzerSoft database tables created");
-  pRates            = new AnalyzerSoftRates(id);
-  pDelayVoltage     = NULL;
-  pDelayCurrent     = NULL;
-  pVoltageSamples   = NULL;
-  pCurrentSamples   = NULL;
-  pAlarms           = NULL;
-  pEventsWorker     = NULL;
-  pPrevSamples      = NULL;
-  pPrevCycles       = NULL;
-  pSyncThread       = 0;
-  pMQTTThread       = 0;
-  pMQTTSendBuff     = NULL;
-  pMQTTRecvBuff     = NULL;
-  pFreqCycles       = NULL;
-//  pRates            = json::array();
-  pMQTTBuffSize     = 0x00020000;
+  for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFT[i] = new AnalyzerSoftFFT("FFT_V" + to_string(i));
+  for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFT[i] = new AnalyzerSoftFFT("FFT_I" + to_string(i));
+  pRates             = new AnalyzerSoftRates(id);
+  pDelayVoltage      = NULL;
+  pDelayCurrent      = NULL;
+  pVoltageSamples    = NULL;
+  pCurrentSamples    = NULL;
+  pCurrentFFTSamples = NULL;
+  pVoltageFFTSamples = NULL;
+  pAlarms            = NULL;
+  pEventsWorker      = NULL;
+  pPrevSamples       = NULL;
+  pPrevCycles        = NULL;
+  pSyncThread        = 0;
+  pMQTTThread        = 0;
+  pMQTTSendBuff      = NULL;
+  pMQTTRecvBuff      = NULL;
+  pFreqCycles        = NULL;
+  pMQTTBuffSize      = 0x00020000;
   InitAggreg(pAggreg200MS, AGGREG_200MS);
   InitAggreg(pAggreg3S, AGGREG_3S);
   InitAggreg(pAggreg1M, AGGREG_1M);
   InitAggreg(pAggreg10M, AGGREG_10M);
   InitAggreg(pAggreg15M, AGGREG_15M);
   InitAggreg(pAggreg1H, AGGREG_1H);
-  for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFT[i] = NULL;
-  for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFT[i] = NULL;
   string Error;
   Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode, &Error));
   if(Error.empty() == false) LogFile::Error("Analyzer '%s' rates failed to parse (%s)", pSerial.c_str(), Error.c_str());
@@ -103,14 +103,10 @@ AnalyzerSoft::~AnalyzerSoft() {
   if(pPrevCycles != NULL) free(pPrevCycles);
   if(pVoltageSamples != NULL) free(pVoltageSamples);
   if(pCurrentSamples != NULL) free(pCurrentSamples);
-  for(uint8_t n = 0; n < pVoltageChannels; n++) {
-    if(pVoltageFFT[n] != NULL) delete pVoltageFFT[n];
-    pVoltageFFT[n] = NULL;
-  }
-  for(uint8_t n = 0; n < pCurrentChannels; n++) {
-    if(pCurrentFFT[n] != NULL) delete pCurrentFFT[n];
-    pCurrentFFT[n] = NULL;
-  }
+  if(pVoltageFFTSamples != NULL) free(pVoltageFFTSamples);
+  if(pCurrentFFTSamples != NULL) free(pCurrentFFTSamples);
+  for(uint8_t n = 0; n < pVoltageChannels; n++) delete pVoltageFFT[n];
+  for(uint8_t n = 0; n < pCurrentChannels; n++) delete pCurrentFFT[n];
   delete pRates;
   LogFile::Info("Analyzer with serial '%s' stopped", pSerial.c_str());
 }
@@ -291,18 +287,21 @@ void AnalyzerSoft::Configure(const json &options) {
       pFreqCyclesLen = ZEROCROSSING_SECONDS * 60;
       pMaxSamples = (12.0 * pSamplerate * 1.15) / pNominalFrequency;
     }
-    pFreqCyclesPos    = 0;
-    pSequence         = 0;
-    pBlockSamples     = 0;
-    pBlockCyclesCount = 0;
+    pMaxFFTSamples     = (pMaxSamples / 2) + 1;
+    pFreqCyclesPos     = 0;
+    pSequence          = 0;
+    pBlockSamples      = 0;
+    pBlockCyclesCount  = 0;
+    pFreqCycles        = (uint32_t*)realloc(pFreqCycles, pFreqCyclesLen * sizeof(uint32_t));
+    pVoltageSamples    = (float*)realloc(pVoltageSamples, sizeof(float) * pVoltageChannels * pMaxSamples);
+    pCurrentSamples    = (float*)realloc(pCurrentSamples, sizeof(float) * pCurrentChannels * pMaxSamples);
+    pVoltageFFTSamples = (AnalyzerSoftFFT::Complex_t*)realloc(pVoltageFFTSamples, sizeof(AnalyzerSoftFFT::Complex_t) * pVoltageChannels * pMaxFFTSamples);
+    pCurrentFFTSamples = (AnalyzerSoftFFT::Complex_t*)realloc(pCurrentFFTSamples, sizeof(AnalyzerSoftFFT::Complex_t) * pCurrentChannels * pMaxFFTSamples);
     InitAggreg(pAggreg200MS, AGGREG_200MS);
     memset(pBlockCycles, 0, sizeof(pBlockCycles));
-    pFreqCycles       = (uint32_t*)realloc(pFreqCycles, pFreqCyclesLen * sizeof(uint32_t));
-    pVoltageSamples   = (float*)realloc(pVoltageSamples, sizeof(float) * pVoltageChannels * pMaxSamples);
-    pCurrentSamples   = (float*)realloc(pCurrentSamples, sizeof(float) * pCurrentChannels * pMaxSamples);
     for(uint8_t n = 0; n < pVoltageChannels; n++) pLastSamples[n] = 0.0;
-    for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFT[i] = new AnalyzerSoftFFT("FFT_V" + to_string(i));
-    for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFT[i] = new AnalyzerSoftFFT("FFT_I" + to_string(i));
+    for(uint8_t n = 0; n < pVoltageChannels; n++) pVoltageFFT[n]->Config(&pVoltageSamples[n * pMaxSamples], &pVoltageFFTSamples[n * pMaxFFTSamples], (pNominalFrequency == 50.0) ? 10 : (pNominalFrequency == 60.0) ? 12 : 0);
+    for(uint8_t n = 0; n < pCurrentChannels; n++) pCurrentFFT[n]->Config(&pCurrentSamples[n * pMaxSamples], &pCurrentFFTSamples[n * pMaxFFTSamples], (pNominalFrequency == 50.0) ? 10 : (pNominalFrequency == 60.0) ? 12 : 0);
     if(pNominalFrequency != 0.0) {
       for(uint8_t n = 0; n < FILTERSTAGES; n++) {
         float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
@@ -591,8 +590,8 @@ void AnalyzerSoft::Analyzer_Func() {
   pAggreg200MS.AggregSamples = 1;
   if(pEventsWorker != NULL) pEventsWorker->Run(NULL);
 //  pFFTSamples = (pBlockSamples / 2) + 1;
-  for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFT[i]->Run(&pVoltageSamples[i * pMaxSamples], pBlockSamples/* &pVoltageFFTChannels[i]*/);
-  for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFT[i]->Run(&pCurrentSamples[i * pMaxSamples], pBlockSamples/* &pCurrentFFTChannels[i]*/);
+  for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFT[i]->Run(pBlockSamples);
+  for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFT[i]->Run(pBlockSamples);
   if(pNominalFrequency > 0) {
     for(uint8_t n = 0; n < pBlockCyclesCount; n++) {
       pFreqCycles[pFreqCyclesPos] = pBlockCycles[n];
@@ -628,9 +627,9 @@ void AnalyzerSoft::Analyzer_Func() {
     pVoltageFFT[j]->Wait();
     pCurrentFFT[j]->Wait();
     for(uint8_t i = 0; i < 50; i++) {
-      pAggreg200MS.Voltage_Harmonics[j * 50 + i] = pVoltageFFT[j]->BinPower(10 + i * 10);
-      pAggreg200MS.Current_Harmonics[j * 50 + i] = pCurrentFFT[j]->BinPower(10 + i * 10);
-      pAggreg200MS.Power_Harmonics[j * 50 + i]   = pAggreg200MS.Current_Harmonics[j * 50 + i] * pAggreg200MS.Voltage_Harmonics[j * 50 + i] * cos(AnalyzerSoftFFT::CalcAngle(pCurrentFFT[j]->Bin(10 + i * 10), pVoltageFFT[j]->Bin(10 + i * 10)));
+      pAggreg200MS.Voltage_Harmonics[j * 50 + i] = pVoltageFFT[j]->HarmonicPower(i);
+      pAggreg200MS.Current_Harmonics[j * 50 + i] = pCurrentFFT[j]->HarmonicPower(i);
+      pAggreg200MS.Power_Harmonics[j * 50 + i]   = pAggreg200MS.Current_Harmonics[j * 50 + i] * pAggreg200MS.Voltage_Harmonics[j * 50 + i] * cos(AnalyzerSoftFFT::CalcAngle(pCurrentFFT[j]->Harmonic(i), pVoltageFFT[j]->Harmonic(i)));
       if(i > 0) pAggreg200MS.Voltage_THD[j] += pAggreg200MS.Voltage_Harmonics[j * 50 + i];
       if(i > 0) pAggreg200MS.Current_THD[j] += pAggreg200MS.Current_Harmonics[j * 50 + i];
     }
@@ -655,7 +654,7 @@ void AnalyzerSoft::Analyzer_Func() {
   if(pMode == PHASE3N) {
     pCurrentFFT[3]->Wait();
     for(uint8_t i = 0; i < 50; i++) {
-      pAggreg200MS.Current_Harmonics[3 * 50 + i] = pCurrentFFT[3]->BinPower(10 + i * 10);
+      pAggreg200MS.Current_Harmonics[3 * 50 + i] = pCurrentFFT[3]->HarmonicPower(i);
       if(i > 0) pAggreg200MS.Current_THD[3] += pAggreg200MS.Current_Harmonics[3 * 50 + i];
     }
     pAggreg200MS.Current_THD[3] = (pAggreg200MS.Current_THD[3] / pAggreg200MS.Current_Harmonics[3 * 50]) * 100.0;
@@ -1203,8 +1202,8 @@ json AnalyzerSoft::CalcGA() {
   GAVector iGA(50 * 2 * pVoltageChannels);
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
     for(uint8_t i = 0; i < 50; i++) {
-      vGA.AddRectPhasor(i * 2, pVoltageFFT[j]->Bin(10 + i * 10).Re, pVoltageFFT[j]->Bin(10 + i * 10).Im);
-      iGA.AddRectPhasor(i * 2, pCurrentFFT[j]->Bin(10 + i * 10).Re, pCurrentFFT[j]->Bin(10 + i * 10).Im);
+      vGA.AddRectPhasor(i * 2, pVoltageFFT[j]->Harmonic(i).Re, pVoltageFFT[j]->Harmonic(i).Im);
+      iGA.AddRectPhasor(i * 2, pCurrentFFT[j]->Harmonic(i).Re, pCurrentFFT[j]->Harmonic(i).Im);
     }
   }
   Result["Voltage"] = vGA.ToJSON();
@@ -1430,7 +1429,7 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
         Result["Voltage_Harmonics"].push_back(json::array());
         for(uint8_t i = 0; i < 50; i++) {
           Result["Voltage_Harmonics"][n].push_back(json::array());
-          AnalyzerSoftFFT::Complex_t Complex = pVoltageFFT[n]->Bin(10 + i * 10);
+          AnalyzerSoftFFT::Complex_t Complex = pVoltageFFT[n]->Harmonic(i);
           Result["Voltage_Harmonics"][n][i].push_back(Complex.Re);
           Result["Voltage_Harmonics"][n][i].push_back(Complex.Im);
         }
@@ -1441,7 +1440,7 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
         Result["Current_Harmonics"].push_back(json::array());
         for(uint8_t i = 0; i < 50; i++) {
           Result["Current_Harmonics"][n].push_back(json::array());
-          AnalyzerSoftFFT::Complex_t Complex = pCurrentFFT[n]->Bin(10 + i * 10);
+          AnalyzerSoftFFT::Complex_t Complex = pCurrentFFT[n]->Harmonic(i);
           Result["Current_Harmonics"][n][i].push_back(Complex.Re);
           Result["Current_Harmonics"][n][i].push_back(Complex.Im);
         }
@@ -1456,13 +1455,13 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
       Result["Voltage_FFT"] = json::array();
       for(uint8_t n = 0; n < pVoltageChannels; n++) {
         Result["Voltage_FFT"].push_back(json::array());
-        for(uint16_t i = 0; i < pVoltageFFT[n]->OutLen(); i++) Result["Voltage_FFT"][n].push_back(pVoltageFFT[n]->BinPower(i));
+        for(uint16_t i = 0; i < ((pBlockSamples / 2) + 1); i++) Result["Voltage_FFT"][n].push_back(pVoltageFFT[n]->BinPower(i));
       }
     } else if(Serie == "CURRENT_FFT") {
       Result["Current_FFT"] = json::array();
       for(uint8_t n = 0; n < pCurrentChannels; n++) {
         Result["Current_FFT"].push_back(json::array());
-        for(uint16_t i = 0; i < pCurrentFFT[n]->OutLen(); i++) Result["Current_FFT"][n].push_back(pCurrentFFT[n]->BinPower(i));
+        for(uint16_t i = 0; i < ((pBlockSamples / 2) + 1); i++) Result["Current_FFT"][n].push_back(pCurrentFFT[n]->BinPower(i));
       }
     } else if(Serie == "VOLTAGE_SAMPLES") {
       Result["Voltage_Samples"] = json::array();
@@ -1732,20 +1731,24 @@ void AnalyzerSoft::DelAlarmsRange(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms WHERE alarmtime >= " + DB.Bind(From) + " AND alarmtime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::GetRates(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);  
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pRates->GetRates(params, response);
 }
-void AnalyzerSoft::AddRate(const json &params, Response &response) { 
-  pRates->AddRate(params, response); 
+void AnalyzerSoft::AddRate(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pRates->AddRate(params, response);
 }
-void AnalyzerSoft::GetRate(const json &params, Response &response) { 
-  pRates->GetRate(params, response); 
+void AnalyzerSoft::GetRate(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pRates->GetRate(params, response);
 }
-void AnalyzerSoft::SetRate(const json &params, Response &response) { 
-  pRates->SetRate(params, response); 
+void AnalyzerSoft::SetRate(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pRates->SetRate(params, response);
 }
-void AnalyzerSoft::DelRate(const json &params, Response &response) { 
-  pRates->DelRate(params, response); 
+void AnalyzerSoft::DelRate(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pRates->DelRate(params, response);
 }
 void AnalyzerSoft::GetRemote(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);

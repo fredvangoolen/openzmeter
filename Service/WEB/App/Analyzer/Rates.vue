@@ -4,23 +4,22 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save rates config"></button>
           <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="Add rate"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', Analyzer.Analyzer)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', analyzer.Analyzer)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
         </div>
       </template>
       <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null" v-html="Error"></div>
       <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error==null">All dates/times are in analyzer timezone.</div>
-      <vuetable key="rates" :fields="Columns" :data="Analyzer.Rates" :api-mode="false" class="table small table-striped">
+      <vuetable key="rates" :fields="Columns" :data="Rates" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowIndex)">Edit</button>
-            <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowIndex)">Delete</button>
+            <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowData)">Edit</button>
+            <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData)">Delete</button>
           </div>
         </template>
       </vuetable>
     </dlg>
-    <analyzer-rate v-if="View=='Rate'" @endEdit="EndEdit" :analyzer="Analyzer" :index="Index"></analyzer-rate>
+    <analyzer-rate v-if="View=='Rate'" :analyzer="analyzer" :rate="Rate" @close="GetRates"></analyzer-rate>
   </div>
 </template>
 
@@ -33,8 +32,9 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { Error: null, ShowSpinner: false, View: null, Index: null, Analyzer: null,
+      return { Error: null, ShowSpinner: false, View: null, Rates: [], Rate: null,
         Columns: [
+          { name: 'Group', title: 'Type', callback: this.FormatGroup },
           { name: 'Name', title: 'Name' },
           { name: 'StartDate', title: 'Start date' },
           { name: 'EndDate', title: 'End date' },
@@ -46,35 +46,50 @@
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     created: function() {
-      this.Analyzer = Object.assign({}, this.analyzer);
+      this.GetRates();
     },
     methods: {
-      EndEdit: function(index, value) {
-        this.Analyzer.Rates[index] = value;
+      FormatGroup: function(val) {
+        return (val == 0) ? 'Contracted' : 'Group ' + val;
+      },
+      GetRates: function() {
         this.View = null;
+        this.ShowSpinner = true;
+        this.ShowSpinner = true;
+        if(this.analyzer == null) return;
+        this.$http.post('getRates', { Analyzer: this.analyzer.Analyzer }).then(
+          (result) => {
+            this.Rates = result.data;
+            this.ShowSpinner = false;
+          },
+          (fail) => {}
+        );
       },
       Add: function() {
-        this.Analyzer.Rates.push({ Name: 'Unname rate', Description: '', StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxs: [], Billing: [] });
-        this.Index = this.Analyzer.Rates.length - 1;
+        this.Rate = null;
         this.View = 'Rate';
       },
       Edit: function(row) {
-        this.Index = row;
-        this.View = 'Rate';
-      },
-      Delete: function(row) {
-        if(confirm("Delete '" + this.Analyzer.Rates[row].Name + "' rate?")) this.Analyzer.Rates.splice(row, 1);
-      },
-      Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setAnalyzer', this.Analyzer).then(
-          (result) => { this.$emit('close', result.data); },
+        this.$http.post('getRate', { Analyzer: this.analyzer.Analyzer, RateID: row.RateID }).then(
+          (result) => {
+            this.Rate = result.data;
+            this.Rate.RateID = row.RateID;
+            this.View = 'Rate';
+          },
           (fail) => {
             this.ShowSpinner = false;
-            this.Error = 'Failed to save analyzer!<br/>' + fail.body;
-            setTimeout(() => { this.Error = null; }, 5000);
           }
         );
+      },
+      Delete: function(row) {
+        if(confirm("Delete '" + row.Name + "' rate?")) {
+          this.ShowSpinner = true;
+          this.$http.post('delRate', { Analyzer: this.analyzer.Analyzer, RateID: row.RateID }).then(
+            (result) => { this.GetRates(); },
+            (fail) => { this.ShowSpinner = false; }
+          );
+        }
       }
     },
     components: { AnalyzerRate, vuetable }
@@ -83,17 +98,24 @@
 
 <style scoped>
   @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(2), .table >>> th:nth-child(3)  {
-      width: 100px;
+    .table >>> th:nth-child(1) {
+      width: 62px;
       text-align: center;
     }
-    .table >>> td:nth-child(2), .table >>> td:nth-child(3) {
+    .table >>> td:nth-child(1) {
       text-align: center;
     }
-    .table >>> th:nth-child(4) {
+    .table >>> th:nth-child(3), .table >>> th:nth-child(4) {
+      width: 80px;
+      text-align: center;
+    }
+    .table >>> td:nth-child(3), .table >>> td:nth-child(4) {
+      text-align: center;
+    }
+    .table >>> th:nth-child(5) {
       width: 94px;
     }
-    .table >>> td:nth-child(4) {
+    .table >>> td:nth-child(5) {
       text-align: right;
     }
   }
