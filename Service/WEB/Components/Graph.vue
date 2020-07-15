@@ -203,6 +203,19 @@
       }
     },
     Formatters: {
+      FFTVal: function(analyzer, val) {
+        var Div = (analyzer.NominalFrequency == 50) ? 10 : 12;
+        return This.Round(val / Div * analyzer.NominalFrequency, 0, true) + ' Hz';
+      },
+      FFTAxis: function(analyzer, val) {
+        var Div = (analyzer.NominalFrequency == 50) ? 10 : 12;
+        val = Math.round(val / Div * analyzer.NominalFrequency);
+        if(val >= 1000) {
+          return (((val / 1000) % 1) != 0) ? "" : (val / 1000) + ' kHz';
+        } else {
+          return ((val % 1) != 0) ? "" : val + ' Hz';
+        }
+      },
       Legend_Follow: function(data) {
         if(data.x === undefined || data.x === null) return "";
         var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';

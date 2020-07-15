@@ -84,7 +84,7 @@ void DeviceV2::GetInstances() {
       continue;
     }
     libusb_close(Dev_Handle);
-    LogFile::Info("Adding 'V2' device driver instance with serial '%s'\n", String);
+    LogFile::Info("Adding 'V2' device driver instance with serial '%s'", String);
     DeviceManager::AddDevice(new DeviceV2(String));
   }
   libusb_free_device_list(Devs, Count);

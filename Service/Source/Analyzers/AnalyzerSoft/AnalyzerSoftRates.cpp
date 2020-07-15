@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftRates.h"
 #include "HTTPChunkedWriter.h"
+#include "Rate.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftRates::AnalyzerSoftRates(const string &serial) {
   pSerial = serial;
@@ -26,7 +27,7 @@ void AnalyzerSoftRates::GetRates(const json &params, Response &response) {
     uint32_t Items = 0;
     writer->Write("[\n  ");
     Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT coalesce(to_json(array_agg(json_build_object('RateID', id, 'Name', name, 'Order', ordering, 'StartDate', startdate, 'EndDate', enddate))),'[]') AS result FROM rates");
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', startdate, 'EndDate', enddate) AS result FROM rates");
     while(DB.FecthRow()) writer->Write(((Items++ != 0) ? ",\n  " : "") + DB.ResultString("result"));
     writer->Write("\n]", true);
     return false;
@@ -34,17 +35,46 @@ void AnalyzerSoftRates::GetRates(const json &params, Response &response) {
   new HTTPChunkedWriter(response, "application/json", WriteFunc);
 }
 void AnalyzerSoftRates::AddRate(const json &params, Response &response) {
-
+  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  uint8_t Group  = params["Group"];
+  json    Config = Rate::CheckConfig(params, Group == 0);
+  if(Config.is_string()) return HTTPServer::FillResponse(response, Config, "text/plain", HTTP_BAD_REQUEST);
+  string Name      = Config["Name"];
+  string StartDate = Config["StartDate"];
+  string EndDate   = Config["EndDate"];
+  string RateID    = Tools::GetUUID();
+  Config.erase("Name");
+  Config.erase("StartDate");
+  Config.erase("EndDate");
+  Database DB(pSerial);
+  bool Result = DB.ExecSentenceNoResult("INSERT INTO rates (id, name, ordering, startdate, enddate, template) VALUES (" + DB.Bind(RateID) + ", " + DB.Bind(Name) + ", " + DB.Bind(Group) + ", " + DB.Bind(StartDate) + ", " + DB.Bind(EndDate) + ", " + DB.Bind(Config.dump()) + ")");
+  HTTPServer::FillResponse(response, "", "application/json", Result ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoftRates::GetRate(const json &params, Response &response) {
   if((params.contains("RateID") == false) || (params["RateID"].is_string() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string ID = params["RateID"];
   Database DB(pSerial);
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'Order', ordering, 'StartDate', startdate, 'EndDate', enddate, 'Template', template) AS result FROM rates WHERE id = " + DB.Bind(ID));
+  DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('Name', name, 'Group', ordering, 'StartDate', startdate, 'EndDate', enddate) || template::jsonb AS result FROM rates WHERE id = " + DB.Bind(ID));
   if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);  
+  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
-void AnalyzerSoftRates::SetRate(const json &params, Response &response) {}
+void AnalyzerSoftRates::SetRate(const json &params, Response &response) {
+  if((params.contains("RateID") == false) || (params["RateID"].is_string() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  uint8_t Group  = params["Group"];
+  string  RateID = params["RateID"];
+  json    Config = Rate::CheckConfig(params, Group == 0);
+  if(Config.is_string()) return HTTPServer::FillResponse(response, Config, "text/plain", HTTP_BAD_REQUEST);
+  string Name      = Config["Name"];
+  string StartDate = Config["StartDate"];
+  string EndDate   = Config["EndDate"];
+  Config.erase("Name");
+  Config.erase("StartDate");
+  Config.erase("EndDate");
+  Database DB(pSerial);
+  bool Result = DB.ExecSentenceNoResult("UPDATE rates SET name = " + DB.Bind(Name) + ", ordering = " + DB.Bind(Group) + ", startdate = " + DB.Bind(StartDate) + ", enddate = " + DB.Bind(EndDate) + ", template = " + DB.Bind(Config.dump()) + " WHERE id = " + DB.Bind(RateID));
+  HTTPServer::FillResponse(response, "", "application/json", Result ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+}
 void AnalyzerSoftRates::DelRate(const json &params, Response &response) {
   if((params.contains("RateID") == false) || (params["RateID"].is_string() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string ID = params["RateID"];
@@ -53,16 +83,18 @@ void AnalyzerSoftRates::DelRate(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "application/json", Result ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoftRates::CalcRate(const json &params, Response &response) {
-
   if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false) || ((params["Aggreg"] != "15M") && (params["Aggreg"] != "1H"))) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Precise") == false) || (params["Precise"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Precise' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   json     Result          = json::object();
   uint64_t To              = params["To"];
   uint64_t From            = params["From"];
   string   Aggreg          = params["Aggreg"];
+  uint8_t  Group           = params["Group"];
+
   bool     SaveActive      = false;
   bool     SaveReactive    = false;
   bool     SaveExpense     = false;

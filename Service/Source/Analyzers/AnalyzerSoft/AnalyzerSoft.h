@@ -125,20 +125,22 @@ class AnalyzerSoft : public Analyzer {
 
   private : //Used in BufferAppend, Configure and Analyzer_Func and some callbacks
     RWLocks                    pAnalyzerLock;            //Locks access to analysis shared variables
-    bool                       pSave200MS;               //Save 10 cycles aggregation to database
+    bool                       pSave200MS;               //Save 10/12 cycles aggregation to database
     float                      pNominalVoltage;          //Analyzer nominal voltage
     float                      pNominalFrequency;        //Analyzer nominal frequency
     float                      pMaxCurrent;              //Max current, over this value warnings are shown
     float                      pMinCurrent;              //Min current, under this value some analysis are disabled
-    uint32_t                   pMaxSamples;              //Max block samples
+    uint16_t                   pMaxSamples;              //Max block samples
+    uint16_t                   pMaxFFTSamples;           //Max FFT samples
     time_zone                  pTimeZone;                //Country code
     uint64_t                   pSequence;                //Sequence number of analyzed blocks
     uint16_t                   pBlockSamples;            //Number of samples in block
     uint8_t                    pBlockCyclesCount;        //Block cycles count
     uint16_t                   pBlockCycles[24];         //Max block sizes
     float                     *pVoltageSamples;          //Voltage samples
-    float                     *pCurrentSamples;          //Current samples
-
+    float                      *pCurrentSamples;          //Current samples
+    AnalyzerSoftFFT::Complex_t *pCurrentFFTSamples;      //Current FFTs
+    AnalyzerSoftFFT::Complex_t *pVoltageFFTSamples;      //Voltage FFTs
     float                      pLastSamples[3];          //Filter samples backup
     Filter_t                   pFilters[FILTERSTAGES];   //Filter bank
     float                     *pDelayVoltage;            //Delay buffer for samples

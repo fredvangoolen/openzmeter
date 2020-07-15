@@ -69,15 +69,8 @@
         Opt.axes.x.drawGrid = false;
         Opt.fillGraph = true;
         Opt.selectMode = 'euclidian';
-        Opt.axes.x.axisLabelFormatter = (y) => {
-          y = (y / 10 * this.analyzer.NominalFrequency);
-          if(y >= 1000) {
-            return (((y / 1000) % 1) !== 0) ? "" : (y / 1000) + ' kHz';
-          } else {
-            return ((y % 1) !== 0) ? "" : y + ' Hz';
-          }
-        };
-        Opt.axes.x.valueFormatter = (y) => { return this.Round(y / 10 * this.analyzer.NominalFrequency, 0, true) + ' Hz'; };
+        Opt.axes.x.axisLabelFormatter = (y) => { return Graph.Formatters.FFTAxis(this.analyzer, y); };
+        Opt.axes.x.valueFormatter = (y) => { return Graph.Formatters.FFTVal(this.analyzer, y); };
         Opt.labels = ['Bin'].concat(VoltageNames).concat(CurrentNames);
         Opt.colors = VoltageStyle.Colors.concat(CurrentStyle.Colors);
         if(this.data != null) {

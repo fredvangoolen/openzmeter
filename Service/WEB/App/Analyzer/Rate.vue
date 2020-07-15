@@ -4,15 +4,16 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
       <div class="pull-right btn-group" v-if="Rate.Periods==null">
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
       <toolbar-pager v-if="Rate.Periods==null" class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['Name', 'StartDate', 'EndDate']"></toolbar-pager>
       <div class="pull-right btn-group" v-if="Rate.Periods!=null">
+        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save rates config"></button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Concepts' }" @click="View='Concepts'">Concepts</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Cycles' }" @click="View='Cycles'">Cycles</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" v-if="Rate.Group==0" :class="{ active: View=='Cycles' }" @click="View='Cycles'">Cycles</button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
     <div class="row" v-if="Rate.Periods==null">
@@ -27,9 +28,13 @@
     </div>
     <div v-if="Rate.Periods!=null">
       <div class="row" v-if="View=='Main'">
-        <div class="col-xs-12">
+        <div class="col-xs-8">
           <label class="control-label">Name</label>
           <input type="text" class="form-control" v-model="Rate.Name">
+        </div>
+        <div class="col-xs-4">
+          <label class="control-label">Type:</label>
+          <option-picker :big="true" v-model="Rate.Group" :options="[{name: 'Contracted', value: 0}, {name: 'Compare group 1', value: 1}, {name: 'Compare group 2', value: 2}, {name: 'Compare group 3', value: 3}, {name: 'Compare group 4', value: 4}, {name: 'Compare group 5', value: 5}, {name: 'Compare group 6', value: 6}, {name: 'Compare group 7', value: 7}, {name: 'Compare group 8', value: 8}, {name: 'Compare group 9', value: 9}, {name: 'Compare group 10', value: 10}]"></option-picker>
         </div>
         <div class="col-xs-12">
           <label class="control-label">Description</label>
@@ -244,7 +249,7 @@
   import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: Object, index: Number },
+    props: { analyzer: Object, rate: Object },
     data() {
       return { View: 'Main', Rate: null, ShowSpinner: false, FilterTariffs: [], Tariffs: [], FilterTaxs: [], FilterCycles: [], FilterCycles: [], SelDate: null,
         BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th'],
@@ -267,7 +272,11 @@
       };
     },
     created: function() {
-      this.Rate = this.analyzer.Rates[this.index];
+      if(this.rate == null) {
+        this.Rate = { Analyzer: this.analyzer.Analyzer, Name: 'Unname rate', Description: '', Group: 0, StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxs: [], Billing: [] };
+      } else {
+        this.Rate = Object.assign({ Analyzer: this.analyzer.Analyzer}, this.rate);
+      }
       this.SelDate = this.Rate.StartDate;
       if(this.Rate.Periods == null) this.LoadTariffs();
     },
@@ -300,7 +309,23 @@
         return Used.includes(this.SelDate);
       }
     },
+    watch: {
+      'Rate.Group': function() {
+        if((this.Rate.Group == 0) && (this.Rate.Billing == null)) this.Rate.Billing = [];
+      }
+    },
     methods: {
+      Save: function() {
+        this.ShowSpinner = true;
+        this.$http.post((this.Rate.RateID == null) ? 'addRate' : 'setRate', this.Rate).then(
+          (result) => { this.$emit('close'); },
+          (fail) => {
+            this.ShowSpinner = false;
+            this.Error = 'Failed to save rate!<br/>' + fail.body;
+            setTimeout(() => { this.Error = null; }, 5000);
+          }
+        );
+      },
       TimestampToDateString: function(val) {
         return moment(val).format('DD/MM/YYYY');
       },

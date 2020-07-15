@@ -17,7 +17,7 @@ json RatesEval::CheckConfig(const json &r) {
   json ConfigOUT = json::array();
   if(r.is_array() == false) return "Rate list is not an array";
   for(uint16_t R = 0; R < r.size(); R++) {
-    json Tmp = Rate::CheckConfig(r[R]);
+    json Tmp = Rate::CheckConfig(r[R], true);
     if(Tmp.is_string() == true) return Tmp;
     ConfigOUT.push_back(Tmp);
   }

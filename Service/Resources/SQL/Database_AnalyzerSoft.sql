@@ -60,18 +60,18 @@ CREATE TABLE IF NOT EXISTS aggreg_15m (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS aggreg_1h (
-  sampletime     bigint  NOT NULL PRIMARY KEY,
-  rms_v          real[]  NOT NULL,
-  rms_i          real[]  NOT NULL,
+  sampletime     bigint      NOT NULL PRIMARY KEY,
+  rms_v          real[]      NOT NULL,
+  rms_i          real[]      NOT NULL,
   freq           real,
-  flag           boolean NOT NULL,
-  active_power   real[]  NOT NULL,
-  reactive_power real[]  NOT NULL,
-  stat_voltage   int4[]  NOT NULL,
-  stat_frequency int4[]  NOT NULL,
-  stat_thd       int4[]  NOT NULL,
-  stat_harmonics int4[]  NOT NULL,
-  stat_unbalance int4[]  NOT NULL
+  flag           boolean     NOT NULL,
+  active_power   real[]      NOT NULL,
+  reactive_power real[]      NOT NULL,
+  stat_voltage   smallint[]  NOT NULL,
+  stat_frequency smallint[]  NOT NULL,
+  stat_thd       smallint[]  NOT NULL,
+  stat_harmonics smallint[]  NOT NULL,
+  stat_unbalance smallint[]  NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS events (
@@ -96,12 +96,12 @@ CREATE TABLE IF NOT EXISTS events_ext (
 
 CREATE TABLE IF NOT EXISTS alarms (
   id            character varying NOT NULL PRIMARY KEY,
-  name          varchar NOT NULL,
-  formula       varchar NOT NULL,
-  aggregation   varchar NOT NULL,
-  samples       int4    NOT NULL,
-  window_length int4    NOT NULL,
-  priority      int2    NOT NULL
+  name          varchar  NOT NULL,
+  formula       varchar  NOT NULL,
+  aggregation   varchar  NOT NULL,
+  samples       smallint NOT NULL,
+  window_length smallint NOT NULL,
+  priority      smallint NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS alarms_ext (
@@ -113,8 +113,8 @@ CREATE TABLE IF NOT EXISTS alarms_ext (
 CREATE TABLE IF NOT EXISTS rates (
   id            character varying NOT NULL PRIMARY KEY,
   name          character varying NOT NULL,
-  ordering      int8              NOT NULL,
-  startdate     int8              NOT NULL,
-  enddate       int8              NOT NULL,
+  ordering      smallint          NOT NULL,
+  startdate     character varying NOT NULL,
+  enddate       character varying NOT NULL,
   template      jsonb             NOT NULL
 ) WITH (OIDS=FALSE);
