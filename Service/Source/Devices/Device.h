@@ -65,6 +65,7 @@ class Device {
     bool GetEvent(const json &params, Response &response);
     bool SetEvent(const json &params, Response &response);
     bool DelEvent(const json &params, Response &response);
+    bool GetCyclicHistogram(const json &params, Response &response);
     bool GetPrices(const json &params, Response &response);
     bool TestAlarm(const json &params, Response &response);
     bool GetAlarms(const json &params, Response &response);

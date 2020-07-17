@@ -46,6 +46,7 @@ class DeviceManager final {
     static void GetEventCallback(const json &params, Response &response);
     static void SetEventCallback(const json &params, Response &response);
     static void DelEventCallback(const json &params, Response &response);
+    static void GetCyclicHistogramCallback(const json &params, Response &response);
     static void GetPricesCallback(const json &params, Response &response);
     static void TestAlarmCallback(const json &params, Response &response);
     static void GetAlarmsCallback(const json &params, Response &response);

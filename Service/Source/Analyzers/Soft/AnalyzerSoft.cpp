@@ -1350,7 +1350,9 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
     This->Analyzer->SetEvent(This->Params, Resp);
   } else if(This->Method == "delEvent") {
     This->Analyzer->DelEvent(This->Params, Resp);
-  } else if(This->Method == "getPrices") {
+  } else if(This->Method == "getCyclicHistogram") {
+    This->Analyzer->GetCyclicHistogram(This->Params, Resp);
+  }else if(This->Method == "getPrices") {
     This->Analyzer->GetPrices(This->Params, Resp);
   } else if(This->Method == "testAlarm") {
     This->Analyzer->TestAlarm(This->Params, Resp);
@@ -1729,6 +1731,40 @@ void AnalyzerSoft::DelEvent(const json &params, Response &response) {
   uint64_t ID = params["StartTime"];
   bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID));
   HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+}
+void AnalyzerSoft::GetCyclicHistogram(const json &params, Response &response) {
+  if (CheckRights(params["UserName"], READ) == false)
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if ((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false))
+    return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+
+  Database DB(Serial);
+  uint64_t ID = params["StartTime"];
+
+  json result = json::object();
+
+  DB.ExecSentenceAsyncResult("SELECT id, event_starttime, starttime, endtime FROM cychist WHERE event_starttime = " + DB.Bind(ID));
+  if (DB.FecthRow())
+  {
+    result["id"] = DB.ResultString("id");
+    result["event_starttime"] = DB.ResultString("event_starttime");
+    result["starttime"] = DB.ResultString("starttime");
+    result["endtime"] = DB.ResultString("endtime");
+  }else{
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  }
+
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('id', COALESCE(ARRAY_AGG(id ORDER BY phase, x, y ASC), '{}'), 'phase', COALESCE(ARRAY_AGG(phase ORDER BY phase, x, y ASC), '{}'), 'x', COALESCE(ARRAY_AGG(x ORDER BY phase, x, y ASC), '{}'), 'y', COALESCE(ARRAY_AGG(y ORDER BY phase, x, y ASC), '{}'), 'count', COALESCE(ARRAY_AGG(count ORDER BY phase, x, y ASC), '{}')) AS points FROM cychist_point WHERE cychist_id = " + DB.ResultString("id"));
+  if (DB.FecthRow())
+  {
+    result["points"] = json::parse(DB.ResultString("points"));
+  }
+  else
+  {
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  }
+
+  return HTTPServer::FillResponse(response, result.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetPrices(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
