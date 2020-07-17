@@ -35,24 +35,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
-#define EVENT_RVC                        5.0
-#define EVENT_DIP_SWELL                 10.0        //Variacion en % para generar subida o bajada
-#define EVENT_INTERRUPTION              90.0        //Bajada en % para generar interrupcion
-#define EVENT_INTERRUPTION_HYSTERESIS   40.0        //Interruption hysteresis
-#define EVENT_HYSTERESIS                02.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
-#define EVENT_RAWENVELOPETIME            0.5        //Time in seconds before and after event to store RAW samples
-//----------------------------------------------------------------------------------------------------------------------
-constexpr float   AnalyzerSoft::FrequencyRanges[];
-const     uint8_t AnalyzerSoft::FrequencyRangesLen;
-constexpr float   AnalyzerSoft::VoltageRanges[];
-const     uint8_t AnalyzerSoft::VoltageRangesLen;
-constexpr float   AnalyzerSoft::THDRanges[];
-const     uint8_t AnalyzerSoft::THDRangesLen;
-constexpr float   AnalyzerSoft::HarmonicsAllowed[];
-const     uint8_t AnalyzerSoft::HarmonicsAllowedLen;
-constexpr float   AnalyzerSoft::UnbalanceRanges[];
-const     uint8_t AnalyzerSoft::UnbalanceRangesLen;
-//----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pMode(mode) {
   Database DB(id);
   LogFile::Debug("Creating AnalyzerSoft database tables");
@@ -60,32 +42,20 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFT[i] = new AnalyzerSoftFFT("FFT_V" + to_string(i));
   for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFT[i] = new AnalyzerSoftFFT("FFT_I" + to_string(i));
   pRates             = new AnalyzerSoftRates(id);
-  pDelayVoltage      = NULL;
-  pDelayCurrent      = NULL;
-  pVoltageSamples    = NULL;
-  pCurrentSamples    = NULL;
-  pCurrentFFTSamples = NULL;
-  pVoltageFFTSamples = NULL;
-  pAlarms            = NULL;
-  pEventsWorker      = NULL;
-  pPrevSamples       = NULL;
-  pPrevCycles        = NULL;
-  pSyncThread        = 0;
-  pMQTTThread        = 0;
-  pMQTTSendBuff      = NULL;
-  pMQTTRecvBuff      = NULL;
-  pFreqCycles        = NULL;
-  pMQTTBuffSize      = 0x00020000;
-  InitAggreg(pAggreg200MS, AGGREG_200MS);
+  pInputBlock        = new AnalyzerSoftBlock(mode, samplerate);
+  pAlarms            = new AnalyzerSoftAlarms(this);
+  pEvents            = new AnalyzerSoftEvents();
+  pSync              = new AnalyzerSoftSync();
+  pMQTT              = new AnalyzerSoftMQTT();
+  pFrequency         = new AnalyzerSoftFrequency();
+  pAggreg200MS       = new AnalyzerSoftAggreg(); //  InitAggreg(pAggreg200MS, AGGREG_200MS);
   InitAggreg(pAggreg3S, AGGREG_3S);
   InitAggreg(pAggreg1M, AGGREG_1M);
   InitAggreg(pAggreg10M, AGGREG_10M);
   InitAggreg(pAggreg15M, AGGREG_15M);
   InitAggreg(pAggreg1H, AGGREG_1H);
-  string Error;
-  Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode, &Error));
-  if(Error.empty() == false) LogFile::Error("Analyzer '%s' rates failed to parse (%s)", pSerial.c_str(), Error.c_str());
-  pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
+  Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode));
+  pAnalyzerWorker = new Worker((mode == PHASE1) ? "Analyzer_1P" : (mode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LogFile::Info("Stopping analyzer with serial '%s'", pSerial.c_str());
@@ -96,68 +66,32 @@ AnalyzerSoft::~AnalyzerSoft() {
   if(pAnalyzerWorker != NULL) delete pAnalyzerWorker;
   if(pEventsWorker != NULL) delete pEventsWorker;
   if(pAlarms != NULL) delete pAlarms;
-  if(pFreqCycles != NULL) free(pFreqCycles);
-  if(pDelayVoltage != NULL) free(pDelayVoltage);
-  if(pDelayCurrent != NULL) free(pDelayCurrent);
+
   if(pPrevSamples != NULL) free(pPrevSamples);
   if(pPrevCycles != NULL) free(pPrevCycles);
-  if(pVoltageSamples != NULL) free(pVoltageSamples);
-  if(pCurrentSamples != NULL) free(pCurrentSamples);
-  if(pVoltageFFTSamples != NULL) free(pVoltageFFTSamples);
-  if(pCurrentFFTSamples != NULL) free(pCurrentFFTSamples);
   for(uint8_t n = 0; n < pVoltageChannels; n++) delete pVoltageFFT[n];
   for(uint8_t n = 0; n < pCurrentChannels; n++) delete pCurrentFFT[n];
+  delete pInputBlock;
   delete pRates;
   LogFile::Info("Analyzer with serial '%s' stopped", pSerial.c_str());
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
-
-  pAnalyzerLock.ReadLock();
-  if(pBlockSamples == 0) {
+//  pAnalyzerLock.ReadLock();
+  if(pAggreg200MS.Timestamp == 0) {
     pAggreg200MS.Timestamp = Tools::GetTime64();
     pAggreg200MS.Timestamp -= (uint64_t)((buffUsage * 1000) / pSamplerate);
   }
-  if(pNominalFrequency == 0) {
-    for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageSamples[i * pMaxSamples + pBlockSamples] = voltageSamples[i];
-    for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentSamples[i * pMaxSamples + pBlockSamples] = currentSamples[i];
-    pBlockSamples++;
-  } else {
-    float *Ptr = &pDelayVoltage[pDelayPos * pVoltageChannels];
-    for(uint8_t i = 0; i < pVoltageChannels; i++) {
-      pVoltageSamples[i * pMaxSamples + pBlockSamples] = Ptr[i];
-      Ptr[i] = voltageSamples[i];
-    }
-    Ptr = &pDelayCurrent[pDelayPos * pCurrentChannels];
-    for(uint8_t i = 0; i < pCurrentChannels; i++) {
-      pCurrentSamples[i * pMaxSamples + pBlockSamples] = Ptr[i];
-      Ptr[i] = currentSamples[i];
-    }
-    pDelayPos = (pDelayPos + 1) % pDelaySize;
-    pBlockSamples++;
-    for(uint8_t i = 0; i < pVoltageChannels; i++) {
-      for(uint8_t n = 0; n < FILTERSTAGES; n++) {
-        float Out = voltageSamples[i] * pFilters[n].A0 + pFilters[n].ChannelsZ1[i];
-        pFilters[n].ChannelsZ1[i] = voltageSamples[i] * pFilters[n].A1 + pFilters[n].ChannelsZ2[i] - pFilters[n].B1 * Out;
-        pFilters[n].ChannelsZ2[i] = voltageSamples[i] * pFilters[n].A2 - pFilters[n].B2 * Out;
-        voltageSamples[i] = Out;
-      }
-    }
-    pBlockCycles[pBlockCyclesCount]++;
-    if((((pLastSamples[0] >= 0.0) && (voltageSamples[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (voltageSamples[0] > 0.0))) && (pBlockCycles[pBlockCyclesCount] > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))) pBlockCyclesCount++;
-    for(uint8_t i = 0; i < pVoltageChannels; i++) pLastSamples[i] = voltageSamples[i];
-  }
-  if((pBlockSamples == pMaxSamples) || ((pNominalFrequency == 50.0) && (pBlockCyclesCount == 20)) || ((pNominalFrequency == 60.0) && (pBlockCyclesCount == 24))) {
-    pAnalyzerWorker->Run(NULL);
-    pAnalyzerLock.Unlock();
-    return true;
-  }
-  pAnalyzerLock.Unlock();
-  return false;
+  bool Result = pInputBlock->PushSample(voltageSamples, currentSamples);
+  for(uint8_t n = 0; n < pVoltageChannels; n++) pVoltageFFT[n]->PushSample(voltageSamples[n]);
+  for(uint8_t n = 0; n < pCurrentChannels; n++) pCurrentFFT[n]->PushSample(currentSamples[n]);
+//  pAnalyzerLock.Unlock();
+  if(Result == true) pAnalyzerWorker->Run(NULL);
+  return Result;
 }
 bool AnalyzerSoft::IsWorking() {
   return pAnalyzerWorker->IsWorking();
 }
-json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, string *error) {
+json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode mode) {
   json ConfigOUT = json::object();
   ConfigOUT["Name"] = "Unnamed analyzer";
   ConfigOUT["NominalVoltage"] = 230.0;
@@ -195,7 +129,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   ConfigOUT["EventsEnabled"] = false;
   ConfigOUT["AlarmsEnabled"] = false;
   ConfigOUT["Alarms"] = json::array();
-  ConfigOUT["Rates"] = json::array();
+//  ConfigOUT["Rates"] = json::array();
   if(!config.is_object()) return ConfigOUT;
   if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
   if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
@@ -256,14 +190,14 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
       ConfigOUT["Alarms"].push_back(configAlarm);
     }
   }
-  if(config.contains("Rates") && config["Rates"].is_array()) {
-    json Tmp = RatesEval::CheckConfig(config["Rates"]);
-    if(Tmp.is_string()) {
-      if(error != NULL) *error = Tmp;
-    } else {
-      ConfigOUT["Rates"] = Tmp;
-    }
-  }
+//  if(config.contains("Rates") && config["Rates"].is_array()) {
+//    json Tmp = RatesEval::CheckConfig(config["Rates"]);
+//    if(Tmp.is_string()) {
+//      if(error != NULL) *error = Tmp;
+//    } else {
+//      ConfigOUT["Rates"] = Tmp;
+//    }
+//  }
   return ConfigOUT;
 }
 void AnalyzerSoft::Configure(const json &options) {
@@ -277,86 +211,15 @@ void AnalyzerSoft::Configure(const json &options) {
   load_time_zone(options["TimeZone"], &pTimeZone);
   if(pNominalFrequency != options["NominalFrequency"]) {
     pNominalFrequency = options["NominalFrequency"];
-    if(pNominalFrequency == 0.0) {
-      pFreqCyclesLen  = 1;
-      pMaxSamples = pSamplerate * 0.2;
-    } else if(pNominalFrequency == 50.0) {
-      pFreqCyclesLen  = ZEROCROSSING_SECONDS * 50;
-      pMaxSamples = (10.0 * pSamplerate * 1.15) / pNominalFrequency;
-    } else if(pNominalFrequency == 60.0) {
-      pFreqCyclesLen = ZEROCROSSING_SECONDS * 60;
-      pMaxSamples = (12.0 * pSamplerate * 1.15) / pNominalFrequency;
-    }
-    pMaxFFTSamples     = (pMaxSamples / 2) + 1;
-    pFreqCyclesPos     = 0;
+    pFrequency->Config(pNominalFrequency);
     pSequence          = 0;
-    pBlockSamples      = 0;
-    pBlockCyclesCount  = 0;
-    pFreqCycles        = (uint32_t*)realloc(pFreqCycles, pFreqCyclesLen * sizeof(uint32_t));
-    pVoltageSamples    = (float*)realloc(pVoltageSamples, sizeof(float) * pVoltageChannels * pMaxSamples);
-    pCurrentSamples    = (float*)realloc(pCurrentSamples, sizeof(float) * pCurrentChannels * pMaxSamples);
-    pVoltageFFTSamples = (AnalyzerSoftFFT::Complex_t*)realloc(pVoltageFFTSamples, sizeof(AnalyzerSoftFFT::Complex_t) * pVoltageChannels * pMaxFFTSamples);
-    pCurrentFFTSamples = (AnalyzerSoftFFT::Complex_t*)realloc(pCurrentFFTSamples, sizeof(AnalyzerSoftFFT::Complex_t) * pCurrentChannels * pMaxFFTSamples);
     InitAggreg(pAggreg200MS, AGGREG_200MS);
-    memset(pBlockCycles, 0, sizeof(pBlockCycles));
-    for(uint8_t n = 0; n < pVoltageChannels; n++) pLastSamples[n] = 0.0;
-    for(uint8_t n = 0; n < pVoltageChannels; n++) pVoltageFFT[n]->Config(&pVoltageSamples[n * pMaxSamples], &pVoltageFFTSamples[n * pMaxFFTSamples], (pNominalFrequency == 50.0) ? 10 : (pNominalFrequency == 60.0) ? 12 : 0);
-    for(uint8_t n = 0; n < pCurrentChannels; n++) pCurrentFFT[n]->Config(&pCurrentSamples[n * pMaxSamples], &pCurrentFFTSamples[n * pMaxFFTSamples], (pNominalFrequency == 50.0) ? 10 : (pNominalFrequency == 60.0) ? 12 : 0);
-    if(pNominalFrequency != 0.0) {
-      for(uint8_t n = 0; n < FILTERSTAGES; n++) {
-        float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
-        float alpha = sin(w0) / 2.0;
-        pFilters[n].A0 = alpha / (1.0 + alpha);
-        pFilters[n].A1 = 0.0;
-        pFilters[n].A2 = -alpha / (1.0 + alpha);
-        pFilters[n].B1 = (-2.0 * cos(w0)) / (1.0 + alpha);
-        pFilters[n].B2 = (1.0 - alpha) / (1.0 + alpha);
-        memset(pFilters[n].ChannelsZ1, 0, sizeof(Filter_t::ChannelsZ1));
-        memset(pFilters[n].ChannelsZ2, 0, sizeof(Filter_t::ChannelsZ2));
-      }
-      pDelaySize = ((pSamplerate / pNominalFrequency) / 2.0) * FILTERSTAGES + 2;
-      pDelayPos = 0;
-      pDelayVoltage = (float*)realloc(pDelayVoltage, sizeof(float) * pDelaySize * pVoltageChannels);
-      pDelayCurrent = (float*)realloc(pDelayCurrent, sizeof(float) * pDelaySize * pCurrentChannels);
-    } else {
-      if(pDelayVoltage != NULL) {
-        free(pDelayVoltage);
-        pDelayVoltage = NULL;
-      }
-      if(pDelayCurrent != NULL) {
-        free(pDelayCurrent);
-        pDelayCurrent = NULL;
-      }
-    }
+    pInputBlock->Config(pNominalFrequency);
+    for(uint8_t n = 0; n < pVoltageChannels; n++) pVoltageFFT[n]->Config((pNominalFrequency == 0.0) ? 1 : (pNominalFrequency == 50.0) ? 10 : 12);
+    for(uint8_t n = 0; n < pCurrentChannels; n++) pCurrentFFT[n]->Config((pNominalFrequency == 0.0) ? 1 : (pNominalFrequency == 50.0) ? 10 : 12);
   }
-//  if(pRateList != NULL) delete pRateList;
-//  pRates = options["Rates"];
   bool AlarmsEnabled = options["AlarmsEnabled"];
   bool EventsEnabled = options["EventsEnabled"];
-  if((EventsEnabled == false) && (pEventsWorker != NULL)) {
-    delete pEventsWorker;
-    pEventsWorker = NULL;
-    free(pPrevCycles);
-    pPrevCycles = NULL;
-    free(pPrevSamples);
-    pPrevSamples = NULL;
-  } else if((EventsEnabled == true) && (pEventsWorker == NULL)) {
-    memset(&pEvent, 0, sizeof(Event_t));
-    pPrevStationary = false;
-    pPrevSamplesLen = EVENT_RAWENVELOPETIME * pSamplerate;
-    pPrevSamplesPos = 0;
-    pPrevSamples    = (float*)calloc(pPrevSamplesLen * pVoltageChannels, sizeof(float));
-    pPrevCyclesLen  = (pNominalFrequency * 2) - 1;
-    pPrevCyclesPos  = 0;
-    pPrevCycles     = (float*)calloc(pPrevCyclesLen * pVoltageChannels, sizeof(float));
-    pEventsWorker   = new Worker("EventsDet", [&](void *a) { this->Events_Func(); });
-  }
-  if((AlarmsEnabled == false) && (pAlarms != NULL)) {
-    delete pAlarms;
-    pAlarms = NULL;
-  } else if((AlarmsEnabled == true) && (pAlarms == NULL)) {
-    pAlarms = new AnalyzerSoftAlarms(this);
-  }
   bool SyncEnabled = options["SyncEnabled"];
   if(SyncEnabled == true) {
     pSyncServer    = options["Sync"]["Server"];
@@ -419,209 +282,30 @@ void AnalyzerSoft::Configure(const json &options) {
   pAnalyzerLock.Unlock();
   if(pMQTTConfig == true) PublishConfig(options);
 }
-void AnalyzerSoft::InitAggreg(Params_t &params, AggregType type) {
-  memset(&params, 0, sizeof(params));
-  params.Type = type;
-}
-void AnalyzerSoft::AccumulateAggreg(Params_t &dst, const Params_t &src) {
-  if(src.AggregSamples == 0) return;
-  if(dst.Timestamp == 0) dst.Timestamp = src.Timestamp;
-  dst.AggregSamples += src.AggregSamples;
-  dst.Frequency += src.Frequency;
-  dst.Unbalance += src.Unbalance;
-  dst.Flag |= src.Flag;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Voltage[n] += src.Voltage[n] * src.Voltage[n];
-  for(uint8_t n = 0; n < pCurrentChannels; n++) dst.Current[n] += src.Current[n] * src.Current[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Active_Power[n] += src.Active_Power[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Reactive_Power[n] += src.Reactive_Power[n];
-  for(uint8_t n = 0; n < pCurrentChannels; n++) dst.Current_THD[n] += src.Current_THD[n] * src.Current_THD[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Phi[n] += src.Phi[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Power_Factor[n] += src.Power_Factor[n];
-  for(uint8_t n = 0; n < (50 * pCurrentChannels); n++) dst.Current_Harmonics[n] += src.Current_Harmonics[n] * src.Current_Harmonics[n];
-  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) dst.Power_Harmonics[n] += src.Power_Harmonics[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Voltage_THD[n] += src.Voltage_THD[n] * src.Voltage_THD[n];
-  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) dst.Voltage_Harmonics[n] += src.Voltage_Harmonics[n] * src.Voltage_Harmonics[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Active_Energy[n] += src.Active_Energy[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Voltage_Phase[n] += src.Voltage_Phase[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Reactive_Energy[n] += src.Reactive_Energy[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++) dst.Apparent_Power[n] += src.Apparent_Power[n];
-}
-void AnalyzerSoft::NormalizeAggreg(Params_t &params) {
-  if(params.AggregSamples == 0) return;
-  params.Frequency = params.Frequency / params.AggregSamples;
-  params.Unbalance = params.Unbalance / params.AggregSamples;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage[n] = sqrt(params.Voltage[n] / params.AggregSamples);
-  for(uint8_t n = 0; n < pCurrentChannels; n++) params.Current[n] = sqrt(params.Current[n] / params.AggregSamples);
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Active_Power[n] = params.Active_Power[n] / params.AggregSamples;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Reactive_Power[n] = params.Reactive_Power[n] / params.AggregSamples;
-  for(uint8_t n = 0; n < pCurrentChannels; n++) params.Current_THD[n] = sqrt(params.Current_THD[n] / params.AggregSamples);
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Phi[n] = params.Phi[n] / params.AggregSamples;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Power_Factor[n] = params.Power_Factor[n] / params.AggregSamples;
-  for(uint8_t n = 0; n < (50 * pCurrentChannels); n++) params.Current_Harmonics[n] = sqrt(params.Current_Harmonics[n] / params.AggregSamples);
-  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) params.Power_Harmonics[n] = params.Power_Harmonics[n] / params.AggregSamples;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage_THD[n] = sqrt(params.Voltage_THD[n] / params.AggregSamples);
-  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) params.Voltage_Harmonics[n] = sqrt(params.Voltage_Harmonics[n] / params.AggregSamples);
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Voltage_Phase[n] = params.Voltage_Phase[n] / params.AggregSamples;
-  for(uint8_t n = 0; n < pVoltageChannels; n++) params.Apparent_Power[n] = params.Apparent_Power[n] / params.AggregSamples;
-  params.AggregSamples = 1;
-}
-void AnalyzerSoft::SaveAggreg(Params_t &params) {
-  if(params.AggregSamples == 0) return;
-  SetOnline();
-  Database DB(pSerial);
-  if(params.Type == AGGREG_200MS) {
-    DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance) VALUES(" +
-    DB.Bind(params.Timestamp) + ", " +
-    DB.Bind(params.Voltage, pVoltageChannels) + ", " +
-    DB.Bind(params.Current, pCurrentChannels) + ", " +
-    DB.Bind(params.Frequency) + ", " +
-    DB.Bind(params.Flag) + ", " +
-    DB.Bind(params.Active_Power, pVoltageChannels) + ", " +
-    DB.Bind(params.Reactive_Power, pVoltageChannels) + ", " +
-    DB.Bind(params.Power_Factor, pVoltageChannels) + ", " +
-    DB.Bind(params.Voltage_THD, pVoltageChannels) + ", " +
-    DB.Bind(params.Current_THD, pCurrentChannels) + ", " +
-    DB.Bind(params.Phi, pVoltageChannels) + ", " +
-    DB.Bind(params.Unbalance) + ")");
-  } else if(params.Type == AGGREG_3S) {
-    DB.ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" +
-    DB.Bind(params.Timestamp) + ", " +
-    DB.Bind(params.Voltage, pVoltageChannels) + ", " +
-    DB.Bind(params.Current, pCurrentChannels) + ", " +
-    DB.Bind(params.Frequency) + ", " +
-    DB.Bind(params.Flag) + ", " +
-    DB.Bind(params.Active_Power, pVoltageChannels) + ", " +
-    DB.Bind(params.Reactive_Power, pVoltageChannels) + ")");
-  } else if(params.Type == AGGREG_1M) {
-    DB.ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" +
-    DB.Bind(params.Timestamp) + ", " +
-    DB.Bind(params.Voltage, pVoltageChannels) + ", " +
-    DB.Bind(params.Current, pCurrentChannels) + ", " +
-    DB.Bind(params.Frequency) + ", " +
-    DB.Bind(params.Flag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance, harmonics_v, harmonics_i, harmonics_p) SELECT sampletime, " +
-    DB.Bind(params.Active_Power, pVoltageChannels) + ", " +
-    DB.Bind(params.Reactive_Power, pVoltageChannels) + ", " +
-    DB.Bind(params.Power_Factor, pVoltageChannels) + ", " +
-    DB.Bind(params.Voltage_THD, pVoltageChannels) + ", " +
-    DB.Bind(params.Current_THD, pCurrentChannels) + ", " +
-    DB.Bind(params.Phi, pVoltageChannels) + ", " +
-    DB.Bind(params.Unbalance) + ", " +
-    DB.Bind(params.Voltage_Harmonics, pVoltageChannels, 50) + ", " +
-    DB.Bind(params.Current_Harmonics, pCurrentChannels, 50) + ", " +
-    DB.Bind(params.Power_Harmonics, pVoltageChannels, 50) + " FROM Sample");
-  } else if(params.Type == AGGREG_10M) {
-    DB.ExecSentenceNoResult("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" +
-    DB.Bind(params.Timestamp) + ", " +
-    DB.Bind(params.Voltage, pVoltageChannels) + ", " +
-    DB.Bind(params.Current, pCurrentChannels) + ", " +
-    DB.Bind(params.Frequency) + ", " +
-    DB.Bind(params.Flag) + ")");
-  } else if(params.Type == AGGREG_15M) {
-    DB.ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" +
-    DB.Bind(params.Timestamp) + ", " +
-    DB.Bind(params.Active_Power, pVoltageChannels) + ", " +
-    DB.Bind(params.Reactive_Power, pVoltageChannels) + ")");
-  } else if(params.Type == AGGREG_1H) {
-    DB.ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) VALUES(" +
-    DB.Bind(params.Timestamp) + ", " +
-    DB.Bind(params.Voltage, pVoltageChannels) + ", " +
-    DB.Bind(params.Current, pCurrentChannels) + ", " +
-    DB.Bind(params.Frequency) + ", " +
-    DB.Bind(params.Flag) + ", " +
-    DB.Bind(params.Active_Power, pVoltageChannels) + ", " +
-    DB.Bind(params.Reactive_Power, pVoltageChannels) + ", " +
-    DB.Bind(params.StatsVoltage, VoltageRangesLen) + ", " +
-    DB.Bind(params.StatsFrequency, FrequencyRangesLen) + ", " +
-    DB.Bind(params.StatsTHD, THDRangesLen) + ", " +
-    DB.Bind(params.StatsHarmonics, 2) + ", " +
-    DB.Bind(params.StatsUnbalance, UnbalanceRangesLen) + ")");
-  }
-}
 float AnalyzerSoft::CalcChange(const float in, const float reference) {
   return ((in - reference) / reference) * 100;
 }
-void AnalyzerSoft::PublishAggreg(const Params_t &params, const string &topic) {
-  if(pMQTTClient.socketfd == -1) return;
-  json Msg = json::object();
-  Msg["Sampletime"] = params.Timestamp;
-  Msg["Frequency"] = params.Frequency;
-  Msg["Flag"] = params.Flag;
-  Msg["Unbalance"] = params.Unbalance;
-  Msg["Voltage"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage"].push_back(params.Voltage[n]);
-  Msg["Current"] = json::array();
-  for(uint8_t n = 0; n < pCurrentChannels; n++) Msg["Current"].push_back(params.Current[n]);
-  Msg["Active_Power"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Active_Power"].push_back(params.Active_Power[n]);
-  Msg["Reactive_Power"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Reactive_Power"].push_back(params.Reactive_Power[n]);
-  Msg["Active_Energy"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Active_Energy"].push_back(params.Active_Energy[n]);
-  Msg["Reactive_Energy"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Reactive_Energy"].push_back(params.Reactive_Energy[n]);
-  Msg["Apparent_Power"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Apparent_Power"].push_back(params.Apparent_Power[n]);
-  Msg["Power_Factor"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Power_Factor"].push_back(params.Power_Factor[n]);
-  Msg["Voltage_THD"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage_THD"].push_back(params.Voltage_THD[n]);
-  Msg["Current_THD"] = json::array();
-  for(uint8_t n = 0; n < pCurrentChannels; n++) Msg["Current_THD"].push_back(params.Current_THD[n]);
-  Msg["Phi"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Phi"].push_back(params.Phi[n]);
-  Msg["Voltage_Phase"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage_Phase"].push_back(params.Voltage_Phase[n]);
-  string TextMsg = Msg.dump();
-  string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/" + topic : pSerial + "/" + topic;
-  mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
-  LogFile::Debug("Analyzer '%s' publish message to MQTT broker", pSerial.c_str());
-}
-void AnalyzerSoft::PublishConfig(const json &options) {
-  if(pMQTTClient.socketfd != -1) {
-    string TextMsg = options.dump();
-    string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/Config" : pSerial + "/Config";
-    mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
-    LogFile::Debug("Analyzer '%s' publish message to MQTT broker", pSerial.c_str());
-  }
-}
 void AnalyzerSoft::Analyzer_Func() {
   pAnalyzerLock.ReadLock();
-  uint64_t Start = Tools::GetTime64();
+  uint64_t Start     = Tools::GetTime64();
+  uint16_t BlockSize = pInputBlock->BlockSamples();
   pAggreg200MS.AggregSamples = 1;
   if(pEventsWorker != NULL) pEventsWorker->Run(NULL);
-//  pFFTSamples = (pBlockSamples / 2) + 1;
-  for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFT[i]->Run(pBlockSamples);
-  for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFT[i]->Run(pBlockSamples);
-  if(pNominalFrequency > 0) {
-    for(uint8_t n = 0; n < pBlockCyclesCount; n++) {
-      pFreqCycles[pFreqCyclesPos] = pBlockCycles[n];
-      pFreqCyclesPos = (pFreqCyclesPos + 1) % pFreqCyclesLen;
-    }
-    uint32_t Samples  = 0;
-    uint16_t Cycles   = 0;
-    uint16_t MinCycle = pSamplerate / (pNominalFrequency * 1.15 * 2.0);
-    uint16_t MaxCycle = pSamplerate / (pNominalFrequency * 0.85 * 2.0);
-    for(uint16_t i = 0; i < pFreqCyclesLen; i++) {
-      if((pFreqCycles[i] < MinCycle) && (pFreqCycles[i] > MaxCycle)) break;
-      Samples += pFreqCycles[i];
-      Cycles++;
-    }
-    pAggreg200MS.Frequency = (Cycles == pFreqCyclesLen) ? pFreqCyclesLen / ((2.0 * Samples) / pSamplerate) : 0;
-  }
+  for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFT[i]->Run();
+  for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFT[i]->Run();
+  if(pFrequency != NULL) pAggreg200MS->Frequency(pFrequency->Frequency());
+
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
-    float *ChV = &pVoltageSamples[j * pMaxSamples];
-    float *ChC = &pCurrentSamples[j * pMaxSamples];
-    for(uint16_t i = 0; i < pBlockSamples; i++) {
-      pAggreg200MS.Voltage[j] += ChV[i] * ChV[i];
-      pAggreg200MS.Active_Power[j] += ChV[i] * ChC[i];
+    for(uint16_t i = 0; i < BlockSize; i++) {
+      pAggreg200MS.Voltage[j] += pow(pInputBlock->VoltageSample(j, i), 2.0);
+      pAggreg200MS.Active_Power[j] += pInputBlock->VoltageSample(j, i) * pInputBlock->CurrentSample(j, i);
     }
-    pAggreg200MS.Voltage[j] = sqrt(pAggreg200MS.Voltage[j] / pBlockSamples);
-    pAggreg200MS.Active_Power[j] = pAggreg200MS.Active_Power[j] / pBlockSamples;
+    pAggreg200MS.Voltage[j] = sqrt(pAggreg200MS.Voltage[j] / BlockSize);
+    pAggreg200MS.Active_Power[j] = pAggreg200MS.Active_Power[j] / BlockSize;
   }
   for(uint8_t j = 0; j < pCurrentChannels; j++) {
-    float *Ch = &pCurrentSamples[j * pMaxSamples];
-    for(uint16_t i = 0; i < pBlockSamples; i++) pAggreg200MS.Current[j] += Ch[i] * Ch[i];
-    pAggreg200MS.Current[j] = sqrt(pAggreg200MS.Current[j] / pBlockSamples);
+    for(uint16_t i = 0; i < BlockSize; i++) pAggreg200MS.Current[j] += pow(pInputBlock->CurrentSample(j, i), 2.0);
+    pAggreg200MS.Current[j] = sqrt(pAggreg200MS.Current[j] / BlockSize);
   }
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
     pVoltageFFT[j]->Wait();
@@ -640,9 +324,9 @@ void AnalyzerSoft::Analyzer_Func() {
     pAggreg200MS.Reactive_Power[j] = pAggreg200MS.Voltage_Harmonics[j * 50] * pAggreg200MS.Current_Harmonics[j * 50] * sin(-PHI);
     pAggreg200MS.Phi[j] = PHI * 180.0 / M_PI;
     pAggreg200MS.Current_THD[j] = (pAggreg200MS.Current_THD[j] / pAggreg200MS.Current_Harmonics[j * 50]) * 100.0;
-    pAggreg200MS.Active_Energy[j] = (pAggreg200MS.Active_Power[j] * pBlockSamples) / (pSamplerate * 3600.0);
+    pAggreg200MS.Active_Energy[j] = (pAggreg200MS.Active_Power[j] * BlockSize) / (pSamplerate * 3600.0);
     pAggreg200MS.Power_Factor[j] = pAggreg200MS.Active_Power[j] / pAggreg200MS.Apparent_Power[j];
-    pAggreg200MS.Reactive_Energy[j] = (pAggreg200MS.Reactive_Power[j] * pBlockSamples) / (pSamplerate * 3600.0);
+    pAggreg200MS.Reactive_Energy[j] = (pAggreg200MS.Reactive_Power[j] * BlockSize) / (pSamplerate * 3600.0);
   }
   if((pMode == PHASE3N) || (pMode == PHASE3)) {
     complex<float> A(cos(120.0 * M_PI / 180.0), sin(120.0 * M_PI / 180.0));
@@ -663,9 +347,6 @@ void AnalyzerSoft::Analyzer_Func() {
   if(pSequence < 100) {
     LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pSequence);
     InitAggreg(pAggreg200MS, AGGREG_200MS);
-    pBlockSamples     = 0;
-    pBlockCyclesCount = 0;
-    memset(pBlockCycles, 0, sizeof(pBlockCycles));
     pSequence++;
     pAnalyzerLock.Unlock();
     return;
@@ -777,185 +458,10 @@ void AnalyzerSoft::Analyzer_Func() {
   pNowDataLock.ProviderWait();
   LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")", pSerial.c_str(), Tools::GetTime64() - Start, pSequence, pAggreg200MS.Timestamp);
   InitAggreg(pAggreg200MS, AGGREG_200MS);
-  pBlockSamples     = 0;
-  pBlockCyclesCount = 0;
-  memset(pBlockCycles, 0, sizeof(pBlockCycles));
   pSequence++;
   pAnalyzerLock.Unlock();
 }
-void AnalyzerSoft::Events_Func() {
-  auto CopyCycles = [&](float *buff, const uint16_t count) -> float* {
-    buff = (float*)realloc(buff, sizeof(float) * pVoltageChannels * count);
-    for(uint16_t n = 0; n < count; n++) {
-      for(uint8_t i = 0; i < pVoltageChannels; i++) buff[i * count + n] = pPrevCycles[((pPrevCyclesPos + pPrevCyclesLen - count + n) % pPrevCyclesLen) * pVoltageChannels + i];
-    }
-    return buff;
-  };
-  auto CopySamples = [&](float *buff, const uint16_t count) -> float* {
-    buff = (float*)realloc(buff, sizeof(float) * pVoltageChannels * count);
-    for(uint16_t n = 0; n < count; n++) {
-      for(uint8_t i = 0; i < pVoltageChannels; i++) buff[i * count + n] = pPrevSamples[((pPrevSamplesPos + pPrevSamplesLen - count + n) % pPrevSamplesLen) * pVoltageChannels + i];
-    }
-    return buff;
-  };
-  uint32_t  Pos  = 0;
-  float    *Buff = NULL;
-  for(uint8_t i = 0; i < pBlockCyclesCount; i++) {
-    float    Tolerance  = EVENT_RVC - ((pPrevStationary == true) ? 0.0 : EVENT_HYSTERESIS);
-    bool     Stationary = true;
-    uint16_t CycleLen   = pBlockCycles[i];
-    float    Cycle[3];
-    float    RMS_Avg[3];
-    for(uint8_t n = 0; n < pVoltageChannels; n++) {
-      Cycle[n] = 0.0;
-      float *Ptr   = &pVoltageSamples[n * pMaxSamples + Pos];
-      for(uint16_t j = 0; j < CycleLen; j++) Cycle[n] += Ptr[j] * Ptr[j];
-      Cycle[n] = sqrt(Cycle[n] / CycleLen);
-      RMS_Avg[n]   = Cycle[n];
-      for(uint16_t j = 0; j < pPrevCyclesLen; j++) RMS_Avg[n] += pPrevCycles[j * pVoltageChannels + n];
-      RMS_Avg[n] = RMS_Avg[n] / (pPrevCyclesLen + 1);
-    }
-    for(uint8_t n = 0; (n < pVoltageChannels) && (Stationary == true); n++) {
-      Stationary = (fabs(CalcChange(Cycle[n], RMS_Avg[n])) > Tolerance) ? false : Stationary;
-      for(int j = 0; j < pPrevCyclesLen; j++) Stationary = (fabs(CalcChange(pPrevCycles[j * pVoltageChannels + n], RMS_Avg[n])) > Tolerance) ? false : Stationary;
-    }
-    if(pEvent.Type != EVT_NONE) {
-      bool IsRunning = false;
-      if(pEvent.Type == EVT_INTERRUPTION) {
-        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (-CalcChange(Cycle[n], pNominalVoltage) > (EVENT_INTERRUPTION - EVENT_INTERRUPTION_HYSTERESIS));
-      } else if(pEvent.Type == EVT_DIP) {
-        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (-CalcChange(Cycle[n], pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS));
-      } else if(pEvent.Type == EVT_SWELL) {
-        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (CalcChange(Cycle[n], pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS));
-      } else if(pEvent.Type == EVT_RVC) {
-        if(Stationary == true) {
-          for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.ChangeValue[n] = RMS_Avg[n];
-        } else {
-          IsRunning = true;
-        }
-      }
-      if(IsRunning == false) {
-        string  Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
-        LogFile::Debug("Event '%s' closed on analyzer '%s'", Type.c_str(), pSerial.c_str());
-        Database DB(pSerial);
-        DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", reference = " + DB.Bind(pEvent.Reference, pVoltageChannels) + ", peak = " + DB.Bind(pEvent.PeakValue, pVoltageChannels) + ", change = " + DB.Bind(pEvent.ChangeValue, pVoltageChannels) + ", duration = " + DB.Bind(pEvent.SamplesDuration) + " WHERE starttime = " + DB.Bind(pEvent.Start));
-        if(pEvent.CyclesDuration < pPrevCyclesLen) {
-          DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RMS'");
-        } else if(pEvent.CyclesDuration > pPrevCyclesLen) {
-          pEvent.CyclesDuration = (pEvent.CyclesDuration < (pPrevCyclesLen * 2)) ? pEvent.CyclesDuration - pPrevCyclesLen : pPrevCyclesLen;
-          DB.ExecSentenceNoResult("WITH tbl as (SELECT starttime as srctime, sampletype as srctype, samples2 as src, " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) +"::real[] as dst, generate_subscripts(samples2, 1) AS idx FROM events_ext) UPDATE events_ext SET samples2 = (SELECT array_agg(array(select unnest(src[idx:idx])) || array(select unnest(dst[idx:idx]))) FROM tbl WHERE srctype = sampletype and srctime = starttime) WHERE sampletype = 'RMS' and starttime = " + DB.Bind(pEvent.Start));
-        }
-        if(pEvent.SamplesDuration < pPrevSamplesLen) {
-          DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RAW'");
-        } else if(pEvent.SamplesDuration > pPrevSamplesLen) {
-          pEvent.SamplesDuration = (pEvent.SamplesDuration < (pPrevSamplesLen * 2)) ? pEvent.SamplesDuration - pPrevSamplesLen : pPrevSamplesLen;
-          DB.ExecSentenceNoResult("WITH tbl as (SELECT starttime as srctime, sampletype as srctype, samples2 as src, " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) +"::real[] as dst, generate_subscripts(samples2, 1) AS idx FROM events_ext) UPDATE events_ext SET samples2 = (SELECT array_agg(array(select unnest(src[idx:idx])) || array(select unnest(dst[idx:idx]))) FROM tbl WHERE srctype = sampletype and srctime = starttime) WHERE sampletype = 'RAW' and starttime = " + DB.Bind(pEvent.Start));
-        }
-        pEvent.CyclesDuration  = 0;
-        pEvent.SamplesDuration = 0;
-        pEvents.push_back(pEvent);
-        memset(&pEvent, 0, sizeof(pEvent));
-      }
-    }
-    if(pSequence > 100) {
-      for(uint8_t n = 0; n < pVoltageChannels; n++) {
-        if((pEvent.Type != EVT_INTERRUPTION) && (-CalcChange(Cycle[n], pNominalVoltage) > EVENT_INTERRUPTION)) {
-          pEvent.Type = EVT_INTERRUPTION;
-          for(uint8_t i = 0; i < pVoltageChannels; i++) {
-            pEvent.Reference[i] = pNominalVoltage;
-            pEvent.PeakValue[i] = Cycle[i];
-          }
-        } else if((pEvent.Type != EVT_DIP) && (pEvent.Type != EVT_INTERRUPTION) && (-CalcChange(Cycle[n], pNominalVoltage) > EVENT_DIP_SWELL)) {
-          pEvent.Type = EVT_DIP;
-          for(uint8_t i = 0; i < pVoltageChannels; i++) {
-            pEvent.Reference[i] = pNominalVoltage;
-            pEvent.PeakValue[i] = Cycle[i];
-          }
-        } else if((pEvent.Type != EVT_SWELL) && (CalcChange(Cycle[n], pNominalVoltage) > EVENT_DIP_SWELL)) {
-          pEvent.Type = EVT_SWELL;
-          for(uint8_t i = 0; i < pVoltageChannels; i++) {
-            pEvent.Reference[i] = pNominalVoltage;
-            pEvent.PeakValue[i] = Cycle[i];
-          }
-        } else if((pEvent.Type == EVT_NONE) && (Stationary == false) && (pPrevStationary == true)) {
-          pEvent.Type = EVT_RVC;
-          for(uint8_t i = 0; i < pVoltageChannels; i++) {
-            pEvent.Reference[i] = RMS_Avg[i];
-            pEvent.PeakValue[i] = Cycle[i];
-          }
-        }
-      }
-    }
-    if(pEvent.Type != EVT_NONE) {
-      pAggreg200MS.Flag = true;
-      if(pEvent.SamplesDuration == 0) {
-        string Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
-        LogFile::Debug("New event '%s' started on analyzer '%s'", Type.c_str(), pSerial.c_str());
-        pEvent.Start = pAggreg200MS.Timestamp + (uint32_t)((Pos * 1000) / pSamplerate);
-        Database DB(pSerial);
-        DB.ExecSentenceNoResult("INSERT INTO events(starttime, evttype, samplerate, reference, peak, change, notes, duration) VALUES (" + DB.Bind(pEvent.Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent.Reference, pVoltageChannels) + ", " + DB.Bind(pEvent.PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent.ChangeValue, pVoltageChannels) + ", '', 0)");
-        DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples1) VALUES (" + DB.Bind(pEvent.Start) + ", 'RMS', " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + ")");
-        DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples1) VALUES (" + DB.Bind(pEvent.Start) + ", 'RAW', " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) + ")");
-      } else {
-        if(pEvent.Type == EVT_INTERRUPTION) {
-          for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.PeakValue[n] = fmin(pEvent.PeakValue[n], Cycle[n]);
-        } else if(pEvent.Type == EVT_DIP) {
-          for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.PeakValue[n] = fmin(pEvent.PeakValue[n], Cycle[n]);
-        } else if(pEvent.Type == EVT_SWELL) {
-          for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.PeakValue[n] = fmax(pEvent.PeakValue[n], Cycle[n]);
-        } else if(pEvent.Type == EVT_RVC) {
-          for(uint8_t n = 0; n < pVoltageChannels; n++) {
-            if(fabs(pEvent.Reference[n] - Cycle[n]) > fabs(pEvent.Reference[n] - pEvent.PeakValue[n])) pEvent.PeakValue[n] = Cycle[n];
-          }
-        }
-      }
-    }
-    for(uint8_t n = 0; n < pVoltageChannels; n++) pPrevCycles[pPrevCyclesPos * pVoltageChannels + n] =  Cycle[n];
-    pPrevCyclesPos  = (pPrevCyclesPos + 1) % pPrevCyclesLen;
-    if(pEvent.Type != EVT_NONE) {
-      pEvent.CyclesDuration++;
-      if(pEvent.CyclesDuration == pPrevCyclesLen) {
-        Database DB(pSerial);
-        DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RMS'");
-      }
-    }
-    for(auto &Event : pEvents) {
-      Event.CyclesDuration++;
-      if(Event.CyclesDuration == pPrevCyclesLen) {
-        Database DB(pSerial);
-        DB.ExecSentenceNoResult("UPDATE events_ext SET samples3 = " + DB.Bind(CopyCycles(Buff, pPrevCyclesLen), pVoltageChannels, pPrevCyclesLen) + " WHERE starttime = " + DB.Bind(Event.Start) + " AND sampletype = 'RMS'");
-      }
-    }
-    for(uint16_t j = 0; j < CycleLen; j++) {
-      for(uint8_t n = 0; n < pVoltageChannels; n++) pPrevSamples[pPrevSamplesPos * pVoltageChannels + n] = pVoltageSamples[n * pMaxSamples + Pos + j];
-      pPrevSamplesPos = (pPrevSamplesPos + 1) % pPrevSamplesLen;
-      if(pEvent.Type != EVT_NONE) {
-        pEvent.SamplesDuration++;
-        if(pEvent.SamplesDuration == pPrevSamplesLen) {
-          Database DB(pSerial);
-          DB.ExecSentenceNoResult("UPDATE events_ext SET samples2 = " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) + " WHERE starttime = " + DB.Bind(pEvent.Start) + " AND sampletype = 'RAW'");
-        }
-      }
-      for(auto &Event : pEvents) {
-        Event.SamplesDuration++;
-        if(Event.SamplesDuration == pPrevSamplesLen) {
-          Database DB(pSerial);
-          DB.ExecSentenceNoResult("UPDATE events_ext SET samples3 = " + DB.Bind(CopySamples(Buff, pPrevSamplesLen), pVoltageChannels, pPrevSamplesLen) + " WHERE starttime = " + DB.Bind(Event.Start) + " AND sampletype = 'RAW'");
-        }
-      }
-    }
-    while(pEvents.size() != 0) {
-      Event_t *Tmp = &pEvents.front();
-      if((Tmp->SamplesDuration < pPrevSamplesLen) || (Tmp->CyclesDuration < pPrevCyclesLen)) break;
-      string Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
-      LogFile::Debug("Event '%s' on analyzer '%s' finished", Type.c_str(), pSerial.c_str());
-      pEvents.pop_front();
-    }
-    Pos             = Pos + CycleLen;
-    pPrevStationary = Stationary && (pEvent.Type == EVT_NONE);
-  }
-  free(Buff);
-}
+
 void *AnalyzerSoft::Sync_Thread(void *params) {
   AnalyzerSoft *This = (AnalyzerSoft*)params;
   nice(10);
@@ -1070,75 +576,6 @@ void *AnalyzerSoft::Sync_Thread(void *params) {
   pthread_mutex_unlock(&Mutex);
   return NULL;
 }
-void *AnalyzerSoft::MQTT_Thread(void *params) {
-  AnalyzerSoft *This = (AnalyzerSoft*)params;
-  nice(10);
-  string User, Pass, Server;
-  while(This->pMQTTTerminate == false) {
-    This->pAnalyzerLock.ReadLock();
-    if((This->pMQTTUser != User) || (This->pMQTTPass != Pass) || (This->pMQTTServer != Server)) {
-      if(This->pMQTTClient.socketfd != -1) {
-        close(This->pMQTTClient.socketfd);
-        This->pMQTTClient.socketfd = -1;
-      }
-      User   = This->pMQTTUser;
-      Pass   = This->pMQTTPass;
-      Server = This->pMQTTServer;
-    }
-    This->pAnalyzerLock.Unlock();
-    mqtt_sync(&This->pMQTTClient);
-    if(This->pMQTTClient.error == MQTT_ERROR_CONNECT_NOT_CALLED) {
-      mqtt_connect(&This->pMQTTClient, NULL, NULL, NULL, 0, (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
-      if(This->pMQTTConfig == true) This->PublishConfig(CheckConfig(ConfigManager::ReadConfig(This->pConfigPath), This->pMode, NULL));
-    } else if(This->pMQTTClient.error == MQTT_ERROR_SOCKET_ERROR) {
-      if(This->pMQTTClient.socketfd != -1) {
-        close(This->pMQTTClient.socketfd);
-        This->pMQTTClient.socketfd = -1;
-      }
-      URL  Url(Server);
-      char Port[16];
-      addrinfo Hints = { .ai_flags = 0, .ai_family = AF_UNSPEC, .ai_socktype = SOCK_STREAM };
-      addrinfo *ServInfo;
-      sprintf(Port, "%u", Url.Port());
-      int Error = getaddrinfo(Url.Host().c_str(), Port, &Hints, &ServInfo);
-      if(Error != 0) {
-        LogFile::Error("%s:%d -> %d", __func__, __LINE__, Error);
-        usleep(1000000);
-        continue;
-      }
-      for(addrinfo *p = ServInfo; p != NULL; p = p->ai_next) {
-        This->pMQTTClient.socketfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if(This->pMQTTClient.socketfd == -1) {
-          LogFile::Error("%s:%d -> (%s)", __func__, __LINE__, strerror(errno));
-          continue;
-        }
-        if(connect(This->pMQTTClient.socketfd, p->ai_addr, p->ai_addrlen) == -1) {
-          close(This->pMQTTClient.socketfd);
-          This->pMQTTClient.socketfd = -1;
-          continue;
-        }
-        fcntl(This->pMQTTClient.socketfd, F_SETFL, fcntl(This->pMQTTClient.socketfd, F_GETFL) | O_NONBLOCK);
-        break;
-      }
-      freeaddrinfo(ServInfo);
-      if(This->pMQTTClient.socketfd == -1) {
-        LogFile::Debug("Analyzer '%s' can not connect to MQTT broker", This->pSerial.c_str());
-        usleep(1000000);
-        continue;
-      } else {
-        mqtt_reinit(&This->pMQTTClient, This->pMQTTClient.socketfd, This->pMQTTSendBuff, This->pMQTTBuffSize, This->pMQTTRecvBuff, This->pMQTTBuffSize);
-      }
-    } else if(This->pMQTTClient.error != MQTT_OK) {
-      LogFile::Error("MQTT ERROR: %s (%d)", mqtt_error_str(This->pMQTTClient.error), This->pMQTTClient.error);
-    }
-    usleep(100000);
-  }
-  if(This->pMQTTClient.socketfd != -1) {
-    close(This->pMQTTClient.socketfd);
-    This->pMQTTClient.socketfd = -1;
-  }
-  return NULL;
-}
 void *AnalyzerSoft::Sync_RespThread(void *args) {
   Sync_t *This = (Sync_t*)args;
   This->Params["UserName"] = "admin";
@@ -1244,11 +681,11 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   Response["Mode"] = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"] = pSamplerate;
   if((params.contains("Alarms") == false) || (params["Alarms"].is_boolean() == false) || (params["Alarms"] == false)) Response.erase("Alarms");
-  if((params.contains("Rates") == false) || (params["Rates"].is_boolean() == false) || (params["Rates"] == false)) {
-    Response.erase("Rates");
-  } else {
-    Response["RateModules"] = PriceSource::GetVarsInfo();
-  }
+//  if((params.contains("Rates") == false) || (params["Rates"].is_boolean() == false) || (params["Rates"] == false)) {
+//    Response.erase("Rates");
+//  } else {
+//    Response["RateModules"] = PriceSource::GetVarsInfo();
+//  }
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT json_build_object('Read', read, 'Write', write, 'Configure', config, 'EventsRead', eventsread, 'AlarmsRead', alarmsread) as access FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
   if(DB.FecthRow() == true) Response["Access"] = DB.ResultJSON("access");
@@ -1274,15 +711,14 @@ void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = params;
   if((Config.contains("Alarms") == false) || (Config["Alarms"].is_array() == false)) Config["Alarms"] = ConfigManager::ReadConfig(pConfigPath + "/Alarms");
-  if((Config.contains("Rates") == false) || (Config["Rates"].is_array() == false)) Config["Rates"] = ConfigManager::ReadConfig(pConfigPath + "/Rates");
-  string Error;
-  json   Conf = CheckConfig(Config, pMode, &Error);
-  if(Error.empty() == true) {
+//  if((Config.contains("Rates") == false) || (Config["Rates"].is_array() == false)) Config["Rates"] = ConfigManager::ReadConfig(pConfigPath + "/Rates");
+  json   Conf = CheckConfig(Config, pMode);
+//  if(Error.empty() == true) {
     Configure(Conf);
     HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
-  } else {
-    HTTPServer::FillResponse(response, Error, "text/plain", HTTP_BAD_REQUEST);
-  }
+//  } else {
+//    HTTPServer::FillResponse(response, Error, "text/plain", HTTP_BAD_REQUEST);
+//  }
 }
 void AnalyzerSoft::GetSeries(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -1455,25 +891,29 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
       Result["Voltage_FFT"] = json::array();
       for(uint8_t n = 0; n < pVoltageChannels; n++) {
         Result["Voltage_FFT"].push_back(json::array());
-        for(uint16_t i = 0; i < ((pBlockSamples / 2) + 1); i++) Result["Voltage_FFT"][n].push_back(pVoltageFFT[n]->BinPower(i));
+        uint16_t BlockSize = pVoltageFFT[n]->OutLen();
+        for(uint16_t i = 0; i < BlockSize; i++) Result["Voltage_FFT"][n].push_back(pVoltageFFT[n]->BinPower(i));
       }
     } else if(Serie == "CURRENT_FFT") {
       Result["Current_FFT"] = json::array();
       for(uint8_t n = 0; n < pCurrentChannels; n++) {
         Result["Current_FFT"].push_back(json::array());
-        for(uint16_t i = 0; i < ((pBlockSamples / 2) + 1); i++) Result["Current_FFT"][n].push_back(pCurrentFFT[n]->BinPower(i));
+        uint16_t BlockSize = pCurrentFFT[n]->OutLen();
+        for(uint16_t i = 0; i < BlockSize; i++) Result["Current_FFT"][n].push_back(pCurrentFFT[n]->BinPower(i));
       }
     } else if(Serie == "VOLTAGE_SAMPLES") {
       Result["Voltage_Samples"] = json::array();
       for(uint8_t n = 0; n < pVoltageChannels; n++) {
         Result["Voltage_Samples"].push_back(json::array());
-        for(uint16_t i = 0; i < pBlockSamples; i++) Result["Voltage_Samples"][n].push_back(pVoltageSamples[n * pMaxSamples + i]);
+        uint16_t BlockSize = pInputBlock->BlockSamples();
+        for(uint16_t i = 0; i < BlockSize; i++) Result["Voltage_Samples"][n].push_back(pInputBlock->VoltageSample(n, i));
       }
     } else if(Serie == "CURRENT_SAMPLES") {
       Result["Current_Samples"] = json::array();
       for(uint8_t n = 0; n < pCurrentChannels; n++) {
         Result["Current_Samples"].push_back(json::array());
-        for(uint16_t i = 0; i < pBlockSamples; i++) Result["Current_Samples"][n].push_back(pCurrentSamples[n * pMaxSamples + i]);
+        uint16_t BlockSize = pInputBlock->BlockSamples();
+        for(uint16_t i = 0; i < BlockSize; i++) Result["Current_Samples"][n].push_back(pInputBlock->CurrentSample(n, i));
       }
     } else if(Serie == "GA_POWER") {
       Result["GA_Power"] = CalcGA();
@@ -1538,19 +978,19 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
         return false;
       }
       json Result = json::object();
-      Result["Samples"] = pBlockSamples;
+//      Result["Samples"] = pBlockSamples;
       if(Params->Voltage) {
         Result["Voltage_Samples"] = json::array();
         for(uint8_t n = 0; n < pVoltageChannels; n++) {
           Result["Voltage_Samples"].push_back(json::array());
-          for(uint16_t i = 0; i < pBlockSamples; i++) Result["Voltage_Samples"][n].push_back(pVoltageSamples[n * pMaxSamples + i]);
+//          for(uint16_t i = 0; i < pBlockSamples; i++) Result["Voltage_Samples"][n].push_back(pVoltageSamples[n * pMaxSamples + i]);
         }
       }
       if(Params->Current) {
         Result["Current_Samples"] = json::array();
         for(uint8_t n = 0; n < pCurrentChannels; n++) {
           Result["Current_Samples"].push_back(json::array());
-          for(uint16_t i = 0; i < pBlockSamples; i++) Result["Current_Samples"][n].push_back(pCurrentSamples[n * pMaxSamples + i]);
+//          for(uint16_t i = 0; i < pBlockSamples; i++) Result["Current_Samples"][n].push_back(pCurrentSamples[n * pMaxSamples + i]);
         }
       }
       pNowDataLock.ConsumerEnds();
@@ -1672,63 +1112,39 @@ void AnalyzerSoft::GetPrices(const json &params, Response &response) {
 }
 void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Parser Evaluator;
-  json   Result = json::object();
-  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-//  InitAlarmParser(Evaluator, params["Expression"], AGGREG_200MS);
-  Result["Variables"] = json::object();
-  for(auto Var : Evaluator.GetVar()) Result["Variables"][Var.first] = *Var.second;
-  try {
-    Result["Result"] = Evaluator.Eval();
-  } catch (Parser::exception_type &e) {
-    Result["Error"] = e.GetMsg();
-  }
-  pNowDataLock.ConsumerEnds();
-  return HTTPServer::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
+  pAlarms->TestAlarm(const json &params, Response &response);
 }
 void AnalyzerSoft::ListAlarms(const json &params, Response &response) {
-
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pAlarms->ListAlarms(const json &params, Response &response);
 }
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t To         = params["To"];
-  uint64_t From       = params["From"];
-  Database DB(pSerial);
-  if((params.contains("Update") == true) && (params["Update"].is_boolean() == true) && (params["Update"] == true)) {
-    string UserName = params["UserName"];
-    DB.ExecSentenceNoResult("UPDATE permissions SET alarmsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
-  }
-  DB.ExecSentenceAsyncResult("SELECT json_build_object("
-                              "'AlarmTime', COALESCE(ARRAY_AGG(alarmtime ORDER BY alarmtime ASC), '{}'), "
-                              "'Name', COALESCE(ARRAY_AGG(name ORDER BY alarmtime ASC), '{}'), "
-                              "'Priority', COALESCE(ARRAY_AGG(priority ORDER BY alarmtime ASC), '{}'), "
-                              "'Triggered', COALESCE(ARRAY_AGG(trigger ORDER BY alarmtime ASC), '{}')) AS result "
-                              "FROM alarms WHERE alarmtime >= " + DB.Bind(From) + " AND alarmtime <= " + DB.Bind(To));
-  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+  pAlarms->GetAlarms(const json &params, Response &response);
 }
-void AnalyzerSoft::AddAlarm(const json &params, Response &response) {}
-void AnalyzerSoft::GetAlarm(const json &params, Response &response) {}
-void AnalyzerSoft::SetAlarm(const json &params, Response &response) {}
-void AnalyzerSoft::DelAlarm(const json &params, Response &response) {}
+void AnalyzerSoft::AddAlarm(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pAlarms->AddAlarm(const json &params, Response &response);
+}
+void AnalyzerSoft::GetAlarm(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pAlarms->GetAlarm(const json &params, Response &response);
+}
+void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pAlarms->SetAlarm(const json &params, Response &response);
+}
+void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pAlarms->DelAlarm(const json &params, Response &response);
+}
 void AnalyzerSoft::GetAlarmsRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB(pSerial);
-  DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(alarmtime) AS max, min(alarmtime) AS min FROM alarms) AS t1) AS t2 ");
-  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
+  pAlarms->GetAlarmsRange(const json &params, Response &response);
 }
 void AnalyzerSoft::DelAlarmsRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t From   = params["From"];
-  uint64_t To     = params["To"];
-  Database DB(pSerial);
-  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms WHERE alarmtime >= " + DB.Bind(From) + " AND alarmtime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  pAlarms->DelAlarmsRange(const json &params, Response &response);
 }
 void AnalyzerSoft::GetRates(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

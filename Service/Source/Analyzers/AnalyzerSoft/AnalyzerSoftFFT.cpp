@@ -22,13 +22,12 @@ pthread_mutex_t     AnalyzerSoftFFT::pFFTMutex   = PTHREAD_MUTEX_INITIALIZER;
 uint32_t            AnalyzerSoftFFT::pFFTRunning = 0;
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftFFT::AnalyzerSoftFFT(const string &name) {
-//  pOutLen      = 0;
-//  pReservedLen = 0;
-  pInLen       = 0;
-  pOutPtr      = NULL;
-  pInPtr       = NULL;
-  pCycles      = 10;
   pWorker      = new Worker(name, [&](void *a) { this->FFT_Func(); }, -15);
+  pDataPtr     = NULL;
+  pInLen       = 0;
+  pOutLen      = 0;
+  pCycles      = 10;
+  pReservedLen = 0;
 }
 AnalyzerSoftFFT::~AnalyzerSoftFFT() {
   pWorker->Wait();
@@ -37,50 +36,52 @@ AnalyzerSoftFFT::~AnalyzerSoftFFT() {
     LogFile::Debug("Clearing FFT cached plans");
     fftwf_cleanup();
   }
-//  if(pOutPtr != NULL) free(pOutPtr);
+  if(pDataPtr != NULL) free(pDataPtr);
   pthread_mutex_unlock(&pFFTMutex);
 }
-void AnalyzerSoftFFT::Config(const float *src, Complex_t *dst, const uint8_t inCycles) {
-  pInPtr  = src;
-  pOutPtr = dst;
+void AnalyzerSoftFFT::Config(const uint8_t inCycles) {
   pCycles = inCycles;
 }
-void AnalyzerSoftFFT::Run(const uint32_t samples) {
-  pInLen   = samples;
-//  pInPtr   = (float*)src;
-//  pOutLen  = (samples / 2) + 1;
-//  if(pOutLen > pReservedLen) {
-//    pOutPtr      = (Complex_t*)realloc(pOutPtr, sizeof(Complex_t) * pOutLen);
-//    pReservedLen = pOutLen;
-//  }
+void AnalyzerSoftFFT::Run() {
   pWorker->Run(this);
 }
 void AnalyzerSoftFFT::Wait() {
   pWorker->Wait();
 }
+void AnalyzerSoftFFT::PushSample(const float val) {
+  if(pInLen == pReservedLen) {
+    pReservedLen = pInLen + 1;
+    pDataPtr = (Complex_t*)realloc(pDataPtr, sizeof(Complex_t) * pReservedLen);
+  }
+  pDataPtr[pInLen].Im = 0.0;
+  pDataPtr[pInLen].Re = val;
+  pInLen++;
+}
 void AnalyzerSoftFFT::FFT_Func() {
+  pOutLen = (pInLen / 2) + 1;
   pthread_mutex_lock(&pFFTMutex);
-  fftwf_plan Plan = fftwf_plan_dft_r2c_1d(pInLen, (float*)pInPtr, (fftwf_complex*)pOutPtr, FFTW_ESTIMATE | FFTW_PRESERVE_INPUT);
+  fftwf_plan Plan = fftwf_plan_dft_1d(pInLen, (fftwf_complex*)pDataPtr, (fftwf_complex*)pDataPtr, FFTW_FORWARD, FFTW_ESTIMATE);
   pFFTRunning++;
   pthread_mutex_unlock(&pFFTMutex);
-  fftwf_execute_dft_r2c(Plan, (float*)pInPtr, (fftwf_complex*)pOutPtr);
+  fftwf_execute(Plan);
   pthread_mutex_lock(&pFFTMutex);
   fftwf_destroy_plan(Plan);
   pFFTRunning--;
   pthread_mutex_unlock(&pFFTMutex);
-  for(uint16_t i = 0; i < ((pInLen / 2) + 1); i++) {
-    pOutPtr[i].Re = pOutPtr[i].Re / pInLen;
-    pOutPtr[i].Im = pOutPtr[i].Im / pInLen;
+  for(uint16_t i = 0; i < pOutLen; i++) {
+    pDataPtr[i].Re = pDataPtr[i].Re / pInLen;
+    pDataPtr[i].Im = pDataPtr[i].Im / pInLen;
   }
+  pInLen = 0;
 }
-//uint32_t AnalyzerSoftFFT::OutLen() const {
-//  return pOutLen;
-//}
+uint16_t AnalyzerSoftFFT::OutLen() const {
+  return pOutLen;
+}
 AnalyzerSoftFFT::Complex_t AnalyzerSoftFFT::Harmonic(const uint8_t index) const {
   return Bin((index + 1) * pCycles);
 }
 AnalyzerSoftFFT::Complex_t AnalyzerSoftFFT::Bin(const uint32_t index) const {
-  Complex_t Complex = pOutPtr[index];
+  Complex_t Complex = pDataPtr[index];
   Complex.Re *= M_SQRT2;
   Complex.Im *= M_SQRT2;
   return Complex;
@@ -89,7 +90,7 @@ float AnalyzerSoftFFT::HarmonicPower(const uint8_t index) const {
   return BinPower((index + 1) * pCycles);
 }
 float AnalyzerSoftFFT::BinPower(const uint32_t index) const {
-  Complex_t Complex = pOutPtr[index];
+  Complex_t Complex = pDataPtr[index];
   return sqrt(Complex.Re * Complex.Re + Complex.Im * Complex.Im) / M_SQRT2 * 2.0;
 }
 float AnalyzerSoftFFT::CalcAngle(const Complex_t &a, const Complex_t &b) {

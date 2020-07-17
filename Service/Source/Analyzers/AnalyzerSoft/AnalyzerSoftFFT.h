@@ -23,16 +23,15 @@ class AnalyzerSoftFFT final {
       float Im;
     } Complex_t;
   private :
-    static pthread_mutex_t     pFFTMutex;                //Planer mutex
-    static uint32_t            pFFTRunning;              //Currently running FFTs
+    static pthread_mutex_t pFFTMutex;       //Planer mutex
+    static uint32_t        pFFTRunning;     //Currently running FFTs
   private :
-    Worker                    *pWorker;
-    const float                     *pInPtr;
-    Complex_t                 *pOutPtr;
-    uint32_t                   pInLen;
-    uint8_t                    pCycles;
-//    uint32_t                   pOutLen;
-//    uint32_t                   pReservedLen;
+    Worker                *pWorker;         //Worker thread
+    Complex_t             *pDataPtr;        //in/out data samples
+    uint16_t               pInLen;          //Input length
+    uint16_t               pOutLen;         //Output length
+    uint8_t                pCycles;         //Number of full cycles
+    uint16_t               pReservedLen;    //Buffer size
   private :
     void FFT_Func();
   public :
@@ -40,9 +39,11 @@ class AnalyzerSoftFFT final {
   public :
     AnalyzerSoftFFT(const string &name);
     ~AnalyzerSoftFFT();
-    void      Config(const float *src, Complex_t *dst, const uint8_t inCycles);
-    void      Run(const uint32_t samples);
+    void      Config(const uint8_t inCycles);
+    void      PushSample(const float val);
+    void      Run();
     void      Wait();
+    uint16_t  OutLen() const;
     Complex_t Harmonic(const uint8_t index) const;
     Complex_t Bin(const uint32_t index) const;
     float     HarmonicPower(const uint8_t index) const;
