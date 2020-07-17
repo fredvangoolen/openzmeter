@@ -1,0 +1,155 @@
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
+#include "AnalyzerSoftBlock.h"
+// ---------------------------------------------------------------------------------------------------------------------
+AnalyzerSoftBlock::AnalyzerSoftBlock(const Analyzer::AnalyzerMode mode, const float samplerate) {
+  memset(pFilters, 0, sizeof(pFilters));
+  pDelayVoltage      = NULL;
+  pDelayCurrent      = NULL;
+  pVoltageSamples    = NULL;
+  pCurrentSamples    = NULL;
+  pBlockCyclesCount  = 0;
+  pMaxSamples        = samplerate * 0.2;
+  pBlockSamples      = 0;
+  pDelaySize         = 0;
+  pDelayPos          = 0;
+  pNominalFrequency  = 50.0;
+  pNextReset         = false;
+  pSamplerate        = samplerate;
+  memset(pBlockCycles, 0, sizeof(pBlockCycles));
+  memset(pLastSamples, 0, sizeof(pLastSamples));
+  if(mode == Analyzer::PHASE1) {
+    pVoltageChannels = 1;
+    pCurrentChannels = 1;
+  } else if(mode == Analyzer::PHASE3) {
+    pVoltageChannels = 3;
+    pCurrentChannels = 3;
+  } else {
+    pVoltageChannels = 3;
+    pCurrentChannels = 4;
+  }
+}
+AnalyzerSoftBlock::~AnalyzerSoftBlock() {
+  if(pDelayVoltage != NULL) free(pDelayVoltage);
+  if(pDelayCurrent != NULL) free(pDelayCurrent);
+  if(pVoltageSamples != NULL) free(pVoltageSamples);
+  if(pCurrentSamples != NULL) free(pCurrentSamples);
+}
+void AnalyzerSoftBlock::Config(const float nominalFreq) {
+  pBlockCyclesCount = 0;
+  pBlockSamples     = 0;
+  pDelayPos         = 0;
+  pNextReset        = false;
+  pNominalFrequency = nominalFreq;
+  pMaxCycles        = (pNominalFrequency == 0.0) ? 1 : (pNominalFrequency == 50.0) ? 20 : 24;
+  pMaxSamples       = (pMaxCycles * pSamplerate * 1.15 * 0.5) / pNominalFrequency;
+  pVoltageSamples   = (float*)realloc(pVoltageSamples, sizeof(float) * pVoltageChannels * pMaxSamples);
+  pCurrentSamples   = (float*)realloc(pCurrentSamples, sizeof(float) * pCurrentChannels * pMaxSamples);
+  if(pDelayVoltage != NULL) free(pDelayVoltage);
+  pDelayVoltage = NULL;
+  if(pDelayCurrent != NULL) free(pDelayCurrent);
+  pDelayCurrent = NULL;
+  if(pNominalFrequency != 0.0) {
+    for(uint8_t n = 0; n < FILTERSTAGES; n++) {
+      float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
+      float alpha = sin(w0) / 2.0;
+      pFilters[n].A0 = alpha / (1.0 + alpha);
+      pFilters[n].A1 = 0.0;
+      pFilters[n].A2 = -alpha / (1.0 + alpha);
+      pFilters[n].B1 = (-2.0 * cos(w0)) / (1.0 + alpha);
+      pFilters[n].B2 = (1.0 - alpha) / (1.0 + alpha);
+      memset(pFilters[n].ChannelsZ1, 0, sizeof(Filter_t::ChannelsZ1));
+      memset(pFilters[n].ChannelsZ2, 0, sizeof(Filter_t::ChannelsZ2));
+    }
+    pDelaySize = ((pSamplerate / pNominalFrequency) / 2.0) * FILTERSTAGES + 2;
+    pDelayVoltage = (float*)calloc(sizeof(float), pDelaySize * pVoltageChannels);
+    pDelayCurrent = (float*)calloc(sizeof(float), pDelaySize * pCurrentChannels);
+  }
+  memset(pLastSamples, 0, sizeof(pLastSamples));
+  memset(pBlockCycles, 0, sizeof(pBlockCycles));
+}
+bool AnalyzerSoftBlock::PushSample(float *voltageSamples, float *currentSamples) {
+  if(pNextReset == true) {
+    pBlockSamples     = 0;
+    pBlockCyclesCount = 0;
+    pNextReset        = false;
+  }
+  for(uint8_t i = 0; i < pVoltageChannels; i++) {
+  float val = voltageSamples[i];
+  if(val > 1000) {
+    printf("WTF!\n");
+  }
+}
+  if(pNominalFrequency == 0) {
+    memcpy(&pVoltageSamples[pVoltageChannels * pBlockSamples], voltageSamples, sizeof(float) * pVoltageChannels);
+    memcpy(&pCurrentSamples[pCurrentChannels * pBlockSamples], currentSamples, sizeof(float) * pCurrentChannels);
+//    for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageSamples[i * pMaxSamples + pBlockSamples] = voltageSamples[i];
+//    for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentSamples[i * pMaxSamples + pBlockSamples] = currentSamples[i];
+  } else {
+    memcpy(&pVoltageSamples[pVoltageChannels * pBlockSamples], &pDelayVoltage[pVoltageChannels * pDelayPos], sizeof(float) * pVoltageChannels);
+    memcpy(&pCurrentSamples[pCurrentChannels * pBlockSamples], &pDelayCurrent[pCurrentChannels * pDelayPos], sizeof(float) * pCurrentChannels);
+    memcpy(&pDelayVoltage[pDelayPos * pVoltageChannels], voltageSamples, sizeof(float) * pVoltageChannels);
+    memcpy(&pDelayCurrent[pDelayPos * pCurrentChannels], currentSamples, sizeof(float) * pCurrentChannels);
+//    float *Ptr = &pDelayVoltage[pDelayPos * pVoltageChannels];
+//    for(uint8_t i = 0; i < pVoltageChannels; i++) {
+//      pVoltageSamples[i * pMaxSamples + pBlockSamples] = Ptr[i];
+//      Ptr[i] = voltageSamples[i];
+//    }
+//    Ptr = &pDelayCurrent[pDelayPos * pCurrentChannels];
+//    for(uint8_t i = 0; i < pCurrentChannels; i++) {
+//      pCurrentSamples[i * pMaxSamples + pBlockSamples] = Ptr[i];
+//      Ptr[i] = currentSamples[i];
+//    }
+    pDelayPos = (pDelayPos + 1) % pDelaySize;
+    for(uint8_t i = 0; i < pVoltageChannels; i++) {
+      for(uint8_t n = 0; n < FILTERSTAGES; n++) {
+        float Out = voltageSamples[i] * pFilters[n].A0 + pFilters[n].ChannelsZ1[i];
+        pFilters[n].ChannelsZ1[i] = voltageSamples[i] * pFilters[n].A1 + pFilters[n].ChannelsZ2[i] - pFilters[n].B1 * Out;
+        pFilters[n].ChannelsZ2[i] = voltageSamples[i] * pFilters[n].A2 - pFilters[n].B2 * Out;
+        voltageSamples[i] = Out;
+      }
+    }
+    pBlockCycles[pBlockCyclesCount]++;
+    if((((pLastSamples[0] >= 0.0) && (voltageSamples[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (voltageSamples[0] > 0.0))) && (pBlockCycles[pBlockCyclesCount] > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))) pBlockCyclesCount++;
+    memcpy(pLastSamples, voltageSamples, sizeof(pLastSamples));
+    memcpy(voltageSamples, &pVoltageSamples[pVoltageChannels * pBlockSamples], sizeof(float) * pVoltageChannels);
+    memcpy(currentSamples, &pCurrentSamples[pCurrentChannels * pBlockSamples], sizeof(float) * pCurrentChannels);
+//    for(uint8_t i = 0; i < pVoltageChannels; i++) voltageSamples[i] = pVoltageSamples[i * pMaxSamples + pBlockSamples];
+//    for(uint8_t i = 0; i < pCurrentChannels; i++) currentSamples[i] = pCurrentSamples[i * pMaxSamples + pBlockSamples];
+for(uint8_t i = 0; i < pVoltageChannels; i++) {
+  float val = voltageSamples[i];
+  if(val > 1000) {
+    printf("WTF!\n");
+  }
+}
+  }
+  pBlockSamples++;
+  if((pBlockSamples == pMaxSamples) || (pBlockCyclesCount == pMaxCycles)) {
+    pNextReset = true;
+    return true;
+  }
+  return false;
+}
+uint16_t AnalyzerSoftBlock::BlockSamples() const {
+  return pBlockSamples;
+}
+float AnalyzerSoftBlock::VoltageSample(const uint8_t ch, const uint16_t sample) const {
+  return pVoltageSamples[pVoltageChannels * sample + ch];
+}
+float AnalyzerSoftBlock::CurrentSample(const uint8_t ch, const uint16_t sample) const {
+  return pCurrentSamples[pCurrentChannels * sample + ch];
+}
+// ---------------------------------------------------------------------------------------------------------------------

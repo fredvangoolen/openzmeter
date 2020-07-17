@@ -50,7 +50,7 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -ggdb3 -fstack-protector-all -fstack-check
 else
-	CFLAGS  += -Os -flto -Wall -s
+	CFLAGS  += -O3 -flto -Wall
 	LDFLAGS += -flto
 endif
 ifeq ($(DEVICE_V1), true)

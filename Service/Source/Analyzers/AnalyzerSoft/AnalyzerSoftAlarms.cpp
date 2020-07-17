@@ -15,6 +15,30 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAlarms.h"
 // ---------------------------------------------------------------------------------------------------------------------
+  if((AlarmsEnabled == false) && (pAlarms != NULL)) {
+    delete pAlarms;
+    pAlarms = NULL;
+  } else if((AlarmsEnabled == true) && (pAlarms == NULL)) {
+    pAlarms = new AnalyzerSoftAlarms(this);
+  }
+void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  Parser Evaluator;
+  json   Result = json::object();
+  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+//  InitAlarmParser(Evaluator, params["Expression"], AGGREG_200MS);
+  Result["Variables"] = json::object();
+  for(auto Var : Evaluator.GetVar()) Result["Variables"][Var.first] = *Var.second;
+  try {
+    Result["Result"] = Evaluator.Eval();
+  } catch (Parser::exception_type &e) {
+    Result["Error"] = e.GetMsg();
+  }
+  pNowDataLock.ConsumerEnds();
+  return HTTPServer::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
+}
+void AnalyzerSoft::ListAlarms(const json &params, Response &response);
 AnalyzerSoftAlarms::AnalyzerSoftAlarms(AnalyzerSoft *parent) {
   //Cargo las alarmas desde la DB
   pWorker = new Worker("AlarmsDet", [&](void *a) { this->Alarms_Func((AnalyzerSoft::Params_t*)a); });

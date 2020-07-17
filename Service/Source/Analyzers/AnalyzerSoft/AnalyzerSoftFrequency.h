@@ -13,7 +13,21 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "AnalyzerSoftZeroCrossing.h"
+#pragma once
+#include <inttypes.h>
 // ---------------------------------------------------------------------------------------------------------------------
-
+class AnalyzerSoftFrequency final {
+  private :
+    static const uint8_t       SECONDS = 10;             //Used seconds to calc frequency
+  private :
+    uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
+    uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
+    uint16_t                  *pFreqCycles;              //Frequency calc cycles lenghts
+  public :
+    AnalyzerSoftFrequency();
+    ~AnalyzerSoftFrequency();
+    void  Config(const float freq);
+    void  PushCycle(const uint16_t len);
+    float Frequency() const;
+};
 // ---------------------------------------------------------------------------------------------------------------------
