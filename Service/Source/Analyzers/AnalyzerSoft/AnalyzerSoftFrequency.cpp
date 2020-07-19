@@ -13,9 +13,53 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 #include "AnalyzerSoftFrequency.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftFrequency::AnalyzerSoftFrequency() {
-
+AnalyzerSoftFrequency::AnalyzerSoftFrequency(const float samplerate) {
+ pNominalFrequency = 0.0;
+ pSamplerate       = 10000.0;
+ pFreqCyclesPos    = 0;
+ pFreqCyclesLen    = 0;
+ pInvalidValues    = 0;
+ pSamplerate       = samplerate;
+ pFreqCycles       = NULL;
+ pMinCycle         = 0;
+ pMaxCycle         = 0;
+ pBufferLen        = 0;
+}
+AnalyzerSoftFrequency::~AnalyzerSoftFrequency() {
+  if(pFreqCycles != NULL) free(pFreqCycles);
+}
+void AnalyzerSoftFrequency::Config(const float freq) {
+  pFreqCyclesPos    = 0;
+  pFreqCyclesLen    = SECONDS * freq;
+  pNominalFrequency = freq;
+  pInvalidValues    = SECONDS * freq;
+  pFreqCycles       = (uint16_t*)realloc(pFreqCycles, SECONDS * freq * sizeof(uint16_t));
+  pMinCycle         = pSamplerate / (freq * 1.15 * 2.0);
+  pMaxCycle         = pSamplerate / (freq * 0.85 * 2.0);
+  memset(pFreqCycles, 0, SECONDS * freq * sizeof(uint16_t));
+}
+void AnalyzerSoftFrequency::PushCycle(const uint16_t len) {
+  if(pNominalFrequency == 0) return;
+  if(pFreqCycles[pFreqCyclesPos] == 0) {
+    pInvalidValues--;
+  } else {
+    pBufferLen = pBufferLen - pFreqCycles[pFreqCyclesPos];
+  }
+  if((len >= pMinCycle) && (len <= pMaxCycle)) {
+    pFreqCycles[pFreqCyclesPos] = len;
+    pBufferLen = pBufferLen + len;
+  } else {
+    pInvalidValues++;
+    pFreqCycles[pFreqCyclesPos] = 0;
+  }
+  pFreqCyclesPos = (pFreqCyclesPos + 1) % pFreqCyclesLen;
+}
+float AnalyzerSoftFrequency::Frequency() const {
+  return (pNominalFrequency == 0) ? 0.0 : (pInvalidValues != 0) ? NAN : pFreqCyclesLen / ((2.0 * pBufferLen) / pSamplerate);
 }
 // ---------------------------------------------------------------------------------------------------------------------

@@ -14,13 +14,19 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
+#include <list>
+#include <inttypes.h>
+#include "AnalyzerSoftEvent.h"
+#include "HTTPChunkedWriter.h"
 // ---------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoftEvents {
+using namespace std;
+// ---------------------------------------------------------------------------------------------------------------------
+class AnalyzerSoftEvents final {
+  private :
+    string                     pSerial;
 
-      Event_t                    pEvent;                   //Running event
-    list<Event_t>              pEvents;                  //Close pending events
-
-  private : //Events related (only acceded inside analyzer thread)
+    AnalyzerSoftEvent         *pEvent;                   //Running event
+    list<AnalyzerSoftEvent*>   pEvents;                  //Close pending events
     bool                       pPrevStationary;          //Steady state flag
     uint16_t                   pPrevSamplesLen;          //Previous samples count
     uint16_t                   pPrevSamplesPos;          //Previous samples write pos
@@ -30,15 +36,16 @@ class AnalyzerSoftEvents {
     float                     *pPrevCycles;              //Previous cycles
 
   private :
-    void GetEvents(const json &params, Response &response) override;
-    void GetEventsRange(const json &params, Response &response) override;
-    void DelEventsRange(const json &params, Response &response) override;
-    void GetEvent(const json &params, Response &response) override;
-    void SetEvent(const json &params, Response &response) override;
-    void DelEvent(const json &params, Response &response) override;
-
     void Events_Func();
     bool FindRunningEvent(const uint32_t mask);
-
+  public :
+    AnalyzerSoftEvents(const string &serial);
+    ~AnalyzerSoftEvents();
+    void GetEvents(const json &params, Response &response);
+    void GetEventsRange(const json &params, Response &response);
+    void DelEventsRange(const json &params, Response &response);
+    void GetEvent(const json &params, Response &response);
+    void SetEvent(const json &params, Response &response);
+    void DelEvent(const json &params, Response &response);
 };
 // ---------------------------------------------------------------------------------------------------------------------

@@ -15,7 +15,10 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftEvents.h"
 // ---------------------------------------------------------------------------------------------------------------------
+AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial) {
 
+}
+/*
     pPrevSamples       = NULL;
   pPrevCycles        = NULL;
 
@@ -56,7 +59,7 @@
     return buff;
   };
   uint32_t  Pos  = 0;
-  float    *Buff = NULL;
+  float    *Buff = NULL;*/
 /*  for(uint8_t i = 0; i < pBlockCyclesCount; i++) {
     float    Tolerance  = EVENT_RVC - ((pPrevStationary == true) ? 0.0 : EVENT_HYSTERESIS);
     bool     Stationary = true;
@@ -211,7 +214,81 @@
     Pos             = Pos + CycleLen;
     pPrevStationary = Stationary && (pEvent.Type == EVT_NONE);
   }*/
-  free(Buff);
+ /*free(Buff);
+}*/
+void AnalyzerSoftEvents::GetEvents(const json &params, Response &response) {
+  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  uint64_t To = params["To"];
+  uint64_t From = params["From"];
+  Database DB(pSerial);
+  if((params.contains("Update") == true) && (params["Update"].is_boolean() == true) && (params["Update"] == true)) {
+    string UserName = params["UserName"];
+    DB.ExecSentenceNoResult("UPDATE permissions SET eventsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
+  }
+  DB.ExecSentenceAsyncResult("SELECT json_build_object("
+                             "'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), "
+                             "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), "
+                             "'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), "
+                             "'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), "
+                             "'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), "
+                             "'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
+                             "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), "
+                             "'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
+                             "FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
+  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("evt"), "application/json", HTTP_OK);
 }
-
+void AnalyzerSoftEvents::GetEventsRange(const json &params, Response &response) {
+  Database DB(pSerial);
+  DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM events) AS t1) AS t2 ");
+  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
+}
+void AnalyzerSoftEvents::DelEventsRange(const json &params, Response &response) {
+  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  uint64_t From   = params["From"];
+  uint64_t To     = params["To"];
+  Database DB(pSerial);
+  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+}
+void AnalyzerSoftEvents::GetEvent(const json &params, Response &response) {
+  if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Samples") == false) || (params["Samples"].is_string() == false)) return HTTPServer::FillResponse(response, "'Samples' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  Database DB(pSerial);
+  if((params["Samples"] != "RMS") && (params["Samples"] != "RAW")) {
+    response.set_content("'Samples' params must be 'RMS' or 'RAW'", "text/plain");
+    response.status = HTTP_BAD_REQUEST;
+    return;
+  }
+  uint64_t ID      = params["StartTime"];
+  string   Samples = params["Samples"];
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('Prev_Samples', samples1, 'Inner_Samples', samples2, 'Post_Samples', samples3) AS evt FROM events_ext WHERE starttime = " + DB.Bind(ID) + " AND sampletype = " + DB.Bind(Samples));
+  if(!DB.FecthRow()) {
+    response.set_content("", "text/plain");
+    response.status = HTTP_INTERNAL_SERVER_ERROR;
+  } else {
+    response.set_content(DB.ResultString("evt"), "application/json");
+    response.status = HTTP_OK;
+  }
+}
+void AnalyzerSoftEvents::SetEvent(const json &params, Response &response) {
+  if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Type") == false) || (params["Type"].is_string() == false)) return HTTPServer::FillResponse(response, "'Type' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Notes") == false) || (params["Notes"].is_string() == false)) return HTTPServer::FillResponse(response, "'Notes' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  Database DB(pSerial);
+  uint64_t ID    = params["StartTime"];
+  string   Type  = params["Type"];
+  string   Notes = params["Notes"];
+  bool Result = DB.ExecSentenceNoResult("UPDATE events SET Notes = " + DB.Bind(Notes) + " WHERE starttime = " + DB.Bind(ID) + " AND evttype = " + DB.Bind(Type));
+  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+}
+void AnalyzerSoftEvents::DelEvent(const json &params, Response &response) {
+  if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  Database DB(pSerial);
+  uint64_t ID = params["StartTime"];
+  bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(ID));
+  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+}
 // ---------------------------------------------------------------------------------------------------------------------

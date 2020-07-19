@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
  #include "AnalyzerSoftMQTT.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftMQTT::AnalyzerSoftMQTT() {
+/*AnalyzerSoftMQTT::AnalyzerSoftMQTT() {
   pPrevSamples       = NULL;
   pPrevCycles        = NULL;
 
@@ -134,5 +134,5 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
     This->pMQTTClient.socketfd = -1;
   }
   return NULL;
-}
+}*/
 // ---------------------------------------------------------------------------------------------------------------------

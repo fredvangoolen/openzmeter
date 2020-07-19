@@ -32,7 +32,7 @@ class AnalyzerSoftAlarm final {
     uint16_t                 Window;
     uint16_t                 ResultPos;
     uint16_t                 ResultCount;
-    AnalyzerSoft::AggregType Aggreg;
+//    AnalyzerSoft::AggregType Aggreg;
     Parser                   Evaluator;
     uint8_t                 *Results;
     bool                     Triggered;

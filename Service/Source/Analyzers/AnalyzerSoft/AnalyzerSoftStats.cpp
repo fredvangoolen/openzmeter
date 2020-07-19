@@ -1,3 +1,4 @@
+/*
 constexpr float   AnalyzerSoft::FrequencyRanges[];
 const     uint8_t AnalyzerSoft::FrequencyRangesLen;
 constexpr float   AnalyzerSoft::VoltageRanges[];
@@ -8,3 +9,4 @@ constexpr float   AnalyzerSoft::HarmonicsAllowed[];
 const     uint8_t AnalyzerSoft::HarmonicsAllowedLen;
 constexpr float   AnalyzerSoft::UnbalanceRanges[];
 const     uint8_t AnalyzerSoft::UnbalanceRangesLen;
+*/
