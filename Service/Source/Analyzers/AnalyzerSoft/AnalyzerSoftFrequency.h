@@ -20,11 +20,17 @@ class AnalyzerSoftFrequency final {
   private :
     static const uint8_t       SECONDS = 10;             //Used seconds to calc frequency
   private :
+    float                      pNominalFrequency;        //Defined nominal frequency
+    float                      pSamplerate;              //input samplerate
     uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
     uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
     uint16_t                  *pFreqCycles;              //Frequency calc cycles lenghts
+    uint16_t                   pInvalidValues;           //Invalid samples in buffer
+    uint16_t                   pMinCycle;                //Minimum cycle len
+    uint16_t                   pMaxCycle;                //Maximun cycle len
+    uint32_t                   pBufferLen;               //Total length of valid cycles
   public :
-    AnalyzerSoftFrequency();
+    AnalyzerSoftFrequency(const float samplerate);
     ~AnalyzerSoftFrequency();
     void  Config(const float freq);
     void  PushCycle(const uint16_t len);

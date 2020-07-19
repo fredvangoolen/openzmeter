@@ -22,16 +22,26 @@
 class AnalyzerSoftAlarms final {
   private :
     vector<AnalyzerSoftAlarm>  pAlarms;                  //Alarms control object
+    string                     pSerial;
     Worker                    *pWorker;
   private :
-    void Alarms_Func(AnalyzerSoft::Params_t *aggreg);
-            void InitAlarmParser(Parser &parser, const string &expr, const AnalyzerSoft::AggregType &type);
+    void Alarms_Func(const AnalyzerSoftAggreg *aggreg);
+    void InitAlarmParser(Parser &parser, const string &expr, const AnalyzerSoftAggreg::AggregType type);
     void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
 
   public :
-    AnalyzerSoftAlarms(AnalyzerSoft *parent);
+    AnalyzerSoftAlarms(const string &serial);
     ~AnalyzerSoftAlarms();
-    void Run(const AnalyzerSoft::Params_t &params);
+    void Run(const AnalyzerSoftAggreg *params);
     void Wait();
+    void TestAlarm(const json &params, Response &response);
+    void ListAlarms(const json &params, Response &response);
+    void GetAlarms(const json &params, Response &response);
+    void AddAlarm(const json &params, Response &response);
+    void GetAlarm(const json &params, Response &response);
+    void SetAlarm(const json &params, Response &response);
+    void DelAlarm(const json &params, Response &response);
+    void GetAlarmsRange(const json &params, Response &response);
+    void DelAlarmsRange(const json &params, Response &response);
 };
 // ---------------------------------------------------------------------------------------------------------------------

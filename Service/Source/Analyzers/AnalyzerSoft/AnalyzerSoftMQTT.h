@@ -18,9 +18,15 @@ extern "C" {
   #include "mqtt-c/mqtt.h"
   #include "mqtt-c/mqtt_pal.h"
 }
+#include <string>
+#include <pthread.h>
+#include "AnalyzerSoftAggreg.h"
+// ---------------------------------------------------------------------------------------------------------------------
+using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftMQTT final {
-     pthread_t                  pMQTTThread;              //MQTT thread
+  private :
+    pthread_t                  pMQTTThread;              //MQTT thread
     mqtt_client                pMQTTClient;              //MQTT client state
     uint32_t                   pMQTTBuffSize;            //MQTT buffers size
     uint8_t                   *pMQTTSendBuff;            //MQTT send buffer
@@ -38,7 +44,7 @@ class AnalyzerSoftMQTT final {
     bool                       pMQTTAlarms;              //Enable alarms publish
     bool                       pMQTTConfig;              //Enable config publish
         static void *MQTT_Thread(void *params);
-    void PublishAggreg(const Params_t &params, const string &topic);
+    void PublishAggreg(const AnalyzerSoftAggreg *params, const string &topic);
     void PublishConfig(const json &options);
 
 };

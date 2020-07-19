@@ -22,9 +22,9 @@
 #define EVENT_HYSTERESIS                02.0        //Variacion en % para cerrar evento (DIP/SWELL/INTERRUPTION)
 #define EVENT_RAWENVELOPETIME            0.5        //Time in seconds before and after event to store RAW samples
 //----------------------------------------------------------------------------------------------------------------------
+class AnalyzerSoftEvent final {
 
-enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
-    typedef struct {
+  enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
       enum EventType           Type;                     //Running event type
       uint64_t                 Start;                    //Event start timestamp
       uint64_t                 SamplesDuration;          //Event duration in samples
@@ -32,5 +32,6 @@ enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERR
       float                    PeakValue[3];             //max/min voltage variation along event
       float                    ChangeValue[3];           //diference voltage of event
       uint32_t                 CyclesDuration;           //Event duration in samples
-    } Event_t;
+  public :
+};
 // ---------------------------------------------------------------------------------------------------------------------

@@ -16,12 +16,9 @@
 #pragma once
 #include <pthread.h>
 #include <inttypes.h>
-#include <deque>
-#include <list>
-#include "muParser/muParser.h"
+#include "cctz/time_zone.h"
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
-#include "RatesEval.h"
 #include "Worker.h"
 #include "AnalyzerSoftFFT.h"
 #include "AnalyzerSoftRates.h"
@@ -29,9 +26,12 @@
 #include "AnalyzerSoftEvents.h"
 #include "AnalyzerSoftAggreg.h"
 #include "AnalyzerSoftFrequency.h"
+#include "AnalyzerSoftSync.h"
+#include "AnalyzerSoftMQTT.h"
 //----------------------------------------------------------------------------------------------------------------------
-using namespace mu;
+//using namespace mu;
 using namespace httplib;
+using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftAlarms;
 class AnalyzerSoft : public Analyzer {
@@ -42,6 +42,8 @@ class AnalyzerSoft : public Analyzer {
     const uint8_t              pCurrentChannels;         //Current channels
     const AnalyzerMode         pMode;                    //Operation mode
   private : //Internal classes
+    AnalyzerSoftSync          *pSync;
+    AnalyzerSoftMQTT          *pMQTT;
     AnalyzerSoftRates         *pRates;                   //Rate handle class
     AnalyzerSoftBlock         *pInputBlock;              //Block maker class
     AnalyzerSoftAlarms        *pAlarms;                  //Alarms control
