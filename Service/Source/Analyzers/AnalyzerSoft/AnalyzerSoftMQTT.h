@@ -44,7 +44,8 @@ class AnalyzerSoftMQTT final {
     bool                       pMQTTAlarms;              //Enable alarms publish
     bool                       pMQTTConfig;              //Enable config publish
         static void *MQTT_Thread(void *params);
-    void PublishAggreg(const AnalyzerSoftAggreg *params, const string &topic);
+        public :
+    void PublishAggreg(const AnalyzerSoftAggreg *params);
     void PublishConfig(const json &options);
 
 };

@@ -16,7 +16,7 @@
 #include "AnalyzerSoftEvents.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial) {
-
+  pSerial = serial;
 }
 /*
     pPrevSamples       = NULL;

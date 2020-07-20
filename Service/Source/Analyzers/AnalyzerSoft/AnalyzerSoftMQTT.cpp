@@ -21,9 +21,9 @@
 
   pMQTTBuffSize      = 0x00020000;
 }
-
-void AnalyzerSoft::PublishAggreg(const Params_t &params, const string &topic) {
-  if(pMQTTClient.socketfd == -1) return;
+*/
+void AnalyzerSoftMQTT::PublishAggreg(const AnalyzerSoftAggreg *aggreg) {
+/*  if(pMQTTClient.socketfd == -1) return;
   json Msg = json::object();
   Msg["Sampletime"] = params.Timestamp;
   Msg["Frequency"] = params.Frequency;
@@ -56,8 +56,9 @@ void AnalyzerSoft::PublishAggreg(const Params_t &params, const string &topic) {
   string TextMsg = Msg.dump();
   string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/" + topic : pSerial + "/" + topic;
   mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
-  LogFile::Debug("Analyzer '%s' publish message to MQTT broker", pSerial.c_str());
+  LogFile::Debug("Analyzer '%s' publish message to MQTT broker", pSerial.c_str());*/
 }
+/*
 void AnalyzerSoft::PublishConfig(const json &options) {
   if(pMQTTClient.socketfd != -1) {
     string TextMsg = options.dump();
