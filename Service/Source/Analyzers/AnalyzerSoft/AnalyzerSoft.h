@@ -24,7 +24,12 @@
 #include "AnalyzerSoftRates.h"
 #include "AnalyzerSoftBlock.h"
 #include "AnalyzerSoftEvents.h"
-#include "AnalyzerSoftStats.h"
+#include "AnalyzerSoftAggreg200MS.h"
+#include "AnalyzerSoftAggreg3S.h"
+#include "AnalyzerSoftAggreg1M.h"
+#include "AnalyzerSoftAggreg10M.h"
+#include "AnalyzerSoftAggreg15M.h"
+#include "AnalyzerSoftAggreg1H.h"
 #include "AnalyzerSoftFrequency.h"
 #include "AnalyzerSoftSync.h"
 #include "AnalyzerSoftMQTT.h"
@@ -51,12 +56,12 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerSoftFrequency     *pFrequency;               //Frequency meter
     AnalyzerSoftFFT           *pVoltageFFT[3];           //Voltage FFT worker
     AnalyzerSoftFFT           *pCurrentFFT[4];           //Current FFT worker
-    AnalyzerSoftAggreg        *pAggreg200MS;             //200ms aggregation
-    AnalyzerSoftAggreg        *pAggreg3S;                //3 seconds aggregation
-    AnalyzerSoftAggreg        *pAggreg1M;                //1 minute aggregation
-    AnalyzerSoftAggreg        *pAggreg10M;               //10 minutes aggregation
-    AnalyzerSoftAggreg        *pAggreg15M;               //15 minutes aggregation
-    AnalyzerSoftStats         *pAggreg1H;                //1 hour aggregation
+    AnalyzerSoftAggreg200MS   *pAggreg200MS;             //200ms aggregation
+    AnalyzerSoftAggreg3S      *pAggreg3S;                //3 seconds aggregation
+    AnalyzerSoftAggreg1M      *pAggreg1M;                //1 minute aggregation
+    AnalyzerSoftAggreg10M     *pAggreg10M;               //10 minutes aggregation
+    AnalyzerSoftAggreg15M     *pAggreg15M;               //15 minutes aggregation
+    AnalyzerSoftAggreg1H      *pAggreg1H;                //1 hour aggregation
   private : //Used in BufferAppend, Configure and Analyzer_Func and some callbacks
     RWLocks                    pAnalyzerLock;            //Locks access to analysis shared variables
     bool                       pSave200MS;               //Save 10/12 cycles aggregation to database

@@ -26,7 +26,7 @@ class AnalyzerSoftAlarms final {
     Worker                    *pWorker;
   private :
     void Alarms_Func(const AnalyzerSoftAggreg *aggreg);
-    void InitAlarmParser(Parser &parser, const string &expr, const AnalyzerSoftAggreg::AggregType type);
+//    void InitAlarmParser(Parser &parser, const string &expr, const AnalyzerSoftAggreg::AggregType type);
     void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
 
   public :
