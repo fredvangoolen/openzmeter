@@ -53,7 +53,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAggreg1M       = new AnalyzerSoftAggreg(pSerial, mode, AnalyzerSoftAggreg::AGGREG_1M);
   pAggreg10M      = new AnalyzerSoftAggreg(pSerial, mode, AnalyzerSoftAggreg::AGGREG_10M);
   pAggreg15M      = new AnalyzerSoftAggreg(pSerial, mode, AnalyzerSoftAggreg::AGGREG_15M);
-  pAggreg1H       = new AnalyzerSoftAggreg(pSerial, mode, AnalyzerSoftAggreg::AGGREG_1H);
+  pAggreg1H       = new AnalyzerSoftStats(pSerial, mode);
   pAnalyzerWorker = new Worker((mode == PHASE1) ? "Analyzer_1P" : (mode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
   Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode));
 }
@@ -344,7 +344,7 @@ void AnalyzerSoft::Analyzer_Func() {
 //  if(pEventsWorker != NULL) pEventsWorker->Wait();
   if(pSequence < 100) {
     LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pSequence);
-//    InitAggreg(pAggreg200MS, AGGREG_200MS);
+    pAggreg200MS->Reset();
     pSequence++;
     pAnalyzerLock.Unlock();
     return;
@@ -354,21 +354,15 @@ void AnalyzerSoft::Analyzer_Func() {
     LogFile::Debug("Storing 3S aggregation for analyzer '%s'", pSerial.c_str());
 //    NormalizeAggreg(pAggreg3S);
 //    if(pAlarms != NULL) pAlarms->Run(pAggreg3S);
-//    if(pAggreg3S.Flag == false) {
-//      float Variation = CalcChange(pAggreg3S.Frequency, pNominalFrequency);
-//      for(uint8_t Range = 0; Range < FrequencyRangesLen; Range++) {
-//        if((Variation >= FrequencyRanges[Range]) && (Variation < FrequencyRanges[Range + 1])) pAggreg1H.StatsFrequency[Range]++;
-//      }
-//    }
-//    SaveAggreg(pAggreg3S);
+     pAggreg1H->AccumulateStats(pAggreg3S);
 //    if(pMQTT3S) PublishAggreg(pAggreg3S, "3S");
 //    if(pAlarms != NULL) pAlarms->Wait();
+//    SaveAggreg(pAggreg3S);
 //    InitAggreg(pAggreg3S, AGGREG_3S);
   }
-//  AccumulateAggreg(pAggreg3S, pAggreg200MS);
-
-//  if((pAggreg1M.Timestamp != 0) && ((pAggreg1M.Timestamp / 60000) < (pAggreg200MS.Timestamp / 60000))) {
-//    LogFile::Debug("Storing 1M aggregation for analyzer '%s'", pSerial.c_str());
+  pAggreg3S->Accumulate(pAggreg200MS);
+  if((pAggreg1M->Timestamp() != 0) && ((pAggreg1M->Timestamp() / 60000) < (pAggreg200MS->Timestamp() / 60000))) {
+    LogFile::Debug("Storing 1M aggregation for analyzer '%s'", pSerial.c_str());
 //    pAggreg1M.Timestamp = pAggreg1M.Timestamp / 60000 * 60000 + 59999;
 //    NormalizeAggreg(pAggreg1M);
 //    if(pAlarms != NULL) pAlarms->Run(pAggreg1M);
@@ -376,41 +370,15 @@ void AnalyzerSoft::Analyzer_Func() {
 //    if(pMQTT1M) PublishAggreg(pAggreg1M, "1M");
 //    if(pAlarms != NULL) pAlarms->Wait();
 //    InitAggreg(pAggreg1M, AGGREG_1M);
-//  }
-//  AccumulateAggreg(pAggreg1M, pAggreg200MS);
+  }
+  pAggreg1M->Accumulate(pAggreg200MS);
 
 //  if((pAggreg10M.Timestamp != 0) && ((pAggreg10M.Timestamp / 600000) < (pAggreg200MS.Timestamp / 600000))) {
 //    LogFile::Debug("Storing 10M aggregation for analyzer '%s", pSerial.c_str());
 //    pAggreg10M.Timestamp = pAggreg10M.Timestamp / 600000 * 600000 + 599999;
 //    NormalizeAggreg(pAggreg10M);
 //    if(pAlarms != NULL) pAlarms->Run(pAggreg10M);
-//    if(pAggreg10M.Flag == false) {
-//      for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
-//        if((pAggreg10M.Unbalance >= UnbalanceRanges[Range]) && (pAggreg10M.Unbalance < UnbalanceRanges[Range + 1])) pAggreg1H.StatsUnbalance[Range]++;
-//      }
-//      for(uint8_t i = 0; i < pVoltageChannels; i++) {
-//        float Variation = CalcChange(pAggreg10M.Voltage[i], pNominalVoltage);
-//        for(uint8_t Range = 0; Range < VoltageRangesLen; Range++) {
-//          if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) pAggreg1H.StatsVoltage[Range]++;
-//        }
-//        for(uint8_t Range = 0; Range < THDRangesLen; Range++) {
-//          if((pAggreg10M.Voltage_THD[i] >= THDRanges[Range]) && (pAggreg10M.Voltage_THD[i] < THDRanges[Range + 1])) pAggreg1H.StatsTHD[Range]++;
-//        }
-//        bool HarmonicsInRange = true;
-//        for(uint8_t n = 0; n < HarmonicsAllowedLen; n++) {
-//          float Variation = CalcChange(pAggreg10M.Voltage_Harmonics[i * 50 + n + 1], pNominalVoltage);
-//            if(Variation > HarmonicsAllowed[n]) {
-//              HarmonicsInRange = false;
-//              break;
-//            }
-//        }
-//        if(HarmonicsInRange == true) {
-//          pAggreg1H.StatsHarmonics[0]++;
-//        } else {
-//          pAggreg1H.StatsHarmonics[1]++;
-//        }
-//      }
-//    }
+      pAggreg1H->AccumulateStats(pAggreg10M);
 //    SaveAggreg(pAggreg10M);
 //    if(pMQTT10M) PublishAggreg(pAggreg10M, "10M");
 //    if(pAlarms != NULL) pAlarms->Wait();
@@ -428,7 +396,7 @@ void AnalyzerSoft::Analyzer_Func() {
 //    if(pAlarms != NULL) pAlarms->Wait();
 //    InitAggreg(pAggreg15M, AGGREG_15M);
 //  }
-//  AccumulateAggreg(pAggreg15M, pAggreg200MS);
+  pAggreg15M->Accumulate(pAggreg200MS);
 
 //  if((pAggreg1H.Timestamp != 0) && ((pAggreg1H.Timestamp / 3600000) < (pAggreg200MS.Timestamp / 3600000))) {
 //    LogFile::Debug("Storing 1H aggregation for analyzer '%s'", pSerial.c_str());
@@ -440,7 +408,7 @@ void AnalyzerSoft::Analyzer_Func() {
 //    if(pAlarms != NULL) pAlarms->Wait();
 //    InitAggreg(pAggreg1H, AGGREG_1H);
 //  }
-//  AccumulateAggreg(pAggreg1H, pAggreg200MS);
+  pAggreg1H->Accumulate(pAggreg200MS);
 
   if(pAlarms != NULL) pAlarms->Run(pAggreg200MS);
   if(pSave200MS) {
