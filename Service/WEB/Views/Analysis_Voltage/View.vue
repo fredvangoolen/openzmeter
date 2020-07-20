@@ -29,7 +29,7 @@
         </div>
       </div>
       <div class="col-lg-12">
-        <detail-tabs v-if="analyzer.NominalFrequency>0" :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events']" storage="Voltage.Details.Tabs.AC" v-model="ActiveTab"></detail-tabs>
+        <detail-tabs v-if="analyzer.NominalFrequency>0" :tabs="['Waveform', 'Harmonics', 'Evolution', 'Advanced', 'Phasors', 'Parameters', 'Events', 'Cyclic Histogram']" storage="Voltage.Details.Tabs.AC" v-model="ActiveTab"></detail-tabs>
         <detail-tabs v-if="analyzer.NominalFrequency==0" :tabs="['Waveform', 'Advanced']" storage="Voltage.Details.Tabs.DC" v-model="ActiveTab"></detail-tabs>
         <waveform v-if="ActiveTab=='Waveform'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></waveform>
         <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
@@ -38,6 +38,7 @@
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
         <phasors v-if="ActiveTab=='Phasors'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></phasors>
         <events v-if="ActiveTab=='Events'" :analyzer="analyzer" :events="TransferEvents.Data"></events>
+        <cyclic-histogram-chart v-if="ActiveTab=='Cyclic Histogram'" :analyzer="analyzer"></cyclic-histogram-chart>
       </div>
     </div>
     <dlg-fs v-if="Expanded" title="Voltage" :height.sync="DialogHeight"></dlg-fs>
@@ -59,6 +60,7 @@
   import Waveform from './Waveform.vue';
   import Events from '../Events_Disturbances/Events.vue';
   import Phasors from './Phasors.vue';
+  import CyclicHistogramChart from './CyclicHistogramChart.vue';
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
@@ -120,7 +122,7 @@
         return Object.seal(Rows);
       }
     },
-    components: { Voltage, Counters, Waveform, Advanced, Events, Evolution, Harmonics, Parameters, Phasors }
+    components: { Voltage, Counters, Waveform, Advanced, Events, Evolution, Harmonics, Parameters, Phasors, CyclicHistogramChart }
   }
 </script>
 

@@ -17,43 +17,41 @@
 
 <script>
 import * as oZm from "JS/openZmeter.js";
-import Plotly from 'plotly.js-dist';
+import Plotly from "plotly.js-dist";
 export default {
   props: { id: "int", analyzer: Object },
   created: function() {
     let event_id = this.$route.params.id;
-    if (event_id != null && this.analyzer != null) {
-      this.$http
-        .post("getCyclicHistogram", {
-          StartTime: event_id,
-          Analyzer: this.analyzer.Analyzer
-        })
-        .then(
-          result => {
-            let data = result.body;
-            
-            let TESTER = document.getElementById("tester");
-            Plotly.newPlot(
-              TESTER,
-              [
-                {
-                  x: data.points.x,
-                  y: data.points.y
-                }
-              ],
+    this.$http
+      .post("getCyclicHistogram", {
+        StartTime: event_id,
+        Analyzer: this.analyzer.Analyzer
+      })
+      .then(
+        result => {
+          let data = result.body;
+
+          let TESTER = document.getElementById("tester");
+          Plotly.newPlot(
+            TESTER,
+            [
               {
-                margin: { t: 0 }
+                x: data.points.x,
+                y: data.points.y
               }
-            );
-          },
-          fail => {
-            this.ShowSpinner = false;
-            alert(
-              "Cyclic Histogram samples are not avaliable right now. The event may still be running or deleted."
-            );
-          }
-        );
-    }
+            ],
+            {
+              margin: { t: 0 }
+            }
+          );
+        },
+        fail => {
+          this.ShowSpinner = false;
+          alert(
+            "Cyclic Histogram samples are not avaliable right now. The event may still be running or deleted."
+          );
+        }
+      );
   },
   data: function() {
     return {};

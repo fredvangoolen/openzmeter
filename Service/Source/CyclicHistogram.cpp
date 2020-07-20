@@ -215,7 +215,57 @@ void CyclicHistogram::ResizeCumulativeCount(uint8_t phaseNumber, size_t newSize)
     cumulativeCount[phaseNumber].resize(newSize, vector<uint64_t>(voltageBinSize));
 }
 
-vector<vector<vector<uint64_t>>> CyclicHistogram::GetCyclicHistogram()
+json CyclicHistogram::GetCyclicHistogramForEvent(uint64_t event_starttime)
 {
-    return cumulativeCount;
+    json result = json::object();
+
+    DB->ExecSentenceAsyncResult("SELECT id, event_starttime, starttime, endtime FROM cychist WHERE event_starttime = " + DB->Bind(event_starttime));
+    if (DB->FecthRow())
+    {
+        result["id"] = DB->ResultString("id");
+        result["event_starttime"] = DB->ResultString("event_starttime");
+        result["starttime"] = DB->ResultString("starttime");
+        result["endtime"] = DB->ResultString("endtime");
+    }
+
+    DB->ExecSentenceAsyncResult("SELECT json_build_object('id', COALESCE(ARRAY_AGG(id ORDER BY phase, x, y ASC), '{}'), 'phase', COALESCE(ARRAY_AGG(phase ORDER BY phase, x, y ASC), '{}'), 'sample', COALESCE(ARRAY_AGG(x ORDER BY phase, x, y ASC), '{}'), 'voltage_bin', COALESCE(ARRAY_AGG(y ORDER BY phase, x, y ASC), '{}'), 'count', COALESCE(ARRAY_AGG(count ORDER BY phase, x, y ASC), '{}')) AS points FROM cychist_point WHERE cychist_id = " + DB->ResultString("id"));
+    if (DB->FecthRow())
+    {
+        result["points"] = json::parse(DB->ResultString("points"));
+    }
+
+    return result;
+}
+
+json CyclicHistogram::GetCurrentCyclicHistogram()
+{
+    json result = json::object();
+
+    result["starttime"] = startTime;
+    result["endtime"] = endTime;
+
+    result["points"] = json::array();
+
+    for (size_t i = 0; i < cumulativeCount.size(); i++)
+    {
+        for (size_t j = 0; j < cumulativeCount[i].size(); j++)
+        {
+            for (size_t k = 0; k < cumulativeCount[i][j].size(); k++)
+            {
+                uint64_t count = cumulativeCount[i][j][k];
+                if (count != 0)
+                {
+                    json point = json::object();
+                    point["phase"] = i;
+                    point["sample"] = j;
+                    point["voltage_bin"] = k;
+                    point["count"] = count;
+
+                    result["points"].push_back(point);
+                }
+            }
+        }
+    }
+
+    return result;
 }

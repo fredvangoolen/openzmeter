@@ -10,7 +10,8 @@ public:
     CyclicHistogram(const string &analyzer_schema, uint32_t nominalVoltage, size_t voltageBinSize = 512);
     ~CyclicHistogram();
     void AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate, float nominalFrequency);
-    vector<vector<vector<uint64_t>>> GetCyclicHistogram();
+    json GetCyclicHistogramForEvent(uint64_t event_starttime);
+    json GetCurrentCyclicHistogram();
     void WriteToDisk();
     void WriteToDatabase();
     void WriteToDatabase(uint64_t event_starttime);
