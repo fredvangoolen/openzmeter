@@ -200,5 +200,4 @@ void AnalyzerSoftRates::CalcRate(const json &params, Response &response) {
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 
 }
-
 // ---------------------------------------------------------------------------------------------------------------------

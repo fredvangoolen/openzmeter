@@ -24,7 +24,7 @@
 #include "AnalyzerSoftRates.h"
 #include "AnalyzerSoftBlock.h"
 #include "AnalyzerSoftEvents.h"
-#include "AnalyzerSoftAggreg.h"
+#include "AnalyzerSoftStats.h"
 #include "AnalyzerSoftFrequency.h"
 #include "AnalyzerSoftSync.h"
 #include "AnalyzerSoftMQTT.h"
@@ -56,7 +56,7 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerSoftAggreg        *pAggreg1M;                //1 minute aggregation
     AnalyzerSoftAggreg        *pAggreg10M;               //10 minutes aggregation
     AnalyzerSoftAggreg        *pAggreg15M;               //15 minutes aggregation
-    AnalyzerSoftAggreg        *pAggreg1H;                //1 hour aggregation
+    AnalyzerSoftStats         *pAggreg1H;                //1 hour aggregation
   private : //Used in BufferAppend, Configure and Analyzer_Func and some callbacks
     RWLocks                    pAnalyzerLock;            //Locks access to analysis shared variables
     bool                       pSave200MS;               //Save 10/12 cycles aggregation to database
