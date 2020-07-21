@@ -3,17 +3,15 @@
     <div class="panel-heading clearfix">
       <div class="header-text">Cyclic Histogram</div>
     </div>
-    <div class="col-lg-4">
-      <h3>Phase 1</h3>
-      <div id="graphPhase1"></div>
+    <div class="col-lg-6 col-md-12" style="padding: 50px;">
+      <div id="graphCyclicHistogram"></div>
     </div>
-    <div class="col-lg-4">
-      <h3>Phase 2</h3>
-      <div id="graphPhase2"></div>
-    </div>
-    <div class="col-lg-4">
-      <h3>Phase 3</h3>
-      <div id="graphPhase3"></div>
+    <div class="col-lg-6 col-md-12" style="padding: 50px;">
+      <h3>Cyclic Histogram Information</h3>
+      <p>Capture Start Time: {{starttime_str}} ({{starttime_ago_str}})</p>
+      <p>Capture End Time: {{endtime_str}} ({{endtime_ago_str}})</p>
+
+      <p v-if="id!=null">Event Start Time: {{event_starttime_str}} ({{event_starttime_ago_str}})</p>
     </div>
   </div>
 </template>
@@ -25,10 +23,10 @@ import * as oZm from "JS/openZmeter.js";
 export default {
   props: { analyzer: Object, id: "int" },
   created: function() {
-    let event_id = this.$route.params.id;
+    this.event_id = this.$route.params.id;
     this.$http
       .post("getCyclicHistogram", {
-        StartTime: event_id,
+        StartTime: this.event_id,
         Analyzer: this.analyzer.Analyzer
       })
       .then(
@@ -36,38 +34,112 @@ export default {
           let data = result.body;
           let points = data.points;
 
-          let points_phase_a = points.filter(x => x.phase == 0);
-          let points_phase_b = points.filter(x => x.phase == 1);
-          let points_phase_c = points.filter(x => x.phase == 2);
+          this.starttime = moment(data.starttime);
+          this.starttime_str = this.starttime.format("MM-DD-YYYY hh:mm:ss a");
 
-          let x_map_fn = function(point) {
-            return point.sample;
-          };
+          this.endtime = moment(data.endtime);
+          this.endtime_str = this.endtime.format("MM-DD-YYYY hh:mm:ss a");
 
-          let y_map_fn = function(point) {
-            return point.voltage_bin;
-          };
+          if (this.event_id != null) {
+            this.event_starttime = moment(this.event_id);
+            this.event_starttime_str = this.event_starttime.format(
+              "MM-DD-YYYY hh:mm:ss a"
+            );
+          }
 
-          let z_map_fn = function(point) {
-            return point.count;
-          };
+          this.timer = setInterval(this.updateCyclicHistogramTimes, 5000);
+          this.updateCyclicHistogramTimes();
 
-          let TESTER = document.getElementById("graphPhase1");
-          Plotly.newPlot(
-            TESTER,
-            [
-              {
-                x: points_phase_a.map(x_map_fn),
-                y: points_phase_a.map(y_map_fn),
-                z: points_phase_a.map(z_map_fn),
-                type: "heatmap",
-                hoverongaps: false
-              }
-            ],
-            {
-              margin: { t: 0 }
-            }
+          let traces = [];
+
+          let z_min = Math.min.apply(
+            Math,
+            points.map(x => x.count)
           );
+          let z_max = Math.max.apply(
+            Math,
+            points.map(x => x.count)
+          );
+
+          // Build the color scale
+          function get_colorscale_normalized_value(k, N) {
+            return (k / 4) * (1 - 3600 / N) + 3600 / N;
+          }
+
+          let colorscale = null;
+          if (z_max > 3600) {
+            colorscale = [
+              [0, "rgb(0,34,234)"], // 1 cycles (static region)
+              [10 / z_max, "rgb(0,140,89)"], // 10 cycles (static region)
+              [30 / z_max, "rgb(28,210,0)"], // 30 cycles (static region)
+              [180 / z_max, "rgb(136,231,0)"], // 180 cycles (static region)
+              [3600 / z_max, "rgb(255,252,0)"], // 3600 cycles (static region)
+              [get_colorscale_normalized_value(1, z_max), "rgb(255,200,0)"],
+              [get_colorscale_normalized_value(2, z_max), "rgb(255,155,0)"],
+              [get_colorscale_normalized_value(3, z_max), "rgb(255,96,0)"],
+              [1, "rgb(255,0,0)"]
+            ];
+          } else {
+            colorscale = [
+              [0, "rgb(0,34,234)"],
+              [0.125, "rgb(0,140,89)"],
+              [0.25, "rgb(28,210,0)"],
+              [0.375, "rgb(136,231,0)"],
+              [0.5, "rgb(255,252,0)"],
+              [0.625, "rgb(255,200,0)"],
+              [0.75, "rgb(255,155,0)"],
+              [0.875, "rgb(255,96,0)"],
+              [1, "rgb(255,0,0)"]
+            ];
+          }
+
+          let phases = [0, 1, 2];
+
+          phases.forEach(function(phase) {
+            let points_filtered = points.filter(x => x.phase == phase);
+            let phase_number = phase + 1;
+
+            let new_trace = {
+              x: points_filtered.map(x => x.sample),
+              y: points_filtered.map(x => x.voltage_bin),
+              z: points_filtered.map(x => x.count),
+              name: "Phase " + phase_number,
+              type: "heatmap",
+              coloraxis: "coloraxis",
+              showlegend: true,
+              zmin: z_min,
+              zmax: z_max,
+              connectgaps: false,
+              hoverongaps: false
+            };
+
+            if (phase != 0) {
+              new_trace["visible"] = "legendonly";
+            }
+
+            traces.push(new_trace);
+          });
+
+          let graphCyclicHistogram = document.getElementById(
+            "graphCyclicHistogram"
+          );
+          let layout = {
+            height: 600,
+            title: { text: "Cyclic Histogram" },
+            xaxis: { title: "Sample Number" },
+            yaxis: { title: "Voltage Bin Number", range: [0, 1024] },
+            legend: {
+              orientation: "h",
+              x: 0.1,
+              y: 1.2
+            },
+            margin: { t: 0 },
+            coloraxis: { colorscale: colorscale },
+            plot_bgcolor: "#000000",
+            paper_bgcolor: "#F1F1F1"
+          };
+          let config = { responsive: true };
+          Plotly.newPlot(graphCyclicHistogram, traces, layout, config);
         },
         fail => {
           this.ShowSpinner = false;
@@ -75,8 +147,32 @@ export default {
         }
       );
   },
+  beforeDestroy() {
+    clearInterval(this.timer);
+  },
+  methods: {
+    updateCyclicHistogramTimes() {
+      this.starttime_ago_str = this.starttime.fromNow();
+      this.endtime_ago_str = this.endtime.fromNow();
+      if (this.event_id != null) {
+        this.event_starttime_ago_str = this.event_starttime.fromNow();
+      }
+    }
+  },
   data() {
-    return {};
+    return {
+      event_id: null,
+      starttime: "",
+      endtime: "",
+      event_starttime: "",
+      starttime_str: "",
+      endtime_str: "",
+      event_starttime_str: "",
+      starttime_ago_str: "",
+      endtime_ago_str: "",
+      event_starttime_ago_str: "",
+      timer_momentjs: ""
+    };
   },
   computed: {}
 };

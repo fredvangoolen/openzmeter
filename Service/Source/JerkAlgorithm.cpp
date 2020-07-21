@@ -39,12 +39,14 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
 
     if (endTime - startTime > 120000)
     {
+        /*
         std::ofstream outputFile;
         outputFile.open("ja.txt", ios::out);
         for (size_t z = 0; z < jerkMaxTemp.size(); z++)
         {
             outputFile << to_string(jerkMaxTemp[z]) << endl;
         }
+        */
 
         LOGFile::Warning("Logging JA data...\n");
         WriteToDatabase();
@@ -114,13 +116,13 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
             {
                 if (jerkElement < stats[phaseNumber].min)
                 {
-                    LOGFile::Warning(("[JA] Found new min: " + to_string(stats[phaseNumber].min) + " -> " + to_string(jerkElement) + "\n").c_str());
+                    //LOGFile::Warning(("[JA] Found new min: " + to_string(stats[phaseNumber].min) + " -> " + to_string(jerkElement) + "\n").c_str());
                     stats[phaseNumber].min = jerkElement;
                 }
 
                 if (jerkElement > stats[phaseNumber].max)
                 {
-                    LOGFile::Warning(("[JA] Found new max: " + to_string(stats[phaseNumber].max) + " -> " + to_string(jerkElement) + "\n").c_str());
+                    //LOGFile::Warning(("[JA] Found new max: " + to_string(stats[phaseNumber].max) + " -> " + to_string(jerkElement) + "\n").c_str());
                     stats[phaseNumber].max = jerkElement;
                     jerkMaxTemp = jerk;
                 }

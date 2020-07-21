@@ -222,16 +222,36 @@ json CyclicHistogram::GetCyclicHistogramForEvent(uint64_t event_starttime)
     DB->ExecSentenceAsyncResult("SELECT id, event_starttime, starttime, endtime FROM cychist WHERE event_starttime = " + DB->Bind(event_starttime));
     if (DB->FecthRow())
     {
-        result["id"] = DB->ResultString("id");
-        result["event_starttime"] = DB->ResultString("event_starttime");
-        result["starttime"] = DB->ResultString("starttime");
-        result["endtime"] = DB->ResultString("endtime");
+        result["id"] = stoi(DB->ResultString("id"));
+        result["event_starttime"] = stol(DB->ResultString("event_starttime"));
+        result["starttime"] = stol(DB->ResultString("starttime"));
+        result["endtime"] = stol(DB->ResultString("endtime"));
     }
 
     DB->ExecSentenceAsyncResult("SELECT json_build_object('id', COALESCE(ARRAY_AGG(id ORDER BY phase, x, y ASC), '{}'), 'phase', COALESCE(ARRAY_AGG(phase ORDER BY phase, x, y ASC), '{}'), 'sample', COALESCE(ARRAY_AGG(x ORDER BY phase, x, y ASC), '{}'), 'voltage_bin', COALESCE(ARRAY_AGG(y ORDER BY phase, x, y ASC), '{}'), 'count', COALESCE(ARRAY_AGG(count ORDER BY phase, x, y ASC), '{}')) AS points FROM cychist_point WHERE cychist_id = " + DB->ResultString("id"));
     if (DB->FecthRow())
     {
-        result["points"] = json::parse(DB->ResultString("points"));
+        json points = json::parse(DB->ResultString("points"));
+
+        json points_id = points["id"];
+        json points_phase = points["phase"];
+        json points_sample = points["sample"];
+        json points_voltage_bin = points["voltage_bin"];
+        json points_count = points["count"];
+
+        result["points"] = json::array();
+        for (size_t i = 0; i < points_id.size(); i++)
+        {
+            json new_point = json::object();
+
+            new_point["id"] = points_id[i];
+            new_point["phase"] = points_phase[i];
+            new_point["sample"] = points_sample[i];
+            new_point["voltage_bin"] = points_voltage_bin[i];
+            new_point["count"] = points_count[i];
+
+            result["points"].push_back(new_point);
+        }
     }
 
     return result;
