@@ -3,10 +3,10 @@
     <div class="panel-heading clearfix">
       <div class="header-text">Cyclic Histogram</div>
     </div>
-    <div class="col-lg-6 col-md-12" style="padding: 50px;">
+    <div class="col-lg-8 col-md-12" style="padding: 50px;">
       <div id="graphCyclicHistogram"></div>
     </div>
-    <div class="col-lg-6 col-md-12" style="padding: 50px;">
+    <div class="col-lg-4 col-md-12" style="padding: 50px;">
       <h3>Cyclic Histogram Information</h3>
       <p>Capture Start Time: {{starttime_str}} ({{starttime_ago_str}})</p>
       <p>Capture End Time: {{endtime_str}} ({{endtime_ago_str}})</p>

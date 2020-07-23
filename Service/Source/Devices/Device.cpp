@@ -129,6 +129,9 @@ bool Device::DelEvent(const json &params, Response &response) {
 bool Device::GetCyclicHistogram(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetCyclicHistogram);
 }
+bool Device::GetJoltData(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetJoltData);
+}
 bool Device::GetPrices(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetPrices);
 }

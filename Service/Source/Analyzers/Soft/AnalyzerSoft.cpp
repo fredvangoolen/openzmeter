@@ -1352,7 +1352,9 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
     This->Analyzer->DelEvent(This->Params, Resp);
   } else if(This->Method == "getCyclicHistogram") {
     This->Analyzer->GetCyclicHistogram(This->Params, Resp);
-  }else if(This->Method == "getPrices") {
+  } else if(This->Method == "GetJoltData") {
+    This->Analyzer->GetJoltData(This->Params, Resp);
+  } else if(This->Method == "getPrices") {
     This->Analyzer->GetPrices(This->Params, Resp);
   } else if(This->Method == "testAlarm") {
     This->Analyzer->TestAlarm(This->Params, Resp);
@@ -1755,6 +1757,23 @@ void AnalyzerSoft::GetCyclicHistogram(const json &params, Response &response)
     // Fetch cyclic histogram for the specified event
     result = cyclicHistogram->GetCyclicHistogramForEvent(ID);
   }
+
+  return HTTPServer::FillResponse(response, result.dump(), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::GetJoltData(const json &params, Response &response)
+{
+  if (CheckRights(params["UserName"], READ) == false)
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+
+  Database DB(Serial);
+
+  if (!params.contains("StartTime") || !params["StartTime"].is_number() || !params.contains("EndTime") || !params["EndTime"].is_number())
+    return HTTPServer::FillResponse(response, "StartTime and EndTime parameters are required.", "text/plain", HTTP_BAD_REQUEST);
+
+  uint64_t startTime = params["StartTime"];
+  uint64_t endTime = params["EndTime"];
+
+  json result = json::object();
 
   return HTTPServer::FillResponse(response, result.dump(), "application/json", HTTP_OK);
 }

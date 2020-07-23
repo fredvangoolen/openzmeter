@@ -53,6 +53,7 @@ class Analyzer {
     virtual void SetEvent(const json &params, Response &response) = 0;
     virtual void DelEvent(const json &params, Response &response) = 0;
     virtual void GetCyclicHistogram(const json &params, Response &response) = 0;
+    virtual void GetJoltData(const json &params, Response &response) = 0;
     virtual void GetPrices(const json &params, Response &response) = 0;
     virtual void TestAlarm(const json &params, Response &response) = 0;
     virtual void GetAlarms(const json &params, Response &response) = 0;

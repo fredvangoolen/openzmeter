@@ -46,6 +46,7 @@ DeviceManager::DeviceManager() {
   HTTPServer::RegisterCallback("setEvent",       SetEventCallback);
   HTTPServer::RegisterCallback("delEvent",       DelEventCallback);
   HTTPServer::RegisterCallback("getCyclicHistogram", GetCyclicHistogramCallback);
+  HTTPServer::RegisterCallback("getJoltData",    GetJoltDataCallback);
   HTTPServer::RegisterCallback("getPrices",      GetPricesCallback);
   HTTPServer::RegisterCallback("testAlarm",      TestAlarmCallback);
   HTTPServer::RegisterCallback("getAlarms",      GetAlarmsCallback);
@@ -205,6 +206,9 @@ void DeviceManager::DelEventCallback(const json &params, Response &response) {
 }
 void DeviceManager::GetCyclicHistogramCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetCyclicHistogram);
+}
+void DeviceManager::GetJoltDataCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::GetJoltData);
 }
 void DeviceManager::GetPricesCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetPrices);
