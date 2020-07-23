@@ -92,7 +92,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
 
   // Setup cyclic histogram manager
   cyclicHistogram = new CyclicHistogram(id, 200, 1024);
-  jerkAlgorithm = new JerkAlgorithm(id);
+  joltAlgorithm = new JoltAlgorithm(id);
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LOGFile::Info("Stopping analyzer with serial '%s'\n", Serial.c_str());
@@ -135,10 +135,10 @@ AnalyzerSoft::~AnalyzerSoft() {
     delete cyclicHistogram;
   cyclicHistogram = NULL;
 
-  // Cleanup jerk algorithm manager
-  if (jerkAlgorithm != NULL)
-    delete jerkAlgorithm;
-  jerkAlgorithm = NULL;
+  // Cleanup jolt algorithm manager
+  if (joltAlgorithm != NULL)
+    delete joltAlgorithm;
+  joltAlgorithm = NULL;
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
   pAnalyzerLock.ReadLock();
@@ -738,9 +738,9 @@ void AnalyzerSoft::Analyzer_Func() {
     {
       cyclicHistogram->AddPoints(pVoltageSamples, pMaxSamples, pVoltageChannels, pSamplerate, pNominalFrequency);
     }
-    if (jerkAlgorithm != NULL)
+    if (joltAlgorithm != NULL)
     {
-      jerkAlgorithm->AddPoints(pVoltageSamples, pMaxSamples, pVoltageChannels, pSamplerate);
+      joltAlgorithm->AddPoints(pVoltageSamples, pMaxSamples, pVoltageChannels, pSamplerate);
     }
   }
   for(uint8_t j = 0; j < pVoltageChannels; j++) {

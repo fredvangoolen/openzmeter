@@ -11,9 +11,9 @@ OS_TARGET = DEBIAN
 TARIFF_ESP  = true
 TARIFF_NONE = true
 
-#Enable/Disable cyclic histogram and jerk algorithms
+#Enable/Disable cyclic histogram and jolt algorithms
 CYCLIC_HISTOGRAM = true
-JERK_ALGORITHM = true
+JOLT_ALGORITHM = true
 
 # Build options --------------------------------------------------------------------------------------------------------
 DEBUG   = true

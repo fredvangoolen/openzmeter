@@ -92,8 +92,8 @@ endif
 ifeq ($(CYCLIC_HISTOGRAM), true)
 	EXECUTABLE_SOURCE += Source/CyclicHistogram.cpp
 endif
-ifeq ($(JERK_ALGORITHM), true)
-	EXECUTABLE_SOURCE += Source/JerkAlgorithm.cpp
+ifeq ($(JOLT_ALGORITHM), true)
+	EXECUTABLE_SOURCE += Source/JoltAlgorithm.cpp
 endif
 
 $(WEB_TARGET): $(WEB_SOURCE)

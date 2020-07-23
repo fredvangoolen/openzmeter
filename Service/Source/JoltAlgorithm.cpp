@@ -1,15 +1,15 @@
-#include "JerkAlgorithm.h"
+#include "JoltAlgorithm.h"
 #include <chrono>
 
-JerkAlgorithm::JerkAlgorithm(const string &analyzer_schema)
+JoltAlgorithm::JoltAlgorithm(const string &analyzer_schema)
 {
     DB = new Database(analyzer_schema);
-    DB->ExecResource("SQL/Database_Jerk.sql");
+    DB->ExecResource("SQL/Database_Jolt.sql");
 
     ClearStats();
 }
 
-JerkAlgorithm::~JerkAlgorithm()
+JoltAlgorithm::~JoltAlgorithm()
 {
     // Cleanup memory
     if (DB != NULL)
@@ -19,7 +19,7 @@ JerkAlgorithm::~JerkAlgorithm()
     DB = NULL;
 }
 
-vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
+vector<float> JoltAlgorithm::ComputeDVDT(vector<float> input)
 {
     vector<float> result = vector<float>();
 
@@ -33,25 +33,16 @@ vector<float> JerkAlgorithm::ComputeDVDT(vector<float> input)
     return result;
 }
 
-void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate)
+void JoltAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate)
 {
     size_t numUsableSamplesPerPhase = min((size_t)sampleRate / 5, arrBlockSize);
 
-    if (endTime - startTime > 120000)
+    if (endTime - startTime > 300000)
     {
-        /*
-        std::ofstream outputFile;
-        outputFile.open("ja.txt", ios::out);
-        for (size_t z = 0; z < jerkMaxTemp.size(); z++)
-        {
-            outputFile << to_string(jerkMaxTemp[z]) << endl;
-        }
-        */
-
-        LOGFile::Warning("Logging JA data...\n");
+        //LOGFile::Warning("Logging JA data...\n");
         WriteToDatabase();
         ClearStats();
-        LOGFile::Warning("  - Done.\n");
+        //LOGFile::Warning("  - Done.\n");
         return;
     }
 
@@ -96,40 +87,39 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
         }
 
         // Compute the third-order DVDT of the input waveform
-        vector<float> jerk = ComputeDVDT(ComputeDVDT(ComputeDVDT(waveform)));
+        vector<float> jolt = ComputeDVDT(ComputeDVDT(ComputeDVDT(waveform)));
 
-        for (size_t i = 0; i < jerk.size(); i++)
+        for (size_t i = 0; i < jolt.size(); i++)
         {
-            float jerkElement = jerk[i];
+            float joltElement = jolt[i];
 
             // Compute the absolute value of the element
-            jerkElement = abs(jerkElement);
+            joltElement = abs(joltElement);
 
             // Update the cumulative stats with new data
             if (stats[phaseNumber].numPoints == 0)
             {
-                stats[phaseNumber].min = jerkElement;
-                stats[phaseNumber].max = jerkElement;
-                stats[phaseNumber].avg = jerkElement;
+                stats[phaseNumber].min = joltElement;
+                stats[phaseNumber].max = joltElement;
+                stats[phaseNumber].avg = joltElement;
             }
             else
             {
-                if (jerkElement < stats[phaseNumber].min)
+                if (joltElement < stats[phaseNumber].min)
                 {
-                    //LOGFile::Warning(("[JA] Found new min: " + to_string(stats[phaseNumber].min) + " -> " + to_string(jerkElement) + "\n").c_str());
-                    stats[phaseNumber].min = jerkElement;
+                    //LOGFile::Warning(("[JA] Found new min: " + to_string(stats[phaseNumber].min) + " -> " + to_string(joltElement) + "\n").c_str());
+                    stats[phaseNumber].min = joltElement;
                 }
 
-                if (jerkElement > stats[phaseNumber].max)
+                if (joltElement > stats[phaseNumber].max)
                 {
-                    //LOGFile::Warning(("[JA] Found new max: " + to_string(stats[phaseNumber].max) + " -> " + to_string(jerkElement) + "\n").c_str());
-                    stats[phaseNumber].max = jerkElement;
-                    jerkMaxTemp = jerk;
+                    //LOGFile::Warning(("[JA] Found new max: " + to_string(stats[phaseNumber].max) + " -> " + to_string(joltElement) + "\n").c_str());
+                    stats[phaseNumber].max = joltElement;
                 }
 
                 // Calcuate the Cumulative Moving Average (CMA)
                 // Algorithm Source: https://en.wikipedia.org/wiki/Moving_average#Cumulative_moving_average
-                stats[phaseNumber].avg = (jerkElement + (stats[phaseNumber].numPoints * stats[phaseNumber].avg)) / (stats[phaseNumber].numPoints + 1);
+                stats[phaseNumber].avg = (joltElement + (stats[phaseNumber].numPoints * stats[phaseNumber].avg)) / (stats[phaseNumber].numPoints + 1);
             }
 
             ++stats[phaseNumber].numPoints;
@@ -137,16 +127,11 @@ void JerkAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
     }
 }
 
-void JerkAlgorithm::WriteToDatabase()
-{
-    WriteToDatabase(0);
-}
-
-void JerkAlgorithm::WriteToDatabase(uint64_t event_starttime)
+void JoltAlgorithm::WriteToDatabase()
 {
     if (startTime == 0 && endTime == 0)
     {
-        // No data has been added to the CH. Don't store anything in database.
+        // No data has been added to the JA. Don't store anything in database.
         return;
     }
 
@@ -154,10 +139,9 @@ void JerkAlgorithm::WriteToDatabase(uint64_t event_starttime)
 
     for (size_t phaseNumber = 0; phaseNumber < stats.size(); phaseNumber++)
     {
-        string sentence = "INSERT INTO jerk (starttime, endtime, event_starttime, phase, num_points, min, max, avg) VALUES (";
+        string sentence = "INSERT INTO jolt (starttime, endtime, phase, num_points, min, max, avg) VALUES (";
         sentence += DB->Bind(startTime) + ",";
         sentence += DB->Bind(endTime) + ",";
-        sentence += (event_starttime != 0 ? DB->Bind(event_starttime) : "NULL") + ",";
         sentence += DB->Bind(phaseNumber) + ",";
         sentence += DB->Bind(stats[phaseNumber].numPoints) + ",";
         sentence += DB->Bind(stats[phaseNumber].min) + ",";
@@ -169,7 +153,7 @@ void JerkAlgorithm::WriteToDatabase(uint64_t event_starttime)
     DB->ExecSentenceNoResult("COMMIT TRANSACTION;");
 }
 
-void JerkAlgorithm::ClearStats()
+void JoltAlgorithm::ClearStats()
 {
     stats.clear();
     startTime = 0;
