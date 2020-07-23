@@ -37,7 +37,7 @@ void JoltAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
 {
     size_t numUsableSamplesPerPhase = min((size_t)sampleRate / 5, arrBlockSize);
 
-    if (endTime - startTime > 300000)
+    if (endTime - startTime > 60000)
     {
         //LOGFile::Warning("Logging JA data...\n");
         WriteToDatabase();
@@ -139,9 +139,8 @@ void JoltAlgorithm::WriteToDatabase()
 
     for (size_t phaseNumber = 0; phaseNumber < stats.size(); phaseNumber++)
     {
-        string sentence = "INSERT INTO jolt (starttime, endtime, phase, num_points, min, max, avg) VALUES (";
-        sentence += DB->Bind(startTime) + ",";
-        sentence += DB->Bind(endTime) + ",";
+        string sentence = "INSERT INTO jolt (time, phase, num_points, min, max, avg) VALUES (";
+        sentence += DB->Bind(endTime) + ","; // Use the ending time as the 'official' time when storing data
         sentence += DB->Bind(phaseNumber) + ",";
         sentence += DB->Bind(stats[phaseNumber].numPoints) + ",";
         sentence += DB->Bind(stats[phaseNumber].min) + ",";
@@ -158,4 +157,55 @@ void JoltAlgorithm::ClearStats()
     stats.clear();
     startTime = 0;
     endTime = 0;
+}
+
+json JoltAlgorithm::GetJoltData(uint64_t startTime, uint64_t endTime)
+{
+    json result = json::object();
+    result["starttime"] = startTime;
+    result["endtime"] = endTime;
+
+    string sentence = "SELECT json_build_object(";
+    sentence += "'id', COALESCE(ARRAY_AGG(id ORDER BY time, phase ASC), '{}'),";
+    sentence += "'time', COALESCE(ARRAY_AGG(time ORDER BY time, phase ASC), '{}'),";
+    sentence += "'phase', COALESCE(ARRAY_AGG(phase ORDER BY time, phase ASC), '{}'),";
+    sentence += "'num_points', COALESCE(ARRAY_AGG(num_points ORDER BY time, phase ASC), '{}'),";
+    sentence += "'min', COALESCE(ARRAY_AGG(min ORDER BY time, phase ASC), '{}'),";
+    sentence += "'max', COALESCE(ARRAY_AGG(max ORDER BY time, phase ASC), '{}'),";
+    sentence += "'avg', COALESCE(ARRAY_AGG(avg ORDER BY time, phase ASC), '{}')";
+    sentence += ") AS points FROM jolt WHERE ";
+    sentence += "time >= " + DB->Bind(startTime);
+    sentence += " AND time <= " + DB->Bind(endTime);
+
+    DB->ExecSentenceAsyncResult(sentence);
+    if (DB->FecthRow())
+    {
+        json points = json::parse(DB->ResultString("points"));
+
+        json points_id = points["id"];
+        json points_time = points["time"];
+        json points_phase = points["phase"];
+        json points_numPoints = points["num_points"];
+        json points_min = points["min"];
+        json points_max = points["max"];
+        json points_avg = points["avg"];
+        
+        result["points"] = json::array();
+        for (size_t i = 0; i < points_id.size(); i++)
+        {
+            json new_point = json::object();
+
+            new_point["id"] = points_id[i];
+            new_point["time"] = points_time[i];
+            new_point["phase"] = points_phase[i];
+            new_point["num_points"] = points_numPoints[i];
+            new_point["min"] = points_min[i];
+            new_point["max"] = points_max[i];
+            new_point["avg"] = points_avg[i];
+
+            result["points"].push_back(new_point);
+        }
+    }
+
+    return result;
 }

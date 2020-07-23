@@ -21,6 +21,7 @@ public:
     void AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate);
     void WriteToDatabase();
     void ClearStats();
+    json GetJoltData(uint64_t startTime, uint64_t endTime);
 
 private:
     Database *DB;

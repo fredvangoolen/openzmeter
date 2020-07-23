@@ -1773,7 +1773,7 @@ void AnalyzerSoft::GetJoltData(const json &params, Response &response)
   uint64_t startTime = params["StartTime"];
   uint64_t endTime = params["EndTime"];
 
-  json result = json::object();
+  json result = joltAlgorithm->GetJoltData(startTime, endTime);
 
   return HTTPServer::FillResponse(response, result.dump(), "application/json", HTTP_OK);
 }
