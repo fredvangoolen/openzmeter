@@ -162,6 +162,8 @@ void AnalyzerRemote::GetSeriesNow(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getSeriesNow", params, response);
 }
+void AnalyzerRemote::GetStatus(const json &params, Response &response) {
+}
 void AnalyzerRemote::GetWaveStream(const json &params, Response &response) {
 
 }
@@ -197,9 +199,13 @@ void AnalyzerRemote::DelEvent(const json &params, Response &response) {
   if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("delEvent", params, response);
 }
-void AnalyzerRemote::GetPrices(const json &params, Response &response) {
+void AnalyzerRemote::GetCosts(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  HandleRequest("getPrices", params, response);
+  HandleRequest("getCosts", params, response);
+}
+void AnalyzerRemote::GetBills(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getBills", params, response);
 }
 void AnalyzerRemote::TestAlarm(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

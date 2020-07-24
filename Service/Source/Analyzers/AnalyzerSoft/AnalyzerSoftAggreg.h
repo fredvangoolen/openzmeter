@@ -19,28 +19,28 @@
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftAggreg {
   protected :
-    string                  pSerial;                             //Serial number of parent analyzer
-    uint8_t                 pVoltageChannels;                    //Avaliable voltage channels
-    uint8_t                 pCurrentChannels;                    //Avaliable current channels
-    bool                    pFlag;                               //Flagged period
-    float                   pFrequency;                          //Frecuency
-    float                   pUnbalance;                          //Unbalance (only in 3phase)
-    float                   pVoltage[3];                         //Aggregation average RMS voltage
-    float                   pCurrent[4];                         //Aggregation average RMS current
-    uint64_t                pTimestamp;                          //Aggregation timestampt
-    float                   pActive_Power[3];                    //Aggregation average Active Power (P)
-    float                   pReactive_Power[3];                  //Reactive power
-    float                   pActive_Energy[3];                   //Energia consumida
-    float                   pReactive_Energy[3];                 //Reactive energy
-    float                   pApparent_Power[3];                  //Potencia aparente (S)
-    float                   pPower_Factor[3];                    //Factor de potencia (cos(PHI))
-    float                   pVoltage_THD[3];                     //Distorsion harmonica de la tension
-    float                   pCurrent_THD[4];                     //Distorsion harmonica de la corriente
-    float                   pVoltage_Phase[3];                   //Angulo entre canales de tension
-    float                   pPhi[3];                             //Angulo de Phi
-    float                   pVoltage_Harmonics[150];             //Harmonicos del canal de tension
-    float                   pCurrent_Harmonics[200];             //Harmonicos del canal de corriente
-    float                   pPower_Harmonics[150];               //Power harmonics
+    string       pSerial;                             //Serial number of parent analyzer
+    uint8_t      pVoltageChannels;                    //Avaliable voltage channels
+    uint8_t      pCurrentChannels;                    //Avaliable current channels
+    bool         pFlag;                               //Flagged period
+    float        pFrequency;                          //Frecuency
+    float        pUnbalance;                          //Unbalance (only in 3phase)
+    float        pVoltage[3];                         //Aggregation average RMS voltage
+    float        pCurrent[4];                         //Aggregation average RMS current
+    uint64_t     pTimestamp;                          //Aggregation timestampt
+    float        pActive_Power[3];                    //Aggregation average Active Power (P)
+    float        pReactive_Power[3];                  //Reactive power
+    float        pActive_Energy[3];                   //Energia consumida
+    float        pReactive_Energy[3];                 //Reactive energy
+    float        pApparent_Power[3];                  //Potencia aparente (S)
+    float        pPower_Factor[3];                    //Factor de potencia (cos(PHI))
+    float        pVoltage_THD[3];                     //Distorsion harmonica de la tension
+    float        pCurrent_THD[4];                     //Distorsion harmonica de la corriente
+    float        pVoltage_Phase[3];                   //Angulo entre canales de tension
+    float        pPhi[3];                             //Angulo de Phi
+    float        pVoltage_Harmonics[150];             //Harmonicos del canal de tension
+    float        pCurrent_Harmonics[200];             //Harmonicos del canal de corriente
+    float        pPower_Harmonics[150];               //Power harmonics
   public :
     uint64_t Timestamp() const;
     float    Frequency() const;

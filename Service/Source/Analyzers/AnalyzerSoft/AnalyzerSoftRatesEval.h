@@ -17,46 +17,56 @@
 #include <stdint.h>
 #include <string>
 #include <map>
+#include "HTTPServer.h"
 #include "muParser/muParser.h"
 #include "Rate.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using namespace mu;
 // ---------------------------------------------------------------------------------------------------------------------
-class RatesEval final {
+class AnalyzerSoftRatesEval final {
   public :
-    typedef struct {
-      uint64_t                          SampleTime;
-      float                             ActivePower;
-      float                             ActiveEnergy;
-      float                             ReactivePower;
-      float                             ReactiveEnergy;
-      float                             Cost;
-      uint16_t                          Period;
-      float                             PeriodF;
-      string                            Color;
-      float                             ContractedPower;
-      float                             EnergyCost;
-      float                             PowerCost;
-    } SampleOut_t;
+//    typedef struct {
+//      uint64_t                          SampleTime;
+//      float                             ActivePower;
+//      float                             ActiveEnergy;
+//      float                             ReactivePower;
+//      float                             ReactiveEnergy;
+//      float                             Cost;
+//      uint16_t                          Period;
+//      float                             PeriodF;
+//      string                            Color;
+//      float                             ContractedPower;
+//      float                             EnergyCost;
+//      float                             PowerCost;
+//    } SampleOut_t;
   private :
     typedef struct {
       Parser             Script;
       map<string, float> Variables;
     } LoadedPeriod_t;
   private :
+    string                              pSerial;
     time_zone                           pTimeZone;
-    vector<Rate>                        pRates;
+    Database                           *pRateDB;
+    Database                           *pDataDB;
+
+
+
+
+
     uint64_t                            pFrom;
     uint64_t                            pTo;
     uint64_t                            pNowDate;
+
+
     uint64_t                            pLoadedPeriodDate;
     uint64_t                            pCurrent;
-    vector<Rate>::iterator              pRatePtr;
+//    vector<Rate>::iterator              pRatePtr;
     vector<TariffYear>::iterator        pYearPtr;
     vector<uint64_t>::iterator          pBillPtr;
     PriceSource                        *pPriceModule;
-    SampleOut_t                         pSampleOut;
+//    SampleOut_t                         pSampleOut;
     Parser                              pEnergyScript;
     Parser                              pPowerScript;
     Parser                              pScript;
@@ -65,9 +75,9 @@ class RatesEval final {
     vector<LoadedPeriod_t>              pPeriods;
   private :
     static float *VariableFactory(const char_type *name, void *params);
-  private:
-    function<void(const SampleOut_t &)> pSampleCallback;
-    function<void(const json &)>        pBillCallback;
+//  private:
+//    function<void(const SampleOut_t &)> pSampleCallback;
+//    function<void(const json &)>        pBillCallback;
   private :
     void     LoadRate();
     void     UnloadRate();
@@ -75,21 +85,23 @@ class RatesEval final {
     void     HandleSample(const float active, const float reactive);
     uint64_t FindStart(const uint64_t from, bool precise);
     uint64_t FindEnd(const uint64_t to, bool precise);
-  public :
-    static json CheckConfig(const json &t);
-  public :
-    RatesEval(const json &t, const time_zone &timezone, const uint64_t from, const uint64_t to, const bool precise);
-    ~RatesEval();
 
-
-
-    void     PushSample(const uint64_t time, const float active, const float reactive);
+//    void     PushSample(const uint64_t time, const float active, const float reactive);
     void     Finish();
 //    void     SetPeriodCallback(function<void(const PeriodOut_t &)> periodOut);
-    void     SetSampleCallback(function<void(const SampleOut_t &)> sampleOut);
-    void     SetBillCallback(function<void(const json &)> billOut);
-    uint64_t StartDate();
-    uint64_t EndDate();
+//    void     SetSampleCallback(function<void(const SampleOut_t &)> sampleOut);
+//    void     SetBillCallback(function<void(const json &)> billOut);
+
+
+
+
+  public :
+//    static json CheckConfig(const json &t);
+  public :
+    AnalyzerSoftRatesEval(const string &serial, const time_zone &timezone);
+    ~AnalyzerSoftRatesEval();
+    void GetCosts(const json &params, Response &response);
+    void GetBills(const json &params, Response &response);
  };
  // ---------------------------------------------------------------------------------------------------------------------
 

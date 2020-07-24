@@ -1,9 +1,7 @@
 var path = require('path');
 var webpack = require('webpack');
-//const TerserPlugin = require('terser-webpack-plugin');
-//const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
-//const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 module.exports = {
   entry: './main.js',
   output: {
@@ -14,7 +12,7 @@ module.exports = {
   plugins: [
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new VueLoaderPlugin(),
-//    new BundleAnalyzerPlugin({}),
+    new CompressionPlugin({test: /\.js(\?.*)?$/i}),
     new webpack.ProvidePlugin({
     $: "jquery",
     jQuery: "jquery",

@@ -27,6 +27,27 @@ const openZmeter = {
           }
         );
       };
+      Transfer.UpdateStatus = (analyzer) => {
+        if(analyzer == null) return;
+        var Cancelled = false;
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+        if((Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = null;
+        Transfer.Analyzer  = analyzer;
+        Transfer.CancelFunc = () => { Cancelled = true; };
+        Transfer.This.$http.post('getStatus', { Analyzer: analyzer.Analyzer, Series: series }).then(
+          (result) => {
+            if(Cancelled == true) return;
+            Transfer.Data = Object.seal(result.body);
+            Transfer.Timer = setTimeout(() => { Transfer.UpdateStatus(Transfer.Analyzer); }, 1500);
+          },
+          (fail) => {
+            if(Cancelled == true) return;
+            Transfer.Data = null;
+            Transfer.Timer = setTimeout(() => { Transfer.UpdateStatus(Transfer.Analyzer); }, 1500);
+          }
+        );
+      };
       Transfer.SetDataPrices = (data) => {
         if((data != null) && (data.Period_Sampletime == null)) data.Period_Sampletime = data.Sampletime;
         Transfer.Data = Object.seal(data);

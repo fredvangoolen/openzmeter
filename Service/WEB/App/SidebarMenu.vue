@@ -58,20 +58,20 @@
   export default {
     props: { analyzer:Object, expanded: Boolean },
     data() {
-      return { Submenu: null, AnalyzerSelected: false, TransferNow: this.CreateSeriesTransfer(this, ['UNREAD']), TitleFrame: 0 }
+      return { Submenu: null, AnalyzerSelected: false, TransferNow: this.CreateSeriesTransfer(this, ['UNREAD_EVENTS', 'UNREAD_ALARMS']), TitleFrame: 0 }
     },
     created: function() {
-      this.TransferNow.UpdateNow(this.analyzer);
+      this.TransferNow.UpdateStatus(this.analyzer);
       setInterval(() => { this.SetTitle(); }, 2000)
     },
     computed: {
       UnreadEvents: function() {
         if(this.TransferNow.Data == null) return 0;
-        return this.TransferNow.Data.Unread.Events;
+        return this.TransferNow.Data.Unread_Events.Count;
       },
       UnreadAlarms: function() {
         if(this.TransferNow.Data == null) return 0;
-        return this.TransferNow.Data.Unread.Alarms;
+        return this.TransferNow.Data.Unread_Alarms.Count;
       }
     },
     watch: {
@@ -79,7 +79,7 @@
         if(val == false) this.Submenu = null;
       },
       analyzer: function() {
-        this.TransferNow.UpdateNow(this.analyzer);
+        this.TransferNow.UpdateStatus(this.analyzer);
       }
     },
     methods: {

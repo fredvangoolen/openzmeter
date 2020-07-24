@@ -59,7 +59,10 @@ void AnalyzerSoftFrequency::PushCycle(const uint16_t len) {
   }
   pFreqCyclesPos = (pFreqCyclesPos + 1) % pFreqCyclesLen;
 }
-float AnalyzerSoftFrequency::Frequency() const {
+float AnalyzerSoftFrequency::Frequency(const AnalyzerSoftBlock *block) {
+  if(block != NULL) {
+    for(uint8_t n = 0; n < block->Cycles(); n++) PushCycle(block->CycleLen(n));
+  }
   return (pNominalFrequency == 0) ? 0.0 : (pInvalidValues != 0) ? NAN : pFreqCyclesLen / ((2.0 * pBufferLen) / pSamplerate);
 }
 // ---------------------------------------------------------------------------------------------------------------------

@@ -20,7 +20,7 @@
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
 #include "Worker.h"
-#include "AnalyzerSoftFFT.h"
+#include "AnalyzerSoftFFTs.h"
 #include "AnalyzerSoftRates.h"
 #include "AnalyzerSoftBlock.h"
 #include "AnalyzerSoftEvents.h"
@@ -30,6 +30,7 @@
 #include "AnalyzerSoftAggreg10M.h"
 #include "AnalyzerSoftAggreg15M.h"
 #include "AnalyzerSoftAggreg1H.h"
+#include "AnalyzerSoftStorage.h"
 #include "AnalyzerSoftFrequency.h"
 #include "AnalyzerSoftSync.h"
 #include "AnalyzerSoftMQTT.h"
@@ -54,14 +55,14 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerSoftAlarms        *pAlarms;                  //Alarms control
     AnalyzerSoftEvents        *pEvents;                  //Events detector
     AnalyzerSoftFrequency     *pFrequency;               //Frequency meter
-    AnalyzerSoftFFT           *pVoltageFFT[3];           //Voltage FFT worker
-    AnalyzerSoftFFT           *pCurrentFFT[4];           //Current FFT worker
+    AnalyzerSoftFFTs          *pFFTs;                    //FFT executor
     AnalyzerSoftAggreg200MS   *pAggreg200MS;             //200ms aggregation
     AnalyzerSoftAggreg3S      *pAggreg3S;                //3 seconds aggregation
     AnalyzerSoftAggreg1M      *pAggreg1M;                //1 minute aggregation
     AnalyzerSoftAggreg10M     *pAggreg10M;               //10 minutes aggregation
     AnalyzerSoftAggreg15M     *pAggreg15M;               //15 minutes aggregation
     AnalyzerSoftAggreg1H      *pAggreg1H;                //1 hour aggregation
+    AnalyzerSoftStorage       *pStorage;                 //Control stored data
   private : //Used in BufferAppend, Configure and Analyzer_Func and some callbacks
     RWLocks                    pAnalyzerLock;            //Locks access to analysis shared variables
     bool                       pSave200MS;               //Save 10/12 cycles aggregation to database
@@ -84,9 +85,11 @@ class AnalyzerSoft : public Analyzer {
   private :
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
+    void GetStatus(const json &params, Response &response) override;
     void GetSeries(const json &params, Response &response) override;
     void GetSeriesNow(const json &params, Response &response) override;
-    void GetPrices(const json &params, Response &response) override;
+    void GetCosts(const json &params, Response &response) override;
+    void GetBills(const json &params, Response &response) override;
     void GetWaveStream(const json &params, Response &response) override;
     void GetSeriesRange(const json &params, Response &response) override;
     void DelSeriesRange(const json &params, Response &response) override;

@@ -53,6 +53,7 @@ class AnalyzerRemote : public Analyzer {
     void HandleRequest(const string &url, const json &params, Response &response);
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
+    void GetStatus(const json &params, Response &response) override;
     void GetSeries(const json &params, Response &response) override;
     void GetSeriesNow(const json &params, Response &response) override;
     void GetWaveStream(const json &params, Response &response) override;
@@ -64,7 +65,8 @@ class AnalyzerRemote : public Analyzer {
     void GetEvent(const json &params, Response &response) override;
     void SetEvent(const json &params, Response &response) override;
     void DelEvent(const json &params, Response &response) override;
-    void GetPrices(const json &params, Response &response) override;
+    void GetCosts(const json &params, Response &response) override;
+    void GetBills(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;
     void GetAlarmsRange(const json &params, Response &response) override;

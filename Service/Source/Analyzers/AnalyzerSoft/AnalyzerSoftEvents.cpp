@@ -18,9 +18,21 @@
 AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial) {
   pSerial = serial;
 }
+AnalyzerSoftEvents::~AnalyzerSoftEvents() {}
+void AnalyzerSoftEvents::Config(const bool enalbed) {
+
+}
+void AnalyzerSoftEvents::Run(const AnalyzerSoftBlock *block) {}
+void AnalyzerSoftEvents::Wait() {}
 /*
+
+//  if(pEventsWorker != NULL) delete pEventsWorker;
     pPrevSamples       = NULL;
   pPrevCycles        = NULL;
+
+
+//  if(pPrevSamples != NULL) free(pPrevSamples);
+//  if(pPrevCycles != NULL) free(pPrevCycles);
 
 
   if((EventsEnabled == false) && (pEventsWorker != NULL)) {

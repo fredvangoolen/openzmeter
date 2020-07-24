@@ -15,7 +15,84 @@
 // ---------------------------------------------------------------------------------------------------------------------
  #include "AnalyzerSoftMQTT.h"
 // ---------------------------------------------------------------------------------------------------------------------
-/*AnalyzerSoftMQTT::AnalyzerSoftMQTT() {
+json AnalyzerSoftMQTT::CheckConfig(const json &config) {
+  json ConfigOUT = json::object();
+  ConfigOUT["MQTTEnabled"] = false;
+  ConfigOUT["MQTT"] = json::object();
+  ConfigOUT["MQTT"]["Prefix"] = "";
+  ConfigOUT["MQTT"]["Server"] = "";
+  ConfigOUT["MQTT"]["User"] = "";
+  ConfigOUT["MQTT"]["Pass"] = "";
+  ConfigOUT["MQTT"]["Export3S"] = false;
+  ConfigOUT["MQTT"]["Export1M"] = false;
+  ConfigOUT["MQTT"]["Export10M"] = false;
+  ConfigOUT["MQTT"]["Export15M"] = false;
+  ConfigOUT["MQTT"]["Export1H"] = false;
+  ConfigOUT["MQTT"]["ExportAlarms"] = false;
+  ConfigOUT["MQTT"]["ExportConfig"] = false;
+  if(config.contains("MQTTEnabled") && config["MQTTEnabled"].is_boolean()) ConfigOUT["MQTTEnabled"] = config["MQTTEnabled"];
+  if(config.contains("MQTT") && config["MQTT"].is_object()) {
+    if(config["MQTT"].contains("Prefix") && config["MQTT"]["Prefix"].is_string()) ConfigOUT["MQTT"]["Prefix"] = config["MQTT"]["Prefix"];
+    if(config["MQTT"].contains("Server") && config["MQTT"]["Server"].is_string()) ConfigOUT["MQTT"]["Server"] = config["MQTT"]["Server"];
+    if(config["MQTT"].contains("User") && config["MQTT"]["User"].is_string()) ConfigOUT["MQTT"]["User"] = config["MQTT"]["User"];
+    if(config["MQTT"].contains("Pass") && config["MQTT"]["Pass"].is_string()) ConfigOUT["MQTT"]["Pass"] = config["MQTT"]["Pass"];
+    if(config["MQTT"].contains("Export3S") && config["MQTT"]["Export3S"].is_boolean()) ConfigOUT["MQTT"]["Export3S"] = config["MQTT"]["Export3S"];
+    if(config["MQTT"].contains("Export1M") && config["MQTT"]["Export1M"].is_boolean()) ConfigOUT["MQTT"]["Export1M"] = config["MQTT"]["Export1M"];
+    if(config["MQTT"].contains("Export10M") && config["MQTT"]["Export10M"].is_boolean()) ConfigOUT["MQTT"]["Export10M"] = config["MQTT"]["Export10M"];
+    if(config["MQTT"].contains("Export15M") && config["MQTT"]["Export15M"].is_boolean()) ConfigOUT["MQTT"]["Export15M"] = config["MQTT"]["Export15M"];
+    if(config["MQTT"].contains("Export1H") && config["MQTT"]["Export1H"].is_boolean()) ConfigOUT["MQTT"]["Export1H"] = config["MQTT"]["Export1H"];
+    if(config["MQTT"].contains("ExportAlarms") && config["MQTT"]["ExportAlarms"].is_boolean()) ConfigOUT["MQTT"]["ExportAlarms"] = config["MQTT"]["ExportAlarms"];
+    if(config["MQTT"].contains("ExportConfig") && config["MQTT"]["ExportConfig"].is_boolean()) ConfigOUT["MQTT"]["ExportConfig"] = config["MQTT"]["ExportConfig"];
+  }
+  return ConfigOUT;
+}
+void AnalyzerSoftMQTT::Config(const json &config) {
+//  bool MQTTEnabled = options["MQTTEnabled"];
+//  if(MQTTEnabled == true) {
+//    pMQTTPrefix    = options["MQTT"]["Prefix"];
+//    pMQTTServer    = options["MQTT"]["Server"];
+//    pMQTTUser      = options["MQTT"]["User"];
+//    pMQTTPass      = options["MQTT"]["Pass"];
+//    pMQTT3S        = options["MQTT"]["Export3S"];
+//    pMQTT1M        = options["MQTT"]["Export1M"];
+//    pMQTT10M       = options["MQTT"]["Export10M"];
+//    pMQTT15M       = options["MQTT"]["Export15M"];
+//    pMQTT1H        = options["MQTT"]["Export1H"];
+//    pMQTTAlarms    = options["MQTT"]["ExportAlarms"];
+//    pMQTTConfig    = options["MQTT"]["ExportConfig"];
+//    pMQTTTerminate = false;
+//    if(pMQTTThread == 0) {
+//      pMQTTSendBuff = (uint8_t*)calloc(pMQTTBuffSize, 1);
+//      pMQTTRecvBuff = (uint8_t*)calloc(pMQTTBuffSize, 1);
+//      mqtt_init_reconnect(&pMQTTClient, NULL, NULL, NULL);
+//      if(pthread_create(&pMQTTThread, NULL, MQTT_Thread, this) != 0) {
+//        LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+//        pMQTTThread = 0;
+//      } else {
+//        pthread_setname_np(pMQTTThread, "MQTT");
+//      }
+//    }
+//  } else if(MQTTEnabled == false) {
+//    pMQTT3S        = false;
+//    pMQTT1M        = false;
+//    pMQTT10M       = false;
+//    pMQTT15M       = false;
+//    pMQTT1H        = false;
+//    pMQTTAlarms    = false;
+//    pMQTTConfig    = false;
+//    if(pMQTTThread != 0) {
+//      pthread_join(pMQTTThread, NULL);
+//      free(pMQTTSendBuff);
+//      free(pMQTTRecvBuff);
+//      pMQTTThread = 0;
+//    }
+//  }
+}
+/*
+//  pMQTTTerminate = true;
+//  if(pMQTTThread != 0) pthread_join(pMQTTThread, NULL);
+
+AnalyzerSoftMQTT::AnalyzerSoftMQTT() {
   pPrevSamples       = NULL;
   pPrevCycles        = NULL;
 
