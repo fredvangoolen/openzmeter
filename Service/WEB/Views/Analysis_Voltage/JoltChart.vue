@@ -10,6 +10,7 @@
       <h3>Jolt Information</h3>
       <p>Start Time: {{startTime_str}}</p>
       <p>End Time: {{endTime_str}}</p>
+      <button type="button" class="btn btn-primary" @click="UpdateJoltData">Refresh Chart</button>
     </div>
   </div>
 </template>
@@ -27,6 +28,7 @@ export default {
     this.UpdateJoltData();
   },
   beforeDestroy() {
+    Plotly.purge(this.graphJolt);
     clearInterval(this.timer);
   },
   methods: {
@@ -102,28 +104,84 @@ export default {
           })
           .then(
             result => {
-              this.UpdateChart();
+              this.joltData = result.body.points;
             },
             fail => {
+              this.joltData = [];
               alert("Jolt data samples are not avaliable right now.");
             }
           );
       } else {
-        this.joltData = null;
+        this.joltData = [];
       }
     },
-    UpdateChart: function() {},
+    UpdateChart: function() {
+      this.graphJolt = document.getElementById("graphJolt");
+
+      let points = this.joltData;
+      let traces = [];
+
+      let phases = [0, 1, 2];
+
+      phases.forEach(function(phase) {
+        let points_filtered = points.filter(x => x.phase == phase);
+        let phase_number = phase + 1;
+
+        traces.push({
+          x: points_filtered.map(x =>
+            moment(x.time).format("YYYY-MM-DD HH:mm:ss")
+          ),
+          y: points_filtered.map(x => x.avg),
+          name: "Phase " + phase_number + ", Avg",
+          mode: "lines+markers",
+          showlegend: true
+        });
+
+        traces.push({
+          x: points_filtered.map(x =>
+            moment(x.time).format("YYYY-MM-DD HH:mm:ss")
+          ),
+          y: points_filtered.map(x => x.min),
+          name: "Phase " + phase_number + ", Min",
+          mode: "lines+markers",
+          showlegend: true,
+          visible: "legendonly"
+        });
+
+        traces.push({
+          x: points_filtered.map(x =>
+            moment(x.time).format("YYYY-MM-DD HH:mm:ss")
+          ),
+          y: points_filtered.map(x => x.max),
+          name: "Phase " + phase_number + ", Max",
+          mode: "lines+markers",
+          showlegend: true,
+          visible: "legendonly"
+        });
+      });
+
+      let layout = {
+        height: 600,
+        title: { text: "Jolt Data" },
+        xaxis: { title: "Time" },
+        yaxis: { title: "Jolt [V/s³]" },
+        plot_bgcolor: "#000000",
+        paper_bgcolor: "#F1F1F1"
+      };
+      let config = { responsive: true };
+      Plotly.react(this.graphJolt, traces, layout, config);
+    },
     UpdateJoltInformation() {
       if (this.startTime != null) {
         this.startTime_str =
-          this.startTime.format("LLLL") + " (" + this.startTime.fromNow() + ")";
+          this.startTime.format("dddd, MMM D, YYYY hh:mm:ss.SSS") + " (" + this.startTime.fromNow() + ")";
       } else {
         this.startTime_str = "";
       }
 
       if (this.endTime != null) {
         this.endTime_str =
-          this.endTime.format("LLLL") + " (" + this.endTime.fromNow() + ")";
+          this.endTime.format("dddd, MMM D, YYYY hh:mm:ss.SSS") + " (" + this.endTime.fromNow() + ")";
       } else {
         this.endTime_str = "";
       }
@@ -131,12 +189,13 @@ export default {
   },
   data() {
     return {
+      graphJolt: null,
       timer: null,
       startTime: null,
       endTime: null,
       startTime_str: "",
       endTime_str: "",
-      joltData: null
+      joltData: []
     };
   },
   watch: {
@@ -149,6 +208,9 @@ export default {
     },
     endTime: function() {
       this.UpdateJoltInformation();
+    },
+    joltData: function() {
+      this.UpdateChart();
     }
   },
   computed: {}
