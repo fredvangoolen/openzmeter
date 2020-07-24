@@ -736,11 +736,11 @@ void AnalyzerSoft::Analyzer_Func() {
 
     if (cyclicHistogram != NULL)
     {
-      cyclicHistogram->AddPoints(pVoltageSamples, pMaxSamples, pVoltageChannels, pSamplerate, pNominalFrequency);
+      cyclicHistogram->AddPoints(pVoltageSamples, pBlockSamples, pVoltageChannels, pSamplerate, pNominalFrequency);
     }
     if (joltAlgorithm != NULL)
     {
-      joltAlgorithm->AddPoints(pVoltageSamples, pMaxSamples, pVoltageChannels, pSamplerate);
+      joltAlgorithm->AddPoints(pVoltageSamples, pBlockSamples, pVoltageChannels, pSamplerate);
     }
   }
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
