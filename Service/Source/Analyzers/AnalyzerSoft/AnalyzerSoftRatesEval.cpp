@@ -1,19 +1,53 @@
+// This file is part of openZmeter.
+//
+// openZmeter is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// openZmeter is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
+// ---------------------------------------------------------------------------------------------------------------------
+#include "HTTPChunkedWriter.h"
 #include "AnalyzerSoftRatesEval.h"
+// ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftRatesEval::AnalyzerSoftRatesEval(const string &serial, const time_zone &timezone) {
   pSerial   = serial;
   pTimeZone = timezone;
   pRateDB   = new Database(serial);
   pDataDB   = new Database(serial);
 }
+AnalyzerSoftRatesEval::~AnalyzerSoftRatesEval() {
+//  UnloadRate();
+  delete pRateDB;
+  delete pDataDB;
+}
 void AnalyzerSoftRatesEval::GetBills(const json &params, Response &response) {
   if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
-//  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) {
-//    HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-//    return;
-//  }
+  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+
   //Tengo que buscar el momento inicial de facturacion. El final se hace conforme avance
+
+/*  auto WriteFunc = [=](HTTPChunkedWriter *writer) -> bool {
+    uint32_t Items = 0;
+    writer->Write("[\n  ");
+    Database DB(pSerial);
+//    DB.ExecSentenceAsyncResult("SELECT json_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy')) AS result FROM rates");
+//    while(DB.FecthRow()) writer->Write(((Items++ != 0) ? ",\n  " : "") + DB.ResultString("result"));
+    writer->Write("\n]", true);
+    return false;
+  };
+  new HTTPChunkedWriter(response, "application/json", WriteFunc);
+
+
+*/
 
 
 }
@@ -34,18 +68,18 @@ void AnalyzerSoftRatesEval::GetCosts(const json &params, Response &response) {
   string   Aggreg  = params["Aggreg"];
   uint8_t  Group   = 0;//params["Group"];
   bool     Precise = true;
-  pFrom            = FindStart(From, Precise);
-  pTo              = FindEnd(To, Precise);
+//  pFrom            = FindStart(From, Precise);
+//  pTo              = FindEnd(To, Precise);
   pCurrent         = pFrom;
   pPriceModule     = NULL;
   pNowDate         = Tools::GetTime64();
   pDataDB->ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime >= " + pDataDB->Bind(pFrom) + " AND sampletime <= " + pDataDB->Bind(pTo) + " ORDER BY sampletime ASC");
   while(pDataDB->FecthRow() == true) {
     uint64_t Time = (pDataDB->ResultUInt64("sampletime") / 900000) * 900000 + 899999;
-    while(pCurrent < Time) HandleSample(0.0, 0.0);
-    HandleSample(pDataDB->ResultFloat("active_power"), pDataDB->ResultFloat("reactive_power"));
+//    while(pCurrent < Time) HandleSample(0.0, 0.0);
+//    HandleSample(pDataDB->ResultFloat("active_power"), pDataDB->ResultFloat("reactive_power"));
   }
-  Finish();
+//  Finish();
 }
 
 
@@ -162,9 +196,7 @@ void AnalyzerSoftRatesEval::GetCosts(const json &params, Response &response) {
 
 
 /*
-RatesEval::~RatesEval() {
-  UnloadRate();
-}
+
 json RatesEval::CheckConfig(const json &r) {
   json ConfigOUT = json::array();
   if(r.is_array() == false) return "Rate list is not an array";
@@ -466,3 +498,4 @@ void RatesEval::SetBillCallback(function<void(const json &)> billOut) {
   pBillCallback = billOut;
 }
 */
+// ---------------------------------------------------------------------------------------------------------------------

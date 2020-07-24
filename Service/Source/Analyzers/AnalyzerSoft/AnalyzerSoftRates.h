@@ -22,10 +22,35 @@ using namespace cctz;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftRates final {
   private :
+    enum SeriesMask { SERIE_TIMESTAMP   = 0x0001,
+                      SERIE_ACTIVE      = 0x0002,
+                      SERIE_REACTIVE    = 0x0004,
+                      SERIE_COST        = 0x0008,
+                      SERIE_PERIOD      = 0x0010,
+                      SERIE_COLOR       = 0x0020,
+                      SERIE_CONTRACTED  = 0x0040,
+                      SERIE_BILL        = 0x0080,
+                      SERIE_ENERGY_COST = 0x0100,
+                      SERIE_POWER_COST  = 0x0200 };
+    typedef struct {
+      time_zone   pTimeZone;
+      Database   *RateDB;
+      Database   *DataDB;
+      uint16_t    SeriesMask;
+      json        Row;
+      json        Header;
+
+    } Eval_t;
+  private :
     string         pSerial;
     time_zone      pTimeZone;
   private :
-    uint64_t FindStart(const uint64_t from, bool precise, const uint8_t order, Database &db) const;
+    static void InitEval(const string &serial, const time_zone &tz, Eval_t &eval, const uint64_t from, const uint64_t to, const uint8_t group, const uint16_t serieMask = 0);
+    static bool EvalFetchRow(Eval_t &eval);
+//    static json PushSample(Eval_t &eval, const uint64_t timestamp, const float active, const float reactive);
+    static void FreeEval(Eval_t &eval);
+    //uint64_t FindStart(const uint64_t from, bool precise, const uint8_t order, Database &db) const;
+
   public :
     AnalyzerSoftRates(const string &serial);
     ~AnalyzerSoftRates();

@@ -40,45 +40,44 @@ AnalyzerRemote::~AnalyzerRemote() {
 void AnalyzerRemote::GetRemote(const json &params, Response &response) {
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   SetName(params["Name"]);
-  response.set_header("Content-Type", "text/event-stream");
-  response.set_chunked_content_provider(
-    [&](uint64_t offset, DataSink &sink) {
-      if(pTerminate == true) {
-        sink.done();
-        return false;
-      }
-      SetOnline();
-      pthread_mutex_lock(&pMutex);
-      pConsumerReady = true;
-      int Result     = 0;
-      if(pProducerRequest == NULL) {
-        timespec Time;
-        clock_gettime(CLOCK_REALTIME, &Time);
-        Time.tv_sec = Time.tv_sec + 1;
-        Result = pthread_cond_timedwait(&pConsumerCond, &pMutex, &Time);
-      }
-      if(Result == ETIMEDOUT) {
-        string Data = "data: null\n\n";
-        sink.write(Data.c_str(), Data.size());
-      } else if(Result == 0) {
-        pRequestList.insert(pProducerRequest);
-        string Data = "data: " + pProducerRequest->Request.dump() + "\n\n";
-        sink.write(Data.c_str(), Data.size());
-        pProducerRequest = NULL;
-      } else {
-        LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
-      }
-      pthread_cond_signal(&pProducerCond);
-      pthread_mutex_unlock(&pMutex);
-      return true;
-    },
-    [&]() {
-      pthread_mutex_lock(&pMutex);
-      pConsumerReady = false;
-      pthread_cond_broadcast(&pProducerCond);
-      pthread_mutex_unlock(&pMutex);
+  auto Func = [&](uint64_t offset, DataSink &sink) {
+    if(pTerminate == true) {
+      sink.done();
+      return false;
     }
-  );
+    SetOnline();
+    pthread_mutex_lock(&pMutex);
+    pConsumerReady = true;
+    int Result     = 0;
+    if(pProducerRequest == NULL) {
+      timespec Time;
+      clock_gettime(CLOCK_REALTIME, &Time);
+      Time.tv_sec = Time.tv_sec + 1;
+      Result = pthread_cond_timedwait(&pConsumerCond, &pMutex, &Time);
+    }
+    if(Result == ETIMEDOUT) {
+      string Data = "data: null\n\n";
+      sink.write(Data.c_str(), Data.size());
+    } else if(Result == 0) {
+      pRequestList.insert(pProducerRequest);
+      string Data = "data: " + pProducerRequest->Request.dump() + "\n\n";
+      sink.write(Data.c_str(), Data.size());
+      pProducerRequest = NULL;
+    } else {
+      LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+    }
+    pthread_cond_signal(&pProducerCond);
+    pthread_mutex_unlock(&pMutex);
+    sink.done();
+    return true;
+  };
+  auto Free = [&]() {
+    pthread_mutex_lock(&pMutex);
+    pConsumerReady = false;
+    pthread_cond_broadcast(&pProducerCond);
+    pthread_mutex_unlock(&pMutex);
+  };
+  response.set_chunked_content_provider("text/event-stream", Func, Free);
 }
 void AnalyzerRemote::SetRemote(const json &params, Response &response) {
   if((params.contains("Code") == false) || (params["Code"].is_number() == false)) return HTTPServer::FillResponse(response, "'Code' param is requiered", "text/plain", HTTP_BAD_REQUEST);
