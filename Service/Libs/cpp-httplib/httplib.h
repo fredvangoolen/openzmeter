@@ -87,24 +87,6 @@
                       : 0))
 #endif
 
-// Prefer gnu::deprecated, otherwise gcc complains if we use
-// [[deprecated]] together with pedantic.
-#ifndef CPPHTTPLIB_DEPRECATED
-#if defined(__has_cpp_attribute)
-#if __has_cpp_attribute(gnu::deprecated)
-#define CPPHTTPLIB_DEPRECATED [[gnu::deprecated]]
-#else
-#if __has_cpp_attribute(deprecated)
-#define CPPHTTPLIB_DEPRECATED [[deprecated]]
-#else
-#define CPPHTTPLIB_DEPRECATED
-#endif
-#endif
-#else
-#define CPPHTTPLIB_DEPRECATED
-#endif
-#endif
-
 /*
  * Headers
  */
@@ -144,6 +126,8 @@ using ssize_t = int;
 
 #include <io.h>
 #include <winsock2.h>
+
+#include <wincrypt.h>
 #include <ws2tcpip.h>
 
 #ifndef WSA_FLAG_NO_HANDLE_INHERIT
@@ -384,10 +368,6 @@ struct Request {
 
 struct Response {
   std::string version;
-#ifdef CPPHTTPLIB_ZLIB_SUPPORT
-  bool accept_gzip_encoding = false;
-  int  gzip_compression_level = Z_DEFAULT_COMPRESSION;
-#endif
   int status = -1;
   Headers headers;
   std::string body;
@@ -403,11 +383,11 @@ struct Response {
   void set_content(std::string s, const char *content_type);
 
   void set_content_provider(
-      size_t length, ContentProvider provider,
+      size_t length, const char *content_type, ContentProvider provider,
       std::function<void()> resource_releaser = [] {});
 
   void set_chunked_content_provider(
-      ChunkedContentProvider provider,
+      const char *content_type, ChunkedContentProvider provider,
       std::function<void()> resource_releaser = [] {});
 
   Response() = default;
@@ -572,8 +552,7 @@ public:
   Server &Delete(const char *pattern, HandlerWithContentReader handler);
   Server &Options(const char *pattern, Handler handler);
 
-  CPPHTTPLIB_DEPRECATED bool set_base_dir(const char *dir,
-                                          const char *mount_point = nullptr);
+  bool set_base_dir(const char *dir, const char *mount_point = nullptr);
   bool set_mount_point(const char *mount_point, const char *dir);
   bool remove_mount_point(const char *mount_point);
   void set_file_extension_and_mimetype_mapping(const char *ext,
@@ -593,9 +572,6 @@ public:
   void set_idle_interval(time_t sec, time_t usec = 0);
 
   void set_payload_max_length(size_t length);
-#ifdef CPPHTTPLIB_ZLIB_SUPPORT
-  void set_compression_level(int);
-#endif
 
   bool bind_to_port(const char *host, int port, int socket_flags = 0);
   int bind_to_any_port(const char *host, int socket_flags = 0);
@@ -622,9 +598,6 @@ protected:
   time_t idle_interval_sec_ = CPPHTTPLIB_IDLE_INTERVAL_SECOND;
   time_t idle_interval_usec_ = CPPHTTPLIB_IDLE_INTERVAL_USECOND;
   size_t payload_max_length_ = CPPHTTPLIB_PAYLOAD_MAX_LENGTH;
-#ifdef CPPHTTPLIB_ZLIB_SUPPORT
-  int    compression_level_ = Z_DEFAULT_COMPRESSION;
-#endif
 
 private:
   using Handlers = std::vector<std::pair<std::regex, Handler>>;
@@ -825,7 +798,6 @@ public:
   void set_tcp_nodelay(bool on);
   void set_socket_options(SocketOptions socket_options);
 
-  CPPHTTPLIB_DEPRECATED void set_timeout_sec(time_t timeout_sec);
   void set_connection_timeout(time_t sec, time_t usec = 0);
   void set_read_timeout(time_t sec, time_t usec = 0);
   void set_write_timeout(time_t sec, time_t usec = 0);
@@ -1739,7 +1711,7 @@ inline ssize_t select_read(socket_t sock, time_t sec, time_t usec) {
   pfd_read.fd = sock;
   pfd_read.events = POLLIN;
 
-  auto timeout = static_cast<int>(sec * 1000 + usec);
+  auto timeout = static_cast<int>(sec * 1000 + usec / 1000);
 
   return handle_EINTR([&]() { return poll(&pfd_read, 1, timeout); });
 #else
@@ -1787,7 +1759,7 @@ inline bool wait_until_socket_is_ready(socket_t sock, time_t sec, time_t usec) {
   pfd_read.fd = sock;
   pfd_read.events = POLLIN | POLLOUT;
 
-  auto timeout = static_cast<int>(sec * 1000 + usec);
+  auto timeout = static_cast<int>(sec * 1000 + usec / 1000);
 
   auto poll_res = handle_EINTR([&]() { return poll(&pfd_read, 1, timeout); });
 
@@ -1898,8 +1870,8 @@ inline bool keep_alive(socket_t sock) {
     } else if (val == 0) {
       auto current = steady_clock::now();
       auto duration = duration_cast<milliseconds>(current - start);
-      auto timeout = CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND * 100 +
-                     CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND;
+      auto timeout = CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND * 1000 +
+                     CPPHTTPLIB_KEEPALIVE_TIMEOUT_USECOND / 1000;
       if (duration.count() > timeout) { return false; }
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     } else {
@@ -2271,8 +2243,7 @@ inline const char *status_message(int status) {
   }
 }
 
-#ifdef CPPHTTPLIB_ZLIB_SUPPORT
-inline bool can_compress(const std::string &content_type) {
+inline bool can_compress_content_type(const std::string &content_type) {
   return !content_type.find("text/") || content_type == "image/svg+xml" ||
          content_type == "application/javascript" ||
          content_type == "application/json" ||
@@ -2280,90 +2251,118 @@ inline bool can_compress(const std::string &content_type) {
          content_type == "application/xhtml+xml";
 }
 
-inline bool compress(std::string &content, int level = Z_DEFAULT_COMPRESSION) {
-  z_stream strm;
-  strm.zalloc = Z_NULL;
-  strm.zfree = Z_NULL;
-  strm.opaque = Z_NULL;
-
-  auto ret = deflateInit2(&strm, level, Z_DEFLATED, 31, 8,
-                          Z_DEFAULT_STRATEGY);
-  if (ret != Z_OK) { return false; }
-
-  strm.avail_in = static_cast<decltype(strm.avail_in)>(content.size());
-  strm.next_in =
-      const_cast<Bytef *>(reinterpret_cast<const Bytef *>(content.data()));
-
-  std::string compressed;
-
-  std::array<char, 16384> buff{};
-  do {
-    strm.avail_out = buff.size();
-    strm.next_out = reinterpret_cast<Bytef *>(buff.data());
-    ret = deflate(&strm, Z_FINISH);
-    assert(ret != Z_STREAM_ERROR);
-    compressed.append(buff.data(), buff.size() - strm.avail_out);
-  } while (strm.avail_out == 0);
-
-  assert(ret == Z_STREAM_END);
-  assert(strm.avail_in == 0);
-
-  content.swap(compressed);
-
-  deflateEnd(&strm);
-  return true;
+inline bool can_compress_content(const Request &req, const Response &res) {
+#ifdef CPPHTTPLIB_ZLIB_SUPPORT
+  const auto &encodings = req.get_header_value("Accept-Encoding");
+  return encodings.find("gzip") != std::string::npos &&
+         detail::can_compress_content_type(
+             res.get_header_value("Content-Type"));
+#else
+  return false;
+#endif
 }
+
+#ifdef CPPHTTPLIB_ZLIB_SUPPORT
+class compressor {
+public:
+  compressor() {
+    std::memset(&strm_, 0, sizeof(strm_));
+    strm_.zalloc = Z_NULL;
+    strm_.zfree = Z_NULL;
+    strm_.opaque = Z_NULL;
+
+    is_valid_ = deflateInit2(&strm_, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 8,
+                             Z_DEFAULT_STRATEGY) == Z_OK;
+  }
+
+  ~compressor() { deflateEnd(&strm_); }
+
+  template <typename T>
+  bool compress(const char *data, size_t data_length, bool last, T callback) {
+    assert(is_valid_);
+
+    auto flush = last ? Z_FINISH : Z_NO_FLUSH;
+
+    strm_.avail_in = static_cast<decltype(strm_.avail_in)>(data_length);
+    strm_.next_in = const_cast<Bytef *>(reinterpret_cast<const Bytef *>(data));
+
+    int ret = Z_OK;
+
+    std::array<char, 16384> buff{};
+    do {
+      strm_.avail_out = buff.size();
+      strm_.next_out = reinterpret_cast<Bytef *>(buff.data());
+
+      ret = deflate(&strm_, flush);
+      assert(ret != Z_STREAM_ERROR);
+
+      if (!callback(buff.data(), buff.size() - strm_.avail_out)) {
+        return false;
+      }
+    } while (strm_.avail_out == 0);
+
+    assert((last && ret == Z_STREAM_END) || (!last && ret == Z_OK));
+    assert(strm_.avail_in == 0);
+    return true;
+  }
+
+private:
+  bool is_valid_ = false;
+  z_stream strm_;
+};
 
 class decompressor {
 public:
   decompressor() {
-    std::memset(&strm, 0, sizeof(strm));
-    strm.zalloc = Z_NULL;
-    strm.zfree = Z_NULL;
-    strm.opaque = Z_NULL;
+    std::memset(&strm_, 0, sizeof(strm_));
+    strm_.zalloc = Z_NULL;
+    strm_.zfree = Z_NULL;
+    strm_.opaque = Z_NULL;
 
     // 15 is the value of wbits, which should be at the maximum possible value
     // to ensure that any gzip stream can be decoded. The offset of 32 specifies
     // that the stream type should be automatically detected either gzip or
     // deflate.
-    is_valid_ = inflateInit2(&strm, 32 + 15) == Z_OK;
+    is_valid_ = inflateInit2(&strm_, 32 + 15) == Z_OK;
   }
 
-  ~decompressor() { inflateEnd(&strm); }
+  ~decompressor() { inflateEnd(&strm_); }
 
   bool is_valid() const { return is_valid_; }
 
   template <typename T>
   bool decompress(const char *data, size_t data_length, T callback) {
+    assert(is_valid_);
+
     int ret = Z_OK;
 
-    strm.avail_in = static_cast<decltype(strm.avail_in)>(data_length);
-    strm.next_in = const_cast<Bytef *>(reinterpret_cast<const Bytef *>(data));
+    strm_.avail_in = static_cast<decltype(strm_.avail_in)>(data_length);
+    strm_.next_in = const_cast<Bytef *>(reinterpret_cast<const Bytef *>(data));
 
     std::array<char, 16384> buff{};
     do {
-      strm.avail_out = buff.size();
-      strm.next_out = reinterpret_cast<Bytef *>(buff.data());
+      strm_.avail_out = buff.size();
+      strm_.next_out = reinterpret_cast<Bytef *>(buff.data());
 
-      ret = inflate(&strm, Z_NO_FLUSH);
+      ret = inflate(&strm_, Z_NO_FLUSH);
       assert(ret != Z_STREAM_ERROR);
       switch (ret) {
       case Z_NEED_DICT:
       case Z_DATA_ERROR:
-      case Z_MEM_ERROR: inflateEnd(&strm); return false;
+      case Z_MEM_ERROR: inflateEnd(&strm_); return false;
       }
 
-      if (!callback(buff.data(), buff.size() - strm.avail_out)) {
+      if (!callback(buff.data(), buff.size() - strm_.avail_out)) {
         return false;
       }
-    } while (strm.avail_out == 0);
+    } while (strm_.avail_out == 0);
 
     return ret == Z_OK || ret == Z_STREAM_END;
   }
 
 private:
-  bool is_valid_;
-  z_stream strm;
+  bool is_valid_ = false;
+  z_stream strm_;
 };
 #endif
 
@@ -2652,39 +2651,90 @@ inline ssize_t write_content(Stream &strm, ContentProvider content_provider,
 template <typename T>
 inline ssize_t write_content_chunked(Stream &strm,
                                      ContentProvider content_provider,
-                                     T is_shutting_down) {
+                                     T is_shutting_down, bool compress) {
   size_t offset = 0;
   auto data_available = true;
   ssize_t total_written_length = 0;
 
   auto ok = true;
-
   DataSink data_sink;
-  data_sink.write = [&](const char *d, size_t l) {
-    if (ok) {
-      data_available = l > 0;
-      offset += l;
 
+#ifdef CPPHTTPLIB_ZLIB_SUPPORT
+  detail::compressor compressor;
+#endif
+
+  data_sink.write = [&](const char *d, size_t l) {
+    if (!ok) { return; }
+
+    data_available = l > 0;
+    offset += l;
+
+    std::string payload;
+    if (compress) {
+#ifdef CPPHTTPLIB_ZLIB_SUPPORT
+      if (!compressor.compress(d, l, false,
+                               [&](const char *data, size_t data_len) {
+                                 payload.append(data, data_len);
+                                 return true;
+                               })) {
+        ok = false;
+        return;
+      }
+#endif
+    } else {
+      payload = std::string(d, l);
+    }
+
+    if (!payload.empty()) {
       // Emit chunked response header and footer for each chunk
-      auto chunk = from_i_to_hex(l) + "\r\n" + std::string(d, l) + "\r\n";
+      auto chunk = from_i_to_hex(payload.size()) + "\r\n" + payload + "\r\n";
       if (write_data(strm, chunk.data(), chunk.size())) {
         total_written_length += chunk.size();
       } else {
         ok = false;
+        return;
       }
     }
   };
+
   data_sink.done = [&](void) {
+    if (!ok) { return; }
+
     data_available = false;
-    if (ok) {
-      static const std::string done_marker("0\r\n\r\n");
-      if (write_data(strm, done_marker.data(), done_marker.size())) {
-        total_written_length += done_marker.size();
-      } else {
+
+    if (compress) {
+#ifdef CPPHTTPLIB_ZLIB_SUPPORT
+      std::string payload;
+      if (!compressor.compress(nullptr, 0, true,
+                               [&](const char *data, size_t data_len) {
+                                 payload.append(data, data_len);
+                                 return true;
+                               })) {
         ok = false;
+        return;
       }
+
+      if (!payload.empty()) {
+        // Emit chunked response header and footer for each chunk
+        auto chunk = from_i_to_hex(payload.size()) + "\r\n" + payload + "\r\n";
+        if (write_data(strm, chunk.data(), chunk.size())) {
+          total_written_length += chunk.size();
+        } else {
+          ok = false;
+          return;
+        }
+      }
+#endif
+    }
+
+    static const std::string done_marker("0\r\n\r\n");
+    if (write_data(strm, done_marker.data(), done_marker.size())) {
+      total_written_length += done_marker.size();
+    } else {
+      ok = false;
     }
   };
+
   data_sink.is_writable = [&](void) { return ok && strm.is_writable(); };
 
   while (data_available && !is_shutting_down()) {
@@ -3241,7 +3291,7 @@ inline std::string SHA_512(const std::string &s) {
 // NOTE: This code came up with the following stackoverflow post:
 // https://stackoverflow.com/questions/9507184/can-openssl-on-windows-use-the-system-certificate-store
 inline bool load_system_certs_on_windows(X509_STORE *store) {
-  auto hStore = CertOpenSystemStore((HCRYPTPROV_LEGACY)NULL, L"ROOT");
+  auto hStore = CertOpenSystemStoreW((HCRYPTPROV_LEGACY)NULL, L"ROOT");
 
   if (!hStore) { return false; }
 
@@ -3507,9 +3557,11 @@ inline void Response::set_content(std::string s, const char *content_type) {
 }
 
 inline void
-Response::set_content_provider(size_t in_length, ContentProvider provider,
+Response::set_content_provider(size_t in_length, const char *content_type,
+                               ContentProvider provider,
                                std::function<void()> resource_releaser) {
   assert(in_length > 0);
+  set_header("Content-Type", content_type);
   content_length_ = in_length;
   content_provider_ = [provider](size_t offset, size_t length, DataSink &sink) {
     return provider(offset, length, sink);
@@ -3518,7 +3570,9 @@ Response::set_content_provider(size_t in_length, ContentProvider provider,
 }
 
 inline void Response::set_chunked_content_provider(
-    ChunkedContentProvider provider, std::function<void()> resource_releaser) {
+    const char *content_type, ChunkedContentProvider provider,
+    std::function<void()> resource_releaser) {
+  set_header("Content-Type", content_type);
   content_length_ = 0;
   content_provider_ = [provider](size_t offset, size_t, DataSink &sink) {
     return provider(offset, sink);
@@ -3537,10 +3591,11 @@ inline ssize_t Stream::write(const std::string &s) {
 
 template <typename... Args>
 inline ssize_t Stream::write_format(const char *fmt, const Args &... args) {
-  std::array<char, 2048> buf;
+  const auto bufsiz = 2048;
+  std::array<char, bufsiz> buf;
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
-  auto sn = _snprintf_s(buf, bufsiz, buf.size() - 1, fmt, args...);
+  auto sn = _snprintf_s(buf, bufsiz - 1, buf.size() - 1, fmt, args...);
 #else
   auto sn = snprintf(buf.data(), buf.size() - 1, fmt, args...);
 #endif
@@ -3790,13 +3845,6 @@ inline void Server::set_payload_max_length(size_t length) {
   payload_max_length_ = length;
 }
 
-#ifdef CPPHTTPLIB_ZLIB_SUPPORT
-inline void Server::set_compression_level(int level) {
-  level = ((level >= Z_NO_COMPRESSION) && (level <= Z_BEST_COMPRESSION)) ? level : Z_DEFAULT_COMPRESSION;
-  compression_level_ = level;
-}
-#endif
-
 inline bool Server::bind_to_port(const char *host, int port, int socket_flags) {
   if (bind_internal(host, port, socket_flags) < 0) return false;
   return true;
@@ -3892,6 +3940,8 @@ inline bool Server::write_response(Stream &strm, bool close_connection,
                         "multipart/byteranges; boundary=" + boundary);
   }
 
+  bool compress = detail::can_compress_content(req, res);
+
   if (res.body.empty()) {
     if (res.content_length_ > 0) {
       size_t length = 0;
@@ -3913,6 +3963,7 @@ inline bool Server::write_response(Stream &strm, bool close_connection,
     } else {
       if (res.content_provider_) {
         res.set_header("Transfer-Encoding", "chunked");
+        if (compress) { res.set_header("Content-Encoding", "gzip"); }
       } else {
         res.set_header("Content-Length", "0");
       }
@@ -3934,11 +3985,22 @@ inline bool Server::write_response(Stream &strm, bool close_connection,
           detail::make_multipart_ranges_data(req, res, boundary, content_type);
     }
 
+    // TODO: 'Accept-Encoding' has gzip, not gzip;q=0
+    if (compress) {
 #ifdef CPPHTTPLIB_ZLIB_SUPPORT
-    if (res.accept_gzip_encoding && detail::can_compress(res.get_header_value("Content-Type")) && detail::compress(res.body, compression_level_)) {
-        res.set_header("Content-Encoding", "gzip");
-    }
+      std::string compressed;
+      detail::compressor compressor;
+      if (!compressor.compress(res.body.data(), res.body.size(), true,
+                               [&](const char *data, size_t data_len) {
+                                 compressed.append(data, data_len);
+                                 return true;
+                               })) {
+        return false;
+      }
+      res.body.swap(compressed);
+      res.set_header("Content-Encoding", "gzip");
 #endif
+    }
 
     auto length = std::to_string(res.body.size());
     res.set_header("Content-Length", length);
@@ -3999,8 +4061,9 @@ Server::write_content_with_provider(Stream &strm, const Request &req,
       }
     }
   } else {
+    auto compress = detail::can_compress_content(req, res);
     if (detail::write_content_chunked(strm, res.content_provider_,
-                                      is_shutting_down) < 0) {
+                                      is_shutting_down, compress) < 0) {
       return false;
     }
   }
@@ -4390,14 +4453,6 @@ Server::process_request(Stream &strm, bool close_connection,
     default: return write_response(strm, close_connection, req, res);
     }
   }
-#ifdef CPPHTTPLIB_ZLIB_SUPPORT
-  // TODO: 'Accept-Encoding' has gzip, not gzip;q=0
-  const auto &encodings = req.get_header_value("Accept-Encoding");
-  if (encodings.find("gzip") != std::string::npos) {
-    res.accept_gzip_encoding = true;
-    res.gzip_compression_level = compression_level_;
-  }
-#endif
 
   // Rounting
   if (routing(req, res, strm)) {
@@ -4748,26 +4803,47 @@ inline std::shared_ptr<Response> Client::send_with_content_provider(
 
 #ifdef CPPHTTPLIB_ZLIB_SUPPORT
   if (compress_) {
+    detail::compressor compressor;
+
     if (content_provider) {
+      auto ok = true;
       size_t offset = 0;
 
       DataSink data_sink;
       data_sink.write = [&](const char *data, size_t data_len) {
-        req.body.append(data, data_len);
-        offset += data_len;
-      };
-      data_sink.is_writable = [&](void) { return true; };
+        if (ok) {
+          auto last = offset + data_len == content_length;
 
-      while (offset < content_length) {
+          auto ret = compressor.compress(
+              data, data_len, last, [&](const char *data, size_t data_len) {
+                req.body.append(data, data_len);
+                return true;
+              });
+
+          if (ret) {
+            offset += data_len;
+          } else {
+            ok = false;
+          }
+        }
+      };
+      data_sink.is_writable = [&](void) { return ok && true; };
+
+      while (ok && offset < content_length) {
         if (!content_provider(offset, content_length - offset, data_sink)) {
           return nullptr;
         }
       }
     } else {
-      req.body = body;
+      if (!compressor.compress(body.data(), body.size(), true,
+                               [&](const char *data, size_t data_len) {
+                                 req.body.append(data, data_len);
+                                 return true;
+                               })) {
+        return nullptr;
+      }
     }
 
-    if (!detail::compress(req.body)) { return nullptr; }
     req.headers.emplace("Content-Encoding", "gzip");
   } else
 #endif
@@ -5145,10 +5221,6 @@ inline void Client::stop() {
   }
 }
 
-inline void Client::set_timeout_sec(time_t timeout_sec) {
-  set_connection_timeout(timeout_sec, 0);
-}
-
 inline void Client::set_connection_timeout(time_t sec, time_t usec) {
   connection_timeout_sec_ = sec;
   connection_timeout_usec_ = usec;
@@ -5341,7 +5413,24 @@ inline SSLSocketStream::SSLSocketStream(socket_t sock, SSL *ssl,
     : sock_(sock), ssl_(ssl), read_timeout_sec_(read_timeout_sec),
       read_timeout_usec_(read_timeout_usec),
       write_timeout_sec_(write_timeout_sec),
-      write_timeout_usec_(write_timeout_usec) {}
+      write_timeout_usec_(write_timeout_usec) {
+  {
+    timeval tv;
+    tv.tv_sec = static_cast<long>(read_timeout_sec);
+    tv.tv_usec = static_cast<decltype(tv.tv_usec)>(read_timeout_usec);
+
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<char *>(&tv),
+               sizeof(tv));
+  }
+  {
+    timeval tv;
+    tv.tv_sec = static_cast<long>(write_timeout_sec);
+    tv.tv_usec = static_cast<decltype(tv.tv_usec)>(write_timeout_usec);
+
+    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<char *>(&tv),
+               sizeof(tv));
+  }
+}
 
 inline SSLSocketStream::~SSLSocketStream() {}
 
@@ -5822,4 +5911,3 @@ inline bool SSLClient::check_host_name(const char *pattern,
 } // namespace httplib
 
 #endif // CPPHTTPLIB_HTTPLIB_H
-

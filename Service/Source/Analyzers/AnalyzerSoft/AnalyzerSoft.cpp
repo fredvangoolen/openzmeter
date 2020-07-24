@@ -407,44 +407,43 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
       return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);
     }
   }
-  response.set_header("Content-Type", "application/json");
-  response.set_chunked_content_provider(
-    [this, Params](uint64_t offset, DataSink &sink) {
-      if(pNowDataLock.ConsumerWait(5) == false) {
-        sink.done();
-        return false;
-      }
-      Params->Block = (Params->Block == 0) ? pSequence : Params->Block + 1;
-      if(Params->Block != pSequence) {
-        pNowDataLock.ConsumerEnds();
-        sink.done();
-        return false;
-      }
-      json Result = json::object();
-//      Result["Samples"] = pBlockSamples;
-      if(Params->Voltage) {
-        Result["Voltage_Samples"] = json::array();
-        for(uint8_t n = 0; n < pVoltageChannels; n++) {
-          Result["Voltage_Samples"].push_back(json::array());
-//          for(uint16_t i = 0; i < pBlockSamples; i++) Result["Voltage_Samples"][n].push_back(pVoltageSamples[n * pMaxSamples + i]);
-        }
-      }
-      if(Params->Current) {
-        Result["Current_Samples"] = json::array();
-        for(uint8_t n = 0; n < pCurrentChannels; n++) {
-          Result["Current_Samples"].push_back(json::array());
-//          for(uint16_t i = 0; i < pBlockSamples; i++) Result["Current_Samples"][n].push_back(pCurrentSamples[n * pMaxSamples + i]);
-        }
-      }
-      pNowDataLock.ConsumerEnds();
-      string Data = Result.dump() + "\n\n";
-      sink.write(Data.c_str(), Data.size());
-      return true;
-    },
-    [Params]() {
-      free(Params);
+  auto Func = [this, Params](uint64_t offset, DataSink &sink) {
+    if(pNowDataLock.ConsumerWait(5) == false) {
+      sink.done();
+      return false;
     }
-  );
+    Params->Block = (Params->Block == 0) ? pSequence : Params->Block + 1;
+    if(Params->Block != pSequence) {
+      pNowDataLock.ConsumerEnds();
+      sink.done();
+      return false;
+    }
+    json Result = json::object();
+//    Result["Samples"] = pBlockSamples;
+    if(Params->Voltage) {
+      Result["Voltage_Samples"] = json::array();
+      for(uint8_t n = 0; n < pVoltageChannels; n++) {
+        Result["Voltage_Samples"].push_back(json::array());
+//        for(uint16_t i = 0; i < pBlockSamples; i++) Result["Voltage_Samples"][n].push_back(pVoltageSamples[n * pMaxSamples + i]);
+      }
+    }
+    if(Params->Current) {
+      Result["Current_Samples"] = json::array();
+      for(uint8_t n = 0; n < pCurrentChannels; n++) {
+        Result["Current_Samples"].push_back(json::array());
+//        for(uint16_t i = 0; i < pBlockSamples; i++) Result["Current_Samples"][n].push_back(pCurrentSamples[n * pMaxSamples + i]);
+      }
+    }
+    pNowDataLock.ConsumerEnds();
+    string Data = Result.dump() + "\n\n";
+    sink.write(Data.c_str(), Data.size());
+    sink.done();
+    return true;
+  };
+  auto Free = [Params]() {
+    free(Params);
+  };
+  response.set_chunked_content_provider("application/json", Func, Free);
 }
 void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

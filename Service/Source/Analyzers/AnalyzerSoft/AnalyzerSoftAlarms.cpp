@@ -125,17 +125,17 @@ void AnalyzerSoftAlarms::ListAlarms(const json &params, Response &response) {
     string UserName = params["UserName"];
     DB.ExecSentenceNoResult("UPDATE permissions SET alarmsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
   }
-  auto WriteFunc = [=](HTTPChunkedWriter *writer) -> bool {
+  auto Func = [=](uint64_t offset, DataSink &sink) -> bool {
     json Headers = {"Name", "Trigger", "Release"};
-    writer->Write("[\n  ");
-    writer->Write("  " + Headers.dump());
+    sink.os << "[\n  " << Headers.dump();
     Database DB(pSerial);
     DB.ExecSentenceAsyncResult("SELECT json_build_array(name, trigger, release) as result FROM alarms WHERE trigger >= " + DB.Bind(From) + " AND trigger <= " + DB.Bind(To));
-    while(DB.FecthRow()) writer->Write(",\n  " + DB.ResultString("result"));
-    writer->Write("\n]", true);
+    while(DB.FecthRow()) sink.os << ",\n  " << DB.ResultString("result");
+    sink.os << "\n]";
+    sink.done();
     return false;
   };
-  new HTTPChunkedWriter(response, "application/json", WriteFunc);
+  response.set_chunked_content_provider("application/json", Func);
 }
 
 

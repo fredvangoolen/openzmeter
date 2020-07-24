@@ -33,16 +33,20 @@ TariffManager::~TariffManager() {
 }
 void TariffManager::GetTariffsCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
-  auto WriteFunc  = [UserName](HTTPChunkedWriter *writer) -> bool {
+  auto Func = [=](uint64_t offset, DataSink &sink) -> bool {
     uint32_t Items = 0;
-    writer->Write("[\n  ");
+    sink.os << "[\n  ";
     Database DB;
     DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'UserName', username) as result FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ") ORDER BY name ASC"));
-    while(DB.FecthRow()) writer->Write(((Items++ != 0) ? ",\n  " : "") + DB.ResultString("result"));
-    writer->Write("\n]", true);
+    while(DB.FecthRow()) {
+      if(Items++ != 0) sink.os << ",\n  ";
+      sink.os << DB.ResultString("result");
+    }
+    sink.os << "\n]";
+    sink.done();
     return false;
   };
-  new HTTPChunkedWriter(response, "application/json", WriteFunc);
+  response.set_chunked_content_provider("application/json", Func);
 }
 void TariffManager::GetTariffCallback(const json &params, Response &response) {
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);

@@ -139,28 +139,34 @@ void AnalyzerManager::CallAnalyzerFunction(const json &params, Response &respons
 }
 void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
-  new HTTPChunkedWriter(response, "application/json",
-    [UserName](HTTPChunkedWriter *writer) -> bool {
-      uint32_t Items = 0;
-      writer->Write("[\n  ");
-      if(UserName != "admin") {
-        Database DB;
-        DB.ExecSentenceAsyncResult("SELECT serial FROM permissions WHERE username = " + DB.Bind(UserName) + " AND (read = true OR write = true OR config = true)");
-        while(DB.FecthRow()) {
-          pAnalyzersLock.ReadLock();
-          auto Tmp = pAnalyzers.find(DB.ResultString("serial"));
-          if(Tmp != pAnalyzers.end()) writer->Write(((Items++ != 0) ? ",\n  " : "") + Tmp->second->GetJSONDescriptor().dump());
-          pAnalyzersLock.Unlock();
-        }
-      } else {
+  auto Func = [=](uint64_t offset, DataSink &sink) -> bool {
+    uint32_t Items = 0;
+    sink.os << "[\n  ";
+    if(UserName != "admin") {
+      Database DB;
+      DB.ExecSentenceAsyncResult("SELECT serial FROM permissions WHERE username = " + DB.Bind(UserName) + " AND (read = true OR write = true OR config = true)");
+      while(DB.FecthRow()) {
         pAnalyzersLock.ReadLock();
-        for(auto Tmp : pAnalyzers) writer->Write(((Items++ != 0) ? ",\n  " : "") + Tmp.second->GetJSONDescriptor().dump());
+        auto Tmp = pAnalyzers.find(DB.ResultString("serial"));
+        if(Tmp != pAnalyzers.end()) {
+          if(Items++ != 0) sink.os << ",\n  ";
+          sink.os << Tmp->second->GetJSONDescriptor().dump();
+        }
         pAnalyzersLock.Unlock();
       }
-      writer->Write("\n]", true);
-      return false;
+    } else {
+      pAnalyzersLock.ReadLock();
+      for(auto Tmp : pAnalyzers) {
+        if(Items++ != 0) sink.os << ",\n  ";
+        sink.os << Tmp.second->GetJSONDescriptor().dump();
+      }
+      pAnalyzersLock.Unlock();
     }
-  );
+    sink.os << "\n]";
+    sink.done();
+    return false;
+  };
+  response.set_chunked_content_provider("application/json", Func);
 }
 void AnalyzerManager::GetAnalyzerCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::GetAnalyzer);
