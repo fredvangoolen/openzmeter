@@ -61,6 +61,8 @@ class AnalyzerRemote : public Analyzer {
     void GetEvent(const json &params, Response &response) override;
     void SetEvent(const json &params, Response &response) override;
     void DelEvent(const json &params, Response &response) override;
+    void GetCyclicHistogram(const json &params, Response &response) override;
+    void GetJoltData(const json &params, Response &response) override;
     void GetPrices(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;

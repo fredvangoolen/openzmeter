@@ -180,6 +180,14 @@ void AnalyzerRemote::DelEvent(const json &params, Response &response) {
   if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("delEvent", params, response);
 }
+void AnalyzerRemote::GetCyclicHistogram(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getCyclicHistogram", params, response);
+}
+void AnalyzerRemote::GetJoltData(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getJoltData", params, response);
+}
 void AnalyzerRemote::GetPrices(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getPrices", params, response);
