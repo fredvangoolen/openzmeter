@@ -15,7 +15,50 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftSync.h"
 // ---------------------------------------------------------------------------------------------------------------------
-/*void *AnalyzerSoftSync::Sync_Thread(void *params) {
+json AnalyzerSoftSync::CheckConfig(const json &config) {
+  json ConfigOUT = json::object();
+  ConfigOUT["SyncEnabled"] = false;
+  ConfigOUT["Sync"] = json::object();
+  ConfigOUT["Sync"]["Server"] = "";
+  ConfigOUT["Sync"]["User"] = "";
+  ConfigOUT["Sync"]["Pass"] = "";
+  if(config.contains("SyncEnabled") && config["SyncEnabled"].is_boolean()) ConfigOUT["SyncEnabled"] = config["SyncEnabled"];
+  if(config.contains("Sync") && config["Sync"].is_object()) {
+    if(config["Sync"].contains("Server") && config["Sync"]["Server"].is_string()) ConfigOUT["Sync"]["Server"] = config["Sync"]["Server"];
+    if(config["Sync"].contains("User") && config["Sync"]["User"].is_string()) ConfigOUT["Sync"]["User"] = config["Sync"]["User"];
+    if(config["Sync"].contains("Pass") && config["Sync"]["Pass"].is_string()) ConfigOUT["Sync"]["Pass"] = config["Sync"]["Pass"];
+  }
+  return ConfigOUT;
+}
+void AnalyzerSoftSync::Config(const json &config) {
+//  bool SyncEnabled = options["SyncEnabled"];
+//  if(SyncEnabled == true) {
+//    pSyncServer    = options["Sync"]["Server"];
+//    pSyncUser      = options["Sync"]["User"];
+//    pSyncPass      = options["Sync"]["Pass"];
+//    pSyncTerminate = false;
+//    if(pSyncThread == 0) {
+//      if(pthread_create(&pSyncThread, NULL, Sync_Thread, this) != 0) {
+//        LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+//        pSyncThread = 0;
+//      } else {
+//        pthread_setname_np(pSyncThread, "Sync");
+//      }
+//    }
+//  } else if((SyncEnabled == false) && (pSyncThread != 0)) {
+//    pSyncTerminate = true;
+//    pthread_join(pSyncThread, NULL);
+//    pSyncThread = 0;
+//  }
+}
+
+
+/*
+
+//  pSyncTerminate = true;
+//  if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
+
+void *AnalyzerSoftSync::Sync_Thread(void *params) {
   AnalyzerSoft *This = (AnalyzerSoft*)params;
   nice(10);
   string Cookie, User, Pass, Server;

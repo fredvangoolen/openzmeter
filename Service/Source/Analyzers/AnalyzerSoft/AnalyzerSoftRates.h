@@ -14,20 +14,28 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
+#include "cctz/time_zone.h"
 #include "HTTPServer.h"
 #include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
+using namespace cctz;
+// ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftRates final {
   private :
-    string  pSerial;
+    string         pSerial;
+    time_zone      pTimeZone;
+  private :
+    uint64_t FindStart(const uint64_t from, bool precise, const uint8_t order, Database &db) const;
   public :
     AnalyzerSoftRates(const string &serial);
     ~AnalyzerSoftRates();
-    void GetRates(const json &params, Response &response);
-    void AddRate(const json &params, Response &response);
-    void GetRate(const json &params, Response &response);
-    void SetRate(const json &params, Response &response);
-    void DelRate(const json &params, Response &response);
-    void CalcRate(const json &params, Response &response);
+    void Config(const time_zone &tz);
+    void GetRates(const json &params, Response &response) const;
+    void AddRate(const json &params, Response &response) const;
+    void GetRate(const json &params, Response &response) const;
+    void SetRate(const json &params, Response &response) const;
+    void DelRate(const json &params, Response &response) const;
+    void GetCosts(const json &params, Response &response) const;
+    void GetBills(const json &params, Response &response) const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

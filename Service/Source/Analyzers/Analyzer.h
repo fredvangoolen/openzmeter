@@ -44,9 +44,11 @@ class Analyzer {
     virtual void PeriodicTasks() = 0;
     virtual void GetAnalyzer(const json &params, Response &response) = 0;
     virtual void SetAnalyzer(const json &params, Response &response) = 0;
+    virtual void GetStatus(const json &params, Response &response) = 0;
     virtual void GetSeries(const json &params, Response &response) = 0;
     virtual void GetSeriesNow(const json &params, Response &response) = 0;
-    virtual void GetPrices(const json &params, Response &response) = 0;
+    virtual void GetCosts(const json &params, Response &response) = 0;
+    virtual void GetBills(const json &params, Response &response) = 0;
     virtual void GetWaveStream(const json &params, Response &response) = 0;
     virtual void GetSeriesRange(const json &params, Response &response) = 0;
     virtual void DelSeriesRange(const json &params, Response &response) = 0;

@@ -81,8 +81,7 @@ void AnalyzerSoftBlock::Config(const float nominalFreq) {
   memset(pLastSamples, 0, sizeof(pLastSamples));
   memset(pBlockCycles, 0, sizeof(pBlockCycles));
 }
-AnalyzerSoftBlock::AppendResult AnalyzerSoftBlock::PushSample(float *voltageSamples, float *currentSamples) {
-  AppendResult Result = NONE;
+bool AnalyzerSoftBlock::PushSample(float *voltageSamples, float *currentSamples) {
   if(pNextReset == true) {
     memset(pBlockCycles, 0, sizeof(pBlockCycles));
     pBlockSamples     = 0;
@@ -107,10 +106,7 @@ AnalyzerSoftBlock::AppendResult AnalyzerSoftBlock::PushSample(float *voltageSamp
       }
     }
     pBlockCycles[pBlockCyclesCount]++;
-    if((((pLastSamples[0] >= 0.0) && (voltageSamples[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (voltageSamples[0] > 0.0))) && (pBlockCycles[pBlockCyclesCount] > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))) {
-      pBlockCyclesCount++;
-      Result = FULL_CYCLE;
-    }
+    if((((pLastSamples[0] >= 0.0) && (voltageSamples[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (voltageSamples[0] > 0.0))) && (pBlockCycles[pBlockCyclesCount] > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))) pBlockCyclesCount++;
     memcpy(pLastSamples, voltageSamples, sizeof(pLastSamples));
     memcpy(voltageSamples, &pVoltageSamples[pVoltageChannels * pBlockSamples], sizeof(float) * pVoltageChannels);
     memcpy(currentSamples, &pCurrentSamples[pCurrentChannels * pBlockSamples], sizeof(float) * pCurrentChannels);
@@ -118,9 +114,9 @@ AnalyzerSoftBlock::AppendResult AnalyzerSoftBlock::PushSample(float *voltageSamp
   pBlockSamples++;
   if((pBlockSamples == pMaxSamples) || (pBlockCyclesCount == pMaxCycles)) {
     pNextReset = true;
-    Result     = FULL_BLOCK;
+    return true;
   }
-  return Result;
+  return false;
 }
 uint16_t AnalyzerSoftBlock::BlockSamples() const {
   return pBlockSamples;
@@ -131,13 +127,32 @@ uint8_t AnalyzerSoftBlock::Cycles() const {
 uint16_t AnalyzerSoftBlock::CycleLen(const uint8_t cycle) const {
   return pBlockCycles[cycle];
 }
-uint16_t AnalyzerSoftBlock::LastCycleLen() const {
-  return pBlockCycles[pBlockCyclesCount - 1];
-}
 float AnalyzerSoftBlock::VoltageSample(const uint8_t ch, const uint16_t sample) const {
   return pVoltageSamples[pVoltageChannels * sample + ch];
 }
 float AnalyzerSoftBlock::CurrentSample(const uint8_t ch, const uint16_t sample) const {
   return pCurrentSamples[pCurrentChannels * sample + ch];
+}
+bool AnalyzerSoftBlock::GetSeriesNow(const string &serie, json &result) {
+  if(serie == "VOLTAGE_SAMPLES") {
+    json Tmp1 = json::array();
+    for(uint8_t n = 0; n < pVoltageChannels; n++) {
+      json Tmp2 = json::array();
+      for(uint16_t i = 0; i < pBlockSamples; i++) Tmp2.push_back(VoltageSample(n, i));
+      Tmp1.push_back(Tmp2);
+    }
+    result["Voltage_Samples"] = Tmp1;
+  } else if(serie == "CURRENT_SAMPLES") {
+    json Tmp1 = json::array();
+    for(uint8_t n = 0; n < pCurrentChannels; n++) {
+      json Tmp2 = json::array();
+      for(uint16_t i = 0; i < pBlockSamples; i++) Tmp2.push_back(CurrentSample(n, i));
+      Tmp1.push_back(Tmp2);
+    }
+    result["Current_Samples"] = Tmp1;
+  } else {
+    return false;
+  }
+  return true;
 }
 // ---------------------------------------------------------------------------------------------------------------------

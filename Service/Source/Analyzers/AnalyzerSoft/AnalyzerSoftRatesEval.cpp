@@ -1,15 +1,167 @@
-#include "RatesEval.h"
-RatesEval::RatesEval(const json &t, const time_zone &timezone, const uint64_t from, const uint64_t to, const bool precise) {
-  if(t.is_array() == false)
-  for(uint16_t R = 0; R < t.size(); R++) pRates.emplace_back(t[R], timezone);
-  pTimeZone    = timezone;
-  pFrom        = FindStart(from, precise);
-  pTo          = FindEnd(to, precise);
-  pCurrent     = pFrom;
-  pRatePtr     = pRates.begin();
-  pPriceModule = NULL;
-  pNowDate     = Tools::GetTime64();
+#include "AnalyzerSoftRatesEval.h"
+AnalyzerSoftRatesEval::AnalyzerSoftRatesEval(const string &serial, const time_zone &timezone) {
+  pSerial   = serial;
+  pTimeZone = timezone;
+  pRateDB   = new Database(serial);
+  pDataDB   = new Database(serial);
 }
+void AnalyzerSoftRatesEval::GetBills(const json &params, Response &response) {
+  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
+//  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) {
+//    HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//    return;
+//  }
+  //Tengo que buscar el momento inicial de facturacion. El final se hace conforme avance
+
+
+}
+void AnalyzerSoftRatesEval::GetCosts(const json &params, Response &response) {
+  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false) || ((params["Aggreg"] != "15M") && (params["Aggreg"] != "1H"))) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Precise") == false) || (params["Precise"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Precise' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) {
+//    HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//    return;
+//  }
+  json     Result  = json::object();
+  uint64_t To      = params["To"];
+  uint64_t From    = params["From"];
+  string   Aggreg  = params["Aggreg"];
+  uint8_t  Group   = 0;//params["Group"];
+  bool     Precise = true;
+  pFrom            = FindStart(From, Precise);
+  pTo              = FindEnd(To, Precise);
+  pCurrent         = pFrom;
+  pPriceModule     = NULL;
+  pNowDate         = Tools::GetTime64();
+  pDataDB->ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active_power, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive_power FROM aggreg_15m WHERE sampletime >= " + pDataDB->Bind(pFrom) + " AND sampletime <= " + pDataDB->Bind(pTo) + " ORDER BY sampletime ASC");
+  while(pDataDB->FecthRow() == true) {
+    uint64_t Time = (pDataDB->ResultUInt64("sampletime") / 900000) * 900000 + 899999;
+    while(pCurrent < Time) HandleSample(0.0, 0.0);
+    HandleSample(pDataDB->ResultFloat("active_power"), pDataDB->ResultFloat("reactive_power"));
+  }
+  Finish();
+}
+
+
+//  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+//  pRatePtr     = pRates.begin();
+
+//  bool     SaveActive      = false;
+//  bool     SaveReactive    = false;
+//  bool     SaveExpense     = false;
+//  bool     SavePeriodName  = false;
+//  bool     SavePeriodColor = false;
+//  bool     SaveContracted  = false;
+//  bool     SaveBills       = false;
+//  bool     SaveEnergyCost  = false;
+//  bool     SavePowerCost   = false;
+//  bool     SaveSampleTime  = false;
+//  bool     SavePeriodTime  = false;
+//  float    AccActive       = 0.0;
+//  float    AccReactive     = 0.0;
+//  float    AccCost         = 0.0;
+//  for(uint8_t i = 0; i < params["Series"].size(); i++) {
+//    if(params["Series"][i].is_string() == false) return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
+//    if(params["Series"][i] == "ACTIVE_POWER") {
+//      Result["Active_Power"] = json::array();
+//      SaveActive = true;
+//    } else if(params["Series"][i] == "REACTIVE_POWER") {
+//      Result["Reactive_Power"] = json::array();
+//      SaveReactive = true;
+//    } else if(params["Series"][i] == "EXPENSE") {
+//      Result["Expense"] = json::array();
+//      SaveExpense = true;
+//    } else if(params["Series"][i] == "PERIOD_POWER_COST") {
+//      Result["Period_Power_Cost"] = json::array();
+//      SavePowerCost = true;
+//    } else if(params["Series"][i] == "PERIOD_ENERGY_COST") {
+//      Result["Period_Energy_Cost"] = json::array();
+//      SaveEnergyCost = true;
+//    } else if(params["Series"][i] == "PERIOD_NUMBER") {
+//      Result["Period_Number"] = json::array();
+//      SavePeriodName = true;
+//    } else if(params["Series"][i] == "PERIOD_COLOR") {
+//      Result["Period_Color"] = json::array();
+//      SavePeriodColor = true;
+//    } else if(params["Series"][i] == "PERIOD_POWER_CONTRACTED") {
+//      Result["Period_Power_Contracted"] = json::array();
+//      SaveContracted = true;
+//    } else if(params["Series"][i] == "BILLS") {
+//      Result["Bills"] = json::array();
+//      SaveBills = true;
+//    } else {
+//      return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
+//    }
+//  }
+//  if((SavePeriodName || SavePeriodColor || SaveContracted || SavePowerCost || SaveEnergyCost) && (Aggreg != "15M")) {
+//    Result["Period_Sampletime"] = json::array();
+//    SavePeriodTime = true;
+//  }
+//  if((SaveActive || SaveReactive || SaveExpense) || ((SavePeriodName || SavePeriodColor || SaveContracted || SavePowerCost || SaveEnergyCost) && (Aggreg == "15M"))) {
+//    Result["Sampletime"] = json::array();
+//    SaveSampleTime = true;
+//  }
+
+
+
+
+
+
+
+
+//  RatesEval Eval(pRates, pTimeZone, From, To, params["Precise"]);
+//  Eval.SetSampleCallback([&](const RatesEval::SampleOut_t &out) {
+//    AccActive   += out.ActivePower;
+//    AccReactive += out.ReactivePower;
+//    AccCost     += out.Cost;
+//    if(SavePeriodTime) Result["Period_Sampletime"].push_back(out.SampleTime);
+//    if(SaveContracted) Result["Period_Power_Contracted"].push_back(out.ContractedPower);
+//    if(SavePowerCost)  Result["Period_Power_Cost"].push_back(out.PowerCost);
+//    if(SaveEnergyCost) Result["Period_Energy_Cost"].push_back(out.EnergyCost);
+//    if(SavePeriodName) {
+//      if(out.Period == UINT16_MAX) {
+//        Result["Period_Number"].push_back(nullptr);
+//      } else {
+//        Result["Period_Number"].push_back(out.Period);
+//      }
+//    }
+//    if(SavePeriodColor) {
+//      if(out.Color.empty() == true) {
+//        Result["Period_Color"].push_back(nullptr);
+//      } else {
+//        Result["Period_Color"].push_back(out.Color);
+//      }
+//    }
+//    if(Aggreg == "1H") {
+//      if((out.SampleTime % 3600000) != 3599999) return;
+//      AccActive = AccActive / 4.0;
+//      AccReactive = AccReactive / 4.0;
+//    }
+//    if(SaveSampleTime) Result["Sampletime"].push_back(out.SampleTime);
+//    if(SaveActive)     Result["Active_Power"].push_back(AccActive);
+//    if(SaveReactive)   Result["Reactive_Power"].push_back(AccReactive);
+//    if(SaveExpense)    Result["Expense"].push_back(AccCost);
+//    AccActive   = 0.0;
+//    AccReactive = 0.0;
+//    AccCost     = 0.0;
+//  });
+//  Eval.SetBillCallback([&](const json &out) {
+//    if(SaveBills == true) Result["Bills"].push_back(out);
+//  });
+
+
+
+
+  //const json &t, const time_zone &timezone, const uint64_t from, const uint64_t to, const bool precise
+
+
+/*
 RatesEval::~RatesEval() {
   UnloadRate();
 }
@@ -26,13 +178,39 @@ json RatesEval::CheckConfig(const json &r) {
 
 
 
-uint64_t RatesEval::StartDate() {
-  return pFrom;
-}
-uint64_t RatesEval::EndDate() {
-  return pTo;
-}
+
 uint64_t RatesEval::FindStart(const uint64_t from, bool precise) {
+
+
+  uint64_t CalcFrom = (From / 3600000) * 3600000 + 899999;
+  Rate *CurrentRate = NULL;
+  vector<uint64_t>::iterator  BillPtr;
+  if(Precise == true) {
+    RateDB.ExecSentenceAsyncResult("SELECT jsonb_build_object('Name', name, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy')) || template::jsonb AS result FROM rates WHERE ordering = " + RateDB.Bind(Group) + " AND " +
+                                   "enddate >= " + RateDB.Bind(format("%Y-%m-%d", chrono::system_clock::time_point(chrono::milliseconds(From)), utc_time_zone())) + " " +
+                                   "startdate <= " + RateDB.Bind(format("%Y-%m-%d", chrono::system_clock::time_point(chrono::milliseconds(To)), utc_time_zone())) + " " +
+                                   "ORDER BY startdate ASC");
+    while(RateDB.FecthRow()) {
+      CurrentRate = new Rate(RateDB.ResultJSON("result"), pTimeZone);
+      if(CurrentRate->EndDate > CalcFrom) {
+        delete CurrentRate;
+        CurrentRate = NULL;
+        break;
+      }
+      CalcFrom = CurrentRate->StartDate + 899999;
+      for(BillPtr = CurrentRate->BillingCycles.begin(); BillPtr != CurrentRate->BillingCycles.end(); BillPtr++) {
+        if(*BillPtr > CalcFrom) break;
+        CalcFrom = *BillPtr + 900000;
+      }
+      if(BillPtr != CurrentRate->BillingCycles.end()) break;
+    }
+  }
+
+
+
+
+
+
   uint64_t Time = (from / 3600000) * 3600000 + 899999;
   if(precise == false) return Time;
   for(uint16_t R = 0; R < pRates.size(); R++) {
@@ -271,11 +449,6 @@ json RatesEval::BuildBill(bool complete) {
   Result["Total"] = Total + Tmp;
   return Result;
 }
-void RatesEval::PushSample(const uint64_t time, const float active, const float reactive) {
-  uint64_t Time = (time / 900000) * 900000 + 899999;
-  while(pCurrent < Time) HandleSample(0.0, 0.0);
-  HandleSample(active, reactive);
-}
 void RatesEval::Finish() {
   while(pCurrent < pTo) HandleSample(0.0, 0.0);
   if(pPeriods.size() > 0) {
@@ -292,3 +465,4 @@ void RatesEval::SetSampleCallback(function<void(const SampleOut_t &)> sampleOut)
 void RatesEval::SetBillCallback(function<void(const json &)> billOut) {
   pBillCallback = billOut;
 }
+*/

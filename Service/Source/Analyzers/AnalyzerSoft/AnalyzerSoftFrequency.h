@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <inttypes.h>
+#include "AnalyzerSoftBlock.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftFrequency final {
   private :
@@ -29,11 +30,12 @@ class AnalyzerSoftFrequency final {
     uint16_t                   pMinCycle;                //Minimum cycle len
     uint16_t                   pMaxCycle;                //Maximun cycle len
     uint32_t                   pBufferLen;               //Total length of valid cycles
+  private :
+    void  PushCycle(const uint16_t len);
   public :
     AnalyzerSoftFrequency(const float samplerate);
     ~AnalyzerSoftFrequency();
     void  Config(const float freq);
-    void  PushCycle(const uint16_t len);
-    float Frequency() const;
+    float Frequency(const AnalyzerSoftBlock *block);
 };
 // ---------------------------------------------------------------------------------------------------------------------

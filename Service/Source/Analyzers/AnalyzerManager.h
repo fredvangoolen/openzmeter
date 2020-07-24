@@ -31,9 +31,11 @@ class AnalyzerManager final {
     static void GetAnalyzersCallback(const json &params, Response &response);
     static void GetAnalyzerCallback(const json &params, Response &response);
     static void SetAnalyzerCallback(const json &params, Response &response);
+    static void GetStatusCallback(const json &params, Response &response);
     static void GetSeriesCallback(const json &params, Response &response);
     static void GetSeriesNowCallback(const json &params, Response &response);
-    static void GetPricesCallback(const json &params, Response &response);
+    static void GetCostsCallback(const json &params, Response &response);
+    static void GetBillsCallback(const json &params, Response &response);
     static void GetWaveStream(const json &params, Response &response);
     static void GetSeriesRangeCallback(const json &params, Response &response);
     static void DelSeriesRangeCallback(const json &params, Response &response);

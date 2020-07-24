@@ -44,4 +44,10 @@ class AnalyzerSoftSync {
     } Sync_t;
     static void *Sync_Thread(void *params);
     static void *Sync_RespThread(void *params);
+
+public :
+  static json CheckConfig(const json &config);
+  public :
+    void Config(const json &config);
+
 };

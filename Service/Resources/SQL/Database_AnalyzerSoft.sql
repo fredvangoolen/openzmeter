@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS rates (
   id            character varying NOT NULL PRIMARY KEY,
   name          character varying NOT NULL,
   ordering      smallint          NOT NULL,
-  startdate     character varying NOT NULL,
-  enddate       character varying NOT NULL,
+  startdate     date              NOT NULL,
+  enddate       date              NOT NULL,
   template      jsonb             NOT NULL
 ) WITH (OIDS=FALSE);

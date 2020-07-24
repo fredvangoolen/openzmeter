@@ -53,13 +53,13 @@ class AnalyzerSoftBlock {
   public :
     AnalyzerSoftBlock(const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftBlock();
-    void         Config(const float nominalFreq);
-    AppendResult PushSample(float *voltageSamples, float *currentSamples);
-    uint16_t     BlockSamples() const;
-    uint8_t      Cycles() const;
-    uint16_t     CycleLen(const uint8_t cycle) const;
-    uint16_t     LastCycleLen() const;
-    float        VoltageSample(const uint8_t ch, const uint16_t sample) const;
-    float        CurrentSample(const uint8_t ch, const uint16_t sample) const;
+    void      Config(const float nominalFreq);
+    bool      PushSample(float *voltageSamples, float *currentSamples);
+    uint16_t  BlockSamples() const;
+    uint8_t   Cycles() const;
+    uint16_t  CycleLen(const uint8_t cycle) const;
+    float     VoltageSample(const uint8_t ch, const uint16_t sample) const;
+    float     CurrentSample(const uint8_t ch, const uint16_t sample) const;
+    bool      GetSeriesNow(const string &serie, json &result);
 };
 // ---------------------------------------------------------------------------------------------------------------------

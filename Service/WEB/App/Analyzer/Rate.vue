@@ -27,6 +27,7 @@
       </vuetable>
     </div>
     <div v-if="Rate.Periods!=null">
+      <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null" v-html="Error"></div>
       <div class="row" v-if="View=='Main'">
         <div class="col-xs-8">
           <label class="control-label">Name</label>
@@ -251,7 +252,7 @@
   export default {
     props: { analyzer: Object, rate: Object },
     data() {
-      return { View: 'Main', Rate: null, ShowSpinner: false, FilterTariffs: [], Tariffs: [], FilterTaxs: [], FilterCycles: [], FilterCycles: [], SelDate: null,
+      return { View: 'Main', Rate: null, ShowSpinner: false, FilterTariffs: [], Tariffs: [], FilterTaxs: [], FilterCycles: [], FilterCycles: [], SelDate: null, Error: null,
         BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th'],
         ColumnsTariffs: [
           { name: 'Name', title: 'Name' },

@@ -81,7 +81,7 @@ float AnalyzerSoftAggreg::PowerFactor(const uint8_t channel) const {
 }
 void AnalyzerSoftAggreg::Reset() {
   pFlag      = false;
-  pFrequency = NAN;
+  pFrequency = 0;
   pUnbalance = 0;
   pTimestamp = 0;
   memset(pVoltage, 0, sizeof(pVoltage));
@@ -103,7 +103,7 @@ void AnalyzerSoftAggreg::Reset() {
 void AnalyzerSoftAggreg::Accumulate(const AnalyzerSoftAggreg *src) {
   pFrequency += src->pFrequency;
   pUnbalance += src->pUnbalance;
-  pFlag |= src->pFlag;
+  pFlag      |= src->pFlag;
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage[n] += pow(src->pVoltage[n], 2.0);
   for(uint8_t n = 0; n < pCurrentChannels; n++)        pCurrent[n] += pow(src->pCurrent[n], 2.0);
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pActive_Power[n] += src->pActive_Power[n];

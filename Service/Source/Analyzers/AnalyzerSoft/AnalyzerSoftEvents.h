@@ -17,6 +17,7 @@
 #include <list>
 #include <inttypes.h>
 #include "AnalyzerSoftEvent.h"
+#include "AnalyzerSoftBlock.h"
 #include "HTTPChunkedWriter.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
@@ -41,6 +42,10 @@ class AnalyzerSoftEvents final {
   public :
     AnalyzerSoftEvents(const string &serial);
     ~AnalyzerSoftEvents();
+        void Config(const bool enalbed);
+
+    void Run(const AnalyzerSoftBlock *block);
+    void Wait();
     void GetEvents(const json &params, Response &response);
     void GetEventsRange(const json &params, Response &response);
     void DelEventsRange(const json &params, Response &response);

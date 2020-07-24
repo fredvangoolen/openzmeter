@@ -32,6 +32,8 @@ class AnalyzerSoftAlarms final {
   public :
     AnalyzerSoftAlarms(const string &serial);
     ~AnalyzerSoftAlarms();
+    void Config(const bool enalbed);
+
     void Run(const AnalyzerSoftAggreg *params);
     void Wait();
     void TestAlarm(const json &params, Response &response);

@@ -24,48 +24,52 @@ map<string, Analyzer*>  AnalyzerManager::pAnalyzers;
 RWLocks                 AnalyzerManager::pAnalyzersLock;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerManager::AnalyzerManager() {
-  HTTPServer::RegisterCallback("getAnalyzers",   GetAnalyzersCallback);
-  HTTPServer::RegisterCallback("getAnalyzer",    GetAnalyzerCallback);
-  HTTPServer::RegisterCallback("setAnalyzer",    SetAnalyzerCallback);
-  HTTPServer::RegisterCallback("getSeries",      GetSeriesCallback);
-  HTTPServer::RegisterCallback("getSeriesNow",   GetSeriesNowCallback);
-  HTTPServer::RegisterCallback("getPrices",      GetPricesCallback);
-  HTTPServer::RegisterCallback("getWaveStream",  GetWaveStream);
-  HTTPServer::RegisterCallback("getSeriesRange", GetSeriesRangeCallback);
-  HTTPServer::RegisterCallback("delSeriesRange", DelSeriesRangeCallback);
-  HTTPServer::RegisterCallback("getEvents",      GetEventsCallback);
-  HTTPServer::RegisterCallback("getEventsRange", GetEventsRangeCallback);
-  HTTPServer::RegisterCallback("delEventsRange", DelEventsRangeCallback);
-  HTTPServer::RegisterCallback("getEvent",       GetEventCallback);
-  HTTPServer::RegisterCallback("setEvent",       SetEventCallback);
-  HTTPServer::RegisterCallback("delEvent",       DelEventCallback);
-  HTTPServer::RegisterCallback("listAlarms",     ListAlarmsCallback);
-  HTTPServer::RegisterCallback("testAlarm",      TestAlarmCallback);
-  HTTPServer::RegisterCallback("getAlarms",      GetAlarmsCallback);
-  HTTPServer::RegisterCallback("addAlarm",       AddAlarmCallback);
-  HTTPServer::RegisterCallback("getAlarm",       GetAlarmCallback);
-  HTTPServer::RegisterCallback("setAlarm",       SetAlarmCallback);
-  HTTPServer::RegisterCallback("delAlarm",       DelAlarmCallback);
-  HTTPServer::RegisterCallback("getAlarmsRange", GetAlarmsRangeCallback);
-  HTTPServer::RegisterCallback("delAlarmsRange", DelAlarmsRangeCallback);
-  HTTPServer::RegisterCallback("getRates",       GetRatesCallback);
-  HTTPServer::RegisterCallback("getRate",        GetRateCallback);
-  HTTPServer::RegisterCallback("addRate",        AddRateCallback);
-  HTTPServer::RegisterCallback("setRate",        SetRateCallback);
-  HTTPServer::RegisterCallback("delRate",        DelRateCallback);
-  HTTPServer::RegisterCallback("getPermissions", GetPermissionsCallback);
-  HTTPServer::RegisterCallback("addPermission",  AddPermissionCallback);
-  HTTPServer::RegisterCallback("setPermission",  SetPermissionCallback);
-  HTTPServer::RegisterCallback("delPermission",  DelPermissionCallback);
+  HTTPServer::RegisterCallback("getAnalyzers",    GetAnalyzersCallback);
+  HTTPServer::RegisterCallback("getAnalyzer",     GetAnalyzerCallback);
+  HTTPServer::RegisterCallback("setAnalyzer",     SetAnalyzerCallback);
+  HTTPServer::RegisterCallback("getStatus",       GetStatusCallback);
+  HTTPServer::RegisterCallback("getSeries",       GetSeriesCallback);
+  HTTPServer::RegisterCallback("getSeriesNow",    GetSeriesNowCallback);
+  HTTPServer::RegisterCallback("getCosts",        GetCostsCallback);
+  HTTPServer::RegisterCallback("getBills",        GetBillsCallback);
+  HTTPServer::RegisterCallback("getWaveStream",   GetWaveStream);
+  HTTPServer::RegisterCallback("getSeriesRange",  GetSeriesRangeCallback);
+  HTTPServer::RegisterCallback("delSeriesRange",  DelSeriesRangeCallback);
+  HTTPServer::RegisterCallback("getEvents",       GetEventsCallback);
+  HTTPServer::RegisterCallback("getEventsRange",  GetEventsRangeCallback);
+  HTTPServer::RegisterCallback("delEventsRange",  DelEventsRangeCallback);
+  HTTPServer::RegisterCallback("getEvent",        GetEventCallback);
+  HTTPServer::RegisterCallback("setEvent",        SetEventCallback);
+  HTTPServer::RegisterCallback("delEvent",        DelEventCallback);
+  HTTPServer::RegisterCallback("listAlarms",      ListAlarmsCallback);
+  HTTPServer::RegisterCallback("testAlarm",       TestAlarmCallback);
+  HTTPServer::RegisterCallback("getAlarms",       GetAlarmsCallback);
+  HTTPServer::RegisterCallback("addAlarm",        AddAlarmCallback);
+  HTTPServer::RegisterCallback("getAlarm",        GetAlarmCallback);
+  HTTPServer::RegisterCallback("setAlarm",        SetAlarmCallback);
+  HTTPServer::RegisterCallback("delAlarm",        DelAlarmCallback);
+  HTTPServer::RegisterCallback("getAlarmsRange",  GetAlarmsRangeCallback);
+  HTTPServer::RegisterCallback("delAlarmsRange",  DelAlarmsRangeCallback);
+  HTTPServer::RegisterCallback("getRates",        GetRatesCallback);
+  HTTPServer::RegisterCallback("getRate",         GetRateCallback);
+  HTTPServer::RegisterCallback("addRate",         AddRateCallback);
+  HTTPServer::RegisterCallback("setRate",         SetRateCallback);
+  HTTPServer::RegisterCallback("delRate",         DelRateCallback);
+  HTTPServer::RegisterCallback("getPermissions",  GetPermissionsCallback);
+  HTTPServer::RegisterCallback("addPermission",   AddPermissionCallback);
+  HTTPServer::RegisterCallback("setPermission",   SetPermissionCallback);
+  HTTPServer::RegisterCallback("delPermission",   DelPermissionCallback);
 }
 AnalyzerManager::~AnalyzerManager() {
   LogFile::Debug("Stopping AnalyzerManager");
   HTTPServer::UnregisterCallback("getAnalyzers");
   HTTPServer::UnregisterCallback("getAnalyzer");
   HTTPServer::UnregisterCallback("setAnalyzer");
+  HTTPServer::UnregisterCallback("getStatus");
   HTTPServer::UnregisterCallback("getSeries");
   HTTPServer::UnregisterCallback("getSeriesNow");
-  HTTPServer::UnregisterCallback("getPrices");
+  HTTPServer::UnregisterCallback("getCosts");
+  HTTPServer::UnregisterCallback("getBills");
   HTTPServer::UnregisterCallback("getWaveStream");
   HTTPServer::UnregisterCallback("getSeriesRange");
   HTTPServer::UnregisterCallback("delSeriesRange");
@@ -164,14 +168,20 @@ void AnalyzerManager::GetAnalyzerCallback(const json &params, Response &response
 void AnalyzerManager::SetAnalyzerCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::SetAnalyzer);
 }
+void AnalyzerManager::GetStatusCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Analyzer::GetStatus);
+}
 void AnalyzerManager::GetSeriesCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::GetSeries);
 }
 void AnalyzerManager::GetSeriesNowCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::GetSeriesNow);
 }
-void AnalyzerManager::GetPricesCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetPrices);
+void AnalyzerManager::GetCostsCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Analyzer::GetCosts);
+}
+void AnalyzerManager::GetBillsCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Analyzer::GetBills);
 }
 void AnalyzerManager::GetWaveStream(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::GetWaveStream);

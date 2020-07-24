@@ -22,7 +22,6 @@ class AnalyzerSoftAggreg200MS final : public AnalyzerSoftAggreg {
     ~AnalyzerSoftAggreg200MS();
     void  Save() const;
     void  Reset();
-    bool  AppendToJSON(const string &serie, json &result) const;
     void  setFlag(const bool val);
     void  setTimestamp(const uint64_t time);
     void  setFrequency(const float val);
@@ -42,5 +41,6 @@ class AnalyzerSoftAggreg200MS final : public AnalyzerSoftAggreg {
     void  setVoltagePhase(const uint8_t channel, const float val);
     void  setPhi(const uint8_t channel, const float val);
     void  setPowerFactor(const uint8_t channel, const float val);
+    bool  GetSeriesNow(const string &serie, json &result) const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

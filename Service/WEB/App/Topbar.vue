@@ -8,7 +8,7 @@
         <div data-toggle="tooltip" :title="'Disk usage: ' + SDTip" v-if="SDUse != null"><img :src="require('Imgs/sd_memory_adapter.png')">{{ SDUse }}</div>
         <div data-toggle="tooltip" :title="'RAM usage: ' + RAMTip" v-if="RAMUse != null"><img :src="require('Imgs/ddr_memory.png')">{{ RAMUse }}</div>
         <div><img :src="require('Imgs/chip.png')" v-if="CPUUse != null">{{ CPUUse }}</div>
-        <div data-toggle="tooltip" :title="'WiFi network: ' + WIFINetwork" v-if="WIFINetwork != null"><img :src="require('Imgs/network_wireless.png')">{{ WIFIPower }}</div>
+        <div data-toggle="tooltip" :title="'WiFi network: ' + WIFINetwork" v-if="WIFIPower != null"><img :src="require('Imgs/network_wireless.png')">{{ WIFIPower }}</div>
         <div data-status="tooltip" :title="'Battery status: ' + BatteryStatus" v-if="BatteryLevel != null"><img :src="require('Imgs/battery.png')">{{ BatteryLevel }}</div>
         <div v-if="Temp != null"><img :src="require('Imgs/temperature_normal.png')">{{ Temp }}</div>
       </div>
@@ -31,55 +31,59 @@
     props: { analyzer: Object, expanded: Boolean },
     data () {
       return { Grouped: false,
-               Transfer1: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY', 'SYS_STATS']),
-               Transfer2: this.CreateSeriesTransfer(this, ['ACTIVE_POWER']) };
+               Transfer1: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
+               Transfer2: this.CreateSeriesTransfer(this, ['ACTIVE_POWER']),
+               Transfer3: this.CreateSeriesTransfer(this, ['SYSTEM']) };
     },
     created: function() {
       this.Transfer1.UpdateNow(this.analyzer);
       this.Transfer2.Update(this.analyzer, '15M', 'Day');
+      this.Transfer3.UpdateStatus(this.analyzer);
     },
     beforeDestroy: function() {
       this.Transfer1.Destroy();
       this.Transfer2.Destroy();
+      this.Transfer3.Destroy();
     },
     watch: {
       analyzer: function(analyzer) {
         this.$nextTick(() => {
           this.Transfer1.UpdateNow(this.analyzer);
           this.Transfer2.Update(this.analyzer, '15M', 'Day');
+          this.Transfer3.UpdateStatus(this.analyzer);
         });
       }
     },
     computed: {
       Uptime: function() {
-        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.UpTime != null)) ? moment.duration(this.Transfer1.Data.Sys_Stats.UpTime, "seconds").humanize() : null;
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.UpTime != null)) ? moment.duration(this.Transfer3.Data.System.UpTime, "seconds").humanize() : null;
       },
       Time: function() {
         return (this.Transfer1.Data != null) ? moment(this.Transfer1.Data.Sampletime).format('HH:mm:ss') : null;
       },
       SDTip: function() {
-        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.Disk_Total != null) && (this.Transfer1.Data.Sys_Stats.Disk_Usage != null)) ? this.BestUnitsBin(this.Transfer1.Data.Sys_Stats.Disk_Total * this.Transfer1.Data.Sys_Stats.Disk_Usage / 100.0) + ' of ' + this.BestUnitsBin(this.Transfer1.Data.Sys_Stats.Disk_Total) : null;
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Disk_Total != null) && (this.Transfer3.Data.System.Disk_Usage != null)) ? this.BestUnitsBin(this.Transfer3.Data.System.Disk_Total * this.Transfer3.Data.System.Disk_Usage / 100.0) + ' of ' + this.BestUnitsBin(this.Transfer3.Data.System.Disk_Total) : null;
       },
       SDUse: function() {
-        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.Disk_Usage != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.Disk_Usage) + '%' : null;
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Disk_Usage != null)) ? Math.round(this.Transfer3.Data.System.Disk_Usage) + '%' : null;
       },
       RAMTip: function() {
-        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.RAM_Total != null) && (this.Transfer1.Data.Sys_Stats.RAM_Usage != null)) ? this.BestUnitsBin(this.Transfer1.Data.Sys_Stats.RAM_Total * this.Transfer1.Data.Sys_Stats.RAM_Usage / 100.0) + ' of ' + this.BestUnitsBin(this.Transfer1.Data.Sys_Stats.RAM_Total) : null;
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.RAM_Total != null) && (this.Transfer3.Data.System.RAM_Usage != null)) ? this.BestUnitsBin(this.Transfer3.Data.System.RAM_Total * this.Transfer3.Data.System.RAM_Usage / 100.0) + ' of ' + this.BestUnitsBin(this.Transfer3.Data.System.RAM_Total) : null;
       },
       RAMUse: function() {
-        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.RAM_Usage != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.RAM_Usage) + '%' : null;
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.RAM_Usage != null)) ? Math.round(this.Transfer3.Data.System.RAM_Usage) + '%' : null;
       },
       CPUUse: function() {
-        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.CPU_Usage != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.CPU_Usage) + '%' : null;
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.CPU_Usage != null)) ? Math.round(this.Transfer3.Data.System.CPU_Usage) + '%' : null;
       },
       Temp: function() {
-        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.Temperature != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.Temperature) + '°' : null;
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Temperature != null)) ? Math.round(this.Transfer3.Data.System.Temperature) + '°' : null;
       },
       WIFINetwork: function() {
-        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.WIFI_Network != null)) ? this.Transfer1.Data.Sys_Stats.WIFI_Network : null;
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.WIFI_Network != null)) ? this.Transfer3.Data.System.WIFI_Network : null;
       },
       WIFIPower: function() {
-        return ((this.Transfer1.Data != null) && (this.Transfer1.Data.Sys_Stats.WIFI_Power != null)) ? Math.round(this.Transfer1.Data.Sys_Stats.WIFI_Power) + '%' : null;
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.WIFI_Power != null)) ? Math.round(this.Transfer3.Data.System.WIFI_Power) + '%' : null;
       },
       BatteryLevel: function() {
         return null;
