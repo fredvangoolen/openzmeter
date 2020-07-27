@@ -740,7 +740,7 @@ void AnalyzerSoft::Analyzer_Func() {
     }
     if (joltAlgorithm != NULL)
     {
-      joltAlgorithm->AddPoints(pVoltageSamples, pBlockSamples, pVoltageChannels, pSamplerate);
+      joltAlgorithm->AddPoints(pVoltageSamples, pMaxSamples, pBlockSamples, pVoltageChannels, pSamplerate);
     }
   }
   for(uint8_t j = 0; j < pVoltageChannels; j++) {

@@ -33,10 +33,8 @@ vector<float> JoltAlgorithm::ComputeDVDT(vector<float> input)
     return result;
 }
 
-void JoltAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate)
+void JoltAlgorithm::AddPoints(float *pVoltageSamples, size_t maxSamplesPerPhase, size_t usableSamplesPerPhase, uint8_t numPhases, float sampleRate)
 {
-    size_t numUsableSamplesPerPhase = min((size_t)sampleRate / 5, arrBlockSize);
-
     if (endTime - startTime > 60000)
     {
         //LOGFile::Warning("Logging JA data...\n");
@@ -64,12 +62,12 @@ void JoltAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
     {
         // Convert float pointer array to vector of floats
         vector<float> waveform;
-        for (size_t i = 0; i < (numUsableSamplesPerPhase - 1); i++)
+        for (size_t i = 0; i < (usableSamplesPerPhase - 1); i++)
         {
-            float sample = pVoltageSamples[(phaseNumber * arrBlockSize) + i];
+            float sample = pVoltageSamples[(phaseNumber * maxSamplesPerPhase) + i];
 
             // Look ahead at the next sample. If it also has a value of 0, then don't include any additional samples for this phase (to prevent any discontinuous jumps).
-            float sample_next = pVoltageSamples[(phaseNumber * arrBlockSize) + i + 1];
+            float sample_next = pVoltageSamples[(phaseNumber * maxSamplesPerPhase) + i + 1];
             if (sample == 0.0 && sample_next == 0.0)
             {
                 break;
@@ -79,7 +77,7 @@ void JoltAlgorithm::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8
                 waveform.push_back(sample);
 
                 // If the last iteration, make sure to include the very last sample
-                if (i == (numUsableSamplesPerPhase - 2))
+                if (i == (usableSamplesPerPhase - 2))
                 {
                     waveform.push_back(sample_next);
                 }

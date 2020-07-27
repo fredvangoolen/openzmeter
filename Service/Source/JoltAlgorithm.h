@@ -18,7 +18,7 @@ public:
     JoltAlgorithm(const string &analyzer_schema);
     ~JoltAlgorithm();
     vector<float> ComputeDVDT(vector<float> input);
-    void AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate);
+    void AddPoints(float *pVoltageSamples, size_t maxSamplesPerPhase, size_t usableSamplesPerPhase, uint8_t numPhases, float sampleRate);
     void WriteToDatabase();
     void ClearStats();
     json GetJoltData(uint64_t startTime, uint64_t endTime);
