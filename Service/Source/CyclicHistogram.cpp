@@ -74,9 +74,8 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
                 float voltage_current = pVoltageSamples[(arrBlockSize * phaseNumber) + i];
                 float voltage_next = pVoltageSamples[(arrBlockSize * phaseNumber) + i + 1]; // Look-ahead to next voltage
 
-                /*
                 // Look ahead at the next sample. If it also has a value of 0, then don't include any additional samples for this phase (to prevent any discontinuous jumps).+
-                if (voltage_current == 0.0 && voltage_next == 0.0)
+                if ((phaseNumber == 0) && (voltage_current == 0.0) && (voltage_next == 0.0))
                 {
                     LOGFile::Warning("[CH] Skipping future data points due to multiple 0 samples.\n");
                     LOGFile::Warning((to_string(phaseNumber) + "\n").c_str());
@@ -85,6 +84,7 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
                     LOGFile::Warning((to_string(i + 1) + " > " + to_string(voltage_next) + "\n").c_str());
                     return;
                 }
+                /*
                 else if (abs((voltage_next - voltage_current) > 10))
                 {
                     // Don't record rapid changes in voltage (i.e. discontinuous, unrealistic jumps in samples)
