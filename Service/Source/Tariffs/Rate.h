@@ -35,7 +35,7 @@ class Rate final : public Tariff {
     string             EnergyCostScript;
     vector<float>      EnergyCost;
     uint64_t           StartDate;
-    string             pPriceSource;
+    string             PriceSrc;
     uint64_t           EndDate;
     vector<uint64_t>   BillingCycles;
     vector<RateTax>    Taxs;

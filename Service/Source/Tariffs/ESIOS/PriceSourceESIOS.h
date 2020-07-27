@@ -25,7 +25,6 @@ class PriceSourceESIOS final : public PriceSource {
    static  string       pQueryColumns;
   private :
     Database            pDB;
-    bool                pHaveData;
   private :
     static bool         Register();
     static PriceSource *CreateInstance();

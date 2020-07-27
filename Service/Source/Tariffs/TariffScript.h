@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <set>
+#include <list>
 #include <string>
 #include "muParser/muParser.h"
 // ---------------------------------------------------------------------------------------------------------------------
@@ -22,8 +23,19 @@ using namespace std;
 using namespace mu;
 // ---------------------------------------------------------------------------------------------------------------------
 class TariffScript final {
-
+  private :
+    Parser        pParser;
+    list<float>   pDefVariables;
+    string        pExpression;
+    bool          pInitialized;
   public :
     static string CheckConfig(const string &script, set<string> &variables);
+  private :
+    static float *VariableFactory(const char_type *name, void *params);
+  public :
+    TariffScript(const string &expr);
+    void  Var(const string &name, float *val);
+    float Var(const string &name);
+    float Eval();
 };
 // ---------------------------------------------------------------------------------------------------------------------

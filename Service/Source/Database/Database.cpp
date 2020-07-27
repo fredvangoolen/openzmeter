@@ -28,6 +28,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(const string &schema) {
   pResult    = NULL;
+  pLoadedRow = false;
   pDBConn    = DatabasePool::PopConnection();
   if(ExecSentenceNoResult("CREATE SCHEMA IF NOT EXISTS " + BindID(schema) + "; SET search_path TO " +  Bind(schema) + ", public") == false) {
     PQfinish(pDBConn);
@@ -40,6 +41,7 @@ Database::~Database() {
   if(pDBConn != NULL) DatabasePool::PushConnection(pDBConn);
 }
 bool Database::FecthRow() {
+  pLoadedRow = false;
   if(pResult != NULL) PQclear(pResult);
   if(pDBConn == NULL) return false;
   pResult = PQgetResult(pDBConn);
@@ -48,7 +50,11 @@ bool Database::FecthRow() {
     if(PQresultStatus(pResult) != PGRES_TUPLES_OK) LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   }
+  pLoadedRow = true;
   return true;
+}
+bool Database::LoadedRow() {
+  return pLoadedRow;
 }
 bool Database::ExecResource(const string &file) {
   size_t Len;

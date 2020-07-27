@@ -15,15 +15,20 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "TariffScript.h"
 // ---------------------------------------------------------------------------------------------------------------------
+TariffScript::TariffScript(const string &expr) {
+  pInitialized = false;
+  pExpression = expr;
+  pParser.SetVarFactory(VariableFactory, this);
+}
 string TariffScript::CheckConfig(const string &script, set<string> &variables) {
   typedef struct {
     set<string> *Variables;
     float        TmpVar;
   } Context_t;
   Context_t Context;
+  Parser    TmpParser;
   Context.TmpVar = 0;
   Context.Variables = &variables;
-  Parser   TmpParser;
   auto VariableFactory = [](const char_type *name, void *params) -> float* {
     Context_t *Tmp = (Context_t*)params;
     Tmp->Variables->insert(name);
@@ -39,4 +44,24 @@ string TariffScript::CheckConfig(const string &script, set<string> &variables) {
   }
   return "";
 }
+float TariffScript::Eval() {
+  if(pInitialized == false) {
+    pParser.SetExpr(pExpression);
+    pInitialized = true;
+  }
+  return pParser.Eval();
+}
+void TariffScript::Var(const string &name, float *val) {
+  pParser.DefineVar(name, val);
+}
+float TariffScript::Var(const string &name) {
+  auto Vars = pParser.GetVar();
+  auto Item = Vars.find(name);
+  return (Item == Vars.end()) ? 0.0 : *(Item->second);
+}
+float *TariffScript::VariableFactory(const char_type *name, void *params) {
+  TariffScript *Tmp = (TariffScript*)params;
+  Tmp->pDefVariables.push_back(0.0);
+  return &Tmp->pDefVariables.back();
+};
 // ---------------------------------------------------------------------------------------------------------------------

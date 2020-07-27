@@ -16,7 +16,6 @@
 #include <string.h>
 #include <math.h>
 #include "AnalyzerManager.h"
-#include "HTTPChunkedWriter.h"
 #include "HTTPServer.h"
 #include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
