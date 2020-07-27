@@ -95,9 +95,9 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t maxSamplesPerPhas
                 LOGFile::Warning((to_string(i + 1) + " > " + to_string(voltage_next) + "\n").c_str());
                 return;
             }
-            * /
+            */
 
-                float m = voltage_next - voltage_current;
+            float m = voltage_next - voltage_current;
             float b = voltage_current - (m * i); // b = y - (m * x)
 
             // Attempt to detect zero-crossing location
