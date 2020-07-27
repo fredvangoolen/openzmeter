@@ -15,7 +15,6 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "TariffManager.h"
 #include "Tariff.h"
-#include "HTTPChunkedWriter.h"
 // ---------------------------------------------------------------------------------------------------------------------
 TariffManager::TariffManager() {
   HTTPServer::RegisterCallback("getTariffs",     GetTariffsCallback);

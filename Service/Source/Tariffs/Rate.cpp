@@ -47,7 +47,7 @@ Rate::Rate(const json &config, const time_zone &tz) : Tariff(config) {
     if((Time > StartDate) && (Time < EndDate)) BillingCycles.emplace_back(Time);
   }
   sort(BillingCycles.begin(), BillingCycles.end());
-  pPriceSource = config["Module"];
+  PriceSrc = config["Module"];
 }
 json Rate::CheckConfig(const json &config, const bool primary) {
   json ConfigOUT = Tariff::CheckConfig(config);

@@ -30,6 +30,7 @@ class Database final {
     PGconn      *pDBConn;
     PGresult    *pResult;
     uint64_t     pLastTime;
+    bool         pLoadedRow;
   private :
     void     ClearAsync();
   public :
@@ -52,6 +53,7 @@ class Database final {
     bool     ExecSentenceAsyncResult(const string &sql);
     bool     ExecResource(const string &file);
     bool     FecthRow();
+    bool     LoadedRow();
     string   ResultString(const string &name) const;
     float    ResultFloat(const string &name) const;
     uint64_t ResultUInt64(const string &name) const;

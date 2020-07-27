@@ -26,96 +26,68 @@ using namespace mu;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftRatesEval final {
   public :
-//    typedef struct {
-//      uint64_t                          SampleTime;
-//      float                             ActivePower;
-//      float                             ActiveEnergy;
-//      float                             ReactivePower;
-//      float                             ReactiveEnergy;
-//      float                             Cost;
-//      uint16_t                          Period;
-//      float                             PeriodF;
-//      string                            Color;
-//      float                             ContractedPower;
-//      float                             EnergyCost;
-//      float                             PowerCost;
-//    } SampleOut_t;
+    enum SeriesMask {
+      SERIE_TIMESTAMP       = 0x0001,
+      SERIE_ACTIVE_POWER    = 0x0002,
+      SERIE_ACTIVE_ENERGY   = 0x0004,
+      SERIE_REACTIVE_POWER  = 0x0008,
+      SERIE_REACTIVE_ENERGY = 0x0010,
+      SERIE_COST            = 0x0020,
+      SERIE_PERIOD          = 0x0040,
+      SERIE_COLOR           = 0x0080,
+      SERIE_CONTRACTED      = 0x0100,
+      SERIE_BILL            = 0x0200,
+      SERIE_ENERGY_COST     = 0x0400,
+      SERIE_POWER_COST      = 0x0800
+    };
   private :
     typedef struct {
       Parser             Script;
       map<string, float> Variables;
     } LoadedPeriod_t;
   private :
-    string                              pSerial;
-    time_zone                           pTimeZone;
-    Database                           *pRateDB;
-    Database                           *pDataDB;
-
-
-
-
-
-    uint64_t                            pFrom;
-    uint64_t                            pTo;
-    uint64_t                            pNowDate;
-
-
-    uint64_t                            pLoadedPeriodDate;
-    uint64_t                            pCurrent;
-//    vector<Rate>::iterator              pRatePtr;
-    vector<TariffYear>::iterator        pYearPtr;
-    vector<uint64_t>::iterator          pBillPtr;
-    PriceSource                        *pPriceModule;
-//    SampleOut_t                         pSampleOut;
-    Parser                              pEnergyScript;
-    Parser                              pPowerScript;
-    Parser                              pScript;
-    map<string, float>                  pVariables;
-    map<string, float>                  pPriceVariables;
-    vector<LoadedPeriod_t>              pPeriods;
+    bool                          pFinished;          //Evaluation end flag
+    time_zone                     pTimeZone;          //Current datazone
+    uint64_t                      pFrom;              //Requested period start
+    uint64_t                      pTo;                //Requested period end
+    uint16_t                      pSeriesMask;        //Output series or 0 for bill mode
+    uint64_t                      pNowDate;           //Current system time
+    uint64_t                      pCurrent;           //Current evaluation time
+    uint64_t                      pLoadedPeriodDate;  //Active bill period start
+//    json                          pRow;               //Returned row
+    Database                     *pRateDB;            //Rate fetch connection
+    Database                     *pDataDB;            //Data fetch connection
+    Rate                         *pLoadedRate;        //Currently loaded Rate (if any)
+    vector<TariffYear>::iterator  pYearPtr;           //Active rate year
+    vector<uint64_t>::iterator    pBillPtr;           //Active rate bill date
+    TariffScript                 *pScript;            //Loaded rate script
+    vector<TariffScript*>         pPeriods;           //Loaded rate period scripts
+    PriceSource                  *pPriceModule;       //Active price module (if any)
+    TariffScript                 *pEnergyScript;      //Energy price calculator script (if any)
+    TariffScript                 *pPowerScript;       //Power price calculator script (if any)
+    map<string, float>            pPriceVariables;    //List of avaliable variables from price module
+    float                         pActivePower;       //Evaluated period active power
+    float                         pActiveEnergy;      //Evaluated period active energy
+    float                         pReactivePower;     //Evaluated period reactive power
+    float                         pReactiveEnergy;    //Evaluated period reactive energy
+    float                         pCost;              //Evaluated period total cost
+    float                         pPeriod;            //Evaluated period number (base 1)
+    string                        pColor;             //Evaluated period decoration color
+    float                         pContractedPower;   //Evaluated period contracted power
+    float                         pEnergyCost;        //Evaluated period energy cost
+    float                         pPowerCost;         //Evaluated period power cost
+    bool                          pBillDate;          //Evaluated period bill start
   private :
-    static float *VariableFactory(const char_type *name, void *params);
-//  private:
-//    function<void(const SampleOut_t &)> pSampleCallback;
-//    function<void(const json &)>        pBillCallback;
-  private :
-    void     LoadRate();
-    void     UnloadRate();
-    json     BuildBill(bool complete);
-    void     HandleSample(const float active, const float reactive);
-    uint64_t FindStart(const uint64_t from, bool precise);
-    uint64_t FindEnd(const uint64_t to, bool precise);
-
-//    void     PushSample(const uint64_t time, const float active, const float reactive);
-    void     Finish();
-//    void     SetPeriodCallback(function<void(const PeriodOut_t &)> periodOut);
-//    void     SetSampleCallback(function<void(const SampleOut_t &)> sampleOut);
-//    void     SetBillCallback(function<void(const json &)> billOut);
-
-
-
-
+    void LoadRate();
+    void UnloadRate();
+    json HandleSample();
+    void FindStart(const uint8_t group);
+    json BuildBill();
+    json BuildSample();
   public :
-//    static json CheckConfig(const json &t);
-  public :
-    AnalyzerSoftRatesEval(const string &serial, const time_zone &timezone);
-    ~AnalyzerSoftRatesEval();
-    void GetCosts(const json &params, Response &response);
-    void GetBills(const json &params, Response &response);
- };
- // ---------------------------------------------------------------------------------------------------------------------
-
-/*
-   friend class RatesEval;
-  private :
-    vector<Rate>                    pRates;
-    time_zone const                *pTimeZone;
-  private :
-    static float                    pTmpVar;
-  public :
-    static json CheckConfig(const json &t);
-    static json CheckTariffConfig(const json &t);
-    static json CheckRateConfig(const json &t);
-  public :
-    RateList(const json &t, const time_zone &timezone);
-    */
+    AnalyzerSoftRatesEval(const string &serial, const time_zone &tz, const uint64_t from, const uint64_t to, const uint8_t group, const uint16_t serieMask = 0);
+    virtual ~AnalyzerSoftRatesEval();
+    json Headers();
+    json FetchRow();
+};
+// ---------------------------------------------------------------------------------------------------------------------

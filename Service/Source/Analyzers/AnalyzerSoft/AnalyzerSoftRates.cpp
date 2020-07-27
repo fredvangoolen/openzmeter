@@ -14,39 +14,12 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftRates.h"
-#include "Rate.h"
 #include "AnalyzerSoftRatesEval.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftRates::AnalyzerSoftRates(const string &serial) {
   pSerial = serial;
 }
 AnalyzerSoftRates::~AnalyzerSoftRates() {
-}
-void AnalyzerSoftRates::InitEval(const string &serial, const time_zone &tz, Eval_t &eval, const uint64_t from, const uint64_t to, const uint8_t group, const uint16_t serieMask) {
-  eval.pTimeZone  = tz;
-  eval.SeriesMask = serieMask;
-  if(serieMask == 0) {
-    eval.Header = nullptr;
-  } else {
-    eval.Header = json::array();
-    if(serieMask & SERIE_TIMESTAMP)   eval.Header.push_back("Sampletime");
-    if(serieMask & SERIE_ACTIVE)      eval.Header.push_back("Active_Power");
-    if(serieMask & SERIE_REACTIVE)    eval.Header.push_back("Reactive_Power");
-    if(serieMask & SERIE_COST)        eval.Header.push_back("Cost");
-    if(serieMask & SERIE_POWER_COST)  eval.Header.push_back("Power_Cost");
-    if(serieMask & SERIE_ENERGY_COST) eval.Header.push_back("Energy_Cost");
-    if(serieMask & SERIE_PERIOD)      eval.Header.push_back("Period");
-    if(serieMask & SERIE_COLOR)       eval.Header.push_back("Color");
-    if(serieMask & SERIE_CONTRACTED)  eval.Header.push_back("Contracted");
-    if(serieMask & SERIE_BILL)        eval.Header.push_back("Bill");
-  }
-}
-bool AnalyzerSoftRates::EvalFetchRow(Eval_t &eval) {
-
-  return false;
-}
-void AnalyzerSoftRates::FreeEval(Eval_t &eval) {
-
 }
 void AnalyzerSoftRates::Config(const time_zone &tz) {
   pTimeZone = tz;
@@ -61,7 +34,7 @@ void AnalyzerSoftRates::GetRates(const json &params, Response &response) const {
       if(Items++ != 0) sink.os << ",\n  ";
       sink.os << DB.ResultString("result");
     }
-    sink.os << "[\n  ";
+    sink.os << "\n]";
     sink.done();
     return false;
   };
@@ -124,40 +97,46 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
   uint64_t From   = params["From"];
   uint64_t To     = params["To"];
   uint8_t  Group  = params["Group"];
-  uint16_t Series = SERIE_TIMESTAMP;
+  uint16_t Series = AnalyzerSoftRatesEval::SERIE_TIMESTAMP;
   for(uint8_t i = 0; i < params["Series"].size(); i++) {
     if(params["Series"][i].is_string() == false) {
       return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
     } else if(params["Series"][i] == "ACTIVE_POWER") {
-      Series |= SERIE_ACTIVE;
+      Series |= AnalyzerSoftRatesEval::SERIE_ACTIVE_POWER;
+    } else if(params["Series"][i] == "ACTIVE_ENERGY") {
+      Series |= AnalyzerSoftRatesEval::SERIE_ACTIVE_ENERGY;
     } else if(params["Series"][i] == "REACTIVE_POWER") {
-      Series |= SERIE_REACTIVE;
+      Series |= AnalyzerSoftRatesEval::SERIE_REACTIVE_POWER;
+    } else if(params["Series"][i] == "REACTIVE_ENERGY") {
+      Series |= AnalyzerSoftRatesEval::SERIE_REACTIVE_ENERGY;
     } else if(params["Series"][i] == "COST") {
-      Series |= SERIE_COST;
+      Series |= AnalyzerSoftRatesEval::SERIE_COST;
     } else if(params["Series"][i] == "POWER_COST") {
-      Series |= SERIE_POWER_COST;
+      Series |= AnalyzerSoftRatesEval::SERIE_POWER_COST;
     } else if(params["Series"][i] == "ENERGY_COST") {
-      Series |= SERIE_ENERGY_COST;
+      Series |= AnalyzerSoftRatesEval::SERIE_ENERGY_COST;
     } else if(params["Series"][i] == "NUMBER") {
-      Series |= SERIE_PERIOD;
+      Series |= AnalyzerSoftRatesEval::SERIE_PERIOD;
     } else if(params["Series"][i] == "COLOR") {
-      Series |= SERIE_COLOR;
+      Series |= AnalyzerSoftRatesEval::SERIE_COLOR;
     } else if(params["Series"][i] == "POWER_CONTRACTED") {
-      Series |= SERIE_CONTRACTED;
+      Series |= AnalyzerSoftRatesEval::SERIE_CONTRACTED;
     } else if(params["Series"][i] == "BILLS") {
-      Series |= SERIE_BILL;
+      Series |= AnalyzerSoftRatesEval::SERIE_BILL;
     } else {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
     }
   }
   auto Func = [=](uint64_t offset, DataSink &sink) -> bool {
-    Eval_t   Eval;
-    InitEval(pSerial, pTimeZone, Eval, From, To, Group, Series);
-    sink.os << "[\n  " << Eval.Header.dump();
-    while(EvalFetchRow(Eval) == true) sink.os << ",\n  " << Eval.Row.dump();
+    AnalyzerSoftRatesEval Eval(pSerial, pTimeZone, From, To, Group, Series);
+    sink.os << "[\n  " << Eval.Headers().dump();
+    while(true) {
+      json Result = Eval.FetchRow();
+      if(Result == nullptr) break;
+      sink.os << ",\n  " << Result.dump();
+    }
     sink.os << "\n]";
     sink.done();
-    FreeEval(Eval);
     return false;
   };
   response.set_chunked_content_provider("application/json", Func);
@@ -172,16 +151,16 @@ void AnalyzerSoftRates::GetBills(const json &params, Response &response) const {
   uint8_t  Group = params["Group"];
   auto Func = [=](uint64_t offset, DataSink &sink) -> bool {
     uint32_t Items = 0;
-    Eval_t   Eval;
-    InitEval(pSerial, pTimeZone, Eval, From, To, Group);
+    AnalyzerSoftRatesEval Eval(pSerial, pTimeZone, From, To, Group);
     sink.os << "[\n  ";
-    while(EvalFetchRow(Eval) == true) {
+    while(true) {
+      json Result = Eval.FetchRow();
+      if(Result == nullptr) break;
       if(Items++ != 0) sink.os << ",\n  ";
-      sink.os << Eval.Row.dump();
+      sink.os << Result.dump();
     }
     sink.os << "\n]";
     sink.done();
-    FreeEval(Eval);
     return false;
   };
   response.set_chunked_content_provider("application/json", Func);

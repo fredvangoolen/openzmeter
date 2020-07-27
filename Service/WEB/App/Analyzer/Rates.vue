@@ -55,7 +55,6 @@
       GetRates: function() {
         this.View = null;
         this.ShowSpinner = true;
-        this.ShowSpinner = true;
         if(this.analyzer == null) return;
         this.$http.post('getRates', { Analyzer: this.analyzer.Analyzer }).then(
           (result) => {

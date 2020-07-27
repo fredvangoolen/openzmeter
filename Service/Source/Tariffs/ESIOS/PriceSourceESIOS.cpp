@@ -35,11 +35,11 @@ PriceSource *PriceSourceESIOS::CreateInstance() {
 }
 void PriceSourceESIOS::PrepareRange(const uint64_t from, const uint64_t to) {
   pDB.ExecSentenceAsyncResult("SELECT " + pQueryColumns + " FROM esios WHERE timestamp >= " + pDB.Bind(from) + " AND timestamp <=" + pDB.Bind(to) + " ORDER BY timestamp ASC");
-  pHaveData = pDB.FecthRow();
+  pDB.FecthRow();
 }
 void PriceSourceESIOS::GetParams(const uint64_t sampletime, map<string, float> &vars) {
-  while((pHaveData == true) && ((pDB.ResultUInt64("timestamp") / 3600000) < (sampletime / 3600000))) pHaveData = pDB.FecthRow();
-  if((pHaveData == true) && ((pDB.ResultUInt64("timestamp") / 3600000) == (sampletime / 3600000))) {
+  while((pDB.LoadedRow() == true) && ((pDB.ResultUInt64("timestamp") / 3600000) < (sampletime / 3600000))) pDB.FecthRow();
+  if((pDB.LoadedRow() == true) && ((pDB.ResultUInt64("timestamp") / 3600000) == (sampletime / 3600000))) {
     for(uint16_t V = 0; V < ESIOSFetch::pVariables.size(); V++) {
       float Tmp = pDB.ResultFloat(ESIOSFetch::pVariables[V].VarName);
       vars[ESIOSFetch::pVariables[V].VarName] = isnan(Tmp) ? 0 : Tmp;
