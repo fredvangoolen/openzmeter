@@ -239,20 +239,27 @@ void CyclicHistogram::ResizeCumulativeCount(uint8_t phaseNumber, size_t newSize)
 
 json CyclicHistogram::GetCyclicHistogramForEvent(uint64_t event_starttime)
 {
+    string sentence = "";
     json result = json::object();
 
-    DB->ExecSentenceAsyncResult("SELECT id, event_starttime, starttime, endtime FROM cychist WHERE event_starttime = " + DB->Bind(event_starttime));
+    sentence = "SELECT id, event_starttime, starttime, endtime FROM cychist WHERE event_starttime = " + DB->Bind(event_starttime);
+    LOGFile::Warning((sentence + "\n").c_str());
+    DB->ExecSentenceAsyncResult(sentence);
     if (DB->FecthRow())
     {
+        LOGFile::Warning("  - Yay\n");
         result["id"] = stoi(DB->ResultString("id"));
         result["event_starttime"] = stol(DB->ResultString("event_starttime"));
         result["starttime"] = stol(DB->ResultString("starttime"));
         result["endtime"] = stol(DB->ResultString("endtime"));
     }
 
-    DB->ExecSentenceAsyncResult("SELECT json_build_object('id', COALESCE(ARRAY_AGG(id ORDER BY phase, x, y ASC), '{}'), 'phase', COALESCE(ARRAY_AGG(phase ORDER BY phase, x, y ASC), '{}'), 'sample', COALESCE(ARRAY_AGG(x ORDER BY phase, x, y ASC), '{}'), 'voltage_bin', COALESCE(ARRAY_AGG(y ORDER BY phase, x, y ASC), '{}'), 'count', COALESCE(ARRAY_AGG(count ORDER BY phase, x, y ASC), '{}')) AS points FROM cychist_point WHERE cychist_id = " + DB->ResultString("id"));
+    sentence = "SELECT json_build_object('id', COALESCE(ARRAY_AGG(id ORDER BY phase, x, y ASC), '{}'), 'phase', COALESCE(ARRAY_AGG(phase ORDER BY phase, x, y ASC), '{}'), 'sample', COALESCE(ARRAY_AGG(x ORDER BY phase, x, y ASC), '{}'), 'voltage_bin', COALESCE(ARRAY_AGG(y ORDER BY phase, x, y ASC), '{}'), 'count', COALESCE(ARRAY_AGG(count ORDER BY phase, x, y ASC), '{}')) AS points FROM cychist_point WHERE cychist_id = " + DB->ResultString("id");
+    LOGFile::Warning((sentence + "\n").c_str());
+    DB->ExecSentenceAsyncResult(sentence);
     if (DB->FecthRow())
     {
+        LOGFile::Warning("  - Yay\n");
         json points = json::parse(DB->ResultString("points"));
 
         json points_id = points["id"];
@@ -276,6 +283,7 @@ json CyclicHistogram::GetCyclicHistogramForEvent(uint64_t event_starttime)
         }
     }
 
+    LOGFile::Warning(result.dump().c_str());
     return result;
 }
 
