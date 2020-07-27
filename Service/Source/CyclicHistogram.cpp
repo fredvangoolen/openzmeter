@@ -24,7 +24,7 @@ CyclicHistogram::~CyclicHistogram()
     DB = NULL;
 }
 
-void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uint8_t numPhases, float sampleRate, float nominalFrequency)
+void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t maxSamplesPerPhase, size_t usableSamplesPerPhase, uint8_t numPhases, float sampleRate, float nominalFrequency)
 {
     uint32_t numSamplesCycle = sampleRate / nominalFrequency;
 
@@ -65,69 +65,67 @@ void CyclicHistogram::AddPoints(float *pVoltageSamples, size_t arrBlockSize, uin
     uint32_t cycleStartIdx = 0;
     float cycleXDiff = 0;
     // Find the index of each zero-crossing instance (from - to +)
-    for (uint32_t i = 0; i < arrBlockSize; i++)
+    for (uint32_t i = 0; i < (usableSamplesPerPhase - 1); i++)
     {
         for (uint8_t phaseNumber = 0; phaseNumber < numPhases; phaseNumber++)
         {
-            if (i < arrBlockSize - 1)
-            {
-                float voltage_current = pVoltageSamples[(arrBlockSize * phaseNumber) + i];
-                float voltage_next = pVoltageSamples[(arrBlockSize * phaseNumber) + i + 1]; // Look-ahead to next voltage
+            float voltage_current = pVoltageSamples[(maxSamplesPerPhase * phaseNumber) + i];
+            float voltage_next = pVoltageSamples[(maxSamplesPerPhase * phaseNumber) + i + 1]; // Look-ahead to next voltage
 
-                // Look ahead at the next sample. If it also has a value of 0, then don't include any additional samples for this phase (to prevent any discontinuous jumps).+
-                if ((phaseNumber == 0) && (voltage_current == 0.0) && (voltage_next == 0.0))
-                {
-                    LOGFile::Warning("[CH] Skipping future data points due to multiple 0 samples.\n");
-                    LOGFile::Warning((to_string(phaseNumber) + "\n").c_str());
-                    LOGFile::Warning((to_string(arrBlockSize) + "\n").c_str());
-                    LOGFile::Warning((to_string(i) + " > " + to_string(voltage_current) + "\n").c_str());
-                    LOGFile::Warning((to_string(i + 1) + " > " + to_string(voltage_next) + "\n").c_str());
-                    return;
-                }
-                /*
-                else if (abs((voltage_next - voltage_current) > 10))
-                {
-                    // Don't record rapid changes in voltage (i.e. discontinuous, unrealistic jumps in samples)
-                    LOGFile::Warning("[CH] Skipping future data points due to discontinuous jump in samples.\n");
-                    LOGFile::Warning((to_string(phaseNumber) + "\n").c_str());
-                    LOGFile::Warning((to_string(arrBlockSize) + "\n").c_str());
-                    LOGFile::Warning((to_string(abs((voltage_next - voltage_current) / voltage_current)) + "\n").c_str());
-                    LOGFile::Warning((to_string(i) + " > " + to_string(voltage_current) + "\n").c_str());
-                    LOGFile::Warning((to_string(i + 1) + " > " + to_string(voltage_next) + "\n").c_str());
-                    return;
-                }
-                */
+            // Look ahead at the next sample. If it also has a value of 0, then don't include any additional samples for this phase (to prevent any discontinuous jumps).+
+            /*
+            if ((phaseNumber == 0) && (voltage_current == 0.0) && (voltage_next == 0.0))
+            {
+                LOGFile::Warning("[CH] Skipping future data points due to multiple 0 samples.\n");
+                LOGFile::Warning((to_string(phaseNumber) + "\n").c_str());
+                LOGFile::Warning((to_string(maxSamplesPerPhase) + "\n").c_str());
+                LOGFile::Warning((to_string(usableSamplesPerPhase) + "\n").c_str());
+                LOGFile::Warning((to_string(i) + " > " + to_string(voltage_current) + "\n").c_str());
+                LOGFile::Warning((to_string(i + 1) + " > " + to_string(voltage_next) + "\n").c_str());
+                return;
+            }
+            else if (abs((voltage_next - voltage_current) > 10))
+            {
+                // Don't record rapid changes in voltage (i.e. discontinuous, unrealistic jumps in samples)
+                LOGFile::Warning("[CH] Skipping future data points due to discontinuous jump in samples.\n");
+                LOGFile::Warning((to_string(phaseNumber) + "\n").c_str());
+                LOGFile::Warning((to_string(arrBlockSize) + "\n").c_str());
+                LOGFile::Warning((to_string(abs((voltage_next - voltage_current) / voltage_current)) + "\n").c_str());
+                LOGFile::Warning((to_string(i) + " > " + to_string(voltage_current) + "\n").c_str());
+                LOGFile::Warning((to_string(i + 1) + " > " + to_string(voltage_next) + "\n").c_str());
+                return;
+            }
+            * /
 
                 float m = voltage_next - voltage_current;
-                float b = voltage_current - (m * i); // b = y - (m * x)
+            float b = voltage_current - (m * i); // b = y - (m * x)
 
-                // Attempt to detect zero-crossing location
-                if ((phaseNumber == 0) && (voltage_current < 0) && (voltage_current >= -0.05 * nominalVoltage) && (voltage_next > 0) && (voltage_next <= 0.05 * nominalVoltage))
+            // Attempt to detect zero-crossing location
+            if ((phaseNumber == 0) && (voltage_current < 0) && (voltage_current >= -0.05 * nominalVoltage) && (voltage_next > 0) && (voltage_next <= 0.05 * nominalVoltage))
+            {
+                foundFirstCycle = true;
+                cycleStartIdx = i;
+
+                // Find the x-diff variable (amount to shift the entire waveform by)
+                float x0 = (0 - b) / m; // x = -b / m (calculates x value where y-intercept is 0)
+                cycleXDiff = x0 - i;
+            }
+
+            if (foundFirstCycle)
+            {
+                float voltageNew = (m * (i + cycleXDiff)) + b;
+
+                // Don't attempt to add to cumulative count if the voltage is clipped
+                if (abs(voltageNew) <= nominalVoltage)
                 {
-                    foundFirstCycle = true;
-                    cycleStartIdx = i;
+                    // Convert voltage measurement into a discrete bin number (i.e. quantization)
+                    uint32_t binIndex = ((voltageNew + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
 
-                    // Find the x-diff variable (amount to shift the entire waveform by)
-                    float x0 = (0 - b) / m; // x = -b / m (calculates x value where y-intercept is 0)
-                    cycleXDiff = x0 - i;
-                }
-
-                if (foundFirstCycle)
-                {
-                    float voltageNew = (m * (i + cycleXDiff)) + b;
-
-                    // Don't attempt to add to cumulative count if the voltage is clipped
-                    if (abs(voltageNew) <= nominalVoltage)
+                    size_t sampleIdx = i - cycleStartIdx;
+                    if (sampleIdx < numSamplesCycle)
                     {
-                        // Convert voltage measurement into a discrete bin number (i.e. quantization)
-                        uint32_t binIndex = ((voltageNew + nominalVoltage) / (2 * nominalVoltage)) * (voltageBinSize - 1);
-
-                        size_t sampleIdx = i - cycleStartIdx;
-                        if (sampleIdx < numSamplesCycle)
-                        {
-                            // Perform the incremental count update
-                            cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
-                        }
+                        // Perform the incremental count update
+                        cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
                     }
                 }
             }

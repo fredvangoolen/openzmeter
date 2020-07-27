@@ -736,7 +736,7 @@ void AnalyzerSoft::Analyzer_Func() {
 
     if (cyclicHistogram != NULL)
     {
-      cyclicHistogram->AddPoints(pVoltageSamples, pBlockSamples, pVoltageChannels, pSamplerate, pNominalFrequency);
+      cyclicHistogram->AddPoints(pVoltageSamples, pMaxSamples, pBlockSamples, pVoltageChannels, pSamplerate, pNominalFrequency);
     }
     if (joltAlgorithm != NULL)
     {
