@@ -252,6 +252,7 @@ json CyclicHistogram::GetCyclicHistogramForEvent(uint64_t event_starttime)
         result["event_starttime"] = stol(DB->ResultString("event_starttime"));
         result["starttime"] = stol(DB->ResultString("starttime"));
         result["endtime"] = stol(DB->ResultString("endtime"));
+        LOGFile::Warning(result.dump().c_str());
     }
 
     sentence = "SELECT json_build_object('id', COALESCE(ARRAY_AGG(id ORDER BY phase, x, y ASC), '{}'), 'phase', COALESCE(ARRAY_AGG(phase ORDER BY phase, x, y ASC), '{}'), 'sample', COALESCE(ARRAY_AGG(x ORDER BY phase, x, y ASC), '{}'), 'voltage_bin', COALESCE(ARRAY_AGG(y ORDER BY phase, x, y ASC), '{}'), 'count', COALESCE(ARRAY_AGG(count ORDER BY phase, x, y ASC), '{}')) AS points FROM cychist_point WHERE cychist_id = " + DB->ResultString("id");
