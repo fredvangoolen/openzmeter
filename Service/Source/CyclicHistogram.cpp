@@ -249,8 +249,11 @@ json CyclicHistogram::GetCyclicHistogramForEvent(uint64_t event_starttime)
     {
         LOGFile::Warning("  - Yay\n");
         result["id"] = stoi(DB->ResultString("id"));
+        LOGFile::Warning(result.dump().c_str());
         result["event_starttime"] = stol(DB->ResultString("event_starttime"));
+        LOGFile::Warning(result.dump().c_str());
         result["starttime"] = stol(DB->ResultString("starttime"));
+        LOGFile::Warning(result.dump().c_str());
         result["endtime"] = stol(DB->ResultString("endtime"));
         LOGFile::Warning(result.dump().c_str());
     }
