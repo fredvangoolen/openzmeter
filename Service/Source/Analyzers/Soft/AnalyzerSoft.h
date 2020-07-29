@@ -195,6 +195,8 @@ class AnalyzerSoft final : public Analyzer {
     Worker                    *pCurrentFFTWorker[4];     //Current FFT worker
     Worker                    *pAlarmsWorker;            //Alarms detection worker
     Worker                    *pEventsWorker;            //Events detector
+    Worker                    *pCyclicHistogramWorker;   //Cyclic Histogram worker
+    Worker                    *pJoltWorker;              //Jolt worker
   private : //Alarms related (should be locked)
     vector<Alarm_t>            pAlarms;                  //Alarms control object
   private : //Events related (only acceded inside analyzer thread)
@@ -241,6 +243,8 @@ class AnalyzerSoft final : public Analyzer {
   private :
     void Analyzer_Func();
     void Events_Func();
+    void CyclicHistogram_Func();
+    void Jolt_Func();
     void FFT_Func(FFTChannel_t *ch);
     void Alarms_Func(Params_t *aggreg);
     void Configure(const json &options);

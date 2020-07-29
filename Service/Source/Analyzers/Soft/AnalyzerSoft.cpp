@@ -68,6 +68,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pCurrentFFT       = NULL;
   pAlarmsWorker     = NULL;
   pEventsWorker     = NULL;
+  pCyclicHistogramWorker = NULL;
+  pJoltWorker = NULL;
   pFreqCycles       = NULL;
   pRateList         = NULL;
   pPrevSamples      = NULL;
@@ -92,7 +94,11 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
 
   // Setup cyclic histogram manager
   cyclicHistogram = new CyclicHistogram(id, 200, 1024);
+  pCyclicHistogramWorker = new Worker("CyclicHistogram", [&](void *a) { this->CyclicHistogram_Func(); });
+
+  // Setup jolt manager
   joltAlgorithm = new JoltAlgorithm(id);
+  pJoltWorker = new Worker("Jolt", [&](void *a) { this->Jolt_Func(); });
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LOGFile::Info("Stopping analyzer with serial '%s'\n", Serial.c_str());
@@ -103,6 +109,8 @@ AnalyzerSoft::~AnalyzerSoft() {
   if(pAnalyzerWorker != NULL) delete pAnalyzerWorker;
   if(pEventsWorker != NULL) delete pEventsWorker;
   if(pAlarmsWorker != NULL) delete pAlarmsWorker;
+  if(pCyclicHistogramWorker != NULL) delete pCyclicHistogramWorker;
+  if(pJoltWorker != NULL) delete pJoltWorker;
   if(pFreqCycles != NULL) free(pFreqCycles);
   if(pDelayVoltage != NULL) free(pDelayVoltage);
   if(pDelayCurrent != NULL) free(pDelayCurrent);
@@ -715,6 +723,8 @@ void AnalyzerSoft::Analyzer_Func() {
   uint64_t Start = Tools::GetTime64();
   pAggreg200MS.AggregSamples = 1;
   if(pEventsWorker != NULL) pEventsWorker->Run(NULL);
+  if(pCyclicHistogramWorker != NULL) pCyclicHistogramWorker->Run(NULL);
+  if(pJoltWorker != NULL) pJoltWorker->Run(NULL);
   pFFTSamples = (pBlockSamples / 2) + 1;
   for(uint8_t i = 0; i < pVoltageChannels; i++) pVoltageFFTWorker[i]->Run(&pVoltageFFTChannels[i]);
   for(uint8_t i = 0; i < pCurrentChannels; i++) pCurrentFFTWorker[i]->Run(&pCurrentFFTChannels[i]);
@@ -733,15 +743,6 @@ void AnalyzerSoft::Analyzer_Func() {
       Cycles++;
     }
     pAggreg200MS.Frequency = (Cycles == pFreqCyclesLen) ? pFreqCyclesLen / ((2.0 * Samples) / pSamplerate) : 0;
-
-    if (cyclicHistogram != NULL)
-    {
-      cyclicHistogram->AddPoints(pVoltageSamples, pMaxSamples, pBlockSamples, pVoltageChannels, pSamplerate, pNominalFrequency);
-    }
-    if (joltAlgorithm != NULL)
-    {
-      joltAlgorithm->AddPoints(pVoltageSamples, pMaxSamples, pBlockSamples, pVoltageChannels, pSamplerate);
-    }
   }
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
     float *ChV = &pVoltageSamples[j * pMaxSamples];
@@ -795,6 +796,8 @@ void AnalyzerSoft::Analyzer_Func() {
     pAggreg200MS.Current_THD[3] = (pAggreg200MS.Current_THD[3] / pAggreg200MS.Current_Harmonics[3 * 50]) * 100.0;
   }
   if(pEventsWorker != NULL) pEventsWorker->Wait();
+  if(pCyclicHistogramWorker != NULL) pCyclicHistogramWorker->Wait();
+  if(pJoltWorker != NULL) pJoltWorker->Wait();
   if(pSequence < 100) {
     LOGFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "\n", Serial.c_str(), Tools::GetTime64() - Start, pSequence);
     InitAggreg(pAggreg200MS, AGGREG_200MS);
@@ -1096,6 +1099,20 @@ void AnalyzerSoft::Events_Func() {
     pPrevStationary = Stationary && (pEvent.Type == EVT_NONE);
   }
   free(Buff);
+}
+void AnalyzerSoft::CyclicHistogram_Func()
+{
+  if (cyclicHistogram != NULL)
+  {
+    cyclicHistogram->AddPoints(pVoltageSamples, pMaxSamples, pBlockSamples, pVoltageChannels, pSamplerate, pNominalFrequency);
+  }
+}
+void AnalyzerSoft::Jolt_Func()
+{
+  if (joltAlgorithm != NULL)
+  {
+    joltAlgorithm->AddPoints(pVoltageSamples, pMaxSamples, pBlockSamples, pVoltageChannels, pSamplerate);
+  }
 }
 void AnalyzerSoft::FFT_Func(FFTChannel_t *ch) {
   pthread_mutex_lock(&pFFTMutex);
