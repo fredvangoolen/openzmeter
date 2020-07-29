@@ -21,7 +21,7 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="Active_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
-                  <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :showContracted="ShowContracted" :periods="TransferGraph.Periods" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
+                  <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :showContracted="ShowContracted" :periods="TransferGraph.Periods" :bills="TransferGraph.Bills" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -45,7 +45,7 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="Reactive_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
-                  <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></power>
+                  <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :bills="TransferGraph.Bills" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -69,7 +69,7 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="Apparent_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedApparent" class="panel-body">
-                  <power serie="Apparent_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedApparent?DialogHeight:AppaerentHeight" @range="Range=$event"></power>
+                  <power serie="Apparent_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :bills="TransferGraph.Bills" :height="ExpandedApparent?DialogHeight:AppaerentHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -116,13 +116,13 @@
                TransferNow: this.CreateSeriesTransfer(this, ['FREQUENCY', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'POWER_HARMONICS', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI', 'GA_POWER']),
                Transfer3S: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
                Transfer1M: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
-               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER', 'PERIOD_POWER_CONTRACTED', 'PERIOD_NUMBER', 'PERIOD_COLOR', 'BILLS']),
+               TransferGraph: this.PriceTransfer(['ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_CONTRACTED', 'PERIOD', 'COLOR', 'BILL']),
                TransferCubism: this.CreateSeriesTransfer(this, ['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'VOLTAGE', 'CURRENT', 'POWER_FACTOR', 'PHI'])
       };
     },
     created: function() {
       this.TransferGraph.AggregFail = () => { this.Aggreg = null };
-      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+      this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       this.TransferNow.UpdateNow(this.analyzer);
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
       this.Transfer1M.Update(this.analyzer, '1M', 'LastSamples');
@@ -137,17 +137,17 @@
     },
     watch: {
       analyzer: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
         this.TransferNow.UpdateNow(this.analyzer);
         this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
         this.Transfer1M.Update(this.analyzer, '1M', 'LastSamples');
         this.Transfer3S.Update(this.analyzer, '3S', 'LastSamples');
       },
       Aggreg: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
       Range: function(val, prev) {
-        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
       Paused: function() {
         if(this.Paused == true) {
