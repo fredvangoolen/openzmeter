@@ -59,15 +59,19 @@
         var Max = { Value: -Infinity, Time: 0, Count: 0 };
         var Value = 0;
         if(this.dataGraph == null) return Max;
-        for(var x in this.dataGraph.Sampletime) {
-          if((this.serie == 'Active_Power') && (this.dataGraph.Active_Power[x] == null)) continue;
-          if((this.serie == 'Reactive_Power') && (this.dataGraph.Reactive_Power[x] == null)) continue;
-          if((this.serie == 'Apparent_Power') && ((this.dataGraph.Active_Power[x] == null) || (this.dataGraph.Reactive_Power[x] == null))) continue;
-          if(this.serie == 'Active_Power') Value = this.dataGraph.Active_Power[x];
-          if(this.serie == 'Reactive_Power') Value = this.dataGraph.Reactive_Power[x];
-          if(this.serie == 'Apparent_Power') Value = Math.sqrt(Math.pow(this.dataGraph.Active_Power[x], 2.0) + Math.pow(this.dataGraph.Reactive_Power[x], 2.0));
+        var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
+        var ActiveCol = this.dataGraph.Headers.indexOf('Active_Power');
+        var ReactiveCol = this.dataGraph.Headers.indexOf('Reactive_Power');
+        var ContractedCol = this.dataGraph.Headers.indexOf('Power_Contracted');
+        for(var x in this.dataGraph.Rows) {
+          if((this.serie == 'Active_Power') && (this.dataGraph.Rows[x][ActiveCol] == null)) continue;
+          if((this.serie == 'Reactive_Power') && (this.dataGraph.Rows[x][ReactiveCol] == null)) continue;
+          if((this.serie == 'Apparent_Power') && ((this.dataGraph.Rows[x][ActiveCol] == null) || (this.dataGraph.Rows[x][ReactiveCol] == null))) continue;
+          if(this.serie == 'Active_Power') Value = this.dataGraph.Rows[x][ActiveCol];
+          if(this.serie == 'Reactive_Power') Value = this.dataGraph.Rows[x][ReactiveCol];
+          if(this.serie == 'Apparent_Power') Value = Math.sqrt(Math.pow(this.dataGraph.Rows[x][ActiveCol], 2.0) + Math.pow(this.dataGraph.Rows[x][ReactiveCol], 2.0));
           if(Value > Max.Value) {
-            Max = { Value: Value, Time: this.dataGraph.Sampletime[x], Count: 0 };
+            Max = { Value: Value, Time: this.dataGraph.Rows[x][TimeCol], Count: 0 };
           } else if(Value == Max.Value) {
             Max.Count++;
           }
@@ -78,15 +82,19 @@
         var Min = { Value: +Infinity, Time: 0, Count: 0 };
         var Value = 0;
         if(this.dataGraph == null) return Min;
-        for(var x in this.dataGraph.Sampletime) {
-          if((this.serie == 'Active_Power') && (this.dataGraph.Active_Power[x] == null)) continue;
-          if((this.serie == 'Reactive_Power') && (this.dataGraph.Reactive_Power[x] == null)) continue;
-          if((this.serie == 'Apparent_Power') && ((this.dataGraph.Active_Power[x] == null) || (this.dataGraph.Reactive_Power[x] == null))) continue;
-          if(this.serie == 'Active_Power') Value = this.dataGraph.Active_Power[x];
-          if(this.serie == 'Reactive_Power') Value = this.dataGraph.Reactive_Power[x];
-          if(this.serie == 'Apparent_Power') Value = Math.sqrt(Math.pow(this.dataGraph.Active_Power[x], 2.0) + Math.pow(this.dataGraph.Reactive_Power[x], 2.0));
+        var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
+        var ActiveCol = this.dataGraph.Headers.indexOf('Active_Power');
+        var ReactiveCol = this.dataGraph.Headers.indexOf('Reactive_Power');
+        var ContractedCol = this.dataGraph.Headers.indexOf('Power_Contracted');
+        for(var x in this.dataGraph.Rows) {
+          if((this.serie == 'Active_Power') && (this.dataGraph.Rows[x][ActiveCol] == null)) continue;
+          if((this.serie == 'Reactive_Power') && (this.dataGraph.Rows[x][ReactiveCol] == null)) continue;
+          if((this.serie == 'Apparent_Power') && ((this.dataGraph.Rows[x][ActiveCol] == null) || (this.dataGraph.Rows[x][ReactiveCol] == null))) continue;
+          if(this.serie == 'Active_Power') Value = this.dataGraph.Rows[x][ActiveCol];
+          if(this.serie == 'Reactive_Power') Value = this.dataGraph.Rows[x][ReactiveCol];
+          if(this.serie == 'Apparent_Power') Value = Math.sqrt(Math.pow(this.dataGraph.Rows[x][ActiveCol], 2.0) + Math.pow(this.dataGraph.Rows[x][ReactiveCol], 2.0));
           if(Value < Min.Value) {
-            Min = { Value: Value, Time: this.dataGraph.Sampletime[x], Count: 0 };
+            Min = { Value: Value, Time: this.dataGraph.Rows[x][TimeCol], Count: 0 };
           } else if(Value == Min.Value) {
             Min.Count++;
           }
