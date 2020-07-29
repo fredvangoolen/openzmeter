@@ -20,7 +20,7 @@
   import * as oZm from 'JS/openZmeter.js';
   var Names = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   export default {
-    props: { data: Object, analyzer: Object },
+    props: { data: Array, analyzer: Object },
     data: function() {
       return { Units: '', Columns: [], Months: [], Periods: [], ExportData: [] };
     },
@@ -37,13 +37,17 @@
       SetData: function() {
         this.Months = [];
         this.Periods = [];
+        if(this.data == null) return;
         var Max = 0.0;
-        for(var i in this.data.Active_Power) {
-          var Month = moment(this.data.Sampletime[i]).tz(this.analyzer.TimeZone).month();
-          if(this.Months[Month] === undefined) this.Months[Month] = { };
-          var Period = (this.data.Period_Number[i] === null) ? 'NONE' : 'P' + this.data.Period_Number[i];
+        var TimeCol = this.data[0].indexOf('Sampletime');
+        var PeriodCol = this.data[0].indexOf('Period');
+        var EnergyCol = this.data[0].indexOf('Active_Energy');
+        for(var i = 1; i < this.data.length; i++) {
+          var Month = moment(this.data[i][TimeCol]).tz(this.analyzer.TimeZone).month();
+          if(this.Months[Month] == null) this.Months[Month] = { };
+          var Period = (this.data[i][PeriodCol] === null) ? 'NONE' : 'P' + this.data[i][PeriodCol];
           if(this.Periods.includes(Period) === false) this.Periods.push(Period);
-          if(this.data.Active_Power[i] != null) this.Months[Month][Period] = (this.Months[Month][Period] == null) ? this.data.Active_Power[i] / 4.0 : this.Months[Month][Period] + this.data.Active_Power[i] / 4.0;
+          if(this.data[i][EnergyCol] != null) this.Months[Month][Period] = (this.Months[Month][Period] == null) ? this.data[i][EnergyCol] : this.Months[Month][Period] + this.data[i][EnergyCol];
         }
         var Max = 0;
         for(var Month in this.Months) {

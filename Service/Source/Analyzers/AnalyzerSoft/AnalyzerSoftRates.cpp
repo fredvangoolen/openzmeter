@@ -115,13 +115,13 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
       Series |= AnalyzerSoftRatesEval::SERIE_POWER_COST;
     } else if(params["Series"][i] == "ENERGY_COST") {
       Series |= AnalyzerSoftRatesEval::SERIE_ENERGY_COST;
-    } else if(params["Series"][i] == "NUMBER") {
+    } else if(params["Series"][i] == "PERIOD") {
       Series |= AnalyzerSoftRatesEval::SERIE_PERIOD;
     } else if(params["Series"][i] == "COLOR") {
       Series |= AnalyzerSoftRatesEval::SERIE_COLOR;
     } else if(params["Series"][i] == "POWER_CONTRACTED") {
       Series |= AnalyzerSoftRatesEval::SERIE_CONTRACTED;
-    } else if(params["Series"][i] == "BILLS") {
+    } else if(params["Series"][i] == "BILL") {
       Series |= AnalyzerSoftRatesEval::SERIE_BILL;
     } else {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);

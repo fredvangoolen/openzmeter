@@ -94,7 +94,9 @@
     },
     computed: {
       GraphOptions: function() {
+
         var Opt = { file: [], axes: { x: {}, y: {}, y2: {} }};
+        return Opt;
         Opt.interactionModel = Graph.InteractionModels.Fixed(this);
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;

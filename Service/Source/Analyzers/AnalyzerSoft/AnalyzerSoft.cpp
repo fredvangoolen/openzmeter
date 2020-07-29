@@ -156,6 +156,7 @@ void AnalyzerSoft::Configure(const json &options) {
     pInputBlock->Config(pNominalFrequency);
     pFFTs->Config((pNominalFrequency == 0.0) ? 1 : (pNominalFrequency == 50.0) ? 10 : 12);
   }
+  pRates->Config(pTimeZone);
   pAlarms->Config(options["AlarmsEnabled"]);
   pEvents->Config(options["EventsEnabled"]);
   pSync->Config(options["Sync"]);
@@ -372,12 +373,12 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
     if(pAggreg200MS->GetSeriesNow(params["Series"][i], Result) == true) continue;
     if(pFFTs->GetSeriesNow(params["Series"][i], Result) == true) continue;
     if(pInputBlock->GetSeriesNow(params["Series"][i], Result) == true) continue;
-//    } else if(params["Series"][i] == "GA_POWER") {
+    if(params["Series"][i] == "GA_POWER") {
 //      Result["GA_Power"] = CalcGA();
-//    } else {
-      pNowDataLock.ConsumerEnds();
-      return HTTPServer::FillResponse(response, "Unknown serie name", "application/json", HTTP_BAD_REQUEST);
-//    }
+      continue;
+    }
+    pNowDataLock.ConsumerEnds();
+    return HTTPServer::FillResponse(response, "Unknown serie name", "application/json", HTTP_BAD_REQUEST);
   }
   pNowDataLock.ConsumerEnds();
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);

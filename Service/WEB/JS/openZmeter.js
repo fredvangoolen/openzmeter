@@ -1,5 +1,88 @@
 const openZmeter = {
   install: function(Vue, options) {
+    Vue.prototype.PriceTransfer = (series) => {
+      var Transfer = { SingleShot: false, Timer: null, CancelFunc: null, Data: null, Periods: null, Bills: null, Series: series, Analyzer: null, Aggreg: null, Range: null, AggregFail: null };
+      Transfer.Destroy = () => {
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+      };
+      Transfer.SetData = (range, aggreg, data) => {
+        if(data == null) {
+          Transfer.Periods = null;
+          Transfer.Data = null;
+          Transfer.Bills = null;
+          return;
+        }
+        var Data = { Headers: data[0], Rows: data.slice(1), Aggreg: aggreg, From: range[0], To: range[1] };
+        Transfer.Data = Object.seal(Data);
+        var Bills = null;
+        if(Transfer.Series.includes('BILL')) {
+          Bills = [];
+          var BillCol = Data.Headers.indexOf('Bill');
+          var TimeCol = Data.Headers.indexOf('Sampletime');
+          for(var i in Data.Rows) {
+            if(Data.Rows[i][BillCol] == true) Bills.push(Data.Rows[i][TimeCol]);
+          }
+        }
+        Transfer.Bills = Object.seal(Bills);
+        var Periods = null;
+        if(Transfer.Series.includes('COLOR') || Transfer.Series.includes('PERIOD')) {
+          Periods = { Headers: [], Rows: [], Aggreg: aggreg };
+          Periods.Headers.push('Sampletime');
+          if(Transfer.Series.includes('PERIOD')) Periods.Headers.push('Period');
+          if(Transfer.Series.includes('COLOR')) Periods.Headers.push('Color');
+          var PeriodCol = Data.Headers.indexOf('Period');
+          var ColorCol = Data.Headers.indexOf('Color');
+          var TimeCol = Data.Headers.indexOf('Sampletime');
+          var LastItem = [];
+          if(PeriodCol != -1) LastItem.push(null);
+          if(ColorCol != -1) LastItem.push(null);
+          Periods.Rows.push([range[0]].concat(LastItem));
+          for(var i in Data.Rows) {
+            var Row = [];
+            if(PeriodCol != -1) Row.push((Data.Rows[i][PeriodCol] == null) ? null : 'P' + Data.Rows[i][PeriodCol]);
+            if(ColorCol != -1) Row.push(Data.Rows[i][ColorCol]);
+            if(JSON.stringify(LastItem) == JSON.stringify(Row)) continue;
+            LastItem = Row;
+            Periods.Rows.push([Data.Rows[i][TimeCol]].concat(LastItem));
+          }
+          if(LastItem.length > 0) Periods.Rows.push([Data.Rows.slice(-1)[0][TimeCol]].concat(LastItem));
+          LastItem = [];
+          if(PeriodCol != -1) LastItem.push(null);
+          if(ColorCol != -1) LastItem.push(null);
+          Periods.Rows.push([range[1]].concat(LastItem));
+        }
+        Transfer.Periods = Object.seal(Periods);
+      };
+      Transfer.Update = (analyzer, aggreg, range) => {
+        if((analyzer == null) || (aggreg == null) || (range == null)) return;
+        var Cancelled = false;
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+        var ReqRange = analyzer.CalcRange(range, aggreg);
+        if(aggreg == '1H') range[0] = (range[0] / 3600000) * 3600000;
+        if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetData(null);
+        Transfer.Analyzer  = analyzer;
+        Transfer.Aggreg    = aggreg;
+        Transfer.Range     = range;
+        Transfer.CancelFunc = () => { Cancelled = true; };
+        Vue.http.post('getCosts', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series, Group: 0 }).then(
+          (result) => {
+            if(Cancelled == true) return;
+            Transfer.SetData(ReqRange, aggreg, result.body);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
+          },
+          (fail) => {
+            if(Cancelled == true) return;
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
+          }
+        );
+      };
+      return Transfer;
+    };
+
+
+
     Vue.prototype.CreateSeriesTransfer = (parent, series) => {
       var Transfer = { This: parent, SingleShot: false, Timer: null, CancelFunc: null, Data: null, LastData: null, UpdateUnread: false, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null, AggregFail: null };
       Transfer.Destroy = () => {
@@ -48,33 +131,7 @@ const openZmeter = {
           }
         );
       };
-      Transfer.SetDataPrices = (data) => {
-        if((data != null) && (data.Period_Sampletime == null)) data.Period_Sampletime = data.Sampletime;
-        Transfer.Data = Object.seal(data);
-        if(data == null) {
-          Transfer.Periods = null;
-          return;
-        }
-        var Data = { Periods: [], Bills: [], Aggreg: data.Aggreg };
-        if(data.Bills != null) Data.Bills = data.Bills;
-        //Group periods
-        var LastItem = null;
-        for(var i = 0; i < data.Period_Sampletime.length; i++) {
-          var Name = (data.Period_Number[i] == null) ? null : 'P' + (data.Period_Number[i] + 1);
-          if(LastItem == null) {
-            LastItem = { Name: Name, From: data.Period_Sampletime[i] - 899999, To: data.Period_Sampletime[i], Color: data.Period_Color[i] };
-            continue;
-          }
-          if(Name == LastItem.Name) {
-            LastItem.To = data.Period_Sampletime[i];
-          } else {
-            Data.Periods.push(LastItem);
-            LastItem = { Name: Name, From: data.Period_Sampletime[i] - 899999, To: data.Period_Sampletime[i], Color: data.Period_Color[i] };
-          }
-        }
-        if(LastItem != null) Data.Periods.push(LastItem);
-        Transfer.Periods = Object.seal(Data);
-      };
+
       Transfer.SetData = (data) => {
         Transfer.Data = Object.seal(data);
         if((data == null) || (data.Sampletime.length == 0)) {
@@ -256,36 +313,6 @@ const openZmeter = {
           (fail) => {
             if(Cancelled == true) return;
             if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
-          }
-        );
-      };
-      Transfer.UpdatePrices = (analyzer, aggreg, range, precise) => {
-        if((analyzer == null) || (aggreg == null) || (range == null)) return;
-        var Cancelled = false;
-        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
-        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
-        if(precise == null) precise = false;
-        var ReqRange = analyzer.CalcRange(range, aggreg);
-        var Data = { };
-        if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetDataPrices(null);
-        Transfer.Analyzer  = analyzer;
-        Transfer.Aggreg    = aggreg;
-        Transfer.Range     = range;
-        Data.Aggreg        = aggreg;
-        Transfer.CancelFunc = () => { Cancelled = true; };
-        Transfer.This.$http.post('getPrices', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series, Precise: precise }).then(
-          (result) => {
-            if(Cancelled == true) return;
-            Data = Object.assign(Data, result.body);
-            Data.From = ReqRange[0];
-            Data.To = ReqRange[1];
-            Transfer.SetDataPrices(Data);
-            Transfer.Timer = setTimeout(() => { Transfer.UpdatePrices(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range, precise); }, 900000);
-          },
-          (fail) => {
-            if(Cancelled == true) return;
-            console.log(fail);
-            Transfer.Timer = setTimeout(() => { Transfer.UpdatePrices(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range, precise); }, 900000);
           }
         );
       };

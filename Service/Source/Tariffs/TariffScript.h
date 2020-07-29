@@ -34,6 +34,7 @@ class TariffScript final {
     static float *VariableFactory(const char_type *name, void *params);
   public :
     TariffScript(const string &expr);
+    ~TariffScript();
     void  Var(const string &name, float *val);
     float Var(const string &name);
     float Eval();

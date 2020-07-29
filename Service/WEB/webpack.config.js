@@ -1,7 +1,7 @@
 var path = require('path');
 var webpack = require('webpack');
-const CompressionPlugin = require('compression-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 module.exports = {
   entry: './main.js',
   output: {
@@ -12,7 +12,6 @@ module.exports = {
   plugins: [
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new VueLoaderPlugin(),
-    new CompressionPlugin({test: /\.js(\?.*)?$/i}),
     new webpack.ProvidePlugin({
     $: "jquery",
     jQuery: "jquery",
@@ -27,31 +26,29 @@ module.exports = {
           'vue-style-loader',
           'css-loader'
         ]
-      },      {
+      }, {
         test: /\.vue$/,
         loader: 'vue-loader',
         options: {
           loaders: {
           }
         }
-      },
-      {
+      }, {
         test: /\.js$/,
         loader: 'babel-loader',
         options: {
           compact: true
         },
         exclude: /node_modules/
-      },
-      {
+      }, {
         test: /\.(png|svg|woff2|ttf|eot|woff)$/i,
         use: [{
-            loader: 'url-loader',
-            options: {
-              limit: 80000,
-              esModule: false
-            }
-          }]
+          loader: 'url-loader',
+          options: {
+            limit: 80000,
+            esModule: false
+          }
+        }]
       }
     ]
   },

@@ -60,32 +60,32 @@
         this.Bills = null;
         var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
         var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getPrices', { From: From, To: To, Analyzer: this.analyzer.Analyzer, Aggreg: '15M', Precise: true, Series: ['BILLS', 'REACTIVE_POWER', 'ACTIVE_POWER', 'PERIOD_NUMBER', 'PERIOD_POWER_COST', 'PERIOD_ENERGY_COST', 'PERIOD_COLOR', 'PERIOD_POWER_CONTRACTED'] }).then(
+        this.$http.post('getBills', { From: From, To: To, Analyzer: this.analyzer.Analyzer, Aggreg: '15M', Group: 0, Series: ['BILLS', 'REACTIVE_POWER', 'ACTIVE_POWER', 'PERIOD_NUMBER', 'PERIOD_POWER_COST', 'PERIOD_ENERGY_COST', 'PERIOD_COLOR', 'PERIOD_POWER_CONTRACTED'] }).then(
           (result) => {
-            this.Bills = result.data.Bills;
+            this.Bills = result.data;
             var Sample = 0;
-            for(var Bill = 0; Bill < this.Bills.length; Bill++) {
-              this.Bills[Bill].Sampletime = [];
-              this.Bills[Bill].Active_Power = [];
-              this.Bills[Bill].Reactive_Power = [];
-              this.Bills[Bill].Period_Color = [];
-              this.Bills[Bill].Period_Energy_Cost = [];
-              this.Bills[Bill].Period_Number = [];
-              this.Bills[Bill].Period_Power_Contracted = [];
-              this.Bills[Bill].Period_Power_Cost = [];
-              for(; Sample < result.data.Sampletime.length; Sample++) {
-                if(result.data.Sampletime[Sample] < result.data.Bills[Bill].From) continue;
-                if(result.data.Sampletime[Sample] > result.data.Bills[Bill].To) break;
-                this.Bills[Bill].Sampletime.push(result.data.Sampletime[Sample]);
-                this.Bills[Bill].Active_Power.push(result.data.Active_Power[Sample]);
-                this.Bills[Bill].Reactive_Power.push(result.data.Reactive_Power[Sample]);
-                this.Bills[Bill].Period_Color.push(result.data.Period_Color[Sample]);
-                this.Bills[Bill].Period_Energy_Cost.push(result.data.Period_Energy_Cost[Sample]);
-                this.Bills[Bill].Period_Number.push(result.data.Period_Number[Sample]);
-                this.Bills[Bill].Period_Power_Contracted.push(result.data.Period_Power_Contracted[Sample]);
-                this.Bills[Bill].Period_Power_Cost.push(result.data.Period_Power_Cost[Sample]);
-              }
-            }
+//            for(var Bill = 0; Bill < this.Bills.length; Bill++) {
+//              this.Bills[Bill].Sampletime = [];
+//              this.Bills[Bill].Active_Power = [];
+//              this.Bills[Bill].Reactive_Power = [];
+//              this.Bills[Bill].Period_Color = [];
+//              this.Bills[Bill].Period_Energy_Cost = [];
+//              this.Bills[Bill].Period_Number = [];
+//              this.Bills[Bill].Period_Power_Contracted = [];
+//              this.Bills[Bill].Period_Power_Cost = [];
+//              for(; Sample < result.data.Sampletime.length; Sample++) {
+//                if(result.data.Sampletime[Sample] < result.data.Bills[Bill].From) continue;
+//                if(result.data.Sampletime[Sample] > result.data.Bills[Bill].To) break;
+//                this.Bills[Bill].Sampletime.push(result.data.Sampletime[Sample]);
+//                this.Bills[Bill].Active_Power.push(result.data.Active_Power[Sample]);
+//                this.Bills[Bill].Reactive_Power.push(result.data.Reactive_Power[Sample]);
+//                this.Bills[Bill].Period_Color.push(result.data.Period_Color[Sample]);
+//                this.Bills[Bill].Period_Energy_Cost.push(result.data.Period_Energy_Cost[Sample]);
+//                this.Bills[Bill].Period_Number.push(result.data.Period_Number[Sample]);
+//                this.Bills[Bill].Period_Power_Contracted.push(result.data.Period_Power_Contracted[Sample]);
+//                this.Bills[Bill].Period_Power_Cost.push(result.data.Period_Power_Cost[Sample]);
+//              }
+//            }
           },
           (fail) => {}
         );

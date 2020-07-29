@@ -76,14 +76,13 @@ class AnalyzerSoftRatesEval final {
     float                         pContractedPower;   //Evaluated period contracted power
     float                         pEnergyCost;        //Evaluated period energy cost
     float                         pPowerCost;         //Evaluated period power cost
-    bool                          pBillDate;          //Evaluated period bill start
   private :
     void LoadRate();
     void UnloadRate();
     json HandleSample();
     void FindStart(const uint8_t group);
     json BuildBill();
-    json BuildSample();
+    json BuildSample(const bool bill);
   public :
     AnalyzerSoftRatesEval(const string &serial, const time_zone &tz, const uint64_t from, const uint64_t to, const uint8_t group, const uint16_t serieMask = 0);
     virtual ~AnalyzerSoftRatesEval();

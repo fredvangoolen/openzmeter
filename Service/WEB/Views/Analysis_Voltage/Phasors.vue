@@ -113,6 +113,7 @@
       },
       GraphOptionsSequence: function() {
         var Opt = {Positive: Object.assign({ file: [] }, this.CommonOptions), Negative: Object.assign({ file: [] }, this.CommonOptions), Zero: Object.assign({ file: [] }, this.CommonOptions) };
+        if(this.data == null) return Opt;
         if(this.data.Voltage.length == 3) {
           var A = new Complex(Math.cos(120.0 * Math.PI / 180.0), Math.sin(120.0 * Math.PI / 180.0));
           var A2 = A.clone().mult(A);
@@ -130,12 +131,6 @@
           Opt.Zero.file.push([n * 2, Zero.arg() * 180.0 / Math.PI - OffsetAngle, Zero.abs()]);
         }
         return Opt;
-      },
-      GraphOptionsNegative: function() {
-        return {};
-      },
-      GraphOptionsZero: function() {
-        return {};
       },
       GraphOptionsPhasors: function() {
         var Opt = {};

@@ -48,13 +48,13 @@
     watch: {
       Year: function(val) {
         this.ShowSpinner = true;
-        this.Data = {};
+        this.Data = null;
         var To = moment.tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
         var From = moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getPrices', { From: From, To: To, Aggreg: '15M', Series: ['ACTIVE_POWER', 'PERIOD_NUMBER'], Precise: false, Analyzer: this.analyzer.Analyzer }).then(
+        this.$http.post('getCosts', { From: From, To: To, Series: ['ACTIVE_ENERGY', 'PERIOD'], Analyzer: this.analyzer.Analyzer, Group: 0 }).then(
           (result) => {
             this.ShowSpinner = false;
-            this.Data = Object.seal(result.data);
+            this.Data = result.data;
           }
         );
       }
