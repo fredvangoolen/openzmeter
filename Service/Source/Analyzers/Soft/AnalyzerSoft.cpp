@@ -93,12 +93,12 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
 
   // Setup cyclic histogram manager
-  cyclicHistogram = new CyclicHistogram(id, 200, 1024);
-  pCyclicHistogramWorker = new Worker("CyclicHistogram", [&](void *a) { this->CyclicHistogram_Func(); });
+  //cyclicHistogram = new CyclicHistogram(id, 200, 1024);
+  //pCyclicHistogramWorker = new Worker("CyclicHistogram", [&](void *a) { this->CyclicHistogram_Func(); });
 
   // Setup jolt manager
-  joltAlgorithm = new JoltAlgorithm(id);
-  pJoltWorker = new Worker("Jolt", [&](void *a) { this->Jolt_Func(); });
+  //joltAlgorithm = new JoltAlgorithm(id);
+  //pJoltWorker = new Worker("Jolt", [&](void *a) { this->Jolt_Func(); });
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LOGFile::Info("Stopping analyzer with serial '%s'\n", Serial.c_str());
