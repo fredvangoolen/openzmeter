@@ -7,7 +7,7 @@
 <script>
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { data: Object, serie: String, height: Number, analyzer: Object, periods: Object },
+    props: { data: Object, serie: String, height: Number, analyzer: Object, periods: Object, bills: Array },
     data() {
       return { };
     },
@@ -28,7 +28,7 @@
         Opt.plotter = Graph.Plotters.MultiBar;
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
-        Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.periods) };
+        Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.periods, this.bills) };
         Opt.labels = (this.serie == 'Active_Energy') ? ['Time', 'Active Energy'] : ['Time', 'Reactive Energy'];
         Opt.colors = [this.analyzer.Color[this.serie]];
         Opt.xAxisHeight = 24;
@@ -40,8 +40,10 @@
         Opt.axes.y.valueFormatter = (x) => { return this.Round(this.ScaleUnits(x, this.BestUnits(x)), 2, false) + ((this.serie == 'Active_Energy') ? ' Wh' : 'VArh');  };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return (g.axes_[0].valueRange == null) ? '' : this.Round(this.ScaleUnits(x, this.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), 2, true); };
         if(this.data != null) {
-          var Div = (this.data.Aggregation_Source == '1H') ? 1.0 : 4.0;
-          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data[(this.serie == 'Active_Energy') ? 'Active_Power' : 'Reactive_Power'][n] / Div]);
+          var TimeCol = this.data.Headers.indexOf('Sampletime');
+          var ValueCol = this.data.Headers.indexOf('Active_Energy');
+          var ReactiveCol = this.data.Headers.indexOf(this.serie);
+          for(var n in this.data.Rows) Opt.file.push([this.data.Rows[n][TimeCol], this.data.Rows[n][ValueCol]]);
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { incZero: 10 });
           Opt.dateWindow = [this.data.From, this.data.To];
         }
