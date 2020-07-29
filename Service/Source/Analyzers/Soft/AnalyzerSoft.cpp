@@ -93,7 +93,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAnalyzerWorker = new Worker((pMode == PHASE1) ? "Analyzer_1P" : (pMode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
 
   // Setup cyclic histogram manager
-  cyclicHistogram = new CyclicHistogram(id, 200, 1024);
+  cyclicHistogram = new CyclicHistogram(id, 200, 4096);
   pCyclicHistogramWorker = new Worker("CyclicHistogram", [&](void *a) { this->CyclicHistogram_Func(); });
 
   // Setup jolt manager
