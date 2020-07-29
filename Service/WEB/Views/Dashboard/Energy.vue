@@ -9,7 +9,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   export default {
-    props: { analyzer: Object, height: Number, data: Object, periods: Object },
+    props: { analyzer: Object, height: Number, data: Object, periods: Object, bills: Array },
     data() {
       return { MouseOver: false };
     },
@@ -19,7 +19,7 @@
         Opt.panEdgeFraction = 1;
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.strokeWidth = 0.5;
-        Opt.gridLineColor = "#BBB";
+        Opt.drawGrid = "#DDD";
         Opt.gridLinePattern = [4, 4];
         Opt.stepPlot = true;
         Opt.drawGapEdgePoints = true;
@@ -31,7 +31,7 @@
         Opt.labels = ['Time', 'Energy'];
         Opt.colors = [oZm.Series['ACTIVE_ENERGY'].Color];
         Opt.xAxisHeight = 20;
-        Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.periods); };
+        Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.periods, this.bills); };
         Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
@@ -40,11 +40,13 @@
         Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
         if(this.data != null) {
-          var Divisor = (this.data.Aggregation_Source == '15M') ? 4 : 1;
-          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data.Active_Power[n] / Divisor]);
+          var TimeCol = this.data.Headers.indexOf('Sampletime');
+          var EnergyCol = this.data.Headers.indexOf('Active_Energy');
+          for(var n in this.data.Rows) Opt.file.push([this.data.Rows[n][TimeCol], this.data.Rows[n][EnergyCol]]);
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, upperPercent: 0.1, lowerPercent: 0.1, minUpperWidth: 10, minLowerWidth: 10 });
           Opt.dateWindow = [this.data.From, this.data.To];
         }
+        console.log(Opt.dateWindow);
         return Opt;
       }
     }

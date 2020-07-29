@@ -20,6 +20,8 @@ TariffScript::TariffScript(const string &expr) {
   pExpression = expr;
   pParser.SetVarFactory(VariableFactory, this);
 }
+TariffScript::~TariffScript() {
+}
 string TariffScript::CheckConfig(const string &script, set<string> &variables) {
   typedef struct {
     set<string> *Variables;

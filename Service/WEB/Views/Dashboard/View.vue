@@ -20,7 +20,7 @@
               <div class="col-md-7 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy :analyzer="analyzer" :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" :periods="TransferGraph.Periods" @range="Range=$event"></energy>
+                  <energy :analyzer="analyzer" :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :bills="TransferGraph.Bills" @range="Range=$event"></energy>
                 </portal>
               </div>
             </div>
@@ -70,14 +70,14 @@
                TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
                Transfer3S: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
                Transfer1M: this.CreateSeriesTransfer(this,  ['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
-               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'EXPENSE', 'PERIOD_COLOR', 'PERIOD_NUMBER', 'BILLS'])
+               TransferGraph: this.PriceTransfer(['ACTIVE_ENERGY', 'COST', 'COLOR', 'PERIOD', 'BILL'])
       };
     },
     created: function() {
       this.TransferNow.UpdateNow(this.analyzer);
       this.Transfer3S.Update(this.analyzer, '3S', 'LastHours');
       this.Transfer1M.Update(this.analyzer, '1M', 'LastDay');
-      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
+      this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
     },
     beforeDestroy: function() {
       this.TransferNow.Destroy();
@@ -93,14 +93,14 @@
         this.TransferNow.UpdateNow(this.analyzer);
         this.Transfer3S.Update(this.analyzer, '3S', 'LastHours');
         this.Transfer1M.Update(this.analyzer, '1M', 'LastDay');
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
         this.BindGraphs();
       },
       Aggreg: function(val, prev) {
-        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
+        if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
       Range: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       }
     },
     methods: {

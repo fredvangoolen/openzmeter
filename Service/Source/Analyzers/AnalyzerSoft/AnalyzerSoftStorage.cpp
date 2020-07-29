@@ -45,7 +45,7 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
       string UserName = params["UserName"];
       Result["Unread_Alarms"] = json::object();
       Database DB(pSerial);
-      DB.ExecSentenceAsyncResult("SELECT alarmsread, (SELECT count(*) FROM alarms WHERE alarmtime > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
+      DB.ExecSentenceAsyncResult("SELECT alarmsread, (SELECT count(*) FROM alarms_ext WHERE trigger > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
       if(DB.FecthRow() == false) {
         Result["Unread_Alarms"]["From"]  = 0;
         Result["Unread_Alarms"]["Count"] = 0;

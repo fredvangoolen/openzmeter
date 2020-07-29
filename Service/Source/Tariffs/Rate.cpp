@@ -19,7 +19,6 @@
 Rate::Rate(const json &config, const time_zone &tz) : Tariff(config) {
   Name = config["Name"];
   for(uint16_t T = 0; T < config["Taxs"].size(); T++) Taxs.emplace_back(config["Taxs"][T]);
-
   Script = config["Script"];
   if(config["ContractedPower"].is_number()) {
     Contracted = vector<float>(Periods.size(), config["ContractedPower"]);

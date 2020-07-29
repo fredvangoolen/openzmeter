@@ -250,36 +250,41 @@
         ctx.strokeRect(area.x, area.y, area.w, area.h);
         ctx.restore();
       },
-      Underlay_DrawPeriods: function(canvas, area, g, decoration) {
-        if(decoration == null) return;
+      Underlay_DrawPeriods: function(canvas, area, g, periods, bills) {
         canvas.save();
-        var Disp = (decoration.Aggreg == '15M') ? 450000 : 1800000;
-        canvas.strokeStyle = '#000';
-        var EmptyPattern = canvas.createPattern(PatternImg, "repeat");
-        canvas.fillStyle = EmptyPattern;
-        canvas.fillRect(area.x, area.y, area.w, 13);
-        for(var i = 0; i < decoration.Periods.length; i++) {
-          if(decoration.Periods[i].Color == null) continue;
-          var Left = g.toDomXCoord(decoration.Periods[i].From + Disp);
-          var Right = g.toDomXCoord(decoration.Periods[i].To + Disp);
-          if(Left < (area.x + 1)) Left = (area.x + 1);
-          if(Right > (area.w + area.x - 1)) Right = (area.w + area.x - 1);
-          canvas.fillStyle = decoration.Periods[i].Color;
-          canvas.fillRect(Left, area.y + 1, Right - Left, 12);
-          if(((Right - Left) > 20) && (decoration.Periods[i].Name !== null)) {
-            canvas.fillStyle = '#000000';
-            canvas.font = "10px monospace";
-            canvas.fillText(decoration.Periods[i].Name, Left + 1, 10);
+        if(bills != null) {
+          for(var i in bills) {
+            canvas.strokeStyle = '#d9534f';
+            canvas.lineWidth = 1;
+            canvas.beginPath();
+            var X = g.toDomXCoord(bills[i]);
+            canvas.moveTo(X, 0);
+            canvas.lineTo(X, area.h);
+            canvas.stroke();
           }
         }
-        for(var i = 0; i < decoration.Bills.length; i++) {
-          canvas.strokeStyle = '#d9534f';
-          canvas.lineWidth = 2;
-          canvas.beginPath();
-          var X = g.toDomXCoord(decoration.Bills[i].To + Disp);
-          canvas.moveTo(X, 13);
-          canvas.lineTo(X, area.h);
-          canvas.stroke();
+        if(periods != null) {
+          canvas.strokeStyle = '#000';
+          var EmptyPattern = canvas.createPattern(PatternImg, "repeat");
+          canvas.fillStyle = EmptyPattern;
+          canvas.fillRect(area.x, area.y, area.w, 13);
+          var PeriodCol = periods.Headers.indexOf('Period');
+          var ColorCol = periods.Headers.indexOf('Color');
+          var TimeCol = periods.Headers.indexOf('Sampletime');
+          for(var i = 1; i < periods.Rows.length; i++) {
+            if(periods.Rows[i][PeriodCol] == null) continue;
+            var Left = g.toDomXCoord(periods.Rows[i - 1][TimeCol]);
+            var Right = g.toDomXCoord(periods.Rows[i][TimeCol] - 1);
+            if(Left < (area.x + 1)) Left = (area.x + 1);
+            if(Right > (area.w + area.x - 1)) Right = (area.w + area.x - 1);
+            canvas.fillStyle = periods.Rows[i - 1][ColorCol];
+            canvas.fillRect(Left, area.y + 1, Right - Left, 12);
+            if(((Right - Left) > 20) && (periods.Rows[i - 1][PeriodCol] != null)) {
+              canvas.fillStyle = '#000000';
+              canvas.font = "10px monospace";
+              canvas.fillText(periods.Rows[i - 1][PeriodCol], Left + 1, 10);
+            }
+          }
         }
         canvas.strokeStyle = '#000';
         canvas.strokeRect(area.x, area.y, area.w, area.h);
@@ -289,8 +294,8 @@
         canvas.lineTo(area.x + area.w, 13.5);
         canvas.stroke();
         canvas.restore();
-        canvas.rect(area.x + 1, area.y + 14, area.w - 2, area.h - 15);
-        canvas.clip();
+//        canvas.rect(area.x + 1, area.y + 14, area.w - 2, area.h - 15);
+//        canvas.clip();
       },
       DrawHighlightPoint_HighlightBar: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {
         var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;

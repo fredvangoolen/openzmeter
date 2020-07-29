@@ -16,16 +16,19 @@
 #include "AnalyzerSoftRatesEval.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftRatesEval::AnalyzerSoftRatesEval(const string &serial, const time_zone &tz, const uint64_t from, const uint64_t to, const uint8_t group, const uint16_t serieMask) {
-  pRateDB      = new Database(serial);
-  pDataDB      = new Database(serial);
-  pTimeZone    = tz;
-  pFinished    = false;
-  pLoadedRate  = NULL;
-  pPriceModule = NULL;
-  pSeriesMask  = serieMask;
-  pNowDate     = Tools::GetTime64();
-  pFrom        = (from / 3600000) * 3600000 + 899999;
-  pTo          = (to / 3600000) * 3600000 + 899999;
+  pRateDB       = new Database(serial);
+  pDataDB       = new Database(serial);
+  pTimeZone     = tz;
+  pFinished     = false;
+  pLoadedRate   = NULL;
+  pPriceModule  = NULL;
+  pScript       = NULL;
+  pEnergyScript = NULL;
+  pPowerScript  = NULL;
+  pSeriesMask   = serieMask;
+  pNowDate      = Tools::GetTime64();
+  pFrom         = (from / 3600000) * 3600000 + 899999;
+  pTo           = (to / 3600000) * 3600000 + 899999;
   FindStart(group);
   pCurrent = pFrom;
   pDataDB->ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive FROM aggreg_15m WHERE sampletime >= " + pDataDB->Bind(pFrom) + " ORDER BY sampletime ASC");
@@ -50,7 +53,7 @@ json AnalyzerSoftRatesEval::Headers() {
   if(pSeriesMask & SERIE_ENERGY_COST)     Header.push_back("Energy_Cost");
   if(pSeriesMask & SERIE_PERIOD)          Header.push_back("Period");
   if(pSeriesMask & SERIE_COLOR)           Header.push_back("Color");
-  if(pSeriesMask & SERIE_CONTRACTED)      Header.push_back("Contracted");
+  if(pSeriesMask & SERIE_CONTRACTED)      Header.push_back("Power_Contracted");
   if(pSeriesMask & SERIE_BILL)            Header.push_back("Bill");
   return Header;
 }
@@ -59,8 +62,7 @@ void AnalyzerSoftRatesEval::FindStart(const uint8_t group) {
                                    "enddate >= " + pRateDB->Bind(format("%Y-%m-%d", chrono::system_clock::time_point(chrono::milliseconds(pFrom)), utc_time_zone())) + " AND " +
                                    "startdate <= " + pRateDB->Bind(format("%Y-%m-%d", chrono::system_clock::time_point(chrono::milliseconds(pTo)), utc_time_zone())) + " " +
                                    "ORDER BY startdate ASC");
-  pRateDB->FecthRow();
-  pLoadedRate = new Rate(pRateDB->ResultJSON("result"), pTimeZone);
+  if(pRateDB->FecthRow() == true) pLoadedRate = new Rate(pRateDB->ResultJSON("result"), pTimeZone);
   if((pSeriesMask != 0) || (pRateDB->LoadedRow() == false)) return;
   uint64_t Time = pLoadedRate->StartDate + 899999;
   for(uint16_t n = 0; n < pLoadedRate->BillingCycles.size(); n++) {
@@ -170,14 +172,14 @@ json AnalyzerSoftRatesEval::HandleSample() {
     pPeriods[Period]->Eval();
     pCost = pScript->Var("Cost") + pPeriods[Period]->Var("Cost");
     if(pCurrent == ((pBillPtr != pLoadedRate->BillingCycles.end()) ? *pBillPtr : pLoadedRate->EndDate)) {
-      pBillDate = true;
-      if(pSeriesMask == 0) Result = BuildBill();
+      Result = (pSeriesMask == 0) ? BuildBill() : BuildSample(true);
       UnloadRate();
     } else {
-      pBillDate = false;
+      if(pSeriesMask != 0) Result = BuildSample(false);
     }
+  } else {
+    if(pSeriesMask != 0) Result = BuildSample(false);
   }
-  if(pSeriesMask != 0) Result = BuildSample();
   pCurrent += 900000;
   return Result;
 }
@@ -246,7 +248,7 @@ json AnalyzerSoftRatesEval::BuildBill() {
       Concept["Type"] = "INFO";
       Concept["Value"] = pScript->Var(pLoadedRate->Concepts[C].Variable);
     }
-    Row["General"].push_back(json::object());
+    Row["General"].push_back(Concept);
   }
   float Total = EnergyTerm + PowerTerm + GeneralTerm;
   Row["Taxes"] = json::array();
@@ -289,7 +291,7 @@ json AnalyzerSoftRatesEval::BuildBill() {
   Row["Total"] = Total + Tmp;
   return Row;
 }
-json AnalyzerSoftRatesEval::BuildSample() {
+json AnalyzerSoftRatesEval::BuildSample(const bool bill) {
   json Row = json::array();
   if(pSeriesMask & SERIE_TIMESTAMP)       Row.push_back(pCurrent);
   if(pSeriesMask & SERIE_ACTIVE_POWER)    Row.push_back(pActivePower);
@@ -303,7 +305,6 @@ json AnalyzerSoftRatesEval::BuildSample() {
     if(pSeriesMask & SERIE_PERIOD)        Row.push_back(nullptr);
     if(pSeriesMask & SERIE_COLOR)         Row.push_back(nullptr);
     if(pSeriesMask & SERIE_CONTRACTED)    Row.push_back(nullptr);
-    if(pSeriesMask & SERIE_BILL)          Row.push_back(false);
   } else {
     if(pSeriesMask & SERIE_COST)          Row.push_back(pCost);
     if(pSeriesMask & SERIE_POWER_COST)    Row.push_back(pPowerCost);
@@ -311,8 +312,8 @@ json AnalyzerSoftRatesEval::BuildSample() {
     if(pSeriesMask & SERIE_PERIOD)        Row.push_back((uint16_t)pPeriod);
     if(pSeriesMask & SERIE_COLOR)         Row.push_back(pColor);
     if(pSeriesMask & SERIE_CONTRACTED)    Row.push_back(pContractedPower);
-    if(pSeriesMask & SERIE_BILL)          Row.push_back(pBillDate);
   }
+  if(pSeriesMask & SERIE_BILL)            Row.push_back(bill);
   return Row;
 }
 json AnalyzerSoftRatesEval::FetchRow() {

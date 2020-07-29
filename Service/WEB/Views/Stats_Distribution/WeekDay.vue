@@ -20,7 +20,7 @@
   import * as oZm from 'JS/openZmeter.js';
   var Names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
   export default {
-    props: { data: Object, analyzer: Object },
+    props: { data: Array, analyzer: Object },
     data() {
       return { Columns: [], Units: '', Days: [], Periods: [], ExportData: [] };
     },
@@ -39,13 +39,17 @@
       SetData: function() {
         this.Days = [];
         this.Periods = [];
+        if(this.data == null) return;
         var Max = 0.0;
-        for(var i in this.data.Active_Power) {
-          var Day = moment(this.data.Sampletime[i]).day();
-          if(this.Days[Day] == null) this.Days[Day] = {};
-          var Period = (this.data.Period_Number[i] == null) ? 'NONE' : 'P' + this.data.Period_Number[i];
+        var TimeCol = this.data[0].indexOf('Sampletime');
+        var PeriodCol = this.data[0].indexOf('Period');
+        var EnergyCol = this.data[0].indexOf('Active_Energy');
+        for(var i = 1; i < this.data.length; i++) {
+          var Day = moment(this.data[i][TimeCol]).day();
+          if(this.Days[Day] == null) this.Days[Day] = { };
+          var Period = (this.data[i][PeriodCol] == null) ? 'NONE' : 'P' + this.data[i][PeriodCol];
           if(this.Periods.includes(Period) == false) this.Periods.push(Period);
-          if(this.data.Active_Power[i] != null) this.Days[Day][Period] = (this.Days[Day][Period] == null) ? this.data.Active_Power[i] / 4.0 : this.Days[Day][Period] + this.data.Active_Power[i] / 4.0;
+          if(this.data[i][EnergyCol] != null) this.Days[Day][Period] = (this.Days[Day][Period] == null) ? this.data[i][EnergyCol] : this.Days[Day][Period] + this.data[i][EnergyCol];
         }
         var Max = 0;
         for(var Day in this.Days) {
