@@ -27,7 +27,7 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-12">
+      <div class="col-lg-12" v-if="analyzer.NominalFrequency!=0">
         <div class="panel panel-reactive-energy">
           <div class="panel-heading">
             <div class="header-text">Fund. Reactive Energy</div>

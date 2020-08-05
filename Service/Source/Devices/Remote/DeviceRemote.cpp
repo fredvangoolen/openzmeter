@@ -21,7 +21,7 @@
 #include "DeviceRemote.h"
 #include "DeviceManager.h"
 #include "LogFile.h"
-#include "ConfigManager.h"
+#include "ConfigFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceRemote::pRegistered = DeviceRemote::Register();
 //----------------------------------------------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ void DeviceRemote::GetInstances() {
   DeviceManager::AddDevice(new DeviceRemote());
 }
 DeviceRemote::DeviceRemote() : Device("REMOTE", "Remote", "Allow repplication of remote openZmeter devices in local machine") {
-  Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial)));
+  Configure(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
 }
 DeviceRemote::~DeviceRemote() {
   LogFile::Info("Stopping device with serial '%s'", pSerial.c_str());
@@ -52,7 +52,7 @@ json DeviceRemote::CheckConfig(const json &config) {
   return ConfigOUT;
 }
 void DeviceRemote::Configure(const json &config) {
-  ConfigManager::WriteConfig("/Devices/" + pSerial, config);
+  ConfigFile::WriteConfig("/Devices/" + pSerial, config);
   pEnabled = config["Enabled"];
 
 //  HTTPServer::RegisterCallback("setRemote",      SetRemoteCallback);
@@ -68,7 +68,7 @@ void DeviceRemote::Configure(const json &config) {
 //    return false;
 //  }
 //  LOGFile::Info("Loading 'Remote' driver configuration\n");
-//  json Config = CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial));
+//  json Config = CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial));
 //  if(pState == UNCONFIGURED) {
 //    pState = STOPPED;
 //    if(AutoStart == false) {
@@ -110,7 +110,7 @@ void DeviceRemote::Configure(const json &config) {
 void DeviceRemote::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void DeviceRemote::SetDevice(const json &params, Response &response) {

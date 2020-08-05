@@ -18,9 +18,10 @@
 #include <list>
 #include <stdlib.h>
 #include "nlohmann/json.h"
+#include "cpp-httplib/httplib.h"
 #include "Database.h"
 #include "Tools.h"
-#include "cpp-httplib/httplib.h"
+#include "RWLocks.h"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 using namespace httplib;
@@ -36,6 +37,9 @@ using namespace std;
 #define HTTP_INTERNAL_SERVER_ERROR 500
 #define HTTP_SERVICE_UNAVAILABLE   503
 #define HTTP_GATEWAY_TIMEOUT       504
+#ifndef __BUILD__
+#define __BUILD__ "UNKNOWN"
+#endif
 //----------------------------------------------------------------------------------------------------------------------
 class HTTPServer final : private Server {
   private :
@@ -48,6 +52,7 @@ class HTTPServer final : private Server {
     static uint16_t             pPort;
     static pthread_t            pThread;
   private :
+    static void        PeriodicTasks();
     static void       *Listen_Thread(void *params);
     static string      ParseCookie(const string &cookie);
     static string      PatchFile(const string &file, const string &find, const string &replace);
@@ -55,10 +60,10 @@ class HTTPServer final : private Server {
     static const char *MimeType(const string &file);
     static void        HandleGet(const Request &request, Response &response);
     static void        HandlePost(const Request &request, Response &response);
-    static void        LogIn(const json &params, Response &response);
-    static void        LogOut(const Request &request, Response &response);
+    static void        GetVersionCallback(const json &params, Response &response);
+    static void        LogInCallback(const json &params, Response &response);
+    static void        LogOutCallback(const Request &request, Response &response);
   public :
-    static void   PeriodicTasks();
     static void   RegisterCallback(const string &handleName, const Func_t function);
     static void   UnregisterCallback(const string &handleName);
     static void   FillResponse(Response &response, const string &body, const char *mime, const int status);

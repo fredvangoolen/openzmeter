@@ -25,9 +25,9 @@
 #include "cctz/time_zone.h"
 #include "muParser/muParser.h"
 #include "AnalyzerSoft.h"
-#include "ConfigManager.h"
+#include "ConfigFile.h"
 #include "LogFile.h"
-#include "SysSupport.h"
+//#include "SysSupport.h"
 #include "Telegram.h"
 #include "AnalyzerSoftGA.h"
 #include "URL.h"
@@ -44,7 +44,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAlarms         = new AnalyzerSoftAlarms(pSerial);
   pEvents         = new AnalyzerSoftEvents(pSerial);
   pSync           = new AnalyzerSoftSync();
-  pMQTT           = new AnalyzerSoftMQTT();
+  pMQTT           = new AnalyzerSoftMQTT(pSerial);
   pInputBlock     = new AnalyzerSoftBlock(mode, samplerate);
   pFrequency      = new AnalyzerSoftFrequency(samplerate);
   pAggreg200MS    = new AnalyzerSoftAggreg200MS(pSerial, mode);
@@ -53,9 +53,9 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAggreg10M      = new AnalyzerSoftAggreg10M(pSerial, mode);
   pAggreg15M      = new AnalyzerSoftAggreg15M(pSerial, mode);
   pAggreg1H       = new AnalyzerSoftAggreg1H(pSerial, mode);
-  pStorage         = new AnalyzerSoftStorage(pSerial, mode);
+  pStorage        = new AnalyzerSoftStorage(pSerial, mode);
   pAnalyzerWorker = new Worker((mode == PHASE1) ? "Analyzer_1P" : (mode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
-  Configure(CheckConfig(ConfigManager::ReadConfig(optionPath), mode));
+  Configure(CheckConfig(ConfigFile::ReadConfig(optionPath), mode));
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LogFile::Info("Stopping analyzer with serial '%s'", pSerial.c_str());
@@ -140,7 +140,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   return ConfigOUT;
 }
 void AnalyzerSoft::Configure(const json &options) {
-  ConfigManager::WriteConfig(pConfigPath, options);
+  ConfigFile::WriteConfig(pConfigPath, options);
   SetName(options["Name"]);
   pAnalyzerLock.WriteLock();
   pNominalVoltage   = options["NominalVoltage"];
@@ -156,13 +156,14 @@ void AnalyzerSoft::Configure(const json &options) {
     pInputBlock->Config(pNominalFrequency);
     pFFTs->Config((pNominalFrequency == 0.0) ? 1 : (pNominalFrequency == 50.0) ? 10 : 12);
   }
+  pAnalyzerLock.Unlock();
   pRates->Config(pTimeZone);
   pAlarms->Config(options["AlarmsEnabled"]);
   pEvents->Config(options["EventsEnabled"]);
   pSync->Config(options["Sync"]);
   pMQTT->Config(options["MQTT"]);
-  pAnalyzerLock.Unlock();
-//  pMQTT->PublishConfig(options);
+  pMQTT->PublishConfig(options);
+
 }
 void AnalyzerSoft::Analyzer_Func() {
   pAnalyzerLock.ReadLock();
@@ -344,7 +345,7 @@ void AnalyzerSoft::PeriodicTasks() {
 void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   string UserName = params["UserName"];
-  json Response = ConfigManager::ReadConfig(pConfigPath);
+  json Response = ConfigFile::ReadConfig(pConfigPath);
   Response["Online"]     = IsOnline();
   Response["Mode"]       = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"] = pSamplerate;
@@ -480,7 +481,9 @@ void AnalyzerSoft::DelEvent(const json &params, Response &response) {
 }
 void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms->TestAlarm(params, response);
+  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  pAlarms->TestAlarm(params, response, pAggreg200MS);
+  pNowDataLock.ConsumerEnds();
 }
 void AnalyzerSoft::ListAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

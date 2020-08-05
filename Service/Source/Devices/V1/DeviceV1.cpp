@@ -17,7 +17,7 @@
 #include "LogFile.h"
 #include "DeviceV1.h"
 #include "DeviceManager.h"
-#include "ConfigManager.h"
+#include "ConfigFile.h"
 #include "AnalyzerManager.h"
 #include "USBTransfer.h"
 #include "Tools.h"
@@ -100,7 +100,7 @@ DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial
   pRunAverageCounter  = 0;
   memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
   memset(pAverageValues, 0 , sizeof(pAverageValues));
-  Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial)));
+  Configure(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
   if(libusb_init(&pContext) < 0) {
     LogFile::Error("Can not open libUSB...");
     return;
@@ -159,7 +159,7 @@ json DeviceV1::CheckConfig(const json &config) {
 void DeviceV1::Configure(const json& config) {
   ClearAnalyzers();
   pthread_mutex_lock(&pConfigLock);
-  ConfigManager::WriteConfig("/Devices/" + pSerial, config);
+  ConfigFile::WriteConfig("/Devices/" + pSerial, config);
   pVoltageGain     = config["VoltageGain"];
   pVoltageOffset   = config["VoltageOffset"];
   pCurrentGain     = config["CurrentGain"];
@@ -305,7 +305,7 @@ int DeviceV1::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
 void DeviceV1::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
   Config.erase("Analyzer");
   pAverageLocks.ReadLock();
   Config["Wave_Average"] = json::object();
@@ -318,7 +318,7 @@ void DeviceV1::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = params;
-  json Orig = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  json Orig = ConfigFile::ReadConfig("/Devices/" + pSerial);
   Config["Analyzer"] = Orig["Analyzer"];
   Configure(CheckConfig(Config));
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);

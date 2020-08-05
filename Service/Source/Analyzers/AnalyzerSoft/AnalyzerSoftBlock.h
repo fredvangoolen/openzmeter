@@ -32,24 +32,24 @@ class AnalyzerSoftBlock {
       float  ChannelsZ2[3];
     } Filter_t;
   private :
-    Filter_t  pFilters[FILTERSTAGES];       //Filter bank
-    uint8_t   pVoltageChannels;             //Number of voltage channels
-    uint8_t   pCurrentChannels;             //Number of current channels
-    uint8_t   pBlockCyclesCount;            //Block cycles count
-    uint8_t   pMaxCycles;                   //Allowed cicles for configured frequency
-    uint16_t  pMaxSamples;                  //Max samples for configured frequency
-    uint16_t  pBlockSamples;                //Number of samples in block
-    uint16_t  pDelaySize;                   //Delay samples
-    uint16_t  pDelayPos;                    //Delay pos
-    uint16_t  pBlockCycles[24];             //Max block sizes
-    float    *pVoltageSamples;              //Output voltage signal
-    float    *pCurrentSamples;              //Output current signal
-    float    *pDelayVoltage;                //Delay line for voltage
-    float    *pDelayCurrent;                //Delay line for current
-    float     pLastSamples[3];              //Filter samples backup
-    float     pSamplerate;                  //Velocidad de muestreo
-    float     pNominalFrequency;            //Configured grid frequency
-    bool      pNextReset;                   //Reset on next sample flag
+    pthread_mutex_t pMutex;                       //Control access to some sections
+    Filter_t        pFilters[FILTERSTAGES];       //Filter bank
+    uint8_t         pVoltageChannels;             //Number of voltage channels
+    uint8_t         pCurrentChannels;             //Number of current channels
+    uint8_t         pBlockCyclesCount;            //Block cycles count
+    uint8_t         pMaxCycles;                   //Allowed cicles for configured frequency
+    uint16_t        pMaxSamples;                  //Max samples for configured frequency
+    uint16_t        pBlockSamples;                //Number of samples in block
+    uint16_t        pDelaySize;                   //Delay samples
+    uint16_t        pDelayPos;                    //Delay pos
+    uint16_t        pBlockCycles[24];             //Max block sizes
+    float          *pVoltageSamples;              //Output voltage signal
+    float          *pCurrentSamples;              //Output current signal
+    float          *pDelayVoltage;                //Delay line for voltage
+    float          *pDelayCurrent;                //Delay line for current
+    float           pLastSamples[3];              //Filter samples backup
+    float           pSamplerate;                  //Velocidad de muestreo
+    float           pNominalFrequency;            //Configured grid frequency
   public :
     AnalyzerSoftBlock(const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftBlock();

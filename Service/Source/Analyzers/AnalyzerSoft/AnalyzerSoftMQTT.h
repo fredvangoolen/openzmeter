@@ -26,32 +26,34 @@ using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftMQTT final {
   private :
-    pthread_t                  pMQTTThread;              //MQTT thread
-    mqtt_client                pMQTTClient;              //MQTT client state
-    uint32_t                   pMQTTBuffSize;            //MQTT buffers size
-    uint8_t                   *pMQTTSendBuff;            //MQTT send buffer
-    uint8_t                   *pMQTTRecvBuff;            //MQTT recv buffer
-    bool                       pMQTTTerminate;           //MQTT terminate signal
-    string                     pMQTTServer;              //MQTT server address
-    string                     pMQTTPrefix;              //MQTT prefix
-    string                     pMQTTUser;                //MQTT server user
-    string                     pMQTTPass;                //MQTT server password
-    bool                       pMQTT3S;                  //Enable 3 seconds publish
-    bool                       pMQTT1M;                  //Enable 1 minute publish
-    bool                       pMQTT10M;                 //Enable 10 minutes publish
-    bool                       pMQTT15M;                 //Enable 15 minutes publish
-    bool                       pMQTT1H;                  //Enable 1 hour publish
-    bool                       pMQTTAlarms;              //Enable alarms publish
-    bool                       pMQTTConfig;              //Enable config publish
-        static void *MQTT_Thread(void *params);
-    public :
-      static json CheckConfig(const json &config);
-
-        public :
+    pthread_mutex_t   pMutex;       //Locks access to shared variables
+    string            pSerial;      //Analyzer serial
+    pthread_t         pThread;      //MQTT thread
+    mqtt_client       pClient;      //MQTT client state
+    uint32_t          pBuffSize;    //MQTT buffers size
+    uint8_t          *pSendBuff;    //MQTT send buffer
+    uint8_t          *pRecvBuff;    //MQTT recv buffer
+    bool              pTerminate;   //MQTT terminate signal
+    string            pServer;      //MQTT server address
+    string            pPrefix;      //MQTT prefix
+    string            pUser;        //MQTT server user
+    string            pPass;        //MQTT server password
+    bool              p3S;          //Enable 3 seconds publish
+    bool              p1M;          //Enable 1 minute publish
+    bool              p10M;         //Enable 10 minutes publish
+    bool              p15M;         //Enable 15 minutes publish
+    bool              p1H;          //Enable 1 hour publish
+    bool              pAlarms;      //Enable alarms publish
+    bool              pConfig;      //Enable config publish
+  private :
+    static void *Thread(void *params);
   public :
+    static json CheckConfig(const json &config);
+  public :
+    AnalyzerSoftMQTT(const string &serial);
+    ~AnalyzerSoftMQTT();
     void Config(const json &config);
     void PublishAggreg(const AnalyzerSoftAggreg *params);
     void PublishConfig(const json &options);
-
 };
 // ---------------------------------------------------------------------------------------------------------------------

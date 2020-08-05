@@ -32,10 +32,11 @@ class DatabasePool final {
     static string              pConnectionString;
     static pthread_mutex_t     pMutex;
     static list<Connection_t>  pConnectionPool;
+  private :
+    static void    PeriodicTasks();
   public :
     static PGconn *PopConnection();
     static void    PushConnection(PGconn *conn);
-    static void    PeriodicTasks();
   public :
     DatabasePool();
     ~DatabasePool();

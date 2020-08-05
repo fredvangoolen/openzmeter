@@ -23,15 +23,22 @@
 #include "HTTPServer.h"
 #include "Telegram.h"
 #include "DeviceManager.h"
+#include "UserManager.h"
+#include "NTPManager.h"
+#include "WifiManager.h"
+#include "EthernetManager.h"
+#include "BluetoothManager.h"
 #include "AnalyzerManager.h"
 #include "TariffManager.h"
-#include "SysSupport.h"
-#include "Tariffs/ESIOS/ESIOSFetch.h"
-#include "ConfigManager.h"
+#include "ConfigFile.h"
+#include "UpdateManager.h"
+#include "StatusManager.h"
+#include "SystemManager.h"
 #include "MODBus.h"
 #include "DatabasePool.h"
+#include "MessageLoop.h"
+#include "ESIOS/ESIOSManager.h"
 //---------------------------------------------------------------------------------------------------------------------
-using namespace cctz;
 volatile bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
@@ -64,41 +71,34 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.\n\n", argv[i]);
     }
   }
-  pthread_setname_np(pthread_self(), "openZmeter");
-  /* Load config file */
-  ConfigManager ConfigManager(ConfigFileName);
-  /* Create PID File */
-  PidFile PIDFile;
-  /* Create LOG file */
-  LogFile LogFile;
-  /* Create database tables */
-  DatabasePool DBPool;
-  /* Create WEB service */
-  HTTPServer HTTPServer;
-  /* Create system manager */
-  SysSupport SystemManager;
-  /* Create Telegram manager */
-  Telegram TG;
-  /* Create tariffs interface */
-  TariffManager TariffManager;
-  /* Create analyzers interface */
-  AnalyzerManager AnalyzerManager;
-  /* Create devices interface */
-  DeviceManager DeviceManager;
-  /* Create ESIOS */
-  ESIOSFetch Esios;
-  /* Create ModbusTCP */
-  ModbusTCP Modbus;
+  pthread_setname_np(pthread_self(), "Main");
   nice(-20);
-  uint32_t Iter = 0;
-  while(!Terminate) {
-    SysSupport::PeriodicTask();
-    if((Iter % 80) == 0)  HTTPServer::PeriodicTasks();
-//    if((Iter % 80) == 20) DeviceManager::PeriodicTasks();
-    if((Iter % 80) == 40) DatabasePool::PeriodicTasks();
-    if((Iter % 80) == 60) Telegram::PeriodicTasks();
-    Iter++;
-    usleep(1000000);
-  }
+  ConfigFile       ConfigFile(ConfigFileName);     // Load config file
+  PidFile          PIDFile;                        // Create PID file
+  LogFile          LogFile;                        // Create LOG file
+  DatabasePool     DBPool;                         // Init database pool
+  HTTPServer       HTTPServer;                     // Init WEB service
+  MessageLoop      Loop;                           // Create application message loop
+
+  StatusManager    Status;                         // Create status manager
+  BluetoothManager BT;                             // Create bluetooth manager
+  WifiManager      Wifi;                           // Create wifi manager
+  EthernetManager  Ethernet;                       // Create ethernet manager
+
+  UpdateManager    Update;                         // Create update manager
+  NTPManager       NTP;                            // Create NTP manager
+  UserManager      User;                           // Create user manager
+  TariffManager    TariffManager;                  // Create tariffs interface
+  ESIOSManager     Esios;                          // Create ESIOS manager
+  SystemManager    System;                         // System information manager
+
+  Telegram         TelegramBoot;                   // Create Telegram manager
+  ModbusTCP        Modbus;                         // Create ModbusTCP
+
+  AnalyzerManager  AnalyzerManager;                // Create analyzers interface
+  DeviceManager    DeviceManager;                  // Create devices interface
+
+  while(!Terminate) MessageLoop::HandleEvents();
   return EXIT_SUCCESS;
 }
+//---------------------------------------------------------------------------------------------------------------------

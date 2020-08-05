@@ -25,22 +25,7 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------------------------------------------------
-class RWLocks final {
-  private :
-    pthread_mutex_t   pMutex;
-    pthread_cond_t    pReadersCondition;
-    pthread_cond_t    pWritersCondition;
-    volatile uint32_t pReaders;
-    volatile uint32_t pWriters;
-    bool              pWriter;
-  public :
-    RWLocks();
-    ~RWLocks();
-    void ReadLock();
-    void WriteLock();
-    void Unlock();
-};
-//----------------------------------------------------------------------------------------------------------------------
+
 class ProviderLocks {
   //Provider wait until all consumers ends, consumers wait until provider write
   private :

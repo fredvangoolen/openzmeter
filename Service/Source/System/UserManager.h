@@ -14,19 +14,18 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <map>
+#include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
-using namespace std;
-// ---------------------------------------------------------------------------------------------------------------------
-class ResourceManager {
+class UserManager final {
   private :
-    typedef struct {
-      uint32_t Size;
-      uint8_t *Ptr;
-    } File_t;
-  private :
-    static map<string, File_t> pFiles;
+    static void GetUsersCallback(const json &params, Response &response);
+    static void GetUserCallback(const json &params, Response &response);
+    static void SetUserPasswordCallback(const json &params, Response &response);
+    static void SetUserCallback(const json &params, Response &response);
+    static void AddUserCallback(const json &params, Response &response);
+    static void DelUserCallback(const json &params, Response &response);
   public :
-    static uint8_t *GetFile(const string name, size_t *size);
+    UserManager();
+    ~UserManager();
 };
 // ---------------------------------------------------------------------------------------------------------------------

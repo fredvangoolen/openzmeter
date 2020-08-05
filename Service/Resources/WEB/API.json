@@ -194,6 +194,46 @@
           }
         }
       }
+    },
+    "/setDevice": {
+      "post": {
+        "summary": "Set device configuration (Each device driver have its own properties)",
+        "tags": [
+          "System"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "Serial"
+                ],
+                "example": {
+                  "Current": 5,
+                  "CurrentPhase": -10.1,
+                  "Enabled": true,
+                  "Frequency": 60,
+                  "Mode": "3PHASE+N",
+                  "SampleRate": 10000,
+                  "Voltage": 230,
+                  "Serial": "VIRTUAL"
+                },
+                "properties": {
+                  "Serial": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          }
+        }
+      }
     }
   }
 }

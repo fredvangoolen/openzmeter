@@ -13,33 +13,42 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "ResourceManager.h"
-#include <string.h>
+#include "StatusManager.h"
+//#include "ConfigFile.h"
+//#include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
-extern char _binary_ResourceFiles_start[];
-extern char _binary_ResourceFiles_end[];
-map<string, ResourceManager::File_t> ResourceManager::pFiles;
+//queue<string>    SysSupport::pSystemActions;
+RWLocks  StatusManager::pLock;
+json     StatusManager::pStatus = json::object();
 //----------------------------------------------------------------------------------------------------------------------
-uint8_t *ResourceManager::GetFile(string name, size_t *size) {
-  *size = 0;
-  if(pFiles.size() == 0) {
-    char *Ptr = _binary_ResourceFiles_start;
-    uint32_t FileCount = atoi(Ptr);
-    Ptr = &Ptr[strlen(Ptr) + 1];
-    for(uint32_t i = 0; i < FileCount; i++) {
-      File_t File;
-      string Name = Ptr;
-      Ptr = &Ptr[strlen(Ptr) + 1];
-      File.Size = atoi(Ptr);
-      Ptr = &Ptr[strlen(Ptr) + 1];
-      File.Ptr = (uint8_t*)Ptr;
-      Ptr = &Ptr[File.Size];
-      pFiles.insert({Name, File});
-    }
-  }
-  auto File = pFiles.find(name);
-  if(File == pFiles.end()) return NULL;
-  *size = File->second.Size;
-  return File->second.Ptr;
+StatusManager::StatusManager() {
+}
+StatusManager::~StatusManager() {
+}
+void StatusManager::SetValue(const string &path, const json &value) {
+  pLock.WriteLock();
+  pStatus[json::json_pointer(path)] = value;
+  pLock.Unlock();
+}
+json StatusManager::GetValue(const string &path) {
+  pLock.ReadLock();
+  json Result = pStatus[json::json_pointer(path)];
+  pLock.Unlock();
+  return Result;
+}
+json StatusManager::GetJSON() {
+  pLock.ReadLock();
+  json Result = pStatus;
+  pLock.Unlock();
+  return Result;
+
+
+
+//  Result["BT_Enabled"] = pBT_Enabled;
+//  Result["TimeSet"] = pTimeSet;
+//  Result["Battery_Volt"] = pSystemStatus.Battery_Volt;
+//  Result["Battery_Level"] = pSystemStatus.Battery_Level;
+//  Result["Updates"] = pSystemStatus.Updates;
+//  Result["Events"] = pSystemStatus.Events;
 }
 //----------------------------------------------------------------------------------------------------------------------

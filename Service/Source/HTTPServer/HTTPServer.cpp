@@ -26,18 +26,19 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 #include "LogFile.h"
-#include "ConfigManager.h"
-#include "ResourceManager.h"
+#include "ConfigFile.h"
+#include "ResourceFile.h"
 #include "HTTPTaskQueue.h"
+#include "MessageLoop.h"
 //----------------------------------------------------------------------------------------------------------------------
 map<string, HTTPServer::Func_t>  __attribute__((init_priority(200))) HTTPServer::pCallbacks;
 RWLocks                                                              HTTPServer::pLock;
 string                                                               HTTPServer::pRelativePath = "/";
-uint16_t                                                              HTTPServer::pPort   = 8080;
-pthread_t                        HTTPServer::pThread = 0;
+uint16_t                                                             HTTPServer::pPort   = 8080;
+pthread_t                                                            HTTPServer::pThread = 0;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
-  json Config = ConfigManager::ReadConfig("/HTTPServer");
+  json Config = ConfigFile::ReadConfig("/HTTPServer");
   if(!Config.is_object()) Config = json::object();
   if(Config["Port"].is_number_unsigned()) pPort = Config["Port"];
   if(Config["RelativePath"].is_string()) pRelativePath = Config["RelativePath"];
@@ -45,12 +46,13 @@ HTTPServer::HTTPServer() {
   Post(".*", HandlePost);
   set_keep_alive_max_count(UINT32_MAX);
   set_read_timeout(30);
-// set_compression_level(9);
   new_task_queue = [] { return new HTTPTaskQueue(); };
   Config = json::object();
   Config["Port"] = pPort;
   Config["RelativePath"] = pRelativePath;
-  ConfigManager::WriteConfig("/HTTPServer", Config);
+  ConfigFile::WriteConfig("/HTTPServer", Config);
+  RegisterCallback("getVersion", GetVersionCallback);
+  MessageLoop::RegisterListener("HTTPServer_PeriodicTasks", PeriodicTasks, 60000);
   if(pthread_create(&pThread, NULL, Listen_Thread, (void*)this) != 0) {
     pThread = 0;
     LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
@@ -60,9 +62,15 @@ HTTPServer::HTTPServer() {
 }
 HTTPServer::~HTTPServer() {
   LogFile::Debug("Stopping HTTPServer");
+  MessageLoop::UnregisterListener("HTTPServer_PeriodicTasks");
   stop();
   if(pThread != 0) pthread_join(pThread, NULL);
   LogFile::Debug("HTTPServer stopped");
+}
+void HTTPServer::PeriodicTasks() {
+  if(Tools::GetTime64() < 1296000000) return;
+  Database DB;
+  DB.ExecSentenceNoResult("DELETE FROM sessions WHERE timestamp < " + DB.Bind(Tools::GetTime64() - 1296000000));
 }
 void *HTTPServer::Listen_Thread(void *params) {
   HTTPServer *This = (HTTPServer*)params;
@@ -115,7 +123,7 @@ const char *HTTPServer::MimeType(const string &file) {
 }
 string HTTPServer::PatchFile(const string &file, const string &find, const string &replace) {
   size_t Len;
-  const char *Content = (const char *)ResourceManager::GetFile(file, &Len);
+  const char *Content = (const char *)ResourceFile::GetFile(file, &Len);
   string Tmp = string(Content, Len);
   return PatchString(Tmp, find, replace);
 }
@@ -123,7 +131,12 @@ string HTTPServer::PatchString(string &src, const string &find, const string &re
   size_t Len = src.find(find, 0);
   return (Len != string::npos) ? src.replace(Len, find.size(), replace) : src;
 }
-void HTTPServer::LogIn(const json &params, Response &response) {
+void HTTPServer::GetVersionCallback(const json &params, Response &response) {
+  json Result = json::object();
+  Result["Version"] = __BUILD__;
+  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+}
+void HTTPServer::LogInCallback(const json &params, Response &response) {
   if((params.contains("Password") == false) || (params["Password"].is_string() == false)) return FillResponse(response, "'Password' param requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("UserName") == false) || (params["UserName"].is_string() == false)) return FillResponse(response, "'UserName' param requiered", "text/plain", HTTP_BAD_REQUEST);
   Database DB;
@@ -143,7 +156,7 @@ void HTTPServer::LogIn(const json &params, Response &response) {
     return FillResponse(response, "", "application/json", HTTP_UNAUTHORIZED);
   }
 }
-void HTTPServer::LogOut(const Request &request, Response &response) {
+void HTTPServer::LogOutCallback(const Request &request, Response &response) {
   if(request.has_header("Cookie")) {
     string Cookie = ParseCookie(request.get_header_value("Cookie"));
     if(Cookie != "") {
@@ -158,7 +171,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   size_t Size     = 0;
   string UserName = "";
   LogFile::Debug("HTTP GET '%s'", URL.c_str());
-  const char *Tmp = (const char*)ResourceManager::GetFile(string("WEB/") + URL, &Size);
+  const char *Tmp = (const char*)ResourceFile::GetFile(string("WEB/") + URL, &Size);
   if(Size != 0) return FillResponse(response, Tmp, Size, MimeType(URL), HTTP_OK);
   if(request.has_header("Cookie")) {
     string Cookie = ParseCookie(request.get_header_value("Cookie"));
@@ -182,8 +195,8 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
   response.set_header("Connection", "Keep-Alive");
   json Params = json::parse(request.body, NULL, false);
   if(Params.is_discarded()) return FillResponse(response, "Malformed JSON params", "text/plain", HTTP_BAD_REQUEST);
-  if(URL == "logIn") return LogIn(Params, response);
-  if(URL == "logOut") return LogOut(request, response);
+  if(URL == "logIn") return LogInCallback(Params, response);
+  if(URL == "logOut") return LogOutCallback(request, response);
   if(request.has_header("Cookie")) {
     Params.erase("UserName");
     string Cookie = ParseCookie(request.get_header_value("Cookie"));
@@ -206,8 +219,4 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
   pLock.Unlock();
   FillResponse(response, "Method not found", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
-void HTTPServer::PeriodicTasks() {
-  if(Tools::GetTime64() < 1296000000) return;
-  Database DB;
-  DB.ExecSentenceNoResult("DELETE FROM sessions WHERE timestamp < " + DB.Bind(Tools::GetTime64() - 1296000000));
-}
+//----------------------------------------------------------------------------------------------------------------------

@@ -3,7 +3,7 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Ethernet settings</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-if="View=='Edit'" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes"></button>
         <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </template>
@@ -63,7 +63,7 @@
     methods: {
       Refresh: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
-        this.$http.post('getLAN', { }).then(
+        this.$http.post('getEthernet', { }).then(
           (result) => {
             if(this.Config == null) return;
             this.Details = 'Device IP address   : ' + result.body.Status.IP + ' (' + result.body.Status.IPMode + ')\nDNS servers         : ' + result.body.Status.DNS.join(', ') + '\nDefault gateway     : ' + result.body.Status.Gateway;
@@ -77,7 +77,7 @@
       },
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setLAN', this.Config).then(
+        this.$http.post('setEthernet', this.Config).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');

@@ -17,6 +17,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftBlock::AnalyzerSoftBlock(const Analyzer::AnalyzerMode mode, const float samplerate) {
   memset(pFilters, 0, sizeof(pFilters));
+  pMutex             = PTHREAD_MUTEX_INITIALIZER;
   pDelayVoltage      = NULL;
   pDelayCurrent      = NULL;
   pVoltageSamples    = NULL;
@@ -27,7 +28,6 @@ AnalyzerSoftBlock::AnalyzerSoftBlock(const Analyzer::AnalyzerMode mode, const fl
   pDelaySize         = 0;
   pDelayPos          = 0;
   pNominalFrequency  = 50.0;
-  pNextReset         = false;
   pSamplerate        = samplerate;
   memset(pBlockCycles, 0, sizeof(pBlockCycles));
   memset(pLastSamples, 0, sizeof(pLastSamples));
@@ -49,19 +49,19 @@ AnalyzerSoftBlock::~AnalyzerSoftBlock() {
   if(pCurrentSamples != NULL) free(pCurrentSamples);
 }
 void AnalyzerSoftBlock::Config(const float nominalFreq) {
+  pthread_mutex_lock(&pMutex);
+  if(pDelayVoltage != NULL) free(pDelayVoltage);
+  if(pDelayCurrent != NULL) free(pDelayCurrent);
+  pDelayVoltage     = NULL;
+  pDelayCurrent     = NULL;
   pBlockCyclesCount = 0;
   pBlockSamples     = 0;
   pDelayPos         = 0;
-  pNextReset        = false;
   pNominalFrequency = nominalFreq;
   pMaxCycles        = (pNominalFrequency == 0.0) ? 1 : (pNominalFrequency == 50.0) ? 20 : 24;
-  pMaxSamples       = (pMaxCycles * pSamplerate * 1.15 * 0.5) / pNominalFrequency;
+  pMaxSamples       = (pNominalFrequency == 0.0) ? pSamplerate * 0.2 : (pMaxCycles * pSamplerate * 1.15 * 0.5) / pNominalFrequency;
   pVoltageSamples   = (float*)realloc(pVoltageSamples, sizeof(float) * pVoltageChannels * pMaxSamples);
   pCurrentSamples   = (float*)realloc(pCurrentSamples, sizeof(float) * pCurrentChannels * pMaxSamples);
-  if(pDelayVoltage != NULL) free(pDelayVoltage);
-  pDelayVoltage = NULL;
-  if(pDelayCurrent != NULL) free(pDelayCurrent);
-  pDelayCurrent = NULL;
   if(pNominalFrequency != 0.0) {
     for(uint8_t n = 0; n < FILTERSTAGES; n++) {
       float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
@@ -80,13 +80,14 @@ void AnalyzerSoftBlock::Config(const float nominalFreq) {
   }
   memset(pLastSamples, 0, sizeof(pLastSamples));
   memset(pBlockCycles, 0, sizeof(pBlockCycles));
+  pthread_mutex_unlock(&pMutex);
 }
 bool AnalyzerSoftBlock::PushSample(float *voltageSamples, float *currentSamples) {
-  if(pNextReset == true) {
+  if(pthread_mutex_trylock(&pMutex) != 0) return false;
+  if((pBlockSamples == pMaxSamples) || (pBlockCyclesCount == pMaxCycles)) {
     memset(pBlockCycles, 0, sizeof(pBlockCycles));
     pBlockSamples     = 0;
     pBlockCyclesCount = 0;
-    pNextReset        = false;
   }
   if(pNominalFrequency == 0) {
     memcpy(&pVoltageSamples[pVoltageChannels * pBlockSamples], voltageSamples, sizeof(float) * pVoltageChannels);
@@ -112,11 +113,9 @@ bool AnalyzerSoftBlock::PushSample(float *voltageSamples, float *currentSamples)
     memcpy(currentSamples, &pCurrentSamples[pCurrentChannels * pBlockSamples], sizeof(float) * pCurrentChannels);
   }
   pBlockSamples++;
-  if((pBlockSamples == pMaxSamples) || (pBlockCyclesCount == pMaxCycles)) {
-    pNextReset = true;
-    return true;
-  }
-  return false;
+  bool Complete = ((pBlockSamples == pMaxSamples) || (pBlockCyclesCount == pMaxCycles));
+  pthread_mutex_unlock(&pMutex);
+  return Complete;
 }
 uint16_t AnalyzerSoftBlock::BlockSamples() const {
   return pBlockSamples;

@@ -15,15 +15,18 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <vector>
+#include <pthread.h>
 #include "Tools.h"
 #include "AnalyzerSoft.h"
 #include "AnalyzerSoftAlarm.h"
+#include "AnalyzerSoftAggreg200MS.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftAlarms final {
   private :
-    vector<AnalyzerSoftAlarm>  pAlarms;                  //Alarms control object
-    string                     pSerial;
-    Worker                    *pWorker;
+    pthread_mutex_t                 pMutex;
+    map<string, AnalyzerSoftAlarm>  pAlarms;                  //Alarms control object
+    string                          pSerial;
+    Worker                         *pWorker;
   private :
     void Alarms_Func(const AnalyzerSoftAggreg *aggreg);
 //    void InitAlarmParser(Parser &parser, const string &expr, const AnalyzerSoftAggreg::AggregType type);
@@ -32,11 +35,10 @@ class AnalyzerSoftAlarms final {
   public :
     AnalyzerSoftAlarms(const string &serial);
     ~AnalyzerSoftAlarms();
-    void Config(const bool enalbed);
-
+    void Config(const bool enabled);
     void Run(const AnalyzerSoftAggreg *params);
     void Wait();
-    void TestAlarm(const json &params, Response &response);
+    void TestAlarm(const json &params, Response &response, const AnalyzerSoftAggreg200MS *aggreg);
     void ListAlarms(const json &params, Response &response);
     void GetAlarms(const json &params, Response &response);
     void AddAlarm(const json &params, Response &response);

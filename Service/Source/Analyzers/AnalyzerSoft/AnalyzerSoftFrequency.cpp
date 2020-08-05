@@ -38,10 +38,15 @@ void AnalyzerSoftFrequency::Config(const float freq) {
   pFreqCyclesLen    = SECONDS * freq;
   pNominalFrequency = freq;
   pInvalidValues    = SECONDS * freq;
-  pFreqCycles       = (uint16_t*)realloc(pFreqCycles, SECONDS * freq * sizeof(uint16_t));
   pMinCycle         = pSamplerate / (freq * 1.15 * 2.0);
   pMaxCycle         = pSamplerate / (freq * 0.85 * 2.0);
-  memset(pFreqCycles, 0, SECONDS * freq * sizeof(uint16_t));
+  if(pFreqCyclesLen != 0) {
+    pFreqCycles = (uint16_t*)realloc(pFreqCycles, pFreqCyclesLen * sizeof(uint16_t));
+    memset(pFreqCycles, 0, SECONDS * freq * sizeof(uint16_t));
+  } else {
+    if(pFreqCycles != NULL) free(pFreqCycles);
+    pFreqCycles = NULL;
+  }
 }
 void AnalyzerSoftFrequency::PushCycle(const uint16_t len) {
   if(pNominalFrequency == 0) return;

@@ -14,129 +14,37 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAlarms.h"
+#include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftAlarms::AnalyzerSoftAlarms(const string &serial) {
   pSerial = serial;
-
-
-    //Cargo las alarmas desde la DB
-//  pWorker = new Worker("AlarmsDet", [&](void *a) { this->Alarms_Func((AnalyzerSoft::Params_t*)a); });
+  pWorker = NULL;
+  pMutex  = PTHREAD_MUTEX_INITIALIZER;
 }
-//  if(pAlarms != NULL) delete pAlarms;
-AnalyzerSoftAlarms::~AnalyzerSoftAlarms() {}
-void AnalyzerSoftAlarms::Config(const bool enalbed) {
-
+AnalyzerSoftAlarms::~AnalyzerSoftAlarms() {
+  Config(false);
 }
-void AnalyzerSoftAlarms::GetAlarms(const json &params, Response &response) {
-/*
-  auto WriteFunc = [=](HTTPChunkedWriter *writer) -> bool {
-    uint32_t Items = 0;
-    writer->Write("[\n  ");
+void AnalyzerSoftAlarms::Config(const bool enabled) {
+  pthread_mutex_lock(&pMutex);
+  if((enabled == false) && (pWorker != NULL)) {
+    pAlarms.clear();
+    pWorker->Wait();
+    delete pWorker;
+    pWorker = NULL;
+  } else if((enabled == true) && (pWorker == NULL)) {
     Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', startdate, 'EndDate', enddate) AS result FROM rates");
-    while(DB.FecthRow()) writer->Write(((Items++ != 0) ? ",\n  " : "") + DB.ResultString("result"));
-    writer->Write("\n]", true);
-    return false;
-  };
-  new HTTPChunkedWriter(response, "application/json", WriteFunc);
-*/
-
-}
-void AnalyzerSoftAlarms::AddAlarm(const json &params, Response &response) {
-
-}
-void AnalyzerSoftAlarms::GetAlarm(const json &params, Response &response) {
-
-}
-void AnalyzerSoftAlarms::SetAlarm(const json &params, Response &response) {
-
-}
-void AnalyzerSoftAlarms::DelAlarm(const json &params, Response &response) {
-//  Database DB(pSerial);
-//  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-//  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-//  uint64_t From   = params["From"];
-//  uint64_t To     = params["To"];
-//  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms_ext WHERE alarmtime >= " + DB.Bind(From) + " AND alarmtime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
-void AnalyzerSoftAlarms::GetAlarmsRange(const json &params, Response &response) {
-  Database DB(pSerial);
-  DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(alarmtime) AS max, min(alarmtime) AS min FROM alarms) AS t1) AS t2 ");
-  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
-}
-void AnalyzerSoftAlarms::DelAlarmsRange(const json &params, Response &response) {
-  Database DB(pSerial);
-  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t From   = params["From"];
-  uint64_t To     = params["To"];
-  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms_ext WHERE alarmtime >= " + DB.Bind(From) + " AND alarmtime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
-
-/*
-
-  if(config.contains("Alarms") && config["Alarms"].is_array()) {
-    for(auto configAlarm : config["Alarms"]) {
-      if((configAlarm.contains("Name") == false) || (configAlarm["Name"].is_string() == false)) continue;
-      if((configAlarm.contains("Priority") == false) || (configAlarm["Priority"].is_number_unsigned() == false) || (configAlarm["Priority"] > 2)) continue;
-      if((configAlarm.contains("Expression") == false) || (configAlarm["Expression"].is_string() == false)) continue;
-      if((configAlarm.contains("Aggreg") == false) || (configAlarm["Aggreg"].is_string() == false) || ((configAlarm["Aggreg"] != "200MS") && (configAlarm["Aggreg"] != "3S") && (configAlarm["Aggreg"] != "1M") && (configAlarm["Aggreg"] != "10M") && (configAlarm["Aggreg"] != "15M") && (configAlarm["Aggreg"] != "1H"))) continue;
-      if((configAlarm.contains("Samples") == false) || (configAlarm["Samples"].is_number_unsigned() == false) || (configAlarm["Samples"] > 1000)) continue;
-      if((configAlarm.contains("Window") == false) || (configAlarm["Window"].is_number_unsigned() == false)) continue;
-      if(configAlarm["Window"] < configAlarm["Samples"]) continue;
-      ConfigOUT["Alarms"].push_back(configAlarm);
+    DB.ExecSentenceAsyncResult("SELECT id, config::jsonb || json_build_object('Name', name) as config FROM alarms");
+    while(DB.FecthRow()) {
+      printf("%s -> %s\n", DB.ResultString("id").c_str(), DB.ResultJSON("config").dump().c_str());
+     //creo alarmas y las meto a la lista
     }
+    pWorker = new Worker("AlarmsDet", [&](void *a) { this->Alarms_Func((AnalyzerSoftAggreg*)a); });
+
+
   }
-
-
-
-  if((AlarmsEnabled == false) && (pAlarms != NULL)) {
-    delete pAlarms;
-    pAlarms = NULL;
-  } else if((AlarmsEnabled == true) && (pAlarms == NULL)) {
-    pAlarms = new AnalyzerSoftAlarms(this);
-  }*/
-
-void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response) {
-  if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Parser Evaluator;
-  json   Result = json::object();
-//  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-//  InitAlarmParser(Evaluator, params["Expression"], AGGREG_200MS);
-  Result["Variables"] = json::object();
-  for(auto Var : Evaluator.GetVar()) Result["Variables"][Var.first] = *Var.second;
-  try {
-    Result["Result"] = Evaluator.Eval();
-  } catch (Parser::exception_type &e) {
-    Result["Error"] = e.GetMsg();
-  }
-//  pNowDataLock.ConsumerEnds();
-  return HTTPServer::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
+  pthread_mutex_unlock(&pMutex);
 }
-void AnalyzerSoftAlarms::ListAlarms(const json &params, Response &response) {
-  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t To   = params["To"];
-  uint64_t From = params["From"];
-  string   User = params["UserName"];
-  Database DB(pSerial);
-  if((params.contains("Update") == true) && (params["Update"].is_boolean() == true) && (params["Update"] == true)) {
-    string UserName = params["UserName"];
-    DB.ExecSentenceNoResult("UPDATE permissions SET alarmsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
-  }
-  auto Func = [=](uint64_t offset, DataSink &sink) -> bool {
-    json Headers = {"Name", "Trigger", "Release"};
-    sink.os << "[\n  " << Headers.dump();
-    Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT json_build_array(name, trigger, release) as result FROM alarms WHERE trigger >= " + DB.Bind(From) + " AND trigger <= " + DB.Bind(To));
-    while(DB.FecthRow()) sink.os << ",\n  " << DB.ResultString("result");
-    sink.os << "\n]";
-    sink.done();
-    return false;
-  };
-  response.set_chunked_content_provider("application/json", Func);
-}
+
 
 
 //  pAlarms = new Worker("AlarmsDet", [&](void *a) { this->Alarms_Func((Params_t*)a); });
@@ -284,5 +192,118 @@ void AnalyzerSoftAlarms::Run(const AnalyzerSoftAggreg *params) {
 }
 void AnalyzerSoftAlarms::Wait() {
 
+}
+
+/*
+
+  if(config.contains("Alarms") && config["Alarms"].is_array()) {
+    for(auto configAlarm : config["Alarms"]) {
+      if((configAlarm.contains("Name") == false) || (configAlarm["Name"].is_string() == false)) continue;
+      if((configAlarm.contains("Priority") == false) || (configAlarm["Priority"].is_number_unsigned() == false) || (configAlarm["Priority"] > 2)) continue;
+      if((configAlarm.contains("Expression") == false) || (configAlarm["Expression"].is_string() == false)) continue;
+      if((configAlarm.contains("Aggreg") == false) || (configAlarm["Aggreg"].is_string() == false) || ((configAlarm["Aggreg"] != "200MS") && (configAlarm["Aggreg"] != "3S") && (configAlarm["Aggreg"] != "1M") && (configAlarm["Aggreg"] != "10M") && (configAlarm["Aggreg"] != "15M") && (configAlarm["Aggreg"] != "1H"))) continue;
+      if((configAlarm.contains("Samples") == false) || (configAlarm["Samples"].is_number_unsigned() == false) || (configAlarm["Samples"] > 1000)) continue;
+      if((configAlarm.contains("Window") == false) || (configAlarm["Window"].is_number_unsigned() == false)) continue;
+      if(configAlarm["Window"] < configAlarm["Samples"]) continue;
+      ConfigOUT["Alarms"].push_back(configAlarm);
+    }
+  }
+
+
+
+  if((AlarmsEnabled == false) && (pAlarms != NULL)) {
+    delete pAlarms;
+    pAlarms = NULL;
+  } else if((AlarmsEnabled == true) && (pAlarms == NULL)) {
+    pAlarms = new AnalyzerSoftAlarms(this);
+  }*/
+void AnalyzerSoftAlarms::GetAlarms(const json &params, Response &response) {
+  auto Func = [&](uint64_t offset, DataSink &sink) -> bool {
+    uint32_t Items = 0;
+    sink.os << "[\n  ";
+    Database DB(pSerial);
+    DB.ExecSentenceAsyncResult("SELECT json_build_array('AlarmID', id, 'Name', name) AS result FROM alarms");
+    while(DB.FecthRow()) {
+      if(Items++ != 0) sink.os << ",\n  ";
+      sink.os << DB.ResultString("result");
+    }
+    sink.os << "\n]";
+    sink.done();
+    return false;
+  };
+  response.set_chunked_content_provider("application/json", Func);
+}
+void AnalyzerSoftAlarms::AddAlarm(const json &params, Response &response) {
+//Verifico alarma y si es correcta añado
+}
+void AnalyzerSoftAlarms::GetAlarm(const json &params, Response &response) {
+  if((params.contains("AlarmID") == false) || (params["AlarmID"].is_string() == false)) return HTTPServer::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  string ID = params["AlarmID"];
+  Database DB(pSerial);
+  DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('Name', name) || config::jsonb AS result FROM alarms WHERE id = " + DB.Bind(ID));
+  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+}
+void AnalyzerSoftAlarms::SetAlarm(const json &params, Response &response) {
+  //Verifico alarma y si es correcta salvo
+}
+void AnalyzerSoftAlarms::DelAlarm(const json &params, Response &response) {
+  if((params.contains("AlarmID") == false) || (params["AlarmID"].is_string() == false)) return HTTPServer::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  string ID = params["AlarmID"];
+  Database DB(pSerial);
+  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms WHERE id = " + DB.Bind(ID)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+}
+void AnalyzerSoftAlarms::GetAlarmsRange(const json &params, Response &response) {
+  Database DB(pSerial);
+  DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(alarmtime) AS max, min(alarmtime) AS min FROM alarms) AS t1) AS t2 ");
+  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
+}
+void AnalyzerSoftAlarms::DelAlarmsRange(const json &params, Response &response) {
+  Database DB(pSerial);
+  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  uint64_t From   = params["From"];
+  uint64_t To     = params["To"];
+  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms_ext WHERE alarmtime >= " + DB.Bind(From) + " AND alarmtime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+}
+void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, const AnalyzerSoftAggreg200MS *aggreg) {
+  if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  Parser Evaluator;
+  json   Result = json::object();
+//  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+//  InitAlarmParser(Evaluator, params["Expression"], AGGREG_200MS);
+  Result["Variables"] = json::object();
+  for(auto Var : Evaluator.GetVar()) Result["Variables"][Var.first] = *Var.second;
+  try {
+    Result["Result"] = Evaluator.Eval();
+  } catch (Parser::exception_type &e) {
+    Result["Error"] = e.GetMsg();
+  }
+//  pNowDataLock.ConsumerEnds();
+  return HTTPServer::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
+}
+void AnalyzerSoftAlarms::ListAlarms(const json &params, Response &response) {
+  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  uint64_t To   = params["To"];
+  uint64_t From = params["From"];
+  string   User = params["UserName"];
+  Database DB(pSerial);
+  if((params.contains("Update") == true) && (params["Update"].is_boolean() == true) && (params["Update"] == true)) {
+    string UserName = params["UserName"];
+    DB.ExecSentenceNoResult("UPDATE permissions SET alarmsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
+  }
+  auto Func = [&, To, From, User](uint64_t offset, DataSink &sink) -> bool {
+    json Headers = {"Name", "Trigger", "Release"};
+    sink.os << "[\n  " << Headers.dump();
+    Database DB(pSerial);
+    DB.ExecSentenceAsyncResult("SELECT json_build_array(name, trigger, release) as result FROM alarms_ext WHERE trigger >= " + DB.Bind(From) + " AND trigger <= " + DB.Bind(To));
+    while(DB.FecthRow()) sink.os << ",\n  " << DB.ResultString("result");
+    sink.os << "\n]";
+    sink.done();
+    return false;
+  };
+  response.set_chunked_content_provider("application/json", Func);
 }
 // ---------------------------------------------------------------------------------------------------------------------

@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "Telegram.h"
-#include "ConfigManager.h"
+#include "ConfigFile.h"
 #include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 json                      Telegram::pStatus      = json::object();
@@ -29,7 +29,7 @@ list<Telegram::Worker_t*> Telegram::pFreeWorkers;
 Telegram::Telegram() {
   HTTPServer::RegisterCallback("getTelegram", GetTelegramCallback);
   HTTPServer::RegisterCallback("setTelegram", SetTelegramCallback);
-  Configure(CheckConfig(ConfigManager::ReadConfig("/Telegram")));
+  Configure(CheckConfig(ConfigFile::ReadConfig("/Telegram")));
 }
 Telegram::~Telegram() {
   pthread_mutex_lock(&pMutex);
@@ -52,7 +52,7 @@ Telegram::~Telegram() {
 
 }
 void Telegram::Configure(const json &config) {
-  ConfigManager::WriteConfig("/Telegram", config);
+  ConfigFile::WriteConfig("/Telegram", config);
   bool Enable = config["Enabled"];
   pthread_mutex_lock(&pMutex);
   pToken = config["Token"];
@@ -83,7 +83,7 @@ json Telegram::CheckConfig(const json &config) {
 }
 void Telegram::GetTelegramCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = ConfigManager::ReadConfig("/Telegram");
+  json Config = ConfigFile::ReadConfig("/Telegram");
   pthread_mutex_lock(&pMutex);
   Config["Status"] = pStatus;
   pthread_mutex_unlock(&pMutex);

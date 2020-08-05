@@ -17,14 +17,14 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "ConfigManager.h"
+#include "ConfigFile.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
-int             ConfigManager::pFile   = -1;
-pthread_mutex_t ConfigManager::pMutex  = PTHREAD_MUTEX_INITIALIZER;
-json            ConfigManager::pConfig = nullptr;
+int             ConfigFile::pFile   = -1;
+pthread_mutex_t ConfigFile::pMutex  = PTHREAD_MUTEX_INITIALIZER;
+json            ConfigFile::pConfig = nullptr;
 //----------------------------------------------------------------------------------------------------------------------
-ConfigManager::ConfigManager(const string &name) {
+ConfigFile::ConfigFile(const string &name) {
   pthread_mutex_lock(&pMutex);
   pFile = open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
   if(pFile < 0) {
@@ -44,13 +44,13 @@ ConfigManager::ConfigManager(const string &name) {
   if(pConfig.is_discarded()) pConfig = json::object();
   pthread_mutex_unlock(&pMutex);
 }
-ConfigManager::~ConfigManager() {
+ConfigFile::~ConfigFile() {
   pthread_mutex_lock(&pMutex);
   if(pFile != -1) close(pFile);
   pFile = -1;
   pthread_mutex_unlock(&pMutex);
 }
-bool ConfigManager::WriteConfig(const string &path, const json &val) {
+bool ConfigFile::WriteConfig(const string &path, const json &val) {
   pthread_mutex_lock(&pMutex);
   LogFile::Debug("Saving '%s' settings", path.c_str());
   if(pFile == -1) {
@@ -73,7 +73,7 @@ bool ConfigManager::WriteConfig(const string &path, const json &val) {
   pthread_mutex_unlock(&pMutex);
   return true;
 }
-json ConfigManager::ReadConfig(const string &path) {
+json ConfigFile::ReadConfig(const string &path) {
   pthread_mutex_lock(&pMutex);
   LogFile::Debug("Reading '%s' settings", path.c_str());
   if((pFile == -1) || (pConfig.is_object() == false)) {

@@ -26,9 +26,9 @@
       <span class="dropdown-icon" :class="{ show: (Submenu == 'Events') }"><img :src="require('Imgs/bullet_arrow_up.png')"></span>
     </div>
     <div class="submenu" :class="{ show: (Submenu == 'Events') }" v-if="analyzer!=null">
-      <router-link to="/Events/ITIC">ITIC</router-link>
-      <a @click="ShowDisturbances">Disturbances<span class="badge badge-submenu" v-if="UnreadEvents>0">{{ UnreadEvents }}</span></a>
-      <router-link to="/Events/EN50160">EN50160</router-link>
+      <router-link to="/Events/ITIC" v-if="analyzer.NominalFrequency!=0">ITIC</router-link>
+      <a @click="ShowDisturbances" v-if="analyzer.NominalFrequency!=0">Disturbances<span class="badge badge-submenu" v-if="UnreadEvents>0">{{ UnreadEvents }}</span></a>
+      <router-link to="/Events/EN50160" v-if="analyzer.NominalFrequency!=0">EN50160</router-link>
       <a @click="ShowAlarms">Alarms<span class="badge badge-submenu" v-if="UnreadAlarms>0">{{ UnreadAlarms }}</span></a>
     </div>
     <div class="item" @click="Submenu = (Submenu == 'Costs') ? null : 'Costs'" v-if="analyzer!=null">
@@ -58,14 +58,15 @@
   export default {
     props: { analyzer:Object, expanded: Boolean },
     data() {
-      return { Submenu: null, AnalyzerSelected: false, TransferNow: this.CreateSeriesTransfer(this, ['UNREAD_EVENTS', 'UNREAD_ALARMS']), TitleFrame: 0 }
+      return { Submenu: null, AnalyzerSelected: false, TransferNow: this.StatusTransfer(this, ['UNREAD_EVENTS', 'UNREAD_ALARMS']), TitleFrame: 0 }
     },
     created: function() {
-      this.TransferNow.UpdateStatus(this.analyzer);
+      this.TransferNow.Update(this.analyzer);
       setInterval(() => { this.SetTitle(); }, 2000)
     },
     computed: {
       UnreadEvents: function() {
+        if(this.analyzer.NominalFrequency == 0) return 0;
         if(this.TransferNow.Data == null) return 0;
         return this.TransferNow.Data.Unread_Events.Count;
       },
@@ -79,7 +80,7 @@
         if(val == false) this.Submenu = null;
       },
       analyzer: function() {
-        this.TransferNow.UpdateStatus(this.analyzer);
+        this.TransferNow.Update(this.analyzer);
       }
     },
     methods: {
@@ -102,14 +103,14 @@
       },
       ShowDisturbances: function() {
         if(this.UnreadEvents != 0) {
-          this.$router.push({ path: '/Events/Disturbances', query: { From: this.TransferNow.Data.Unread.EventsFrom, To: this.TransferNow.Data.Sampletime } });
+          this.$router.push({ path: '/Events/Disturbances', query: { From: this.TransferNow.Data.Unread_Events.From, To: this.TransferNow.Data.Sampletime } });
         } else {
           this.$router.push('/Events/Disturbances');
         }
       },
       ShowAlarms: function() {
         if(this.UnreadAlarms != 0) {
-          this.$router.push({ path: '/Events/Alarms', query: { From: this.TransferNow.Data.Unread.AlarmsFrom, To: this.TransferNow.Data.Sampletime } });
+          this.$router.push({ path: '/Events/Alarms', query: { From: this.TransferNow.Data.Unread_Alarms.From, To: this.TransferNow.Data.Sampletime } });
         } else {
           this.$router.push('/Events/Alarms');
         }

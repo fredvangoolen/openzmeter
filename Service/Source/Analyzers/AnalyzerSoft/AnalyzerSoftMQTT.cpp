@@ -14,91 +14,97 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
  #include "AnalyzerSoftMQTT.h"
+ #include "URL.h"
+ #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
+AnalyzerSoftMQTT::AnalyzerSoftMQTT(const string &serial) {
+  pMutex    = PTHREAD_MUTEX_INITIALIZER;
+  pSerial   = serial;
+  pThread   = 0;
+  pBuffSize = 0x040000;
+  pSendBuff = NULL;
+  pRecvBuff = NULL;
+  p3S       = false;
+  p1M       = false;
+  p10M      = false;
+  p15M      = false;
+  p1H       = false;
+  pAlarms   = false;
+  pConfig   = false;
+}
+AnalyzerSoftMQTT::~AnalyzerSoftMQTT() {
+  pTerminate = true;
+  if(pThread != 0) pthread_join(pThread, NULL);
+}
 json AnalyzerSoftMQTT::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
-  ConfigOUT["MQTTEnabled"] = false;
-  ConfigOUT["MQTT"] = json::object();
-  ConfigOUT["MQTT"]["Prefix"] = "";
-  ConfigOUT["MQTT"]["Server"] = "";
-  ConfigOUT["MQTT"]["User"] = "";
-  ConfigOUT["MQTT"]["Pass"] = "";
-  ConfigOUT["MQTT"]["Export3S"] = false;
-  ConfigOUT["MQTT"]["Export1M"] = false;
-  ConfigOUT["MQTT"]["Export10M"] = false;
-  ConfigOUT["MQTT"]["Export15M"] = false;
-  ConfigOUT["MQTT"]["Export1H"] = false;
-  ConfigOUT["MQTT"]["ExportAlarms"] = false;
-  ConfigOUT["MQTT"]["ExportConfig"] = false;
-  if(config.contains("MQTTEnabled") && config["MQTTEnabled"].is_boolean()) ConfigOUT["MQTTEnabled"] = config["MQTTEnabled"];
-  if(config.contains("MQTT") && config["MQTT"].is_object()) {
-    if(config["MQTT"].contains("Prefix") && config["MQTT"]["Prefix"].is_string()) ConfigOUT["MQTT"]["Prefix"] = config["MQTT"]["Prefix"];
-    if(config["MQTT"].contains("Server") && config["MQTT"]["Server"].is_string()) ConfigOUT["MQTT"]["Server"] = config["MQTT"]["Server"];
-    if(config["MQTT"].contains("User") && config["MQTT"]["User"].is_string()) ConfigOUT["MQTT"]["User"] = config["MQTT"]["User"];
-    if(config["MQTT"].contains("Pass") && config["MQTT"]["Pass"].is_string()) ConfigOUT["MQTT"]["Pass"] = config["MQTT"]["Pass"];
-    if(config["MQTT"].contains("Export3S") && config["MQTT"]["Export3S"].is_boolean()) ConfigOUT["MQTT"]["Export3S"] = config["MQTT"]["Export3S"];
-    if(config["MQTT"].contains("Export1M") && config["MQTT"]["Export1M"].is_boolean()) ConfigOUT["MQTT"]["Export1M"] = config["MQTT"]["Export1M"];
-    if(config["MQTT"].contains("Export10M") && config["MQTT"]["Export10M"].is_boolean()) ConfigOUT["MQTT"]["Export10M"] = config["MQTT"]["Export10M"];
-    if(config["MQTT"].contains("Export15M") && config["MQTT"]["Export15M"].is_boolean()) ConfigOUT["MQTT"]["Export15M"] = config["MQTT"]["Export15M"];
-    if(config["MQTT"].contains("Export1H") && config["MQTT"]["Export1H"].is_boolean()) ConfigOUT["MQTT"]["Export1H"] = config["MQTT"]["Export1H"];
-    if(config["MQTT"].contains("ExportAlarms") && config["MQTT"]["ExportAlarms"].is_boolean()) ConfigOUT["MQTT"]["ExportAlarms"] = config["MQTT"]["ExportAlarms"];
-    if(config["MQTT"].contains("ExportConfig") && config["MQTT"]["ExportConfig"].is_boolean()) ConfigOUT["MQTT"]["ExportConfig"] = config["MQTT"]["ExportConfig"];
-  }
+  ConfigOUT["Enabled"] = false;
+  ConfigOUT["Prefix"] = "";
+  ConfigOUT["Server"] = "";
+  ConfigOUT["User"] = "";
+  ConfigOUT["Pass"] = "";
+  ConfigOUT["Export3S"] = false;
+  ConfigOUT["Export1M"] = false;
+  ConfigOUT["Export10M"] = false;
+  ConfigOUT["Export15M"] = false;
+  ConfigOUT["Export1H"] = false;
+  ConfigOUT["ExportAlarms"] = false;
+  ConfigOUT["ExportConfig"] = false;
+  if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
+  if(config.contains("Prefix") && config["Prefix"].is_string()) ConfigOUT["Prefix"] = config["Prefix"];
+  if(config.contains("Server") && config["Server"].is_string()) ConfigOUT["Server"] = config["Server"];
+  if(config.contains("User") && config["User"].is_string()) ConfigOUT["User"] = config["User"];
+  if(config.contains("Pass") && config["Pass"].is_string()) ConfigOUT["Pass"] = config["Pass"];
+  if(config.contains("Export3S") && config["Export3S"].is_boolean()) ConfigOUT["Export3S"] = config["Export3S"];
+  if(config.contains("Export1M") && config["Export1M"].is_boolean()) ConfigOUT["Export1M"] = config["Export1M"];
+  if(config.contains("Export10M") && config["Export10M"].is_boolean()) ConfigOUT["Export10M"] = config["Export10M"];
+  if(config.contains("Export15M") && config["Export15M"].is_boolean()) ConfigOUT["Export15M"] = config["Export15M"];
+  if(config.contains("Export1H") && config["Export1H"].is_boolean()) ConfigOUT["Export1H"] = config["Export1H"];
+  if(config.contains("ExportAlarms") && config["ExportAlarms"].is_boolean()) ConfigOUT["ExportAlarms"] = config["ExportAlarms"];
+  if(config.contains("ExportConfig") && config["ExportConfig"].is_boolean()) ConfigOUT["ExportConfig"] = config["ExportConfig"];
   return ConfigOUT;
 }
 void AnalyzerSoftMQTT::Config(const json &config) {
-//  bool MQTTEnabled = options["MQTTEnabled"];
-//  if(MQTTEnabled == true) {
-//    pMQTTPrefix    = options["MQTT"]["Prefix"];
-//    pMQTTServer    = options["MQTT"]["Server"];
-//    pMQTTUser      = options["MQTT"]["User"];
-//    pMQTTPass      = options["MQTT"]["Pass"];
-//    pMQTT3S        = options["MQTT"]["Export3S"];
-//    pMQTT1M        = options["MQTT"]["Export1M"];
-//    pMQTT10M       = options["MQTT"]["Export10M"];
-//    pMQTT15M       = options["MQTT"]["Export15M"];
-//    pMQTT1H        = options["MQTT"]["Export1H"];
-//    pMQTTAlarms    = options["MQTT"]["ExportAlarms"];
-//    pMQTTConfig    = options["MQTT"]["ExportConfig"];
-//    pMQTTTerminate = false;
-//    if(pMQTTThread == 0) {
-//      pMQTTSendBuff = (uint8_t*)calloc(pMQTTBuffSize, 1);
-//      pMQTTRecvBuff = (uint8_t*)calloc(pMQTTBuffSize, 1);
-//      mqtt_init_reconnect(&pMQTTClient, NULL, NULL, NULL);
-//      if(pthread_create(&pMQTTThread, NULL, MQTT_Thread, this) != 0) {
-//        LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
-//        pMQTTThread = 0;
-//      } else {
-//        pthread_setname_np(pMQTTThread, "MQTT");
-//      }
-//    }
-//  } else if(MQTTEnabled == false) {
-//    pMQTT3S        = false;
-//    pMQTT1M        = false;
-//    pMQTT10M       = false;
-//    pMQTT15M       = false;
-//    pMQTT1H        = false;
-//    pMQTTAlarms    = false;
-//    pMQTTConfig    = false;
-//    if(pMQTTThread != 0) {
-//      pthread_join(pMQTTThread, NULL);
-//      free(pMQTTSendBuff);
-//      free(pMQTTRecvBuff);
-//      pMQTTThread = 0;
-//    }
-//  }
+  pthread_mutex_lock(&pMutex);
+  bool Enabled = config["Enabled"];
+  if((Enabled == false) && (pThread != 0)) {
+    pTerminate = false;
+    pthread_join(pThread, NULL);
+    free(pSendBuff);
+    free(pRecvBuff);
+    pThread = 0;
+    p3S     = false;
+    p1M     = false;
+    p10M    = false;
+    p15M    = false;
+    p1H     = false;
+    pAlarms = false;
+    pConfig = false;
+  } else if((Enabled == true) && (pThread == 0)) {
+    pPrefix    = config["Prefix"];
+    pServer    = config["Server"];
+    pUser      = config["User"];
+    pPass      = config["Pass"];
+    p3S        = config["Export3S"];
+    p1M        = config["Export1M"];
+    p10M       = config["Export10M"];
+    p15M       = config["Export15M"];
+    p1H        = config["Export1H"];
+    pAlarms    = config["ExportAlarms"];
+    pConfig    = config["ExportConfig"];
+    pTerminate = false;
+    pSendBuff  = (uint8_t*)calloc(pBuffSize, 1);
+    pRecvBuff  = (uint8_t*)calloc(pBuffSize, 1);
+    mqtt_init_reconnect(&pClient, NULL, NULL, NULL);
+    if(pthread_create(&pThread, NULL, Thread, this) != 0) {
+      LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+      pThread = 0;
+    } else {
+      pthread_setname_np(pThread, "MQTT");
+    }
+  }
+  pthread_mutex_unlock(&pMutex);
 }
-/*
-//  pMQTTTerminate = true;
-//  if(pMQTTThread != 0) pthread_join(pMQTTThread, NULL);
-
-AnalyzerSoftMQTT::AnalyzerSoftMQTT() {
-  pPrevSamples       = NULL;
-  pPrevCycles        = NULL;
-
-  pMQTTBuffSize      = 0x00020000;
-}
-*/
 void AnalyzerSoftMQTT::PublishAggreg(const AnalyzerSoftAggreg *aggreg) {
 /*  if(pMQTTClient.socketfd == -1) return;
   json Msg = json::object();
@@ -132,42 +138,42 @@ void AnalyzerSoftMQTT::PublishAggreg(const AnalyzerSoftAggreg *aggreg) {
   for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage_Phase"].push_back(params.Voltage_Phase[n]);
   string TextMsg = Msg.dump();
   string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/" + topic : pSerial + "/" + topic;
-  mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
-  LogFile::Debug("Analyzer '%s' publish message to MQTT broker", pSerial.c_str());*/
+  mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);*/
+  LogFile::Debug("Analyzer '%s' publish message to MQTT broker", pSerial.c_str());
 }
-/*
-void AnalyzerSoft::PublishConfig(const json &options) {
-  if(pMQTTClient.socketfd != -1) {
+void AnalyzerSoftMQTT::PublishConfig(const json &options) {
+  pthread_mutex_lock(&pMutex);
+  if((pConfig == true) && (pClient.socketfd != -1)) {
     string TextMsg = options.dump();
-    string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/Config" : pSerial + "/Config";
-    mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
+    string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Config" : pSerial + "/Config";
+    mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
     LogFile::Debug("Analyzer '%s' publish message to MQTT broker", pSerial.c_str());
   }
+  pthread_mutex_unlock(&pMutex);
 }
-void *AnalyzerSoft::MQTT_Thread(void *params) {
-  AnalyzerSoft *This = (AnalyzerSoft*)params;
+void *AnalyzerSoftMQTT::Thread(void *params) {
+  AnalyzerSoftMQTT *This = (AnalyzerSoftMQTT*)params;
   nice(10);
   string User, Pass, Server;
-  while(This->pMQTTTerminate == false) {
-    This->pAnalyzerLock.ReadLock();
-    if((This->pMQTTUser != User) || (This->pMQTTPass != Pass) || (This->pMQTTServer != Server)) {
-      if(This->pMQTTClient.socketfd != -1) {
-        close(This->pMQTTClient.socketfd);
-        This->pMQTTClient.socketfd = -1;
+  while(This->pTerminate == false) {
+    pthread_mutex_lock(&This->pMutex);
+    if((This->pUser != User) || (This->pPass != Pass) || (This->pServer != Server)) {
+      if(This->pClient.socketfd != -1) {
+        close(This->pClient.socketfd);
+        This->pClient.socketfd = -1;
       }
-      User   = This->pMQTTUser;
-      Pass   = This->pMQTTPass;
-      Server = This->pMQTTServer;
+      User   = This->pUser;
+      Pass   = This->pPass;
+      Server = This->pServer;
     }
-    This->pAnalyzerLock.Unlock();
-    mqtt_sync(&This->pMQTTClient);
-    if(This->pMQTTClient.error == MQTT_ERROR_CONNECT_NOT_CALLED) {
-      mqtt_connect(&This->pMQTTClient, NULL, NULL, NULL, 0, (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
-      if(This->pMQTTConfig == true) This->PublishConfig(CheckConfig(ConfigManager::ReadConfig(This->pConfigPath), This->pMode));
-    } else if(This->pMQTTClient.error == MQTT_ERROR_SOCKET_ERROR) {
-      if(This->pMQTTClient.socketfd != -1) {
-        close(This->pMQTTClient.socketfd);
-        This->pMQTTClient.socketfd = -1;
+    pthread_mutex_unlock(&This->pMutex);
+    mqtt_sync(&This->pClient);
+    if(This->pClient.error == MQTT_ERROR_CONNECT_NOT_CALLED) {
+      mqtt_connect(&This->pClient, NULL, NULL, NULL, 0, (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
+    } else if(This->pClient.error == MQTT_ERROR_SOCKET_ERROR) {
+      if(This->pClient.socketfd != -1) {
+        close(This->pClient.socketfd);
+        This->pClient.socketfd = -1;
       }
       URL  Url(Server);
       char Port[16];
@@ -181,36 +187,36 @@ void *AnalyzerSoft::MQTT_Thread(void *params) {
         continue;
       }
       for(addrinfo *p = ServInfo; p != NULL; p = p->ai_next) {
-        This->pMQTTClient.socketfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if(This->pMQTTClient.socketfd == -1) {
+        This->pClient.socketfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if(This->pClient.socketfd == -1) {
           LogFile::Error("%s:%d -> (%s)", __func__, __LINE__, strerror(errno));
           continue;
         }
-        if(connect(This->pMQTTClient.socketfd, p->ai_addr, p->ai_addrlen) == -1) {
-          close(This->pMQTTClient.socketfd);
-          This->pMQTTClient.socketfd = -1;
+        if(connect(This->pClient.socketfd, p->ai_addr, p->ai_addrlen) == -1) {
+          close(This->pClient.socketfd);
+          This->pClient.socketfd = -1;
           continue;
         }
-        fcntl(This->pMQTTClient.socketfd, F_SETFL, fcntl(This->pMQTTClient.socketfd, F_GETFL) | O_NONBLOCK);
+        fcntl(This->pClient.socketfd, F_SETFL, fcntl(This->pClient.socketfd, F_GETFL) | O_NONBLOCK);
         break;
       }
       freeaddrinfo(ServInfo);
-      if(This->pMQTTClient.socketfd == -1) {
+      if(This->pClient.socketfd == -1) {
         LogFile::Debug("Analyzer '%s' can not connect to MQTT broker", This->pSerial.c_str());
         usleep(1000000);
         continue;
       } else {
-        mqtt_reinit(&This->pMQTTClient, This->pMQTTClient.socketfd, This->pMQTTSendBuff, This->pMQTTBuffSize, This->pMQTTRecvBuff, This->pMQTTBuffSize);
+        mqtt_reinit(&This->pClient, This->pClient.socketfd, This->pSendBuff, This->pBuffSize, This->pRecvBuff, This->pBuffSize);
       }
-    } else if(This->pMQTTClient.error != MQTT_OK) {
-      LogFile::Error("MQTT ERROR: %s (%d)", mqtt_error_str(This->pMQTTClient.error), This->pMQTTClient.error);
+    } else if(This->pClient.error != MQTT_OK) {
+      LogFile::Error("MQTT ERROR: %s (%d)", mqtt_error_str(This->pClient.error), This->pClient.error);
     }
     usleep(100000);
   }
-  if(This->pMQTTClient.socketfd != -1) {
-    close(This->pMQTTClient.socketfd);
-    This->pMQTTClient.socketfd = -1;
+  if(This->pClient.socketfd != -1) {
+    close(This->pClient.socketfd);
+    This->pClient.socketfd = -1;
   }
   return NULL;
-}*/
+}
 // ---------------------------------------------------------------------------------------------------------------------

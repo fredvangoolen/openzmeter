@@ -9,6 +9,7 @@
         <div data-toggle="tooltip" :title="'RAM usage: ' + RAMTip" v-if="RAMUse != null"><img :src="require('Imgs/ddr_memory.png')">{{ RAMUse }}</div>
         <div><img :src="require('Imgs/chip.png')" v-if="CPUUse != null">{{ CPUUse }}</div>
         <div data-toggle="tooltip" :title="'WiFi network: ' + WIFINetwork" v-if="WIFIPower != null"><img :src="require('Imgs/network_wireless.png')">{{ WIFIPower }}</div>
+        <div data-toggle="tooltip" :title="'Ethernet network'" v-if="Ethernet != null"><img :src="require('Imgs/network_ethernet.png')">{{ Ethernet }}</div>
         <div data-status="tooltip" :title="'Battery status: ' + BatteryStatus" v-if="BatteryLevel != null"><img :src="require('Imgs/battery.png')">{{ BatteryLevel }}</div>
         <div v-if="Temp != null"><img :src="require('Imgs/temperature_normal.png')">{{ Temp }}</div>
       </div>
@@ -33,12 +34,12 @@
       return { Grouped: false,
                Transfer1: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
                Transfer2: this.CreateSeriesTransfer(this, ['ACTIVE_POWER']),
-               Transfer3: this.CreateSeriesTransfer(this, ['SYSTEM']) };
+               Transfer3: this.StatusTransfer(['SYSTEM']) };
     },
     created: function() {
       this.Transfer1.UpdateNow(this.analyzer);
       this.Transfer2.Update(this.analyzer, '15M', 'Day');
-      this.Transfer3.UpdateStatus(this.analyzer);
+      this.Transfer3.Update(this.analyzer);
     },
     beforeDestroy: function() {
       this.Transfer1.Destroy();
@@ -50,7 +51,7 @@
         this.$nextTick(() => {
           this.Transfer1.UpdateNow(this.analyzer);
           this.Transfer2.Update(this.analyzer, '15M', 'Day');
-          this.Transfer3.UpdateStatus(this.analyzer);
+          this.Transfer3.Update(this.analyzer);
         });
       }
     },
@@ -84,6 +85,9 @@
       },
       WIFIPower: function() {
         return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.WIFI_Power != null)) ? Math.round(this.Transfer3.Data.System.WIFI_Power) + '%' : null;
+      },
+      Ethernet: function() {
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Ethernet_Enabled != null)) ? (this.Transfer3.Data.System.Ethernet_Enabled == true) ? 'ON' : 'OFF' : null;
       },
       BatteryLevel: function() {
         return null;
@@ -149,7 +153,6 @@
     text-align: center;
     color: #FFF;
     line-height: 16px;
-    margin-right: 2px;
     display: inline-block;
   }
   .navbar-brand > div > img {

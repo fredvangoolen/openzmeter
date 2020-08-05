@@ -21,9 +21,9 @@
 #include <fstream>
 #include "Database.h"
 #include "LogFile.h"
-#include "ResourceManager.h"
-#include "ConfigManager.h"
-#include "ResourceManager.h"
+#include "ResourceFile.h"
+#include "ConfigFile.h"
+#include "ResourceFile.h"
 #include "DatabasePool.h"
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(const string &schema) {
@@ -59,7 +59,7 @@ bool Database::LoadedRow() {
 bool Database::ExecResource(const string &file) {
   size_t Len;
   ClearAsync();
-  char *Script = (char*)ResourceManager::GetFile(file, &Len);
+  char *Script = (char*)ResourceFile::GetFile(file, &Len);
   Script[Len - 1] = 0;
   return ExecSentenceNoResult(Script);
 }
