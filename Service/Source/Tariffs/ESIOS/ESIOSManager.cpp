@@ -13,17 +13,17 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "ESIOSFetch.h"
-#include "ConfigManager.h"
+#include "ESIOSManager.h"
+#include "ConfigFile.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
-uint64_t                  ESIOSFetch::pSyncDate    = 1262304000000;
-string                    ESIOSFetch::pToken       = "";
-pthread_t                 ESIOSFetch::pThread      = 0;
-pthread_mutex_t           ESIOSFetch::pMutex       = PTHREAD_MUTEX_INITIALIZER;
-volatile bool             ESIOSFetch::pTerminate   = false;
+uint64_t                  ESIOSManager::pSyncDate    = 1262304000000;
+string                    ESIOSManager::pToken       = "";
+pthread_t                 ESIOSManager::pThread      = 0;
+pthread_mutex_t           ESIOSManager::pMutex       = PTHREAD_MUTEX_INITIALIZER;
+volatile bool             ESIOSManager::pTerminate   = false;
 // ---------------------------------------------------------------------------------------------------------------------
-vector<ESIOSFetch::Variable_t> ESIOSFetch::pVariables = {
+vector<ESIOSManager::Variable_t> ESIOSManager::pVariables = {
   {  773, 8741, "hour", "v773",  "(773) Pagos por capacidad tarifa seis periodos" },
   {  792, 8741, "hour", "v792",  "(792) Precio medio horario componente mercado diario contratación libre" },
   {  793, 8741, "hour", "v793",  "(793) Precio medio horario componente restricciones PBF contratación libre" },
@@ -39,20 +39,20 @@ vector<ESIOSFetch::Variable_t> ESIOSFetch::pVariables = {
   { 1368, 8741, "hour", "v1368", "(1368) Precio medio horario componente incumplimiento energía de balance " },
 };
 // ---------------------------------------------------------------------------------------------------------------------
-ESIOSFetch::ESIOSFetch() {
+ESIOSManager::ESIOSManager() {
   Database DB;
   for(uint16_t V = 0; V < pVariables.size(); V++) DB.ExecSentenceNoResult("ALTER TABLE esios ADD COLUMN IF NOT EXISTS " + DB.BindID(pVariables[V].VarName) + " real NULL");
   HTTPServer::RegisterCallback("getESIOS", GetESIOSCallback);
   HTTPServer::RegisterCallback("setESIOS", SetESIOSCallback);
-  Configure(CheckConfig(ConfigManager::ReadConfig("/ESIOS")));
+  Configure(CheckConfig(ConfigFile::ReadConfig("/ESIOS")));
 }
-ESIOSFetch::~ESIOSFetch() {
+ESIOSManager::~ESIOSManager() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
   pthread_mutex_unlock(&pMutex);
   if(pThread != 0) pthread_join(pThread, NULL);
 }
-json ESIOSFetch::CheckConfig(const json &config) {
+json ESIOSManager::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Token"] = "";
   ConfigOUT["Enabled"] = false;
@@ -62,8 +62,8 @@ json ESIOSFetch::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-void ESIOSFetch::Configure(const json &config) {
-  ConfigManager::WriteConfig("/ESIOS", config);
+void ESIOSManager::Configure(const json &config) {
+  ConfigFile::WriteConfig("/ESIOS", config);
   bool Enable = config["Enabled"];
   pthread_mutex_lock(&pMutex);
   pToken    = config["Token"];
@@ -82,23 +82,23 @@ void ESIOSFetch::Configure(const json &config) {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void ESIOSFetch::GetESIOSCallback(const json &params, Response &response) {
+void ESIOSManager::GetESIOSCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = ConfigManager::ReadConfig("/ESIOS");
+  json Config = ConfigFile::ReadConfig("/ESIOS");
   pthread_mutex_lock(&pMutex);
   Config["LastDate"] = pSyncDate;
   pthread_mutex_unlock(&pMutex);
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
-void ESIOSFetch::SetESIOSCallback(const json &params, Response &response) {
+void ESIOSManager::SetESIOSCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Token") == false) || (params["Token"].is_string() == false)) return HTTPServer::FillResponse(response, "'Token' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Configure(CheckConfig(params));
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
-void *ESIOSFetch::Thread_Func(void *params) {
-  ESIOSFetch *This = (ESIOSFetch*)params;
+void *ESIOSManager::Thread_Func(void *params) {
+  ESIOSManager *This = (ESIOSManager*)params;
   SSLClient Client("api.esios.ree.es", 443);
   Client.set_keep_alive(true);
   Client.set_connection_timeout(30);
@@ -125,7 +125,7 @@ void *ESIOSFetch::Thread_Func(void *params) {
   }
   return NULL;
 }
-bool ESIOSFetch::FetchIndicator(SSLClient &client, const string &token, const Variable_t &var, uint64_t to) {
+bool ESIOSManager::FetchIndicator(SSLClient &client, const string &token, const Variable_t &var, uint64_t to) {
   Database DB;
   time_t   Time;
   tm       Timestamp;

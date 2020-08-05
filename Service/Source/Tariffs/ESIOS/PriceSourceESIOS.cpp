@@ -16,7 +16,7 @@
 #include "cctz/time_zone.h"
 #include "Database.h"
 #include "PriceSourceESIOS.h"
-#include "ESIOSFetch.h"
+#include "ESIOSManager.h"
 #include "PriceSource.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
@@ -26,7 +26,7 @@ bool   PriceSourceESIOS::pRegistered = PriceSourceESIOS::Register();
 //----------------------------------------------------------------------------------------------------------------------
 bool PriceSourceESIOS::Register() {
   PriceSource::pModules.insert( { "ESP_ESIOS", { CreateInstance, GetVarsInfo } } );
-  for(uint16_t V = 0; V < ESIOSFetch::pVariables.size(); V++) pQueryColumns += ESIOSFetch::pVariables[V].VarName + ", ";
+  for(uint16_t V = 0; V < ESIOSManager::pVariables.size(); V++) pQueryColumns += ESIOSManager::pVariables[V].VarName + ", ";
   pQueryColumns += "timestamp";
   return true;
 }
@@ -40,12 +40,12 @@ void PriceSourceESIOS::PrepareRange(const uint64_t from, const uint64_t to) {
 void PriceSourceESIOS::GetParams(const uint64_t sampletime, map<string, float> &vars) {
   while((pDB.LoadedRow() == true) && ((pDB.ResultUInt64("timestamp") / 3600000) < (sampletime / 3600000))) pDB.FecthRow();
   if((pDB.LoadedRow() == true) && ((pDB.ResultUInt64("timestamp") / 3600000) == (sampletime / 3600000))) {
-    for(uint16_t V = 0; V < ESIOSFetch::pVariables.size(); V++) {
-      float Tmp = pDB.ResultFloat(ESIOSFetch::pVariables[V].VarName);
-      vars[ESIOSFetch::pVariables[V].VarName] = isnan(Tmp) ? 0 : Tmp;
+    for(uint16_t V = 0; V < ESIOSManager::pVariables.size(); V++) {
+      float Tmp = pDB.ResultFloat(ESIOSManager::pVariables[V].VarName);
+      vars[ESIOSManager::pVariables[V].VarName] = isnan(Tmp) ? 0 : Tmp;
     }
   } else {
-    for(uint16_t V = 0; V < ESIOSFetch::pVariables.size(); V++) vars[ESIOSFetch::pVariables[V].VarName] = 0.0;
+    for(uint16_t V = 0; V < ESIOSManager::pVariables.size(); V++) vars[ESIOSManager::pVariables[V].VarName] = 0.0;
   }
 }
 json PriceSourceESIOS::GetVarsInfo() {
@@ -54,12 +54,12 @@ json PriceSourceESIOS::GetVarsInfo() {
   Database DB;
   DB.ExecSentenceAsyncResult("SELECT " + pQueryColumns + " FROM esios WHERE timestamp <= " + DB.Bind(Now) + " ORDER BY timestamp DESC LIMIT 1");
   bool HaveData = DB.FecthRow();
-  for(uint16_t V = 0; V < ESIOSFetch::pVariables.size(); V++) {
+  for(uint16_t V = 0; V < ESIOSManager::pVariables.size(); V++) {
     json Var = json::object();
-    Var["Name"] = ESIOSFetch::pVariables[V].VarName;
-    Var["Description"] = ESIOSFetch::pVariables[V].Description;
+    Var["Name"] = ESIOSManager::pVariables[V].VarName;
+    Var["Description"] = ESIOSManager::pVariables[V].Description;
     if(HaveData == true) {
-      float Tmp = DB.ResultFloat(ESIOSFetch::pVariables[V].VarName);
+      float Tmp = DB.ResultFloat(ESIOSManager::pVariables[V].VarName);
       Var["Value"] = isnan(Tmp) ? 0 : Tmp;
     } else {
       Var["Value"] = 0.0;

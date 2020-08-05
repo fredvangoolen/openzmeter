@@ -19,14 +19,14 @@
 #include <unistd.h>
 #include "PidFile.h"
 #include "nlohmann/json.h"
-#include "ConfigManager.h"
+#include "ConfigFile.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 PidFile::PidFile() {
   pFile = "/var/run/openZmeter.pid";
-  json Config = ConfigManager::ReadConfig("/PidFile");
+  json Config = ConfigFile::ReadConfig("/PidFile");
   if(Config.is_string()) pFile = Config;
   char PID_Number[16];
   int Len = sprintf(PID_Number, "%d", getpid());

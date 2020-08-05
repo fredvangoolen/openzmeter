@@ -80,6 +80,38 @@ const openZmeter = {
       };
       return Transfer;
     };
+    Vue.prototype.StatusTransfer = (series) => {
+      var Transfer = { SingleShot: false, Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null };
+      Transfer.Destroy = () => {
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+      };
+      Transfer.Update = (analyzer) => {
+        if(analyzer == null) return;
+        var Cancelled = false;
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+        if((Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = null;
+        Transfer.Analyzer  = analyzer;
+        Transfer.CancelFunc = () => { Cancelled = true; };
+        Vue.http.post('getStatus', { Analyzer: analyzer.Analyzer, Series: series }).then(
+          (result) => {
+            if(Cancelled == true) return;
+            Transfer.Data = Object.seal(result.body);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 3000);
+          },
+          (fail) => {
+            if(Cancelled == true) return;
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 3000);
+          }
+        );
+      };
+      return Transfer;
+    };
+
+
+
+
 
 
 

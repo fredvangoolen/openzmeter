@@ -15,10 +15,11 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "DatabasePool.h"
 #include "nlohmann/json.h"
-#include "ConfigManager.h"
+#include "ConfigFile.h"
 #include "LogFile.h"
 #include "Tools.h"
 #include "Database.h"
+#include "MessageLoop.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -27,7 +28,7 @@ list<DatabasePool::Connection_t>  DatabasePool::pConnectionPool;
 pthread_mutex_t                   DatabasePool::pMutex = PTHREAD_MUTEX_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 DatabasePool::DatabasePool() {
-  json Config = ConfigManager::ReadConfig("/Database");
+  json Config = ConfigFile::ReadConfig("/Database");
   uint16_t Port     = 5432;
   string   Hostname = "localhost";
   string   DataBase = "openzmeter";
@@ -46,14 +47,15 @@ DatabasePool::DatabasePool() {
   Config["Database"] = DataBase;
   Config["Username"] = Username;
   Config["Password"] = Password;
-  ConfigManager::WriteConfig("/Database", Config);
+  ConfigFile::WriteConfig("/Database", Config);
   pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase + " sslmode=allow";
-
+  MessageLoop::RegisterListener("DatabasePool_PeriodicTasks", PeriodicTasks, 60000);
   LogFile::Debug("Creating database tables");
   Database DB;
   if(DB.ExecResource("SQL/Database.sql") == false) LogFile::Error("Database is damaged, manual repair is nedded");
 }
 DatabasePool::~DatabasePool() {
+  MessageLoop::UnregisterListener("DatabasePool_PeriodicTasks");
   pthread_mutex_lock(&pMutex);
   while(pConnectionPool.size() > 0) {
     Connection_t Connection = pConnectionPool.front();

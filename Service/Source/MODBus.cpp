@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include <poll.h>
 #include "LogFile.h"
-#include "ConfigManager.h"
+#include "ConfigFile.h"
 #include "MODBus.h"
 #include "DeviceManager.h"
 // ---------------------------------------------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ list<ModbusTCP::Worker_t*> ModbusTCP::pFreeWorkers;
 vector<string>             ModbusTCP::pAnalyzers;
 // ---------------------------------------------------------------------------------------------------------------------
 ModbusTCP::ModbusTCP() {
-  Configure(CheckConfig(ConfigManager::ReadConfig("/ModbusTCP")));
+  Configure(CheckConfig(ConfigFile::ReadConfig("/ModbusTCP")));
   HTTPServer::RegisterCallback("getModbusTCP", GetModbusTCP);
   HTTPServer::RegisterCallback("setModbusTCP", SetModbusTCP);
 }
@@ -68,7 +68,7 @@ void ModbusTCP::Configure(const json &config) {
     pAnalyzers.clear();
     LogFile::Info("ModbusTCP server stoped");
   }
-  ConfigManager::WriteConfig("/ModbusTCP", config);
+  ConfigFile::WriteConfig("/ModbusTCP", config);
   bool     Enabled = config["Enabled"];
   if(Enabled == true) {
     pPort      = config["Port"];
@@ -86,7 +86,7 @@ void ModbusTCP::Configure(const json &config) {
 }
 void ModbusTCP::GetModbusTCP(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = ConfigManager::ReadConfig("/ModbusTCP");
+  json Config = ConfigFile::ReadConfig("/ModbusTCP");
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void ModbusTCP::SetModbusTCP(const json &params, Response &response) {

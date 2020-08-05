@@ -14,43 +14,33 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <vector>
-#include <stdint.h>
 #include <string>
-#include "nlohmann/json.h"
-#include "HTTPServer.h"
+#include <map>
+#include <set>
+#include <functional>
+#include <pthread.h>
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
-using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
-class PriceSourceESIOS;
-class ESIOSFetch final {
-  friend class PriceSourceESIOS;
+class MessageLoop final {
   private :
     typedef struct {
-      uint32_t   IndicatorNum;
-      uint32_t   GeoID;
-      string     TimeTrunc;
-      string     VarName;
-      string     Description;
-    } Variable_t;
+      uint64_t         LastCall;
+      function<void()> Function;
+      uint32_t         Interval;
+    } Listener_t;
   private :
-    static string              pToken;
-    static uint64_t            pSyncDate;
-    static pthread_t           pThread;
-    static pthread_mutex_t     pMutex;
-    volatile static bool       pTerminate;
+    static pthread_mutex_t         pListenersMutex;
+    static map<string, Listener_t> pListeners;
+    static pthread_mutex_t         pMessagesMutex;
+    static set<string>             pMessages;
   public :
-    static vector<Variable_t>  pVariables;
-  private :
-    static void     GetESIOSCallback(const json &params, Response &response);
-    static void     SetESIOSCallback(const json &params, Response &response);
-    static void     Configure(const json &config);
-    static json     CheckConfig(const json &config);
-    static void    *Thread_Func(void *params);
-    static bool     FetchIndicator(SSLClient &client, const string &token, const Variable_t &var, uint64_t to);
+    static void SendMessage(const string &id);
+    static void RegisterListener(const string &id, function<void()> func, uint32_t ms = 0);
+    static void UnregisterListener(const string &id);
+    static void HandleEvents();
   public :
-    ESIOSFetch();
-    ~ESIOSFetch();
+    MessageLoop();
+    ~MessageLoop();
 };
 // ---------------------------------------------------------------------------------------------------------------------

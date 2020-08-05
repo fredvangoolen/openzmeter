@@ -27,11 +27,12 @@
 #include <sys/time.h>
 #include "DeviceV2.h"
 #include "AnalyzerManager.h"
-#include "ConfigManager.h"
 #include "DeviceManager.h"
+#include "StatusManager.h"
+#include "ConfigFile.h"
 #include "LogFile.h"
 #include "Tools.h"
-#include "SysSupport.h"
+#include "MessageLoop.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceV2::pRegistered = DeviceV2::Register();
 //----------------------------------------------------------------------------------------------------------------------
@@ -108,7 +109,7 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
   memset(pAnalyzers, 0, sizeof(pAnalyzers));
   memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
   memset(pAverageValues, 0 , sizeof(pAverageValues));
-  Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial)));
+  Configure(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
   if(libusb_init(&pContext) < 0) {
     LogFile::Error("Can not open libUSB...\n");
     return;
@@ -244,7 +245,7 @@ json DeviceV2::CheckConfig(const json &config) {
 void DeviceV2::Configure(const json& config) {
   ClearAnalyzers();
   pthread_mutex_lock(&pConfigLock);
-  ConfigManager::WriteConfig("/Devices/" + pSerial, config);
+  ConfigFile::WriteConfig("/Devices/" + pSerial, config);
   for(uint8_t Ch = 0; Ch < 3; Ch++) {
     pVoltageGain[Ch] = config["VoltageGain"][Ch];
     pVoltageOffset[Ch] = config["VoltageOffset"][Ch];
@@ -430,9 +431,9 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
 //          SysStatus->Lock.Unlock();
         uint8_t Action = (Sample & 0x0300) >> 8;
         if((Action == CLICK) && (This->pButtonAction == false)) {
-          SysSupport::AddSystemAction("ToogleBluetooth");
+          MessageLoop::SendMessage("Bluetooth_Toogle");
         } else if((Action == LONG_CLICK) && (This->pButtonAction == false)) {
-          SysSupport::AddSystemAction("PowerOff");
+          MessageLoop::SendMessage("PowerOff");
         }
         This->pButtonAction = (Action == NONE);
         StatusRecv = true;
@@ -481,7 +482,7 @@ int DeviceV2::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
 void DeviceV2::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
   pAverageLocks.ReadLock();
   Config["Wave_Average"] = json::object();
@@ -501,7 +502,7 @@ void  DeviceV2::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = params;
-  json Orig = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  json Orig = ConfigFile::ReadConfig("/Devices/" + pSerial);
   if(Config.contains("Outputs") && Orig.contains("Outputs") && Config["Outputs"].is_array() && Orig["Outputs"].is_array()) {
     for(uint8_t n = 0; n < Config["Outputs"].size(); n++) {
       if(n < Orig["Outputs"].size() && (Config["Outputs"][n].contains("Mode") && Orig["Outputs"][n].contains("Mode")) && Orig["Outputs"][n].contains("Analyzer") && (Config["Outputs"][n]["Mode"] == Orig["Outputs"][n]["Mode"])) Config["Outputs"][n]["Analyzer"] = Orig["Outputs"][n]["Analyzer"];

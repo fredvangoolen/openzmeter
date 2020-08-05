@@ -32,7 +32,7 @@ TariffManager::~TariffManager() {
 }
 void TariffManager::GetTariffsCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
-  auto Func = [=](uint64_t offset, DataSink &sink) -> bool {
+  auto Func = [UserName](uint64_t offset, DataSink &sink) -> bool {
     uint32_t Items = 0;
     sink.os << "[\n  ";
     Database DB;

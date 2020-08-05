@@ -24,46 +24,7 @@
 #include "Tools.h"
 #include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
-RWLocks::RWLocks() {
-  pMutex = PTHREAD_MUTEX_INITIALIZER;
-  pReadersCondition = PTHREAD_COND_INITIALIZER;
-  pWritersCondition = PTHREAD_COND_INITIALIZER;
-  pWriters          = 0;
-  pReaders          = 0;
-  pWriter           = false;
-}
-RWLocks::~RWLocks() {
-}
-void RWLocks::ReadLock() {
-  pthread_mutex_lock(&pMutex);
-  while((pWriters > 0) || (pWriter == true)) pthread_cond_wait(&pReadersCondition, &pMutex);
-  pReaders++;
-  pthread_mutex_unlock(&pMutex);
-}
-void RWLocks::WriteLock() {
-  pthread_mutex_lock(&pMutex);
-  pWriters++;
-  while((pReaders > 0) || (pWriter == true)) pthread_cond_wait(&pWritersCondition, &pMutex);
-  pWriters--;
-  pWriter = true;
-  pthread_mutex_unlock(&pMutex);
-}
-void RWLocks::Unlock() {
-  pthread_mutex_lock(&pMutex);
-  if(pWriter == true) {
-    pWriter = false;
-  } else {
-    pReaders--;
-  }
-  if(pWriters > 0) {
-    pthread_cond_signal(&pWritersCondition);
-  } else {
-    pthread_cond_broadcast(&pReadersCondition);
-  }
-  pthread_mutex_unlock(&pMutex);
-}
-//----------------------------------------------------------------------------------------------------------------------
+
 ProviderLocks::ProviderLocks() {
   pConsumers         = 0;
   pDataReady         = false;

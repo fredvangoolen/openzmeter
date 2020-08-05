@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include "nlohmann/json.h"
 #include "LogFile.h"
-#include "ConfigManager.h"
+#include "ConfigFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using json = nlohmann::json;
@@ -33,7 +33,7 @@ bool            LogFile::pDebug    = false;
 //----------------------------------------------------------------------------------------------------------------------
 LogFile::LogFile() {
   string Name = "/var/log/openZmeter.log";
-  json Config = ConfigManager::ReadConfig("/Log");
+  json Config = ConfigFile::ReadConfig("/Log");
   if(Config.is_object()) {
     if(Config["File"].is_string()) Name = Config["File"];
     if(Config["Level"].is_number_unsigned()) pLevel = Config["Level"];
@@ -41,7 +41,7 @@ LogFile::LogFile() {
   Config = json::object();
   Config["File"] = Name;
   Config["Level"] = pLevel;
-  ConfigManager::WriteConfig("/Log", Config);
+  ConfigFile::WriteConfig("/Log", Config);
   if(Name.empty() == false) {
     pFile = open(Name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if(pFile < 0) LogFile::Warning("Can not create or open log file (%s)", strerror(errno));
@@ -83,6 +83,7 @@ void LogFile::CloseConsole() {
   pConsole = false;
 }
 void LogFile::Msg(Type type, const char *msg, va_list params) {
+  if((pDebug == false) && (type == DEBUG)) return;
   if(((type > pLevel) || (pFile == -1)) && (pConsole == false)) return;
   char   DateStr[32];
   char   MsgStr[1024];

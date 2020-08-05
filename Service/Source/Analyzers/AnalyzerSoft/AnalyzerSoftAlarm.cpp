@@ -15,3 +15,14 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAlarm.h"
 // ---------------------------------------------------------------------------------------------------------------------
+json AnalyzerSoftAlarm::CheckConfig(const json &config) {
+//  if((configAlarm.contains("Name") == false) || (configAlarm["Name"].is_string() == false)) continue;
+//      if((configAlarm.contains("Priority") == false) || (configAlarm["Priority"].is_number_unsigned() == false) || (configAlarm["Priority"] > 2)) continue;
+//      if((configAlarm.contains("Expression") == false) || (configAlarm["Expression"].is_string() == false)) continue;
+//      if((configAlarm.contains("Aggreg") == false) || (configAlarm["Aggreg"].is_string() == false) || ((configAlarm["Aggreg"] != "200MS") && (configAlarm["Aggreg"] != "3S") && (configAlarm["Aggreg"] != "1M") && (configAlarm["Aggreg"] != "10M") && (configAlarm["Aggreg"] != "15M") && (configAlarm["Aggreg"] != "1H"))) continue;
+//      if((configAlarm.contains("Samples") == false) || (configAlarm["Samples"].is_number_unsigned() == false) || (configAlarm["Samples"] > 1000)) continue;
+//      if((configAlarm.contains("Window") == false) || (configAlarm["Window"].is_number_unsigned() == false)) continue;
+//      if(configAlarm["Window"] < configAlarm["Samples"]) continue;
+//      ConfigOUT["Alarms"].push_back(configAlarm);
+return json::object();
+}

@@ -41,7 +41,6 @@ class Analyzer {
     void   SetOnline();
     bool   IsOnline();
   public :
-    virtual void PeriodicTasks() = 0;
     virtual void GetAnalyzer(const json &params, Response &response) = 0;
     virtual void SetAnalyzer(const json &params, Response &response) = 0;
     virtual void GetStatus(const json &params, Response &response) = 0;

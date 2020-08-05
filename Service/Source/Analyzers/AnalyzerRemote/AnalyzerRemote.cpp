@@ -99,8 +99,6 @@ void AnalyzerRemote::SetRemote(const json &params, Response &response) {
   pthread_mutex_unlock(&pMutex);
   return HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
-void AnalyzerRemote::PeriodicTasks() {
-}
 void AnalyzerRemote::HandleRequest(const string &url, const json &params, Response &response) {
   pthread_mutex_lock(&pMutex);
   if(pConsumerReady == false) {

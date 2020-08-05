@@ -97,16 +97,12 @@ CREATE TABLE IF NOT EXISTS events_ext (
 CREATE TABLE IF NOT EXISTS alarms (
   id            character varying NOT NULL PRIMARY KEY,
   name          varchar  NOT NULL,
-  formula       varchar  NOT NULL,
-  aggregation   varchar  NOT NULL,
-  samples       smallint NOT NULL,
-  window_length smallint NOT NULL,
-  priority      smallint NOT NULL
+  config        jsonb    NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS alarms_ext (
   id            character varying NOT NULL REFERENCES alarms(id) ON UPDATE CASCADE ON DELETE CASCADE,
-  trigger       bigint            NOT NULL PRIMARY KEY,
+  trigger       bigint   NOT NULL PRIMARY KEY,
   release       bigint
 ) WITH (OIDS=FALSE);
 

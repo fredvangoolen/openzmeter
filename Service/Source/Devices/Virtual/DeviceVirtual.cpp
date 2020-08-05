@@ -18,7 +18,7 @@
 #include "AnalyzerManager.h"
 #include "Tools.h"
 #include "LogFile.h"
-#include "ConfigManager.h"
+#include "ConfigFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceVirtual::pRegistered = DeviceVirtual::Register();
 //----------------------------------------------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of r
   pThread   = 0;
   pLock     = PTHREAD_MUTEX_INITIALIZER;
   pAnalyzer = NULL;
-  Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + pSerial)));
+  Configure(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
 }
 DeviceVirtual::~DeviceVirtual() {
   LogFile::Info("Stopping device with serial '%s'", pSerial.c_str());
@@ -81,7 +81,7 @@ uint32_t DeviceVirtual::AnalyzersCount() {
   return Count;
 }
 void DeviceVirtual::Configure(const json &config) {
-  ConfigManager::WriteConfig("/Devices/" + pSerial, config);
+  ConfigFile::WriteConfig("/Devices/" + pSerial, config);
   if(pThread != 0) {
     pTerminate = true;
     pthread_join(pThread, NULL);
@@ -114,7 +114,7 @@ void DeviceVirtual::Configure(const json &config) {
 void DeviceVirtual::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = ConfigManager::ReadConfig("/Devices/" + pSerial);
+  json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
   Config.erase("Analyzer");
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
@@ -122,7 +122,7 @@ void DeviceVirtual::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = params;
-  Config["Analyzer"] = ConfigManager::ReadConfig("/Devices/" + pSerial + "/Analyzer");
+  Config["Analyzer"] = ConfigFile::ReadConfig("/Devices/" + pSerial + "/Analyzer");
   Configure(Config);
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }

@@ -109,11 +109,6 @@ void AnalyzerManager::DelAnalyzer(const string &serial) {
   if(Analyzer != pAnalyzers.end()) pAnalyzers.erase(Analyzer);
   pAnalyzersLock.Unlock();
 }
-//void DeviceManager::PeriodicTasks() {
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) Dev->PeriodicTasks();
-//  pDevicesLock.Unlock();
-//}
 //bool DeviceManager::HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
 //  pDevicesLock.ReadLock();
 //  for(Device *Dev : pDevices) {
@@ -138,7 +133,7 @@ void AnalyzerManager::CallAnalyzerFunction(const json &params, Response &respons
 }
 void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
-  auto Func = [=](uint64_t offset, DataSink &sink) -> bool {
+  auto Func = [UserName](uint64_t offset, DataSink &sink) -> bool {
     uint32_t Items = 0;
     sink.os << "[\n  ";
     if(UserName != "admin") {

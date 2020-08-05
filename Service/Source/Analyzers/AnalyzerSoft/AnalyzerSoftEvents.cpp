@@ -18,7 +18,9 @@
 AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial) {
   pSerial = serial;
 }
-AnalyzerSoftEvents::~AnalyzerSoftEvents() {}
+AnalyzerSoftEvents::~AnalyzerSoftEvents() {
+
+}
 void AnalyzerSoftEvents::Config(const bool enalbed) {
 
 }

@@ -25,7 +25,7 @@ void AnalyzerSoftRates::Config(const time_zone &tz) {
   pTimeZone = tz;
 }
 void AnalyzerSoftRates::GetRates(const json &params, Response &response) const {
-  auto Func = [=](uint64_t offset, DataSink &sink) -> bool {
+  auto Func = [&](uint64_t offset, DataSink &sink) -> bool {
     uint32_t Items = 0;
     sink.os << "[\n  ";
     Database DB(pSerial);
@@ -127,7 +127,7 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
     }
   }
-  auto Func = [=](uint64_t offset, DataSink &sink) -> bool {
+  auto Func = [&, From, To, Group, Series](uint64_t offset, DataSink &sink) -> bool {
     AnalyzerSoftRatesEval Eval(pSerial, pTimeZone, From, To, Group, Series);
     sink.os << "[\n  " << Eval.Headers().dump();
     while(true) {
@@ -149,7 +149,7 @@ void AnalyzerSoftRates::GetBills(const json &params, Response &response) const {
   uint64_t From  = params["From"];
   uint64_t To    = params["To"];
   uint8_t  Group = params["Group"];
-  auto Func = [=](uint64_t offset, DataSink &sink) -> bool {
+  auto Func = [&, From, To, Group](uint64_t offset, DataSink &sink) -> bool {
     uint32_t Items = 0;
     AnalyzerSoftRatesEval Eval(pSerial, pTimeZone, From, To, Group);
     sink.os << "[\n  ";
