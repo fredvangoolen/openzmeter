@@ -64,7 +64,7 @@
     data: function() {
       return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
                TransferGraph: this.CreateSeriesTransfer(this, ['VOLTAGE']),
-               TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'VOLTAGE_PHASE', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'UNBALANCE']),
+               TransferNow: this.NowTransfer(['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'VOLTAGE_PHASE', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'UNBALANCE']),
                TransferCubism: this.CreateSeriesTransfer(this, ['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'UNBALANCE']),
                Transfer10M: this.CreateSeriesTransfer(this, ['VOLTAGE']),
                TransferEvents: this.CreateSeriesTransfer(this)
@@ -73,7 +73,7 @@
     created: function() {
       this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
-      this.TransferNow.UpdateNow(this.analyzer);
+      this.TransferNow.Update(this.analyzer);
       this.Transfer10M.Update(this.analyzer, '10M', 'LastSamples');
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
       this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
@@ -88,7 +88,7 @@
     watch: {
       analyzer: function(val) {
         this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
-        this.TransferNow.UpdateNow(this.analyzer);
+        this.TransferNow.Update(this.analyzer);
         this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
         this.Transfer10M.Update(this.analyzer, '10M', 'LastSamples');
         this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
@@ -104,7 +104,7 @@
         if(this.Paused == true) {
           this.TransferNow.Destroy();
         } else {
-          this.TransferNow.UpdateNow(this.analyzer);
+          this.TransferNow.Update(this.analyzer);
         }
       }
     },

@@ -56,9 +56,9 @@
 <script>
   import moment from 'moment';
   export default {
-    props: { analyzer:Object, expanded: Boolean },
+    props: { analyzer: Object, expanded: Boolean },
     data() {
-      return { Submenu: null, AnalyzerSelected: false, TransferNow: this.StatusTransfer(this, ['UNREAD_EVENTS', 'UNREAD_ALARMS']), TitleFrame: 0 }
+      return { Submenu: null, AnalyzerSelected: false, TransferNow: this.StatusTransfer(['UNREAD_EVENTS', 'UNREAD_ALARMS']), TitleFrame: 0 }
     },
     created: function() {
       this.TransferNow.Update(this.analyzer);

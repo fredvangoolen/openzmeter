@@ -145,13 +145,13 @@ void DeviceV2::ClearAnalyzers() {
   pthread_mutex_unlock(&pConfigLock);
 }
 DeviceV2::~DeviceV2() {
-  LogFile::Info("Stopping device with serial '%s'\n", pSerial.c_str());
+  LogFile::Info("Stopping device with serial '%s'", pSerial.c_str());
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   ClearAnalyzers();
   if(pBuffer != NULL) free(pBuffer);
   if(pChannelsDelay != NULL) free(pChannelsDelay);
-  LogFile::Info("Device with serial '%s' stopped\n", pSerial.c_str());
+  LogFile::Info("Device with serial '%s' stopped", pSerial.c_str());
 }
 json DeviceV2::CheckConfig(const json &config) {
   json ConfigOUT = json::object();

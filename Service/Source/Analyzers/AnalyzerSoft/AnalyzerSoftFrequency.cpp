@@ -70,4 +70,7 @@ float AnalyzerSoftFrequency::Frequency(const AnalyzerSoftBlock *block) {
   }
   return (pNominalFrequency == 0) ? 0.0 : (pInvalidValues != 0) ? NAN : pFreqCyclesLen / ((2.0 * pBufferLen) / pSamplerate);
 }
+float AnalyzerSoftFrequency::NominalFrequency() {
+  return pNominalFrequency;
+}
 // ---------------------------------------------------------------------------------------------------------------------

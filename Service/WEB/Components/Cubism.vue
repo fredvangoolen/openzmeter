@@ -17,19 +17,15 @@
     watch: {
       data: function(data) {
         if((this.paused == true) || (this.Graph == null)) return;
-        var Opt = { file: [] };
-        var Range = 0;
-        if(data.Sampletime == null) {
+        var Opt = { file: data[this.title].Rows };
+        var Range = 1;
+        if(data[this.title].Rows.length == 0) {
           this.Graph.updateOptions({ file: [[0,0]] });
           return;
         }
-        for(var n in data.Sampletime) {
-          if(Math.abs(data[this.title][n]) > Range) Range = Math.abs(data[this.title][n]);
-          Opt.file.push([data.Sampletime[n], data[this.title][n]]);
-        }
-        if(Range < 1.0) Range = 1.0;
+        for(var n = 0; n < data[this.title].Rows.length; n++) Range = Math.max(Range, Math.abs(data[this.title].Rows[n][1]));
         Opt.valueRange = [-Range, +Range];
-        Opt.dateWindow = [data.From, data.To];
+        Opt.dateWindow = [data[this.title].From, data[this.title].To];
         this.Graph.updateOptions(Opt);
       },
       now: function(label) {

@@ -66,17 +66,12 @@ class AnalyzerSoft : public Analyzer {
   private : //Used in BufferAppend, Configure and Analyzer_Func and some callbacks
     RWLocks                    pAnalyzerLock;            //Locks access to analysis shared variables
     bool                       pSave200MS;               //Save 10/12 cycles aggregation to database
-    float                      pNominalVoltage;          //Analyzer nominal voltage
-    float                      pNominalFrequency;        //Analyzer nominal frequency
     float                      pMaxCurrent;              //Max current, over this value warnings are shown
     float                      pMinCurrent;              //Min current, under this value some analysis are disabled
-    time_zone                  pTimeZone;                //Country code
     uint64_t                   pSequence;                //Sequence number of analyzed blocks
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private : //Workers
     Worker                    *pAnalyzerWorker;          //Analyzer worker
-  private :
-    static float CalcChange(const float in, const float reference);
   private :
     void Analyzer_Func();
     void Configure(const json &options);
@@ -99,14 +94,15 @@ class AnalyzerSoft : public Analyzer {
     void GetEvent(const json &params, Response &response) override;
     void SetEvent(const json &params, Response &response) override;
     void DelEvent(const json &params, Response &response) override;
+    void GetAlarmsDef(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
-    void ListAlarms(const json &params, Response &response) override;
+    void AddAlarmDef(const json &params, Response &response) override;
+    void GetAlarmDef(const json &params, Response &response) override;
+    void SetAlarmDef(const json &params, Response &response) override;
+    void DelAlarmDef(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;
-    void AddAlarm(const json &params, Response &response) override;
-    void GetAlarm(const json &params, Response &response) override;
-    void SetAlarm(const json &params, Response &response) override;
-    void DelAlarm(const json &params, Response &response) override;
     void GetAlarmsRange(const json &params, Response &response) override;
+    void DelAlarm(const json &params, Response &response) override;
     void DelAlarmsRange(const json &params, Response &response) override;
     void GetRates(const json &params, Response &response) override;
     void AddRate(const json &params, Response &response) override;

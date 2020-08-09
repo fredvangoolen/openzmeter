@@ -17,14 +17,19 @@
 #include <list>
 #include <inttypes.h>
 #include "AnalyzerSoftEvent.h"
+#include "Worker.h"
 #include "AnalyzerSoftBlock.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftEvents final {
   private :
+    pthread_mutex_t            pMutex;
     string                     pSerial;
-
+    uint8_t                    pVoltageChannels;
+    float                      pSamplerate;
+    float                      pNominalVoltage;
+    Worker                    *pWorker;
     AnalyzerSoftEvent         *pEvent;                   //Running event
     list<AnalyzerSoftEvent*>   pEvents;                  //Close pending events
     bool                       pPrevStationary;          //Steady state flag
@@ -34,17 +39,17 @@ class AnalyzerSoftEvents final {
     uint16_t                   pPrevCyclesLen;           //Previous cycles count
     uint16_t                   pPrevCyclesPos;           //Previous cycles write pos
     float                     *pPrevCycles;              //Previous cycles
-
+    bool                       pHaveEvent;               //Flag to block event
   private :
-    void Events_Func();
-    bool FindRunningEvent(const uint32_t mask);
+    void  Events_Func(const AnalyzerSoftBlock *block);
+    bool  FindRunningEvent(const uint32_t mask) const;
+    float CalcChange(const float in, const float reference) const;
   public :
-    AnalyzerSoftEvents(const string &serial);
+    AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftEvents();
-        void Config(const bool enalbed);
-
+    void Config(const bool enabled, const float nominalVoltage, const float nominalFreq);
     void Run(const AnalyzerSoftBlock *block);
-    void Wait();
+    bool Wait();
     void GetEvents(const json &params, Response &response);
     void GetEventsRange(const json &params, Response &response);
     void DelEventsRange(const json &params, Response &response);

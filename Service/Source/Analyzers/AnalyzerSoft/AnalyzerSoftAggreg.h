@@ -15,7 +15,10 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <stdint.h>
+#include "muParser/muParser.h"
 #include "Analyzer.h"
+// ---------------------------------------------------------------------------------------------------------------------
+using namespace mu;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftAggreg {
   protected :
@@ -42,6 +45,7 @@ class AnalyzerSoftAggreg {
     float        pCurrent_Harmonics[200];             //Harmonicos del canal de corriente
     float        pPower_Harmonics[150];               //Power harmonics
   public :
+    void     muParserInit(Parser &parser, const string &expression);
     uint64_t Timestamp() const;
     float    Frequency() const;
     bool     Flag() const;

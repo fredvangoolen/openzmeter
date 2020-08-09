@@ -14,15 +14,89 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAlarm.h"
+#include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
-json AnalyzerSoftAlarm::CheckConfig(const json &config) {
-//  if((configAlarm.contains("Name") == false) || (configAlarm["Name"].is_string() == false)) continue;
-//      if((configAlarm.contains("Priority") == false) || (configAlarm["Priority"].is_number_unsigned() == false) || (configAlarm["Priority"] > 2)) continue;
-//      if((configAlarm.contains("Expression") == false) || (configAlarm["Expression"].is_string() == false)) continue;
-//      if((configAlarm.contains("Aggreg") == false) || (configAlarm["Aggreg"].is_string() == false) || ((configAlarm["Aggreg"] != "200MS") && (configAlarm["Aggreg"] != "3S") && (configAlarm["Aggreg"] != "1M") && (configAlarm["Aggreg"] != "10M") && (configAlarm["Aggreg"] != "15M") && (configAlarm["Aggreg"] != "1H"))) continue;
-//      if((configAlarm.contains("Samples") == false) || (configAlarm["Samples"].is_number_unsigned() == false) || (configAlarm["Samples"] > 1000)) continue;
-//      if((configAlarm.contains("Window") == false) || (configAlarm["Window"].is_number_unsigned() == false)) continue;
-//      if(configAlarm["Window"] < configAlarm["Samples"]) continue;
-//      ConfigOUT["Alarms"].push_back(configAlarm);
-return json::object();
+AnalyzerSoftAlarm::AnalyzerSoftAlarm(const string &serial, const json &config, float &voltage, float &freq) {
+  pSerial      = serial;
+  pExpression  = config["Expression"];
+  pName        = config["Name"];
+  pPriority    = config["Priority"];
+  pSamples     = config["Samples"];
+  pWindow      = config["Window"];
+  pAggreg      = config["Aggreg"];
+  pResultPos   = 0;
+  pResultCount = 0;
+  pTriggerTime = 0;
+  pInitialized = false;
+  pEvaluator   = Parser();
+  pResults     = (uint8_t*)calloc(ceil(pWindow / 8), 1);
+  pEvaluator.DefineVar("Nominal_Voltage", &voltage);
+  pEvaluator.DefineVar("Nominal_Frequency", &freq);
 }
+AnalyzerSoftAlarm::~AnalyzerSoftAlarm() {
+  if(pResults != NULL) free(pResults);
+}
+json AnalyzerSoftAlarm::CheckConfig(const json &config) {
+  json ConfigOUT = json::object();
+  ConfigOUT["Name"] = "No name";
+  ConfigOUT["Priority"] = 0;
+  ConfigOUT["Expression"] = "";
+  ConfigOUT["Aggreg"] = "3S";
+  ConfigOUT["Samples"] = 10;
+  ConfigOUT["Window"] = 12;
+  if((config.contains("Name") == true) && (config["Name"].is_string() == true)) ConfigOUT["Name"] = config["Name"];
+  if((config.contains("Priority") == true) && (config["Priority"].is_number_unsigned() == false) && (config["Priority"] < 3)) ConfigOUT["Priority"] = config["Priority"];
+  if((config.contains("Expression") == true) && (config["Expression"].is_string() == true)) ConfigOUT["Expression"] = config["Expression"];
+  if((config.contains("Aggreg") == true) && (config["Aggreg"].is_string() == true) && ((config["Aggreg"] == "200MS") || (config["Aggreg"] == "3S") || (config["Aggreg"] == "1M") || (config["Aggreg"] == "10M") || (config["Aggreg"] == "15M") || (config["Aggreg"] == "1H"))) ConfigOUT["Aggreg"] = config["Aggreg"];
+  if((config.contains("Samples") == true) && (config["Samples"].is_number_unsigned() == true) && (config["Samples"] <= 1000)) ConfigOUT["Samples"] = config["Samples"];
+  if((config.contains("Window") == true) && (config["Window"].is_number_unsigned() == true) && (config["Window"] > ConfigOUT["Samples"])) ConfigOUT["Window"] = config["Window"];
+  return ConfigOUT;
+}
+void AnalyzerSoftAlarm::PushAggreg(const string &aggreg, AnalyzerSoftAggreg *data) {
+  if(pAggreg != aggreg) return;
+  if(pInitialized == false) {
+    data->muParserInit(pEvaluator, pExpression);
+    pInitialized = true;
+  }
+  uint8_t *Byte   = &pResults[pResultPos / 8];
+  uint8_t  Bit    = pResultPos % 8;
+  if((*Byte) & (1 << Bit)) pResultCount--;
+  *Byte &= ~(1 << Bit);
+  try {
+    if((pEvaluator.Eval() > 0.0) == true) {
+      pResultCount++;
+      *Byte |= (1 << Bit);
+    }
+  } catch (Parser::exception_type &e) {
+    LogFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", pSerial.c_str());
+  }
+  pResultPos = (pResultPos + 1) % pWindow;
+  if((pResultCount == pSamples) && (pTriggerTime == 0)) {
+    pTriggerTime = data->Timestamp();
+    LogFile::Debug("Alarm triggered on analyzer '%s'", pSerial.c_str());
+    Database DB(pSerial);
+//    DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", true, " + DB.Bind(Alarm.Priority) + ")");
+//    if(pMQTTAlarms == true) PublishAlarm(aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
+//    Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
+  } else if((pResultCount == 0) && (pTriggerTime != 0)) {
+    pTriggerTime = 0;
+    LogFile::Debug("Alarm reseted on analyzer '%s'", pSerial.c_str());
+    Database DB(pSerial);
+//    DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", false, " + DB.Bind(Alarm.Priority) + ")");
+//    if(pMQTTAlarms == true) PublishAlarm(aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
+//    Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
+  }
+}
+/*void AnalyzerSoftAlarm::PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered) {
+  if(pMQTTClient.socketfd == -1) return;
+  json Msg = json::object();
+  Msg["AlarmTime"] = time;
+  Msg["Name"] = name;
+  Msg["Priority"] = prio;
+  Msg["Triggered"] = triggered;
+  string TextMsg = Msg.dump();
+  string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/Alarms" : pSerial + "/Alarms";
+  mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1);
+  LogFile::Debug("Analyzer '%s' publish message to MQTT broker", pSerial.c_str());
+}*/
+// ---------------------------------------------------------------------------------------------------------------------

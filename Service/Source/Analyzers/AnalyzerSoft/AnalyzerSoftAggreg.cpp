@@ -137,4 +137,27 @@ void AnalyzerSoftAggreg::Normalize(const uint16_t samples) {
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage_Phase[n] = pVoltage_Phase[n] / samples;
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pApparent_Power[n] = pApparent_Power[n] / samples;
 }
+void AnalyzerSoftAggreg::muParserInit(Parser &parser, const string &expression) {
+  auto AppendArray = [&](const string &serie, float *data, const uint8_t len) {
+    if(len == 1) {
+      parser.DefineVar(serie, &data[0]);
+    } else {
+      for(uint8_t n = 0; n < len; n++) parser.DefineVar(serie + "_" + to_string(n + 1), &data[n]);
+    }
+  };
+  parser.DefineVar("Frequency", &pFrequency);
+  AppendArray("Voltage", pVoltage, pVoltageChannels);
+  AppendArray("Current", pCurrent, pCurrentChannels);
+  AppendArray("ActivePower", pActive_Power, pVoltageChannels);
+  AppendArray("ReactivePower", pReactive_Power, pVoltageChannels);
+  AppendArray("ApparentPower", pApparent_Power, pVoltageChannels);
+  AppendArray("PowerFactor", pPower_Factor, pVoltageChannels);
+  AppendArray("VoltageTHD", pVoltage_THD, pVoltageChannels);
+  AppendArray("CurrentTHD", pCurrent_THD, pCurrentChannels);
+  AppendArray("Phi", pPhi, pVoltageChannels);
+  if(pVoltageChannels > 1) {
+    AppendArray("VoltagePhase", pVoltage_Phase, pVoltageChannels);
+    parser.DefineVar("Unbalance", &pUnbalance);
+  }
+}
 // ---------------------------------------------------------------------------------------------------------------------

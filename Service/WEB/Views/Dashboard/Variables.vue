@@ -33,20 +33,20 @@
     },
     computed: {
       Data: function() {
-        var Series = { 'Active Power': [], 'Reactive Power': [], 'Power Factor': [], 'Phi': [], 'Voltage THD': [], 'Current THD': [] };
-        if((this.data == null) || (this.analyzer == null) || (this.Phase == null)) return Series;
-        Series.Sampletime = this.data.Sampletime;
-        Series.From = this.data.From;
-        Series.To = this.data.To;
-        Series.TimeZone = this.analyzer.TimeZone;
-        for(var i in this.data.Sampletime) {
-          Series['Active Power'].push(this.data.Active_Power[i][this.Phase]);
-          Series['Reactive Power'].push(this.data.Reactive_Power[i][this.Phase]);
-          Series['Power Factor'].push(this.data.Power_Factor[i][this.Phase]);
-          Series['Phi'].push(this.data.Phi[i][this.Phase]);
-          Series['Voltage THD'].push(this.data.Voltage_THD[i][this.Phase]);
-          Series['Current THD'].push(this.data.Current_THD[i][this.Phase]);
-        }
+        var Series = { 'Active Power': this.FillSerie('Active_Power'), 'Reactive Power': this.FillSerie('Reactive_Power'), 'Power Factor': this.FillSerie('Power_Factor'), 'Phi': this.FillSerie('Phi'), 'Voltage THD': this.FillSerie('Voltage_THD'), 'Current THD': this.FillSerie('Current_THD') };
+//        if((this.data == null) || (this.analyzer == null) || (this.Phase == null)) return Series;
+//        Series.Sampletime = this.data.Sampletime;
+//        Series.From = this.data.From;
+//        Series.To = this.data.To;
+//        Series.TimeZone = this.analyzer.TimeZone;
+//        for(var i in this.data.Sampletime) {
+//          Series['Active Power'].push(this.data.Active_Power[i][this.Phase]);
+//          Series['Reactive Power'].push(this.data.Reactive_Power[i][this.Phase]);
+//          Series['Power Factor'].push(this.data.Power_Factor[i][this.Phase]);
+//          Series['Phi'].push(this.data.Phi[i][this.Phase]);
+//          Series['Voltage THD'].push(this.data.Voltage_THD[i][this.Phase]);
+//          Series['Current THD'].push(this.data.Current_THD[i][this.Phase]);
+//        }
         return Object.seal(Series);
       },
       DataNow: function() {
@@ -67,6 +67,14 @@
       Formatter_Power_Factor: function(val) { return this.Round(val, 2, true); },
       Formatter_Phi: function(val) { return this.Round(val, 2, true) + ((val < 0) ? '° IND' : (val > 0) ? '° CAP' : '°'); },
       Formatter_Percent: function(val) { return this.Round(val, 2, true) + ' %'; },
+      FillSerie: function(name) {
+        var Data = [];
+        if(this.data == null) return { From: null, To: null, TimeZone: null, Rows: Data };
+        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var DataCol = this.data.Headers.indexOf(name);
+        for(var i = 0; i < this.data.Rows.length; i++) Data.push([this.data.Rows[i][TimeCol], this.data.Rows[i][DataCol][this.Phase]]);
+        return { From: this.data.From, To: this.data.To, TimeZone: this.analyzer.TimeZone, Rows: Data };
+      },
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
         var Header = ['Sample']

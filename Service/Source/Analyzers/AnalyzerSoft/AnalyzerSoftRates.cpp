@@ -21,8 +21,8 @@ AnalyzerSoftRates::AnalyzerSoftRates(const string &serial) {
 }
 AnalyzerSoftRates::~AnalyzerSoftRates() {
 }
-void AnalyzerSoftRates::Config(const time_zone &tz) {
-  pTimeZone = tz;
+void AnalyzerSoftRates::Config(const string &timezone) {
+  load_time_zone(timezone, &pTimeZone);
 }
 void AnalyzerSoftRates::GetRates(const json &params, Response &response) const {
   auto Func = [&](uint64_t offset, DataSink &sink) -> bool {
@@ -98,30 +98,30 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
   uint64_t To     = params["To"];
   uint8_t  Group  = params["Group"];
   uint16_t Series = AnalyzerSoftRatesEval::SERIE_TIMESTAMP;
-  for(uint8_t i = 0; i < params["Series"].size(); i++) {
-    if(params["Series"][i].is_string() == false) {
+  for(auto &Serie : params["Series"]) {
+    if(Serie.is_string() == false) {
       return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
-    } else if(params["Series"][i] == "ACTIVE_POWER") {
+    } else if(Serie == "ACTIVE_POWER") {
       Series |= AnalyzerSoftRatesEval::SERIE_ACTIVE_POWER;
-    } else if(params["Series"][i] == "ACTIVE_ENERGY") {
+    } else if(Serie == "ACTIVE_ENERGY") {
       Series |= AnalyzerSoftRatesEval::SERIE_ACTIVE_ENERGY;
-    } else if(params["Series"][i] == "REACTIVE_POWER") {
+    } else if(Serie == "REACTIVE_POWER") {
       Series |= AnalyzerSoftRatesEval::SERIE_REACTIVE_POWER;
-    } else if(params["Series"][i] == "REACTIVE_ENERGY") {
+    } else if(Serie == "REACTIVE_ENERGY") {
       Series |= AnalyzerSoftRatesEval::SERIE_REACTIVE_ENERGY;
-    } else if(params["Series"][i] == "COST") {
+    } else if(Serie == "COST") {
       Series |= AnalyzerSoftRatesEval::SERIE_COST;
-    } else if(params["Series"][i] == "POWER_COST") {
+    } else if(Serie == "POWER_COST") {
       Series |= AnalyzerSoftRatesEval::SERIE_POWER_COST;
-    } else if(params["Series"][i] == "ENERGY_COST") {
+    } else if(Serie == "ENERGY_COST") {
       Series |= AnalyzerSoftRatesEval::SERIE_ENERGY_COST;
-    } else if(params["Series"][i] == "PERIOD") {
+    } else if(Serie == "PERIOD") {
       Series |= AnalyzerSoftRatesEval::SERIE_PERIOD;
-    } else if(params["Series"][i] == "COLOR") {
+    } else if(Serie == "COLOR") {
       Series |= AnalyzerSoftRatesEval::SERIE_COLOR;
-    } else if(params["Series"][i] == "POWER_CONTRACTED") {
+    } else if(Serie == "POWER_CONTRACTED") {
       Series |= AnalyzerSoftRatesEval::SERIE_CONTRACTED;
-    } else if(params["Series"][i] == "BILL") {
+    } else if(Serie == "BILL") {
       Series |= AnalyzerSoftRatesEval::SERIE_BILL;
     } else {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);

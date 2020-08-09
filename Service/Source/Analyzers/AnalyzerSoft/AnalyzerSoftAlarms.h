@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <vector>
+#include <map>
 #include <pthread.h>
 #include "Tools.h"
 #include "AnalyzerSoft.h"
@@ -23,29 +23,31 @@
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftAlarms final {
   private :
+    float                           pNominalVoltage;
+    float                           pNominalFrequency;
     pthread_mutex_t                 pMutex;
-    map<string, AnalyzerSoftAlarm>  pAlarms;                  //Alarms control object
+    map<string, AnalyzerSoftAlarm>  pAlarms;
     string                          pSerial;
     Worker                         *pWorker;
+    string                          pRunningAggreg;
   private :
-    void Alarms_Func(const AnalyzerSoftAggreg *aggreg);
-//    void InitAlarmParser(Parser &parser, const string &expr, const AnalyzerSoftAggreg::AggregType type);
+    void Alarms_Func(AnalyzerSoftAggreg *aggreg);
     void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
-
   public :
     AnalyzerSoftAlarms(const string &serial);
     ~AnalyzerSoftAlarms();
-    void Config(const bool enabled);
-    void Run(const AnalyzerSoftAggreg *params);
+    void Config(const bool enabled, const float nominalVoltage, const float nominalFreq);
+    void Run(const string &name, const AnalyzerSoftAggreg *params);
     void Wait();
-    void TestAlarm(const json &params, Response &response, const AnalyzerSoftAggreg200MS *aggreg);
-    void ListAlarms(const json &params, Response &response);
+    void GetAlarmsDef(const json &params, Response &response);
+    void TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS *aggreg);
+    void AddAlarmDef(const json &params, Response &response);
+    void GetAlarmDef(const json &params, Response &response);
+    void SetAlarmDef(const json &params, Response &response);
+    void DelAlarmDef(const json &params, Response &response);
     void GetAlarms(const json &params, Response &response);
-    void AddAlarm(const json &params, Response &response);
-    void GetAlarm(const json &params, Response &response);
-    void SetAlarm(const json &params, Response &response);
-    void DelAlarm(const json &params, Response &response);
     void GetAlarmsRange(const json &params, Response &response);
+    void DelAlarm(const json &params, Response &response);
     void DelAlarmsRange(const json &params, Response &response);
 };
 // ---------------------------------------------------------------------------------------------------------------------

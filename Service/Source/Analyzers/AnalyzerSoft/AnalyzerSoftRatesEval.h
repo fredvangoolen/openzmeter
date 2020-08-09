@@ -54,7 +54,6 @@ class AnalyzerSoftRatesEval final {
     uint64_t                      pNowDate;           //Current system time
     uint64_t                      pCurrent;           //Current evaluation time
     uint64_t                      pLoadedPeriodDate;  //Active bill period start
-//    json                          pRow;               //Returned row
     Database                     *pRateDB;            //Rate fetch connection
     Database                     *pDataDB;            //Data fetch connection
     Rate                         *pLoadedRate;        //Currently loaded Rate (if any)

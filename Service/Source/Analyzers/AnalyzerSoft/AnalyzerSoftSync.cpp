@@ -13,67 +13,69 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
+#include "LogFile.h"
 #include "AnalyzerSoftSync.h"
 // ---------------------------------------------------------------------------------------------------------------------
+AnalyzerSoftSync::AnalyzerSoftSync() {
+  pMutex = PTHREAD_MUTEX_INITIALIZER;
+  pThread = 0;
+}
+AnalyzerSoftSync::~AnalyzerSoftSync() {
+  pTerminate = true;
+  if(pThread != 0) pthread_join(pThread, NULL);
+}
 json AnalyzerSoftSync::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
-  ConfigOUT["SyncEnabled"] = false;
-  ConfigOUT["Sync"] = json::object();
-  ConfigOUT["Sync"]["Server"] = "";
-  ConfigOUT["Sync"]["User"] = "";
-  ConfigOUT["Sync"]["Pass"] = "";
-  if(config.contains("SyncEnabled") && config["SyncEnabled"].is_boolean()) ConfigOUT["SyncEnabled"] = config["SyncEnabled"];
-  if(config.contains("Sync") && config["Sync"].is_object()) {
-    if(config["Sync"].contains("Server") && config["Sync"]["Server"].is_string()) ConfigOUT["Sync"]["Server"] = config["Sync"]["Server"];
-    if(config["Sync"].contains("User") && config["Sync"]["User"].is_string()) ConfigOUT["Sync"]["User"] = config["Sync"]["User"];
-    if(config["Sync"].contains("Pass") && config["Sync"]["Pass"].is_string()) ConfigOUT["Sync"]["Pass"] = config["Sync"]["Pass"];
+  ConfigOUT["Enabled"] = false;
+  ConfigOUT["Server"] = "";
+  ConfigOUT["User"] = "";
+  ConfigOUT["Pass"] = "";
+  if(config.is_object() == true) {
+    if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
+    if(config.contains("Server") && config["Server"].is_string()) ConfigOUT["Server"] = config["Server"];
+    if(config.contains("User") && config["User"].is_string()) ConfigOUT["User"] = config["User"];
+    if(config.contains("Pass") && config["Pass"].is_string()) ConfigOUT["Pass"] = config["Pass"];
   }
   return ConfigOUT;
 }
 void AnalyzerSoftSync::Config(const json &config) {
-//  bool SyncEnabled = options["SyncEnabled"];
-//  if(SyncEnabled == true) {
-//    pSyncServer    = options["Sync"]["Server"];
-//    pSyncUser      = options["Sync"]["User"];
-//    pSyncPass      = options["Sync"]["Pass"];
-//    pSyncTerminate = false;
-//    if(pSyncThread == 0) {
-//      if(pthread_create(&pSyncThread, NULL, Sync_Thread, this) != 0) {
-//        LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
-//        pSyncThread = 0;
-//      } else {
-//        pthread_setname_np(pSyncThread, "Sync");
-//      }
-//    }
-//  } else if((SyncEnabled == false) && (pSyncThread != 0)) {
-//    pSyncTerminate = true;
-//    pthread_join(pSyncThread, NULL);
-//    pSyncThread = 0;
-//  }
-}
-
-
-/*
-
-//  pSyncTerminate = true;
-//  if(pSyncThread != 0) pthread_join(pSyncThread, NULL);
-
-void *AnalyzerSoftSync::Sync_Thread(void *params) {
-  AnalyzerSoft *This = (AnalyzerSoft*)params;
-  nice(10);
-  string Cookie, User, Pass, Server;
-  uint32_t ThreadsCount = 0;
-  pthread_mutex_t Mutex = PTHREAD_MUTEX_INITIALIZER;
-  pthread_cond_t  Cond  = PTHREAD_COND_INITIALIZER;
-  while(This->pSyncTerminate == false) {
-    This->pAnalyzerLock.ReadLock();
-    if((This->pSyncUser != User) || (This->pSyncPass != Pass) || (This->pSyncServer != Server)) {
-      Cookie = "";
-      User   = This->pSyncUser;
-      Pass   = This->pSyncPass;
-      Server = This->pSyncServer;
+  bool Enabled = config["Enabled"];
+  if(Enabled == true) {
+    pServer    = config["Server"];
+    pUser      = config["User"];
+    pPass      = config["Pass"];
+    pTerminate = false;
+    if(pThread == 0) {
+      if(pthread_create(&pThread, NULL, Sync_Thread, this) != 0) {
+        LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+        pThread = 0;
+      } else {
+        pthread_setname_np(pThread, "Sync");
+      }
     }
-    This->pAnalyzerLock.Unlock();
+  } else if((Enabled == false) && (pThread != 0)) {
+    pTerminate = true;
+    pthread_join(pThread, NULL);
+    pThread = 0;
+  }
+}
+void *AnalyzerSoftSync::Sync_Thread(void *params) {
+  AnalyzerSoftSync *This = (AnalyzerSoftSync*)params;
+  nice(10);
+  string   Cookie, User, Pass, Server;
+  uint32_t        ThreadsCount = 0;
+  pthread_mutex_t Mutex        = PTHREAD_MUTEX_INITIALIZER;
+  pthread_cond_t  Cond         = PTHREAD_COND_INITIALIZER;
+  /*
+  while(This->pTerminate == false) {
+    pthread_mutex_lock(&This->pMutex);
+    if((This->pUser != User) || (This->pPass != Pass) || (This->pServer != Server)) {
+      Cookie = "";
+      User   = This->pUser;
+      Pass   = This->pPass;
+      Server = This->pServer;
+    }
+    pthread_mutex_unlock(&This->pMutex);
     URL Url(Server);
     Client HTTPClient(Url.Host(), Url.Port());
     HTTPClient.set_compress(true);
@@ -169,11 +171,11 @@ void *AnalyzerSoftSync::Sync_Thread(void *params) {
     LogFile::Debug("Analyzer '%s' flusing remote request (%d pending)", This->pSerial.c_str(), ThreadsCount);
     pthread_cond_wait(&Cond, &Mutex);
   }
-  pthread_mutex_unlock(&Mutex);
+  pthread_mutex_unlock(&Mutex);*/
   return NULL;
 }
-void *AnalyzerSoft::Sync_RespThread(void *args) {
-  Sync_t *This = (Sync_t*)args;
+void *AnalyzerSoftSync::Sync_RespThread(void *args) {
+/*  Sync_t *This = (Sync_t*)args;
   This->Params["UserName"] = "admin";
   LogFile::Debug("Remote server request query '%s' for analyzar '%s'", This->Method.c_str(), This->Analyzer->pSerial.c_str());
   Response Resp;
@@ -226,7 +228,7 @@ void *AnalyzerSoft::Sync_RespThread(void *args) {
   *This->Count = *This->Count - 1;
   pthread_cond_signal(This->Cond);
   pthread_mutex_unlock(This->Mutex);
-  delete This;
+  delete This;*/
   return NULL;
 }
-*/
+// ---------------------------------------------------------------------------------------------------------------------

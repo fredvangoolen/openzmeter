@@ -66,11 +66,17 @@ class AnalyzerRemote : public Analyzer {
     void DelEvent(const json &params, Response &response) override;
     void GetCosts(const json &params, Response &response) override;
     void GetBills(const json &params, Response &response) override;
+    void GetAlarmsDef(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
+    void AddAlarmDef(const json &params, Response &response) override;
+    void GetAlarmDef(const json &params, Response &response) override;
+    void SetAlarmDef(const json &params, Response &response) override;
+    void DelAlarmDef(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;
     void GetAlarmsRange(const json &params, Response &response) override;
-    void DelAlarmsRange(const json &params, Response &response) override;
     void DelAlarm(const json &params, Response &response) override;
+    void DelAlarmsRange(const json &params, Response &response) override;
+
     void GetRemote(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
     bool HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len);
