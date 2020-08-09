@@ -22,13 +22,13 @@ using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftSync {
   enum SyncState   { NOT_LOGGED, LOGGED, CONNECTED, TERMINATE };
-
   private : //Readed in thread, changed in configure
-    pthread_t                  pSyncThread;              //Export thread
-    bool                       pSyncTerminate;           //Sync terminate signal
-    string                     pSyncServer;              //Export server address
-    string                     pSyncUser;                //Export server user
-    string                     pSyncPass;                //Export server password
+    pthread_t                  pThread;              //Export thread
+    pthread_mutex_t            pMutex;               //Shared variables lock
+    bool                       pTerminate;           //Sync terminate signal
+    string                     pServer;              //Export server address
+    string                     pUser;                //Export server user
+    string                     pPass;                //Export server password
 
 
         typedef struct {
@@ -45,9 +45,11 @@ class AnalyzerSoftSync {
     static void *Sync_Thread(void *params);
     static void *Sync_RespThread(void *params);
 
-public :
-  static json CheckConfig(const json &config);
   public :
+    static json CheckConfig(const json &config);
+  public :
+    AnalyzerSoftSync();
+    ~AnalyzerSoftSync();
     void Config(const json &config);
 
 };

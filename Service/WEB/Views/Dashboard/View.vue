@@ -67,14 +67,14 @@
     props: { analyzer: { type: Object } },
     data () {
       return { Aggreg: null, Range: null, Height: 200, Paused3S: false, Expanded: false, DialogHeight: 200,
-               TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
-               Transfer3S: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
-               Transfer1M: this.CreateSeriesTransfer(this,  ['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
+               TransferNow: this.NowTransfer(['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
+               Transfer3S: this.SeriesTransfer(['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
+               Transfer1M: this.SeriesTransfer(['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
                TransferGraph: this.PriceTransfer(['ACTIVE_ENERGY', 'COST', 'COLOR', 'PERIOD', 'BILL'])
       };
     },
     created: function() {
-      this.TransferNow.UpdateNow(this.analyzer);
+      this.TransferNow.Update(this.analyzer);
       this.Transfer3S.Update(this.analyzer, '3S', 'LastHours');
       this.Transfer1M.Update(this.analyzer, '1M', 'LastDay');
       this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
@@ -90,7 +90,7 @@
     },
     watch: {
       analyzer: function() {
-        this.TransferNow.UpdateNow(this.analyzer);
+        this.TransferNow.Update(this.analyzer);
         this.Transfer3S.Update(this.analyzer, '3S', 'LastHours');
         this.Transfer1M.Update(this.analyzer, '1M', 'LastDay');
         this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);

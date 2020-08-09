@@ -40,14 +40,15 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("getEvent",        GetEventCallback);
   HTTPServer::RegisterCallback("setEvent",        SetEventCallback);
   HTTPServer::RegisterCallback("delEvent",        DelEventCallback);
-  HTTPServer::RegisterCallback("listAlarms",      ListAlarmsCallback);
+  HTTPServer::RegisterCallback("getAlarmsDef",    GetAlarmsDefCallback);
   HTTPServer::RegisterCallback("testAlarm",       TestAlarmCallback);
-  HTTPServer::RegisterCallback("getAlarms",       GetAlarmsCallback);
-  HTTPServer::RegisterCallback("addAlarm",        AddAlarmCallback);
-  HTTPServer::RegisterCallback("getAlarm",        GetAlarmCallback);
-  HTTPServer::RegisterCallback("setAlarm",        SetAlarmCallback);
-  HTTPServer::RegisterCallback("delAlarm",        DelAlarmCallback);
+  HTTPServer::RegisterCallback("addAlarmDef",     AddAlarmDefCallback);
+  HTTPServer::RegisterCallback("getAlarmDef",     GetAlarmDefCallback);
+  HTTPServer::RegisterCallback("setAlarmDef",     SetAlarmDefCallback);
+  HTTPServer::RegisterCallback("delAlarmDef",     DelAlarmDefCallback);
+  HTTPServer::RegisterCallback("getAlarms",       GetAlarmDefCallback);
   HTTPServer::RegisterCallback("getAlarmsRange",  GetAlarmsRangeCallback);
+  HTTPServer::RegisterCallback("delAlarms",       DelAlarmCallback);
   HTTPServer::RegisterCallback("delAlarmsRange",  DelAlarmsRangeCallback);
   HTTPServer::RegisterCallback("getRates",        GetRatesCallback);
   HTTPServer::RegisterCallback("getRate",         GetRateCallback);
@@ -78,14 +79,15 @@ AnalyzerManager::~AnalyzerManager() {
   HTTPServer::UnregisterCallback("getEvent");
   HTTPServer::UnregisterCallback("setEvent");
   HTTPServer::UnregisterCallback("delEvent");
-  HTTPServer::UnregisterCallback("listAlarms");
+  HTTPServer::UnregisterCallback("getAlarmsDef");
   HTTPServer::UnregisterCallback("testAlarm");
+  HTTPServer::UnregisterCallback("addAlarmDef");
+  HTTPServer::UnregisterCallback("getAlarmDef");
+  HTTPServer::UnregisterCallback("setAlarmDef");
+  HTTPServer::UnregisterCallback("delAlarmDef");
   HTTPServer::UnregisterCallback("getAlarms");
-  HTTPServer::UnregisterCallback("addAlarm");
-  HTTPServer::UnregisterCallback("getAlarm");
-  HTTPServer::UnregisterCallback("setAlarm");
-  HTTPServer::UnregisterCallback("delAlarm");
   HTTPServer::UnregisterCallback("getAlarmsRange");
+  HTTPServer::UnregisterCallback("delAlarms");
   HTTPServer::UnregisterCallback("delAlarmsRange");
   HTTPServer::UnregisterCallback("getRates");
   HTTPServer::UnregisterCallback("getRate");
@@ -210,29 +212,32 @@ void AnalyzerManager::SetEventCallback(const json &params, Response &response) {
 void AnalyzerManager::DelEventCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::DelEvent);
 }
-void AnalyzerManager::ListAlarmsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::ListAlarms);
-}
-void AnalyzerManager::GetAlarmsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetAlarms);
+void AnalyzerManager::GetAlarmsDefCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Analyzer::GetAlarmsDef);
 }
 void AnalyzerManager::TestAlarmCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::TestAlarm);
 }
-void AnalyzerManager::AddAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::AddAlarm);
+void AnalyzerManager::AddAlarmDefCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Analyzer::AddAlarmDef);
 }
-void AnalyzerManager::GetAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetAlarm);
+void AnalyzerManager::GetAlarmDefCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Analyzer::GetAlarmDef);
 }
-void AnalyzerManager::SetAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::SetAlarm);
+void AnalyzerManager::SetAlarmDefCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Analyzer::SetAlarmDef);
 }
-void AnalyzerManager::DelAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::DelAlarm);
+void AnalyzerManager::DelAlarmDefCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Analyzer::DelAlarmDef);
+}
+void AnalyzerManager::GetAlarmsCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Analyzer::GetAlarms);
 }
 void AnalyzerManager::GetAlarmsRangeCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::GetAlarmsRange);
+}
+void AnalyzerManager::DelAlarmCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Analyzer::DelAlarm);
 }
 void AnalyzerManager::DelAlarmsRangeCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::DelAlarmsRange);

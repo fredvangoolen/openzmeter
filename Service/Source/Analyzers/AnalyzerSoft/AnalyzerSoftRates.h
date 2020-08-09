@@ -28,7 +28,7 @@ class AnalyzerSoftRates final {
   public :
     AnalyzerSoftRates(const string &serial);
     ~AnalyzerSoftRates();
-    void Config(const time_zone &tz);
+    void Config(const string &timezone);
     void GetRates(const json &params, Response &response) const;
     void AddRate(const json &params, Response &response) const;
     void GetRate(const json &params, Response &response) const;

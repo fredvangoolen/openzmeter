@@ -15,49 +15,67 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftEvents.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial) {
-  pSerial = serial;
+AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate) {
+  pMutex            = PTHREAD_MUTEX_INITIALIZER;
+  pVoltageChannels  = (mode == Analyzer::PHASE1) ? 1 : 3;
+  pSerial           = serial;
+  pSamplerate       = samplerate;
+  pNominalVoltage   = 230.0;
+  pEvent            = NULL;
+  pPrevStationary   = false;
+  pPrevSamplesLen   = 0;
+  pPrevSamplesPos   = 0;
+  pPrevSamples      = NULL;
+  pPrevCyclesLen    = 0;
+  pPrevCyclesPos    = 0;
+  pPrevCycles       = NULL;
+  pWorker           = NULL;
+  pHaveEvent        = false;
 }
 AnalyzerSoftEvents::~AnalyzerSoftEvents() {
-
+  if(pEvent != NULL) delete pEvent;
+  if(pPrevSamples != NULL) free(pPrevSamples);
+  if(pPrevCycles != NULL) free(pPrevCycles);
 }
-void AnalyzerSoftEvents::Config(const bool enalbed) {
-
-}
-void AnalyzerSoftEvents::Run(const AnalyzerSoftBlock *block) {}
-void AnalyzerSoftEvents::Wait() {}
-/*
-
-//  if(pEventsWorker != NULL) delete pEventsWorker;
-    pPrevSamples       = NULL;
-  pPrevCycles        = NULL;
-
-
-//  if(pPrevSamples != NULL) free(pPrevSamples);
-//  if(pPrevCycles != NULL) free(pPrevCycles);
-
-
-  if((EventsEnabled == false) && (pEventsWorker != NULL)) {
-    delete pEventsWorker;
-    pEventsWorker = NULL;
-    free(pPrevCycles);
-    pPrevCycles = NULL;
-    free(pPrevSamples);
-    pPrevSamples = NULL;
-  } else if((EventsEnabled == true) && (pEventsWorker == NULL)) {
-    memset(&pEvent, 0, sizeof(Event_t));
+void AnalyzerSoftEvents::Config(const bool enabled, const float nominalVoltage, const float nominalFreq) {
+  pthread_mutex_lock(&pMutex);
+  pNominalVoltage = nominalVoltage;
+  if(pPrevCycles != NULL) free(pPrevCycles);
+  pPrevCycles = NULL;
+  if(pPrevSamples != NULL) free(pPrevSamples);
+  pPrevSamples = NULL;
+  if((enabled == false) && (pWorker != NULL)) {
+    delete pWorker;
+    pWorker = NULL;
+  } else if((enabled == true) && (pWorker == NULL)) {
+   // memset(&pEvent, 0, sizeof(Event_t));
     pPrevStationary = false;
     pPrevSamplesLen = EVENT_RAWENVELOPETIME * pSamplerate;
     pPrevSamplesPos = 0;
     pPrevSamples    = (float*)calloc(pPrevSamplesLen * pVoltageChannels, sizeof(float));
-    pPrevCyclesLen  = (pNominalFrequency * 2) - 1;
+    pPrevCyclesLen  = (nominalFreq * 2) - 1;
     pPrevCyclesPos  = 0;
     pPrevCycles     = (float*)calloc(pPrevCyclesLen * pVoltageChannels, sizeof(float));
-    pEventsWorker   = new Worker("EventsDet", [&](void *a) { this->Events_Func(); });
+    pWorker         = new Worker("EventsDet", [&](void *a) { this->Events_Func((const AnalyzerSoftBlock *)a); });
   }
-
-
-  void AnalyzerSoft::Events_Func() {
+  pthread_mutex_unlock(&pMutex);
+}
+void AnalyzerSoftEvents::Run(const AnalyzerSoftBlock *block) {
+  pthread_mutex_unlock(&pMutex);
+  if(pWorker != NULL) pWorker->Run((void*)block);
+  pthread_mutex_unlock(&pMutex);
+}
+bool AnalyzerSoftEvents::Wait() {
+  pthread_mutex_unlock(&pMutex);
+  if(pWorker != NULL) pWorker->Wait();
+  bool Result = ((pWorker != NULL) && pHaveEvent);
+  pthread_mutex_unlock(&pMutex);
+  return Result;
+}
+float AnalyzerSoftEvents::CalcChange(const float in, const float reference) const {
+  return ((in - reference) / reference) * 100;
+}
+void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
   auto CopyCycles = [&](float *buff, const uint16_t count) -> float* {
     buff = (float*)realloc(buff, sizeof(float) * pVoltageChannels * count);
     for(uint16_t n = 0; n < count; n++) {
@@ -73,41 +91,26 @@ void AnalyzerSoftEvents::Wait() {}
     return buff;
   };
   uint32_t  Pos  = 0;
-  float    *Buff = NULL;*/
-/*  for(uint8_t i = 0; i < pBlockCyclesCount; i++) {
+//  float    *Buff = NULL;
+  for(uint8_t i = 0; i < block->Cycles(); i++) {
     float    Tolerance  = EVENT_RVC - ((pPrevStationary == true) ? 0.0 : EVENT_HYSTERESIS);
     bool     Stationary = true;
-    uint16_t CycleLen   = pBlockCycles[i];
+    uint16_t CycleLen   = block->CycleLen(i);
     float    Cycle[3];
     float    RMS_Avg[3];
     for(uint8_t n = 0; n < pVoltageChannels; n++) {
       Cycle[n] = 0.0;
-      float *Ptr   = &pVoltageSamples[n * pMaxSamples + Pos];
-      for(uint16_t j = 0; j < CycleLen; j++) Cycle[n] += Ptr[j] * Ptr[j];
-      Cycle[n] = sqrt(Cycle[n] / CycleLen);
-      RMS_Avg[n]   = Cycle[n];
+      for(uint16_t j = 0; j < CycleLen; j++) Cycle[n] += pow(block->VoltageSample(n, Pos + j), 2.0);
+      Cycle[n]   = sqrt(Cycle[n] / CycleLen);
+      RMS_Avg[n] = Cycle[n];
       for(uint16_t j = 0; j < pPrevCyclesLen; j++) RMS_Avg[n] += pPrevCycles[j * pVoltageChannels + n];
       RMS_Avg[n] = RMS_Avg[n] / (pPrevCyclesLen + 1);
-    }
-    for(uint8_t n = 0; (n < pVoltageChannels) && (Stationary == true); n++) {
       Stationary = (fabs(CalcChange(Cycle[n], RMS_Avg[n])) > Tolerance) ? false : Stationary;
       for(int j = 0; j < pPrevCyclesLen; j++) Stationary = (fabs(CalcChange(pPrevCycles[j * pVoltageChannels + n], RMS_Avg[n])) > Tolerance) ? false : Stationary;
     }
+/*
     if(pEvent.Type != EVT_NONE) {
-      bool IsRunning = false;
-      if(pEvent.Type == EVT_INTERRUPTION) {
-        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (-CalcChange(Cycle[n], pNominalVoltage) > (EVENT_INTERRUPTION - EVENT_INTERRUPTION_HYSTERESIS));
-      } else if(pEvent.Type == EVT_DIP) {
-        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (-CalcChange(Cycle[n], pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS));
-      } else if(pEvent.Type == EVT_SWELL) {
-        for(uint8_t n = 0; n < pVoltageChannels; n++) IsRunning |= (CalcChange(Cycle[n], pNominalVoltage) > (EVENT_DIP_SWELL - EVENT_HYSTERESIS));
-      } else if(pEvent.Type == EVT_RVC) {
-        if(Stationary == true) {
-          for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent.ChangeValue[n] = RMS_Avg[n];
-        } else {
-          IsRunning = true;
-        }
-      }
+      bool IsRunning = pEvent->IsRunning(Stationary, Cycle, RMS_Avg);
       if(IsRunning == false) {
         string  Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
         LogFile::Debug("Event '%s' closed on analyzer '%s'", Type.c_str(), pSerial.c_str());
@@ -224,12 +227,12 @@ void AnalyzerSoftEvents::Wait() {}
       string Type = (pEvent.Type == EVT_RVC) ? "RVC" : (pEvent.Type == EVT_INTERRUPTION) ? "INTERRUPTION" : (pEvent.Type == EVT_DIP) ? "DIP" : "SWELL";
       LogFile::Debug("Event '%s' on analyzer '%s' finished", Type.c_str(), pSerial.c_str());
       pEvents.pop_front();
-    }
+    }*/
     Pos             = Pos + CycleLen;
-    pPrevStationary = Stationary && (pEvent.Type == EVT_NONE);
-  }*/
- /*free(Buff);
-}*/
+//    pPrevStationary = Stationary && (pEvent.Type == EVT_NONE);
+  }
+//  free(Buff);
+}
 void AnalyzerSoftEvents::GetEvents(const json &params, Response &response) {
   if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -240,18 +243,17 @@ void AnalyzerSoftEvents::GetEvents(const json &params, Response &response) {
     string UserName = params["UserName"];
     DB.ExecSentenceNoResult("UPDATE permissions SET eventsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
   }
-  DB.ExecSentenceAsyncResult("SELECT json_build_object("
-                             "'StartTime', COALESCE(ARRAY_AGG(starttime ORDER BY starttime ASC), '{}'), "
-                             "'Type', COALESCE(ARRAY_AGG(evttype ORDER BY starttime ASC), '{}'), "
-                             "'SampleRate', COALESCE(ARRAY_AGG(samplerate ORDER BY starttime ASC), '{}'), "
-                             "'Reference', COALESCE(ARRAY_AGG(reference ORDER BY starttime ASC), '{}'), "
-                             "'Peak', COALESCE(ARRAY_AGG(peak ORDER BY starttime ASC), '{}'), "
-                             "'Change', COALESCE(ARRAY_AGG(change ORDER BY starttime ASC), '{}'), "
-                             "'Duration', COALESCE(ARRAY_AGG(duration ORDER BY starttime ASC), '{}'), "
-                             "'Notes', COALESCE(ARRAY_AGG(notes ORDER BY starttime ASC), '{}')) AS evt "
-                             "FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
-  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("evt"), "application/json", HTTP_OK);
+  auto Func = [&, To, From](uint64_t offset, DataSink &sink) -> bool {
+    json Headers = {"StartTime", "Type", "SampleRate", "Reference", "Peak", "Change", "Duration", "Notes"};
+    sink.os << "[\n  " << Headers.dump();
+    Database DB(pSerial);
+    DB.ExecSentenceAsyncResult("SELECT json_build_array(starttime, evttype, samplerate, reference, peak, change, duration, notes) FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
+    while(DB.FecthRow()) sink.os << ",\n  " << DB.ResultString("result");
+    sink.os << "\n]";
+    sink.done();
+    return false;
+  };
+  response.set_chunked_content_provider("application/json", Func);
 }
 void AnalyzerSoftEvents::GetEventsRange(const json &params, Response &response) {
   Database DB(pSerial);

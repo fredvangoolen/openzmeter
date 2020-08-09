@@ -32,12 +32,12 @@
     props: { analyzer: Object, expanded: Boolean },
     data () {
       return { Grouped: false,
-               Transfer1: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
-               Transfer2: this.CreateSeriesTransfer(this, ['ACTIVE_POWER']),
+               Transfer1: this.NowTransfer(['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
+               Transfer2: this.SeriesTransfer(['ACTIVE_ENERGY']),
                Transfer3: this.StatusTransfer(['SYSTEM']) };
     },
     created: function() {
-      this.Transfer1.UpdateNow(this.analyzer);
+      this.Transfer1.Update(this.analyzer);
       this.Transfer2.Update(this.analyzer, '15M', 'Day');
       this.Transfer3.Update(this.analyzer);
     },
@@ -49,7 +49,7 @@
     watch: {
       analyzer: function(analyzer) {
         this.$nextTick(() => {
-          this.Transfer1.UpdateNow(this.analyzer);
+          this.Transfer1.Update(this.analyzer);
           this.Transfer2.Update(this.analyzer, '15M', 'Day');
           this.Transfer3.Update(this.analyzer);
         });
@@ -98,11 +98,9 @@
       EnergyUsage: function() {
         var Energy = new Array(this.analyzer.VoltageChannels).fill(0);
         if(this.Transfer2.Data == null) return { Active_Energy: Energy };
-        for(var n = 0; n < this.Transfer2.Data.Active_Power.length; n++) {
-          for(var p = 0; p < this.Transfer2.Data['Active_Power'][n].length; p++) {
-            if(this.Transfer2.Data['Active_Power'][n][p] === null) continue;
-            Energy[p] = Energy[p] + this.Transfer2.Data['Active_Power'][n][p] / 4.0;
-          }
+        var EnergyCol = this.Transfer2.Data.Headers.indexOf('Active_Energy');
+        for(var n = 0; n < this.Transfer2.Data.Rows.length; n++) {
+          for(var p = 0; p < this.Transfer2.Data.Rows[n][EnergyCol].length; p++) Energy[p] = Energy[p] + this.Transfer2.Data.Rows[n][EnergyCol][p];
         }
         return { Active_Energy: Energy };
       }

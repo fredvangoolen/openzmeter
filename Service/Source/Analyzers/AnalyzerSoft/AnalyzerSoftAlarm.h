@@ -26,19 +26,24 @@ using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftAlarm final {
   private :
-    string                   Name;
-    uint8_t                  Priority;
-    uint16_t                 Samples;
-    uint16_t                 Window;
-    uint16_t                 ResultPos;
-    uint16_t                 ResultCount;
-//    AnalyzerSoft::AggregType Aggreg;
-    Parser                   Evaluator;
-    uint8_t                 *Results;
-    bool                     Triggered;
+    string            pSerial;
+    string            pName;
+    uint8_t           pPriority;
+    uint16_t          pSamples;
+    uint16_t          pWindow;
+    uint16_t          pResultPos;
+    uint16_t          pResultCount;
+    string            pAggreg;
+    Parser            pEvaluator;
+    uint8_t          *pResults;
+    bool              pInitialized;
+    string            pExpression;
+    uint64_t          pTriggerTime;
   public :
     static json CheckConfig(const json &config);
   public :
-    AnalyzerSoftAlarm(const json &config);
+    AnalyzerSoftAlarm(const string &serial, const json &config, float &voltage, float &freq);
+    ~AnalyzerSoftAlarm();
+    void PushAggreg(const string &aggreg, AnalyzerSoftAggreg *data);
 };
 // ---------------------------------------------------------------------------------------------------------------------

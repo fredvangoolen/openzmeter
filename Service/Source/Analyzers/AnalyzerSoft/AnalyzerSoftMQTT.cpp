@@ -50,18 +50,20 @@ json AnalyzerSoftMQTT::CheckConfig(const json &config) {
   ConfigOUT["Export1H"] = false;
   ConfigOUT["ExportAlarms"] = false;
   ConfigOUT["ExportConfig"] = false;
-  if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
-  if(config.contains("Prefix") && config["Prefix"].is_string()) ConfigOUT["Prefix"] = config["Prefix"];
-  if(config.contains("Server") && config["Server"].is_string()) ConfigOUT["Server"] = config["Server"];
-  if(config.contains("User") && config["User"].is_string()) ConfigOUT["User"] = config["User"];
-  if(config.contains("Pass") && config["Pass"].is_string()) ConfigOUT["Pass"] = config["Pass"];
-  if(config.contains("Export3S") && config["Export3S"].is_boolean()) ConfigOUT["Export3S"] = config["Export3S"];
-  if(config.contains("Export1M") && config["Export1M"].is_boolean()) ConfigOUT["Export1M"] = config["Export1M"];
-  if(config.contains("Export10M") && config["Export10M"].is_boolean()) ConfigOUT["Export10M"] = config["Export10M"];
-  if(config.contains("Export15M") && config["Export15M"].is_boolean()) ConfigOUT["Export15M"] = config["Export15M"];
-  if(config.contains("Export1H") && config["Export1H"].is_boolean()) ConfigOUT["Export1H"] = config["Export1H"];
-  if(config.contains("ExportAlarms") && config["ExportAlarms"].is_boolean()) ConfigOUT["ExportAlarms"] = config["ExportAlarms"];
-  if(config.contains("ExportConfig") && config["ExportConfig"].is_boolean()) ConfigOUT["ExportConfig"] = config["ExportConfig"];
+  if(config.is_object() == true) {
+    if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
+    if(config.contains("Prefix") && config["Prefix"].is_string()) ConfigOUT["Prefix"] = config["Prefix"];
+    if(config.contains("Server") && config["Server"].is_string()) ConfigOUT["Server"] = config["Server"];
+    if(config.contains("User") && config["User"].is_string()) ConfigOUT["User"] = config["User"];
+    if(config.contains("Pass") && config["Pass"].is_string()) ConfigOUT["Pass"] = config["Pass"];
+    if(config.contains("Export3S") && config["Export3S"].is_boolean()) ConfigOUT["Export3S"] = config["Export3S"];
+    if(config.contains("Export1M") && config["Export1M"].is_boolean()) ConfigOUT["Export1M"] = config["Export1M"];
+    if(config.contains("Export10M") && config["Export10M"].is_boolean()) ConfigOUT["Export10M"] = config["Export10M"];
+    if(config.contains("Export15M") && config["Export15M"].is_boolean()) ConfigOUT["Export15M"] = config["Export15M"];
+    if(config.contains("Export1H") && config["Export1H"].is_boolean()) ConfigOUT["Export1H"] = config["Export1H"];
+    if(config.contains("ExportAlarms") && config["ExportAlarms"].is_boolean()) ConfigOUT["ExportAlarms"] = config["ExportAlarms"];
+    if(config.contains("ExportConfig") && config["ExportConfig"].is_boolean()) ConfigOUT["ExportConfig"] = config["ExportConfig"];
+  }
   return ConfigOUT;
 }
 void AnalyzerSoftMQTT::Config(const json &config) {

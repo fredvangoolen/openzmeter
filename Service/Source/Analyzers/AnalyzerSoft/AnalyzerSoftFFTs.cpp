@@ -40,11 +40,11 @@ AnalyzerSoftFFTs::AnalyzerSoftFFTs(const Analyzer::AnalyzerMode mode) {
 }
 AnalyzerSoftFFTs::~AnalyzerSoftFFTs() {
   for(uint8_t i = 0; i < pVoltageChannels; i++) {
-    pVoltageFFT[i]->Wait();
+    delete pVoltageFFT[i];
     if(pFFTVoltageData[i].DataPtr != NULL) free(pFFTVoltageData[i].DataPtr);
   }
   for(uint8_t i = 0; i < pCurrentChannels; i++) {
-    pCurrentFFT[i]->Wait();
+    delete pCurrentFFT[i];
     if(pFFTCurrentData[i].DataPtr != NULL) free(pFFTCurrentData[i].DataPtr);
   }
   pthread_mutex_lock(&pFFTMutex);

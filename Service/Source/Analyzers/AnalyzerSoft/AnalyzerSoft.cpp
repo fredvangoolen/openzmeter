@@ -27,7 +27,7 @@
 #include "AnalyzerSoft.h"
 #include "ConfigFile.h"
 #include "LogFile.h"
-//#include "SysSupport.h"
+#include "StatusManager.h"
 #include "Telegram.h"
 #include "AnalyzerSoftGA.h"
 #include "URL.h"
@@ -42,7 +42,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pFFTs           = new AnalyzerSoftFFTs(mode);
   pRates          = new AnalyzerSoftRates(pSerial);
   pAlarms         = new AnalyzerSoftAlarms(pSerial);
-  pEvents         = new AnalyzerSoftEvents(pSerial);
+  pEvents         = new AnalyzerSoftEvents(pSerial, mode, samplerate);
   pSync           = new AnalyzerSoftSync();
   pMQTT           = new AnalyzerSoftMQTT(pSerial);
   pInputBlock     = new AnalyzerSoftBlock(mode, samplerate);
@@ -143,27 +143,25 @@ void AnalyzerSoft::Configure(const json &options) {
   ConfigFile::WriteConfig(pConfigPath, options);
   SetName(options["Name"]);
   pAnalyzerLock.WriteLock();
-  pNominalVoltage   = options["NominalVoltage"];
-  pMaxCurrent       = options["MaxCurrent"];
-  pMinCurrent       = options["MinCurrent"];
-  pSave200MS        = options["Save200MS"];
-  load_time_zone(options["TimeZone"], &pTimeZone);
-  if(pNominalFrequency != options["NominalFrequency"]) {
+  float NominalVoltage   = options["NominalVoltage"];
+  float NominalFrequency = options["NominalFrequency"];
+  pMaxCurrent            = options["MaxCurrent"];
+  pMinCurrent            = options["MinCurrent"];
+  pSave200MS             = options["Save200MS"];
+  if(NominalFrequency != pFrequency->NominalFrequency()) {
     pSequence         = 0;
-    pNominalFrequency = options["NominalFrequency"];
     pAggreg200MS->Reset();
-    pFrequency->Config(pNominalFrequency);
-    pInputBlock->Config(pNominalFrequency);
-    pFFTs->Config((pNominalFrequency == 0.0) ? 1 : (pNominalFrequency == 50.0) ? 10 : 12);
+    pFrequency->Config(NominalFrequency);
+    pInputBlock->Config(NominalFrequency);
+    pFFTs->Config((NominalFrequency == 0.0) ? 1 : (NominalFrequency == 50.0) ? 10 : 12);
   }
   pAnalyzerLock.Unlock();
-  pRates->Config(pTimeZone);
-  pAlarms->Config(options["AlarmsEnabled"]);
-  pEvents->Config(options["EventsEnabled"]);
+  pRates->Config(options["TimeZone"]);
+  pAlarms->Config(options["AlarmsEnabled"], NominalVoltage, NominalFrequency);
+  pEvents->Config(options["EventsEnabled"], NominalVoltage, NominalFrequency);
   pSync->Config(options["Sync"]);
   pMQTT->Config(options["MQTT"]);
   pMQTT->PublishConfig(options);
-
 }
 void AnalyzerSoft::Analyzer_Func() {
   pAnalyzerLock.ReadLock();
@@ -224,7 +222,7 @@ void AnalyzerSoft::Analyzer_Func() {
     }
     pAggreg200MS->setCurrentTHD(3, (THD / pAggreg200MS->CurrentHarmonic(3, 0)) * 100.0);
   }
-  pEvents->Wait();
+  pAggreg200MS->setFlag(pEvents->Wait());
   if(pSequence < 100) {
     LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pSequence);
     pAggreg200MS->Reset();
@@ -237,7 +235,7 @@ void AnalyzerSoft::Analyzer_Func() {
   if((pSequence % 15) == 0) {
     LogFile::Debug("Storing 3S aggregation for analyzer '%s'", pSerial.c_str());
     pAggreg3S->Normalize();
-    pAlarms->Run(pAggreg3S);
+    pAlarms->Run("3S", pAggreg3S);
     pAggreg3S->Save();
     pAggreg1H->AccumulateStats(pAggreg3S);
     pMQTT->PublishAggreg(pAggreg3S);
@@ -248,7 +246,7 @@ void AnalyzerSoft::Analyzer_Func() {
   if((pAggreg1M->Timestamp() != 0) && ((pAggreg1M->Timestamp() / 60000) < (pAggreg200MS->Timestamp() / 60000))) {
     LogFile::Debug("Storing 1M aggregation for analyzer '%s'", pSerial.c_str());
     pAggreg1M->Normalize();
-    pAlarms->Run(pAggreg1M);
+    pAlarms->Run("1M", pAggreg1M);
     pAggreg1M->Save();
     pMQTT->PublishAggreg(pAggreg1M);
     pAlarms->Wait();
@@ -258,7 +256,7 @@ void AnalyzerSoft::Analyzer_Func() {
   if((pAggreg10M->Timestamp() != 0) && ((pAggreg10M->Timestamp() / 600000) < (pAggreg200MS->Timestamp() / 600000))) {
     LogFile::Debug("Storing 10M aggregation for analyzer '%s", pSerial.c_str());
     pAggreg10M->Normalize();
-    pAlarms->Run(pAggreg10M);
+    pAlarms->Run("10M", pAggreg10M);
     pAggreg1H->AccumulateStats(pAggreg10M);
     pAggreg10M->Save();
     pMQTT->PublishAggreg(pAggreg10M);
@@ -269,7 +267,7 @@ void AnalyzerSoft::Analyzer_Func() {
   if((pAggreg15M->Timestamp() != 0) && ((pAggreg15M->Timestamp() / 900000) < (pAggreg200MS->Timestamp() / 900000))) {
     LogFile::Debug("Storing 15M aggregation for analyzer '%s'", pSerial.c_str());
     pAggreg15M->Normalize();
-    pAlarms->Run(pAggreg15M);
+    pAlarms->Run("15M", pAggreg15M);
     pAggreg15M->Save();
     pMQTT->PublishAggreg(pAggreg15M);
     pAlarms->Wait();
@@ -279,23 +277,20 @@ void AnalyzerSoft::Analyzer_Func() {
   if((pAggreg1H->Timestamp() != 0) && ((pAggreg1H->Timestamp() / 3600000) < (pAggreg200MS->Timestamp() / 3600000))) {
     LogFile::Debug("Storing 1H aggregation for analyzer '%s'", pSerial.c_str());
     pAggreg1H->Normalize();
-    pAlarms->Run(pAggreg1H);
+    pAlarms->Run("1H", pAggreg1H);
     pAggreg1H->Save();
     pMQTT->PublishAggreg(pAggreg1H);
     pAlarms->Wait();
     pAggreg1H->Reset();
   }
   pAggreg1H->Accumulate(pAggreg200MS);
-  pAlarms->Run(pAggreg200MS);
+  pAlarms->Run("200MS", pAggreg200MS);
   if(pSave200MS) {
     LogFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", pSerial.c_str());
     pAggreg200MS->Save();
   }
   pAlarms->Wait();
-  //  SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
-  //  SysStatus->Lock.WriteLock();
-  //  SysStatus->Events = This->pAggreg200MS.Flag;
-  //  SysStatus->Lock.Unlock();
+  if(pAggreg200MS->Flag() == true) StatusManager::SetValue("Last_Event", pAggreg200MS->Timestamp());
   pNowDataLock.ProviderWait();
   LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")", pSerial.c_str(), Tools::GetTime64() - Start, pSequence, pAggreg200MS->Timestamp());
   pAggreg200MS->Reset();
@@ -479,39 +474,43 @@ void AnalyzerSoft::DelEvent(const json &params, Response &response) {
   if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pEvents->DelEvent(params, response);
 }
+void AnalyzerSoft::GetAlarmsDef(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pAlarms->GetAlarmsDef(params, response);
+}
 void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   pAlarms->TestAlarm(params, response, pAggreg200MS);
   pNowDataLock.ConsumerEnds();
 }
-void AnalyzerSoft::ListAlarms(const json &params, Response &response) {
+void AnalyzerSoft::AddAlarmDef(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pAlarms->AddAlarmDef(params, response);
+}
+void AnalyzerSoft::GetAlarmDef(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms->ListAlarms(params, response);
+  pAlarms->GetAlarmDef(params, response);
+}
+void AnalyzerSoft::SetAlarmDef(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pAlarms->SetAlarmDef(params, response);
+}
+void AnalyzerSoft::DelAlarmDef(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pAlarms->DelAlarmDef(params, response);
 }
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pAlarms->GetAlarms(params, response);
 }
-void AnalyzerSoft::AddAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms->AddAlarm(params, response);
-}
-void AnalyzerSoft::GetAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms->GetAlarm(params, response);
-}
-void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms->SetAlarm(params, response);
-}
-void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms->DelAlarm(params, response);
-}
 void AnalyzerSoft::GetAlarmsRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pAlarms->GetAlarmsRange(params, response);
+}
+void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pAlarms->DelAlarm(params, response);
 }
 void AnalyzerSoft::DelAlarmsRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

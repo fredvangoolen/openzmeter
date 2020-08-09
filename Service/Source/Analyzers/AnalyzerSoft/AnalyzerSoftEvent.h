@@ -14,6 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
+#include "Analyzer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 #define EVENT_RVC                        5.0
 #define EVENT_DIP_SWELL                 10.0        //Variacion en % para generar subida o bajada
@@ -23,15 +24,25 @@
 #define EVENT_RAWENVELOPETIME            0.5        //Time in seconds before and after event to store RAW samples
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftEvent final {
-
-  enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
-      enum EventType           Type;                     //Running event type
-      uint64_t                 Start;                    //Event start timestamp
-      uint64_t                 SamplesDuration;          //Event duration in samples
-      float                    Reference[3];             //Voltage reference for event (Stationary for RVC, nominal for others)
-      float                    PeakValue[3];             //max/min voltage variation along event
-      float                    ChangeValue[3];           //diference voltage of event
-      uint32_t                 CyclesDuration;           //Event duration in samples
+  private :
+    enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
+  private :
+    uint8_t        pVoltageChannels;          //Voltage channels
+    float          pNominalVoltage;           //Analyzer nominal voltage
+    EventType      pType;                     //Running event type
+    uint64_t       pStart;                    //Event start timestamp
+    uint64_t       pSamplesDuration;          //Event duration in samples
+    float          pReference[3];             //Voltage reference for event (Stationary for RVC, nominal for others)
+    float          pPeakValue[3];             //max/min voltage variation along event
+    float          pChangeValue[3];           //diference voltage of event
+    uint32_t       pCyclesDuration;           //Event duration in samples
+  private :
+    float CalcChange(const float in, const float reference) const;
   public :
+    AnalyzerSoftEvent(const Analyzer::AnalyzerMode mode, const float nominalVoltage);
+    ~AnalyzerSoftEvent();
+    bool IsRunning(const bool stationary, const float *cycle, const float *avg) const;
+
+
 };
 // ---------------------------------------------------------------------------------------------------------------------
