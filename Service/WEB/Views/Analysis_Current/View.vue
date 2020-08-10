@@ -62,7 +62,7 @@
       };
     },
     created: function() {
-      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
+//      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       this.TransferNow.Update(this.analyzer);
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');

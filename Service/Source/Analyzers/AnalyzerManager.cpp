@@ -46,7 +46,7 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("getAlarmDef",     GetAlarmDefCallback);
   HTTPServer::RegisterCallback("setAlarmDef",     SetAlarmDefCallback);
   HTTPServer::RegisterCallback("delAlarmDef",     DelAlarmDefCallback);
-  HTTPServer::RegisterCallback("getAlarms",       GetAlarmDefCallback);
+  HTTPServer::RegisterCallback("getAlarms",       GetAlarmsCallback);
   HTTPServer::RegisterCallback("getAlarmsRange",  GetAlarmsRangeCallback);
   HTTPServer::RegisterCallback("delAlarms",       DelAlarmCallback);
   HTTPServer::RegisterCallback("delAlarmsRange",  DelAlarmsRangeCallback);
