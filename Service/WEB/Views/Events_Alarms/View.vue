@@ -31,7 +31,7 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Analyzer: null, Range: null, Alarms: null, TransferAlarms: this.CreateSeriesTransfer(this) };
+      return { Analyzer: null, Range: null, Alarms: null, TransferAlarms: this.AlarmsTransfer() };
     },
     created: function () {
       if((this.$route.query.From != null) && (this.$route.query.To != null)) {
@@ -40,29 +40,14 @@
       }
       history.pushState({}, null, this.$route.path);
       this.TransferAlarms.SingleShot = true;
-      this.TransferAlarms.UpdateAlarms(this.analyzer, this.Range);
-      if(this.analyzer != null) {
-        this.$http.post('getAnalyzer', { Analyzer: this.analyzer.Analyzer , Alarms: true }).then(
-          (result) => { this.Analyzer = result.body; },
-          (fail) => {}
-        );
-      }
+      this.TransferAlarms.Update(this.analyzer, this.Range);
     },
     beforeDestroy: function() {
       this.TransferAlarms.Destroy();
     },
     watch: {
-      analyzer: function() {
-        this.Analyzer = null;
-        if(this.analyzer != null) {
-          this.$http.post('getAnalyzer', { Analyzer: this.analyzer.Analyzer , Alarms: true }).then(
-            (result) => { this.Analyzer = result.body; },
-            (fail) => {}
-          );
-        }
-        this.TransferAlarms.UpdateAlarms(this.analyzer, this.Range);
-      },
-      Range: function() { this.TransferAlarms.UpdateAlarms(this.analyzer, this.Range); }
+      analyzer: function() { this.TransferAlarms.Update(this.analyzer, this.Range); },
+      Range: function() { this.TransferAlarms.Update(this.analyzer, this.Range); }
     },
     components: { AlarmsTable, TimeLine }
   }

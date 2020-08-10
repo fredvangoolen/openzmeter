@@ -63,20 +63,19 @@
     props: { analyzer: { type: Object } },
     data: function() {
       return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
-               TransferGraph: this.CreateSeriesTransfer(this, ['VOLTAGE']),
+               TransferGraph: this.SeriesTransfer(['VOLTAGE']),
                TransferNow: this.NowTransfer(['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'VOLTAGE_PHASE', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'UNBALANCE']),
-               TransferCubism: this.CreateSeriesTransfer(this, ['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'UNBALANCE']),
-               Transfer10M: this.CreateSeriesTransfer(this, ['VOLTAGE']),
-               TransferEvents: this.CreateSeriesTransfer(this)
+               TransferCubism: this.SeriesTransfer(['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'UNBALANCE']),
+               Transfer10M: this.SeriesTransfer(['VOLTAGE']),
+               TransferEvents: this.EventsTransfer()
       };
     },
     created: function() {
-      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       this.TransferNow.Update(this.analyzer);
       this.Transfer10M.Update(this.analyzer, '10M', 'LastSamples');
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
-      this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
+      this.TransferEvents.Update(this.analyzer, this.Range);
     },
     beforeDestroy: function() {
       this.TransferGraph.Destroy();
@@ -89,7 +88,7 @@
       analyzer: function(val) {
         this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
         this.TransferNow.Update(this.analyzer);
-        this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
+        this.TransferEvents.Update(this.analyzer, this.Range);
         this.Transfer10M.Update(this.analyzer, '10M', 'LastSamples');
         this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');
       },
@@ -98,13 +97,13 @@
       },
       Range: function(val, prev) {
         if(prev != null) this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
-        this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
+        this.TransferEvents.Update(this.analyzer, this.Range);
       },
       Paused: function() {
         if(this.Paused == true) {
           this.TransferNow.Destroy();
         } else {
-          this.TransferNow.Update(this.analyzer);
+          this.TransferNow.Update();
         }
       }
     },

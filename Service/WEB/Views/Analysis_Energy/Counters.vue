@@ -59,7 +59,7 @@
         if(this.dataGraph == null) return Sum;
         var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
         var ValueCol = this.dataGraph.Headers.indexOf(this.serie);
-        for(var x in this.dataGraph.Rows) {
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
           if((this.dataGraph.Rows[x][ValueCol] == null)) continue;
           Sum.Count++;
           Sum.Value += this.dataGraph.Rows[x][ValueCol];
@@ -71,7 +71,7 @@
         if(this.dataGraph == null) return Max;
         var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
         var ValueCol = this.dataGraph.Headers.indexOf(this.serie);
-        for(var x in this.dataGraph.Rows) {
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
           if((this.dataGraph.Rows[x][ValueCol] == null)) continue;
           var Value = this.dataGraph.Rows[x][ValueCol];
           if(Value > Max.Value) {

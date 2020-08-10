@@ -1,7 +1,7 @@
 const openZmeter = {
   install: function(Vue, options) {
     Vue.prototype.PriceTransfer = (series) => {
-      var Transfer = { SingleShot: false, Timer: null, CancelFunc: null, Data: null, Periods: null, Bills: null, Series: series, Analyzer: null, Aggreg: null, Range: null, AggregFail: null };
+      var Transfer = { SingleShot: false, Timer: null, CancelFunc: null, Data: null, Periods: null, Bills: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -138,7 +138,7 @@ const openZmeter = {
       return Transfer;
     };
     Vue.prototype.SeriesTransfer = (series) => {
-      var Transfer = { Timer: null, CancelFunc: null, Data: null, LastData: null, UpdateUnread: false, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null, AggregFail: null };
+      var Transfer = { Timer: null, CancelFunc: null, Data: null, LastData: null, UpdateUnread: false, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -151,14 +151,20 @@ const openZmeter = {
         }
         var Data = { Headers: data[0], Rows: data.slice(1), Aggreg: aggreg, From: range[0], To: range[1]};
         Transfer.Data = Object.seal(Data);
-        Transfer.LastData = (Transfer.Data.Rows.length == 0) ? null : Object.seal(Transfer.Data.Rows.slice(-1)[0]);
+        if(Transfer.Data.Rows.length == 0) {
+          Transfer.LastData = null;
+         } else {
+           var Row  = Transfer.Data.Rows.slice(-1)[0];
+           var Last = {};
+           for(var n = 0; n < Transfer.Data.Headers.length; n++) Last[Transfer.Data.Headers[n]] = Row[n];
+           Transfer.LastData = Object.seal(Last);
+         } 
       };
       Transfer.Update = (analyzer, aggreg, range) => {
         if((analyzer == null) || (aggreg == null) || (range == null)) return;
         var Promises  = [];
         var Cancelled = false;
         var ReqRange  = analyzer.CalcRange(range, aggreg);
-//        var Period    = (aggreg == '200MS') ? 200 : (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
         if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetData(null, null, null);
@@ -191,6 +197,111 @@ const openZmeter = {
       };
       return Transfer;
     },
+    Vue.prototype.AlarmsTransfer = () => {
+      var Transfer = { Timer: null, SingleShot: false, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null };
+      Transfer.Destroy = () => {
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+      };
+      Transfer.SetData = (range, data) => {
+        if(data == null) {
+          Transfer.Data = null;
+          return;
+        }
+        var Data = { Headers: data[0], Rows: data.slice(1), From: range[0], To: range[1]};
+        Transfer.Data = Object.seal(Data);
+        Transfer.LastData = (Transfer.Data.Rows.length == 0) ? null : Object.seal(Transfer.Data.Rows.slice(-1)[0]);
+      };
+      Transfer.Update = (analyzer, range) => {
+        if((analyzer == null) || (range == null)) return;
+        var Promises  = [];
+        var Cancelled = false;
+        var ReqRange  = analyzer.CalcRange(range);
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+        if((Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetData(null, null);
+        while((Transfer.Data != null) && (Transfer.Data.Rows.length > 0) && (Transfer.Data.Rows[0][0] < ReqRange[0])) Transfer.Data.Rows.shift();
+        while((Transfer.Data != null) && (Transfer.Data.Rows.length > 0) && (Transfer.Data.Rows.slice(-1)[0] > ReqRange[1])) Transfer.Data.Rows.pop();
+        Transfer.Analyzer  = analyzer;
+        Transfer.Range     = range;
+        if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
+          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread }));
+        } else {
+          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1 }));
+          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1] }));
+        }
+        Transfer.CancelFunc = () => { Cancelled = true; };
+        Promise.all(Promises).then(
+          (result) => {
+            if(Cancelled == true) return;
+            if(Cancelled == true) return;
+            var Data = result[0].body;
+            if(Transfer.Data != null) Data = Data.concat(Transfer.Data.Rows);
+            if((result.length == 2) && (result[1].body.length > 1)) Data = Data.concat(result[1].body.slice(1));
+            Transfer.SetData(ReqRange, Data);
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
+          },
+          (fail) => {
+            if(Cancelled == true) return;
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
+          }
+        );
+      };
+      return Transfer;
+    },
+    Vue.prototype.EventsTransfer = () => {
+      var Transfer = { Timer: null, SingleShot: false, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null };
+      Transfer.Destroy = () => {
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+      };
+      Transfer.SetData = (range, data) => {
+        if(data == null) {
+          Transfer.Data = null;
+          return;
+        }
+        var Data = { Headers: data[0], Rows: data.slice(1), From: range[0], To: range[1]};
+        Transfer.Data = Object.seal(Data);
+        Transfer.LastData = (Transfer.Data.Rows.length == 0) ? null : Object.seal(Transfer.Data.Rows.slice(-1)[0]);
+      };
+      Transfer.Update = (analyzer, range) => {
+        if((analyzer == null) || (range == null)) return;
+        var Promises  = [];
+        var Cancelled = false;
+        var ReqRange  = analyzer.CalcRange(range);
+        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
+        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
+        if((Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetData(null, null);
+        while((Transfer.Data != null) && (Transfer.Data.Rows.length > 0) && (Transfer.Data.Rows[0][0] < ReqRange[0])) Transfer.Data.Rows.shift();
+        while((Transfer.Data != null) && (Transfer.Data.Rows.length > 0) && (Transfer.Data.Rows.slice(-1)[0] > ReqRange[1])) Transfer.Data.Rows.pop();
+        Transfer.Analyzer  = analyzer;
+        Transfer.Range     = range;
+        if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread }));
+        } else {
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1 }));
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1] }));
+        }
+        Transfer.CancelFunc = () => { Cancelled = true; };
+        Promise.all(Promises).then(
+          (result) => {
+            if(Cancelled == true) return;
+            if(Cancelled == true) return;
+            var Data = result[0].body;
+            if(Transfer.Data != null) Data = Data.concat(Transfer.Data.Rows);
+            if((result.length == 2) && (result[1].body.length > 1)) Data = Data.concat(result[1].body.slice(1));
+            Transfer.SetData(ReqRange, Data);
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
+          },
+          (fail) => {
+            if(Cancelled == true) return;
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
+          }
+        );
+      };
+      return Transfer;
+    },
+
 
 
 

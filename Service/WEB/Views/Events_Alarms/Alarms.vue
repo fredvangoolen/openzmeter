@@ -4,6 +4,9 @@
       <div class="header-text">Last alarms</div>
       <div class="header-buttons clearfix">
         <toolbar-pager :pageSize="10" :input="Alarms" :output.sync="FilterAlarms" :filtercols="['Date', 'Name']"></toolbar-pager>
+        <div class="btn-group">
+          <button-export :rows="Export" file="Alarms"></button-export>
+        </div>
       </div>
     </div>
     <div class="panel-body">
@@ -24,7 +27,6 @@
     data: function() {
       return { Alarms: [], FilterAlarms: [],
                Columns: [
-                 { name: 'Priority', title: 'Priority' },
                  { name: 'StartDate', title: 'Trigger Date' },
                  { name: 'EndDate', title: 'Release Date' },
                  { name: 'Name', title: 'Name' }
@@ -47,29 +49,15 @@
       SetAlarms: function() {
         this.Alarms = [];
         if((this.alarms == null) || (this.analyzer == null)) return;
-        var Groups = {};
-        var Priority = ['LOW', 'MEDIUM', 'HIGH'];
-        for(var n = 0; n < this.alarms.AlarmTime.length; n++) {
-          var Name = this.alarms.Name[n];
-          if(Groups.hasOwnProperty(Name) == false) Groups[Name] = null;
-          if((this.alarms.Triggered[n] == false) && (Groups[Name] == null)) {
-            this.Alarms.push({ Priority: Priority[this.alarms.Priority[n]], StartDate: 'Unknown', EndDate: this.analyzer.FormatDateTime(this.alarms.AlarmTime[n]), Name: Name });
-          } else if((this.alarms.Triggered[n] == false) && (Groups[Name] != null)) {
-            this.Alarms.push({ Priority: Priority[this.alarms.Priority[n]], StartDate: this.analyzer.FormatDateTime(Groups[Name]), EndDate: this.analyzer.FormatDateTime(this.alarms.AlarmTime[n]), Name: Name });
-            Groups[Name] = null;
-          } else if((this.alarms.Triggered[n] == true) && (Groups[Name] != null)) {
-            continue;
-          } else if((this.alarms.Triggered[n] == true) && (Groups[Name] == null)) {
-            Groups[Name] = this.alarms.AlarmTime[n];
-          }
-        }
-        for(var n in Groups) {
-          if(Groups[n] != null) this.Alarms.push({ Priority: '-', StartDate: this.analyzer.FormatDateTime(Groups[n]), EndDate: 'Unknown', Name: n });
-        }
+        var NameCol    = this.alarms.Headers.indexOf('Name');
+        var TriggerCol = this.alarms.Headers.indexOf('Trigger');
+        var ReleaseCol = this.alarms.Headers.indexOf('Release');
+        for(var n = 0; n < this.alarms.Rows.length; n++) this.Alarms.push({ StartDate: this.analyzer.FormatDateTime(this.alarms.Rows[n][TriggerCol]), EndDate: this.analyzer.FormatDateTime(this.alarms.Rows[n][ReleaseCol]), Name: this.alarms.Rows[n][NameCol] });
       },
       Export: function() {
-        var Export = [['Date', 'Type', 'Duration', 'ΔU (V)', 'Notes']];
-        for(var i = 0; i < this.Events.length; i++) Export.push([this.Events[i].StartTime, this.Events[i].Type, this.Round(this.Events[i].SampleDuration / this.Events[i].SampleRate, 3), this.Round(this.Events[i].Diff, 3), this.Events[i].Notes]);
+        var Export = [['Trigger Time', 'Release Time', 'Name']];
+        if((this.alarms == null) || (this.analyzer == null)) return; 
+        Export.concat(this.alarms.Rows);
         return Object.seal(Export);
       }
     },
