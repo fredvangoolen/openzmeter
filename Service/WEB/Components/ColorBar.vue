@@ -1,10 +1,10 @@
 <template>
-  <div class="color-bar" v-bind:style="{ width: width }">
+  <div class="color-bar" :style="{ width: width }">
     <div class="left-val" v-html="Min"></div>
     <div class="right-val" v-html="Max"></div>
     <div class="units">{{ Prefix }}{{ units }}</div>
-    <div class="bar" v-bind:style="{ width: width + 'px', height: height + 'px' }">
-      <div v-for="(div, idx) in Divs" :key="idx" v-bind:style="{ background: div }"></div>
+    <div class="bar" :style="{ width: width + 'px', height: height + 'px' }">
+      <div v-for="(div, idx) in Divs" :key="idx" :style="{ background: div }"></div>
     </div>
   </div>
 </template>

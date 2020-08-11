@@ -69,13 +69,12 @@
     props: { analyzer: { type: Object } },
     data: function() {
       return { Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300,
-               Transfer15M: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
-               Transfer1H: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
+               Transfer15M: this.SeriesTransfer(['ACTIVE_ENERGY', 'REACTIVE_ENERGY']),
+               Transfer1H: this.SeriesTransfer(['ACTIVE_ENERGY', 'REACTIVE_ENERGY']),
                TransferGraph: this.PriceTransfer(['ACTIVE_ENERGY', 'REACTIVE_ENERGY', 'COLOR', 'PERIOD', 'BILL'])
       };
     },
     created: function() {
-      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.Transfer15M.Update(this.analyzer, '15M', 'LastSamples');
       this.Transfer1H.Update(this.analyzer, '1H', 'LastSamples');
       this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);

@@ -97,7 +97,6 @@ import StatsDistribution from 'Views/Stats_Distribution/View.vue';
 import Settings from 'Views/Settings/View.vue';
 import About from 'Views/About/View.vue';
 import PageNotFound from 'Views/PageNotFound.vue';
-
 const AppRouter = new Router({
   linkActiveClass: 'active',
   mode: 'history',

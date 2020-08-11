@@ -28,17 +28,8 @@
     },
     computed: {
       Data: function() {
-        if((this.data == null) || (this.analyzer == null) || (this.Phase == null)) return null;
         var Series = {};
-        Series.Sampletime = this.data.Sampletime;
-        Series.From = this.data.From;
-        Series.To = this.data.To;
-        Series.TimeZone = this.analyzer.TimeZone;
-        for(var n in this.Names) {
-          var Serie = [];
-          for(var i in this.data.Power_Harmonics) Serie.push(this.data.Power_Harmonics[i][this.Phase][n]);
-          Series[this.Names[n]] = Serie;
-        }
+        for(var n = 0; n < this.Names.length; n++) Series[this.Names[n]] = this.FillSerie(n);
         return Object.seal(Series);
       }
     },
@@ -46,6 +37,14 @@
       Formatter: function(x) {
         var Units = this.BestUnits(x);
         return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + Units + 'W';
+      },
+      FillSerie: function(idx) {
+        var Data = [];
+        if((this.data == null) || (this.Phase == null)) return { From: null, To: null, TimeZone: null, Rows: Data };
+        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var DataCol = this.data.Headers.indexOf('Power_Harmonics');
+        for(var i = 0; i < this.data.Rows.length; i++) Data.push([this.data.Rows[i][TimeCol], this.data.Rows[i][DataCol][this.Phase][idx]]);
+        return { From: this.data.From, To: this.data.To, TimeZone: this.analyzer.TimeZone, Rows: Data };
       },
       Export: function() {
         if(this.data == null) return [];

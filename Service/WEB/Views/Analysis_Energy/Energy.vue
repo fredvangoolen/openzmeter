@@ -41,8 +41,7 @@
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return (g.axes_[0].valueRange == null) ? '' : this.Round(this.ScaleUnits(x, this.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), 2, true); };
         if(this.data != null) {
           var TimeCol = this.data.Headers.indexOf('Sampletime');
-          var ValueCol = this.data.Headers.indexOf('Active_Energy');
-          var ReactiveCol = this.data.Headers.indexOf(this.serie);
+          var ValueCol = this.data.Headers.indexOf(this.serie);
           for(var n in this.data.Rows) Opt.file.push([this.data.Rows[n][TimeCol], this.data.Rows[n][ValueCol]]);
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { incZero: 10 });
           Opt.dateWindow = [this.data.From, this.data.To];

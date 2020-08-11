@@ -39,7 +39,9 @@
         Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
         if(this.data != null) {
-          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n], this.data.Frequency[n]]);
+          var TimeCol = this.data.Headers.indexOf('Sampletime');
+          var ValueCol = this.data.Headers.indexOf('Frequency');
+          for(var n = 0; n < this.data.Rows.length; n++) Opt.file.push([this.data.Rows[n][TimeCol]].concat(this.data.Rows[n][ValueCol]));
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.05 });
           Opt.dateWindow = [this.data.From, this.data.To];
         }

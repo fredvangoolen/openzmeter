@@ -23,15 +23,17 @@
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.strokeWidth = 0.5;
         Opt.stepPlot = true;
+        Opt.showRangeSelector = false;
         Opt.drawGapEdgePoints = true;
         Opt.connectSeparatedPoints = false;
         Opt.fillGraph = false;
         Opt.gridLineColor = "#BBB";
         Opt.gridLinePattern = [4, 4];
         Opt.legend = 'follow';
-        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.xAxisHeight = 24;
         Opt.selectMode = 'euclidian';
+        Opt.legendFormatter = Graph.Formatters.Legend_Follow;
+        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.visibility = this.phases;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
@@ -42,19 +44,14 @@
         Opt.labels = ['Time'].concat(CurrentNames);
         Opt.colors = CurrentStyle.Colors;
         if(this.data != null) {
-          for(var n in this.data.Sampletime) Opt.file.push([this.data.Sampletime[n]].concat(this.data.Current[n]));
+          var TimeCol = this.data.Headers.indexOf('Sampletime');
+          var ValueCol = this.data.Headers.indexOf('Current');
+          for(var n = 0; n < this.data.Rows.length; n++) Opt.file.push([this.data.Rows[n][TimeCol]].concat(this.data.Rows[n][ValueCol]));
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 10 });
           Opt.dateWindow = [this.data.From, this.data.To];
         }
-        return Opt;
+        return Object.seal(Opt);
       }
-    },
-    methods: {
-      ExportClick: function() {
-        if(this.$root.SelectedAnalyzer === null) return;
-        var Analyzer = this.$root.SelectedAnalyzer;
-        this.$refs.tools.SaveCVS('Current.csv', [['Time'].concat(oZm.Series['CURRENT'].Names(Analyzer))].concat(this.Data));
-      },
     }
   }
 </script>

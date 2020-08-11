@@ -5,9 +5,9 @@
       <div class="counters-aggreg" v-if="data15M!=null">From 15 minutes aggregation<br>{{ analyzer.FormatTime(data15M.Sampletime) }}</div>
       <div class="clearfix"></div>
       <div>
-        <div class="current-value" v-html="(data15M!=null) ? FormatSum(data15M, 4.0) : '-'"></div>
-        <div class="counters-phases" v-if="(data15M!=null)&&(data15M.Active_Power.length>1)">
-          <div v-for="(phase, idx) in FormatPhases(data15M, 4.0)" :key="idx" v-html="phase"></div>
+        <div class="current-value" v-html="(data15M!=null) ? FormatSum(data15M) : '-'"></div>
+        <div class="counters-phases" v-if="(data15M!=null)&&(data15M.Active_Energy.length>1)">
+          <div v-for="(phase, idx) in FormatPhases(data15M)" :key="idx" v-html="phase"></div>
         </div>
       </div>
     </div>
@@ -16,9 +16,9 @@
       <div class="counters-aggreg" v-if="data1H!=null">From 1 hour aggregation<br>{{ analyzer.FormatTime(data1H.Sampletime) }}</div>
       <div class="clearfix"></div>
       <div>
-        <div class="current-value" v-html="(data1H!=null) ? FormatSum(data1H, 1.0) : '-'"></div>
-        <div class="counters-phases" v-if="(data1H!=null)&&(data1H.Active_Power.length>1)">
-          <div v-for="(phase, idx) in FormatPhases(data1H, 1.0)" :key="idx" v-html="phase"></div>
+        <div class="current-value" v-html="(data1H!=null) ? FormatSum(data1H) : '-'"></div>
+        <div class="counters-phases" v-if="(data1H!=null)&&(data1H.Active_Energy.length>1)">
+          <div v-for="(phase, idx) in FormatPhases(data1H)" :key="idx" v-html="phase"></div>
         </div>
       </div>
     </div>
@@ -56,7 +56,7 @@
     computed: {
       Sum: function() {
         var Sum = { Value: 0, Count: 0 };
-        if(this.dataGraph == null) return Sum;
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Sum;
         var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
         var ValueCol = this.dataGraph.Headers.indexOf(this.serie);
         for(var x = 0; x < this.dataGraph.Rows.length; x++) {
@@ -68,7 +68,7 @@
       },
       Max: function() {
         var Max = { Value: -Infinity, Time: 0, Count: 0 };
-        if(this.dataGraph == null) return Max;
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Max;
         var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
         var ValueCol = this.dataGraph.Headers.indexOf(this.serie);
         for(var x = 0; x < this.dataGraph.Rows.length; x++) {
@@ -88,17 +88,15 @@
         var Units = this.BestUnits(val);
         return oZm.RoundHTML(oZm.ScaleToUnits(val, Units), 2) + ' ' + Units + ((this.serie == 'Active_Energy') ? 'Wh' : 'VArh');
       },
-      FormatSum: function(val, div) {
-        var Val = (this.serie == 'Active_Energy') ? val.Active_Power : val.Reactive_Power;
+      FormatSum: function(val) {
         var Sum = 0;
-        for(var n in Val) Sum = Sum + Val[n] / div;
+        for(var n = 0; n < this.analyzer.VoltageChannels; n++) Sum = Sum + val[this.serie][n];
         return this.FormatHTML(Sum);
       },
       FormatPhases: function(val, div) {
-        var Val = ((this.serie == 'Active_Energy') ? val.Active_Power : val.Reactive_Power) / div;
-        var Units = this.BestUnits(oZm.ArrayAbsMax(Val));
+        var Units = this.BestUnits(oZm.ArrayAbsMax(val[this.serie]));
         var Result = [];
-        for(var n in Val) Result.push(this.FormatHTML(Val[n] / Div));
+        for(var n = 0; n < this.analyzer.VoltageChannels; n++) Result.push(this.FormatHTML(val[this.serie][n]));
         return Result;
       }
     }

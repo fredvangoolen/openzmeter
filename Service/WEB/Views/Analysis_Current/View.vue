@@ -54,15 +54,14 @@
     props: { analyzer: { type: Object } },
     data: function() {
       return { ActiveTab: '', Aggreg: '', Range: null, Phases: null, Height: 300, Paused: false, Expanded: false,
-               TransferGraph: this.CreateSeriesTransfer(this, ['CURRENT']),
+               TransferGraph: this.SeriesTransfer(['CURRENT']),
                TransferNow: this.NowTransfer(['CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
-               TransferCubism: this.CreateSeriesTransfer(this, ['CURRENT_HARMONICS', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
-               Transfer1M: this.CreateSeriesTransfer(this, ['CURRENT']),
-               Transfer3S: this.CreateSeriesTransfer(this, ['CURRENT'])
+               TransferCubism: this.SeriesTransfer(['CURRENT_HARMONICS', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
+               Transfer1M: this.SeriesTransfer(['CURRENT']),
+               Transfer3S: this.SeriesTransfer(['CURRENT'])
       };
     },
     created: function() {
-//      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       this.TransferNow.Update(this.analyzer);
       this.TransferCubism.Update(this.analyzer, '1M', 'LastDay');

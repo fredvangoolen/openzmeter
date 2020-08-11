@@ -158,7 +158,7 @@ const openZmeter = {
            var Last = {};
            for(var n = 0; n < Transfer.Data.Headers.length; n++) Last[Transfer.Data.Headers[n]] = Row[n];
            Transfer.LastData = Object.seal(Last);
-         } 
+         }
       };
       Transfer.Update = (analyzer, aggreg, range) => {
         if((analyzer == null) || (aggreg == null) || (range == null)) return;

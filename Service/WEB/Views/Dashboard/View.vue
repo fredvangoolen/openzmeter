@@ -31,16 +31,16 @@
     </div>
     <div class="row">
       <div class="col-lg-6 col-md-12">
-        <graphs ref="g0" serie="VOLTAGE" :analyzer="analyzer" :data="Transfer3S.Data" :paused.sync="Paused3S"></graphs>
+        <graphs ref="g0" serie="Voltage" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
       </div>
       <div class="col-lg-6 col-md-12">
-        <graphs ref="g1" serie="CURRENT" :analyzer="analyzer" :data="Transfer3S.Data" :paused.sync="Paused3S"></graphs>
+        <graphs ref="g1" serie="Current" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
       </div>
-      <div v-bind:class="{'col-lg-6': (analyzer.NominalFrequency > 0.0)}" class="col-md-12">
-        <graphs ref="g2" serie="ACTIVE_POWER" :analyzer="analyzer" :data="Transfer3S.Data" :paused.sync="Paused3S"></graphs>
+      <div :class="{'col-lg-6': (analyzer.NominalFrequency > 0.0)}" class="col-md-12">
+        <graphs ref="g2" serie="Active_Power" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
       </div>
       <div class="col-lg-6 col-md-12" v-if="analyzer.NominalFrequency > 0.0">
-        <graphs ref="g3" serie="FREQUENCY" :analyzer="analyzer" :data="Transfer3S.Data" :paused.sync="Paused3S"></graphs>
+        <graphs ref="g3" serie="Frequency" :analyzer="analyzer" :data="Transfer3S.Data" :last="Transfer3S.LastData" :paused.sync="Paused3S"></graphs>
       </div>
     </div>
     <div class="row" v-if="analyzer.NominalFrequency > 0.0">

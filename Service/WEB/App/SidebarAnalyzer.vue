@@ -1,5 +1,5 @@
 <template>
-  <div class="this" v-bind:class="{ expanded: expanded }">
+  <div class="this" :class="{ expanded: expanded }">
     <img class="icon" :src="require('Imgs/disconnect32.png')">
     <div class="name">{{ (analyzer == null) ? 'None selected' : analyzer.Name }}</div>
     <div class="btn-group">
@@ -41,6 +41,9 @@
           analyzer.VoltageChannels = (analyzer.Mode == '1PHASE') ? 1 : 3;
           analyzer.CurrentChannels = (analyzer.Mode == '1PHASE') ? 1 : (analyzer.Mode == '3PHASE') ? 3 : 4;
           analyzer.Color = { Voltage: '#d9534f', Current: '#428bca', Active_Power: '#f0ad4e', Reactive_Power: '#DF842A', Apparent_Power: '#DF842A', Active_Energy: '#3d3d8b', Reactive_Energy: '#643d8b', Frequency: '#5cb85c' };
+          analyzer.Style = this.Style.bind(this);
+          analyzer.Title = { Voltage: 'Voltage', Current: 'Current', Active_Power: 'Active Power', Frequency: 'Frequency' };
+          analyzer.Channels = { Voltage: analyzer.VoltageChannels, Current: analyzer.CurrentChannels, Active_Power: analyzer.VoltageChannels, Frequency: 1 };
           analyzer.Unit = { Voltage: 'V', Current: 'A', Active_Power: 'W', Active_Energy: 'Wh', Frequency: 'Hz'};
           analyzer.HarmonicsNames = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
           analyzer.GetSeriesNames = this.GetSeriesNames.bind(this);
@@ -74,6 +77,11 @@
       FormatDateTime: function(val, spacer) {
         if(spacer == null) spacer = ' - ';
         return moment(val).tz(this.analyzer.TimeZone).format('HH:mm:ss') + spacer + moment(val).tz(this.analyzer.TimeZone).format('DD/MM/YYYY');
+      },
+      Style: function(serie, primary) {
+        if(this.analyzer.Channels[serie] == 1) return { Colors: [this.analyzer.Color[serie]], Width: (primary == true) ? 0.5 : 1.5 };
+        var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];
+        return { Colors: Colors.slice(0, analyzer.Channels[serie]), Width: (primary == true) ? 0.5 : 1.5 }
       },
       CalcRange: function(range, aggreg) {
         var Now = moment().tz(this.analyzer.TimeZone);
