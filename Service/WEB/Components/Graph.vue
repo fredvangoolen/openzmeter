@@ -11,8 +11,8 @@
   var PatternImg = new Image();
   PatternImg.onload = () => {};
   PatternImg.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAJElEQVQImT2JsQ0AMAyDyP832q+QIWqZEJDEx6gA0JZr9/mmLvBPKENuQmcdAAAAAElFTkSuQmCC";
-
-
+  function nullAction() {
+  }
   function mouseDown(event, g, context) {
     context.initializeMouseDown(event, g, context);
     if(event.altKey || event.shiftKey) {
@@ -38,10 +38,11 @@
       if(context.regionWidth > 0) this.$emit('range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
     }
   }
-
+  function mouseDblClick(event, g, context) {
+    g.updateOptions({ dateWindow: null });
+  }
   function mouseWheelZoom(event, g, context) {
     if(!event.shiftKey) return;
-//    if(this.StopAutoupdate) this.StopAutoupdate();
     var normal = event.detail ? event.detail * -1 : event.wheelDelta / 40;
     var percentage = normal / 50;
     if (!event.offsetX) event.offsetX = event.layerX - event.target.offsetLeft;
@@ -50,18 +51,25 @@
     var w = g.toDomCoords(g.xAxisRange()[1], null)[0] - xOffset;
     var xPct = w == 0 ? 0 : (x / w);
     var Axis = g.xAxisRange();
-    g.updateOptions({ dateWindow: [Axis[0] + (Axis[1] - Axis[0]) * percentage * xPct, Axis[1] - (Axis[1] - Axis[0]) * percentage * (1 - xPct)] });
-    event.preventDefault();
-    event.stopPropagation();
-    clearInterval(context.MouseWheelTimer);
-    context.MouseWheelTimer = setTimeout( function() { this.WindowChange(Axis[0] + (Axis[1] - Axis[0]) * percentage * xPct, Axis[1] - (Axis[1] - Axis[0]) * percentage * (1 - xPct)); }.bind(this), 500);
+    var Window = [Axis[0] + (Axis[1] - Axis[0]) * percentage * xPct, Axis[1] - (Axis[1] - Axis[0]) * percentage * (1 - xPct)];
+    if((this.Fixed == true) && (g.file_.length > 0)) {
+      if(Window[0] < g.file_[0][0]) Window[0] = g.file_[0][0];
+      if(Window[1] > g.file_.slice(-1)[0][0]) Window[1] = g.file_.slice(-1)[0][0];
+    } else  {
+      clearInterval(context.MouseWheelTimer);
+      context.MouseWheelTimer = setTimeout( () => {
+        if(g.file_.length > 0) g.updateOptions({ file: [Array(g.file_[0].length).fill(0)] }, false);
+        this.This.$emit('range', Window);
+      }, 500);
+    }
+    g.updateOptions({ dateWindow: Window });
   }
-  function MouseDblClick(event, g, context) {
-    g.updateOptions({
-    dateWindow: null
-  });
-  //  this.WindowRestore();
-  }
+
+
+
+
+
+
   function touchStart(event, g, context) {
     if(this && this.StopAutoupdate) this.StopAutoupdate();
     event.preventDefault();  // touch browsers are all nice.
@@ -294,8 +302,6 @@
         canvas.lineTo(area.x + area.w, 13.5);
         canvas.stroke();
         canvas.restore();
-//        canvas.rect(area.x + 1, area.y + 14, area.w - 2, area.h - 15);
-//        canvas.clip();
       },
       DrawHighlightPoint_HighlightBar: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {
         var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;
@@ -365,9 +371,9 @@
         return { mousedown: mouseDown.bind(parent),
                  mousemove: mouseMove.bind(parent),
                  mouseup: mouseUp.bind(parent),
-                 /*dblclick: MouseDblClick,
-                 mousewheel: mouseWheelZoom,
-                 touchstart: touchStart,
+                 dblclick: nullAction.bind(parent),
+                 mousewheel: mouseWheelZoom.bind({ This: parent, Fixed: false }),
+                 /*touchstart: touchStart,
                  touchmove: touchMove,
                  touchend: touchEnd*/
         };
@@ -376,9 +382,9 @@
         return { mousedown: mouseDown.bind(parent),
                  mousemove: mouseMove.bind(parent),
                  mouseup: mouseUp.bind(parent),
-/*                 dblclick: MouseDblClick,
-                 mousewheel : mouseWheelZoom,
-                 touchstart: touchStart,
+                 dblclick: mouseDblClick.bind(parent),
+                 mousewheel : mouseWheelZoom.bind({ This: parent, Fixed: true }),
+/*                 touchstart: touchStart,
                  touchmove: touchMove,
                  touchend: touchEnd*/
         };
@@ -408,6 +414,7 @@
           this.PausedOptions = val;
           return;
         }
+        this.PausedOptions = null;
         this.Graph.updateOptions({ showRangeSelector: true}, false);
         val.showRangeSelector = false;
         this.Graph.updateOptions(val);
@@ -428,7 +435,7 @@
     created: function() {
       this.Graph = null;
       this.PausedOptions = null;
-      },
+    },
     mounted: function() {
       var Data = [];
       if(this.options.labels == null) this.options.labels = ['A', 'B'];
