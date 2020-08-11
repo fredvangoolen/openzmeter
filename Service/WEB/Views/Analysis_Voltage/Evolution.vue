@@ -30,9 +30,7 @@
     computed: {
       Data: function() {
         var Series = {};
-        for(var n = 0; n < this.Names.length; n++) {
-          Series[this.Names[n]] = this.FillSerie(n);
-        }
+        for(var n = 0; n < this.Names.length; n++) Series[this.Names[n]] = this.FillSerie(n);
         return Object.seal(Series);
       }
     },
@@ -47,7 +45,7 @@
         var DataCol = this.data.Headers.indexOf('Voltage_Harmonics');
         for(var i = 0; i < this.data.Rows.length; i++) Data.push([this.data.Rows[i][TimeCol], this.Options['Log'] ? 20 * Math.log10(Math.max(0.001, this.data.Rows[i][DataCol][this.Phase][idx])) : this.data.Rows[i][DataCol][this.Phase][idx]]);
         return { From: this.data.From, To: this.data.To, TimeZone: this.analyzer.TimeZone, Rows: Data };
-      },      
+      },
       Export: function() {
         if(this.data == null) return [];
         var Data = [];

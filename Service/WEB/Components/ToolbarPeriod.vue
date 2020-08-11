@@ -74,7 +74,7 @@
         } else if((Stored != 'LastHours') && (Stored != 'LastDay') && (Stored != 'LastDay') && (Stored != 'LastWeek') && (Stored != 'LastMonth') && (Stored != 'LastYear') && (Stored != 'Day') && (Stored != 'Week') && (Stored != 'Month') && (Stored != 'Year')) {
           Stored = 'Day';
         }
-        if(this.value != Stored) this.$emit('input', Stored);
+        if(JSON.stringify(this.value) != JSON.stringify(Stored)) this.$emit('input', Stored);
       } else if(this.value == null) {
         this.$emit('input', 'Day');
       }

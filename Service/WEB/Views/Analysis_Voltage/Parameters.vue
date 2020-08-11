@@ -52,7 +52,7 @@
         var DataCol = this.data.Headers.indexOf(name);
         for(var i = 0; i < this.data.Rows.length; i++) Data.push([this.data.Rows[i][TimeCol], this.data.Rows[i][DataCol][this.Phase]]);
         return { From: this.data.From, To: this.data.To, TimeZone: this.analyzer.TimeZone, Rows: Data };
-      },      
+      },
       Export: function() {
         if(this.data == null) return [];
         var Header = ['Sample']

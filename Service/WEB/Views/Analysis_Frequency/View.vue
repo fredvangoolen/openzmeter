@@ -44,12 +44,11 @@
     props: { analyzer: Object },
     data: function() {
       return { Aggreg: null, Range: null, Height: 300, Expanded: false, DialogHeight: 300,
-               TransferGraph: this.CreateSeriesTransfer(this, ['FREQUENCY']),
-               TransferNow: this.CreateSeriesTransfer(this, ['FREQUENCY']),
+               TransferGraph: this.SeriesTransfer(['FREQUENCY']),
+               TransferNow: this.SeriesTransfer(['FREQUENCY']),
       };
     },
     created: function() {
-      this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.TransferNow.Update(this.analyzer, '3S', 'LastSamples');
       this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
     },

@@ -69,7 +69,7 @@
         var Min = { Value: [], Time: 0, Count: 0 };
         if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Min;
         var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
-        var ValueCol = this.dataGraph.Headers.indexOf('Voltage'); 
+        var ValueCol = this.dataGraph.Headers.indexOf('Voltage');
         for(var x = 0; x < this.dataGraph.Rows.length; x++) {
           for(var p = 0; p < this.dataGraph.Rows[x][ValueCol].length; p++) {
             if(this.dataGraph.Rows[x][ValueCol][p] < Val) {
@@ -87,7 +87,7 @@
         var Max = { Value: [], Time: 0, Count: 0 };
         if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Max;
         var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
-        var ValueCol = this.dataGraph.Headers.indexOf('Voltage'); 
+        var ValueCol = this.dataGraph.Headers.indexOf('Voltage');
         for(var x = 0; x < this.dataGraph.Rows.length; x++) {
           for(var p = 0; p < this.dataGraph.Rows[x][ValueCol].length; p++) {
             if(this.dataGraph.Rows[x][ValueCol][p] > Val) {
@@ -103,7 +103,7 @@
       Avg: function() {
         var Avg = { Value: [], Count: 0 };
         if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Avg;
-        var ValueCol = this.dataGraph.Headers.indexOf('Voltage');        
+        var ValueCol = this.dataGraph.Headers.indexOf('Voltage');
         if(this.dataGraph == null) return Avg;
         for(var x = 0; x < this.dataGraph.Rows.length; x++) {
           if(Avg.Value.length == 0) Avg.Value = new Array(this.dataGraph.Rows[x][ValueCol].length).fill(0);
@@ -117,7 +117,7 @@
         var Std = { Value: [], Percent: 0 };
         var Avg = [], Count = 0;
         if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Std;
-        var ValueCol = this.dataGraph.Headers.indexOf('Voltage');           
+        var ValueCol = this.dataGraph.Headers.indexOf('Voltage');
         for(var x = 0; x < this.dataGraph.Rows.length; x++) {
           if(Std.Value.length == 0) {
             Avg = new Array(this.dataGraph.Rows[x][ValueCol].length).fill(0);

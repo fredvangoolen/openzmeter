@@ -53,12 +53,14 @@
     computed: {
       Min: function() {
         var Min = { Value: +Infinity, Time: 0, Count: 0 };
-        if(this.dataGraph == null) return Min;
-        for(var x in this.dataGraph.Sampletime) {
-          if(this.dataGraph.Frequency[x] == null) continue;
-          if(this.dataGraph.Frequency[x] < Min.Value) {
-            Min = { Value: this.dataGraph.Frequency[x], Time: this.dataGraph.Sampletime[x], Count: 0 };
-          } else if(this.dataGraph.Frequency[x] == Min) {
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Min;
+        var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
+        var ValueCol = this.dataGraph.Headers.indexOf('Frequency');
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
+          if(this.dataGraph.Rows[x][ValueCol] == null) continue;
+          if(this.dataGraph.Rows[x][ValueCol] < Min.Value) {
+            Min = { Value: this.dataGraph.Rows[x][ValueCol], Time: this.dataGraph.Rows[x][TimeCol], Count: 0 };
+          } else if(this.dataGraph.Rows[x][ValueCol] == Min) {
             Min.Count++;
           }
         }
@@ -66,12 +68,14 @@
       },
       Max: function() {
         var Max = { Value: -Infinity, Time: 0, Count: 0 };
-        if(this.dataGraph == null) return Max;
-        for(var x in this.dataGraph.Sampletime) {
-          if(this.dataGraph.Frequency[x] == null) continue;
-          if(this.dataGraph.Frequency[x] > Max.Value) {
-            Max = { Value: this.dataGraph.Frequency[x], Time: this.dataGraph.Sampletime[x], Count: 0 };
-          } else if(this.dataGraph.Frequency[x] == Max) {
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Max;
+        var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
+        var ValueCol = this.dataGraph.Headers.indexOf('Frequency');
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
+          if(this.dataGraph.Rows[x][ValueCol] == null) continue;
+          if(this.dataGraph.Rows[x][ValueCol] > Max.Value) {
+            Max = { Value: this.dataGraph.Rows[x][ValueCol], Time: this.dataGraph.Rows[x][TimeCol], Count: 0 };
+          } else if(this.dataGraph.Rows[x][ValueCol] == Max) {
             Max.Count++;
           }
         }
@@ -80,12 +84,14 @@
       Std: function() {
         var Std = { Value: 0, Percent: 0, Count: 0 };
         var Avg = 0;
-        if(this.dataGraph == null) return Std;
-        for(var x in this.dataGraph.Sampletime) {
-          if(this.dataGraph.Frequency[x] == null) continue;
-          if((this.dataGraph.Frequency[x] > this.analyzer.NominalFreq * 0.99) && (this.dataGraph.Frequency[x] < this.analyzer.NominalFreq * 1.01)) Std.Percent++;
-          Std.Value += Math.pow(this.dataGraph.Frequency[x], 2.0);
-          Avg += this.dataGraph.Frequency[x];
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Max;
+        var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
+        var ValueCol = this.dataGraph.Headers.indexOf('Frequency');
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
+          if(this.dataGraph.Rows[x][ValueCol] == null) continue;
+          if((this.dataGraph.Rows[x][ValueCol] > this.analyzer.NominalFreq * 0.99) && (this.dataGraph.Rows[x][ValueCol] < this.analyzer.NominalFreq * 1.01)) Std.Percent++;
+          Std.Value += Math.pow(this.dataGraph.Rows[x][ValueCol], 2.0);
+          Avg += this.dataGraph.Rows[x][ValueCol];
           Std.Count++;
         }
         Std.Value = Math.sqrt((Std.Value / Std.Count) - Math.pow(Avg / Std.Count, 2));
@@ -94,11 +100,13 @@
       },
       Avg: function() {
         var Avg = { Value: 0, Count: 0 };
-        if(this.dataGraph == null) return Avg;
-        for(var x in this.dataGraph.Sampletime) {
-          if(this.dataGraph.Frequency[x] == null) continue;
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Max;
+        var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
+        var ValueCol = this.dataGraph.Headers.indexOf('Frequency');
+        for(var x = 0; x < this.dataGraph.Rows.length; x++) {
+          if(this.dataGraph.Rows[x][ValueCol] == null) continue;
           Avg.Count++;
-          Avg.Value += this.dataGraph.Frequency[x];
+          Avg.Value += this.dataGraph.Rows[x][ValueCol];
         }
         Avg.Value = Avg.Value / Avg.Count;
         return Avg;

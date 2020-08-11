@@ -34,7 +34,7 @@
       <tr v-for="(day, idxd) in Days" :key="idxd">
         <td>{{ day.DayOfWeek }}</td>
         <td>{{ day.Date }}</td>
-        <td v-for="(block, idx) in day.Cells" :key="idx" :colspan="(aggreg === '1H') ? 4 : 1" :title="day.Date + ' - ' + block.Date + '\x0A' + block.Text" v-bind:style="{ 'border': '1px solid', 'border-color': block.BorderColor, 'background': block.Color }"></td>
+        <td v-for="(block, idx) in day.Cells" :key="idx" :colspan="(aggreg === '1H') ? 4 : 1" :title="day.Date + ' - ' + block.Date + '\x0A' + block.Text" :style="{ 'border': '1px solid', 'border-color': block.BorderColor, 'background': block.Color }"></td>
       </tr>
     </tbody>
   </table>

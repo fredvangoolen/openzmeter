@@ -1,5 +1,5 @@
 <template>
-  <div class='input-group' v-bind:class="{'input-group-xs': (big==false)}">
+  <div class='input-group' :class="{'input-group-xs': (big==false)}">
     <input type='text' class="form-control"/>
     <span class="input-group-addon"><span class="glyphicon-calendar"></span></span>
   </div>

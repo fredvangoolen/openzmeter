@@ -1,5 +1,5 @@
 <template>
-  <div class="navbar-nav" @mouseenter="$emit('update:expanded', true)" @mouseleave="$emit('update:expanded', false)" :class="{ expanded: expanded }">
+  <div class="navbar-nav" @mouseenter="$emit('update:expanded', true)" @mouseleave="$emit('update:expanded', false)" :class="{ 'expanded': expanded }">
     <div class="menu-wrapper">
       <sidebar-analyzer :analyzer="analyzer" @update:analyzer="$emit('update:analyzer', $event)" :expanded="expanded"></sidebar-analyzer>
       <sidebar-user :user="user" @update:user="$emit('update:user', $event)" :expanded="expanded"></sidebar-user>
@@ -36,7 +36,6 @@ export default {
     overflow: hidden;
     bottom: 0px;
     background: #212121;
-/*    box-shadow: 2px 2px 6px rgba(0,0,0,.3);*/
     display: block;
     font-size: 16px;
     font-weight: 400;
@@ -62,36 +61,4 @@ export default {
       min-height: calc(100vh - 48px - 56px);
     }
   }
-/*  .sidenav-header {
-    padding: 3px 6px;
-    color: #DDD;
-    font-size: 16px;
-    border-bottom: 1px solid #333;
-  }
-  .sidenav-header > div:first-child {
-    float: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 28px;
-  }
-  .sidenav-header button {
-    padding: 4px;
-    background-color: transparent;
-    border: 1px solid #333;
-  }
-  .sidenav-overlay {
-    background: #000;
-    opacity: 0.5;
-    display:none;
-    height:100%;
-    left:0;
-    position:fixed;
-    top:0;
-    width:100%;
-    z-index:99
-  }
-  .sidenav-no-scroll {
-    overflow: hidden!important
-  }*/
 </style>

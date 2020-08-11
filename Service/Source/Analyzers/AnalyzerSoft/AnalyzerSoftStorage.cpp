@@ -94,7 +94,7 @@ void AnalyzerSoftStorage::GetSeries(const json &params, Response &response) cons
   uint64_t To      = params["To"];
   uint64_t From    = params["From"];
   string   Aggreg  = params["Aggreg"];
-  uint16_t Series  = AnalyzerSoftStorage::SERIE_TIMESTAMP;
+  uint32_t Series  = AnalyzerSoftStorage::SERIE_TIMESTAMP;
   for(auto Serie : params["Series"]) {
     if(Serie.is_string() == false) {
       return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
@@ -180,9 +180,9 @@ void AnalyzerSoftStorage::GetSeries(const json &params, Response &response) cons
     sink.os << "[\n  " << Headers.dump();
     Database DB(pSerial);
     if(Aggreg == "1M") {
-      DB.ExecSentenceAsyncResult("SELECT json_build_array(" + Cols +") AS result FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m WHERE sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To));
+      DB.ExecSentenceAsyncResult("SELECT json_build_array(" + Cols + ") AS result FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m WHERE sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To) + " ORDER BY sampletime ASC");
     } else {
-      DB.ExecSentenceAsyncResult("SELECT json_build_array(" + Cols +") AS result FROM " + "aggreg_" + Aggreg + " WHERE sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To));
+      DB.ExecSentenceAsyncResult("SELECT json_build_array(" + Cols +") AS result FROM " + "aggreg_" + Aggreg + " WHERE sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To) + " ORDER BY sampletime ASC");
     }
     while(DB.FecthRow()) sink.os << ",\n  " << DB.ResultString("result");
     sink.os << "\n]";
