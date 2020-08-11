@@ -46,7 +46,6 @@
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, upperPercent: 0.1, lowerPercent: 0.1, minUpperWidth: 10, minLowerWidth: 10 });
           Opt.dateWindow = [this.data.From, this.data.To];
         }
-        console.log(Opt.dateWindow);
         return Opt;
       }
     }
