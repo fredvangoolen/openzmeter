@@ -65,128 +65,60 @@
     g.updateOptions({ dateWindow: Window });
   }
 
-
-
-
-
-
   function touchStart(event, g, context) {
-    if(this && this.StopAutoupdate) this.StopAutoupdate();
-    event.preventDefault();  // touch browsers are all nice.
+    event.preventDefault();
     if(event.touches.length > 1) context.startTimeForDoubleTapMs = null;
     var touches = [];
-    for(var i = 0; i < event.touches.length; i++) {
-      var t = event.touches[i];
-      touches.push({ pageX: t.pageX, dataX: g.toDataXCoord(t.pageX) });
-    }
+    for(var i = 0; i < event.touches.length; i++) touches.push({ pageX: event.touches[i].pageX, dataX: g.toDataXCoord(event.touches[i].pageX) });
     context.initialTouches = touches;
-    if(touches.length === 1) {
+    if(touches.length == 1) {
       context.initialPinchCenter = touches[0];
       context.touchDirections = { x: true };
-    } else if(touches.length >= 2) {
+    } else if(touches.length == 2) {
       context.initialPinchCenter = { pageX: 0.5 * (touches[0].pageX + touches[1].pageX), dataX: 0.5 * (touches[0].dataX + touches[1].dataX) };
-//      var initialAngle = 180 / Math.PI * Math.atan2(context.initialPinchCenter.pageY - touches[0].pageY, touches[0].pageX - context.initialPinchCenter.pageX);
-//      initialAngle = Math.abs(initialAngle);
-//      if(initialAngle > 90) initialAngle = 90 - initialAngle;
-//      context.touchDirections = { x: (initialAngle < (90 - 45/2)), y: (initialAngle > 45/2) };
     }
     context.initialRange = { x: g.xAxisRange() };
   }
   function touchMove(event, g, context) {
     context.startTimeForDoubleTapMs = null;
-    var i, touches = [];
-    for (i = 0; i < event.touches.length; i++) {
+    var touches = [];
+    for(var i = 0; i < event.touches.length; i++) {
       var t = event.touches[i];
       touches.push({ pageX: t.pageX });
     }
     var initialTouches = context.initialTouches;
-    var c_now;
+    var c_now = (touches.length == 1) ? touches[0] : { pageX: 0.5 * (touches[0].pageX + touches[1].pageX) };
     var c_init = context.initialPinchCenter;
-    if (touches.length == 1) {
-      c_now = touches[0];
-    } else {
-      c_now = { pageX: 0.5 * (touches[0].pageX + touches[1].pageX) };
-    }
     var swipe = { pageX: c_now.pageX - c_init.pageX };
-      var dataWidth = context.initialRange.x[1] - context.initialRange.x[0];
-//      var dataHeight = context.initialRange.y[0] - context.initialRange.y[1];
-      swipe.dataX = (swipe.pageX / g.plotter_.area.w) * dataWidth;
-//      swipe.dataY = (swipe.pageY / g.plotter_.area.h) * dataHeight;
-      var xScale/*, yScale*/;
-
-      // The residual bits are usually split into scale & rotate bits, but we split
-      // them into x-scale and y-scale bits.
-      if (touches.length == 1) {
-        xScale = 1.0;
-//        yScale = 1.0;
-      } else if (touches.length >= 2) {
-        var initHalfWidth = (initialTouches[1].pageX - c_init.pageX);
-        xScale = (touches[1].pageX - c_now.pageX) / initHalfWidth;
-
-//        var initHalfHeight = (initialTouches[1].pageY - c_init.pageY);
-//        yScale = (touches[1].pageY - c_now.pageY) / initHalfHeight;
-      }
-
-      // Clip scaling to [1/8, 8] to prevent too much blowup.
-      xScale = Math.min(8, Math.max(0.125, xScale));
-//      yScale = Math.min(8, Math.max(0.125, yScale));
-
-      var didZoom = false;
-//      if (context.touchDirections.x) {
-        g.dateWindow_ = [
-          c_init.dataX - swipe.dataX + (context.initialRange.x[0] - c_init.dataX) / xScale,
-          c_init.dataX - swipe.dataX + (context.initialRange.x[1] - c_init.dataX) / xScale
-        ];
-        didZoom = true;
-//      }
-
-//      if (context.touchDirections.y) {
-//        for (i = 0; i < 1  /*g.axes_.length*/; i++) {
-//          var axis = g.axes_[i];
-//          var logscale = g.attributes_.getForAxis("logscale", i);
-//          if (logscale) {
-//            // TODO(danvk): implement
-//          } else {
-//            axis.valueRange = [
-//              c_init.dataY - swipe.dataY + (context.initialRange.y[0] - c_init.dataY) / yScale,
-//              c_init.dataY - swipe.dataY + (context.initialRange.y[1] - c_init.dataY) / yScale
-//            ];
-//            didZoom = true;
-//          }
-//        }
-//      }
-
-      g.drawGraph_(false);
-
-      // We only call zoomCallback on zooms, not pans, to mirror desktop behavior.
-      if (didZoom && touches.length > 1 && g.getFunctionOption('zoomCallback')) {
-        var viewWindow = g.xAxisRange();
-        g.getFunctionOption("zoomCallback").call(g, viewWindow[0], viewWindow[1], g.yAxisRanges());
-      }
+    var dataWidth = context.initialRange.x[1] - context.initialRange.x[0];
+    swipe.dataX = (swipe.pageX / g.plotter_.area.w) * dataWidth;
+    var xScale = Math.min(8, Math.max(0.125, (touches.length == 1) ? 1.0 : (touches[1].pageX - c_now.pageX) / (initialTouches[1].pageX - c_init.pageX)));
+    g.dateWindow_ = [c_init.dataX - swipe.dataX + (context.initialRange.x[0] - c_init.dataX) / xScale, c_init.dataX - swipe.dataX + (context.initialRange.x[1] - c_init.dataX) / xScale];
+    if(this.Fixed == true) {
+      if(g.dateWindow_[0] < g.file_[0][0]) g.dateWindow_[0] = g.file_[0][0];
+      if(g.dateWindow_[1] > g.file_.slice(-1)[0][0]) g.dateWindow_[1] = g.file_.slice(-1)[0][0];
     }
+    g.drawGraph_(false);
+  }
   function touchEnd(event, g, context) {
-      if (event.touches.length !== 0) {
-        // this is effectively a "reset"
-        touchStart(event, g, context);
-      } else if (event.changedTouches.length == 1) {
-          // Could be part of a "double tap"
-          // The heuristic here is that it's a double-tap if the two touchend events
-          // occur within 500ms and within a 50x50 pixel box.
-          var now = new Date().getTime();
-          var t = event.changedTouches[0];
-          if (context.startTimeForDoubleTapMs &&
-              now - context.startTimeForDoubleTapMs < 500 &&
-              context.doubleTapX && Math.abs(context.doubleTapX - t.screenX) < 50 &&
-              context.doubleTapY && Math.abs(context.doubleTapY - t.screenY) < 50) {
-            g.resetZoom();
-          } else {
-            context.startTimeForDoubleTapMs = now;
-            context.doubleTapX = t.screenX;
-//            context.doubleTapY = t.screenY;
-          }
+    if(event.touches.length != 0) {
+      touchStart(event, g, context);
+    } else if(event.changedTouches.length == 1) {
+      var now = new Date().getTime();
+      var t = event.changedTouches[0];
+      if((context.startTimeForDoubleTapMs != null) && ((now - context.startTimeForDoubleTapMs) < 500) && (context.doubleTapX != null) && (Math.abs(context.doubleTapX - t.screenX) < 50) && (context.doubleTapY != null) && (Math.abs(context.doubleTapY - t.screenY) < 50)) {
+        if(this.Fixed == true) g.updateOptions({ dateWindow: null });
+      } else {
+        context.startTimeForDoubleTapMs = now;
+        context.doubleTapX = t.screenX;
+        context.doubleTapY = t.screenY;
       }
-      this.WindowChange(g.dateWindow_[0], g.dateWindow_[1]);
     }
+    if(this.Fixed == false) {
+      if(g.file_.length > 0) g.updateOptions({ file: [Array(g.file_[0].length).fill(0)] }, false);
+      this.This.$emit('range', g.dateWindow_);
+    }
+  }
   export default {
     Tickers: {
       Default: function(a, b, pixels, opts, dygraph, vals) {
@@ -373,9 +305,9 @@
                  mouseup: mouseUp.bind(parent),
                  dblclick: nullAction.bind(parent),
                  mousewheel: mouseWheelZoom.bind({ This: parent, Fixed: false }),
-                 /*touchstart: touchStart,
-                 touchmove: touchMove,
-                 touchend: touchEnd*/
+                 touchstart: touchStart.bind(parent),
+                 touchmove: touchMove.bind({ This: parent, Fixed: false }),
+                 touchend: touchEnd.bind({ This: parent, Fixed: false })
         };
       },
       Fixed: function(parent) {
@@ -384,9 +316,9 @@
                  mouseup: mouseUp.bind(parent),
                  dblclick: mouseDblClick.bind(parent),
                  mousewheel : mouseWheelZoom.bind({ This: parent, Fixed: true }),
-/*                 touchstart: touchStart,
-                 touchmove: touchMove,
-                 touchend: touchEnd*/
+                 touchstart: touchStart.bind(parent),
+                 touchmove: touchMove.bind({ This: parent, Fixed: true }),
+                 touchend: touchEnd.bind({ This: parent, Fixed: true })
         };
       },
     },
