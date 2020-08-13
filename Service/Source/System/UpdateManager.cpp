@@ -14,6 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "UpdateManager.h"
+#include "LogFile.h"
 #ifdef OPENWRT // ======================================================================================================
 #include "SystemManager.h"
 UpdateManager::UpdateManager() {
@@ -53,11 +54,28 @@ void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {
 }
 void UpdateManager::SetUpgradeCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Package") == false) || (params["Package"].is_string() == false)) return HTTPServer::FillResponse(response, "'Package' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string Package = params["Package"];
-  int ResultCode = 0;
-  string Result = SystemManager::Exec("opkg upgrade --force-depends " + Package, &ResultCode);
-  HTTPServer::FillResponse(response, "", "text/plain", (ResultCode == 0) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  if((params.contains("Packages") == false) || (params["Packages"].is_array() == false) || (params["Packages"].size() == 0)) return HTTPServer::FillResponse(response, "'Packages' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  string Command = "opkg upgrade --force-depends";
+  for(auto &Package : params["Packages"]) {
+    if(Package.is_string() == false) return HTTPServer::FillResponse(response, "'Packages' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    Command.append(" " + Package.get<string>());
+  }
+  auto Func = [Command](uint64_t offset, DataSink &sink) {
+    char   Buffer[128];
+    string Result = "";
+    FILE  *Pipe   = popen(Command.c_str(), "r");
+    if(!Pipe) {
+      LogFile::Error("Can not exec 'opkg upgrade' (%s)", strerror(errno));
+      sink.os << "event: status\ndata: ERROR (Can not exec 'opkg upgrade')\n\n";
+      return false;
+    }
+    while(fgets(Buffer, sizeof(Buffer), Pipe) != NULL) sink.os << "event: text\ndata: " + string(Buffer) + "\n\n";
+    int Code = WEXITSTATUS(pclose(Pipe));
+    sink.os << ((Code == 0) ? "event: status\ndata: OK (Upgrade finished)\n\n" : "event: status\ndata: ERROR (Upgrade failed)\n\n");
+    sink.done();
+    return false;
+  };
+  response.set_chunked_content_provider("text/event-stream", Func);
 }
 #else // ===============================================================================================================
 UpdateManager::UpdateManager() {

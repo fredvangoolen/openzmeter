@@ -125,11 +125,11 @@
     line-height: 18px;
     background-color: #fff;
     border: 0px solid #ccc;
-    font-family: monospace;
+    font-family: 'Fira Code';
     outline: 0;
   }
   .vartable >>> mark {
-    font-family: monospace;
+    font-family: 'Fira Code';
     font-size: 11px;
     background: #FFF;
   }

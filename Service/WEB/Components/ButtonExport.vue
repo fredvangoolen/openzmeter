@@ -111,10 +111,10 @@
   .scrollpanel table tr td {
     border: 1px solid #f5f5f5;
     text-align: right;
-    font: 10px monospace;
+    font: 11px 'Fira Code';
     padding: 1px 3px;
   }
-  .scrollpanel table tr:first-child {
+  .scrollpanel table tr:first-child td {
     font-weight: bold;
     background: #f5f5f5;
   }
