@@ -92,7 +92,7 @@
 <style scoped>
   textarea {
     resize: none;
-    font-family: monospace;
+    font-family: 'Fira Code';
     font-size: 12px;
   }
 </style>

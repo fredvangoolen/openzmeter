@@ -221,7 +221,7 @@
             canvas.fillRect(Left, area.y + 1, Right - Left, 12);
             if(((Right - Left) > 20) && (periods.Rows[i - 1][PeriodCol] != null)) {
               canvas.fillStyle = '#000000';
-              canvas.font = "10px monospace";
+              canvas.font = "10px 'Fira Code";
               canvas.fillText(periods.Rows[i - 1][PeriodCol], Left + 1, 10);
             }
           }

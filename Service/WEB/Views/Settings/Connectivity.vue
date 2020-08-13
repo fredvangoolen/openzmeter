@@ -13,7 +13,7 @@
       </vuetable>
       <bluetooth :settings.sync="Modules.Bluetooth.Settings" v-if="View=='Bluetooth'" @close="View=null"></bluetooth>
       <wifi :settings.sync="Modules.Wifi.Settings" v-if="View=='Wifi'" @close="View=null"></wifi>
-      <Ethernet :settings.sync="Modules.Ethernet.Settings" v-if="View=='Ethernet'" @close="View=null"></Ethernet>
+      <ethernet :settings.sync="Modules.Ethernet.Settings" v-if="View=='Ethernet'" @close="View=null"></ethernet>
       <ntp :settings.sync="Modules.NTP.Settings" v-if="View=='NTP'" @close="View=null"></ntp>
       <telegram :settings.sync="Modules.Telegram.Settings" v-if="View=='Telegram'" @close="View=null"></telegram>
       <modbus-tcp :settings.sync="Modules.ModbusTCP.Settings" v-if="View=='ModbusTCP'" @close="View=null"></modbus-tcp>
@@ -128,7 +128,7 @@
 <style scoped>
   textarea {
     resize: none;
-    font-family: monospace;
+    font-family: 'Fira Code';
     font-size: 12px;
   }
   .table >>> th:nth-child(2) {

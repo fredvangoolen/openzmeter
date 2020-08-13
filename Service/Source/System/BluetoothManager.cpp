@@ -49,12 +49,14 @@ BluetoothManager::BluetoothManager() {
   MessageLoop::RegisterListener("Bluetooth_Toogle", ToggleEnable);
 }
 BluetoothManager::~BluetoothManager() {
+  LogFile::Info("Stopping bluetooth manager...");
   MessageLoop::UnregisterListener("Bluetooth_Toogle");
   HTTPServer::UnregisterCallback("getBluetooth");
   HTTPServer::UnregisterCallback("setBluetooth");
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   pThread = 0;
+  LogFile::Info("Bluetooth manager stoped");
 }
 void BluetoothManager::ToggleEnable() {
   pthread_mutex_lock(&pMutex);
