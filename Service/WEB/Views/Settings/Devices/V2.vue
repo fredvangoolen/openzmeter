@@ -254,7 +254,7 @@
   }
   .serial-number {
     font-size: 12px;
-    float:right;
+    float: right;
     font-weight: normal;
   }
   .toggle-gain >>> .toggle {
