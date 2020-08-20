@@ -33,7 +33,7 @@
     },
     computed: {
       Data: function() {
-        return Object.seal({ 'Active Power': this.FillSerie('Active_Power'), 'Reactive Power': this.FillSerie('Reactive_Power'), 'Power Factor': this.FillSerie('Power_Factor'), 'Phi': this.FillSerie('Phi'), 'Voltage THD': this.FillSerie('Voltage_THD'), 'Current THD': this.FillSerie('Current_THD') });
+        return Object.seal({ TimeZone: (this.analyzer == null) ? null : this.analyzer.TimeZone, 'Active Power': this.FillSerie('Active_Power'), 'Reactive Power': this.FillSerie('Reactive_Power'), 'Power Factor': this.FillSerie('Power_Factor'), 'Phi': this.FillSerie('Phi'), 'Voltage THD': this.FillSerie('Voltage_THD'), 'Current THD': this.FillSerie('Current_THD') });
       },
       DataNow: function() {
         var Series = { 'Active Power': null, 'Reactive Power': null, 'Power Factor': null, 'Phi': null, 'Voltage THD': null, 'Current THD': null };

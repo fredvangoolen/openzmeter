@@ -4,8 +4,8 @@
 
 <script>
   import moment from 'moment';
-  import vis from 'JS/vis.js';
-  import 'CSS/vis.css';
+  import vis from 'vis';
+//  import 'CSS/vis.css';
   import 'CSS/jquery.qtip.css';
   import qtip from 'JS/jquery.qtip.js';
   export default {
@@ -38,33 +38,22 @@
         this.TimeLineGroups.clear();
         this.TimeLineDataset.clear();
         var Groups = [];
-        var StartDate = [];
         var Counts = [];
         var Colors = ['green', 'yellow', 'red'];
         if((this.alarms == null) || (this.analyzer == null)) return;
-        for(var n = 0; n < this.analyzer.Alarms.length; n++) {
-          Groups.push(this.analyzer.Alarms[n].Name);
-          StartDate.push(null);
-          Counts.push(0);
-        }
-        for(var n = 0; n < this.alarms.AlarmTime.length; n++) {
-          var Index = Groups.indexOf(this.alarms.Name[n]);
-          if(Index == -1) continue;
-          if((this.alarms.Triggered[n] == false) && (StartDate[Index] == null) && (Counts[Index] == 0)) {
-            Counts[Index] = Counts[Index] + 1;
-            this.TimeLineDataset.add({ start: this.alarms.From, className: Colors[this.alarms.Priority[n]], group: Index, end: this.alarms.AlarmTime[n] });
-          } else if((this.alarms.Triggered[n] == false) && (StartDate[Index] != null)) {
-            this.TimeLineDataset.add({ start: StartDate[Index], className: Colors[this.alarms.Priority[n]], group: Index, end: this.alarms.AlarmTime[n] });
-            StartDate[Index] = null;
-            Counts[Index] = Counts[Index] + 1;
-          } else if((this.alarms.Triggered[n] == true) && (StartDate[Index] != null)) {
-            continue;
-          } else if((this.alarms.Triggered[n] == true) && (StartDate[Index] == null)) {
-            StartDate[Index] = this.alarms.AlarmTime[n];
+        var NameCol    = this.alarms.Headers.indexOf('Name');
+        var TriggerCol = this.alarms.Headers.indexOf('Trigger');
+        var ReleaseCol = this.alarms.Headers.indexOf('Release');
+        for(var n = 0; n < this.alarms.Rows.length; n++) {
+          var Index = Groups.indexOf(this.alarms.Rows[n][NameCol]);
+          if(Index == -1) {
+            Groups.push(this.alarms.Rows[n][NameCol]);
+            Counts.push(0);
+            Index = Groups.length - 1;
           }
-        }
-        for(var n = 0; n < Groups.length; n++) {
-          if(StartDate[n] != null) this.TimeLineDataset.add({ start: StartDate[n], className: Colors[this.alarms.Priority[n]], group: n, end: this.alarms.To });
+          Counts[Index] = Counts[Index] + 1;
+          var Row = { start: this.alarms.Rows[n][TriggerCol], className: Colors[0], group: Index, end: (this.alarms.Rows[n][ReleaseCol] == null) ? moment().valueOf() : this.alarms.Rows[n][ReleaseCol] };
+          this.TimeLineDataset.add(Row);
         }
         this.TimeLine.setWindow(this.alarms.From, this.alarms.To);
         for(var n = 0; n < Groups.length; n++) {

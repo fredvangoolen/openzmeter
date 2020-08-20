@@ -28,7 +28,7 @@
     },
     computed: {
       Data: function() {
-        var Series = {};
+        var Series = { TimeZone: (this.analyzer == null) ? null : this.analyzer.TimeZone };
         for(var n = 0; n < this.Names.length; n++) Series[this.Names[n]] = this.FillSerie(n);
         return Object.seal(Series);
       }

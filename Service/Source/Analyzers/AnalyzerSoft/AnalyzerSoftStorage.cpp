@@ -28,6 +28,7 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
   json Result = json::object();
   for(auto &Serie : params["Series"]) {
     if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    uint64_t To = Tools::GetTime64();
     if(Serie == "SYSTEM") {
       Result["System"] = Status::GetJSON();
     } else if(Serie == "UNREAD_EVENTS") {
@@ -35,6 +36,7 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
       Result["Unread_Events"] = json::object();
       Database DB(pSerial);
       DB.ExecSentenceAsyncResult("SELECT eventsread, (SELECT count(*) FROM events WHERE starttime > eventsread) AS events  FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
+      Result["Unread_Events"]["To"] = To;
       if(DB.FecthRow() == false) {
         Result["Unread_Events"]["From"]  = 0;
         Result["Unread_Events"]["Count"] = 0;
@@ -47,6 +49,7 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
       Result["Unread_Alarms"] = json::object();
       Database DB(pSerial);
       DB.ExecSentenceAsyncResult("SELECT alarmsread, (SELECT count(*) FROM alarms_ext WHERE trigger > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
+      Result["Unread_Alarms"]["To"]    = To;
       if(DB.FecthRow() == false) {
         Result["Unread_Alarms"]["From"]  = 0;
         Result["Unread_Alarms"]["Count"] = 0;

@@ -10,7 +10,7 @@
         </div>
         <div class="panel-body">
           <spinner v-if="TransferAlarms.Data==null"></spinner>
-          <time-line :analyzer="Analyzer" :range.sync="Range" :alarms="TransferAlarms.Data"></time-line>
+          <time-line :analyzer="analyzer" :range.sync="Range" :alarms="TransferAlarms.Data"></time-line>
         </div>
       </div>
     </div>
@@ -31,7 +31,7 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Analyzer: null, Range: null, Alarms: null, TransferAlarms: this.AlarmsTransfer() };
+      return { Range: null, TransferAlarms: this.AlarmsTransfer() };
     },
     created: function () {
       if((this.$route.query.From != null) && (this.$route.query.To != null)) {
