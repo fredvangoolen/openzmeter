@@ -36,6 +36,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import Dygraph from 'JS/dygraph.js';
   import Graph from 'Components/Graph.vue';
+  import moment from 'moment';
   import 'JS/dygraph-crosshair.js';
   export default {
     props: { serie: String, analyzer: Object, data: Object, last: Object, paused: Boolean },
@@ -96,7 +97,15 @@
         Opt.selectMode = 'euclidian';
         Opt.xAxisHeight = 12;
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatTime(x); };
-        Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatTime(x); };
+        Opt.axes.x.ticker = (min, max) => {
+          var ticks = [];
+          if(this.analyzer == null) return ticks;
+          var Min = moment.tz(min, this.analyzer.TimeZone).startOf('hour');
+          var Max = moment.tz(max, this.analyzer.TimeZone).endOf('hour');
+          for(var h = Min; h.isBefore(Max); h.add(15, 'minute')) ticks.push({ v: h.valueOf(), label: h.format('HH:mm') });
+          console.log
+          return ticks;
+        };
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30;
         if(this.Phases != null) Opt.visibility =  this.Phases;
