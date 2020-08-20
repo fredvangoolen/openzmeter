@@ -13,42 +13,31 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "StatusManager.h"
-//#include "ConfigFile.h"
-//#include "LogFile.h"
+#include "Status.h"
 //----------------------------------------------------------------------------------------------------------------------
 //queue<string>    SysSupport::pSystemActions;
-RWLocks  StatusManager::pLock;
-json     StatusManager::pStatus = json::object();
+RWLocks  Status::pLock;
+json     Status::pStatus = json::object();
 //----------------------------------------------------------------------------------------------------------------------
-StatusManager::StatusManager() {
+Status::Status() {
 }
-StatusManager::~StatusManager() {
+Status::~Status() {
 }
-void StatusManager::SetValue(const string &path, const json &value) {
+void Status::SetValue(const string &path, const json &value) {
   pLock.WriteLock();
   pStatus[json::json_pointer(path)] = value;
   pLock.Unlock();
 }
-json StatusManager::GetValue(const string &path) {
+json Status::GetValue(const string &path) {
   pLock.ReadLock();
   json Result = pStatus[json::json_pointer(path)];
   pLock.Unlock();
   return Result;
 }
-json StatusManager::GetJSON() {
+json Status::GetJSON() {
   pLock.ReadLock();
   json Result = pStatus;
   pLock.Unlock();
   return Result;
-
-
-
-//  Result["BT_Enabled"] = pBT_Enabled;
-//  Result["TimeSet"] = pTimeSet;
-//  Result["Battery_Volt"] = pSystemStatus.Battery_Volt;
-//  Result["Battery_Level"] = pSystemStatus.Battery_Level;
-//  Result["Updates"] = pSystemStatus.Updates;
-//  Result["Events"] = pSystemStatus.Events;
 }
 //----------------------------------------------------------------------------------------------------------------------

@@ -32,7 +32,7 @@
 #include "TariffManager.h"
 #include "ConfigFile.h"
 #include "UpdateManager.h"
-#include "StatusManager.h"
+#include "Status.h"
 #include "SystemManager.h"
 #include "MODBus.h"
 #include "DatabasePool.h"
@@ -72,19 +72,18 @@ int main(int argc, char** argv) {
     }
   }
   pthread_setname_np(pthread_self(), "Main");
-  nice(-20);
+  nice(15);
   ConfigFile       ConfigFile(ConfigFileName);     // Load config file
   PidFile          PIDFile;                        // Create PID file
   LogFile          LogFile;                        // Create LOG file
   DatabasePool     DBPool;                         // Init database pool
   HTTPServer       HTTPServer;                     // Init WEB service
   MessageLoop      Loop;                           // Create application message loop
+  Status           StatusObj;                      // Create status manager
 
-  StatusManager    Status;                         // Create status manager
   BluetoothManager BT;                             // Create bluetooth manager
   WifiManager      Wifi;                           // Create wifi manager
   EthernetManager  Ethernet;                       // Create ethernet manager
-
   UpdateManager    Update;                         // Create update manager
   NTPManager       NTP;                            // Create NTP manager
   UserManager      User;                           // Create user manager

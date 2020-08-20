@@ -248,7 +248,7 @@ void AnalyzerSoftEvents::GetEvents(const json &params, Response &response) {
     sink.os << "[\n  " << Headers.dump();
     Database DB(pSerial);
     DB.ExecSentenceAsyncResult("SELECT json_build_array(starttime, evttype, samplerate, reference, peak, change, duration, notes) FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
-    while(DB.FecthRow()) sink.os << ",\n  " << DB.ResultString("result");
+    while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " << DB.ResultString("result");
     sink.os << "\n]";
     sink.done();
     return false;

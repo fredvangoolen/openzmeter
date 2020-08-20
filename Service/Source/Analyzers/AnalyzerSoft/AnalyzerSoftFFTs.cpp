@@ -36,7 +36,7 @@ AnalyzerSoftFFTs::AnalyzerSoftFFTs(const Analyzer::AnalyzerMode mode) {
   }
   pInLen  = 0;
   pOutLen = 0;
-  pCycles = 10;
+  pCycles = 0;
 }
 AnalyzerSoftFFTs::~AnalyzerSoftFFTs() {
   for(uint8_t i = 0; i < pVoltageChannels; i++) {
@@ -149,7 +149,7 @@ float AnalyzerSoftFFTs::CurrentBinPower(const uint8_t channel, const uint16_t in
   Complex_t Complex = pFFTCurrentData[channel].DataPtr[index];
   return sqrt(Complex.Re * Complex.Re + Complex.Im * Complex.Im) / M_SQRT2 * 2.0;
 }
-bool AnalyzerSoftFFTs::GetSeriesNow(const string &serie, json &result) {
+bool AnalyzerSoftFFTs::GetSeriesJSON(const string &serie, json &result) {
   if(serie == "VOLTAGE_HARMONICS") {
     json Tmp1 = json::array();
     for(uint8_t n = 0; n < pVoltageChannels; n++) {

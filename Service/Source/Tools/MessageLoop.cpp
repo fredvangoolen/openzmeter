@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
+#include <unistd.h>
 #include "MessageLoop.h"
 #include "Tools.h"
 #include "LogFile.h"
@@ -56,6 +57,7 @@ void MessageLoop::HandleEvents() {
     Item.second.LastCall = Time;
   }
   pthread_mutex_unlock(&pListenersMutex);
+  usleep(100000);
 }
 void MessageLoop::RegisterListener(const string &id, function<void()> func, uint32_t ms) {
   Listener_t Listener;
@@ -69,8 +71,7 @@ void MessageLoop::RegisterListener(const string &id, function<void()> func, uint
 void MessageLoop::UnregisterListener(const string &id) {
   pthread_mutex_lock(&pListenersMutex);
   auto Item = pListeners.find(id);
-  if(Item == pListeners.end()) return;
-  pListeners.erase(Item);
+  if(Item != pListeners.end()) pListeners.erase(Item);
   pthread_mutex_unlock(&pListenersMutex);
 }
 // ---------------------------------------------------------------------------------------------------------------------

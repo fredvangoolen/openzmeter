@@ -60,7 +60,6 @@ const openZmeter = {
         var ReqRange  = analyzer.CalcRange(range, aggreg);
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
-        if(aggreg == '1H') range[0] = (range[0] / 3600000) * 3600000;
         if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetData(null, null, null);
         Transfer.Analyzer  = analyzer;
         Transfer.Aggreg    = aggreg;

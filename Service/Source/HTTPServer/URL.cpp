@@ -32,6 +32,7 @@ URL::URL(const string &url) {
       pProtocol = string(protocolStart, protocolEnd);
       protocolEnd += 3;
       if(pProtocol == "https") pPort = 443;
+      if(pProtocol == "mqtt") pPort = 1883;
     } else {
       protocolEnd = url.begin();
     }

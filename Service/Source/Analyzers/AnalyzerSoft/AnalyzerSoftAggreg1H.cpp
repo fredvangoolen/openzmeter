@@ -94,9 +94,11 @@ void AnalyzerSoftAggreg1H::AccumulateStats(const AnalyzerSoftAggreg10M *params) 
     }
   }
 }
-void AnalyzerSoftAggreg1H::Normalize() {
+bool AnalyzerSoftAggreg1H::Normalize() {
+  if(pSamples < 16000) return false;
   AnalyzerSoftAggreg::Normalize(pSamples);
   pSamples = 1;
+  return true;
 }
 void AnalyzerSoftAggreg1H::Accumulate(const AnalyzerSoftAggreg200MS *src) {
   pSamples++;

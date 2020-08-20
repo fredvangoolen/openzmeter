@@ -84,7 +84,7 @@
       Std: function() {
         var Std = { Value: 0, Percent: 0, Count: 0 };
         var Avg = 0;
-        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Max;
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Std;
         var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
         var ValueCol = this.dataGraph.Headers.indexOf('Frequency');
         for(var x = 0; x < this.dataGraph.Rows.length; x++) {
@@ -100,7 +100,7 @@
       },
       Avg: function() {
         var Avg = { Value: 0, Count: 0 };
-        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Max;
+        if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Avg;
         var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
         var ValueCol = this.dataGraph.Headers.indexOf('Frequency');
         for(var x = 0; x < this.dataGraph.Rows.length; x++) {

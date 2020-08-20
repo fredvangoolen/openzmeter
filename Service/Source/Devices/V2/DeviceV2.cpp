@@ -28,7 +28,7 @@
 #include "DeviceV2.h"
 #include "AnalyzerManager.h"
 #include "DeviceManager.h"
-#include "StatusManager.h"
+#include "Status.h"
 #include "ConfigFile.h"
 #include "LogFile.h"
 #include "Tools.h"

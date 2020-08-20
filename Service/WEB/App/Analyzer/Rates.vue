@@ -1,6 +1,6 @@
 <template>
   <div>
-    <dlg :loading="ShowSpinner" v-if="View==null">
+    <dlg :loading="ShowSpinner" v-if="Rate==null">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates</h4></div>
         <div class="pull-right btn-group">
@@ -19,7 +19,7 @@
         </template>
       </vuetable>
     </dlg>
-    <analyzer-rate v-if="View=='Rate'" :analyzer="analyzer" :rate="Rate" @close="GetRates"></analyzer-rate>
+    <analyzer-rate v-if="Rate!=null" :analyzer="analyzer" :rate="Rate" @close="GetRates"></analyzer-rate>
   </div>
 </template>
 
@@ -32,7 +32,7 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { Error: null, ShowSpinner: false, View: null, Rates: [], Rate: null,
+      return { Error: null, ShowSpinner: false, Rates: [], Rate: null,
         Columns: [
           { name: 'Group', title: 'Type', callback: this.FormatGroup },
           { name: 'Name', title: 'Name' },
@@ -53,9 +53,8 @@
         return (val == 0) ? 'Contracted' : 'Group ' + val;
       },
       GetRates: function() {
-        this.View = null;
+        this.Rate = null;
         this.ShowSpinner = true;
-        if(this.analyzer == null) return;
         this.$http.post('getRates', { Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
             this.Rates = result.data;
@@ -65,20 +64,13 @@
         );
       },
       Add: function() {
-        this.Rate = null;
-        this.View = 'Rate';
+        this.Rate = { Analyzer: this.analyzer.Analyzer, Name: 'Unname rate', Description: '', Group: 0, StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxs: [], Billing: [] };
       },
       Edit: function(row) {
         this.ShowSpinner = true;
         this.$http.post('getRate', { Analyzer: this.analyzer.Analyzer, RateID: row.RateID }).then(
-          (result) => {
-            this.Rate = result.data;
-            this.Rate.RateID = row.RateID;
-            this.View = 'Rate';
-          },
-          (fail) => {
-            this.ShowSpinner = false;
-          }
+          (result) => { this.Rate = Object.assign( {RateID: row.RateID }, result.data); },
+          (fail) => { this.ShowSpinner = false; }
         );
       },
       Delete: function(row) {

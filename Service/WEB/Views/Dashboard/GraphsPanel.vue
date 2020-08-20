@@ -122,27 +122,22 @@
     },
     methods: {
       Export: function() {
-        if(this.data == null) return [];
-        var Header = [['Time'].concat(this.SerieProps.Names(this.analyzer))];
-        for(var n in this.data.Sampletime) {
-          var Row = [this.data.Sampletime[n]];
-          if(this.serie == 'VOLTAGE') {
-            for(var i in this.data.Voltage[n]) Row.push(this.Round(this.data.Voltage[n][i], 3));
-          } else if(this.serie == 'CURRENT') {
-            for(var i in this.data.Current[n]) Row.push(this.Round(this.data.Current[n][i], 3));
-          } else if(this.serie == 'ACTIVE_POWER') {
-            for(var i in this.data.Active_Power[n]) Row.push(this.Round(this.data.Active_Power[n][i], 3));
-          } else if(this.serie == 'FREQUENCY') {
-            Row.push(this.Round(this.data.Frequency[n], 3));
+        if((this.data == null) || (this.analyzer == null)) return [];
+        var Header = [['Time'].concat(this.analyzer.GetSeriesNames(this.analyzer.Title[this.serie], this.analyzer.Channels[this.serie]))];
+        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var ValueCol = this.data.Headers.indexOf(this.serie);
+        for(var n = 0; n < this.data.Rows.length; n++) {
+          var Row = [this.analyzer.FormatDateTime(this.data.Rows[n][TimeCol])];
+          if(this.serie != 'Frequency') {
+            for(var i in this.data.Rows[n][ValueCol]) Row.push(this.Round(this.data.Rows[n][ValueCol][i], 3));
+          } else {
+            Row.push(this.Round(this.data.Rows[n][ValueCol], 3));
           }
           Header.push(Row);
         }
         return Object.seal(Header);
       }
-    },
-    created: function() {
-//      this.SerieProps = oZm.Series[this.serie];
-    },
+    }
   }
 </script>
 

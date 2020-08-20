@@ -16,56 +16,71 @@
 #include "AnalyzerSoftAlarms.h"
 #include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAlarms::AnalyzerSoftAlarms(const string &serial) {
+AnalyzerSoftAlarms::AnalyzerSoftAlarms(AnalyzerSoftMQTT *mqtt, const string &serial) {
   pSerial           = serial;
   pNominalVoltage   = 230.0;
   pNominalFrequency = 50.0;
   pWorker           = NULL;
-  pMutex            = PTHREAD_MUTEX_INITIALIZER;
+  pMQTT             = mqtt;
+  pConfigMutex      = PTHREAD_MUTEX_INITIALIZER;
+  pAlarmsMutex      = PTHREAD_MUTEX_INITIALIZER;
 }
 AnalyzerSoftAlarms::~AnalyzerSoftAlarms() {
   Config(false, pNominalVoltage, pNominalFrequency);
 }
 void AnalyzerSoftAlarms::Config(const bool enabled, const float nominalVoltage, const float nominalFreq) {
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_lock(&pConfigMutex);
   pNominalVoltage   = nominalVoltage;
   pNominalFrequency = nominalFreq;
   if((enabled == false) && (pWorker != NULL)) {
+    pthread_mutex_lock(&pAlarmsMutex);
     pAlarms.clear();
+    pthread_mutex_unlock(&pAlarmsMutex);
     pWorker->Wait();
     delete pWorker;
     pWorker = NULL;
   } else if((enabled == true) && (pWorker == NULL)) {
     Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT id, config::jsonb || json_build_object('Name', name) as config FROM alarms");
+    DB.ExecSentenceAsyncResult("SELECT id, config::jsonb || jsonb_build_object('Name', name) as config FROM alarms");
+    pthread_mutex_lock(&pAlarmsMutex);
     while(DB.FecthRow()) pAlarms.emplace(piecewise_construct, forward_as_tuple(DB.ResultString("id")), forward_as_tuple(pSerial, DB.ResultJSON("config"), pNominalVoltage, pNominalFrequency));
+    pthread_mutex_unlock(&pAlarmsMutex);
     pWorker = new Worker("AlarmsDet", [&](void *a) { this->Alarms_Func((AnalyzerSoftAggreg*)a); });
   }
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pConfigMutex);
 }
 void AnalyzerSoftAlarms::Alarms_Func(AnalyzerSoftAggreg *aggreg) {
-  pthread_mutex_lock(&pMutex);
-  for(auto &Alarm : pAlarms) Alarm.second.PushAggreg(pRunningAggreg, aggreg);
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_lock(&pAlarmsMutex);
+  for(auto &Alarm : pAlarms) {
+    auto Result = Alarm.second.PushAggreg(pRunningAggreg, aggreg);
+    if(Result == AnalyzerSoftAlarm::TRIGGERED) {
+      pMQTT->PublishAlarm(aggreg->Timestamp(), Alarm.second.Name(), Alarm.second.Priority(), true);
+//      Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
+    } else if(Result == AnalyzerSoftAlarm::RELEASED) {
+      pMQTT->PublishAlarm(aggreg->Timestamp(), Alarm.second.Name(), Alarm.second.Priority(), false);
+//    Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
+    }
+  }
+  pthread_mutex_unlock(&pAlarmsMutex);
 }
 void AnalyzerSoftAlarms::Run(const string &aggreg, const AnalyzerSoftAggreg *params) {
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_lock(&pConfigMutex);
   pRunningAggreg = aggreg;
   if(pWorker != NULL) pWorker->Run((void*)params);
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pConfigMutex);
 }
 void AnalyzerSoftAlarms::Wait() {
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_lock(&pConfigMutex);
   if(pWorker != NULL) pWorker->Wait();
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pConfigMutex);
 }
 void AnalyzerSoftAlarms::GetAlarmsDef(const json &params, Response &response) {
   auto Func = [&](uint64_t offset, DataSink &sink) -> bool {
     uint32_t Items = 0;
     sink.os << "[\n  ";
     Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT json_build_array('AlarmID', id, 'Name', name) AS result FROM alarms");
-    while(DB.FecthRow()) {
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('AlarmID', id, 'Name', name) AS result FROM alarms");
+    while(DB.FecthRow() && sink.is_writable()) {
       if(Items++ != 0) sink.os << ",\n  ";
       sink.os << DB.ResultString("result");
     }
@@ -97,10 +112,10 @@ void AnalyzerSoftAlarms::AddAlarmDef(const json &params, Response &response) {
   string Name   = params["Name"];
   json   Config = AnalyzerSoftAlarm::CheckConfig(params);
   Database DB(pSerial);
-  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("INSERT INTO alarms(id, name, config) VALUES(" + DB.Bind(ID) + ", " + DB.Bind(Name) + ", " + DB.Bind(Config.dump())) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-  pthread_mutex_lock(&pMutex);
+  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("INSERT INTO alarms(id, name, config) VALUES(" + DB.Bind(ID) + ", " + DB.Bind(Name) + ", " + DB.Bind(Config.dump()) + ")") ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  pthread_mutex_lock(&pAlarmsMutex);
   pAlarms.emplace(piecewise_construct, forward_as_tuple(DB.ResultString("id")), forward_as_tuple(pSerial, Config, pNominalVoltage, pNominalFrequency));
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pAlarmsMutex);
 }
 void AnalyzerSoftAlarms::GetAlarmDef(const json &params, Response &response) {
   if((params.contains("AlarmID") == false) || (params["AlarmID"].is_string() == false)) return HTTPServer::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -118,21 +133,21 @@ void AnalyzerSoftAlarms::SetAlarmDef(const json &params, Response &response) {
   json   Config = AnalyzerSoftAlarm::CheckConfig(params);
   Database DB(pSerial);
   HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("UPDATE alarms SET name = " + DB.Bind(Name) + ", config = " + DB.Bind(Config.dump()) +" WHERE id = " + DB.Bind(ID)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_lock(&pAlarmsMutex);
   auto Item = pAlarms.find(ID);
   if(Item != pAlarms.end()) pAlarms.erase(Item);
   pAlarms.emplace(piecewise_construct, forward_as_tuple(DB.ResultString("id")), forward_as_tuple(pSerial, Config, pNominalVoltage, pNominalFrequency));
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pAlarmsMutex);
 }
 void AnalyzerSoftAlarms::DelAlarmDef(const json &params, Response &response) {
   if((params.contains("AlarmID") == false) || (params["AlarmID"].is_string() == false)) return HTTPServer::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string ID = params["AlarmID"];
   Database DB(pSerial);
   HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms WHERE id = " + DB.Bind(ID)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_lock(&pAlarmsMutex);
   auto Item = pAlarms.find(ID);
   if(Item != pAlarms.end()) pAlarms.erase(Item);
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pAlarmsMutex);
 }
 void AnalyzerSoftAlarms::GetAlarms(const json &params, Response &response) {
   if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -149,7 +164,7 @@ void AnalyzerSoftAlarms::GetAlarms(const json &params, Response &response) {
     sink.os << "[\n  " << Headers.dump();
     Database DB(pSerial);
     DB.ExecSentenceAsyncResult("SELECT json_build_array(name, trigger, release) as result FROM alarms_ext WHERE trigger >= " + DB.Bind(From) + " AND trigger <= " + DB.Bind(To));
-    while(DB.FecthRow()) sink.os << ",\n  " << DB.ResultString("result");
+    while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " << DB.ResultString("result");
     sink.os << "\n]";
     sink.done();
     return false;

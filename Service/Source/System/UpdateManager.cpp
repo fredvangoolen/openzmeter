@@ -18,12 +18,15 @@
 #ifdef OPENWRT // ======================================================================================================
 #include "SystemManager.h"
 UpdateManager::UpdateManager() {
+  LogFile::Info("Starting Update manager");
   HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
   HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
 }
 UpdateManager::~UpdateManager() {
+  LogFile::Info("Stopping Update manager...");
   HTTPServer::UnregisterCallback("getUpdates");
   HTTPServer::UnregisterCallback("setUpgrade");
+  LogFile::Info("Update manager stoped");
 }
 void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -69,7 +72,7 @@ void UpdateManager::SetUpgradeCallback(const json &params, Response &response) {
       sink.os << "event: status\ndata: ERROR (Can not exec 'opkg upgrade')\n\n";
       return false;
     }
-    while(fgets(Buffer, sizeof(Buffer), Pipe) != NULL) sink.os << "event: text\ndata: " + string(Buffer) + "\n\n";
+    while((fgets(Buffer, sizeof(Buffer), Pipe) != NULL) && sink.is_writable()) sink.os << "event: text\ndata: " + string(Buffer) + "\n\n";
     int Code = WEXITSTATUS(pclose(Pipe));
     sink.os << ((Code == 0) ? "event: status\ndata: OK (Upgrade finished)\n\n" : "event: status\ndata: ERROR (Upgrade failed)\n\n");
     sink.done();

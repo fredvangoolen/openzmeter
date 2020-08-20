@@ -16,7 +16,8 @@
 #include "WifiManager.h"
 #ifdef OPENWRT // ======================================================================================================
 #include "SystemManager.h"
-#include "StatusManager.h"
+#include "LogFile.h"
+#include "Status.h"
 #include "MessageLoop.h"
 #include "ConfigFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
@@ -25,6 +26,7 @@ string           WifiManager::pNetworkWIFI   = "lan";
 string           WifiManager::pWirelessWIFI  = "default_radio";
 // ---------------------------------------------------------------------------------------------------------------------
 WifiManager::WifiManager() {
+  LogFile::Info("Starting Wifi manager");
   json Config = ConfigFile::ReadConfig("/WIFI");
   if(Config.is_object() == true) {
     if(Config["Interface"].is_string()) pInterfaceWIFI = Config["Interface"];
@@ -42,17 +44,19 @@ WifiManager::WifiManager() {
   HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
 }
 WifiManager::~WifiManager() {
+  LogFile::Info("Stopping Wifi manager...");
   HTTPServer::UnregisterCallback("scanWIFI");
   HTTPServer::UnregisterCallback("getWIFI");
   HTTPServer::UnregisterCallback("setWIFI");
   MessageLoop::UnregisterListener("WIFI_PeriodicTasks");
+  LogFile::Info("Stopping Wifi manager...");
 }
 void WifiManager::PeriodicTasks() {
   json Params = json::object();
   Params["device"] = pInterfaceWIFI;
   json Result = SystemManager::uBusCall("iwinfo", "info", Params);
-  StatusManager::SetValue("/WIFI_Network", ((Result == nullptr) || (Result.is_object() == false) || (Result["ssid"].is_string() == false)) ? json() : Result["ssid"]);
-  StatusManager::SetValue("/WIFI_Power", ((Result == nullptr) || (Result.is_object() == false) || (Result["quality"].is_number() == false) || (Result["quality_max"].is_number() == false)) ? json() : json(Result["quality"].get<int>() * 100.0 / Result["quality_max"].get<int>()));
+  Status::SetValue("/WIFI_Network", ((Result == nullptr) || (Result.is_object() == false) || (Result["ssid"].is_string() == false)) ? json() : Result["ssid"]);
+  Status::SetValue("/WIFI_Power", ((Result == nullptr) || (Result.is_object() == false) || (Result["quality"].is_number() == false) || (Result["quality_max"].is_number() == false)) ? json() : json(Result["quality"].get<int>() * 100.0 / Result["quality_max"].get<int>()));
 }
 void WifiManager::ScanWIFICallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

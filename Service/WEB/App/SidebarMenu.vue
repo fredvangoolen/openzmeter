@@ -66,7 +66,7 @@
     },
     computed: {
       UnreadEvents: function() {
-        if(this.analyzer.NominalFrequency == 0) return 0;
+        if((this.analyzer == null) || (this.analyzer.NominalFrequency == 0)) return 0;
         if(this.TransferNow.Data == null) return 0;
         return this.TransferNow.Data.Unread_Events.Count;
       },

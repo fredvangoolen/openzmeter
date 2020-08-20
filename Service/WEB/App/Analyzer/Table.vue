@@ -90,8 +90,8 @@
           (result) => {
             result.data.Analyzer = analyzer;
             this.$emit('update:analyzer', result.data);
-            if(close == true) this.$emit('close');
             this.ShowSpinner = false;
+            if(close == true) this.$emit('close');
           },
           (fail) => {}
         );
@@ -106,37 +106,31 @@
         this.ShowSpinner = true;
         this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
-            if(result.status == 200) {
-              result.data.Analyzer = analyzer;
-              this.Analyzer = result.data;
-              this.View = 'Configure';
-            }
+            result.data.Analyzer = analyzer;
+            this.Analyzer = result.data;
+            this.View = 'Configure';
             this.ShowSpinner = false;
           }
         );
       },
       Rates: function(analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer, Rates: true }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
-            if(result.status == 200) {
-              result.data.Analyzer = analyzer;
-              this.Analyzer = result.data;
-              this.View = 'Rates';
-            }
+            result.data.Analyzer = analyzer;
+            this.Analyzer = result.data;
+            this.View = 'Rates';
             this.ShowSpinner = false;
           }
         );
       },
       Alarms: function(analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer , Alarms: true }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
-            if(result.status == 200) {
-              result.data.Analyzer = analyzer;
-              this.Analyzer = result.data;
-              this.View = 'Alarms';
-            }
+            result.data.Analyzer = analyzer;
+            this.Analyzer = result.data;
+            this.View = 'Alarms';
             this.ShowSpinner = false;
           }
         );
@@ -145,11 +139,9 @@
         this.ShowSpinner = true;
         this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
-            if(result.status == 200) {
-              result.data.Analyzer = analyzer;
-              this.Analyzer = result.data;
-              this.View = 'Remote';
-            }
+            result.data.Analyzer = analyzer;
+            this.Analyzer = result.data;
+            this.View = 'Remote';
             this.ShowSpinner = false;
           }
         );
@@ -158,11 +150,9 @@
         this.ShowSpinner = true;
         this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
-            if(result.status == 200) {
-              result.data.Analyzer = analyzer;
-              this.Analyzer = result.data;
-              this.View = 'Permissions';
-            }
+            result.data.Analyzer = analyzer;
+            this.Analyzer = result.data;
+            this.View = 'Permissions';
             this.ShowSpinner = false;
           }
         );
@@ -171,11 +161,9 @@
         this.ShowSpinner = true;
         this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
-            if(result.status == 200) {
-              result.data.Analyzer = analyzer;
-              this.Analyzer = result.data;
-              this.View = 'Maintenance';
-            }
+            result.data.Analyzer = analyzer;
+            this.Analyzer = result.data;
+            this.View = 'Maintenance';
             this.ShowSpinner = false;
           }
         );

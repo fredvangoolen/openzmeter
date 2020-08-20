@@ -65,6 +65,7 @@ class AnalyzerSoftAggreg {
     float    VoltagePhase(const uint8_t channel) const;
     float    Phi(const uint8_t channel) const;
     float    PowerFactor(const uint8_t channel) const;
+    bool     GetSeriesJSON(const string &serie, json &result) const;
   protected :
     AnalyzerSoftAggreg(const string &serial, const Analyzer::AnalyzerMode mode);
     virtual ~AnalyzerSoftAggreg();

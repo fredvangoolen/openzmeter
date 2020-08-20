@@ -27,9 +27,9 @@
 #include "AnalyzerSoft.h"
 #include "ConfigFile.h"
 #include "LogFile.h"
-#include "StatusManager.h"
+#include "Status.h"
 #include "Telegram.h"
-#include "AnalyzerSoftGA.h"
+#include "MessageLoop.h"
 #include "URL.h"
 #include "AnalyzerSoftAlarms.h"
 //----------------------------------------------------------------------------------------------------------------------
@@ -39,12 +39,13 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   Database DB(id);
   LogFile::Debug("Creating AnalyzerSoft database tables");
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
+  pSequence       = 0;
   pFFTs           = new AnalyzerSoftFFTs(mode);
+  pMQTT           = new AnalyzerSoftMQTT(pSerial);
   pRates          = new AnalyzerSoftRates(pSerial);
-  pAlarms         = new AnalyzerSoftAlarms(pSerial);
+  pAlarms         = new AnalyzerSoftAlarms(pMQTT, pSerial);
   pEvents         = new AnalyzerSoftEvents(pSerial, mode, samplerate);
   pSync           = new AnalyzerSoftSync();
-  pMQTT           = new AnalyzerSoftMQTT(pSerial);
   pInputBlock     = new AnalyzerSoftBlock(mode, samplerate);
   pFrequency      = new AnalyzerSoftFrequency(samplerate);
   pAggreg200MS    = new AnalyzerSoftAggreg200MS(pSerial, mode);
@@ -55,10 +56,12 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAggreg1H       = new AnalyzerSoftAggreg1H(pSerial, mode);
   pStorage        = new AnalyzerSoftStorage(pSerial, mode);
   pAnalyzerWorker = new Worker((mode == PHASE1) ? "Analyzer_1P" : (mode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
+  MessageLoop::RegisterListener("AnalyzerSoft_" + pSerial + "_PeriodicTasks", [&]() { this->PeriodicTasks(); }, 60000);
   Configure(CheckConfig(ConfigFile::ReadConfig(optionPath), mode));
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LogFile::Info("Stopping analyzer with serial '%s'", pSerial.c_str());
+  MessageLoop::UnregisterListener("AnalyzerSoft_" + pSerial + "_PeriodicTasks");
   delete pAnalyzerWorker;
   delete pAggreg1H;
   delete pAggreg15M;
@@ -149,11 +152,11 @@ void AnalyzerSoft::Configure(const json &options) {
   pMinCurrent            = options["MinCurrent"];
   pSave200MS             = options["Save200MS"];
   if(NominalFrequency != pFrequency->NominalFrequency()) {
-    pSequence         = 0;
+    pSequence = 0;
     pAggreg200MS->Reset();
     pFrequency->Config(NominalFrequency);
     pInputBlock->Config(NominalFrequency);
-    pFFTs->Config((NominalFrequency == 0.0) ? 1 : (NominalFrequency == 50.0) ? 10 : 12);
+    pFFTs->Config((NominalFrequency == 0.0) ? 0 : (NominalFrequency == 50.0) ? 10 : 12);
   }
   pAnalyzerLock.Unlock();
   pRates->Config(options["TimeZone"]);
@@ -234,53 +237,58 @@ void AnalyzerSoft::Analyzer_Func() {
   pNowDataLock.ProviderWrite();
   if((pSequence % 15) == 0) {
     LogFile::Debug("Storing 3S aggregation for analyzer '%s'", pSerial.c_str());
-    pAggreg3S->Normalize();
-    pAlarms->Run("3S", pAggreg3S);
-    pAggreg3S->Save();
-    pAggreg1H->AccumulateStats(pAggreg3S);
-    pMQTT->PublishAggreg(pAggreg3S);
-    pAlarms->Wait();
+    if(pAggreg3S->Normalize() == true) {
+      pAlarms->Run("3S", pAggreg3S);
+      pAggreg3S->Save();
+      pAggreg1H->AccumulateStats(pAggreg3S);
+      pMQTT->PublishAggreg("3S", pAggreg3S);
+      pAlarms->Wait();
+    }
     pAggreg3S->Reset();
   }
   pAggreg3S->Accumulate(pAggreg200MS);
   if((pAggreg1M->Timestamp() != 0) && ((pAggreg1M->Timestamp() / 60000) < (pAggreg200MS->Timestamp() / 60000))) {
     LogFile::Debug("Storing 1M aggregation for analyzer '%s'", pSerial.c_str());
-    pAggreg1M->Normalize();
-    pAlarms->Run("1M", pAggreg1M);
-    pAggreg1M->Save();
-    pMQTT->PublishAggreg(pAggreg1M);
-    pAlarms->Wait();
+    if(pAggreg1M->Normalize() == true) {
+      pAlarms->Run("1M", pAggreg1M);
+      pAggreg1M->Save();
+      pMQTT->PublishAggreg("1M", pAggreg1M);
+      pAlarms->Wait();
+    }
     pAggreg1M->Reset();
   }
   pAggreg1M->Accumulate(pAggreg200MS);
   if((pAggreg10M->Timestamp() != 0) && ((pAggreg10M->Timestamp() / 600000) < (pAggreg200MS->Timestamp() / 600000))) {
     LogFile::Debug("Storing 10M aggregation for analyzer '%s", pSerial.c_str());
-    pAggreg10M->Normalize();
-    pAlarms->Run("10M", pAggreg10M);
-    pAggreg1H->AccumulateStats(pAggreg10M);
-    pAggreg10M->Save();
-    pMQTT->PublishAggreg(pAggreg10M);
-    pAlarms->Wait();
+    if(pAggreg10M->Normalize() == true) {
+      pAlarms->Run("10M", pAggreg10M);
+      pAggreg1H->AccumulateStats(pAggreg10M);
+      pAggreg10M->Save();
+      pMQTT->PublishAggreg("10M", pAggreg10M);
+      pAlarms->Wait();
+    }
     pAggreg10M->Reset();
   }
   pAggreg10M->Accumulate(pAggreg200MS);
   if((pAggreg15M->Timestamp() != 0) && ((pAggreg15M->Timestamp() / 900000) < (pAggreg200MS->Timestamp() / 900000))) {
     LogFile::Debug("Storing 15M aggregation for analyzer '%s'", pSerial.c_str());
-    pAggreg15M->Normalize();
-    pAlarms->Run("15M", pAggreg15M);
-    pAggreg15M->Save();
-    pMQTT->PublishAggreg(pAggreg15M);
-    pAlarms->Wait();
+    if(pAggreg15M->Normalize() == true) {
+      pAlarms->Run("15M", pAggreg15M);
+      pAggreg15M->Save();
+      pMQTT->PublishAggreg("15M", pAggreg15M);
+      pAlarms->Wait();
+    }
     pAggreg15M->Reset();
   }
   pAggreg15M->Accumulate(pAggreg200MS);
   if((pAggreg1H->Timestamp() != 0) && ((pAggreg1H->Timestamp() / 3600000) < (pAggreg200MS->Timestamp() / 3600000))) {
     LogFile::Debug("Storing 1H aggregation for analyzer '%s'", pSerial.c_str());
-    pAggreg1H->Normalize();
-    pAlarms->Run("1H", pAggreg1H);
-    pAggreg1H->Save();
-    pMQTT->PublishAggreg(pAggreg1H);
-    pAlarms->Wait();
+    if(pAggreg1H->Normalize() == true) {
+      pAlarms->Run("1H", pAggreg1H);
+      pAggreg1H->Save();
+      pMQTT->PublishAggreg("1H", pAggreg1H);
+      pAlarms->Wait();
+    }
     pAggreg1H->Reset();
   }
   pAggreg1H->Accumulate(pAggreg200MS);
@@ -290,44 +298,12 @@ void AnalyzerSoft::Analyzer_Func() {
     pAggreg200MS->Save();
   }
   pAlarms->Wait();
-  if(pAggreg200MS->Flag() == true) StatusManager::SetValue("Last_Event", pAggreg200MS->Timestamp());
+  if(pAggreg200MS->Flag() == true) Status::SetValue("Last_Event", pAggreg200MS->Timestamp());
   pNowDataLock.ProviderWait();
   LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")", pSerial.c_str(), Tools::GetTime64() - Start, pSequence, pAggreg200MS->Timestamp());
   pAggreg200MS->Reset();
   pSequence++;
   pAnalyzerLock.Unlock();
-}
-json AnalyzerSoft::CalcGA() {
-  json Result = json::object();
-//  GAVector vGA(50 * 2 * pVoltageChannels);
-//  GAVector iGA(50 * 2 * pVoltageChannels);
-//  for(uint8_t j = 0; j < pVoltageChannels; j++) {
-//    for(uint8_t i = 0; i < 50; i++) {
-//      vGA.AddRectPhasor(i * 2, pVoltageFFT[j]->Harmonic(i).Re, pVoltageFFT[j]->Harmonic(i).Im);
-//      iGA.AddRectPhasor(i * 2, pCurrentFFT[j]->Harmonic(i).Re, pCurrentFFT[j]->Harmonic(i).Im);
-//    }
-//  }
-//  Result["Voltage"] = vGA.ToJSON();
-//  Result["Current"] = iGA.ToJSON();
-//  GABivector M = vGA * iGA;
-//  Result["Power"] = M.ToJSON();
-//  float Ma = M.GetActiveTotal();
-//  Result["Ma"] = Ma;
-//  GaPoTNumBivector Mn = M.GetNonActivePart();
-//  Result["Mn"] = Mn.ToString();
-//  float Norm_M = M.Norm();
-//  Result["Norm(M)"] = Norm_M;
-//  float Norm_iGA = iGA.Norm();
-//  Result["Norm(iGA)"] = Norm_iGA;
-//  float Norm_vGA = vGA.Norm();
-//  Result["Norm(vGA)"] = Norm_vGA;
-//  float Norm_Ia = (vGA.Inverse() * Ma).Norm();
-//  Result["Ia"] = Norm_Ia;
-//  float Norm_In = (vGA.Inverse() * Mn).Norm();
-//  Result["In"] = Norm_In;
-//  auto PF = Ma / Norm_M;
-//  Result["PF"] = PF;
-  return Result;
 }
 void AnalyzerSoft::PeriodicTasks() {
   LogFile::Debug("Removing old data for analyzer '%s'", pSerial.c_str());
@@ -361,18 +337,19 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
   if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   json Result  = json::object();
   Result["Sampletime"] = pAggreg200MS->Timestamp();
-  for(uint8_t i = 0; i < params["Series"].size(); i++) {
-    if(params["Series"][i].is_string() == false) {
+  for(auto &Serie : params["Series"]) {
+    if(Serie.is_string() == false) {
       pNowDataLock.ConsumerEnds();
       return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
     }
-    if(pAggreg200MS->GetSeriesNow(params["Series"][i], Result) == true) continue;
-    if(pFFTs->GetSeriesNow(params["Series"][i], Result) == true) continue;
-    if(pInputBlock->GetSeriesNow(params["Series"][i], Result) == true) continue;
-    if(params["Series"][i] == "GA_POWER") {
+    if(pAggreg200MS->GetSeriesJSON(Serie, Result) == true) continue;
+    if(pFFTs->GetSeriesJSON(Serie, Result) == true) continue;
+    if(pInputBlock->GetSeriesJSON(Serie, Result) == true) continue;
+    if(pGA->GetSeriesNow(Serie, Result) == true) continue;
+    // == "GA_POWER") {
 //      Result["GA_Power"] = CalcGA();
-      continue;
-    }
+ //     continue;
+ //   }
     pNowDataLock.ConsumerEnds();
     return HTTPServer::FillResponse(response, "Unknown serie name", "application/json", HTTP_BAD_REQUEST);
   }

@@ -24,6 +24,7 @@
 #include "AnalyzerSoftRates.h"
 #include "AnalyzerSoftBlock.h"
 #include "AnalyzerSoftEvents.h"
+#include "AnalyzerSoftGA.h"
 #include "AnalyzerSoftAggreg200MS.h"
 #include "AnalyzerSoftAggreg3S.h"
 #include "AnalyzerSoftAggreg1M.h"
@@ -48,14 +49,15 @@ class AnalyzerSoft : public Analyzer {
     const uint8_t              pCurrentChannels;         //Current channels
     const AnalyzerMode         pMode;                    //Operation mode
   private : //Internal classes
-    AnalyzerSoftSync          *pSync;
-    AnalyzerSoftMQTT          *pMQTT;
+    AnalyzerSoftSync          *pSync;                    //Remote sync object
+    AnalyzerSoftMQTT          *pMQTT;                    //MQTT Control object
     AnalyzerSoftRates         *pRates;                   //Rate handle class
     AnalyzerSoftBlock         *pInputBlock;              //Block maker class
     AnalyzerSoftAlarms        *pAlarms;                  //Alarms control
     AnalyzerSoftEvents        *pEvents;                  //Events detector
     AnalyzerSoftFrequency     *pFrequency;               //Frequency meter
     AnalyzerSoftFFTs          *pFFTs;                    //FFT executor
+    AnalyzerSoftGA            *pGA;                      //Geometric algebra calculator
     AnalyzerSoftAggreg200MS   *pAggreg200MS;             //200ms aggregation
     AnalyzerSoftAggreg3S      *pAggreg3S;                //3 seconds aggregation
     AnalyzerSoftAggreg1M      *pAggreg1M;                //1 minute aggregation
@@ -75,7 +77,6 @@ class AnalyzerSoft : public Analyzer {
   private :
     void Analyzer_Func();
     void Configure(const json &options);
-    json CalcGA();
     void PeriodicTasks();
   private :
     void GetAnalyzer(const json &params, Response &response) override;

@@ -25,6 +25,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @file
  * @brief Includes/supports the types/calls required by the MQTT-C client.
@@ -65,7 +69,7 @@ SOFTWARE.
 
 
 /* UNIX-like platform support */
-#ifdef __unix__
+#if defined(__unix__) || defined(__APPLE__)
     #include <limits.h>
     #include <string.h>
     #include <stdarg.h>
@@ -86,9 +90,27 @@ SOFTWARE.
     #define MQTT_PAL_MUTEX_UNLOCK(mtx_ptr) pthread_mutex_unlock(mtx_ptr)
 
     #ifndef MQTT_USE_CUSTOM_SOCKET_HANDLE
-        #ifdef MQTT_USE_BIO
+        #ifdef MQTT_USE_MBEDTLS
+            struct mbedtls_ssl_context;
+            typedef struct mbedtls_ssl_context *mqtt_pal_socket_handle;
+        #elif defined(MQTT_USE_BIO)
             #include <openssl/bio.h>
             typedef BIO* mqtt_pal_socket_handle;
+        #elif defined(MQTT_USE_BEARSSL)
+            #include <bearssl.h>
+
+            typedef struct _bearssl_context {
+                br_ssl_client_context sc;
+                br_x509_minimal_context xc;
+                br_sslio_context ioc;
+                size_t ta_count;
+                br_x509_trust_anchor *anchOut;
+                int fd;
+                int (*low_read)(void *read_context, unsigned char *buf, size_t len);
+                int (*low_write)(void *write_context, const unsigned char *buf, size_t len);
+            } bearssl_context;
+
+            typedef bearssl_context* mqtt_pal_socket_handle;
         #else
             typedef int mqtt_pal_socket_handle;
         #endif
@@ -150,5 +172,10 @@ ssize_t mqtt_pal_sendall(mqtt_pal_socket_handle fd, const void* buf, size_t len,
  * @returns The number of bytes received if successful, an \ref MQTTErrors otherwise.
  */
 ssize_t mqtt_pal_recvall(mqtt_pal_socket_handle fd, void* buf, size_t bufsz, int flags);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

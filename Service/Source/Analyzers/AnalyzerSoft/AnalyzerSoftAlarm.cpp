@@ -52,8 +52,8 @@ json AnalyzerSoftAlarm::CheckConfig(const json &config) {
   if((config.contains("Window") == true) && (config["Window"].is_number_unsigned() == true) && (config["Window"] > ConfigOUT["Samples"])) ConfigOUT["Window"] = config["Window"];
   return ConfigOUT;
 }
-void AnalyzerSoftAlarm::PushAggreg(const string &aggreg, AnalyzerSoftAggreg *data) {
-  if(pAggreg != aggreg) return;
+AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(const string &aggreg, AnalyzerSoftAggreg *data) {
+  if(pAggreg != aggreg) return NONE;
   if(pInitialized == false) {
     data->muParserInit(pEvaluator, pExpression);
     pInitialized = true;
@@ -68,35 +68,28 @@ void AnalyzerSoftAlarm::PushAggreg(const string &aggreg, AnalyzerSoftAggreg *dat
       *Byte |= (1 << Bit);
     }
   } catch (Parser::exception_type &e) {
-    LogFile::Error("Alarm expresion evaluation failed on analyzer '%s'\n", pSerial.c_str());
+    LogFile::Debug("Alarm expresion evaluation failed on analyzer '%s'", pSerial.c_str());
   }
   pResultPos = (pResultPos + 1) % pWindow;
   if((pResultCount == pSamples) && (pTriggerTime == 0)) {
     pTriggerTime = data->Timestamp();
     LogFile::Debug("Alarm triggered on analyzer '%s'", pSerial.c_str());
     Database DB(pSerial);
-//    DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", true, " + DB.Bind(Alarm.Priority) + ")");
-//    if(pMQTTAlarms == true) PublishAlarm(aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
-//    Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
+    DB.ExecSentenceNoResult("INSERT INTO alarms_ext(name, trigger, release) VALUES(" + DB.Bind(pName) + ", " + DB.Bind(pTriggerTime) + ", null)");
+    return TRIGGERED;
   } else if((pResultCount == 0) && (pTriggerTime != 0)) {
-    pTriggerTime = 0;
     LogFile::Debug("Alarm reseted on analyzer '%s'", pSerial.c_str());
     Database DB(pSerial);
-//    DB.ExecSentenceNoResult("INSERT INTO alarms(alarmtime, name, trigger, priority) VALUES(" + DB.Bind(aggreg->Timestamp) + ", " + DB.Bind(Alarm.Name) + ", false, " + DB.Bind(Alarm.Priority) + ")");
-//    if(pMQTTAlarms == true) PublishAlarm(aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
-//    Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
+    DB.ExecSentenceNoResult("UPDATE alarms_ext SET release = " + DB.Bind(data->Timestamp()) + " WHERE name = " + DB.Bind(pName) + " AND trigger = " + DB.Bind(pTriggerTime));
+    pTriggerTime = 0;
+    return RELEASED;
   }
+  return NONE;
 }
-/*void AnalyzerSoftAlarm::PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered) {
-  if(pMQTTClient.socketfd == -1) return;
-  json Msg = json::object();
-  Msg["AlarmTime"] = time;
-  Msg["Name"] = name;
-  Msg["Priority"] = prio;
-  Msg["Triggered"] = triggered;
-  string TextMsg = Msg.dump();
-  string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/Alarms" : pSerial + "/Alarms";
-  mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1);
-  LogFile::Debug("Analyzer '%s' publish message to MQTT broker", pSerial.c_str());
-}*/
+string AnalyzerSoftAlarm::Name() const {
+  return pName;
+}
+uint8_t AnalyzerSoftAlarm::Priority() const {
+  return pPriority;
+}
 // ---------------------------------------------------------------------------------------------------------------------

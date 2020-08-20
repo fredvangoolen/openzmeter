@@ -48,7 +48,7 @@ class AnalyzerSoftAggreg1H final : public AnalyzerSoftAggreg {
     void Accumulate(const AnalyzerSoftAggreg200MS *src);
     void Save() const;
     void Reset();
-    void Normalize();
+    bool Normalize();
     void AccumulateStats(const AnalyzerSoftAggreg3S *params);
     void AccumulateStats(const AnalyzerSoftAggreg10M *params);
 };

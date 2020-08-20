@@ -82,7 +82,7 @@ void AnalyzerSoftMQTT::Config(const json &config) {
     p1H     = false;
     pAlarms = false;
     pConfig = false;
-  } else if((Enabled == true) && (pThread == 0)) {
+  } else if(Enabled == true) {
     pPrefix    = config["Prefix"];
     pServer    = config["Server"];
     pUser      = config["User"];
@@ -98,7 +98,7 @@ void AnalyzerSoftMQTT::Config(const json &config) {
     pSendBuff  = (uint8_t*)calloc(pBuffSize, 1);
     pRecvBuff  = (uint8_t*)calloc(pBuffSize, 1);
     mqtt_init_reconnect(&pClient, NULL, NULL, NULL);
-    if(pthread_create(&pThread, NULL, Thread, this) != 0) {
+    if((pThread == 0) && (pthread_create(&pThread, NULL, Thread, this) != 0)) {
       LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
       pThread = 0;
     } else {
@@ -107,41 +107,33 @@ void AnalyzerSoftMQTT::Config(const json &config) {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void AnalyzerSoftMQTT::PublishAggreg(const AnalyzerSoftAggreg *aggreg) {
-/*  if(pMQTTClient.socketfd == -1) return;
-  json Msg = json::object();
-  Msg["Sampletime"] = params.Timestamp;
-  Msg["Frequency"] = params.Frequency;
-  Msg["Flag"] = params.Flag;
-  Msg["Unbalance"] = params.Unbalance;
-  Msg["Voltage"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage"].push_back(params.Voltage[n]);
-  Msg["Current"] = json::array();
-  for(uint8_t n = 0; n < pCurrentChannels; n++) Msg["Current"].push_back(params.Current[n]);
-  Msg["Active_Power"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Active_Power"].push_back(params.Active_Power[n]);
-  Msg["Reactive_Power"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Reactive_Power"].push_back(params.Reactive_Power[n]);
-  Msg["Active_Energy"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Active_Energy"].push_back(params.Active_Energy[n]);
-  Msg["Reactive_Energy"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Reactive_Energy"].push_back(params.Reactive_Energy[n]);
-  Msg["Apparent_Power"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Apparent_Power"].push_back(params.Apparent_Power[n]);
-  Msg["Power_Factor"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Power_Factor"].push_back(params.Power_Factor[n]);
-  Msg["Voltage_THD"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage_THD"].push_back(params.Voltage_THD[n]);
-  Msg["Current_THD"] = json::array();
-  for(uint8_t n = 0; n < pCurrentChannels; n++) Msg["Current_THD"].push_back(params.Current_THD[n]);
-  Msg["Phi"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Phi"].push_back(params.Phi[n]);
-  Msg["Voltage_Phase"] = json::array();
-  for(uint8_t n = 0; n < pVoltageChannels; n++) Msg["Voltage_Phase"].push_back(params.Voltage_Phase[n]);
-  string TextMsg = Msg.dump();
-  string Topic   = (pMQTTPrefix != "") ? pMQTTPrefix + "/" + pSerial + "/" + topic : pSerial + "/" + topic;
-  mqtt_publish(&pMQTTClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);*/
-  LogFile::Debug("Analyzer '%s' publish message to MQTT broker", pSerial.c_str());
+void AnalyzerSoftMQTT::PublishAggreg(const string &aggreg, const AnalyzerSoftAggreg *params) {
+  pthread_mutex_lock(&pMutex);
+  if((pClient.socketfd != -1) && (((aggreg == "3S") && (p3S == true)) || ((aggreg == "1M") && (p1M == true)) || ((aggreg == "10M") && (p10M == true)) || ((aggreg == "15M") && (p15M == true)) || ((aggreg == "1H") && (p1H == true)))) {
+    json Result = json::object();
+    Result["Sampletime"] = params->Timestamp();
+    params->GetSeriesJSON("SAMPLETIME", Result);
+    params->GetSeriesJSON("FREQUENCY", Result);
+    params->GetSeriesJSON("FLAG", Result);
+    params->GetSeriesJSON("UNBALANCE", Result);
+    params->GetSeriesJSON("VOLTAGE", Result);
+    params->GetSeriesJSON("CURRENT", Result);
+    params->GetSeriesJSON("ACTIVE_POWER", Result);
+    params->GetSeriesJSON("REACTIVE_POWER", Result);
+    params->GetSeriesJSON("ACTIVE_ENERGY", Result);
+    params->GetSeriesJSON("REACTIVE_ENERGY", Result);
+    params->GetSeriesJSON("APPARENT_POWER", Result);
+    params->GetSeriesJSON("POWER_FACTOR", Result);
+    params->GetSeriesJSON("VOLTAGE_THD", Result);
+    params->GetSeriesJSON("CURRENT_THD", Result);
+    params->GetSeriesJSON("PHI", Result);
+    params->GetSeriesJSON("VOLTAGE_PHASE", Result);
+    string TextMsg = Result.dump();
+    string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/" + aggreg : pSerial + "/" + aggreg;
+    mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
+    LogFile::Debug("Analyzer '%s' publish aggregation to MQTT broker", pSerial.c_str());
+  }
+  pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoftMQTT::PublishConfig(const json &options) {
   pthread_mutex_lock(&pMutex);
@@ -149,7 +141,22 @@ void AnalyzerSoftMQTT::PublishConfig(const json &options) {
     string TextMsg = options.dump();
     string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Config" : pSerial + "/Config";
     mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
-    LogFile::Debug("Analyzer '%s' publish message to MQTT broker", pSerial.c_str());
+    LogFile::Debug("Analyzer '%s' publish config to MQTT broker", pSerial.c_str());
+  }
+  pthread_mutex_unlock(&pMutex);
+}
+void AnalyzerSoftMQTT::PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered) {
+  pthread_mutex_lock(&pMutex);
+  if((pAlarms == true) && (pClient.socketfd == -1)) {
+    json Msg = json::object();
+    Msg["AlarmTime"] = time;
+    Msg["Name"] = name;
+    Msg["Priority"] = prio;
+    Msg["Triggered"] = triggered;
+    string TextMsg = Msg.dump();
+    string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Alarms" : pSerial + "/Alarms";
+    mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1);
+    LogFile::Debug("Analyzer '%s' publish alarm to MQTT broker", pSerial.c_str());
   }
   pthread_mutex_unlock(&pMutex);
 }
@@ -211,7 +218,7 @@ void *AnalyzerSoftMQTT::Thread(void *params) {
         mqtt_reinit(&This->pClient, This->pClient.socketfd, This->pSendBuff, This->pBuffSize, This->pRecvBuff, This->pBuffSize);
       }
     } else if(This->pClient.error != MQTT_OK) {
-      LogFile::Error("MQTT ERROR: %s (%d)", mqtt_error_str(This->pClient.error), This->pClient.error);
+      LogFile::Error("Analyzer '%s' MQTT broker fail (%s)", This->pSerial.c_str(), mqtt_error_str(This->pClient.error));
     }
     usleep(100000);
   }

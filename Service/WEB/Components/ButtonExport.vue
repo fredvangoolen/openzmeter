@@ -107,6 +107,7 @@
   .scrollpanel table {
     margin-bottom: 0px;
     border: 1px solid #ccc;
+    white-space: nowrap;
   }
   .scrollpanel table tr td {
     border: 1px solid #f5f5f5;

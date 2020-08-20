@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftStorage.h"
-#include "StatusManager.h"
+#include "Status.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftStorage::AnalyzerSoftStorage(const string &serial, const Analyzer::AnalyzerMode mode) {
   pSerial = serial;
@@ -25,11 +25,12 @@ AnalyzerSoftStorage::~AnalyzerSoftStorage() {
 }
 void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
   if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  json Result  = json::object();
-  for(uint8_t i = 0; i < params["Series"].size(); i++) {
-    if(params["Series"][i] == "SYSTEM") {
-      Result["System"] = StatusManager::GetJSON();
-    } else if(params["Series"][i] == "UNREAD_EVENTS") {
+  json Result = json::object();
+  for(auto &Serie : params["Series"]) {
+    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if(Serie == "SYSTEM") {
+      Result["System"] = Status::GetJSON();
+    } else if(Serie == "UNREAD_EVENTS") {
       string UserName = params["UserName"];
       Result["Unread_Events"] = json::object();
       Database DB(pSerial);
@@ -41,7 +42,7 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
         Result["Unread_Events"]["From"]  = DB.ResultUInt64("eventsread");
         Result["Unread_Events"]["Count"] = DB.ResultUInt64("events");
       }
-    } else if(params["Series"][i] == "UNREAD_ALARMS") {
+    } else if(Serie == "UNREAD_ALARMS") {
       string UserName = params["UserName"];
       Result["Unread_Alarms"] = json::object();
       Database DB(pSerial);
@@ -53,17 +54,17 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
         Result["Unread_Alarms"]["From"]  = DB.ResultUInt64("alarmsread");
         Result["Unread_Alarms"]["Count"] = DB.ResultUInt64("alarms");
       }
-    } else if(params["Series"][i] == "PERMISSIONS") {
+    } else if(Serie == "PERMISSIONS") {
       Database DB;
       string UserName = params["UserName"];
       DB.ExecSentenceAsyncResult("SELECT json_build_object('Read', read, 'Write', write, 'Configure', config) as access FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
       if(DB.FecthRow() == true) Result["Permissions"] = DB.ResultJSON("access");
-    } else if(params["Series"][i] == "LAST_ACCESS") {
+    } else if(Serie == "LAST_ACCESS") {
       Database DB;
       string UserName = params["UserName"];
       DB.ExecSentenceAsyncResult("SELECT json_build_object('EventsRead', eventsread, 'AlarmsRead', alarmsread) as access FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
       if(DB.FecthRow() == true) Result["Last_Access"] = DB.ResultJSON("access");
-    } else if(params["Series"][i] == "STORAGE") {
+    } else if(Serie == "STORAGE") {
       Database DB;
       Result["Storage"] = json::array();
       DB.ExecSentenceAsyncResult("WITH sizes AS (SELECT tablename, pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)) AS size from pg_tables WHERE schemaname = " + DB.Bind(pSerial) + ") "
@@ -184,7 +185,7 @@ void AnalyzerSoftStorage::GetSeries(const json &params, Response &response) cons
     } else {
       DB.ExecSentenceAsyncResult("SELECT json_build_array(" + Cols +") AS result FROM " + "aggreg_" + Aggreg + " WHERE sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To) + " ORDER BY sampletime ASC");
     }
-    while(DB.FecthRow()) sink.os << ",\n  " << DB.ResultString("result");
+    while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " << DB.ResultString("result");
     sink.os << "\n]";
     sink.done();
     return false;

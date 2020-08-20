@@ -25,6 +25,8 @@ using namespace mu;
 using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftAlarm final {
+  public :
+    enum Alarm_Result { NONE, TRIGGERED, RELEASED };
   private :
     string            pSerial;
     string            pName;
@@ -44,6 +46,8 @@ class AnalyzerSoftAlarm final {
   public :
     AnalyzerSoftAlarm(const string &serial, const json &config, float &voltage, float &freq);
     ~AnalyzerSoftAlarm();
-    void PushAggreg(const string &aggreg, AnalyzerSoftAggreg *data);
+    Alarm_Result PushAggreg(const string &aggreg, AnalyzerSoftAggreg *data);
+    string  Name() const;
+    uint8_t Priority() const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

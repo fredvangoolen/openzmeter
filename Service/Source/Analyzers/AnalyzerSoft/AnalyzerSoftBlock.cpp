@@ -22,15 +22,7 @@ AnalyzerSoftBlock::AnalyzerSoftBlock(const Analyzer::AnalyzerMode mode, const fl
   pDelayCurrent      = NULL;
   pVoltageSamples    = NULL;
   pCurrentSamples    = NULL;
-  pBlockCyclesCount  = 0;
-  pMaxSamples        = samplerate * 0.2;
-  pBlockSamples      = 0;
-  pDelaySize         = 0;
-  pDelayPos          = 0;
-  pNominalFrequency  = 50.0;
   pSamplerate        = samplerate;
-  memset(pBlockCycles, 0, sizeof(pBlockCycles));
-  memset(pLastSamples, 0, sizeof(pLastSamples));
   if(mode == Analyzer::PHASE1) {
     pVoltageChannels = 1;
     pCurrentChannels = 1;
@@ -41,6 +33,7 @@ AnalyzerSoftBlock::AnalyzerSoftBlock(const Analyzer::AnalyzerMode mode, const fl
     pVoltageChannels = 3;
     pCurrentChannels = 4;
   }
+  Config(0.0);
 }
 AnalyzerSoftBlock::~AnalyzerSoftBlock() {
   if(pDelayVoltage != NULL) free(pDelayVoltage);
@@ -51,9 +44,10 @@ AnalyzerSoftBlock::~AnalyzerSoftBlock() {
 void AnalyzerSoftBlock::Config(const float nominalFreq) {
   pthread_mutex_lock(&pMutex);
   if(pDelayVoltage != NULL) free(pDelayVoltage);
-  if(pDelayCurrent != NULL) free(pDelayCurrent);
   pDelayVoltage     = NULL;
+  if(pDelayCurrent != NULL) free(pDelayCurrent);
   pDelayCurrent     = NULL;
+
   pBlockCyclesCount = 0;
   pBlockSamples     = 0;
   pDelayPos         = 0;
@@ -132,7 +126,7 @@ float AnalyzerSoftBlock::VoltageSample(const uint8_t ch, const uint16_t sample) 
 float AnalyzerSoftBlock::CurrentSample(const uint8_t ch, const uint16_t sample) const {
   return pCurrentSamples[pCurrentChannels * sample + ch];
 }
-bool AnalyzerSoftBlock::GetSeriesNow(const string &serie, json &result) {
+bool AnalyzerSoftBlock::GetSeriesJSON(const string &serie, json &result) {
   if(serie == "VOLTAGE_SAMPLES") {
     json Tmp1 = json::array();
     for(uint8_t n = 0; n < pVoltageChannels; n++) {
