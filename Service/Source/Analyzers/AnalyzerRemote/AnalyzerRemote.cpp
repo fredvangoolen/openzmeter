@@ -204,9 +204,29 @@ void AnalyzerRemote::GetBills(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("getBills", params, response);
 }
+void AnalyzerRemote::GetAlarmsDef(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getAlarmsDef", params, response);
+}
 void AnalyzerRemote::TestAlarm(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HandleRequest("testAlarm", params, response);
+}
+void AnalyzerRemote::AddAlarmDef(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("addAlarmDef", params, response);
+}
+void AnalyzerRemote::GetAlarmDef(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("getAlarmDef", params, response);
+}
+void AnalyzerRemote::SetAlarmDef(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("setAlarmDef", params, response);
+}
+void AnalyzerRemote::DelAlarmDef(const json &params, Response &response) {
+  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HandleRequest("delAlarmDef", params, response);
 }
 void AnalyzerRemote::GetAlarms(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

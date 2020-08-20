@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS aggreg_1m (
 CREATE TABLE IF NOT EXISTS aggreg_ext_1m (
   sampletime     bigint NOT NULL PRIMARY KEY REFERENCES aggreg_1m(sampletime) ON UPDATE CASCADE ON DELETE CASCADE,
   power_factor   real[] NOT NULL,
-  unbalance      real   NOT NULL,
+  unbalance      real,
   thd_v          real[] NOT NULL,
   thd_i          real[] NOT NULL,
   active_power   real[] NOT NULL,

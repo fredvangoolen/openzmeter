@@ -113,3 +113,12 @@ class GAVector final {
 //    string ToString();
 };
 //----------------------------------------------------------------------------------------------------------------------
+class AnalyzerSoftGA {
+  public :
+  AnalyzerSoftGA();
+  ~AnalyzerSoftGA();
+  bool  GetSeriesNow(const string &serie, json &result) const;
+  json  Calc();
+
+
+};

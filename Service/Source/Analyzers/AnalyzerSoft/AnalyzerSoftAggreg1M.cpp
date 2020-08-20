@@ -43,9 +43,11 @@ void AnalyzerSoftAggreg1M::Reset() {
   pSamples = 0;
   AnalyzerSoftAggreg::Reset();
 }
-void AnalyzerSoftAggreg1M::Normalize() {
+bool AnalyzerSoftAggreg1M::Normalize() {
+  if(pSamples < 200) return false;
   AnalyzerSoftAggreg::Normalize(pSamples);
   pSamples = 1;
+  return true;
 }
 void AnalyzerSoftAggreg1M::Accumulate(const AnalyzerSoftAggreg200MS *src) {
   pSamples++;

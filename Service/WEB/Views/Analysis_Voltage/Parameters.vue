@@ -55,21 +55,26 @@
       },
       Export: function() {
         if(this.data == null) return [];
-        var Header = ['Sample']
+        var Header = [['Time']
           .concat(this.analyzer.GetSeriesNames('Power Factor', this.analyzer.VoltageChannels))
           .concat(this.analyzer.GetSeriesNames('Voltage THD', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels));
-        if(this.analyzer.VoltageChannels > 1) Header = Header.concat('Unbalance');
-        var Data = [Header];
-        for(var n in this.data.Sampletime) {
-          var Row = [this.data.Sampletime[n]];
-          for(var i in this.data.Power_Factor[n]) Row.push(this.Round(this.data.Power_Factor[n][i], 3));
-          for(var i in this.data.Voltage_THD[n]) Row.push(this.Round(this.data.Voltage_THD[n][i], 3));
-          for(var i in this.data.Phi[n]) Row.push(this.Round(this.data.Phi[n][i], 3));
-          if(this.analyzer.VoltageChannels > 1) Row.push(this.Round(this.data.Unbalance[n], 3));
-          Data.push(Row);
+          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels))
+        ];
+        if(this.analyzer.VoltageChannels > 1) Header[0].concat('Unbalance');
+        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var PowerFactorCol = this.data.Headers.indexOf('Power_Factor');
+        var VoltageTHDCol = this.data.Headers.indexOf('Voltage_THD');
+        var PhiCol = this.data.Headers.indexOf('Phi');
+        var UnbalanceCol = this.data.Headers.indexOf('Unbalance');
+        for(var n = 0; n < this.data.Rows.length; n++) {
+          var Row = [this.analyzer.FormatDateTime(this.data.Rows[n][TimeCol])];
+          for(var i in this.data.Rows[n][PowerFactorCol]) Row.push(this.Round(this.data.Rows[n][PowerFactorCol][i], 3));
+          for(var i in this.data.Rows[n][VoltageTHDCol]) Row.push(this.Round(this.data.Rows[n][VoltageTHDCol][i], 3));
+          for(var i in this.data.Rows[n][PhiCol]) Row.push(this.Round(this.data.Rows[n][PhiCol][i], 3));
+          if(this.analyzer.VoltageChannels > 1) Row.push(this.Round(this.data.Rows[n][UnbalanceCol][i], 3));
+          Header.push(Row);
         }
-        return Object.seal(Data);
+        return Object.seal(Header);
       }
     },
     mounted: function() {

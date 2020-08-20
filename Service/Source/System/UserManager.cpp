@@ -15,8 +15,10 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "UserManager.h"
 #include "Database.h"
+#include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 UserManager::UserManager() {
+  LogFile::Info("Starting User manager");
   HTTPServer::RegisterCallback("getUsers",        GetUsersCallback);
   HTTPServer::RegisterCallback("getUser",         GetUserCallback);
   HTTPServer::RegisterCallback("setUser",         SetUserCallback);
@@ -25,6 +27,7 @@ UserManager::UserManager() {
   HTTPServer::RegisterCallback("delUser",         DelUserCallback);
 }
 UserManager::~UserManager() {
+  LogFile::Info("Stopping user manager...");
   HTTPServer::UnregisterCallback("getVersion");
   HTTPServer::UnregisterCallback("getUsers");
   HTTPServer::UnregisterCallback("getUser");
@@ -32,15 +35,22 @@ UserManager::~UserManager() {
   HTTPServer::UnregisterCallback("setUserPassword");
   HTTPServer::UnregisterCallback("addUser");
   HTTPServer::UnregisterCallback("delUser");
+  LogFile::Info("User manager stoped");
 }
 void UserManager::GetUsersCallback(const json &params, Response &response) {
-  //only 'admin' user can get this information
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB;
-  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('User', username, 'Name', name, 'Email', email, 'TimeZone', time_zone) ORDER BY username ASC)), '[]') AS result FROM users");
-  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+  auto Func = [UserName](uint64_t offset, DataSink &sink) -> bool {
+    uint32_t Items = 0;
+    sink.os << "[\n  ";
+    Database DB;
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('User', username, 'Name', name, 'Email', email, 'TimeZone', time_zone) AS result FROM users ORDER BY username ASC");
+    while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " + DB.ResultString("result") : DB.ResultString("result"));
+    sink.os << "\n]";
+    sink.done();
+    return false;
+  };
+  response.set_chunked_content_provider("application/json", Func);
 }
 void UserManager::GetUserCallback(const json &params, Response &response) {
   string UserName = params["UserName"];

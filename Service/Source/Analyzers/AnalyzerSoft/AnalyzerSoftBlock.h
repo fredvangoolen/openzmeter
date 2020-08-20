@@ -60,6 +60,6 @@ class AnalyzerSoftBlock {
     uint16_t  CycleLen(const uint8_t cycle) const;
     float     VoltageSample(const uint8_t ch, const uint16_t sample) const;
     float     CurrentSample(const uint8_t ch, const uint16_t sample) const;
-    bool      GetSeriesNow(const string &serie, json &result);
+    bool      GetSeriesJSON(const string &serie, json &result);
 };
 // ---------------------------------------------------------------------------------------------------------------------

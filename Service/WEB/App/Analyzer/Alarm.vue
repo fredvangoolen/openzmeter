@@ -5,9 +5,11 @@
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Expression' }" @click="View='Expression'">Expression</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('endEdit', index, Alarm)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save alarm and events config"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
+    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
     <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="(Data!=null)&&(Data.Result!=null)&&(View=='Expression')">Expresion evaluated to: <span v-html="Round(Data.Result, 3, true)"></span><br/>Alarm is {{ (Data.Result==0.0) ? 'NOT' : '' }} triggered</div>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="(Data!=null)&&(Data.Result==null)&&(View=='Expression')">Expresion evaluation fail:<br/>{{ Data.Error }}</div>
     <div class="row" v-if="View=='Main'">
@@ -43,14 +45,26 @@
 
 <script>
   export default {
-    props: { analyzer: Object, index: Number },
+    props: { analyzer: Object, alarm: Object },
     data: function() {
-      return { ShowSpinner: false, Alarm: null, Data: null, Vars: [], View: 'Main' };
+      return { ShowSpinner: false, Alarm: null, Data: null, Vars: [], View: 'Main', Error: null };
     },
     created: function() {
-      this.Alarm = Object.assign({}, this.analyzer.Alarms[this.index]);
+      this.Alarm = Object.assign({ Analyzer: this.analyzer.Analyzer }, this.alarm);
     },
     methods: {
+      Save: function() {
+        this.ShowSpinner = true;
+        this.$http.post((this.Alarm.AlarmID == null) ? 'addAlarmDef' : 'setAlarmDef', this.Alarm).then(
+          (result) => { this.$emit('close'); },
+          (fail) => {
+            this.ShowSpinner = false;
+            this.Error = 'Failed to save alarm!';
+            setTimeout(() => { this.Error = null; }, 5000);
+          }
+        );
+
+      },
       FillValues: function(data) {
         var Result = [];
         if(data == null) return Result;

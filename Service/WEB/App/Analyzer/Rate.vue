@@ -4,7 +4,7 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
       <div class="pull-right btn-group" v-if="Rate.Periods==null">
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
       <toolbar-pager v-if="Rate.Periods==null" class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['Name', 'StartDate', 'EndDate']"></toolbar-pager>
       <div class="pull-right btn-group" v-if="Rate.Periods!=null">

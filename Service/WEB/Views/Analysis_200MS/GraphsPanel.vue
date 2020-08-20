@@ -112,7 +112,6 @@
         Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, this.SerieProps.Units, 2, true); };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         return Object.seal(Opt);
-        return Object.seal(Opt);
       }
     },
     methods: {

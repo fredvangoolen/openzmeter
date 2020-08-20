@@ -40,8 +40,10 @@ void AnalyzerSoftAggreg3S::Reset() {
   pSamples = 0;
   AnalyzerSoftAggreg::Reset();
 }
-void AnalyzerSoftAggreg3S::Normalize() {
+bool AnalyzerSoftAggreg3S::Normalize() {
+  if(pSamples < 10) return false;
   AnalyzerSoftAggreg::Normalize(pSamples);
   pSamples = 1;
+  return true;
 }
 // ---------------------------------------------------------------------------------------------------------------------

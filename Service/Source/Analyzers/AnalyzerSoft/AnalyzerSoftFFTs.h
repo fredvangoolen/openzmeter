@@ -57,6 +57,6 @@ class AnalyzerSoftFFTs final {
     Complex_t CurrentHarmonic(const uint8_t channel, const uint8_t index) const;
     float     VoltageHarmonicPower(const uint8_t channel, const uint8_t index) const;
     float     CurrentHarmonicPower(const uint8_t channel, const uint8_t index) const;
-    bool      GetSeriesNow(const string &serie, json &result);
+    bool      GetSeriesJSON(const string &serie, json &result);
 };
 // ---------------------------------------------------------------------------------------------------------------------

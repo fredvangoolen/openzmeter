@@ -19,21 +19,17 @@
 #include "AnalyzerSoftFrequency.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftFrequency::AnalyzerSoftFrequency(const float samplerate) {
- pNominalFrequency = 0.0;
- pSamplerate       = 10000.0;
- pFreqCyclesPos    = 0;
- pFreqCyclesLen    = 0;
- pInvalidValues    = 0;
  pSamplerate       = samplerate;
  pFreqCycles       = NULL;
  pMinCycle         = 0;
  pMaxCycle         = 0;
- pBufferLen        = 0;
+ Config(0.0);
 }
 AnalyzerSoftFrequency::~AnalyzerSoftFrequency() {
   if(pFreqCycles != NULL) free(pFreqCycles);
 }
 void AnalyzerSoftFrequency::Config(const float freq) {
+  pBufferLen        = 0;
   pFreqCyclesPos    = 0;
   pFreqCyclesLen    = SECONDS * freq;
   pNominalFrequency = freq;
@@ -61,14 +57,13 @@ void AnalyzerSoftFrequency::PushCycle(const uint16_t len) {
   } else {
     pInvalidValues++;
     pFreqCycles[pFreqCyclesPos] = 0;
+    printf("Hay un bloque con longitud %u que no encaja\n", len);
   }
   pFreqCyclesPos = (pFreqCyclesPos + 1) % pFreqCyclesLen;
 }
 float AnalyzerSoftFrequency::Frequency(const AnalyzerSoftBlock *block) {
-  if(block != NULL) {
-    for(uint8_t n = 0; n < block->Cycles(); n++) PushCycle(block->CycleLen(n));
-  }
-  return (pNominalFrequency == 0) ? 0.0 : (pInvalidValues != 0) ? NAN : pFreqCyclesLen / ((2.0 * pBufferLen) / pSamplerate);
+  for(uint8_t n = 0; n < block->Cycles(); n++) PushCycle(block->CycleLen(n));
+  return ((pNominalFrequency == 0) || (pInvalidValues != 0)) ? 0.0 : pFreqCyclesLen / ((2.0 * pBufferLen) / pSamplerate);
 }
 float AnalyzerSoftFrequency::NominalFrequency() {
   return pNominalFrequency;

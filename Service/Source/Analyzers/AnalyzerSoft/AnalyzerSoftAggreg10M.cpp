@@ -38,8 +38,10 @@ void AnalyzerSoftAggreg10M::Reset() {
   pSamples = 0;
   AnalyzerSoftAggreg::Reset();
 }
-void AnalyzerSoftAggreg10M::Normalize() {
+bool AnalyzerSoftAggreg10M::Normalize() {
+  if(pSamples < 2000) return false;
   AnalyzerSoftAggreg::Normalize(pSamples);
   pSamples = 1;
+  return true;
 }
 // ---------------------------------------------------------------------------------------------------------------------

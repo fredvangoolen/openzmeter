@@ -18,7 +18,7 @@
 #include "ConfigFile.h"
 #include "LogFile.h"
 #include "MessageLoop.h"
-#include "StatusManager.h"
+#include "Status.h"
 // ---------------------------------------------------------------------------------------------------------------------
 bool             BluetoothManager::pTerminate   = false;
 bool             BluetoothManager::pEnable      = false;
@@ -28,6 +28,7 @@ pthread_t        BluetoothManager::pThread      = 0;
 pthread_mutex_t  BluetoothManager::pMutex       = PTHREAD_MUTEX_INITIALIZER;
 // ---------------------------------------------------------------------------------------------------------------------
 BluetoothManager::BluetoothManager() {
+  LogFile::Info("Starting Bluetooth manager");
   HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback);
   HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback);
   json Config = ConfigFile::ReadConfig("/Bluetooth");
@@ -69,7 +70,7 @@ void *BluetoothManager::Thread(void *params) {
   DBusConnection *DBus = NULL;
   nice(5);
   bool Enabled = false;
-  StatusManager::SetValue("/Bluetooth_Enabled", Enabled);
+  Status::SetValue("/Bluetooth_Enabled", Enabled);
 //  chmod("/dev/watchdog", S_IWUSR | S_IWGRP | S_IWOTH);
 //  int WatchdogFD = open("/dev/watchdog", O_WRONLY);
 //  if(WatchdogFD == -1) {
@@ -154,7 +155,7 @@ void *BluetoothManager::Thread(void *params) {
       pServerName = NetName;
       pthread_mutex_unlock(&pMutex);
       Enabled = true;
-      StatusManager::SetValue("/Bluetooth_Enabled", Enabled);
+      Status::SetValue("/Bluetooth_Enabled", Enabled);
     } else if((Enabled == true) && (Enable == false)) {
       if(SendBoolBT(DBus, "Powered", false) == false) continue;
       DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "UnregisterAgent");
@@ -177,7 +178,7 @@ void *BluetoothManager::Thread(void *params) {
       pServerName = "";
       pthread_mutex_unlock(&pMutex);
       Enabled = false;
-      StatusManager::SetValue("/Bluetooth_Enabled", Enabled);
+      Status::SetValue("/Bluetooth_Enabled", Enabled);
     }
   }
   if(DBus != NULL) dbus_connection_unref(DBus);

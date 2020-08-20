@@ -14,10 +14,8 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-extern "C" {
-  #include "mqtt-c/mqtt.h"
-  #include "mqtt-c/mqtt_pal.h"
-}
+#include "mqtt-c/mqtt.h"
+#include "mqtt-c/mqtt_pal.h"
 #include <string>
 #include <pthread.h>
 #include "AnalyzerSoftAggreg.h"
@@ -53,7 +51,8 @@ class AnalyzerSoftMQTT final {
     AnalyzerSoftMQTT(const string &serial);
     ~AnalyzerSoftMQTT();
     void Config(const json &config);
-    void PublishAggreg(const AnalyzerSoftAggreg *params);
+    void PublishAggreg(const string &aggreg, const AnalyzerSoftAggreg *params);
     void PublishConfig(const json &options);
+    void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
 };
 // ---------------------------------------------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <dlg :loading="ShowSpinner" v-if="View==null">
+    <dlg :loading="ShowSpinner" v-if="Alarm==null">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Alarms and events</h4></div>
         <div class="pull-right btn-group">
@@ -23,16 +23,16 @@
           <div class="help">Evaluate math expressions with analysis params and generate alarms</div>
         </div>
       </div>
-      <vuetable ref="table" :fields="columns" :api-mode="false" :data="Analyzer.Alarms" class="table small table-striped">
+      <vuetable ref="table" :fields="columns" :api-mode="false" :data="Alarms" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowIndex)">Edit</button>
-            <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowIndex)">Delete</button>
+            <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowData)">Edit</button>
+            <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData)">Delete</button>
           </div>
         </template>
       </vuetable>
     </dlg>
-    <analyzer-alarm v-if="View=='Alarm'" @endEdit="EndEdit" :analyzer="Analyzer" :index="Index"></analyzer-alarm>
+    <analyzer-alarm v-if="Alarm!=null" @close="GetAlarms" :analyzer="analyzer" :alarm="Alarm"></analyzer-alarm>
   </div>
 </template>
 
@@ -44,11 +44,9 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { ShowSpinner: false, Index: null, View: null, Error: null, Analyzer: null,
+      return { Analyzer: null, ShowSpinner: false, Alarms: [], Alarm: null, Error: null,
         columns: [
           { name: 'Name', title: 'Name' },
-          { name: 'UserName', title: 'User' },
-          { name: 'Priority', title: 'Priority', callback: this.PriorityFormat },
           { name: '__slot:actions', title: '' }
         ]
       };
@@ -58,23 +56,37 @@
     },
     created: function() {
       this.Analyzer = Object.assign({}, this.analyzer);
+      this.GetAlarms();
     },
     methods: {
-      EndEdit: function(index, value) {
-        this.Analyzer.Alarms[index] = value;
-        this.View = null;
+      GetAlarms: function() {
+        this.Alarm = null;
+        this.ShowSpinner = true;
+        this.$http.post('getAlarmsDef', { Analyzer: this.analyzer.Analyzer }).then(
+          (result) => {
+            this.Alarms = result.data;
+            this.ShowSpinner = false;
+          },
+          (fail) => {}
+        );
       },
       Add: function() {
-        this.Analyzer.Alarms.push({ Name: 'Unnamed alarm', Priority: 1, Aggreg: '1M', Samples: 10, Window: 20, Expression: '' });
-        this.Index = this.Analyzer.Alarms.length - 1;
-        this.View = 'Alarm';
+        this.Alarm = { Name: 'Unnamed alarm', Priority: 1, Aggreg: '1M', Samples: 10, Window: 20, Expression: '' };
       },
       Edit: function(row) {
-        this.Index = row;
-        this.View = 'Alarm';
+        this.ShowSpinner = true;
+        this.$http.post('getAlarmDef', { Analyzer: this.analyzer.Analyzer, AlarmID: row.AlarmID }).then(
+          (result) => { this.Alarm = Object.assign({ AlarmID: row.AlarmID }, result.data); },
+          (fail) => { this.ShowSpinner = false; }
+        );
       },
       Delete: function(row) {
-        if(confirm("Delete '" + this.Analyzer.Alarms[row].Name + "' alarm?")) this.Analyzer.Alarms.splice(row, 1);
+        if(confirm("Delete '" + row.Name + "' alarm?") == false) return;
+        this.ShowSpinner = true;
+        this.$http.post('delAlarmDef', { Analyzer: this.analyzer.Analyzer, AlarmID: row.AlarmID }).then(
+          (result) => { this.GetAlarms(); },
+          (fail) => { this.ShowSpinner = false; }
+        );
       },
       Save: function() {
         this.ShowSpinner = true;
@@ -86,11 +98,6 @@
             setTimeout(() => { this.Error = null; }, 5000);
           }
         );
-      },
-      PriorityFormat: function(val) {
-        if(val == 0) return 'Low';
-        if(val == 1) return 'Normal';
-        if(val == 2) return 'High';
       }
     },
     components: { vuetable, AnalyzerAlarm }
@@ -99,17 +106,10 @@
 
 <style scoped>
   @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(3) {
-      width: 94px;
-      text-align: center;
-    }
-    .table >>> td:nth-child(3) {
-      text-align: center;
-    }
-    .table >>> th:nth-child(4) {
+    .table >>> th:nth-child(2) {
       width: 94px;
     }
-    .table >>> td:nth-child(4) {
+    .table >>> td:nth-child(2) {
       text-align: right;
     }
   }

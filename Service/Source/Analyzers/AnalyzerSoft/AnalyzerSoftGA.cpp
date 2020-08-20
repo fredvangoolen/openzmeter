@@ -239,3 +239,41 @@ json GAVector::ToJSON() {
   }
   return Tmp;
 }
+
+  AnalyzerSoftGA::AnalyzerSoftGA() {}
+AnalyzerSoftGA::~AnalyzerSoftGA() {}
+bool AnalyzerSoftGA::GetSeriesNow(const string &serie, json &result) const {
+  return true;
+}
+json AnalyzerSoftGA::Calc() {
+  json Result = json::object();
+//  GAVector vGA(50 * 2 * pVoltageChannels);
+//  GAVector iGA(50 * 2 * pVoltageChannels);
+//  for(uint8_t j = 0; j < pVoltageChannels; j++) {
+//    for(uint8_t i = 0; i < 50; i++) {
+//      vGA.AddRectPhasor(i * 2, pVoltageFFT[j]->Harmonic(i).Re, pVoltageFFT[j]->Harmonic(i).Im);
+//      iGA.AddRectPhasor(i * 2, pCurrentFFT[j]->Harmonic(i).Re, pCurrentFFT[j]->Harmonic(i).Im);
+//    }
+//  }
+//  Result["Voltage"] = vGA.ToJSON();
+//  Result["Current"] = iGA.ToJSON();
+//  GABivector M = vGA * iGA;
+//  Result["Power"] = M.ToJSON();
+//  float Ma = M.GetActiveTotal();
+//  Result["Ma"] = Ma;
+//  GaPoTNumBivector Mn = M.GetNonActivePart();
+//  Result["Mn"] = Mn.ToString();
+//  float Norm_M = M.Norm();
+//  Result["Norm(M)"] = Norm_M;
+//  float Norm_iGA = iGA.Norm();
+//  Result["Norm(iGA)"] = Norm_iGA;
+//  float Norm_vGA = vGA.Norm();
+//  Result["Norm(vGA)"] = Norm_vGA;
+//  float Norm_Ia = (vGA.Inverse() * Ma).Norm();
+//  Result["Ia"] = Norm_Ia;
+//  float Norm_In = (vGA.Inverse() * Mn).Norm();
+//  Result["In"] = Norm_In;
+//  auto PF = Ma / Norm_M;
+//  Result["PF"] = PF;
+  return Result;
+}

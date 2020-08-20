@@ -26,6 +26,6 @@ class AnalyzerSoftAggreg10M : public AnalyzerSoftAggreg {
     void Accumulate(const AnalyzerSoftAggreg200MS *src);
     void Save() const;
     void Reset();
-    void Normalize();
+    bool Normalize();
 };
 // ---------------------------------------------------------------------------------------------------------------------

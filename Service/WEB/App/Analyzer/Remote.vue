@@ -9,7 +9,6 @@
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" :class="{ active: (View=='Main') }" @click="View='Main'">Main</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: (View=='MQTT') }" @click="View='MQTT'">MQTT</button>
-        <!--button type="button" class="btn btn-default btn-xs" :class="{ active: (View=='MOBBus') }" @click="View='MODBus'">MODBus</button-->
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null && !ShowSpinner">{{ Error }}</div>
@@ -36,7 +35,7 @@
     <div class="row" v-if="View=='MQTT'">
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable publish</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.MQTTEnabled"></toggle>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.MQTT.Enabled"></toggle>
         <div class="help">Publish analyzer data to MQTT broker. Only selected data is exported.</div>
       </div>
       <div class="col-xs-12"><hr style="margin: 5px 0px 5px 0px"/></div>

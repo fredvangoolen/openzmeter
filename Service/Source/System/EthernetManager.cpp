@@ -16,13 +16,15 @@
 #include "EthernetManager.h"
 #ifdef OPENWRT // ======================================================================================================
 #include "ConfigFile.h"
+#include "LogFile.h"
 #include "SystemManager.h"
-#include "StatusManager.h"
+#include "Status.h"
 #include "MessageLoop.h"
 // ---------------------------------------------------------------------------------------------------------------------
 string EthernetManager::pInterface = "";
 // ---------------------------------------------------------------------------------------------------------------------
 EthernetManager::EthernetManager() {
+  LogFile::Info("Starting Ethernet manager");
   json Config = ConfigFile::ReadConfig("/EthernetInterface");
   if(Config.is_string() == true) pInterface = Config;
   ConfigFile::WriteConfig("/EthernetInterface", pInterface);
@@ -33,14 +35,16 @@ EthernetManager::EthernetManager() {
   }
 }
 EthernetManager::~EthernetManager() {
+  LogFile::Info("Stopping Ethernet manager...");
   HTTPServer::UnregisterCallback("getEthernet");
   HTTPServer::UnregisterCallback("setEthernet");
   MessageLoop::UnregisterListener("Ethernet_PeriodicTasks");
+  LogFile::Info("Ethernet manager stoped");
 }
 void EthernetManager::PeriodicTasks() {
   json Params = json::object();
   json Tmp = SystemManager::uBusCall("network.interface." + pInterface, "status");
-  StatusManager::SetValue("/Ethernet_Enabled", ((Tmp == nullptr) || (Tmp.is_object() == false) || (Tmp["up"].is_boolean() == false)) ? json() : Tmp["up"]);
+  Status::SetValue("/Ethernet_Enabled", ((Tmp == nullptr) || (Tmp.is_object() == false) || (Tmp["up"].is_boolean() == false)) ? json() : Tmp["up"]);
 }
 void EthernetManager::GetEthernetCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

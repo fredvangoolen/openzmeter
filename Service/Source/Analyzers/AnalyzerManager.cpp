@@ -141,7 +141,7 @@ void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &respons
     if(UserName != "admin") {
       Database DB;
       DB.ExecSentenceAsyncResult("SELECT serial FROM permissions WHERE username = " + DB.Bind(UserName) + " AND (read = true OR write = true OR config = true)");
-      while(DB.FecthRow()) {
+      while(DB.FecthRow() && sink.is_writable()) {
         pAnalyzersLock.ReadLock();
         auto Tmp = pAnalyzers.find(DB.ResultString("serial"));
         if(Tmp != pAnalyzers.end()) {
@@ -153,6 +153,7 @@ void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &respons
     } else {
       pAnalyzersLock.ReadLock();
       for(auto Tmp : pAnalyzers) {
+        if(sink.is_writable() == false) break;
         if(Items++ != 0) sink.os << ",\n  ";
         sink.os << Tmp.second->GetJSONDescriptor().dump();
       }

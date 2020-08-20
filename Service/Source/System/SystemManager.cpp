@@ -19,7 +19,7 @@
 #include <sys/statvfs.h>
 #include "LogFile.h"
 #include "MessageLoop.h"
-#include "StatusManager.h"
+#include "Status.h"
 // ---------------------------------------------------------------------------------------------------------------------
 SystemManager::SystemManager() {
   MessageLoop::RegisterListener("SystemManager_PeriodicTasks", PeriodicTasks, 5000);
@@ -46,16 +46,16 @@ void SystemManager::PeriodicTasks() {
   if(MemResult.empty() == true) LogFile::Error("Can not read memory usage stats");
   string TempResult = Exec("cat /sys/class/thermal/thermal_zone0/temp");
   if(TempResult.empty() == true) LogFile::Error("Can not read temperature");
-  StatusManager::SetValue("/Uptime", (Error1 != 0) ? 0 : Info.uptime);
-  StatusManager::SetValue("/Swap_Total", (Error1 != 0) ? 0 : (uint64_t)Info.totalswap * Info.mem_unit);
-  StatusManager::SetValue("/Swap_Usage", (Error1 != 0) ? NAN : ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap);
-  StatusManager::SetValue("/CPU_Usage", (Error1 != 0) ? NAN : ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0);
-  StatusManager::SetValue("/Disk_Total", (Error2 != 0) ? 0 : (uint64_t)Disk.f_blocks * Disk.f_frsize);
-  StatusManager::SetValue("/Disk_Usage", (Error2 != 0) ? NAN : ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks);
-  StatusManager::SetValue("/RAM_Total", ParseProcMem("MemTotal", MemResult));
-  StatusManager::SetValue("/RAM_Usage", ((ParseProcMem("MemTotal", MemResult) -  ParseProcMem("MemFree", MemResult) - ParseProcMem("Cached", MemResult) - ParseProcMem("Buffers", MemResult)) * 100.0) / ParseProcMem("MemTotal", MemResult));
-  StatusManager::SetValue("/Temperature", stoi(TempResult) / 1000.0);
-//  pTimeSet = (Tools::GetTime64() > 946684800000);
+  Status::SetValue("/Uptime", (Error1 != 0) ? 0 : Info.uptime);
+  Status::SetValue("/Swap_Total", (Error1 != 0) ? 0 : (uint64_t)Info.totalswap * Info.mem_unit);
+  Status::SetValue("/Swap_Usage", (Error1 != 0) ? NAN : ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap);
+  Status::SetValue("/CPU_Usage", (Error1 != 0) ? NAN : ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0);
+  Status::SetValue("/Disk_Total", (Error2 != 0) ? 0 : (uint64_t)Disk.f_blocks * Disk.f_frsize);
+  Status::SetValue("/Disk_Usage", (Error2 != 0) ? NAN : ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks);
+  Status::SetValue("/RAM_Total", ParseProcMem("MemTotal", MemResult));
+  Status::SetValue("/RAM_Usage", ((ParseProcMem("MemTotal", MemResult) -  ParseProcMem("MemFree", MemResult) - ParseProcMem("Cached", MemResult) - ParseProcMem("Buffers", MemResult)) * 100.0) / ParseProcMem("MemTotal", MemResult));
+  Status::SetValue("/Temperature", (TempResult.empty()) ? json(nullptr) : json(stoi(TempResult) / 1000.0));
+  Status::SetValue("/TimeSet", Tools::GetTime64() > 946684800000);
 }
 void SystemManager::PowerOff() {
   Exec("poweroff");

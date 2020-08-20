@@ -41,6 +41,5 @@ class AnalyzerSoftAggreg200MS final : public AnalyzerSoftAggreg {
     void  setVoltagePhase(const uint8_t channel, const float val);
     void  setPhi(const uint8_t channel, const float val);
     void  setPowerFactor(const uint8_t channel, const float val);
-    bool  GetSeriesNow(const string &serie, json &result) const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

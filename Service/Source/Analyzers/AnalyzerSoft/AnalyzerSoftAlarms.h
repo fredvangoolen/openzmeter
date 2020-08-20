@@ -21,20 +21,23 @@
 #include "AnalyzerSoftAlarm.h"
 #include "AnalyzerSoftAggreg200MS.h"
 // ---------------------------------------------------------------------------------------------------------------------
+class AnalyzerSoftMQTT;
 class AnalyzerSoftAlarms final {
   private :
     float                           pNominalVoltage;
     float                           pNominalFrequency;
-    pthread_mutex_t                 pMutex;
+    pthread_mutex_t                 pConfigMutex;
+    pthread_mutex_t                 pAlarmsMutex;
     map<string, AnalyzerSoftAlarm>  pAlarms;
     string                          pSerial;
     Worker                         *pWorker;
     string                          pRunningAggreg;
+    AnalyzerSoftMQTT               *pMQTT;
   private :
     void Alarms_Func(AnalyzerSoftAggreg *aggreg);
     void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
   public :
-    AnalyzerSoftAlarms(const string &serial);
+    AnalyzerSoftAlarms(AnalyzerSoftMQTT *mqtt, const string &serial);
     ~AnalyzerSoftAlarms();
     void Config(const bool enabled, const float nominalVoltage, const float nominalFreq);
     void Run(const string &name, const AnalyzerSoftAggreg *params);
