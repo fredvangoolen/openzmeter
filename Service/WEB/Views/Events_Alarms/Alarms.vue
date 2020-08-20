@@ -27,9 +27,9 @@
     data: function() {
       return { Alarms: [], FilterAlarms: [],
                Columns: [
+                 { name: 'Name', title: 'Name' },
                  { name: 'StartDate', title: 'Trigger Date' },
-                 { name: 'EndDate', title: 'Release Date' },
-                 { name: 'Name', title: 'Name' }
+                 { name: 'EndDate', title: 'Release Date' }
               ]
       };
     },
@@ -52,11 +52,11 @@
         var NameCol    = this.alarms.Headers.indexOf('Name');
         var TriggerCol = this.alarms.Headers.indexOf('Trigger');
         var ReleaseCol = this.alarms.Headers.indexOf('Release');
-        for(var n = 0; n < this.alarms.Rows.length; n++) this.Alarms.push({ StartDate: this.analyzer.FormatDateTime(this.alarms.Rows[n][TriggerCol]), EndDate: this.analyzer.FormatDateTime(this.alarms.Rows[n][ReleaseCol]), Name: this.alarms.Rows[n][NameCol] });
+        for(var n = 0; n < this.alarms.Rows.length; n++) this.Alarms.push({ StartDate: this.analyzer.FormatDateTime(this.alarms.Rows[n][TriggerCol]), EndDate: (this.alarms.Rows[n][ReleaseCol] == null) ? '-' : this.analyzer.FormatDateTime(this.alarms.Rows[n][ReleaseCol]), Name: this.alarms.Rows[n][NameCol] });
       },
       Export: function() {
         var Export = [['Trigger Time', 'Release Time', 'Name']];
-        if((this.alarms == null) || (this.analyzer == null)) return; 
+        if((this.alarms == null) || (this.analyzer == null)) return;
         Export.concat(this.alarms.Rows);
         return Object.seal(Export);
       }
@@ -70,9 +70,6 @@
     font-size: 14px;
   }
   @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(1) {
-      width: 100px;
-    }
     .table >>> th:nth-child(2), .table >>> th:nth-child(3) {
       width: 160px;
     }

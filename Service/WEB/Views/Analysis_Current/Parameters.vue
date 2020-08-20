@@ -28,7 +28,7 @@
     },
     computed: {
       Data: function() {
-        return Object.seal({ 'Power Factor': this.FillSerie('Power_Factor'), 'Current THD': this.FillSerie('Current_THD'), 'Phi': this.FillSerie('Phi') });
+        return Object.seal({ TimeZone: (this.analyzer == null) ? null : this.analyzer.TimeZone, 'Power Factor': this.FillSerie('Power_Factor'), 'Current THD': this.FillSerie('Current_THD'), 'Phi': this.FillSerie('Phi') });
       },
       DataNow: function() {
         if((this.dataNow == null) || (this.analyzer == null) || (this.Phase == null)) return null;

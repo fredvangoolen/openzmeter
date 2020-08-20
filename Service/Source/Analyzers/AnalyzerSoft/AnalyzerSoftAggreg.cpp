@@ -160,6 +160,7 @@ void AnalyzerSoftAggreg::muParserInit(Parser &parser, const string &expression) 
     AppendArray("VoltagePhase", pVoltage_Phase, pVoltageChannels);
     parser.DefineVar("Unbalance", &pUnbalance);
   }
+  parser.SetExpr(expression);
 }
 bool AnalyzerSoftAggreg::GetSeriesJSON(const string &serie, json &result) const {
   if(serie == "FREQUENCY") {

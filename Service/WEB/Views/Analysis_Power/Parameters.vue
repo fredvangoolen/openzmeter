@@ -30,7 +30,7 @@
     },
     computed: {
       Data: function() {
-        return Object.seal({ 'Active Power': this.FillSerie('Active_Power'), 'Reactive Power': this.FillSerie('Reactive_Power'), 'Apparent Power': this.FillSerie('Apparent_Power'), 'Power Factor': this.FillSerie('Power_Factor'), 'Phi': this.FillSerie('Phi') });
+        return Object.seal({ TimeZone: (this.analyzer == null) ? null : this.analyzer.TimeZone, 'Active Power': this.FillSerie('Active_Power'), 'Reactive Power': this.FillSerie('Reactive_Power'), 'Apparent Power': this.FillSerie('Apparent_Power'), 'Power Factor': this.FillSerie('Power_Factor'), 'Phi': this.FillSerie('Phi') });
       },
       DataNow: function() {
         if((this.dataNow == null) || (this.analyzer == null) || (this.Phase == null)) return null;

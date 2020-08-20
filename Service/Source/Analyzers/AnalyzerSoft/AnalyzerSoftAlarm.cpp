@@ -58,6 +58,7 @@ AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(const string &aggr
     data->muParserInit(pEvaluator, pExpression);
     pInitialized = true;
   }
+
   uint8_t *Byte   = &pResults[pResultPos / 8];
   uint8_t  Bit    = pResultPos % 8;
   if((*Byte) & (1 << Bit)) pResultCount--;

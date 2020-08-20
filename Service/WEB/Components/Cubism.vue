@@ -7,6 +7,7 @@
 
 <script>
   import Dygraph from 'JS/dygraph.js';
+  import Graph from 'Components/Graph.vue';
   import 'JS/dygraph-crosshair.js';
   import moment from 'moment';
   export default {
@@ -116,15 +117,14 @@
       Opt.axes.y.drawAxis = false;
       Opt.axes.y.drawGrid = false;
       Opt.axes.y.valueFormatter = (val) => { return this.format(val); };
-      Opt.axes.x.valueFormatter = (x) => { return '<div class="x-axis">' + moment(x).format('HH:mm:ss') + '</div>'; };
-      Opt.axes.x.axisLabelFormatter = (x, i) => {
-        if((this.index != 0) || (this.data.TimeZone == null)) return null;
-        var date = moment(x).tz(this.data.TimeZone);
-        if((date.hours() === 0) && (date.minutes() === 0) && (date.seconds() === 0)) {
-          return '<div class="timeline-day">' + moment(x).format('DD/MM') + '</div>';
-        } else {
-          return '<div class="timeline">' + moment(x).format('HH:mm') + '</div>';
-        }
+      Opt.axes.x.valueFormatter = (x) => { return '<div class="x-axis">' + moment.tz(x, this.data.TimeZone).format('HH:mm:ss') + '</div>'; };
+      Opt.axes.x.ticker = (min, max) => {
+        var ticks = [];
+        if(this.data.TimeZone == null) return ticks;
+        var Min = moment.tz(min, this.data.TimeZone).startOf('hour');
+        var Max = moment.tz(max, this.data.TimeZone).endOf('hour');
+        for(var h = Min; h.isBefore(Max); h.add(1, 'hour')) ticks.push({ v: h.valueOf(), label: (this.index != 0) ? '' : (h.hours() == 0) ? '<div class="timeline-day">' + h.format('DD/MM') + '</div>' : '<div class="timeline">' + h.format('HH') + 'h</div>' });
+        return ticks;
       };
       this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], Opt);
     },
@@ -137,7 +137,6 @@
 <style>
   .cubism-serie .first {
     margin-top: 16px;
-/*    border-top: 1px solid #BBB;*/
   }
   .cubism-serie .x-axis {
     font-size: 10px;

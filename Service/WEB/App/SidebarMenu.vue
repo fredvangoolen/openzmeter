@@ -103,14 +103,14 @@
       },
       ShowDisturbances: function() {
         if(this.UnreadEvents != 0) {
-          this.$router.push({ path: '/Events/Disturbances', query: { From: this.TransferNow.Data.Unread_Events.From, To: this.TransferNow.Data.Sampletime } });
+          this.$router.push({ path: '/Events/Disturbances', query: { From: this.TransferNow.Data.Unread_Events.From, To: this.TransferNow.Data.Unread_Events.To } });
         } else {
           this.$router.push('/Events/Disturbances');
         }
       },
       ShowAlarms: function() {
         if(this.UnreadAlarms != 0) {
-          this.$router.push({ path: '/Events/Alarms', query: { From: this.TransferNow.Data.Unread_Alarms.From, To: this.TransferNow.Data.Sampletime } });
+          this.$router.push({ path: '/Events/Alarms', query: { From: this.TransferNow.Data.Unread_Alarms.From, To: this.TransferNow.Data.Unread_Alarms.To } });
         } else {
           this.$router.push('/Events/Alarms');
         }

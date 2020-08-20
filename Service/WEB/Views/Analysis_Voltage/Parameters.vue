@@ -30,7 +30,7 @@
     },
     computed: {
       Data: function() {
-        return Object.seal({ 'Power Factor': this.FillSerie('Power_Factor'), 'Voltage THD': this.FillSerie('Voltage_THD'), 'Phi': this.FillSerie('Phi'), 'Unbalance': this.FillSerie('Unbalance') });
+        return Object.seal({ TimeZone: (this.analyzer == null) ? null : this.analyzer.TimeZone, 'Power Factor': this.FillSerie('Power_Factor'), 'Voltage THD': this.FillSerie('Voltage_THD'), 'Phi': this.FillSerie('Phi'), 'Unbalance': this.FillSerie('Unbalance') });
       },
       DataNow: function() {
         if((this.dataNow == null) || (this.Phase == null)) return null;
