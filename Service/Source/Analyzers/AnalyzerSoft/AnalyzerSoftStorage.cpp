@@ -71,14 +71,15 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
       Database DB;
       Result["Storage"] = json::array();
       DB.ExecSentenceAsyncResult("WITH sizes AS (SELECT tablename, pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)) AS size from pg_tables WHERE schemaname = " + DB.Bind(pSerial) + ") "
+        "SELECT 'Aggreg_200MS' AS name, size FROM sizes WHERE tablename = 'aggreg_200ms' UNION "
         "SELECT 'Aggreg_3S' AS name, size FROM sizes WHERE tablename = 'aggreg_3s' UNION "
         "SELECT 'Aggreg_1M' AS name, SUM(size) FROM sizes WHERE tablename IN ('aggreg_1m', 'aggreg_ext_1m') UNION "
         "SELECT 'Aggreg_10M' AS name, size FROM sizes WHERE tablename = 'aggreg_10m' UNION "
         "SELECT 'Aggreg_15M' AS name, size FROM sizes WHERE tablename = 'aggreg_15m' UNION "
         "SELECT 'Aggreg_1H' AS name, size FROM sizes WHERE tablename = 'aggreg_1h' UNION "
-        "SELECT 'Events_Stats' AS name, size FROM sizes WHERE tablename = 'events' UNION "
-        "SELECT 'Events_Samples' AS name, size FROM sizes WHERE tablename = 'events_ext' UNION "
-        "SELECT 'Alarms' AS name, size FROM sizes WHERE tablename = 'alarms'");
+        "SELECT 'Events' AS name, SUM(size) FROM sizes WHERE tablename IN ('events', 'events_ext') UNION "
+        "SELECT 'Alarms' AS name, size FROM sizes WHERE tablename = 'alarms_ext' UNION "
+        "SELECT 'Settings' AS name, SUM(size) FROM sizes WHERE tablename IN ('alarms', 'rates')");
       while(DB.FecthRow()) {
         json Row = json::object();
         Row["Table"] = DB.ResultString("name");
