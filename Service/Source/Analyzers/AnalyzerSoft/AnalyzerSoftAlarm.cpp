@@ -16,14 +16,15 @@
 #include "AnalyzerSoftAlarm.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAlarm::AnalyzerSoftAlarm(const string &serial, const json &config, float &voltage, float &freq) {
+AnalyzerSoftAlarm::AnalyzerSoftAlarm(const string &serial, const string &uid, const string &expr, const string &name, const uint8_t prio, const uint16_t samples, const uint16_t window, const string &aggreg, float &voltage, float &freq) {
   pSerial      = serial;
-  pExpression  = config["Expression"];
-  pName        = config["Name"];
-  pPriority    = config["Priority"];
-  pSamples     = config["Samples"];
-  pWindow      = config["Window"];
-  pAggreg      = config["Aggreg"];
+  pUID         = uid;
+  pExpression  = expr;
+  pName        = name;
+  pPriority    = prio;
+  pSamples     = samples;
+  pWindow      = window;
+  pAggreg      = aggreg;
   pResultPos   = 0;
   pResultCount = 0;
   pTriggerTime = 0;
@@ -58,7 +59,6 @@ AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(const string &aggr
     data->muParserInit(pEvaluator, pExpression);
     pInitialized = true;
   }
-
   uint8_t *Byte   = &pResults[pResultPos / 8];
   uint8_t  Bit    = pResultPos % 8;
   if((*Byte) & (1 << Bit)) pResultCount--;
@@ -76,12 +76,12 @@ AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(const string &aggr
     pTriggerTime = data->Timestamp();
     LogFile::Debug("Alarm triggered on analyzer '%s'", pSerial.c_str());
     Database DB(pSerial);
-    DB.ExecSentenceNoResult("INSERT INTO alarms_ext(name, trigger, release) VALUES(" + DB.Bind(pName) + ", " + DB.Bind(pTriggerTime) + ", null)");
+    DB.ExecSentenceNoResult("INSERT INTO alarms_ext(id, trigger, release) VALUES(" + DB.Bind(pUID) + ", " + DB.Bind(pTriggerTime) + ", null)");
     return TRIGGERED;
   } else if((pResultCount == 0) && (pTriggerTime != 0)) {
     LogFile::Debug("Alarm reseted on analyzer '%s'", pSerial.c_str());
     Database DB(pSerial);
-    DB.ExecSentenceNoResult("UPDATE alarms_ext SET release = " + DB.Bind(data->Timestamp()) + " WHERE name = " + DB.Bind(pName) + " AND trigger = " + DB.Bind(pTriggerTime));
+    DB.ExecSentenceNoResult("UPDATE alarms_ext SET release = " + DB.Bind(data->Timestamp()) + " WHERE id = " + DB.Bind(pUID) + " AND trigger = " + DB.Bind(pTriggerTime));
     pTriggerTime = 0;
     return RELEASED;
   }

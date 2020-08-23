@@ -40,6 +40,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   LogFile::Debug("Creating AnalyzerSoft database tables");
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
   pSequence       = 0;
+  pMutex          = PTHREAD_MUTEX_INITIALIZER;
   pFFTs           = new AnalyzerSoftFFTs(mode);
   pMQTT           = new AnalyzerSoftMQTT(pSerial);
   pRates          = new AnalyzerSoftRates(pSerial);
@@ -145,11 +146,9 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
 void AnalyzerSoft::Configure(const json &options) {
   ConfigFile::WriteConfig(pConfigPath, options);
   SetName(options["Name"]);
-  pAnalyzerLock.WriteLock();
+  pthread_mutex_lock(&pMutex);
   float NominalVoltage   = options["NominalVoltage"];
   float NominalFrequency = options["NominalFrequency"];
-  pMaxCurrent            = options["MaxCurrent"];
-  pMinCurrent            = options["MinCurrent"];
   pSave200MS             = options["Save200MS"];
   if(NominalFrequency != pFrequency->NominalFrequency()) {
     pSequence = 0;
@@ -158,20 +157,19 @@ void AnalyzerSoft::Configure(const json &options) {
     pInputBlock->Config(NominalFrequency);
     pFFTs->Config((NominalFrequency == 0.0) ? 0 : (NominalFrequency == 50.0) ? 10 : 12);
   }
-  pAnalyzerLock.Unlock();
   pRates->Config(options["TimeZone"]);
   pAlarms->Config(options["AlarmsEnabled"], NominalVoltage, NominalFrequency);
   pEvents->Config(options["EventsEnabled"], NominalVoltage, NominalFrequency);
   pSync->Config(options["Sync"]);
   pMQTT->Config(options["MQTT"]);
   pMQTT->PublishConfig(options);
+  pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoft::Analyzer_Func() {
-  pAnalyzerLock.ReadLock();
   uint64_t Start     = Tools::GetTime64();
   uint16_t BlockSize = pInputBlock->BlockSamples();
   pFFTs->Run(pInputBlock);
-  pEvents->Run(pInputBlock);
+  pEvents->Run(pInputBlock, pAggreg200MS->Timestamp());
   pAggreg200MS->setFrequency(pFrequency->Frequency(pInputBlock));
   for(uint8_t j = 0; j < pVoltageChannels; j++) {
     float Voltage     = 0.0;
@@ -230,7 +228,6 @@ void AnalyzerSoft::Analyzer_Func() {
     LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pSequence);
     pAggreg200MS->Reset();
     pSequence++;
-    pAnalyzerLock.Unlock();
     return;
   }
   SetOnline();
@@ -298,12 +295,11 @@ void AnalyzerSoft::Analyzer_Func() {
     pAggreg200MS->Save();
   }
   pAlarms->Wait();
-  if(pAggreg200MS->Flag() == true) Status::SetValue("Last_Event", pAggreg200MS->Timestamp());
+  if(pAggreg200MS->Flag() == true) Status::SetValue("/Last_Event", pAggreg200MS->Timestamp());
   pNowDataLock.ProviderWait();
   LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")", pSerial.c_str(), Tools::GetTime64() - Start, pSequence, pAggreg200MS->Timestamp());
   pAggreg200MS->Reset();
   pSequence++;
-  pAnalyzerLock.Unlock();
 }
 void AnalyzerSoft::PeriodicTasks() {
   LogFile::Debug("Removing old data for analyzer '%s'", pSerial.c_str());

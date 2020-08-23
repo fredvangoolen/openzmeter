@@ -65,11 +65,9 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerSoftAggreg15M     *pAggreg15M;               //15 minutes aggregation
     AnalyzerSoftAggreg1H      *pAggreg1H;                //1 hour aggregation
     AnalyzerSoftStorage       *pStorage;                 //Control stored data
-  private : //Used in BufferAppend, Configure and Analyzer_Func and some callbacks
-    RWLocks                    pAnalyzerLock;            //Locks access to analysis shared variables
+  private :
+    pthread_mutex_t            pMutex;                   //Locks access to analysis shared variables
     bool                       pSave200MS;               //Save 10/12 cycles aggregation to database
-    float                      pMaxCurrent;              //Max current, over this value warnings are shown
-    float                      pMinCurrent;              //Min current, under this value some analysis are disabled
     uint64_t                   pSequence;                //Sequence number of analyzed blocks
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private : //Workers

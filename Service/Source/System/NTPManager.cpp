@@ -68,7 +68,7 @@ void NTPManager::SetNTPCallback(const json &params, Response &response) {
     TimeVal.tv_usec = Time % 1000;
     if(settimeofday(&TimeVal, NULL) != 0) {
       Result["Status"] = false;
-      LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     }
   }
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);

@@ -60,7 +60,7 @@ void Telegram::Configure(const json &config) {
     pTerminate = false;
     if(pthread_create(&pThread, NULL, Thread_Func, NULL) != 0) {
       pThread = 0;
-      LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     } else {
       pthread_setname_np(pThread, "TelegramServer");
     }

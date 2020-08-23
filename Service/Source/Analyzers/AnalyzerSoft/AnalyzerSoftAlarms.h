@@ -28,7 +28,7 @@ class AnalyzerSoftAlarms final {
     float                           pNominalFrequency;
     pthread_mutex_t                 pConfigMutex;
     pthread_mutex_t                 pAlarmsMutex;
-    map<string, AnalyzerSoftAlarm>  pAlarms;
+    map<string, AnalyzerSoftAlarm*> pAlarms;
     string                          pSerial;
     Worker                         *pWorker;
     string                          pRunningAggreg;
