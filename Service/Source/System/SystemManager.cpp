@@ -38,10 +38,10 @@ uint64_t SystemManager::ParseProcMem(const string &name, const string &buff) {
 void SystemManager::PeriodicTasks() {
   struct sysinfo Info;
   int Error1 = sysinfo(&Info);
-  if(Error1 != 0) LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+  if(Error1 != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   struct statvfs Disk;
   int Error2 = statvfs("/", &Disk);
-  if(Error2 != 0) LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+  if(Error2 != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   string MemResult = Exec("cat /proc/meminfo");
   if(MemResult.empty() == true) LogFile::Error("Can not read memory usage stats");
   string TempResult = Exec("cat /sys/class/thermal/thermal_zone0/temp");

@@ -55,7 +55,7 @@ HTTPServer::HTTPServer() {
   MessageLoop::RegisterListener("HTTPServer_PeriodicTasks", PeriodicTasks, 60000);
   if(pthread_create(&pThread, NULL, Listen_Thread, (void*)this) != 0) {
     pThread = 0;
-    LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   } else {
     pthread_setname_np(pThread, "HTTPServer");
   }

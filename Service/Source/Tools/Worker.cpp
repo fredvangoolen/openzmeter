@@ -30,7 +30,7 @@ Worker::Worker(const string &name, function<void(void*)> callback, int8_t nice) 
   pCallback = callback;
   if(pthread_create(&pThread, NULL, Thread, (void*)this) != 0) {
     pThread = 0;
-    LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return;
   }
   if(nice != 0) setpriority(PRIO_PROCESS, pThread, -nice);

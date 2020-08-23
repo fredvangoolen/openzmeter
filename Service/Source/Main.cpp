@@ -72,7 +72,6 @@ int main(int argc, char** argv) {
     }
   }
   pthread_setname_np(pthread_self(), "Main");
-  nice(15);
   ConfigFile       ConfigFile(ConfigFileName);     // Load config file
   PidFile          PIDFile;                        // Create PID file
   LogFile          LogFile;                        // Create LOG file

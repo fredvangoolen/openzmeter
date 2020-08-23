@@ -103,7 +103,7 @@ void DeviceVirtual::Configure(const json &config) {
   if(pEnabled == true) {
     pTerminate = false;
     if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
-      LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       ClearAnalyzers();
       pThread = 0;
     } else {

@@ -115,7 +115,7 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
     return;
   }
   if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
-    LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s\n", __FILE__, __LINE__, strerror(errno));
     libusb_exit(pContext);
     return;
   }
@@ -299,18 +299,19 @@ void DeviceV2::Configure(const json& config) {
   pthread_mutex_unlock(&pConfigLock);
 }
 void *DeviceV2::Capture_Thread(void *args) {
-  DeviceV2            *This           = (DeviceV2*)args;
-  uint64_t             LastSignalSend = 0;
+  DeviceV2    *This           = (DeviceV2*)args;
+  uint8_t      TimeCounter    = 0;
   USBTransfer *SignalTransfer = new USBTransfer(This, 2);
   USBTransfer *Transfers[DEVICEV2_TRANSFERS];
   for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) Transfers[n] = new USBTransfer(This, 8192);
   nice(-20);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
-    struct timeval tv = { 5, 0 };
+    struct timeval tv = { 0, 10000 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) LogFile::Error("libusb_handle_events_timeout_completed returns code %d", Result);
     if(This->pTerminate == true) continue;
-    if((This->pDeviceHandle != NULL) && (LastSignalSend < (Tools::GetTime64() - 500))) {
+    if((This->pDeviceHandle != NULL) && (TimeCounter++ > 50)) {
+      TimeCounter = 0;
       uint16_t Status = 0x0006; //Stat=GREEN y Wifi=RED
 //      SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
 //      SysStatus->Lock.ReadLock();
@@ -325,7 +326,6 @@ void *DeviceV2::Capture_Thread(void *args) {
       Status |= (This->pHighGain == true) ? 0x4000 : 0x0000;
       SignalTransfer->Submit(&Status, sizeof(Status));
       This->pSubmittedTransfers++;
-      LastSignalSend = Tools::GetTime64();
     }
     if(This->pNewDevice != NULL) {
       struct libusb_device_descriptor Descriptor;
@@ -400,7 +400,7 @@ void *DeviceV2::Capture_Thread(void *args) {
       }
       LogFile::Info("Capture started on DeviceV2 with serial '%s'", This->pSerial.c_str());
       This->pNewDevice = NULL;
-      LastSignalSend = 0;
+      TimeCounter = 0;
     }
   }
   if(This->pDeviceHandle != 0) libusb_release_interface(This->pDeviceHandle, 0);
@@ -421,14 +421,12 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
       uint16_t Sample = (Samples[Pos] & 0x1FFF);
       if(Seq == 7) {
         if(StatusRecv == true) continue;
-//          SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
-//          SysStatus->Lock.WriteLock();
-//          SysStatus->Battery_Volt = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
-//          SysStatus->Battery_Level  = (SysStatus->Battery_Volt - 2.96) * 80.65;
-//          if(SysStatus->Battery_Level > 100.0) SysStatus->Battery_Level = 100.0;
-//          Status["Charging"] = (Sample & 0x0002) ? true: false;
-//          Status["Powered"] = (Sample & 0x0001) ? true: false;
-//          SysStatus->Lock.Unlock();
+        float Battery_Volt = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
+        Status::SetValue("/Battery_Volt", Battery_Volt);
+        float Battery_Level  = (Battery_Volt - 2.96) * 80.65;
+        Status::SetValue("/Battery_Level", (Battery_Level > 100.0) ? 100.0 : Battery_Level);
+        Status::SetValue("/Charging", (Sample & 0x0002) ? true: false);
+        Status::SetValue("/Powered", (Sample & 0x0001) ? true: false);
         uint8_t Action = (Sample & 0x0300) >> 8;
         if((Action == CLICK) && (This->pButtonAction == false)) {
           MessageLoop::SendMessage("Bluetooth_Toogle");
@@ -438,7 +436,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
         This->pButtonAction = (Action == NONE);
         StatusRecv = true;
       } else if(This->pCaptureSize != Seq) {
-        LogFile::Debug("Lost sample, restarting adquisition");
+        LogFile::Warning("Lost sample, restarting adquisition");
         This->pCaptureSize = 0;
         break;
       } else {
@@ -511,7 +509,7 @@ void  DeviceV2::SetDevice(const json &params, Response &response) {
   Configure(CheckConfig(Config));
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
-void  DeviceV2::BufferAppend() {
+void DeviceV2::BufferAppend() {
   for(uint8_t Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] = pRunAverageValues[Ch] + pCapture[Ch];
   pRunAverageCounter++;
   if(pRunAverageCounter == (DEVICEV2_SAMPLEFREQ * 10)) {

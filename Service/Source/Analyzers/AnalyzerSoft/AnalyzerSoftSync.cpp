@@ -47,7 +47,7 @@ void AnalyzerSoftSync::Config(const json &config) {
     pTerminate = false;
     if(pThread == 0) {
       if(pthread_create(&pThread, NULL, Sync_Thread, this) != 0) {
-        LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+        LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         pThread = 0;
       } else {
         pthread_setname_np(pThread, "Sync");
@@ -152,7 +152,7 @@ void *AnalyzerSoftSync::Sync_Thread(void *params) {
         pthread_t Thread;
         pthread_mutex_lock(&Mutex);
         if(pthread_create(&Thread, NULL, Sync_RespThread, (void*)Request) != 0) {
-          LogFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+          LogFile::Error("%s:%d -> %s\n", __FILE__, __LINE__, strerror(errno));
           delete Request;
         } else {
           pthread_setname_np(Thread, "SyncWorker");

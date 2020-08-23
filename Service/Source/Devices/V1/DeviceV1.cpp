@@ -106,7 +106,7 @@ DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial
     return;
   }
   if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
-    LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     libusb_exit(pContext);
     return;
   }
@@ -184,7 +184,7 @@ void *DeviceV1::Capture_Thread(void *args) {
   USBTransfer *Transfers[DEVICEV1_TRANSFERS];
   for(uint8_t n = 0; n < DEVICEV1_TRANSFERS; n++) Transfers[n] = new USBTransfer(This, 8192);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
-    struct timeval tv = { 5, 0 };
+    struct timeval tv = { 0, 10000 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) LogFile::Error("libusb_handle_events_timeout_completed returns code %d", Result);
     if(This->pTerminate == true) continue;

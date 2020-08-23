@@ -29,6 +29,7 @@ class AnalyzerSoftAlarm final {
     enum Alarm_Result { NONE, TRIGGERED, RELEASED };
   private :
     string            pSerial;
+    string            pUID;
     string            pName;
     uint8_t           pPriority;
     uint16_t          pSamples;
@@ -44,7 +45,7 @@ class AnalyzerSoftAlarm final {
   public :
     static json CheckConfig(const json &config);
   public :
-    AnalyzerSoftAlarm(const string &serial, const json &config, float &voltage, float &freq);
+    AnalyzerSoftAlarm(const string &serial, const string &uid, const string &expr, const string &name, const uint8_t prio, const uint16_t samples, const uint16_t window, const string &aggreg, float &voltage, float &freq);
     ~AnalyzerSoftAlarm();
     Alarm_Result PushAggreg(const string &aggreg, AnalyzerSoftAggreg *data);
     string  Name() const;

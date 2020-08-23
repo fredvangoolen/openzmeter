@@ -16,7 +16,6 @@
 #pragma once
 #include <list>
 #include <inttypes.h>
-#include "AnalyzerSoftEvent.h"
 #include "Worker.h"
 #include "AnalyzerSoftBlock.h"
 // ---------------------------------------------------------------------------------------------------------------------
@@ -24,31 +23,53 @@ using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftEvents final {
   private :
-    pthread_mutex_t            pMutex;
-    string                     pSerial;
-    uint8_t                    pVoltageChannels;
-    float                      pSamplerate;
-    float                      pNominalVoltage;
-    Worker                    *pWorker;
-    AnalyzerSoftEvent         *pEvent;                   //Running event
-    list<AnalyzerSoftEvent*>   pEvents;                  //Close pending events
-    bool                       pPrevStationary;          //Steady state flag
-    uint16_t                   pPrevSamplesLen;          //Previous samples count
-    uint16_t                   pPrevSamplesPos;          //Previous samples write pos
-    float                     *pPrevSamples;             //Previous samples
-    uint16_t                   pPrevCyclesLen;           //Previous cycles count
-    uint16_t                   pPrevCyclesPos;           //Previous cycles write pos
-    float                     *pPrevCycles;              //Previous cycles
-    bool                       pHaveEvent;               //Flag to block event
+    enum EventType { EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC };
+    typedef struct {
+      string         UID;                       //Event unique identifier
+      EventType      Type;                      //Running event type
+      uint64_t       Start;                     //Event start timestamp
+      uint64_t       SamplesDuration;           //Event duration in samples
+      float          Reference[3];              //Voltage reference for event (Stationary for RVC, nominal for others)
+      float          PeakValue[3];              //max/min voltage variation along event
+      float          ChangeValue[3];            //diference voltage of event
+      uint32_t       CyclesDuration;            //Event duration in samples
+    } Event_t;
   private :
-    void  Events_Func(const AnalyzerSoftBlock *block);
-    bool  FindRunningEvent(const uint32_t mask) const;
-    float CalcChange(const float in, const float reference) const;
+    static constexpr float Event_RVC        =  5.0;   //Variation in % to start a RVC event
+    static constexpr float Event_DIP_SWELL  = 10.0;   //Variation in % to start a dip/swell event
+    static constexpr float Event_INT        = 90.0;   //Variation in % to start a interruption
+    static constexpr float Event_Hysteresis =  2.0;   //Hysteresis in % to end and event
+    static constexpr float Event_RAW_Time   =  0.5;   //Time in seconds before and after event to store RAW samples
+  private :
+    pthread_mutex_t  pMutex;                    //Configuration lock
+    string           pSerial;                   //Analyzer serial
+    uint8_t          pVoltageChannels;          //Input channels
+    float            pSamplerate;               //Input samplerate
+    float            pNominalVoltage;           //Nominal voltage
+    float            pNominalFrequency;         //Nominal frequency
+    Worker          *pWorker;                   //Working thread
+    Event_t         *pEvent;                    //Running event
+    list<Event_t*>   pEvents;                   //Close pending events
+    bool             pPrevStationary;           //Steady state flag
+    uint16_t         pPrevSamplesLen;           //Previous samples count
+    uint16_t         pPrevSamplesPos;           //Previous samples write pos
+    float           *pPrevSamples;              //Previous samples
+    uint16_t         pPrevCyclesLen;            //Previous cycles count
+    uint16_t         pPrevCyclesPos;            //Previous cycles write pos
+    float           *pPrevCycles;               //Previous cycles
+    bool             pHaveEvent;                //Flag to block event
+    uint64_t         pTimestamp;                //Current block start time
+  private :
+    Event_t *InitEvent();
+    void     Events_Func(const AnalyzerSoftBlock *block);
+    bool     FindRunningEvent(const uint32_t mask) const;
+    float    CalcChange(const float in, const float reference) const;
+    string   EventTypeToString(const EventType type) const;
   public :
     AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftEvents();
     void Config(const bool enabled, const float nominalVoltage, const float nominalFreq);
-    void Run(const AnalyzerSoftBlock *block);
+    void Run(const AnalyzerSoftBlock *block, const uint64_t timestamp);
     bool Wait();
     void GetEvents(const json &params, Response &response);
     void GetEventsRange(const json &params, Response &response);

@@ -50,8 +50,8 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -ggdb3 -fstack-protector-all -fstack-check
 else
-	CFLAGS  += -O3 -flto -Wall
-	LDFLAGS += -flto
+	CFLAGS   += -Os -flto -Wall
+	LDFLAGS  += -flto
 endif
 ifeq ($(DEVICE_V1), true)
 	EXECUTABLE_SOURCE += Source/Devices/V1/DeviceV1.cpp Source/Devices/USBTransfer.cpp

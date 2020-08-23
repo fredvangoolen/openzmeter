@@ -99,7 +99,7 @@ void AnalyzerSoftMQTT::Config(const json &config) {
     pRecvBuff  = (uint8_t*)calloc(pBuffSize, 1);
     mqtt_init_reconnect(&pClient, NULL, NULL, NULL);
     if((pThread == 0) && (pthread_create(&pThread, NULL, Thread, this) != 0)) {
-      LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       pThread = 0;
     } else {
       pthread_setname_np(pThread, "MQTT");
@@ -191,14 +191,14 @@ void *AnalyzerSoftMQTT::Thread(void *params) {
       sprintf(Port, "%u", Url.Port());
       int Error = getaddrinfo(Url.Host().c_str(), Port, &Hints, &ServInfo);
       if(Error != 0) {
-        LogFile::Error("%s:%d -> %d", __func__, __LINE__, Error);
+        LogFile::Error("%s:%d -> (%s)", __FILE__, __LINE__, strerror(errno));
         usleep(1000000);
         continue;
       }
       for(addrinfo *p = ServInfo; p != NULL; p = p->ai_next) {
         This->pClient.socketfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
         if(This->pClient.socketfd == -1) {
-          LogFile::Error("%s:%d -> (%s)", __func__, __LINE__, strerror(errno));
+          LogFile::Error("%s:%d -> (%s)", __FILE__, __LINE__, strerror(errno));
           continue;
         }
         if(connect(This->pClient.socketfd, p->ai_addr, p->ai_addrlen) == -1) {
@@ -219,6 +219,7 @@ void *AnalyzerSoftMQTT::Thread(void *params) {
       }
     } else if(This->pClient.error != MQTT_OK) {
       LogFile::Error("Analyzer '%s' MQTT broker fail (%s)", This->pSerial.c_str(), mqtt_error_str(This->pClient.error));
+      This->pClient.error = MQTT_OK;
     }
     usleep(100000);
   }

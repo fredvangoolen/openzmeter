@@ -77,7 +77,7 @@ void ModbusTCP::Configure(const json &config) {
     LogFile::Info("Starting ModbusTCP server on port %u...", pPort);
     if(pthread_create(&pThread, NULL, Thread, NULL) != 0) {
       pThread = 0;
-      LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     } else {
       pthread_setname_np(pThread, "ModbusTCP");
     }
@@ -103,7 +103,7 @@ void *ModbusTCP::Thread(void *) {
   int         Opt = 1;
   int         Sock   = socket(AF_INET, SOCK_STREAM, 0);
 	if(Sock < 0) {
-		LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+		LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return NULL;
   }
   setsockopt(Sock, SOL_SOCKET, SO_REUSEADDR, (const void *)&Opt , sizeof(int));
@@ -111,7 +111,7 @@ void *ModbusTCP::Thread(void *) {
 	Server.sin_addr.s_addr = INADDR_ANY;
 	Server.sin_port = htons(pPort);
 	if(bind(Sock, (sockaddr *)&Server, sizeof(Server)) < 0) {
-		LogFile::Error("%s:%d -> %s", __func__, __LINE__, strerror(errno));
+		LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return NULL;
   }
   listen(Sock, 5);

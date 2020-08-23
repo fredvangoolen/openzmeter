@@ -75,8 +75,9 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS events (
-  starttime   bigint            NOT NULL PRIMARY KEY,
+  id          character varying NOT NULL PRIMARY KEY,
   evttype     character varying NOT NULL,
+  starttime   bigint            NOT NULL,
   samplerate  real              NOT NULL,
   reference   real[]            NOT NULL,
   peak        real[]            NOT NULL,
@@ -84,27 +85,30 @@ CREATE TABLE IF NOT EXISTS events (
   notes       text              NOT NULL,
   duration    bigint            NOT NULL
 ) WITH (OIDS=FALSE);
+CREATE INDEX IF NOT EXISTS events_starttime ON events(starttime);
 
 CREATE TABLE IF NOT EXISTS events_ext (
-  starttime   bigint            NOT NULL REFERENCES events(starttime) ON UPDATE CASCADE ON DELETE CASCADE,
-  sampletype  character varying NOT NULL,
-  samples1    real[],
-  samples2    real[],
-  samples3    real[],
-  PRIMARY KEY (starttime, sampletype)
+  id          character varying NOT NULL REFERENCES events(id) ON UPDATE CASCADE ON DELETE CASCADE,
+  sampletype  smallint          NOT NULL,
+  samples     real[],
+  PRIMARY KEY (id, sampletype)
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS alarms (
   id            character varying NOT NULL PRIMARY KEY,
-  name          varchar  NOT NULL,
-  config        jsonb    NOT NULL
+  name          varchar           NOT NULL,
+  priority      smallint          NOT NULL,
+  expression    character varying NOT NULL,
+  aggreg        character varying NOT NULL,
+  samples       smallint          NOT NULL,
+  windowlen     smallint          NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS alarms_ext (
-  name          character varying NOT NULL,
+  id            character varying NOT NULL,
   trigger       bigint            NOT NULL,
-  release       bigint,
-  PRIMARY KEY (name, trigger)
+  release       bigint            NULL,
+  PRIMARY KEY(trigger, id)
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS rates (

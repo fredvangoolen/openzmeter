@@ -19,16 +19,18 @@
 #include "AnalyzerSoftFrequency.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftFrequency::AnalyzerSoftFrequency(const float samplerate) {
- pSamplerate       = samplerate;
- pFreqCycles       = NULL;
- pMinCycle         = 0;
- pMaxCycle         = 0;
+ pMutex       = PTHREAD_MUTEX_INITIALIZER;
+ pSamplerate  = samplerate;
+ pFreqCycles  = NULL;
+ pMinCycle    = 0;
+ pMaxCycle    = 0;
  Config(0.0);
 }
 AnalyzerSoftFrequency::~AnalyzerSoftFrequency() {
   if(pFreqCycles != NULL) free(pFreqCycles);
 }
 void AnalyzerSoftFrequency::Config(const float freq) {
+  pthread_mutex_lock(&pMutex);
   pBufferLen        = 0;
   pFreqCyclesPos    = 0;
   pFreqCyclesLen    = SECONDS * freq;
@@ -43,6 +45,7 @@ void AnalyzerSoftFrequency::Config(const float freq) {
     if(pFreqCycles != NULL) free(pFreqCycles);
     pFreqCycles = NULL;
   }
+  pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoftFrequency::PushCycle(const uint16_t len) {
   if(pNominalFrequency == 0) return;
@@ -57,15 +60,20 @@ void AnalyzerSoftFrequency::PushCycle(const uint16_t len) {
   } else {
     pInvalidValues++;
     pFreqCycles[pFreqCyclesPos] = 0;
-    printf("Hay un bloque con longitud %u que no encaja\n", len);
   }
   pFreqCyclesPos = (pFreqCyclesPos + 1) % pFreqCyclesLen;
 }
 float AnalyzerSoftFrequency::Frequency(const AnalyzerSoftBlock *block) {
+  pthread_mutex_lock(&pMutex);
   for(uint8_t n = 0; n < block->Cycles(); n++) PushCycle(block->CycleLen(n));
-  return ((pNominalFrequency == 0) || (pInvalidValues != 0)) ? 0.0 : pFreqCyclesLen / ((2.0 * pBufferLen) / pSamplerate);
+  float Val = ((pNominalFrequency == 0) || (pInvalidValues != 0)) ? 0.0 : pFreqCyclesLen / ((2.0 * pBufferLen) / pSamplerate);
+  pthread_mutex_unlock(&pMutex);
+  return Val;
 }
 float AnalyzerSoftFrequency::NominalFrequency() {
-  return pNominalFrequency;
+  pthread_mutex_lock(&pMutex);
+  float Val = pNominalFrequency;
+  pthread_mutex_unlock(&pMutex);
+  return Val;
 }
 // ---------------------------------------------------------------------------------------------------------------------

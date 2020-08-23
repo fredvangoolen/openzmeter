@@ -21,6 +21,7 @@ class AnalyzerSoftFrequency final {
   private :
     static const uint8_t       SECONDS = 10;             //Used seconds to calc frequency
   private :
+    pthread_mutex_t            pMutex;                   //Configuration mutex
     float                      pNominalFrequency;        //Defined nominal frequency
     float                      pSamplerate;              //input samplerate
     uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
