@@ -30,7 +30,7 @@ class Worker {
     pthread_cond_t        pCondWait;
     function<void(void*)> pCallback;
   private :
-    static void *Thread(void *args);
+    void *Thread();
   public :
     Worker(const string &name, function<void(void*)> callback, int8_t nice = 0);
     ~Worker();

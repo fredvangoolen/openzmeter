@@ -98,7 +98,6 @@ void ESIOSManager::SetESIOSCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
 void *ESIOSManager::Thread_Func(void *params) {
-  ESIOSManager *This = (ESIOSManager*)params;
   SSLClient Client("api.esios.ree.es", 443);
   Client.set_keep_alive(true);
   Client.set_connection_timeout(30);
@@ -107,7 +106,7 @@ void *ESIOSManager::Thread_Func(void *params) {
   Client.set_compress(true);
   while(pTerminate == false) {
     pthread_mutex_lock(&pMutex);
-    string   Token = This->pToken;
+    string   Token = pToken;
     uint64_t To    = pSyncDate + 863999999;
     pthread_mutex_unlock(&pMutex);
     LogFile::Debug("ESIOS request start (Up to %" PRIu64 ")", To);

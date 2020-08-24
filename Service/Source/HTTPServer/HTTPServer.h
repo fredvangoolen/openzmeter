@@ -53,7 +53,6 @@ class HTTPServer final : private Server {
     static pthread_t            pThread;
   private :
     static void        PeriodicTasks();
-    static void       *Listen_Thread(void *params);
     static string      ParseCookie(const string &cookie);
     static string      PatchFile(const string &file, const string &find, const string &replace);
     static string      PatchString(string &src, const string &find, const string &replace);
@@ -63,6 +62,8 @@ class HTTPServer final : private Server {
     static void        GetVersionCallback(const json &params, Response &response);
     static void        LogInCallback(const json &params, Response &response);
     static void        LogOutCallback(const Request &request, Response &response);
+  private :
+    void *Thread();
   public :
     static void   RegisterCallback(const string &handleName, const Func_t function);
     static void   UnregisterCallback(const string &handleName);

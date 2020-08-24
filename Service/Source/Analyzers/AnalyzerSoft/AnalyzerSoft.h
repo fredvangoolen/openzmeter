@@ -68,7 +68,6 @@ class AnalyzerSoft : public Analyzer {
   private :
     pthread_mutex_t            pMutex;                   //Locks access to analysis shared variables
     bool                       pSave200MS;               //Save 10/12 cycles aggregation to database
-    uint64_t                   pSequence;                //Sequence number of analyzed blocks
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private : //Workers
     Worker                    *pAnalyzerWorker;          //Analyzer worker

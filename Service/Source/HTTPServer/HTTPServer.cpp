@@ -53,7 +53,7 @@ HTTPServer::HTTPServer() {
   ConfigFile::WriteConfig("/HTTPServer", Config);
   RegisterCallback("getVersion", GetVersionCallback);
   MessageLoop::RegisterListener("HTTPServer_PeriodicTasks", PeriodicTasks, 60000);
-  if(pthread_create(&pThread, NULL, Listen_Thread, (void*)this) != 0) {
+  if(pthread_create(&pThread, NULL, [](void *params) { return ((HTTPServer*)params)->Thread(); }, (void*)this) != 0) {
     pThread = 0;
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   } else {
@@ -72,11 +72,10 @@ void HTTPServer::PeriodicTasks() {
   Database DB;
   DB.ExecSentenceNoResult("DELETE FROM sessions WHERE timestamp < " + DB.Bind(Tools::GetTime64() - 1296000000));
 }
-void *HTTPServer::Listen_Thread(void *params) {
-  HTTPServer *This = (HTTPServer*)params;
+void *HTTPServer::Thread() {
   nice(10);
-  LogFile::Info("HTTP server starting on port %hu with relative path '%s'", This->pPort, This->pRelativePath.c_str());
-  if(This->listen("0.0.0.0", This->pPort) == false) LogFile::Error("HTTP port (%hu) already in use", This->pPort);
+  LogFile::Info("HTTP server starting on port %hu with relative path '%s'", pPort, pRelativePath.c_str());
+  if(listen("0.0.0.0", pPort) == false) LogFile::Error("HTTP port (%hu) already in use", pPort);
   return NULL;
 }
 void HTTPServer::FillResponse(Response &response, const string &body, const char *mime, const int status) {
