@@ -173,27 +173,29 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
         pEvent = NULL;
       }
     }
-    for(uint8_t n = 0; n < pVoltageChannels; n++) {
-      if(((pEvent == NULL) || (pEvent->Type != EVT_INTERRUPTION)) && (-CalcChange(Cycle[n], pNominalVoltage) > Event_INT)) {
-        if(pEvent == NULL) pEvent = InitEvent();
-        pEvent->Type = EVT_INTERRUPTION;
-        for(uint8_t i = 0; i < pVoltageChannels; i++) pEvent->Reference[i] = pNominalVoltage;
-        memcpy(pEvent->PeakValue, Cycle, sizeof(float) * pVoltageChannels);
-      } else if(((pEvent == NULL) || ((pEvent->Type != EVT_DIP) && (pEvent->Type != EVT_INTERRUPTION))) && (-CalcChange(Cycle[n], pNominalVoltage) > Event_DIP_SWELL)) {
-        if(pEvent == NULL) pEvent = InitEvent();
-        pEvent->Type = EVT_DIP;
-        for(uint8_t i = 0; i < pVoltageChannels; i++) pEvent->Reference[i] = pNominalVoltage;
-        memcpy(pEvent->PeakValue, Cycle, sizeof(float) * pVoltageChannels);
-      } else if(((pEvent == NULL) || (pEvent->Type != EVT_SWELL)) && (CalcChange(Cycle[n], pNominalVoltage) > Event_DIP_SWELL)) {
-        if(pEvent == NULL) pEvent = InitEvent();
-        pEvent->Type = EVT_SWELL;
-        for(uint8_t i = 0; i < pVoltageChannels; i++) pEvent->Reference[i] = pNominalVoltage;
-        memcpy(pEvent->PeakValue, Cycle, sizeof(float) * pVoltageChannels);
-      } else if((pEvent == NULL) && (Stationary == false) && (pPrevStationary == true)) {
-        if(pEvent == NULL) pEvent = InitEvent();
-        pEvent->Type = EVT_RVC;
-        memcpy(pEvent->Reference, RMS_Avg, sizeof(float) * pVoltageChannels);
-        memcpy(pEvent->PeakValue, Cycle, sizeof(float) * pVoltageChannels);
+    if(block->Sequence() > 100) {
+      for(uint8_t n = 0; n < pVoltageChannels; n++) {
+        if(((pEvent == NULL) || (pEvent->Type != EVT_INTERRUPTION)) && (-CalcChange(Cycle[n], pNominalVoltage) > Event_INT)) {
+          if(pEvent == NULL) pEvent = InitEvent();
+          pEvent->Type = EVT_INTERRUPTION;
+          for(uint8_t i = 0; i < pVoltageChannels; i++) pEvent->Reference[i] = pNominalVoltage;
+          memcpy(pEvent->PeakValue, Cycle, sizeof(float) * pVoltageChannels);
+        } else if(((pEvent == NULL) || ((pEvent->Type != EVT_DIP) && (pEvent->Type != EVT_INTERRUPTION))) && (-CalcChange(Cycle[n], pNominalVoltage) > Event_DIP_SWELL)) {
+          if(pEvent == NULL) pEvent = InitEvent();
+          pEvent->Type = EVT_DIP;
+          for(uint8_t i = 0; i < pVoltageChannels; i++) pEvent->Reference[i] = pNominalVoltage;
+          memcpy(pEvent->PeakValue, Cycle, sizeof(float) * pVoltageChannels);
+        } else if(((pEvent == NULL) || (pEvent->Type != EVT_SWELL)) && (CalcChange(Cycle[n], pNominalVoltage) > Event_DIP_SWELL)) {
+          if(pEvent == NULL) pEvent = InitEvent();
+          pEvent->Type = EVT_SWELL;
+          for(uint8_t i = 0; i < pVoltageChannels; i++) pEvent->Reference[i] = pNominalVoltage;
+          memcpy(pEvent->PeakValue, Cycle, sizeof(float) * pVoltageChannels);
+        } else if((pEvent == NULL) && (Stationary == false) && (pPrevStationary == true)) {
+          if(pEvent == NULL) pEvent = InitEvent();
+          pEvent->Type = EVT_RVC;
+          memcpy(pEvent->Reference, RMS_Avg, sizeof(float) * pVoltageChannels);
+          memcpy(pEvent->PeakValue, Cycle, sizeof(float) * pVoltageChannels);
+        }
       }
     }
     if(pEvent != NULL) {

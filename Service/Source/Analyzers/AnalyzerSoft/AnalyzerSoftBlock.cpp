@@ -22,6 +22,7 @@ AnalyzerSoftBlock::AnalyzerSoftBlock(const Analyzer::AnalyzerMode mode, const fl
   pDelayCurrent      = NULL;
   pVoltageSamples    = NULL;
   pCurrentSamples    = NULL;
+  pSequence          = 0;
   pSamplerate        = samplerate;
   if(mode == Analyzer::PHASE1) {
     pVoltageChannels = 1;
@@ -47,7 +48,7 @@ void AnalyzerSoftBlock::Config(const float nominalFreq) {
   pDelayVoltage     = NULL;
   if(pDelayCurrent != NULL) free(pDelayCurrent);
   pDelayCurrent     = NULL;
-
+  pSequence         = 0;
   pBlockCyclesCount = 0;
   pBlockSamples     = 0;
   pDelayPos         = 0;
@@ -82,6 +83,7 @@ bool AnalyzerSoftBlock::PushSample(float *voltageSamples, float *currentSamples)
     memset(pBlockCycles, 0, sizeof(pBlockCycles));
     pBlockSamples     = 0;
     pBlockCyclesCount = 0;
+    pSequence++;
   }
   if(pNominalFrequency == 0) {
     memcpy(&pVoltageSamples[pVoltageChannels * pBlockSamples], voltageSamples, sizeof(float) * pVoltageChannels);
@@ -125,6 +127,9 @@ float AnalyzerSoftBlock::VoltageSample(const uint8_t ch, const uint16_t sample) 
 }
 float AnalyzerSoftBlock::CurrentSample(const uint8_t ch, const uint16_t sample) const {
   return pCurrentSamples[pCurrentChannels * sample + ch];
+}
+uint64_t AnalyzerSoftBlock::Sequence() const {
+  return pSequence;
 }
 bool AnalyzerSoftBlock::GetSeriesJSON(const string &serie, json &result) {
   if(serie == "VOLTAGE_SAMPLES") {

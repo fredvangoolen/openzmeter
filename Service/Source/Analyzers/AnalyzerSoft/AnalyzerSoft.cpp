@@ -39,7 +39,6 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   Database DB(id);
   LogFile::Debug("Creating AnalyzerSoft database tables");
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
-  pSequence       = 0;
   pMutex          = PTHREAD_MUTEX_INITIALIZER;
   pFFTs           = new AnalyzerSoftFFTs(mode);
   pMQTT           = new AnalyzerSoftMQTT(pSerial);
@@ -151,7 +150,6 @@ void AnalyzerSoft::Configure(const json &options) {
   float NominalFrequency = options["NominalFrequency"];
   pSave200MS             = options["Save200MS"];
   if(NominalFrequency != pFrequency->NominalFrequency()) {
-    pSequence = 0;
     pAggreg200MS->Reset();
     pFrequency->Config(NominalFrequency);
     pInputBlock->Config(NominalFrequency);
@@ -224,15 +222,14 @@ void AnalyzerSoft::Analyzer_Func() {
     pAggreg200MS->setCurrentTHD(3, (THD / pAggreg200MS->CurrentHarmonic(3, 0)) * 100.0);
   }
   pAggreg200MS->setFlag(pEvents->Wait());
-  if(pSequence < 100) {
-    LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pSequence);
+  if(pInputBlock->Sequence() < 100) {
+    LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pInputBlock->Sequence());
     pAggreg200MS->Reset();
-    pSequence++;
     return;
   }
   SetOnline();
   pNowDataLock.ProviderWrite();
-  if((pSequence % 15) == 0) {
+  if((pInputBlock->Sequence() % 15) == 0) {
     LogFile::Debug("Storing 3S aggregation for analyzer '%s'", pSerial.c_str());
     if(pAggreg3S->Normalize() == true) {
       pAlarms->Run("3S", pAggreg3S);
@@ -297,9 +294,8 @@ void AnalyzerSoft::Analyzer_Func() {
   pAlarms->Wait();
   if(pAggreg200MS->Flag() == true) Status::SetValue("/Last_Event", pAggreg200MS->Timestamp());
   pNowDataLock.ProviderWait();
-  LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")", pSerial.c_str(), Tools::GetTime64() - Start, pSequence, pAggreg200MS->Timestamp());
+  LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")", pSerial.c_str(), Tools::GetTime64() - Start, pInputBlock->Sequence(), pAggreg200MS->Timestamp());
   pAggreg200MS->Reset();
-  pSequence++;
 }
 void AnalyzerSoft::PeriodicTasks() {
   LogFile::Debug("Removing old data for analyzer '%s'", pSerial.c_str());
@@ -382,8 +378,8 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
       sink.done();
       return false;
     }
-    Params->Block = (Params->Block == 0) ? pSequence : Params->Block + 1;
-    if(Params->Block != pSequence) {
+    Params->Block = (Params->Block == 0) ? pInputBlock->Sequence() : Params->Block + 1;
+    if(Params->Block != pInputBlock->Sequence()) {
       pNowDataLock.ConsumerEnds();
       sink.done();
       return false;

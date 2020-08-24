@@ -67,9 +67,6 @@ class DeviceV2 final : public Device {
   private :
     static bool  Register();
     static void  GetInstances();
-    static void *Capture_Thread(void *args);
-    static void  ReadCallback(struct libusb_transfer *transfer);
-    static int   PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
     static json  CheckConfig(const json &config);
   private :
     DeviceV2(const string &serial);
@@ -79,6 +76,9 @@ class DeviceV2 final : public Device {
     void     GetDevice(const json &params, Response &response) override;
     void     SetDevice(const json &params, Response &response) override;
     void     BufferAppend();
+    void    *Thread();
+    void     ReadCallback(struct libusb_transfer *transfer);
+    int      PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event);
   public :
     ~DeviceV2();
 };

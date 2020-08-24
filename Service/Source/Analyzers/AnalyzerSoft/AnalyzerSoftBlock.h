@@ -33,6 +33,7 @@ class AnalyzerSoftBlock {
     } Filter_t;
   private :
     pthread_mutex_t pMutex;                       //Control access to some sections
+    uint64_t        pSequence;                    //Sequence number of analyzed blocks
     Filter_t        pFilters[FILTERSTAGES];       //Filter bank
     uint8_t         pVoltageChannels;             //Number of voltage channels
     uint8_t         pCurrentChannels;             //Number of current channels
@@ -58,6 +59,7 @@ class AnalyzerSoftBlock {
     uint16_t  BlockSamples() const;
     uint8_t   Cycles() const;
     uint16_t  CycleLen(const uint8_t cycle) const;
+    uint64_t  Sequence() const;
     float     VoltageSample(const uint8_t ch, const uint16_t sample) const;
     float     CurrentSample(const uint8_t ch, const uint16_t sample) const;
     bool      GetSeriesJSON(const string &serie, json &result);

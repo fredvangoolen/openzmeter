@@ -27,7 +27,7 @@
         <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Status==false">Upgrade failed, see log messages</div>
         <div class="row">
           <div class="col-xs-12">
-            <textarea ref="log" rows="20" class="form-control" readonly>{{ Log }}</textarea>
+            <textarea ref="log" rows="20" class="form-control" readonly="true" v-model="Log"></textarea>
           </div>
         </div>
       </dlg>
