@@ -4,29 +4,14 @@
     "title": "openZmeter API",
     "version": "1.1.0",
     "description": "Full API definition of openZmeter daemon. Not all functions are avaliable on all systems, not for all users or not all time.",
-    "license": {
-      "name": "GNU General Public License v3.0",
-      "url": "https://www.gnu.org/licenses/gpl-3.0.html"
-    }
+    "license": { "name": "GNU General Public License v3.0", "url": "https://www.gnu.org/licenses/gpl-3.0.html" }
   },
-  "servers": [
-    {
-      "url": "/"
-    }
-  ],
+  "servers": [ {"url": "/"} ],
   "tags": [
-    {
-      "name": "Analyzers",
-      "description": "Analyzer information queries."
-    },
-    {
-      "name": "Tariffs",
-      "description": "Manage tariffs."
-    },
-    {
-      "name": "System",
-      "description": "System management functions."
-    }
+    { "name": "Analyzers", "description": "Analyzer information queries." },
+    { "name": "Tariffs", "description": "Manage tariffs." },
+    { "name": "System", "description": "System management functions." },
+    { "name": "Bluetooth", "description": "Manage bluetooth services if avaliable." }
   ],
   "paths": {
     "/logIn": {
@@ -198,17 +183,13 @@
     "/setDevice": {
       "post": {
         "summary": "Set device configuration (Each device driver have its own properties)",
-        "tags": [
-          "System"
-        ],
+        "tags": [ "System" ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "required": [
-                  "Serial"
-                ],
+                "required": [ "Serial" ],
                 "example": {
                   "Current": 5,
                   "CurrentPhase": -10.1,
@@ -220,9 +201,7 @@
                   "Serial": "VIRTUAL"
                 },
                 "properties": {
-                  "Serial": {
-                    "type": "string"
-                  }
+                  "Serial": { "type": "string" }
                 }
               }
             }
@@ -232,6 +211,63 @@
           "200": {
             "description": "On success"
           }
+        }
+      }
+    },
+    "/getBluetooth": {
+      "post": {
+        "summary": "Get bluetooth configuration",
+        "tags": ["Bluetooth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": { "description": "Not logged in" },
+          "403": { "description": "Not admin user" },
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "Enabled": true,
+                  "Interface": "br-bt",
+                  "Name": "openZmeter_xxxx"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/setBluetooth": {
+      "post": {
+        "summary": "Set bluetooth configuration",
+        "tags": ["Bluetooth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["Enabled"],
+                "example": {},
+                "properties": {
+                  "Enabled": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": { "description": "Not logged in" },
+          "403": { "description": "Not admin user" },
+          "200": { "description": "On success" }
         }
       }
     }
