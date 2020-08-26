@@ -11,7 +11,8 @@
     { "name": "Analyzers", "description": "Analyzer information queries." },
     { "name": "Tariffs", "description": "Manage tariffs." },
     { "name": "System", "description": "System management functions." },
-    { "name": "Bluetooth", "description": "Manage bluetooth services if avaliable." }
+    { "name": "Bluetooth", "description": "Manage bluetooth services, if avaliable." },
+    { "name": "NTP", "description": "Manage NTP (network time protocol) client configuration, if avaliable."}
   ],
   "paths": {
     "/logIn": {
@@ -229,6 +230,7 @@
           }
         },
         "responses": {
+          "503": { "description": "Function not avaliable"},
           "401": { "description": "Not logged in" },
           "403": { "description": "Not admin user" },
           "200": {
@@ -256,7 +258,7 @@
             "application/json": {
               "schema": {
                 "required": ["Enabled"],
-                "example": {},
+                "example": { "Enabled": true },
                 "properties": {
                   "Enabled": { "type": "boolean" }
                 }
@@ -265,6 +267,72 @@
           }
         },
         "responses": {
+          "503": { "description": "Function not avaliable"},
+          "401": { "description": "Not logged in" },
+          "403": { "description": "Not admin user" },
+          "200": { "description": "On success" }
+        }
+      }
+    },
+    "/getNTP": {
+      "post": {
+        "summary": "Get NPT configuration",
+        "tags": ["NTP"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "503": { "description": "Function not avaliable"},
+          "401": { "description": "Not logged in" },
+          "403": { "description": "Not admin user" },
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "Enabled": true,
+                  "Server": "hora.roa.es",
+                  "Time": 1598430332332
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/setNTP": {
+      "post": {
+        "summary": "Set NTP configuration, if Server is disabled, 'Time' values is set as local UTC time",
+        "tags": ["NTP"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["Enabled", "Server", "Time"],
+                "example": {
+                  "Enabled": true,
+                  "Server": "hora.roa.es",
+                  "Time": 1598430332332
+                },
+                "properties": {
+                  "Enabled": { "type": "boolean" },
+                  "Server": { "type": "string" },
+                  "Time": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "503": { "description": "Function not avaliable"},
           "401": { "description": "Not logged in" },
           "403": { "description": "Not admin user" },
           "200": { "description": "On success" }
