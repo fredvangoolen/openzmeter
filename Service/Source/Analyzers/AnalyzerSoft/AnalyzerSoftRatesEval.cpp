@@ -31,7 +31,7 @@ AnalyzerSoftRatesEval::AnalyzerSoftRatesEval(const string &serial, const time_zo
   pTo           = (to / 3600000) * 3600000 + 899999;
   FindStart(group);
   pCurrent = pFrom;
-  pDataDB->ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive FROM aggreg_15m WHERE sampletime >= " + pDataDB->Bind(pFrom) + " ORDER BY sampletime ASC");
+  pDataDB->ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive FROM aggreg_15m WHERE sampletime >= " + pDataDB->Bind(pFrom) + " ORDER BY sampletime ASC LIMIT 1000");
   pDataDB->FecthRow();
 }
 AnalyzerSoftRatesEval::~AnalyzerSoftRatesEval() {
@@ -333,7 +333,11 @@ json AnalyzerSoftRatesEval::FetchRow() {
       pReactivePower  = pDataDB->ResultFloat("reactive");
       pReactiveEnergy = pReactivePower / 4.0;
       Row = HandleSample();
-      pDataDB->FecthRow();
+      if(pDataDB->FecthRow() == false) {
+        pFrom = pCurrent + 1;
+        pDataDB->ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive FROM aggreg_15m WHERE sampletime >= " + pDataDB->Bind(pFrom) + " ORDER BY sampletime ASC LIMIT 1000");
+        pDataDB->FecthRow();
+      }
     }
     if((pSeriesMask != 0) && (pCurrent == pTo)) pFinished = true;
     if((pSeriesMask == 0) && (pCurrent >= pTo)) {

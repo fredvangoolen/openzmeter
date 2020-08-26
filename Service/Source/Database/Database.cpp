@@ -51,10 +51,14 @@ bool Database::FecthRow() {
     return false;
   }
   pLoadedRow = true;
+  pRowPos++;
   return true;
 }
 bool Database::LoadedRow() {
   return pLoadedRow;
+}
+uint64_t Database::RowIndex() const {
+  return pRowPos;
 }
 bool Database::ExecResource(const string &file) {
   size_t Len;
@@ -91,10 +95,12 @@ bool Database::ExecSentenceAsyncResult(const string &sql) {
     LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   }
+  pRowPos = 0;
   return true;
 }
 void Database::ClearAsync() {
   if(pResult == NULL) return;
+  PQrequestCancel(pDBConn);
   do {
     PQclear(pResult);
     pResult = PQgetResult(pDBConn);
