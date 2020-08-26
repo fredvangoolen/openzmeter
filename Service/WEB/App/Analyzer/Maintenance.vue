@@ -15,106 +15,65 @@
         <detail-tabs :tabs="['200MS','3S', '1M', '10M', '15M', '1H', 'Events', 'Alarms', 'Settings']" v-model="ActiveTab"></detail-tabs>
         <table v-if="ActiveTab=='200MS'">
           <tr>
-            <td class="first-row">
-              Store 200 miliseconds data. Table persistence is limited to an hour.
-            </td>
-            <td class="first-row text-right action">
-              {{ BestUnitsBin(TableSize('Aggreg_200MS')) }}
-            </td>
+            <td class="first-row">Store 200 miliseconds data. Table persistence is limited to an hour.</td>
+            <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Aggreg_200MS')) }}</td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Delete all data in this table. All used space is reclaimed.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Clear200MS">Execute</button>
-            </td>
+            <td class="help">Delete all data in this table. All used space is reclaimed.</td>
+            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Clear('200MS', true)">Execute</button></td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Download all table data to a file.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Download200MS">Execute</button>
-            </td>
+            <td class="help">Download all table data to a file.</td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('200MS', true)">Execute</button></td>
           </tr>
         </table>
         <table v-if="ActiveTab=='3S'">
           <tr>
-            <td class="first-row">
-              Store 3 seconds data. Table persistence is limited only by storage.
-            </td>
-            <td class="first-row text-right action">
-              {{ BestUnitsBin(TableSize('Aggreg_3S')) }}
-            </td>
+            <td class="first-row">Store 3 seconds data. Table persistence is limited only by storage.</td>
+            <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Aggreg_3S')) }}</td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Delete all data in this table. All used space is reclaimed.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Execute">Execute</button>
-            </td>
+            <td class="help">Delete all data in this table. All used space is reclaimed.</td>
+            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Clear('3S', true)">Execute</button></td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Download all table data to a file.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Download selected range of table data to a file.
+            <td class="help">Clear selected range of table.
               <div style="display:flex">
-                <label>From:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
+            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Clear('3S', false)">Execute</button></td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Restore data from file. Stored rows in overlapped period are replaced with new ones.
+            <td class="help">Download all table data to a file.</td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('3S', true)">Execute</button></td>
+          </tr>
+          <tr class="line">
+            <td class="help">Download selected range of table data to a file.
+              <div style="display:flex">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+              </div>
             </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('3S', false)">Execute</button></td>
+          </tr>
+          <tr class="line">
+            <td class="help">Restore data from file. Stored rows in overlapped period are replaced with new ones.</td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="alert('NOT IMPLEMENTED!')">Execute</button></td>
           </tr>
         </table>
         <table v-if="ActiveTab=='1M'">
           <tr>
-            <td class="first-row">
-              Store 1 minute data. Table persistence is limited only by storage but advanced parameters persist only for a day.
-            </td>
-            <td class="first-row text-right action">
-              {{ BestUnitsBin(TableSize('Aggreg_1M')) }}
-            </td>
+            <td class="first-row">Store 1 minute data. Table persistence is limited only by storage but advanced parameters persist only for a day.</td>
+            <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Aggreg_1M')) }}</td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Delete all data in this table. All used space is reclaimed.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Execute">Execute</button>
-            </td>
+            <td class="help">Delete all data in this table. All used space is reclaimed.</td>
+            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Clear('1M', true)">Execute</button></td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Download all table data to a file.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Download selected range of table data to a file.
+            <td class="help">Clear selected range of table.
               <div style="display:flex">
                 <label>From:</label>
                 <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
@@ -122,19 +81,28 @@
                 <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
+            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Clear('1M', false)">Execute</button></td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Restore data from file. Stored rows in overlapped period are replaced with new ones.
+            <td class="help">Download all table data to a file.</td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('1M', true)">Execute</button></td>
+          </tr>
+          <tr class="line">
+            <td class="help">Download selected range of table data to a file.
+              <div style="display:flex">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+              </div>
             </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('1M', false)">Execute</button></td>
+          </tr>
+          <tr class="line">
+            <td class="help">Restore data from file. Stored rows in overlapped period are replaced with new ones.</td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button></td>
           </tr>
         </table>
+
+
         <table v-if="ActiveTab=='10M'">
           <tr>
             <td class="first-row">
@@ -438,6 +406,16 @@
       return { ShowSpinner: false, Action: 'Clear all', From: 0, To: 0, Storage: [], ActiveTab: null,
       };
     },
+    watch: {
+      ActiveTab: function(tab) {
+        if((tab != '3S') && (tab != '1M') && (tab != '10M') && (tab != '15M') && (tab != '1H')) return;
+        this.ShowSpinner = true;
+        this.$http.post('getSeriesRange', { Analyzer: this.analyzer.Analyzer, Aggreg: tab }).then(
+          (result) => { this.ShowSpinner = false; this.From = result.body.From; this.To = result.body.To; },
+          (fail) => { this.ShowSpinner = false; }
+        );
+      },
+    },
     created: function() {
       this.GetStorage();
     },
@@ -466,14 +444,27 @@
           (fail) => {}
         );
       },
-      Clear200MS: function() {
-
-      },
-      Download200MS: function() {
+      Clear: function(aggreg, all) {
         this.ShowSpinner = true;
-        fetch('getSeries', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: 0, To: Number.MAX_SAFE_INTEGER, Aggreg: '200MS', Series: ['VOLTAGE', 'CURRENT', 'UNBALANCE', 'FREQUENCY', 'FLAG', 'ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'VOLTAGE_THD', 'CURRENT_THD', 'PHI']}), headers: { 'Content-Type': 'application/json' } }).then(
+        var From = (all) ? 0 : this.From;
+        var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
+        this.$http.post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg}).then(
+          (res) => { this.ShowSpinner = false; this.ActiveTab = aggreg; },
+          (fail) => { this.ShowSpinner = false; }
+        );
+      },
+      Download: function(aggreg, all) {
+        this.ShowSpinner = true;
+        var Series = [];
+        if(aggreg == '200MS') Series = ['VOLTAGE', 'CURRENT', 'UNBALANCE', 'FREQUENCY', 'FLAG', 'ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'VOLTAGE_THD', 'CURRENT_THD', 'PHI'];
+        if(aggreg == '3S')    Series = ['VOLTAGE', 'CURRENT', 'FREQUENCY', 'FLAG', 'ACTIVE_POWER', 'REACTIVE_POWER'];
+        if(aggreg == '1M')    Series = ['VOLTAGE', 'CURRENT', 'FREQUENCY', 'FLAG', 'POWER_FACTOR', 'UNBALANCE', 'VOLTAGE_THD', 'CURRENT_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'PHI', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'POWER_HARMONICS'];
+
+        var From = (all) ? 0 : this.From;
+        var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
+        fetch('getSeries', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg, Series: Series}), headers: { 'Content-Type': 'application/json' } }).then(
           (res) => {
-            const fileStream = streamSaver.createWriteStream('200MS.json', null);
+            const fileStream = streamSaver.createWriteStream(aggreg + '.json', null);
             const writeStream = fileStream.getWriter();
             const reader = res.body.getReader();
             const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
@@ -481,7 +472,6 @@
           }
         );
       },
-
 
 
 
@@ -629,13 +619,13 @@
   }
   .action {
     width: 80px;
-    vertical-align: top;
+    vertical-align: bottom;
   }
   .action > button {
     width: 100%;
   }
   .line td {
-    padding: 10px 4px;
+    padding: 4px 4px;
   }
   .line {
     border: 1px solid #ccc;
