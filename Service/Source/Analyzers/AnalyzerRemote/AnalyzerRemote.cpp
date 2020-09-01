@@ -19,7 +19,7 @@
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerRemote::AnalyzerRemote(const string &id) : Analyzer(id) {
-  SetName("Never seen");
+  Name("Never seen");
   pMutex           = PTHREAD_MUTEX_INITIALIZER;
   pProducerCond    = PTHREAD_COND_INITIALIZER;
   pConsumerCond    = PTHREAD_COND_INITIALIZER;
@@ -39,13 +39,13 @@ AnalyzerRemote::~AnalyzerRemote() {
 }
 void AnalyzerRemote::GetRemote(const json &params, Response &response) {
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  SetName(params["Name"]);
+  Name(params["Name"]);
   auto Func = [&](uint64_t offset, DataSink &sink) {
     if(pTerminate == true) {
       sink.done();
       return false;
     }
-    SetOnline();
+    Online(true);
     pthread_mutex_lock(&pMutex);
     pConsumerReady = true;
     int Result     = 0;

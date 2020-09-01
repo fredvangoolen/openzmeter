@@ -33,7 +33,7 @@
 #include "ConfigFile.h"
 #include "UpdateManager.h"
 #include "Status.h"
-#include "SystemManager.h"
+#include "System.h"
 #include "MODBus.h"
 #include "DatabasePool.h"
 #include "MessageLoop.h"
@@ -79,6 +79,7 @@ int main(int argc, char** argv) {
   HTTPServer       HTTPServer;                     // Init WEB service
   MessageLoop      Loop;                           // Create application message loop
   Status           StatusObj;                      // Create status manager
+  System           Sys;                            // System status and actions
 
   BluetoothManager BT;                             // Create bluetooth manager
   WifiManager      Wifi;                           // Create wifi manager
@@ -88,8 +89,6 @@ int main(int argc, char** argv) {
   UserManager      User;                           // Create user manager
   TariffManager    TariffManager;                  // Create tariffs interface
   ESIOSManager     Esios;                          // Create ESIOS manager
-  SystemManager    System;                         // System information manager
-
   Telegram         TelegramBoot;                   // Create Telegram manager
   ModbusTCP        Modbus;                         // Create ModbusTCP
 

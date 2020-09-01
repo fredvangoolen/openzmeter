@@ -36,10 +36,10 @@ class Analyzer {
     const string      pSerial;                  //Serial number
   protected :
     Analyzer(const string &id);
-    string GetName();
-    void   SetName(const string &name);
-    void   SetOnline();
-    bool   IsOnline();
+    string Name();
+    void   Name(const string &name);
+    void   Online(const bool online);
+    bool   Online();
   public :
     virtual void GetAnalyzer(const json &params, Response &response) = 0;
     virtual void SetAnalyzer(const json &params, Response &response) = 0;

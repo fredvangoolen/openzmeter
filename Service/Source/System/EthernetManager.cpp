@@ -17,7 +17,7 @@
 #ifdef OPENWRT // ======================================================================================================
 #include "ConfigFile.h"
 #include "LogFile.h"
-#include "SystemManager.h"
+#include "System.h"
 #include "Status.h"
 #include "MessageLoop.h"
 // ---------------------------------------------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ EthernetManager::~EthernetManager() {
 }
 void EthernetManager::PeriodicTasks() {
   json Params = json::object();
-  json Tmp = SystemManager::uBusCall("network.interface." + pInterface, "status");
+  json Tmp = System::uBusCall("network.interface." + pInterface, "status");
   Status::SetValue("/Ethernet_Enabled", ((Tmp == nullptr) || (Tmp.is_object() == false) || (Tmp["up"].is_boolean() == false)) ? json() : Tmp["up"]);
 }
 void EthernetManager::GetEthernetCallback(const json &params, Response &response) {
@@ -51,7 +51,7 @@ void EthernetManager::GetEthernetCallback(const json &params, Response &response
   string PhyInterface = "";
   json   Result       = json::object();
   Result["Status"]    = json::object();
-  json Tmp = SystemManager::uBusCall("network.interface." + pInterface, "status");
+  json Tmp = System::uBusCall("network.interface." + pInterface, "status");
   if((Tmp == nullptr) || (Tmp.is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   if(Tmp["up"].is_boolean()) Result["Status"]["Connected"] = Tmp["up"];
   if(Tmp["device"].is_string()) PhyInterface = Tmp["device"];
@@ -62,14 +62,14 @@ void EthernetManager::GetEthernetCallback(const json &params, Response &response
 
   json Params = json::object();
   Params["name"] = PhyInterface;
-  Tmp = SystemManager::uBusCall("network.device", "status", Params);
+  Tmp = System::uBusCall("network.device", "status", Params);
   if((Tmp == nullptr) || (Tmp.is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   if(Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
 
   Params = json::object();
   Params["config"] = "network";
   Params["section"] = pInterface;
-  Tmp = SystemManager::uBusCall("uci", "get", Params);
+  Tmp = System::uBusCall("uci", "get", Params);
   if((Tmp == nullptr) || (Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   if(Tmp["values"]["proto"].is_string()) Result["IPMode"] = (Tmp["values"]["proto"] == "static") ? "STATIC" : "DHCP";
   if(Tmp["values"]["ipaddr"].is_string()) Result["IP"] = Tmp["values"]["ipaddr"];
@@ -91,8 +91,8 @@ void EthernetManager::SetEthernetCallback(const json &params, Response &response
   if(params.contains("Netmask") && params["Netmask"].is_string()) Params["values"]["netmask"] = params["Netmask"];
   if(params.contains("Gateway") && params["Gateway"].is_string()) Params["values"]["gateway"] = params["Gateway"];
   if(params.contains("DNS") && params["DNS"].is_array()) Params["values"]["dns"] = params["DNS"];
-  SystemManager::uBusCall("uci", "set", Params);
-  SystemManager::Exec("uci commit && ubus call network reload", &ErrorCode);
+  System::uBusCall("uci", "set", Params);
+  System::Exec("uci commit && ubus call network reload", &ErrorCode);
   return HTTPServer::FillResponse(response, "", "text/plain", (ErrorCode != 0) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
 #else // ===============================================================================================================

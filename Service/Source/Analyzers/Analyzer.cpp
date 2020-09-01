@@ -37,23 +37,23 @@ json Analyzer::GetJSONDescriptor() {
 string Analyzer::Serial() {
   return pSerial;
 }
-string Analyzer::GetName() {
+string Analyzer::Name() {
   pMembersLocks.ReadLock();
   string Name = pName;
   pMembersLocks.Unlock();
   return Name;
 }
-void Analyzer::SetName(const string &name) {
+void Analyzer::Name(const string &name) {
   pMembersLocks.WriteLock();
   pName = name;
   pMembersLocks.Unlock();
 }
-void Analyzer::SetOnline() {
+void Analyzer::Online(const bool online) {
   pMembersLocks.WriteLock();
-  pLastSave = Tools::GetTime64();
+  pLastSave = (online == true) ? Tools::GetTime64() : 0;
   pMembersLocks.Unlock();
 }
-bool Analyzer::IsOnline() {
+bool Analyzer::Online() {
   pMembersLocks.ReadLock();
   bool Online = ((Tools::GetTime64() - pLastSave) < 20000);
   pMembersLocks.Unlock();

@@ -45,7 +45,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pRates          = new AnalyzerSoftRates(pSerial);
   pAlarms         = new AnalyzerSoftAlarms(pMQTT, pSerial);
   pEvents         = new AnalyzerSoftEvents(pSerial, mode, samplerate);
-  pSync           = new AnalyzerSoftSync();
+  pSync           = new AnalyzerSoftSync(pSerial);
   pInputBlock     = new AnalyzerSoftBlock(mode, samplerate);
   pFrequency      = new AnalyzerSoftFrequency(samplerate);
   pAggreg200MS    = new AnalyzerSoftAggreg200MS(pSerial, mode);
@@ -144,7 +144,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
 }
 void AnalyzerSoft::Configure(const json &options) {
   ConfigFile::WriteConfig(pConfigPath, options);
-  SetName(options["Name"]);
+  Name(options["Name"]);
   pthread_mutex_lock(&pMutex);
   float NominalVoltage   = options["NominalVoltage"];
   float NominalFrequency = options["NominalFrequency"];
@@ -158,7 +158,7 @@ void AnalyzerSoft::Configure(const json &options) {
   pRates->Config(options["TimeZone"]);
   pAlarms->Config(options["AlarmsEnabled"], NominalVoltage, NominalFrequency);
   pEvents->Config(options["EventsEnabled"], NominalVoltage, NominalFrequency);
-  pSync->Config(options["Sync"]);
+  pSync->Config(options["Sync"], Name());
   pMQTT->Config(options["MQTT"]);
   pMQTT->PublishConfig(options);
   pthread_mutex_unlock(&pMutex);
@@ -227,7 +227,7 @@ void AnalyzerSoft::Analyzer_Func() {
     pAggreg200MS->Reset();
     return;
   }
-  SetOnline();
+  Online(true);
   pNowDataLock.ProviderWrite();
   if((pInputBlock->Sequence() % 15) == 0) {
     LogFile::Debug("Storing 3S aggregation for analyzer '%s'", pSerial.c_str());
@@ -309,7 +309,7 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   string UserName = params["UserName"];
   json Response = ConfigFile::ReadConfig(pConfigPath);
-  Response["Online"]     = IsOnline();
+  Response["Online"]     = Online();
   Response["Mode"]       = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"] = pSamplerate;
   HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
