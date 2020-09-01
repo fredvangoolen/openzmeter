@@ -13,51 +13,95 @@ const openZmeter = {
           Transfer.Bills = null;
           return;
         }
-        var Data = { Headers: data[0], Rows: data.slice(1), Aggreg: aggreg, From: range[0], To: range[1] };
-        Transfer.Data = Object.seal(Data);
         var Bills = null;
         if(Transfer.Series.includes('BILL')) {
           Bills = [];
-          var BillCol = Data.Headers.indexOf('Bill');
-          var TimeCol = Data.Headers.indexOf('Sampletime');
-          for(var i in Data.Rows) {
-            if(Data.Rows[i][BillCol] == true) Bills.push(Data.Rows[i][TimeCol]);
+          var BillCol = data[0].indexOf('Bill');
+          var TimeCol = data[0].indexOf('Sampletime');
+          for(var i = 1; i < data.length; i++) {
+            if(data[i][BillCol] == true) Bills.push(data[i][TimeCol]);
           }
         }
         Transfer.Bills = Object.seal(Bills);
+
         var Periods = null;
         if(Transfer.Series.includes('COLOR') || Transfer.Series.includes('PERIOD')) {
           Periods = { Headers: [], Rows: [], Aggreg: aggreg };
           Periods.Headers.push('Sampletime');
           if(Transfer.Series.includes('PERIOD')) Periods.Headers.push('Period');
           if(Transfer.Series.includes('COLOR')) Periods.Headers.push('Color');
-          var PeriodCol = Data.Headers.indexOf('Period');
-          var ColorCol = Data.Headers.indexOf('Color');
-          var TimeCol = Data.Headers.indexOf('Sampletime');
+          var PeriodCol = data[0].indexOf('Period');
+          var ColorCol = data[0].indexOf('Color');
+          var TimeCol = data[0].indexOf('Sampletime');
           var LastItem = [];
           if(PeriodCol != -1) LastItem.push(null);
           if(ColorCol != -1) LastItem.push(null);
           Periods.Rows.push([range[0]].concat(LastItem));
-          for(var i in Data.Rows) {
+          for(var i = 1; i < data.length; i++) {
             var Row = [];
-            if(PeriodCol != -1) Row.push((Data.Rows[i][PeriodCol] == null) ? null : 'P' + Data.Rows[i][PeriodCol]);
-            if(ColorCol != -1) Row.push(Data.Rows[i][ColorCol]);
+            if(PeriodCol != -1) Row.push((data[i][PeriodCol] == null) ? null : 'P' + data[i][PeriodCol]);
+            if(ColorCol != -1) Row.push(data[i][ColorCol]);
             if(JSON.stringify(LastItem) == JSON.stringify(Row)) continue;
             LastItem = Row;
-            Periods.Rows.push([Data.Rows[i][TimeCol]].concat(LastItem));
+            Periods.Rows.push([data[i][TimeCol]].concat(LastItem));
           }
-          if(LastItem.length > 0) Periods.Rows.push([Data.Rows.slice(-1)[0][TimeCol]].concat(LastItem));
+          if((LastItem.length > 0) && (data.length > 1)) Periods.Rows.push([data.slice(-1)[0][TimeCol]].concat(LastItem));
           LastItem = [];
           if(PeriodCol != -1) LastItem.push(null);
           if(ColorCol != -1) LastItem.push(null);
           Periods.Rows.push([range[1]].concat(LastItem));
         }
+        var Data = { Aggreg: aggreg, From: range[0], To: range[1] };
+        if(Transfer.Aggreg == '15M') {
+          Data.Headers = data[0];
+          Data.Rows = data.slice(1);
+        } else {
+          Data.Headers = [];
+          Data.Rows = [];
+          var TimeCol = data[0].indexOf('Sampletime');
+          if(TimeCol != -1) Data.Headers.push('Sampletime');
+          var ActivePowerCol = data[0].indexOf('Active_Power');
+          if(ActivePowerCol != -1) Data.Headers.push('Active_Power');
+          var ReactivePowerCol = data[0].indexOf('Reactive_Power');
+          if(ReactivePowerCol != -1) Data.Headers.push('Reactive_Power');
+          var ActiveEnergyCol = data[0].indexOf('Active_Energy');
+          if(ActiveEnergyCol != -1) Data.Headers.push('Active_Energy');
+          var ReactiveEnergyCol = data[0].indexOf('Reactive_Energy');
+          if(ReactiveEnergyCol != -1) Data.Headers.push('Reactive_Energy');
+          var CostCol = data[0].indexOf('Cost');
+          if(CostCol != -1) Data.Headers.push('Cost');
+          var Row = null;
+          for(var i = 1; i < data.length; i++) {
+            if((Row != null) && (Math.floor(Row[0] / 3600000) != Math.floor(data[i][TimeCol] / 3600000))) {
+              Data.Rows.push(Row);
+              Row = null;
+            }
+            if(Row == null) {
+              Row = [Math.floor(data[i][TimeCol] / 3600000) * 3600000 + 3599999];
+              if(ActivePowerCol != -1) Row.push(data[i][ActivePowerCol] / 4.0);
+              if(ReactivePowerCol != -1) Row.push(data[i][ReactivePowerCol] / 4.0);
+              if(ActiveEnergyCol != -1) Row.push(data[i][ActiveEnergyCol]);
+              if(ReactiveEnergyCol != -1) Row.push(data[i][ReactiveEnergyCol]);
+              if(CostCol != -1) Row.push(data[i][CostCol]);
+            } else {
+              var Idx = 1;
+              if(ActivePowerCol != -1) Row[Idx++] += data[i][ActivePowerCol] / 4.0;
+              if(ReactivePowerCol != -1) Row[Idx++] += data[i][ReactivePowerCol] / 4.0;
+              if(ActiveEnergyCol != -1) Row[Idx++] += data[i][ActiveEnergyCol];
+              if(ReactiveEnergyCol != -1) Row[Idx++] += data[i][ReactiveEnergyCol];
+              if(CostCol != -1) Row[Idx++] += data[i][CostCol];
+            }  
+          }
+          if(Row != null) Data.Rows.push(Row);
+        }
+        Transfer.Data = Object.seal(Data);
         Transfer.Periods = Object.seal(Periods);
       };
       Transfer.Update = (analyzer, aggreg, range) => {
         if((analyzer == null) || (aggreg == null) || (range == null)) return;
         var Cancelled = false;
         var ReqRange  = analyzer.CalcRange(range, aggreg);
+        if(aggreg == '1H') ReqRange[0] = ReqRange[0] / 3600000 * 3600000;
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
         if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetData(null, null, null);
