@@ -18,14 +18,11 @@
 #include <string>
 #include <vector>
 #include <pthread.h>
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------------------------------------------------
-
 class ProviderLocks {
   //Provider wait until all consumers ends, consumers wait until provider write
   private :

@@ -17,7 +17,7 @@
 #include <vector>
 #include <list>
 #include <stdlib.h>
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 #include "cpp-httplib/httplib.h"
 #include "Database.h"
 #include "Tools.h"

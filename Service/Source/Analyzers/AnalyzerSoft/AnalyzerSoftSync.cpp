@@ -127,13 +127,13 @@ void *AnalyzerSoftSync::Thread() {
         if(pTerminate == true) return false;
         if(response.status == HTTP_UNAUTHORIZED) {
           Cookie = "";
-          LogFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...", This->pSerial.c_str());
+          LogFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...", pSerial.c_str());
           usleep(1000000);
           return false;
         } else if(response.status == HTTP_OK) {
           return true;
         } else {
-          LogFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)", This->pSerial.c_str(), response.status);
+          LogFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)", pSerial.c_str(), response.status);
           usleep(1000000);
           return false;
         }

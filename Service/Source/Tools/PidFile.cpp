@@ -18,7 +18,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "PidFile.h"
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 #include "ConfigFile.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------

@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <stdint.h>
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 #include "cctz/time_zone.h"
 #include "Tariff.h"
 #include "RateTax.h"

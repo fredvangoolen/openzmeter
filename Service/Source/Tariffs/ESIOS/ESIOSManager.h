@@ -17,7 +17,7 @@
 #include <vector>
 #include <stdint.h>
 #include <string>
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 #include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;

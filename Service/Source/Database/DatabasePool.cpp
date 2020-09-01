@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "DatabasePool.h"
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 #include "ConfigFile.h"
 #include "LogFile.h"
 #include "Tools.h"

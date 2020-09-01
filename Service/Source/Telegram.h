@@ -16,7 +16,7 @@
 #pragma once
 #include "cpp-httplib/httplib.h"
 #include "cctz/time_zone.h"
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 #include "Tools.h"
 #include "HTTPServer/HTTPServer.h"
 #include "Worker.h"
