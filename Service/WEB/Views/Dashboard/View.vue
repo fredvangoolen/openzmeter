@@ -116,9 +116,11 @@
       },
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
-        var Data = [['Sampletime', 'Active Energy', 'Period name', 'Period expense']];
+        var Data = [['Sampletime', 'Active Energy', 'Period expense']];
         var TimeCol = this.TransferGraph.Data.Headers.indexOf("Sampletime");
-        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) Data.push([this.TransferGraph.Data.Rows[i][TimeCol]/*, this.Round(this.TransferGraph.Data.Active_Power[i] / Div, 3), 'P' + this.TransferGraph.Data.Period_Number[i], this.Round(this.TransferGraph.Data.Expense[i], 3)*/]);
+        var ActiveCol = this.TransferGraph.Data.Headers.indexOf("Active_Energy");
+        var ExpenseCol = this.TransferGraph.Data.Headers.indexOf("Cost");
+        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ExpenseCol], 3)]);
         return Object.seal(Data);
       }
     },

@@ -111,9 +111,11 @@
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
         var Rows = [['Sampletime'].concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels))];
-        for(var n in this.TransferGraph.Data.Sampletime) {
-          var Row = [this.TransferGraph.Data.Sampletime[n]];
-          for(var i in this.TransferGraph.Data.Voltage[n]) Row.push(this.Round(this.TransferGraph.Data.Voltage[n][i], 3));
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf("Sampletime");
+        var VoltageCol = this.TransferGraph.Data.Headers.indexOf("Voltage");
+        for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) {
+          var Row = [this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[n][TimeCol])];
+          for(var i = 0; i < this.analyzer.VoltageChannels; i++) Row.push(this.Round(this.TransferGraph.Data.Rows[n][VoltageCol][i], 3));
           Rows.push(Row);
         }
         return Object.seal(Rows);
