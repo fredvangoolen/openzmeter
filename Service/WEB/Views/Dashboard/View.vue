@@ -116,9 +116,9 @@
       },
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
-        var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
         var Data = [['Sampletime', 'Active Energy', 'Period name', 'Period expense']];
-        for(var i = 0; i < this.TransferGraph.Data.Sampletime.length; i++) Data.push([this.TransferGraph.Data.Sampletime[i], this.Round(this.TransferGraph.Data.Active_Power[i] / Div, 3), 'P' + this.TransferGraph.Data.Period_Number[i], this.Round(this.TransferGraph.Data.Expense[i], 3)]);
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf("Sampletime");
+        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) Data.push([this.TransferGraph.Data.Rows[i][TimeCol]/*, this.Round(this.TransferGraph.Data.Active_Power[i] / Div, 3), 'P' + this.TransferGraph.Data.Period_Number[i], this.Round(this.TransferGraph.Data.Expense[i], 3)*/]);
         return Object.seal(Data);
       }
     },

@@ -24,6 +24,15 @@ using namespace std;
 class AnalyzerSoftEvents final {
   private :
     enum EventType { EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC };
+    enum EventSamples { SAMPLES_RAW_PRESTART = 0x01,
+                        SAMPLES_RAW_POSSTART = 0x02,
+                        SAMPLES_RAW_PREEND   = 0x03,
+                        SAMPLES_RAW_POSEND   = 0x04,
+                        SAMPLES_RMS_PRESTART = 0x10,
+                        SAMPLES_RMS_POSSTART = 0x20,
+                        SAMPLES_RMS_PREEND   = 0x30,
+                        SAMPLES_RMS_POSEND   = 0x40
+                      };
     typedef struct {
       string         UID;                       //Event unique identifier
       EventType      Type;                      //Running event type
@@ -65,6 +74,7 @@ class AnalyzerSoftEvents final {
     bool     FindRunningEvent(const uint32_t mask) const;
     float    CalcChange(const float in, const float reference) const;
     string   EventTypeToString(const EventType type) const;
+    void     SaveSamples(const string &id, const uint8_t type, const uint16_t len);
   public :
     AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftEvents();

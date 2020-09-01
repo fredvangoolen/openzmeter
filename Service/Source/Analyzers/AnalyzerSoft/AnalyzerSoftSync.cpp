@@ -14,10 +14,12 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "LogFile.h"
+#include "URL.h"
 #include "AnalyzerSoftSync.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftSync::AnalyzerSoftSync() {
+AnalyzerSoftSync::AnalyzerSoftSync(const string &serial) {
   pMutex = PTHREAD_MUTEX_INITIALIZER;
+  pSerial = serial;
   pThread = 0;
 }
 AnalyzerSoftSync::~AnalyzerSoftSync() {
@@ -38,47 +40,52 @@ json AnalyzerSoftSync::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-void AnalyzerSoftSync::Config(const json &config) {
+void AnalyzerSoftSync::Config(const json &config, const string &name) {
+  pthread_mutex_lock(&pMutex);
   bool Enabled = config["Enabled"];
   if(Enabled == true) {
+    pName      = name;
     pServer    = config["Server"];
     pUser      = config["User"];
     pPass      = config["Pass"];
     pTerminate = false;
     if(pThread == 0) {
-      if(pthread_create(&pThread, NULL, Sync_Thread, this) != 0) {
+      if(pthread_create(&pThread, NULL, [](void *params) { return ((AnalyzerSoftSync*)params)->Thread(); }, this) != 0) {
         LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         pThread = 0;
       } else {
         pthread_setname_np(pThread, "Sync");
       }
     }
-  } else if((Enabled == false) && (pThread != 0)) {
-    pTerminate = true;
-    pthread_join(pThread, NULL);
-    pThread = 0;
+  } else if(Enabled == false) {
+    if(pThread != 0) {
+      pTerminate = true;
+      pthread_join(pThread, NULL);
+      pThread = 0;
+    }
   }
+  pthread_mutex_unlock(&pMutex);
 }
-void *AnalyzerSoftSync::Sync_Thread(void *params) {
-  AnalyzerSoftSync *This = (AnalyzerSoftSync*)params;
+void *AnalyzerSoftSync::Thread() {
   nice(10);
-  string   Cookie, User, Pass, Server;
+  string   Cookie, User, Pass, Server, Name;
   uint32_t        ThreadsCount = 0;
   pthread_mutex_t Mutex        = PTHREAD_MUTEX_INITIALIZER;
   pthread_cond_t  Cond         = PTHREAD_COND_INITIALIZER;
-  /*
-  while(This->pTerminate == false) {
-    pthread_mutex_lock(&This->pMutex);
-    if((This->pUser != User) || (This->pPass != Pass) || (This->pServer != Server)) {
+  while(pTerminate == false) {
+    pthread_mutex_lock(&pMutex);
+    if((pUser != User) || (pPass != Pass) || (pServer != Server)) {
       Cookie = "";
-      User   = This->pUser;
-      Pass   = This->pPass;
-      Server = This->pServer;
+      User   = pUser;
+      Pass   = pPass;
+      Server = pServer;
+      Name   = pName;
     }
-    pthread_mutex_unlock(&This->pMutex);
+    pthread_mutex_unlock(&pMutex);
     URL Url(Server);
     Client HTTPClient(Url.Host(), Url.Port());
     HTTPClient.set_compress(true);
+    HTTPClient.set_keep_alive(true);
     HTTPClient.set_read_timeout(30);
     HTTPClient.set_write_timeout(30);
     HTTPClient.set_connection_timeout(30);
@@ -100,16 +107,16 @@ void *AnalyzerSoftSync::Sync_Thread(void *params) {
         }
       }
       if(Cookie != "") {
-        LogFile::Debug("Analyzer '%s' logged on remote server", This->pSerial.c_str());
+        LogFile::Debug("Analyzer '%s' logged on remote server", pSerial.c_str());
       } else {
-        LogFile::Debug("Analyzer '%s' can not login on remote server", This->pSerial.c_str());
+        LogFile::Debug("Analyzer '%s' can not login on remote server", pSerial.c_str());
         usleep(1000000);
       }
     } else {
       json   Content = json::object();
-      Content["Serial"] = "REMOTE";
-      Content["Analyzer"] = This->pSerial;
-      Content["Name"] = This->GetName();
+      Content["Serial"]   = "REMOTE";
+      Content["Analyzer"] = pSerial;
+      Content["Name"]     = Name;
       Request Req;
       Req.method = "POST";
       Req.path = Url.Path() + "/getRemote";
@@ -117,7 +124,7 @@ void *AnalyzerSoftSync::Sync_Thread(void *params) {
       Req.body = Content.dump();
       Req.progress = nullptr;
       Req.response_handler = [&](const Response &response) -> bool {
-        if(This->pSyncTerminate == true) return false;
+        if(pTerminate == true) return false;
         if(response.status == HTTP_UNAUTHORIZED) {
           Cookie = "";
           LogFile::Debug("Analyzer '%s' not authorized on remote server, trying to login again...", This->pSerial.c_str());
@@ -132,46 +139,47 @@ void *AnalyzerSoftSync::Sync_Thread(void *params) {
         }
       };
       Req.content_receiver = [&](const char *data, uint64_t len) -> bool {
-        if(This->pSyncTerminate == true) return false;
+        if(pTerminate == true) return false;
         if((len <= 5) || (strncmp("data:", data, 5) != 0)) return false;
         string Msg(&data[5], len - 5);
         json Content = json::parse(Msg, NULL, false);
         if((Content.is_discarded() == true) || (Content.is_object() == false)) return true;
-        LogFile::Debug("Analyzer '%s' receive querie from remote server", This->pSerial.c_str());
         if((Content["Sequence"].is_number() == false) || (Content["Method"].is_string() == false) || (Content["Params"].is_object() == false)) return false;
-        Sync_t *Request = new Sync_t;
-        Request->Count        = &ThreadsCount;
-        Request->Mutex        = &Mutex;
-        Request->Cond         = &Cond;
-        Request->Cookie       = Cookie;
-        Request->Server       = Server;
-        Request->Analyzer     = This;
-        Request->Method       = Content["Method"];
-        Request->Params       = Content["Params"];
-        Request->Sequence     = Content["Sequence"];
-        pthread_t Thread;
-        pthread_mutex_lock(&Mutex);
-        if(pthread_create(&Thread, NULL, Sync_RespThread, (void*)Request) != 0) {
-          LogFile::Error("%s:%d -> %s\n", __FILE__, __LINE__, strerror(errno));
-          delete Request;
-        } else {
-          pthread_setname_np(Thread, "SyncWorker");
-          ThreadsCount++;
-          pthread_detach(Thread);
-        }
+        LogFile::Debug("Analyzer '%s' receive querie from remote server", pSerial.c_str());
+
+//        Sync_t *Request = new Sync_t;
+//        Request->Count        = &ThreadsCount;
+//        Request->Mutex        = &Mutex;
+//        Request->Cond         = &Cond;
+//        Request->Cookie       = Cookie;
+//        Request->Server       = Server;
+//        Request->Analyzer     = This;
+//        Request->Method       = Content["Method"];
+//        Request->Params       = Content["Params"];
+//        Request->Sequence     = Content["Sequence"];
+//        pthread_t Thread;
+//        pthread_mutex_lock(&Mutex);
+//        if(pthread_create(&Thread, NULL, Sync_RespThread, (void*)Request) != 0) {
+//          LogFile::Error("%s:%d -> %s\n", __FILE__, __LINE__, strerror(errno));
+//          delete Request;
+//        } else {
+//          pthread_setname_np(Thread, "SyncWorker");
+//          ThreadsCount++;
+//          pthread_detach(Thread);
+//        }
         pthread_mutex_unlock(&Mutex);
         return true;
       };
-      auto Res = std::make_shared<Response>();
-      if(HTTPClient.send(Req, *Res) == false) usleep(1000000);
+//      auto Res = std::make_shared<Response>();
+//      if(HTTPClient.send(Req, *Res) == false) usleep(1000000);
     }
   }
   pthread_mutex_lock(&Mutex);
   while(ThreadsCount > 0) {
-    LogFile::Debug("Analyzer '%s' flusing remote request (%d pending)", This->pSerial.c_str(), ThreadsCount);
+    LogFile::Debug("Analyzer '%s' flusing remote request (%d pending)", pSerial.c_str(), ThreadsCount);
     pthread_cond_wait(&Cond, &Mutex);
   }
-  pthread_mutex_unlock(&Mutex);*/
+  pthread_mutex_unlock(&Mutex);
   return NULL;
 }
 void *AnalyzerSoftSync::Sync_RespThread(void *args) {

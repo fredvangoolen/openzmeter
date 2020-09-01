@@ -16,7 +16,7 @@
 #include "NTPManager.h"
 #ifdef OPENWRT // ======================================================================================================
 #include <sys/time.h>
-#include "SystemManager.h"
+#include "System.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 NTPManager::NTPManager() {
@@ -33,7 +33,7 @@ NTPManager::~NTPManager() {
 void NTPManager::GetNTPCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::object();
-  string CommandStr = SystemManager::Exec("ubus call uci get '{\"config\":\"system\", \"section\":\"ntp\"}'");
+  string CommandStr = System::Exec("ubus call uci get '{\"config\":\"system\", \"section\":\"ntp\"}'");
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
@@ -58,10 +58,10 @@ void NTPManager::SetNTPCallback(const json &params, Response &response) {
   if((params.contains("Server") == false) || (params["Server"].is_string() == false)) return HTTPServer::FillResponse(response, "'Server' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   bool Enabled  = params["Enabled"];
   string Server = params["Server"];
-  SystemManager::Exec("ubus call uci set '{\"config\":\"system\", \"section\":\"ntp\", \"values\":{\"enabled\":\"" + string((Enabled == true) ? "1" : "0") + "\", \"server\":\"" + Server + "\"}}'", &ErrorCode);
-  if(ErrorCode == 0) SystemManager::Exec("uci commit", &ErrorCode);
-  if(ErrorCode == 0) SystemManager::Exec("reload_config", &ErrorCode);
-  if((params["Enabled"] == false) && params["Time"].is_number()) {
+  System::Exec("ubus call uci set '{\"config\":\"system\", \"section\":\"ntp\", \"values\":{\"enabled\":\"" + string((Enabled == true) ? "1" : "0") + "\", \"server\":\"" + Server + "\"}}'", &ErrorCode);
+  if(ErrorCode == 0) System::Exec("uci commit", &ErrorCode);
+  if(ErrorCode == 0) System::Exec("reload_config", &ErrorCode);
+  if((params["Enabled"] == false) && params.contains("Time") && params["Time"].is_number()) {
     uint64_t Time = params["Time"];
     timeval TimeVal;
     TimeVal.tv_sec  = Time / 1000;

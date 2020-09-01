@@ -22,16 +22,8 @@ using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftSync {
   enum SyncState   { NOT_LOGGED, LOGGED, CONNECTED, TERMINATE };
-  private : //Readed in thread, changed in configure
-    pthread_t                  pThread;              //Export thread
-    pthread_mutex_t            pMutex;               //Shared variables lock
-    bool                       pTerminate;           //Sync terminate signal
-    string                     pServer;              //Export server address
-    string                     pUser;                //Export server user
-    string                     pPass;                //Export server password
-
-
-        typedef struct {
+  private :
+    typedef struct {
       pthread_mutex_t         *Mutex;                    //Export list locks
       pthread_cond_t          *Cond;                     //Wakeup parent after last thread ends
       uint32_t                *Count;                    //Count of running sync threads
@@ -42,14 +34,28 @@ class AnalyzerSoftSync {
       uint64_t                 Sequence;                 //
       //AnalyzerSoft            *Analyzer;                 //
     } Sync_t;
-    static void *Sync_Thread(void *params);
+
+  private :
+    pthread_t                  pThread;              //Export thread
+    pthread_mutex_t            pMutex;               //Shared variables lock
+    bool                       pTerminate;           //Sync terminate signal
+    string                     pSerial;              //Analyzer serial
+    string                     pName;                //Analyzer description
+    string                     pServer;              //Export server address
+    string                     pUser;                //Export server user
+    string                     pPass;                //Export server password
+
+
+
+  private :
+    void *Thread();
     static void *Sync_RespThread(void *params);
 
   public :
     static json CheckConfig(const json &config);
   public :
-    AnalyzerSoftSync();
+    AnalyzerSoftSync(const string &serial);
     ~AnalyzerSoftSync();
-    void Config(const json &config);
+    void Config(const json &config, const string &name);
 
 };

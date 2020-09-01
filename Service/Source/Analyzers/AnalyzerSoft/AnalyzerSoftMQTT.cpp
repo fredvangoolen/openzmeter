@@ -69,12 +69,14 @@ json AnalyzerSoftMQTT::CheckConfig(const json &config) {
 void AnalyzerSoftMQTT::Config(const json &config) {
   pthread_mutex_lock(&pMutex);
   bool Enabled = config["Enabled"];
-  if((Enabled == false) && (pThread != 0)) {
-    pTerminate = false;
-    pthread_join(pThread, NULL);
-    free(pSendBuff);
-    free(pRecvBuff);
-    pThread = 0;
+  if(Enabled == false) {
+    if(pThread != 0) {
+      pTerminate = false;
+      pthread_join(pThread, NULL);
+      free(pSendBuff);
+      free(pRecvBuff);
+      pThread = 0;
+    }
     p3S     = false;
     p1M     = false;
     p10M    = false;
@@ -94,15 +96,17 @@ void AnalyzerSoftMQTT::Config(const json &config) {
     p1H        = config["Export1H"];
     pAlarms    = config["ExportAlarms"];
     pConfig    = config["ExportConfig"];
-    pTerminate = false;
-    pSendBuff  = (uint8_t*)calloc(pBuffSize, 1);
-    pRecvBuff  = (uint8_t*)calloc(pBuffSize, 1);
-    mqtt_init_reconnect(&pClient, NULL, NULL, NULL);
-    if((pThread == 0) && (pthread_create(&pThread, NULL, Thread, this) != 0)) {
-      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-      pThread = 0;
-    } else {
-      pthread_setname_np(pThread, "MQTT");
+    if(pThread == 0) {
+      pTerminate = false;
+      if(pSendBuff == NULL) pSendBuff  = (uint8_t*)calloc(pBuffSize, 1);
+      if(pRecvBuff == NULL) pRecvBuff  = (uint8_t*)calloc(pBuffSize, 1);
+      mqtt_init_reconnect(&pClient, NULL, NULL, NULL);
+      if(pthread_create(&pThread, NULL, [](void *params) { return ((AnalyzerSoftMQTT*)params)->Thread(); }, this) != 0) {
+        LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+        pThread = 0;
+      } else {
+        pthread_setname_np(pThread, "MQTT");
+      }
     }
   }
   pthread_mutex_unlock(&pMutex);
@@ -160,29 +164,28 @@ void AnalyzerSoftMQTT::PublishAlarm(const uint64_t time, const string &name, con
   }
   pthread_mutex_unlock(&pMutex);
 }
-void *AnalyzerSoftMQTT::Thread(void *params) {
-  AnalyzerSoftMQTT *This = (AnalyzerSoftMQTT*)params;
+void *AnalyzerSoftMQTT::Thread() {
   nice(10);
   string User, Pass, Server;
-  while(This->pTerminate == false) {
-    pthread_mutex_lock(&This->pMutex);
-    if((This->pUser != User) || (This->pPass != Pass) || (This->pServer != Server)) {
-      if(This->pClient.socketfd != -1) {
-        close(This->pClient.socketfd);
-        This->pClient.socketfd = -1;
+  while(pTerminate == false) {
+    pthread_mutex_lock(&pMutex);
+    if((pUser != User) || (pPass != Pass) || (pServer != Server)) {
+      if(pClient.socketfd != -1) {
+        close(pClient.socketfd);
+        pClient.socketfd = -1;
       }
-      User   = This->pUser;
-      Pass   = This->pPass;
-      Server = This->pServer;
+      User   = pUser;
+      Pass   = pPass;
+      Server = pServer;
     }
-    pthread_mutex_unlock(&This->pMutex);
-    mqtt_sync(&This->pClient);
-    if(This->pClient.error == MQTT_ERROR_CONNECT_NOT_CALLED) {
-      mqtt_connect(&This->pClient, NULL, NULL, NULL, 0, (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
-    } else if(This->pClient.error == MQTT_ERROR_SOCKET_ERROR) {
-      if(This->pClient.socketfd != -1) {
-        close(This->pClient.socketfd);
-        This->pClient.socketfd = -1;
+    pthread_mutex_unlock(&pMutex);
+    mqtt_sync(&pClient);
+    if(pClient.error == MQTT_ERROR_CONNECT_NOT_CALLED) {
+      mqtt_connect(&pClient, NULL, NULL, NULL, 0, (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
+    } else if(pClient.error == MQTT_ERROR_SOCKET_ERROR) {
+      if(pClient.socketfd != -1) {
+        close(pClient.socketfd);
+        pClient.socketfd = -1;
       }
       URL  Url(Server);
       char Port[16];
@@ -196,36 +199,36 @@ void *AnalyzerSoftMQTT::Thread(void *params) {
         continue;
       }
       for(addrinfo *p = ServInfo; p != NULL; p = p->ai_next) {
-        This->pClient.socketfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
-        if(This->pClient.socketfd == -1) {
+        pClient.socketfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+        if(pClient.socketfd == -1) {
           LogFile::Error("%s:%d -> (%s)", __FILE__, __LINE__, strerror(errno));
           continue;
         }
-        if(connect(This->pClient.socketfd, p->ai_addr, p->ai_addrlen) == -1) {
-          close(This->pClient.socketfd);
-          This->pClient.socketfd = -1;
+        if(connect(pClient.socketfd, p->ai_addr, p->ai_addrlen) == -1) {
+          close(pClient.socketfd);
+          pClient.socketfd = -1;
           continue;
         }
-        fcntl(This->pClient.socketfd, F_SETFL, fcntl(This->pClient.socketfd, F_GETFL) | O_NONBLOCK);
+        fcntl(pClient.socketfd, F_SETFL, fcntl(pClient.socketfd, F_GETFL) | O_NONBLOCK);
         break;
       }
       freeaddrinfo(ServInfo);
-      if(This->pClient.socketfd == -1) {
-        LogFile::Debug("Analyzer '%s' can not connect to MQTT broker", This->pSerial.c_str());
+      if(pClient.socketfd == -1) {
+        LogFile::Debug("Analyzer '%s' can not connect to MQTT broker", pSerial.c_str());
         usleep(1000000);
         continue;
       } else {
-        mqtt_reinit(&This->pClient, This->pClient.socketfd, This->pSendBuff, This->pBuffSize, This->pRecvBuff, This->pBuffSize);
+        mqtt_reinit(&pClient, pClient.socketfd, pSendBuff, pBuffSize, pRecvBuff, pBuffSize);
       }
-    } else if(This->pClient.error != MQTT_OK) {
-      LogFile::Error("Analyzer '%s' MQTT broker fail (%s)", This->pSerial.c_str(), mqtt_error_str(This->pClient.error));
-      This->pClient.error = MQTT_OK;
+    } else if(pClient.error != MQTT_OK) {
+      LogFile::Error("Analyzer '%s' MQTT broker fail (%s)", pSerial.c_str(), mqtt_error_str(pClient.error));
+      pClient.error = MQTT_OK;
     }
     usleep(100000);
   }
-  if(This->pClient.socketfd != -1) {
-    close(This->pClient.socketfd);
-    This->pClient.socketfd = -1;
+  if(pClient.socketfd != -1) {
+    close(pClient.socketfd);
+    pClient.socketfd = -1;
   }
   return NULL;
 }

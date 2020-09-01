@@ -44,7 +44,7 @@ class AnalyzerSoftMQTT final {
     bool              pAlarms;      //Enable alarms publish
     bool              pConfig;      //Enable config publish
   private :
-    static void *Thread(void *params);
+    void *Thread();
   public :
     static json CheckConfig(const json &config);
   public :
