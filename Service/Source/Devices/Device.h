@@ -16,7 +16,7 @@
 #pragma once
 #include <set>
 #include <pthread.h>
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 #include "Analyzer.h"
 #include "HTTPServer.h"
 #include "Tools.h"

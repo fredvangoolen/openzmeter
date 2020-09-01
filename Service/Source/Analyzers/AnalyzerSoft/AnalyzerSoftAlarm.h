@@ -16,7 +16,7 @@
 #pragma once
 #include <string>
 #include <inttypes.h>
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 #include "muParser/muParser.h"
 #include "AnalyzerSoft.h"
 // ---------------------------------------------------------------------------------------------------------------------

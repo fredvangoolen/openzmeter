@@ -16,7 +16,7 @@
 #pragma once
 #include <pthread.h>
 #include <stdlib.h>
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 using namespace std;

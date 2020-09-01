@@ -7,6 +7,7 @@
   import chroma from 'chroma-js';
   import * as oZm from 'JS/openZmeter.js';
   import Vue from 'vue';
+  import moment from 'moment';
   const This = Vue.prototype;
   var PatternImg = new Image();
   PatternImg.onload = () => {};
@@ -59,12 +60,11 @@
       clearInterval(context.MouseWheelTimer);
       context.MouseWheelTimer = setTimeout( () => {
         if(g.file_.length > 0) g.updateOptions({ file: [Array(g.file_[0].length).fill(0)] }, false);
-        this.This.$emit('range', Window);
+        this.This.$emit('range', [Math.round(Window[0]), Math.round(Window[1])]);
       }, 500);
     }
     g.updateOptions({ dateWindow: Window });
   }
-
   function touchStart(event, g, context) {
     event.preventDefault();
     if(event.touches.length > 1) context.startTimeForDoubleTapMs = null;
@@ -116,7 +116,7 @@
     }
     if(this.Fixed == false) {
       if(g.file_.length > 0) g.updateOptions({ file: [Array(g.file_[0].length).fill(0)] }, false);
-      this.This.$emit('range', g.dateWindow_);
+      this.This.$emit('range', [Math.round(g.dateWindow_[0]), Math.round(g.dateWindow_[1])]);
     }
   }
   export default {
@@ -165,6 +165,31 @@
           }
         }
         return Result;
+      },
+      X_HourlyFull: function(min, max, pixels, tz) {
+        var ticks = [];
+        if((tz == null) || (isNaN(pixels))) return ticks;
+        var Min = moment.tz(min, tz).startOf('hour');
+        var Max = moment.tz(max, tz).endOf('hour');
+        var HoursDiff = moment.duration(Max.diff(Min)).asHours();
+        var DaysDiff = moment.duration(Max.diff(Min)).asDays();
+        if(HoursDiff < 48) {
+          for(var h = Min; h.isBefore(Max); h.add(1, 'hour')) ticks.push({ v: h.valueOf(), label: (h.hours() == 0) ? '<strong>' + h.format('DD/MM') + '</strong>' : h.format('HH') + 'h' });
+        } else {
+          var Inc = Math.max(1, Math.trunc(DaysDiff / (pixels / 50)));
+          var Min = Min.startOf('day');
+          var Max = Max.endOf('day');
+          for(var h = Min; h.isBefore(Max); h.add(Inc, 'day')) ticks.push({ v: h.valueOf(), label: h.format('DD/MM') });
+        }
+        return ticks;
+      },
+      X_Hourly: function(x, tz, quarters) {
+        var Time = moment(x).tz(tz);
+        if(quarters == true) {
+          return Time.hours() + 'h (' + (Math.trunc(Time.minute() / 15) + 1) + 'Q) - ' + Time.format('DD/MM/YYYY');
+        } else {
+          return Time.hours() + 'h - ' + Time.format('DD/MM/YYYY');
+        }
       },
       Y_UnitScale: function(x, units, dec, html) {
         if(dec == null) dec = 2;
@@ -245,8 +270,8 @@
           var x_left = g.UndoHighlight.cx[serieIndex] - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
           canvasContext.fillRect(x_left, g.UndoHighlight.cy[serieIndex], g.subbar_width, g.y_bottom - g.UndoHighlight.cy[serieIndex]);
         }
-        g.UndoHighlight.cx[serieIndex]=cx;
-        g.UndoHighlight.cy[serieIndex]=cy;
+        g.UndoHighlight.cx[serieIndex] = cx;
+        g.UndoHighlight.cy[serieIndex] = cy;
         canvasContext.fillStyle = chroma(color).brighten(2);
         var x_left = cx - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
         canvasContext.fillRect(x_left, cy, g.subbar_width, g.y_bottom - cy);
@@ -295,6 +320,23 @@
             var x_left = p.canvasx - (g.subbar_width * sets.length / 2) + j * g.subbar_width;
             ctx.fillRect(x_left, p.canvasy, g.subbar_width, y_bottom - p.canvasy);
           }
+        }
+      },
+      BarOffset: function(e, offset) {
+        var ctx = e.drawingContext;
+        var points = e.points;
+        var y_bottom = e.dygraph.toDomYCoord(0);
+        var g = e.dygraph;
+        g.UndoHighlight = { cx: [], cy: [] };
+        g.SeriesCount = 1;
+        g.y_bottom = e.dygraph.toDomYCoord(0);
+        g.subbar_width = Math.max(1.0, e.dygraph.toDomXCoord(offset) - e.dygraph.toDomXCoord(0));
+        ctx.strokeStyle = e.color;
+        ctx.fillStyle = e.color;
+        for(var j = 0; j < points.length; j++) {
+          var p = points[j];
+          p.canvasx = p.canvasx - (g.subbar_width / 2.0);
+          ctx.fillRect(p.canvasx - (g.subbar_width / 2.0), p.canvasy, g.subbar_width, y_bottom - p.canvasy);
         }
       }
     },

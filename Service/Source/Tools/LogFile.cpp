@@ -18,7 +18,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 #include "LogFile.h"
 #include "ConfigFile.h"
 //----------------------------------------------------------------------------------------------------------------------

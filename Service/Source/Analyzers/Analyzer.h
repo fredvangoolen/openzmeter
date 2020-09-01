@@ -16,7 +16,7 @@
 #pragma once
 #include <vector>
 #include <complex>
-#include "nlohmann/json.h"
+#include "nlohmann/json.hpp"
 #include "Tools.h"
 #include "Database.h"
 #include "HTTPServer.h"
