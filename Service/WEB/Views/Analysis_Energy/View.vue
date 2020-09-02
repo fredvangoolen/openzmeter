@@ -99,11 +99,12 @@
     },
     methods: {
       Export: function() {
-        var Data = [['Time', 'Period', 'Active energy', 'Reactive energy']];
-        if(this.TransferGraph.Data != null) {
-          var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
-          for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], 'P' + this.TransferGraph.Data.Period_Number[n], this.Round(this.TransferGraph.Data.Active_Power[n] / Div, 3), this.Round(this.TransferGraph.Data.Reactive_Power[n] / Div, 3)]);
-        }
+        if(this.TransferGraph.Data == null) return [];
+        var Data = [['Time', 'Active energy', 'Reactive energy']];
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf("Sampletime");
+        var ActiveCol = this.TransferGraph.Data.Headers.indexOf("Active_Energy");
+        var ReactiveCol = this.TransferGraph.Data.Headers.indexOf("Reactive_Energy");
+        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ReactiveCol], 3)]);
         return Object.seal(Data);
       }
     },

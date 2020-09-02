@@ -48,7 +48,7 @@
       return { };
     },
     updated: function() {
-      this.$emit('update:height', this.$el.clientHeight);
+      this.$emit('update:height', this.$el.clientHeight - 10);
     },
     computed: {
       Min: function() {

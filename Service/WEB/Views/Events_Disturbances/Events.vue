@@ -58,7 +58,7 @@
       events: function() {
         var Events = [];
         if(this.events == null) return [];
-        for(var x = 0; x < this.events.StartTime.length; x++) {
+        for(var x = 0; x < this.events.Rows.length; x++) {
           if(this.events.Deleted[x] == true) continue;
           var Event = { id: x,
                         StartTime: this.events.StartTime[x],

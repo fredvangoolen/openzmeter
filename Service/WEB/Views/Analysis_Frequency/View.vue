@@ -15,11 +15,11 @@
             </portal>
           </div>
           <div class="panel-body">
-            <spinner v-if="TransferGraph.Data==null"></spinner>
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :dataNow="TransferNow.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+                  <spinner v-if="TransferGraph.Data==null"></spinner>
                   <frequency :analyzer="analyzer" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></frequency>
                 </portal>
               </div>
@@ -72,7 +72,9 @@
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
         var Rows = [['Time', 'Frequency']];
-        for(var n in this.TransferGraph.Data.Sampletime) Rows.push([this.TransferGraph.Data.Sampletime[n], this.Round(this.TransferGraph.Data.Frequency[n], 3)]);
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf("Sampletime");
+        var ValueCol = this.TransferGraph.Data.Headers.indexOf("Frequency");
+        for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) Rows.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[n][TimeCol]), this.Round(this.TransferGraph.Data.Rows[n][ValueCol], 3)]);
         return Object.seal(Rows);
       }
     },

@@ -5,21 +5,25 @@
         <div class="panel panel-current">
           <div class="panel-heading">
             <div class="header-text">Current</div>
-            <div class="header-buttons clearfix">
+            <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
               <toolbar-aggregation storage="Aggregation" :options="['3S', '1M', '10M', '1H']" v-model="Aggreg"></toolbar-aggregation>
               <toolbar-period storage="Period" v-model="Range" :analyzer="analyzer"></toolbar-period>
               <toolbar-phases storage="ViewPhases" :analyzer="analyzer" :current="true" :multi="true" v-model="Phases"></toolbar-phases>
               <div class="btn-group">
                 <button-export file="Current" :rows="Export"></button-export>
-                <button-expand :expanded.sync="Expanded"></button-expand>
+                <button-expand v-model="Expanded"></button-expand>
               </div>
-            </div>
+            </portal>
           </div>
           <div class="panel-body">
-            <spinner v-if="TransferGraph.Data==null"></spinner>
             <div class="row">
               <counters class="col-md-6 col-lg-4 col-xl-3" :analyzer="analyzer" :data1M="Transfer1M.LastData" :data3S="Transfer3S.LastData" :dataGraph="TransferGraph.Data" :height.sync="Height"></counters>
-              <current class="col-md-6 col-lg-8 col-xl-9" :phases="Phases" :analyzer="analyzer" :data="TransferGraph.Data" :height="Height" @range="Range=$event"></current>
+              <div class="col-md-6 col-lg-8 col-xl-9">
+                <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+                  <spinner v-if="TransferGraph.Data==null"></spinner>
+                  <current :phases="Phases" :analyzer="analyzer" :data="TransferGraph.Data" :height="Expanded?DialogHeight:Height" @range="Range=$event"></current>
+                </portal>
+              </div>
             </div>
           </div>
         </div>
@@ -34,6 +38,7 @@
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
       </div>
     </div>
+    <dlg-fs v-if="Expanded" title="Voltage" :height.sync="DialogHeight"></dlg-fs>
   </div>
   <div v-else-if="analyzer == null">
     <div class="alert alert-danger text-center">
@@ -53,7 +58,7 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { ActiveTab: '', Aggreg: '', Range: null, Phases: null, Height: 300, Paused: false, Expanded: false,
+      return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
                TransferGraph: this.SeriesTransfer(['CURRENT']),
                TransferNow: this.NowTransfer(['CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
                TransferCubism: this.SeriesTransfer(['CURRENT_HARMONICS', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
