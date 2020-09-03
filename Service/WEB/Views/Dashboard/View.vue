@@ -20,7 +20,7 @@
               <div class="col-md-7 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!Expanded" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy :analyzer="analyzer" :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :bills="TransferGraph.Bills" @range="Range=$event"></energy>
+                  <energy :analyzer="analyzer" :height="Expanded?DialogHeight:Height-10" :data="TransferGraph.Data" @range="Range=$event"></energy>
                 </portal>
               </div>
             </div>
@@ -120,7 +120,10 @@
         var TimeCol = this.TransferGraph.Data.Headers.indexOf("Sampletime");
         var ActiveCol = this.TransferGraph.Data.Headers.indexOf("Active_Energy");
         var ExpenseCol = this.TransferGraph.Data.Headers.indexOf("Cost");
-        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ExpenseCol], 3)]);
+        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) {
+          if(this.TransferGraph.Data.Rows[i][ActiveCol] == null) continue;
+          Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ExpenseCol], 3)]);
+        }
         return Object.seal(Data);
       }
     },

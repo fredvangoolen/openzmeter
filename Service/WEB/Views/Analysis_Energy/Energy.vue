@@ -28,7 +28,7 @@
         Opt.plotter = (e) => { Graph.Plotters.BarOffset(e, ((this.data != null) && (this.data.Aggreg == '1H')) ? 3600000 : 900000); };
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
-        Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.periods, this.bills) };
+        Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.data) };
         Opt.labels = (this.serie == 'Active_Energy') ? ['Time', 'Active Energy'] : ['Time', 'Reactive Energy'];
         Opt.colors = [this.analyzer.Color[this.serie]];
         Opt.xAxisHeight = 12;
@@ -42,7 +42,8 @@
         if(this.data != null) {
           var TimeCol = this.data.Headers.indexOf('Sampletime');
           var ValueCol = this.data.Headers.indexOf(this.serie);
-          for(var n in this.data.Rows) Opt.file.push([this.data.Rows[n][TimeCol], this.data.Rows[n][ValueCol]]);
+          console.log(this.serie);
+          for(var n = 0; n < this.data.Rows.length; n++) Opt.file.push([this.data.Rows[n][TimeCol], this.data.Rows[n][ValueCol]]);
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { incZero: 10 });
           Opt.dateWindow = [this.data.From, this.data.To];
         }

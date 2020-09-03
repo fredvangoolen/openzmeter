@@ -21,7 +21,7 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="Active_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ActiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
-                  <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :showContracted="ShowContracted" :periods="TransferGraph.Periods" :bills="TransferGraph.Bills" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
+                  <power serie="Active_Power" :analyzer="analyzer" :data="TransferGraph.Data" :showContracted="ShowContracted" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -45,7 +45,7 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="Reactive_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
-                  <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :bills="TransferGraph.Bills" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></power>
+                  <power serie="Reactive_Power" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -69,7 +69,7 @@
               <counters class="col-md-6 col-lg-4 col-xl-3" serie="Apparent_Power" :analyzer="analyzer" :data3S="Transfer3S.LastData" :data1M="Transfer1M.LastData" :dataGraph="TransferGraph.Data" :height.sync="ReactiveHeight"></counters>
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedApparent" class="panel-body">
-                  <power serie="Apparent_Power" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :bills="TransferGraph.Bills" :height="ExpandedApparent?DialogHeight:AppaerentHeight" @range="Range=$event"></power>
+                  <power serie="Apparent_Power" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedApparent?DialogHeight:AppaerentHeight" @range="Range=$event"></power>
                 </portal>
               </div>
             </div>
@@ -159,10 +159,14 @@
     },
     methods: {
       Export: function() {
-        var Data = [['Time', 'Period', 'Contracted', 'Active power', 'Reactive power']];
+        if(this.TransferGraph.Data == null) return [];
+        var Data = [['Time', 'Active power', 'Reactive power', 'Apparent power']];
         var TimeCol = this.TransferGraph.Data.Headers.indexOf('Sampletime');
-        if(this.TransferGraph.Data != null) {
-          for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], 'P' + this.TransferGraph.Data.Period_Number[n], this.Round(this.TransferGraph.Data.Period_Power[n], 3), this.Round(this.TransferGraph.Data.Active_Power[n], 3), this.Round(this.TransferGraph.Data.Reactive_Power[n], 3)]);
+        var ActiveCol = this.TransferGraph.Data.Headers.indexOf("Active_Power");
+        var ReactiveCol = this.TransferGraph.Data.Headers.indexOf("Reactive_Power");
+        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) {
+          if(this.TransferGraph.Data.Rows[i][ActiveCol] == null) continue;
+          Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ReactiveCol], 3), this.Round(Math.sqrt(Math.pow(this.TransferGraph.Data.Rows[i][ReactiveCol], 2.0) + Math.pow(this.TransferGraph.Data.Rows[i][ActiveCol], 2.0)), 3)]);
         }
         return Object.seal(Data);
       }
