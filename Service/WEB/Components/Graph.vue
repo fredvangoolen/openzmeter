@@ -160,7 +160,7 @@
         if(data.x === undefined || data.x === null) return "";
         var Result = '<span class="dygraph-legend-title">' + data.xHTML + '</span><br>';
         for(var i = 0; i < data.series.length; i++)  {
-          if(data.series[i].isVisible) {
+          if((data.series[i].isVisible) && (data.series[i].yHTML != null)) {
             Result = Result + data.series[i].label + ' : ' + data.series[i].yHTML + '<br>';
           }
         }
@@ -215,41 +215,55 @@
         ctx.strokeRect(area.x, area.y, area.w, area.h);
         ctx.restore();
       },
-      Underlay_DrawPeriods: function(canvas, area, g, periods, bills) {
+      Underlay_DrawPeriods: function(canvas, area, g, data) {
+        var DrawPeriod = (color, period, from, to) => {
+          if((Color == null) || (period == null)) return;
+          var Left = g.toDomXCoord(from);
+          var Right = g.toDomXCoord(to);
+          if(Left < (area.x + 1)) Left = (area.x + 1);
+          if(Right > (area.w + area.x - 1)) Right = (area.w + area.x - 1);
+          canvas.fillStyle = color;
+          canvas.fillRect(Left, area.y + 1, Right - Left, 12);
+          if((Right - Left) > 20) {
+            canvas.fillStyle = '#000000';
+            canvas.font = "10px 'Fira Code";
+            canvas.fillText('P' + period, Left + 1, 10);
+          }
+        };
         canvas.save();
-        if(bills != null) {
-          for(var i in bills) {
-            canvas.strokeStyle = '#d9534f';
-            canvas.lineWidth = 1;
+        var TimeCol = (data != null) ? data.Headers.indexOf('Sampletime') : -1;
+        var BillCol = (data != null) ? data.Headers.indexOf('Bill') : -1;
+        var PeriodCol = (data != null) ? data.Headers.indexOf('Period') : -1;
+        var ColorCol = (data != null) ? data.Headers.indexOf('Color') : -1;
+        if(BillCol != -1) {
+          canvas.strokeStyle = '#d9534f';
+          canvas.lineWidth = 1.5;
+          for(var i = 0; i < data.Rows.length; i++) {
+            if(data.Rows[i][BillCol] == false) continue;
+            var X = g.toDomXCoord(data.Rows[i][TimeCol]);
             canvas.beginPath();
-            var X = g.toDomXCoord(bills[i]);
-            canvas.moveTo(X, 0);
+            canvas.moveTo(X, 13);
             canvas.lineTo(X, area.h);
             canvas.stroke();
           }
         }
-        if(periods != null) {
-          canvas.strokeStyle = '#000';
+        if(PeriodCol != -1) {
           var EmptyPattern = canvas.createPattern(PatternImg, "repeat");
+          var Color = null;
+          var From = null;
+          var Period = null;
+          canvas.strokeStyle = '#000';
           canvas.fillStyle = EmptyPattern;
           canvas.fillRect(area.x, area.y, area.w, 13);
-          var PeriodCol = periods.Headers.indexOf('Period');
-          var ColorCol = periods.Headers.indexOf('Color');
-          var TimeCol = periods.Headers.indexOf('Sampletime');
-          for(var i = 1; i < periods.Rows.length; i++) {
-            if(periods.Rows[i][PeriodCol] == null) continue;
-            var Left = g.toDomXCoord(periods.Rows[i - 1][TimeCol]);
-            var Right = g.toDomXCoord(periods.Rows[i][TimeCol] - 1);
-            if(Left < (area.x + 1)) Left = (area.x + 1);
-            if(Right > (area.w + area.x - 1)) Right = (area.w + area.x - 1);
-            canvas.fillStyle = periods.Rows[i - 1][ColorCol];
-            canvas.fillRect(Left, area.y + 1, Right - Left, 12);
-            if(((Right - Left) > 20) && (periods.Rows[i - 1][PeriodCol] != null)) {
-              canvas.fillStyle = '#000000';
-              canvas.font = "10px 'Fira Code";
-              canvas.fillText(periods.Rows[i - 1][PeriodCol], Left + 1, 10);
+          for(var i = 0; i < data.Rows.length; i++) {
+            if((Color != data.Rows[i][ColorCol]) || (Period != data.Rows[i][PeriodCol])) {
+              DrawPeriod(Color, Period, From, data.Rows[i][TimeCol] - 900000);
+              Color = data.Rows[i][ColorCol];
+              Period = data.Rows[i][PeriodCol];
+              From = data.Rows[i][TimeCol] - 899999;
             }
           }
+          if(data.Rows.length > 1) DrawPeriod(Color, Period, From, data.Rows.slice(-1)[0][TimeCol]);
         }
         canvas.strokeStyle = '#000';
         canvas.strokeRect(area.x, area.y, area.w, area.h);
@@ -259,6 +273,8 @@
         canvas.lineTo(area.x + area.w, 13.5);
         canvas.stroke();
         canvas.restore();
+        canvas.rect(area.x + 1, area.y + 14, area.w - 2, area.h - 15);
+        canvas.clip();
       },
       DrawHighlightPoint_HighlightBar: function(g, seriesName, canvasContext, cx, cy, color, pointSize) {
         var serieIndex = g.user_attrs_.labels.indexOf(seriesName) - 1;
@@ -335,9 +351,67 @@
         ctx.fillStyle = e.color;
         for(var j = 0; j < points.length; j++) {
           var p = points[j];
+          if(isNaN(p.y)) {
+            p.canvasx = null;
+            p.canvasy = null;
+            continue;
+          }
           p.canvasx = p.canvasx - (g.subbar_width / 2.0);
           ctx.fillRect(p.canvasx - (g.subbar_width / 2.0), p.canvasy, g.subbar_width, y_bottom - p.canvasy);
         }
+      },
+      LineOffset: function(e, offset) {
+        var ctx = e.drawingContext;
+        var points = e.points;
+        var y_bottom = e.dygraph.toDomYCoord(0);
+        var g = e.dygraph;
+        g.UndoHighlight = { cx: [], cy: [] };
+        g.SeriesCount = 1;
+        g.y_bottom = e.dygraph.toDomYCoord(0);
+        g.subbar_width = Math.max(1.0, e.dygraph.toDomXCoord(offset) - e.dygraph.toDomXCoord(0));
+        ctx.strokeStyle = e.color;
+        if(e.seriesIndex == 0) {
+          ctx.fillStyle = chroma(e.color).alpha(0.2);
+          ctx.beginPath();
+          var prevX = null;
+          for(var j = 0; j < points.length; j++) {
+            var p = points[j];
+            if(isNaN(p.y)) {
+              p.canvasx = null;
+              p.canvasy = null;
+              continue;
+            }
+            if(prevX == null) {
+              ctx.moveTo(e.dygraph.toDomXCoord(p.xval - offset), g.y_bottom);
+              ctx.lineTo(e.dygraph.toDomXCoord(p.xval - offset), p.canvasy);
+            } else {
+              ctx.lineTo(prevX, p.canvasy);
+            }
+            ctx.lineTo(p.canvasx, p.canvasy);
+            prevX = p.canvasx;
+          }
+          if(prevX != null) ctx.lineTo(prevX, g.y_bottom);
+          ctx.fill();
+        }
+        var prevX = null;
+        ctx.beginPath();
+        for(var j = 0; j < points.length; j++) {
+          var p = points[j];
+          if(isNaN(p.y)) {
+            p.canvasx = null;
+            p.canvasy = null;
+            continue;
+          }
+          if(prevX == null) {
+            ctx.moveTo(e.dygraph.toDomXCoord(p.xval - offset), p.canvasy);
+          } else {
+            ctx.lineTo(prevX, p.canvasy);
+          }
+          ctx.lineTo(p.canvasx, p.canvasy);
+          prevX = p.canvasx;
+          p.canvasx = p.canvasx - (g.subbar_width / 2.0);
+        }
+        ctx.stroke();
       }
     },
     InteractionModels: {

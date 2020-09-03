@@ -58,24 +58,31 @@
         return { From: this.data.From, To: this.data.To, TimeZone: this.analyzer.TimeZone, Rows: Data };
       },
       Export: function() {
-        if((this.data == null) || (this.analyzer == null)) return [];
-        var Header = ['Sample']
+        if(this.data == null) return [];
+        var Header = [['Sample']
           .concat(this.analyzer.GetSeriesNames('Active Power', this.analyzer.VoltageChannels))
           .concat(this.analyzer.GetSeriesNames('Reactive Power', this.analyzer.VoltageChannels))
           .concat(this.analyzer.GetSeriesNames('Apparent Power', this.analyzer.VoltageChannels))
           .concat(this.analyzer.GetSeriesNames('Power Factor', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels));
-        var Data = [Header];
-        for(var n in this.data.Sampletime) {
-          var Row = [this.data.Sampletime[n]];
-          for(var i in this.data.Active_Power[n]) Row.push(this.Round(this.data.Active_Power[n][i], 3));
-          for(var i in this.data.Reactive_Power[n]) Row.push(this.Round(this.data.Reactive_Power[n][i], 3));
-          for(var i in this.data.Voltage[n]) Row.push(this.Round(this.data.Voltage[n][i] * this.data.Current[n][i], 3));
-          for(var i in this.data.Power_Factor[n]) Row.push(this.Round(this.data.Power_Factor[n][i], 3));
-          for(var i in this.data.Phi[n]) Row.push(this.Round(this.data.Phi[n][i], 3));
-          Data.push(Row);
+          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels))
+        ];
+        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var ActiveCol = this.data.Headers.indexOf('Active_Power');
+        var ReactiveCol = this.data.Headers.indexOf('Reactive_Power');
+        var PowerFactorCol = this.data.Headers.indexOf('Power_Factor');
+        var VoltageCol = this.data.Headers.indexOf('Voltage');
+        var CurrentCol = this.data.Headers.indexOf('Current');
+        var PhiCol = this.data.Headers.indexOf('Phi');
+        for(var n = 0; n < this.data.Rows.length; n++) {
+          var Row = [this.analyzer.FormatDateTime(this.data.Rows[n][TimeCol])];
+          for(var i in this.data.Rows[n][ActiveCol]) Row.push(this.Round(this.data.Rows[n][ActiveCol][i], 3));
+          for(var i in this.data.Rows[n][ReactiveCol]) Row.push(this.Round(this.data.Rows[n][ReactiveCol][i], 3));
+          for(var i in this.data.Rows[n][VoltageCol]) Row.push(this.Round(this.data.Rows[n][VoltageCol][i] * this.data.Rows[n][CurrentCol][i], 3));
+          for(var i in this.data.Rows[n][PowerFactorCol]) Row.push(this.Round(this.data.Rows[n][PowerFactorCol][i], 3));
+          for(var i in this.data.Rows[n][PhiCol]) Row.push(this.Round(this.data.Rows[n][PhiCol][i], 3));
+          Header.push(Row);
         }
-        return Object.seal(Data);
+        return Object.seal(Header);
       }
     },
     mounted: function() {

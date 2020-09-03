@@ -50,12 +50,14 @@
         if(this.data == null) return [];
         var Data = [];
         var Header = ['Time'];
-        for(var n in this.analyzer.HarmonicsNames) Header = Header.concat(this.analyzer.GetSeriesNames(this.analyzer.HarmonicsNames[n], this.analyzer.VoltageChannels))
+        for(var n in this.analyzer.HarmonicsNames) Header = Header.concat(this.analyzer.GetSeriesNames(this.analyzer.HarmonicsNames[n], this.analyzer.VoltageChannels));
         Data.push(Header);
-        for(var n in this.data.Sampletime) {
-          var Row = [this.data.Sampletime[n]];
-          for(var i in this.analyzer.HarmonicsNames) {
-            for(var j in this.data.Power_Harmonics[n]) Row.push(this.Round(this.data.Power_Harmonics[n][j][i], 3));
+        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var DataCol = this.data.Headers.indexOf('Power_Harmonics');
+        for(var n = 0; n < this.data.Rows.length; n++) {
+          var Row = [this.analyzer.FormatDateTime(this.data.Rows[n][TimeCol])];
+          for(var i = 0; i < this.analyzer.HarmonicsNames.length; i++) {
+            for(var j = 0; j < this.analyzer.VoltageChannels; j++) Row.push(this.Round(this.data.Rows[n][DataCol][j][i], 3));
           }
           Data.push(Row);
         }

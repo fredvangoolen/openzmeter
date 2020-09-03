@@ -52,7 +52,7 @@
       return { };
     },
     updated: function() {
-      this.$emit('update:height', this.$el.clientHeight);
+      this.$emit('update:height', this.$el.clientHeight - 14);
     },
     computed: {
       Max: function() {

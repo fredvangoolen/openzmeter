@@ -20,7 +20,7 @@
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy serie="Active_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :bills="TransferGraph.Bills" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></energy>
+                  <energy serie="Active_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></energy>
                 </portal>
               </div>
             </div>
@@ -44,7 +44,7 @@
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy serie="Reactive_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :bills="TransferGraph.Bills" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></energy>
+                  <energy serie="Reactive_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></energy>
                 </portal>
               </div>
             </div>
@@ -87,7 +87,7 @@
     watch: {
       analyzer: function() {
         this.Transfer15M.Update(this.analyzer, '15M', 'LastHours');
-        this.Transfer1H.Update(this.analyzer, '1M', 'LastDay');
+        this.Transfer1H.Update(this.analyzer, '1H', 'LastDay');
         this.TransferGraph.Update(this.analyzer, this.Aggreg, this.Range);
       },
       Aggreg: function(val, prev) {
@@ -104,7 +104,10 @@
         var TimeCol = this.TransferGraph.Data.Headers.indexOf("Sampletime");
         var ActiveCol = this.TransferGraph.Data.Headers.indexOf("Active_Energy");
         var ReactiveCol = this.TransferGraph.Data.Headers.indexOf("Reactive_Energy");
-        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ReactiveCol], 3)]);
+        for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) {
+          if(this.TransferGraph.Data.Rows[i][ActiveCol] == null) continue;
+          Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ReactiveCol], 3)]);
+        }
         return Object.seal(Data);
       }
     },
