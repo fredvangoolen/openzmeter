@@ -39,7 +39,7 @@
         this.Periods = [];
         if(this.data == null) return;
         var Max = 0.0;
-        var TimeCol = this.data[0].indexOf('Sampletime');
+        var TimeCol = this.data[0].indexOf('Time');
         var PeriodCol = this.data[0].indexOf('Period');
         var EnergyCol = this.data[0].indexOf('Active_Energy');
         for(var i = 1; i < this.data.length; i++) {

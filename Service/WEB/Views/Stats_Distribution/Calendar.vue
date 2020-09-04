@@ -39,7 +39,7 @@
       SetData: function() {
         this.Days = [];
         if(this.data == null) return;
-        var TimeCol = this.data[0].indexOf('Sampletime');
+        var TimeCol = this.data[0].indexOf('Time');
         var EnergyCol = this.data[0].indexOf('Active_Energy');
         for(var i = 1; i < this.data.length; i++) {
           var Day = moment(this.data[i][TimeCol]).tz(this.analyzer.TimeZone).dayOfYear();

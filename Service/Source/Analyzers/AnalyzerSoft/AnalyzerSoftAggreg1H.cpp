@@ -27,9 +27,18 @@ constexpr float   AnalyzerSoftAggreg1H::UnbalanceRanges[];
 const     uint8_t AnalyzerSoftAggreg1H::UnbalanceRangesLen;
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftAggreg1H::AnalyzerSoftAggreg1H(const string &serial, const Analyzer::AnalyzerMode mode) : AnalyzerSoftAggreg(serial, mode) {
+  pNominalFrequency = 0;
+  pNominalVoltage   = 0;
+  pMutex            = PTHREAD_MUTEX_INITIALIZER;
   Reset();
 }
 AnalyzerSoftAggreg1H::~AnalyzerSoftAggreg1H() {
+}
+void AnalyzerSoftAggreg1H::Config(const float nominalVoltage, const float nominalFreq) {
+  pthread_mutex_lock(&pMutex);
+  pNominalVoltage   = nominalVoltage;
+  pNominalFrequency = nominalFreq;
+  pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoftAggreg1H::Save() const {
   Database DB(pSerial);
@@ -68,6 +77,7 @@ void AnalyzerSoftAggreg1H::AccumulateStats(const AnalyzerSoftAggreg3S *params) {
 }
 void AnalyzerSoftAggreg1H::AccumulateStats(const AnalyzerSoftAggreg10M *params) {
   if(params->Flag() == true) return;
+  pthread_mutex_lock(&pMutex);
   for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
     if((params->Unbalance() >= UnbalanceRanges[Range]) && (params->Unbalance() < UnbalanceRanges[Range + 1])) pStatsUnbalance[Range]++;
   }
@@ -93,6 +103,7 @@ void AnalyzerSoftAggreg1H::AccumulateStats(const AnalyzerSoftAggreg10M *params) 
       pStatsHarmonics[1]++;
     }
   }
+  pthread_mutex_unlock(&pMutex);
 }
 bool AnalyzerSoftAggreg1H::Normalize() {
   if(pSamples < 16000) return false;

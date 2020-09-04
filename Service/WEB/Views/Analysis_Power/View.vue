@@ -161,7 +161,7 @@
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
         var Data = [['Time', 'Active power', 'Reactive power', 'Apparent power']];
-        var TimeCol = this.TransferGraph.Data.Headers.indexOf('Sampletime');
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
         var ActiveCol = this.TransferGraph.Data.Headers.indexOf("Active_Power");
         var ReactiveCol = this.TransferGraph.Data.Headers.indexOf("Reactive_Power");
         for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) {

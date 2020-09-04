@@ -153,7 +153,7 @@ void AnalyzerSoftStorage::GetSeries(const json &params, Response &response) cons
   }
   auto Func = [&, To, From, Aggreg, Series](uint64_t offset, DataSink &sink) -> bool {
     string   Cols    = "sampletime";
-    json     Headers = {"Sampletime"};
+    json     Headers = {"Time"};
     uint64_t Start   = From;
     if(Series & SERIE_FREQUENCY)         { Headers.push_back("Frequency");         Cols.append(", freq"); }
     if(Series & SERIE_UNBALANCE)         { Headers.push_back("Unbalance");         Cols.append(", unbalance"); }
@@ -183,7 +183,7 @@ void AnalyzerSoftStorage::GetSeries(const json &params, Response &response) cons
       if(Aggreg == "1M") {
         DB.ExecSentenceAsyncResult("SELECT sampletime, json_build_array(" + Cols + ") AS result FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m WHERE sampletime >= " + DB.Bind(Start) + " ORDER BY sampletime ASC LIMIT 1000");
       } else {
-        DB.ExecSentenceAsyncResult("SELECT sampletime, json_build_array(" + Cols +") AS result FROM " + "aggreg_" + Aggreg + " WHERE sampletime >= " + DB.Bind(Start) + " ORDER BY sampletime ASC LIMIT 1000");
+        DB.ExecSentenceAsyncResult("SELECT sampletime, json_build_array(" + Cols + ") AS result FROM " + "aggreg_" + Aggreg + " WHERE sampletime >= " + DB.Bind(Start) + " ORDER BY sampletime ASC LIMIT 1000");
       }
       while(DB.FecthRow() && sink.is_writable()) {
         Start = DB.ResultUInt64("sampletime") + 1;

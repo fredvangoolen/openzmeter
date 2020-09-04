@@ -41,7 +41,7 @@
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         Opt.series = { 'Contracted Power': { strokeWidth: 1, fillGraph: false, plotter: (e) => { Graph.Plotters.LineOffset(e, 900000); } } };
         if(this.data != null) {
-          var TimeCol = this.data.Headers.indexOf('Sampletime');
+          var TimeCol = this.data.Headers.indexOf('Time');
           var ActiveCol = this.data.Headers.indexOf('Active_Power');
           var ReactiveCol = this.data.Headers.indexOf('Reactive_Power');
           var ContractedCol = this.data.Headers.indexOf('Power_Contracted');

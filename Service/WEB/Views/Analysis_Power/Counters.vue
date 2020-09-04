@@ -59,7 +59,7 @@
         var Max = { Value: -Infinity, Time: 0, Count: 0 };
         var Value = 0;
         if(this.dataGraph == null) return Max;
-        var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
         var ActiveCol = this.dataGraph.Headers.indexOf('Active_Power');
         var ReactiveCol = this.dataGraph.Headers.indexOf('Reactive_Power');
         var ContractedCol = this.dataGraph.Headers.indexOf('Power_Contracted');
@@ -82,7 +82,7 @@
         var Min = { Value: +Infinity, Time: 0, Count: 0 };
         var Value = 0;
         if(this.dataGraph == null) return Min;
-        var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
         var ActiveCol = this.dataGraph.Headers.indexOf('Active_Power');
         var ReactiveCol = this.dataGraph.Headers.indexOf('Reactive_Power');
         var ContractedCol = this.dataGraph.Headers.indexOf('Power_Contracted');

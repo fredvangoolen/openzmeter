@@ -231,7 +231,7 @@
           }
         };
         canvas.save();
-        var TimeCol = (data != null) ? data.Headers.indexOf('Sampletime') : -1;
+        var TimeCol = (data != null) ? data.Headers.indexOf('Time') : -1;
         var BillCol = (data != null) ? data.Headers.indexOf('Bill') : -1;
         var PeriodCol = (data != null) ? data.Headers.indexOf('Period') : -1;
         var ColorCol = (data != null) ? data.Headers.indexOf('Color') : -1;

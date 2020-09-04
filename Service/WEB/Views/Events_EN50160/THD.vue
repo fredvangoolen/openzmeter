@@ -2,7 +2,7 @@
   <div class="panel panel-reactive-power">
     <div class="panel-heading">
       <div class="float-left">Harmonic distorsion</div>
-      <div class="float-right" v-if="(((data[index].THDIN / data[index].THDSamples) * 100.0) < 100)">
+      <div class="float-right" v-if="(((data.THDIN / data.THDSamples) * 100.0) < 100)">
         <img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
       </div>
       <div class="clearfix"></div>
@@ -12,10 +12,10 @@
     </div>
     <div class="panel-footer">
       <div class="text-center">100% of the year under 8%</div>
-        <progress-bar :value="(((data[index].THDIN / data[index].THDSamples) * 100.0) - 80) * 5" :text="Round(((data[index].THDIN / data[index].THDSamples) * 100.0), 2) + '% of time in range'"></progress-bar>
+        <progress-bar :value="(((data.THDIN / data.THDSamples) * 100.0) - 80) * 5" :text="Round(((data.THDIN / data.THDSamples) * 100.0), 2) + '% of time in range'"></progress-bar>
         <div style="float: left; font-size: 10px">80%</div>
         <div style="float:right; font-size: 10px">100%</div>
-        <div class="clearfix text-center">{{ Round(((data[index].THDIN / data[index].THDSamples) * 100.0), 2) + '% of time in range' }}</div>
+        <div class="clearfix text-center">{{ Round(((data.THDIN / data.THDSamples) * 100.0), 2) + '% of time in range' }}</div>
     </div>
   </div>
 </template>
@@ -23,7 +23,7 @@
 <script>
   import Graph from 'Components/Graph.vue';
   export default {
-    props: { data: Array, index: Number, analyzer: Object, ranges: Array },
+    props: { data: Object, analyzer: Object, ranges: Array },
     data: function() {
       return { };
     },
@@ -65,9 +65,9 @@
           }
         };
         if(this.data != null) {
-          for(var i = 0; i < this.data[this.index].THD.length; i++) Opt.file.push([i, this.data[this.index].THD[i]]);
-          Opt.axes.y.valueFormatter = (x) => { return this.Round(x * 100.0 / this.data[this.index].THDSamples, 2) + ' %'; };
-          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x * 100 / this.data[this.index].THDSamples, 0) + '%'; };
+          for(var i = 0; i < this.data.THD.length; i++) Opt.file.push([i, this.data.THD[i]]);
+          Opt.axes.y.valueFormatter = (x) => { return this.Round(x * 100.0 / this.data.THDSamples, 2) + ' %'; };
+          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x * 100 / this.data.THDSamples, 0) + '%'; };
         }
         return Object.seal(Opt);
       }

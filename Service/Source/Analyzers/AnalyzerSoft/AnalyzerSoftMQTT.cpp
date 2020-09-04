@@ -115,8 +115,8 @@ void AnalyzerSoftMQTT::PublishAggreg(const string &aggreg, const AnalyzerSoftAgg
   pthread_mutex_lock(&pMutex);
   if((pClient.socketfd != -1) && (((aggreg == "3S") && (p3S == true)) || ((aggreg == "1M") && (p1M == true)) || ((aggreg == "10M") && (p10M == true)) || ((aggreg == "15M") && (p15M == true)) || ((aggreg == "1H") && (p1H == true)))) {
     json Result = json::object();
-    Result["Sampletime"] = params->Timestamp();
-    params->GetSeriesJSON("SAMPLETIME", Result);
+    Result["Time"] = params->Timestamp();
+    params->GetSeriesJSON("TIME", Result);
     params->GetSeriesJSON("FREQUENCY", Result);
     params->GetSeriesJSON("FLAG", Result);
     params->GetSeriesJSON("UNBALANCE", Result);

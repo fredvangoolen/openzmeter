@@ -39,7 +39,7 @@
         Opt.axes.x.ticker = (min, max, pixels) => { return Graph.Formatters.X_HourlyFull(min, max, pixels, (this.analyzer != null) ? this.analyzer.TimeZone : null); };
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
         if(this.data != null) {
-          var TimeCol = this.data.Headers.indexOf('Sampletime');
+          var TimeCol = this.data.Headers.indexOf('Time');
           var ValueCol = this.data.Headers.indexOf('Frequency');
           for(var n = 0; n < this.data.Rows.length; n++) Opt.file.push([this.data.Rows[n][TimeCol]].concat(this.data.Rows[n][ValueCol]));
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.05 });

@@ -39,7 +39,7 @@
       Sum: function() {
         var Sum = { Value: 0, Count: 0, Budget: 0 };
         if(this.data == null) return Sum;
-        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var TimeCol = this.data.Headers.indexOf('Time');
         var EnergyCol = this.data.Headers.indexOf('Active_Energy');
         var CostCol = this.data.Headers.indexOf('Cost');
         for(var x in this.data.Rows) {
@@ -52,7 +52,7 @@
       Max: function() {
         var Max = { Value: -Infinity, Time: 0, Count: 0 };
         if(this.data == null) return Max;
-        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var TimeCol = this.data.Headers.indexOf('Time');
         var EnergyCol = this.data.Headers.indexOf('Active_Energy');
         for(var x in this.data.Rows) {
           var Value = this.data.Rows[x][EnergyCol];

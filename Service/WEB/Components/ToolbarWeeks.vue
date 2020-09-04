@@ -3,12 +3,12 @@
     <div class="input-group input-group-xs">
       <span class="input-group-addon"><img :src="require('Imgs/calendar_view_day.png')"></span>
       <div class="input-group-btn">
-        <button class="btn btn-default dropdown-toggle" :class="{disabled: (weeks.length == 0)}" type="button" data-toggle="dropdown"><span>{{ SelectedText }}</span><span class="caret"></span></button>
+        <button class="btn btn-default dropdown-toggle" :class="{disabled: (weeks.length == 0)}" type="button" data-toggle="dropdown"><span>{{ value }}</span><span class="caret"></span></button>
         <ul class="dropdown-menu pull-right">
-          <li v-for="(week, id) in weeks" :class="{ active: (week == SelectedText) }" v-if="week != undefined"><a @click="WeekClick(id, $event)">
-              <img v-if="week.Warning===true" :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
-              <div v-if="week.Warning!==true"></div>
-              {{ week.Name }}</a></li>
+          <li v-for="(week, id) in weeks" :class="{ active: (id == value) }" :key="id"><a @click="$emit('input', id)">
+            <img v-if="week.Warning==true" :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
+            <div v-if="week.Warning==false"></div>
+            {{ id }}</a></li>
         </ul>
       </div>
     </div>
@@ -18,22 +18,14 @@
 <script>
   import moment from 'moment';
   export default {
-    props: { weeks: Array },
+    props: { weeks: Object, value: String },
     data() {
-      return { SelectedText: 'All year' };
+      return { };
     },
     methods: {
       WeekClick: function(week, event) {
         event.preventDefault();
-        this.SelectedText = this.weeks[week].Name;
-        this.$emit('WeekChanged', week);
-      }
-    },
-    watch: {
-      weeks: function(val) {
-        if(val.length === 0) return;
-        this.SelectedText = val[0].Name;
-        this.$emit('WeekChanged', 0);
+        this.$emit('input', week);
       }
     }
   }

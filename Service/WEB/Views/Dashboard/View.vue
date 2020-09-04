@@ -116,10 +116,10 @@
       },
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
-        var Data = [['Sampletime', 'Active Energy', 'Period expense']];
-        var TimeCol = this.TransferGraph.Data.Headers.indexOf("Sampletime");
-        var ActiveCol = this.TransferGraph.Data.Headers.indexOf("Active_Energy");
-        var ExpenseCol = this.TransferGraph.Data.Headers.indexOf("Cost");
+        var Data = [['Time', 'Active Energy', 'Period expense']];
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
+        var ActiveCol = this.TransferGraph.Data.Headers.indexOf('Active_Energy');
+        var ExpenseCol = this.TransferGraph.Data.Headers.indexOf('Cost');
         for(var i = 0; i < this.TransferGraph.Data.Rows.length; i++) {
           if(this.TransferGraph.Data.Rows[i][ActiveCol] == null) continue;
           Data.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[i][TimeCol]), this.Round(this.TransferGraph.Data.Rows[i][ActiveCol], 3), this.Round(this.TransferGraph.Data.Rows[i][ExpenseCol], 3)]);

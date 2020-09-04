@@ -61,7 +61,7 @@
         this.TimeLineDataset.clear();
         if(this.events == null) return;
         var Count = {Interruption: 0, Swell: 0, Dip: 0, RVC: 0 };
-        for(var i = 0; i < this.events.StartTime.length; i++) {
+        for(var i = 0; i < this.events.Rows.length; i++) {
           if(this.events.Deleted[i] == true) continue;
           var Item = {
             id: i,

@@ -64,7 +64,7 @@
         var Headers   = this.data[0];
         var Rows      = this.data.slice(1);
         var Tmp       = { };
-        var TimeCol   = Headers.indexOf('Sampletime');
+        var TimeCol   = Headers.indexOf('Time');
         var EnergyCol = Headers.indexOf('Active_Energy');
         for(var i = 0; i < Rows.length; i++) {
           var RowDate = moment(Rows[i][TimeCol]).tz(this.analyzer.TimeZone);

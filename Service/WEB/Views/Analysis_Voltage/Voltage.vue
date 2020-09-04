@@ -44,7 +44,7 @@
         Opt.labels = ['Time'].concat(VoltageNames);
         Opt.colors = VoltageStyle.Colors;
         if(this.data != null) {
-          var TimeCol = this.data.Headers.indexOf('Sampletime');
+          var TimeCol = this.data.Headers.indexOf('Time');
           var ValueCol = this.data.Headers.indexOf('Voltage');
           for(var n = 0; n < this.data.Rows.length; n++) Opt.file.push([this.data.Rows[n][TimeCol]].concat(this.data.Rows[n][ValueCol]));
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.phases), { defMin: 0, defMax: 1, percent: 0.01, minWidth: 10 });

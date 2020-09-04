@@ -13,24 +13,24 @@
             </div>
           </div>
           <div class="panel-body">
-            <spinner v-if="Data==null"></spinner>
-            <curve :data="Data" :analyzer="analyzer"></curve>
+            <spinner v-if="TransferEvents.Data==null"></spinner>
+            <curve :data="TransferEvents.Data" :analyzer="analyzer"></curve>
           </div>
         </div>
       </div>
     </div>
     <div class="row">
       <div class="col-xs-12 col-md-6">
-        <by-date :data="Data" :analyzer="analyzer"></by-date>
+        <by-date :data="TransferEvents.Data" :analyzer="analyzer"></by-date>
       </div>
       <div class="col-xs-12 col-md-6">
-        <by-type :data="Data" :analyzer="analyzer"></by-type>
+        <by-type :data="TransferEvents.Data" :analyzer="analyzer"></by-type>
       </div>
       <div class="col-xs-12 col-md-6">
-        <by-rms :data="Data" :analyzer="analyzer"></by-rms>
+        <by-rms :data="TransferEvents.Data" :analyzer="analyzer"></by-rms>
       </div>
       <div class="col-xs-12 col-md-6">
-        <by-duration :data="Data" :analyzer="analyzer"></by-duration>
+        <by-duration :data="TransferEvents.Data" :analyzer="analyzer"></by-duration>
       </div>
     </div>
   </div>
@@ -47,20 +47,17 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Year: null, Data: null };
+      return { Year: null, TransferEvents: this.EventsTransfer(this) };
+    },
+    created: function() {
+      this.TransferEvents.SingleShot = true;
     },
     watch: {
-      Year: function(val) {
-        this.Data = null;
-        var To   = moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
-        var From = moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getEvents', { From: From, To: To, Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            this.Data = Object.seal(result.data);
-          },
-          (fail) => { }
-        );
-      }
+      analyzer: function() { this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf()]); },
+      Year: function(val) { this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf()]); }
+    },
+    beforeDestroy: function() {
+      this.TransferEvents.Destroy();
     },
     methods: {
       Export: function() {

@@ -68,7 +68,7 @@
         var Val = +Infinity;
         var Min = { Value: [], Time: 0, Count: 0 };
         if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Min;
-        var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
         var ValueCol = this.dataGraph.Headers.indexOf('Voltage');
         for(var x = 0; x < this.dataGraph.Rows.length; x++) {
           for(var p = 0; p < this.dataGraph.Rows[x][ValueCol].length; p++) {
@@ -86,7 +86,7 @@
         var Val = -Infinity;
         var Max = { Value: [], Time: 0, Count: 0 };
         if((this.dataGraph == null) || (this.dataGraph.Rows.length == 0)) return Max;
-        var TimeCol = this.dataGraph.Headers.indexOf('Sampletime');
+        var TimeCol = this.dataGraph.Headers.indexOf('Time');
         var ValueCol = this.dataGraph.Headers.indexOf('Voltage');
         for(var x = 0; x < this.dataGraph.Rows.length; x++) {
           for(var p = 0; p < this.dataGraph.Rows[x][ValueCol].length; p++) {
