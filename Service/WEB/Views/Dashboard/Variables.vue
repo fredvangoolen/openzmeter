@@ -56,7 +56,7 @@
       FillSerie: function(name) {
         var Data = [];
         if(this.data == null) return { From: null, To: null, TimeZone: null, Rows: Data };
-        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var TimeCol = this.data.Headers.indexOf('Time');
         var DataCol = this.data.Headers.indexOf(name);
         for(var i = 0; i < this.data.Rows.length; i++) Data.push([this.data.Rows[i][TimeCol], this.data.Rows[i][DataCol][this.Phase]]);
         return { From: this.data.From, To: this.data.To, TimeZone: this.analyzer.TimeZone, Rows: Data };
@@ -71,7 +71,7 @@
           .concat(this.analyzer.GetSeriesNames('Voltage THD', this.analyzer.VoltageChannels))
           .concat(this.analyzer.GetSeriesNames('Current THD', this.analyzer.VoltageChannels))
         ];
-        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var TimeCol = this.data.Headers.indexOf('Time');
         var ActiveCol = this.data.Headers.indexOf('Active_Power');
         var ReactiveCol = this.data.Headers.indexOf('Reactive_Power');
         var PowerFactorCol = this.data.Headers.indexOf('Power_Factor');

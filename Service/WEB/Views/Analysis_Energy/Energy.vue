@@ -40,7 +40,7 @@
         Opt.axes.y.valueFormatter = (x) => { return this.Round(this.ScaleUnits(x, this.BestUnits(x)), 2, false) + ((this.serie == 'Active_Energy') ? ' Wh' : 'VArh');  };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return (g.axes_[0].valueRange == null) ? '' : this.Round(this.ScaleUnits(x, this.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), 2, true); };
         if(this.data != null) {
-          var TimeCol = this.data.Headers.indexOf('Sampletime');
+          var TimeCol = this.data.Headers.indexOf('Time');
           var ValueCol = this.data.Headers.indexOf(this.serie);
           console.log(this.serie);
           for(var n = 0; n < this.data.Rows.length; n++) Opt.file.push([this.data.Rows[n][TimeCol], this.data.Rows[n][ValueCol]]);

@@ -112,7 +112,7 @@
         if((this.data == null)) return Opt;
         Opt.dateWindow = [this.data.From, this.data.To];
         for(var n = 0; n < this.data.Rows.length; n++) {
-          var TimeCol = this.data.Headers.indexOf('Sampletime');
+          var TimeCol = this.data.Headers.indexOf('Time');
           var ValueCol = this.data.Headers.indexOf(this.serie);
           Opt.file.push([this.data.Rows[n][TimeCol]].concat(this.data.Rows[n][ValueCol]));
         }
@@ -133,7 +133,7 @@
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
         var Header = [['Time'].concat(this.analyzer.GetSeriesNames(this.analyzer.Title[this.serie], this.analyzer.Channels[this.serie]))];
-        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var TimeCol = this.data.Headers.indexOf('Time');
         var ValueCol = this.data.Headers.indexOf(this.serie);
         for(var n = 0; n < this.data.Rows.length; n++) {
           var Row = [this.analyzer.FormatDateTime(this.data.Rows[n][TimeCol])];

@@ -43,7 +43,7 @@ AnalyzerSoftRatesEval::~AnalyzerSoftRatesEval() {
 json AnalyzerSoftRatesEval::Headers() {
   if(pSeriesMask == 0) return nullptr;
   json Header = json::array();
-  if(pSeriesMask & SERIE_TIMESTAMP)       Header.push_back("Sampletime");
+  if(pSeriesMask & SERIE_TIMESTAMP)       Header.push_back("Time");
   if(pSeriesMask & SERIE_ACTIVE_POWER)    Header.push_back("Active_Power");
   if(pSeriesMask & SERIE_ACTIVE_ENERGY)   Header.push_back("Active_Energy");
   if(pSeriesMask & SERIE_REACTIVE_POWER)  Header.push_back("Reactive_Power");

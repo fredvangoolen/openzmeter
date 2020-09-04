@@ -13,7 +13,7 @@ const openZmeter = {
         }
         var Data = { Headers: data[0], Rows: data.slice(1), Aggreg: aggreg, From: range[0], To: range[1] };
         if(Transfer.Aggreg == '1H') {
-          var TimeCol = data[0].indexOf('Sampletime');
+          var TimeCol = data[0].indexOf('Time');
           var ActivePowerCol = data[0].indexOf('Active_Power');
           var ReactivePowerCol = data[0].indexOf('Reactive_Power');
           var ActiveEnergyCol = data[0].indexOf('Active_Energy');
@@ -73,7 +73,7 @@ const openZmeter = {
           (result) => {
             if(Cancelled == true) return;
             Transfer.SetData(ReqRange, aggreg, result.body);
-            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
           },
           (fail) => {
             if(Cancelled == true) return;
@@ -101,7 +101,7 @@ const openZmeter = {
           (result) => {
             if(Cancelled == true) return;
             Transfer.Data = Object.seal(result.body);
-            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 3000);
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 3000);
           },
           (fail) => {
             if(Cancelled == true) return;
@@ -129,7 +129,7 @@ const openZmeter = {
           (result) => {
             if(Cancelled == true) return;
             Transfer.Data = Object.seal(result.body);
-            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 1500);
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 1500);
           },
           (fail) => {
             if(Cancelled == true) return;
@@ -141,7 +141,7 @@ const openZmeter = {
       return Transfer;
     };
     Vue.prototype.SeriesTransfer = (series) => {
-      var Transfer = { Timer: null, CancelFunc: null, Data: null, LastData: null, UpdateUnread: false, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
+      var Transfer = { Timer: null, SingleShot: false, CancelFunc: null, Data: null, LastData: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -190,7 +190,7 @@ const openZmeter = {
             if(Transfer.Data != null) Data = Data.concat(Transfer.Data.Rows);
             if((result.length == 2) && (result[1].body.length > 1)) Data = Data.concat(result[1].body.slice(1));
             Transfer.SetData(ReqRange, aggreg, Data);
-            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, (aggreg == "200MS") ? 0 : 3000);
+            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, (aggreg == "200MS") ? 0 : 3000);
           },
           (fail) => {
             if(Cancelled == true) return;
@@ -246,7 +246,7 @@ const openZmeter = {
           },
           (fail) => {
             if(Cancelled == true) return;
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
           }
         );
       };
@@ -298,7 +298,7 @@ const openZmeter = {
           },
           (fail) => {
             if(Cancelled == true) return;
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
           }
         );
       };

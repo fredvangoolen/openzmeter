@@ -74,6 +74,8 @@ import ToolbarPhases from 'Components/ToolbarPhases.vue';
 Vue.component('ToolbarPhases', ToolbarPhases);
 import ToolbarOptions from 'Components/ToolbarOptions.vue';
 Vue.component('ToolbarOptions', ToolbarOptions);
+import ToolbarWeeks from 'Components/ToolbarWeeks.vue';
+Vue.component('ToolbarWeeks', ToolbarWeeks);
 import DetailTabs from 'Components/Tabs.vue';
 Vue.component('DetailTabs', DetailTabs);
 import Toggle from 'Components/Toggle.vue';

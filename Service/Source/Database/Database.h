@@ -31,7 +31,7 @@ class Database final {
     PGresult    *pResult;
     uint64_t     pLastTime;
     bool         pLoadedRow;
-    uint64_t     pRowPos;
+    uint32_t     pRowPos;
   private :
     void     ClearAsync();
   public :
@@ -60,6 +60,6 @@ class Database final {
     uint64_t ResultUInt64(const string &name) const;
     json     ResultJSON(const string &name) const;
     uint64_t LastUse() const;
-    uint64_t RowIndex() const;
+    uint32_t RowIndex() const;
 };
 //----------------------------------------------------------------------------------------------------------------------

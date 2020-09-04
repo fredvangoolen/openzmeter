@@ -41,7 +41,7 @@
       FillSerie: function(idx) {
         var Data = [];
         if((this.data == null) || (this.Phase == null)) return { From: null, To: null, TimeZone: null, Rows: Data };
-        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var TimeCol = this.data.Headers.indexOf('Time');
         var DataCol = this.data.Headers.indexOf('Power_Harmonics');
         for(var i = 0; i < this.data.Rows.length; i++) Data.push([this.data.Rows[i][TimeCol], this.data.Rows[i][DataCol][this.Phase][idx]]);
         return { From: this.data.From, To: this.data.To, TimeZone: this.analyzer.TimeZone, Rows: Data };
@@ -52,7 +52,7 @@
         var Header = ['Time'];
         for(var n in this.analyzer.HarmonicsNames) Header = Header.concat(this.analyzer.GetSeriesNames(this.analyzer.HarmonicsNames[n], this.analyzer.VoltageChannels));
         Data.push(Header);
-        var TimeCol = this.data.Headers.indexOf('Sampletime');
+        var TimeCol = this.data.Headers.indexOf('Time');
         var DataCol = this.data.Headers.indexOf('Power_Harmonics');
         for(var n = 0; n < this.data.Rows.length; n++) {
           var Row = [this.analyzer.FormatDateTime(this.data.Rows[n][TimeCol])];

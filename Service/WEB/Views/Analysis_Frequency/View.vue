@@ -72,8 +72,8 @@
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
         var Rows = [['Time', 'Frequency']];
-        var TimeCol = this.TransferGraph.Data.Headers.indexOf("Sampletime");
-        var ValueCol = this.TransferGraph.Data.Headers.indexOf("Frequency");
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
+        var ValueCol = this.TransferGraph.Data.Headers.indexOf('Frequency');
         for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) Rows.push([this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[n][TimeCol]), this.Round(this.TransferGraph.Data.Rows[n][ValueCol], 3)]);
         return Object.seal(Rows);
       }

@@ -155,6 +155,7 @@ void AnalyzerSoft::Configure(const json &options) {
     pInputBlock->Config(NominalFrequency);
     pFFTs->Config((NominalFrequency == 0.0) ? 0 : (NominalFrequency == 50.0) ? 10 : 12);
   }
+  pAggreg1H->Config(NominalVoltage, NominalFrequency);
   pRates->Config(options["TimeZone"]);
   pAlarms->Config(options["AlarmsEnabled"], NominalVoltage, NominalFrequency);
   pEvents->Config(options["EventsEnabled"], NominalVoltage, NominalFrequency);
@@ -328,7 +329,7 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
   if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   json Result  = json::object();
-  Result["Sampletime"] = pAggreg200MS->Timestamp();
+  Result["Time"] = pAggreg200MS->Timestamp();
   for(auto &Serie : params["Series"]) {
     if(Serie.is_string() == false) {
       pNowDataLock.ConsumerEnds();

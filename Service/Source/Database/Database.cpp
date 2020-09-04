@@ -57,7 +57,7 @@ bool Database::FecthRow() {
 bool Database::LoadedRow() {
   return pLoadedRow;
 }
-uint64_t Database::RowIndex() const {
+uint32_t Database::RowIndex() const {
   return pRowPos;
 }
 bool Database::ExecResource(const string &file) {

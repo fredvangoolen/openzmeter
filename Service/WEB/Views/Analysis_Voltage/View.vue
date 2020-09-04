@@ -110,9 +110,9 @@
     methods: {
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
-        var Rows = [['Sampletime'].concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels))];
-        var TimeCol = this.TransferGraph.Data.Headers.indexOf("Sampletime");
-        var VoltageCol = this.TransferGraph.Data.Headers.indexOf("Voltage");
+        var Rows = [['Time'].concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels))];
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
+        var VoltageCol = this.TransferGraph.Data.Headers.indexOf('Voltage');
         for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) {
           var Row = [this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[n][TimeCol])];
           for(var i = 0; i < this.analyzer.VoltageChannels; i++) Row.push(this.Round(this.TransferGraph.Data.Rows[n][VoltageCol][i], 3));

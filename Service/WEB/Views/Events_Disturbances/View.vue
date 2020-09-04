@@ -31,23 +31,22 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Range: null, TransferEvents: this.CreateSeriesTransfer(this) };
+      return { Range: null, TransferEvents: this.EventsTransfer(this) };
     },
     created: function() {
+      this.TransferEvents.SingleShot = true;
       if((this.$route.query.From != null) && (this.$route.query.To != null)) {
         localStorage.setItem('PeriodEvents', JSON.stringify([this.$route.query.From, this.$route.query.To]));
         this.TransferEvents.UpdateUnread = true;
       }
       history.pushState({}, null, this.$route.path);
-      this.TransferEvents.SingleShot = true;
-      this.TransferEvents.UpdateEvents(this.analyzer, this.Range);
     },
     beforeDestroy: function() {
       this.TransferEvents.Destroy();
     },
     watch: {
-      analyzer: function() { this.TransferEvents.UpdateEvents(this.analyzer, this.Range); },
-      Range: function() { this.TransferEvents.UpdateEvents(this.analyzer, this.Range); }
+      analyzer: function() { this.TransferEvents.Update(this.analyzer, this.Range); },
+      Range: function() { this.TransferEvents.Update(this.analyzer, this.Range); }
     },
     components: { EventsTable, TimeLine}
   }

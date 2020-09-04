@@ -41,7 +41,7 @@
         Opt.axes.x.valueFormatter = (x) => { return (x < 1000) ? this.Round(x, 2, false) + 'ms' : this.Round(x / 1000, 2, false) + 's'; };
         Opt.axes.x.axisLabelFormatter = (x) => { return (x < 1000) ? x + 'ms' : (x / 1000) + 's'; };
         if(this.data != null) {
-          for(var i in this.data.StartTime) Opt.file.push([(this.data.Duration[i] / this.data.SampleRate[i]) * 1000.0, 100 + this.MaxDiff(this.data.Peak[i])]);
+          for(var i = 1; i < this.data.Rows.length; i++) Opt.file.push([(this.data.Duration[i] / this.data.SampleRate[i]) * 1000.0, 100 + this.MaxDiff(this.data.Peak[i])]);
         }
         return Object.seal(Opt);
       }

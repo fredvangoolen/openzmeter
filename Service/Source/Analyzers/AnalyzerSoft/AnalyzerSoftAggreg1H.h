@@ -31,14 +31,15 @@ class AnalyzerSoftAggreg1H final : public AnalyzerSoftAggreg {
     static constexpr float   HarmonicsAllowed[]  = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
     static constexpr uint8_t HarmonicsAllowedLen = (sizeof(HarmonicsAllowed) / sizeof(float));
   private :
-    uint16_t  pSamples;
-    float     pNominalVoltage;
-    float     pNominalFrequency;
-    uint16_t  pStatsFrequency[FrequencyRangesLen]; //Distribucion de frecuencias
-    uint16_t  pStatsVoltage[VoltageRangesLen];     //Distribucion de tensiones
-    uint16_t  pStatsTHD[THDRangesLen];             //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
-    uint16_t  pStatsHarmonics[2];                  //Numero de muestras que cumplen los limites de harmonicos / no cumplen
-    uint16_t  pStatsUnbalance[UnbalanceRangesLen]; //Distribucion de unbalance
+    uint16_t        pSamples;
+    pthread_mutex_t pMutex;
+    float           pNominalVoltage;
+    float           pNominalFrequency;
+    uint16_t        pStatsFrequency[FrequencyRangesLen]; //Distribucion de frecuencias
+    uint16_t        pStatsVoltage[VoltageRangesLen];     //Distribucion de tensiones
+    uint16_t        pStatsTHD[THDRangesLen];             //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
+    uint16_t        pStatsHarmonics[2];                  //Numero de muestras que cumplen los limites de harmonicos / no cumplen
+    uint16_t        pStatsUnbalance[UnbalanceRangesLen]; //Distribucion de unbalance
   private :
     float CalcChange(const float in, const float reference);
   public :
