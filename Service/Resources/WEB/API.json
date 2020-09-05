@@ -893,6 +893,174 @@
         }
       }
     },
+    "/getWIFI": {
+      "post": {
+        "summary": "Get WiFi configuration",
+        "tags": [
+          "WIFI"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "DNS": [
+                    "192.168.1.1",
+                    "8.8.8.8"
+                  ],
+                  "ESSID": "WIFI",
+                  "Enabled": true,
+                  "Gateway": "192.168.1.1",
+                  "IP": "192.168.1.92",
+                  "IPMode": "DHCP",
+                  "Key": "xxxxxxxxxx",
+                  "KeyMode": "WPA2",
+                  "Netmask": "255.255.255.0",
+                  "Status": {
+                    "Channel": 11,
+                    "Connected": true,
+                    "DNS": [
+                      "192.168.1.1",
+                      "8.8.8.8",
+                      "192.168.0.1"
+                    ],
+                    "ESSID": "WIFI",
+                    "Gateway": "192.168.0.1",
+                    "IP": "192.168.0.87",
+                    "IPMode": "DHCP",
+                    "Quality": 68
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "500": {
+            "description": "Configuration can not be read"
+          },
+          "503": {
+            "description": "Function not avaliable"
+          }
+        }
+      }
+    },
+    "/setWIFI": {
+      "post": {
+        "summary": "Set bluetooth configuration",
+        "tags": [
+          "WIFI"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "DNS",
+                  "ESSID",
+                  "Enabled",
+                  "Gateway",
+                  "IP",
+                  "IPMode",
+                  "Key",
+                  "KeyMode",
+                  "Netmask"
+                ],
+                "example": {
+                  "DNS": [
+                    "192.168.1.1",
+                    "8.8.8.8"
+                  ],
+                  "ESSID": "WIFI",
+                  "Enabled": true,
+                  "Gateway": "192.168.1.1",
+                  "IP": "192.168.1.92",
+                  "IPMode": "DHCP",
+                  "Key": "xxxxxxxxxx",
+                  "KeyMode": "WPA2",
+                  "Netmask": "255.255.255.0"
+                },
+                "properties": {
+                  "DNS": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "ESSID": {
+                    "type": "string"
+                  },
+                  "Gateway": {
+                    "type": "string"
+                  },
+                  "IP": {
+                    "type": "string"
+                  },
+                  "IPMode": {
+                    "type": "string",
+                    "enum": [
+                      "STATIC",
+                      "DHCP"
+                    ]
+                  },
+                  "Key": {
+                    "type": "string"
+                  },
+                  "KeyMode": {
+                    "type": "string",
+                    "enum": [
+                      "NONE",
+                      "WEP",
+                      "WPA",
+                      "WPA2"
+                    ]
+                  },
+                  "Netmask": {
+                    "type": "string"
+                  },
+                  "Enabled": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "500": {
+            "description": "Configuration can not be saved"
+          },
+          "503": {
+            "description": "Function not avaliable"
+          }
+        }
+      }
+    },
     "/getNTP": {
       "post": {
         "summary": "Get NPT configuration",
@@ -1064,7 +1232,9 @@
                     },
                     {
                       "type": "object",
-                      "example": {"UserName": "admin"},
+                      "example": {
+                        "UserName": "admin"
+                      },
                       "properties": {
                         "UserName": {
                           "type": "string"
@@ -1155,7 +1325,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "example": {"Name": "ESP_2.0A"},
+                "example": {
+                  "Name": "ESP_2.0A"
+                },
                 "properties": {
                   "Name": {
                     "type": "string"
