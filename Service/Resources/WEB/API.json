@@ -1,162 +1,140 @@
 {
-  "openapi":"3.0.1",
-  "info":{
-    "title":"openZmeter API",
-    "version":"1.1.0",
-    "description":"Full API definition of openZmeter daemon. Not all functions are avaliable on all systems, not for all users or not all time.",
-    "license":{
-      "name":"GNU General Public License v3.0",
-      "url":"https://www.gnu.org/licenses/gpl-3.0.html"
-    }
+  "openapi": "3.0.1",
+  "info": {
+    "title": "openZmeter API",
+    "version": "1.1.0",
+    "description": "Full API definition of openZmeter daemon. Not all functions are avaliable on all systems, not for all users or not all time.",
+    "license": { "name": "GNU General Public License v3.0", "url": "https://www.gnu.org/licenses/gpl-3.0.html" }
   },
-  "servers":[
-    {
-      "url":"/"
-    }
+  "servers": [ {"url": "/"} ],
+  "tags": [
+    { "name": "Analyzers", "description": "Analyzer information queries" },
+    { "name": "Devices", "description": "Devices configuration and listing" },
+    { "name": "Tariffs", "description": "Manage tariffs" },
+    { "name": "System", "description": "System management functions" },
+    { "name": "Users", "description": "Manage system users" },
+    { "name": "Bluetooth", "description": "Manage bluetooth services, if avaliable" },
+    { "name": "Ethernet", "description": "Manage ethernet connection, if avaliable" },
+    { "name": "WIFI", "description": "Manage WiFi connection, if avaliable" },
+    { "name": "ModbusTCP", "description": "Manage modbusTCP services"},
+    { "name": "Telegram", "description": "Manage Telegram bot services"},
+    { "name": "Updates", "description": "Search and install system package updates"},
+    { "name": "NTP", "description": "Manage NTP (network time protocol) client configuration, if avaliable."},
+    { "name": "Price modules", "description": "Additional price modules configuration" }
   ],
-  "tags":[
-    {
-      "name":"Analyzers",
-      "description":"Analyzer information queries."
-    },
-    {
-      "name":"Tariffs",
-      "description":"Manage tariffs."
-    },
-    {
-      "name":"System",
-      "description":"System management functions."
-    },
-    {
-      "name":"Bluetooth",
-      "description":"Manage bluetooth services, if avaliable."
-    },
-    {
-      "name":"NTP",
-      "description":"Manage NTP (network time protocol) client configuration, if avaliable."
-    }
-  ],
-  "paths":{
-    "/logIn":{
-      "post":{
-        "summary":"Authorize to access the system",
-        "tags":[
+  "paths": {
+    "/logIn": {
+      "post": {
+        "summary": "Authorize to access the system",
+        "tags": [
           "System"
         ],
-        "requestBody":{
-          "required":true,
-          "content":{
-            "application/json":{
-              "schema":{
-                "required":[
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
                   "UserName",
                   "Password"
                 ],
-                "example":{
-                  "UserName":"test",
-                  "Password":"test",
-                  "UpdateLastLogin":true
+                "example": {
+                  "UserName": "test",
+                  "Password": "test",
+                  "UpdateLastLogin": true
                 },
-                "properties":{
-                  "UserName":{
-                    "type":"string"
+                "properties": {
+                  "UserName": {
+                    "type": "string"
                   },
-                  "Password":{
-                    "type":"string"
+                  "Password": {
+                    "type": "string"
                   },
-                  "UpdateLastLogin":{
-                    "type":"boolean"
+                  "UpdateLastLogin": {
+                    "type": "boolean"
                   }
                 }
               }
             }
           }
         },
-        "responses":{
-          "200":{
-            "description":"On success",
-            "content":{
-              "application/json":{
-                "example":{
-                  "LastLogin":1000000
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "LastLogin": 1000000
                 }
               }
             },
-            "headers":{
-              "Set-Cookie":{
-                "description":"Cookie value for current session",
-                "schema":{
-                  "type":"string"
+            "headers": {
+              "Set-Cookie": {
+                "description": "Cookie value for current session",
+                "schema": {
+                  "type": "string"
                 }
               }
             }
           },
-          "400":{
-            "description":"On missing params"
+          "400": {
+            "description": "On missing params"
           },
-          "401":{
-            "description":"On invalid login params"
+          "401": {
+            "description": "On invalid login params"
           }
         }
       }
     },
-    "/logOut":{
-      "post":{
-        "summary":"Close active user session",
-        "tags":[
+    "/logOut": {
+      "post": {
+        "summary": "Close active user session",
+        "tags": [
           "System"
         ],
-        "requestBody":{
-          "required":true,
-          "content":{
-            "application/json":{
-              "example":{
-
-              },
-              "schema":{
-
-              }
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {},
+              "schema": {}
             }
           }
         },
-        "responses":{
-          "200":{
-            "description":"On success"
+        "responses": {
+          "200": {
+            "description": "On success"
           }
         }
       }
     },
-    "/getDevices":{
-      "post":{
-        "summary":"Get list of avaliable system devices",
-        "tags":[
+    "/getDevices": {
+      "post": {
+        "summary": "Get list of avaliable system devices",
+        "tags": [
           "System"
         ],
-        "requestBody":{
-          "required":true,
-          "content":{
-            "application/json":{
-              "example":{
-
-              },
-              "schema":{
-
-              }
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {},
+              "schema": {}
             }
           }
         },
-        "responses":{
-          "200":{
-            "description":"On success",
-            "content":{
-              "application/json":{
-                "example":[
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
                   {
-                    "Analyzers":1,
-                    "Driver":"V2",
-                    "Enabled":true,
-                    "Name":"Capture device V2",
-                    "Serial":"F100A1009034E42413032302"
+                    "Analyzers": 1,
+                    "Driver": "V2",
+                    "Enabled": true,
+                    "Name": "Capture device V2",
+                    "Serial": "F100A1009034E42413032302"
                   }
                 ]
               }
@@ -165,45 +143,45 @@
         }
       }
     },
-    "/getDevice":{
-      "post":{
-        "summary":"Get device configuration (Each device driver have its own properties)",
-        "tags":[
+    "/getDevice": {
+      "post": {
+        "summary": "Get device configuration (Each device driver have its own properties)",
+        "tags": [
           "System"
         ],
-        "requestBody":{
-          "required":true,
-          "content":{
-            "application/json":{
-              "schema":{
-                "required":[
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
                   "Serial"
                 ],
-                "example":{
-                  "Serial":"VIRTUAL"
+                "example": {
+                  "Serial": "VIRTUAL"
                 },
-                "properties":{
-                  "Serial":{
-                    "type":"string"
+                "properties": {
+                  "Serial": {
+                    "type": "string"
                   }
                 }
               }
             }
           }
         },
-        "responses":{
-          "200":{
-            "description":"On success",
-            "content":{
-              "application/json":{
-                "example":{
-                  "Current":5,
-                  "CurrentPhase":-10.1,
-                  "Enabled":false,
-                  "Frequency":50,
-                  "Mode":"3PHASE+N",
-                  "SampleRate":10000,
-                  "Voltage":230
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "Current": 5,
+                  "CurrentPhase": -10.1,
+                  "Enabled": false,
+                  "Frequency": 50,
+                  "Mode": "3PHASE+N",
+                  "SampleRate": 10000,
+                  "Voltage": 230
                 }
               }
             }
@@ -211,82 +189,66 @@
         }
       }
     },
-    "/setDevice":{
-      "post":{
-        "summary":"Set device configuration (Each device driver have its own properties)",
-        "tags":[
-          "System"
-        ],
-        "requestBody":{
-          "required":true,
-          "content":{
-            "application/json":{
-              "schema":{
-                "required":[
-                  "Serial"
-                ],
-                "example":{
-                  "Current":5,
-                  "CurrentPhase":-10.1,
-                  "Enabled":true,
-                  "Frequency":60,
-                  "Mode":"3PHASE+N",
-                  "SampleRate":10000,
-                  "Voltage":230,
-                  "Serial":"VIRTUAL"
+    "/setDevice": {
+      "post": {
+        "summary": "Set device configuration (Each device driver have its own properties)",
+        "tags": [ "System" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [ "Serial" ],
+                "example": {
+                  "Current": 5,
+                  "CurrentPhase": -10.1,
+                  "Enabled": true,
+                  "Frequency": 60,
+                  "Mode": "3PHASE+N",
+                  "SampleRate": 10000,
+                  "Voltage": 230,
+                  "Serial": "VIRTUAL"
                 },
-                "properties":{
-                  "Serial":{
-                    "type":"string"
-                  }
+                "properties": {
+                  "Serial": { "type": "string" }
                 }
               }
             }
           }
         },
-        "responses":{
-          "200":{
-            "description":"On success"
+        "responses": {
+          "200": {
+            "description": "On success"
           }
         }
       }
     },
-    "/getBluetooth":{
-      "post":{
-        "summary":"Get bluetooth configuration",
-        "tags":[
-          "Bluetooth"
-        ],
-        "requestBody":{
-          "required":true,
-          "content":{
-            "application/json":{
-              "schema":{
-                "example":{
-
-                }
+    "/getBluetooth": {
+      "post": {
+        "summary": "Get bluetooth configuration",
+        "tags": ["Bluetooth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {}
               }
             }
           }
         },
-        "responses":{
-          "503":{
-            "description":"Function not avaliable"
-          },
-          "401":{
-            "description":"Not logged in"
-          },
-          "403":{
-            "description":"Not admin user"
-          },
-          "200":{
-            "description":"On success",
-            "content":{
-              "application/json":{
-                "example":{
-                  "Enabled":true,
-                  "Interface":"br-bt",
-                  "Name":"openZmeter_xxxx"
+        "responses": {
+          "503": { "description": "Function not avaliable"},
+          "401": { "description": "Not logged in" },
+          "403": { "description": "Not admin user" },
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "Enabled": true,
+                  "Interface": "br-bt",
+                  "Name": "openZmeter_xxxx"
                 }
               }
             }
@@ -294,84 +256,122 @@
         }
       }
     },
-    "/setBluetooth":{
-      "post":{
-        "summary":"Set bluetooth configuration",
-        "tags":[
-          "Bluetooth"
-        ],
-        "requestBody":{
-          "required":true,
-          "content":{
-            "application/json":{
-              "schema":{
-                "required":[
-                  "Enabled"
-                ],
-                "example":{
-                  "Enabled":true
+    "/setBluetooth": {
+      "post": {
+        "summary": "Set bluetooth configuration",
+        "tags": ["Bluetooth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["Enabled"],
+                "example": { "Enabled": true },
+                "properties": {
+                  "Enabled": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "503": { "description": "Function not avaliable"},
+          "401": { "description": "Not logged in" },
+          "403": { "description": "Not admin user" },
+          "200": { "description": "On success" }
+        }
+      }
+    },
+    "/getNTP": {
+      "post": {
+        "summary": "Get NPT configuration",
+        "tags": ["NTP"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "503": { "description": "Function not avaliable"},
+          "401": { "description": "Not logged in" },
+          "403": { "description": "Not admin user" },
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "Enabled": true,
+                  "Server": "hora.roa.es",
+                  "Time": 1598430332332
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/setNTP": {
+      "post": {
+        "summary": "Set NTP configuration, if Server is disabled, 'Time' values is set as local UTC time",
+        "tags": ["NTP"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["Enabled", "Server", "Time"],
+                "example": {
+                  "Enabled": true,
+                  "Server": "hora.roa.es",
+                  "Time": 1598430332332
                 },
-                "properties":{
-                  "Enabled":{
-                    "type":"boolean"
-                  }
+                "properties": {
+                  "Enabled": { "type": "boolean" },
+                  "Server": { "type": "string" },
+                  "Time": { "type": "number" }
                 }
               }
             }
           }
         },
-        "responses":{
-          "503":{
-            "description":"Function not avaliable"
-          },
-          "401":{
-            "description":"Not logged in"
-          },
-          "403":{
-            "description":"Not admin user"
-          },
-          "200":{
-            "description":"On success"
-          }
+        "responses": {
+          "503": { "description": "Function not avaliable"},
+          "401": { "description": "Not logged in" },
+          "403": { "description": "Not admin user" },
+          "200": { "description": "On success" }
         }
       }
     },
-    "/getNTP":{
-      "post":{
-        "summary":"Get NPT configuration",
-        "tags":[
-          "NTP"
-        ],
-        "requestBody":{
-          "required":true,
-          "content":{
-            "application/json":{
-              "schema":{
-                "example":{
-
-                }
+    "/getESIOS": {
+      "post": {
+        "summary": "Get ESIOS price fetch module configuration",
+        "tags": ["Price modules"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {}
               }
             }
           }
         },
-        "responses":{
-          "503":{
-            "description":"Function not avaliable"
-          },
-          "401":{
-            "description":"Not logged in"
-          },
-          "403":{
-            "description":"Not admin user"
-          },
-          "200":{
-            "description":"On success",
-            "content":{
-              "application/json":{
-                "example":{
-                  "Enabled":true,
-                  "Server":"hora.roa.es",
-                  "Time":1598430332332
+        "responses": {
+          "401": { "description": "Not logged in" },
+          "403": { "description": "Not admin user" },
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "Enabled": false,
+                  "LastDate": 1262304000000,
+                  "Token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                 }
               }
             }
@@ -379,54 +379,32 @@
         }
       }
     },
-    "/setNTP":{
-      "post":{
-        "summary":"Set NTP configuration, if Server is disabled, 'Time' values is set as local UTC time",
-        "tags":[
-          "NTP"
-        ],
-        "requestBody":{
-          "required":true,
-          "content":{
-            "application/json":{
-              "schema":{
-                "required":[
-                  "Enabled",
-                  "Server"
-                ],
-                "example":{
-                  "Enabled":true,
-                  "Server":"hora.roa.es",
-                  "Time":1598430332332
+    "/setESIOS": {
+      "post": {
+        "summary": "Set ESIOS price fecth module configuration",
+        "tags": ["Price modules"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": ["Enabled", "Server", "Time"],
+                "example": {
+                  "Enabled": true,
+                  "Token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                 },
-                "properties":{
-                  "Enabled":{
-                    "type":"boolean"
-                  },
-                  "Server":{
-                    "type":"string"
-                  },
-                  "Time":{
-                    "type":"number"
-                  }
+                "properties": {
+                  "Enabled": { "type": "boolean" },
+                  "Token": { "type": "string" }
                 }
               }
             }
           }
         },
-        "responses":{
-          "503":{
-            "description":"Function not avaliable"
-          },
-          "401":{
-            "description":"Not logged in"
-          },
-          "403":{
-            "description":"Not admin user"
-          },
-          "200":{
-            "description":"On success"
-          }
+        "responses": {
+          "401": { "description": "Not logged in" },
+          "403": { "description": "Not admin user" },
+          "200": { "description": "On success" }
         }
       }
     }
