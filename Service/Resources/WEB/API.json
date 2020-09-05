@@ -16,6 +16,45 @@
   ],
   "components": {
     "schemas": {
+      "UserTemplate": {
+        "type": "object",
+        "properties": {
+          "User": {
+            "type": "string"
+          },
+          "Name": {
+            "type": "string"
+          },
+          "Address": {
+            "type": "string"
+          },
+          "Company": {
+            "type": "string"
+          },
+          "Photo": {
+            "type": "string"
+          },
+          "Email": {
+            "type": "string"
+          },
+          "Telegram": {
+            "type": "number"
+          },
+          "TimeZone": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "User": "admin",
+          "Name": "System administrator",
+          "Address": "",
+          "Company": "",
+          "Photo": "",
+          "Email": "",
+          "Telegram": 0,
+          "TimeZone": "UTC"
+        }
+      },
       "TariffTemplate": {
         "type": "object",
         "properties": {
@@ -604,6 +643,285 @@
     }
   ],
   "paths": {
+    "/getAnalyzers": {
+      "post": {
+        "summary": "Get list of avaliable analyzers",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {},
+              "schema": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "Analyzer": "120052009034E42413032302_1P_CH0",
+                    "Name": "Unnamed analyzer",
+                    "Online": true
+                  },
+                  {
+                    "Analyzer": "VIRTUAL_3PHASE+N",
+                    "Name": "Unnamed analyzer",
+                    "Online": false
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getAnalyzer": {
+      "post": {
+        "summary": "Get analyzer details",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx"
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "Analyzer"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "AlarmsEnabled": true,
+                  "EventsEnabled": true,
+                  "MQTT": {
+                    "Enabled": false,
+                    "Export10M": false,
+                    "Export15M": false,
+                    "Export1H": false,
+                    "Export1M": true,
+                    "Export3S": true,
+                    "ExportAlarms": false,
+                    "ExportConfig": false,
+                    "Pass": "",
+                    "Prefix": "/OZM",
+                    "Server": "mqtt://test.mosquitto.org",
+                    "User": ""
+                  },
+                  "MaxCurrent": 35,
+                  "MinCurrent": 0.1,
+                  "Mode": "1PHASE",
+                  "Name": "Unnamed analyzer",
+                  "NominalFrequency": 50,
+                  "NominalVoltage": 230,
+                  "Online": true,
+                  "SampleRate": 24000,
+                  "Save200MS": true,
+                  "Sync": {
+                    "Enabled": false,
+                    "Pass": "",
+                    "Server": "",
+                    "User": ""
+                  },
+                  "Tags": [],
+                  "TimeZone": "UTC"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getStatus": {
+      "post": {
+        "summary": "Get analyzer status",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "UNREAD_EVENTS",
+                    "PERMISSIONS"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "SYSTEM",
+                        "UNREAD_EVENTS",
+                        "UNREAD_ALARMS",
+                        "PERMISSIONS",
+                        "LAST_ACCESS",
+                        "STORAGE"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "Permissions": {
+                    "Configure": true,
+                    "Read": true,
+                    "Write": true
+                  },
+                  "Unread_Events": {
+                    "Count": 0,
+                    "From": 0,
+                    "To": 1599317246998
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getSeries": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "VOLTAGE",
+                    "CURRENT"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "VOLTAGE",
+                        "CURRENT",
+                        "ACTIVE_POWER",
+                        "REACTIVE_POWER",
+                        "ACTIVE_ENERGY",
+                        "REACTIVE_ENERGY",
+                        "VOLTAGE_SAMPLES",
+                        "VOLTAGE_THD",
+                        "PHI",
+                        "POWER_FACTOR"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
     "/logIn": {
       "post": {
         "summary": "Authorize to access the system",
@@ -693,7 +1011,7 @@
       "post": {
         "summary": "Get list of avaliable system devices",
         "tags": [
-          "System"
+          "Devices"
         ],
         "requestBody": {
           "required": true,
@@ -728,7 +1046,7 @@
       "post": {
         "summary": "Get device configuration (Each device driver have its own properties)",
         "tags": [
-          "System"
+          "Devices"
         ],
         "requestBody": {
           "required": true,
@@ -774,7 +1092,7 @@
       "post": {
         "summary": "Set device configuration (Each device driver have its own properties)",
         "tags": [
-          "System"
+          "Devices"
         ],
         "requestBody": {
           "required": true,
@@ -889,6 +1207,551 @@
           },
           "503": {
             "description": "Function not avaliable"
+          }
+        }
+      }
+    },
+    "/getVersion": {
+      "post": {
+        "summary": "Ver service version",
+        "tags": [
+          "System"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "Version": "xxxxxxx"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          }
+        }
+      }
+    },
+    "/getEthernet": {
+      "post": {
+        "summary": "Get ethernet configuration",
+        "tags": [
+          "Ethernet"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "DNS": [
+                    "192.168.1.1",
+                    "8.8.8.8"
+                  ],
+                  "Enabled": true,
+                  "Gateway": "192.168.1.1",
+                  "IP": "192.168.1.92",
+                  "IPMode": "DHCP",
+                  "Netmask": "255.255.255.0",
+                  "Status": {
+                    "Connected": true,
+                    "DNS": [
+                      "192.168.1.1",
+                      "8.8.8.8",
+                      "192.168.0.1"
+                    ],
+                    "Gateway": "192.168.0.1",
+                    "IP": "192.168.0.87",
+                    "IPMode": "DHCP"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "500": {
+            "description": "Configuration can not be read"
+          },
+          "503": {
+            "description": "Function not avaliable"
+          }
+        }
+      }
+    },
+    "/setEthernet": {
+      "post": {
+        "summary": "Set ethernet configuration",
+        "tags": [
+          "Ethernet"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "DNS",
+                  "Enabled",
+                  "Gateway",
+                  "IP",
+                  "IPMode",
+                  "Netmask"
+                ],
+                "example": {
+                  "DNS": [
+                    "192.168.1.1",
+                    "8.8.8.8"
+                  ],
+                  "Enabled": true,
+                  "Gateway": "192.168.1.1",
+                  "IP": "192.168.1.92",
+                  "IPMode": "DHCP",
+                  "Netmask": "255.255.255.0"
+                },
+                "properties": {
+                  "DNS": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "Gateway": {
+                    "type": "string"
+                  },
+                  "IP": {
+                    "type": "string"
+                  },
+                  "IPMode": {
+                    "type": "string",
+                    "enum": [
+                      "STATIC",
+                      "DHCP"
+                    ]
+                  },
+                  "Netmask": {
+                    "type": "string"
+                  },
+                  "Enabled": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "500": {
+            "description": "Configuration can not be saved"
+          },
+          "503": {
+            "description": "Function not avaliable"
+          }
+        }
+      }
+    },
+    "/getUpdates": {
+      "post": {
+        "summary": "Get avaliable updates for installed packages. If 'Force' is true, update package list from update server",
+        "tags": [
+          "Updates"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Force": true
+                },
+                "properties": {
+                  "Force": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "From": "20191219.1025",
+                    "Package": "openZmeter-devel",
+                    "To": "20200509.2103"
+                  },
+                  {
+                    "From": "2.16.6-1",
+                    "Package": "libmbedtls",
+                    "To": "2.16.7-1"
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "500": {
+            "description": "Can not get avaliable updates"
+          },
+          "503": {
+            "description": "Function not avaliable"
+          }
+        }
+      }
+    },
+    "/setUpgrade": {
+      "post": {
+        "summary": "Upgrade requested packages",
+        "tags": [
+          "Updates"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Packages": [
+                    "openZmeter-devel"
+                  ]
+                },
+                "properties": {
+                  "Pacakages": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upgrading is taking place",
+            "content": {
+              "text/event-stream": {
+                "example": "event: text\ndata: console messages...\n\nevent: status\ndata: OK (Upgrade finished)\n\n"
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "500": {
+            "description": "Can not upgrade requested packages"
+          },
+          "503": {
+            "description": "Function not avaliable"
+          }
+        }
+      }
+    },
+    "/getUsers": {
+      "post": {
+        "summary": "Get user list",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "User": "admin",
+                    "Name": "System administrator",
+                    "Email": "",
+                    "TimeZone": "UTC"
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "500": {
+            "description": "Can retrieve user list"
+          }
+        }
+      }
+    },
+    "/getUser": {
+      "post": {
+        "summary": "Get user details",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Name": "admin"
+                },
+                "required": [
+                  "Name"
+                ],
+                "properties": {
+                  "Name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTemplate"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user, or requested user differs from calling one"
+          },
+          "500": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/setUser": {
+      "post": {
+        "summary": "Update user details",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserTemplate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user, or requested user differs from calling one"
+          },
+          "500": {
+            "description": "Can not save user"
+          }
+        }
+      }
+    },
+    "/addUser": {
+      "post": {
+        "summary": "Add user",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/UserTemplate"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "Password": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "Password"
+                    ],
+                    "example": {
+                      "Password": "xxxx"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "500": {
+            "description": "Can not save user"
+          }
+        }
+      }
+    },
+    "/setUserPassword": {
+      "post": {
+        "summary": "Update user password",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "User",
+                  "Password"
+                ],
+                "properties": {
+                  "User": {
+                    "type": "string"
+                  },
+                  "Password": {
+                    "type": "string"
+                  },
+                  "PrevPassword": {
+                    "type": "string"
+                  }
+                },
+                "example": {
+                  "User": "xxxx",
+                  "Password": "xxxx",
+                  "PrevPassword": "xxxxxxx"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user, or requested user differs from calling one"
+          }
+        }
+      }
+    },
+    "/delUser": {
+      "post": {
+        "summary": "Remove user",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "User": {
+                    "type": "string"
+                  }
+                },
+                "example": {
+                  "User": "xxxx"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
           }
         }
       }
