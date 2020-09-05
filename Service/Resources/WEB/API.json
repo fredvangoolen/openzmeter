@@ -4,23 +4,604 @@
     "title": "openZmeter API",
     "version": "1.1.0",
     "description": "Full API definition of openZmeter daemon. Not all functions are avaliable on all systems, not for all users or not all time.",
-    "license": { "name": "GNU General Public License v3.0", "url": "https://www.gnu.org/licenses/gpl-3.0.html" }
+    "license": {
+      "name": "GNU General Public License v3.0",
+      "url": "https://www.gnu.org/licenses/gpl-3.0.html"
+    }
   },
-  "servers": [ {"url": "/"} ],
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "TariffTemplate": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "integer"
+          },
+          "Template": {
+            "type": "object"
+          }
+        },
+        "example": {
+          "Name": "ESP_2.0A",
+          "Template": {
+            "Days": [
+              {
+                "Name": "Day 1",
+                "Color": "#fffff0",
+                "Quarters": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ],
+            "Years": [
+              {
+                "Days": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
+                "Year": 2020
+              }
+            ],
+            "Script": "Cost=(ContractedPower_P1*PowerCost_P1)/96,\nContracted=ContractedPower_P1,\nTotalCost=TotalCost+Cost",
+            "Periods": [
+              {
+                "Name": "All day",
+                "Color": "#fffff0",
+                "Script": "Cost=(ActiveEnergy/1000.0)*EnergyCost,\nTotalCost=TotalCost+Cost,\nTotalConsumed=TotalConsumed+ActiveEnergy/1000",
+                "Concepts": [
+                  {
+                    "Type": "INFO",
+                    "Variable": "TotalConsumed",
+                    "Description": "Consumed energy (kWh)"
+                  },
+                  {
+                    "Type": "COST_ENERGY",
+                    "Variable": "TotalCost",
+                    "Description": "Consumed energy cost"
+                  }
+                ],
+                "DefaultPowerCost": 0.104228,
+                "DefaultEnergyCost": 0.135343
+              }
+            ],
+            "Concepts": [
+              {
+                "Type": "INFO",
+                "Variable": "Contracted",
+                "Description": "Contracted power (kW)"
+              },
+              {
+                "Type": "COST_POWER",
+                "Variable": "TotalCost",
+                "Description": "Contracted power cost"
+              }
+            ],
+            "Currency": "€",
+            "PowerUnits": "kW",
+            "Description": "Spanish 2.0A tariff. Constant price. Without seasons.",
+            "EnergyUnits": "kWh"
+          }
+        }
+      }
+    }
+  },
   "tags": [
-    { "name": "Analyzers", "description": "Analyzer information queries" },
-    { "name": "Devices", "description": "Devices configuration and listing" },
-    { "name": "Tariffs", "description": "Manage tariffs" },
-    { "name": "System", "description": "System management functions" },
-    { "name": "Users", "description": "Manage system users" },
-    { "name": "Bluetooth", "description": "Manage bluetooth services, if avaliable" },
-    { "name": "Ethernet", "description": "Manage ethernet connection, if avaliable" },
-    { "name": "WIFI", "description": "Manage WiFi connection, if avaliable" },
-    { "name": "ModbusTCP", "description": "Manage modbusTCP services"},
-    { "name": "Telegram", "description": "Manage Telegram bot services"},
-    { "name": "Updates", "description": "Search and install system package updates"},
-    { "name": "NTP", "description": "Manage NTP (network time protocol) client configuration, if avaliable."},
-    { "name": "Price modules", "description": "Additional price modules configuration" }
+    {
+      "name": "Analyzers",
+      "description": "Analyzer information queries"
+    },
+    {
+      "name": "Devices",
+      "description": "Devices configuration and listing"
+    },
+    {
+      "name": "Tariffs",
+      "description": "Manage tariffs"
+    },
+    {
+      "name": "System",
+      "description": "System management functions"
+    },
+    {
+      "name": "Users",
+      "description": "Manage system users"
+    },
+    {
+      "name": "Bluetooth",
+      "description": "Manage bluetooth services, if avaliable"
+    },
+    {
+      "name": "Ethernet",
+      "description": "Manage ethernet connection, if avaliable"
+    },
+    {
+      "name": "WIFI",
+      "description": "Manage WiFi connection, if avaliable"
+    },
+    {
+      "name": "ModbusTCP",
+      "description": "Manage modbusTCP services"
+    },
+    {
+      "name": "Telegram",
+      "description": "Manage Telegram bot services"
+    },
+    {
+      "name": "Updates",
+      "description": "Search and install system package updates"
+    },
+    {
+      "name": "NTP",
+      "description": "Manage NTP (network time protocol) client configuration, if avaliable."
+    },
+    {
+      "name": "Price modules",
+      "description": "Additional price modules configuration"
+    }
   ],
   "paths": {
     "/logIn": {
@@ -192,13 +773,17 @@
     "/setDevice": {
       "post": {
         "summary": "Set device configuration (Each device driver have its own properties)",
-        "tags": [ "System" ],
+        "tags": [
+          "System"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "required": [ "Serial" ],
+                "required": [
+                  "Serial"
+                ],
                 "example": {
                   "Current": 5,
                   "CurrentPhase": -10.1,
@@ -210,7 +795,9 @@
                   "Serial": "VIRTUAL"
                 },
                 "properties": {
-                  "Serial": { "type": "string" }
+                  "Serial": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -226,7 +813,9 @@
     "/getBluetooth": {
       "post": {
         "summary": "Get bluetooth configuration",
-        "tags": ["Bluetooth"],
+        "tags": [
+          "Bluetooth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -238,9 +827,6 @@
           }
         },
         "responses": {
-          "503": { "description": "Function not avaliable"},
-          "401": { "description": "Not logged in" },
-          "403": { "description": "Not admin user" },
           "200": {
             "description": "On success",
             "content": {
@@ -252,6 +838,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "503": {
+            "description": "Function not avaliable"
           }
         }
       }
@@ -259,33 +854,51 @@
     "/setBluetooth": {
       "post": {
         "summary": "Set bluetooth configuration",
-        "tags": ["Bluetooth"],
+        "tags": [
+          "Bluetooth"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "required": ["Enabled"],
-                "example": { "Enabled": true },
+                "required": [
+                  "Enabled"
+                ],
+                "example": {
+                  "Enabled": true
+                },
                 "properties": {
-                  "Enabled": { "type": "boolean" }
+                  "Enabled": {
+                    "type": "boolean"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "503": { "description": "Function not avaliable"},
-          "401": { "description": "Not logged in" },
-          "403": { "description": "Not admin user" },
-          "200": { "description": "On success" }
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "503": {
+            "description": "Function not avaliable"
+          }
         }
       }
     },
     "/getNTP": {
       "post": {
         "summary": "Get NPT configuration",
-        "tags": ["NTP"],
+        "tags": [
+          "NTP"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -297,9 +910,6 @@
           }
         },
         "responses": {
-          "503": { "description": "Function not avaliable"},
-          "401": { "description": "Not logged in" },
-          "403": { "description": "Not admin user" },
           "200": {
             "description": "On success",
             "content": {
@@ -311,6 +921,15 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "503": {
+            "description": "Function not avaliable"
           }
         }
       }
@@ -318,39 +937,61 @@
     "/setNTP": {
       "post": {
         "summary": "Set NTP configuration, if Server is disabled, 'Time' values is set as local UTC time",
-        "tags": ["NTP"],
+        "tags": [
+          "NTP"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "required": ["Enabled", "Server", "Time"],
+                "required": [
+                  "Enabled",
+                  "Server",
+                  "Time"
+                ],
                 "example": {
                   "Enabled": true,
                   "Server": "hora.roa.es",
                   "Time": 1598430332332
                 },
                 "properties": {
-                  "Enabled": { "type": "boolean" },
-                  "Server": { "type": "string" },
-                  "Time": { "type": "number" }
+                  "Enabled": {
+                    "type": "boolean"
+                  },
+                  "Server": {
+                    "type": "string"
+                  },
+                  "Time": {
+                    "type": "number"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "503": { "description": "Function not avaliable"},
-          "401": { "description": "Not logged in" },
-          "403": { "description": "Not admin user" },
-          "200": { "description": "On success" }
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          },
+          "503": {
+            "description": "Function not avaliable"
+          }
         }
       }
     },
-    "/getESIOS": {
+    "/getTariffs": {
       "post": {
-        "summary": "Get ESIOS price fetch module configuration",
-        "tags": ["Price modules"],
+        "summary": "Get configured tariffs list",
+        "tags": [
+          "Tariffs"
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -362,8 +1003,198 @@
           }
         },
         "responses": {
-          "401": { "description": "Not logged in" },
-          "403": { "description": "Not admin user" },
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "Name": "ESP_2.0A",
+                    "UserName": "admin"
+                  },
+                  {
+                    "Name": "ESP_2.0DHA",
+                    "UserName": "admin"
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          }
+        }
+      }
+    },
+    "/getTariff": {
+      "post": {
+        "summary": "Get full tariff configuration",
+        "tags": [
+          "Tariffs"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "Name"
+                ],
+                "example": {
+                  "Name": "ESP_2,0A"
+                },
+                "properties": {
+                  "Name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/TariffTemplate"
+                    },
+                    {
+                      "type": "object",
+                      "example": {"UserName": "admin"},
+                      "properties": {
+                        "UserName": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "501": {
+            "description": "Tariff name not found"
+          }
+        }
+      }
+    },
+    "/setTariff": {
+      "post": {
+        "summary": "Update tariff configuration",
+        "tags": [
+          "Tariffs"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TariffTemplate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "501": {
+            "description": "Tariff name not found"
+          }
+        }
+      }
+    },
+    "/addTariff": {
+      "post": {
+        "summary": "Add tariff configuration",
+        "tags": [
+          "Tariffs"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TariffTemplate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "501": {
+            "description": "Tariff name already exists"
+          }
+        }
+      }
+    },
+    "/delTariff": {
+      "post": {
+        "summary": "Add tariff configuration",
+        "tags": [
+          "Tariffs"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {"Name": "ESP_2.0A"},
+                "properties": {
+                  "Name": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "501": {
+            "description": "Tariff name not found or not owned by calling user"
+          }
+        }
+      }
+    },
+    "/getESIOS": {
+      "post": {
+        "summary": "Get ESIOS price fetch module configuration",
+        "tags": [
+          "Price modules"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {}
+              }
+            }
+          }
+        },
+        "responses": {
           "200": {
             "description": "On success",
             "content": {
@@ -375,6 +1206,12 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
           }
         }
       }
@@ -382,29 +1219,44 @@
     "/setESIOS": {
       "post": {
         "summary": "Set ESIOS price fecth module configuration",
-        "tags": ["Price modules"],
+        "tags": [
+          "Price modules"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "required": ["Enabled", "Server", "Time"],
+                "required": [
+                  "Enabled",
+                  "Token"
+                ],
                 "example": {
                   "Enabled": true,
                   "Token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                 },
                 "properties": {
-                  "Enabled": { "type": "boolean" },
-                  "Token": { "type": "string" }
+                  "Enabled": {
+                    "type": "boolean"
+                  },
+                  "Token": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "401": { "description": "Not logged in" },
-          "403": { "description": "Not admin user" },
-          "200": { "description": "On success" }
+          "200": {
+            "description": "On success"
+          },
+          "401": {
+            "description": "Not logged in"
+          },
+          "403": {
+            "description": "Not admin user"
+          }
         }
       }
     }
