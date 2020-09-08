@@ -12,7 +12,7 @@
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Concepts' }" @click="View='Concepts'">Concepts</button>
-        <button type="button" class="btn btn-default btn-xs" v-if="Rate.Group==0" :class="{ active: View=='Cycles' }" @click="View='Cycles'">Cycles</button>
+        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Cycles' }" @click="View='Cycles'">Cycles</button>
         <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
@@ -34,7 +34,7 @@
           <input type="text" class="form-control" v-model="Rate.Name">
         </div>
         <div class="col-xs-4">
-          <label class="control-label">Type:</label>
+          <label class="control-label">Group:</label>
           <option-picker :big="true" v-model="Rate.Group" :options="[{name: 'Contracted', value: 0}, {name: 'Compare group 1', value: 1}, {name: 'Compare group 2', value: 2}, {name: 'Compare group 3', value: 3}, {name: 'Compare group 4', value: 4}, {name: 'Compare group 5', value: 5}, {name: 'Compare group 6', value: 6}, {name: 'Compare group 7', value: 7}, {name: 'Compare group 8', value: 8}, {name: 'Compare group 9', value: 9}, {name: 'Compare group 10', value: 10}]"></option-picker>
         </div>
         <div class="col-xs-12">
@@ -308,11 +308,6 @@
       ValidBillDate: function() {
         var Used = this.Rate.Billing.concat([ this.Rate.StartDate, this.Rate.EndDate]);
         return Used.includes(this.SelDate);
-      }
-    },
-    watch: {
-      'Rate.Group': function() {
-        if((this.Rate.Group == 0) && (this.Rate.Billing == null)) this.Rate.Billing = [];
       }
     },
     methods: {

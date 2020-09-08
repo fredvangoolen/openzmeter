@@ -12,30 +12,25 @@ const openZmeter = {
           return;
         }
         var Data = { Headers: data[0], Rows: data.slice(1), Aggreg: aggreg, From: range[0], To: range[1] };
-        if(Transfer.Aggreg == '1H') {
+        if(Transfer.Aggreg != '15M') {
           var TimeCol = data[0].indexOf('Time');
           var ActivePowerCol = data[0].indexOf('Active_Power');
           var ReactivePowerCol = data[0].indexOf('Reactive_Power');
           var ActiveEnergyCol = data[0].indexOf('Active_Energy');
           var ReactiveEnergyCol = data[0].indexOf('Reactive_Energy');
-          var ActivePower = 0;
-          var ReactivePower = 0;
-          var ActiveEnergy = 0;
+          var ActivePower    = 0;
+          var ReactivePower  = 0;
+          var ActiveEnergy   = 0;
           var ReactiveEnergy = 0;
-          var Timestamp = 0;
+          var Count          = 0;
+          var MaxCount       = (Transfer.Aggreg == '1H') ? 4.0 : 96.0;
           for(var i = 1; i < data.length; i++) {
-            if((Math.floor(Timestamp / 3600000) != Math.floor(data[i][TimeCol] / 3600000))) {
-              ActivePower = 0;
-              ReactivePower = 0;
-              ActiveEnergy = 0;
-              ReactiveEnergy = 0;
-            }
             if(ActivePowerCol != -1) {
-              ActivePower += data[i][ActivePowerCol] / 4.0;
+              ActivePower += data[i][ActivePowerCol] / MaxCount;
               data[i][ActivePowerCol] = null;
             }
             if(ReactivePowerCol != -1) {
-              ReactivePower += data[i][ReactivePowerCol] / 4.0;
+              ReactivePower += data[i][ReactivePowerCol] / MaxCount;
               data[i][ReactivePowerCol] = null;
             }
             if(ActiveEnergyCol != -1) {
@@ -46,13 +41,18 @@ const openZmeter = {
               ReactiveEnergy += data[i][ReactiveEnergyCol];
               data[i][ReactiveEnergyCol] = null;
             }
-            if((data[i][TimeCol] % 3600000) == 3599999) {
+            Count++;
+            if(Count == MaxCount) {
               if(ActivePowerCol != -1) data[i][ActivePowerCol] = ActivePower;
               if(ReactivePowerCol != -1) data[i][ReactivePowerCol] = ReactivePower;
               if(ActiveEnergyCol != -1) data[i][ActiveEnergyCol] = ActiveEnergy;
               if(ReactiveEnergyCol != -1) data[i][ReactiveEnergyCol] = ReactiveEnergy;
+              ActivePower = 0;
+              ReactivePower = 0;
+              ActiveEnergy = 0;
+              ReactiveEnergy = 0;
+              Count = 0;
             }
-            Timestamp = data[i][TimeCol];
           }
         }
         Transfer.Data = Object.seal(Data);
@@ -112,7 +112,7 @@ const openZmeter = {
       return Transfer;
     };
     Vue.prototype.NowTransfer = (series) => {
-      var Transfer = { Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null };
+      var Transfer = { SingleShot: false, Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }

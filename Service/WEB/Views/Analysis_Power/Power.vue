@@ -37,14 +37,14 @@
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.x.valueFormatter = (x) => { return Graph.Formatters.X_Hourly(x, this.analyzer.TimeZone,  ((this.data != null) && (this.data.Aggreg == '1H')) ? false : true); };
         Opt.axes.x.ticker = (min, max, pixels) => { return Graph.Formatters.X_HourlyFull(min, max, pixels, (this.analyzer != null) ? this.analyzer.TimeZone : null); };
-        Opt.axes.y.valueFormatter = (x, opts, seriesName) => { return (seriesName == 'Contracted Power') ? null : Graph.Formatters.Y_UnitScale(x, (this.serie == 'Active_Power') ? ' W' : 'var', 2, true);  };
+        Opt.axes.y.valueFormatter = (x, opts, seriesName) => { return Graph.Formatters.Y_UnitScale(x, (this.serie == 'Active_Power') ? 'W' : (this.serie == 'Reactive_Power') ? 'var' : 'va', 2, true);  };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         Opt.series = { 'Contracted Power': { strokeWidth: 1, fillGraph: false, plotter: (e) => { Graph.Plotters.LineOffset(e, 900000); } } };
         if(this.data != null) {
           var TimeCol = this.data.Headers.indexOf('Time');
           var ActiveCol = this.data.Headers.indexOf('Active_Power');
           var ReactiveCol = this.data.Headers.indexOf('Reactive_Power');
-          var ContractedCol = this.data.Headers.indexOf('Power_Contracted');
+          var ContractedCol = this.data.Headers.indexOf('Contracted');
           for(var n in this.data.Rows) {
             if(this.serie == 'Active_Power')
               Opt.file.push([this.data.Rows[n][TimeCol], this.data.Rows[n][ActiveCol], this.data.Rows[n][ContractedCol] * 1000]);

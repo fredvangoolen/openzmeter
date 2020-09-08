@@ -35,6 +35,7 @@
       if(this.options.includes('10M')) this.Options.push({value: '10M', name: '10 minutes'});
       if(this.options.includes('15M')) this.Options.push({value: '15M', name: '15 minutes'});
       if(this.options.includes('1H'))  this.Options.push({value: '1H',  name: '1 hour'});
+      if(this.options.includes('1D'))  this.Options.push({value: '1D',  name: '1 day'});
       if(this.storage != null) {
         var Stored = localStorage.getItem(this.storage);
         if(this.options.includes(Stored)) {

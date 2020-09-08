@@ -195,13 +195,16 @@
         if(dec == null) dec = 2;
         if(units == null) units = '';
         if(html == null) html = false;
-        return This.Round(This.ScaleUnits(x, This.BestUnits(x)), dec, html) + units;
+        var Prefix = This.BestUnits(x);
+        return This.Round(This.ScaleUnits(x, Prefix), dec, html) + Prefix + units;
       },
       Y_UnitScaleFull: function(x, gran, opts, g, units, dec, html) {
         if(dec == null) dec = 2;
         if(units == null) units = '';
         if(html == null) html = false;
-        return (g.axes_[0].valueRange == null) ? '' : This.Round(This.ScaleUnits(x, This.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), dec, html) + units;
+        var Range = g.axes_[0].valueRange;
+        if(Range == null) Range = g.axes_[0].computedValueRange;
+        return (Range == null) ? '' : This.Round(This.ScaleUnits(x, This.BestUnits(Math.max(Math.abs(Range[0]), Math.abs(Range[1])))), dec, html) + units;
       }
     },
     Plugins: {

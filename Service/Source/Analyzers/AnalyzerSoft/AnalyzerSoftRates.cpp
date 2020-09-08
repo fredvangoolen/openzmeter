@@ -116,7 +116,7 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
       Series |= AnalyzerSoftRatesEval::SERIE_PERIOD;
     } else if(Serie == "COLOR") {
       Series |= AnalyzerSoftRatesEval::SERIE_COLOR;
-    } else if(Serie == "POWER_CONTRACTED") {
+    } else if(Serie == "CONTRACTED") {
       Series |= AnalyzerSoftRatesEval::SERIE_CONTRACTED;
     } else if(Serie == "BILL") {
       Series |= AnalyzerSoftRatesEval::SERIE_BILL;
