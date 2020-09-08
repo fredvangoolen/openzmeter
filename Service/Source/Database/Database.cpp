@@ -14,6 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <string.h>
 #include <float.h>
@@ -27,9 +28,14 @@
 #include "DatabasePool.h"
 //----------------------------------------------------------------------------------------------------------------------
 Database::Database(const string &schema) {
-  pResult    = NULL;
-  pLoadedRow = false;
-  pDBConn    = DatabasePool::PopConnection();
+  pDBConn       = NULL;
+  pResult       = NULL;
+  pLoadedRow    = false;
+  for(uint8_t Retry = 0; Retry < 10; Retry++) {
+    pDBConn = DatabasePool::PopConnection();
+    if(pDBConn != NULL) break;
+    usleep(1000000);
+  }
   if(ExecSentenceNoResult("CREATE SCHEMA IF NOT EXISTS " + BindID(schema) + "; SET search_path TO " +  Bind(schema) + ", public") == false) {
     PQfinish(pDBConn);
     pDBConn = NULL;

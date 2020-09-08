@@ -37,8 +37,8 @@
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.x.valueFormatter = (x) => { return Graph.Formatters.X_Hourly(x, this.analyzer.TimeZone,  ((this.data != null) && (this.data.Aggreg == '1H')) ? false : true); };
         Opt.axes.x.ticker = (min, max, pixels) => { return Graph.Formatters.X_HourlyFull(min, max, pixels, (this.analyzer != null) ? this.analyzer.TimeZone : null); };
-        Opt.axes.y.valueFormatter = (x) => { return this.Round(this.ScaleUnits(x, this.BestUnits(x)), 2, false) + ((this.serie == 'Active_Energy') ? ' Wh' : 'VArh');  };
-        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return (g.axes_[0].valueRange == null) ? '' : this.Round(this.ScaleUnits(x, this.BestUnits(Math.max(Math.abs(g.axes_[0].valueRange[0]), Math.abs(g.axes_[0].valueRange[1])))), 2, true); };
+        Opt.axes.y.valueFormatter = (x, opts, seriesName) => { return Graph.Formatters.Y_UnitScale(x, ((this.serie == 'Active_Energy') ? ' Wh' : 'varh'), 2, true);  };
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         if(this.data != null) {
           var TimeCol = this.data.Headers.indexOf('Time');
           var ValueCol = this.data.Headers.indexOf(this.serie);

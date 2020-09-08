@@ -147,11 +147,11 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
     if(pEvent != NULL) {
       bool IsRunning = false;
       for(uint8_t n = 0; (n < pVoltageChannels) && (IsRunning == false); n++) {
-        printf("OPEN -> %f   %f\n", -CalcChange(Cycle[n], pNominalVoltage), (Event_DIP_SWELL - Event_Hysteresis));
+//        printf("OPEN -> %f   %f\n", -CalcChange(Cycle[n], pNominalVoltage), (Event_DIP_SWELL - Event_Hysteresis));
         if((pEvent->Type == EVT_INTERRUPTION) && (-CalcChange(Cycle[n], pNominalVoltage) > (Event_INT - Event_Hysteresis))) {
           IsRunning = true;
         } else if((pEvent->Type == EVT_DIP) && (-CalcChange(Cycle[n], pNominalVoltage) > (Event_DIP_SWELL - Event_Hysteresis))) {
-          printf("CLOSE -> %f   %f\n", -CalcChange(Cycle[n], pNominalVoltage), (Event_DIP_SWELL - Event_Hysteresis));
+//          printf("CLOSE -> %f   %f\n", -CalcChange(Cycle[n], pNominalVoltage), (Event_DIP_SWELL - Event_Hysteresis));
           IsRunning = true;
         } else if((pEvent->Type == EVT_SWELL) && (CalcChange(Cycle[n], pNominalVoltage) < (Event_DIP_SWELL - Event_Hysteresis))) {
           IsRunning = true;

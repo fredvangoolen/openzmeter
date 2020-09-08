@@ -5,10 +5,27 @@
         <span>From {{ analyzer.FormatDate(bill.From) }} to {{ analyzer.FormatDate(bill.To) }} ({{ bill.Name }})</span>
         <div v-if="bill.Complete==false" class="title-warning"><img :src="require('Imgs/exclamation.png')">Bill is not yet complete, partial data is shown</div>
       </div>
-      <div class="float-right"><strong style="font-size: 16px" v-html="Round(bill.Total, 2, true) + ' ' + bill.Currency"></strong></div>
+      <portal to="fs-toolbar" :disabled="!Expanded" class="float-right">
+        <toolbar-aggregation storage="AggregationBill" v-model="Aggreg" :options="['15M', '1H', '1D']"></toolbar-aggregation>
+          <div class="btn-group">
+            <button type="button" class="btn btn-default btn-xs" :class="{ active: GraphSeries=='Energy' }" @click="GraphSeries='Energy'">Energy</button>
+            <button type="button" class="btn btn-default btn-xs" :class="{ active: GraphSeries=='Power' }" @click="GraphSeries='Power'">Power</button>
+          </div>
+          <div class="btn-group">
+            <button-export :rows="Export" file="Evolution"></button-export>
+            <button-expand v-model="Expanded"></button-expand>
+          </div>
+        </portal>
+      <div class="float-right"><strong style="font-size: 16px; padding-right: 10px" v-html="Round(bill.Total, 2, true) + ' ' + bill.Currency"></strong></div>
     </div>
     <div class="panel-body">
       <div class="row">
+        <div class="col-md-12">
+          <portal to="fs-body" :disabled="!Expanded" class="panel-body">
+            <spinner v-if="TransferGraph.Data==null"></spinner>
+            <graph :options="GraphOptions" :height="Expanded?DialogHeight:200"></graph>
+          </portal>
+        </div>
         <div class="col-md-12 col-lg-6">
           <div v-for="(p, idx) in bill.Periods" :key="idx" class="main-div">
             <table class="main-table">
@@ -23,28 +40,6 @@
           </div>
         </div>
         <div class="col-md-12 col-lg-6">
-          <table class="main-table" >
-            <tr><td class="border-bottom">Evolution
-              <portal to="fs-toolbar" :disabled="!Expanded" class="float-right">
-                <div class="btn-group">
-                  <button type="button" class="btn btn-default btn-xs" :class="{ active: GroupDay }" @click="GroupDay=!GroupDay"><img :src="require('Imgs/calendar_view_day.png')"></button>
-                </div>
-                <div class="btn-group">
-                  <button type="button" class="btn btn-default btn-xs" :class="{ active: GraphSeries=='Energy' }" @click="GraphSeries='Energy'">Energy</button>
-                  <button type="button" class="btn btn-default btn-xs" :class="{ active: GraphSeries=='Power' }" @click="GraphSeries='Power'">Power</button>
-                </div>
-                <div class="btn-group">
-                  <button-export :rows="Export" file="Evolution"></button-export>
-                  <button-expand v-model="Expanded"></button-expand>
-                </div>
-              </portal>
-            </td></tr>
-            <tr><td style="padding: 5px 0px">
-              <portal to="fs-body" :disabled="!Expanded" class="panel-body">
-                <graph :options="GraphOptions" :height="Expanded?DialogHeight: 200"></graph>
-              </portal>
-            </td></tr>
-          </table>
           <table class="main-table" v-show="bill.General.length>0">
             <tr><td class="border-bottom">General
               <div class="float-right"><strong v-html="Round(bill.General.reduce((sum, i) => { return sum + ((i.Type != 'INFO') ? i.Value : 0.0); }, 0.0), 2, true) + ' ' + bill.Currency"></strong></div>
@@ -76,7 +71,7 @@
   export default {
     props: { bill: Object, analyzer: Object },
     data: function() {
-      return { Expanded: false, DialogHeight: 200, GraphSeries: 'Energy', GroupDay: true,
+      return { Expanded: false, DialogHeight: 200, GraphSeries: 'Energy', Aggreg: null, TransferGraph: this.PriceTransfer(['ACTIVE_ENERGY', 'ACTIVE_POWER', 'COLOR', 'PERIOD', 'CONTRACTED', 'ENERGY_COST', 'POWER_COST']),
         ColumnsCost: [
           { name: 'Description', title: 'Concept' },
           { name: 'Type', title: 'Term', callback: this.TermFormat },
@@ -92,14 +87,22 @@
         ],
       };
     },
+    created: function() {
+      this.TransferGraph.Update(this.analyzer, this.Aggreg, [this.bill.From, this.bill.To]);
+    },
+    watch: {
+      Aggreg: function() {
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, [this.bill.From, this.bill.To]);
+      },
+      analyzer: function() {
+        this.TransferGraph.Update(this.analyzer, this.Aggreg, [this.bill.From, this.bill.To]);
+      }
+    },
     computed: {
       GraphOptions: function() {
-
         var Opt = { file: [], axes: { x: {}, y: {}, y2: {} }};
-        return Opt;
         Opt.interactionModel = Graph.InteractionModels.Fixed(this);
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
-        Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.showRangeSelector = false;
         Opt.strokeWidth = 0.5;
         Opt.gridLineColor = "#DDD";
@@ -111,63 +114,70 @@
         Opt.legend = 'follow';
         Opt.selectMode = 'euclidian';
         Opt.includeZero = true;
-
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 30;
         Opt.axes.y2.pixelsPerLabel = 15;
         Opt.axes.y2.axisLabelWidth = 30;
         Opt.dateWindow = [this.bill.From, this.bill.To];
+        Opt.xAxisHeight = 12;
+        Opt.axes.x.valueFormatter = (x) => { return Graph.Formatters.X_Hourly(x, this.analyzer.TimeZone,  ((this.TransferGraph.Data != null) && (this.TransferGraph.Data.Aggreg == '1H')) ? false : true); };
+        Opt.axes.x.ticker = (min, max, pixels) => { return Graph.Formatters.X_HourlyFull(min, max, pixels, (this.analyzer != null) ? this.analyzer.TimeZone : null); };
+        if(this.TransferGraph.Data == null) return Opt;
+        Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.TransferGraph.Data) };
 
-        if(this.GroupDay) {
-          Opt.xAxisHeight = 10;
-          Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDate(x); };
-          Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDate(x); };
-          if(this.GraphSeries=='Energy') {
-            var PrevDay     = null;
-            var EnergySum   = 0;
-            var EnergyPrice = 0;
-            var Samples     = 0;
-            for(var n = 0; n < this.bill.Sampletime.length; n++) {
-              var Date = moment(this.bill.Sampletime[n]).tz(this.analyzer.TimeZone);
-              if((PrevDay != null) && (PrevDay.isSame(Date, 'day'))) {
-                EnergySum += this.bill.Active_Power[n] / 4.0;
-                EnergyPrice += this.bill.Period_Energy_Cost[n];
-                Samples++;
-              } else {
-                if(Samples != 0) Opt.file.push([PrevDay.valueOf(), EnergySum, EnergyPrice /Samples]);
-                Samples = 0;
-                EnergySum = this.bill.Active_Power[n] / 4.0;
-                EnergyPrice = this.bill.Period_Energy_Cost[n];
-                PrevDay = Date;
-              }
-            }
-            if(Samples != 0) Opt.file.push([PrevDay.valueOf(), EnergySum, EnergyPrice /Samples]);
-          }
-        } else {
-          Opt.xAxisHeight = 20;
-          Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
-          Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
-          if(this.GraphSeries=='Energy') {
-            for(var n = 0; n < this.bill.Sampletime.length; n++) Opt.file.push([this.bill.Sampletime[n], this.bill.Active_Power[n] / 4.0, this.bill.Period_Energy_Cost[n]]);
-          }
-        }
-        if(this.GraphSeries=='Energy') {
-          Opt.labels = ['Time', 'Energy', 'Cost'];
+//        if(this.GroupDay) {
+//          Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDate(x); };
+//          Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDate(x); };
+//          if(this.GraphSeries=='Energy') {
+//            var PrevDay     = null;
+//            var EnergySum   = 0;
+//            var EnergyPrice = 0;
+//            var Samples     = 0;
+//            for(var n = 0; n < this.bill.Sampletime.length; n++) {
+//              var Date = moment(this.bill.Sampletime[n]).tz(this.analyzer.TimeZone);
+//              if((PrevDay != null) && (PrevDay.isSame(Date, 'day'))) {
+//                EnergySum += this.bill.Active_Power[n] / 4.0;
+//                EnergyPrice += this.bill.Period_Energy_Cost[n];
+//                Samples++;
+//              } else {
+//                if(Samples != 0) Opt.file.push([PrevDay.valueOf(), EnergySum, EnergyPrice /Samples]);
+//                Samples = 0;
+//                EnergySum = this.bill.Active_Power[n] / 4.0;
+//                EnergyPrice = this.bill.Period_Energy_Cost[n];
+//                PrevDay = Date;
+//              }
+//            }
+//            if(Samples != 0) Opt.file.push([PrevDay.valueOf(), EnergySum, EnergyPrice /Samples]);
+//          }
+//        } else {
+//          Opt.xAxisHeight = 20;
+//          Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
+//          Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
+//        }
+        var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
+        if(this.GraphSeries == 'Energy') {
+          var EnergyCol = this.TransferGraph.Data.Headers.indexOf('Active_Energy');
+          var CostCol = this.TransferGraph.Data.Headers.indexOf('Energy_Cost');
+          Opt.labels = ['Time', 'Energy', 'Energy cost'];
           Opt.colors = [this.analyzer.Color.Active_Energy, '#d9534f'];
-          Opt.series = { 'Energy': { axis: 'y', plotter: Graph.Plotters.Bar }, 'Cost': { axis: 'y2' } };
-          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true, false], { incZero: 1.0 });
-          var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
-          Opt.axes.y.valueFormatter = (x) => { return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + this.bill.EnergyUnits; };
-          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(this.ScaleUnits(x, Units), 2, true); };
+          Opt.series = { 'Energy': { axis: 'y', plotter: (e) => { Graph.Plotters.BarOffset(e, (this.Aggreg == '1D') ? 86400000 : (this.Aggreg == '1H') ? 3600000 : 900000); } }, 'Energy cost': { axis: 'y2' } };
+          for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) Opt.file.push([this.TransferGraph.Data.Rows[n][TimeCol], this.TransferGraph.Data.Rows[n][EnergyCol], this.TransferGraph.Data.Rows[n][CostCol]]);
+//          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true, false], { incZero: 1.0 });
+//          var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
+        Opt.axes.y.valueFormatter = (x, opts, seriesName) => { return Graph.Formatters.Y_UnitScale(x, 'Wh', 2, true);  };
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
+
+
+
         } else {
           Opt.labels = ['Time', 'Power', 'Contracted', 'Cost'];
           Opt.colors = [this.analyzer.Color.Active_Power, '#428bca', '#d9534f'];
           Opt.series = { 'Power': { axis: 'y', fillGraph: true }, 'Power': { axis: 'y' }, 'Cost': { axis: 'y2' } };
-          for(var n = 0; n < this.bill.Sampletime.length; n++) Opt.file.push([this.bill.Sampletime[n], this.bill.Active_Power[n], this.bill.Period_Power_Contracted[n], this.bill.Period_Power_Cost[n]]);
-          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true, true, false], { incZero: 1.0 });
-          var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
-          Opt.axes.y.valueFormatter = (x) => { return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + this.bill.PowerUnits; };
-          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(this.ScaleUnits(x, Units), 2, true); };
+          for(var n = 0; n < this.data.Sampletime.length; n++) Opt.file.push([this.bill.Sampletime[n], this.bill.Active_Power[n], this.bill.Period_Power_Contracted[n], this.bill.Period_Power_Cost[n]]);
+//          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true, true, false], { incZero: 1.0 });
+//          var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
+//          Opt.axes.y.valueFormatter = (x) => { return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + this.bill.PowerUnits; };
+//          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(this.ScaleUnits(x, Units), 2, true); };
         }
         Opt.axes.y2.valueFormatter = (x) => { return this.Round(x, 2, true) + ' ' + this.bill.Currency + '/' + this.bill.EnergyUnits; };
         Opt.axes.y2.axisLabelFormatter = (x) => { return this.Round(x, 2, true); };

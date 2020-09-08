@@ -49,10 +49,10 @@ DatabasePool::DatabasePool() {
   Config["Password"] = Password;
   ConfigFile::WriteConfig("/Database", Config);
   pConnectionString = "host=" + Hostname + " port=" + to_string(Port) + " user=" + Username + " password=" + Password + " dbname=" + DataBase + " sslmode=allow";
-  MessageLoop::RegisterListener("DatabasePool_PeriodicTasks", PeriodicTasks, 60000);
   LogFile::Debug("Creating database tables");
   Database DB;
   if(DB.ExecResource("SQL/Database.sql") == false) LogFile::Error("Database is damaged, manual repair is nedded");
+  MessageLoop::RegisterListener("DatabasePool_PeriodicTasks", PeriodicTasks, 60000);
 }
 DatabasePool::~DatabasePool() {
   MessageLoop::UnregisterListener("DatabasePool_PeriodicTasks");

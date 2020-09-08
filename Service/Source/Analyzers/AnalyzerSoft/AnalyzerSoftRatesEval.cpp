@@ -53,7 +53,7 @@ json AnalyzerSoftRatesEval::Headers() {
   if(pSeriesMask & SERIE_ENERGY_COST)     Header.push_back("Energy_Cost");
   if(pSeriesMask & SERIE_PERIOD)          Header.push_back("Period");
   if(pSeriesMask & SERIE_COLOR)           Header.push_back("Color");
-  if(pSeriesMask & SERIE_CONTRACTED)      Header.push_back("Power_Contracted");
+  if(pSeriesMask & SERIE_CONTRACTED)      Header.push_back("Contracted");
   if(pSeriesMask & SERIE_BILL)            Header.push_back("Bill");
   return Header;
 }

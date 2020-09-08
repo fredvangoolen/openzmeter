@@ -1,3 +1,18 @@
+## [sep-2020]
+  - Lots of internal changes to reduce memory and CPU usage.
+  - API changed to stream data from database without need to load entire dataset.
+  - Lots of bugs fixed in frontend:
+    - Export buttons.
+    - Labels.
+    - Units in graphs.
+    - Period/bill decoration in graphs.
+    - Bar graphs alignament to hours/quarters.
+    - X axes labels alignament to hours/quarters.
+    - Timezone corrections.
+  - Rate comparison function added. Aditionaly to current real rates, other groups of rates may be added to an analyzer. In 'Cost' view a group can be selected.
+  - API documentation improved.
+  - Ethernet configuration added to board with embedded ethernet (OrangePI).
+
 ## [jun-2020]
   - Alarms and Disturbances badged added to WEB menu.
   - Waveform stream function added to WEB.

@@ -117,7 +117,7 @@
                TransferNow: this.NowTransfer(['FREQUENCY', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'POWER_HARMONICS', 'CURRENT', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI', 'GA_POWER']),
                Transfer3S: this.SeriesTransfer(['ACTIVE_POWER', 'REACTIVE_POWER']),
                Transfer1M: this.SeriesTransfer(['ACTIVE_POWER', 'REACTIVE_POWER']),
-               TransferGraph: this.PriceTransfer(['ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_CONTRACTED', 'PERIOD', 'COLOR', 'BILL']),
+               TransferGraph: this.PriceTransfer(['ACTIVE_POWER', 'REACTIVE_POWER', 'CONTRACTED', 'PERIOD', 'COLOR', 'BILL']),
                TransferCubism: this.SeriesTransfer(['POWER_HARMONICS', 'ACTIVE_POWER', 'REACTIVE_POWER', 'APPARENT_POWER', 'POWER_FACTOR', 'PHI'])
       };
     },
