@@ -15,14 +15,14 @@ extern unsigned char  BSS_START;
 extern unsigned char  BSS_END;
 // the section "vectors" is placed at the beginning of flash  by the linker script -------------------------------------
 const void * Vectors[] __attribute__((section(".vectors"))) = {
-  (void *)0x20001000,     /* Top of stack (4k) */ 
+  (void *)0x20001800,     /* Top of stack */
   Init,                   /* Reset Handler */
   Default_Handler,        /* NMI */
-  HardFault_Handler,      /* Hard Fault */
+  Default_Handler,        /* Hard Fault */
   Default_Handler,        /* MemManage */
   Default_Handler,        /* Reserved  */
   Default_Handler,        /* Reserved */
-  Default_Handler,        /* Reserved */ 
+  Default_Handler,        /* Reserved */
   Default_Handler,        /* Reserved */
   Default_Handler,        /* Reserved */
   Default_Handler,        /* Reserved */
@@ -78,10 +78,10 @@ void Init() {
   Setup();
   while(1) Loop();
 }
-void Default_Handler() {        
+void Default_Handler() {
   while(1);
 }
-void HardFault_HandlerC(unsigned long *hardfault_args){
+/*void HardFault_HandlerC(unsigned long *hardfault_args){
   volatile unsigned long stacked_r0 ;
   volatile unsigned long stacked_r1 ;
   volatile unsigned long stacked_r2 ;
@@ -106,7 +106,7 @@ void HardFault_HandlerC(unsigned long *hardfault_args){
   stacked_psr = ((unsigned long)hardfault_args[7]) ;
   // Configurable Fault Status Register
   // Consists of MMSR, BFSR and UFSR
-  _CFSR = (*((volatile unsigned long *)(0xE000ED28))) ;   
+  _CFSR = (*((volatile unsigned long *)(0xE000ED28))) ;
   // Hard Fault Status Register
   _HFSR = (*((volatile unsigned long *)(0xE000ED2C))) ;
   // Debug Fault Status Register
@@ -133,4 +133,4 @@ static void HardFault_Handler(void) {
          "MRS    R0, MSP \n"
          "B      HardFault_HandlerC      \n"
          ".syntax divided\n");
-}
+}*/

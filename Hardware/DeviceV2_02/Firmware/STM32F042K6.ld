@@ -3,10 +3,9 @@ MEMORY
     flash : org = 0x08000000, len = 32k
     ram : org = 0x20000000, len = 6k
 }
-  
+
 SECTIONS
 {
-        
 	. = ORIGIN(flash);
         .text : {
 		  *(.vectors); /* The interrupt vectors */
@@ -21,9 +20,7 @@ SECTIONS
         } >ram AT>flash
 	BSS_START = .;
 	.bss : {
-	  
 	    *(.bss);
-	  
 	} > ram
 	BSS_END = .;
 }

@@ -3,7 +3,7 @@
 #include <STM32F0xx.h>
 #include "USB.h"
 // Configuration -------------------------------------------------------------------------------------------------------
-#define BUFF_LEN  1200
+#define BUFF_LEN                        2816
 // USB application definitions -----------------------------------------------------------------------------------------
 #define SEND_EP                         0x81
 #define RECV_EP                         0x02
@@ -18,13 +18,14 @@ typedef struct {
 } SignalsStatus_t;
 enum LED_Color {OFF = 0, RED = 1, GREEN = 2, YELLOW = 3 };
 typedef struct {
-  uint8_t ExtPower:1;   //External power flag
-  uint8_t Charging:1;   //Charging flag
-  uint8_t Battery:6;    //Battery level
+  uint8_t ExtPower:1;         //External power flag
+  uint8_t Charging:1;         //Charging flag
+  uint8_t Battery:6;          //Battery level
+  uint8_t ChargingCounter;    //Charging signal counter
 } SysStatus_t;
 typedef struct {
-  uint16_t Action:2;    //Pending button action
-  uint16_t Counter:14;  //Buttons ticks
+  uint16_t Action:2;          //Pending button action
+  uint16_t Counter:14;        //Buttons ticks
 } ButtonStatus_t;
 enum Button_Action { NONE = 0, CLICK = 1, LONG_CLICK = 2, VERY_LONG_CLICK = 3};
 typedef struct {
@@ -35,10 +36,10 @@ typedef struct {
 } Samples_Buffer_t;
 // Local variables -----------------------------------------------------------------------------------------------------
 volatile uint32_t SysTicks;
-SignalsStatus_t   SignalsStatus = { .Power_Color = OFF, .Status_Color = OFF, .Wifi_Color = OFF, .Buzzer = 0};
-SysStatus_t       SysStatus = { .Charging = 0, .ExtPower = 0, .Battery = 0 };
-ButtonStatus_t    ButtonStatus = { .Action = CLICK, .Counter = 0};
-Samples_Buffer_t  Samples_Buffer = { .Head = 0, .Tail = 0, .Counter = 0 };
+Samples_Buffer_t  Samples_Buffer;
+SignalsStatus_t   SignalsStatus;
+ButtonStatus_t    ButtonStatus;
+SysStatus_t       SysStatus;
 uint16_t          ADC_Read[8][9];
 // Control LED, buton and buzzer ---------------------------------------------------------------------------------------
 void SysTick_ISR() {
@@ -66,9 +67,9 @@ void SysTick_ISR() {
   }
   if((SysTicks % 64) == 0) {
     TIM2->CCR2 = ((SignalsStatus.Buzzer & 0x001) ? 1000 - 1 : 0);
-    SignalsStatus.Buzzer = SignalsStatus.Buzzer >> 1;    
+    SignalsStatus.Buzzer = SignalsStatus.Buzzer >> 1;
   }
-  //Detecto pulsacion de boton
+  //Push button reading
   if(ButtonStatus.Action == NONE) {
     if(GPIOA->IDR & GPIO_IDR_0) {
       if(ButtonStatus.Counter == 0) SignalsStatus.Buzzer = 0b000000001;
@@ -116,7 +117,8 @@ void DMA_CH1_ISR() {
   int16_t Offset = (2048 * 4) - (Ptr[0] + Ptr[9] + Ptr[18] + Ptr[27]);
   if((Offset > 256) || (Offset < -256)) Offset = 0;
   for(uint8_t Count = 0; Count < 7; Count++) {
-    uint16_t Next = (Samples_Buffer.Head + 1) % BUFF_LEN;
+    uint16_t Next = Samples_Buffer.Head + 1;
+    if(Next == BUFF_LEN) Next = 0;
     Ptr++;
     if(Next != Samples_Buffer.Tail) {
       Samples_Buffer.Buffer[Samples_Buffer.Head] = (((Ptr[0] + Ptr[9] + Ptr[18] + Ptr[27] + Offset) >> 1) & 0x1FFF) | (Count << 13);
@@ -126,33 +128,34 @@ void DMA_CH1_ISR() {
       Samples_Buffer.Tail = 0;
     }
   }
-  //const uint16_t Temp30 = *(uint16_t*)0x1FFFF7B8;
-  //const uint16_t Temp110 = *(uint16_t*)0x1FFFF7C2;
-  //int32_t Temp = ((Ptr[0].Temperature - Temp30) * 80) / (Temp110 - Temp30) + 30;
-  //TIM16->CCR1 = (Temp < 50) ? 0 : Temp * 30000;
   if(Ptr[8] < 2560) {
     SysStatus.Battery = 0;
   } else {
-    Ptr[8] = Ptr[8] - 2560 / 18;
+    Ptr[8] = Ptr[8] - (2560 / 18);
     SysStatus.Battery = (Ptr[8] > 63) ? 63 : Ptr[8];
   }
-//  int32_t Battery = ((uint32_t)Ptr[8] * 4520) / 4096;
-//  SysStatus.Battery = (Battery <= 2960) ? 0 : (Battery >= 4240) ? 63 : (Battery - 2960) / 20;
 }
 // USB callbacks functions ---------------------------------------------------------------------------------------------
 void USB_HandleEP1_TX(uint8_t event) {
-  uint16_t fifo[32];
   if(event != USB_EVENT_TX) return;
+  PMA_Table_t  *tbl = EPT(SEND_EP);
+  uint16_t     *reg = EPR(SEND_EP);
+  PMA_Record_t *ptr = (*reg & USB_EP_SWBUF_TX) ? &(tbl->tx1) : &(tbl->tx0);
+  uint16_t     *pma = (void*)(USB_PMAADDR + ptr->addr);
   for(int x = 0; x < 32; x++) {
+    uint16_t Word;
+    uint8_t *Bytes = &Word;
     if(Samples_Buffer.Head == Samples_Buffer.Tail) {
-      fifo[x] = 0xE000 | (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
+      Word = 0xE000 | (ButtonStatus.Action << 8) | (SysStatus.Battery << 2) | (SysStatus.Charging << 1) | (SysStatus.ExtPower);
     } else {
-      uint16_t Val = Samples_Buffer.Buffer[Samples_Buffer.Tail];
-      Samples_Buffer.Tail = (Samples_Buffer.Tail + 1) % BUFF_LEN;
-      fifo[x] = Val;
+      Word = Samples_Buffer.Buffer[Samples_Buffer.Tail];
+      Samples_Buffer.Tail = Samples_Buffer.Tail + 1;
+      if(Samples_Buffer.Tail == BUFF_LEN) Samples_Buffer.Tail = 0;
     }
+    *pma++ = Bytes[1] << 8 | Bytes[0];
   }
-  USB_WriteEP(SEND_EP, fifo, 64);
+  ptr->cnt = 64;
+  *reg = (*reg & USB_EPREG_MASK) | USB_EP_SWBUF_TX;
 }
 void USB_HandleEP2_RX(uint8_t event) {
   if(event != USB_EVENT_RX) return;
@@ -206,7 +209,7 @@ void Setup() {
   GPIOF->MODER   |= GPIO_MODER_MODER1_0;
   GPIOF->OSPEEDR |= GPIO_OSPEEDER_OSPEEDR0 | GPIO_OSPEEDER_OSPEEDR1;
   //Configure Port A (PA0, PA8 -> Digital inputs, PA9, PA10, PA15 -> Digital outputs, PA1, PA2, PA3, PA4, PA5, PA6, PA7 -> Analog input, PA11, PA12 -> Alternate function, PA13, PA14 -> SWD)
-  GPIOA->MODER |= GPIO_MODER_MODER1 | GPIO_MODER_MODER2 | GPIO_MODER_MODER3 | GPIO_MODER_MODER4 | GPIO_MODER_MODER5 | GPIO_MODER_MODER6 | GPIO_MODER_MODER7 | GPIO_MODER_MODER9_0 | 
+  GPIOA->MODER |= GPIO_MODER_MODER1 | GPIO_MODER_MODER2 | GPIO_MODER_MODER3 | GPIO_MODER_MODER4 | GPIO_MODER_MODER5 | GPIO_MODER_MODER6 | GPIO_MODER_MODER7 | GPIO_MODER_MODER9_0 |
                   GPIO_MODER_MODER10_0 | GPIO_MODER_MODER11_1 | GPIO_MODER_MODER12_1 | GPIO_MODER_MODER15_0;
   GPIOA->PUPDR |= GPIO_PUPDR_PUPDR8_0 | GPIO_PUPDR_PUPDR0_1;
   //Configure Port B (PB7 -> Digital input, PB0, PB1 -> Analog inputs, PB4, PB5, PB6 -> Digital output, PB3, PB8 -> Alternate function)
@@ -249,29 +252,32 @@ void Setup() {
   //Configure SysTicks every 1ms (48MHz Clock)
   SysTick_Config(48000);
   NVIC_SetPriority(SysTick_IRQn, 2);
-  // Configure and init USB 
+  // Configure and init USB
   USB_Init();
-  //cdc_init_usbd();
   NVIC_EnableIRQ(USB_IRQn);
   NVIC_SetPriority(USB_IRQn, 1);
   USB_Enable(true);
   USB_Connect(true);
+  ButtonStatus.Action = CLICK;
 }
 void Sleep(uint16_t ms) {
   uint32_t Time = SysTicks + ms;
   while(SysTicks < Time);
-} 
+}
 // Main loop -----------------------------------------------------------------------------------------------------------
 void Loop() {
-  static uint8_t Charging = 0;
   //Read charging and external power bits
   SysStatus.ExtPower = (GPIOB->IDR & GPIO_IDR_7) ? 1 : 0;
   if(GPIOA->IDR & GPIO_IDR_8) {
-    SysStatus.Charging = 0;
-    Charging = 0;
+    if(SysStatus.ChargingCounter > 0)
+      SysStatus.ChargingCounter--;
+    else
+      SysStatus.Charging = 0;
   } else {
-    Charging++;
-    if(Charging == 0xFF) SysStatus.Charging = 1;    
+    if(SysStatus.ChargingCounter < 0xFF)
+      SysStatus.ChargingCounter++;
+    else
+      SysStatus.Charging = 1;
   }
   if(ButtonStatus.Action == CLICK) {
     //Handle power on action
@@ -312,9 +318,10 @@ void Loop() {
       }
     }
     SignalsStatus.Power_Color = GREEN;
-    ButtonStatus.Action = NONE;    
+    ButtonStatus.Action = NONE;
   } else if(ButtonStatus.Action == VERY_LONG_CLICK) {
     Sleep(2000);
     Suspend();
   }
 }
+//----------------------------------------------------------------------------------------------------------------------
