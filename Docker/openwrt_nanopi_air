@@ -26,7 +26,7 @@ RUN cd /opt/openWRT_SDK && make package/wireless-tools/compile V=sc-j32
 RUN cd /opt/openWRT_SDK && make package/dbus/compile V=sc -j32
 RUN cd /opt/openWRT_SDK && make package/libusb/compile V=sc -j32
 RUN cd /opt/openWRT_SDK && BUILD_VARIANT="single" make package/fftw3/compile V=sc -j32
-RUN cd /opt/openWRT_SDK && make package/uuid/compile V=sc -j32
+RUN cd /opt/openWRT_SDK && make package/util-linux/compile V=sc -j32
 
 #Clean intermediate files --------------------------------------------------
 RUN cd /opt/openWRT_SDK && rm -rf build_dir
@@ -34,14 +34,14 @@ RUN cd /opt/openWRT_SDK && rm -rf build_dir
 # OpenWRT SDK --------------------------------------------------------------
 ENV SDK_DIR "/opt/openWRT_SDK"
 ENV STAGING_DIR "${SDK_DIR}/staging_dir"
-ENV TOOLCHAIN "${STAGING_DIR}/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi"
-ENV CC=arm-openwrt-linux-gcc  
-ENV CXX=arm-openwrt-linux-g++  
-ENV CMAKE_C_COMPILER=arm-openwrt-linux-gcc  
-ENV CMAKE_CXX_COMPILER=arm-openwrt-linux-g++  
-ENV STRIP=arm-openwrt-linux-strip  
-ENV RANLIB=arm-openwrt-linux-ranlib 
-ENV AS=arm-openwrt-linux-as  
-ENV AR=arm-openwrt-linux-ar  
-ENV LD=arm-openwrt-linux-ld
-ENV PATH=${TOOLCHAIN}/bin:${SDK_DIR}/scripts:$STAGING_DIR/host/bin:${PATH}
+ENV TOOLCHAIN "${STAGING_DIR}/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.5.0_musl_eabi"
+ENV CC "arm-openwrt-linux-gcc"
+ENV CXX "arm-openwrt-linux-g++"
+ENV CMAKE_C_COMPILER "arm-openwrt-linux-gcc"
+ENV CMAKE_CXX_COMPILER "arm-openwrt-linux-g++"
+ENV STRIP "arm-openwrt-linux-strip"
+ENV RANLIB "arm-openwrt-linux-ranlib"
+ENV AS "arm-openwrt-linux-as"
+ENV AR "arm-openwrt-linux-ar" 
+ENV LD "arm-openwrt-linux-ld"
+ENV PATH "${TOOLCHAIN}/bin:${SDK_DIR}/scripts:$STAGING_DIR/host/bin:${PATH}"
