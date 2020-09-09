@@ -104,8 +104,6 @@ typedef union {
     PMA_Record_t rx1;
   };
 } PMA_Table_t;
-
-
  // Functions -----------------------------------------------------------------------------------------------------------
 void         USB_Init();
 uint8_t      USB_Connect(bool connect);

@@ -67,7 +67,7 @@ const uint8_t USB_ConfigDescriptor[] = {
   0x02,                                   /* bmAttributes: Bulk */
   0x40, 0x00,                             /* wMaxPacketSize: */
   0x00,                                   /* bInterval: ignore for Bulk transfer */
-  
+
   0x07,                                   /* bLength: Endpoint Descriptor size */
   USB_DTYPE_ENDPOINT,                     /* bDescriptorType: Endpoint */
   0x02,                                   /* bEndpointAddress: (OUT2) */
@@ -75,7 +75,7 @@ const uint8_t USB_ConfigDescriptor[] = {
   0x02, 0x00,                             /* wMaxPacketSize: */
   0x00                                    /* bInterval: ignore for Bulk transfer */
 };
-const uint8_t StringLangID[] = { 
+const uint8_t StringLangID[] = {
   0x04,                                   /* bLength */
   USB_DTYPE_STRING,                       /* bDescriptorType */
   0x0A, 0x04                              /* LangID = 0x040A: Spanish */
@@ -88,14 +88,14 @@ const uint8_t StringVendor[] = {
 const uint8_t StringProduct[] = {
   0x38,                                   /* bLength */
   USB_DTYPE_STRING,                       /* bDescriptorType */
-  'o', 0, 'p', 0, 'e', 0, 'n', 0, 'Z', 0, 'm', 0, 'e', 0, 't', 0, 
+  'o', 0, 'p', 0, 'e', 0, 'n', 0, 'Z', 0, 'm', 0, 'e', 0, 't', 0,
   'e', 0, 'r', 0, ' ', 0, '-', 0, ' ', 0, 'C', 0, 'a', 0, 'p', 0,
   't', 0, 'u', 0, 'r', 0, 'e', 0, ' ', 0, 'd', 0, 'e', 0, 'v', 0,
-  'i', 0, 'c', 0, 'e', 0 
+  'i', 0, 'c', 0, 'e', 0
 };
 // Variables -----------------------------------------------------------------------------------------------------------
 USB_Device_t USB_Device;
-uint32_t USB_Buffer[0x20] __attribute__ ((aligned (4)));
+uint8_t      USB_Buffer[32] __attribute__ ((aligned (4)));
 
 // Functions -----------------------------------------------------------------------------------------------------------
 PMA_Table_t *EPT(uint8_t ep) {
@@ -680,7 +680,7 @@ void         USB_ISR() {
       break;
   }
 //  if(udev.Events[_ev]) udev.Events[_ev](_ev, _ep);
-  
-  
+
+
 //  usbd_process_evt(&udev, _ev, _ep);
 }
