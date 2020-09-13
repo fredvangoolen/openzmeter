@@ -64,7 +64,7 @@
           for(var n = 0; n < this.last.Active_Power.length; n++) Val.Value += this.last.Active_Power[n];
           Val.Units = this.BestUnits(Val.Value);
           Val.Value = this.Round(this.ScaleUnits(Val.Value, Val.Units), 2, true);
-          for(var n = 1; n < this.last.Active_Power.length; n++) Val.Phases.push(this.Round(this.ScaleUnits(this.last.Active_Power[n], Val.Units), 2, true) + ' ' + Val.Units + 'W');
+          for(var n = 0; n < this.last.Active_Power.length; n++) Val.Phases.push(this.Round(this.ScaleUnits(this.last.Active_Power[n], Val.Units), 2, true) + ' ' + Val.Units + 'W');
           Val.Units += 'W';
         } else if((this.serie == 'Voltage') || (this.serie == 'Current')) {
           Val.Value = 0.0;
@@ -72,7 +72,7 @@
           Val.Value = Math.sqrt(Val.Value / this.analyzer.VoltageChannels);
           Val.Units = this.BestUnits(Val.Value);
           Val.Value = this.Round(this.ScaleUnits(Val.Value, Val.Units), 2, true);
-          for(var n = 1; n < this.last[this.serie].length; n++) Val.Phases.push(this.Round(this.ScaleUnits(this.last[this.serie][n], Val.Units), 2, true) + ' ' + Val.Units + this.analyzer.Unit[this.serie]);
+          for(var n = 0; n < this.last[this.serie].length; n++) Val.Phases.push(this.Round(this.ScaleUnits(this.last[this.serie][n], Val.Units), 2, true) + ' ' + Val.Units + this.analyzer.Unit[this.serie]);
           Val.Units += this.analyzer.Unit[this.serie];
         }
         return Val;

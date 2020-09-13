@@ -77,7 +77,7 @@
         </div>
       </div>
       <div class="col-lg-12">
-        <detail-tabs v-if="analyzer.NominalFrequency!=0" :tabs="['Waveform', 'Harmonics', 'GA', 'Evolution', 'Distribution', 'Parameters', 'Lissajou']" storage="Power.Detail.Tab.AC" v-model="ActiveTab"></detail-tabs>
+        <detail-tabs v-if="analyzer.NominalFrequency!=0" :tabs="['Waveform', 'Harmonics', /*'GA',*/ 'Evolution', /*'Distribution',*/ 'Parameters', 'Lissajou']" storage="Power.Detail.Tab.AC" v-model="ActiveTab"></detail-tabs>
         <detail-tabs v-if="analyzer.NominalFrequency==0" :tabs="['Waveform']" storage="Power.Details.Tabs.DC" v-model="ActiveTab"></detail-tabs>
         <waveform v-if="ActiveTab=='Waveform'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></waveform>
         <harmonics v-if="ActiveTab=='Harmonics'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></harmonics>
