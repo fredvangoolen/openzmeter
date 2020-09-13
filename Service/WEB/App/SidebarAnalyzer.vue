@@ -81,7 +81,7 @@
       Style: function(serie, primary) {
         if(this.analyzer.Channels[serie] == 1) return { Colors: [this.analyzer.Color[serie]], Width: (primary == true) ? 0.5 : 1.5 };
         var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];
-        return { Colors: Colors.slice(0, analyzer.Channels[serie]), Width: (primary == true) ? 0.5 : 1.5 }
+        return { Colors: Colors.slice(0, this.analyzer.Channels[serie]), Width: (primary == true) ? 0.5 : 1.5 }
       },
       CalcRange: function(range, aggreg) {
         var Now = moment().tz(this.analyzer.TimeZone);

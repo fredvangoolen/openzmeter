@@ -134,7 +134,7 @@ void AnalyzerSoftMQTT::PublishAggreg(const string &aggreg, const AnalyzerSoftAgg
     params->GetSeriesJSON("VOLTAGE_PHASE", Result);
     string TextMsg = Result.dump();
     string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/" + aggreg : pSerial + "/" + aggreg;
-    mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
+    mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1);
     LogFile::Debug("Analyzer '%s' publish aggregation to MQTT broker", pSerial.c_str());
   }
   pthread_mutex_unlock(&pMutex);

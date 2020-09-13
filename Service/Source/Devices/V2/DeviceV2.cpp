@@ -421,7 +421,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
       if(Seq == 7) {
         if(StatusRecv == true) continue;
         float Battery_Volt = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
-        Status::SetValue("/Battery_Volt", Battery_Volt);
+        Status::SetValue("/Battery_Voltage", Battery_Volt);
         float Battery_Level  = (Battery_Volt - 2.96) * 80.65;
         Status::SetValue("/Battery_Level", (Battery_Level > 100.0) ? 100.0 : Battery_Level);
         Status::SetValue("/Charging", (Sample & 0x0002) ? true: false);
