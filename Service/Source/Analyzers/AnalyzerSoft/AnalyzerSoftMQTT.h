@@ -43,6 +43,7 @@ class AnalyzerSoftMQTT final {
     bool              p1H;          //Enable 1 hour publish
     bool              pAlarms;      //Enable alarms publish
     bool              pConfig;      //Enable config publish
+    json              pParentConf;  //Keep
   private :
     void *Thread();
   public :
@@ -52,7 +53,6 @@ class AnalyzerSoftMQTT final {
     ~AnalyzerSoftMQTT();
     void Config(const json &config);
     void PublishAggreg(const string &aggreg, const AnalyzerSoftAggreg *params);
-    void PublishConfig(const json &options);
     void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
 };
 // ---------------------------------------------------------------------------------------------------------------------

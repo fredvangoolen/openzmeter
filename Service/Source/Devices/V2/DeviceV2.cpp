@@ -288,7 +288,7 @@ void DeviceV2::Configure(const json& config) {
       for(unsigned Ch = 0; Ch < Tmp["Current"].size(); Ch++) {
         string Current =  Tmp["Current"][Ch];
         CurrentMap[Ch] = Current[3] - '1' + 3;
-        InvertMap[Ch] = (Current[0] == '+') ? 1.0 : -1.0;
+        InvertMap[Ch] = (Current[0] == '-');
       }
       Name = Name + ((Mode == Analyzer::PHASE3) ? "_3P" : "_3PN");
     }

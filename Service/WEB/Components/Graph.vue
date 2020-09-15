@@ -285,7 +285,7 @@
         for(var n = 0; n < serieIndex; n++) {
           if(g.user_attrs_.visibility[n] == false) VisibleSerie--;
         }
-        if(g.UndoHighlight.cx != undefined && g.UndoHighlight.cx[serieIndex] != undefined) {
+        if(g.UndoHighlight.cx != null && g.UndoHighlight.cx[serieIndex] != null) {
           var x_left = g.UndoHighlight.cx[serieIndex] - (g.subbar_width * g.SeriesCount / 2) + VisibleSerie * g.subbar_width;
           canvasContext.fillRect(x_left, g.UndoHighlight.cy[serieIndex], g.subbar_width, g.y_bottom - g.UndoHighlight.cy[serieIndex]);
         }
