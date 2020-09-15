@@ -93,7 +93,7 @@
         return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Battery_Level != null)) ? Math.round(this.Transfer3.Data.System.Battery_Level) + '%' : null;
       },
       BatteryStatus: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Battery_Voltage != null)) ? this.Round(this.Transfer3.Data.System.Battery_Voltage, 2) + 'V' : null;
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Battery_Voltage != null)) ? (this.Transfer3.Data.System.Battery_Voltage < 3) ? 'Uncharged or not mounted' : this.Round(this.Transfer3.Data.System.Battery_Voltage, 2) + 'V' : null;
       },
       EnergyUsage: function() {
         var Energy = new Array(this.analyzer.VoltageChannels).fill(0);

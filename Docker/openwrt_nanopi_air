@@ -27,6 +27,7 @@ RUN cd /opt/openWRT_SDK && make package/dbus/compile V=sc -j32
 RUN cd /opt/openWRT_SDK && make package/libusb/compile V=sc -j32
 RUN cd /opt/openWRT_SDK && BUILD_VARIANT="single" make package/fftw3/compile V=sc -j32
 RUN cd /opt/openWRT_SDK && make package/util-linux/compile V=sc -j32
+RUN cd /opt/openWRT_SDK && make package/mosquitto/compile V=sc -j32
 
 #Clean intermediate files --------------------------------------------------
 RUN cd /opt/openWRT_SDK && rm -rf build_dir

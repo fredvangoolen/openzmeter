@@ -38,15 +38,15 @@ void AnalyzerSoftRates::GetRates(const json &params, Response &response) const {
   response.set_chunked_content_provider("application/json", Func);
 }
 void AnalyzerSoftRates::AddRate(const json &params, Response &response) const {
-  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint8_t Group  = params["Group"];
-  json    Config = Rate::CheckConfig(params, Group == 0);
+  json    Config = Rate::CheckConfig(params);
   if(Config.is_string()) return HTTPServer::FillResponse(response, Config, "text/plain", HTTP_BAD_REQUEST);
-  string Name      = Config["Name"];
-  string StartDate = Config["StartDate"];
-  string EndDate   = Config["EndDate"];
-  string RateID    = Tools::GetUUID();
+  string  Name      = Config["Name"];
+  uint8_t Group     = Config["Group"];
+  string  StartDate = Config["StartDate"];
+  string  EndDate   = Config["EndDate"];
+  string  RateID    = Tools::GetUUID();
   Config.erase("Name");
+  Config.erase("Group");
   Config.erase("StartDate");
   Config.erase("EndDate");
   Database DB(pSerial);
@@ -63,15 +63,15 @@ void AnalyzerSoftRates::GetRate(const json &params, Response &response) const {
 }
 void AnalyzerSoftRates::SetRate(const json &params, Response &response) const {
   if((params.contains("RateID") == false) || (params["RateID"].is_string() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint8_t Group  = params["Group"];
   string  RateID = params["RateID"];
-  json    Config = Rate::CheckConfig(params, Group == 0);
+  json    Config = Rate::CheckConfig(params);
   if(Config.is_string()) return HTTPServer::FillResponse(response, Config, "text/plain", HTTP_BAD_REQUEST);
-  string Name      = Config["Name"];
-  string StartDate = Config["StartDate"];
-  string EndDate   = Config["EndDate"];
+  string  Name      = Config["Name"];
+  uint8_t Group     = Config["Group"];
+  string  StartDate = Config["StartDate"];
+  string  EndDate   = Config["EndDate"];
   Config.erase("Name");
+  Config.erase("Group");
   Config.erase("StartDate");
   Config.erase("EndDate");
   Database DB(pSerial);

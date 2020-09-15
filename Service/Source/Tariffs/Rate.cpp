@@ -48,11 +48,13 @@ Rate::Rate(const json &config, const time_zone &tz) : Tariff(config) {
   sort(BillingCycles.begin(), BillingCycles.end());
   PriceSrc = config["Module"];
 }
-json Rate::CheckConfig(const json &config, const bool primary) {
+json Rate::CheckConfig(const json &config) {
   json ConfigOUT = Tariff::CheckConfig(config);
   if(ConfigOUT.is_string()) return ConfigOUT;
   if((config.contains("Name") == false) || (config["Name"].is_string() == false)) return "'Name' param is required";
   ConfigOUT["Name"] = config["Name"];
+  if((config.contains("Group") == false) || (config["Group"].is_number_integer() == false) || (config["Group"] < 0) || (config["Group"] > 10)) return "'Group' param is requiered";
+  ConfigOUT["Group"] = config["Group"];
   if((config.contains("Taxs") == false) || (config["Taxs"].is_array() == false)) return "'Taxs' param is required";
   ConfigOUT["Taxs"] = json::array();
   for(uint16_t T = 0; T < config["Taxs"].size(); T++) {
@@ -127,16 +129,14 @@ json Rate::CheckConfig(const json &config, const bool primary) {
   for(uint16_t Y = StartDate.year(); Y <= EndDate.year(); Y++) {
     if(find_if(ConfigOUT["Years"].begin(), ConfigOUT["Years"].end(), [&](const json &a) -> bool { return (a["Year"] == Y); }) == ConfigOUT["Years"].end()) return "Missing year(s) in defined range";
   }
-  if(primary == true) {
-    if((config.contains("Billing") == false) || (config["Billing"].is_array() == false)) return "'Billing' param is required";
-    ConfigOUT["Billing"] = json::array();
-    vector<civil_day> Billing;
-    for(uint16_t B = 0; B < config["Billing"].size(); B++) {
-      if((config["Billing"][B].is_string() == false) || (parse("%d/%m/%Y", config["Billing"][B], utc_time_zone(), &TimePoint) == false)) return "'Billing' param is required";
-      civil_day BillDate = civil_day(convert(TimePoint, utc_time_zone()));
-      if((BillDate <= StartDate) || (BillDate >= EndDate) || (find_if(Billing.begin(), Billing.end(), [&](const civil_day &day) -> bool { return day == BillDate; }) != Billing.end())) return "'Billing' param is invalid or repeated";
-      ConfigOUT["Billing"].push_back(format("%d/%m/%Y", TimePoint, utc_time_zone()));
-    }
+  if((config.contains("Billing") == false) || (config["Billing"].is_array() == false)) return "'Billing' param is required";
+  ConfigOUT["Billing"] = json::array();
+  vector<civil_day> Billing;
+  for(uint16_t B = 0; B < config["Billing"].size(); B++) {
+    if((config["Billing"][B].is_string() == false) || (parse("%d/%m/%Y", config["Billing"][B], utc_time_zone(), &TimePoint) == false)) return "'Billing' param is required";
+    civil_day BillDate = civil_day(convert(TimePoint, utc_time_zone()));
+    if((BillDate <= StartDate) || (BillDate >= EndDate) || (find_if(Billing.begin(), Billing.end(), [&](const civil_day &day) -> bool { return day == BillDate; }) != Billing.end())) return "'Billing' param is invalid or repeated";
+    ConfigOUT["Billing"].push_back(format("%d/%m/%Y", TimePoint, utc_time_zone()));
   }
   return ConfigOUT;
 }

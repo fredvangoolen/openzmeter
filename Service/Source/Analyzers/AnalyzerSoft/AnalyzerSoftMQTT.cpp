@@ -16,6 +16,7 @@
  #include "AnalyzerSoftMQTT.h"
  #include "URL.h"
  #include "LogFile.h"
+ #include "Status.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftMQTT::AnalyzerSoftMQTT(const string &serial) {
   pMutex    = PTHREAD_MUTEX_INITIALIZER;
@@ -68,7 +69,8 @@ json AnalyzerSoftMQTT::CheckConfig(const json &config) {
 }
 void AnalyzerSoftMQTT::Config(const json &config) {
   pthread_mutex_lock(&pMutex);
-  bool Enabled = config["Enabled"];
+  pParentConf = config;
+  bool Enabled = config["MQTT"]["Enabled"];
   if(Enabled == false) {
     if(pThread != 0) {
       pTerminate = false;
@@ -85,17 +87,17 @@ void AnalyzerSoftMQTT::Config(const json &config) {
     pAlarms = false;
     pConfig = false;
   } else if(Enabled == true) {
-    pPrefix    = config["Prefix"];
-    pServer    = config["Server"];
-    pUser      = config["User"];
-    pPass      = config["Pass"];
-    p3S        = config["Export3S"];
-    p1M        = config["Export1M"];
-    p10M       = config["Export10M"];
-    p15M       = config["Export15M"];
-    p1H        = config["Export1H"];
-    pAlarms    = config["ExportAlarms"];
-    pConfig    = config["ExportConfig"];
+    pPrefix    = config["MQTT"]["Prefix"];
+    pServer    = config["MQTT"]["Server"];
+    pUser      = config["MQTT"]["User"];
+    pPass      = config["MQTT"]["Pass"];
+    p3S        = config["MQTT"]["Export3S"];
+    p1M        = config["MQTT"]["Export1M"];
+    p10M       = config["MQTT"]["Export10M"];
+    p15M       = config["MQTT"]["Export15M"];
+    p1H        = config["MQTT"]["Export1H"];
+    pAlarms    = config["MQTT"]["ExportAlarms"];
+    pConfig    = config["MQTT"]["ExportConfig"];
     if(pThread == 0) {
       pTerminate = false;
       if(pSendBuff == NULL) pSendBuff  = (uint8_t*)calloc(pBuffSize, 1);
@@ -139,16 +141,6 @@ void AnalyzerSoftMQTT::PublishAggreg(const string &aggreg, const AnalyzerSoftAgg
   }
   pthread_mutex_unlock(&pMutex);
 }
-void AnalyzerSoftMQTT::PublishConfig(const json &options) {
-  pthread_mutex_lock(&pMutex);
-  if((pConfig == true) && (pClient.socketfd != -1)) {
-    string TextMsg = options.dump();
-    string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Config" : pSerial + "/Config";
-    mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
-    LogFile::Debug("Analyzer '%s' publish config to MQTT broker", pSerial.c_str());
-  }
-  pthread_mutex_unlock(&pMutex);
-}
 void AnalyzerSoftMQTT::PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered) {
   pthread_mutex_lock(&pMutex);
   if((pAlarms == true) && (pClient.socketfd == -1)) {
@@ -166,7 +158,8 @@ void AnalyzerSoftMQTT::PublishAlarm(const uint64_t time, const string &name, con
 }
 void *AnalyzerSoftMQTT::Thread() {
   nice(10);
-  string User, Pass, Server;
+  string   User, Pass, Server;
+  uint64_t StatusTimer = 0;
   while(pTerminate == false) {
     pthread_mutex_lock(&pMutex);
     if((pUser != User) || (pPass != Pass) || (pServer != Server)) {
@@ -181,7 +174,10 @@ void *AnalyzerSoftMQTT::Thread() {
     pthread_mutex_unlock(&pMutex);
     mqtt_sync(&pClient);
     if(pClient.error == MQTT_ERROR_CONNECT_NOT_CALLED) {
-      mqtt_connect(&pClient, NULL, NULL, NULL, 0, (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
+      string WillMsg = "{ \"Online\": false }";
+      string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Status" : pSerial + "/Status";
+      StatusTimer = 0;
+      mqtt_connect(&pClient, NULL, Topic.c_str(), WillMsg.c_str(), WillMsg.size(), (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
     } else if(pClient.error == MQTT_ERROR_SOCKET_ERROR) {
       if(pClient.socketfd != -1) {
         close(pClient.socketfd);
@@ -220,8 +216,28 @@ void *AnalyzerSoftMQTT::Thread() {
       } else {
         mqtt_reinit(&pClient, pClient.socketfd, pSendBuff, pBuffSize, pRecvBuff, pBuffSize);
       }
-    } else if(pClient.error != MQTT_OK) {
-      LogFile::Error("Analyzer '%s' MQTT broker fail (%s)", pSerial.c_str(), mqtt_error_str(pClient.error));
+    } else if(pClient.error == MQTT_OK) {
+      pthread_mutex_lock(&pMutex);
+      if((pConfig == true) && (pParentConf != nullptr) && (pClient.socketfd != -1)) {
+        string TextMsg = pParentConf.dump();
+        string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Config" : pSerial + "/Config";
+        mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
+        LogFile::Debug("Analyzer '%s' publish config to MQTT broker", pSerial.c_str());
+        pParentConf = nullptr;
+      }
+      uint64_t Now = Tools::GetTime64();
+      if((StatusTimer == 0) || (StatusTimer + 10000) < Now) {
+        json   Msg = Status::GetJSON();
+        Msg["Online"] = true;
+        string TextMsg = Msg.dump();
+        string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Status" : pSerial + "/Status";
+        mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1);
+        LogFile::Debug("Analyzer '%s' publish config to MQTT broker", pSerial.c_str());
+        StatusTimer = Now;
+      }
+      pthread_mutex_unlock(&pMutex);
+    } else {
+      LogFile::Warning("Analyzer '%s' MQTT broker fail (%s)", pSerial.c_str(), mqtt_error_str(pClient.error));
       pClient.error = MQTT_OK;
     }
     usleep(100000);

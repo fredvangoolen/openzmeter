@@ -160,8 +160,7 @@ void AnalyzerSoft::Configure(const json &options) {
   pAlarms->Config(options["AlarmsEnabled"], NominalVoltage, NominalFrequency);
   pEvents->Config(options["EventsEnabled"], NominalVoltage, NominalFrequency);
   pSync->Config(options["Sync"], Name());
-  pMQTT->Config(options["MQTT"]);
-  pMQTT->PublishConfig(options);
+  pMQTT->Config(options);
   pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoft::Analyzer_Func() {
