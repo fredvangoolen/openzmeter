@@ -62,7 +62,7 @@ build_nanopi_air:
 
 build_onion_omega2:
   stage: build
-  image: registry.gitlab.com/zredalmeria/openzmeter/openwrt_nanopi_air
+  image: registry.gitlab.com/zredalmeria/openzmeter/openwrt_onion_omega2
   tags:
     - devel
   cache:

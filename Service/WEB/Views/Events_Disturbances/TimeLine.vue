@@ -4,8 +4,8 @@
 
 <script>
   import moment from 'moment';
-  import vis from 'vis';
-  import 'CSS/vis.css';
+  import vis from 'vis-timeline';
+//  import 'CSS/vis.css';
   import 'CSS/jquery.qtip.css';
   import qtip from 'JS/jquery.qtip.js';
   export default {
