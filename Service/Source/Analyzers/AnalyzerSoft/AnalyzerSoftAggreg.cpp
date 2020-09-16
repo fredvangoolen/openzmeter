@@ -192,7 +192,7 @@ bool AnalyzerSoftAggreg::GetSeriesJSON(const string &serie, json &result) const 
   } else if(serie == "REACTIVE_ENERGY") {
     json Tmp = json::array();
     for(uint8_t n = 0; n < pVoltageChannels; n++) Tmp.push_back(pReactive_Energy[n]);
-    result["Rective_Energy"] = Tmp;
+    result["Reactive_Energy"] = Tmp;
   } else if(serie == "APPARENT_POWER") {
     json Tmp = json::array();
     for(uint8_t n = 0; n < pVoltageChannels; n++) Tmp.push_back(pApparent_Power[n]);

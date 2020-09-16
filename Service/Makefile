@@ -50,7 +50,7 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -ggdb3 -fstack-protector-all -fstack-check
 else
-	CFLAGS   += -O3 -flto -Wall
+	CFLAGS   += -O3 -flto -Wall -fno-pic -fno-pie
 	LDFLAGS  += -flto
 endif
 ifeq ($(DEVICE_V1), true)
@@ -100,7 +100,7 @@ $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 		printf '%s\000%d\000' `echo $$FILE | cut -d'/' -f2-` `stat --printf="%s" $$FILE` >> Tmp/ResourceFiles ; \
 		cat $$FILE >> Tmp/ResourceFiles ; \
 	done
-	@cd Tmp; $(LD) -r -b binary -o ResourceFiles.o ResourceFiles
+	@cd Tmp; $(LD) -s -r -b binary -o ResourceFiles.o ResourceFiles
 	@rm -f Tmp/ResourceFiles
 
 $(EXECUTABLE_TARGET): $(RESOURCES_TARGET) $(EXECUTABLE_OBJS)
