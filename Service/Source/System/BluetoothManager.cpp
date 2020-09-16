@@ -22,7 +22,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 bool             BluetoothManager::pTerminate   = false;
 bool             BluetoothManager::pEnable      = false;
-string           BluetoothManager::pInterface   = "br-bt";
+string           BluetoothManager::pInterface   = "bt";
 string           BluetoothManager::pServerName  = "";
 pthread_t        BluetoothManager::pThread      = 0;
 pthread_mutex_t  BluetoothManager::pMutex       = PTHREAD_MUTEX_INITIALIZER;

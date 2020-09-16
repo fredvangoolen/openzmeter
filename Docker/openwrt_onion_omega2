@@ -9,39 +9,39 @@ RUN cd /opt/openWRT_SDK && git checkout openwrt-19.07
 RUN cd /opt/openWRT_SDK && ./scripts/feeds update -a && ./scripts/feeds install -a
 
 #Setup openWRT SDK ---------------------------------------------------------
-#RUN echo "CONFIG_TARGET_sunxi=y" > /opt/openWRT_SDK/.config
-#RUN echo "CONFIG_TARGET_sunxi_cortexa7=y" >> /opt/openWRT_SDK/.config
-#RUN echo "CONFIG_TARGET_sunxi_cortexa7_DEVICE_sun8i-h3-nanopi-neo=y" >> /opt/openWRT_SDK/.config
-#RUN cd /opt/openWRT_SDK && make defconfig
+RUN echo "CONFIG_TARGET_ramips=y" > /opt/openWRT_SDK/.config
+RUN echo "CONFIG_TARGET_ramips_mt76x8=y" >> /opt/openWRT_SDK/.config
+RUN echo "CONFIG_TARGET_ramips_mt76x8_DEVICE_omega2p=y" >> /opt/openWRT_SDK/.config
+RUN cd /opt/openWRT_SDK && make defconfig
 
 #Generate required openWRT packages ----------------------------------------
-#ENV FORCE_UNSAFE_CONFIGURE=1
-#RUN cd /opt/openWRT_SDK && make tools/install V=sc -j32
-#RUN cd /opt/openWRT_SDK && make toolchain/install V=sc -j32
-#RUN cd /opt/openWRT_SDK && make package/usign/host/compile V=sc -j32
-#RUN cd /opt/openWRT_SDK && make package/zlib/compile V=sc -j32
-#RUN cd /opt/openWRT_SDK && make package/postgresql/compile V=sc -j32
-#RUN cd /opt/openWRT_SDK && make package/openssl/compile V=sc -j32
-#RUN cd /opt/openWRT_SDK && make package/wireless-tools/compile V=sc-j32
-#RUN cd /opt/openWRT_SDK && make package/dbus/compile V=sc -j32
-#RUN cd /opt/openWRT_SDK && make package/libusb/compile V=sc -j32
-#RUN cd /opt/openWRT_SDK && BUILD_VARIANT="single" make package/fftw3/compile V=sc -j32
-#RUN cd /opt/openWRT_SDK && make package/util-linux/compile V=sc -j32
+ENV FORCE_UNSAFE_CONFIGURE=1
+RUN cd /opt/openWRT_SDK && make tools/install V=sc -j32
+RUN cd /opt/openWRT_SDK && make toolchain/install V=sc -j32
+RUN cd /opt/openWRT_SDK && make package/usign/host/compile V=sc -j32
+RUN cd /opt/openWRT_SDK && make package/zlib/compile V=sc -j32
+RUN cd /opt/openWRT_SDK && make package/postgresql/compile V=sc -j32
+RUN cd /opt/openWRT_SDK && make package/openssl/compile V=sc -j32
+RUN cd /opt/openWRT_SDK && make package/wireless-tools/compile V=sc-j32
+RUN cd /opt/openWRT_SDK && make package/dbus/compile V=sc -j32
+RUN cd /opt/openWRT_SDK && make package/libusb/compile V=sc -j32
+RUN cd /opt/openWRT_SDK && BUILD_VARIANT="single" make package/fftw3/compile V=sc -j32
+RUN cd /opt/openWRT_SDK && make package/util-linux/compile V=sc -j32
 
 #Clean intermediate files --------------------------------------------------
-#RUN cd /opt/openWRT_SDK && rm -rf build_dir
+RUN cd /opt/openWRT_SDK && rm -rf build_dir
 
 # OpenWRT SDK --------------------------------------------------------------
-#ENV SDK_DIR "/opt/openWRT_SDK"
-#ENV STAGING_DIR "${SDK_DIR}/staging_dir"
-#ENV TOOLCHAIN "${STAGING_DIR}/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.5.0_musl_eabi"
-#ENV CC "arm-openwrt-linux-gcc"
-#ENV CXX "arm-openwrt-linux-g++"
-#ENV CMAKE_C_COMPILER "arm-openwrt-linux-gcc"
-#ENV CMAKE_CXX_COMPILER "arm-openwrt-linux-g++"
-#ENV STRIP "arm-openwrt-linux-strip"
-#ENV RANLIB "arm-openwrt-linux-ranlib"
-#ENV AS "arm-openwrt-linux-as"
-#ENV AR "arm-openwrt-linux-ar" 
-#ENV LD "arm-openwrt-linux-ld"
-#ENV PATH "${TOOLCHAIN}/bin:${SDK_DIR}/scripts:$STAGING_DIR/host/bin:${PATH}"
+ENV SDK_DIR "/opt/openWRT_SDK"
+ENV STAGING_DIR "${SDK_DIR}/staging_dir"
+ENV TOOLCHAIN "${STAGING_DIR}/toolchain-mipsel_24kc_gcc-7.5.0_musl"
+ENV CC "mipsel-openwrt-linux-gcc"
+ENV CXX "mipsel-openwrt-linux-g++"
+ENV CMAKE_C_COMPILER "mipsel-openwrt-linux-gcc"
+ENV CMAKE_CXX_COMPILER "mipsel-openwrt-linux-g++"
+ENV STRIP "mipsel-openwrt-linux-strip"
+ENV RANLIB "mipsel-openwrt-linux-ranlib"
+ENV AS "mipsel-openwrt-linux-as"
+ENV AR "mipsel-openwrt-linux-ar" 
+ENV LD "mipsel-openwrt-linux-ld"
+ENV PATH "${TOOLCHAIN}/bin:${SDK_DIR}/scripts:$STAGING_DIR/host/bin:${PATH}"

@@ -21,7 +21,7 @@
     <div class="panel-footer clearfix">
       <router-link :to="Link"><span class="pull-left">View Details</span></router-link>
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
-        <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'FREQUENCY'" :storage="'Dashboard_' + serie" :current="serie=='CURRENT'" :multi="true"></toolbar-phases>
+        <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true"></toolbar-phases>
         <div class="btn-group">
           <button-export :rows="Export" :file="analyzer.Title[serie]"></button-export>
           <button-expand v-model="Expanded"></button-expand>
