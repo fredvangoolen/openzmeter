@@ -4,8 +4,9 @@
 
 <script>
   import moment from 'moment';
-  import vis from 'vis-timeline';
-//  import 'CSS/vis.css';
+  import { DataSet } from "vis-data/peer";
+  import { Timeline } from "vis-timeline/peer";
+  import "vis-timeline/styles/vis-timeline-graph2d.css";
   import 'CSS/jquery.qtip.css';
   import qtip from 'JS/jquery.qtip.js';
   export default {
@@ -15,8 +16,8 @@
     },
     created: function() {
       this.TimeLine = null;
-      this.TimeLineDataset = new vis.DataSet();
-      this.TimeLineGroups = new vis.DataSet();
+      this.TimeLineDataset = new DataSet();
+      this.TimeLineGroups = new DataSet();
     },
     mounted: function() {
       this.TimeLineGroups.add({ id: 1, content: '<div style="width:150px">Dips</div>'});
@@ -24,7 +25,7 @@
       this.TimeLineGroups.add({ id: 3, content: '<div style="width:150px">Interruptions</div>'});
       this.TimeLineGroups.add({ id: 4, content: '<div style="width:150px">RVC</div>'});
       this.SetEvents();
-      this.TimeLine = new vis.Timeline(this.$el, this.TimeLineDataset, {
+      this.TimeLine = new Timeline(this.$el, this.TimeLineDataset, {
         stack: false,
         editable: false,
         margin: { item: 10, axis: 5 },

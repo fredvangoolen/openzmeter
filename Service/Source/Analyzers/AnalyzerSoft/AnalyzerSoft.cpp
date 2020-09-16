@@ -288,7 +288,7 @@ void AnalyzerSoft::Analyzer_Func() {
   pAggreg1H->Accumulate(pAggreg200MS);
   pAlarms->Run("200MS", pAggreg200MS);
   if(pSave200MS) {
-    LogFile::Debug("Storing 200MS aggregation for analyzer '%s'\n", pSerial.c_str());
+    LogFile::Debug("Storing 200MS aggregation for analyzer '%s'", pSerial.c_str());
     pAggreg200MS->Save();
   }
   pAlarms->Wait();
