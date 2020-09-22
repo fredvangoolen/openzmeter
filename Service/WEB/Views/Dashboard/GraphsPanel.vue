@@ -45,7 +45,10 @@
     },
     computed: {
       Link: function() {
-        return '';
+        if(this.serie == 'Voltage') return '/Analysis/Voltage';
+        if(this.serie == 'Current') return '/Analysis/Current';
+        if(this.serie == 'Active_Power') return '/Analysis/Power';
+        if(this.serie == 'Frequency') return '/Analysis/Frequency';
       },
       PanelClass: function() {
         if(this.serie == 'Voltage') return 'panel-voltage';
