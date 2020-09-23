@@ -49,7 +49,7 @@ class AnalyzerRemote : public Analyzer {
     set<Request_t*, Comp>   pRequestList;
     uint64_t                pSequence;
   private :
-    void HandleRequest(const string &url, const json &params, Response &response);
+    void HandleRequest(const AnalyzerRights rights, const string &url, const json &params, Response &response);
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
     void GetStatus(const json &params, Response &response) override;

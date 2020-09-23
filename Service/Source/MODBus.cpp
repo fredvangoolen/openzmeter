@@ -17,7 +17,7 @@
 #include "LogFile.h"
 #include "ConfigFile.h"
 #include "MODBus.h"
-#include "DeviceManager.h"
+#include "AnalyzerManager.h"
 // ---------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t            ModbusTCP::pMutex       = PTHREAD_MUTEX_INITIALIZER;
 pthread_t                  ModbusTCP::pThread      = 0;
@@ -69,7 +69,7 @@ void ModbusTCP::Configure(const json &config) {
     LogFile::Info("ModbusTCP server stoped");
   }
   ConfigFile::WriteConfig("/ModbusTCP", config);
-  bool     Enabled = config["Enabled"];
+  bool Enabled = config["Enabled"];
   if(Enabled == true) {
     pPort      = config["Port"];
     pTerminate = false;
@@ -175,24 +175,24 @@ void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &clien
     PacketOUT.UnitID        = PacketIN.UnitID;
     PacketOUT.FunctionCode  = PacketIN.FunctionCode;
     if(PacketOUT.FunctionCode != MODBUS_FUNC_READ_REGISTERS) {
-      PacketOUT.FunctionCode |= 0x80;
-      PacketOUT.ResponseLen = 1;
+      PacketOUT.FunctionCode     |= 0x80;
+      PacketOUT.ResponseLen       = 1;
       PacketOUT.ResponseBuffer[0] = 1;
     } else if(PacketIN.UnitID >= pAnalyzers.size()) {
-      PacketOUT.FunctionCode |= 0x80;
-      PacketOUT.ResponseLen = 1;
+      PacketOUT.FunctionCode     |= 0x80;
+      PacketOUT.ResponseLen       = 1;
       PacketOUT.ResponseBuffer[0] = 10;
     } else if(PacketIN.QuantityRegisters > 125) {
-      PacketOUT.FunctionCode |= 0x80;
-      PacketOUT.ResponseLen = 1;
+      PacketOUT.FunctionCode     |= 0x80;
+      PacketOUT.ResponseLen       = 1;
       PacketOUT.ResponseBuffer[0] = 2;
     } else {
       PacketOUT.ResponseLen = sizeof(uint16_t) * PacketIN.QuantityRegisters;
-//      if(DeviceManager::HandleModbus(PacketOUT.ResponseBuffer, pAnalyzers[PacketOUT.UnitID], PacketIN.StartAddress, PacketIN.QuantityRegisters) == false) {
-//        PacketOUT.FunctionCode |= 0x80;
-//        PacketOUT.ResponseLen = 1;
-//        PacketOUT.ResponseBuffer[0] = 11;
-//      }
+      if(AnalyzerManager::HandleModbus(PacketOUT.ResponseBuffer, pAnalyzers[PacketOUT.UnitID], PacketIN.StartAddress, PacketIN.QuantityRegisters) == false) {
+        PacketOUT.FunctionCode     |= 0x80;
+        PacketOUT.ResponseLen       = 1;
+        PacketOUT.ResponseBuffer[0] = 11;
+      }
     }
     PacketOUT.Length = htons(PacketOUT.ResponseLen + 3);
     Size = send(clientSock, &PacketOUT, PacketOUT.ResponseLen + 9, 0);

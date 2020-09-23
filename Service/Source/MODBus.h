@@ -55,7 +55,7 @@ class ModbusTCP final {
       uint8_t        UnitID;
       uint8_t        FunctionCode;
       uint8_t        ResponseLen;
-      uint8_t        ResponseBuffer[255];
+      uint8_t        ResponseBuffer[256];
     } PacketOUT_t;
   private :
     static pthread_mutex_t pMutex;
