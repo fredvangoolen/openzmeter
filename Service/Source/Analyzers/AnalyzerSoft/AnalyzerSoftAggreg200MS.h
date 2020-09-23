@@ -41,5 +41,6 @@ class AnalyzerSoftAggreg200MS final : public AnalyzerSoftAggreg {
     void  setVoltagePhase(const uint8_t channel, const float val);
     void  setPhi(const uint8_t channel, const float val);
     void  setPowerFactor(const uint8_t channel, const float val);
+    void  HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len);
 };
 // ---------------------------------------------------------------------------------------------------------------------

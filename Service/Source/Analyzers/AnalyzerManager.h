@@ -67,7 +67,7 @@ class AnalyzerManager final {
   public :
     static void AddAnalyzer(Analyzer *analyzer);
     static void DelAnalyzer(const string &serial);
-//    static bool HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len);
+    static bool HandleModbus(uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len);
   public :
     AnalyzerManager();
     ~AnalyzerManager();

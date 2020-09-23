@@ -36,7 +36,6 @@
 #include "AnalyzerSoftSync.h"
 #include "AnalyzerSoftMQTT.h"
 //----------------------------------------------------------------------------------------------------------------------
-//using namespace mu;
 using namespace httplib;
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
@@ -109,7 +108,7 @@ class AnalyzerSoft : public Analyzer {
     void DelRate(const json &params, Response &response) override;
     void GetRemote(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
-    bool HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len);
+    bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
   public :
     static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode);
   public :

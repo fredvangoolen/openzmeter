@@ -96,4 +96,116 @@ void  AnalyzerSoftAggreg200MS::setPhi(const uint8_t channel, const float val) {
 void  AnalyzerSoftAggreg200MS::setPowerFactor(const uint8_t channel, const float val) {
   pPower_Factor[channel] = val;
 }
+void AnalyzerSoftAggreg200MS::HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) {
+  uint16_t Pos   = 0;
+  uint16_t Start = start * 2;
+  uint8_t  Len   = len * 2;
+  auto Append_String = [&](const string &val, const uint8_t bytes) -> bool {
+    if(Pos >= Start) {
+      for(uint8_t n = 0; n < bytes; n++, Pos++) {
+        if(Pos >= (Start + Len)) return false;
+        if(Pos >= Start) buff[Pos - Start] = (n >= val.size()) ? 0 : val.c_str()[n];
+      }
+    } else {
+      Pos = Pos + bytes;
+    }
+    return (Pos <= (Start + Len));
+  };
+  auto Append_U32 = [&](const uint32_t val) {
+    if(Pos >= Start) {
+      uint32_t Val = htobe32(val);
+      for(uint8_t n = 0; n < 4; n++, Pos++) {
+        if(Pos >= (Start + Len)) return false;
+        if(Pos >= Start) buff[Pos - Start] = ((uint8_t*)&Val)[n];
+      }
+    } else {
+      Pos = Pos + 4;
+    }
+    return (Pos <= (Start + Len));
+  };
+  auto Append_U64 = [&](const uint64_t val) {
+    if(Pos >= Start) {
+      uint64_t Val = htobe64(val);
+      for(uint8_t n = 0; n < 8; n++, Pos++) {
+        if(Pos >= (Start + Len)) return false;
+        if(Pos >= Start) buff[Pos - Start] = ((uint8_t*)&Val)[n];
+      }
+    } else {
+      Pos = Pos + 8;
+    }
+    return (Pos <= (Start + Len));
+  };
+  auto Append_Float = [&](const float val) {
+    if(Pos >= Start) {
+      uint32_t Val = htobe32(*((uint32_t*)&val));
+      for(uint8_t n = 0; n < 4; n++, Pos++) {
+        if(Pos >= (Start + Len)) return false;
+        if(Pos >= Start) buff[Pos - Start] = ((uint8_t*)&Val)[n];
+      }
+    } else {
+      Pos = Pos + 4;
+    }
+    return (Pos <= (Start + Len));
+  };
+  if(Append_String(pSerial, 32) == false) return;
+  if(Append_U32(Timestamp() / 1000) == false) return;
+  if(Append_U64(Timestamp()) == false) return;
+  if(Append_Float(Frequency()) == false) return;
+  if(pVoltageChannels > 1) {
+    if(Append_Float(Unbalance()) == false) return;
+  }
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+    if(Append_Float(Voltage(ch)) == false) return;
+  }
+  for(uint8_t ch = 0; ch < pCurrentChannels; ch++) {
+    if(Append_Float(Current(ch)) == false) return;
+  }
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+    if(Append_Float(ActivePower(ch)) == false) return;
+  }
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+    if(Append_Float(ReactivePower(ch)) == false) return;
+  }
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+    if(Append_Float(ActiveEnergy(ch)) == false) return;
+  }
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+    if(Append_Float(ReactiveEnergy(ch)) == false) return;
+  }
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+    if(Append_Float(ApparentPower(ch)) == false) return;
+  }
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+    if(Append_Float(PowerFactor(ch)) == false) return;
+  }
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+    if(Append_Float(VoltageTHD(ch)) == false) return;
+  }
+  for(uint8_t ch = 0; ch < pCurrentChannels; ch++) {
+    if(Append_Float(CurrentTHD(ch)) == false) return;
+  }
+  if(pVoltageChannels > 1) {
+    for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+      if(Append_Float(VoltagePhase(ch)) == false) return;
+    }
+  }
+  for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+    if(Append_Float(Phi(ch)) == false) return;
+  }
+  for(uint8_t h = 0; h < 50; h++) {
+    for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+      if(Append_Float(VoltageHarmonic(ch, h)) == false) return;
+    }
+  }
+  for(uint8_t h = 0; h < 50; h++) {
+    for(uint8_t ch = 0; ch < pCurrentChannels; ch++) {
+      if(Append_Float(CurrentHarmonic(ch, h)) == false) return;
+    }
+  }
+  for(uint8_t h = 0; h < 50; h++) {
+    for(uint8_t ch = 0; ch < pVoltageChannels; ch++) {
+      if(Append_Float(PowerHarmonic(ch, h)) == false) return;
+    }
+  }
+}
 // ---------------------------------------------------------------------------------------------------------------------

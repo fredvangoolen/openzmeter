@@ -111,16 +111,13 @@ void AnalyzerManager::DelAnalyzer(const string &serial) {
   if(Analyzer != pAnalyzers.end()) pAnalyzers.erase(Analyzer);
   pAnalyzersLock.Unlock();
 }
-//bool DeviceManager::HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
-//  pDevicesLock.ReadLock();
-//  for(Device *Dev : pDevices) {
-//    if(Dev->HandleModbus(buff, serial, start, len) == false) continue;
-//    pDevicesLock.Unlock();
-//    return true;
-//  }
-//  pDevicesLock.Unlock();
-//  return false;
-//}
+bool AnalyzerManager::HandleModbus(uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
+  pAnalyzersLock.ReadLock();
+  auto Analyzer = pAnalyzers.find(serial);
+  bool Ret = (Analyzer != pAnalyzers.end()) ? Analyzer->second->HandleModbus(buff, start, len) : false;
+  pAnalyzersLock.Unlock();
+  return Ret;
+}
 void AnalyzerManager::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
   if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string Serial = params["Analyzer"];
