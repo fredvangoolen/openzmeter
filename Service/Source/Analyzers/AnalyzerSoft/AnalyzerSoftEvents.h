@@ -18,6 +18,7 @@
 #include <inttypes.h>
 #include "Worker.h"
 #include "AnalyzerSoftBlock.h"
+#include "AnalyzerSoftCyclicHistogram.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -68,6 +69,7 @@ class AnalyzerSoftEvents final {
     float           *pPrevCycles;               //Previous cycles
     bool             pHaveEvent;                //Flag to block event
     uint64_t         pTimestamp;                //Current block start time
+    AnalyzerSoftCyclicHistogram *pCyclicHistogram; //Cyclic histogram
   private :
     Event_t *InitEvent();
     void     Events_Func(const AnalyzerSoftBlock *block);
@@ -76,7 +78,7 @@ class AnalyzerSoftEvents final {
     string   EventTypeToString(const EventType type) const;
     void     SaveSamples(const string &id, const uint8_t type, const uint16_t len);
   public :
-    AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate);
+    AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate, AnalyzerSoftCyclicHistogram *cyclicHistogram);
     ~AnalyzerSoftEvents();
     void Config(const bool enabled, const float nominalVoltage, const float nominalFreq);
     void Run(const AnalyzerSoftBlock *block, const uint64_t timestamp);

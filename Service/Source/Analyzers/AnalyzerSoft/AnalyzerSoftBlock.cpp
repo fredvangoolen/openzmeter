@@ -116,6 +116,15 @@ bool AnalyzerSoftBlock::PushSample(float *voltageSamples, float *currentSamples)
 uint16_t AnalyzerSoftBlock::BlockSamples() const {
   return pBlockSamples;
 }
+float AnalyzerSoftBlock::SampleRate() const {
+  return pSamplerate;
+}
+float AnalyzerSoftBlock::NominalFrequency() const {
+  return pNominalFrequency;
+}
+uint16_t AnalyzerSoftBlock::VoltageChannels() const {
+  return pVoltageChannels;
+}
 uint8_t AnalyzerSoftBlock::Cycles() const {
   return pBlockCyclesCount;
 }

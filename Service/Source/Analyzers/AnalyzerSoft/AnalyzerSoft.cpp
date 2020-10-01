@@ -38,13 +38,15 @@ using namespace cctz;
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pMode(mode) {
   Database DB(id);
   LogFile::Debug("Creating AnalyzerSoft database tables");
-  DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
+  DB.ExecResource("SQL/Database_AnalyzerSoft.sql"); 
+  pCyclicHistogram = new AnalyzerSoftCyclicHistogram(id, 200, 4096); // Setup cyclic histogram manager  
+  pJoltAlgorithm  = new AnalyzerSoftJoltAlgorithm(id); // Setup jolt manager
   pMutex          = PTHREAD_MUTEX_INITIALIZER;
   pFFTs           = new AnalyzerSoftFFTs(mode);
   pMQTT           = new AnalyzerSoftMQTT(pSerial);
   pRates          = new AnalyzerSoftRates(pSerial);
   pAlarms         = new AnalyzerSoftAlarms(pMQTT, pSerial);
-  pEvents         = new AnalyzerSoftEvents(pSerial, mode, samplerate);
+  pEvents         = new AnalyzerSoftEvents(pSerial, mode, samplerate, pCyclicHistogram);
   pSync           = new AnalyzerSoftSync(pSerial);
   pInputBlock     = new AnalyzerSoftBlock(mode, samplerate);
   pFrequency      = new AnalyzerSoftFrequency(samplerate);
@@ -77,6 +79,9 @@ AnalyzerSoft::~AnalyzerSoft() {
   delete pAlarms;
   delete pRates;
   delete pFFTs;
+  delete pCyclicHistogram;
+  delete pJoltAlgorithm;
+
   LogFile::Info("Analyzer with serial '%s' stopped", pSerial.c_str());
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
@@ -164,7 +169,10 @@ void AnalyzerSoft::Configure(const json &options) {
   pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoft::Analyzer_Func() {
-  uint64_t Start     = Tools::GetTime64();
+  pCyclicHistogram->AddPoints(pInputBlock);
+  pJoltAlgorithm->AddPoints(pInputBlock);
+
+  uint64_t Start = Tools::GetTime64();
   uint16_t BlockSize = pInputBlock->BlockSamples();
   pFFTs->Run(pInputBlock);
   pEvents->Run(pInputBlock, pAggreg200MS->Timestamp());

@@ -35,6 +35,8 @@
 #include "AnalyzerSoftFrequency.h"
 #include "AnalyzerSoftSync.h"
 #include "AnalyzerSoftMQTT.h"
+#include "AnalyzerSoftCyclicHistogram.h"
+#include "AnalyzerSoftJoltAlgorithm.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace httplib;
 using namespace cctz;
@@ -64,6 +66,8 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerSoftAggreg15M     *pAggreg15M;               //15 minutes aggregation
     AnalyzerSoftAggreg1H      *pAggreg1H;                //1 hour aggregation
     AnalyzerSoftStorage       *pStorage;                 //Control stored data
+    AnalyzerSoftCyclicHistogram *pCyclicHistogram;       //Cyclic Histogram analyzer
+    AnalyzerSoftJoltAlgorithm *pJoltAlgorithm;           //Jolt Algorithm analyzer
   private :
     pthread_mutex_t            pMutex;                   //Locks access to analysis shared variables
     bool                       pSave200MS;               //Save 10/12 cycles aggregation to database

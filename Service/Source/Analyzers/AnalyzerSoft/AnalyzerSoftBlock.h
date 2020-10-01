@@ -57,6 +57,9 @@ class AnalyzerSoftBlock {
     void      Config(const float nominalFreq);
     bool      PushSample(float *voltageSamples, float *currentSamples);
     uint16_t  BlockSamples() const;
+    float     SampleRate() const;
+    float     NominalFrequency() const;
+    uint16_t  VoltageChannels() const;
     uint8_t   Cycles() const;
     uint16_t  CycleLen(const uint8_t cycle) const;
     uint64_t  Sequence() const;

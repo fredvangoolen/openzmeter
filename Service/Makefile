@@ -84,6 +84,8 @@ ifeq ($(OS_TARGET), DEBIAN)
 	CFLAGS += -DDEBIAN
 	LDFLAGS += -ldbus-1
 endif
+EXECUTABLE_SOURCE += Source/Analyzers/AnalyzerSoft/AnalyzerSoftCyclicHistogram.cpp
+EXECUTABLE_SOURCE += Source/Analyzers/AnalyzerSoft/AnalyzerSoftJoltAlgorithm.cpp
 # Build steps
 $(WEB_TARGET): $(WEB_SOURCE)
 	@echo "Building WEB interface"

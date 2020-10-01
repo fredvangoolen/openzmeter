@@ -22,7 +22,7 @@ constexpr float AnalyzerSoftEvents::Event_INT;
 constexpr float AnalyzerSoftEvents::Event_Hysteresis;
 constexpr float AnalyzerSoftEvents::Event_RAW_Time;
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate) {
+AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate, AnalyzerSoftCyclicHistogram *cyclicHistogram) {
   pMutex            = PTHREAD_MUTEX_INITIALIZER;
   pVoltageChannels  = (mode == Analyzer::PHASE1) ? 1 : 3;
   pSerial           = serial;
@@ -38,6 +38,7 @@ AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::Ana
   pPrevCycles       = NULL;
   pWorker           = NULL;
   pHaveEvent        = false;
+  pCyclicHistogram  = cyclicHistogram;
 }
 AnalyzerSoftEvents::~AnalyzerSoftEvents() {
   if(pEvent != NULL) delete pEvent;
@@ -209,6 +210,12 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
         DB.ExecSentenceNoResult("INSERT INTO events(id, starttime, evttype, samplerate, reference, peak, change, notes, duration) VALUES (" + DB.Bind(pEvent->UID) + ", " + DB.Bind(pEvent->Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", '', 0)");
         SaveSamples(pEvent->UID, SAMPLES_RMS_PRESTART, pPrevCyclesLen);
         SaveSamples(pEvent->UID, SAMPLES_RAW_PRESTART, pPrevSamplesLen);
+
+        if (pCyclicHistogram != NULL)
+        {
+          pCyclicHistogram->WriteToDatabase(pEvent->UID);
+          pCyclicHistogram->Clear();
+        }
       } else if(pEvent->Type == EVT_INTERRUPTION) {
         for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent->PeakValue[n] = fmin(pEvent->PeakValue[n], Cycle[n]);
       } else if(pEvent->Type == EVT_DIP) {
