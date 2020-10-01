@@ -26,6 +26,9 @@ extern "C" {
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
 #include "Tariff.h"
+#include "CyclicHistogram.h"
+#include "JoltAlgorithm.h"
+
 //----------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace httplib;
@@ -35,9 +38,8 @@ class AnalyzerSoft final : public Analyzer {
     static const uint8_t FILTERSTAGES         =  5;        //Filter stages for zerocrossing
     static const uint8_t ZEROCROSSING_SECONDS = 10;        //Used seconds to calc frequency
   public :
-    enum AggregType  { UNINITIALIZED, AGGREG_200MS, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
+    enum AggregType  { AGGREG_UNINITIALIZED = 0, AGGREG_200MS, AGGREG_3S, AGGREG_1M, AGGREG_10M, AGGREG_15M, AGGREG_1H };
     enum EventType   { EVT_NONE = 0x00, EVT_SWELL = 0x01, EVT_DIP = 0x02, EVT_INTERRUPTION = 0x04, EVT_RVC = 0x08 };
-    enum EventState  { EVT_RUNNING, EVT_CLOSING, EVT_CLOSED };
     enum SyncState   { NOT_LOGGED, LOGGED, CONNECTED, TERMINATE };
   private :
     static constexpr float   FrequencyRanges[]   = { -INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY };
@@ -50,7 +52,11 @@ class AnalyzerSoft final : public Analyzer {
     static constexpr uint8_t UnbalanceRangesLen  = (sizeof(UnbalanceRanges) / sizeof(float)) - 1;
     static constexpr float   HarmonicsAllowed[]  = {2, 5, 1, 6, 0.5, 5, 0.5, 1.5, 0.5, 3.5, 0.5, 3, 0.5, 0.5, 0.5, 2, 0.5, 1.5, 0.5, 0.5, 0.5, 1.5, 0.5, 1.5};
     static constexpr uint8_t HarmonicsAllowedLen = (sizeof(HarmonicsAllowed) / sizeof(float));
-   private :
+  private :
+    typedef struct {
+      float Re;
+      float Im;
+    } Complex_t;
     typedef struct {
       AggregType               Type;                               //Aggregation type
       bool                     Flag;                               //Flagged period
@@ -81,7 +87,7 @@ class AnalyzerSoft final : public Analyzer {
     } Params_t;
     typedef struct {
      float                    *InPtr;
-     float                    *OutPtr;
+     Complex_t                *OutPtr;
     } FFTChannel_t;
     typedef struct {
       float                    A0;
@@ -92,6 +98,13 @@ class AnalyzerSoft final : public Analyzer {
       float                    ChannelsZ1[3];
       float                    ChannelsZ2[3];
     } Filter_t;
+
+    typedef struct {
+      float PhaseOffset;
+      float FrequencyOffset;
+      float Bandwidth;
+    } PLL_t;
+
     typedef struct {
       string                   Name;
       uint8_t                  Priority;
@@ -104,22 +117,18 @@ class AnalyzerSoft final : public Analyzer {
       uint8_t                 *Results;
       bool                     Triggered;
     } Alarm_t;
-    typedef struct {
-      vector<float>            RMS;
-      uint64_t                 Timestamp;
-    } EventCycle_t;
+//    typedef struct {
+//      float                    RMS[3];
+//      uint64_t                 Timestamp;
+//    } EventCycle_t;
     typedef struct {
       enum EventType           Type;                     //Running event type
-      EventState               State;                    //Events state
       uint64_t                 Start;                    //Event start timestamp
-      uint64_t                 Duration;                 //Event duration in samples
-      vector<float>            Reference;                //Voltage reference for event (Stationary for RVC, nominal for others)
-      vector<float>            PeakValue;                //max/min voltage variation along event
-      vector<float>            ChangeValue;              //diference voltage of event
-      deque<vector<float> >    SamplesRAW_A;             //
-      deque<vector<float> >    SamplesRMS_A;             //
-      deque<vector<float> >    SamplesRAW_B;             //
-      deque<vector<float> >    SamplesRMS_B;             //
+      uint64_t                 SamplesDuration;          //Event duration in samples
+      float                    Reference[3];             //Voltage reference for event (Stationary for RVC, nominal for others)
+      float                    PeakValue[3];             //max/min voltage variation along event
+      float                    ChangeValue[3];           //diference voltage of event
+      uint32_t                 CyclesDuration;           //Event duration in samples
     } Event_t;
     typedef struct {
       pthread_mutex_t         *Mutex;                    //Export list locks
@@ -149,16 +158,17 @@ class AnalyzerSoft final : public Analyzer {
     float                      pMaxCurrent;              //Max current, over this value warnings are shown
     float                      pMinCurrent;              //Min current, under this value some analysis are disabled
     uint32_t                   pMaxSamples;              //Max block samples
-    string                     pTimeZone;                //Country code
+    time_zone                  pTimeZone;                //Country code
     uint64_t                   pSequence;                //Sequence number of analyzed blocks
     uint16_t                   pBlockSamples;            //Number of samples in block
-    uint16_t                   pBlockCyclesCount;        //Block cycles count
+    uint8_t                    pBlockCyclesCount;        //Block cycles count
     uint16_t                   pBlockCycles[24];         //Max block sizes
     float                     *pVoltageSamples;          //Voltage samples
     float                     *pCurrentSamples;          //Current samples
+    uint32_t                   pMaxFFTSamples;           //Max FFT block samples
     uint16_t                   pFFTSamples;              //FFT result samples
-    float                     *pVoltageFFT;              //FFT voltage output (complex)
-    float                     *pCurrentFFT;              //FFT current output (complex)
+    Complex_t                 *pVoltageFFT;              //FFT voltage output (complex)
+    Complex_t                 *pCurrentFFT;              //FFT current output (complex)
     FFTChannel_t               pVoltageFFTChannels[3];   //FFT configuration channels
     FFTChannel_t               pCurrentFFTChannels[4];   //FFT configuration channels
     float                      pLastSamples[3];          //Filter samples backup
@@ -170,10 +180,9 @@ class AnalyzerSoft final : public Analyzer {
     uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
     uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
     uint32_t                  *pFreqCycles;              //Frequency calc cycles lenghts
-    json                       pRates;                   //Applied rates local copy
+    Rates                     *pRateList;                //Applied rates
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private : //Used only in Analyzer_Func
-    uint64_t                   pPrevTimestamp;           //Previous block time
     Params_t                   pAggreg200MS;             //200ms aggregation
     Params_t                   pAggreg3S;                //3 seconds aggregation
     Params_t                   pAggreg1M;                //1 minute aggregation
@@ -186,13 +195,20 @@ class AnalyzerSoft final : public Analyzer {
     Worker                    *pCurrentFFTWorker[4];     //Current FFT worker
     Worker                    *pAlarmsWorker;            //Alarms detection worker
     Worker                    *pEventsWorker;            //Events detector
+    Worker                    *pCyclicHistogramWorker;   //Cyclic Histogram worker
+    Worker                    *pJoltWorker;              //Jolt worker
   private : //Alarms related (should be locked)
     vector<Alarm_t>            pAlarms;                  //Alarms control object
   private : //Events related (only acceded inside analyzer thread)
-    list<Event_t>              pEvents;                  //Running events
+    Event_t                    pEvent;                   //Running event
+    list<Event_t>              pEvents;                  //Close pending events
     bool                       pPrevStationary;          //Steady state flag
-    deque<vector<float> >      pPrevSamples;             //Previous samples
-    deque<EventCycle_t>        pPrevCycles;              //Previous cycles
+    uint16_t                   pPrevSamplesLen;          //Previous samples count
+    uint16_t                   pPrevSamplesPos;          //Previous samples write pos
+    float                     *pPrevSamples;             //Previous samples
+    uint16_t                   pPrevCyclesLen;           //Previous cycles count
+    uint16_t                   pPrevCyclesPos;           //Previous cycles write pos
+    float                     *pPrevCycles;              //Previous cycles
   private : //Readed in thread, changed in configure
     pthread_t                  pSyncThread;              //Export thread
     bool                       pSyncTerminate;           //Sync terminate signal
@@ -218,17 +234,19 @@ class AnalyzerSoft final : public Analyzer {
     bool                       pMQTTAlarms;              //Enable alarms publish
     bool                       pMQTTConfig;              //Enable config publish
   private :
-    static void  Analyzer_Func(void *creation, void *run);
-    static void  Events_Func(void *creation, void *run);
-    static void  FFT_Func(void *creation, void *run);
-    static void  Alarms_Func(void *creation, void *run);
     static void *Sync_Thread(void *params);
     static void *MQTT_Thread(void *params);
     static void *Sync_RespThread(void *params);
     static float CalcChange(const float in, const float reference);
-    static float CalcAngle(const float *a, const float *b);
-    static float BinPower(const float *a);
+    static float CalcAngle(const Complex_t &a, const Complex_t &b);
+    static float BinPower(const Complex_t &a);
   private :
+    void Analyzer_Func();
+    void Events_Func();
+    void CyclicHistogram_Func();
+    void Jolt_Func();
+    void FFT_Func(FFTChannel_t *ch);
+    void Alarms_Func(Params_t *aggreg);
     void Configure(const json &options);
     void InitAggreg(Params_t &params, AggregType type);
     void InitAlarmParser(Parser &parser, const string &expr, const AggregType &type);
@@ -238,29 +256,36 @@ class AnalyzerSoft final : public Analyzer {
     void PublishAggreg(const Params_t &params, const string &topic);
     void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
     void PublishConfig(const json &options);
-    void InitEvent(const EventType type, const vector<float> &reference, const uint32_t pos);
     bool FindRunningEvent(const uint32_t mask);
-    void SaveEvent(Event_t &evt);
+    json CalcGA();
+    void PeriodicTasks();
   private :
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
     void GetSeries(const json &params, Response &response) override;
     void GetSeriesNow(const json &params, Response &response) override;
+    void GetWaveStream(const json &params, Response &response) override;
     void GetSeriesRange(const json &params, Response &response) override;
     void GetEvents(const json &params, Response &response) override;
     void GetEvent(const json &params, Response &response) override;
     void SetEvent(const json &params, Response &response) override;
     void DelEvent(const json &params, Response &response) override;
+    void GetCyclicHistogram(const json &params, Response &response) override;
+    void GetJoltData(const json &params, Response &response) override;
     void GetPrices(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;
     void GetRemote(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
+    bool HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len);
   public :
-    static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode);
+    static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, string *error);
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();
     bool BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage);
     bool IsWorking();
+  private :
+    CyclicHistogram *cyclicHistogram;
+    JoltAlgorithm *joltAlgorithm;
 };

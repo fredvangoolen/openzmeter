@@ -172,15 +172,15 @@
           Week.Start          = moment(date).tz(this.analyzer.TimeZone).startOf('isoWeek').valueOf();
           Week.End            = moment(date).tz(this.analyzer.TimeZone).endOf('isoWeek').valueOf();
         }
-        Week.Frequency        = Array(this.Frequencies.length - 1).fill(0);
+        Week.Frequency        = new Array(this.Frequencies.length - 1).fill(0);
         Week.FrequencySamples = 0;
         Week.FrequencyIN      = 0;
-        Week.Voltage          = Array(this.Voltages.length - 1).fill(0);
+        Week.Voltage          = new Array(this.Voltages.length - 1).fill(0);
         Week.VoltageSamples   = 0;
         Week.VoltageIN        = 0;
-        Week.THD              = Array(this.THDs.length - 1).fill(0);
+        Week.THD              = new Array(this.THDs.length - 1).fill(0);
         Week.THDSamples       = 0;
-        Week.Unbalance        = Array(this.Unbalances.length - 1).fill(0);
+        Week.Unbalance        = new Array(this.Unbalances.length - 1).fill(0);
         Week.UnbalanceSamples = 0;
         Week.UnbalanceIN      = 0;
         Week.THDIN            = 0;

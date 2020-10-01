@@ -88,7 +88,7 @@
         return null;
       },
       EnergyUsage: function() {
-        var Energy = Array(this.analyzer.VoltageChannels).fill(0);
+        var Energy = new Array(this.analyzer.VoltageChannels).fill(0);
         if(this.Transfer2.Data == null) return { Active_Energy: Energy };
         for(var n = 0; n < this.Transfer2.Data.Active_Power.length; n++) {
           for(var p = 0; p < this.Transfer2.Data['Active_Power'][n].length; p++) {

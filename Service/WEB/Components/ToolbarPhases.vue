@@ -65,7 +65,7 @@
     },
     methods: {
       Configure: function() {
-        this.Active = Array((this.analyzer.Mode == '1PHASE') ? 1 : (this.analyzer.Mode == '3PHASE') ? 3 : (this.current == true) ? 4 : 3). fill(false);
+        this.Active = new Array((this.analyzer.Mode == '1PHASE') ? 1 : (this.analyzer.Mode == '3PHASE') ? 3 : (this.current == true) ? 4 : 3). fill(false);
         if(this.storage != null) {
           var Mode = this.analyzer.Mode + '_' + ((this.multi == true) ? 'Multi' : 'Single') + '_' + ((this.current == true) ? 'Current' : 'Voltage');
           var Stored = JSON.parse(localStorage.getItem(this.storage));

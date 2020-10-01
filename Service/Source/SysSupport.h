@@ -28,10 +28,8 @@ class SysSupport final {
   private :  //System actions variables
     static queue<string>      pSystemActions;
     static pthread_mutex_t    pSystemActionMutex;
-    static pthread_cond_t     pSystemActionCond;
-    static pthread_t          pSystemActionThread;
   private :  //System status variables
-    static bool     pTerminate;
+    volatile static bool     pTerminate;
     static RWLocks  pSysStatLock;
     static bool     pBT_Enabled;        //BT network enabled/disabled
     static uint64_t pUpTime;            //Uptime in seconds
@@ -46,8 +44,6 @@ class SysSupport final {
     static string   pWIFI_Network;      //Current WIFI network or empty for non connected
     static float    pWIFI_Power;        //Current WIFI signal if connected
     static bool     pTimeSet;           //If system time is set (manualy or with NTP comunication)
-
-//    bool               Updates;         //System have uninstalled updates
 //    bool               Events;          //Running events
 
 
@@ -59,7 +55,6 @@ class SysSupport final {
     static string      pBTServerName;   //bluetooth network name
     static string      pBTBridgeName;   //bluetooth bridge name
     static pthread_t   pBTThread;       //bluetooth manager thread
-    static pthread_t   pStatsThread;    //sys mem, cpu, etc thread
     static string      pInterfaceWIFI;
     static string      pNetworkWIFI;
     static string      pWirelessWIFI;
@@ -83,7 +78,6 @@ class SysSupport final {
     static void     Upgrade(const string &package);
     static void     GetUpdates();
     static void    *Bluetooth_Thread(void *params);
-    static void    *SysStat_Thread(void *params);
     static void     GetBluetoothCallback(const json &params, Response &response);
     static void     SetBluetoothCallback(const json &params, Response &response);
     static void     GetWIFICallback(const json &params, Response &response);
@@ -93,13 +87,9 @@ class SysSupport final {
     static void     SetNTPCallback(const json &params, Response &response);
     static void     GetUpdatesCallback(const json &params, Response &response);
     static void     SetUpgradeCallback(const json &params, Response &response);
-//      static void     PeriodicTask_5S();
-//      static void     PeriodicTask_1M();
-//      static void     PeriodicTask_1H();
     #endif
-  private :
-    static void *Actions_Thread(void *params);
   public :
+    static void PeriodicTask();
     static json GetSystemStatusJSON();
     static void AddSystemAction(const string &action);
   public:

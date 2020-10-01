@@ -11,11 +11,15 @@ OS_TARGET = OPENWRT
 TARIFF_ESP  = true
 TARIFF_NONE = true
 
+#Enable/Disable cyclic histogram and jolt algorithms
+CYCLIC_HISTOGRAM = true
+JOLT_ALGORITHM = true
+
 # Build options --------------------------------------------------------------------------------------------------------
 DEBUG    = false
 CPP      = arm-openwrt-linux-gcc
 CC       = arm-openwrt-linux-gcc
 LD       = arm-openwrt-linux-ld
 CFLAGS  += -I $(STAGING_DIR)/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include -I $(STAGING_DIR)/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/include/dbus-1.0 -I $(STAGING_DIR)/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib/dbus-1.0/include
-CFLAGS  += -mcpu=cortex-a7 -mfpu=neon-vfpv4 -Wl,--stack -Wl,8388608
+CFLAGS  += -mcpu=cortex-a7 -mfloat-abi=hard -mfpu=neon-vfpv4
 LDFLAGS += -L $(STAGING_DIR)/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib

@@ -30,7 +30,7 @@ json Analyzer::GetJSONDescriptor() {
   Response["Analyzer"] = Serial;
   pMembersLocks.ReadLock();
   Response["Name"] = pName;
-  Response["Online"] = ((Tools::GetTime() - pLastSave) < 20000);
+  Response["Online"] = ((Tools::GetTime64() - pLastSave) < 20000);
   pMembersLocks.Unlock();
   return Response;
 }
@@ -47,12 +47,12 @@ void Analyzer::SetName(const string &name) {
 }
 void Analyzer::SetOnline() {
   pMembersLocks.WriteLock();
-  pLastSave = Tools::GetTime();
+  pLastSave = Tools::GetTime64();
   pMembersLocks.Unlock();
 }
 bool Analyzer::IsOnline() {
   pMembersLocks.ReadLock();
-  bool Online = ((Tools::GetTime() - pLastSave) < 20000);
+  bool Online = ((Tools::GetTime64() - pLastSave) < 20000);
   pMembersLocks.Unlock();
   return Online;
 }

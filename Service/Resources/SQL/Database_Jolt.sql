@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS "jolt" (
+	"id" SERIAL PRIMARY KEY,
+	"time" BIGINT NOT NULL,
+	"phase" INTEGER NOT NULL,
+	"num_points" INTEGER NOT NULL,
+	"min" REAL NOT NULL,
+	"max" REAL NOT NULL,
+	"avg" REAL NOT NULL
+);

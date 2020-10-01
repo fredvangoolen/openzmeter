@@ -1,8 +1,8 @@
-CREATE UNLOGGED TABLE IF NOT EXISTS aggreg_200ms (
+CREATE TABLE IF NOT EXISTS aggreg_200ms (
   sampletime     bigint NOT NULL PRIMARY KEY,
   rms_v          real[] NOT NULL,
   rms_i          real[] NOT NULL,
-  unbalance      real   NOT NULL,
+  unbalance      real,
   freq           real,
   flag           boolean NOT NULL,
   active_power   real[] NOT NULL,
@@ -12,10 +12,7 @@ CREATE UNLOGGED TABLE IF NOT EXISTS aggreg_200ms (
   thd_i          real[] NOT NULL,
   phi            real[] NOT NULL
 ) WITH (OIDS=FALSE);
---ALTER TABLE aggreg_200ms ADD COLUMN IF NOT EXISTS unbalance real;
---UPDATE aggreg_200ms SET unbalance = 0 WHERE unbalance IS NULL;
---ALTER TABLE aggreg_200ms ALTER COLUMN unbalance SET NOT NULL;
-select count(*) from aggreg_200ms;
+
 CREATE TABLE IF NOT EXISTS aggreg_3s (
   sampletime     bigint NOT NULL PRIMARY KEY,
   rms_v          real[] NOT NULL,
@@ -47,10 +44,6 @@ CREATE TABLE IF NOT EXISTS aggreg_ext_1m (
   harmonics_i    real[] NOT NULL,
   harmonics_p    real[] NOT NULL
 ) WITH (OIDS=FALSE);
---ALTER TABLE aggreg_ext_1m ADD COLUMN IF NOT EXISTS harmonics_p real[];
---UPDATE aggreg_ext_1m SET harmonics_p = array_fill(NULL::real, ARRAY[array_length(harmonics_v, 1), array_length(harmonics_v, 2)]) WHERE harmonics_p IS NULL;
---ALTER TABLE aggreg_ext_1m ALTER COLUMN harmonics_p SET NOT NULL;
---ALTER TABLE aggreg_ext_1m ADD COLUMN IF NOT EXISTS unbalance real;
 
 CREATE TABLE IF NOT EXISTS aggreg_10m (
   sampletime bigint NOT NULL PRIMARY KEY,
@@ -67,7 +60,7 @@ CREATE TABLE IF NOT EXISTS aggreg_15m (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS aggreg_1h (
-  sampletime bigint NOT NULL PRIMARY KEY,
+  sampletime     bigint  NOT NULL PRIMARY KEY,
   rms_v          real[]  NOT NULL,
   rms_i          real[]  NOT NULL,
   freq           real,
@@ -80,48 +73,23 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
   stat_harmonics int4[]  NOT NULL,
   stat_unbalance int4[]  NOT NULL
 ) WITH (OIDS=FALSE);
---ALTER TABLE aggreg_1h ADD COLUMN IF NOT EXISTS stat_unbalance int4[];
---UPDATE aggreg_1h SET stat_unbalance = array_fill(0, ARRAY[31]) WHERE stat_unbalance IS NULL;
---ALTER TABLE aggreg_1h ALTER COLUMN stat_unbalance SET NOT NULL;
 
 CREATE TABLE IF NOT EXISTS events (
-  starttime   bigint                NOT NULL,
-  evttype     character varying(16) NOT NULL,
-  duration    bigint                NOT NULL,
-  samplerate  real                  NOT NULL,
-  reference   real[]                NOT NULL,
-  peak        real[]                NOT NULL,
-  change      real[]                NOT NULL,
-  finished    boolean               NOT NULL,
-  notes       text                  NOT NULL,
+  starttime   bigint            NOT NULL PRIMARY KEY,
+  evttype     character varying NOT NULL,
+  samplerate  real              NOT NULL,
+  reference   real[]            NOT NULL,
+  peak        real[]            NOT NULL,
+  change      real[]            NOT NULL,
+  notes       text              NOT NULL,
+  duration    bigint            NOT NULL
+) WITH (OIDS=FALSE);
+
+CREATE TABLE IF NOT EXISTS events_ext (
+  starttime   bigint            NOT NULL REFERENCES events(starttime) ON UPDATE CASCADE ON DELETE CASCADE,
+  sampletype  character varying NOT NULL,
   samples1    real[],
-  rms1        real[],
   samples2    real[],
-  rms2        real[],
   samples3    real[],
-  rms3        real[],
-  CONSTRAINT events_pkey PRIMARY KEY (starttime, evttype)
-) WITH (OIDS=FALSE);
---ALTER TABLE events DROP COLUMN IF EXISTS finished;
-
-CREATE TABLE IF NOT EXISTS prices (
-  sampletime bigint NOT NULL PRIMARY KEY,
-  price real NOT NULL
-) WITH (OIDS=FALSE);
-
---CREATE TABLE IF NOT EXISTS rates(
---  rate      serial            NOT NULL PRIMARY KEY,
---  name      character varying NOT NULL,
---  startdate bigint            NOT NULL,
---  enddate   bigint            NOT NULL,
---  config    jsonb             NOT NULL,
---  template  jsonb             NOT NULL
---) WITH (OIDS=FALSE);
---DROP TABLE IF EXISTS rates;
-
-CREATE TABLE IF NOT EXISTS alarms(
-  alarmtime     bigint            NOT NULL PRIMARY KEY,
-  name          character varying NOT NULL,
-  trigger       boolean           NOT NULL,
-  priority      smallint          NOT NULL
+  PRIMARY KEY (starttime, sampletype)
 ) WITH (OIDS=FALSE);

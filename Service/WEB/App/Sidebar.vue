@@ -5,7 +5,6 @@
       <sidebar-user :user="user" @update:user="$emit('update:user', $event)" :expanded="expanded"></sidebar-user>
       <sidebar-menu :analyzer="analyzer" :expanded="expanded"></sidebar-menu>
     </div>
-    <sidebar-news v-if="false"></sidebar-news>
   </div>
 </template>
 
@@ -17,38 +16,6 @@ export default {
   props: { analyzer: Object, user: Object, expanded: Boolean },
   data() {
     return { };
-  },
-  mounted: function() {
-//    $('.navbar-toggle').click(function (e) {
-//      $('.navbar-nav').toggleClass('show');
-//      if($('.navbar-nav').hasClass('show')) {
-//        this.showOverlay();
-//      } else {
-//        this.hideOverlay();
-//      }
-//    }.bind(this));
-//    $('.link').click(function (e){
-//      $(e.target).parent().parent().parent().find("[data-sidenav-dropdown]:visible").not($(e.target).parent().parent()).slideUp("fast");
-//      $('.navbar-nav').toggleClass('show');
-//      this.hideOverlay();
-//    }.bind(this));
-//    $('body').on('click', '.sidenav-overlay', this.hideOverlay);
-  },
-  methods: {
-//    showOverlay: function () {
-//      $('body').toggleClass('sidenav-no-scroll');
-//      var overlay = $('[data-sidenav-overlay]');
-//      if(overlay[0] === undefined) {
-//        overlay = $('<div data-sidenav-overlay class="sidenav-overlay"/>');
-//        $('body').append(overlay);
-//      }
-//      overlay.fadeToggle('fast');
-//    },
-//    hideOverlay: function () {
-//      $('body').removeClass('sidenav-no-scroll');
-//      $('.navbar-nav').removeClass('show');
-//      $('[data-sidenav-overlay]').fadeOut('fast');
-//    }
   },
   components: { SidebarUser, SidebarAnalyzer, SidebarMenu }
 }

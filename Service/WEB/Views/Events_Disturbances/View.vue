@@ -15,7 +15,7 @@
       </div>
     </div>
     <div class="col-lg-12">
-      <events-table :analyzer="analyzer" :events="TransferEvents.Data"></events-table>
+      <events-table :analyzer="analyzer" :events.sync="TransferEvents.Data"></events-table>
     </div>
   </div>
   <div v-else-if="analyzer==null">
@@ -27,7 +27,7 @@
 
 <script>
   import TimeLine from './TimeLine.vue';
-  import EventsTable from '../Analysis_Voltage/Events.vue';
+  import EventsTable from './Events.vue';
   export default {
     props: { analyzer: Object },
     data: function() {

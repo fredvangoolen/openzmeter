@@ -40,6 +40,8 @@ import DlgFs from 'Components/DialogFullscreen.vue';
 Vue.component('DlgFs', DlgFs);
 import Graph from 'Components/Graph.vue';
 Vue.component('Graph', Graph);
+import InputMath from 'Components/InputMath.vue';
+Vue.component('InputMath', InputMath);
 import InputSpin from 'Components/InputSpin.vue';
 Vue.component('InputSpin', InputSpin);
 import OptionAdder from 'Components/OptionAdder.vue';
@@ -52,6 +54,10 @@ import ProgressBar from 'Components/ProgressBar.vue';
 Vue.component('ProgressBar', ProgressBar);
 import Spinner from 'Components/Spinner.vue';
 Vue.component('Spinner', Spinner);
+import YearConfig from 'Components/YearConfig.vue';
+Vue.component('YearConfig', YearConfig);
+import DayConfig from 'Components/DayConfig.vue';
+Vue.component('DayConfig', DayConfig);
 import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
 Vue.component('ToolbarAggregation', ToolbarAggregation);
 import ToolbarYears from 'Components/ToolbarYears.vue';
@@ -60,6 +66,8 @@ import ToolbarPager from 'Components/ToolbarPager.vue';
 Vue.component('ToolbarPager', ToolbarPager);
 import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
 Vue.component('ToolbarPeriod', ToolbarPeriod);
+import ToolbarColorItems from 'Components/ToolbarColorItems.vue';
+Vue.component('ToolbarColorItems', ToolbarColorItems);
 import ToolbarPeriodB from 'Components/ToolbarPeriodB.vue';
 Vue.component('ToolbarPeriodB', ToolbarPeriodB);
 import ToolbarPhases from 'Components/ToolbarPhases.vue';
@@ -81,6 +89,7 @@ import AnalysisFrequency from 'Views/Analysis_Frequency/View.vue';
 import Analysis200MS from 'Views/Analysis_200MS/View.vue';
 import EventsITIC from 'Views/Events_ITIC/View.vue';
 import EventsDisturbances from 'Views/Events_Disturbances/View.vue';
+import CyclicHistogram from 'Views/Events_Disturbances/CyclicHistogram.vue';
 import EventsEN50160 from 'Views/Events_EN50160/View.vue';
 import EventsAlarms from 'Views/Events_Alarms/View.vue';
 import StatsCosts from 'Views/Stats_Costs/View.vue';
@@ -104,6 +113,7 @@ const AppRouter = new Router({
     { path: '/Analysis/200MS', component: Analysis200MS },
     { path: '/Events/ITIC', component: EventsITIC },
     { path: '/Events/Disturbances', component: EventsDisturbances },
+    { path: '/Events/Disturbances/CyclicHistogram/:id', name: 'CyclicHistogram', component: CyclicHistogram, props: true },
     { path: '/Events/EN50160', component: EventsEN50160 },
     { path: '/Events/Alarms', component: EventsAlarms },
     { path: '/Stats/Costs', component: StatsCosts },

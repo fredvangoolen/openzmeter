@@ -70,14 +70,14 @@
                TransferNow: this.CreateSeriesTransfer(this, ['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
                Transfer3S: this.CreateSeriesTransfer(this, ['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
                Transfer1M: this.CreateSeriesTransfer(this,  ['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
-               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'PERIOD_EXPENSE', 'PERIOD_COLOR', 'PERIOD_NAME', 'BILLS'])
+               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'EXPENSE', 'PERIOD_COLOR', 'PERIOD_NUMBER', 'BILLS'])
       };
     },
     created: function() {
       this.TransferNow.UpdateNow(this.analyzer);
       this.Transfer3S.Update(this.analyzer, '3S', 'LastHours');
       this.Transfer1M.Update(this.analyzer, '1M', 'LastDay');
-      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
     },
     beforeDestroy: function() {
       this.TransferNow.Destroy();
@@ -93,14 +93,14 @@
         this.TransferNow.UpdateNow(this.analyzer);
         this.Transfer3S.Update(this.analyzer, '3S', 'LastHours');
         this.Transfer1M.Update(this.analyzer, '1M', 'LastDay');
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
         this.BindGraphs();
       },
       Aggreg: function(val, prev) {
-        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       },
       Range: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       }
     },
     methods: {
@@ -118,7 +118,7 @@
         if(this.TransferGraph.Data == null) return [];
         var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
         var Data = [['Sampletime', 'Active Energy', 'Period name', 'Period expense']];
-        for(var i = 0; i < this.TransferGraph.Data.Sampletime.length; i++) Data.push([this.TransferGraph.Data.Sampletime[i], this.Round(this.TransferGraph.Data.Active_Power[i] / Div, 3), this.TransferGraph.Data.Period_Name[i], this.Round(this.TransferGraph.Data.Period_Expense[i], 3)]);
+        for(var i = 0; i < this.TransferGraph.Data.Sampletime.length; i++) Data.push([this.TransferGraph.Data.Sampletime[i], this.Round(this.TransferGraph.Data.Active_Power[i] / Div, 3), 'P' + this.TransferGraph.Data.Period_Number[i], this.Round(this.TransferGraph.Data.Expense[i], 3)]);
         return Object.seal(Data);
       }
     },

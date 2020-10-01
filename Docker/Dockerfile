@@ -27,6 +27,11 @@ RUN cd /opt/openWRT_SDK && make package/dbus/compile -j8
 RUN cd /opt/openWRT_SDK && make package/libusb/compile -j8
 RUN cd /opt/openWRT_SDK && BUILD_VARIANT="single" make package/fftw3/compile -j8
 
+# Add UUID lib
+RUN cd /opt/openWRT_SDK && make package/util-linux/compile -j8
+RUN mkdir /opt/openWRT_SDK/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.3.0_musl_eabi/include/uuid
+RUN cp /opt/openWRT_SDK/build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/util-linux-2.32/libuuid/src/uuid.h /opt/openWRT_SDK/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.3.0_musl_eabi/include/uuid
+
 # OpenWRT SDK --------------------------------------------------------------
 ENV SDK_DIR "/opt/openWRT_SDK"
 ENV STAGING_DIR "${SDK_DIR}/staging_dir"

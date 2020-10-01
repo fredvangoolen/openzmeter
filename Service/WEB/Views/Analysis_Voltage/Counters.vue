@@ -102,7 +102,7 @@
         var Avg = { Value: [], Count: 0 };
         if(this.dataGraph == null) return Avg;
         for(var x in this.dataGraph.Sampletime) {
-          if(Avg.Value.length == 0) Avg.Value = Array(this.dataGraph.Voltage[x].length).fill(0);
+          if(Avg.Value.length == 0) Avg.Value = new Array(this.dataGraph.Voltage[x].length).fill(0);
           for(var p in this.dataGraph.Voltage[x]) Avg.Value[p] = Avg.Value[p] + this.dataGraph.Voltage[x][p];
           Avg.Count++;
         }
@@ -115,8 +115,8 @@
         if(this.dataGraph == null) return Std;
         for(var x in this.dataGraph.Sampletime) {
           if(Std.Value.length == 0) {
-            Avg = Array(this.dataGraph.Voltage[x].length).fill(0);
-            Std.Value = Array(this.dataGraph.Voltage[x].length).fill(0);
+            Avg = new Array(this.dataGraph.Voltage[x].length).fill(0);
+            Std.Value = new Array(this.dataGraph.Voltage[x].length).fill(0);
           }
           for(var p in this.dataGraph.Voltage[x]) {
             if((this.dataGraph.Voltage[x][p] > this.analyzer.NominalVoltage * 0.9) && (this.dataGraph.Voltage[x][p] < this.analyzer.NominalVoltage * 1.1)) Std.Percent++;

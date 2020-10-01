@@ -66,7 +66,7 @@
     },
     methods: {
       Resize: function() {
-        this.Height = Math.min(600, this.$refs.Container.clientWidth - 30);
+        if(this.$refs.Container != null) this.Height = Math.min(600, this.$refs.Container.clientWidth - 30);
       },
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
@@ -91,12 +91,5 @@
 <style scoped>
   .header-text {
     font-size: 14px;
-  }
-  .title-warning {
-    line-height: 20px;
-    font-size: 14px;
-  }
-  .title-warning img {
-    margin: -4px 4px 0px 0px;
   }
 </style>

@@ -22,6 +22,10 @@
           <in>time_zone_posix.cpp</in>
           <in>zone_info_source.cpp</in>
         </df>
+        <df name="mqtt-c">
+          <in>mqtt.c</in>
+          <in>mqtt_pal.c</in>
+        </df>
         <df name="muParser">
           <in>muParser.cpp</in>
           <in>muParserBase.cpp</in>
@@ -72,6 +76,7 @@
           <df name="NONE">
             <in>TariffPlugin_NONE.cpp</in>
           </df>
+          <in>ESIOS.cpp</in>
           <in>Tariff.cpp</in>
         </df>
         <in>Database.cpp</in>
@@ -79,6 +84,7 @@
         <in>MODBus.cpp</in>
         <in>Main.cpp</in>
         <in>SysSupport.cpp</in>
+        <in>Telegram.cpp</in>
         <in>Tools.cpp</in>
       </df>
     </df>
@@ -108,21 +114,26 @@
       <flagsDictionary>
         <element flagsID="0" commonFlags="-g -Os -std=c99 -ffreestanding"/>
         <element flagsID="1"
+                 commonFlags="-march=native -fstack-protector-all -std=c++14"/>
+        <element flagsID="2"
+                 commonFlags="-march=sandybridge -msse3 -mssse3 -mcx16 -maes -mpclmul -mpopcnt -mavx -msse4.2 -msse4.1 -mxsave -mxsaveopt -mtune=sandybridge -g -ggdb3 -fstack-protector-all"/>
+        <element flagsID="3"
+                 commonFlags="-march=sandybridge -msse3 -mssse3 -mcx16 -maes -mpclmul -mpopcnt -mavx -msse4.2 -msse4.1 -mxsave -mxsaveopt -mtune=sandybridge -std=c++14 -fstack-protector-all"/>
+        <element flagsID="4"
                  commonFlags="-march=sandybridge -msse3 -mssse3 -mcx16 -maes -mpclmul -mpopcnt -mavx -msse4.2 -msse4.1 -mxsave -mxsaveopt -mtune=sandybridge -std=c++14 -funsafe-math-optimizations -fstack-protector-all"/>
-        <element flagsID="2" commonFlags="-std=c++11 -fstack-protector-all"/>
-        <element flagsID="3" commonFlags="-std=c++11 -march=native"/>
+        <element flagsID="5" commonFlags="-std=c++11 -fstack-protector-all"/>
       </flagsDictionary>
       <codeAssistance>
       </codeAssistance>
       <makefileType>
         <makeTool>
           <buildCommandWorkingDir>.</buildCommandWorkingDir>
-          <buildCommand>${MAKE} -j8 -f Makefile CONFIG=Configs/debian.config</buildCommand>
-          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <buildCommand>${MAKE} -j8 -f Makefile CONFIG=Configs/linux_native</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean-c</cleanCommand>
           <executablePath>Tmp/openZmeter</executablePath>
           <cTool flags="0">
           </cTool>
-          <ccTool flags="2">
+          <ccTool flags="5">
           </ccTool>
         </makeTool>
         <preBuild>
@@ -163,137 +174,108 @@
         </cTool>
       </item>
       <item path="Libs/cctz/civil_time_detail.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_fixed.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_format.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_if.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_impl.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_info.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_libc.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_lookup.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/cctz/time_zone_posix.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>.</pElem>
-          </incDir>
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/cctz/zone_info_source.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
-          <incDir>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
+        <ccTool flags="3">
         </ccTool>
       </item>
+      <item path="Libs/mqtt-c/mqtt.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="2">
+        </cTool>
+      </item>
+      <item path="Libs/mqtt-c/mqtt_pal.c" ex="false" tool="0" flavor2="3">
+        <cTool flags="2">
+        </cTool>
+      </item>
       <item path="Libs/muParser/muParser.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/muParser/muParserBase.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/muParser/muParserBytecode.cpp"
             ex="false"
             tool="1"
             flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/muParser/muParserCallback.cpp"
             ex="false"
             tool="1"
             flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/muParser/muParserDLL.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/muParser/muParserError.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/muParser/muParserInt.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/muParser/muParserTest.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Libs/muParser/muParserTokenReader.cpp"
             ex="false"
             tool="1"
             flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/Analyzers/Analyzer.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
           <incDir>
             <pElem>Libs/nlohmann</pElem>
+            <pElem>/usr/include/openssl</pElem>
             <pElem>Libs/cpp-httplib</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source</pElem>
             <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
@@ -303,11 +285,11 @@
             ex="false"
             tool="1"
             flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/Analyzers/Soft/Alarms.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="5">
           <incDir>
             <pElem>../../../../openWRT/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
             <pElem>../../../../openWRT/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
@@ -691,24 +673,27 @@
             ex="false"
             tool="1"
             flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
           <incDir>
             <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/openssl</pElem>
             <pElem>Libs/cpp-httplib</pElem>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>Source/Tariffs</pElem>
             <pElem>Source</pElem>
             <pElem>Libs/muParser</pElem>
-            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs/mqtt-c</pElem>
             <pElem>/usr/include/postgresql</pElem>
             <pElem>Source/Analyzers</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/Analyzers/Soft/Events.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="5">
           <incDir>
             <pElem>../../../../openWRT/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
             <pElem>../../../../openWRT/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
@@ -1088,7 +1073,7 @@
         </ccTool>
       </item>
       <item path="Source/Analyzers/Soft/FFT.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="5">
           <incDir>
             <pElem>../../../../openWRT/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
@@ -1468,7 +1453,7 @@
         </ccTool>
       </item>
       <item path="Source/Analyzers/Soft/Rates.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="5">
           <incDir>
             <pElem>../../../../openWRT/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
             <pElem>../../../../openWRT/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
@@ -1842,7 +1827,7 @@
         </ccTool>
       </item>
       <item path="Source/Analyzers/Soft/Sync.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="2">
+        <ccTool flags="5">
           <incDir>
             <pElem>../../../../openWRT/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0/bits</pElem>
             <pElem>../../../../openWRT/openwrt/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.4.0_musl_eabi/arm-openwrt-linux-muslgnueabi/include/c++/7.4.0</pElem>
@@ -2223,7 +2208,7 @@
         </ccTool>
       </item>
       <item path="Source/Database.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
           <incDir>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -2234,32 +2219,38 @@
         </ccTool>
       </item>
       <item path="Source/Devices/Device.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
           <incDir>
             <pElem>Libs/nlohmann</pElem>
+            <pElem>/usr/include/openssl</pElem>
             <pElem>Libs/cpp-httplib</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Libs/cctz</pElem>
+            <pElem>Libs/muParser</pElem>
             <pElem>Source/Tariffs</pElem>
             <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/Devices/DeviceManager.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
           <incDir>
             <pElem>Libs/nlohmann</pElem>
+            <pElem>/usr/include/openssl</pElem>
             <pElem>Libs/cpp-httplib</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source</pElem>
+            <pElem>/usr/include/postgresql</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Libs/cctz</pElem>
+            <pElem>Libs/muParser</pElem>
             <pElem>Source/Tariffs</pElem>
-            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
@@ -2269,78 +2260,58 @@
             ex="false"
             tool="1"
             flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/Devices/V1/DeviceV1.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/Devices/V2/DeviceV2.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/Devices/Virtual/DeviceVirtual.cpp"
             ex="false"
             tool="1"
             flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
         </ccTool>
       </item>
       <item path="Source/HTTPServer.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="1">
           <incDir>
-            <pElem>Libs/nlohmann</pElem>
-            <pElem>Libs/cpp-httplib</pElem>
             <pElem>Source</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
-          </incDir>
-        </ccTool>
-      </item>
-      <item path="Source/MODBus.cpp" ex="false" tool="1" flavor2="8">
-        <ccTool flags="3">
-          <incDir>
-            <pElem>Libs/nlohmann</pElem>
-            <pElem>Source/Analyzers/Remote</pElem>
-            <pElem>Source</pElem>
-            <pElem>Source/Analyzers</pElem>
-            <pElem>/usr/include/postgresql</pElem>
-            <pElem>/usr/include/x86_64-linux-gnu/curl</pElem>
-            <pElem>Libs</pElem>
-            <pElem>.</pElem>
             <pElem>Source/Devices</pElem>
+            <pElem>Source/Analyzers</pElem>
             <pElem>Source/Tariffs</pElem>
-            <pElem>Source/Support</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/mqtt-c</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
-            <pElem>Source/Support/Debian</pElem>
-            <pElem>/usr/include/dbus-1.0</pElem>
-            <pElem>/usr/lib/x86_64-linux-gnu/dbus-1.0/include</pElem>
-            <pElem>/usr/include/libxml2</pElem>
-            <pElem>/usr/local/pgsql/include</pElem>
-            <pElem>/usr/lib/arm-linux-gnueabihf/dbus-1.0/include</pElem>
-            <pElem>/usr/include/nlohmann</pElem>
-            <pElem>Source/Tariffs/NONE</pElem>
-            <pElem>Source/Tariffs/ESP</pElem>
-            <pElem>Source/Tariffs/ESP/ESIOS</pElem>
-            <pElem>Source/Devices/Virtual</pElem>
-            <pElem>Source/Devices/V2_00</pElem>
-            <pElem>Source/Devices/Remote</pElem>
-            <pElem>Source/Devices/V1_01</pElem>
-            <pElem>Source/Devices/V1_00</pElem>
-            <pElem>Libs/cctz</pElem>
+            <pElem>.</pElem>
           </incDir>
           <preprocessorList>
+            <Elem>CPPHTTPLIB_OPENSSL_SUPPORT</Elem>
+            <Elem>CPPHTTPLIB_ZLIB_SUPPORT</Elem>
             <Elem>DEBIAN</Elem>
-            <Elem>OZM_DEBUG</Elem>
-            <Elem>__BUILD__="20190731.1831"</Elem>
+            <Elem>__BUILD__="custom_20200429.1657"</Elem>
           </preprocessorList>
         </ccTool>
       </item>
-      <item path="Source/Main.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+      <item path="Source/MODBus.cpp" ex="false" tool="1" flavor2="11">
+        <ccTool flags="3">
           <incDir>
+            <pElem>Source</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="Source/Main.cpp" ex="false" tool="1" flavor2="11">
+        <ccTool flags="3">
+          <incDir>
+            <pElem>/usr/include/openssl</pElem>
             <pElem>Libs/cpp-httplib</pElem>
             <pElem>Source</pElem>
             <pElem>Libs/cctz</pElem>
@@ -2348,18 +2319,38 @@
             <pElem>/usr/include/postgresql</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source/Devices</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/SysSupport.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
           <incDir>
             <pElem>Libs/nlohmann</pElem>
+            <pElem>/usr/include/openssl</pElem>
             <pElem>Libs/cpp-httplib</pElem>
             <pElem>Source</pElem>
             <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
+            <pElem>Libs</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+      </item>
+      <item path="Source/Tariffs/ESIOS.cpp" ex="false" tool="1" flavor2="11">
+        <ccTool flags="3">
+          <incDir>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>/usr/include/openssl</pElem>
+            <pElem>Libs/cpp-httplib</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
@@ -2369,33 +2360,55 @@
             ex="false"
             tool="1"
             flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="4">
         </ccTool>
       </item>
       <item path="Source/Tariffs/NONE/TariffPlugin_NONE.cpp"
             ex="false"
             tool="1"
             flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="4">
         </ccTool>
       </item>
       <item path="Source/Tariffs/Tariff.cpp" ex="false" tool="1" flavor2="11">
         <ccTool flags="1">
           <incDir>
-            <pElem>Libs/cctz</pElem>
-            <pElem>Libs/nlohmann</pElem>
-            <pElem>Libs/cpp-httplib</pElem>
-            <pElem>Source/Tariffs</pElem>
-            <pElem>/usr/include/postgresql</pElem>
             <pElem>Source</pElem>
+            <pElem>Source/Devices</pElem>
             <pElem>Source/Analyzers</pElem>
+            <pElem>Source/Tariffs</pElem>
+            <pElem>Libs</pElem>
+            <pElem>Libs/mqtt-c</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>Source/Analyzers/Remote</pElem>
+            <pElem>Source/Analyzers/Soft</pElem>
+            <pElem>.</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>CPPHTTPLIB_OPENSSL_SUPPORT</Elem>
+            <Elem>CPPHTTPLIB_ZLIB_SUPPORT</Elem>
+            <Elem>DEBIAN</Elem>
+            <Elem>__BUILD__="custom_20200429.1648"</Elem>
+          </preprocessorList>
+        </ccTool>
+      </item>
+      <item path="Source/Telegram.cpp" ex="false" tool="1" flavor2="11">
+        <ccTool flags="3">
+          <incDir>
+            <pElem>Libs/cctz</pElem>
+            <pElem>/usr/include/openssl</pElem>
+            <pElem>Libs/cpp-httplib</pElem>
+            <pElem>Libs/nlohmann</pElem>
+            <pElem>Source</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
         </ccTool>
       </item>
       <item path="Source/Tools.cpp" ex="false" tool="1" flavor2="11">
-        <ccTool flags="1">
+        <ccTool flags="3">
           <incDir>
             <pElem>Libs/nlohmann</pElem>
             <pElem>Source</pElem>
@@ -2404,6 +2417,14 @@
           </incDir>
         </ccTool>
       </item>
+      <folder path="0">
+        <cTool>
+          <incDir>
+            <pElem>Libs/mqtt-c</pElem>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+      </folder>
       <folder path="0/Libs">
         <ccTool>
           <incDir>
@@ -2439,11 +2460,13 @@
         <ccTool>
           <incDir>
             <pElem>Libs/nlohmann</pElem>
+            <pElem>/usr/include/openssl</pElem>
             <pElem>Libs/cpp-httplib</pElem>
             <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
@@ -2453,12 +2476,14 @@
         <ccTool>
           <incDir>
             <pElem>Libs/nlohmann</pElem>
+            <pElem>/usr/include/openssl</pElem>
             <pElem>Libs/cpp-httplib</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Source/Devices/Remote</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
             <pElem>Source/Analyzers/Remote</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
@@ -2470,14 +2495,19 @@
           <incDir>
             <pElem>/usr/include/libusb-1.0</pElem>
             <pElem>Libs/nlohmann</pElem>
+            <pElem>/usr/include/openssl</pElem>
             <pElem>Libs/cpp-httplib</pElem>
             <pElem>Source/Devices/V1</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Libs/muParser</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Source/Tariffs</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
             <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
+            <pElem>Libs/mqtt-c</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
@@ -2488,14 +2518,19 @@
           <incDir>
             <pElem>/usr/include/libusb-1.0</pElem>
             <pElem>Libs/nlohmann</pElem>
+            <pElem>/usr/include/openssl</pElem>
             <pElem>Libs/cpp-httplib</pElem>
             <pElem>Source/Devices/V2</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Libs/muParser</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Source/Tariffs</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
             <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
+            <pElem>Libs/mqtt-c</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>
@@ -2505,14 +2540,19 @@
         <ccTool>
           <incDir>
             <pElem>Libs/nlohmann</pElem>
+            <pElem>/usr/include/openssl</pElem>
             <pElem>Libs/cpp-httplib</pElem>
             <pElem>Source/Devices/Virtual</pElem>
             <pElem>Source</pElem>
             <pElem>Source/Analyzers</pElem>
             <pElem>Source/Devices</pElem>
             <pElem>Libs/muParser</pElem>
+            <pElem>Libs/cctz</pElem>
+            <pElem>Source/Tariffs</pElem>
             <pElem>Source/Analyzers/Soft</pElem>
             <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/x86_64-linux-gnu/openssl</pElem>
+            <pElem>Libs/mqtt-c</pElem>
             <pElem>Libs</pElem>
             <pElem>.</pElem>
           </incDir>

@@ -26,7 +26,7 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-map<string, HTTPServer::Func_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
+map<string, HTTPServer::Func_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks = map<string, HTTPServer::Func_t>();
 RWLocks                                                             HTTPServer::pLock;
 string                                                              HTTPServer::pRelativePath = "/";
 //----------------------------------------------------------------------------------------------------------------------
@@ -64,78 +64,101 @@ URL::URL(const string &url) {
   if(queryStart != uriEnd) Query = string(queryStart, url.end());
 }
 //----------------------------------------------------------------------------------------------------------------------
-pthread_mutex_t HTTPTaskQueue::pLocks = PTHREAD_MUTEX_INITIALIZER;
-HTTPTaskQueue  *HTTPTaskQueue::pInstance = NULL;
+//HTTPTaskQueue  *HTTPTaskQueue::pInstance = NULL;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPTaskQueue::HTTPTaskQueue() {
-  pUsedWorkers = 0;
-  pthread_mutex_lock(&pLocks);
-  pInstance = this;
-  pthread_mutex_unlock(&pLocks);
+  pRunningWorkers = 0;
+  pMutex          = PTHREAD_MUTEX_INITIALIZER;
+  pCond           = PTHREAD_COND_INITIALIZER;
+  pLastAdjust     = Tools::GetTime64();
 }
 HTTPTaskQueue::~HTTPTaskQueue() {
   shutdown();
 }
 void HTTPTaskQueue::enqueue(std::function<void()> fn) {
   Worker_t *Tmp = NULL;
-  pthread_mutex_lock(&pLocks);
-  pUsedWorkers++;
+  pthread_mutex_lock(&pMutex);
+  pRunningWorkers++;
   if(pFreeWorkers.size() > 0) {
     Tmp = pFreeWorkers.front();
     pFreeWorkers.pop_front();
   }
-  pthread_mutex_unlock(&pLocks);
+  pthread_mutex_unlock(&pMutex);
   if(Tmp == NULL) {
-    Tmp = (Worker_t*)calloc(sizeof(Worker_t), 1);
-    Tmp->Thread = new Worker("HTTPWorker", this, Thread, 15);
-  }
-  if(Tmp != NULL) {
+    Tmp = new Worker_t;
+    Tmp->Terminate = false;
+    Tmp->Cond      = PTHREAD_COND_INITIALIZER;
+    Tmp->Mutex     = PTHREAD_MUTEX_INITIALIZER;
+    Tmp->Parent    = this;
+    Tmp->Function  = fn;
+    if(pthread_create(&Tmp->Thread, NULL, Thread, (void*)Tmp) != 0) {
+      Tmp->Thread = 0;
+      LOGFile::Error("%s:%d -> %s\n", __func__, __LINE__, strerror(errno));
+      return;
+    }
+    pthread_setname_np(Tmp->Thread, "HTTPWorker");
+  } else {
+    pthread_mutex_lock(&Tmp->Mutex);
     Tmp->Function = fn;
-    Tmp->Thread->Run(Tmp);
+    pthread_cond_signal(&Tmp->Cond);
+    pthread_mutex_unlock(&Tmp->Mutex);
+  }
+}
+void *HTTPTaskQueue::Thread(void *params) {
+  Worker_t *This = (Worker_t*)params;
+  nice(15);
+  while(true) {
+    pthread_mutex_lock(&This->Mutex);
+    while((This->Terminate == false) && (This->Function == NULL)) pthread_cond_wait(&This->Cond, &This->Mutex);
+    if(This->Terminate == true) return NULL;
+    pthread_mutex_unlock(&This->Mutex);
+    This->Function();
+    pthread_mutex_lock(&This->Mutex);
+    This->Function = NULL;
+    This->LastTime = Tools::GetTime64();
+    pthread_mutex_unlock(&This->Mutex);
+    pthread_mutex_lock(&This->Parent->pMutex);
+    This->Parent->pFreeWorkers.push_front(This);
+    This->Parent->pRunningWorkers--;
+    if(This->Parent->pRunningWorkers == 0) pthread_cond_signal(&This->Parent->pCond);
+    pthread_mutex_unlock(&This->Parent->pMutex);
   }
 }
 void HTTPTaskQueue::shutdown() {
-  pthread_mutex_lock(&pLocks);
-  pInstance = NULL;
-  while(pUsedWorkers > 0) {
-    pthread_mutex_unlock(&pLocks);
-    usleep(100000);
-    pthread_mutex_lock(&pLocks);
-  }
+  pthread_mutex_lock(&pMutex);
+  while(pRunningWorkers > 0) pthread_cond_wait(&pCond, &pMutex);
   while(pFreeWorkers.size() > 0) {
     auto Tmp = pFreeWorkers.front();
-    delete Tmp->Thread;
     pFreeWorkers.pop_front();
-    free(Tmp);
+    pthread_mutex_lock(&Tmp->Mutex);
+    Tmp->Terminate = true;
+    pthread_cond_signal(&Tmp->Cond);
+    pthread_mutex_unlock(&Tmp->Mutex);
+    pthread_join(Tmp->Thread, NULL);
+    delete Tmp;
   }
-  pthread_mutex_unlock(&pLocks);
+  pthread_mutex_unlock(&pMutex);
 }
-void HTTPTaskQueue::Thread(void *param1, void *param2) {
-  HTTPTaskQueue *This = (HTTPTaskQueue*)param1;
-  Worker_t *Work = (Worker_t*)param2;
-  Work->Function();
-  pthread_mutex_lock(&This->pLocks);
-  Work->LastTime = Tools::GetTime();
-  This->pFreeWorkers.push_front(Work);
-  This->pUsedWorkers--;
-  pthread_mutex_unlock(&This->pLocks);
-}
-void HTTPTaskQueue::AdjustWorkers() {
-  pthread_mutex_lock(&pLocks);
-  if(pInstance == NULL) {
-    pthread_mutex_unlock(&pLocks);
+void HTTPTaskQueue::on_idle() {
+  pthread_mutex_lock(&pMutex);
+  uint64_t Time = Tools::GetTime64();
+  if((pLastAdjust + 60000) > Time) {
+    pthread_mutex_unlock(&pMutex);
     return;
   }
-  uint64_t Time = Tools::GetTime();
-  while(pInstance->pFreeWorkers.size() > 0) {
-    auto Tmp = pInstance->pFreeWorkers.back();
+  pLastAdjust = Time;
+  while(pFreeWorkers.size() > 0) {
+    auto Tmp = pFreeWorkers.back();
     if((Time - Tmp->LastTime) < 60000) break;
-    delete Tmp->Thread;
-    pInstance->pFreeWorkers.pop_back();
-    free(Tmp);
+    Tmp->Terminate = true;
+    pthread_cond_signal(&Tmp->Cond);
+    pthread_mutex_unlock(&Tmp->Mutex);
+    pthread_join(Tmp->Thread, NULL);
+    pFreeWorkers.pop_back();
+    delete Tmp;
   }
-  LOGFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)\n", pInstance->pFreeWorkers.size(), pInstance->pUsedWorkers);
-  pthread_mutex_unlock(&pLocks);
+  pthread_mutex_unlock(&pMutex);
+  LOGFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)\n", pFreeWorkers.size(), pRunningWorkers);
 }
 //----------------------------------------------------------------------------------------------------------------------
 uint16_t       HTTPServer::pPort   = 8080;
@@ -282,9 +305,9 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
         Response["Result"] = true;
         Response["LastLogin"] = DB.ResultUInt64("lastlogin");
         if(Params["UpdateLastLogin"].is_boolean()) UpdateLastLogin = Params["UpdateLastLogin"];
-        DB.ExecSentenceAsyncResult("INSERT INTO sessions(username, timestamp) VALUES (" + DB.Bind(User) + ", " + DB.Bind(Tools::GetTime()) + ") RETURNING id");
+        DB.ExecSentenceAsyncResult("INSERT INTO sessions(username, timestamp) VALUES (" + DB.Bind(User) + ", " + DB.Bind(Tools::GetTime64()) + ") RETURNING id");
         if(DB.FecthRow()) response.set_header("Set-Cookie", "SESSION=" + DB.ResultString("id"));
-        if(UpdateLastLogin) DB.ExecSentenceNoResult("UPDATE users SET lastlogin = " + DB.Bind(Tools::GetTime()) + " WHERE username = " + DB.Bind(User));
+        if(UpdateLastLogin) DB.ExecSentenceNoResult("UPDATE users SET lastlogin = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(User));
       } else {
         Response["Result"] = false;
       }
@@ -323,8 +346,8 @@ void HTTPServer::HandlePost(const Request &request, Response &response) {
   pLock.Unlock();
   FillResponse(response, "Method not found", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
-void HTTPServer::RemoveExpiredSessions() const {
-  if(Tools::GetTime() < 1296000000) return;
+void HTTPServer::PeriodicTasks() {
+  if(Tools::GetTime64() < 1296000000) return;
   Database DB;
-  DB.ExecSentenceNoResult("DELETE FROM sessions WHERE timestamp < " + DB.Bind(Tools::GetTime() - 1296000000));
+  DB.ExecSentenceNoResult("DELETE FROM sessions WHERE timestamp < " + DB.Bind(Tools::GetTime64() - 1296000000));
 }

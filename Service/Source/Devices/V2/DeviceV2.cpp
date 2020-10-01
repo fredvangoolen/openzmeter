@@ -126,10 +126,12 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
   }
 }
 DeviceV2::~DeviceV2() {
+  LOGFile::Info("Stopping device with serial '%s'\n", Serial.c_str());
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   if(pBuffer != NULL) free(pBuffer);
   if(pChannelsDelay != NULL) free(pChannelsDelay);
+  LOGFile::Info("Device with serial '%s' stopped\n", Serial.c_str());
 }
 json DeviceV2::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
@@ -176,7 +178,7 @@ json DeviceV2::CheckConfig(const json &config) {
         json Output     = json::object();
         bool Error      = false;
         Output["Mode"]  = "1PHASE";
-        Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1);
+        Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1, NULL);
         if(Tmp.contains("Mode") && Tmp["Mode"].is_string() && ((Tmp["Mode"] == "1PHASE") || (Tmp["Mode"] == "3PHASE") || (Tmp["Mode"] == "3PHASE+N"))) Output["Mode"] = Tmp["Mode"];
         if(Output["Mode"] == "1PHASE") {
           Output["Voltage"] = "CH1";
@@ -205,7 +207,7 @@ json DeviceV2::CheckConfig(const json &config) {
             CurrentMask |= (1 << Channel);
           }
         }
-        if(Tmp.contains("Analyzer") && Tmp["Analyzer"].is_object()) Output["Analyzer"] = AnalyzerSoft::CheckConfig(Tmp["Analyzer"], (Output["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Output["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N);
+        if(Tmp.contains("Analyzer") && Tmp["Analyzer"].is_object()) Output["Analyzer"] = AnalyzerSoft::CheckConfig(Tmp["Analyzer"], (Output["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Output["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N, NULL);
         if(Error == false) ConfigOUT["Outputs"].push_back(Output);
       }
     }
@@ -214,7 +216,7 @@ json DeviceV2::CheckConfig(const json &config) {
       Output["Mode"]  = "1PHASE";
       Output["Voltage"] = "CH1";
       Output["Current"] = "+CH1";
-      Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1);
+      Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1, NULL);
       ConfigOUT["Outputs"].push_back(Output);
     }
   }
@@ -285,11 +287,11 @@ void *DeviceV2::Capture_Thread(void *args) {
   nice(-20);
   for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) This->pTransfers[n].Init(This, 65536);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
-    struct timeval tv = { 1, 0 };
+    struct timeval tv = { 0, 100000 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) LOGFile::Error("libusb_handle_events_timeout_completed returns code %d\n", Result);
     if(This->pTerminate == true) continue;
-    if((This->pDeviceHandle != NULL) && (LastSignalSend < (Tools::GetTime() - 500))) {
+    if((This->pDeviceHandle != NULL) && (LastSignalSend < (Tools::GetTime64() - 500))) {
       uint16_t Status = 0x0006; //Stat=GREEN y Wifi=RED
 //      SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
 //      SysStatus->Lock.ReadLock();
@@ -304,7 +306,7 @@ void *DeviceV2::Capture_Thread(void *args) {
       Status |= (This->pHighGain == true) ? 0x4000 : 0x0000;
       This->pSignalTransfer.Submit(&Status, sizeof(Status));
       This->pSubmittedTransfers++;
-      LastSignalSend = Tools::GetTime();
+      LastSignalSend = Tools::GetTime64();
     }
     if(This->pNewDevice != NULL) {
       struct libusb_device_descriptor Descriptor;
@@ -365,9 +367,9 @@ void *DeviceV2::Capture_Thread(void *args) {
       } else {
         LOGFile::Info("Claimed interface 0 for DeviceV2 with serial '%s'\n", This->Serial.c_str());
       }
-      This->pSignalTransfer.Setup(This->pDeviceHandle, DEVICEV2_ENDPOINT_OUT, ReadCallback, -1);
+      This->pSignalTransfer.Setup(This->pDeviceHandle, DEVICEV2_ENDPOINT_OUT, ReadCallback, 1000);
       for(Transfer &Tmp : This->pTransfers) {
-        Tmp.Submit(This->pDeviceHandle, DEVICEV2_ENDPOINT_IN, ReadCallback, -1);
+        Tmp.Submit(This->pDeviceHandle, DEVICEV2_ENDPOINT_IN, ReadCallback, 5000);
         This->pSubmittedTransfers++;
       }
       if(Result != LIBUSB_SUCCESS) {

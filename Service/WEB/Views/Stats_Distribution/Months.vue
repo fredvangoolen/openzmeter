@@ -41,15 +41,16 @@
         for(var i in this.data.Active_Power) {
           var Month = moment(this.data.Sampletime[i]).tz(this.analyzer.TimeZone).month();
           if(this.Months[Month] === undefined) this.Months[Month] = { };
-          var Period = (this.data.Period_Name[i] === null) ? 'NONE' : this.data.Period_Name[i];
+          var Period = (this.data.Period_Number[i] === null) ? 'NONE' : 'P' + this.data.Period_Number[i];
           if(this.Periods.includes(Period) === false) this.Periods.push(Period);
-          if(this.data.Active_Power[i] != null) this.Months[Month][Period] = (this.Months[Month][Period] == undefined) ? this.data.Active_Power[i] : this.Months[Month][Period] + this.data.Active_Power[i];
+          if(this.data.Active_Power[i] != null) this.Months[Month][Period] = (this.Months[Month][Period] == null) ? this.data.Active_Power[i] / 4.0 : this.Months[Month][Period] + this.data.Active_Power[i] / 4.0;
         }
         var Max = 0;
         for(var Month in this.Months) {
           for(var Period in this.Months[Month]) Max = Math.max(Max, this.Months[Month][Period]);
         }
         this.Units = this.BestUnits(Max);
+        console.log(Max);
         this.Periods = this.Periods.sort();
         this.Columns = [ { name: 'Month', title: 'Month' } ];
         for(var Period in this.Periods) this.Columns.push({ name: this.Periods[Period], title: this.Periods[Period] });

@@ -38,6 +38,8 @@ DeviceRemote::DeviceRemote() : Device("REMOTE", "Remote", "Allow repplication of
   Configure(CheckConfig(ConfigManager::ReadConfig("/Devices/" + Serial)));
 }
 DeviceRemote::~DeviceRemote() {
+  LOGFile::Info("Stopping device with serial '%s'\n", Serial.c_str());
+  LOGFile::Info("Device with serial '%s' stopped\n", Serial.c_str());
 }
 json DeviceRemote::CheckConfig(const json &config) {
   json ConfigOUT = json::object();

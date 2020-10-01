@@ -20,8 +20,10 @@
 #include "Tools.h"
 #include "HTTPServer.h"
 #include "Telegram.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "SysSupport.h"
+#include "Tariffs/ESIOS.h"
+#include "MODBus.h"
 //---------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 volatile bool Terminate = false;
@@ -72,13 +74,21 @@ int main(int argc, char** argv) {
   SysSupport SystemManager;
   /* Create devices interface */
   DeviceManager DeviceManager;
+  /* Create ESIOS */
+  ESIOS Esios;
+  /* Create ModbusTCP */
+  ModbusTCP Modbus;
+
+  pthread_setname_np(pthread_self(), "openZmeter");
+  nice(15);
 
   uint32_t Iter = 0;
   while(!Terminate) {
-    if((Iter % 3600) == 0) HTTPServer.RemoveExpiredSessions();
-    if((Iter % 60) == 10) DatabasePool::AdjustWorkers();
-    if((Iter % 60) == 20) Telegram::AdjustWorkers();
-    if((Iter % 60) == 30) HTTPTaskQueue::AdjustWorkers();
+    SysSupport::PeriodicTask();
+    if((Iter % 80) == 0)  HTTPServer::PeriodicTasks();
+    if((Iter % 80) == 20) DeviceManager::PeriodicTasks();
+    if((Iter % 80) == 40) DatabasePool::PeriodicTasks();
+    if((Iter % 80) == 60) Telegram::PeriodicTasks();
     Iter++;
     usleep(1000000);
   }

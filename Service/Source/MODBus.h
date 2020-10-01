@@ -15,11 +15,65 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <pthread.h>
+#include "nlohmann/json.h"
+#include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
-class MODBus {
+#define MODBUS_FUNC_NONE 0x00
+//#define MB_FC_READ_COILS 1
+//#define MB_FC_READ_DISCRETE_INPUT 2
+#define MODBUS_FUNC_READ_REGISTERS 0x03
+//#define MB_FC_READ_INPUT_REGISTERS 4        //implemented
+//#define MB_FC_WRITE_COIL 5
+//#define MB_FC_WRITE_REGISTER 6              //implemented
+//#define MB_FC_WRITE_MULTIPLE_COILS 15
+//#define MB_FC_WRITE_MULTIPLE_REGISTERS 16   //implemented
+// ---------------------------------------------------------------------------------------------------------------------
+using json = nlohmann::json;
+// ---------------------------------------------------------------------------------------------------------------------
+class ModbusTCP final {
+  private :
+    typedef struct {
+      uint64_t       LastTime;     //Last time event
+      Worker        *Thread;
+      sockaddr_in    Client;
+      int            ClientSock;
+    } Worker_t;
+    typedef struct {
+      uint16_t       TransactionID;
+      uint16_t       ProtocolID;
+      uint16_t       Length;
+      uint8_t        UnitID;
+      uint8_t        FunctionCode;
+      uint16_t       StartAddress;
+      uint16_t       QuantityRegisters;
+    } PacketIN_t;
+    typedef struct {
+      uint16_t       TransactionID;
+      uint16_t       ProtocolID;
+      uint16_t       Length;
+      uint8_t        UnitID;
+      uint8_t        FunctionCode;
+      uint8_t        ResponseLen;
+      uint8_t        ResponseBuffer[255];
+    } PacketOUT_t;
+  private :
+    static pthread_mutex_t pMutex;
+    static pthread_t       pThread;
+    static volatile bool   pTerminate;
+    static uint16_t        pPort;
+    static list<Worker_t*> pFreeWorkers;
+    static uint32_t        pUsedWorkers;
+    static vector<string>  pAnalyzers;
+  private :
+    static json  CheckConfig(const json &config);
+    static void  Configure(const json &config);
+    static void *Thread(void *args);
+    static void  Connection_Handle(const int clientSock, const sockaddr_in &client);
+    static void  GetModbusTCP(const json &params, Response &response);
+    static void  SetModbusTCP(const json &params, Response &response);
   public :
-    MODBus();
-    ~MODBus();
+    ModbusTCP();
+    ~ModbusTCP();
 };
 //#ifndef ModbusTCPSlave_h
 //#define ModbusTCPSlave_h
@@ -85,14 +139,13 @@ class MODBus {
 //#define MB_TCP_REGISTER_START         8
 //#define MB_TCP_REGISTER_NUMBER         10
 //
-class ModbusTCP {
-private :
-  pthread_t   pThread;
-  bool        pTerminate;
-private :
-  void *Thread(void *args);
-  public:
-    ModbusTCP();
+
+
+//class ModbusTCP {
+//private :
+
+//  public:
+//    ModbusTCP();
 //#ifdef MB_ETHERNET
 //    void begin();
 //    void begin(uint8_t ip[4],uint8_t gateway[4],uint8_t subnet[4]);
@@ -124,6 +177,6 @@ private :
 //#ifdef MB_ESP8266
 //    WiFiServer MBServer;
 //#endif
-};
+//};
 
 //#endif

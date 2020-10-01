@@ -25,37 +25,35 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class Worker final {
   private :
-    void           *pCreationParam;
-    void           *pRunParam;
-    bool            pWorking;
-    volatile bool   pTerminate;
-    pthread_t       pThread;
-    pthread_mutex_t pMutex;
-    pthread_cond_t  pCond;
-    void          (*pCallback)(void*, void*);
+    void                 *pRunParam;
+    volatile bool         pWorking;
+    volatile bool         pTerminate;
+    pthread_t             pThread;
+    pthread_mutex_t       pMutex;
+    pthread_cond_t        pCondWake;
+    pthread_cond_t        pCondWait;
+    function<void(void*)> pCallback;
   private :
     static void *Thread(void *args);
   public :
-    Worker(const string &name, void *param, void (*callback)(void*, void*), int8_t nice = 0);
+    Worker(const string &name, function<void(void*)> callback, int8_t nice = 0);
     ~Worker();
     bool IsWorking();
     void Run(void *param);
     void Wait();
 };
 class RWLocks final {
-  //Multiple read access allowed, exclusive access for writing
   private :
-    pthread_mutex_t  pMutex;
-    pthread_cond_t   pReadersCondition;
-    pthread_cond_t   pWritersCondition;
-    uint32_t         pReaders;
-    uint32_t         pWriters;
-    bool             pWriter;
+    pthread_mutex_t   pMutex;
+    pthread_cond_t    pReadersCondition;
+    pthread_cond_t    pWritersCondition;
+    volatile uint32_t pReaders;
+    volatile uint32_t pWriters;
+    bool              pWriter;
   public :
     RWLocks();
     ~RWLocks();
     void ReadLock();
-    bool TryReadLock();
     void WriteLock();
     void Unlock();
 };
@@ -63,18 +61,19 @@ class RWLocks final {
 class ProviderLocks {
   //Provider wait until all consumers ends, consumers wait until provider write
   private :
-    volatile bool    pTerminate;
-    bool             pDataReady;
-    uint32_t         pConsumers;
-    pthread_mutex_t  pMutex;
-    pthread_cond_t   pConsumersCond;
-    pthread_cond_t   pProducerCond;
+    volatile bool     pTerminate;
+    volatile bool     pDataReady;
+    volatile uint32_t pConsumers;
+    pthread_mutex_t   pMutex;
+    pthread_cond_t    pConsumerEnterCond;
+    pthread_cond_t    pConsumerWaitCond;
+    pthread_cond_t    pProducerCond;
   public :
     ProviderLocks();
-    void Abort();
+    ~ProviderLocks();
     void ProviderWrite();
     void ProviderWait();
-    bool ConsumerWait(uint32_t timeoutMS);
+    bool ConsumerWait(uint32_t timeoutSec);
     void ConsumerEnds();
 };
 //----------------------------------------------------------------------------------------------------------------------
@@ -143,7 +142,8 @@ class Tools {
   public :
     static void      DisableEcho();
     static void      RunDaemon();
-    static uint64_t  GetTime();
+    static uint64_t  GetTime64();
+    static string    StrTrim(const string &str);
     static void      SendUDP(const json &obj);
 };
 //----------------------------------------------------------------------------------------------------------------------

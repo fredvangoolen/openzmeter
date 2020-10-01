@@ -29,33 +29,36 @@ DeviceManager::DeviceManager() {
     for(auto Dev : Func()) pDevices.push_back(Dev);
   }
   pDevicesLock.Unlock();
-  HTTPServer::RegisterCallback("getDevices",          GetDevicesCallback);
-  HTTPServer::RegisterCallback("getDevice",           GetDeviceCallback);
-  HTTPServer::RegisterCallback("setDevice",           SetDeviceCallback);
-  HTTPServer::RegisterCallback("setRemote",           SetRemoteCallback);
-  HTTPServer::RegisterCallback("getRemote",           GetRemoteCallback);
-  HTTPServer::RegisterCallback("getAnalyzers",        GetAnalyzersCallback);
-  HTTPServer::RegisterCallback("getAnalyzer",         GetAnalyzerCallback);
-  HTTPServer::RegisterCallback("setAnalyzer",         SetAnalyzerCallback);
-  HTTPServer::RegisterCallback("getSeries",           GetSeriesCallback);
-  HTTPServer::RegisterCallback("getSeriesNow",        GetSeriesNowCallback);
-  HTTPServer::RegisterCallback("getSeriesRange",      GetSeriesRangeCallback);
-  HTTPServer::RegisterCallback("getEvents",           GetEventsCallback);
-  HTTPServer::RegisterCallback("getEvent",            GetEventCallback);
-  HTTPServer::RegisterCallback("setEvent",            SetEventCallback);
-  HTTPServer::RegisterCallback("delEvent",            DelEventCallback);
-//  HTTPServer::RegisterCallback("getRates",            GetRatesCallback);
-//  HTTPServer::RegisterCallback("getRate",             GetRateCallback);
-//  HTTPServer::RegisterCallback("setRate",             SetRateCallback);
-//  HTTPServer::RegisterCallback("delRate",             DelRateCallback);
-//  HTTPServer::RegisterCallback("addRate",             AddRateCallback);
-  HTTPServer::RegisterCallback("getPrices",           GetPricesCallback);
-  HTTPServer::RegisterCallback("testAlarm",           TestAlarmCallback);
-  HTTPServer::RegisterCallback("getAlarms",           GetAlarmsCallback);
-  HTTPServer::RegisterCallback("getPermissions",      GetPermissionsCallback);
-  HTTPServer::RegisterCallback("addPermission",       AddPermissionCallback);
-  HTTPServer::RegisterCallback("setPermission",       SetPermissionCallback);
-  HTTPServer::RegisterCallback("delPermission",       DelPermissionCallback);
+  HTTPServer::RegisterCallback("getDevices",     GetDevicesCallback);
+  HTTPServer::RegisterCallback("getDevice",      GetDeviceCallback);
+  HTTPServer::RegisterCallback("setDevice",      SetDeviceCallback);
+  HTTPServer::RegisterCallback("setRemote",      SetRemoteCallback);
+  HTTPServer::RegisterCallback("getRemote",      GetRemoteCallback);
+  HTTPServer::RegisterCallback("getAnalyzers",   GetAnalyzersCallback);
+  HTTPServer::RegisterCallback("getAnalyzer",    GetAnalyzerCallback);
+  HTTPServer::RegisterCallback("setAnalyzer",    SetAnalyzerCallback);
+  HTTPServer::RegisterCallback("getSeries",      GetSeriesCallback);
+  HTTPServer::RegisterCallback("getSeriesNow",   GetSeriesNowCallback);
+  HTTPServer::RegisterCallback("getWaveStream",  GetWaveStream);
+  HTTPServer::RegisterCallback("getSeriesRange", GetSeriesRangeCallback);
+  HTTPServer::RegisterCallback("getEvents",      GetEventsCallback);
+  HTTPServer::RegisterCallback("getEvent",       GetEventCallback);
+  HTTPServer::RegisterCallback("setEvent",       SetEventCallback);
+  HTTPServer::RegisterCallback("delEvent",       DelEventCallback);
+  HTTPServer::RegisterCallback("getCyclicHistogram", GetCyclicHistogramCallback);
+  HTTPServer::RegisterCallback("getJoltData",    GetJoltDataCallback);
+  HTTPServer::RegisterCallback("getPrices",      GetPricesCallback);
+  HTTPServer::RegisterCallback("testAlarm",      TestAlarmCallback);
+  HTTPServer::RegisterCallback("getAlarms",      GetAlarmsCallback);
+  HTTPServer::RegisterCallback("getPermissions", GetPermissionsCallback);
+  HTTPServer::RegisterCallback("addPermission",  AddPermissionCallback);
+  HTTPServer::RegisterCallback("setPermission",  SetPermissionCallback);
+  HTTPServer::RegisterCallback("delPermission",  DelPermissionCallback);
+  HTTPServer::RegisterCallback("getTariffs",     GetTariffsCallback);
+  HTTPServer::RegisterCallback("getTariff",      GetTariffCallback);
+  HTTPServer::RegisterCallback("setTariff",      SetTariffCallback);
+  HTTPServer::RegisterCallback("delTariff",      DelTariffCallback);
+  HTTPServer::RegisterCallback("addTariff",      AddTariffCallback);
 }
 DeviceManager::~DeviceManager() {
   LOGFile::Debug("Stopping DeviceManager\n");
@@ -69,6 +72,7 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("setAnalyzer");
   HTTPServer::UnregisterCallback("getSeries");
   HTTPServer::UnregisterCallback("getSeriesNow");
+  HTTPServer::UnregisterCallback("getWaveStream");
   HTTPServer::UnregisterCallback("getSeriesRange");
   HTTPServer::UnregisterCallback("getEvents");
   HTTPServer::UnregisterCallback("getEvent");
@@ -81,6 +85,11 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("addPermission");
   HTTPServer::UnregisterCallback("setPermission");
   HTTPServer::UnregisterCallback("delPermission");
+  HTTPServer::UnregisterCallback("getTariffs");
+  HTTPServer::UnregisterCallback("getTariff");
+  HTTPServer::UnregisterCallback("setTariff");
+  HTTPServer::UnregisterCallback("delTariff");
+  HTTPServer::UnregisterCallback("addTariff");
   LOGFile::Info("Stopping devices...\n");
   pDevicesLock.WriteLock();
   while(pDevices.size() > 0) {
@@ -93,6 +102,21 @@ DeviceManager::~DeviceManager() {
 }
 void DeviceManager::AddDriver(vector<Device*> (*func)()) {
   pDrivers.push_back(func);
+}
+void DeviceManager::PeriodicTasks() {
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) Dev->PeriodicTasks();
+  pDevicesLock.Unlock();
+}
+bool DeviceManager::HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
+  pDevicesLock.ReadLock();
+  for(Device *Dev : pDevices) {
+    if(Dev->HandleModbus(buff, serial, start, len) == false) continue;
+    pDevicesLock.Unlock();
+    return true;
+  }
+  pDevicesLock.Unlock();
+  return false;
 }
 void DeviceManager::CallAnalyzerFunction(const json &params, Response &response, bool (Device::*method)(const json &params, Response &response)) {
   if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -119,7 +143,6 @@ void DeviceManager::CallDeviceFunction(const json &params, Response &response, v
   HTTPServer::FillResponse(response, "Device not found", "text/plain", HTTP_BAD_REQUEST);
 }
 void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
-  //only 'admin' user can get this information
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Response = json::array();
@@ -163,6 +186,9 @@ void DeviceManager::GetSeriesCallback(const json &params, Response &response) {
 void DeviceManager::GetSeriesNowCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetSeriesNow);
 }
+void DeviceManager::GetWaveStream(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::GetWaveStream);
+}
 void DeviceManager::GetSeriesRangeCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetSeriesRange);
 }
@@ -177,6 +203,12 @@ void DeviceManager::SetEventCallback(const json &params, Response &response) {
 }
 void DeviceManager::DelEventCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::DelEvent);
+}
+void DeviceManager::GetCyclicHistogramCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::GetCyclicHistogram);
+}
+void DeviceManager::GetJoltDataCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Device::GetJoltData);
 }
 void DeviceManager::GetPricesCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::GetPrices);
@@ -198,4 +230,50 @@ void DeviceManager::SetPermissionCallback(const json &params, Response &response
 }
 void DeviceManager::DelPermissionCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Device::DelPermission);
+}
+void DeviceManager::GetTariffsCallback(const json &params, Response &response) {
+  Database DB;
+  string   UserName = params["UserName"];
+  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('Name', name, 'UserName', username))), '[]') as result FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ")"));
+  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+}
+void DeviceManager::GetTariffCallback(const json &params, Response &response) {
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
+  Database DB;
+  string Name = params["Name"];
+  string UserName = params["UserName"];
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'UserName', username, 'Template', template) as result FROM tariffs WHERE name = " + DB.Bind(Name) + ((UserName == "admin") ? "" : " AND username = " + DB.Bind(UserName)));
+  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+}
+void DeviceManager::DelTariffCallback(const json &params, Response &response) {
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
+  Database DB;
+  string Name = params["Name"];
+  string UserName = params["UserName"];
+  DB.ExecSentenceAsyncResult("DELETE FROM tariffs WHERE name = " + DB.Bind(Name) + ((UserName == "admin") ? "" : " AND username = " + DB.Bind(UserName)) + " RETURNING name");
+  return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
+}
+void DeviceManager::SetTariffCallback(const json &params, Response &response) {
+  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
+  json Conf = Rates::CheckTariffConfig(params["Template"]);
+  if(Conf.is_string()) return HTTPServer::FillResponse(response, Conf, "text/plain", HTTP_BAD_REQUEST);
+  string   UserName = params["UserName"];
+  string   Name     = params["Name"];
+  Database DB;
+  DB.ExecSentenceAsyncResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(Conf.dump()) + " WHERE name = " + DB.Bind(Name) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : "") + " RETURNING name");
+  return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
+}
+void DeviceManager::AddTariffCallback(const json &params, Response &response) {
+  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
+  json Conf = Rates::CheckTariffConfig(params["Template"]);
+  if(Conf.is_string()) return HTTPServer::FillResponse(response, Conf, "text/plain", HTTP_BAD_REQUEST);
+  string   UserName = params["UserName"];
+  string   Name     = params["Name"];
+  Database DB;
+  DB.ExecSentenceAsyncResult("INSERT INTO tariffs(name, username, template) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(UserName) + ", " + DB.Bind(Conf.dump()) + ") RETURNING name");
+  return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }

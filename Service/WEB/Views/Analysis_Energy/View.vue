@@ -20,7 +20,7 @@
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedActive" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy serie="Active_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedActive?DialogHeight:ActiveHeight"></energy>
+                  <energy serie="Active_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedActive?DialogHeight:ActiveHeight" @range="Range=$event"></energy>
                 </portal>
               </div>
             </div>
@@ -44,7 +44,7 @@
               <div class="col-md-6 col-lg-8 col-xl-9">
                 <portal to="fs-body" :disabled="!ExpandedReactive" class="panel-body">
                   <spinner v-if="TransferGraph.Data==null"></spinner>
-                  <energy serie="Reactive_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedReactive?DialogHeight:ReactiveHeight"></energy>
+                  <energy serie="Reactive_Energy" :analyzer="analyzer" :data="TransferGraph.Data" :periods="TransferGraph.Periods" :height="ExpandedReactive?DialogHeight:ReactiveHeight" @range="Range=$event"></energy>
                 </portal>
               </div>
             </div>
@@ -71,14 +71,14 @@
       return { Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300,
                Transfer15M: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
                Transfer1H: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER']),
-               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER', 'PERIOD_COLOR', 'PERIOD_NAME', 'BILLS'])
+               TransferGraph: this.CreateSeriesTransfer(this, ['ACTIVE_POWER', 'REACTIVE_POWER', 'PERIOD_COLOR', 'PERIOD_NUMBER', 'BILLS'])
       };
     },
     created: function() {
       this.TransferGraph.AggregFail = () => { this.Aggreg = null };
       this.Transfer15M.Update(this.analyzer, '15M', 'LastSamples');
       this.Transfer1H.Update(this.analyzer, '1H', 'LastSamples');
-      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+      this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
     },
     beforeDestroy: function() {
       this.Transfer15M.Destroy();
@@ -89,13 +89,13 @@
       analyzer: function() {
         this.Transfer15M.Update(this.analyzer, '3S', 'LastHours');
         this.Transfer1H.Update(this.analyzer, '1M', 'LastDay');
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       },
       Aggreg: function(val, prev) {
-        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        if(prev != null) this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       },
       Range: function() {
-        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range);
+        this.TransferGraph.UpdatePrices(this.analyzer, this.Aggreg, this.Range, false);
       }
     },
     methods: {
@@ -103,7 +103,7 @@
         var Data = [['Time', 'Period', 'Active energy', 'Reactive energy']];
         if(this.TransferGraph.Data != null) {
           var Div = (this.TransferGraph.Data.Aggreg == '1H') ? 1 : 4;
-          for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], this.TransferGraph.Data.Period_Name[n], this.Round(this.TransferGraph.Data.Active_Power[n] / Div, 3), this.Round(this.TransferGraph.Data.Reactive_Power[n] / Div, 3)]);
+          for(var n in this.TransferGraph.Data.Sampletime) Data.push([this.TransferGraph.Data.Sampletime[n], 'P' + this.TransferGraph.Data.Period_Number[n], this.Round(this.TransferGraph.Data.Active_Power[n] / Div, 3), this.Round(this.TransferGraph.Data.Reactive_Power[n] / Div, 3)]);
         }
         return Object.seal(Data);
       }

@@ -25,6 +25,11 @@ Device::Device(const string &serial, const string &driver, const string &name) :
 Device::~Device() {
   ClearAnalyzers();
 }
+void Device::PeriodicTasks() {
+  pAnalyzersLock.ReadLock();
+  for(auto &Tmp : pAnalyzers) Tmp->PeriodicTasks();
+  pAnalyzersLock.Unlock();
+}
 void Device::AddAnalyzer(Analyzer *analyzer) {
   pAnalyzersLock.WriteLock();
   auto Tmp = pAnalyzers.insert(analyzer);
@@ -66,6 +71,18 @@ void Device::GetRemote(const json &params, Response &response) {
 void Device::SetRemote(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
 }
+bool Device::HandleModbus(const uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
+  pAnalyzersLock.ReadLock();
+  auto Tmp = pAnalyzers.find(serial);
+  if(Tmp == pAnalyzers.end()) {
+    pAnalyzersLock.Unlock();
+    return false;
+  } else {
+    bool Result = (*Tmp)->HandleModbus(buff, start, len);
+    pAnalyzersLock.Unlock();
+    return Result;
+  }
+}
 bool Device::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
   string Serial = params["Analyzer"];
   pAnalyzersLock.ReadLock();
@@ -91,6 +108,9 @@ bool Device::GetSeries(const json &params, Response &response) {
 bool Device::GetSeriesNow(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetSeriesNow);
 }
+bool Device::GetWaveStream(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetWaveStream);
+}
 bool Device::GetSeriesRange(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetSeriesRange);
 }
@@ -105,6 +125,12 @@ bool Device::SetEvent(const json &params, Response &response) {
 }
 bool Device::DelEvent(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::DelEvent);
+}
+bool Device::GetCyclicHistogram(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetCyclicHistogram);
+}
+bool Device::GetJoltData(const json &params, Response &response) {
+  return CallAnalyzerFunction(params, response, &Analyzer::GetJoltData);
 }
 bool Device::GetPrices(const json &params, Response &response) {
   return CallAnalyzerFunction(params, response, &Analyzer::GetPrices);
