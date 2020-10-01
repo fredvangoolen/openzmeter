@@ -118,6 +118,23 @@
           }
         );
       },
+      CyclicHistogram: function(evt){
+        this.ShowSpinner = true;
+        this.$http.post('getCyclicHistogram', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Type: evt.Type }).then(
+          (result) => {
+            this.ShowSpinner = false;
+            this.$router.push({name: 'CyclicHistogram' , params: {id: evt.StartTime}});
+          },
+          (fail) => {
+            this.ShowSpinner = false;
+            alert("Event samples are not avaliable now. Maybe event is still running or deleted.");
+          }
+        );
+
+        this.Event = evt;
+        this.View = 'About';
+        return;
+      },
       RAW: function(evt) {
         this.ShowSpinner = true;
         this.$http.post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Type: evt.Type, Samples: 'RAW' }).then(
