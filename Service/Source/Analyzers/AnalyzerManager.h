@@ -34,6 +34,8 @@ class AnalyzerManager final {
     static void GetStatusCallback(const json &params, Response &response);
     static void GetSeriesCallback(const json &params, Response &response);
     static void GetSeriesNowCallback(const json &params, Response &response);
+    static void GetCyclicHistogramCallback(const json &params, Response &response);
+    static void GetJoltDataCallback(const json &params, Response &response);
     static void GetCostsCallback(const json &params, Response &response);
     static void GetBillsCallback(const json &params, Response &response);
     static void GetWaveStream(const json &params, Response &response);

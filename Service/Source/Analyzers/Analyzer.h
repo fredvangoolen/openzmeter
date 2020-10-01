@@ -46,6 +46,8 @@ class Analyzer {
     virtual void GetStatus(const json &params, Response &response) = 0;
     virtual void GetSeries(const json &params, Response &response) = 0;
     virtual void GetSeriesNow(const json &params, Response &response) = 0;
+    virtual void GetCyclicHistogram(const json &params, Response &response) = 0;
+    virtual void GetJoltData(const json &params, Response &response) = 0;
     virtual void GetCosts(const json &params, Response &response) = 0;
     virtual void GetBills(const json &params, Response &response) = 0;
     virtual void GetWaveStream(const json &params, Response &response) = 0;

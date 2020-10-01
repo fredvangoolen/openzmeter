@@ -356,6 +356,49 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
   pNowDataLock.ConsumerEnds();
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
+void AnalyzerSoft::GetCyclicHistogram(const json &params, Response &response)
+{
+  if (CheckRights(params["UserName"], READ) == false)
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+
+  Database DB(Serial());
+
+  string ID = "";
+  if (params.contains("ID"))
+    ID = params["ID"];
+
+  json result = json::object();
+
+  if (ID == "")
+  {
+    // Fetch current (in-memory) cyclic histogram data
+    result = pCyclicHistogram->GetCurrentCyclicHistogram();
+  }
+  else
+  {
+    // Fetch cyclic histogram for the specified event
+    result = pCyclicHistogram->GetCyclicHistogramForEvent(ID);
+  }
+
+  return HTTPServer::FillResponse(response, result.dump(), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::GetJoltData(const json &params, Response &response)
+{
+  if (CheckRights(params["UserName"], READ) == false)
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+
+  Database DB(Serial());
+
+  if (!params.contains("StartTime") || !params["StartTime"].is_number() || !params.contains("EndTime") || !params["EndTime"].is_number())
+    return HTTPServer::FillResponse(response, "StartTime and EndTime parameters are required.", "text/plain", HTTP_BAD_REQUEST);
+
+  uint64_t startTime = params["StartTime"];
+  uint64_t endTime = params["EndTime"];
+
+  json result = pJoltAlgorithm->GetJoltData(startTime, endTime);
+
+  return HTTPServer::FillResponse(response, result.dump(), "application/json", HTTP_OK);
+}
 void AnalyzerSoft::GetStatus(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pStorage->GetStatus(params, response);

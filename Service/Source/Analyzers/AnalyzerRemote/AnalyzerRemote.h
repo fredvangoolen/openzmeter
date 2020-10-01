@@ -55,6 +55,8 @@ class AnalyzerRemote : public Analyzer {
     void GetStatus(const json &params, Response &response) override;
     void GetSeries(const json &params, Response &response) override;
     void GetSeriesNow(const json &params, Response &response) override;
+    void GetCyclicHistogram(const json &params, Response &response) override;
+    void GetJoltData(const json &params, Response &response) override;
     void GetWaveStream(const json &params, Response &response) override;
     void GetSeriesRange(const json &params, Response &response) override;
     void DelSeriesRange(const json &params, Response &response) override;

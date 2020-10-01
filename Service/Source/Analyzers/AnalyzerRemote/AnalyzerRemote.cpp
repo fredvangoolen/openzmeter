@@ -157,6 +157,12 @@ void AnalyzerRemote::GetSeries(const json &params, Response &response) {
 void AnalyzerRemote::GetSeriesNow(const json &params, Response &response) {
   HandleRequest(READ, "getSeriesNow", params, response);
 }
+void AnalyzerRemote::GetCyclicHistogram(const json &params, Response &response) {
+  HandleRequest(READ, "getCyclicHistogram", params, response);
+}
+void AnalyzerRemote::GetJoltData(const json &params, Response &response) {
+  HandleRequest(READ, "getJoltData", params, response);
+}
 void AnalyzerRemote::GetStatus(const json &params, Response &response) {
   HandleRequest(READ, "getStatus", params, response);
 }

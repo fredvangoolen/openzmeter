@@ -21,7 +21,7 @@ import moment from "moment";
 import Plotly from "plotly.js-dist";
 import * as oZm from "JS/openZmeter.js";
 export default {
-  props: { analyzer: Object, id: "int" },
+  props: { analyzer: Object, id: "string" },
   created: function() {
     this.event_id = this.$route.params.id;
     this.timer = setInterval(this.UpdateCyclicHistogramTimes, 5000);
@@ -35,7 +35,7 @@ export default {
     UpdateCyclicHistogramData() {
       this.$http
         .post("getCyclicHistogram", {
-          StartTime: this.event_id,
+          ID: this.event_id,
           Analyzer: this.analyzer.Analyzer
         })
         .then(
@@ -147,7 +147,7 @@ export default {
         height: 600,
         title: { text: "Cyclic Histogram" },
         xaxis: { title: "Sample Number" },
-        yaxis: { title: "Voltage Bin Number", range: [0, 1024] },
+        yaxis: { title: "Voltage Bin Number", range: [0, 4096] },
         legend: {
           orientation: "h",
           x: 0.1,

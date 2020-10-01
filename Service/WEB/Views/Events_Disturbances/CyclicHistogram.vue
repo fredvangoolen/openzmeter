@@ -19,7 +19,7 @@
 import * as oZm from "JS/openZmeter.js";
 import CyclicHistogramChart from "../Analysis_Voltage/CyclicHistogramChart.vue";
 export default {
-  props: { id: "int", analyzer: Object },
+  props: { id: "string", analyzer: Object },
   created: function() {
     //let event_id = this.$route.params.id;
   },

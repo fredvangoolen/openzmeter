@@ -84,6 +84,8 @@ class AnalyzerSoft : public Analyzer {
     void GetStatus(const json &params, Response &response) override;
     void GetSeries(const json &params, Response &response) override;
     void GetSeriesNow(const json &params, Response &response) override;
+    void GetCyclicHistogram(const json &params, Response &response) override;
+    void GetJoltData(const json &params, Response &response) override;
     void GetCosts(const json &params, Response &response) override;
     void GetBills(const json &params, Response &response) override;
     void GetWaveStream(const json &params, Response &response) override;
