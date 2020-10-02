@@ -130,6 +130,8 @@ void AnalyzerSoftCyclicHistogram::AddPoints(AnalyzerSoftBlock *inputBlock)
                     size_t sampleIdx = i - cycleStartIdx;
                     if (sampleIdx < numSamplesCycle)
                     {
+                        if (phaseNumber == 0 && sampleIdx == 0)
+                            continue;
                         // Perform the incremental count update
                         cumulativeCount[phaseNumber][sampleIdx][binIndex] += 1;
                     }
