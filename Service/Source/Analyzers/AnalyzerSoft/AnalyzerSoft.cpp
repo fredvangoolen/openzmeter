@@ -45,7 +45,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pRates          = new AnalyzerSoftRates(pSerial);
   pAlarms         = new AnalyzerSoftAlarms(pMQTT, pSerial);
   pEvents         = new AnalyzerSoftEvents(pSerial, mode, samplerate);
-  pSync           = new AnalyzerSoftSync(pSerial);
+  pSync           = new AnalyzerSoftSync(this);
   pInputBlock     = new AnalyzerSoftBlock(mode, samplerate);
   pFrequency      = new AnalyzerSoftFrequency(samplerate);
   pAggreg200MS    = new AnalyzerSoftAggreg200MS(pSerial, mode);
@@ -159,7 +159,7 @@ void AnalyzerSoft::Configure(const json &options) {
   pRates->Config(options["TimeZone"]);
   pAlarms->Config(options["AlarmsEnabled"], NominalVoltage, NominalFrequency);
   pEvents->Config(options["EventsEnabled"], NominalVoltage, NominalFrequency);
-  pSync->Config(options["Sync"], Name());
+  pSync->Config(options["Sync"], options["Name"]);
   pMQTT->Config(options);
   pthread_mutex_unlock(&pMutex);
 }
@@ -512,12 +512,6 @@ void AnalyzerSoft::SetRate(const json &params, Response &response) {
 void AnalyzerSoft::DelRate(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pRates->DelRate(params, response);
-}
-void AnalyzerSoft::GetRemote(const json &params, Response &response) {
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-}
-void AnalyzerSoft::SetRemote(const json &params, Response &response) {
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
 bool AnalyzerSoft::HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) {
   if(pNowDataLock.ConsumerWait(5) == false) return false;

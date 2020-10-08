@@ -11,13 +11,13 @@ build_nanopi_air:
       - Service/WEB/node_modules
   artifacts:
     paths:
-      - Service/Tmp/openZmeter*.ipk
+      - Service/Tmp/openWRT_nanopi_air/openZmeter*.ipk
   script:
     - export BUILD_DATE=$(date -d @$(git show -s --format=%ct $CI_COMMIT_SHA) +%Y%m%d.%H%M)
     - export BUILD_NAME=$CI_COMMIT_REF_NAME
     - cd Service
     - make CONFIG=Configs/openWRT_nanopi_air -j8
-    - cd Tmp
+    - cd Tmp/openWRT_nanopi_air
     - mkdir -p Package
     - mkdir -p Package/usr/sbin
     - mv openZmeter Package/usr/sbin/
@@ -70,13 +70,13 @@ build_onion_omega2:
       - Service/WEB/node_modules
   artifacts:
     paths:
-      - Service/Tmp/openZmeter*.ipk
+      - Service/Tmp/openWRT_onion_omega2/openZmeter*.ipk
   script:
     - export BUILD_DATE=$(date -d @$(git show -s --format=%ct $CI_COMMIT_SHA) +%Y%m%d.%H%M)
     - export BUILD_NAME=$CI_COMMIT_REF_NAME
     - cd Service
     - make CONFIG=Configs/openWRT_onion_omega2 -j8
-    - cd Tmp
+    - cd Tmp/openWRT_onion_omega2
     - mkdir -p Package
     - mkdir -p Package/usr/sbin
     - mv openZmeter Package/usr/sbin/

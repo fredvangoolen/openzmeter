@@ -136,8 +136,9 @@ void AnalyzerSoftAggreg200MS::HandleModbus(uint8_t *buff, const uint16_t start, 
     return (Pos <= (Start + Len));
   };
   auto Append_Float = [&](const float val) {
+    uint32_t *Src = (uint32_t*)&val;
     if(Pos >= Start) {
-      uint32_t Val = htobe32(*((uint32_t*)&val));
+      uint32_t Val = htobe32(*Src);
       for(uint8_t n = 0; n < 4; n++, Pos++) {
         if(Pos >= (Start + Len)) return false;
         if(Pos >= Start) buff[Pos - Start] = ((uint8_t*)&Val)[n];

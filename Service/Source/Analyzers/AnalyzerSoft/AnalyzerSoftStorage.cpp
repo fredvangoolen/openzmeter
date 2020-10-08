@@ -177,7 +177,7 @@ void AnalyzerSoftStorage::GetSeries(const json &params, Response &response) cons
     if(Series & SERIE_THD_STAT)          { Headers.push_back("THD_Stats");         Cols.append(", stat_thd"); }
     if(Series & SERIE_HARMONIC_STAT)     { Headers.push_back("Harmonics_Stats");   Cols.append(", stat_harmonics"); }
     if(Series & SERIE_UNBALANCE_STAT)    { Headers.push_back("Unbalance_Stats");   Cols.append(", stat_unbalance"); }
-    sink.os << "[\n  " << Headers.dump();
+    sink.os << "[\n  " + Headers.dump();
     Database DB(pSerial);
     do {
       if(Aggreg == "1M") {
@@ -188,7 +188,7 @@ void AnalyzerSoftStorage::GetSeries(const json &params, Response &response) cons
       while(DB.FecthRow() && sink.is_writable()) {
         Start = DB.ResultUInt64("sampletime") + 1;
         if(Start > To) break;
-        sink.os << ",\n  " << DB.ResultString("result");
+        sink.os << ",\n  " + DB.ResultString("result");
       }
     } while((DB.RowIndex() != 0) && (Start < To));
     sink.os << "\n]";

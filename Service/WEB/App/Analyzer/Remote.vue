@@ -15,7 +15,7 @@
     <div class="row" v-if="View=='Main'">
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable remote access</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.SyncEnabled"></toggle>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.Sync.Enabled"></toggle>
         <div class="help">Enable remote access throw openZmeter network</div>
       </div>
       <div class="col-xs-12"><hr style="margin: 5px 0px 5px 0px"/></div>

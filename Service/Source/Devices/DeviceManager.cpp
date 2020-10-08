@@ -26,15 +26,15 @@ RWLocks                                                DeviceManager::pDevicesLo
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
   for(auto Func : pDrivers) Func();
-  HTTPServer::RegisterCallback("getDevices",     GetDevicesCallback);
-  HTTPServer::RegisterCallback("getDevice",      GetDeviceCallback);
-  HTTPServer::RegisterCallback("setDevice",      SetDeviceCallback);
+  HTTPServer::RegisterJSONCallback("getDevices",     GetDevicesCallback);
+  HTTPServer::RegisterJSONCallback("getDevice",      GetDeviceCallback);
+  HTTPServer::RegisterJSONCallback("setDevice",      SetDeviceCallback);
 }
 DeviceManager::~DeviceManager() {
   LogFile::Debug("Stopping DeviceManager");
-  HTTPServer::UnregisterCallback("getDevices");
-  HTTPServer::UnregisterCallback("getDevice");
-  HTTPServer::UnregisterCallback("setDevice");
+  HTTPServer::UnregisterJSONCallback("getDevices");
+  HTTPServer::UnregisterJSONCallback("getDevice");
+  HTTPServer::UnregisterJSONCallback("setDevice");
   LogFile::Info("Stopping devices...");
   pDevicesLock.WriteLock();
   for(auto &Device : pDevices) delete Device.second;

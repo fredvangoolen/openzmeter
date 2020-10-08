@@ -28,14 +28,15 @@
 #include "LogFile.h"
 #include "ConfigFile.h"
 #include "ResourceFile.h"
-#include "HTTPTaskQueue.h"
+#include "HTTPRequestPoll.h"
 #include "MessageLoop.h"
 //----------------------------------------------------------------------------------------------------------------------
-map<string, HTTPServer::Func_t>  __attribute__((init_priority(200))) HTTPServer::pCallbacks;
-RWLocks                                                              HTTPServer::pLock;
-string                                                               HTTPServer::pRelativePath = "/";
-uint16_t                                                             HTTPServer::pPort   = 8080;
-pthread_t                                                            HTTPServer::pThread = 0;
+map<string, HTTPServer::Func1_t>          __attribute__((init_priority(200))) HTTPServer::pJSONCallbacks;
+map<string, HTTPServer::EventCallback_t>  __attribute__((init_priority(200))) HTTPServer::pEventCallbacks;
+RWLocks                                                                       HTTPServer::pLock;
+string                                                                        HTTPServer::pRelativePath = "/";
+uint16_t                                                                      HTTPServer::pPort   = 8080;
+pthread_t                                                                     HTTPServer::pThread = 0;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   json Config = ConfigFile::ReadConfig("/HTTPServer");
@@ -46,12 +47,12 @@ HTTPServer::HTTPServer() {
   Post(".*", HandlePost);
   set_keep_alive_max_count(UINT32_MAX);
   set_read_timeout(30);
-  new_task_queue = [] { return new HTTPTaskQueue(); };
+  new_task_queue = [] { return new HTTPRequestPoll(); };
   Config = json::object();
   Config["Port"] = pPort;
   Config["RelativePath"] = pRelativePath;
   ConfigFile::WriteConfig("/HTTPServer", Config);
-  RegisterCallback("getVersion", GetVersionCallback);
+  RegisterJSONCallback("getVersion", GetVersionCallback);
   MessageLoop::RegisterListener("HTTPServer_PeriodicTasks", PeriodicTasks, 60000);
   if(pthread_create(&pThread, NULL, [](void *params) { return ((HTTPServer*)params)->Thread(); }, (void*)this) != 0) {
     pThread = 0;
@@ -86,14 +87,24 @@ void HTTPServer::FillResponse(Response &response, const char *body, const size_t
   response.set_content(body, size, mime);
   response.status = status;
 }
-void HTTPServer::RegisterCallback(const string &handleName, const Func_t function) {
+void HTTPServer::RegisterJSONCallback(const string &handleName, const Func1_t function) {
   pLock.WriteLock();
-  pCallbacks.insert({handleName, function});
+  pJSONCallbacks.insert({handleName, function });
   pLock.Unlock();
 }
-void HTTPServer::UnregisterCallback(const string &handleName) {
+void HTTPServer::UnregisterJSONCallback(const string &handleName) {
   pLock.WriteLock();
-  pCallbacks.erase(handleName);
+  pJSONCallbacks.erase(handleName);
+  pLock.Unlock();
+}
+void HTTPServer::RegisterEventCallback(const string &handleName, const Func2_t function, const vector<string> &headers) {
+  pLock.WriteLock();
+  pEventCallbacks.insert({handleName, { .Function = function, .RequestedHeaders = headers } });
+  pLock.Unlock();
+}
+void HTTPServer::UnregisterEventCallback(const string &handleName) {
+  pLock.WriteLock();
+  pEventCallbacks.erase(handleName);
   pLock.Unlock();
 }
 string HTTPServer::ParseCookie(const string &cookie) {
@@ -188,34 +199,76 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   string File = PatchFile("WEB/Index.html", "{{ VERSION }}", __BUILD__);
   return FillResponse(response, PatchString(File, "{{ RELATIVE_PATH }}", pRelativePath), "text/html", HTTP_OK);
 }
-void HTTPServer::HandlePost(const Request &request, Response &response) {
-  string URL = string(request.path).erase(0, pRelativePath.size());
+void HTTPServer::HandlePost(const Request &request, Response &response, const ContentReader &content_reader) {
+  string URL      = string(request.path).erase(0, pRelativePath.size());
+  string UserName = "";
   LogFile::Debug("HTTP POST '%s'", URL.c_str());
-  response.set_header("Connection", "Keep-Alive");
-  json Params = json::parse(request.body, NULL, false);
-  if(Params.is_discarded()) return FillResponse(response, "Malformed JSON params", "text/plain", HTTP_BAD_REQUEST);
-  if(URL == "logIn") return LogInCallback(Params, response);
-  if(URL == "logOut") return LogOutCallback(request, response);
-  if(request.has_header("Cookie")) {
-    Params.erase("UserName");
-    string Cookie = ParseCookie(request.get_header_value("Cookie"));
-    if(Cookie != "") {
-      Database DB;
-      DB.ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + DB.Bind(Cookie));
-      if(DB.FecthRow()) Params["UserName"] = DB.ResultString("username");
+  if(request.has_header("Content-Type") == false) return FillResponse(response, "'Content-Type' header required", "text/plain", HTTP_UNSUPPORTED_MEDIA_TYPE);
+  if(request.get_header_value("Content-Type") == "application/json") {
+    string Body;
+    content_reader([&](const char *data, size_t length) -> bool {
+      if((Body.size() + length) > 0x20000) {
+        Body = "";
+        return false;
+      }
+      Body.append(data, length);
+      return true;
+    });
+    if(Body.empty() == true) return FillResponse(response, "Body is empty or too large", "text/plain", HTTP_PAYLOAD_TOO_LARGE);
+    json Params = json::parse(Body, NULL, false);
+    if(Params.is_discarded()) return FillResponse(response, "Malformed JSON params", "text/plain", HTTP_BAD_REQUEST);
+    if(URL == "logIn") return LogInCallback(Params, response);
+    if(URL == "logOut") return LogOutCallback(request, response);
+    if(request.has_header("Cookie")) {
+      Params.erase("UserName");
+      string Cookie = ParseCookie(request.get_header_value("Cookie"));
+      if(Cookie != "") {
+        Database DB;
+        DB.ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + DB.Bind(Cookie));
+        if(DB.FecthRow()) Params["UserName"] = DB.ResultString("username");
+      }
+    } else if(request.has_header("REMOTE_ADDR")) {
+      if(request.get_header_value("REMOTE_ADDR") != "127.0.0.1") Params.erase("UserName");
     }
-  } else if(request.has_header("REMOTE_ADDR")) {
-    if(request.get_header_value("REMOTE_ADDR") != "127.0.0.1") Params.erase("UserName");
-  }
-  if(Params.contains("UserName") == false) return FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
-  pLock.ReadLock();
-  auto Callback = pCallbacks.find(URL);
-  if(Callback != pCallbacks.end()) {
-    Callback->second(Params, response);
+    if(Params.contains("UserName") == false) return FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
+    pLock.ReadLock();
+    auto Callback = pJSONCallbacks.find(URL);
+    if(Callback != pJSONCallbacks.end()) {
+      Callback->second(Params, response);
+      pLock.Unlock();
+      return;
+    }
     pLock.Unlock();
-    return;
+  } else if(request.get_header_value("Content-Type") == "text/event-stream") {
+    string User;
+    if(request.has_header("Cookie") == true) {
+      string Cookie = ParseCookie(request.get_header_value("Cookie"));
+      if(Cookie != "") {
+        Database DB;
+        DB.ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + DB.Bind(Cookie));
+        if(DB.FecthRow()) User = DB.ResultString("username");
+      }
+    }
+    if(User.empty() == true) return FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
+    pLock.ReadLock();
+    auto Callback = pEventCallbacks.find(URL);
+    if(Callback != pEventCallbacks.end()) {
+      map<string, string> Params;
+      Params.insert({ "UserName", User });
+      for(uint8_t n = 0; n < Callback->second.RequestedHeaders.size(); n++) {
+        if(request.has_header(Callback->second.RequestedHeaders[n].c_str()) == false) {
+          pLock.Unlock();
+          return FillResponse(response, "'" + Callback->second.RequestedHeaders[n] + "' header required", "text/plain", HTTP_BAD_REQUEST);
+        } else {
+          Params.insert({Callback->second.RequestedHeaders[n], request.get_header_value(Callback->second.RequestedHeaders[n].c_str())});
+        }
+      }
+      Callback->second.Function(Params, content_reader, response);
+      pLock.Unlock();
+      return;
+    }
+    pLock.Unlock();
   }
-  pLock.Unlock();
   FillResponse(response, "Method not found", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
 //----------------------------------------------------------------------------------------------------------------------

@@ -14,40 +14,36 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <set>
+#include <map>
 #include "HTTPServer.h"
 #include "Analyzer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerRemote : public Analyzer {
   private :
-    typedef struct {
-      uint64_t        Sequence;
-      json            Request;
-      json            Response;
-      pthread_cond_t  Cond;
+    typedef struct Request_t {
+      bool                     Terminate;
+      bool                     WriterTerminated;
+      json                     ReqParams;
+      string                   ResMime;
+      uint16_t                 ResCode;
+      list<string>             ResData;
+      pthread_cond_t           Cond;
+      pthread_mutex_t          Mutex;
+      map<string, Request_t*> *Map;
     } Request_t;
   private :
-    struct Comp {
-      using is_transparent = void;
-      bool operator()(const Request_t *a1, const Request_t *a2) const {
-        return a1->Sequence < a2->Sequence;
-      }
-      bool operator()(const uint64_t seq, const Request_t *a) const {
-        return seq < a->Sequence;
-      }
-      bool operator()(const Request_t *a, const uint64_t seq) const {
-        return a->Sequence < seq;
-      }
-    };
-  private :
-    volatile bool           pTerminate;
-    pthread_mutex_t         pMutex;
-    pthread_cond_t          pProducerCond;
-    pthread_cond_t          pConsumerCond;
-    Request_t              *pProducerRequest;
-    bool                    pConsumerReady;
-    set<Request_t*, Comp>   pRequestList;
-    uint64_t                pSequence;
+    volatile bool               pTerminate;        //Termination signal
+    pthread_mutex_t             pMutex;            //Control access to shared variables and maps
+    pthread_cond_t              pCond;             //Wake getRemote as needed
+    map<string, Request_t*>     pSendPending;      //Request awaiting to be send
+    map<string, Request_t*>     pResponsePending;  //Request awaiting response
+
+
+
+//    pthread_cond_t              pProducerCond;
+
+//    Request_t                  *pProducerRequest;
+//    bool                        pConsumerReady;
   private :
     void HandleRequest(const AnalyzerRights rights, const string &url, const json &params, Response &response);
     void GetAnalyzer(const json &params, Response &response) override;
@@ -76,10 +72,15 @@ class AnalyzerRemote : public Analyzer {
     void GetAlarmsRange(const json &params, Response &response) override;
     void DelAlarm(const json &params, Response &response) override;
     void DelAlarmsRange(const json &params, Response &response) override;
-
-    void GetRemote(const json &params, Response &response) override;
-    void SetRemote(const json &params, Response &response) override;
-    bool HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len);
+    void GetRates(const json &params, Response &response) override;
+    void AddRate(const json &params, Response &response) override;
+    void GetRate(const json &params, Response &response) override;
+    void SetRate(const json &params, Response &response) override;
+    void DelRate(const json &params, Response &response) override;
+    bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
+  public :
+    void GetRemote(const json &params, Response &response);
+    void SetRemote(const map<string, string> &params, const ContentReader &content_reader, Response &response);
   public :
     AnalyzerRemote(const string &id);
     ~AnalyzerRemote();

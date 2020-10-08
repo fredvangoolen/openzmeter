@@ -15,27 +15,39 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <stdint.h>
-#include <functional>
 #include <pthread.h>
-// ---------------------------------------------------------------------------------------------------------------------
+#include "nlohmann/json.hpp"
+#include "URL.h"
+#include "HTTPServer.h"
+//----------------------------------------------------------------------------------------------------------------------
 using namespace std;
+using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
-class HTTPTaskQueue;
-class HTTPWorker final {
+class AnalyzerSoft;
+class AnalyzerSoftSync;
+class AnalyzerSoftSyncWorker final {
   private :
-    function<void()> pFunction;
-    uint64_t         pLastTime;
-    bool             pTerminate;
-    pthread_t        pThread;
-    pthread_mutex_t  pMutex;
-    pthread_cond_t   pCond;
-    HTTPTaskQueue   *pParent;
+    volatile bool      pTerminate;
+    string             pCookie;
+    uint16_t           pPort;
+    string             pHost;
+    string             pPath;
+    string             pSequence;
+    string             pMethod;
+    json               pParams;
+    uint64_t           pLastTime;
+    pthread_t          pThread;
+    pthread_mutex_t    pMutex;
+    pthread_cond_t     pCond;
+    AnalyzerSoftSync  *pParent;
+    AnalyzerSoft      *pAnalyzer;
+    Client            *pClient;
   private:
-    static void *Thread(void *params);
+    void *Thread();
   public :
-    HTTPWorker(HTTPTaskQueue *parent);
-    ~HTTPWorker();
-    void     Run(function<void()> fn);
+    AnalyzerSoftSyncWorker(AnalyzerSoftSync *parent, AnalyzerSoft *analyzer);
+    ~AnalyzerSoftSyncWorker();
+    void     Run(const string &cookie, const URL &url, const string &sequence, const string &method, const json &params);
     uint64_t LastUse() const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

@@ -20,13 +20,13 @@
 //----------------------------------------------------------------------------------------------------------------------
 UpdateManager::UpdateManager() {
   LogFile::Info("Starting Update manager");
-  HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
-  HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
+  HTTPServer::RegisterJSONCallback("getUpdates",   GetUpdatesCallback);
+  HTTPServer::RegisterJSONCallback("setUpgrade",   SetUpgradeCallback);
 }
 UpdateManager::~UpdateManager() {
   LogFile::Info("Stopping Update manager...");
-  HTTPServer::UnregisterCallback("getUpdates");
-  HTTPServer::UnregisterCallback("setUpgrade");
+  HTTPServer::UnregisterJSONCallback("getUpdates");
+  HTTPServer::UnregisterJSONCallback("setUpgrade");
   LogFile::Info("Update manager stoped");
 }
 void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {

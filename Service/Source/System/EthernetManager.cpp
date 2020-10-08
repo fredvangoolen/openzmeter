@@ -30,14 +30,14 @@ EthernetManager::EthernetManager() {
   ConfigFile::WriteConfig("/EthernetInterface", pInterface);
   if(pInterface.empty() == false) {
     MessageLoop::RegisterListener("Ethernet_PeriodicTasks", PeriodicTasks, 5000);
-    HTTPServer::RegisterCallback("getEthernet", GetEthernetCallback);
-    HTTPServer::RegisterCallback("setEthernet", SetEthernetCallback);
+    HTTPServer::RegisterJSONCallback("getEthernet", GetEthernetCallback);
+    HTTPServer::RegisterJSONCallback("setEthernet", SetEthernetCallback);
   }
 }
 EthernetManager::~EthernetManager() {
   LogFile::Info("Stopping Ethernet manager...");
-  HTTPServer::UnregisterCallback("getEthernet");
-  HTTPServer::UnregisterCallback("setEthernet");
+  HTTPServer::UnregisterJSONCallback("getEthernet");
+  HTTPServer::UnregisterJSONCallback("setEthernet");
   MessageLoop::UnregisterListener("Ethernet_PeriodicTasks");
   LogFile::Info("Ethernet manager stoped");
 }

@@ -20,7 +20,7 @@
 #include "MessageLoop.h"
 #include "Status.h"
 // ---------------------------------------------------------------------------------------------------------------------
-bool             BluetoothManager::pTerminate   = false;
+volatile bool    BluetoothManager::pTerminate   = false;
 bool             BluetoothManager::pEnable      = false;
 string           BluetoothManager::pInterface   = "bt";
 string           BluetoothManager::pServerName  = "";
@@ -29,8 +29,8 @@ pthread_mutex_t  BluetoothManager::pMutex       = PTHREAD_MUTEX_INITIALIZER;
 // ---------------------------------------------------------------------------------------------------------------------
 BluetoothManager::BluetoothManager() {
   LogFile::Info("Starting Bluetooth manager");
-  HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback);
-  HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback);
+  HTTPServer::RegisterJSONCallback("getBluetooth", GetBluetoothCallback);
+  HTTPServer::RegisterJSONCallback("setBluetooth", SetBluetoothCallback);
   json Config = ConfigFile::ReadConfig("/Bluetooth");
   if(Config.is_object() == true) {
     if(Config["Enabled"].is_boolean()) pEnable = Config["Enabled"];
@@ -52,8 +52,8 @@ BluetoothManager::BluetoothManager() {
 BluetoothManager::~BluetoothManager() {
   LogFile::Info("Stopping bluetooth manager...");
   MessageLoop::UnregisterListener("Bluetooth_Toogle");
-  HTTPServer::UnregisterCallback("getBluetooth");
-  HTTPServer::UnregisterCallback("setBluetooth");
+  HTTPServer::UnregisterJSONCallback("getBluetooth");
+  HTTPServer::UnregisterJSONCallback("setBluetooth");
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   pThread = 0;

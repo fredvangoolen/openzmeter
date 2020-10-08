@@ -22,7 +22,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 class BluetoothManager final {
   private :
-    static bool             pTerminate;    //Terminate flag
+    static volatile bool    pTerminate;    //Terminate flag
     static pthread_mutex_t  pMutex;        //Shared variables lock
     static pthread_t        pThread;       //bluetooth manager thread
     static bool             pEnable;       //Enable or disable
