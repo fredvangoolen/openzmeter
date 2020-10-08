@@ -17,26 +17,26 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include "cpp-httplib/httplib.h"
-#include "HTTPWorker.h"
+#include "HTTPRequestWorker.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using namespace httplib;
 //----------------------------------------------------------------------------------------------------------------------
-class HTTPTaskQueue final : public TaskQueue {
+class HTTPRequestPoll final : public TaskQueue {
   private :
-    pthread_mutex_t    pMutex;
-    pthread_cond_t     pCond;
-    list<HTTPWorker*>  pFreeWorkers;
-    uint32_t           pRunningWorkers;
-    uint64_t           pLastAdjust;
+    pthread_mutex_t           pMutex;
+    pthread_cond_t            pCond;
+    list<HTTPRequestWorker*>  pFreeWorkers;
+    uint32_t                  pRunningWorkers;
+  private :
+    void               PeriodicTasks();
+    HTTPRequestWorker *PopWorker();
   public:
-    HTTPTaskQueue();
-    ~HTTPTaskQueue();
-    void        PushWorker(HTTPWorker *worker);
-    HTTPWorker *PopWorker();
+    HTTPRequestPoll();
+    ~HTTPRequestPoll();
+    void PushWorker(HTTPRequestWorker *worker);
   public :
     void enqueue(function<void()> fn) override;
-    void on_idle() override;
     void shutdown() override;
 };
 //----------------------------------------------------------------------------------------------------------------------

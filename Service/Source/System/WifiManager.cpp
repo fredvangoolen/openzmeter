@@ -39,15 +39,15 @@ WifiManager::WifiManager() {
   Config["Config"] = pWirelessWIFI;
   ConfigFile::WriteConfig("/WIFI", Config);
   MessageLoop::RegisterListener("WIFI_PeriodicTasks", PeriodicTasks, 5000);
-  HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
-  HTTPServer::RegisterCallback("getWIFI",  GetWIFICallback);
-  HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
+  HTTPServer::RegisterJSONCallback("scanWIFI", ScanWIFICallback);
+  HTTPServer::RegisterJSONCallback("getWIFI",  GetWIFICallback);
+  HTTPServer::RegisterJSONCallback("setWIFI",  SetWIFICallback);
 }
 WifiManager::~WifiManager() {
   LogFile::Info("Stopping Wifi manager...");
-  HTTPServer::UnregisterCallback("scanWIFI");
-  HTTPServer::UnregisterCallback("getWIFI");
-  HTTPServer::UnregisterCallback("setWIFI");
+  HTTPServer::UnregisterJSONCallback("scanWIFI");
+  HTTPServer::UnregisterJSONCallback("getWIFI");
+  HTTPServer::UnregisterJSONCallback("setWIFI");
   MessageLoop::UnregisterListener("WIFI_PeriodicTasks");
   LogFile::Info("Stopping Wifi manager...");
 }

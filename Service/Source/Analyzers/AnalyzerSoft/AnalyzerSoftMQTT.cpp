@@ -19,19 +19,20 @@
  #include "Status.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftMQTT::AnalyzerSoftMQTT(const string &serial) {
-  pMutex    = PTHREAD_MUTEX_INITIALIZER;
-  pSerial   = serial;
-  pThread   = 0;
-  pBuffSize = 0x040000;
-  pSendBuff = NULL;
-  pRecvBuff = NULL;
-  p3S       = false;
-  p1M       = false;
-  p10M      = false;
-  p15M      = false;
-  p1H       = false;
-  pAlarms   = false;
-  pConfig   = false;
+  pMutex      = PTHREAD_MUTEX_INITIALIZER;
+  pSerial     = serial;
+  pThread     = 0;
+  pBuffSize   = 0x040000;
+  pSendBuff   = NULL;
+  pRecvBuff   = NULL;
+  p3S         = false;
+  p1M         = false;
+  p10M        = false;
+  p15M        = false;
+  p1H         = false;
+  pAlarms     = false;
+  pConfig     = false;
+  pConfigSend = false;
 }
 AnalyzerSoftMQTT::~AnalyzerSoftMQTT() {
   pTerminate = true;
@@ -70,6 +71,7 @@ json AnalyzerSoftMQTT::CheckConfig(const json &config) {
 void AnalyzerSoftMQTT::Config(const json &config) {
   pthread_mutex_lock(&pMutex);
   pParentConf = config;
+  pConfigSend = false;
   bool Enabled = config["MQTT"]["Enabled"];
   if(Enabled == false) {
     if(pThread != 0) {
@@ -177,6 +179,7 @@ void *AnalyzerSoftMQTT::Thread() {
       string WillMsg = "{ \"Online\": false }";
       string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Status" : pSerial + "/Status";
       StatusTimer = 0;
+      pConfigSend = false;
       mqtt_connect(&pClient, NULL, Topic.c_str(), WillMsg.c_str(), WillMsg.size(), (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
     } else if(pClient.error == MQTT_ERROR_SOCKET_ERROR) {
       if(pClient.socketfd != -1) {
@@ -218,12 +221,12 @@ void *AnalyzerSoftMQTT::Thread() {
       }
     } else if(pClient.error == MQTT_OK) {
       pthread_mutex_lock(&pMutex);
-      if((pConfig == true) && (pParentConf != nullptr) && (pClient.socketfd != -1)) {
+      if((pConfig == true) && (pConfigSend == false) && (pClient.socketfd != -1)) {
         string TextMsg = pParentConf.dump();
         string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Config" : pSerial + "/Config";
         mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
         LogFile::Debug("Analyzer '%s' publish config to MQTT broker", pSerial.c_str());
-        pParentConf = nullptr;
+        pConfigSend = true;
       }
       uint64_t Now = Tools::GetTime64();
       if((StatusTimer == 0) || (StatusTimer + 10000) < Now) {

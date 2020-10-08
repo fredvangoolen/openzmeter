@@ -14,43 +14,45 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "Tools.h"
-#include "HTTPTaskQueue.h"
+#include "HTTPRequestPoll.h"
 #include "LogFile.h"
+#include "MessageLoop.h"
 //----------------------------------------------------------------------------------------------------------------------
-HTTPTaskQueue::HTTPTaskQueue() {
+HTTPRequestPoll::HTTPRequestPoll() {
   pRunningWorkers = 0;
   pMutex          = PTHREAD_MUTEX_INITIALIZER;
   pCond           = PTHREAD_COND_INITIALIZER;
-  pLastAdjust     = Tools::GetTime64();
+  MessageLoop::RegisterListener("HTTPRequestPoll_PeriodicTasks", [&]() { this->PeriodicTasks(); }, 60000);
 }
-HTTPTaskQueue::~HTTPTaskQueue() {
+HTTPRequestPoll::~HTTPRequestPoll() {
+  MessageLoop::UnregisterListener("HTTPRequestPoll_PeriodicTasks");
   shutdown();
 }
-void HTTPTaskQueue::PushWorker(HTTPWorker *worker) {
+void HTTPRequestPoll::PushWorker(HTTPRequestWorker *worker) {
   pthread_mutex_lock(&pMutex);
   pFreeWorkers.push_front(worker);
   pRunningWorkers--;
   if(pRunningWorkers == 0) pthread_cond_signal(&pCond);
   pthread_mutex_unlock(&pMutex);
 }
-HTTPWorker *HTTPTaskQueue::PopWorker() {
+HTTPRequestWorker *HTTPRequestPoll::PopWorker() {
   pthread_mutex_lock(&pMutex);
   pRunningWorkers++;
   if(pFreeWorkers.size() > 0) {
-    HTTPWorker *Tmp = pFreeWorkers.front();
+    HTTPRequestWorker *Tmp = pFreeWorkers.front();
     pFreeWorkers.pop_front();
     pthread_mutex_unlock(&pMutex);
     return Tmp;
   } else {
     pthread_mutex_unlock(&pMutex);
-    HTTPWorker *Tmp = new HTTPWorker(this);
+    HTTPRequestWorker *Tmp = new HTTPRequestWorker(this);
     return Tmp;
   }
 }
-void HTTPTaskQueue::enqueue(function<void()> fn) {
+void HTTPRequestPoll::enqueue(function<void()> fn) {
   PopWorker()->Run(fn);
 }
-void HTTPTaskQueue::shutdown() {
+void HTTPRequestPoll::shutdown() {
   pthread_mutex_lock(&pMutex);
   while(pRunningWorkers > 0) pthread_cond_wait(&pCond, &pMutex);
   while(pFreeWorkers.size() > 0) {
@@ -59,14 +61,9 @@ void HTTPTaskQueue::shutdown() {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void HTTPTaskQueue::on_idle() {
+void HTTPRequestPoll::PeriodicTasks() {
   pthread_mutex_lock(&pMutex);
   uint64_t Time = Tools::GetTime64();
-  if((pLastAdjust + 60000) > Time) {
-    pthread_mutex_unlock(&pMutex);
-    return;
-  }
-  pLastAdjust = Time;
   while(pFreeWorkers.size() > 0) {
     auto Tmp = pFreeWorkers.back();
     if((Time - Tmp->LastUse()) < 60000) break;

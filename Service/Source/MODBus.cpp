@@ -29,13 +29,13 @@ vector<string>             ModbusTCP::pAnalyzers;
 // ---------------------------------------------------------------------------------------------------------------------
 ModbusTCP::ModbusTCP() {
   Configure(CheckConfig(ConfigFile::ReadConfig("/ModbusTCP")));
-  HTTPServer::RegisterCallback("getModbusTCP", GetModbusTCP);
-  HTTPServer::RegisterCallback("setModbusTCP", SetModbusTCP);
+  HTTPServer::RegisterJSONCallback("getModbusTCP", GetModbusTCP);
+  HTTPServer::RegisterJSONCallback("setModbusTCP", SetModbusTCP);
 }
 ModbusTCP::~ModbusTCP() {
   LogFile::Info("Stopping ModbusTCP server...");
-  HTTPServer::UnregisterCallback("getModbusTCP");
-  HTTPServer::UnregisterCallback("setModbusTCP");
+  HTTPServer::UnregisterJSONCallback("getModbusTCP");
+  HTTPServer::UnregisterJSONCallback("setModbusTCP");
   if(pThread != 0) {
     pTerminate = true;
     pthread_join(pThread, NULL);

@@ -74,7 +74,7 @@ class AnalyzerSoft : public Analyzer {
     void Analyzer_Func();
     void Configure(const json &options);
     void PeriodicTasks();
-  private :
+  public :
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
     void GetStatus(const json &params, Response &response) override;
@@ -106,8 +106,6 @@ class AnalyzerSoft : public Analyzer {
     void GetRate(const json &params, Response &response) override;
     void SetRate(const json &params, Response &response) override;
     void DelRate(const json &params, Response &response) override;
-    void GetRemote(const json &params, Response &response) override;
-    void SetRemote(const json &params, Response &response) override;
     bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
   public :
     static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode);

@@ -159,6 +159,7 @@
         var Request = new XMLHttpRequest();
         Request.open("POST", 'logIn', true);
         Request.setRequestHeader("Content-Type", "application/json");
+        Request.setRequestHeader("Accept", "application/json");
         Request.onreadystatechange = function () {
           if(Request.readyState === 4) {
             if(Request.status === 200) {

@@ -21,13 +21,13 @@
 // ---------------------------------------------------------------------------------------------------------------------
 NTPManager::NTPManager() {
   LogFile::Info("Starting NTP manager");
-  HTTPServer::RegisterCallback("getNTP",       GetNTPCallback);
-  HTTPServer::RegisterCallback("setNTP",       SetNTPCallback);
+  HTTPServer::RegisterJSONCallback("getNTP",       GetNTPCallback);
+  HTTPServer::RegisterJSONCallback("setNTP",       SetNTPCallback);
 }
 NTPManager::~NTPManager() {
   LogFile::Info("Stopping NTP manager...");
-  HTTPServer::UnregisterCallback("getNTP");
-  HTTPServer::UnregisterCallback("setNTP");
+  HTTPServer::UnregisterJSONCallback("getNTP");
+  HTTPServer::UnregisterJSONCallback("setNTP");
   LogFile::Info("NTP manager stoped");
 }
 void NTPManager::GetNTPCallback(const json &params, Response &response) {

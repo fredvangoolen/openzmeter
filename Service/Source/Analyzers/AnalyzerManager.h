@@ -65,8 +65,8 @@ class AnalyzerManager final {
     static void SetPermissionCallback(const json &params, Response &response);
     static void DelPermissionCallback(const json &params, Response &response);
   public :
-    static void AddAnalyzer(Analyzer *analyzer);
-    static void DelAnalyzer(const string &serial);
+    static bool AddAnalyzer(Analyzer *analyzer, const string &user = "admin");
+    static bool DelAnalyzer(const string &serial);
     static bool HandleModbus(uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len);
   public :
     AnalyzerManager();

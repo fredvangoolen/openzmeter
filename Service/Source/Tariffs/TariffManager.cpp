@@ -17,18 +17,18 @@
 #include "Tariff.h"
 // ---------------------------------------------------------------------------------------------------------------------
 TariffManager::TariffManager() {
-  HTTPServer::RegisterCallback("getTariffs",     GetTariffsCallback);
-  HTTPServer::RegisterCallback("getTariff",      GetTariffCallback);
-  HTTPServer::RegisterCallback("setTariff",      SetTariffCallback);
-  HTTPServer::RegisterCallback("delTariff",      DelTariffCallback);
-  HTTPServer::RegisterCallback("addTariff",      AddTariffCallback);
+  HTTPServer::RegisterJSONCallback("getTariffs",     GetTariffsCallback);
+  HTTPServer::RegisterJSONCallback("getTariff",      GetTariffCallback);
+  HTTPServer::RegisterJSONCallback("setTariff",      SetTariffCallback);
+  HTTPServer::RegisterJSONCallback("delTariff",      DelTariffCallback);
+  HTTPServer::RegisterJSONCallback("addTariff",      AddTariffCallback);
 }
 TariffManager::~TariffManager() {
-  HTTPServer::UnregisterCallback("getTariffs");
-  HTTPServer::UnregisterCallback("getTariff");
-  HTTPServer::UnregisterCallback("setTariff");
-  HTTPServer::UnregisterCallback("delTariff");
-  HTTPServer::UnregisterCallback("addTariff");
+  HTTPServer::UnregisterJSONCallback("getTariffs");
+  HTTPServer::UnregisterJSONCallback("getTariff");
+  HTTPServer::UnregisterJSONCallback("setTariff");
+  HTTPServer::UnregisterJSONCallback("delTariff");
+  HTTPServer::UnregisterJSONCallback("addTariff");
 }
 void TariffManager::GetTariffsCallback(const json &params, Response &response) {
   string UserName = params["UserName"];

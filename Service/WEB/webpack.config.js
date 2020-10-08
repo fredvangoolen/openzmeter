@@ -5,7 +5,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 module.exports = {
   entry: './main.js',
   output: {
-    path: path.resolve(__dirname, '../Tmp/WEB'),
+    path: path.resolve(__dirname, '../Tmp'),
     publicPath: '/',
     filename: 'openZmeter.js'
   },

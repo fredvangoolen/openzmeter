@@ -129,7 +129,7 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
     sink.os << "[\n  " << Eval.Headers().dump();
     json Result = Eval.FetchRow();
     while((Result != nullptr) && sink.is_writable()) {
-      sink.os << ",\n  " << Result.dump();
+      sink.os << ",\n  " + Result.dump();
       Result = Eval.FetchRow();
     }
     sink.os << "\n]";

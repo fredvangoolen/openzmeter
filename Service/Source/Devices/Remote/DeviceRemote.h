@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <vector>
+#include <map>
 #include "Device.h"
 #include "AnalyzerRemote.h"
 #include "HTTPServer.h"
@@ -23,21 +23,21 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceRemote final : public Device {
   private :
-    static bool     pRegistered;
-  private :
-    pthread_mutex_t pAnalyzersLock;
+    static bool                         pRegistered;
+    static RWLocks                      pLocks;
+    static map<string, AnalyzerRemote*> pAnalyzers;
   private :
     static bool  Register();
     static void  GetInstances();
     static json  CheckConfig(const json &config);
+    static void  GetRemoteCallback(const json &params, Response &response);
+    static void  SetRemoteCallback(const map<string, string> &params, const ContentReader &content_reader, Response &response);
   private :
     DeviceRemote();
     uint32_t AnalyzersCount();
     void     Configure(const json &config);
     void     GetDevice(const json &params, Response &response) override;
     void     SetDevice(const json &params, Response &response) override;
-    void     GetRemote(const json &params, Response &response);
-    void     SetRemote(const json &params, Response &response);
   public :
     ~DeviceRemote();
 };

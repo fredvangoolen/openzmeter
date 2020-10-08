@@ -160,7 +160,7 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
       if((pEvent->Type == EVT_RVC) && (Stationary == false)) IsRunning = true;
       if(IsRunning == false) {
         string Type = EventTypeToString(pEvent->Type);
-        LogFile::Debug("Event '%s' closed on analyzer '%s'\n", Type.c_str(), pSerial.c_str());
+        LogFile::Debug("Event '%s' closed on analyzer '%s'", Type.c_str(), pSerial.c_str());
         Database DB(pSerial);
         if(pEvent->Type == EVT_RVC) memcpy(pEvent->ChangeValue, RMS_Avg, sizeof(float) * pVoltageChannels);
         DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", reference = " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", peak = " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", change = " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", duration = " + DB.Bind(pEvent->SamplesDuration) + " WHERE starttime = " + DB.Bind(pEvent->Start));
@@ -266,7 +266,7 @@ void AnalyzerSoftEvents::GetEvents(const json &params, Response &response) {
     sink.os << "[\n  " << Headers.dump();
     Database DB(pSerial);
     DB.ExecSentenceAsyncResult("SELECT json_build_array(id, starttime, evttype, samplerate, reference, peak, change, duration, notes) AS result FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
-    while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " << DB.ResultString("result");
+    while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " + DB.ResultString("result");
     sink.os << "\n]";
     sink.done();
     return false;
