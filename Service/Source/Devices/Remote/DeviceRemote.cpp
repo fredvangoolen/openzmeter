@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
+#include <sys/ioctl.h>
+#include <poll.h>
 #include <string.h>
 #include <pthread.h>
 #include <errno.h>
@@ -37,6 +39,8 @@ void DeviceRemote::GetInstances() {
   DeviceManager::AddDevice(new DeviceRemote());
 }
 DeviceRemote::DeviceRemote() : Device("REMOTE", "Remote", "Allow repplication of remote openZmeter devices in local machine") {
+  pThread       = 0;
+  pServerSocket = -1;
   Configure(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
 }
 DeviceRemote::~DeviceRemote() {
@@ -59,8 +63,10 @@ uint32_t DeviceRemote::AnalyzersCount() {
 json DeviceRemote::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Enabled"] = false;
+  ConfigOUT["Port"]    = 8081;
   if(config.is_object()) {
     if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
+    if(config.contains("Port") && config["Port"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
   }
   return ConfigOUT;
 }
@@ -70,12 +76,48 @@ void DeviceRemote::Configure(const json &config) {
   bool Enabled = config["Enabled"];
   if((pEnabled == false) && (Enabled == true)) {
     LogFile::Info("Starting 'Remote' driver");
-    HTTPServer::RegisterEventCallback("setRemote", SetRemoteCallback, { "Sequence", "Analyzer", "Content-Type", "Status-Code" });
-    HTTPServer::RegisterJSONCallback("getRemote", GetRemoteCallback);
+    pTerminate = false;
+    pServerSocket = socket(AF_INET , SOCK_STREAM , 0);
+    if(pServerSocket == -1) {
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+      pLocks.Unlock();
+      return;
+    }
+    int Opt = 1;
+    setsockopt(pServerSocket, SOL_SOCKET, SO_REUSEADDR, (char*)&Opt, sizeof(Opt));
+    ioctl(pServerSocket, FIONBIO, (char*)&Opt);
+    sockaddr_in Server;
+    Server.sin_family = AF_INET;
+    Server.sin_addr.s_addr = INADDR_ANY;
+    Server.sin_port = htons(pPort);
+    if(bind(pServerSocket,(struct sockaddr *)&Server , sizeof(Server)) < 0) {
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+      close(pServerSocket);
+      pServerSocket = -1;
+      pLocks.Unlock();
+      return;
+    }
+    if(listen(pServerSocket, 10) == -1) {
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+      close(pServerSocket);
+      pServerSocket = -1;
+      pLocks.Unlock();
+      return;
+    }
+    if(pthread_create(&pThread, NULL, [](void *param) { return ((DeviceRemote*)param)->Thread(); }, this) != 0) {
+      close(pServerSocket);
+      pServerSocket = -1;
+      pThread = 0;
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    } else {
+      pthread_setname_np(pThread, "DeviceRemote");
+      pEnabled = true;
+    }
   } else if((pEnabled == true) && (Enabled == false)) {
     LogFile::Info("Stopping 'Remote' driver...");
-    HTTPServer::UnregisterEventCallback("setRemote");
-    HTTPServer::UnregisterJSONCallback("getRemote");
+    pTerminate = true;
+    if(pServerSocket != -1) close(pServerSocket);
+    pthread_join(pThread, NULL);
     while(pAnalyzers.size() > 0) {
       auto Analyzer = pAnalyzers.begin();
       AnalyzerManager::DelAnalyzer(Analyzer->second->Serial());
@@ -83,8 +125,47 @@ void DeviceRemote::Configure(const json &config) {
       pAnalyzers.erase(Analyzer);
     }
   }
-  pEnabled = Enabled;
   pLocks.Unlock();
+}
+void *DeviceRemote::Thread() {
+  queue<Client_t>  Clients = queue<Client_t>(10);
+  pollfd           FDS[11];
+  while(pTerminate == false) {
+    uint64_t Time  = Tools::GetTime64();
+    FDS[0].revents = 0;
+    FDS[0].events  = POLLIN;
+    FDS[0].fd      = pServerSocket;
+    while(Clients.size() > 0) {
+      if(Clients[0].Time > Time) Clients.p
+    }
+    for(uint8_t n = 0; n < Clients.size(); n++) {
+      FDS[n + 1].revents = 0;
+      FDS[n + 1].events  = POLL_IN;
+      FDS[n + 1].fd      = Clients[n].Socket;
+    }
+    int Result = poll(FDS, Clients.size() + 1, 100);
+    if((Result <= 0) || (FDS[0].revents != POLLIN)) continue;
+
+    Client_t *Client = new Client_t;
+    socklen_t   ClientAddrLen = sizeof(Client->Address);
+    Client->Socket = accept(pServerSocket, (sockaddr*)&Client->Address, &ClientAddrLen);
+    if(Client->Socket < 0) {
+      delete Client;
+      continue;
+    }
+    if(pthread_create(&Client->Thread, NULL, Client_Thread, (void*)Client) < 0) {
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+      close(Client->Socket);
+      delete Client;
+    }
+
+        //Now join the thread , so that we dont terminate before the thread
+        //pthread_join( thread_id , NULL);
+//        puts("Handler assigned");
+//    }
+
+  }
+  return NULL;
 }
 void DeviceRemote::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];

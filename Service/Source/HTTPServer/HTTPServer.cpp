@@ -204,7 +204,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response, const Co
   string UserName = "";
   LogFile::Debug("HTTP POST '%s'", URL.c_str());
   if(request.has_header("Content-Type") == false) return FillResponse(response, "'Content-Type' header required", "text/plain", HTTP_UNSUPPORTED_MEDIA_TYPE);
-  if(request.get_header_value("Content-Type") == "application/json") {
+  if(request.get_header_value("Content-Type").find("application/json") == 0) {
     string Body;
     content_reader([&](const char *data, size_t length) -> bool {
       if((Body.size() + length) > 0x20000) {
@@ -239,7 +239,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response, const Co
       return;
     }
     pLock.Unlock();
-  } else if(request.get_header_value("Content-Type") == "text/event-stream") {
+  } else if(request.get_header_value("Content-Type").find("text/event-stream") == 0) {
     string User;
     if(request.has_header("Cookie") == true) {
       string Cookie = ParseCookie(request.get_header_value("Cookie"));
