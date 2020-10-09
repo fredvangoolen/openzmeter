@@ -110,8 +110,11 @@ void *AnalyzerSoftSyncWorker::Thread() {
     else if(pMethod == "setPermission")  pAnalyzer->SetPermission(pParams, Resp);
     else if(pMethod == "delPermission")  pAnalyzer->DelPermission(pParams, Resp);
 
-    printf("Enviando1");
     Headers Header  = {{"Accept", "application/json"}, {"Cookie", pCookie}, {"Analyzer", pAnalyzer->Serial().c_str()}, {"Sequence", pSequence.c_str()}, {"Status-Code", to_string(Resp.status).c_str()}};
+    auto Response = pClient->Post((pPath + "/setRemote").c_str(), Header, Resp.body, "text/event-stream");
+
+    printf("Enviando1");
+
     if(Resp.body.empty() == false) {
       auto Response = pClient->Post((pPath + "/setRemote").c_str(), Header, Resp.body, "text/event-stream");
       if((Response != nullptr) && (Response->status == HTTP_OK)) {

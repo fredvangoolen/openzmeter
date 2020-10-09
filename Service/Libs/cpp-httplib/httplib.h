@@ -16,10 +16,6 @@
 #define CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND 5
 #endif
 
-#ifndef CPPHTTPLIB_KEEPALIVE_TIMEOUT_USECOND
-#define CPPHTTPLIB_KEEPALIVE_TIMEOUT_USECOND 0
-#endif
-
 #ifndef CPPHTTPLIB_KEEPALIVE_MAX_COUNT
 #define CPPHTTPLIB_KEEPALIVE_MAX_COUNT 5
 #endif
@@ -180,6 +176,7 @@ using socket_t = int;
 #include <array>
 #include <atomic>
 #include <cassert>
+#include <cctype>
 #include <climits>
 #include <condition_variable>
 #include <errno.h>
@@ -193,6 +190,7 @@ using socket_t = int;
 #include <mutex>
 #include <random>
 #include <regex>
+#include <sstream>
 #include <string>
 #include <sys/stat.h>
 #include <thread>
@@ -595,6 +593,7 @@ public:
   void set_socket_options(SocketOptions socket_options);
 
   void set_keep_alive_max_count(size_t count);
+  void set_keep_alive_timeout(time_t sec);
   void set_read_timeout(time_t sec, time_t usec = 0);
   void set_write_timeout(time_t sec, time_t usec = 0);
   void set_idle_interval(time_t sec, time_t usec = 0);
@@ -619,6 +618,7 @@ protected:
 
   std::atomic<socket_t> svr_sock_;
   size_t keep_alive_max_count_ = CPPHTTPLIB_KEEPALIVE_MAX_COUNT;
+  time_t keep_alive_timeout_sec_ = CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND;
   time_t read_timeout_sec_ = CPPHTTPLIB_READ_TIMEOUT_SECOND;
   time_t read_timeout_usec_ = CPPHTTPLIB_READ_TIMEOUT_USECOND;
   time_t write_timeout_sec_ = CPPHTTPLIB_WRITE_TIMEOUT_SECOND;
@@ -839,6 +839,10 @@ public:
   void set_proxy_digest_auth(const char *username, const char *password);
 #endif
 
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+  void enable_server_certificate_verification(bool enabled);
+#endif
+
   void set_logger(Logger logger);
 
 protected:
@@ -858,6 +862,8 @@ protected:
                        bool close_connection);
 
   Error get_last_error() const;
+
+  void copy_settings(const ClientImpl &rhs);
 
   // Error state
   mutable Error error_ = Error::Success;
@@ -916,41 +922,11 @@ protected:
   std::string proxy_digest_auth_password_;
 #endif
 
-  Logger logger_;
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+  bool server_certificate_verification_ = true;
+#endif
 
-  void copy_settings(const ClientImpl &rhs) {
-    client_cert_path_ = rhs.client_cert_path_;
-    client_key_path_ = rhs.client_key_path_;
-    connection_timeout_sec_ = rhs.connection_timeout_sec_;
-    read_timeout_sec_ = rhs.read_timeout_sec_;
-    read_timeout_usec_ = rhs.read_timeout_usec_;
-    write_timeout_sec_ = rhs.write_timeout_sec_;
-    write_timeout_usec_ = rhs.write_timeout_usec_;
-    basic_auth_username_ = rhs.basic_auth_username_;
-    basic_auth_password_ = rhs.basic_auth_password_;
-    bearer_token_auth_token_ = rhs.bearer_token_auth_token_;
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-    digest_auth_username_ = rhs.digest_auth_username_;
-    digest_auth_password_ = rhs.digest_auth_password_;
-#endif
-    keep_alive_ = rhs.keep_alive_;
-    follow_location_ = rhs.follow_location_;
-    tcp_nodelay_ = rhs.tcp_nodelay_;
-    socket_options_ = rhs.socket_options_;
-    compress_ = rhs.compress_;
-    decompress_ = rhs.decompress_;
-    interface_ = rhs.interface_;
-    proxy_host_ = rhs.proxy_host_;
-    proxy_port_ = rhs.proxy_port_;
-    proxy_basic_auth_username_ = rhs.proxy_basic_auth_username_;
-    proxy_basic_auth_password_ = rhs.proxy_basic_auth_password_;
-    proxy_bearer_token_auth_token_ = rhs.proxy_bearer_token_auth_token_;
-#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-    proxy_digest_auth_username_ = rhs.proxy_digest_auth_username_;
-    proxy_digest_auth_password_ = rhs.proxy_digest_auth_password_;
-#endif
-    logger_ = rhs.logger_;
-  }
+  Logger logger_;
 
 private:
   socket_t create_client_socket() const;
@@ -1096,16 +1072,18 @@ public:
   void set_proxy_digest_auth(const char *username, const char *password);
 #endif
 
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+  void enable_server_certificate_verification(bool enabled);
+#endif
+
   void set_logger(Logger logger);
 
   // SSL
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-  Client &set_ca_cert_path(const char *ca_cert_file_path,
-                           const char *ca_cert_dir_path = nullptr);
+  void set_ca_cert_path(const char *ca_cert_file_path,
+                        const char *ca_cert_dir_path = nullptr);
 
-  Client &set_ca_cert_store(X509_STORE *ca_cert_store);
-
-  Client &enable_server_certificate_verification(bool enabled);
+  void set_ca_cert_store(X509_STORE *ca_cert_store);
 
   long get_openssl_verify_result() const;
 
@@ -1163,8 +1141,6 @@ public:
 
   void set_ca_cert_store(X509_STORE *ca_cert_store);
 
-  void enable_server_certificate_verification(bool enabled);
-
   long get_openssl_verify_result() const;
 
   SSL_CTX *ssl_context() const;
@@ -1195,8 +1171,6 @@ private:
 
   std::string ca_cert_file_path_;
   std::string ca_cert_dir_path_;
-  X509_STORE *ca_cert_store_ = nullptr;
-  bool server_certificate_verification_ = true;
   long verify_result_ = 0;
 
   friend class ClientImpl;
@@ -1739,7 +1713,7 @@ private:
   size_t position = 0;
 };
 
-inline bool keep_alive(socket_t sock) {
+inline bool keep_alive(socket_t sock, time_t keep_alive_timeout_sec) {
   using namespace std::chrono;
   auto start = steady_clock::now();
   while (true) {
@@ -1749,8 +1723,7 @@ inline bool keep_alive(socket_t sock) {
     } else if (val == 0) {
       auto current = steady_clock::now();
       auto duration = duration_cast<milliseconds>(current - start);
-      auto timeout = CPPHTTPLIB_KEEPALIVE_TIMEOUT_SECOND * 1000 +
-                     CPPHTTPLIB_KEEPALIVE_TIMEOUT_USECOND / 1000;
+      auto timeout = keep_alive_timeout_sec * 1000;
       if (duration.count() > timeout) { return false; }
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     } else {
@@ -1760,13 +1733,13 @@ inline bool keep_alive(socket_t sock) {
 }
 
 template <typename T>
-inline bool process_server_socket_core(socket_t sock,
-                                       size_t keep_alive_max_count,
-                                       T callback) {
+inline bool
+process_server_socket_core(socket_t sock, size_t keep_alive_max_count,
+                           time_t keep_alive_timeout_sec, T callback) {
   assert(keep_alive_max_count > 0);
   auto ret = false;
   auto count = keep_alive_max_count;
-  while (count > 0 && keep_alive(sock)) {
+  while (count > 0 && keep_alive(sock, keep_alive_timeout_sec)) {
     auto close_connection = count == 1;
     auto connection_closed = false;
     ret = callback(close_connection, connection_closed);
@@ -1777,14 +1750,14 @@ inline bool process_server_socket_core(socket_t sock,
 }
 
 template <typename T>
-inline bool process_server_socket(socket_t sock, size_t keep_alive_max_count,
-                                  time_t read_timeout_sec,
-                                  time_t read_timeout_usec,
-                                  time_t write_timeout_sec,
-                                  time_t write_timeout_usec, T callback) {
+inline bool
+process_server_socket(socket_t sock, size_t keep_alive_max_count,
+                      time_t keep_alive_timeout_sec, time_t read_timeout_sec,
+                      time_t read_timeout_usec, time_t write_timeout_sec,
+                      time_t write_timeout_usec, T callback) {
   return process_server_socket_core(
-      sock, keep_alive_max_count,
-      [&](bool close_connection, bool connection_closed) {
+      sock, keep_alive_max_count, keep_alive_timeout_sec,
+      [&](bool close_connection, bool &connection_closed) {
         SocketStream strm(sock, read_timeout_sec, read_timeout_usec,
                           write_timeout_sec, write_timeout_usec);
         return callback(strm, close_connection, connection_closed);
@@ -2396,9 +2369,7 @@ public:
 
       if (decoder_r == BROTLI_DECODER_RESULT_ERROR) { return false; }
 
-      if (!callback(buff.data(), buff.size() - avail_out)) {
-        return false;
-      }
+      if (!callback(buff.data(), buff.size() - avail_out)) { return false; }
     }
 
     return decoder_r == BROTLI_DECODER_RESULT_SUCCESS ||
@@ -3895,6 +3866,10 @@ inline void Server::set_keep_alive_max_count(size_t count) {
   keep_alive_max_count_ = count;
 }
 
+inline void Server::set_keep_alive_timeout(time_t sec) {
+  keep_alive_timeout_sec_ = sec;
+}
+
 inline void Server::set_read_timeout(time_t sec, time_t usec) {
   read_timeout_sec_ = sec;
   read_timeout_usec_ = usec;
@@ -3978,10 +3953,11 @@ inline bool Server::write_response(Stream &strm, bool close_connection,
   // Headers
   if (close_connection || req.get_header_value("Connection") == "close") {
     res.set_header("Connection", "close");
-  }
-
-  if (!close_connection && req.get_header_value("Connection") == "Keep-Alive") {
-    res.set_header("Connection", "Keep-Alive");
+  } else {
+    std::stringstream ss;
+    ss << "timeout=" << keep_alive_timeout_sec_
+       << ", max=" << keep_alive_max_count_;
+    res.set_header("Keep-Alive", ss.str());
   }
 
   if (!res.has_header("Content-Type") &&
@@ -4582,8 +4558,8 @@ inline bool Server::is_valid() const { return true; }
 
 inline bool Server::process_and_close_socket(socket_t sock) {
   auto ret = detail::process_server_socket(
-      sock, keep_alive_max_count_, read_timeout_sec_, read_timeout_usec_,
-      write_timeout_sec_, write_timeout_usec_,
+      sock, keep_alive_max_count_, keep_alive_timeout_sec_, read_timeout_sec_,
+      read_timeout_usec_, write_timeout_sec_, write_timeout_usec_,
       [this](Stream &strm, bool close_connection, bool &connection_closed) {
         return process_request(strm, close_connection, connection_closed,
                                nullptr);
@@ -4613,6 +4589,43 @@ inline ClientImpl::~ClientImpl() { stop_core(); }
 inline bool ClientImpl::is_valid() const { return true; }
 
 inline Error ClientImpl::get_last_error() const { return error_; }
+
+inline void ClientImpl::copy_settings(const ClientImpl &rhs) {
+  client_cert_path_ = rhs.client_cert_path_;
+  client_key_path_ = rhs.client_key_path_;
+  connection_timeout_sec_ = rhs.connection_timeout_sec_;
+  read_timeout_sec_ = rhs.read_timeout_sec_;
+  read_timeout_usec_ = rhs.read_timeout_usec_;
+  write_timeout_sec_ = rhs.write_timeout_sec_;
+  write_timeout_usec_ = rhs.write_timeout_usec_;
+  basic_auth_username_ = rhs.basic_auth_username_;
+  basic_auth_password_ = rhs.basic_auth_password_;
+  bearer_token_auth_token_ = rhs.bearer_token_auth_token_;
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+  digest_auth_username_ = rhs.digest_auth_username_;
+  digest_auth_password_ = rhs.digest_auth_password_;
+#endif
+  keep_alive_ = rhs.keep_alive_;
+  follow_location_ = rhs.follow_location_;
+  tcp_nodelay_ = rhs.tcp_nodelay_;
+  socket_options_ = rhs.socket_options_;
+  compress_ = rhs.compress_;
+  decompress_ = rhs.decompress_;
+  interface_ = rhs.interface_;
+  proxy_host_ = rhs.proxy_host_;
+  proxy_port_ = rhs.proxy_port_;
+  proxy_basic_auth_username_ = rhs.proxy_basic_auth_username_;
+  proxy_basic_auth_password_ = rhs.proxy_basic_auth_password_;
+  proxy_bearer_token_auth_token_ = rhs.proxy_bearer_token_auth_token_;
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+  proxy_digest_auth_username_ = rhs.proxy_digest_auth_username_;
+  proxy_digest_auth_password_ = rhs.proxy_digest_auth_password_;
+#endif
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+  server_certificate_verification_ = rhs.server_certificate_verification_;
+#endif
+  logger_ = rhs.logger_;
+}
 
 inline socket_t ClientImpl::create_client_socket() const {
   if (!proxy_host_.empty() && proxy_port_ != -1) {
@@ -4651,7 +4664,17 @@ inline bool ClientImpl::read_response_line(Stream &strm, Response &res) {
   const static std::regex re("(HTTP/1\\.[01]) (\\d+) (.*?)\r\n");
 
   std::cmatch m;
-  if (std::regex_match(line_reader.ptr(), m, re)) {
+  if (!std::regex_match(line_reader.ptr(), m, re)) { return false; }
+  res.version = std::string(m[1]);
+  res.status = std::stoi(std::string(m[2]));
+  res.reason = std::string(m[3]);
+
+  // Ignore '100 Continue'
+  while (res.status == 100) {
+    if (!line_reader.getline()) { return false; } // CRLF
+    if (!line_reader.getline()) { return false; } // next response line
+
+    if (!std::regex_match(line_reader.ptr(), m, re)) { return false; }
     res.version = std::string(m[1]);
     res.status = std::stoi(std::string(m[2]));
     res.reason = std::string(m[3]);
@@ -5477,6 +5500,12 @@ inline void ClientImpl::set_proxy_digest_auth(const char *username,
 }
 #endif
 
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+inline void ClientImpl::enable_server_certificate_verification(bool enabled) {
+  server_certificate_verification_ = enabled;
+}
+#endif
+
 inline void ClientImpl::set_logger(Logger logger) {
   logger_ = std::move(logger);
 }
@@ -5526,12 +5555,13 @@ inline void ssl_delete(std::mutex &ctx_mutex, SSL *ssl,
 template <typename T>
 inline bool
 process_server_socket_ssl(SSL *ssl, socket_t sock, size_t keep_alive_max_count,
+                          time_t keep_alive_timeout_sec,
                           time_t read_timeout_sec, time_t read_timeout_usec,
                           time_t write_timeout_sec, time_t write_timeout_usec,
                           T callback) {
   return process_server_socket_core(
-      sock, keep_alive_max_count,
-      [&](bool close_connection, bool connection_closed) {
+      sock, keep_alive_max_count, keep_alive_timeout_sec,
+      [&](bool close_connection, bool &connection_closed) {
         SSLSocketStream strm(sock, ssl, read_timeout_sec, read_timeout_usec,
                              write_timeout_sec, write_timeout_usec);
         return callback(strm, close_connection, connection_closed);
@@ -5737,8 +5767,9 @@ inline bool SSLServer::process_and_close_socket(socket_t sock) {
 
   if (ssl) {
     auto ret = detail::process_server_socket_ssl(
-        ssl, sock, keep_alive_max_count_, read_timeout_sec_, read_timeout_usec_,
-        write_timeout_sec_, write_timeout_usec_,
+        ssl, sock, keep_alive_max_count_, keep_alive_timeout_sec_,
+        read_timeout_sec_, read_timeout_usec_, write_timeout_sec_,
+        write_timeout_usec_,
         [this, ssl](Stream &strm, bool close_connection,
                     bool &connection_closed) {
           return process_request(strm, close_connection, connection_closed,
@@ -5812,11 +5843,16 @@ inline void SSLClient::set_ca_cert_path(const char *ca_cert_file_path,
 }
 
 inline void SSLClient::set_ca_cert_store(X509_STORE *ca_cert_store) {
-  if (ca_cert_store) { ca_cert_store_ = ca_cert_store; }
-}
-
-inline void SSLClient::enable_server_certificate_verification(bool enabled) {
-  server_certificate_verification_ = enabled;
+  if (ca_cert_store) {
+    if(ctx_) {
+      if (SSL_CTX_get_cert_store(ctx_) != ca_cert_store) {
+        // Free memory allocated for old cert and use new store `ca_cert_store`
+        SSL_CTX_set_cert_store(ctx_, ca_cert_store);
+      }
+    } else {
+      X509_STORE_free(ca_cert_store);
+    }
+  }
 }
 
 inline long SSLClient::get_openssl_verify_result() const {
@@ -5893,10 +5929,6 @@ inline bool SSLClient::load_certs() {
       if (!SSL_CTX_load_verify_locations(ctx_, nullptr,
                                          ca_cert_dir_path_.c_str())) {
         ret = false;
-      }
-    } else if (ca_cert_store_ != nullptr) {
-      if (SSL_CTX_get_cert_store(ctx_) != ca_cert_store_) {
-        SSL_CTX_set_cert_store(ctx_, ca_cert_store_);
       }
     } else {
 #ifdef _WIN32
@@ -6399,31 +6431,27 @@ inline void Client::set_proxy_digest_auth(const char *username,
 }
 #endif
 
+#ifdef CPPHTTPLIB_OPENSSL_SUPPORT
+inline void Client::enable_server_certificate_verification(bool enabled) {
+  cli_->enable_server_certificate_verification(enabled);
+}
+#endif
+
 inline void Client::set_logger(Logger logger) { cli_->set_logger(logger); }
 
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-inline Client &Client::set_ca_cert_path(const char *ca_cert_file_path,
-                                        const char *ca_cert_dir_path) {
+inline void Client::set_ca_cert_path(const char *ca_cert_file_path,
+                                     const char *ca_cert_dir_path) {
   if (is_ssl_) {
     static_cast<SSLClient &>(*cli_).set_ca_cert_path(ca_cert_file_path,
                                                      ca_cert_dir_path);
   }
-  return *this;
 }
 
-inline Client &Client::set_ca_cert_store(X509_STORE *ca_cert_store) {
+inline void Client::set_ca_cert_store(X509_STORE *ca_cert_store) {
   if (is_ssl_) {
     static_cast<SSLClient &>(*cli_).set_ca_cert_store(ca_cert_store);
   }
-  return *this;
-}
-
-inline Client &Client::enable_server_certificate_verification(bool enabled) {
-  if (is_ssl_) {
-    static_cast<SSLClient &>(*cli_).enable_server_certificate_verification(
-        enabled);
-  }
-  return *this;
 }
 
 inline long Client::get_openssl_verify_result() const {
