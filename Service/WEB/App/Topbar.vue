@@ -32,8 +32,8 @@
     props: { analyzer: Object, expanded: Boolean },
     data () {
       return { Grouped: false,
-               Transfer1: this.NowTransfer(['Voltage', 'Current', 'ACTIVE_POWER', 'Frequency']),
-               Transfer2: this.SeriesTransfer(['ACTIVE_ENERGY']),
+               Transfer1: this.NowTransfer(['Voltage', 'Current', 'Active_Power', 'Frequency']),
+               Transfer2: this.SeriesTransfer(['Active_Energy']),
                Transfer3: this.StatusTransfer(['SYSTEM']) };
     },
     created: function() {

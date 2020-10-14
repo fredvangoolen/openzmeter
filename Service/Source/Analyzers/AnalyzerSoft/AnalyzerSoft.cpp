@@ -365,9 +365,9 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
   for(uint8_t i = 0; i < params["Series"].size(); i++) {
     if(params["Series"][i].is_string() == false) {
       return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    } else if(params["Series"][i] == "CURRENT_SAMPLES") {
+    } else if(params["Series"][i] == "Current_Samples") {
       Params->Current = true;
-    } else if(params["Series"][i] == "VOLTAGE_SAMPLES") {
+    } else if(params["Series"][i] == "Voltage_Samples") {
       Params->Voltage = true;
     } else {
       return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);

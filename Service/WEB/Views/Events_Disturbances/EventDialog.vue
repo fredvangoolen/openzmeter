@@ -40,7 +40,7 @@
         Opt.includeZero = true;
         Opt.showRangeSelector = false;
         Opt.labels = ['Sample'].concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels));
-        Opt.colors = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, false).Colors;//  oZm.ColorArray(oZm.Series['VOLTAGE'].Color, oZm.Series['VOLTAGE'].Names(Analyzer).length) } );
+        Opt.colors = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, false).Colors;//  oZm.ColorArray(oZm.Series['Voltage'].Color, oZm.Series['Voltage'].Names(Analyzer).length) } );
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 2, true) + ' V'; };
@@ -122,7 +122,7 @@
               canvas.restore();
             }
           } else if(this.event.Type == 'RVC') {
-            var Colors = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0).Colors;
+            var Colors = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, 0).Colors;
             canvas.save();
             var HighStart = 0;
             var HighEnd = 0;
@@ -209,7 +209,7 @@
     methods: {
        Export: function() {
         var Analyzer = this.$root.SelectedAnalyzer;
-        this.$refs.tools.SaveCVS('Event_' + this.ViewMode + '.csv', [['Sample'].concat(oZm.Series['VOLTAGE'].Names(Analyzer))].concat(this.Data));
+        this.$refs.tools.SaveCVS('Event_' + this.ViewMode + '.csv', [['Sample'].concat(oZm.Series['Voltage'].Names(Analyzer))].concat(this.Data));
       },
       PhasesChanged: function(phases) {
         this.Phases = phases;

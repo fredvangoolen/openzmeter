@@ -51,10 +51,10 @@
         Opt.axes.x.ticker = (min, max) => { return Graph.Tickers.WaveTimeTicks(max, this.analyzer); };
         if((this.Phases == null) || (this.Options == null)) return Opt;
         Opt.visibility = [];
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
-        var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
-        var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
-        var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
+        var CurrentStyle = oZm.SerieStyle(oZm.Series['Current'], this.analyzer, 0);
+        var VoltageNames = oZm.Series['Voltage'].Names(this.analyzer);
+        var CurrentNames = oZm.Series['Current'].Names(this.analyzer);
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
         Opt.series = {};
@@ -93,7 +93,7 @@
     },
     methods: {
       Export: function() {
-        var Rows = [['Sample'].concat(oZm.Series['VOLTAGE'].Names(this.analyzer).concat(oZm.Series['CURRENT'].Names(this.analyzer)))];
+        var Rows = [['Sample'].concat(oZm.Series['Voltage'].Names(this.analyzer).concat(oZm.Series['Current'].Names(this.analyzer)))];
         if(this.data != null) {
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [i];

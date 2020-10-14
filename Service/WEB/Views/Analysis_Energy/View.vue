@@ -69,9 +69,9 @@
     props: { analyzer: { type: Object } },
     data: function() {
       return { Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300,
-               Transfer15M: this.SeriesTransfer(['ACTIVE_ENERGY', 'REACTIVE_ENERGY']),
-               Transfer1H: this.SeriesTransfer(['ACTIVE_ENERGY', 'REACTIVE_ENERGY']),
-               TransferGraph: this.PriceTransfer(['ACTIVE_ENERGY', 'REACTIVE_ENERGY', 'COLOR', 'PERIOD', 'BILL'])
+               Transfer15M: this.SeriesTransfer(['Active_Energy', 'Reactive_Energy']),
+               Transfer1H: this.SeriesTransfer(['Active_Energy', 'Reactive_Energy']),
+               TransferGraph: this.PriceTransfer(['Active_Energy', 'Reactive_Energy', 'Color', 'Period', 'Bill'])
       };
     },
     created: function() {

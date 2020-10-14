@@ -101,12 +101,10 @@ void HTTPServer::RegisterCallback(const string &handleName, const Func2_t functi
   pLock.Unlock();
 }
 void HTTPServer::UnregisterCallback(const string &handleName) {
-  printf("Quitando %s\n", handleName.c_str());
   pLock.WriteLock();
   pCallbacks1.erase(handleName);
   pCallbacks2.erase(handleName);
   pLock.Unlock();
-  printf("Quitado %s\n", handleName.c_str());
 }
 string HTTPServer::ParseCookie(const string &cookie) {
   string CookieNum = "";

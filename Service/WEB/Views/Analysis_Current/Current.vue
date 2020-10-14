@@ -16,8 +16,8 @@
     },
     computed: {
       GraphOptions: function(val) {
-        var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
-        var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
+        var CurrentStyle = oZm.SerieStyle(oZm.Series['Current'], this.analyzer, 0);
+        var CurrentNames = oZm.Series['Current'].Names(this.analyzer);
         var Opt = { file: [], axes: { x: {}, y: {} } };
         Opt.panEdgeFraction = 1;
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);

@@ -53,13 +53,13 @@
       PanelClass: function() {
         if(this.serie == 'Voltage') return 'panel-voltage';
         if(this.serie == 'Current') return 'panel-current';
-        if(this.serie == 'ACTIVE_POWER') return 'panel-active-power';
+        if(this.serie == 'Active_Power') return 'panel-active-power';
         if(this.serie == 'Frequency') return 'panel-frequency';
       },
       PanelTitle: function() {
         if(this.serie == 'Voltage') return 'Voltage';
         if(this.serie == 'Current') return 'Current';
-        if(this.serie == 'ACTIVE_POWER') return 'Active Power';
+        if(this.serie == 'Active_Power') return 'Active Power';
         if(this.serie == 'Frequency') return 'Frequency';
       },
       GraphOptions: function() {
@@ -94,7 +94,7 @@
             for(var i in this.TransferGraph.Data.Voltage[n]) Row.push(this.TransferGraph.Data.Voltage[n][i]);
           } else if(this.serie == 'Current') {
             for(var i in this.TransferGraph.Data.Current[n]) Row.push(this.TransferGraph.Data.Current[n][i]);
-          } else if(this.serie == 'ACTIVE_POWER') {
+          } else if(this.serie == 'Active_Power') {
             for(var i in this.TransferGraph.Data.Active_Power[n]) Row.push(this.TransferGraph.Data.Active_Power[n][i]);
           } else if(this.serie == 'Frequency') {
             Row.push(this.TransferGraph.Data.Frequency[n]);
@@ -103,7 +103,7 @@
         }
         if((this.serie == 'Voltage') || (this.serie == 'Current')) {
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { rmsRange: 1.0 });
-        } else if(this.serie == 'ACTIVE_POWER') {
+        } else if(this.serie == 'Active_Power') {
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false].concat(this.Phases), { incZero: 1.0 });
         } else if(this.serie == 'Frequency') {
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.1 });
@@ -124,7 +124,7 @@
             for(var i in this.data.Voltage[n]) Row.push(this.Round(this.data.Voltage[n][i], 3));
           } else if(this.serie == 'Current') {
             for(var i in this.data.Current[n]) Row.push(this.Round(this.data.Current[n][i], 3));
-          } else if(this.serie == 'ACTIVE_POWER') {
+          } else if(this.serie == 'Active_Power') {
             for(var i in this.data.Active_Power[n]) Row.push(this.Round(this.data.Active_Power[n][i], 3));
           } else if(this.serie == 'Frequency') {
             Row.push(this.Round(this.data.Frequency[n], 3));

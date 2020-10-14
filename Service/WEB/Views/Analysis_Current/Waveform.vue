@@ -45,8 +45,8 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return Opt;
         Opt.visibility = [];
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
-        var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, ((this.Options['Voltage'] == true) ? 1 : 0));
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, 0);
+        var CurrentStyle = oZm.SerieStyle(oZm.Series['Current'], this.analyzer, ((this.Options['Voltage'] == true) ? 1 : 0));
         var VoltageNames = (this.analyzer.PhaseNames == null) ? ['Voltage'] : this.analyzer.PhaseNames.slice(0, this.analyzer.VoltageChannels).map((val) => { return 'Voltage' + ' (' + val + ')'});
         var CurrentNames = (this.analyzer.PhaseNames == null) ? ['Current'] : this.analyzer.PhaseNames.slice(0, this.analyzer.CurrentChannels).map((val) => { return 'Current' + ' (' + val + ')'});
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n]);
@@ -87,7 +87,7 @@
     },
     methods: {
       Export: function() {
-        var Rows = [['Sample'].concat(oZm.Series['CURRENT'].Names(this.analyzer).concat(oZm.Series['VOLTAGE'].Names(this.analyzer)))];
+        var Rows = [['Sample'].concat(oZm.Series['Current'].Names(this.analyzer).concat(oZm.Series['Voltage'].Names(this.analyzer)))];
         if(this.data != null) {
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [i];

@@ -867,14 +867,14 @@
                       "enum": [
                         "Voltage",
                         "Current",
-                        "ACTIVE_POWER",
-                        "REACTIVE_POWER",
-                        "ACTIVE_ENERGY",
-                        "REACTIVE_ENERGY",
-                        "VOLTAGE_SAMPLES",
-                        "VOLTAGE_THD",
-                        "PHI",
-                        "POWER_FACTOR"
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
                       ]
                     }
                   }

@@ -785,7 +785,7 @@ export function MergeSeriesResult(result, previous) {
 }
 
 export var Series = {
-  'VOLTAGE': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V',  Link: '/Analysis/Voltage', Color: '#d9534f', Decimals: 2,
+  'Voltage': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V',  Link: '/Analysis/Voltage', Color: '#d9534f', Decimals: 2,
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['V'] : ['V(R)', 'V(S)', 'V(T)']; },
     Range: function(values, phases) {
       var UpperRange = -Infinity;
@@ -811,7 +811,7 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
-  'CURRENT': { CSS_Class: 'panel-current', Title: 'Current', Serie: 'Current', Units: 'A', Link: '/Analysis/Current', Color: '#428bca', Decimals: 2,
+  'Current': { CSS_Class: 'panel-current', Title: 'Current', Serie: 'Current', Units: 'A', Link: '/Analysis/Current', Color: '#428bca', Decimals: 2,
     FormatValue: function(val) {return {Units: '' + 'A', Value: Round2(val) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['I'] : (analyzer.Mode === '3PHASE') ? ['I(R)', 'I(S)', 'I(T)'] : ['I(R)', 'I(S)', 'I(T)', 'I(N)'];},
     Range: function(values, phases) {
@@ -838,7 +838,7 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
-  'ACTIVE_POWER': { CSS_Class: 'panel-active-power', Title: 'Active Power', Serie: 'Active_Power', Units: 'W', Link: '/Analysis/Power', Color: '#f0ad4e', Decimals: 2,
+  'Active_Power': { CSS_Class: 'panel-active-power', Title: 'Active Power', Serie: 'Active_Power', Units: 'W', Link: '/Analysis/Power', Color: '#f0ad4e', Decimals: 2,
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'W', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; },
     Range: function(values, phases) {
@@ -861,7 +861,7 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
-  'ACTIVE_ENERGY': { CSS_Class: 'panel-active-energy', Title: 'Active Energy', Serie: 'Active_Energy', Units: 'Wh', Color: '#3d3d8b', Decimals: 2,
+  'Active_Energy': { CSS_Class: 'panel-active-energy', Title: 'Active Energy', Serie: 'Active_Energy', Units: 'Wh', Color: '#3d3d8b', Decimals: 2,
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'Wh', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['P'] : ['P(R)', 'P(S)', 'P(T)']; },
     Range: function(values, phases) {
@@ -879,7 +879,7 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
-  'REACTIVE_ENERGY': { CSS_Class: 'panel-reactive-energy', Title: 'Reactive Energy', Serie: 'Reactive_Energy', Units: 'VArh', Color: '#643d8b', Decimals: 2,
+  'Reactive_Energy': { CSS_Class: 'panel-reactive-energy', Title: 'Reactive Energy', Serie: 'Reactive_Energy', Units: 'VArh', Color: '#643d8b', Decimals: 2,
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'VArh', Value: Round2(ScaleToUnits(val, Units)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['Q'] : ['Q(R)', 'Q(S)', 'Q(T)']; },
     Range: function(values, phases) {
@@ -936,20 +936,20 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
-  'APPARENT_POWER': { CSS_Class: '', Title: 'Apparent Power', Serie: 'Apparent_Power', Units: 'va', Link: '/Analysis/Power', Color: '', Deciamls: 2,
+  'Apparent_Power': { CSS_Class: '', Title: 'Apparent Power', Serie: 'Apparent_Power', Units: 'va', Link: '/Analysis/Power', Color: '', Deciamls: 2,
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['S'] : ['S(R)', 'S(S)', 'S(T)']; },
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'va', Value: Round2(ScaleToUnits(val, Units)) }; },
     rangeFunc: function() {}
   },
-  'POWER_FACTOR': { CSS_Class: '', Title: 'Power Factor', Serie: 'Power_Factor', Units: '', Link: '',
+  'Power_Factor': { CSS_Class: '', Title: 'Power Factor', Serie: 'Power_Factor', Units: '', Link: '',
     FormatValue: function(val) { return { Units: '', Value: Round2(val) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)']; },
   },
-  'PHI': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '',
+  'Phi': { CSS_Class: '', Title: 'Phi', Serie: 'Phi', Units: '', Link: '',
     FormatValue: function(val) { return { Units: ((val < 0) ? '° IND' : (val > 0) ? '° CAP' : '°'), Value: Round2(Math.abs(val)) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['Phi'] : ['Phi(R)', 'Phi(S)', 'Phi(T)']; },
   },
-  'VOLTAGE_THD': {
+  'Voltage_THD': {
     CSS_Class: '',
     Title: 'Voltage THD',
     Serie: 'Voltage_THD',
@@ -958,7 +958,7 @@ export var Series = {
     FormatValue: function(val) { return { Units: '%', Value: Round2(val * 100) }; },
     Names: function(analyzer) { return (analyzer.Mode === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)']; },
   },
-  'CURRENT_THD': {
+  'Current_THD': {
     CSS_Class: '',
     Title: 'Current THD',
     Serie: 'Current_THD',
@@ -976,7 +976,7 @@ export var Series = {
     Units: 'W',
     Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th']
   },
-  'VOLTAGE_SAMPLES': {
+  'Voltage_Samples': {
     Range: function(values, phases) {
       var UpperRange = -Infinity;
       var LowerRange = +Infinity;
@@ -995,7 +995,7 @@ export var Series = {
       return [LowerRange, UpperRange];
     }
   },
-  'CURRENT_SAMPLES': {
+  'Current_Samples': {
     Range: function(values, phases) {
       var UpperRange = -Infinity;
       var LowerRange = +Infinity;
@@ -1020,7 +1020,7 @@ export var Series = {
 //    if(varName === 'Power_Factor')  return (Self.GetSelected().Mode === '1PHASE') ? ['PF'] : ['PF(R)', 'PF(S)', 'PF(T)'];
 //    if(varName === 'Voltage_THD')  return (Self.GetSelected().Mode === '1PHASE') ? ['THDv'] : ['THDv(R)', 'THDv(S)', 'THDv(T)'];
 //    if(varName === 'Current_THD')  return (Self.GetSelected().Mode === '1PHASE') ? ['THDi'] : (Self.GetSelected().Mode) ? ['THDi(R)', 'THDi(S)', 'THDi(T)'] : ['THDi(R)', 'THDi(S)', 'THDi(T)', 'THDi(N)'];
-//    if(varName === 'Phi')  return (Self.GetSelected().Mode === '1PHASE') ? ['PHI']  : ['PHI(R)', 'PHI(S)', 'PHI(T)'];
+//    if(varName === 'Phi')  return (Self.GetSelected().Mode === '1PHASE') ? ['Phi']  : ['Phi(R)', 'Phi(S)', 'Phi(T)'];
 };
 
 

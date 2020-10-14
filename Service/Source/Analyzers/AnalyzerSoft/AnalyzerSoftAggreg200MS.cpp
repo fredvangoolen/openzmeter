@@ -109,15 +109,7 @@ void AnalyzerSoftAggreg200MS::setPowerFactor(const uint8_t channel, const float 
 }
 bool AnalyzerSoftAggreg200MS::GetSeriesJSON(const string &serie, json &result) const {
   if(AnalyzerSoftAggreg::GetSeriesJSON(serie, result) == true) return true;
-  if(serie == "Voltage_Harmonics") {
-    json Tmp1 = json::array();
-    for(uint8_t n = 0; n < pVoltageChannels; n++) {
-      json Tmp2 = json::array();
-      for(uint8_t i = 0; i < 50; i++) Tmp2.push_back(VoltageHarmonic(n, i));
-      Tmp1.push_back(Tmp2);
-    }
-    result["Voltage_Harmonics"] = Tmp1;
-  } else if(serie == "Voltage_Harmonics_Complex") {
+  if(serie == "Voltage_Harmonics_Complex") {
     json Tmp1 = json::array();
     for(uint8_t n = 0; n < pVoltageChannels; n++) {
       json Tmp2 = json::array();
@@ -131,14 +123,6 @@ bool AnalyzerSoftAggreg200MS::GetSeriesJSON(const string &serie, json &result) c
       Tmp1.push_back(Tmp2);
     }
     result["Voltage_Harmonics_Complex"] = Tmp1;
-  } else if(serie == "Current_Harmonics") {
-    json Tmp1 = json::array();
-    for(uint8_t n = 0; n < pVoltageChannels; n++) {
-      json Tmp2 = json::array();
-      for(uint8_t i = 0; i < 50; i++) Tmp2.push_back(CurrentHarmonic(n, i));
-      Tmp1.push_back(Tmp2);
-    }
-    result["Current_Harmonics"] = Tmp1;
   } else if(serie == "Current_Harmonics_Complex") {
     json Tmp1 = json::array();
     for(uint8_t n = 0; n < pCurrentChannels; n++) {

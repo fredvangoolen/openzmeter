@@ -107,49 +107,49 @@ void AnalyzerSoftStorage::GetSeries(const json &params, Response &response) cons
       Series |= AnalyzerSoftStorage::SERIE_FREQUENCY;
     } else if((Serie == "Unbalance") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
       Series |= AnalyzerSoftStorage::SERIE_UNBALANCE;
-    } else if((Serie == "FLAG") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
+    } else if((Serie == "Flag") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
       Series |= AnalyzerSoftStorage::SERIE_FLAG;
     } else if((Serie == "Voltage") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
       Series |= AnalyzerSoftStorage::SERIE_VOLTAGE;
     } else if((Serie == "Current") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
       Series |= AnalyzerSoftStorage::SERIE_CURRENT;
-    } else if((Serie == "ACTIVE_POWER") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {
+    } else if((Serie == "Active_Power") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {
       Series |= AnalyzerSoftStorage::SERIE_ACTIVE_POWER;
-    } else if((Serie == "ACTIVE_ENERGY") && ((Aggreg == "15M") || (Aggreg == "1H"))) {
+    } else if((Serie == "Active_Energy") && ((Aggreg == "15M") || (Aggreg == "1H"))) {
       Series |= AnalyzerSoftStorage::SERIE_ACTIVE_ENERGY;
-    } else if((Serie == "REACTIVE_POWER") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {
+    } else if((Serie == "Reactive_Power") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {
       Series |= AnalyzerSoftStorage::SERIE_REACTIVE_POWER;
-    } else if((Serie == "REACTIVE_ENERGY") && ((Aggreg == "15M") || (Aggreg == "1H"))) {
+    } else if((Serie == "Reactive_Energy") && ((Aggreg == "15M") || (Aggreg == "1H"))) {
       Series |= AnalyzerSoftStorage::SERIE_REACTIVE_ENERGY;
-    } else if((Serie == "APPARENT_POWER") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {
+    } else if((Serie == "Apparent_Power") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "15M") || (Aggreg == "1H"))) {
       Series |= AnalyzerSoftStorage::SERIE_APPARENT_POWER;
-    } else if((Serie == "POWER_FACTOR") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
+    } else if((Serie == "Power_Factor") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
       Series |= AnalyzerSoftStorage::SERIE_POWER_FACTOR;
-    } else if((Serie == "VOLTAGE_THD") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
+    } else if((Serie == "Voltage_THD") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
       Series |= AnalyzerSoftStorage::SERIE_VOLTAGE_THD;
-    } else if((Serie == "CURRENT_THD") && (((Aggreg == "200MS") || Aggreg == "1M"))) {
+    } else if((Serie == "Current_THD") && (((Aggreg == "200MS") || Aggreg == "1M"))) {
       Series |= AnalyzerSoftStorage::SERIE_CURRENT_THD;
-    } else if((Serie == "PHI") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
+    } else if((Serie == "Phi") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
       Series |= AnalyzerSoftStorage::SERIE_PHI;
-    } else if((Serie == "VOLTAGE_HARMONICS") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
+    } else if((Serie == "Voltage_Harmonics") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
       Series |= AnalyzerSoftStorage::SERIE_VOLTAGE_HARMONICS;
-    } else if((Serie == "VOLTAGE_HARMONICS_COMPLEX") && (Aggreg == "200MS")) {
+    } else if((Serie == "Voltage_Harmonics_Complex") && (Aggreg == "200MS")) {
       Series |= AnalyzerSoftStorage::SERIE_VOLTAGE_HARMONICS_COMPLEX;
-    } else if((Serie == "CURRENT_HARMONICS") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
+    } else if((Serie == "Current_Harmonics") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
       Series |= AnalyzerSoftStorage::SERIE_CURRENT_HARMONICS;
-    } else if((Serie == "CURRENT_HARMONICS_COMPLEX") && (Aggreg == "200MS")) {
+    } else if((Serie == "Current_Harmonics_Complex") && (Aggreg == "200MS")) {
       Series |= AnalyzerSoftStorage::SERIE_CURRENT_HARMONICS_COMPLEX;
-    } else if((Serie == "POWER_HARMONICS") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
+    } else if((Serie == "Power_Harmonics") && ((Aggreg == "200MS") || (Aggreg == "1M"))) {
       Series |= AnalyzerSoftStorage::SERIE_POWER_HARMONICS;
-    } else if((Serie == "VOLTAGE_STATS") && (Aggreg ==  "1H")) {
+    } else if((Serie == "Voltage_Stats") && (Aggreg ==  "1H")) {
       Series |= AnalyzerSoftStorage::SERIE_VOLTAGE_STAT;
-    } else if((Serie == "FREQUENCY_STATS") && (Aggreg ==  "1H")) {
+    } else if((Serie == "Frequency_Stats") && (Aggreg ==  "1H")) {
       Series |= AnalyzerSoftStorage::SERIE_FREQUENCY_STAT;
-    } else if((Serie == "VOLTAGE_THD_STATS") && (Aggreg ==  "1H")) {
+    } else if((Serie == "Voltage_THD_Stats") && (Aggreg ==  "1H")) {
       Series |= AnalyzerSoftStorage::SERIE_THD_STAT;
-    } else if((Serie == "VOLTAGE_HARMONICS_STATS") && (Aggreg ==  "1H")) {
+    } else if((Serie == "Voltage_Harmonics_Stats") && (Aggreg ==  "1H")) {
       Series |= AnalyzerSoftStorage::SERIE_HARMONIC_STAT;
-    } else if((Serie == "UNBALANCE_STATS") && (Aggreg == "1H")) {
+    } else if((Serie == "Unbalance_Stats") && (Aggreg == "1H")) {
       Series |= AnalyzerSoftStorage::SERIE_UNBALANCE_STAT;
     } else {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);

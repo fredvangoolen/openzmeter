@@ -132,7 +132,7 @@ uint64_t AnalyzerSoftBlock::Sequence() const {
   return pSequence;
 }
 bool AnalyzerSoftBlock::GetSeriesJSON(const string &serie, json &result) {
-  if(serie == "VOLTAGE_SAMPLES") {
+  if(serie == "Voltage_Samples") {
     json Tmp1 = json::array();
     for(uint8_t n = 0; n < pVoltageChannels; n++) {
       json Tmp2 = json::array();
@@ -140,7 +140,7 @@ bool AnalyzerSoftBlock::GetSeriesJSON(const string &serie, json &result) {
       Tmp1.push_back(Tmp2);
     }
     result["Voltage_Samples"] = Tmp1;
-  } else if(serie == "CURRENT_SAMPLES") {
+  } else if(serie == "Current_Samples") {
     json Tmp1 = json::array();
     for(uint8_t n = 0; n < pCurrentChannels; n++) {
       json Tmp2 = json::array();
