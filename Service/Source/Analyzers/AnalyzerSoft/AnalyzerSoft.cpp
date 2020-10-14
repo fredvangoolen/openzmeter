@@ -191,9 +191,9 @@ void AnalyzerSoft::Analyzer_Func() {
     float THDv        = 0.0;
     float THDi        = 0.0;
     for(uint8_t i = 0; i < 50; i++) {
-      pAggreg200MS->setVoltageHarmonic(j, i, pFFTs->VoltageHarmonicPower(j, i));
+      pAggreg200MS->setVoltageHarmonic(j, i, pFFTs->VoltageHarmonic(j, i));
       if(i > 0) THDv += pFFTs->VoltageHarmonicPower(j, i);
-      pAggreg200MS->setCurrentHarmonic(j, i, pFFTs->CurrentHarmonicPower(j, i));
+      pAggreg200MS->setCurrentHarmonic(j, i, pFFTs->CurrentHarmonic(j, i));
       if(i > 0) THDi += pFFTs->CurrentHarmonicPower(j, i);
       pAggreg200MS->setPowerHarmonic(j, i, pFFTs->VoltageHarmonicPower(j, i) * pFFTs->CurrentHarmonicPower(j, i) * cos(AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, i), pFFTs->VoltageHarmonic(j, i))));
     }
@@ -216,7 +216,7 @@ void AnalyzerSoft::Analyzer_Func() {
     for(uint16_t i = 0; i < BlockSize; i++) Current += pow(pInputBlock->CurrentSample(3, i), 2.0);
     pAggreg200MS->setCurrent(3, sqrt(Current / BlockSize));
     for(uint8_t i = 0; i < 50; i++) {
-      pAggreg200MS->setCurrentHarmonic(3, i, pFFTs->CurrentHarmonicPower(3, i));
+      pAggreg200MS->setCurrentHarmonic(3, i, pFFTs->CurrentHarmonic(3, i));
       if(i > 0) THD += pFFTs->CurrentHarmonicPower(3, i);
     }
     pAggreg200MS->setCurrentTHD(3, (THD / pAggreg200MS->CurrentHarmonic(3, 0)) * 100.0);
@@ -291,6 +291,7 @@ void AnalyzerSoft::Analyzer_Func() {
     LogFile::Debug("Storing 200MS aggregation for analyzer '%s'", pSerial.c_str());
     pAggreg200MS->Save();
   }
+  pMQTT->PublishAggreg("200MS", pAggreg200MS);
   pAlarms->Wait();
   if(pAggreg200MS->Flag() == true) Status::SetValue("/Last_Event", pAggreg200MS->Timestamp());
   pNowDataLock.ProviderWait();
@@ -298,7 +299,6 @@ void AnalyzerSoft::Analyzer_Func() {
   pAggreg200MS->Reset();
 }
 void AnalyzerSoft::PeriodicTasks() {
-  LogFile::Debug("Removing old data for analyzer '%s'", pSerial.c_str());
   Database DB(pSerial);
   uint64_t Now = Tools::GetTime64();
   if(Now > 86400000) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Now - 86400000));   //Delete 1 day old

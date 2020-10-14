@@ -76,7 +76,7 @@
         );
       },
       LoadWIFI: function(show) {
-        this.$http.post('getWIFI', { Type: "CURRENT" }).then(
+        this.$http.post('getWIFI', { }).then(
           (result) => {
             this.Modules.Wifi.Settings = result.body;
             if(show) this.View = 'Wifi';
@@ -85,7 +85,7 @@
         );
       },
       LoadEthernet: function(show) {
-        this.$http.post('getEthernet', { Type: "CURRENT" }).then(
+        this.$http.post('getEthernet', {  }).then(
           (result) => {
             this.Modules.Ethernet.Settings = result.body;
             if(show) this.View = 'Ethernet';

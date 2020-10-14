@@ -15,7 +15,6 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <map>
-#include <queue>
 #include "Device.h"
 #include "AnalyzerRemote.h"
 #include "HTTPServer.h"
@@ -24,30 +23,15 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceRemote final : public Device {
   private :
-    typedef struct {
-      sockaddr_in Address;
-      int         Socket;
-      uint64_t    Time;
-      string      Buffer;
-    } Client_t;
-  private :
     static bool                         pRegistered;
     static RWLocks                      pLocks;
     static map<string, AnalyzerRemote*> pAnalyzers;
-  private :
-    volatile bool  pTerminate;
-    pthread_t      pThread;
-    uint16_t       pPort;
-    int            pServerSocket;
-  private :
-    void        *Thread();
-    void        *Client_Thread();
   private :
     static bool  Register();
     static void  GetInstances();
     static json  CheckConfig(const json &config);
     static void  GetRemoteCallback(const json &params, Response &response);
-    static void  SetRemoteCallback(const map<string, string> &params, const ContentReader &content_reader, Response &response);
+    static void  SetRemoteCallback(const map<string, string> &params, Response &response, const ContentReader &content_reader);
   private :
     DeviceRemote();
     uint32_t AnalyzersCount();

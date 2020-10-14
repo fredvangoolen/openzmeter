@@ -17,18 +17,18 @@
 #include "Tariff.h"
 // ---------------------------------------------------------------------------------------------------------------------
 TariffManager::TariffManager() {
-  HTTPServer::RegisterJSONCallback("getTariffs",     GetTariffsCallback);
-  HTTPServer::RegisterJSONCallback("getTariff",      GetTariffCallback);
-  HTTPServer::RegisterJSONCallback("setTariff",      SetTariffCallback);
-  HTTPServer::RegisterJSONCallback("delTariff",      DelTariffCallback);
-  HTTPServer::RegisterJSONCallback("addTariff",      AddTariffCallback);
+  HTTPServer::RegisterCallback("getTariffs",     GetTariffsCallback);
+  HTTPServer::RegisterCallback("getTariff",      GetTariffCallback);
+  HTTPServer::RegisterCallback("setTariff",      SetTariffCallback);
+  HTTPServer::RegisterCallback("delTariff",      DelTariffCallback);
+  HTTPServer::RegisterCallback("addTariff",      AddTariffCallback);
 }
 TariffManager::~TariffManager() {
-  HTTPServer::UnregisterJSONCallback("getTariffs");
-  HTTPServer::UnregisterJSONCallback("getTariff");
-  HTTPServer::UnregisterJSONCallback("setTariff");
-  HTTPServer::UnregisterJSONCallback("delTariff");
-  HTTPServer::UnregisterJSONCallback("addTariff");
+  HTTPServer::UnregisterCallback("getTariffs");
+  HTTPServer::UnregisterCallback("getTariff");
+  HTTPServer::UnregisterCallback("setTariff");
+  HTTPServer::UnregisterCallback("delTariff");
+  HTTPServer::UnregisterCallback("addTariff");
 }
 void TariffManager::GetTariffsCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
@@ -40,7 +40,7 @@ void TariffManager::GetTariffsCallback(const json &params, Response &response) {
     while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " + DB.ResultString("result") : DB.ResultString("result"));
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }

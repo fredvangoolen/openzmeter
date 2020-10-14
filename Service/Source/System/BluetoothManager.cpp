@@ -29,8 +29,8 @@ pthread_mutex_t  BluetoothManager::pMutex       = PTHREAD_MUTEX_INITIALIZER;
 // ---------------------------------------------------------------------------------------------------------------------
 BluetoothManager::BluetoothManager() {
   LogFile::Info("Starting Bluetooth manager");
-  HTTPServer::RegisterJSONCallback("getBluetooth", GetBluetoothCallback);
-  HTTPServer::RegisterJSONCallback("setBluetooth", SetBluetoothCallback);
+  HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback);
+  HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback);
   json Config = ConfigFile::ReadConfig("/Bluetooth");
   if(Config.is_object() == true) {
     if(Config["Enabled"].is_boolean()) pEnable = Config["Enabled"];
@@ -52,8 +52,8 @@ BluetoothManager::BluetoothManager() {
 BluetoothManager::~BluetoothManager() {
   LogFile::Info("Stopping bluetooth manager...");
   MessageLoop::UnregisterListener("Bluetooth_Toogle");
-  HTTPServer::UnregisterJSONCallback("getBluetooth");
-  HTTPServer::UnregisterJSONCallback("setBluetooth");
+  HTTPServer::UnregisterCallback("getBluetooth");
+  HTTPServer::UnregisterCallback("setBluetooth");
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   pThread = 0;

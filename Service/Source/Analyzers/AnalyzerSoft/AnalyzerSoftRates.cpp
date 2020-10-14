@@ -33,7 +33,7 @@ void AnalyzerSoftRates::GetRates(const json &params, Response &response) const {
     while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " + DB.ResultString("result") : DB.ResultString("result"));
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }
@@ -134,7 +134,7 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
     }
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }
@@ -157,7 +157,7 @@ void AnalyzerSoftRates::GetBills(const json &params, Response &response) const {
     }
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }

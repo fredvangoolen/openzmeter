@@ -42,15 +42,15 @@ vector<ESIOSManager::Variable_t> ESIOSManager::pVariables = {
 ESIOSManager::ESIOSManager() {
   Database DB;
   for(uint16_t V = 0; V < pVariables.size(); V++) DB.ExecSentenceNoResult("ALTER TABLE esios ADD COLUMN IF NOT EXISTS " + DB.BindID(pVariables[V].VarName) + " real NULL");
-  HTTPServer::RegisterJSONCallback("getESIOS", GetESIOSCallback);
-  HTTPServer::RegisterJSONCallback("setESIOS", SetESIOSCallback);
+  HTTPServer::RegisterCallback("getESIOS", GetESIOSCallback);
+  HTTPServer::RegisterCallback("setESIOS", SetESIOSCallback);
   Configure(CheckConfig(ConfigFile::ReadConfig("/ESIOS")));
 }
 ESIOSManager::~ESIOSManager() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
-  HTTPServer::UnregisterJSONCallback("getESIOS");
-  HTTPServer::UnregisterJSONCallback("setESIOS");
+  HTTPServer::UnregisterCallback("getESIOS");
+  HTTPServer::UnregisterCallback("setESIOS");
   pthread_mutex_unlock(&pMutex);
   if(pThread != 0) pthread_join(pThread, NULL);
 }

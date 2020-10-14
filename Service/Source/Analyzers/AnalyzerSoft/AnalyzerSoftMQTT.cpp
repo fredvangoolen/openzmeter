@@ -41,15 +41,16 @@ AnalyzerSoftMQTT::~AnalyzerSoftMQTT() {
 json AnalyzerSoftMQTT::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Enabled"] = false;
-  ConfigOUT["Prefix"] = "";
-  ConfigOUT["Server"] = "";
-  ConfigOUT["User"] = "";
-  ConfigOUT["Pass"] = "";
-  ConfigOUT["Export3S"] = false;
-  ConfigOUT["Export1M"] = false;
-  ConfigOUT["Export10M"] = false;
-  ConfigOUT["Export15M"] = false;
-  ConfigOUT["Export1H"] = false;
+  ConfigOUT["Prefix"]  = "";
+  ConfigOUT["Server"]  = "";
+  ConfigOUT["User"]    = "";
+  ConfigOUT["Pass"]    = "";
+  ConfigOUT["Export200MS"]  = false;
+  ConfigOUT["Export3S"]     = false;
+  ConfigOUT["Export1M"]     = false;
+  ConfigOUT["Export10M"]    = false;
+  ConfigOUT["Export15M"]    = false;
+  ConfigOUT["Export1H"]     = false;
   ConfigOUT["ExportAlarms"] = false;
   ConfigOUT["ExportConfig"] = false;
   if(config.is_object() == true) {
@@ -58,6 +59,7 @@ json AnalyzerSoftMQTT::CheckConfig(const json &config) {
     if(config.contains("Server") && config["Server"].is_string()) ConfigOUT["Server"] = config["Server"];
     if(config.contains("User") && config["User"].is_string()) ConfigOUT["User"] = config["User"];
     if(config.contains("Pass") && config["Pass"].is_string()) ConfigOUT["Pass"] = config["Pass"];
+    if(config.contains("Export200MS") && config["Export200MS"].is_boolean()) ConfigOUT["Export200MS"] = config["Export200MS"];
     if(config.contains("Export3S") && config["Export3S"].is_boolean()) ConfigOUT["Export3S"] = config["Export3S"];
     if(config.contains("Export1M") && config["Export1M"].is_boolean()) ConfigOUT["Export1M"] = config["Export1M"];
     if(config.contains("Export10M") && config["Export10M"].is_boolean()) ConfigOUT["Export10M"] = config["Export10M"];
@@ -81,6 +83,7 @@ void AnalyzerSoftMQTT::Config(const json &config) {
       free(pRecvBuff);
       pThread = 0;
     }
+    p200MS  = false;
     p3S     = false;
     p1M     = false;
     p10M    = false;
@@ -93,6 +96,7 @@ void AnalyzerSoftMQTT::Config(const json &config) {
     pServer    = config["MQTT"]["Server"];
     pUser      = config["MQTT"]["User"];
     pPass      = config["MQTT"]["Pass"];
+    p200MS     = config["MQTT"]["Export200MS"];
     p3S        = config["MQTT"]["Export3S"];
     p1M        = config["MQTT"]["Export1M"];
     p10M       = config["MQTT"]["Export10M"];
@@ -117,15 +121,15 @@ void AnalyzerSoftMQTT::Config(const json &config) {
 }
 void AnalyzerSoftMQTT::PublishAggreg(const string &aggreg, const AnalyzerSoftAggreg *params) {
   pthread_mutex_lock(&pMutex);
-  if((pClient.socketfd != -1) && (((aggreg == "3S") && (p3S == true)) || ((aggreg == "1M") && (p1M == true)) || ((aggreg == "10M") && (p10M == true)) || ((aggreg == "15M") && (p15M == true)) || ((aggreg == "1H") && (p1H == true)))) {
+  if((pClient.socketfd != -1) && (((aggreg == "200MS") && (p200MS == true)) || ((aggreg == "3S") && (p3S == true)) || ((aggreg == "1M") && (p1M == true)) || ((aggreg == "10M") && (p10M == true)) || ((aggreg == "15M") && (p15M == true)) || ((aggreg == "1H") && (p1H == true)))) {
     json Result = json::object();
     Result["Time"] = params->Timestamp();
     params->GetSeriesJSON("TIME", Result);
-    params->GetSeriesJSON("FREQUENCY", Result);
+    params->GetSeriesJSON("Frequency", Result);
     params->GetSeriesJSON("FLAG", Result);
-    params->GetSeriesJSON("UNBALANCE", Result);
-    params->GetSeriesJSON("VOLTAGE", Result);
-    params->GetSeriesJSON("CURRENT", Result);
+    params->GetSeriesJSON("Unbalance", Result);
+    params->GetSeriesJSON("Voltage", Result);
+    params->GetSeriesJSON("Current", Result);
     params->GetSeriesJSON("ACTIVE_POWER", Result);
     params->GetSeriesJSON("REACTIVE_POWER", Result);
     params->GetSeriesJSON("ACTIVE_ENERGY", Result);
@@ -134,6 +138,9 @@ void AnalyzerSoftMQTT::PublishAggreg(const string &aggreg, const AnalyzerSoftAgg
     params->GetSeriesJSON("POWER_FACTOR", Result);
     params->GetSeriesJSON("VOLTAGE_THD", Result);
     params->GetSeriesJSON("CURRENT_THD", Result);
+    params->GetSeriesJSON("Voltage_Harmonics", Result);
+    params->GetSeriesJSON("Current_Harmonics", Result);
+    params->GetSeriesJSON("Power_Harmonics", Result);
     params->GetSeriesJSON("PHI", Result);
     params->GetSeriesJSON("VOLTAGE_PHASE", Result);
     string TextMsg = Result.dump();

@@ -60,7 +60,7 @@ void AnalyzerSoftSyncWorker::Run(const string &cookie, const URL &url, const str
     pPort = url.Port();
     pHost = url.Host();
     pClient = new Client(pHost, pPort);
-//  HTTPClient.set_compress(true);
+    pClient->set_compress(true);
   }
   pthread_cond_signal(&pCond);
   pthread_mutex_unlock(&pMutex);
@@ -74,6 +74,7 @@ void *AnalyzerSoftSyncWorker::Thread() {
     pthread_mutex_unlock(&pMutex);
     pParams["UserName"] = "admin";
     Response Resp;
+    Resp.status = HTTP_OK;
     if(pMethod == "getAnalyzer")         pAnalyzer->GetAnalyzer(pParams, Resp);
     else if(pMethod == "setAnalyzer")    pAnalyzer->SetAnalyzer(pParams, Resp);
     else if(pMethod == "getStatus")      pAnalyzer->GetStatus(pParams, Resp);
@@ -110,32 +111,32 @@ void *AnalyzerSoftSyncWorker::Thread() {
     else if(pMethod == "setPermission")  pAnalyzer->SetPermission(pParams, Resp);
     else if(pMethod == "delPermission")  pAnalyzer->DelPermission(pParams, Resp);
 
-    Headers Header  = {{"Accept", "application/json"}, {"Cookie", pCookie}, {"Analyzer", pAnalyzer->Serial().c_str()}, {"Sequence", pSequence.c_str()}, {"Status-Code", to_string(Resp.status).c_str()}};
-    auto Response = pClient->Post((pPath + "/setRemote").c_str(), Header, Resp.body, "text/event-stream");
-
-    printf("Enviando1");
-
-    if(Resp.body.empty() == false) {
-      auto Response = pClient->Post((pPath + "/setRemote").c_str(), Header, Resp.body, "text/event-stream");
-      if((Response != nullptr) && (Response->status == HTTP_OK)) {
+    Headers Header  = {{"Accept", "application/json"}, {"Cookie", pCookie}, {"X-Analyzer", pAnalyzer->Serial().c_str()}, {"X-Sequence", pSequence.c_str()}, {"X-Status", to_string(Resp.status).c_str()}};
+    if(Resp.is_chunked_content_provider == false) {
+      auto Tmp = pClient->Post((pPath + "/setRemote").c_str(), Header, Resp.body, Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type").c_str() : "text/plain");
+      if((Tmp != nullptr) && (Tmp->status == HTTP_OK)) {
         LogFile::Debug("Remote request '%s' for analyzer '%s' completed", pMethod.c_str(), pAnalyzer->Serial().c_str());
-      } else if(Response != nullptr) {
-        LogFile::Error("Remote request '%s' for analyzer '%s' failed (ERROR: %d)", pMethod.c_str(), pAnalyzer->Serial().c_str(), Response->status);
+      } else if(Tmp != nullptr) {
+        LogFile::Error("Remote request '%s' for analyzer '%s' failed (ERROR: %d)", pMethod.c_str(), pAnalyzer->Serial().c_str(), Tmp->status);
       } else {
         LogFile::Error("Remote request '%s' for analyzer '%s' failed (can not connect)", pMethod.c_str(), pAnalyzer->Serial().c_str());
       }
     } else {
-      printf("Enviando2");
-
+      auto Tmp = pClient->Post((pPath + "/setRemote").c_str(), Header, 0, Resp.content_provider_, Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type").c_str() : "text/plain");
+      if(Resp.content_provider_resource_releaser_) Resp.content_provider_resource_releaser_();
+      if((Tmp != nullptr) && (Tmp->status == HTTP_OK)) {
+        LogFile::Debug("Remote request '%s' for analyzer '%s' completed", pMethod.c_str(), pAnalyzer->Serial().c_str());
+      } else if(Tmp != nullptr) {
+        LogFile::Error("Remote request '%s' for analyzer '%s' failed (ERROR: %d)", pMethod.c_str(), pAnalyzer->Serial().c_str(), Tmp->status);
+      } else {
+        LogFile::Error("Remote request '%s' for analyzer '%s' failed (can not connect)", pMethod.c_str(), pAnalyzer->Serial().c_str());
+      }
     }
-//  Content["Response"] = Resp.body;
-//  Content["Mime"] = Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type") : "text/plain";
-
     pthread_mutex_lock(&pMutex);
     pMethod = "";
     pLastTime = Tools::GetTime64();
     pthread_mutex_unlock(&pMutex);
-    pParent->PushWorker(this);
+    pParent->PushWorker(this, false);
   }
 }
 // ---------------------------------------------------------------------------------------------------------------------

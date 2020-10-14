@@ -16,6 +16,7 @@
 #include <fftw3.h>
 #include <math.h>
 #include "AnalyzerSoftFFTs.h"
+#include "AnalyzerSoftBlock.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t     AnalyzerSoftFFTs::pFFTMutex   = PTHREAD_MUTEX_INITIALIZER;
@@ -150,35 +151,7 @@ float AnalyzerSoftFFTs::CurrentBinPower(const uint8_t channel, const uint16_t in
   return sqrt(Complex.Re * Complex.Re + Complex.Im * Complex.Im) / M_SQRT2 * 2.0;
 }
 bool AnalyzerSoftFFTs::GetSeriesJSON(const string &serie, json &result) {
-  if(serie == "VOLTAGE_HARMONICS") {
-    json Tmp1 = json::array();
-    for(uint8_t n = 0; n < pVoltageChannels; n++) {
-      json Tmp2 = json::array();
-      for(uint8_t i = 0; i < 50; i++) {
-        json Tmp3 = json::array();
-        Complex_t Complex = VoltageHarmonic(n, i);
-        Tmp3.push_back(Complex.Re);
-        Tmp3.push_back(Complex.Im);
-        Tmp2.push_back(Tmp3);
-      }
-      Tmp1.push_back(Tmp2);
-    }
-    result["Voltage_Harmonics"] = Tmp1;
-  } else if(serie == "CURRENT_HARMONICS") {
-    json Tmp1 = json::array();
-    for(uint8_t n = 0; n < pCurrentChannels; n++) {
-      json Tmp2 = json::array();
-      for(uint8_t i = 0; i < 50; i++) {
-        json Tmp3 = json::array();
-        Complex_t Complex = CurrentHarmonic(n, i);
-        Tmp3.push_back(Complex.Re);
-        Tmp3.push_back(Complex.Im);
-        Tmp2.push_back(Tmp3);
-      }
-      Tmp1.push_back(Tmp2);
-    }
-    result["Current_Harmonics"] = Tmp1;
-  } else if(serie == "VOLTAGE_FFT") {
+  if(serie == "Voltage_FFT") {
     json Tmp1 = json::array();
     for(uint8_t n = 0; n < pVoltageChannels; n++) {
       json Tmp2 = json::array();
@@ -186,7 +159,7 @@ bool AnalyzerSoftFFTs::GetSeriesJSON(const string &serie, json &result) {
       Tmp1.push_back(Tmp2);
     }
     result["Voltage_FFT"] = Tmp1;
-  } else if(serie == "CURRENT_FFT") {
+  } else if(serie == "Current_FFT") {
     json Tmp1 = json::array();
     for(uint8_t n = 0; n < pCurrentChannels; n++) {
       json Tmp2 = json::array();

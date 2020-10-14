@@ -16,8 +16,8 @@
     },
     computed: {
       GraphOptions: function(val) {
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
-        var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, 0);
+        var VoltageNames = oZm.Series['Voltage'].Names(this.analyzer);
         var Opt = { file: [], axes: { x: {}, y: {} } };
         Opt.panEdgeFraction = 1;
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);

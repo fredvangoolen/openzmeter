@@ -835,8 +835,8 @@
                 "example": {
                   "Analyzer": "xxxxxxxxxx",
                   "Series": [
-                    "VOLTAGE",
-                    "CURRENT"
+                    "Voltage",
+                    "Current"
                   ]
                 },
                 "properties": {
@@ -865,8 +865,8 @@
                     "items": {
                       "type": "string",
                       "enum": [
-                        "VOLTAGE",
-                        "CURRENT",
+                        "Voltage",
+                        "Current",
                         "ACTIVE_POWER",
                         "REACTIVE_POWER",
                         "ACTIVE_ENERGY",

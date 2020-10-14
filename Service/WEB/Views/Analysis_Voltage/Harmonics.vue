@@ -48,10 +48,10 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         if((this.Phases == null) || (this.Options == null)) return { };
         Opt.visibility = [];
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, 0);
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
         for(var c in CurrentStyle.Colors) CurrentStyle.Colors[c] = chroma(CurrentStyle.Colors[c]).darken();
-        var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
+        var VoltageNames = oZm.Series['Voltage'].Names(this.analyzer);
         var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
@@ -77,8 +77,8 @@
           for(var i = 0; i < 50; i++) {
             if((this.Options['1st Harmonic'] == false) && (i == 0)) continue;
             var Row = [i];
-            for(var n = 0; n < this.data.Voltage_Harmonics.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics[n][i]))) : this.BinPower(this.data.Voltage_Harmonics[n][i]));
-            for(var n = 0; n < this.data.Current_Harmonics.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics[n][i]))) : this.BinPower(this.data.Current_Harmonics[n][i]));
+            for(var n = 0; n < this.data.Voltage_Harmonics_Complex.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics_Complex[n][i]))) : this.BinPower(this.data.Voltage_Harmonics_Complex[n][i]));
+            for(var n = 0; n < this.data.Current_Harmonics_Complex.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics_Complex[n][i]))) : this.BinPower(this.data.Current_Harmonics_Complex[n][i]));
             Opt.file.push(Row);
           }
           Opt.dateWindow = [Opt.file[0][0] - 0.5, 49.5];

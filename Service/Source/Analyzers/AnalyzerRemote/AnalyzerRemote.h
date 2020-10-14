@@ -21,14 +21,15 @@
 class AnalyzerRemote : public Analyzer {
   private :
     typedef struct Request_t {
-      bool                     Terminate;
-      bool                     WriterTerminated;
+//      bool                     Terminate;
+      int                      Pipe[2];
+//      bool                     WriterTerminated;
       json                     ReqParams;
       string                   ResMime;
       uint16_t                 ResCode;
-      list<string>             ResData;
+//      list<string>             ResData;
       pthread_cond_t           Cond;
-      pthread_mutex_t          Mutex;
+//      pthread_mutex_t          Mutex;
       map<string, Request_t*> *Map;
     } Request_t;
   private :
@@ -80,7 +81,7 @@ class AnalyzerRemote : public Analyzer {
     bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
   public :
     void GetRemote(const json &params, Response &response);
-    void SetRemote(const map<string, string> &params, const ContentReader &content_reader, Response &response);
+    void SetRemote(const map<string, string> &params, Response &response, const ContentReader &content_reader);
   public :
     AnalyzerRemote(const string &id);
     ~AnalyzerRemote();

@@ -36,6 +36,7 @@ class AnalyzerSoftMQTT final {
     string            pPrefix;      //MQTT prefix
     string            pUser;        //MQTT server user
     string            pPass;        //MQTT server password
+    bool              p200MS;       //Enable 200ms publish
     bool              p3S;          //Enable 3 seconds publish
     bool              p1M;          //Enable 1 minute publish
     bool              p10M;         //Enable 10 minutes publish

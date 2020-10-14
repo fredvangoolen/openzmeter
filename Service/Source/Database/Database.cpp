@@ -131,29 +131,55 @@ string Database::Bind(const float param) const {
   return isfinite(param) ? to_string(param) : string("NULL");
 }
 string Database::Bind(const float *params, const uint32_t lenA, const uint32_t lenB) const {
+  float *Ptr    = (float*)params;
   string Result = "'{";
   for(uint32_t i = 0; i < lenA; i++) {
     Result.append((i == 0) ? "{" : ", {");
-    for(uint32_t n = 0; n < lenB; n++) Result.append(((n == 0) ? "" : ", ") + (isnan(params[i * lenB + n]) ? string("NULL") : to_string(params[i * lenB + n])));
+    for(uint32_t n = 0; n < lenB; n++) {
+      Result.append(((n == 0) ? "" : ", ") + (isfinite(*Ptr) ? to_string(*Ptr) : string("NULL")));
+      Ptr++;
+    }
+    Result.append("}");
+  }
+  Result.append("}'");
+  return Result;
+}
+string Database::Bind(const float *params, const uint32_t lenA, const uint32_t lenB, const uint32_t lenC) const {
+  float *Ptr    = (float*)params;
+  string Result = "'{";
+  for(uint32_t i = 0; i < lenA; i++) {
+    Result.append((i == 0) ? "{" : ", {");
+    for(uint32_t n = 0; n < lenB; n++) {
+      Result.append((n == 0) ? "{" : ", {");
+      for(uint32_t m = 0; m < lenC; m++) {
+        Result.append(((m == 0) ? "" : ", ") + (isfinite(*Ptr) ? to_string(*Ptr) : string("NULL")));
+        Ptr++;
+      }
+      Result.append("}");
+    }
     Result.append("}");
   }
   Result.append("}'");
   return Result;
 }
 string Database::Bind(const uint16_t *params, const uint32_t len) const {
+  uint16_t *Ptr = (uint16_t*)params;
   string Result = "'{";
   for(uint i = 0; i < len; i++) {
-    Result.append(isfinite(params[i]) ? to_string(params[i]) : string("NULL"));
-    Result.append((i < (len - 1)) ? ", " : "}'");
+    Result.append(((i == 0) ? "" : ", ") + to_string(*Ptr));
+    Ptr++;
   }
+  Result.append("}'");
   return Result;
 }
 string Database::Bind(const float *params, const uint32_t len) const {
+  float *Ptr = (float*)params;
   string Result = "'{";
   for(uint32_t i = 0; i < len; i++) {
-    Result.append(isnan(params[i]) ? string("NULL") : to_string(params[i]));
-    Result.append((i < (len - 1)) ? ", " : "}'");
+    Result.append(((i == 0) ? "" : ", ") + (isfinite(*Ptr) ? to_string(*Ptr) : string("NULL")));
+    Ptr++;
   }
+  Result.append("}'");
   return Result;
 }
 string Database::Bind(const bool param) const {
