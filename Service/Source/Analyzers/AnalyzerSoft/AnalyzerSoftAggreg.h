@@ -36,7 +36,7 @@ class AnalyzerSoftAggreg {
     float        pActive_Energy[3];                   //Energia consumida
     float        pReactive_Energy[3];                 //Reactive energy
     float        pApparent_Power[3];                  //Potencia aparente (S)
-    float        pPower_Factor[3];                    //Factor de potencia (cos(PHI))
+    float        pPower_Factor[3];                    //Factor de potencia (cos(Phi))
     float        pVoltage_THD[3];                     //Distorsion harmonica de la tension
     float        pCurrent_THD[4];                     //Distorsion harmonica de la corriente
     float        pVoltage_Phase[3];                   //Angulo entre canales de tension

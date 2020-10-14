@@ -71,7 +71,7 @@
   export default {
     props: { bill: Object, analyzer: Object },
     data: function() {
-      return { Expanded: false, DialogHeight: 200, GraphSeries: 'Energy', Aggreg: null, TransferGraph: this.PriceTransfer(['ACTIVE_ENERGY', 'ACTIVE_POWER', 'COLOR', 'PERIOD', 'CONTRACTED', 'ENERGY_COST', 'POWER_COST']),
+      return { Expanded: false, DialogHeight: 200, GraphSeries: 'Energy', Aggreg: null, TransferGraph: this.PriceTransfer(['Active_Energy', 'Active_Power', 'Color', 'Period', 'Contracted', 'Energy_Cost', 'Power_Cost']),
         ColumnsCost: [
           { name: 'Description', title: 'Concept' },
           { name: 'Type', title: 'Term', callback: this.TermFormat },

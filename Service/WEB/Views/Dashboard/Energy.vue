@@ -28,7 +28,7 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.plotter = (e) => { Graph.Plotters.BarOffset(e, ((this.data != null) && (this.data.Aggreg == '1H')) ? 3600000 : 900000); };
         Opt.labels = ['Time', 'Energy'];
-        Opt.colors = [oZm.Series['ACTIVE_ENERGY'].Color];
+        Opt.colors = [oZm.Series['Active_Energy'].Color];
         Opt.xAxisHeight = 12;
         Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.data); };
         Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;

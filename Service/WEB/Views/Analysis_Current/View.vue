@@ -60,8 +60,8 @@
     data: function() {
       return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
                TransferGraph: this.SeriesTransfer(['Current']),
-               TransferNow: this.NowTransfer(['Current', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'Voltage_Harmonics_Complex', 'Current_Harmonics_Complex', 'Voltage_FFT', 'Current_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
-               TransferCubism: this.SeriesTransfer(['CURRENT_HARMONICS', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
+               TransferNow: this.NowTransfer(['Current', 'Voltage_Samples', 'Current_Samples', 'Voltage_Harmonics_Complex', 'Current_Harmonics_Complex', 'Voltage_FFT', 'Current_FFT', 'Power_Factor', 'Current_THD', 'Phi']),
+               TransferCubism: this.SeriesTransfer(['Current_Harmonics', 'Power_Factor', 'Current_THD', 'Phi']),
                Transfer1M: this.SeriesTransfer(['Current']),
                Transfer3S: this.SeriesTransfer(['Current'])
       };

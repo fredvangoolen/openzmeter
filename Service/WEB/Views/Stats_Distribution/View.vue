@@ -51,7 +51,7 @@
         this.Data = null;
         var To = moment.tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
         var From = moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getCosts', { From: From, To: To, Series: ['ACTIVE_ENERGY', 'PERIOD'], Analyzer: this.analyzer.Analyzer, Group: 0 }).then(
+        this.$http.post('getCosts', { From: From, To: To, Series: ['Active_Energy', 'Period'], Analyzer: this.analyzer.Analyzer, Group: 0 }).then(
           (result) => {
             this.ShowSpinner = false;
             this.Data = result.data;
