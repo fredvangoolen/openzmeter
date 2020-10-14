@@ -46,15 +46,15 @@ using namespace std;
 class HTTPServer final : private Server {
   private :
     typedef void (*Func1_t)(const json &params, Response &response);
-    typedef void (*Func2_t)(const map<string, string> &params, const ContentReader &content_reader, Response &response);
+    typedef void (*Func2_t)(const map<string, string> &params, Response &response, const ContentReader &content_reader);
     typedef struct {
-      Func2_t        Function;
-      vector<string> RequestedHeaders;
-    } EventCallback_t;
+      vector<string>   Headers;
+      Func2_t          Function;
+    } Call_t;
   private :
     static RWLocks                      pLock;            //Control access to pCallbacks vector
-    static map<string, Func1_t>         pJSONCallbacks;   //List of JSON callbacks URLs
-    static map<string, EventCallback_t> pEventCallbacks;  //List of JSON callbacks URLs
+    static map<string, Func1_t>         pCallbacks1;      //List of callbacks without reader
+    static map<string, Call_t>          pCallbacks2;      //List of callbacks with reader
     static string                       pRelativePath;    //Relative path of server
   private:
     static uint16_t                     pPort;
@@ -73,10 +73,9 @@ class HTTPServer final : private Server {
   private :
     void *Thread();
   public :
-    static void   RegisterJSONCallback(const string &handleName, const Func1_t function);
-    static void   UnregisterJSONCallback(const string &handleName);
-    static void   RegisterEventCallback(const string &handleName, const Func2_t function, const vector<string> &headers);
-    static void   UnregisterEventCallback(const string &handleName);
+    static void   RegisterCallback(const string &handleName, const Func1_t function);
+    static void   RegisterCallback(const string &handleName, const Func2_t function, const vector<string> &params);
+    static void   UnregisterCallback(const string &handleName);
     static void   FillResponse(Response &response, const string &body, const char *mime, const int status);
     static void   FillResponse(Response &response, const char *body, const size_t size, const char *mime, const int status);
   public :

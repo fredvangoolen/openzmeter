@@ -24,6 +24,7 @@ AnalyzerSoftSync::AnalyzerSoftSync(AnalyzerSoft *parent) {
   pCond           = PTHREAD_COND_INITIALIZER;
   pParent         = parent;
   pThread         = 0;
+  pReAuth         = false;
 }
 AnalyzerSoftSync::~AnalyzerSoftSync() {
   pTerminate = true;
@@ -88,18 +89,23 @@ bool AnalyzerSoftSync::Login(const string &path, Client *client, const string &u
     LogFile::Debug("Analyzer '%s' logged on remote server", pParent->Serial().c_str());
     cookie = Response->get_header_value("Set-Cookie");
     return true;
+  } else {
+    LogFile::Debug("Analyzer '%s' can not login on remote server", pParent->Serial().c_str());
+    usleep(1000000);
+    return false;
   }
-  LogFile::Debug("Analyzer '%s' can not login on remote server", pParent->Serial().c_str());
-  usleep(1000000);
-  return false;
 }
 void *AnalyzerSoftSync::Thread() {
   nice(10);
   string  Cookie, User, Pass, Server, Name;
   URL    *Url        = NULL;
-  Client               *HTTPClient = NULL;
+  Client *HTTPClient = NULL;
   while(pTerminate == false) {
     pthread_mutex_lock(&pMutex);
+    if(pReAuth == true) {
+      Cookie = "";
+      pReAuth = false;
+    }
     if((pUser != User) || (pName != Name) || (pPass != Pass) || (pServer != Server) || (HTTPClient == NULL) || (Url == NULL)) {
       User   = pUser;
       Pass   = pPass;
@@ -115,7 +121,7 @@ void *AnalyzerSoftSync::Thread() {
         HTTPClient = NULL;
       }
       HTTPClient = new Client(Url->Host(), Url->Port());
-//      HTTPClient->set_compress(true);
+      HTTPClient->set_compress(true);
       HTTPClient->set_keep_alive(true);
       HTTPClient->set_read_timeout(30);
       HTTPClient->set_write_timeout(30);
@@ -131,7 +137,7 @@ void *AnalyzerSoftSync::Thread() {
     Content["Name"]      = Name;
     Req.method           = "POST";
     Req.path             = Url->Path() + "/getRemote";
-    Req.headers          =  {{"Cookie", Cookie}, { "Accept", "text/event-stream" }, {"Content-Type", "application/json"}};
+    Req.headers          = {{"Cookie", Cookie}, { "Accept", "text/event-stream" }, {"Content-Type", "application/json"}};
     Req.body             = Content.dump();
     Req.response_handler = [&](const Response &response) -> bool {
       if(pTerminate == true) return false;
@@ -173,8 +179,9 @@ void AnalyzerSoftSync::PeriodicTasks() {
   pthread_mutex_unlock(&pMutex);
   LogFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)", pFreeWorkers.size(), pRunningWorkers);
 }
-void AnalyzerSoftSync::PushWorker(AnalyzerSoftSyncWorker *worker) {
+void AnalyzerSoftSync::PushWorker(AnalyzerSoftSyncWorker *worker, const bool fail) {
   pthread_mutex_lock(&pMutex);
+  if(fail == true) pReAuth = true;
   pFreeWorkers.push_front(worker);
   pRunningWorkers--;
   if(pRunningWorkers == 0) pthread_cond_signal(&pCond);

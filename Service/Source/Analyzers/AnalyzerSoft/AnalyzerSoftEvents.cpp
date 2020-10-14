@@ -269,7 +269,7 @@ void AnalyzerSoftEvents::GetEvents(const json &params, Response &response) {
     while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " + DB.ResultString("result");
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }

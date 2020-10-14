@@ -42,10 +42,10 @@ CREATE TABLE IF NOT EXISTS permissions (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS esios (
-  timestamp   bigint   NOT NULL PRIMARY KEY
+  timestamp  bigint            NOT NULL PRIMARY KEY
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS telegram (
-  id       serial NOT NULL PRIMARY KEY,
-  msg      jsonb  NOT NULL
+  id          serial           NOT NULL PRIMARY KEY,
+  msg         jsonb            NOT NULL
 ) WITH (OIDS=FALSE);

@@ -20,13 +20,13 @@
 //----------------------------------------------------------------------------------------------------------------------
 UpdateManager::UpdateManager() {
   LogFile::Info("Starting Update manager");
-  HTTPServer::RegisterJSONCallback("getUpdates",   GetUpdatesCallback);
-  HTTPServer::RegisterJSONCallback("setUpgrade",   SetUpgradeCallback);
+  HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
+  HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
 }
 UpdateManager::~UpdateManager() {
   LogFile::Info("Stopping Update manager...");
-  HTTPServer::UnregisterJSONCallback("getUpdates");
-  HTTPServer::UnregisterJSONCallback("setUpgrade");
+  HTTPServer::UnregisterCallback("getUpdates");
+  HTTPServer::UnregisterCallback("setUpgrade");
   LogFile::Info("Update manager stoped");
 }
 void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {
@@ -77,7 +77,7 @@ void UpdateManager::SetUpgradeCallback(const json &params, Response &response) {
     int Code = WEXITSTATUS(pclose(Pipe));
     sink.os << ((Code == 0) ? "event: status\ndata: OK (Upgrade finished)\n\n" : "event: status\ndata: ERROR (Upgrade failed)\n\n");
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("text/event-stream", Func);
 }

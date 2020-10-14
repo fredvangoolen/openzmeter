@@ -77,8 +77,8 @@
           for(var i = 0; i < 50; i++) {
             if((this.Options['1st Harmonic'] == false) && (i == 0)) continue;
             var Row = [i];
-            for(var n = 0; n < this.data.Current_Harmonics.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics[n][i]))) : this.BinPower(this.data.Current_Harmonics[n][i]));
-            for(var n = 0; n < this.data.Voltage_Harmonics.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics[n][i]))) : this.BinPower(this.data.Voltage_Harmonics[n][i]));
+            for(var n = 0; n < this.data.Current_Harmonics_Complex.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics_Complex[n][i]))) : this.BinPower(this.data.Current_Harmonics_Complex[n][i]));
+            for(var n = 0; n < this.data.Voltage_Harmonics_Complex.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics_Complex[n][i]))) : this.BinPower(this.data.Voltage_Harmonics_Complex[n][i]));
             Opt.file.push(Row);
           }
           Opt.dateWindow = [Opt.file[0][0] - 0.5, 49.5];

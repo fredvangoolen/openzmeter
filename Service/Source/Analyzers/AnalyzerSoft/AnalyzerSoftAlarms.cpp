@@ -87,7 +87,7 @@ void AnalyzerSoftAlarms::GetAlarmsDef(const json &params, Response &response) {
     }
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }
@@ -185,7 +185,7 @@ void AnalyzerSoftAlarms::GetAlarms(const json &params, Response &response) {
     while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " + DB.ResultString("result");
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }

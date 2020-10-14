@@ -113,9 +113,9 @@ void AnalyzerSoftAggreg::Accumulate(const AnalyzerSoftAggreg *src) {
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pPhi[n] += src->pPhi[n];
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pPower_Factor[n] += src->pPower_Factor[n];
   for(uint8_t n = 0; n < (50 * pCurrentChannels); n++) pCurrent_Harmonics[n] += pow(src->pCurrent_Harmonics[n], 2.0);
+  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) pVoltage_Harmonics[n] += pow(src->pVoltage_Harmonics[n], 2.0);
   for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) pPower_Harmonics[n] += src->pPower_Harmonics[n];
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage_THD[n] += pow(src->pVoltage_THD[n], 2.0);
-  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) pVoltage_Harmonics[n] += pow(src->pVoltage_Harmonics[n], 2.0);
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pActive_Energy[n] += src->pActive_Energy[n];
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage_Phase[n] += src->pVoltage_Phase[n];
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pReactive_Energy[n] += src->pReactive_Energy[n];
@@ -132,9 +132,9 @@ void AnalyzerSoftAggreg::Normalize(const uint16_t samples) {
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pPhi[n] = pPhi[n] / samples;
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pPower_Factor[n] = pPower_Factor[n] / samples;
   for(uint8_t n = 0; n < (50 * pCurrentChannels); n++) pCurrent_Harmonics[n] = sqrt(pCurrent_Harmonics[n] / samples);
+  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) pVoltage_Harmonics[n] = sqrt(pVoltage_Harmonics[n] / samples);
   for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) pPower_Harmonics[n] = pPower_Harmonics[n] / samples;
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage_THD[n] = sqrt(pVoltage_THD[n] / samples);
-  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) pVoltage_Harmonics[n] = sqrt(pVoltage_Harmonics[n] / samples);
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage_Phase[n] = pVoltage_Phase[n] / samples;
   for(uint8_t n = 0; n < pVoltageChannels; n++)        pApparent_Power[n] = pApparent_Power[n] / samples;
 }
@@ -163,17 +163,17 @@ void AnalyzerSoftAggreg::muParserInit(Parser &parser, const string &expression) 
   parser.SetExpr(expression);
 }
 bool AnalyzerSoftAggreg::GetSeriesJSON(const string &serie, json &result) const {
-  if(serie == "FREQUENCY") {
+  if(serie == "Frequency") {
     result["Frequency"] = pFrequency;
   } else if(serie == "FLAG") {
     result["Flag"] = pFlag;
-  } else if(serie == "UNBALANCE") {
+  } else if(serie == "Unbalance") {
     result["Unbalance"] = pUnbalance;
-  } else if(serie == "VOLTAGE") {
+  } else if(serie == "Voltage") {
     json Tmp = json::array();
     for(uint8_t n = 0; n < pVoltageChannels; n++) Tmp.push_back(pVoltage[n]);
     result["Voltage"] = Tmp;
-  } else if(serie == "CURRENT") {
+  } else if(serie == "Current") {
     json Tmp = json::array();
     for(uint8_t n = 0; n < pCurrentChannels; n++) Tmp.push_back(pCurrent[n]);
     result["Current"] = Tmp;
@@ -217,6 +217,8 @@ bool AnalyzerSoftAggreg::GetSeriesJSON(const string &serie, json &result) const 
     json Tmp = json::array();
     for(uint8_t n = 0; n < pVoltageChannels; n++) Tmp.push_back(pVoltage_Phase[n]);
     result["Voltage_Phase"] = Tmp;
+//AÑADIR ARMONICOS
+
   } else if(serie == "POWER_HARMONICS") {
     json Tmp1 = json::array();
     for(uint8_t n = 0; n < pVoltageChannels; n++) {

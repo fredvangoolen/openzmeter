@@ -25,7 +25,7 @@ BUILD_DATE ?= $(shell date +%Y%m%d.%H%M)
 BUILD_NAME ?= "custom"
 
 #Default flags and programs
-CFLAGS += -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" -I Libs -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -I Libs/mqtt-c
+CFLAGS += -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" -I Libs -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -I Libs/mqtt-c -I Libs/uSockets
 CC  ?= gcc
 LD  ?= ld
 
@@ -96,7 +96,7 @@ $(EXECUTABLE_TARGET): $(RESOURCES_TARGET) $(EXECUTABLE_OBJS)
 Tmp/$(TARGET)/%.cpp.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "Building" $@
-	@$(CC) $(CFLAGS) -MMD -std=c++14 -c $< -o $@
+	@$(CC) $(CFLAGS) -MMD -std=c++17 -c $< -o $@
 
 Tmp/$(TARGET)/%.c.o: %.c
 	@mkdir -p $(dir $@)

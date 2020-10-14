@@ -19,22 +19,22 @@
 // ---------------------------------------------------------------------------------------------------------------------
 UserManager::UserManager() {
   LogFile::Info("Starting User manager");
-  HTTPServer::RegisterJSONCallback("getUsers",        GetUsersCallback);
-  HTTPServer::RegisterJSONCallback("getUser",         GetUserCallback);
-  HTTPServer::RegisterJSONCallback("setUser",         SetUserCallback);
-  HTTPServer::RegisterJSONCallback("setUserPassword", SetUserPasswordCallback);
-  HTTPServer::RegisterJSONCallback("addUser",         AddUserCallback);
-  HTTPServer::RegisterJSONCallback("delUser",         DelUserCallback);
+  HTTPServer::RegisterCallback("getUsers",        GetUsersCallback);
+  HTTPServer::RegisterCallback("getUser",         GetUserCallback);
+  HTTPServer::RegisterCallback("setUser",         SetUserCallback);
+  HTTPServer::RegisterCallback("setUserPassword", SetUserPasswordCallback);
+  HTTPServer::RegisterCallback("addUser",         AddUserCallback);
+  HTTPServer::RegisterCallback("delUser",         DelUserCallback);
 }
 UserManager::~UserManager() {
   LogFile::Info("Stopping user manager...");
-  HTTPServer::UnregisterJSONCallback("getVersion");
-  HTTPServer::UnregisterJSONCallback("getUsers");
-  HTTPServer::UnregisterJSONCallback("getUser");
-  HTTPServer::UnregisterJSONCallback("setUser");
-  HTTPServer::UnregisterJSONCallback("setUserPassword");
-  HTTPServer::UnregisterJSONCallback("addUser");
-  HTTPServer::UnregisterJSONCallback("delUser");
+  HTTPServer::UnregisterCallback("getVersion");
+  HTTPServer::UnregisterCallback("getUsers");
+  HTTPServer::UnregisterCallback("getUser");
+  HTTPServer::UnregisterCallback("setUser");
+  HTTPServer::UnregisterCallback("setUserPassword");
+  HTTPServer::UnregisterCallback("addUser");
+  HTTPServer::UnregisterCallback("delUser");
   LogFile::Info("User manager stoped");
 }
 void UserManager::GetUsersCallback(const json &params, Response &response) {
@@ -48,7 +48,7 @@ void UserManager::GetUsersCallback(const json &params, Response &response) {
     while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " + DB.ResultString("result") : DB.ResultString("result"));
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }

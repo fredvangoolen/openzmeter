@@ -27,15 +27,15 @@ Headers                   Telegram::pHeaders     = {{"Accept", "application/json
 list<Telegram::Worker_t*> Telegram::pFreeWorkers;
 //----------------------------------------------------------------------------------------------------------------------
 Telegram::Telegram() {
-  HTTPServer::RegisterJSONCallback("getTelegram", GetTelegramCallback);
-  HTTPServer::RegisterJSONCallback("setTelegram", SetTelegramCallback);
+  HTTPServer::RegisterCallback("getTelegram", GetTelegramCallback);
+  HTTPServer::RegisterCallback("setTelegram", SetTelegramCallback);
   Configure(CheckConfig(ConfigFile::ReadConfig("/Telegram")));
 }
 Telegram::~Telegram() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
-  HTTPServer::UnregisterJSONCallback("getTelegram");
-  HTTPServer::UnregisterJSONCallback("setTelegram");
+  HTTPServer::UnregisterCallback("getTelegram");
+  HTTPServer::UnregisterCallback("setTelegram");
   pthread_mutex_unlock(&pMutex);
   if(pThread != 0) pthread_join(pThread, NULL);
   pthread_mutex_lock(&pMutex);

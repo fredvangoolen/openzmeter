@@ -45,27 +45,27 @@ class AnalyzerSoftAggreg {
     float        pCurrent_Harmonics[200];             //Harmonicos del canal de corriente
     float        pPower_Harmonics[150];               //Power harmonics
   public :
-    void     muParserInit(Parser &parser, const string &expression);
-    uint64_t Timestamp() const;
-    float    Frequency() const;
-    bool     Flag() const;
-    float    Unbalance() const;
-    float    Voltage(const uint8_t channel) const;
-    float    Current(const uint8_t channel) const;
-    float    ActivePower(const uint8_t channel) const;
-    float    ApparentPower(const uint8_t channel) const;
-    float    ReactivePower(const uint8_t channel) const;
-    float    ActiveEnergy(const uint8_t channel) const;
-    float    ReactiveEnergy(const uint8_t channel) const;
-    float    VoltageHarmonic(const uint8_t channel, const uint8_t harmonic) const;
-    float    CurrentHarmonic(const uint8_t channel, const uint8_t harmonic) const;
-    float    PowerHarmonic(const uint8_t channel, const uint8_t harmonic) const;
-    float    CurrentTHD(const uint8_t channel) const;
-    float    VoltageTHD(const uint8_t channel) const;
-    float    VoltagePhase(const uint8_t channel) const;
-    float    Phi(const uint8_t channel) const;
-    float    PowerFactor(const uint8_t channel) const;
-    bool     GetSeriesJSON(const string &serie, json &result) const;
+    void         muParserInit(Parser &parser, const string &expression);
+    uint64_t     Timestamp() const;
+    float        Frequency() const;
+    bool         Flag() const;
+    float        Unbalance() const;
+    float        Voltage(const uint8_t channel) const;
+    float        Current(const uint8_t channel) const;
+    float        ActivePower(const uint8_t channel) const;
+    float        ApparentPower(const uint8_t channel) const;
+    float        ReactivePower(const uint8_t channel) const;
+    float        ActiveEnergy(const uint8_t channel) const;
+    float        ReactiveEnergy(const uint8_t channel) const;
+    float        VoltageHarmonic(const uint8_t channel, const uint8_t harmonic) const;
+    float        CurrentHarmonic(const uint8_t channel, const uint8_t harmonic) const;
+    float        PowerHarmonic(const uint8_t channel, const uint8_t harmonic) const;
+    float        CurrentTHD(const uint8_t channel) const;
+    float        VoltageTHD(const uint8_t channel) const;
+    float        VoltagePhase(const uint8_t channel) const;
+    float        Phi(const uint8_t channel) const;
+    float        PowerFactor(const uint8_t channel) const;
+    virtual bool GetSeriesJSON(const string &serie, json &result) const;
   protected :
     AnalyzerSoftAggreg(const string &serial, const Analyzer::AnalyzerMode mode);
     virtual ~AnalyzerSoftAggreg();

@@ -78,6 +78,7 @@
                 { name: '__slot:actions', title: 'Enabled' }
               ],
               Rows: [
+                { Source: '200 miliseconds aggregation', Topic: '200MS', Export: 'Export200MS' },
                 { Source: '3 seconds aggregation', Topic: '3S', Export: 'Export3S' },
                 { Source: '1 minute aggregation', Topic: '1M', Export: 'Export1M' },
                 { Source: '10 minutes aggregation', Topic: '10M', Export: 'Export10M' },

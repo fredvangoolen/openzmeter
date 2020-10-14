@@ -45,7 +45,7 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
       if(pSendPending.size() == 0) {
         timespec Time;
         clock_gettime(CLOCK_REALTIME, &Time);
-        Time.tv_sec = Time.tv_sec + 1;
+        Time.tv_sec = Time.tv_sec + 10;
         Result = pthread_cond_timedwait(&pCond, &pMutex, &Time);
       }
       if((Result == 0) && (pSendPending.size() > 0)) {
@@ -62,102 +62,79 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
       pthread_mutex_unlock(&pMutex);
     }
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("text/event-stream", Func);
 }
-void AnalyzerRemote::SetRemote(const map<string, string> &params, const ContentReader &content_reader, Response &response) {
+void AnalyzerRemote::SetRemote(const map<string, string> &params, Response &response, const ContentReader &content_reader) {
   pthread_mutex_lock(&pMutex);
-  auto Tmp = pResponsePending.find(params.find("Sequence")->second);
+  auto Tmp = pResponsePending.find(params.find("X-Sequence")->second);
   if(Tmp == pResponsePending.end()) {
     pthread_mutex_unlock(&pMutex);
     return HTTPServer::FillResponse(response, "Sequence not found", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   }
   Request_t *Request = Tmp->second;
-  pthread_mutex_lock(&Request->Mutex);
-  Request->Map     = NULL;
-  Request->ResMime = params.find("Content-Type")->second;
-  Request->ResCode = atoi(params.find("Status-Code")->second.c_str());
+  int        WriteFD = Request->Pipe[1];
+  Request->Map       = NULL;
+  Request->ResMime   = params.find("Content-Type")->second;
+  Request->ResCode   = atoi(params.find("X-Status")->second.c_str());
   pResponsePending.erase(Tmp);
   pthread_cond_signal(&Request->Cond);
-  pthread_mutex_unlock(&Request->Mutex);
   pthread_mutex_unlock(&pMutex);
-  content_reader([Request](const char *data, size_t length) -> bool {
-    pthread_mutex_lock(&Request->Mutex);
-    if(Request->Terminate == true) {
-      Request->WriterTerminated = true;
-      pthread_cond_signal(&Request->Cond);
-      pthread_mutex_unlock(&Request->Mutex);
-      return false;
-    }
-    Request->ResData.push_back(string(data, length));
-    pthread_cond_signal(&Request->Cond);
-    pthread_mutex_unlock(&Request->Mutex);
-    return true;
+
+  content_reader([&, Request](const char *data, size_t length) -> bool {
+    ssize_t Write = write(WriteFD, data, length);
+    if(Write > 0) return true;
+    if(Write == -1) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    return false;
   });
-  pthread_mutex_lock(&Request->Mutex);
-  Request->WriterTerminated = true;
-  pthread_cond_signal(&Request->Cond);
-  pthread_mutex_unlock(&Request->Mutex);
+  close(WriteFD);
   return HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void AnalyzerRemote::HandleRequest(const Analyzer::AnalyzerRights rights, const string &url, const json &params, Response &response) {
   if(CheckRights(params["UserName"], rights) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   timespec   Time;
-  int        Result   = ETIMEDOUT;
   string     Sequence = Tools::GetUUID();
   Request_t *Request  = new Request_t;
-  Request->Terminate        = false;
-  Request->WriterTerminated = false;
   Request->Cond             = PTHREAD_COND_INITIALIZER;
-  Request->Mutex            = PTHREAD_MUTEX_INITIALIZER;
   Request->Map              = &pSendPending;
   Request->ReqParams        = params;
   Request->ReqParams["Method"]   = url;
   Request->ReqParams["Sequence"] = Sequence;
   Request->ReqParams.erase("Analyzer");
   Request->ReqParams.erase("UserName");
-  pthread_mutex_lock(&pMutex);
-  pSendPending.insert({ Sequence, Request });
-  pthread_cond_signal(&pCond);
-  pthread_mutex_unlock(&pMutex);
-
-  pthread_mutex_lock(&Request->Mutex);
-  for(uint8_t Retries = 0; (Retries < 10) && (Result == ETIMEDOUT) && (pTerminate == false) && (Request->ResMime.empty() == true); Retries++) {
-    clock_gettime(CLOCK_REALTIME, &Time);
-    Time.tv_sec = Time.tv_sec + 1;
-    Result = pthread_cond_timedwait(&Request->Cond, &Request->Mutex, &Time);
+  if(pipe(Request->Pipe) != 0) {
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    delete Request;
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   }
-  if(Request->ResMime.empty() == true) {
-    pthread_mutex_lock(&pMutex);
+  pthread_mutex_lock(&pMutex);
+  pSendPending.emplace(Sequence, Request);
+  pthread_cond_signal(&pCond);
+  clock_gettime(CLOCK_REALTIME, &Time);
+  Time.tv_sec = Time.tv_sec + 10;
+  pthread_cond_timedwait(&Request->Cond, &pMutex, &Time);
+  if(Request->Map != NULL) {
     Request->Map->erase(Sequence);
-    pthread_mutex_unlock(&Request->Mutex);
     pthread_mutex_unlock(&pMutex);
     delete Request;
     return HTTPServer::FillResponse(response, "", "text/plain", HTTP_GATEWAY_TIMEOUT);
   }
-  pthread_mutex_unlock(&Request->Mutex);
-  auto Func = [Request](uint64_t offset, DataSink &sink) -> bool {
-    pthread_mutex_lock(&Request->Mutex);
-    if((sink.is_writable() == true) && (Request->ResData.size() > 0)) {
-      sink.write(Request->ResData.front().c_str(), Request->ResData.front().size());
-      Request->ResData.pop_front();
-      pthread_mutex_unlock(&Request->Mutex);
+  pthread_mutex_unlock(&pMutex);
+
+  auto Func = [&, Request](uint64_t offset, DataSink &sink) -> bool {
+    char Buff[128];
+    ssize_t Read = read(Request->Pipe[0], Buff, sizeof(Buff));
+    if(Read > 0) {
+      sink.write(Buff, Read);
       return true;
     }
-    if((sink.is_writable() == false) || (Request->WriterTerminated == true)) {
-      Request->Terminate = true;
-      while(Request->WriterTerminated == false) pthread_cond_wait(&Request->Cond, &Request->Mutex);
-      pthread_mutex_unlock(&Request->Mutex);
-      return false;
-    }
-    timespec   Time;
-    clock_gettime(CLOCK_REALTIME, &Time);
-    Time.tv_sec = Time.tv_sec + 1;
-    int Result = pthread_cond_timedwait(&Request->Cond, &Request->Mutex, &Time);
-    return ((Result == 0) || (Result == ETIMEDOUT));
+    if(Read == -1) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    sink.done();
+    return true;
   };
   auto Free = [Request]() {
+    close(Request->Pipe[0]);
     delete Request;
   };
   response.status = Request->ResCode;

@@ -10,7 +10,10 @@ CREATE TABLE IF NOT EXISTS aggreg_200ms (
   power_factor   real[] NOT NULL,
   thd_v          real[] NOT NULL,
   thd_i          real[] NOT NULL,
-  phi            real[] NOT NULL
+  phi            real[] NOT NULL,
+  harmonics_v    real[] NOT NULL,
+  harmonics_i    real[] NOT NULL,
+  harmonics_p    real[] NOT NULL
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS aggreg_3s (

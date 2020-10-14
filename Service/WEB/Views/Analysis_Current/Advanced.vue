@@ -46,7 +46,7 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         if((this.Phases == null) || (this.Options == null)) return Opt;
         Opt.visibility = [];
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, ((this.Options['Voltage'] == true) ? 1 : 0));
         var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
         var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
         var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);

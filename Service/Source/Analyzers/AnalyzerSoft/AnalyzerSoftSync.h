@@ -26,6 +26,7 @@ class AnalyzerSoft;
 class AnalyzerSoftSync {
   private :
     bool                          pTerminate;        //Sync terminate signal
+    bool                          pReAuth;           //Need to clear cookie flag
     pthread_t                     pThread;           //Export thread
     pthread_cond_t                pCond;             //Wait workers condition
     pthread_mutex_t               pMutex;            //Shared variables lock
@@ -47,6 +48,6 @@ class AnalyzerSoftSync {
     AnalyzerSoftSync(AnalyzerSoft *parent);
     ~AnalyzerSoftSync();
     void Config(const json &config, const string &name);
-    void PushWorker(AnalyzerSoftSyncWorker *worker);
+    void PushWorker(AnalyzerSoftSyncWorker *worker, const bool fail);
 };
 // ---------------------------------------------------------------------------------------------------------------------

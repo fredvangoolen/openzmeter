@@ -115,7 +115,7 @@
       },
       Configure: function(module) {
         if(module.Name == 'ESP_ESIOS') {
-          this.$http.post('getESIOS', { Type: "CURRENT" }).then(
+          this.$http.post('getESIOS', { }).then(
             (result) => { this.Module = result.body; this.Module.Name = module.Name; },
             (fail) => { }
           );

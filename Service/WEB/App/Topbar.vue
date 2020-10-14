@@ -32,7 +32,7 @@
     props: { analyzer: Object, expanded: Boolean },
     data () {
       return { Grouped: false,
-               Transfer1: this.NowTransfer(['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
+               Transfer1: this.NowTransfer(['Voltage', 'Current', 'ACTIVE_POWER', 'Frequency']),
                Transfer2: this.SeriesTransfer(['ACTIVE_ENERGY']),
                Transfer3: this.StatusTransfer(['SYSTEM']) };
     },
