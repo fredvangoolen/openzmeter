@@ -291,9 +291,12 @@ void AnalyzerSoftEvents::GetEvent(const json &params, Response &response) {
   if((params.contains("EventID") == false) || (params["EventID"].is_string() == false)) return HTTPServer::FillResponse(response, "'EventID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Samples") == false) || (params["Samples"].is_string() == false) || ((params["Samples"] != "RMS") && (params["Samples"] != "RAW"))) return HTTPServer::FillResponse(response, "'Samples' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Database DB(pSerial);
-  uint64_t ID      = params["EventID"];
-  string   Samples = to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_PRESTART : SAMPLES_RAW_PRESTART) + ", " + to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_POSSTART : SAMPLES_RAW_POSSTART) + ", " + to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_PREEND : SAMPLES_RAW_PREEND) + ", " + to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_POSEND : SAMPLES_RAW_POSEND);
-  DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('Time', starttime, 'Type', evttype, 'SampleRate', samplerate, 'Reference', reference, 'Peak', peak, 'Change', change, 'Duration', duration, 'Notes', notes) || (SELECT jsonb_build_object('Length', max(array_length(samples, 1))) || jsonb_object_agg('Samples',samples ORDER BY sampletype asc) AS result FROM events_ext WHERE events_ext.id = events.id AND sampletype IN (" + Samples + ") FROM events WHERE id = " + DB.Bind(ID));
+  string ID      = params["EventID"];
+  string Samples = to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_PRESTART : SAMPLES_RAW_PRESTART) + ", " + to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_POSSTART : SAMPLES_RAW_POSSTART) + ", " + to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_PREEND : SAMPLES_RAW_PREEND) + ", " + to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_POSEND : SAMPLES_RAW_POSEND);
+  DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('Time', starttime, 'Type', evttype, 'SampleRate', samplerate, 'Reference', reference, 'Peak', peak, 'Change', change, 'Duration', duration, 'Notes', notes, "
+                             "'Length', (SELECT max(array_length(samples, 1)) FROM events_ext WHERE events_ext.id = events.id AND sampletype IN (" + Samples + ")), "
+                             "'Samples', (SELECT to_json(array_agg(samples)) FROM (SELECT sampletype, d1, array_agg(samples[d1][d2]) AS samples FROM events_ext, generate_subscripts(samples,1) d1, generate_subscripts(samples,2) d2 WHERE events_ext.id = events.id AND sampletype IN (" + Samples + ") GROUP BY sampletype, d1 ORDER BY sampletype ASC, d1 ASC) t1 ) "
+                             ") AS result FROM events WHERE id = " + DB.Bind(ID));
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
