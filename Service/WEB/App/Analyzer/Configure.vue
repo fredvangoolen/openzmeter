@@ -110,10 +110,10 @@
       <div class="col-xs-12">
         <table>
           <tr><td><strong>Tag name</strong></td><td class="text-right"><strong>Value</strong></td></tr>
-          <tr v-for="(tag, idx) in Analyzer.Tags" :key="idx">
+          <tr v-for="(tag, idx) in Tags" :key="idx">
             <td>
               <div class="input-group input-group-xs">
-                <span class="input-group-btn"><button class="btn btn-default" type="button" @click="Analyzer.Tags.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button></span>
+                <span class="input-group-btn"><button class="btn btn-default" type="button" @click="Tags.splice(idx, 1)"><img :src="require('Imgs/cross.png')"></button></span>
                 <input type="text" class="form-control" v-model="tag.Name">
               </div>
             </td>
@@ -125,7 +125,7 @@
           </tr>
           <tr>
             <td colspan="2">
-              <button type="button" class="btn btn-default btn-xs" style="width:100%" @click="Analyzer.Tags.push({ Name: 'Unnamed tag', Value: 'none'})"><img :src="require('Imgs/plus.png')"> New tag</button>
+              <button type="button" class="btn btn-default btn-xs" style="width:100%" @click="Tags.push({ Name: 'Unnamed tag', Value: 'none'})"><img :src="require('Imgs/plus.png')"> New tag</button>
             </td>
           </tr>
         </table>
@@ -141,7 +141,7 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { ShowSpinner: false, Error: '', Analyzer: null,
+      return { ShowSpinner: false, Error: '', Analyzer: null, Tags: [],
                TimeZones: moment.tz.names().map((val) => { return { name: val, value: val }}),
                Columns: [
                  {name: 'Name', title: 'Name'},
@@ -153,10 +153,13 @@
     },
     created: function() {
       this.Analyzer = Object.assign({}, this.analyzer);
+      this.Tags = [];
+      for(var prop in this.Analyzer.Tags) this.Tags.push({Name: prop, Value: this.Analyzer.Tags[prop]})
     },
     methods: {
       Save: function() {
         this.ShowSpinner = true;
+        for(var prop in this.Tags) this.Analyzer.Tags[this.Tags[prop].Name] = this.Tags[prop].Value;
         this.$http.post('setAnalyzer', this.Analyzer).then(
           (result) => { this.$emit('close', this.Analyzer.Analyzer); },
           (fail) => {

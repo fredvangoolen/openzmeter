@@ -69,7 +69,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*': { target: 'http://10.8.0.141:80/'}
+      '*': { target: 'http://localhost:8080/'}
     }
   },
   performance: {
@@ -79,7 +79,7 @@ module.exports = {
 };
 
 if(process.env.NODE_ENV === 'production') {
-  module.exports.devtool = '#source-map';
+  module.exports.devtool = false;
   module.exports.resolve.alias['vue$'] =  'vue/dist/vue.min.js';
   module.exports.plugins = (module.exports.plugins || []).concat([
     new webpack.DefinePlugin({
