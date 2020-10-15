@@ -117,6 +117,8 @@ void AnalyzerRemote::HandleRequest(const Analyzer::AnalyzerRights rights, const 
   if(Request->Map != NULL) {
     Request->Map->erase(Sequence);
     pthread_mutex_unlock(&pMutex);
+    close(Request->Pipe[0]);
+    close(Request->Pipe[1]);
     delete Request;
     return HTTPServer::FillResponse(response, "", "text/plain", HTTP_GATEWAY_TIMEOUT);
   }
