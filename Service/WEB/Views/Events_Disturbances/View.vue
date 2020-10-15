@@ -36,7 +36,7 @@
     created: function() {
       this.TransferEvents.SingleShot = true;
       if((this.$route.query.From != null) && (this.$route.query.To != null)) {
-        localStorage.setItem('PeriodEvents', JSON.stringify([this.$route.query.From, this.$route.query.To]));
+        localStorage.setItem('PeriodEvents', JSON.stringify([parseInt(this.$route.query.From), parseInt(this.$route.query.To)]));
         this.TransferEvents.UpdateUnread = true;
       }
       history.pushState({}, null, this.$route.path);

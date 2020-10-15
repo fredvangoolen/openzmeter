@@ -21,15 +21,11 @@
 class AnalyzerRemote : public Analyzer {
   private :
     typedef struct Request_t {
-//      bool                     Terminate;
       int                      Pipe[2];
-//      bool                     WriterTerminated;
       json                     ReqParams;
       string                   ResMime;
       uint16_t                 ResCode;
-//      list<string>             ResData;
       pthread_cond_t           Cond;
-//      pthread_mutex_t          Mutex;
       map<string, Request_t*> *Map;
     } Request_t;
   private :
@@ -38,13 +34,6 @@ class AnalyzerRemote : public Analyzer {
     pthread_cond_t              pCond;             //Wake getRemote as needed
     map<string, Request_t*>     pSendPending;      //Request awaiting to be send
     map<string, Request_t*>     pResponsePending;  //Request awaiting response
-
-
-
-//    pthread_cond_t              pProducerCond;
-
-//    Request_t                  *pProducerRequest;
-//    bool                        pConsumerReady;
   private :
     void HandleRequest(const AnalyzerRights rights, const string &url, const json &params, Response &response);
     void GetAnalyzer(const json &params, Response &response) override;

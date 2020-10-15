@@ -104,7 +104,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
     if(mode == Analyzer::PHASE3N) ConfigOUT["PhaseNames"].push_back("N");
   }
   ConfigOUT["TimeZone"] = "UTC";
-  ConfigOUT["Tags"] = json::array();
+  ConfigOUT["Tags"] = json::object();
   ConfigOUT["Sync"] = AnalyzerSoftSync::CheckConfig(json::object());
   ConfigOUT["MQTT"] = AnalyzerSoftMQTT::CheckConfig(json::object());
   ConfigOUT["Save200MS"] = false;
@@ -126,13 +126,9 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
     string TZ = config["TimeZone"];
     if(cctz::load_time_zone(TZ, &TimeZone) == true) ConfigOUT["TimeZone"] = TZ;
   }
-  if(config.contains("Tags") && config["Tags"].is_array()) {
-    for(auto Tag : config["Tags"]) {
-      if(!Tag.is_object() || !Tag.contains("Name") || !Tag["Name"].is_string() || !Tag.contains("Value") || !Tag["Value"].is_string()) continue;
-      json Row = json::object();
-      Row["Name"] = Tag["Name"];
-      Row["Value"] = Tag["Value"];
-      ConfigOUT["Tags"].push_back(Row);
+  if(config.contains("Tags") && config["Tags"].is_object()) {
+    for(auto Tag = config["Tags"].begin(); Tag != config["Tags"].end(); Tag++) {
+      if(Tag.value().is_string() == true) ConfigOUT["Tags"][Tag.key()] = Tag.value();
     }
   }
   if(config.contains("Sync")) ConfigOUT["Sync"] = AnalyzerSoftSync::CheckConfig(config["Sync"]);
