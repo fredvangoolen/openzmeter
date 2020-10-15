@@ -58,35 +58,42 @@
       events: function() {
         var Events = [];
         if(this.events == null) return [];
+        var StartTimeCol  = this.events.Headers.indexOf("Time");
+        var SampleRateCol = this.events.Headers.indexOf("SampleRate");
+        var DurationCol   = this.events.Headers.indexOf("Duration");
+        var TypeCol       = this.events.Headers.indexOf("Type");
+        var ReferenceCol  = this.events.Headers.indexOf("Reference");
+        var PeakCol       = this.events.Headers.indexOf("Peak");
+        var ChangeCol     = this.events.Headers.indexOf("Change");
+        var NotesCol      = this.events.Headers.indexOf("Notes");
         for(var x = 0; x < this.events.Rows.length; x++) {
-          if(this.events.Deleted[x] == true) continue;
           var Event = { id: x,
-                        StartTime: this.events.StartTime[x],
-                        Date: this.analyzer.FormatDateTime(this.events.StartTime[x]),
-                        Type: this.events.Type[x],
-                        Reference: this.events.Reference[x],
-                        PeakVoltage: this.events.Peak[x],
-                        ExitVoltage: this.events.Change[x],
-                        SampleDuration: this.events.Duration[x],
-                        SampleRate: this.events.SampleRate[x],
-                        Notes: this.events.Notes[x],
-                        Duration: (this.events.Duration == 0) ? 'RUNNNING' : this.Round(this.events.Duration[x] / this.events.SampleRate[x], 2, false)
+                        StartTime: this.events.Rows[x][StartTimeCol],
+                        Date: this.analyzer.FormatDateTime(this.events.Rows[x][StartTimeCol]),
+                        Type: this.events.Rows[x][TypeCol],
+                        Reference: this.events.Rows[x][ReferenceCol],
+                        PeakVoltage: this.events.Rows[x][PeakCol],
+                        ExitVoltage: this.events.Rows[x][ChangeCol],
+                        SampleDuration: this.events.Rows[x][DurationCol],
+                        SampleRate: this.events.Rows[x][SampleRateCol],
+                        Notes: this.events.Rows[x][NotesCol],
+                        Duration: (this.events.Rows[x][DurationCol] == 0) ? 'RUNNNING' : this.Round(this.events.Rows[x][DurationCol] / this.events.Rows[x][SampleRateCol], 2, false)
           };
           var Max = 0;
-          for(var i = 0; i < this.events.Reference[x].length; i++) {
-            if(Math.abs(this.events.Reference[x][i] - this.events.Peak[x][i]) > Math.abs(Max)) Max = this.events.Peak[x][i] - this.events.Reference[x][i];
+          for(var i = 0; i < this.events.Rows[x][ReferenceCol].length; i++) {
+            if(Math.abs(this.events.Rows[x][ReferenceCol][i] - this.events.Rows[x][PeakCol][i]) > Math.abs(Max)) Max = this.events.Rows[x][PeakCol][i] - this.events.Rows[x][ReferenceCol][i];
           }
           if(Event.Type === 'RVC') {
             Event.Diff = 0;
-            for(var i = 0; i < this.events.Reference[x].length; i++) {
-              if(Math.abs(this.events.Reference[x][i] - this.events.Change[x][i]) > Math.abs(Event.Diff)) Event.Diff = this.events.Change[x][i] - this.events.Reference[x][i];
+            for(var i = 0; i < this.events.Rows[x][ReferenceCol].length; i++) {
+              if(Math.abs(this.events.Reference[x][i] - this.events.Rows[x][ChangeCol][i]) > Math.abs(Event.Diff)) Event.Diff = this.events.Rows[x][ChangeCol][i] - this.events.Rows[x][ReferenceCol][i];
             }
             Event.Change = this.Round(Event.Diff, 2, false) + '<br>(' + this.Round(Max, 2, false) + ' Max)';
-            Event.Percent = this.Round(Event.Diff / this.events.Reference[x][0] * 100.0, 2, false);
+            Event.Percent = this.Round(Event.Diff / this.events.Rows[x][ReferenceCol][0] * 100.0, 2, false);
           } else {
             Event.Diff = Max;
             Event.Change = this.Round(Max, 2, false);
-            Event.Percent = this.Round(Max / this.events.Reference[x][0] * 100.0, 2, false);
+            Event.Percent = this.Round(Max / this.events.Rows[x][ReferenceCol][0] * 100.0, 2, false);
           }
           Events.push(Event);
         }
