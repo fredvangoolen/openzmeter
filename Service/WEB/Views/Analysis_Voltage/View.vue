@@ -37,7 +37,7 @@
         <advanced v-if="ActiveTab=='Advanced'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></advanced>
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
         <phasors v-if="ActiveTab=='Phasors'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></phasors>
-        <events v-if="ActiveTab=='Events'" :analyzer="analyzer" :events="TransferEvents.Data"></events>
+        <events v-if="ActiveTab=='Events'" :analyzer="analyzer" :events="TransferEvents.Data" @eventschanged="UpdateEvents"></events>
       </div>
     </div>
     <dlg-fs v-if="Expanded" title="Voltage" :height.sync="DialogHeight"></dlg-fs>
@@ -119,6 +119,10 @@
           Rows.push(Row);
         }
         return Object.seal(Rows);
+      },
+      UpdateEvents: function() {
+        this.TransferEvents.Data = null;
+        this.TransferEvents.Update(this.analyzer, this.Range);
       }
     },
     components: { Voltage, Counters, Waveform, Advanced, Events, Evolution, Harmonics, Parameters, Phasors }

@@ -4,15 +4,14 @@
       <div class="pull-left"><h4 class="modal-title">Events &raquo; Add notes</h4></div>
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" :disabled="ShowSpinner" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
-      <div class="row">
-        <div class="col-xs-12">
-          <label class="control-label">Notes</label>
-          <textarea type="text" class="form-control" v-model="Event.Notes"></textarea>
-        </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <label class="control-label">Notes</label>
+        <textarea type="text" class="form-control" v-model="Event.Notes"></textarea>
       </div>
     </div>
   </dlg>
@@ -30,8 +29,8 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setEvent', { Analyzer: this.analyzer.Analyzer, Notes: this.Event.Notes, StartTime: this.Event.StartTime, Type: this.Event.Type } ).then(
-          (result) => { this.$emit('close', this.Event); },
+        this.$http.post('setEvent', { Analyzer: this.analyzer.Analyzer, Notes: this.Event.Notes, EventID: this.Event.id } ).then(
+          (result) => { this.$emit('close', true); },
           (fail) =>  {
             this.Error = 'Failed to save analyzer!';
             this.ShowSpinner = false;
@@ -40,7 +39,7 @@
         );
       }
     }
-  };  
+  };
 </script>
 
 <style scoped>

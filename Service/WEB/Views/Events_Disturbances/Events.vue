@@ -58,6 +58,7 @@
       events: function() {
         var Events = [];
         if(this.events == null) return [];
+        var IDCol         = this.events.Headers.indexOf("EventID");
         var StartTimeCol  = this.events.Headers.indexOf("Time");
         var SampleRateCol = this.events.Headers.indexOf("SampleRate");
         var DurationCol   = this.events.Headers.indexOf("Duration");
@@ -67,7 +68,7 @@
         var ChangeCol     = this.events.Headers.indexOf("Change");
         var NotesCol      = this.events.Headers.indexOf("Notes");
         for(var x = 0; x < this.events.Rows.length; x++) {
-          var Event = { id: x,
+          var Event = { id: this.events.Rows[x][IDCol],
                         StartTime: this.events.Rows[x][StartTimeCol],
                         Date: this.analyzer.FormatDateTime(this.events.Rows[x][StartTimeCol]),
                         Type: this.events.Rows[x][TypeCol],
@@ -105,11 +106,9 @@
         this.Event = evt;
         this.View = 'Notes';
       },
-      UpdateEvent: function(event) {
+      UpdateEvent: function(update) {
         this.View = null;
-        if(event == null) return;
-        this.events.Notes[event.id] = event.Notes;
-        this.$emit('update:events', this.events);
+        if(update) this.$emit('eventschanged');
       },
       RMS: function(evt) {
         this.ShowSpinner = true;
@@ -144,19 +143,15 @@
         if(confirm('Delete ' + Selection.length + ' event(s)?') == false) return;
         this.ShowSpinner = true;
         for(var n = 0; n < Selection.length; n++) {
-          this.$http.post('delEvent', { StartTime: this.events.StartTime[Selection[n]], Analyzer: this.analyzer.Analyzer });
-          this.events.Deleted[Selection[n]] = true;
-          this.$emit('update:events', this.events);
+          this.$http.post('delEvent', { EventID: Selection[n], Analyzer: this.analyzer.Analyzer });
+          this.$emit('eventschanged');
         }
         this.ShowSpinner = false;
       },
       Delete: function(evt) {
         if(confirm("Delete selected event?")) {
-          this.$http.post('delEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer }).then(
-            (result, n) => {
-              this.events.Deleted[evt.id] = true;
-              this.$emit('update:events', this.events);
-            }
+          this.$http.post('delEvent', { EventID: evt.id, Analyzer: this.analyzer.Analyzer }).then(
+            (result, n) => { this.$emit('eventschanged'); }
           );
         }
       },
