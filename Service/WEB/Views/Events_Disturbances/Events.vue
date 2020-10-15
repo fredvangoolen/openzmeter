@@ -115,7 +115,7 @@
         this.$http.post('getEvent', { EventID: evt.id, Analyzer: this.analyzer.Analyzer, Samples: 'RMS' }).then(
           (result) => {
             this.ShowSpinner = false;
-            this.Event = Object.assign(evt, result.body);
+            this.Event = Object.freeze(result.body);
             this.View = 'RMS';
           },
           (fail) => {
@@ -129,7 +129,7 @@
         this.$http.post('getEvent', { EventID: evt.id, Analyzer: this.analyzer.Analyzer, Samples: 'RAW' }).then(
           (result) => {
             this.ShowSpinner = false;
-            this.Event = Object.assign(evt, result.body);
+            this.Event = Object.freeze(result.body);
             this.View = 'RAW';
           },
           (fail) => {
