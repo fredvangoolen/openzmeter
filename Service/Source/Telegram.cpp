@@ -34,6 +34,8 @@ Telegram::Telegram() {
 Telegram::~Telegram() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
+  HTTPServer::UnregisterCallback("getTelegram");
+  HTTPServer::UnregisterCallback("setTelegram");
   pthread_mutex_unlock(&pMutex);
   if(pThread != 0) pthread_join(pThread, NULL);
   pthread_mutex_lock(&pMutex);

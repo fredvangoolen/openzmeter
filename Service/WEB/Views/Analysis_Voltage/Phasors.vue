@@ -117,9 +117,9 @@
         if(this.data.Voltage.length == 3) {
           var A = new Complex(Math.cos(120.0 * Math.PI / 180.0), Math.sin(120.0 * Math.PI / 180.0));
           var A2 = A.clone().mult(A);
-          var V1 = new Complex(this.data.Voltage_Harmonics[0][0][0], this.data.Voltage_Harmonics[0][0][1]);
-          var V2 = new Complex(this.data.Voltage_Harmonics[1][0][0], this.data.Voltage_Harmonics[1][0][1]);
-          var V3 = new Complex(this.data.Voltage_Harmonics[2][0][0], this.data.Voltage_Harmonics[2][0][1]);
+          var V1 = new Complex(this.data.Voltage_Harmonics_Complex[0][0][0], this.data.Voltage_Harmonics_Complex[0][0][1]);
+          var V2 = new Complex(this.data.Voltage_Harmonics_Complex[1][0][0], this.data.Voltage_Harmonics_Complex[1][0][1]);
+          var V3 = new Complex(this.data.Voltage_Harmonics_Complex[2][0][0], this.data.Voltage_Harmonics_Complex[2][0][1]);
           var Positive = V1.clone().add(A.clone().mult(V2)).add(A2.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
           var Negative = V1.clone().add(A2.clone().mult(V2)).add(A.clone().mult(V3)).mult(new Complex(1.0 / 3.0, 0.0));
           var Zero = V1.clone().add(V2).add(V3).mult(new Complex(1.0 / 3.0, 0.0));
@@ -206,7 +206,7 @@
       },
       Plotter: function(e) {
         if((this.analyzer == null) || (e.seriesIndex != 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0) || (e.dygraph.file_.length == 0) || (e.dygraph.file_[0].length != 3)) return;
-        var Phases = (oZm.Series['VOLTAGE'].Names(this.analyzer).length == 1) ? ['L'] : ['R', 'S', 'T'];
+        var Phases = (oZm.Series['Voltage'].Names(this.analyzer).length == 1) ? ['L'] : ['R', 'S', 'T'];
         var ctx = e.drawingContext;
         var MaxCurrent = 0;
         for(var i = 0; i < e.points.length; i++) {

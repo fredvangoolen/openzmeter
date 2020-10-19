@@ -58,35 +58,43 @@
       events: function() {
         var Events = [];
         if(this.events == null) return [];
+        var IDCol         = this.events.Headers.indexOf("EventID");
+        var StartTimeCol  = this.events.Headers.indexOf("Time");
+        var SampleRateCol = this.events.Headers.indexOf("SampleRate");
+        var DurationCol   = this.events.Headers.indexOf("Duration");
+        var TypeCol       = this.events.Headers.indexOf("Type");
+        var ReferenceCol  = this.events.Headers.indexOf("Reference");
+        var PeakCol       = this.events.Headers.indexOf("Peak");
+        var ChangeCol     = this.events.Headers.indexOf("Change");
+        var NotesCol      = this.events.Headers.indexOf("Notes");
         for(var x = 0; x < this.events.Rows.length; x++) {
-          if(this.events.Deleted[x] == true) continue;
-          var Event = { id: x,
-                        StartTime: this.events.StartTime[x],
-                        Date: this.analyzer.FormatDateTime(this.events.StartTime[x]),
-                        Type: this.events.Type[x],
-                        Reference: this.events.Reference[x],
-                        PeakVoltage: this.events.Peak[x],
-                        ExitVoltage: this.events.Change[x],
-                        SampleDuration: this.events.Duration[x],
-                        SampleRate: this.events.SampleRate[x],
-                        Notes: this.events.Notes[x],
-                        Duration: (this.events.Duration == 0) ? 'RUNNNING' : this.Round(this.events.Duration[x] / this.events.SampleRate[x], 2, false)
+          var Event = { id: this.events.Rows[x][IDCol],
+                        StartTime: this.events.Rows[x][StartTimeCol],
+                        Date: this.analyzer.FormatDateTime(this.events.Rows[x][StartTimeCol]),
+                        Type: this.events.Rows[x][TypeCol],
+                        Reference: this.events.Rows[x][ReferenceCol],
+                        PeakVoltage: this.events.Rows[x][PeakCol],
+                        ExitVoltage: this.events.Rows[x][ChangeCol],
+                        SampleDuration: this.events.Rows[x][DurationCol],
+                        SampleRate: this.events.Rows[x][SampleRateCol],
+                        Notes: this.events.Rows[x][NotesCol],
+                        Duration: (this.events.Rows[x][DurationCol] == 0) ? 'RUNNNING' : this.Round(this.events.Rows[x][DurationCol] / this.events.Rows[x][SampleRateCol], 2, false)
           };
           var Max = 0;
-          for(var i = 0; i < this.events.Reference[x].length; i++) {
-            if(Math.abs(this.events.Reference[x][i] - this.events.Peak[x][i]) > Math.abs(Max)) Max = this.events.Peak[x][i] - this.events.Reference[x][i];
+          for(var i = 0; i < this.events.Rows[x][ReferenceCol].length; i++) {
+            if(Math.abs(this.events.Rows[x][ReferenceCol][i] - this.events.Rows[x][PeakCol][i]) > Math.abs(Max)) Max = this.events.Rows[x][PeakCol][i] - this.events.Rows[x][ReferenceCol][i];
           }
           if(Event.Type === 'RVC') {
             Event.Diff = 0;
-            for(var i = 0; i < this.events.Reference[x].length; i++) {
-              if(Math.abs(this.events.Reference[x][i] - this.events.Change[x][i]) > Math.abs(Event.Diff)) Event.Diff = this.events.Change[x][i] - this.events.Reference[x][i];
+            for(var i = 0; i < this.events.Rows[x][ReferenceCol].length; i++) {
+              if(Math.abs(this.events.Reference[x][i] - this.events.Rows[x][ChangeCol][i]) > Math.abs(Event.Diff)) Event.Diff = this.events.Rows[x][ChangeCol][i] - this.events.Rows[x][ReferenceCol][i];
             }
             Event.Change = this.Round(Event.Diff, 2, false) + '<br>(' + this.Round(Max, 2, false) + ' Max)';
-            Event.Percent = this.Round(Event.Diff / this.events.Reference[x][0] * 100.0, 2, false);
+            Event.Percent = this.Round(Event.Diff / this.events.Rows[x][ReferenceCol][0] * 100.0, 2, false);
           } else {
             Event.Diff = Max;
             Event.Change = this.Round(Max, 2, false);
-            Event.Percent = this.Round(Max / this.events.Reference[x][0] * 100.0, 2, false);
+            Event.Percent = this.Round(Max / this.events.Rows[x][ReferenceCol][0] * 100.0, 2, false);
           }
           Events.push(Event);
         }
@@ -98,18 +106,16 @@
         this.Event = evt;
         this.View = 'Notes';
       },
-      UpdateEvent: function(event) {
+      UpdateEvent: function(update) {
         this.View = null;
-        if(event == null) return;
-        this.events.Notes[event.id] = event.Notes;
-        this.$emit('update:events', this.events);
+        if(update) this.$emit('eventschanged');
       },
       RMS: function(evt) {
         this.ShowSpinner = true;
-        this.$http.post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Type: evt.Type, Samples: 'RMS' }).then(
+        this.$http.post('getEvent', { EventID: evt.id, Analyzer: this.analyzer.Analyzer, Samples: 'RMS' }).then(
           (result) => {
             this.ShowSpinner = false;
-            this.Event = Object.assign(evt, result.body);
+            this.Event = Object.freeze(result.body);
             this.View = 'RMS';
           },
           (fail) => {
@@ -137,10 +143,10 @@
       },
       RAW: function(evt) {
         this.ShowSpinner = true;
-        this.$http.post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Type: evt.Type, Samples: 'RAW' }).then(
+        this.$http.post('getEvent', { EventID: evt.id, Analyzer: this.analyzer.Analyzer, Samples: 'RAW' }).then(
           (result) => {
             this.ShowSpinner = false;
-            this.Event = Object.assign(evt, result.body);
+            this.Event = Object.freeze(result.body);
             this.View = 'RAW';
           },
           (fail) => {
@@ -154,19 +160,15 @@
         if(confirm('Delete ' + Selection.length + ' event(s)?') == false) return;
         this.ShowSpinner = true;
         for(var n = 0; n < Selection.length; n++) {
-          this.$http.post('delEvent', { StartTime: this.events.StartTime[Selection[n]], Analyzer: this.analyzer.Analyzer });
-          this.events.Deleted[Selection[n]] = true;
-          this.$emit('update:events', this.events);
+          this.$http.post('delEvent', { EventID: Selection[n], Analyzer: this.analyzer.Analyzer });
+          this.$emit('eventschanged');
         }
         this.ShowSpinner = false;
       },
       Delete: function(evt) {
         if(confirm("Delete selected event?")) {
-          this.$http.post('delEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer }).then(
-            (result, n) => {
-              this.events.Deleted[evt.id] = true;
-              this.$emit('update:events', this.events);
-            }
+          this.$http.post('delEvent', { EventID: evt.id, Analyzer: this.analyzer.Analyzer }).then(
+            (result, n) => { this.$emit('eventschanged'); }
           );
         }
       },

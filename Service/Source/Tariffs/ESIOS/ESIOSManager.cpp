@@ -49,6 +49,8 @@ ESIOSManager::ESIOSManager() {
 ESIOSManager::~ESIOSManager() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
+  HTTPServer::UnregisterCallback("getESIOS");
+  HTTPServer::UnregisterCallback("setESIOS");
   pthread_mutex_unlock(&pMutex);
   if(pThread != 0) pthread_join(pThread, NULL);
 }

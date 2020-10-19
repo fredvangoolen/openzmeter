@@ -20,7 +20,7 @@
 #include "MessageLoop.h"
 #include "Status.h"
 // ---------------------------------------------------------------------------------------------------------------------
-bool             BluetoothManager::pTerminate   = false;
+volatile bool    BluetoothManager::pTerminate   = false;
 bool             BluetoothManager::pEnable      = false;
 string           BluetoothManager::pInterface   = "bt";
 string           BluetoothManager::pServerName  = "";

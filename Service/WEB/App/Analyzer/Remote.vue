@@ -15,7 +15,7 @@
     <div class="row" v-if="View=='Main'">
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable remote access</label>
-        <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.SyncEnabled"></toggle>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="Analyzer.Sync.Enabled"></toggle>
         <div class="help">Enable remote access throw openZmeter network</div>
       </div>
       <div class="col-xs-12"><hr style="margin: 5px 0px 5px 0px"/></div>
@@ -78,6 +78,7 @@
                 { name: '__slot:actions', title: 'Enabled' }
               ],
               Rows: [
+                { Source: '200 miliseconds aggregation', Topic: '200MS', Export: 'Export200MS' },
                 { Source: '3 seconds aggregation', Topic: '3S', Export: 'Export3S' },
                 { Source: '1 minute aggregation', Topic: '1M', Export: 'Export1M' },
                 { Source: '10 minutes aggregation', Topic: '10M', Export: 'Export10M' },

@@ -37,7 +37,7 @@
         <advanced v-if="ActiveTab=='Advanced'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></advanced>
         <parameters v-if="ActiveTab=='Parameters'" :data="TransferCubism.Data" :dataNow="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></parameters>
         <phasors v-if="ActiveTab=='Phasors'" :data="TransferNow.Data" :analyzer="analyzer" :paused.sync="Paused"></phasors>
-        <events v-if="ActiveTab=='Events'" :analyzer="analyzer" :events="TransferEvents.Data"></events>
+        <events v-if="ActiveTab=='Events'" :analyzer="analyzer" :events="TransferEvents.Data" @eventschanged="UpdateEvents"></events>
         <cyclic-histogram-chart v-if="ActiveTab=='Cyclic Histogram'" :analyzer="analyzer"></cyclic-histogram-chart>
         <jolt-chart v-if="ActiveTab=='Jolt'" :analyzer="analyzer" :range="Range"></jolt-chart>
       </div>
@@ -67,10 +67,10 @@
     props: { analyzer: { type: Object } },
     data: function() {
       return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
-               TransferGraph: this.SeriesTransfer(['VOLTAGE']),
-               TransferNow: this.NowTransfer(['VOLTAGE', 'CURRENT', 'VOLTAGE_SAMPLES', 'VOLTAGE_PHASE', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'UNBALANCE']),
-               TransferCubism: this.SeriesTransfer(['VOLTAGE_HARMONICS', 'POWER_FACTOR', 'VOLTAGE_THD', 'PHI', 'UNBALANCE']),
-               Transfer10M: this.SeriesTransfer(['VOLTAGE']),
+               TransferGraph: this.SeriesTransfer(['Voltage']),
+               TransferNow: this.NowTransfer(['Voltage', 'Current', 'Voltage_Samples', 'Voltage_Phase', 'Current_Samples', 'Voltage_Harmonics_Complex', 'Current_Harmonics_Complex', 'Voltage_FFT', 'Current_FFT', 'Power_Factor', 'Voltage_THD', 'Phi', 'Unbalance']),
+               TransferCubism: this.SeriesTransfer(['Voltage_Harmonics', 'Power_Factor', 'Voltage_THD', 'Phi', 'Unbalance']),
+               Transfer10M: this.SeriesTransfer(['Voltage']),
                TransferEvents: this.EventsTransfer()
       };
     },
@@ -123,6 +123,10 @@
           Rows.push(Row);
         }
         return Object.seal(Rows);
+      },
+      UpdateEvents: function() {
+        this.TransferEvents.Data = null;
+        this.TransferEvents.Update(this.analyzer, this.Range);
       }
     },
     components: { Voltage, Counters, Waveform, Advanced, Events, Evolution, Harmonics, Parameters, Phasors, CyclicHistogramChart, JoltChart }

@@ -19,19 +19,20 @@
  #include "Status.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftMQTT::AnalyzerSoftMQTT(const string &serial) {
-  pMutex    = PTHREAD_MUTEX_INITIALIZER;
-  pSerial   = serial;
-  pThread   = 0;
-  pBuffSize = 0x040000;
-  pSendBuff = NULL;
-  pRecvBuff = NULL;
-  p3S       = false;
-  p1M       = false;
-  p10M      = false;
-  p15M      = false;
-  p1H       = false;
-  pAlarms   = false;
-  pConfig   = false;
+  pMutex      = PTHREAD_MUTEX_INITIALIZER;
+  pSerial     = serial;
+  pThread     = 0;
+  pBuffSize   = 0x040000;
+  pSendBuff   = NULL;
+  pRecvBuff   = NULL;
+  p3S         = false;
+  p1M         = false;
+  p10M        = false;
+  p15M        = false;
+  p1H         = false;
+  pAlarms     = false;
+  pConfig     = false;
+  pConfigSend = false;
 }
 AnalyzerSoftMQTT::~AnalyzerSoftMQTT() {
   pTerminate = true;
@@ -40,15 +41,16 @@ AnalyzerSoftMQTT::~AnalyzerSoftMQTT() {
 json AnalyzerSoftMQTT::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Enabled"] = false;
-  ConfigOUT["Prefix"] = "";
-  ConfigOUT["Server"] = "";
-  ConfigOUT["User"] = "";
-  ConfigOUT["Pass"] = "";
-  ConfigOUT["Export3S"] = false;
-  ConfigOUT["Export1M"] = false;
-  ConfigOUT["Export10M"] = false;
-  ConfigOUT["Export15M"] = false;
-  ConfigOUT["Export1H"] = false;
+  ConfigOUT["Prefix"]  = "";
+  ConfigOUT["Server"]  = "";
+  ConfigOUT["User"]    = "";
+  ConfigOUT["Pass"]    = "";
+  ConfigOUT["Export200MS"]  = false;
+  ConfigOUT["Export3S"]     = false;
+  ConfigOUT["Export1M"]     = false;
+  ConfigOUT["Export10M"]    = false;
+  ConfigOUT["Export15M"]    = false;
+  ConfigOUT["Export1H"]     = false;
   ConfigOUT["ExportAlarms"] = false;
   ConfigOUT["ExportConfig"] = false;
   if(config.is_object() == true) {
@@ -57,6 +59,7 @@ json AnalyzerSoftMQTT::CheckConfig(const json &config) {
     if(config.contains("Server") && config["Server"].is_string()) ConfigOUT["Server"] = config["Server"];
     if(config.contains("User") && config["User"].is_string()) ConfigOUT["User"] = config["User"];
     if(config.contains("Pass") && config["Pass"].is_string()) ConfigOUT["Pass"] = config["Pass"];
+    if(config.contains("Export200MS") && config["Export200MS"].is_boolean()) ConfigOUT["Export200MS"] = config["Export200MS"];
     if(config.contains("Export3S") && config["Export3S"].is_boolean()) ConfigOUT["Export3S"] = config["Export3S"];
     if(config.contains("Export1M") && config["Export1M"].is_boolean()) ConfigOUT["Export1M"] = config["Export1M"];
     if(config.contains("Export10M") && config["Export10M"].is_boolean()) ConfigOUT["Export10M"] = config["Export10M"];
@@ -70,6 +73,7 @@ json AnalyzerSoftMQTT::CheckConfig(const json &config) {
 void AnalyzerSoftMQTT::Config(const json &config) {
   pthread_mutex_lock(&pMutex);
   pParentConf = config;
+  pConfigSend = false;
   bool Enabled = config["MQTT"]["Enabled"];
   if(Enabled == false) {
     if(pThread != 0) {
@@ -79,6 +83,7 @@ void AnalyzerSoftMQTT::Config(const json &config) {
       free(pRecvBuff);
       pThread = 0;
     }
+    p200MS  = false;
     p3S     = false;
     p1M     = false;
     p10M    = false;
@@ -91,6 +96,7 @@ void AnalyzerSoftMQTT::Config(const json &config) {
     pServer    = config["MQTT"]["Server"];
     pUser      = config["MQTT"]["User"];
     pPass      = config["MQTT"]["Pass"];
+    p200MS     = config["MQTT"]["Export200MS"];
     p3S        = config["MQTT"]["Export3S"];
     p1M        = config["MQTT"]["Export1M"];
     p10M       = config["MQTT"]["Export10M"];
@@ -115,25 +121,28 @@ void AnalyzerSoftMQTT::Config(const json &config) {
 }
 void AnalyzerSoftMQTT::PublishAggreg(const string &aggreg, const AnalyzerSoftAggreg *params) {
   pthread_mutex_lock(&pMutex);
-  if((pClient.socketfd != -1) && (((aggreg == "3S") && (p3S == true)) || ((aggreg == "1M") && (p1M == true)) || ((aggreg == "10M") && (p10M == true)) || ((aggreg == "15M") && (p15M == true)) || ((aggreg == "1H") && (p1H == true)))) {
+  if((pClient.socketfd != -1) && (((aggreg == "200MS") && (p200MS == true)) || ((aggreg == "3S") && (p3S == true)) || ((aggreg == "1M") && (p1M == true)) || ((aggreg == "10M") && (p10M == true)) || ((aggreg == "15M") && (p15M == true)) || ((aggreg == "1H") && (p1H == true)))) {
     json Result = json::object();
     Result["Time"] = params->Timestamp();
     params->GetSeriesJSON("TIME", Result);
-    params->GetSeriesJSON("FREQUENCY", Result);
-    params->GetSeriesJSON("FLAG", Result);
-    params->GetSeriesJSON("UNBALANCE", Result);
-    params->GetSeriesJSON("VOLTAGE", Result);
-    params->GetSeriesJSON("CURRENT", Result);
-    params->GetSeriesJSON("ACTIVE_POWER", Result);
-    params->GetSeriesJSON("REACTIVE_POWER", Result);
-    params->GetSeriesJSON("ACTIVE_ENERGY", Result);
-    params->GetSeriesJSON("REACTIVE_ENERGY", Result);
-    params->GetSeriesJSON("APPARENT_POWER", Result);
-    params->GetSeriesJSON("POWER_FACTOR", Result);
-    params->GetSeriesJSON("VOLTAGE_THD", Result);
-    params->GetSeriesJSON("CURRENT_THD", Result);
-    params->GetSeriesJSON("PHI", Result);
-    params->GetSeriesJSON("VOLTAGE_PHASE", Result);
+    params->GetSeriesJSON("Frequency", Result);
+    params->GetSeriesJSON("Flag", Result);
+    params->GetSeriesJSON("Unbalance", Result);
+    params->GetSeriesJSON("Voltage", Result);
+    params->GetSeriesJSON("Current", Result);
+    params->GetSeriesJSON("Active_Power", Result);
+    params->GetSeriesJSON("Reactive_Power", Result);
+    params->GetSeriesJSON("Active_Energy", Result);
+    params->GetSeriesJSON("Reactive_Energy", Result);
+    params->GetSeriesJSON("Apparent_Power", Result);
+    params->GetSeriesJSON("Power_Factor", Result);
+    params->GetSeriesJSON("Voltage_THD", Result);
+    params->GetSeriesJSON("Current_THD", Result);
+    params->GetSeriesJSON("Voltage_Harmonics", Result);
+    params->GetSeriesJSON("Current_Harmonics", Result);
+    params->GetSeriesJSON("Power_Harmonics", Result);
+    params->GetSeriesJSON("Phi", Result);
+    params->GetSeriesJSON("Voltage_Phase", Result);
     string TextMsg = Result.dump();
     string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/" + aggreg : pSerial + "/" + aggreg;
     mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1);
@@ -177,6 +186,7 @@ void *AnalyzerSoftMQTT::Thread() {
       string WillMsg = "{ \"Online\": false }";
       string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Status" : pSerial + "/Status";
       StatusTimer = 0;
+      pConfigSend = false;
       mqtt_connect(&pClient, NULL, Topic.c_str(), WillMsg.c_str(), WillMsg.size(), (User == "") ? NULL : User.c_str(), (Pass == "") ? NULL : Pass.c_str(), MQTT_CONNECT_CLEAN_SESSION, 400);
     } else if(pClient.error == MQTT_ERROR_SOCKET_ERROR) {
       if(pClient.socketfd != -1) {
@@ -218,12 +228,12 @@ void *AnalyzerSoftMQTT::Thread() {
       }
     } else if(pClient.error == MQTT_OK) {
       pthread_mutex_lock(&pMutex);
-      if((pConfig == true) && (pParentConf != nullptr) && (pClient.socketfd != -1)) {
+      if((pConfig == true) && (pConfigSend == false) && (pClient.socketfd != -1)) {
         string TextMsg = pParentConf.dump();
         string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Config" : pSerial + "/Config";
         mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1 | MQTT_PUBLISH_RETAIN);
         LogFile::Debug("Analyzer '%s' publish config to MQTT broker", pSerial.c_str());
-        pParentConf = nullptr;
+        pConfigSend = true;
       }
       uint64_t Now = Tools::GetTime64();
       if((StatusTimer == 0) || (StatusTimer + 10000) < Now) {

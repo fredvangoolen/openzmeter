@@ -67,10 +67,10 @@
     props: { analyzer: { type: Object } },
     data () {
       return { Aggreg: null, Range: null, Height: 200, Paused3S: false, Expanded: false, DialogHeight: 200,
-               TransferNow: this.NowTransfer(['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
-               Transfer3S: this.SeriesTransfer(['VOLTAGE', 'CURRENT', 'ACTIVE_POWER', 'FREQUENCY']),
-               Transfer1M: this.SeriesTransfer(['VOLTAGE_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'CURRENT_THD', 'POWER_FACTOR', 'PHI']),
-               TransferGraph: this.PriceTransfer(['ACTIVE_ENERGY', 'COST', 'COLOR', 'PERIOD', 'BILL'])
+               TransferNow: this.NowTransfer(['Voltage_THD', 'Active_Power', 'Reactive_Power', 'Current_THD', 'Power_Factor', 'Phi']),
+               Transfer3S: this.SeriesTransfer(['Voltage', 'Current', 'Active_Power', 'Frequency']),
+               Transfer1M: this.SeriesTransfer(['Voltage_THD', 'Active_Power', 'Reactive_Power', 'Current_THD', 'Power_Factor', 'Phi']),
+               TransferGraph: this.PriceTransfer(['Active_Energy', 'Cost', 'Color', 'Period', 'Bill'])
       };
     },
     created: function() {

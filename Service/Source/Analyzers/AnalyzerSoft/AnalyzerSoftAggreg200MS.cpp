@@ -22,7 +22,7 @@ AnalyzerSoftAggreg200MS::~AnalyzerSoftAggreg200MS() {
 }
 void AnalyzerSoftAggreg200MS::Save() const {
   Database DB(pSerial);
-  DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance) VALUES(" +
+  DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance, harmonics_v, harmonics_i, harmonics_p) VALUES(" +
   DB.Bind(pTimestamp) + ", " +
   DB.Bind(pVoltage, pVoltageChannels) + ", " +
   DB.Bind(pCurrent, pCurrentChannels) + ", " +
@@ -34,7 +34,10 @@ void AnalyzerSoftAggreg200MS::Save() const {
   DB.Bind(pVoltage_THD, pVoltageChannels) + ", " +
   DB.Bind(pCurrent_THD, pCurrentChannels) + ", " +
   DB.Bind(pPhi, pVoltageChannels) + ", " +
-  DB.Bind(pUnbalance) + ")");
+  DB.Bind(pUnbalance) + ", " +
+  DB.Bind((float*)pVoltage_HarmonicsComplex, pVoltageChannels, 50, 2) + ", " +
+  DB.Bind((float*)pCurrent_HarmonicsComplex, pCurrentChannels, 50, 2) + ", " +
+  DB.Bind(pPower_Harmonics, pVoltageChannels, 50) + ")");
 }
 void AnalyzerSoftAggreg200MS::Reset() {
   AnalyzerSoftAggreg::Reset();
@@ -72,11 +75,19 @@ void AnalyzerSoftAggreg200MS::setActiveEnergy(const uint8_t channel, const float
 void AnalyzerSoftAggreg200MS::setReactiveEnergy(const uint8_t channel, const float val) {
   pReactive_Energy[channel] = val;
 }
-void AnalyzerSoftAggreg200MS::setVoltageHarmonic(const uint8_t channel, const uint8_t harmonic, const float val) {
-  pVoltage_Harmonics[channel * 50 + harmonic] = val;
+void AnalyzerSoftAggreg200MS::setVoltageHarmonic(const uint8_t channel, const uint8_t harmonic, const AnalyzerSoftAggreg200MS::Complex_t val) {
+  pVoltage_Harmonics[channel * 50 + harmonic] = sqrt(val.Re * val.Re + val.Im * val.Im) / M_SQRT2 * 2.0;
+  pVoltage_HarmonicsComplex[channel * 50 + harmonic] = val;
 }
-void AnalyzerSoftAggreg200MS::setCurrentHarmonic(const uint8_t channel, const uint8_t harmonic, const float val) {
-  pCurrent_Harmonics[channel * 50 + harmonic] = val;
+void AnalyzerSoftAggreg200MS::setCurrentHarmonic(const uint8_t channel, const uint8_t harmonic, const AnalyzerSoftAggreg200MS::Complex_t val) {
+  pCurrent_Harmonics[channel * 50 + harmonic] = sqrt(val.Re * val.Re + val.Im * val.Im) / M_SQRT2 * 2.0;
+  pCurrent_HarmonicsComplex[channel * 50 + harmonic] = val;
+}
+AnalyzerSoftAggreg200MS::Complex_t AnalyzerSoftAggreg200MS::VoltageHarmonicComplex(const uint8_t channel, const uint8_t harmonic) const {
+  return pVoltage_HarmonicsComplex[channel * 50 + harmonic];
+}
+AnalyzerSoftAggreg200MS::Complex_t AnalyzerSoftAggreg200MS::CurrentHarmonicComplex(const uint8_t channel, const uint8_t harmonic) const {
+  return pCurrent_HarmonicsComplex[channel * 50 + harmonic];
 }
 void AnalyzerSoftAggreg200MS::setPowerHarmonic(const uint8_t channel, const uint8_t harmonic, const float val) {
   pPower_Harmonics[channel * 50 + harmonic] = val;
@@ -87,14 +98,49 @@ void AnalyzerSoftAggreg200MS::setCurrentTHD(const uint8_t channel, const float v
 void AnalyzerSoftAggreg200MS::setVoltageTHD(const uint8_t channel, const float val) {
   pVoltage_THD[channel] = val;
 }
-void  AnalyzerSoftAggreg200MS::setVoltagePhase(const uint8_t channel, const float val) {
+void AnalyzerSoftAggreg200MS::setVoltagePhase(const uint8_t channel, const float val) {
   pVoltage_Phase[channel] = val;
 }
-void  AnalyzerSoftAggreg200MS::setPhi(const uint8_t channel, const float val) {
+void AnalyzerSoftAggreg200MS::setPhi(const uint8_t channel, const float val) {
   pPhi[channel] = val;
 }
-void  AnalyzerSoftAggreg200MS::setPowerFactor(const uint8_t channel, const float val) {
+void AnalyzerSoftAggreg200MS::setPowerFactor(const uint8_t channel, const float val) {
   pPower_Factor[channel] = val;
+}
+bool AnalyzerSoftAggreg200MS::GetSeriesJSON(const string &serie, json &result) const {
+  if(AnalyzerSoftAggreg::GetSeriesJSON(serie, result) == true) return true;
+  if(serie == "Voltage_Harmonics_Complex") {
+    json Tmp1 = json::array();
+    for(uint8_t n = 0; n < pVoltageChannels; n++) {
+      json Tmp2 = json::array();
+      for(uint8_t i = 0; i < 50; i++) {
+        json Tmp3 = json::array();
+        Complex_t Complex = VoltageHarmonicComplex(n, i);
+        Tmp3.push_back(Complex.Re);
+        Tmp3.push_back(Complex.Im);
+        Tmp2.push_back(Tmp3);
+      }
+      Tmp1.push_back(Tmp2);
+    }
+    result["Voltage_Harmonics_Complex"] = Tmp1;
+  } else if(serie == "Current_Harmonics_Complex") {
+    json Tmp1 = json::array();
+    for(uint8_t n = 0; n < pCurrentChannels; n++) {
+      json Tmp2 = json::array();
+      for(uint8_t i = 0; i < 50; i++) {
+        json Tmp3 = json::array();
+        Complex_t Complex = CurrentHarmonicComplex(n, i);
+        Tmp3.push_back(Complex.Re);
+        Tmp3.push_back(Complex.Im);
+        Tmp2.push_back(Tmp3);
+      }
+      Tmp1.push_back(Tmp2);
+    }
+    result["Current_Harmonics_Complex"] = Tmp1;
+  } else {
+    return false;
+  }
+  return true;
 }
 void AnalyzerSoftAggreg200MS::HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) {
   uint16_t Pos   = 0;
@@ -136,8 +182,9 @@ void AnalyzerSoftAggreg200MS::HandleModbus(uint8_t *buff, const uint16_t start, 
     return (Pos <= (Start + Len));
   };
   auto Append_Float = [&](const float val) {
+    uint32_t *Src = (uint32_t*)&val;
     if(Pos >= Start) {
-      uint32_t Val = htobe32(*((uint32_t*)&val));
+      uint32_t Val = htobe32(*Src);
       for(uint8_t n = 0; n < 4; n++, Pos++) {
         if(Pos >= (Start + Len)) return false;
         if(Pos >= Start) buff[Pos - Start] = ((uint8_t*)&Val)[n];

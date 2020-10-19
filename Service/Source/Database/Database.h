@@ -43,6 +43,7 @@ class Database final {
     string   Bind(const float param) const;
     string   Bind(const float *params, const uint32_t len) const;
     string   Bind(const float *params, const uint32_t lenA, const uint32_t lenB) const;
+    string   Bind(const float *params, const uint32_t lenA, const uint32_t lenB, const uint32_t lenC) const;
     string   Bind(const uint16_t *params, const uint32_t len) const;
     string   Bind(const bool param) const;
     string   Bind(const string &string) const;

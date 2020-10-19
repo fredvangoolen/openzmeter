@@ -55,17 +55,13 @@ void Analyzer::Online(const bool online) {
 }
 bool Analyzer::Online() {
   pMembersLocks.ReadLock();
-  bool Online = ((Tools::GetTime64() - pLastSave) < 20000);
+  bool Online = ((Tools::GetTime64() - pLastSave) < 2000);
   pMembersLocks.Unlock();
   return Online;
 }
 bool Analyzer::CheckRights(const string &user, const AnalyzerRights neededAccess) {
   Database DB;
-  if(user == "admin") {
-    DB.ExecSentenceNoResult("INSERT INTO permissions(username, serial, read, write, config, eventsread, alarmsread) VALUES('admin', " + DB.Bind(pSerial) + ", true, true, true, 0, 0) ON CONFLICT(username, serial) DO NOTHING");
-    return true;
-  }
-  string Permision = (neededAccess == READ) ? "read" : (neededAccess == WRITE) ? "write" : "config";
+  string   Permision = (neededAccess == READ) ? "read" : (neededAccess == WRITE) ? "write" : "config";
   DB.ExecSentenceAsyncResult("SELECT " + Permision + " AS result FROM permissions WHERE username = " + DB.Bind(user) + " AND serial = " + DB.Bind(pSerial));
   bool Result = ((DB.FecthRow() == true) && (DB.ResultString("result") == "t"));
   return Result;

@@ -28,10 +28,11 @@
 #include "LogFile.h"
 #include "ConfigFile.h"
 #include "ResourceFile.h"
-#include "HTTPTaskQueue.h"
+#include "HTTPRequestPoll.h"
 #include "MessageLoop.h"
 //----------------------------------------------------------------------------------------------------------------------
-map<string, HTTPServer::Func_t>  __attribute__((init_priority(200))) HTTPServer::pCallbacks;
+map<string, HTTPServer::Func1_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks1;
+map<string, HTTPServer::Call_t>  __attribute__((init_priority(200))) HTTPServer::pCallbacks2;
 RWLocks                                                              HTTPServer::pLock;
 string                                                               HTTPServer::pRelativePath = "/";
 uint16_t                                                             HTTPServer::pPort   = 8080;
@@ -46,7 +47,7 @@ HTTPServer::HTTPServer() {
   Post(".*", HandlePost);
   set_keep_alive_max_count(UINT32_MAX);
   set_read_timeout(30);
-  new_task_queue = [] { return new HTTPTaskQueue(); };
+  new_task_queue = [] { return new HTTPRequestPoll(); };
   Config = json::object();
   Config["Port"] = pPort;
   Config["RelativePath"] = pRelativePath;
@@ -86,14 +87,23 @@ void HTTPServer::FillResponse(Response &response, const char *body, const size_t
   response.set_content(body, size, mime);
   response.status = status;
 }
-void HTTPServer::RegisterCallback(const string &handleName, const Func_t function) {
+void HTTPServer::RegisterCallback(const string &handleName, const Func1_t function) {
   pLock.WriteLock();
-  pCallbacks.insert({handleName, function});
+  pCallbacks1.insert({handleName, function});
+  pLock.Unlock();
+}
+void HTTPServer::RegisterCallback(const string &handleName, const Func2_t function, const vector<string> &params) {
+  pLock.WriteLock();
+  Call_t Call;
+  Call.Function = function;
+  Call.Headers = params;
+  pCallbacks2.insert({handleName, Call});
   pLock.Unlock();
 }
 void HTTPServer::UnregisterCallback(const string &handleName) {
   pLock.WriteLock();
-  pCallbacks.erase(handleName);
+  pCallbacks1.erase(handleName);
+  pCallbacks2.erase(handleName);
   pLock.Unlock();
 }
 string HTTPServer::ParseCookie(const string &cookie) {
@@ -188,30 +198,67 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   string File = PatchFile("WEB/Index.html", "{{ VERSION }}", __BUILD__);
   return FillResponse(response, PatchString(File, "{{ RELATIVE_PATH }}", pRelativePath), "text/html", HTTP_OK);
 }
-void HTTPServer::HandlePost(const Request &request, Response &response) {
-  string URL = string(request.path).erase(0, pRelativePath.size());
+void HTTPServer::HandlePost(const Request &request, Response &response, const ContentReader &content_reader) {
+  string URL      = string(request.path).erase(0, pRelativePath.size());
+  string UserName = "";
+  string Body;
+  auto   DefReader = [&](const char *data, size_t length) -> bool {
+    if((Body.size() + length) > 0x20000) {
+      Body = "";
+      return false;
+    }
+    Body.append(data, length);
+    return true;
+  };
+  auto GetUser = [&]() {
+    string User = "";
+    if(request.has_header("Cookie")) {
+      string Cookie = ParseCookie(request.get_header_value("Cookie"));
+      if(Cookie != "") {
+        Database DB;
+        DB.ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + DB.Bind(Cookie));
+        if(DB.FecthRow()) User = DB.ResultString("username");
+      }
+    }
+    return User;
+  };
   LogFile::Debug("HTTP POST '%s'", URL.c_str());
-  response.set_header("Connection", "Keep-Alive");
-  json Params = json::parse(request.body, NULL, false);
+  pLock.ReadLock();
+  auto Callback2 = pCallbacks2.find(URL);
+  if(Callback2 != pCallbacks2.end()) {
+    string              User = GetUser();
+    map<string, string> Params;
+    if(User.empty()) {
+      pLock.Unlock();
+      return FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
+    }
+    Params.insert({ "UserName", User });
+    for(uint8_t n = 0; n < Callback2->second.Headers.size(); n++) {
+      if(request.has_header(Callback2->second.Headers[n].c_str()) == false) {
+        pLock.Unlock();
+        return FillResponse(response, "'" + Callback2->second.Headers[n] + "' header required", "text/plain", HTTP_BAD_REQUEST);
+      } else {
+        Params.insert({Callback2->second.Headers[n], request.get_header_value(Callback2->second.Headers[n].c_str())});
+      }
+    }
+    Callback2->second.Function(Params, response, content_reader);
+    pLock.Unlock();
+    return;
+  }
+  pLock.Unlock();
+  content_reader(DefReader);
+  if(Body.empty() == true) return FillResponse(response, "Body is empty or too large", "text/plain", HTTP_PAYLOAD_TOO_LARGE);
+  json Params = json::parse(Body, NULL, false);
   if(Params.is_discarded()) return FillResponse(response, "Malformed JSON params", "text/plain", HTTP_BAD_REQUEST);
   if(URL == "logIn") return LogInCallback(Params, response);
   if(URL == "logOut") return LogOutCallback(request, response);
-  if(request.has_header("Cookie")) {
-    Params.erase("UserName");
-    string Cookie = ParseCookie(request.get_header_value("Cookie"));
-    if(Cookie != "") {
-      Database DB;
-      DB.ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + DB.Bind(Cookie));
-      if(DB.FecthRow()) Params["UserName"] = DB.ResultString("username");
-    }
-  } else if(request.has_header("REMOTE_ADDR")) {
-    if(request.get_header_value("REMOTE_ADDR") != "127.0.0.1") Params.erase("UserName");
-  }
-  if(Params.contains("UserName") == false) return FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
+  if((request.has_header("REMOTE_ADDR") == true) && (request.get_header_value("REMOTE_ADDR") != "127.0.0.1")) Params.erase("UserName");
+  if(Params.contains("UserName") == false) Params["UserName"] = GetUser();
+  if(Params["UserName"] == "") return FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
   pLock.ReadLock();
-  auto Callback = pCallbacks.find(URL);
-  if(Callback != pCallbacks.end()) {
-    Callback->second(Params, response);
+  auto Callback1 = pCallbacks1.find(URL);
+  if(Callback1 != pCallbacks1.end()) {
+    Callback1->second(Params, response);
     pLock.Unlock();
     return;
   }

@@ -15,8 +15,9 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include "Worker.h"
-#include "AnalyzerSoftBlock.h"
+#include "Analyzer.h"
 // ---------------------------------------------------------------------------------------------------------------------
+class AnalyzerSoftBlock;
 class AnalyzerSoftFFTs final {
   public :
     typedef struct {

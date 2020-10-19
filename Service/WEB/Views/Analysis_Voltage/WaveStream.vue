@@ -16,7 +16,7 @@
       </div>
       <div class="col-md-6">
         <label class="control-label">Waves</label>
-        <option-picker :options="[{name: 'Voltage', value: 'VOLTAGE' }, {name: 'Current', value: 'CURRENT'}, {name: 'Voltage and Current', value: 'VOLTAGE_CURRENT'}]" v-model="DownloadSamples" :big="true"></option-picker>
+        <option-picker :options="[{name: 'Voltage', value: 'Voltage' }, {name: 'Current', value: 'CURRENT'}, {name: 'Voltage and Current', value: 'Voltage_Current'}]" v-model="DownloadSamples" :big="true"></option-picker>
       </div>
       <div class="col-xs-12" style="margin-top: 5px">
         <button type="button" class="btn btn-default btn-sm" style="width:100%" data-toggle="tooltip" title="Close dialog" @click="StartStream">Start</button>
@@ -39,7 +39,7 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { File: 'Waveform', DownloadSamples: 'VOLTAGE', Error: null, Info: null, Abort: null, Data: [] };
+      return { File: 'Waveform', DownloadSamples: 'Voltage', Error: null, Info: null, Abort: null, Data: [] };
     },
     methods: {
       StartStream: function() {
@@ -62,12 +62,12 @@
         const eventStream = new WritableStream({
           start: (controller) => {
             this.Info = { Samples: 0, Time: 0.0 };
-            if(this.DownloadSamples == 'VOLTAGE') {
-              this.Data = [['Sample'].concat(oZm.Series['VOLTAGE'].Names(this.analyzer))];
+            if(this.DownloadSamples == 'Voltage') {
+              this.Data = [['Sample'].concat(oZm.Series['Voltage'].Names(this.analyzer))];
             } else if(this.DownloadSamples == 'CURRENT') {
               this.Data = [['Sample'].concat(oZm.Series['CURRENT'].Names(this.analyzer))];
             } else {
-              this.Data = [['Sample'].concat(oZm.Series['VOLTAGE'].Names(this.analyzer)).concat(oZm.Series['CURRENT'].Names(this.analyzer))];
+              this.Data = [['Sample'].concat(oZm.Series['Voltage'].Names(this.analyzer)).concat(oZm.Series['CURRENT'].Names(this.analyzer))];
             }
           },
           write: (message, controller) => {
@@ -92,7 +92,7 @@
             this.Abort = null;
           }
         });
-        fetch('getWaveStream', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, Series: (this.DownloadSamples == 'VOLTAGE') ? ['VOLTAGE_SAMPLES'] : (this.DownloadSamples == 'CURRENT') ? ['CURRENT_SAMPLES'] : ['VOLTAGE_SAMPLES', 'CURRENT_SAMPLES']}), headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', signal: this.Abort.signal }).then(
+        fetch('getWaveStream', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, Series: (this.DownloadSamples == 'Voltage') ? ['Voltage_Samples'] : (this.DownloadSamples == 'Current') ? ['Current_Samples'] : ['Voltage_Samples', 'CURRENT_SAMPLES']}), headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', signal: this.Abort.signal }).then(
           (response) => {
             response.body.pipeThrough(new TextDecoderStream()).pipeThrough(jsonDecoder).pipeTo(eventStream);
           },

@@ -456,9 +456,9 @@
       Download: function(aggreg, all) {
         this.ShowSpinner = true;
         var Series = [];
-        if(aggreg == '200MS') Series = ['VOLTAGE', 'CURRENT', 'UNBALANCE', 'FREQUENCY', 'FLAG', 'ACTIVE_POWER', 'REACTIVE_POWER', 'POWER_FACTOR', 'VOLTAGE_THD', 'CURRENT_THD', 'PHI'];
-        if(aggreg == '3S')    Series = ['VOLTAGE', 'CURRENT', 'FREQUENCY', 'FLAG', 'ACTIVE_POWER', 'REACTIVE_POWER'];
-        if(aggreg == '1M')    Series = ['VOLTAGE', 'CURRENT', 'FREQUENCY', 'FLAG', 'POWER_FACTOR', 'UNBALANCE', 'VOLTAGE_THD', 'CURRENT_THD', 'ACTIVE_POWER', 'REACTIVE_POWER', 'PHI', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'POWER_HARMONICS'];
+        if(aggreg == '200MS') Series = ['Voltage', 'Current', 'Unbalance', 'Frequency', 'Flag', 'Active_Power', 'Reactive_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi'];
+        if(aggreg == '3S')    Series = ['Voltage', 'Current', 'Frequency', 'Flag', 'Active_Power', 'Reactive_Power'];
+        if(aggreg == '1M')    Series = ['Voltage', 'Current', 'Frequency', 'Flag', 'Power_Factor', 'Unbalance', 'Voltage_THD', 'Current_THD', 'Active_Power', 'Reactive_Power', 'Phi', 'Voltage_Harmonics', 'Current_Harmonics', 'Power_Harmonics'];
 
         var From = (all) ? 0 : this.From;
         var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
@@ -564,11 +564,11 @@
       },
       FetchDay: function () {
         var DayData = [];
-        var Series3S = ["FREQUENCY", "FLAG", "VOLTAGE", "CURRENT", "ACTIVE_POWER", "REACTIVE_POWER"];
-        var Series1M = ["FREQUENCY","FLAG", "VOLTAGE", "CURRENT"];
-        var Series10M = ["FREQUENCY", "FLAG", "VOLTAGE", "CURRENT"];
-        var Series15M = ["ACTIVE_POWER", "REACTIVE_POWER"];
-        var Series1H = ["FREQUENCY", "FLAG", "VOLTAGE", "CURRENT", "ACTIVE_POWER", "REACTIVE_POWER", "VOLTAGE_STATS", "FREQUENCY_STATS", "VOLTAGE_THD_STATS", "VOLTAGE_HARMONICS_STATS"];
+        var Series3S = ["Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power"];
+        var Series1M = ["Frequency","Flag", "Voltage", "Current"];
+        var Series10M = ["Frequency", "Flag", "Voltage", "Current"];
+        var Series15M = ["Active_Power", "Reactive_Power"];
+        var Series1H = ["Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Voltage_Stats", "Frequency_Stats", "Voltage_THD_Stats", "Voltage_Harmonics_Stats"];
         var FetchFunc = (aggreg, series) => {
           var ToDate = moment.tz(this.StartDate, this.Analyzer.TimeZone).endOf('day').valueOf();
           $.ajax({url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({Series: series, LastSample: 0, Analyzer: this.Analyzer.Analyzer, Aggreg: aggreg, To: ToDate, Period: 86399999}),

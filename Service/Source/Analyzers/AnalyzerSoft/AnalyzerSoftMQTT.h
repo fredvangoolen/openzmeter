@@ -24,6 +24,7 @@ using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftMQTT final {
   private :
+    volatile bool     pTerminate;   //MQTT terminate signal
     pthread_mutex_t   pMutex;       //Locks access to shared variables
     string            pSerial;      //Analyzer serial
     pthread_t         pThread;      //MQTT thread
@@ -31,11 +32,11 @@ class AnalyzerSoftMQTT final {
     uint32_t          pBuffSize;    //MQTT buffers size
     uint8_t          *pSendBuff;    //MQTT send buffer
     uint8_t          *pRecvBuff;    //MQTT recv buffer
-    bool              pTerminate;   //MQTT terminate signal
     string            pServer;      //MQTT server address
     string            pPrefix;      //MQTT prefix
     string            pUser;        //MQTT server user
     string            pPass;        //MQTT server password
+    bool              p200MS;       //Enable 200ms publish
     bool              p3S;          //Enable 3 seconds publish
     bool              p1M;          //Enable 1 minute publish
     bool              p10M;         //Enable 10 minutes publish
@@ -43,7 +44,8 @@ class AnalyzerSoftMQTT final {
     bool              p1H;          //Enable 1 hour publish
     bool              pAlarms;      //Enable alarms publish
     bool              pConfig;      //Enable config publish
-    json              pParentConf;  //Keep
+    bool              pConfigSend;  //If config is send in current connection
+    json              pParentConf;  //Keep parent config
   private :
     void *Thread();
   public :

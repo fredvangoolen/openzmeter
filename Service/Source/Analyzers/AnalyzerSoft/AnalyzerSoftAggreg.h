@@ -36,7 +36,7 @@ class AnalyzerSoftAggreg {
     float        pActive_Energy[3];                   //Energia consumida
     float        pReactive_Energy[3];                 //Reactive energy
     float        pApparent_Power[3];                  //Potencia aparente (S)
-    float        pPower_Factor[3];                    //Factor de potencia (cos(PHI))
+    float        pPower_Factor[3];                    //Factor de potencia (cos(Phi))
     float        pVoltage_THD[3];                     //Distorsion harmonica de la tension
     float        pCurrent_THD[4];                     //Distorsion harmonica de la corriente
     float        pVoltage_Phase[3];                   //Angulo entre canales de tension
@@ -45,27 +45,27 @@ class AnalyzerSoftAggreg {
     float        pCurrent_Harmonics[200];             //Harmonicos del canal de corriente
     float        pPower_Harmonics[150];               //Power harmonics
   public :
-    void     muParserInit(Parser &parser, const string &expression);
-    uint64_t Timestamp() const;
-    float    Frequency() const;
-    bool     Flag() const;
-    float    Unbalance() const;
-    float    Voltage(const uint8_t channel) const;
-    float    Current(const uint8_t channel) const;
-    float    ActivePower(const uint8_t channel) const;
-    float    ApparentPower(const uint8_t channel) const;
-    float    ReactivePower(const uint8_t channel) const;
-    float    ActiveEnergy(const uint8_t channel) const;
-    float    ReactiveEnergy(const uint8_t channel) const;
-    float    VoltageHarmonic(const uint8_t channel, const uint8_t harmonic) const;
-    float    CurrentHarmonic(const uint8_t channel, const uint8_t harmonic) const;
-    float    PowerHarmonic(const uint8_t channel, const uint8_t harmonic) const;
-    float    CurrentTHD(const uint8_t channel) const;
-    float    VoltageTHD(const uint8_t channel) const;
-    float    VoltagePhase(const uint8_t channel) const;
-    float    Phi(const uint8_t channel) const;
-    float    PowerFactor(const uint8_t channel) const;
-    bool     GetSeriesJSON(const string &serie, json &result) const;
+    void         muParserInit(Parser &parser, const string &expression);
+    uint64_t     Timestamp() const;
+    float        Frequency() const;
+    bool         Flag() const;
+    float        Unbalance() const;
+    float        Voltage(const uint8_t channel) const;
+    float        Current(const uint8_t channel) const;
+    float        ActivePower(const uint8_t channel) const;
+    float        ApparentPower(const uint8_t channel) const;
+    float        ReactivePower(const uint8_t channel) const;
+    float        ActiveEnergy(const uint8_t channel) const;
+    float        ReactiveEnergy(const uint8_t channel) const;
+    float        VoltageHarmonic(const uint8_t channel, const uint8_t harmonic) const;
+    float        CurrentHarmonic(const uint8_t channel, const uint8_t harmonic) const;
+    float        PowerHarmonic(const uint8_t channel, const uint8_t harmonic) const;
+    float        CurrentTHD(const uint8_t channel) const;
+    float        VoltageTHD(const uint8_t channel) const;
+    float        VoltagePhase(const uint8_t channel) const;
+    float        Phi(const uint8_t channel) const;
+    float        PowerFactor(const uint8_t channel) const;
+    virtual bool GetSeriesJSON(const string &serie, json &result) const;
   protected :
     AnalyzerSoftAggreg(const string &serial, const Analyzer::AnalyzerMode mode);
     virtual ~AnalyzerSoftAggreg();

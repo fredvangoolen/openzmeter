@@ -87,7 +87,7 @@ void AnalyzerSoftAlarms::GetAlarmsDef(const json &params, Response &response) {
     }
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }
@@ -144,8 +144,13 @@ void AnalyzerSoftAlarms::SetAlarmDef(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("UPDATE alarms SET name = " + DB.Bind(Name) + ", priority = " + DB.Bind(Priority) +", expression = " + DB.Bind(Expression) + ", aggreg = " + DB.Bind(Aggreg) + ", samples = " + DB.Bind(Samples) + ", windowlen = " + DB.Bind(Window) + " WHERE id = " + DB.Bind(ID)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
   pthread_mutex_lock(&pAlarmsMutex);
   auto Item = pAlarms.find(ID);
-  if(Item != pAlarms.end()) pAlarms.erase(Item);
-  pAlarms.emplace(ID, new AnalyzerSoftAlarm(pSerial, ID, Expression, Name, Priority, Samples, Window, Aggreg, pNominalVoltage, pNominalFrequency));
+  if(Item != pAlarms.end()) {
+    delete Item->second;
+    pAlarms.erase(ID);
+    pAlarms.emplace(ID, new AnalyzerSoftAlarm(pSerial, ID, Expression, Name, Priority, Samples, Window, Aggreg, pNominalVoltage, pNominalFrequency));
+  } else {
+    HTTPServer::FillResponse(response, "Alarm not found", "text/plain", HTTP_BAD_REQUEST);
+  }
   pthread_mutex_unlock(&pAlarmsMutex);
 }
 void AnalyzerSoftAlarms::DelAlarmDef(const json &params, Response &response) {
@@ -155,7 +160,11 @@ void AnalyzerSoftAlarms::DelAlarmDef(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms WHERE id = " + DB.Bind(ID)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
   pthread_mutex_lock(&pAlarmsMutex);
   auto Item = pAlarms.find(ID);
-  if(Item != pAlarms.end()) pAlarms.erase(Item);
+  if(Item != pAlarms.end()) {
+    pAlarms.erase(ID);
+  } else {
+    HTTPServer::FillResponse(response, "Alarm not found", "text/plain", HTTP_BAD_REQUEST);
+  }
   pthread_mutex_unlock(&pAlarmsMutex);
 }
 void AnalyzerSoftAlarms::GetAlarms(const json &params, Response &response) {
@@ -173,10 +182,10 @@ void AnalyzerSoftAlarms::GetAlarms(const json &params, Response &response) {
     sink.os << "[\n  " << Headers.dump();
     Database DB(pSerial);
     DB.ExecSentenceAsyncResult("SELECT json_build_array(name, priority, trigger, release) as result FROM alarms NATURAL JOIN alarms_ext WHERE trigger >= " + DB.Bind(From) + " AND trigger <= " + DB.Bind(To));
-    while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " << DB.ResultString("result");
+    while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " + DB.ResultString("result");
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }

@@ -15,7 +15,7 @@
       </div>
     </div>
     <div class="col-lg-12">
-      <events-table :analyzer="analyzer" :events.sync="TransferEvents.Data"></events-table>
+      <events-table :analyzer="analyzer" :events="TransferEvents.Data" @eventschanged="UpdateEvents"></events-table>
     </div>
   </div>
   <div v-else-if="analyzer==null">
@@ -36,7 +36,7 @@
     created: function() {
       this.TransferEvents.SingleShot = true;
       if((this.$route.query.From != null) && (this.$route.query.To != null)) {
-        localStorage.setItem('PeriodEvents', JSON.stringify([this.$route.query.From, this.$route.query.To]));
+        localStorage.setItem('PeriodEvents', JSON.stringify([parseInt(this.$route.query.From), parseInt(this.$route.query.To)]));
         this.TransferEvents.UpdateUnread = true;
       }
       history.pushState({}, null, this.$route.path);
@@ -47,6 +47,12 @@
     watch: {
       analyzer: function() { this.TransferEvents.Update(this.analyzer, this.Range); },
       Range: function() { this.TransferEvents.Update(this.analyzer, this.Range); }
+    },
+    methods: {
+      UpdateEvents: function() {
+        this.TransferEvents.Data = null;
+        this.TransferEvents.Update(this.analyzer, this.Range);
+      }
     },
     components: { EventsTable, TimeLine}
   }

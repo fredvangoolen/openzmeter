@@ -44,8 +44,8 @@
     props: { analyzer: Object },
     data: function() {
       return { Aggreg: null, Range: null, Height: 300, Expanded: false, DialogHeight: 300,
-               TransferGraph: this.SeriesTransfer(['FREQUENCY']),
-               TransferNow: this.SeriesTransfer(['FREQUENCY']),
+               TransferGraph: this.SeriesTransfer(['Frequency']),
+               TransferNow: this.SeriesTransfer(['Frequency']),
       };
     },
     created: function() {

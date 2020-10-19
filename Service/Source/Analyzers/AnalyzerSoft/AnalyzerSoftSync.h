@@ -14,48 +14,40 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
+#include <map>
 #include <pthread.h>
 #include <string>
 #include "HTTPServer.h"
+#include "AnalyzerSoftSyncWorker.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
+class AnalyzerSoft;
 class AnalyzerSoftSync {
-  enum SyncState   { NOT_LOGGED, LOGGED, CONNECTED, TERMINATE };
   private :
-    typedef struct {
-      pthread_mutex_t         *Mutex;                    //Export list locks
-      pthread_cond_t          *Cond;                     //Wakeup parent after last thread ends
-      uint32_t                *Count;                    //Count of running sync threads
-      string                   Server;                   //
-      string                   Cookie;                   //
-      string                   Method;                   //
-      json                     Params;                   //
-      uint64_t                 Sequence;                 //
-      //AnalyzerSoft            *Analyzer;                 //
-    } Sync_t;
-
+    bool                          pTerminate;        //Sync terminate signal
+    bool                          pReAuth;           //Need to clear cookie flag
+    pthread_t                     pThread;           //Export thread
+    pthread_cond_t                pCond;             //Wait workers condition
+    pthread_mutex_t               pMutex;            //Shared variables lock
+    AnalyzerSoft                 *pParent;           //Parent analyzer
+    string                        pServer;           //Export server address
+    string                        pUser;             //Export server user
+    string                        pPass;             //Export server password
+    string                        pName;             //Analyzer name
+    list<AnalyzerSoftSyncWorker*> pFreeWorkers;      //Avaliable workers
+    uint32_t                      pRunningWorkers;   //Currently active workers
   private :
-    pthread_t                  pThread;              //Export thread
-    pthread_mutex_t            pMutex;               //Shared variables lock
-    bool                       pTerminate;           //Sync terminate signal
-    string                     pSerial;              //Analyzer serial
-    string                     pName;                //Analyzer description
-    string                     pServer;              //Export server address
-    string                     pUser;                //Export server user
-    string                     pPass;                //Export server password
-
-
-
-  private :
-    void *Thread();
-    static void *Sync_RespThread(void *params);
-
+    void                   *Thread();
+    void                    PeriodicTasks();
+    bool                    Login(const string &path, Client *client, const string &user, const string &pass, string &cookie);
+    AnalyzerSoftSyncWorker *PopWorker();
   public :
     static json CheckConfig(const json &config);
   public :
-    AnalyzerSoftSync(const string &serial);
+    AnalyzerSoftSync(AnalyzerSoft *parent);
     ~AnalyzerSoftSync();
     void Config(const json &config, const string &name);
-
+    void PushWorker(AnalyzerSoftSyncWorker *worker, const bool fail);
 };
+// ---------------------------------------------------------------------------------------------------------------------

@@ -50,7 +50,7 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("delAlarmDef",     DelAlarmDefCallback);
   HTTPServer::RegisterCallback("getAlarms",       GetAlarmsCallback);
   HTTPServer::RegisterCallback("getAlarmsRange",  GetAlarmsRangeCallback);
-  HTTPServer::RegisterCallback("delAlarms",       DelAlarmCallback);
+  HTTPServer::RegisterCallback("delAlarm",        DelAlarmCallback);
   HTTPServer::RegisterCallback("delAlarmsRange",  DelAlarmsRangeCallback);
   HTTPServer::RegisterCallback("getRates",        GetRatesCallback);
   HTTPServer::RegisterCallback("getRate",         GetRateCallback);
@@ -89,7 +89,7 @@ AnalyzerManager::~AnalyzerManager() {
   HTTPServer::UnregisterCallback("delAlarmDef");
   HTTPServer::UnregisterCallback("getAlarms");
   HTTPServer::UnregisterCallback("getAlarmsRange");
-  HTTPServer::UnregisterCallback("delAlarms");
+  HTTPServer::UnregisterCallback("delAlarm");
   HTTPServer::UnregisterCallback("delAlarmsRange");
   HTTPServer::UnregisterCallback("getRates");
   HTTPServer::UnregisterCallback("getRate");
@@ -102,16 +102,22 @@ AnalyzerManager::~AnalyzerManager() {
   HTTPServer::UnregisterCallback("delPermission");
   LogFile::Debug("AnalyzerManager stopped");
 }
-void AnalyzerManager::AddAnalyzer(Analyzer *analyzer) {
+bool AnalyzerManager::AddAnalyzer(Analyzer *analyzer, const string &user) {
   pAnalyzersLock.WriteLock();
-  pAnalyzers.insert({analyzer->Serial(), analyzer});
+  auto Result = pAnalyzers.insert({analyzer->Serial(), analyzer});
   pAnalyzersLock.Unlock();
+  if(Result.second == true) {
+    Database DB;
+    if(user != "admin") DB.ExecSentenceNoResult("INSERT INTO permissions(username, serial, read, write, config, eventsread, alarmsread) VALUES(" + DB.Bind(user) + ", " + DB.Bind(analyzer->Serial()) + ", true, true, true, 0, 0) ON CONFLICT(username, serial) DO NOTHING");
+    DB.ExecSentenceNoResult("INSERT INTO permissions(username, serial, read, write, config, eventsread, alarmsread) VALUES('admin', " + DB.Bind(analyzer->Serial()) + ", true, true, true, 0, 0) ON CONFLICT(username, serial) DO NOTHING");
+  }
+  return Result.second;
 }
-void AnalyzerManager::DelAnalyzer(const string &serial) {
+bool AnalyzerManager::DelAnalyzer(const string &serial) {
   pAnalyzersLock.WriteLock();
-  auto Analyzer = pAnalyzers.find(serial);
-  if(Analyzer != pAnalyzers.end()) pAnalyzers.erase(Analyzer);
+  uint32_t Erased = pAnalyzers.erase(serial);
   pAnalyzersLock.Unlock();
+  return (Erased == 1);
 }
 bool AnalyzerManager::HandleModbus(uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
   pAnalyzersLock.ReadLock();
@@ -160,7 +166,7 @@ void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &respons
     }
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }

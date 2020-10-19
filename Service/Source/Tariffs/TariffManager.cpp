@@ -40,7 +40,7 @@ void TariffManager::GetTariffsCallback(const json &params, Response &response) {
     while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " + DB.ResultString("result") : DB.ResultString("result"));
     sink.os << "\n]";
     sink.done();
-    return false;
+    return true;
   };
   response.set_chunked_content_provider("application/json", Func);
 }

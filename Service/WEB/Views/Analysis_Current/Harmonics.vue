@@ -38,11 +38,11 @@
       GraphOptions: function() {
         if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return { };
         var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
-        var CurrentStyle = oZm.SerieStyle(oZm.Series['CURRENT'], this.analyzer, 0);
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, 0);
+        var CurrentStyle = oZm.SerieStyle(oZm.Series['Current'], this.analyzer, 0);
         for(var c in VoltageStyle.Colors) VoltageStyle.Colors[c] = chroma(VoltageStyle.Colors[c]).darken();
-        var VoltageNames = oZm.Series['VOLTAGE'].Names(this.analyzer);
-        var CurrentNames = oZm.Series['CURRENT'].Names(this.analyzer);
+        var VoltageNames = oZm.Series['Voltage'].Names(this.analyzer);
+        var CurrentNames = oZm.Series['Current'].Names(this.analyzer);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n]);
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n] && this.Options['Voltage']);
         for(var n in VoltageNames) Opt.series[VoltageNames[n]] = { axis: 'y2' };
@@ -77,8 +77,8 @@
           for(var i = 0; i < 50; i++) {
             if((this.Options['1st Harmonic'] == false) && (i == 0)) continue;
             var Row = [i];
-            for(var n = 0; n < this.data.Current_Harmonics.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics[n][i]))) : this.BinPower(this.data.Current_Harmonics[n][i]));
-            for(var n = 0; n < this.data.Voltage_Harmonics.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics[n][i]))) : this.BinPower(this.data.Voltage_Harmonics[n][i]));
+            for(var n = 0; n < this.data.Current_Harmonics_Complex.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics_Complex[n][i]))) : this.BinPower(this.data.Current_Harmonics_Complex[n][i]));
+            for(var n = 0; n < this.data.Voltage_Harmonics_Complex.length; n++) Row.push(this.Options['Log'] ? 20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics_Complex[n][i]))) : this.BinPower(this.data.Voltage_Harmonics_Complex[n][i]));
             Opt.file.push(Row);
           }
           Opt.dateWindow = [Opt.file[0][0] - 0.5, 49.5];
@@ -107,25 +107,25 @@
         var Data = [];
         if(this.data == null) return Data;
         var Header = ['Harmonic'];
-        for(var i = 0; i < oZm.Series['CURRENT'].Names(this.analyzer).length; i++) {
-          Header.push(oZm.Series['CURRENT'].Names(this.analyzer)[i]);
-          Header.push(oZm.Series['CURRENT'].Names(this.analyzer)[i] + ' (dB)');
-          Header.push(oZm.Series['CURRENT'].Names(this.analyzer)[i] + ' (Complex)');
+        for(var i = 0; i < oZm.Series['Current'].Names(this.analyzer).length; i++) {
+          Header.push(oZm.Series['Current'].Names(this.analyzer)[i]);
+          Header.push(oZm.Series['Current'].Names(this.analyzer)[i] + ' (dB)');
+          Header.push(oZm.Series['Current'].Names(this.analyzer)[i] + ' (Complex)');
         }
-        for(var i = 0; i < oZm.Series['VOLTAGE'].Names(this.analyzer).length; i++) {
-          Header.push(oZm.Series['VOLTAGE'].Names(this.analyzer)[i]);
-          Header.push(oZm.Series['VOLTAGE'].Names(this.analyzer)[i] + ' (dB)');
-          Header.push(oZm.Series['VOLTAGE'].Names(this.analyzer)[i] + ' (Complex)');
+        for(var i = 0; i < oZm.Series['Voltage'].Names(this.analyzer).length; i++) {
+          Header.push(oZm.Series['Voltage'].Names(this.analyzer)[i]);
+          Header.push(oZm.Series['Voltage'].Names(this.analyzer)[i] + ' (dB)');
+          Header.push(oZm.Series['Voltage'].Names(this.analyzer)[i] + ' (Complex)');
         }
         Data.push(Header);
         for(var i = 0; i < oZm.Series['HARMONICS'].Names.length; i++) {
           var Row = [oZm.Series['HARMONICS'].Names[i]];
-          for(var n = 0; n < oZm.Series['CURRENT'].Names(this.analyzer).length; n++) {
+          for(var n = 0; n < oZm.Series['Current'].Names(this.analyzer).length; n++) {
             Row.push(this.Round(this.BinPower(this.data.Current_Harmonics[n][i]), 3));
             Row.push(this.Round(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Current_Harmonics[n][i]))), 3));
             Row.push(this.Round(this.data.Current_Harmonics[n][i][0], 3) + ((this.data.Current_Harmonics[n][i][1] >= 0) ? '+' + this.Round(this.data.Current_Harmonics[n][i][1], 3) : this.Round(this.data.Current_Harmonics[n][i][1], 3)) + 'i');
           }
-          for(var n = 0; n < oZm.Series['VOLTAGE'].Names(this.analyzer).length; n++) {
+          for(var n = 0; n < oZm.Series['Voltage'].Names(this.analyzer).length; n++) {
             Row.push(this.Round(this.BinPower(this.data.Voltage_Harmonics[n][i]), 3));
             Row.push(this.Round(20.0 * Math.log10(Math.max(0.001, this.BinPower(this.data.Voltage_Harmonics[n][i]))), 3));
             Row.push(this.Round(this.data.Voltage_Harmonics[n][i][0], 3) + ((this.data.Voltage_Harmonics[n][i][1] >= 0) ? '+' + this.Round(this.data.Voltage_Harmonics[n][i][1], 3) : this.Round(this.data.Voltage_Harmonics[n][i][1], 3)) + 'i');

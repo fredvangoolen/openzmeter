@@ -36,7 +36,7 @@
       GraphOptions: function() {
         var Opt = { series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
         Opt.showRangeSelector = false;
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['VOLTAGE'], this.analyzer, 0);
+        var VoltageStyle = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, 0);
         Opt.legend = 'follow';
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;

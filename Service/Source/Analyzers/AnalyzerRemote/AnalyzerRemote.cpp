@@ -20,16 +20,13 @@
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerRemote::AnalyzerRemote(const string &id) : Analyzer(id) {
   Name("Never seen");
-  pMutex           = PTHREAD_MUTEX_INITIALIZER;
-  pProducerCond    = PTHREAD_COND_INITIALIZER;
-  pConsumerCond    = PTHREAD_COND_INITIALIZER;
-  pTerminate       = false;
-  pConsumerReady   = false;
-  pProducerRequest = NULL;
-  pSequence        = 0;
+  pMutex     = PTHREAD_MUTEX_INITIALIZER;
+  pCond      = PTHREAD_COND_INITIALIZER;
+  pTerminate = false;
 }
 AnalyzerRemote::~AnalyzerRemote() {
   pTerminate = true;
+  pthread_cond_broadcast(&pCond);
   //Espero.. no se como ni a que!
 
 //  pMembersLocks.WriteLock();
@@ -41,109 +38,109 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Name(params["Name"]);
   auto Func = [&](uint64_t offset, DataSink &sink) {
-    if(pTerminate == true) {
-      sink.done();
-      return false;
+    while((pTerminate == false) && (sink.is_writable() == true)) {
+      Online(true);
+      pthread_mutex_lock(&pMutex);
+      int Result = 0;
+      if(pSendPending.size() == 0) {
+        timespec Time;
+        clock_gettime(CLOCK_REALTIME, &Time);
+        Time.tv_sec = Time.tv_sec + 10;
+        Result = pthread_cond_timedwait(&pCond, &pMutex, &Time);
+      }
+      if((Result == 0) && (pSendPending.size() > 0)) {
+        auto Request = pSendPending.begin();
+        sink.os << "data: " + Request->second->ReqParams.dump() + "\n\n";
+        Request->second->Map = &pResponsePending;
+        pResponsePending.insert( { Request->first, Request->second } );
+        pSendPending.erase(Request);
+      } else if(Result != ETIMEDOUT) {
+        LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+      } else {
+        sink.os << "data: null\n\n";
+      }
+      pthread_mutex_unlock(&pMutex);
     }
-    Online(true);
-    pthread_mutex_lock(&pMutex);
-    pConsumerReady = true;
-    int Result     = 0;
-    if(pProducerRequest == NULL) {
-      timespec Time;
-      clock_gettime(CLOCK_REALTIME, &Time);
-      Time.tv_sec = Time.tv_sec + 1;
-      Result = pthread_cond_timedwait(&pConsumerCond, &pMutex, &Time);
-    }
-    if(Result == ETIMEDOUT) {
-      string Data = "data: null\n\n";
-      sink.write(Data.c_str(), Data.size());
-    } else if(Result == 0) {
-      pRequestList.insert(pProducerRequest);
-      string Data = "data: " + pProducerRequest->Request.dump() + "\n\n";
-      sink.write(Data.c_str(), Data.size());
-      pProducerRequest = NULL;
-    } else {
-      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-    }
-    pthread_cond_signal(&pProducerCond);
-    pthread_mutex_unlock(&pMutex);
     sink.done();
     return true;
   };
-  auto Free = [&]() {
-    pthread_mutex_lock(&pMutex);
-    pConsumerReady = false;
-    pthread_cond_broadcast(&pProducerCond);
-    pthread_mutex_unlock(&pMutex);
-  };
-  response.set_chunked_content_provider("text/event-stream", Func, Free);
+  response.set_chunked_content_provider("text/event-stream", Func);
 }
-void AnalyzerRemote::SetRemote(const json &params, Response &response) {
-  if((params.contains("Code") == false) || (params["Code"].is_number() == false)) return HTTPServer::FillResponse(response, "'Code' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Sequence") == false) || (params["Sequence"].is_number() == false)) return HTTPServer::FillResponse(response, "'Sequence' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Response") == false) || (params["Response"].is_string() == false)) return HTTPServer::FillResponse(response, "'Response' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Mime") == false) || (params["Mime"].is_string() == false)) return HTTPServer::FillResponse(response, "'Mime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerRemote::SetRemote(const map<string, string> &params, Response &response, const ContentReader &content_reader) {
   pthread_mutex_lock(&pMutex);
-  uint64_t Sequence = params["Sequence"];
-  auto     Request  = pRequestList.find(Sequence);
-  if(Request == pRequestList.end()) {
+  auto Tmp = pResponsePending.find(params.find("X-Sequence")->second);
+  if(Tmp == pResponsePending.end()) {
     pthread_mutex_unlock(&pMutex);
     return HTTPServer::FillResponse(response, "Sequence not found", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   }
-  (*Request)->Response = json::object();
-  (*Request)->Response["Code"] = params["Code"];
-  (*Request)->Response["Mime"] = params["Mime"];
-  (*Request)->Response["Response"] = params["Response"];
-  pthread_cond_signal(&(*Request)->Cond);
+  Request_t *Request = Tmp->second;
+  int        WriteFD = Request->Pipe[1];
+  Request->Map       = NULL;
+  Request->ResMime   = params.find("Content-Type")->second;
+  Request->ResCode   = atoi(params.find("X-Status")->second.c_str());
+  pResponsePending.erase(Tmp);
+  pthread_cond_signal(&Request->Cond);
   pthread_mutex_unlock(&pMutex);
+
+  content_reader([&, Request](const char *data, size_t length) -> bool {
+    ssize_t Write = write(WriteFD, data, length);
+    if(Write > 0) return true;
+    if(Write == -1) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    return false;
+  });
+  close(WriteFD);
   return HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void AnalyzerRemote::HandleRequest(const Analyzer::AnalyzerRights rights, const string &url, const json &params, Response &response) {
   if(CheckRights(params["UserName"], rights) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  
-  pthread_mutex_lock(&pMutex);
-  if(pConsumerReady == false) {
-    pthread_mutex_unlock(&pMutex);
-    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
-  }
-  while(pProducerRequest != NULL) {
-    pthread_cond_wait(&pProducerCond, &pMutex);
-    if(pConsumerReady == false) {
-      pthread_mutex_unlock(&pMutex);
-      return HTTPServer::FillResponse(response, "", "text/plain", HTTP_SERVICE_UNAVAILABLE);
-    }
-  }
-  Request_t Request;
-  timespec  Time;
-  Request.Cond     = PTHREAD_COND_INITIALIZER;
-  Request.Sequence = pSequence++;
-  Request.Request  = json::object();
-  Request.Request["Method"]   = url;
-  Request.Request["Params"]   = params;
-  Request.Request["Sequence"] = Request.Sequence;
-  Request.Request["Params"].erase("Analyzer");
-  Request.Response = nullptr;
-  pProducerRequest = &Request;
-  pthread_cond_signal(&pConsumerCond);
-  clock_gettime(CLOCK_REALTIME, &Time);
-  Time.tv_sec = Time.tv_sec + 30;
-  int Result  = pthread_cond_timedwait(&Request.Cond, &pMutex, &Time);
-  auto Tmp    = pRequestList.find(Request.Sequence);
-  if(Tmp != pRequestList.end()) pRequestList.erase(Tmp);
-  if(Result == ETIMEDOUT) {
-    pthread_mutex_unlock(&pMutex);
-    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_GATEWAY_TIMEOUT);
-  } else if(Result == 0) {
-    pthread_mutex_unlock(&pMutex);
-    string Mime = Request.Response["Mime"];
-    int    Code = Request.Response["Code"];
-    return HTTPServer::FillResponse(response, Request.Response["Response"], Mime.c_str(), Code);
-  } else {
-    pthread_mutex_unlock(&pMutex);
+  timespec   Time;
+  string     Sequence = Tools::GetUUID();
+  Request_t *Request  = new Request_t;
+  Request->Cond             = PTHREAD_COND_INITIALIZER;
+  Request->Map              = &pSendPending;
+  Request->ReqParams        = params;
+  Request->ReqParams["Method"]   = url;
+  Request->ReqParams["Sequence"] = Sequence;
+  Request->ReqParams.erase("Analyzer");
+  Request->ReqParams.erase("UserName");
+  if(pipe(Request->Pipe) != 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    delete Request;
     return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   }
+  pthread_mutex_lock(&pMutex);
+  pSendPending.emplace(Sequence, Request);
+  pthread_cond_signal(&pCond);
+  clock_gettime(CLOCK_REALTIME, &Time);
+  Time.tv_sec = Time.tv_sec + 10;
+  pthread_cond_timedwait(&Request->Cond, &pMutex, &Time);
+  if(Request->Map != NULL) {
+    Request->Map->erase(Sequence);
+    pthread_mutex_unlock(&pMutex);
+    close(Request->Pipe[0]);
+    close(Request->Pipe[1]);
+    delete Request;
+    return HTTPServer::FillResponse(response, "", "text/plain", HTTP_GATEWAY_TIMEOUT);
+  }
+  pthread_mutex_unlock(&pMutex);
+
+  auto Func = [&, Request](uint64_t offset, DataSink &sink) -> bool {
+    char Buff[128];
+    ssize_t Read = read(Request->Pipe[0], Buff, sizeof(Buff));
+    if(Read > 0) {
+      sink.write(Buff, Read);
+      return true;
+    }
+    if(Read == -1) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    sink.done();
+    return true;
+  };
+  auto Free = [Request]() {
+    close(Request->Pipe[0]);
+    delete Request;
+  };
+  response.status = Request->ResCode;
+  response.set_chunked_content_provider(Request->ResMime.c_str(), Func, Free);
 }
 void AnalyzerRemote::GetAnalyzer(const json &params, Response &response) {
   HandleRequest(READ, "getAnalyzer", params, response);
@@ -229,7 +226,22 @@ void AnalyzerRemote::DelAlarmsRange(const json &params, Response &response) {
 void AnalyzerRemote::DelAlarm(const json &params, Response &response) {
   HandleRequest(WRITE, "delAlarm", params, response);
 }
-bool AnalyzerRemote::HandleModbus(const uint8_t *buff, const uint16_t start, const uint8_t len) {
+void AnalyzerRemote::GetRates(const json &params, Response &response) {
+  HandleRequest(READ, "getRates", params, response);
+}
+void AnalyzerRemote::AddRate(const json &params, Response &response) {
+  HandleRequest(CONFIG, "addRate", params, response);
+}
+void AnalyzerRemote::GetRate(const json &params, Response &response) {
+  HandleRequest(READ, "getRate", params, response);
+}
+void AnalyzerRemote::SetRate(const json &params, Response &response) {
+  HandleRequest(CONFIG, "setRate", params, response);
+}
+void AnalyzerRemote::DelRate(const json &params, Response &response) {
+  HandleRequest(CONFIG, "delRate", params, response);
+}
+bool AnalyzerRemote::HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) {
 //  uint8_t Pending = len;
 
   return false;

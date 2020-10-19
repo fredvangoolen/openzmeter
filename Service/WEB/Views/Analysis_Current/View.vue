@@ -59,11 +59,11 @@
     props: { analyzer: { type: Object } },
     data: function() {
       return { ActiveTab: null, Aggreg: null, Range: null, Phases: null, Height: 300, Paused: false, Expanded: false, DialogHeight: 300,
-               TransferGraph: this.SeriesTransfer(['CURRENT']),
-               TransferNow: this.NowTransfer(['CURRENT', 'VOLTAGE_SAMPLES', 'CURRENT_SAMPLES', 'VOLTAGE_HARMONICS', 'CURRENT_HARMONICS', 'VOLTAGE_FFT', 'CURRENT_FFT', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
-               TransferCubism: this.SeriesTransfer(['CURRENT_HARMONICS', 'POWER_FACTOR', 'CURRENT_THD', 'PHI']),
-               Transfer1M: this.SeriesTransfer(['CURRENT']),
-               Transfer3S: this.SeriesTransfer(['CURRENT'])
+               TransferGraph: this.SeriesTransfer(['Current']),
+               TransferNow: this.NowTransfer(['Current', 'Voltage_Samples', 'Current_Samples', 'Voltage_Harmonics_Complex', 'Current_Harmonics_Complex', 'Voltage_FFT', 'Current_FFT', 'Power_Factor', 'Current_THD', 'Phi']),
+               TransferCubism: this.SeriesTransfer(['Current_Harmonics', 'Power_Factor', 'Current_THD', 'Phi']),
+               Transfer1M: this.SeriesTransfer(['Current']),
+               Transfer3S: this.SeriesTransfer(['Current'])
       };
     },
     created: function() {
