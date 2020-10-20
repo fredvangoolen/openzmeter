@@ -102,15 +102,13 @@ void *AnalyzerSoftSync::Thread() {
   Client *HTTPClient = NULL;
   while(pTerminate == false) {
     pthread_mutex_lock(&pMutex);
-    if(pReAuth == true) {
-      Cookie = "";
+    if((pReAuth == true) || (pUser != User) || (pName != Name) || (pPass != Pass) || (pServer != Server) || (HTTPClient == NULL) || (Url == NULL)) {
+      Cookie  = "";
       pReAuth = false;
-    }
-    if((pUser != User) || (pName != Name) || (pPass != Pass) || (pServer != Server) || (HTTPClient == NULL) || (Url == NULL)) {
-      User   = pUser;
-      Pass   = pPass;
-      Server = pServer;
-      Name   = pName;
+      User    = pUser;
+      Pass    = pPass;
+      Server  = pServer;
+      Name    = pName;
       if(Url != NULL) {
         delete Url;
         Url = NULL;
@@ -126,10 +124,10 @@ void *AnalyzerSoftSync::Thread() {
       HTTPClient->set_read_timeout(30);
       HTTPClient->set_write_timeout(30);
       HTTPClient->set_connection_timeout(30);
-      Cookie = "";
     }
     pthread_mutex_unlock(&pMutex);
     if(Login(Url->Path(), HTTPClient, User, Pass, Cookie) == false) continue;
+    string   Buffer;
     Request  Req;
     Response Res;
     json     Content     = json::object();
@@ -146,19 +144,36 @@ void *AnalyzerSoftSync::Thread() {
       usleep(1000000);
       return false;
     };
+    Req.progress = [&](uint64_t current, uint64_t total) -> bool {
+      if((current == 0) && (total > 0x00100000)) return false;
+      if(current == 0) {
+        Buffer.clear();
+        Buffer.reserve(total);
+      } else if(current == total) {
+        if((Buffer.size() > 5) && (Buffer.substr(0, 6) == "data: ")) {
+          Buffer = Buffer.substr(6);
+          json Content = json::parse(Buffer, NULL, false);
+          if(!Content.is_discarded() && Content.is_object() && Content["Sequence"].is_string() && Content["Method"].is_string()) {
+            LogFile::Info("Analyzer '%s' receive query from remote server", pParent->Serial().c_str());
+            string ID     = Content["Sequence"];
+            string Method = Content["Method"];
+            Content.erase("Sequence");
+            Content.erase("Method");
+            PopWorker()->Run(Cookie, *Url, ID, Method, Content);
+          }
+        }
+        Buffer.clear();
+      }
+      return true;
+     };
     Req.content_receiver = [&](const char *data, uint64_t len) -> bool {
-      if(pTerminate == true) return false;
-      if((len <= 5) || (strncmp("data: ", data, 6) != 0)) return false;
-      string Msg(&data[6], len - 6);
-      json Content = json::parse(Msg, NULL, false);
-      if((Content.is_discarded() == true) || (Content.is_object() == false)) return true;
-      if((Content["Sequence"].is_string() == false) || (Content["Method"].is_string() == false)) return false;
-      LogFile::Debug("Analyzer '%s' receive query from remote server", pParent->Serial().c_str());
-      string ID     = Content["Sequence"];
-      string Method = Content["Method"];
-      Content.erase("Sequence");
-      Content.erase("Method");
-      PopWorker()->Run(Cookie, *Url, ID, Method, Content);
+      pthread_mutex_lock(&pMutex);
+      if((pTerminate == true) || (pReAuth == true) || (pUser != User) || (pName != Name) || (pPass != Pass) || (pServer != Server)) {
+        pthread_mutex_unlock(&pMutex);
+        return false;
+      }
+      pthread_mutex_unlock(&pMutex);
+      Buffer.append(data, len);
       return true;
     };
     if(HTTPClient->send(Req, Res) == false) usleep(1000000);
