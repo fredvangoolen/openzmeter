@@ -18,6 +18,7 @@
             <button type="button" class="btn btn-xs btn-success" @click="Edit(props.rowData)">Add notes</button>
             <button type="button" class="btn btn-xs btn-default" @click="RMS(props.rowData)">RMS</button>
             <button type="button" class="btn btn-xs btn-default" @click="RAW(props.rowData)">Wave</button>
+            <button type="button" class="btn btn-xs btn-default" @click="CyclicHistogram(props.rowData)">CH</button>
             <button type="button" class="btn btn-danger btn-xs"  @click="Delete(props.rowData)">Delete</button>
           </div>
         </template>
