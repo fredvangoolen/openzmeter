@@ -127,10 +127,10 @@
       },
       CyclicHistogram: function(evt){
         this.ShowSpinner = true;
-        this.$http.post('getCyclicHistogram', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Type: evt.Type }).then(
+        this.$http.post('getCyclicHistogram', { ID: evt.id, Analyzer: this.analyzer.Analyzer, Type: evt.Type }).then(
           (result) => {
             this.ShowSpinner = false;
-            this.$router.push({name: 'CyclicHistogram' , params: {id: evt.StartTime}});
+            this.$router.push({name: 'CyclicHistogram' , params: {id: evt.id}});
           },
           (fail) => {
             this.ShowSpinner = false;
