@@ -35,7 +35,7 @@
     },
     created: function () {
       if((this.$route.query.From != null) && (this.$route.query.To != null)) {
-        localStorage.setItem('PeriodAlarms', JSON.stringify([this.$route.query.From, this.$route.query.To]));
+        localStorage.setItem('PeriodAlarms', JSON.stringify([parseInt(this.$route.query.From), parseInt(this.$route.query.To)]));
         this.TransferAlarms.UpdateUnread = true;
       }
       history.pushState({}, null, this.$route.path);

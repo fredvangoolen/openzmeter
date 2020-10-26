@@ -41,6 +41,7 @@ AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::Ana
   pCyclicHistogram  = cyclicHistogram;
 }
 AnalyzerSoftEvents::~AnalyzerSoftEvents() {
+  if(pWorker != NULL) delete pWorker;
   if(pEvent != NULL) delete pEvent;
   if(pPrevSamples != NULL) free(pPrevSamples);
   if(pPrevCycles != NULL) free(pPrevCycles);
