@@ -253,7 +253,7 @@ json AnalyzerSoftCyclicHistogram::GetCyclicHistogramForEvent(string event_id)
     if (DB->FecthRow())
     {
         result["id"] = stoi(DB->ResultString("id"));
-        result["event_id"] = stoll(DB->ResultString("event_id"));
+        result["event_id"] = DB->ResultString("event_id");
         result["starttime"] = stoll(DB->ResultString("starttime"));
         result["endtime"] = stoll(DB->ResultString("endtime"));
     }
