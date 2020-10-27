@@ -1,5 +1,5 @@
 <template>
-  <div class="navbar-nav" @mouseenter="$emit('update:expanded', true)" @mouseleave="$emit('update:expanded', false)" :class="{ 'expanded': expanded }">
+  <div class="navbar-nav" @mouseenter="$emit('expandmenu')" :class="{ 'expanded': expanded }">
     <div class="menu-wrapper">
       <sidebar-analyzer :analyzer="analyzer" @update:analyzer="$emit('update:analyzer', $event)" :expanded="expanded"></sidebar-analyzer>
       <sidebar-user :user="user" @update:user="$emit('update:user', $event)" :expanded="expanded"></sidebar-user>
@@ -42,7 +42,6 @@ export default {
     min-height: 100%;
     left: 0;
     position: fixed;
-   /* transform: translate(-262px,0);*/
     transition: transform .2s;
     top: 0px;
     width: 0px;
