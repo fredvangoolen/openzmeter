@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle" @mouseenter="$emit('update:expanded', true)" @click="$emit('update:expanded', true)"><img :src="require('Imgs/application_menu.png')"></button>
+      <button type="button" class="navbar-toggle" @mouseenter="$emit('expandmenu')" @click="$emit('expandmenu')"><img :src="require('Imgs/application_menu.png')"></button>
       <div class="navbar-brand">
         <img :src="require('Imgs/Logo.png')">
         <div data-toggle="tooltip" :title="'Uptime: ' + Uptime" v-if="Time != null"><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
