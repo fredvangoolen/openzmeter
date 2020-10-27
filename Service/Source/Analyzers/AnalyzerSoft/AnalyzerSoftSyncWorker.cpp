@@ -89,7 +89,7 @@ void *AnalyzerSoftSyncWorker::Thread() {
     else if(pMethod == "getEvents")      pAnalyzer->GetEvents(pParams, Resp);
     else if(pMethod == "getEventsRange") pAnalyzer->GetEventsRange(pParams, Resp);
     else if(pMethod == "delEventsRange") pAnalyzer->DelEventsRange(pParams, Resp);
-    else if(pMethod == "getEvent")       pAnalyzer->GetEvents(pParams, Resp);
+    else if(pMethod == "getEvent")       pAnalyzer->GetEvent(pParams, Resp);
     else if(pMethod == "setEvent")       pAnalyzer->SetEvent(pParams, Resp);
     else if(pMethod == "delEvent")       pAnalyzer->DelEvent(pParams, Resp);
     else if(pMethod == "getAlarmsDef")   pAnalyzer->GetAlarmsDef(pParams, Resp);
@@ -118,9 +118,9 @@ void *AnalyzerSoftSyncWorker::Thread() {
       if((Tmp != nullptr) && (Tmp->status == HTTP_OK)) {
         LogFile::Debug("Remote request '%s' for analyzer '%s' completed", pMethod.c_str(), pAnalyzer->Serial().c_str());
       } else if(Tmp != nullptr) {
-        LogFile::Error("Remote request '%s' for analyzer '%s' failed (ERROR: %d)", pMethod.c_str(), pAnalyzer->Serial().c_str(), Tmp->status);
+        LogFile::Warning("Remote request '%s' for analyzer '%s' failed (ERROR: %d)", pMethod.c_str(), pAnalyzer->Serial().c_str(), Tmp->status);
       } else {
-        LogFile::Error("Remote request '%s' for analyzer '%s' failed (can not connect)", pMethod.c_str(), pAnalyzer->Serial().c_str());
+        LogFile::Warning("Remote request '%s' for analyzer '%s' failed (can not connect)", pMethod.c_str(), pAnalyzer->Serial().c_str());
       }
     } else {
       auto Tmp = pClient->Post((pPath + "/setRemote").c_str(), Header, 0, Resp.content_provider_, Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type").c_str() : "text/plain");
@@ -128,9 +128,9 @@ void *AnalyzerSoftSyncWorker::Thread() {
       if((Tmp != nullptr) && (Tmp->status == HTTP_OK)) {
         LogFile::Debug("Remote request '%s' for analyzer '%s' completed", pMethod.c_str(), pAnalyzer->Serial().c_str());
       } else if(Tmp != nullptr) {
-        LogFile::Error("Remote request '%s' for analyzer '%s' failed (ERROR: %d)", pMethod.c_str(), pAnalyzer->Serial().c_str(), Tmp->status);
+        LogFile::Warning("Remote request '%s' for analyzer '%s' failed (ERROR: %d)", pMethod.c_str(), pAnalyzer->Serial().c_str(), Tmp->status);
       } else {
-        LogFile::Error("Remote request '%s' for analyzer '%s' failed (can not connect)", pMethod.c_str(), pAnalyzer->Serial().c_str());
+        LogFile::Warning("Remote request '%s' for analyzer '%s' failed (can not connect)", pMethod.c_str(), pAnalyzer->Serial().c_str());
       }
     }
     pthread_mutex_lock(&pMutex);

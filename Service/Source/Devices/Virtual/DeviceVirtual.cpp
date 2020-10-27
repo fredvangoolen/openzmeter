@@ -135,12 +135,19 @@ void *DeviceVirtual::Capture_Thread(void *args) {
   float          TimeInc          = 2.0 * M_PI / (This->pSampleRate / This->pFrequency);
   while(!This->pTerminate) {
     float Voltage[3], Current[4];
-    uint64_t Sampletime = Tools::GetTime64();
-    if((This->pAnalyzer->IsWorking() == false) && (((Sampletime - StartTime) * This->pSampleRate / 1000) > GeneratedSamples)) {
+    uint64_t TimeI = Tools::GetTime64() - StartTime;
+    if((This->pAnalyzer->IsWorking() == false) && ((TimeI * This->pSampleRate / 1000) > GeneratedSamples)) {
       Voltage[0] = (This->pFrequency > 0.0) ? This->pVoltage * M_SQRT2 * sin(Time) : This->pVoltage;
       Current[0] = (This->pFrequency > 0.0) ? This->pCurrent * M_SQRT2 * sin(Time + Phase) : This->pCurrent;
-      if(((Sampletime - StartTime) > 60000) && ((Sampletime - StartTime) < 65000))
-        Voltage[0] = Voltage[0] * 0.8;
+      if((TimeI >= 50000) && (TimeI < 60000)) {
+        Voltage[0] = Voltage[0] * 1.12;
+      } else if((TimeI >= 90000) && (TimeI < 100000)) {
+        Voltage[0] = Voltage[0] * 0.88;
+      } else if((TimeI >= 120000) && (TimeI < 121000)) {
+        Voltage[0] = Voltage[0] * (0.94 + (TimeI - 120000) / 25000.0);
+      } else if(TimeI >= 121000) {
+        Voltage[0] = Voltage[0] * 0.98;
+      }
       if((This->pMode == Analyzer::PHASE3) || (This->pMode == Analyzer::PHASE3N)) {
         Voltage[1] = (This->pFrequency > 0.0) ? This->pVoltage * M_SQRT2 * sin(Time - 120.0 * M_PI / 180.0) : This->pVoltage;
         Current[1] = (This->pFrequency > 0.0) ? This->pCurrent * M_SQRT2 * sin(Time + Phase - 120.0 * M_PI / 180.0) : This->pCurrent;
@@ -153,7 +160,7 @@ void *DeviceVirtual::Capture_Thread(void *args) {
       if(Time > (2.0 * M_PI)) Time -= 2.0 * M_PI;
       This->pAnalyzer->BufferAppend(Voltage, Current, 0);
     } else {
-      usleep(1000);
+      usleep(10000);
     }
   }
   return NULL;

@@ -51,7 +51,7 @@ else
 	@false
 endif
 ifeq ($(DEBUG), true)
-	CFLAGS += -O0 -g -ggdb3 -fstack-protector-all -fstack-check
+	CFLAGS += -O0 -g -ggdb3
 else
 	CFLAGS   += -O3 -flto -fwhole-program -Wall -fno-pic -fno-pie
 	LDFLAGS  += -flto

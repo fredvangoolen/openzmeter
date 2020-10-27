@@ -87,7 +87,7 @@
           if(Event.Type === 'RVC') {
             Event.Diff = 0;
             for(var i = 0; i < this.events.Rows[x][ReferenceCol].length; i++) {
-              if(Math.abs(this.events.Reference[x][i] - this.events.Rows[x][ChangeCol][i]) > Math.abs(Event.Diff)) Event.Diff = this.events.Rows[x][ChangeCol][i] - this.events.Rows[x][ReferenceCol][i];
+              if(Math.abs(this.events.Rows[x][ReferenceCol][i] - this.events.Rows[x][ChangeCol][i]) > Math.abs(Event.Diff)) Event.Diff = this.events.Rows[x][ChangeCol][i] - this.events.Rows[x][ReferenceCol][i];
             }
             Event.Change = this.Round(Event.Diff, 2, false) + '<br>(' + this.Round(Max, 2, false) + ' Max)';
             Event.Percent = this.Round(Event.Diff / this.events.Rows[x][ReferenceCol][0] * 100.0, 2, false);

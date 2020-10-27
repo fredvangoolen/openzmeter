@@ -170,8 +170,8 @@ void AnalyzerSoft::Analyzer_Func() {
     float Current     = 0.0;
     float ActivePower = 0.0;
     for(uint16_t i = 0; i < BlockSize; i++) {
-      Voltage     += pow(pInputBlock->VoltageSample(j, i), 2.0);
-      Current     += pow(pInputBlock->CurrentSample(j, i), 2.0);
+      Voltage     += pInputBlock->VoltageSample(j, i) * pInputBlock->VoltageSample(j, i);
+      Current     += pInputBlock->CurrentSample(j, i) * pInputBlock->CurrentSample(j, i);
       ActivePower += pInputBlock->VoltageSample(j, i) * pInputBlock->CurrentSample(j, i);
     }
     pAggreg200MS->setVoltage(j, sqrt(Voltage / BlockSize));
@@ -209,7 +209,7 @@ void AnalyzerSoft::Analyzer_Func() {
   if(pMode == PHASE3N) {
     float Current = 0.0;
     float THD     = 0.0;
-    for(uint16_t i = 0; i < BlockSize; i++) Current += pow(pInputBlock->CurrentSample(3, i), 2.0);
+    for(uint16_t i = 0; i < BlockSize; i++) Current += pInputBlock->CurrentSample(3, i) * pInputBlock->CurrentSample(3, i);
     pAggreg200MS->setCurrent(3, sqrt(Current / BlockSize));
     for(uint8_t i = 0; i < 50; i++) {
       pAggreg200MS->setCurrentHarmonic(3, i, pFFTs->CurrentHarmonic(3, i));

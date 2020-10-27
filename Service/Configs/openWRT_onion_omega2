@@ -1,21 +1,13 @@
-#Enable/Disable device plugins (set to true or false) ------------------------------------------------------------------
-DEVICE_V1      = true
-DEVICE_V2      = true
-DEVICE_VIRTUAL = true
-DEVICE_REMOTE  = true
-
 #Target OS (set to DEBIAN or OPENWRT) ----------------------------------------------------------------------------------
 OS_TARGET = OPENWRT
 
-#Enable/Disable tariff plugins (set to true or false) ------------------------------------------------------------------
-TARIFF_ESP  = true
-TARIFF_NONE = true
-
 # Build options --------------------------------------------------------------------------------------------------------
 DEBUG      = false
+ARCH       = mipsel-openwrt-linux
 CPP        = mipsel-openwrt-linux-gcc
 CC         = mipsel-openwrt-linux-gcc
 LD         = mipsel-openwrt-linux-ld
 CFLAGS    += -I $(STAGING_DIR)/target-mipsel_24kc_musl/usr/include -I $(STAGING_DIR)/target-mipsel_24kc_musl/usr/include/dbus-1.0 -I $(STAGING_DIR)/target-mipsel_24kc_musl/usr/lib/dbus-1.0/include
-CFLAGS    += -mno-branch-likely -mips32r2 -mtune=24kc -fno-caller-saves -fno-plt -fhonour-copts -msoft-float -mips16 -minterlink-mips16
+CFLAGS    += -mno-branch-likely -mips32r2 -mtune=24kc -fno-caller-saves -fno-plt -fhonour-copts -mhard-float
+#-mips16 -minterlink-mips16
 LDFLAGS   += -L $(STAGING_DIR)/target-mipsel_24kc_musl/usr/lib

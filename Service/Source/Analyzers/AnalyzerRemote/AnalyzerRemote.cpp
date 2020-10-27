@@ -27,12 +27,6 @@ AnalyzerRemote::AnalyzerRemote(const string &id) : Analyzer(id) {
 AnalyzerRemote::~AnalyzerRemote() {
   pTerminate = true;
   pthread_cond_broadcast(&pCond);
-  //Espero.. no se como ni a que!
-
-//  pMembersLocks.WriteLock();
-//  if(pRequestLocks != NULL) pRequestLocks->Abort();
-//  for(list<Query_t*>::iterator it = pQueries.begin(); it != pQueries.end(); it++) (*it)->Locks.Abort();
-//  pMembersLocks.WriteUnlock();
 }
 void AnalyzerRemote::GetRemote(const json &params, Response &response) {
   if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
