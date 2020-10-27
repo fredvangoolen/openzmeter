@@ -6,7 +6,7 @@ module.exports = {
   entry: './main.js',
   output: {
     path: path.resolve(__dirname, '../Tmp'),
-    publicPath: '/',
+    publicPath: '/myozm/',
     filename: 'openZmeter.js'
   },
   plugins: [
@@ -69,7 +69,7 @@ module.exports = {
     noInfo: true,
     overlay: true,
     proxy: {
-      '*': { target: 'http://localhost:8080/'}
+      '*': { target: 'http://10.8.0.105:8081'}
     }
   },
   performance: {

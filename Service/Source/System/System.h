@@ -25,6 +25,7 @@ class System final {
     static void     PeriodicTasks();
     static void     PowerOff();
     static uint64_t ParseProcMem(const string &name, const string &buff);
+    static bool     ReadFile(const string filename, string &res);
   public :
     static string Exec(const string &command, int *resultCode = NULL);
     static json   uBusCall(const string &path, const string &method, const json &params = nullptr);

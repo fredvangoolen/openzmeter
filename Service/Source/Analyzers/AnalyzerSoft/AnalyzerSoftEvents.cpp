@@ -148,13 +148,11 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
     if(pEvent != NULL) {
       bool IsRunning = false;
       for(uint8_t n = 0; (n < pVoltageChannels) && (IsRunning == false); n++) {
-//        printf("OPEN -> %f   %f\n", -CalcChange(Cycle[n], pNominalVoltage), (Event_DIP_SWELL - Event_Hysteresis));
         if((pEvent->Type == EVT_INTERRUPTION) && (-CalcChange(Cycle[n], pNominalVoltage) > (Event_INT - Event_Hysteresis))) {
           IsRunning = true;
         } else if((pEvent->Type == EVT_DIP) && (-CalcChange(Cycle[n], pNominalVoltage) > (Event_DIP_SWELL - Event_Hysteresis))) {
-//          printf("CLOSE -> %f   %f\n", -CalcChange(Cycle[n], pNominalVoltage), (Event_DIP_SWELL - Event_Hysteresis));
           IsRunning = true;
-        } else if((pEvent->Type == EVT_SWELL) && (CalcChange(Cycle[n], pNominalVoltage) < (Event_DIP_SWELL - Event_Hysteresis))) {
+        } else if((pEvent->Type == EVT_SWELL) && (CalcChange(Cycle[n], pNominalVoltage) > (Event_DIP_SWELL - Event_Hysteresis))) {
           IsRunning = true;
         }
       }
@@ -293,10 +291,14 @@ void AnalyzerSoftEvents::GetEvent(const json &params, Response &response) {
   if((params.contains("Samples") == false) || (params["Samples"].is_string() == false) || ((params["Samples"] != "RMS") && (params["Samples"] != "RAW"))) return HTTPServer::FillResponse(response, "'Samples' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Database DB(pSerial);
   string ID      = params["EventID"];
-  string Samples = to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_PRESTART : SAMPLES_RAW_PRESTART) + ", " + to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_POSSTART : SAMPLES_RAW_POSSTART) + ", " + to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_PREEND : SAMPLES_RAW_PREEND) + ", " + to_string((params["Samples"] == "RMS") ? SAMPLES_RMS_POSEND : SAMPLES_RAW_POSEND);
+  string Samples = params["Samples"];
   DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('Time', starttime, 'Type', evttype, 'SampleRate', samplerate, 'Reference', reference, 'Peak', peak, 'Change', change, 'Duration', duration, 'Notes', notes, "
-                             "'Length', (SELECT max(array_length(samples, 1)) FROM events_ext WHERE events_ext.id = events.id AND sampletype IN (" + Samples + ")), "
-                             "'Samples', (SELECT to_json(array_agg(samples)) FROM (SELECT sampletype, d1, array_agg(samples[d1][d2]) AS samples FROM events_ext, generate_subscripts(samples,1) d1, generate_subscripts(samples,2) d2 WHERE events_ext.id = events.id AND sampletype IN (" + Samples + ") GROUP BY sampletype, d1 ORDER BY sampletype ASC, d1 ASC) t1 ) "
+                             "'Length', (SELECT array_length(samples, 1) FROM events_ext WHERE events_ext.id = events.id AND sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_PRESTART : SAMPLES_RAW_PRESTART)) + "), "
+                             "'Samples', (WITH ext AS (SELECT samples, sampletype FROM events_ext WHERE events_ext.id = events.id) SELECT "
+                             " (SELECT samples FROM ext WHERE sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_PRESTART : SAMPLES_RAW_PRESTART)) + ") || "
+                             " (SELECT samples FROM ext where sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_POSSTART : SAMPLES_RAW_POSSTART)) + ") || "
+                             " (SELECT samples FROM ext WHERE sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_PREEND   : SAMPLES_RAW_PREEND)) + ") || "
+                             " (SELECT samples FROM ext WHERE sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_POSEND   : SAMPLES_RAW_POSEND)) + ")) "
                              ") AS result FROM events WHERE id = " + DB.Bind(ID));
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
