@@ -594,6 +594,10 @@
       "description": "Analyzer information queries"
     },
     {
+      "name": "Alarms",
+      "description": "Manage analyzer alarms"
+    },
+    {
       "name": "Devices",
       "description": "Devices configuration and listing"
     },
@@ -643,6 +647,203 @@
     }
   ],
   "paths": {
+    "/GetAlarmsDef": {
+      "post": {
+        "summary": "Get list of configured alarms for given analyzer",
+        "tags": [
+          "Alarms"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx"
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "Analyzer"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "AlarmID": "xxxxxxxxxxx",
+                    "Name": "Alarm 1",
+                    "Priority": 1,
+                    "Aggreg": "3S"
+                  },
+                  {
+                    "AlarmID": "xxxxxxxxxxx",
+                    "Name": "Alarm 2",
+                    "Priority": 3,
+                    "Aggreg": "1H"
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "On missing params"
+          }
+        }
+      }
+    },
+    "/GetAlarmDef": {
+      "post": {
+        "summary": "Get entire alarm configuration",
+        "tags": [
+          "Alarms"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "AlarmID": "xxxxxxxxxx"
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "AlarmID": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "AlarmID"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "Name": "Alarm 1",
+                  "Priority": 1,
+                  "Expression": "ActivePower>1000",
+                  "Aggreg": "3S",
+                  "Samples": 10,
+                  "Window": 20
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "On missing params"
+          }
+        }
+      }
+    },
+    "/DelAlarmDef": {
+      "post": {
+        "summary": "Delete alarm definition",
+        "tags": [
+          "Alarms"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "AlarmID": "xxxxxxxxxx"
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "AlarmID": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "AlarmID"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "400": {
+            "description": "On missing params"
+          }
+        }
+      }
+    },
+    "/DelAlarm": {
+      "post": {
+        "summary": "Delete detected alarm",
+        "tags": [
+          "Alarms"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "AlarmID": "xxxxxxxxxx",
+                  "Trigger": 1603790565225
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "AlarmID": {
+                    "type": "string"
+                  },
+                  "Trigger": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "AlarmID",
+                  "Trigger"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "400": {
+            "description": "On missing params"
+          },
+          "500": {
+            "description": "Fail to delete alarm"
+          }
+        }
+      }
+    },
     "/getAnalyzers": {
       "post": {
         "summary": "Get list of avaliable analyzers",
