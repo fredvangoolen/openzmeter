@@ -48,7 +48,7 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
         Request->second->Map = &pResponsePending;
         pResponsePending.insert( { Request->first, Request->second } );
         pSendPending.erase(Request);
-      } else if(Result != ETIMEDOUT) {
+      } else if(Result != 0) && (Result != ETIMEDOUT)) {
         LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       } else {
         sink.os << "data: null\n\n";

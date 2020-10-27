@@ -647,7 +647,7 @@
     }
   ],
   "paths": {
-    "/GetAlarmsDef": {
+    "/getAlarmsDef": {
       "post": {
         "summary": "Get list of configured alarms for given analyzer",
         "tags": [
@@ -701,7 +701,7 @@
         }
       }
     },
-    "/GetAlarmDef": {
+    "/getAlarmDef": {
       "post": {
         "summary": "Get entire alarm configuration",
         "tags": [
@@ -754,7 +754,7 @@
         }
       }
     },
-    "/DelAlarmDef": {
+    "/delAlarmDef": {
       "post": {
         "summary": "Delete alarm definition",
         "tags": [
@@ -795,7 +795,7 @@
         }
       }
     },
-    "/DelAlarm": {
+    "/delAlarm": {
       "post": {
         "summary": "Delete detected alarm",
         "tags": [
