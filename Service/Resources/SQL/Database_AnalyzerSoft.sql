@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS alarms (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS alarms_ext (
-  id            character varying NOT NULL,
+  id            character varying NOT NULL REFERENCES alarms(id) ON UPDATE CASCADE ON DELETE CASCADE,
   trigger       bigint            NOT NULL,
   release       bigint            NULL,
   PRIMARY KEY(trigger, id)
