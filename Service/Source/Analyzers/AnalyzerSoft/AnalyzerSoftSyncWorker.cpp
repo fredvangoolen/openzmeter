@@ -95,7 +95,6 @@ void *AnalyzerSoftSyncWorker::Thread() {
     else if(pMethod == "getAlarmsDef")   pAnalyzer->GetAlarmsDef(pParams, Resp);
     else if(pMethod == "testAlarm")      pAnalyzer->TestAlarm(pParams, Resp);
     else if(pMethod == "addAlarmDef")    pAnalyzer->AddAlarmDef(pParams, Resp);
-    else if(pMethod == "getAlarmDef")    pAnalyzer->GetAlarmDef(pParams, Resp);
     else if(pMethod == "setAlarmDef")    pAnalyzer->SetAlarmDef(pParams, Resp);
     else if(pMethod == "delAlarmDef")    pAnalyzer->DelAlarmDef(pParams, Resp);
     else if(pMethod == "getAlarms")      pAnalyzer->GetAlarms(pParams, Resp);

@@ -75,10 +75,7 @@
       },
       Edit: function(row) {
         this.ShowSpinner = true;
-        this.$http.post('getAlarmDef', { Analyzer: this.analyzer.Analyzer, AlarmID: row.AlarmID }).then(
-          (result) => { this.Alarm = Object.assign({ AlarmID: row.AlarmID }, result.data); },
-          (fail) => { this.ShowSpinner = false; }
-        );
+        this.Alarm = row
       },
       Delete: function(row) {
         if(confirm("Delete '" + row.Name + "' alarm?") == false) return;

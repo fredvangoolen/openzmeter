@@ -453,10 +453,6 @@ void AnalyzerSoft::AddAlarmDef(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pAlarms->AddAlarmDef(params, response);
 }
-void AnalyzerSoft::GetAlarmDef(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms->GetAlarmDef(params, response);
-}
 void AnalyzerSoft::SetAlarmDef(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pAlarms->SetAlarmDef(params, response);

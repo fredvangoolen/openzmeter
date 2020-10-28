@@ -45,7 +45,6 @@ class AnalyzerSoftAlarms final {
     void GetAlarmsDef(const json &params, Response &response);
     void TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS *aggreg);
     void AddAlarmDef(const json &params, Response &response);
-    void GetAlarmDef(const json &params, Response &response);
     void SetAlarmDef(const json &params, Response &response);
     void DelAlarmDef(const json &params, Response &response);
     void GetAlarms(const json &params, Response &response);

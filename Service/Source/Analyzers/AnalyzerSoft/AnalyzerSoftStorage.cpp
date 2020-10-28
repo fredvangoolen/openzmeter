@@ -67,7 +67,7 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
       string UserName = params["UserName"];
       DB.ExecSentenceAsyncResult("SELECT json_build_object('EventsRead', eventsread, 'AlarmsRead', alarmsread) as access FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
       if(DB.FecthRow() == true) Result["Last_Access"] = DB.ResultJSON("access");
-    } else if(Serie == "STORAGE") {
+    } else if(Serie == "Storage") {
       Database DB;
       Result["Storage"] = json::array();
       DB.ExecSentenceAsyncResult("WITH sizes AS (SELECT tablename, pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)) AS size from pg_tables WHERE schemaname = " + DB.Bind(pSerial) + ") "
@@ -78,8 +78,8 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
         "SELECT 'Aggreg_15M' AS name, size FROM sizes WHERE tablename = 'aggreg_15m' UNION "
         "SELECT 'Aggreg_1H' AS name, size FROM sizes WHERE tablename = 'aggreg_1h' UNION "
         "SELECT 'Events' AS name, SUM(size) FROM sizes WHERE tablename IN ('events', 'events_ext') UNION "
-        "SELECT 'Alarms' AS name, size FROM sizes WHERE tablename = 'alarms_ext' UNION "
-        "SELECT 'Settings' AS name, SUM(size) FROM sizes WHERE tablename IN ('alarms', 'rates')");
+        "SELECT 'Alarms' AS name, size FROM sizes WHERE tablename IN ('alarms', 'alarms_ext') UNION "
+        "SELECT 'Rates' AS name, SUM(size) FROM sizes WHERE tablename = 'rates'");
       while(DB.FecthRow()) {
         json Row = json::object();
         Row["Table"] = DB.ResultString("name");
@@ -208,7 +208,7 @@ void AnalyzerSoftStorage::GetSeriesRange(const json &params, Response &response)
   string Aggreg = params["Aggreg"];
   if((Aggreg != "200MS") && (Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' param must be '200MS', 3S', '1M', '10M', '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
   Database DB(pSerial);
-  DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM aggreg_" + Aggreg + ") AS t1) AS t2 ");
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('To', max(sampletime), 'From', min(sampletime)) AS ranges FROM aggreg_" + Aggreg);
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
 }

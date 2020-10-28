@@ -274,7 +274,7 @@ void AnalyzerSoftEvents::GetEvents(const json &params, Response &response) {
 }
 void AnalyzerSoftEvents::GetEventsRange(const json &params, Response &response) {
   Database DB(pSerial);
-  DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(sampletime) AS max, min(sampletime) AS min FROM events) AS t1) AS t2 ");
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('To', max(starttime), 'From', min(starttime)) AS ranges FROM events");
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
 }
