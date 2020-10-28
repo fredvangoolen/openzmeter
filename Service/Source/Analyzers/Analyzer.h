@@ -60,7 +60,6 @@ class Analyzer {
     virtual void GetAlarmsDef(const json &params, Response &response) = 0;
     virtual void TestAlarm(const json &params, Response &response) = 0;
     virtual void AddAlarmDef(const json &params, Response &response) = 0;
-    virtual void GetAlarmDef(const json &params, Response &response) = 0;
     virtual void SetAlarmDef(const json &params, Response &response) = 0;
     virtual void DelAlarmDef(const json &params, Response &response) = 0;
     virtual void GetAlarms(const json &params, Response &response) = 0;

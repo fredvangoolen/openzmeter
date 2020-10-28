@@ -16,6 +16,37 @@
   ],
   "components": {
     "schemas": {
+      "AlarmTemplate": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string"
+          },
+          "Priority": {
+            "type": "number"
+          },
+          "Expression": {
+            "type": "string"
+          },
+          "Aggreg": {
+            "type": "string"
+          },
+          "Samples": {
+            "type": "number"
+          },
+          "Window": {
+            "type": "number"
+          }
+        },
+        "example": {
+          "Name": "Alarm1",
+          "Priority": 0,
+          "Expression": "ActivePower>100",
+          "Aggreg": "3S",
+          "Samples": 10,
+          "Window": 20
+        }
+      },
       "UserTemplate": {
         "type": "object",
         "properties": {
@@ -683,13 +714,19 @@
                     "AlarmID": "xxxxxxxxxxx",
                     "Name": "Alarm 1",
                     "Priority": 1,
-                    "Aggreg": "3S"
+                    "Aggreg": "3S",
+                    "Expression": "ActivePower>1000",
+                    "Samples": 10,
+                    "Window": 20
                   },
                   {
                     "AlarmID": "xxxxxxxxxxx",
                     "Name": "Alarm 2",
                     "Priority": 3,
-                    "Aggreg": "1H"
+                    "Aggreg": "1H",
+                    "Expression": "ActivePower<500",
+                    "Samples": 10,
+                    "Window": 20
                   }
                 ]
               }
@@ -701,9 +738,9 @@
         }
       }
     },
-    "/getAlarmDef": {
+    "/addAlarmDef": {
       "post": {
-        "summary": "Get entire alarm configuration",
+        "summary": "Add new alarm definition",
         "tags": [
           "Alarms"
         ],
@@ -712,21 +749,24 @@
           "content": {
             "application/json": {
               "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "AlarmID": "xxxxxxxxxx"
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/AlarmTemplate"
                   },
-                  "AlarmID": {
-                    "type": "string"
+                  {
+                    "type": "object",
+                    "properties": {
+                      "Analyzer": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "Analyzer"
+                    ],
+                    "example": {
+                      "Analyzer": "xxxx"
+                    }
                   }
-                },
-                "required": [
-                  "Analyzer",
-                  "AlarmID"
                 ]
               }
             }
@@ -734,22 +774,65 @@
         },
         "responses": {
           "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "Name": "Alarm 1",
-                  "Priority": 1,
-                  "Expression": "ActivePower>1000",
-                  "Aggreg": "3S",
-                  "Samples": 10,
-                  "Window": 20
-                }
-              }
-            }
+            "description": "On success"
           },
           "400": {
             "description": "On missing params"
+          },
+          "500": {
+            "description": "On fail"
+          }
+        }
+      }
+    },
+    "/setAlarmDef": {
+      "post": {
+        "summary": "Update alarm definition",
+        "tags": [
+          "Alarms"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/AlarmTemplate"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "Analyzer": {
+                        "type": "string"
+                      },
+                      "AlarmID": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "AlarmID",
+                      "Analyzer"
+                    ],
+                    "example": {
+                      "AlarmID": "xxxx",
+                      "Analyzer": "xxxx"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success"
+          },
+          "400": {
+            "description": "On missing params"
+          },
+          "500": {
+            "description": "On fail"
           }
         }
       }
@@ -986,7 +1069,7 @@
                         "UNREAD_ALARMS",
                         "PERMISSIONS",
                         "LAST_ACCESS",
-                        "STORAGE"
+                        "Storage"
                       ]
                     }
                   }

@@ -80,7 +80,7 @@ void AnalyzerSoftAlarms::GetAlarmsDef(const json &params, Response &response) {
     uint32_t Items = 0;
     sink.os << "[\n  ";
     Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('AlarmID', id, 'Name', name, 'Priority', priority, 'Aggreg', aggreg) AS result FROM alarms");
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('AlarmID', id, 'Name', name, 'Priority', priority, 'Expression', expression, 'Aggreg', aggreg, 'Samples', samples, 'Window', windowlen) AS result FROM alarms");
     while(DB.FecthRow() && sink.is_writable()) {
       if(Items++ != 0) sink.os << ",\n  ";
       sink.os << DB.ResultString("result");
@@ -121,14 +121,6 @@ void AnalyzerSoftAlarms::AddAlarmDef(const json &params, Response &response) {
   pthread_mutex_lock(&pAlarmsMutex);
   pAlarms.emplace(ID, new AnalyzerSoftAlarm(pSerial, ID, Expression, Name, Priority, Samples, Window, Aggreg, pNominalVoltage, pNominalFrequency));
   pthread_mutex_unlock(&pAlarmsMutex);
-}
-void AnalyzerSoftAlarms::GetAlarmDef(const json &params, Response &response) {
-  if((params.contains("AlarmID") == false) || (params["AlarmID"].is_string() == false)) return HTTPServer::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string ID = params["AlarmID"];
-  Database DB(pSerial);
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'Priority', priority, 'Expression', expression, 'Aggreg', aggreg, 'Samples', samples, 'Window', windowlen) AS result FROM alarms WHERE id = " + DB.Bind(ID));
-  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
 void AnalyzerSoftAlarms::SetAlarmDef(const json &params, Response &response) {
   if((params.contains("AlarmID") == false) || (params["AlarmID"].is_string() == false)) return HTTPServer::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -191,7 +183,7 @@ void AnalyzerSoftAlarms::GetAlarms(const json &params, Response &response) {
 }
 void AnalyzerSoftAlarms::GetAlarmsRange(const json &params, Response &response) {
   Database DB(pSerial);
-  DB.ExecSentenceAsyncResult("SELECT ranges FROM (SELECT json_build_object('To', max, 'From', min) AS ranges FROM (SELECT max(alarmtime) AS max, min(alarmtime) AS min FROM alarms) AS t1) AS t2 ");
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('To', max(trigger), 'From', min(trigger)) AS ranges FROM alarms_ext");
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
 }

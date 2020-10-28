@@ -193,9 +193,6 @@ void AnalyzerRemote::TestAlarm(const json &params, Response &response) {
 void AnalyzerRemote::AddAlarmDef(const json &params, Response &response) {
   HandleRequest(CONFIG, "addAlarmDef", params, response);
 }
-void AnalyzerRemote::GetAlarmDef(const json &params, Response &response) {
-  HandleRequest(READ, "getAlarmDef", params, response);
-}
 void AnalyzerRemote::SetAlarmDef(const json &params, Response &response) {
   HandleRequest(CONFIG, "setAlarmDef", params, response);
 }

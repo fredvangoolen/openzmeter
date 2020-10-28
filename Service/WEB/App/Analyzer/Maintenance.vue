@@ -12,139 +12,119 @@
     </div>
     <div class="row">
       <div class="col-xs-12">
-        <detail-tabs :tabs="['200MS','3S', '1M', '10M', '15M', '1H', 'Events', 'Alarms', 'Settings']" v-model="ActiveTab"></detail-tabs>
+        <detail-tabs :tabs="['200MS','3S', '1M', '10M', '15M', '1H', 'Events', 'Alarms', 'Ratejgks']" v-model="ActiveTab"></detail-tabs>
         <table v-if="ActiveTab=='200MS'">
           <tr>
             <td class="first-row">Store 200 miliseconds data. Table persistence is limited to an hour.</td>
             <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Aggreg_200MS')) }}</td>
           </tr>
           <tr class="line">
-            <td class="help">Delete all data in this table. All used space is reclaimed.</td>
-            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Clear('200MS', true)">Execute</button></td>
+            <td>Delete all data in this table</td>
+            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Delete('200MS', false)">Execute</button></td>
           </tr>
           <tr class="line">
-            <td class="help">Download all table data to a file.</td>
-            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('200MS', true)">Execute</button></td>
+            <td>Download all table data to a file</td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('200MS', false)">Execute</button></td>
+          </tr>
+          <tr class="line">
+            <td>Restore data from file</td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs disabled">Execute</button></td>
           </tr>
         </table>
         <table v-if="ActiveTab=='3S'">
           <tr>
-            <td class="first-row">Store 3 seconds data. Table persistence is limited only by storage.</td>
+            <td class="first-row">Store 3 seconds data. Table persistence is limited only by avaliable storage.</td>
             <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Aggreg_3S')) }}</td>
           </tr>
           <tr class="line">
-            <td class="help">Delete all data in this table. All used space is reclaimed.</td>
-            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Clear('3S', true)">Execute</button></td>
-          </tr>
-          <tr class="line">
-            <td class="help">Clear selected range of table.
+            <td>Delete table data
               <div style="display:flex">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+                <input type="checkbox" v-model="Del3SRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del3SRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del3SRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
-            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Clear('3S', false)">Execute</button></td>
+            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Delete('3S', Del3SRanged)">Execute</button></td>
           </tr>
           <tr class="line">
-            <td class="help">Download all table data to a file.</td>
-            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('3S', true)">Execute</button></td>
-          </tr>
-          <tr class="line">
-            <td class="help">Download selected range of table data to a file.
+            <td>Download table data to a file
               <div style="display:flex">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+                <input type="checkbox" v-model="Get3SRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get3SRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get3SRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
-            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('3S', false)">Execute</button></td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('3S', Get3SRanged)">Execute</button></td>
           </tr>
           <tr class="line">
-            <td class="help">Restore data from file. Stored rows in overlapped period are replaced with new ones.</td>
+            <td>Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span></td>
             <td class="action"><button type="button" class="btn btn-default btn-xs" @click="alert('NOT IMPLEMENTED!')">Execute</button></td>
           </tr>
         </table>
         <table v-if="ActiveTab=='1M'">
           <tr>
-            <td class="first-row">Store 1 minute data. Table persistence is limited only by storage but advanced parameters persist only for a day.</td>
+            <td class="first-row">Store 1 minute data. Table persistence is limited only by avaliable storage.<br><span class="help">Advanced parameters persist only for a day.</span></td>
             <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Aggreg_1M')) }}</td>
           </tr>
           <tr class="line">
-            <td class="help">Delete all data in this table. All used space is reclaimed.</td>
-            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Clear('1M', true)">Execute</button></td>
-          </tr>
-          <tr class="line">
-            <td class="help">Clear selected range of table.
+            <td>Delete table data
               <div style="display:flex">
-                <label>From:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+                <input type="checkbox" v-model="Del1MRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del1MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del1MRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
-            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Clear('1M', false)">Execute</button></td>
+            <td class="action"><button type="button" class="btn btn-danger btn-xs" @click="Delete('1M', Del1MRanged)">Execute</button></td>
           </tr>
           <tr class="line">
-            <td class="help">Download all table data to a file.</td>
-            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('1M', true)">Execute</button></td>
-          </tr>
-          <tr class="line">
-            <td class="help">Download selected range of table data to a file.
+            <td>Download table data to a file
               <div style="display:flex">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+                <input type="checkbox" v-model="Get1MRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get1MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get1MRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
-            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('1M', false)">Execute</button></td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('1M', Get1MRanged)">Execute</button></td>
           </tr>
           <tr class="line">
-            <td class="help">Restore data from file. Stored rows in overlapped period are replaced with new ones.</td>
+            <td>Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span></td>
             <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button></td>
           </tr>
         </table>
-
-
         <table v-if="ActiveTab=='10M'">
           <tr>
-            <td class="first-row">
-              Store 10 minute data. Table persistence is limited only by storage.
-            </td>
-            <td class="first-row text-right action">
-              {{ BestUnitsBin(TableSize('Aggreg_10M')) }}
-            </td>
+            <td class="first-row">Store 10 minute data. Table persistence is limited only by avaliable storage.</td>
+            <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Aggreg_10M')) }}</td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Delete all data in this table. All used space is reclaimed.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Download all table data to a file.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Download selected range of table data to a file.
+            <td>
+              Delete table data
               <div style="display:flex">
-                <label>From:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+                <input type="checkbox" v-model="Del10MRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del10MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del10MRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-danger btn-xs" @click="Delete('10M', Del10MRanged)">Execute</button>
             </td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Restore data from file. Stored rows in overlapped period are replaced with new ones.
+            <td>
+              Download table data to a file
+              <div style="display:flex">
+                <input type="checkbox" v-model="Get10MRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get10MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get10MRanged" v-model="To" style="flex-grow:2"></date-picker>
+              </div>
+            </td>
+            <td class="action">
+              <button type="button" class="btn btn-default btn-xs" @click="Download('10M', Get10MRanged)">Execute</button>
+            </td>
+          </tr>
+          <tr class="line">
+            <td>
+              Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span>
             </td>
             <td class="action">
               <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
@@ -153,46 +133,38 @@
         </table>
         <table v-if="ActiveTab=='15M'">
           <tr>
-            <td class="first-row">
-              Store 15 minute data. Table persistence is limited only by storage.
-            </td>
-            <td class="first-row text-right action">
-              {{ BestUnitsBin(TableSize('Aggreg_15M')) }}
-            </td>
+            <td class="first-row">Store 15 minute data. Table persistence is limited only by avaliable storage.</td>
+            <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Aggreg_15M')) }}</td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Delete all data in this table. All used space is reclaimed.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Download all table data to a file.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Download selected range of table data to a file.
+            <td>
+              Delete table data
               <div style="display:flex">
-                <label>From:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+                <input type="checkbox" v-model="Del15MRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del15MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del15MRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-danger btn-xs" @click="Delete('15M', Del15MRanged)">Execute</button>
             </td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Restore data from file. Stored rows in overlapped period are replaced with new ones.
+            <td>
+              Download table data to a file
+              <div style="display:flex">
+                <input type="checkbox" v-model="Get15MRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get15MRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get15MRanged" v-model="To" style="flex-grow:2"></date-picker>
+              </div>
+            </td>
+            <td class="action">
+              <button type="button" class="btn btn-default btn-xs" @click="Download('15M', Get15MRanged)">Execute</button>
+            </td>
+          </tr>
+          <tr class="line">
+            <td>
+              Restore data from file<br><span  class="help">Stored rows in overlapped period are replaced with new ones</span>
             </td>
             <td class="action">
               <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
@@ -201,46 +173,38 @@
         </table>
         <table v-if="ActiveTab=='1H'">
           <tr>
-            <td class="first-row">
-              Store 1 hour data. Table persistence is limited only by storage.
-            </td>
-            <td class="first-row text-right action">
-              {{ BestUnitsBin(TableSize('Aggreg_1H')) }}
-            </td>
+            <td class="first-row">Store 1 hour data. Table persistence is limited only by storage.</td>
+            <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Aggreg_1H')) }}</td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Delete all data in this table. All used space is reclaimed.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Download all table data to a file.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Download selected range of table data to a file.
+            <td>
+              Delete table data
               <div style="display:flex">
-                <label>From:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+                <input type="checkbox" v-model="Del1HRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del1HRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Del1HRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-danger btn-xs" @click="Delete('1H', Del1HMRanged)">Execute</button>
             </td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Restore data from file. Stored rows in overlapped period are replaced with new ones.
+            <td>
+              Download table data to a file
+              <div style="display:flex">
+                <input type="checkbox" v-model="Get1HRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get1HRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get1HRanged" v-model="To" style="flex-grow:2"></date-picker>
+              </div>
+            </td>
+            <td class="action">
+              <button type="button" class="btn btn-default btn-xs" @click="Download('1H', Get1HMRanged)">Execute</button>
+            </td>
+          </tr>
+          <tr class="line">
+            <td>
+              Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span>
             </td>
             <td class="action">
               <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
@@ -249,145 +213,129 @@
         </table>
         <table v-if="ActiveTab=='Events'">
           <tr>
-            <td class="first-row">
-              Store event list, RMS and waveforms.
-            </td>
-            <td class="first-row text-right action">
-              {{ BestUnitsBin(TableSize('Events')) }}
-            </td>
+            <td class="first-row">Store event list, RMS and waveforms.</td>
+            <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Events')) }}</td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Delete all data in this table. All used space is reclaimed.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Download all table data to a file.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Download selected range of table data to a file.
+            <td>
+              Delete events data
               <div style="display:flex">
-                <label>From:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+                <input type="checkbox" v-model="DelEventsRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelEventsRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelEventsRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-danger btn-xs" @click="Delete('1H', DelEventsRanged)">Execute</button>
             </td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Restore data from file. Stored rows in overlapped period are replaced with new ones.
+            <td>
+              Download table data to a file
+              <div style="display:flex">
+                <input type="checkbox" v-model="GetEventsRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!GetEventsRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!GetEventsRanged" v-model="To" style="flex-grow:2"></date-picker>
+              </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-default btn-xs" @click="Download('Events', GetEventsRanged)">Execute</button>
+            </td>
+          </tr>
+          <tr class="line">
+            <td>
+              Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span>
+            </td>
+            <td class="action">
+              <button type="button" class="btn btn-default btn-xs" @click="Download('Events', GetEventsRanged)">Execute</button>
             </td>
           </tr>
         </table>
         <table v-if="ActiveTab=='Alarms'">
           <tr>
-            <td class="first-row">
-              Store alarm list.
-            </td>
-            <td class="first-row text-right action">
-              {{ BestUnitsBin(TableSize('Alarms')) }}
-            </td>
+            <td class="first-row">Store alarm list</td>
+            <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Alarms')) }}</td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Delete all data in this table. All used space is reclaimed.
+            <td>
+              Delete all alarms definitions
             </td>
             <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-danger btn-xs" @click="Delete('AlarmsDef')">Execute</button>
             </td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Download all table data to a file.
+            <td>
+              Save all alarms definitions
+            </td>
+            <td class="action">
+              <button type="button" class="btn btn-default btn-xs" @click="Download('AlarmsDef')">Execute</button>
+            </td>
+          </tr>
+          <tr class="line">
+            <td>
+              Restore alarms definitions
             </td>
             <td class="action">
               <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
             </td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Download selected range of table data to a file.
+            <td>
+              Delete registered alarms
               <div style="display:flex">
-                <label>From:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
+                <input type="checkbox" v-model="DelAlarmsRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelAlarmsRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelAlarmsRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-danger btn-xs" @click="Delete('1H', DelEventsRanged)">Execute</button>
             </td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Restore data from file. Stored rows in overlapped period are replaced with new ones.
+            <td>
+              Download registered alarms
+              <div style="display:flex">
+                <input type="checkbox" v-model="GetAlarmsRanged">
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!GetAlarmsRanged" v-model="From" style="flex-grow:2"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!GetAlarmsRanged" v-model="To" style="flex-grow:2"></date-picker>
+              </div>
+            </td>
+            <td class="action">
+              <button type="button" class="btn btn-default btn-xs" @click="Download('Alarms', GetAlarmsRanged)">Execute</button>
+            </td>
+          </tr>
+          <tr class="line">
+            <td>
+              Restore registered alarms<br><span class="help">Stored rows in overlapped period are replaced with new ones</span>
             </td>
             <td class="action">
               <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
             </td>
           </tr>
         </table>
-        <table v-if="ActiveTab=='Settings'">
+        <table v-if="ActiveTab=='Rates'">
           <tr>
-            <td class="first-row">
-              Store configured alarms and rates.
-            </td>
-            <td class="first-row text-right action">
-              {{ BestUnitsBin(TableSize('Settings')) }}
+            <td class="first-row">Store configured alarms and rates</td>
+            <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Rates')) }}</td>
+          </tr>
+          <tr class="line">
+            <td>Delete all configured rates</td>
+            <td class="action">
+              <button type="button" class="btn btn-danger btn-xs" @click="Delete('Rates')">Execute</button>
             </td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Delete all data in this table. All used space is reclaimed.
-            </td>
+            <td>Save all configured rates</td>
             <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-default btn-xs" @click="Delete('Rates')">Execute</button>
             </td>
           </tr>
           <tr class="line">
-            <td class="help">
-              Download all table data to a file.
-            </td>
+            <td>Restore configured rates</td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Download selected range of table data to a file.
-              <div style="display:flex">
-                <label>From:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label>
-                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" v-model="To" style="flex-grow:2"></date-picker>
-              </div>
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td class="help">
-              Restore data from file. Stored rows in overlapped period are replaced with new ones.
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-default btn-xs" @click="Delete('Rates')">Execute</button>
             </td>
           </tr>
         </table>
@@ -404,16 +352,32 @@
     props: { analyzer: Object },
     data() {
       return { ShowSpinner: false, Action: 'Clear all', From: 0, To: 0, Storage: [], ActiveTab: null,
+               Del3SRanged: false, Get3SRanged: false, Del1MRanged: false, Get1MRanged: false, Del10MRanged: false, Get10MRanged: false,
+               Del15MRanged: false, Get15MRanged: false, Del1HRanged: false, Get1HRanged: false,
+               DelEventsRanged: false, GetEventsRanged: false,  DelAlarmsRanged: false, GetAlarmsRanged: false
       };
     },
     watch: {
       ActiveTab: function(tab) {
-        if((tab != '3S') && (tab != '1M') && (tab != '10M') && (tab != '15M') && (tab != '1H')) return;
-        this.ShowSpinner = true;
-        this.$http.post('getSeriesRange', { Analyzer: this.analyzer.Analyzer, Aggreg: tab }).then(
-          (result) => { this.ShowSpinner = false; this.From = result.body.From; this.To = result.body.To; },
-          (fail) => { this.ShowSpinner = false; }
-        );
+        if((tab == '3S') || (tab == '1M') || (tab == '10M') || (tab == '15M') || (tab == '1H')) {
+          this.ShowSpinner = true;
+          this.$http.post('getSeriesRange', { Analyzer: this.analyzer.Analyzer, Aggreg: tab }).then(
+            (result) => { this.ShowSpinner = false; this.From = result.body.From; this.To = result.body.To; },
+            (fail) => { this.ShowSpinner = false; }
+          );
+        } else if(tab == 'Events') {
+          this.ShowSpinner = true;
+          this.$http.post('getEventsRange', { Analyzer: this.analyzer.Analyzer }).then(
+            (result) => { this.ShowSpinner = false; this.From = result.body.From; this.To = result.body.To; },
+            (fail) => { this.ShowSpinner = false; }
+          );
+        } else if(tab == 'Alarms') {
+          this.ShowSpinner = true;
+          this.$http.post('getAlarmsRange', { Analyzer: this.analyzer.Analyzer }).then(
+            (result) => { this.ShowSpinner = false; this.From = result.body.From; this.To = result.body.To; },
+            (fail) => { this.ShowSpinner = false; }
+          );
+        }
       },
     },
     created: function() {
@@ -436,7 +400,7 @@
       GetStorage: function() {
         this.Rate = null;
         this.ShowSpinner = true;
-        this.$http.post('getStatus', { Analyzer: this.analyzer.Analyzer, Series: ['STORAGE'] }).then(
+        this.$http.post('getStatus', { Analyzer: this.analyzer.Analyzer, Series: ['Storage'] }).then(
           (result) => {
             this.Storage = result.body.Storage;
             this.ShowSpinner = false;
@@ -456,7 +420,7 @@
       Download: function(aggreg, all) {
         this.ShowSpinner = true;
         var Series = [];
-        if(aggreg == '200MS') Series = ['Voltage', 'Current', 'Unbalance', 'Frequency', 'Flag', 'Active_Power', 'Reactive_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi'];
+        if(aggreg == '200MS') Series = ['Voltage', 'Current', 'Unbalance', 'Frequency', 'Flag', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi', 'Voltage_Harmonics', 'Voltage_Harmonics_Complex', 'Current_Harmonics', 'Current_Harmonics_Complex', 'Power_Harmonics'];
         if(aggreg == '3S')    Series = ['Voltage', 'Current', 'Frequency', 'Flag', 'Active_Power', 'Reactive_Power'];
         if(aggreg == '1M')    Series = ['Voltage', 'Current', 'Frequency', 'Flag', 'Power_Factor', 'Unbalance', 'Voltage_THD', 'Current_THD', 'Active_Power', 'Reactive_Power', 'Phi', 'Voltage_Harmonics', 'Current_Harmonics', 'Power_Harmonics'];
 
@@ -650,6 +614,10 @@
   }
   .help {
     font-size: 85%;
+  }
+  input[type=checkbox] {
+    margin-top: 6px;
+    margin-right: 4px;
   }
 
 

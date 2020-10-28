@@ -55,7 +55,6 @@ class AnalyzerRemote : public Analyzer {
     void GetAlarmsDef(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
     void AddAlarmDef(const json &params, Response &response) override;
-    void GetAlarmDef(const json &params, Response &response) override;
     void SetAlarmDef(const json &params, Response &response) override;
     void DelAlarmDef(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;

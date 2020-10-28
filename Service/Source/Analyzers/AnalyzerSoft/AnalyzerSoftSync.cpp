@@ -154,7 +154,7 @@ void *AnalyzerSoftSync::Thread() {
           Buffer = Buffer.substr(6);
           json Content = json::parse(Buffer, NULL, false);
           if(!Content.is_discarded() && Content.is_object() && Content["Sequence"].is_string() && Content["Method"].is_string()) {
-            LogFile::Info("Analyzer '%s' receive query from remote server", pParent->Serial().c_str());
+            LogFile::Debug("Analyzer '%s' receive query from remote server", pParent->Serial().c_str());
             string ID     = Content["Sequence"];
             string Method = Content["Method"];
             Content.erase("Sequence");
