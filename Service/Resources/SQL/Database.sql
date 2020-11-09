@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   company       character varying  NOT NULL,
   photo         text               NULL,
   email         character varying  NOT NULL,
-  telegram      bigint             NULL UNIQUE
+  telegram      bigint             NULL
 ) WITH (OIDS=FALSE);
 INSERT INTO users(username, password, lastlogin, time_zone, name, address, company, photo, email, telegram) VALUES('admin', MD5('admin'), 0, 'UTC', 'System administrator', '', '', '', '', 0) ON CONFLICT (username) DO NOTHING;
 

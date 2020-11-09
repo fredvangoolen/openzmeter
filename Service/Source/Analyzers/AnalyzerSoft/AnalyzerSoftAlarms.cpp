@@ -14,6 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAlarms.h"
+#include "Telegram.h"
 #include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftAlarms::AnalyzerSoftAlarms(AnalyzerSoftMQTT *mqtt, const string &serial) {
@@ -22,22 +23,28 @@ AnalyzerSoftAlarms::AnalyzerSoftAlarms(AnalyzerSoftMQTT *mqtt, const string &ser
   pNominalFrequency = 50.0;
   pWorker           = NULL;
   pMQTT             = mqtt;
-  pConfigMutex      = PTHREAD_MUTEX_INITIALIZER;
   pAlarmsMutex      = PTHREAD_MUTEX_INITIALIZER;
+  pConfigMutex      = PTHREAD_MUTEX_INITIALIZER;
 }
 AnalyzerSoftAlarms::~AnalyzerSoftAlarms() {
-  Config(false, pNominalVoltage, pNominalFrequency);
+  pthread_mutex_lock(&pAlarmsMutex);
+  for(auto &Alarm : pAlarms) delete Alarm.second;
+  pAlarms.clear();
+  pthread_mutex_unlock(&pAlarmsMutex);
+  pthread_mutex_lock(&pConfigMutex);
+  if(pWorker != NULL) delete pWorker;
+  pthread_mutex_unlock(&pConfigMutex);
 }
-void AnalyzerSoftAlarms::Config(const bool enabled, const float nominalVoltage, const float nominalFreq) {
+void AnalyzerSoftAlarms::Config(const bool enabled, const float nominalVoltage, const float nominalFreq, const string &tz) {
   pthread_mutex_lock(&pConfigMutex);
   pNominalVoltage   = nominalVoltage;
   pNominalFrequency = nominalFreq;
+  cctz::load_time_zone(tz, &pTimeZone);
   if((enabled == false) && (pWorker != NULL)) {
     pthread_mutex_lock(&pAlarmsMutex);
     for(auto &Alarm : pAlarms) delete Alarm.second;
     pAlarms.clear();
     pthread_mutex_unlock(&pAlarmsMutex);
-    pWorker->Wait();
     delete pWorker;
     pWorker = NULL;
   } else if((enabled == true) && (pWorker == NULL)) {
@@ -56,10 +63,10 @@ void AnalyzerSoftAlarms::Alarms_Func(AnalyzerSoftAggreg *aggreg) {
     auto Result = Alarm.second->PushAggreg(pRunningAggreg, aggreg);
     if(Result == AnalyzerSoftAlarm::TRIGGERED) {
       pMQTT->PublishAlarm(aggreg->Timestamp(), Alarm.second->Name(), Alarm.second->Priority(), true);
-//      Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, true);
+      Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp(), Alarm.second->Name(), Alarm.second->Priority(), true);
     } else if(Result == AnalyzerSoftAlarm::RELEASED) {
       pMQTT->PublishAlarm(aggreg->Timestamp(), Alarm.second->Name(), Alarm.second->Priority(), false);
-//    Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp, Alarm.Name, Alarm.Priority, false);
+      Telegram::SendAlarm(pSerial, pTimeZone, aggreg->Timestamp(), Alarm.second->Name(), Alarm.second->Priority(), false);
     }
   }
   pthread_mutex_unlock(&pAlarmsMutex);

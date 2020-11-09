@@ -153,7 +153,7 @@ void AnalyzerSoft::Configure(const json &options) {
   }
   pAggreg1H->Config(NominalVoltage, NominalFrequency);
   pRates->Config(options["TimeZone"]);
-  pAlarms->Config(options["AlarmsEnabled"], NominalVoltage, NominalFrequency);
+  pAlarms->Config(options["AlarmsEnabled"], NominalVoltage, NominalFrequency, options["TimeZone"]);
   pEvents->Config(options["EventsEnabled"], NominalVoltage, NominalFrequency);
   pSync->Config(options["Sync"], options["Name"]);
   pMQTT->Config(options);
