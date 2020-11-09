@@ -5,6 +5,8 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'CSS/openZmeter.css';
 //VUE components -------------------------------------------------------------------------------------------------------
 import Vue from 'vue';
+import VueI18n from 'vue-i18n';
+Vue.use(VueI18n);
 import Router from 'vue-router';
 Vue.use(Router);
 import VueResource from 'vue-resource';
@@ -123,4 +125,9 @@ const AppRouter = new Router({
     { path: '*', component: PageNotFound }
   ]
 });
-new Vue( { el: '#app', render: h => h(App), router: AppRouter } );
+new Vue({
+  i18n: new VueI18n( { locale: 'es', fallbackLocale: 'en'} ),
+  el: '#app',
+  render: h => h(App),
+  router: AppRouter
+});

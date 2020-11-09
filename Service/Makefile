@@ -80,6 +80,12 @@ $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 		printf '%s\000%d\000' `echo $$FILE | cut -d'/' -f2-` `stat --printf="%s" $$FILE` >> Tmp/ResourceFiles ; \
 		cat $$FILE >> Tmp/ResourceFiles ; \
 	done
+#	@for FILE in $(shell find Tmp/WEB -type f ! -name "*.map"); \
+#	do \
+#		echo "  Append " $$FILE ; \
+#		printf '%s\000%d\000' `echo $$FILE | cut -d'/' -f2-` `stat --printf="%s" $$FILE` >> Tmp/ResourceFiles ; \
+#		cat $$FILE >> Tmp/ResourceFiles ; \
+#	done
 	@echo "  Append " $(WEB_TARGET) ; \
 		printf 'WEB/%s\000%d\000' `echo $(WEB_TARGET) | cut -d'/' -f2-` `stat --printf="%s" $(WEB_TARGET)` >> Tmp/ResourceFiles ; \
 		cat $(WEB_TARGET) >> Tmp/ResourceFiles ;

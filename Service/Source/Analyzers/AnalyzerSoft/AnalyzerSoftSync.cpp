@@ -101,6 +101,7 @@ void *AnalyzerSoftSync::Thread() {
   URL    *Url        = NULL;
   Client *HTTPClient = NULL;
   while(pTerminate == false) {
+    usleep(1000000);
     pthread_mutex_lock(&pMutex);
     if((pReAuth == true) || (pUser != User) || (pName != Name) || (pPass != Pass) || (pServer != Server) || (HTTPClient == NULL) || (Url == NULL)) {
       Cookie  = "";
@@ -119,7 +120,7 @@ void *AnalyzerSoftSync::Thread() {
         HTTPClient = NULL;
       }
       HTTPClient = new Client(Url->Host(), Url->Port());
-      HTTPClient->set_compress(true);
+      HTTPClient->set_compress(false);
       HTTPClient->set_keep_alive(true);
       HTTPClient->set_read_timeout(30);
       HTTPClient->set_write_timeout(30);
@@ -144,12 +145,20 @@ void *AnalyzerSoftSync::Thread() {
       usleep(1000000);
       return false;
     };
-    Req.progress = [&](uint64_t current, uint64_t total) -> bool {
-      if((current == 0) && (total > 0x00100000)) return false;
-      if(current == 0) {
+    Req.content_receiver = [&](const char *data, size_t data_length, uint64_t offset, uint64_t total_length) -> bool {
+      pthread_mutex_lock(&pMutex);
+      if((pTerminate == true) || (pReAuth == true) || (pUser != User) || (pName != Name) || (pPass != Pass) || (pServer != Server)) {
+        pthread_mutex_unlock(&pMutex);
+        return false;
+      }
+      pthread_mutex_unlock(&pMutex);
+      if(offset == 0) {
+        if(total_length > 0x00100000) return false;
         Buffer.clear();
-        Buffer.reserve(total);
-      } else if(current == total) {
+        Buffer.reserve(total_length);
+      }
+      Buffer.append(data, data_length);
+      if(Buffer.size() == total_length) {
         if((Buffer.size() > 5) && (Buffer.substr(0, 6) == "data: ")) {
           Buffer = Buffer.substr(6);
           json Content = json::parse(Buffer, NULL, false);
@@ -165,18 +174,8 @@ void *AnalyzerSoftSync::Thread() {
         Buffer.clear();
       }
       return true;
-     };
-    Req.content_receiver = [&](const char *data, uint64_t len) -> bool {
-      pthread_mutex_lock(&pMutex);
-      if((pTerminate == true) || (pReAuth == true) || (pUser != User) || (pName != Name) || (pPass != Pass) || (pServer != Server)) {
-        pthread_mutex_unlock(&pMutex);
-        return false;
-      }
-      pthread_mutex_unlock(&pMutex);
-      Buffer.append(data, len);
-      return true;
     };
-    if(HTTPClient->send(Req, Res) == false) usleep(1000000);
+    if(HTTPClient->send(Req, Res) == false) pReAuth = true;
   }
   if(HTTPClient != NULL) delete HTTPClient;
   if(Url != NULL)        delete Url;
