@@ -14,7 +14,8 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "telegrab/telegrab.hpp"
+#include "cpp-httplib/httplib.h"
+//#include "telegrab/telegrab.hpp"
 #include "cctz/time_zone.h"
 #include "nlohmann/json.hpp"
 #include "Worker.h"
@@ -22,11 +23,12 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using namespace cctz;
+using namespace httplib;
 //----------------------------------------------------------------------------------------------------------------------
-//#define TELEGRAM_POLLING_SEC    3
-//#define TELEGRAM_UPDATE_LIMIT 100
+#define TELEGRAM_POLLING_SEC    3
+#define TELEGRAM_UPDATE_LIMIT 100
 //----------------------------------------------------------------------------------------------------------------------
-class Telegram final : private Telegrab {
+class Telegram final {
   private :
     typedef struct {
       uint64_t              LastTime;     //Last time event
