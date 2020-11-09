@@ -56,7 +56,7 @@ void System::PeriodicTasks() {
     Status::SetValue("/Uptime", Info.uptime);
     Status::SetValue("/Swap_Total", (uint64_t)Info.totalswap * Info.mem_unit);
     Status::SetValue("/Swap_Usage", ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap);
-    Status::SetValue("/CPU_Usage", MAX(100.0, ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0));
+    Status::SetValue("/CPU_Usage", MIN(100.0, ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0));
   } else {
     Status::SetValue("/Uptime", nullptr);
     Status::SetValue("/Swap_Total", nullptr);

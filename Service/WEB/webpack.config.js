@@ -1,12 +1,11 @@
 var path = require('path');
 var webpack = require('webpack');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
-const TerserPlugin = require('terser-webpack-plugin');
 module.exports = {
   entry: './main.js',
   output: {
     path: path.resolve(__dirname, '../Tmp'),
-    publicPath: '/myozm/',
+    publicPath: '/',
     filename: 'openZmeter.js'
   },
   plugins: [
@@ -28,11 +27,11 @@ module.exports = {
         ]
       }, {
         test: /\.vue$/,
-        loader: 'vue-loader',
-        options: {
-          loaders: {
-          }
-        }
+        loader: 'vue-loader'
+      }, {
+        resourceQuery: /blockType=i18n/,
+        type: 'javascript/auto',
+        loader: '@intlify/vue-i18n-loader'
       }, {
         test: /\.js$/,
         loader: 'babel-loader',

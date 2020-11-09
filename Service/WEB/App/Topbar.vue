@@ -57,7 +57,7 @@
     },
     computed: {
       Uptime: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.UpTime != null)) ? moment.duration(this.Transfer3.Data.System.UpTime, "seconds").humanize() : null;
+        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Uptime != null)) ? moment.duration(this.Transfer3.Data.System.Uptime, "seconds").humanize() : null;
       },
       Time: function() {
         return (this.Transfer1.Data != null) ? moment(this.Transfer1.Data.Sampletime).format('HH:mm:ss') : null;

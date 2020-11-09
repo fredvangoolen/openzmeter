@@ -14,6 +14,6 @@
   }
 </script>
 
-<style scoped>
-
-</style>
+<i18n>
+{}
+</i18n>

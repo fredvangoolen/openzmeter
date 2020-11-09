@@ -60,8 +60,8 @@ void AnalyzerSoftSyncWorker::Run(const string &cookie, const URL &url, const str
     pPort = url.Port();
     pHost = url.Host();
     pClient = new Client(pHost, pPort);
-    pClient->set_keep_alive(false);
-//    pClient->set_compress(true);
+    pClient->set_keep_alive(true);
+    pClient->set_compress(false);
   }
   pthread_cond_signal(&pCond);
   pthread_mutex_unlock(&pMutex);

@@ -1,12 +1,12 @@
 <template>
   <dlg :loading="ShowSpinner">
     <template v-slot:header>
-      <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Alarms &raquo; Edit</h4></div>
+      <div class="pull-left"><h4 class="modal-title"> {{ $t('Title') }}</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
-        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Expression' }" @click="View='Expression'">Expression</button>
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save alarm and events config"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">{{ $t('Main') }}</button>
+        <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Expression' }" @click="View='Expression'">{{ $t('Expression') }}</button>
+        <button type="button" class="btn btn-default btn-xs" @click="Save" data-title="tooltip" title="Save alarm and events config"><img :src="require('Imgs/diskette.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')" data-title="tooltip" title="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
@@ -14,23 +14,23 @@
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="(Data!=null)&&(Data.Result==null)&&(View=='Expression')">Expresion evaluation fail:<br/>{{ Data.Error }}</div>
     <div class="row" v-if="View=='Main'">
       <div class="col-xs-12">
-        <label class="control-label">Name</label>
+        <label class="control-label">{{ $t('Name') }}</label>
         <input type="text" class="form-control form-control-sm" v-model="Alarm.Name"/>
       </div>
       <div class="col-xs-6">
-        <label class="control-label">Priority</label>
+        <label class="control-label">{{ $t('Priority') }}</label>
         <option-picker :options="[{name: 'LOW', value: 0}, {name: 'NORMAL', value: 1}, {name: 'HIGH', value:2}]" v-model="Alarm.Priority" :big="true"></option-picker>
       </div>
       <div class="col-xs-6">
-        <label class="control-label">Aggregation</label>
-        <option-picker :options="[{name: '200 miliseconds', value: '200MS'}, {name: '3 seconds', value: '3S'}, {name: '1 minute', value: '1M'}, {name: '10 minutes', value: '10M'}, {name: '15 minutes', value: '15M'}, {name: '1 hour', value: '1H'}]" v-model="Alarm.Aggreg" :big="true"></option-picker>
+        <label class="control-label">{{ $t('Aggregation') }}</label>
+        <option-picker :options="[{name: $t('200 miliseconds'), value: '200MS'}, {name: '3 seconds', value: '3S'}, {name: '1 minute', value: '1M'}, {name: '10 minutes', value: '10M'}, {name: '15 minutes', value: '15M'}, {name: '1 hour', value: '1H'}]" v-model="Alarm.Aggreg" :big="true"></option-picker>
       </div>
       <div class="col-xs-6">
-        <label class="control-label">Occurrences</label>
+        <label class="control-label">{{ $t('Occurrences') }}</label>
         <input-spin :min="1" :max="1000" v-model="Alarm.Samples" :increment="1" :decimals="0" :big="true"></input-spin>
       </div>
       <div class="col-xs-6">
-        <label class="control-label">Window</label>
+        <label class="control-label">{{ $t('Window') }}</label>
         <input-spin :min="1" :max="1000" v-model="Alarm.Window" :increment="1" :decimals="0" :big="true"></input-spin>
       </div>
     </div>
@@ -105,3 +105,30 @@
     }
   }
 </script>
+
+<i18n>
+  {
+    "en": {
+      "Title": "Analyzers » Alarms » Edit",
+      "Main": "Main",
+      "Expression": "Expression",
+      "Name": "Name",
+      "Priority": "Priority",
+      "Aggregation": "Aggregation",
+      "Occurrences": "Occurrences",
+      "Window": "Window",
+      "200 miliseconds": "200 miliseconds"
+    },
+    "es": {
+      "Title": "Analyzador » Alarmas » Editar",
+      "Main": "Principal",
+      "Expression": "Expresión",
+      "Name": "Nombre",
+      "Priority": "Prioridad",
+      "Aggregation": "Agregación",
+      "Occurrences": "Ocurrencias",
+      "Window": "Ventana",
+      "200 miliseconds": "200 milisegundos"
+    }
+  }
+</i18n>

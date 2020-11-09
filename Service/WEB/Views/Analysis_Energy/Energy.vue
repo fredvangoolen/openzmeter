@@ -42,7 +42,6 @@
         if(this.data != null) {
           var TimeCol = this.data.Headers.indexOf('Time');
           var ValueCol = this.data.Headers.indexOf(this.serie);
-          console.log(this.serie);
           for(var n = 0; n < this.data.Rows.length; n++) Opt.file.push([this.data.Rows[n][TimeCol], this.data.Rows[n][ValueCol]]);
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { incZero: 10 });
           Opt.dateWindow = [this.data.From, this.data.To];

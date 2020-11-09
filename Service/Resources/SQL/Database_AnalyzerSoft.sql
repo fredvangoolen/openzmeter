@@ -78,9 +78,8 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS events (
-  id          character varying NOT NULL PRIMARY KEY,
+  starttime   bigint            NOT NULL PRIMARY KEY,
   evttype     character varying NOT NULL,
-  starttime   bigint            NOT NULL,
   samplerate  real              NOT NULL,
   reference   real[]            NOT NULL,
   peak        real[]            NOT NULL,
@@ -88,10 +87,9 @@ CREATE TABLE IF NOT EXISTS events (
   notes       text              NOT NULL,
   duration    bigint            NOT NULL
 ) WITH (OIDS=FALSE);
-CREATE INDEX IF NOT EXISTS events_starttime ON events(starttime);
 
 CREATE TABLE IF NOT EXISTS events_ext (
-  id          character varying NOT NULL REFERENCES events(id) ON UPDATE CASCADE ON DELETE CASCADE,
+  starttime   bigint            NOT NULL REFERENCES events(starttime) ON UPDATE CASCADE ON DELETE CASCADE,
   sampletype  smallint          NOT NULL,
   samples     real[],
   PRIMARY KEY (id, sampletype)
