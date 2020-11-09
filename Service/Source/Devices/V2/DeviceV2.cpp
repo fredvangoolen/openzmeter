@@ -279,7 +279,7 @@ void DeviceV2::Configure(const json& config) {
       VoltageMap[0] = (Voltage[2] - '1');
       CurrentMap[0] = (Current[3] - '1') + 3;
       InvertMap[0]  = (Current[0] == '+') ? false : true;
-      Name          = Name + "_1P_CH" + to_string(Current[3] - '1');
+      Name          = Name + "_1P_CH" + to_string(Current[3] - '0');
     } else {
       for(unsigned Ch = 0; Ch < Tmp["Voltage"].size(); Ch++) {
         string Voltage = Tmp["Voltage"][Ch];

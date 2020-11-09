@@ -17,9 +17,12 @@
 #include <map>
 #include <pthread.h>
 #include "Tools.h"
+#include "cctz/time_zone.h"
 #include "AnalyzerSoft.h"
 #include "AnalyzerSoftAlarm.h"
 #include "AnalyzerSoftAggreg200MS.h"
+// ---------------------------------------------------------------------------------------------------------------------
+using namespace cctz;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftMQTT;
 class AnalyzerSoftAlarms final {
@@ -33,13 +36,13 @@ class AnalyzerSoftAlarms final {
     Worker                         *pWorker;
     string                          pRunningAggreg;
     AnalyzerSoftMQTT               *pMQTT;
+    time_zone                       pTimeZone;
   private :
     void Alarms_Func(AnalyzerSoftAggreg *aggreg);
-    void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
   public :
     AnalyzerSoftAlarms(AnalyzerSoftMQTT *mqtt, const string &serial);
     ~AnalyzerSoftAlarms();
-    void Config(const bool enabled, const float nominalVoltage, const float nominalFreq);
+    void Config(const bool enabled, const float nominalVoltage, const float nominalFreq, const string &tz);
     void Run(const string &name, const AnalyzerSoftAggreg *params);
     void Wait();
     void GetAlarmsDef(const json &params, Response &response);

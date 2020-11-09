@@ -52,7 +52,6 @@ Telegram::~Telegram() {
     pFreeWorkers.pop_front();
     delete Tmp;
   }
-
 }
 void Telegram::Configure(const json &config) {
   ConfigFile::WriteConfig("/Telegram", config);
