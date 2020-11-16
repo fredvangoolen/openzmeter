@@ -17,15 +17,16 @@
 #include <AnalyzerSoft.h>
 // ---------------------------------------------------------------------------------------------------------------------
 class DeviceV2Analyzer : public AnalyzerSoft {
-  private :
-    uint8_t                 VoltageMap[3];
-    uint8_t                 CurrentMap[4];
-    float                   InvertMap[4];
-    uint8_t                 VoltageChannels;
-    uint8_t                 CurrentChannels;
-    Analyzer::AnalyzerMode  Mode;
+  protected :
+    uint8_t                 pVoltageMap[3];
+    uint8_t                 pCurrentMap[4];
+    float                   pInvertMap[4];
+    uint8_t                 pVoltageChannels;
+    uint8_t                 pCurrentChannels;
+    bool                    pCalc;
   public :
     DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerMode mode, const string &configPath, const float samplerate, const uint8_t *voltage, const uint8_t *current, const bool *invert);
+    DeviceV2Analyzer(const string &name, const string &configPath, const float samplerate, const uint8_t voltage, const float *current);
     bool BufferAppend(const float *values, const uint32_t buffUsage);
 };
 // ---------------------------------------------------------------------------------------------------------------------

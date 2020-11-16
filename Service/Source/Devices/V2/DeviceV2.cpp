@@ -163,6 +163,11 @@ json DeviceV2::CheckConfig(const json &config) {
   ConfigOUT["Enabled"] = false;
   ConfigOUT["HighGain"] = false;
   ConfigOUT["Outputs"] = json::array();
+  ConfigOUT["Calculated"] = json::object();
+  ConfigOUT["Calculated"]["Enabled"]  = false;
+  ConfigOUT["Calculated"]["Voltage"]  = "CH1";
+  ConfigOUT["Calculated"]["Current"]  = vector<string>(4, "UNUSED");
+  ConfigOUT["Calculated"]["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1);
   if(config.is_object()) {
     if(config.contains("VoltageGain") && config["VoltageGain"].is_array() && (config["VoltageGain"].size() == ConfigOUT["VoltageGain"].size())) {
       for(uint8_t n = 0; n < ConfigOUT["VoltageGain"].size(); n++) {
@@ -213,14 +218,14 @@ json DeviceV2::CheckConfig(const json &config) {
           Output["Voltage"] = json::parse("[\"CH1\", \"CH2\", \"CH3\"]");
           Output["Current"] = ((Output["Mode"] == "3PHASE") ? json::parse("[\"+CH1\", \"+CH2\", \"+CH3\"]") : json::parse("[\"+CH1\", \"+CH2\", \"+CH3\", \"+CH4\"]"));
           if(Tmp.contains("Voltage") && Tmp["Voltage"].is_array() && (Tmp["Voltage"].size() == Output["Voltage"].size()) && Tmp.contains("Current") && Tmp["Current"].is_array() && (Tmp["Current"].size() == Output["Current"].size())) {
-            for(unsigned i = 0; i < Output["Voltage"].size(); i++) {
+            for(uint8_t i = 0; i < Output["Voltage"].size(); i++) {
               if(Tmp["Voltage"][i].is_string() && ((Tmp["Voltage"][i] == "CH1") || (Tmp["Voltage"][i] == "CH2") || (Tmp["Voltage"][i] == "CH3"))) Output["Voltage"][i] = Tmp["Voltage"][i];
             }
-            for(unsigned i = 0; i < Output["Current"].size(); i++) {
+            for(uint8_t i = 0; i < Output["Current"].size(); i++) {
               if(Tmp["Current"][i].is_string() && ((Tmp["Current"][i] == "+CH1") || (Tmp["Current"][i] == "-CH1") || (Tmp["Current"][i] == "+CH2") || (Tmp["Current"][i] == "-CH2") || (Tmp["Current"][i] == "+CH3") || (Tmp["Current"][i] == "-CH3") || (Tmp["Current"][i] == "+CH4") || (Tmp["Current"][i] == "-CH4"))) Output["Current"][i] = Tmp["Current"][i];
             }
           }
-          for(unsigned i = 0; i < Output["Current"].size(); i++) {
+          for(uint8_t i = 0; i < Output["Current"].size(); i++) {
             string CurrentCH = Output["Current"][i];
             uint8_t Channel = CurrentCH[3] - '1';
             if((CurrentMask & (1 << Channel)) != 0) Error = true;
@@ -238,6 +243,27 @@ json DeviceV2::CheckConfig(const json &config) {
       Output["Current"] = "+CH1";
       Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1);
       ConfigOUT["Outputs"].push_back(Output);
+    }
+    if(config.contains("Calculated") && config["Calculated"].is_object()) {
+      if(config["Calculated"].contains("Analyzer") && config["Calculated"]["Analyzer"].is_object()) ConfigOUT["Calculated"]["Analyzer"] = AnalyzerSoft::CheckConfig(config["Calculated"]["Analyzer"], Analyzer::PHASE1);
+      if(config["Calculated"].contains("Voltage") && config["Calculated"]["Voltage"].is_string() && ((config["Calculated"]["Voltage"] == "CH1") || (config["Calculated"]["Voltage"] == "CH2") || (config["Calculated"]["Voltage"] == "CH3"))) ConfigOUT["Calculated"]["Voltage"] = config["Calculated"]["Voltage"];
+      vector<bool> AvaliableChannels = vector<bool>(4, false);
+      for(auto Tmp : ConfigOUT["Outputs"]) {
+        if((Tmp["Mode"] != "1PHASE") || (Tmp["Voltage"] != ConfigOUT["Calculated"]["Voltage"])) continue;
+        string CurrentCH = Tmp["Current"];
+        AvaliableChannels[CurrentCH[3] - '1'] = true;
+      }
+      uint8_t UsedCurrentChannels = 0;
+      if(config["Calculated"].contains("Current") && config["Calculated"]["Current"].is_array() && (config["Calculated"]["Current"].size() == 4)) {
+        for(uint8_t i = 0; i < 4; i++) {
+          if(config["Calculated"]["Current"][i].is_string() && ((config["Calculated"]["Current"][i] == "ADD") || (config["Calculated"]["Current"][i] == "SUB") || (config["Calculated"]["Current"][i] == "UNUSED"))) {
+            ConfigOUT["Calculated"]["Current"][i] = config["Calculated"]["Current"][i];
+            if(AvaliableChannels[i] == false) ConfigOUT["Calculated"]["Current"][i] = "UNUSED";
+            if(ConfigOUT["Calculated"]["Current"][i] != "UNUSED") UsedCurrentChannels++;
+          }
+        }
+      }
+      if((UsedCurrentChannels > 1) && config["Calculated"].contains("Enabled") && config["Calculated"]["Enabled"].is_boolean()) ConfigOUT["Calculated"]["Enabled"] = config["Calculated"]["Enabled"];
     }
   }
   return ConfigOUT;
@@ -281,11 +307,11 @@ void DeviceV2::Configure(const json& config) {
       InvertMap[0]  = (Current[0] == '+') ? false : true;
       Name          = Name + "_1P_CH" + to_string(Current[3] - '0');
     } else {
-      for(unsigned Ch = 0; Ch < Tmp["Voltage"].size(); Ch++) {
+      for(uint8_t Ch = 0; Ch < Tmp["Voltage"].size(); Ch++) {
         string Voltage = Tmp["Voltage"][Ch];
         VoltageMap[Ch] = (Voltage[2] - '1');
       }
-      for(unsigned Ch = 0; Ch < Tmp["Current"].size(); Ch++) {
+      for(uint8_t Ch = 0; Ch < Tmp["Current"].size(); Ch++) {
         string Current =  Tmp["Current"][Ch];
         CurrentMap[Ch] = Current[3] - '1' + 3;
         InvertMap[Ch] = (Current[0] == '-');
@@ -293,6 +319,14 @@ void DeviceV2::Configure(const json& config) {
       Name = Name + ((Mode == Analyzer::PHASE3) ? "_3P" : "_3PN");
     }
     pAnalyzers[pAnalyzersCount] = new DeviceV2Analyzer(Name, Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzersCount) + "/Analyzer", DEVICEV2_SAMPLEFREQ, VoltageMap, CurrentMap, InvertMap);
+    AnalyzerManager::AddAnalyzer(pAnalyzers[pAnalyzersCount]);
+    pAnalyzersCount++;
+  }
+  if(config["Calculated"]["Enabled"]) {
+    string Voltage = config["Calculated"]["Voltage"];
+    float CurrentMap[4];
+    for(uint8_t Ch = 0; Ch < 4; Ch++) CurrentMap[Ch] = (config["Calculated"]["Current"][Ch] == "UNUSED") ? 0.0 : (config["Calculated"]["Current"][Ch] == "ADD") ? 1.0 : -1.0;
+    pAnalyzers[pAnalyzersCount] = new DeviceV2Analyzer(pSerial + "_1P_CAL", "/Devices/" + pSerial + "/Calculated/Analyzer", DEVICEV2_SAMPLEFREQ, Voltage[2] - '1', CurrentMap);
     AnalyzerManager::AddAnalyzer(pAnalyzers[pAnalyzersCount]);
     pAnalyzersCount++;
   }

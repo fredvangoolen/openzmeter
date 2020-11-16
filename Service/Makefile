@@ -12,7 +12,9 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort)
 #Executable related components
 EXECUTABLE_TARGET = Tmp/$(TARGET)/openZmeter
 EXECUTABLE_SOURCE = $(shell find Source -name "*.cpp" ! -type d -print)
-CFLAGS  += -DCPPHTTPLIB_USE_POLL -Wno-psabi -Wall -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/AnalyzerSoft -I Source/Analyzers/AnalyzerRemote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools
+CFLAGS  += -DCPPHTTPLIB_USE_POLL -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT \
+           -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/AnalyzerSoft -I Source/Analyzers/AnalyzerRemote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools \
+					 -Wno-psabi -Wall -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" -I Libs  -I Libs/mqtt-c
 LDFLAGS += -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto -luuid -lfftw3f -lusb-1.0
 
 #Add libs (cctz, nlohmann, muparser, httplib, mqtt-c)
@@ -25,7 +27,6 @@ BUILD_DATE ?= $(shell date +%Y%m%d.%H%M)
 BUILD_NAME ?= "custom"
 
 #Default flags and programs
-CFLAGS += -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" -I Libs -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -I Libs/mqtt-c -I Libs/uSockets
 CC  ?= gcc
 LD  ?= ld
 
@@ -53,7 +54,7 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -ggdb3
 else
-	CFLAGS   += -O3 -flto -fwhole-program -Wall -fno-pic -fno-pie
+	CFLAGS   += -O3 -flto -fwhole-program
 	LDFLAGS  += -flto
 endif
 ifeq ($(OS_TARGET), OPENWRT)

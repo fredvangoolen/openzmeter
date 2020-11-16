@@ -60,8 +60,8 @@ void AnalyzerSoftSyncWorker::Run(const string &cookie, const URL &url, const str
     pPort = url.Port();
     pHost = url.Host();
     pClient = new Client(pHost, pPort);
-    pClient->set_keep_alive(false);
-    pClient->set_compress(true);
+    pClient->set_keep_alive(true);
+    pClient->set_compress(false);
   }
   pthread_cond_signal(&pCond);
   pthread_mutex_unlock(&pMutex);
@@ -122,7 +122,14 @@ void *AnalyzerSoftSyncWorker::Thread() {
         LogFile::Warning("Remote request '%s' for analyzer '%s' failed (can not connect)", pMethod.c_str(), pAnalyzer->Serial().c_str());
       }
     } else {
-      auto Tmp = pClient->Post((pPath + "/setRemote").c_str(), Header, 0, Resp.content_provider_, Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type").c_str() : "text/plain");
+      auto Writer = [&](size_t offset, size_t length, DataSink &sink) -> bool {
+        DataSink sink2;
+        sink2.is_writable = [&](void) { return sink.is_writable(); };
+        sink2.write = [&](const char *d, size_t l) { return sink.write(d, l); };
+        sink2.done = [&](void) { };
+        return Resp.content_provider_(0, 0, sink2);
+      };
+      auto Tmp = pClient->Post((pPath + "/setRemote").c_str(), Header, 0, Writer, Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type").c_str() : "text/plain");
       if(Resp.content_provider_resource_releaser_) Resp.content_provider_resource_releaser_();
       if((Tmp != nullptr) && (Tmp->status == HTTP_OK)) {
         LogFile::Debug("Remote request '%s' for analyzer '%s' completed", pMethod.c_str(), pAnalyzer->Serial().c_str());

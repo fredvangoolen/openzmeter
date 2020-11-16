@@ -299,6 +299,7 @@ void AnalyzerSoft::PeriodicTasks() {
   uint64_t Now = Tools::GetTime64();
   if(Now > 86400000) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Now - 86400000));   //Delete 1 day old
   if(Now > 3600000)  DB.ExecSentenceNoResult("DELETE FROM aggreg_200ms WHERE sampletime < " + DB.Bind(Now - 3600000));     //Delete 1 hour old
+  pSync->PeriodicTasks();
 }
 //----------------------------------------------------------------------------------------------------------------------
 void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
