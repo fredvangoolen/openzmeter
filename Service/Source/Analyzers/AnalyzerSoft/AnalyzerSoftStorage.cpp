@@ -159,44 +159,40 @@ void AnalyzerSoftStorage::GetSeries(const json &params, Response &response) cons
     string   Cols    = "sampletime";
     json     Headers = {"Time"};
     uint64_t Start   = From;
-    if(Series & SERIE_FREQUENCY)                 { Headers.push_back("Frequency");         Cols.append(", freq"); }
-    if(Series & SERIE_UNBALANCE)                 { Headers.push_back("Unbalance");         Cols.append(", unbalance"); }
-    if(Series & SERIE_FLAG)                      { Headers.push_back("Flag");              Cols.append(", flag"); }
-    if(Series & SERIE_VOLTAGE)                   { Headers.push_back("Voltage");           Cols.append(", rms_v"); }
-    if(Series & SERIE_CURRENT)                   { Headers.push_back("Current");           Cols.append(", rms_i"); }
-    if(Series & SERIE_ACTIVE_POWER)              { Headers.push_back("Active_Power");      Cols.append(", active_power"); }
-    if(Series & SERIE_ACTIVE_ENERGY)             { Headers.push_back("Active_Energy");     Cols.append((Aggreg == "1H") ? ", active_power" : ", ARRAY(SELECT UNNEST(active_power) / 4.0)"); }
-    if(Series & SERIE_REACTIVE_POWER)            { Headers.push_back("Reactive_Power");    Cols.append(", reactive_power"); }
-    if(Series & SERIE_REACTIVE_ENERGY)           { Headers.push_back("Reactive_Energy");   Cols.append((Aggreg == "1H") ? ", reactive_power" : ", ARRAY(SELECT UNNEST(reactive_power) / 4.0)"); };
-    if(Series & SERIE_APPARENT_POWER)            { Headers.push_back("Apparent_Power");    Cols.append(", ARRAY(SELECT v * i FROM UNNEST(rms_v, rms_i) as t(v, i) LIMIT array_length(rms_v, 1))"); }
-    if(Series & SERIE_POWER_FACTOR)              { Headers.push_back("Power_Factor");      Cols.append(", power_factor"); }
-    if(Series & SERIE_VOLTAGE_THD)               { Headers.push_back("Voltage_THD");       Cols.append(", thd_v"); }
-    if(Series & SERIE_CURRENT_THD)               { Headers.push_back("Current_THD");       Cols.append(", thd_i"); }
-    if(Series & SERIE_PHI)                       { Headers.push_back("Phi");               Cols.append(", phi"); }
-    if(Series & SERIE_VOLTAGE_HARMONICS)         { Headers.push_back("Voltage_Harmonics"); Cols.append((Aggreg == "1M") ? ", harmonics_v" : "(select array_agg(harmonics_v) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_v[ch][h][1],2.0) + pow(harmonics_v[ch][h][2], 2.0))) harmonics_v FROM (SELECT generate_series(1, array_length(harmonics_v, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3)"); }
+    if(Series & SERIE_FREQUENCY)                 { Headers.push_back("Frequency");                 Cols.append(", freq"); }
+    if(Series & SERIE_UNBALANCE)                 { Headers.push_back("Unbalance");                 Cols.append(", unbalance"); }
+    if(Series & SERIE_FLAG)                      { Headers.push_back("Flag");                      Cols.append(", flag"); }
+    if(Series & SERIE_VOLTAGE)                   { Headers.push_back("Voltage");                   Cols.append(", rms_v"); }
+    if(Series & SERIE_CURRENT)                   { Headers.push_back("Current");                   Cols.append(", rms_i"); }
+    if(Series & SERIE_ACTIVE_POWER)              { Headers.push_back("Active_Power");              Cols.append(", active_power"); }
+    if(Series & SERIE_ACTIVE_ENERGY)             { Headers.push_back("Active_Energy");             Cols.append((Aggreg == "1H") ? ", active_power" : ", ARRAY(SELECT UNNEST(active_power) / 4.0)"); }
+    if(Series & SERIE_REACTIVE_POWER)            { Headers.push_back("Reactive_Power");            Cols.append(", reactive_power"); }
+    if(Series & SERIE_REACTIVE_ENERGY)           { Headers.push_back("Reactive_Energy");           Cols.append((Aggreg == "1H") ? ", reactive_power" : ", ARRAY(SELECT UNNEST(reactive_power) / 4.0)"); };
+    if(Series & SERIE_APPARENT_POWER)            { Headers.push_back("Apparent_Power");            Cols.append(", ARRAY(SELECT v * i FROM UNNEST(rms_v, rms_i) as t(v, i) LIMIT array_length(rms_v, 1))"); }
+    if(Series & SERIE_POWER_FACTOR)              { Headers.push_back("Power_Factor");              Cols.append(", power_factor"); }
+    if(Series & SERIE_VOLTAGE_THD)               { Headers.push_back("Voltage_THD");               Cols.append(", thd_v"); }
+    if(Series & SERIE_CURRENT_THD)               { Headers.push_back("Current_THD");               Cols.append(", thd_i"); }
+    if(Series & SERIE_PHI)                       { Headers.push_back("Phi");                       Cols.append(", phi"); }
+    if(Series & SERIE_VOLTAGE_HARMONICS)         { Headers.push_back("Voltage_Harmonics");         Cols.append((Aggreg == "1M") ? ", harmonics_v" : ", (SELECT array_agg(harmonics_v) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_v[ch][h][1],2.0) + pow(harmonics_v[ch][h][2], 2.0))) harmonics_v FROM (SELECT generate_series(1, array_length(harmonics_v, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3)"); }
     if(Series & SERIE_VOLTAGE_HARMONICS_COMPLEX) { Headers.push_back("Voltage_Harmonics_Complex"); Cols.append(", harmonics_v"); }
-    if(Series & SERIE_CURRENT_HARMONICS)         { Headers.push_back("Current_Harmonics"); Cols.append((Aggreg == "1M") ? ", harmonics_v" : "(select array_agg(harmonics_i) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_i[ch][h][1],2.0) + pow(harmonics_i[ch][h][2], 2.0))) harmonics_i FROM (SELECT generate_series(1, array_length(harmonics_i, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3)"); }
+    if(Series & SERIE_CURRENT_HARMONICS)         { Headers.push_back("Current_Harmonics");         Cols.append((Aggreg == "1M") ? ", harmonics_i" : ", (SELECT array_agg(harmonics_i) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_i[ch][h][1],2.0) + pow(harmonics_i[ch][h][2], 2.0))) harmonics_i FROM (SELECT generate_series(1, array_length(harmonics_i, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3)"); }
     if(Series & SERIE_CURRENT_HARMONICS_COMPLEX) { Headers.push_back("Current_Harmonics_Complex"); Cols.append(", harmonics_i"); }
-    if(Series & SERIE_POWER_HARMONICS)           { Headers.push_back("Power_Harmonics");   Cols.append(", harmonics_p"); }
-    if(Series & SERIE_VOLTAGE_STAT)              { Headers.push_back("Voltage_Stats");     Cols.append(", stat_voltage"); }
-    if(Series & SERIE_FREQUENCY_STAT)            { Headers.push_back("Frequency_Stats");   Cols.append(", stat_frequency"); }
-    if(Series & SERIE_THD_STAT)                  { Headers.push_back("THD_Stats");         Cols.append(", stat_thd"); }
-    if(Series & SERIE_HARMONIC_STAT)             { Headers.push_back("Harmonics_Stats");   Cols.append(", stat_harmonics"); }
-    if(Series & SERIE_UNBALANCE_STAT)            { Headers.push_back("Unbalance_Stats");   Cols.append(", stat_unbalance"); }
+    if(Series & SERIE_POWER_HARMONICS)           { Headers.push_back("Power_Harmonics");           Cols.append(", harmonics_p"); }
+    if(Series & SERIE_VOLTAGE_STAT)              { Headers.push_back("Voltage_Stats");             Cols.append(", stat_voltage"); }
+    if(Series & SERIE_FREQUENCY_STAT)            { Headers.push_back("Frequency_Stats");           Cols.append(", stat_frequency"); }
+    if(Series & SERIE_THD_STAT)                  { Headers.push_back("THD_Stats");                 Cols.append(", stat_thd"); }
+    if(Series & SERIE_HARMONIC_STAT)             { Headers.push_back("Harmonics_Stats");           Cols.append(", stat_harmonics"); }
+    if(Series & SERIE_UNBALANCE_STAT)            { Headers.push_back("Unbalance_Stats");           Cols.append(", stat_unbalance"); }
     sink.os << "[\n  " + Headers.dump();
     Database DB(pSerial);
     do {
-      if(Aggreg == "1M") {
-        DB.ExecSentenceAsyncResult("SELECT sampletime, json_build_array(" + Cols + ") AS result FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m WHERE sampletime >= " + DB.Bind(Start) + " ORDER BY sampletime ASC LIMIT 1000");
-      } else {
-        DB.ExecSentenceAsyncResult("SELECT sampletime, json_build_array(" + Cols + ") AS result FROM " + "aggreg_" + Aggreg + " WHERE sampletime >= " + DB.Bind(Start) + " ORDER BY sampletime ASC LIMIT 1000");
-      }
-      while(DB.FecthRow() && sink.is_writable()) {
+      DB.ExecSentenceAsyncResult("SELECT sampletime, json_build_array(" + Cols + ") AS result FROM " + ((Aggreg == "1M") ? "aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m" : "aggreg_" + Aggreg) + " WHERE sampletime >= " + DB.Bind(Start) + " ORDER BY sampletime ASC LIMIT 1000");
+      while(DB.FecthRow()) {
         Start = DB.ResultUInt64("sampletime") + 1;
         if(Start > To) break;
         sink.os << ",\n  " + DB.ResultString("result");
       }
-    } while((DB.RowIndex() != 0) && (Start < To));
+    } while((DB.RowIndex() != 0) && (Start < To) && sink.is_writable());
     sink.os << "\n]";
     sink.done();
     return true;

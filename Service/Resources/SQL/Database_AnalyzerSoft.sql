@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS events_ext (
   starttime   bigint            NOT NULL REFERENCES events(starttime) ON UPDATE CASCADE ON DELETE CASCADE,
   sampletype  smallint          NOT NULL,
   samples     real[],
-  PRIMARY KEY (id, sampletype)
+  PRIMARY KEY (starttime, sampletype)
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS alarms (

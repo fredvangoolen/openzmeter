@@ -88,10 +88,7 @@ void AnalyzerSoftAlarms::GetAlarmsDef(const json &params, Response &response) {
     sink.os << "[\n  ";
     Database DB(pSerial);
     DB.ExecSentenceAsyncResult("SELECT json_build_object('AlarmID', id, 'Name', name, 'Priority', priority, 'Expression', expression, 'Aggreg', aggreg, 'Samples', samples, 'Window', windowlen) AS result FROM alarms");
-    while(DB.FecthRow() && sink.is_writable()) {
-      if(Items++ != 0) sink.os << ",\n  ";
-      sink.os << DB.ResultString("result");
-    }
+    while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " : "") + DB.ResultString("result");
     sink.os << "\n]";
     sink.done();
     return true;

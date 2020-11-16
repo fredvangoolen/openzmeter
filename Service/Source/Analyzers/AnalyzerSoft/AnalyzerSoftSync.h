@@ -39,7 +39,6 @@ class AnalyzerSoftSync {
     uint32_t                      pRunningWorkers;   //Currently active workers
   private :
     void                   *Thread();
-    void                    PeriodicTasks();
     bool                    Login(const string &path, Client *client, const string &user, const string &pass, string &cookie);
     AnalyzerSoftSyncWorker *PopWorker();
   public :
@@ -48,6 +47,7 @@ class AnalyzerSoftSync {
     AnalyzerSoftSync(AnalyzerSoft *parent);
     ~AnalyzerSoftSync();
     void Config(const json &config, const string &name);
+    void PeriodicTasks();
     void PushWorker(AnalyzerSoftSyncWorker *worker, const bool fail);
 };
 // ---------------------------------------------------------------------------------------------------------------------
