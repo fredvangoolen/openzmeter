@@ -23,6 +23,7 @@ class TariffManager final {
     static void SetTariffCallback(const json &params, Response &response);
     static void DelTariffCallback(const json &params, Response &response);
     static void AddTariffCallback(const json &params, Response &response);
+    static void EvalRatesCallback(const json &params, Response &response);
   public :
     TariffManager();
     ~TariffManager();

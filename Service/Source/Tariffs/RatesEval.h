@@ -17,14 +17,15 @@
 #include <stdint.h>
 #include <string>
 #include <map>
-#include "HTTPServer.h"
 #include "muParser/muParser.h"
 #include "Rate.h"
+#include "PriceSource.h"
+#include "RatesEvalProvider.h"
 // ---------------------------------------------------------------------------------------------------------------------
-using namespace std;
 using namespace mu;
+using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoftRatesEval final {
+class RatesEval final {
   public :
     enum SeriesMask {
       SERIE_TIMESTAMP       = 0x0001,
@@ -54,8 +55,8 @@ class AnalyzerSoftRatesEval final {
     uint64_t                      pNowDate;           //Current system time
     uint64_t                      pCurrent;           //Current evaluation time
     uint64_t                      pLoadedPeriodDate;  //Active bill period start
-    Database                     *pRateDB;            //Rate fetch connection
-    Database                     *pDataDB;            //Data fetch connection
+//    Database                     *pRateDB;            //Rate fetch connection
+//    Database                     *pDataDB;            //Data fetch connection
     Rate                         *pLoadedRate;        //Currently loaded Rate (if any)
     vector<TariffYear>::iterator  pYearPtr;           //Active rate year
     vector<uint64_t>::iterator    pBillPtr;           //Active rate bill date
@@ -75,16 +76,18 @@ class AnalyzerSoftRatesEval final {
     float                         pContractedPower;   //Evaluated period contracted power
     float                         pEnergyCost;        //Evaluated period energy cost
     float                         pPowerCost;         //Evaluated period power cost
+    RatesEvalProvider            *pProvider;          //Data provider for required data
+    RatesEvalProvider::Sample_t  *pSample;            //Current loaded sample
   private :
     void LoadRate();
     void UnloadRate();
     json HandleSample();
-    void FindStart(const uint8_t group);
+    void FindStart();
     json BuildBill();
     json BuildSample(const bool bill);
   public :
-    AnalyzerSoftRatesEval(const string &serial, const time_zone &tz, const uint64_t from, const uint64_t to, const uint8_t group, const uint16_t serieMask = 0);
-    virtual ~AnalyzerSoftRatesEval();
+    RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to, RatesEvalProvider &provider, const uint16_t serieMask = 0);
+    ~RatesEval();
     json Headers();
     json FetchRow();
 };

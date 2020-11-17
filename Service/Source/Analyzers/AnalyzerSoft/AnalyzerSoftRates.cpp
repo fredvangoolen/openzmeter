@@ -13,8 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
+#include "RatesEval.h"
 #include "AnalyzerSoftRates.h"
-#include "AnalyzerSoftRatesEval.h"
+#include "AnalyzerSoftRatesProvider.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftRates::AnalyzerSoftRates(const string &serial) {
   pSerial = serial;
@@ -94,38 +95,39 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
   uint64_t From   = params["From"];
   uint64_t To     = params["To"];
   uint8_t  Group  = params["Group"];
-  uint16_t Series = AnalyzerSoftRatesEval::SERIE_TIMESTAMP;
+  uint16_t Series = RatesEval::SERIE_TIMESTAMP;
   for(auto &Serie : params["Series"]) {
     if(Serie.is_string() == false) {
       return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
     } else if(Serie == "Active_Power") {
-      Series |= AnalyzerSoftRatesEval::SERIE_ACTIVE_POWER;
+      Series |= RatesEval::SERIE_ACTIVE_POWER;
     } else if(Serie == "Active_Energy") {
-      Series |= AnalyzerSoftRatesEval::SERIE_ACTIVE_ENERGY;
+      Series |= RatesEval::SERIE_ACTIVE_ENERGY;
     } else if(Serie == "Reactive_Power") {
-      Series |= AnalyzerSoftRatesEval::SERIE_REACTIVE_POWER;
+      Series |= RatesEval::SERIE_REACTIVE_POWER;
     } else if(Serie == "Reactive_Energy") {
-      Series |= AnalyzerSoftRatesEval::SERIE_REACTIVE_ENERGY;
+      Series |= RatesEval::SERIE_REACTIVE_ENERGY;
     } else if(Serie == "Cost") {
-      Series |= AnalyzerSoftRatesEval::SERIE_COST;
+      Series |= RatesEval::SERIE_COST;
     } else if(Serie == "Power_Cost") {
-      Series |= AnalyzerSoftRatesEval::SERIE_POWER_COST;
+      Series |= RatesEval::SERIE_POWER_COST;
     } else if(Serie == "Energy_Cost") {
-      Series |= AnalyzerSoftRatesEval::SERIE_ENERGY_COST;
+      Series |= RatesEval::SERIE_ENERGY_COST;
     } else if(Serie == "Period") {
-      Series |= AnalyzerSoftRatesEval::SERIE_PERIOD;
+      Series |= RatesEval::SERIE_PERIOD;
     } else if(Serie == "Color") {
-      Series |= AnalyzerSoftRatesEval::SERIE_COLOR;
+      Series |= RatesEval::SERIE_COLOR;
     } else if(Serie == "Contracted") {
-      Series |= AnalyzerSoftRatesEval::SERIE_CONTRACTED;
+      Series |= RatesEval::SERIE_CONTRACTED;
     } else if(Serie == "Bill") {
-      Series |= AnalyzerSoftRatesEval::SERIE_BILL;
+      Series |= RatesEval::SERIE_BILL;
     } else {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
     }
   }
   auto Func = [&, From, To, Group, Series](uint64_t offset, DataSink &sink) -> bool {
-    AnalyzerSoftRatesEval Eval(pSerial, pTimeZone, From, To, Group, Series);
+    AnalyzerSoftRatesProvider Provider(pSerial, pTimeZone, Group);
+    RatesEval Eval(pTimeZone, From, To, Provider, Series);
     sink.os << "[\n  " << Eval.Headers().dump();
     json Result = Eval.FetchRow();
     while((Result != nullptr) && sink.is_writable()) {
@@ -148,7 +150,8 @@ void AnalyzerSoftRates::GetBills(const json &params, Response &response) const {
   uint8_t  Group = params["Group"];
   auto Func = [&, From, To, Group](uint64_t offset, DataSink &sink) -> bool {
     uint32_t Items = 0;
-    AnalyzerSoftRatesEval Eval(pSerial, pTimeZone, From, To, Group);
+    AnalyzerSoftRatesProvider Provider(pSerial, pTimeZone, Group);
+    RatesEval Eval(pTimeZone, From, To, Provider);
     sink.os << "[\n  ";
     json Result = Eval.FetchRow();
     while((Result != nullptr) && sink.is_writable()) {
