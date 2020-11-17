@@ -17,20 +17,10 @@
 #include <set>
 #include "cctz/time_zone.h"
 #include "muParser/muParser.h"
-#include "Database.h"
-#include "HTTPServer.h"
-#include "Tools.h"
-#include "Analyzer.h"
-#include "PriceSource.h"
-
 #include "TariffConcept.h"
 #include "TariffPeriod.h"
 #include "TariffDay.h"
 #include "TariffYear.h"
-
-
-
-
 //----------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 using namespace mu;
@@ -50,10 +40,4 @@ class Tariff {
   public :
     Tariff(const json &config);
 };
-
-
-
-
-//----------------------------------------------------------------------------------------------------------------------
-
 //----------------------------------------------------------------------------------------------------------------------

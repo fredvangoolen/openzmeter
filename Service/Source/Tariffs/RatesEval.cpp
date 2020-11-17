@@ -13,11 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "AnalyzerSoftRatesEval.h"
+#include "RatesEval.h"
+#include "Tools.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftRatesEval::AnalyzerSoftRatesEval(const string &serial, const time_zone &tz, const uint64_t from, const uint64_t to, const uint8_t group, const uint16_t serieMask) {
-  pRateDB       = new Database(serial);
-  pDataDB       = new Database(serial);
+RatesEval::RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to, RatesEvalProvider &provider, const uint16_t serieMask) {
   pTimeZone     = tz;
   pFinished     = false;
   pLoadedRate   = NULL;
@@ -29,18 +28,14 @@ AnalyzerSoftRatesEval::AnalyzerSoftRatesEval(const string &serial, const time_zo
   pNowDate      = Tools::GetTime64();
   pFrom         = (from / 3600000) * 3600000 + 899999;
   pTo           = (to / 3600000) * 3600000 + 899999;
-  FindStart(group);
-  pCurrent = pFrom;
-  pDataDB->ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive FROM aggreg_15m WHERE sampletime >= " + pDataDB->Bind(pFrom) + " ORDER BY sampletime ASC LIMIT 1000");
-  pDataDB->FecthRow();
+  pProvider     = &provider;
+  FindStart();
+  pSample       = pProvider->InitSamples(pFrom, pTo);
 }
-AnalyzerSoftRatesEval::~AnalyzerSoftRatesEval() {
+RatesEval::~RatesEval() {
   UnloadRate();
-  delete pLoadedRate;
-  delete pRateDB;
-  delete pDataDB;
 }
-json AnalyzerSoftRatesEval::Headers() {
+json RatesEval::Headers() {
   if(pSeriesMask == 0) return nullptr;
   json Header = json::array();
   if(pSeriesMask & SERIE_TIMESTAMP)       Header.push_back("Time");
@@ -57,24 +52,23 @@ json AnalyzerSoftRatesEval::Headers() {
   if(pSeriesMask & SERIE_BILL)            Header.push_back("Bill");
   return Header;
 }
-void AnalyzerSoftRatesEval::FindStart(const uint8_t group) {
-  pRateDB->ExecSentenceAsyncResult("SELECT jsonb_build_object('Name', name, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy')) || template::jsonb AS result FROM rates WHERE ordering = " + pRateDB->Bind(group) + " AND " +
-                                   "enddate >= " + pRateDB->Bind(format("%Y-%m-%d", chrono::system_clock::time_point(chrono::milliseconds(pFrom)), utc_time_zone())) + " AND " +
-                                   "startdate <= " + pRateDB->Bind(format("%Y-%m-%d", chrono::system_clock::time_point(chrono::milliseconds(pTo)), utc_time_zone())) + " " +
-                                   "ORDER BY startdate ASC");
-  if(pRateDB->FecthRow() == true) pLoadedRate = new Rate(pRateDB->ResultJSON("result"), pTimeZone);
-  if((pSeriesMask != 0) || (pRateDB->LoadedRow() == false)) return;
+void RatesEval::FindStart() {
+  pCurrent = pFrom;
+  pLoadedRate = pProvider->InitRates(pFrom, pTo);
+  if((pSeriesMask != 0) || (pLoadedRate == NULL)) return;
   uint64_t Time = pLoadedRate->StartDate + 899999;
   for(uint16_t n = 0; n < pLoadedRate->BillingCycles.size(); n++) {
     if(pFrom < pLoadedRate->BillingCycles[n]) {
-      pFrom = Time;
+      pFrom    = Time;
+      pCurrent = pFrom;
       return;
     }
     Time = pLoadedRate->BillingCycles[n] + 900000;
   }
-  pFrom = Time;
+  pFrom    = Time;
+  pCurrent = pFrom;
 }
-void AnalyzerSoftRatesEval::LoadRate() {
+void RatesEval::LoadRate() {
   if(pPeriods.size() > 0) return;
   pYearPtr          = pLoadedRate->Years.begin();
   pBillPtr          = pLoadedRate->BillingCycles.begin();
@@ -119,7 +113,7 @@ void AnalyzerSoftRatesEval::LoadRate() {
     pPowerScript->Var("Period", &pPeriod);
   }
 }
-void AnalyzerSoftRatesEval::UnloadRate() {
+void RatesEval::UnloadRate() {
   if(pPriceModule != NULL) {
     delete pPriceModule;
     pPriceModule = NULL;
@@ -140,18 +134,15 @@ void AnalyzerSoftRatesEval::UnloadRate() {
   pPeriods.clear();
   pPriceVariables.clear();
 }
-json AnalyzerSoftRatesEval::HandleSample() {
+json RatesEval::HandleSample() {
   while(pLoadedRate != NULL) {
     if(pCurrent < pLoadedRate->StartDate) break;
     if((pCurrent >= pLoadedRate->StartDate) && (pCurrent <= pLoadedRate->EndDate)) {
       LoadRate();
       break;
     }
-    delete pLoadedRate;
-    pLoadedRate = NULL;
-    if(pRateDB->FecthRow()) {
-      pLoadedRate = new Rate(pRateDB->ResultJSON("result"), pTimeZone);
-    } else {
+    pLoadedRate = pProvider->NextRate();
+    if(pLoadedRate == NULL) {
       if(pSeriesMask == 0) pFinished = true;
       return nullptr;
     }
@@ -183,7 +174,7 @@ json AnalyzerSoftRatesEval::HandleSample() {
   pCurrent += 900000;
   return Result;
 }
-json AnalyzerSoftRatesEval::BuildBill() {
+json RatesEval::BuildBill() {
   float EnergyTerm  = 0.0;
   float PowerTerm   = 0.0;
   float GeneralTerm = 0.0;
@@ -291,7 +282,7 @@ json AnalyzerSoftRatesEval::BuildBill() {
   Row["Total"] = Total + Tmp;
   return Row;
 }
-json AnalyzerSoftRatesEval::BuildSample(const bool bill) {
+json RatesEval::BuildSample(const bool bill) {
   json Row = json::array();
   if(pSeriesMask & SERIE_TIMESTAMP)       Row.push_back(pCurrent);
   if(pSeriesMask & SERIE_ACTIVE_POWER)    Row.push_back(pActivePower);
@@ -316,28 +307,24 @@ json AnalyzerSoftRatesEval::BuildSample(const bool bill) {
   if(pSeriesMask & SERIE_BILL)            Row.push_back(bill);
   return Row;
 }
-json AnalyzerSoftRatesEval::FetchRow() {
+json RatesEval::FetchRow() {
   json Row = nullptr;
   while((Row == nullptr) && (pFinished == false)) {
     uint64_t Time = UINT64_MAX;
-    if(pDataDB->LoadedRow() == true) Time = (pDataDB->ResultUInt64("sampletime") / 900000) * 900000 + 899999;
+    if(pSample != NULL) Time = (pSample->Time / 900000) * 900000 + 899999;
     if(Time > pCurrent) {
       pActivePower    = 0.0;
       pActiveEnergy   = 0.0;
       pReactivePower  = 0.0;
       pReactiveEnergy = 0.0;
-      Row = HandleSample();
+      Row             = HandleSample();
     } else {
-      pActivePower    = pDataDB->ResultFloat("active");
+      pActivePower    = pSample->Active;
       pActiveEnergy   = pActivePower / 4.0;
-      pReactivePower  = pDataDB->ResultFloat("reactive");
+      pReactivePower  = pSample->Reactive;
       pReactiveEnergy = pReactivePower / 4.0;
-      Row = HandleSample();
-      if(pDataDB->FecthRow() == false) {
-        pFrom = pCurrent + 1;
-        pDataDB->ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive FROM aggreg_15m WHERE sampletime >= " + pDataDB->Bind(pFrom) + " ORDER BY sampletime ASC LIMIT 1000");
-        pDataDB->FecthRow();
-      }
+      Row             = HandleSample();
+      pSample         = pProvider->NextSample();
     }
     if((pSeriesMask != 0) && (pCurrent == pTo)) pFinished = true;
     if((pSeriesMask == 0) && (pCurrent >= pTo)) {
