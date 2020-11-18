@@ -30,11 +30,13 @@ RatesEvalProvider::~RatesEvalProvider() {
 }
 Rate *RatesEvalProvider::InitRates(const uint64_t from, const uint64_t to) {
   while(pRates.size() < pRatesIdx) {
-    json JsonRate = pRates[pRatesIdx++];
+    json JsonRate = Rate::CheckConfig(pRates[pRatesIdx++]);
+    if(JsonRate.is_string()) continue;
     if(pLoadedRate != NULL) {
       delete pLoadedRate;
       pLoadedRate = NULL;
     }
+
     pLoadedRate = new Rate(JsonRate, pTimeZone);
     if((pLoadedRate->StartDate >= from) && (pLoadedRate->EndDate <= from)) return pLoadedRate;
   }
@@ -58,7 +60,11 @@ Rate *RatesEvalProvider::NextRate() {
     delete pLoadedRate;
     pLoadedRate = NULL;
   }
-  if(pRates.size() < pRatesIdx) pLoadedRate = new Rate(pRates[pRatesIdx++], pTimeZone);
+  if(pRates.size() < pRatesIdx) {
+    json JsonRate = Rate::CheckConfig(pRates[pRatesIdx++]);
+    if(JsonRate.is_string()) return NULL;
+    pLoadedRate = new Rate(JsonRate, pTimeZone);
+  }
   return pLoadedRate;
 }
 RatesEvalProvider::Sample_t *RatesEvalProvider::NextSample() {

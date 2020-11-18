@@ -330,6 +330,7 @@ json RatesEval::FetchRow() {
     if((pSeriesMask == 0) && (pCurrent >= pTo)) {
       if((pLoadedRate != NULL) && (pLoadedRate->EndDate == pCurrent)) pFinished = true;
       if((pLoadedRate != NULL) && (pBillPtr != pLoadedRate->BillingCycles.end()) && (*pBillPtr == pCurrent)) pFinished = true;
+      if((pLoadedRate == NULL) && (pCurrent >= pTo)) pFinished = true;
     }
   }
   return Row;

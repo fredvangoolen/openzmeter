@@ -2,7 +2,7 @@
 OS_TARGET = DEBIAN
 
 # Build options --------------------------------------------------------------------------------------------------------
-DEBUG   = false
+DEBUG   = true
 ARCH    = x86_64-linux-gnu
 CC      = gcc
 LD      = ld
