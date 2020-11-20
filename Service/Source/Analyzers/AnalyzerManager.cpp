@@ -145,18 +145,14 @@ void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &respons
       while(DB.FecthRow() && sink.is_writable()) {
         pAnalyzersLock.ReadLock();
         auto Tmp = pAnalyzers.find(DB.ResultString("serial"));
-        if(Tmp != pAnalyzers.end()) {
-          if(Items++ != 0) sink.os << ",\n  ";
-          sink.os << Tmp->second->GetJSONDescriptor().dump();
-        }
+        if(Tmp != pAnalyzers.end()) sink.os << ((Items++ != 0) ? ",\n  " : "") + Tmp->second->GetJSONDescriptor().dump();
         pAnalyzersLock.Unlock();
       }
     } else {
       pAnalyzersLock.ReadLock();
       for(auto Tmp : pAnalyzers) {
         if(sink.is_writable() == false) break;
-        if(Items++ != 0) sink.os << ",\n  ";
-        sink.os << Tmp.second->GetJSONDescriptor().dump();
+        sink.os << ((Items++ != 0) ? ",\n  " : "") + Tmp.second->GetJSONDescriptor().dump();
       }
       pAnalyzersLock.Unlock();
     }
