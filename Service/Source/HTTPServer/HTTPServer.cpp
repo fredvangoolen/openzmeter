@@ -203,7 +203,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response, const Co
   string UserName = "";
   string Body;
   auto   DefReader = [&](const char *data, size_t length) -> bool {
-    if((Body.size() + length) > 0x20000) {
+    if((Body.size() + length) > 0x800000) {
       Body = "";
       return false;
     }

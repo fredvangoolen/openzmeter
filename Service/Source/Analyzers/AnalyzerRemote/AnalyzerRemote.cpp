@@ -43,11 +43,13 @@ void AnalyzerRemote::GetRemote(const json &params, Response &response) {
         Result = pthread_cond_timedwait(&pCond, &pMutex, &Time);
       }
       if((Result == 0) && (pSendPending.size() > 0)) {
-        auto Request = pSendPending.begin();
-        sink.os << "data: " + Request->second->ReqParams.dump() + "\n\n";
-        Request->second->Map = &pResponsePending;
-        pResponsePending.insert( { Request->first, Request->second } );
-        pSendPending.erase(Request);
+        while(pSendPending.size() > 0) {
+          auto Request = pSendPending.begin();
+          sink.os << "data: " + Request->second->ReqParams.dump() + "\n\n";
+          Request->second->Map = &pResponsePending;
+          pResponsePending.insert( { Request->first, Request->second } );
+          pSendPending.erase(Request);
+        }
       } else if((Result != 0) && (Result != ETIMEDOUT)) {
         LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       } else {

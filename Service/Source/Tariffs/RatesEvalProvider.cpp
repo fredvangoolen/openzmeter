@@ -29,21 +29,23 @@ RatesEvalProvider::~RatesEvalProvider() {
   if(pLoadedSample) free(pLoadedSample);
 }
 Rate *RatesEvalProvider::InitRates(const uint64_t from, const uint64_t to) {
-  while(pRates.size() < pRatesIdx) {
+  while(pRates.size() > pRatesIdx) {
     json JsonRate = Rate::CheckConfig(pRates[pRatesIdx++]);
-    if(JsonRate.is_string()) continue;
+    if(JsonRate.is_string()) {
+      printf("%s\n", JsonRate.dump().c_str());
+      continue;
+    }
     if(pLoadedRate != NULL) {
       delete pLoadedRate;
       pLoadedRate = NULL;
     }
-
     pLoadedRate = new Rate(JsonRate, pTimeZone);
-    if((pLoadedRate->StartDate >= from) && (pLoadedRate->EndDate <= from)) return pLoadedRate;
+    if(pLoadedRate->EndDate >= from) return pLoadedRate;
   }
   return NULL;
 }
 RatesEvalProvider::Sample_t *RatesEvalProvider::InitSamples(const uint64_t from, const uint64_t to) {
-  while(pSamples.size() < pSamplesIdx) {
+  while(pSamples.size() > pSamplesIdx) {
     json JsonSample = pSamples[pSamplesIdx++];
     if((JsonSample.contains("SampleTime") == false) || (JsonSample["SampleTime"].is_number() == false) || (JsonSample.contains("Active_Power") == false) || (JsonSample["Active_Power"].is_number() == false) || (JsonSample.contains("Reactive_Power") == false) || (JsonSample["Reactive_Power"].is_number() == false)) return NULL;
     if(pLoadedSample == NULL) pLoadedSample = (Sample_t*)malloc(sizeof(Sample_t));
@@ -60,7 +62,7 @@ Rate *RatesEvalProvider::NextRate() {
     delete pLoadedRate;
     pLoadedRate = NULL;
   }
-  if(pRates.size() < pRatesIdx) {
+  if(pRates.size() > pRatesIdx) {
     json JsonRate = Rate::CheckConfig(pRates[pRatesIdx++]);
     if(JsonRate.is_string()) return NULL;
     pLoadedRate = new Rate(JsonRate, pTimeZone);
@@ -69,7 +71,7 @@ Rate *RatesEvalProvider::NextRate() {
 }
 RatesEvalProvider::Sample_t *RatesEvalProvider::NextSample() {
   if(pLoadedSample == NULL) return NULL;
-  if(pSamples.size() < pSamplesIdx) {
+  if(pSamples.size() > pSamplesIdx) {
     pLoadedSample->Time     = pSamples[pSamplesIdx]["SampleTime"];
     pLoadedSample->Active   = pSamples[pSamplesIdx]["Active_Power"];
     pLoadedSample->Reactive = pSamples[pSamplesIdx]["Reactive_Power"];
