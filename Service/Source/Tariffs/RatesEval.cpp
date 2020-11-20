@@ -243,40 +243,40 @@ json RatesEval::BuildBill() {
   }
   float Total = EnergyTerm + PowerTerm + GeneralTerm;
   Row["Taxes"] = json::array();
-  for(uint16_t T = 0; T < pLoadedRate->Taxs.size(); T++) {
+  for(uint16_t T = 0; T < pLoadedRate->Taxes.size(); T++) {
     json Tax = json::object();
-    if(pLoadedRate->Taxs[T].Type == RateTax::TAX_PERCENT_ENERGY) {
+    if(pLoadedRate->Taxes[T].Type == RateTax::TAX_PERCENT_ENERGY) {
       Tax["Type"] = "PERCENT_ENERGY";
-      Tax["Value"] = EnergyTerm * (pLoadedRate->Taxs[T].Value / 100.0);
-      Total += EnergyTerm * (pLoadedRate->Taxs[T].Value / 100.0);
-    } else if(pLoadedRate->Taxs[T].Type == RateTax::TAX_PERCENT_POWER) {
+      Tax["Value"] = EnergyTerm * (pLoadedRate->Taxes[T].Value / 100.0);
+      Total += EnergyTerm * (pLoadedRate->Taxes[T].Value / 100.0);
+    } else if(pLoadedRate->Taxes[T].Type == RateTax::TAX_PERCENT_POWER) {
       Tax["Type"] = "PERCENT_POWER";
-      Tax["Value"] = PowerTerm * (pLoadedRate->Taxs[T].Value / 100.0);
-      Total += PowerTerm * (pLoadedRate->Taxs[T].Value / 100.0);
-    } else if(pLoadedRate->Taxs[T].Type == RateTax::TAX_PERCENT_ENERGY_POWER) {
+      Tax["Value"] = PowerTerm * (pLoadedRate->Taxes[T].Value / 100.0);
+      Total += PowerTerm * (pLoadedRate->Taxes[T].Value / 100.0);
+    } else if(pLoadedRate->Taxes[T].Type == RateTax::TAX_PERCENT_ENERGY_POWER) {
       Tax["Type"] = "PERCENT_ENERGY_POWER";
-      Tax["Value"] = (EnergyTerm + PowerTerm) * (pLoadedRate->Taxs[T].Value / 100.0);
-      Total += (EnergyTerm + PowerTerm) * (pLoadedRate->Taxs[T].Value / 100.0);
-    } else if(pLoadedRate->Taxs[T].Type == RateTax::TAX_FIXED) {
+      Tax["Value"] = (EnergyTerm + PowerTerm) * (pLoadedRate->Taxes[T].Value / 100.0);
+      Total += (EnergyTerm + PowerTerm) * (pLoadedRate->Taxes[T].Value / 100.0);
+    } else if(pLoadedRate->Taxes[T].Type == RateTax::TAX_FIXED) {
       Tax["Type"] = "FIXED_QUANTITY";
-      Tax["Value"] = pLoadedRate->Taxs[T].Value;
-      GeneralTerm += pLoadedRate->Taxs[T].Value;
-      Total += pLoadedRate->Taxs[T].Value;
+      Tax["Value"] = pLoadedRate->Taxes[T].Value;
+      GeneralTerm += pLoadedRate->Taxes[T].Value;
+      Total += pLoadedRate->Taxes[T].Value;
     } else {
       continue;
     }
-    Tax["Description"] = pLoadedRate->Taxs[T].Description;
+    Tax["Description"] = pLoadedRate->Taxes[T].Description;
     Row["Taxes"].push_back(Tax);
   }
   float Tmp = 0.0;
-  for(uint16_t T = 0; T < pLoadedRate->Taxs.size(); T++) {
-    if(pLoadedRate->Taxs[T].Type == RateTax::TAX_PERCENT) {
+  for(uint16_t T = 0; T < pLoadedRate->Taxes.size(); T++) {
+    if(pLoadedRate->Taxes[T].Type == RateTax::TAX_PERCENT) {
       json Tax = json::object();
-      Tax["Description"] = pLoadedRate->Taxs[T].Description;
+      Tax["Description"] = pLoadedRate->Taxes[T].Description;
       Tax["Type"] = "PERCENT_TOTAL";
-      Tax["Value"] = Total * (pLoadedRate->Taxs[T].Value / 100.0);
+      Tax["Value"] = Total * (pLoadedRate->Taxes[T].Value / 100.0);
       Row["Taxes"].push_back(Tax);
-      Tmp += Total * (pLoadedRate->Taxs[T].Value / 100.0);
+      Tmp += Total * (pLoadedRate->Taxes[T].Value / 100.0);
     }
   }
   Row["Total"] = Total + Tmp;

@@ -18,7 +18,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 Rate::Rate(const json &config, const time_zone &tz) : Tariff(config) {
   Name = config["Name"];
-  for(uint16_t T = 0; T < config["Taxs"].size(); T++) Taxs.emplace_back(config["Taxs"][T]);
+  for(uint16_t T = 0; T < config["Taxes"].size(); T++) Taxes.emplace_back(config["Taxes"][T]);
   Script = config["Script"];
   if(config["ContractedPower"].is_number()) {
     Contracted = vector<float>(Periods.size(), config["ContractedPower"]);
@@ -55,12 +55,12 @@ json Rate::CheckConfig(const json &config) {
   ConfigOUT["Name"] = config["Name"];
   if((config.contains("Group") == false) || (config["Group"].is_number_integer() == false) || (config["Group"] < 0) || (config["Group"] > 10)) return "'Group' param is requiered";
   ConfigOUT["Group"] = config["Group"];
-  if((config.contains("Taxs") == false) || (config["Taxs"].is_array() == false)) return "'Taxs' param is required";
-  ConfigOUT["Taxs"] = json::array();
-  for(uint16_t T = 0; T < config["Taxs"].size(); T++) {
-    json Tax = RateTax::CheckConfig(config["Taxs"][T]);
+  if((config.contains("Taxes") == false) || (config["Taxes"].is_array() == false)) return "'Taxes' param is required";
+  ConfigOUT["Taxes"] = json::array();
+  for(uint16_t T = 0; T < config["Taxes"].size(); T++) {
+    json Tax = RateTax::CheckConfig(config["Taxes"][T]);
     if(Tax.is_string()) return Tax;
-    ConfigOUT["Taxs"].push_back(Tax);
+    ConfigOUT["Taxes"].push_back(Tax);
   }
   if((config.contains("ContractedPower") == true) && (config["ContractedPower"].is_array() == true) && (config["ContractedPower"].size() == ConfigOUT["Periods"].size())) {
     ConfigOUT["ContractedPower"] = json::array();

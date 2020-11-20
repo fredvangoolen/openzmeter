@@ -155,17 +155,17 @@
           <div class="panel panel-dialog" style="margin-bottom: 0px">
             <div class="panel-heading">
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" @click="Rate.Taxs.push({Description: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0})" data-toggle="tooltip" title="Add concept"><img :src="require('Imgs/plus.png')"></button>
+                <button type="button" class="btn btn-default btn-xs" @click="Rate.Taxes.push({Description: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0})" data-toggle="tooltip" title="Add concept"><img :src="require('Imgs/plus.png')"></button>
               </div>
-              <toolbar-pager class="pull-right" :pageSize="10" :input="Rate.Taxs" :output.sync="FilterTaxs" :filtercols="['Description']"></toolbar-pager>
+              <toolbar-pager class="pull-right" :pageSize="10" :input="Rate.Taxes" :output.sync="FilterTaxes" :filtercols="['Description']"></toolbar-pager>
               <div class="clearfix"></div>
             </div>
             <div class="panel-body">
-              <vuetable :fields="ColumnsTaxs" :api-mode="false" :data="FilterTaxs" class="taxs table small table-striped">
+              <vuetable :fields="ColumnsTaxes" :api-mode="false" :data="FilterTaxes" class="taxes table small table-striped">
                 <template slot="tax" slot-scope="props">
                   <div class="input-group input-group-xs">
                     <span class="input-group-btn">
-                      <button class="btn btn-default" type="button" @click="Rate.Taxs.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
+                      <button class="btn btn-default" type="button" @click="Rate.Taxes.splice(props.rowData.rowNum, 1)"><img :src="require('Imgs/cross.png')"></button>
                     </span>
                     <input type="text" class="form-control" v-model="props.rowData.Description">
                   </div>
@@ -252,14 +252,14 @@
   export default {
     props: { analyzer: Object, rate: Object },
     data() {
-      return { View: 'Main', Rate: null, ShowSpinner: false, FilterTariffs: [], Tariffs: [], FilterTaxs: [], FilterCycles: [], FilterCycles: [], SelDate: null, Error: null,
+      return { View: 'Main', Rate: null, ShowSpinner: false, FilterTariffs: [], Tariffs: [], FilterTaxes: [], FilterCycles: [], FilterCycles: [], SelDate: null, Error: null,
         BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th'],
         ColumnsTariffs: [
           { name: 'Name', title: 'Name' },
           { name: 'UserName', title: 'Owner' },
           { name: '__slot:actions', title: '' }
         ],
-        ColumnsTaxs: [
+        ColumnsTaxes: [
           { name: '__slot:tax', title: 'Concept' },
           { name: '__slot:type', title: 'Type' },
           { name: '__slot:value', title: 'Value' },
@@ -274,7 +274,7 @@
     },
     created: function() {
       if(this.rate == null) {
-        this.Rate = { Analyzer: this.analyzer.Analyzer, Name: 'Unname rate', Description: '', Group: 0, StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxs: [], Billing: [] };
+        this.Rate = { Analyzer: this.analyzer.Analyzer, Name: 'Unname rate', Description: '', Group: 0, StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxes: [], Billing: [] };
       } else {
         this.Rate = Object.assign({ Analyzer: this.analyzer.Analyzer}, this.rate);
       }
@@ -397,7 +397,7 @@
   .tariffs.table >>> td:nth-child(3) {
     text-align: right;
   }
-  .taxs.table >>> th:nth-child(3) {
+  .taxes.table >>> th:nth-child(3) {
     width: 200px;
   }
   table tr td {

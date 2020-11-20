@@ -38,7 +38,7 @@ class Rate final : public Tariff {
     string             PriceSrc;
     uint64_t           EndDate;
     vector<uint64_t>   BillingCycles;
-    vector<RateTax>    Taxs;
+    vector<RateTax>    Taxes;
     vector<float>      Contracted;
   public :
     static json CheckConfig(const json &config);
