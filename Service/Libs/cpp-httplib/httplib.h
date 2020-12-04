@@ -4356,7 +4356,7 @@ Server::create_server_socket(const char *host, int port, int socket_flags,
         if (::bind(sock, ai.ai_addr, static_cast<socklen_t>(ai.ai_addrlen))) {
           return false;
         }
-        if (::listen(sock, 5)) { // Listen through 5 channels
+        if (::listen(sock, 50)) { // Listen through 5 channels
           return false;
         }
         return true;

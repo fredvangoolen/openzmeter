@@ -160,11 +160,13 @@ void DeviceV1::Configure(const json& config) {
   ClearAnalyzers();
   pthread_mutex_lock(&pConfigLock);
   ConfigFile::WriteConfig("/Devices/" + pSerial, config);
-  pVoltageGain     = config["VoltageGain"];
   pVoltageOffset   = config["VoltageOffset"];
-  pCurrentGain     = config["CurrentGain"];
-  pCurrentOffset   = config["CurrentOffset"];
+  pVoltageGain     = config["VoltageGain"];
+  pVoltageGain     = ((pHWVersion == 0x0100) ? 0.010683471 : 0.014244628) * (1.0 + (pVoltageGain / 100.0));
   pCurrentInvert   = config["CurrentInvert"];
+  pCurrentOffset   = config["CurrentOffset"];
+  pCurrentGain     = config["CurrentGain"];
+  pCurrentGain     = 0.0015625 * (1.0 + (pCurrentGain / 100.0)) * (pCurrentInvert ? -1.0 : 1.0);
   pEnabled         = config["Enabled"];
   pVoltageDelayPos = 0;
   memset(pVoltageDelay, 0, sizeof(pVoltageDelay));
@@ -184,7 +186,7 @@ void *DeviceV1::Capture_Thread(void *args) {
   USBTransfer *Transfers[DEVICEV1_TRANSFERS];
   for(uint8_t n = 0; n < DEVICEV1_TRANSFERS; n++) Transfers[n] = new USBTransfer(This, 8192);
   while((This->pTerminate == false) || (This->pSubmittedTransfers > 0)) {
-    struct timeval tv = { 0, 10000 };
+    struct timeval tv = { 1, 0 };
     int Result = libusb_handle_events_timeout_completed(This->pContext, &tv, NULL);
     if(Result < LIBUSB_SUCCESS) LogFile::Error("libusb_handle_events_timeout_completed returns code %d", Result);
     if(This->pTerminate == true) continue;
@@ -274,7 +276,7 @@ void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
   if((transfer->endpoint == DEVICEV1_ENDPOINT_IN) && (transfer->status == LIBUSB_TRANSFER_COMPLETED)) {
     int16_t *Samples = (int16_t*)transfer->buffer;
     pthread_mutex_lock(&This->pConfigLock);
-    for(uint16_t Pos = 0; Pos < (transfer->actual_length / 2); Pos = Pos +2) {
+    for(uint16_t Pos = 0; Pos < (transfer->actual_length / 2); Pos = Pos + 2) {
       if(Samples[Pos] != -32768) This->BufferAppend(&Samples[Pos]);
     }
     pthread_mutex_unlock(&This->pConfigLock);
@@ -324,7 +326,7 @@ void DeviceV1::SetDevice(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void DeviceV1::BufferAppend(int16_t *sample) {
-  for(uint8_t Ch = 0; Ch < 2; Ch++) pRunAverageValues[Ch] = pRunAverageValues[Ch] + sample[Ch];
+  for(uint8_t Ch = 0; Ch < 2; Ch++) pRunAverageValues[Ch] += sample[Ch];
   pRunAverageCounter++;
   if(pRunAverageCounter == (DEVICEV1_SAMPLEFREQ * 10)) {
     pAverageLocks.WriteLock();
@@ -345,12 +347,11 @@ void DeviceV1::BufferAppend(int16_t *sample) {
   }
   if(pAnalyzer->IsWorking() == true) return;
   bool AnalyzerRun  = false;
-  float VoltageMult = (pHWVersion == 0x0100) ? 0.0106834716796 : 0.0142446289062;
   for(uint8_t max = 0; (max < 5) && (pBufferTail != pBufferHead) && (AnalyzerRun == false); max++) {
     int16_t *Ptr = &pBuffer[pBufferTail * 2];
     pBufferTail = (pBufferTail + 1) % DEVICEV1_BUFFERSIZE;
-    float Voltage = ((pVoltageDelay[pVoltageDelayPos] * VoltageMult) * (1.0 + (pVoltageGain / 100.0))) + pVoltageOffset;
-    float Current = ((Ptr[1] * 0.0015625000000) * (1.0 + (pCurrentGain / 100.0)) * (pCurrentInvert ? -1.0 : 1.0)) + pCurrentOffset;
+    float Voltage = (pVoltageDelay[pVoltageDelayPos] + pVoltageOffset) * pVoltageGain;
+    float Current = (Ptr[1] + pCurrentOffset) * pCurrentGain;
     pVoltageDelay[pVoltageDelayPos] = Ptr[0];
     pVoltageDelayPos = (pVoltageDelayPos + 1) % DEVICEV1_VOLTAGEDELAY;
     uint32_t Used = (pBufferHead > pBufferTail) ? pBufferHead - pBufferTail : DEVICEV1_BUFFERSIZE - pBufferTail + pBufferHead;

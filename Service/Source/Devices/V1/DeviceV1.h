@@ -24,7 +24,7 @@
 #define DEVICEV1_MANSTRING       "zRed"                          //Manufacturer string
 #define DEVICEV1_01_PRODSTRING   "openZmeter - Capture device"   //Product string
 #define DEVICEV1_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
-#define DEVICEV1_SAMPLEFREQ    15625.00                          //Frequencia de muestreo
+#define DEVICEV1_SAMPLEFREQ       15625                          //Frequencia de muestreo
 #define DEVICEV1_BUFFERSECONDS       10                          //Tamaño del buffer (10 segundos)
 #define DEVICEV1_TRANSFERS            8                          //Numero de transferencias a encolar
 #define DEVICEV1_BUFFERSIZE    0x040000
