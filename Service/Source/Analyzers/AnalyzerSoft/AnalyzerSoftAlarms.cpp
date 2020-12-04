@@ -137,7 +137,7 @@ void AnalyzerSoftAlarms::SetAlarmDef(const json &params, Response &response) {
   uint16_t Samples    = params["Samples"];
   uint16_t Window     = params["Window"];
   Database DB(pSerial);
-  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("UPDATE alarms SET name = " + DB.Bind(Name) + ", priority = " + DB.Bind(Priority) +", expression = " + DB.Bind(Expression) + ", aggreg = " + DB.Bind(Aggreg) + ", samples = " + DB.Bind(Samples) + ", windowlen = " + DB.Bind(Window) + " WHERE id = " + DB.Bind(ID)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("INSERT INTO alarms(id, name, priority, expression, aggreg, samples, windowlen) VALUES(" + DB.Bind(ID) + ", " + DB.Bind(Name) + ", " + DB.Bind(Priority) + ", " + DB.Bind(Expression) + ", " + DB.Bind(Aggreg) + ", " + DB.Bind(Samples) + ", " + DB.Bind(Window) + ") ON CONFLICT(id) DO UPDATE SET name = EXCLUDED.name, priority = EXCLUDED.priority, expression = EXCLUDED.expression, aggreg = EXCLUDED.aggreg, samples = EXCLUDED.samples, windowlen = EXCLUDED.windowlen") ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
   pthread_mutex_lock(&pAlarmsMutex);
   auto Item = pAlarms.find(ID);
   if(Item != pAlarms.end()) {

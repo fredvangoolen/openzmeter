@@ -34,7 +34,6 @@ class AnalyzerSoftEvents final {
                         SAMPLES_RMS_POSEND   = 0x40
                       };
     typedef struct {
-      string         UID;                       //Event unique identifier
       EventType      Type;                      //Running event type
       uint64_t       Start;                     //Event start timestamp
       uint64_t       SamplesDuration;           //Event duration in samples
@@ -74,7 +73,7 @@ class AnalyzerSoftEvents final {
     bool     FindRunningEvent(const uint32_t mask) const;
     float    CalcChange(const float in, const float reference) const;
     string   EventTypeToString(const EventType type) const;
-    void     SaveSamples(const string &id, const uint8_t type, const uint16_t len);
+    void     SaveSamples(const uint64_t &start, const uint8_t type, const uint16_t len);
   public :
     AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftEvents();

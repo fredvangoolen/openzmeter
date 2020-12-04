@@ -89,6 +89,7 @@ PGconn *DatabasePool::PopConnection() {
   pthread_mutex_unlock(&pMutex);
   if(Tmp == NULL) {
     Tmp = PQconnectdb(pConnectionString.c_str());
+    LogFile::Debug("New connection to database server started");
     New = true;
   }
   if((Tmp != NULL) && (PQstatus(Tmp) != CONNECTION_OK)) {

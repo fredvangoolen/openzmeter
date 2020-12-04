@@ -549,7 +549,7 @@ void  DeviceV2::SetDevice(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void DeviceV2::BufferAppend() {
-  for(uint8_t Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] = pRunAverageValues[Ch] + pCapture[Ch];
+  for(uint8_t Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] += pCapture[Ch];
   pRunAverageCounter++;
   if(pRunAverageCounter == (DEVICEV2_SAMPLEFREQ * 10)) {
     pAverageLocks.WriteLock();

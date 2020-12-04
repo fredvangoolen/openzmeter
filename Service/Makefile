@@ -12,9 +12,9 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort)
 #Executable related components
 EXECUTABLE_TARGET = Tmp/$(TARGET)/openZmeter
 EXECUTABLE_SOURCE = $(shell find Source -name "*.cpp" ! -type d -print)
-CFLAGS  += -DCPPHTTPLIB_USE_POLL -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT \
-           -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/AnalyzerSoft -I Source/Analyzers/AnalyzerRemote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools \
-					 -Wno-psabi -Wall -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" -I Libs  -I Libs/mqtt-c
+CFLAGS  += -DCPPHTTPLIB_USE_POLL -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" \
+           -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/AnalyzerSoft -I Source/Analyzers/AnalyzerRemote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools -I Libs -I Libs/mqtt-c \
+					 -fsingle-precision-constant -Wno-psabi -Wall
 LDFLAGS += -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto -luuid -lfftw3f -lusb-1.0
 
 #Add libs (cctz, nlohmann, muparser, httplib, mqtt-c)

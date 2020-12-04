@@ -96,12 +96,11 @@ string AnalyzerSoftEvents::EventTypeToString(const AnalyzerSoftEvents::EventType
 }
 AnalyzerSoftEvents::Event_t *AnalyzerSoftEvents::InitEvent() {
   Event_t *Event = new Event_t;
-  Event->UID = Tools::GetUUID();
   Event->SamplesDuration = 0;
   Event->CyclesDuration = 0;
   return Event;
 }
-void AnalyzerSoftEvents::SaveSamples(const string &id, const uint8_t type, const uint16_t len) {
+void AnalyzerSoftEvents::SaveSamples(const uint64_t &time, const uint8_t type, const uint16_t len) {
   uint16_t MaxLen;
   uint16_t ReadPos;
   Database DB(pSerial);
@@ -124,7 +123,7 @@ void AnalyzerSoftEvents::SaveSamples(const string &id, const uint8_t type, const
     Result.append("}");
   }
   Result.append("}'");
-  DB.ExecSentenceNoResult("INSERT INTO events_ext(id, sampletype, samples) VALUES (" + DB.Bind(id) + ", " + DB.Bind(type) + ", " + Result + ")");
+  DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples) VALUES (" + DB.Bind(time) + ", " + DB.Bind(type) + ", " + Result + ")");
 }
 void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
   uint16_t Pos = 0;
@@ -163,10 +162,10 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
         Database DB(pSerial);
         if(pEvent->Type == EVT_RVC) memcpy(pEvent->ChangeValue, RMS_Avg, sizeof(float) * pVoltageChannels);
         DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", reference = " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", peak = " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", change = " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", duration = " + DB.Bind(pEvent->SamplesDuration) + " WHERE starttime = " + DB.Bind(pEvent->Start));
-        if(pEvent->CyclesDuration  < pPrevCyclesLen)  SaveSamples(pEvent->UID, SAMPLES_RMS_POSSTART, 0);
-        if(pEvent->SamplesDuration < pPrevSamplesLen) SaveSamples(pEvent->UID, SAMPLES_RAW_POSSTART, 0);
-        SaveSamples(pEvent->UID, SAMPLES_RMS_PREEND, (pEvent->CyclesDuration < pPrevCyclesLen) ? pEvent->CyclesDuration : (pEvent->CyclesDuration < (pPrevCyclesLen * 2)) ? pEvent->CyclesDuration - pPrevCyclesLen : pPrevCyclesLen);
-        SaveSamples(pEvent->UID, SAMPLES_RAW_PREEND, (pEvent->SamplesDuration < pPrevSamplesLen) ? pEvent->SamplesDuration : (pEvent->SamplesDuration < (pPrevSamplesLen * 2)) ? pEvent->SamplesDuration - pPrevSamplesLen : pPrevSamplesLen);
+        if(pEvent->CyclesDuration  < pPrevCyclesLen)  SaveSamples(pEvent->Start, SAMPLES_RMS_POSSTART, 0);
+        if(pEvent->SamplesDuration < pPrevSamplesLen) SaveSamples(pEvent->Start, SAMPLES_RAW_POSSTART, 0);
+        SaveSamples(pEvent->Start, SAMPLES_RMS_PREEND, (pEvent->CyclesDuration < pPrevCyclesLen) ? pEvent->CyclesDuration : (pEvent->CyclesDuration < (pPrevCyclesLen * 2)) ? pEvent->CyclesDuration - pPrevCyclesLen : pPrevCyclesLen);
+        SaveSamples(pEvent->Start, SAMPLES_RAW_PREEND, (pEvent->SamplesDuration < pPrevSamplesLen) ? pEvent->SamplesDuration : (pEvent->SamplesDuration < (pPrevSamplesLen * 2)) ? pEvent->SamplesDuration - pPrevSamplesLen : pPrevSamplesLen);
         pEvent->CyclesDuration  = 0;
         pEvent->SamplesDuration = 0;
         pEvents.push_back(pEvent);
@@ -205,9 +204,9 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
         LogFile::Debug("New event '%s' started on analyzer '%s'", Type.c_str(), pSerial.c_str());
         pEvent->Start = pTimestamp + (uint32_t)((Pos * 1000) / pSamplerate);
         Database DB(pSerial);
-        DB.ExecSentenceNoResult("INSERT INTO events(id, starttime, evttype, samplerate, reference, peak, change, notes, duration) VALUES (" + DB.Bind(pEvent->UID) + ", " + DB.Bind(pEvent->Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", '', 0)");
-        SaveSamples(pEvent->UID, SAMPLES_RMS_PRESTART, pPrevCyclesLen);
-        SaveSamples(pEvent->UID, SAMPLES_RAW_PRESTART, pPrevSamplesLen);
+        DB.ExecSentenceNoResult("INSERT INTO events(starttime, evttype, samplerate, reference, peak, change, notes, duration) VALUES (" + DB.Bind(pEvent->Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", '', 0)");
+        SaveSamples(pEvent->Start, SAMPLES_RMS_PRESTART, pPrevCyclesLen);
+        SaveSamples(pEvent->Start, SAMPLES_RAW_PRESTART, pPrevSamplesLen);
       } else if(pEvent->Type == EVT_INTERRUPTION) {
         for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent->PeakValue[n] = fmin(pEvent->PeakValue[n], Cycle[n]);
       } else if(pEvent->Type == EVT_DIP) {
@@ -222,22 +221,22 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
     pPrevCyclesPos  = (pPrevCyclesPos + 1) % pPrevCyclesLen;
     if(pEvent != NULL) {
       pEvent->CyclesDuration++;
-      if(pEvent->CyclesDuration == pPrevCyclesLen) SaveSamples(pEvent->UID, SAMPLES_RMS_POSSTART, pPrevCyclesLen);
+      if(pEvent->CyclesDuration == pPrevCyclesLen) SaveSamples(pEvent->Start, SAMPLES_RMS_POSSTART, pPrevCyclesLen);
     }
     for(auto &Event : pEvents) {
       Event->CyclesDuration++;
-      if(Event->CyclesDuration == pPrevCyclesLen) SaveSamples(Event->UID, SAMPLES_RMS_POSEND, pPrevCyclesLen);
+      if(Event->CyclesDuration == pPrevCyclesLen) SaveSamples(Event->Start, SAMPLES_RMS_POSEND, pPrevCyclesLen);
     }
     for(uint16_t j = 0; j < CycleLen; j++) {
       for(uint8_t n = 0; n < pVoltageChannels; n++) pPrevSamples[pPrevSamplesPos * pVoltageChannels + n] = block->VoltageSample(n, Pos + j);
       pPrevSamplesPos = (pPrevSamplesPos + 1) % pPrevSamplesLen;
       if(pEvent != NULL) {
         pEvent->SamplesDuration++;
-        if(pEvent->SamplesDuration == pPrevSamplesLen) SaveSamples(pEvent->UID, SAMPLES_RAW_POSSTART, pPrevSamplesLen);
+        if(pEvent->SamplesDuration == pPrevSamplesLen) SaveSamples(pEvent->Start, SAMPLES_RAW_POSSTART, pPrevSamplesLen);
       }
       for(auto &Event : pEvents) {
         Event->SamplesDuration++;
-        if(Event->SamplesDuration == pPrevSamplesLen) SaveSamples(Event->UID, SAMPLES_RAW_POSEND, pPrevSamplesLen);
+        if(Event->SamplesDuration == pPrevSamplesLen) SaveSamples(Event->Start, SAMPLES_RAW_POSEND, pPrevSamplesLen);
       }
     }
     while(pEvents.size() != 0) {
@@ -261,10 +260,10 @@ void AnalyzerSoftEvents::GetEvents(const json &params, Response &response) {
     DB.ExecSentenceNoResult("UPDATE permissions SET eventsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
   }
   auto Func = [&, To, From](uint64_t offset, DataSink &sink) -> bool {
-    json Headers = {"EventID", "Time", "Type", "SampleRate", "Reference", "Peak", "Change", "Duration", "Notes"};
+    json Headers = {"StartTime", "Type", "SampleRate", "Reference", "Peak", "Change", "Duration", "Notes"};
     sink.os << "[\n  " << Headers.dump();
     Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT json_build_array(id, starttime, evttype, samplerate, reference, peak, change, duration, notes) AS result FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To));
+    DB.ExecSentenceAsyncResult("SELECT json_build_array(starttime, evttype, samplerate, reference, peak, change, duration, notes) AS result FROM events WHERE starttime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To));
     while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " + DB.ResultString("result");
     sink.os << "\n]";
     sink.done();
@@ -281,42 +280,42 @@ void AnalyzerSoftEvents::GetEventsRange(const json &params, Response &response) 
 void AnalyzerSoftEvents::DelEventsRange(const json &params, Response &response) {
   if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t From   = params["From"];
-  uint64_t To     = params["To"];
+  uint64_t From = params["From"];
+  uint64_t To   = params["To"];
   Database DB(pSerial);
-  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime >= " + DB.Bind(From) + " AND starttime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoftEvents::GetEvent(const json &params, Response &response) {
-  if((params.contains("EventID") == false) || (params["EventID"].is_string() == false)) return HTTPServer::FillResponse(response, "'EventID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Samples") == false) || (params["Samples"].is_string() == false) || ((params["Samples"] != "RMS") && (params["Samples"] != "RAW"))) return HTTPServer::FillResponse(response, "'Samples' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Database DB(pSerial);
-  string ID      = params["EventID"];
-  string Samples = params["Samples"];
-  DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('Time', starttime, 'Type', evttype, 'SampleRate', samplerate, 'Reference', reference, 'Peak', peak, 'Change', change, 'Duration', duration, 'Notes', notes, "
-                             "'Length', (SELECT array_length(samples, 1) FROM events_ext WHERE events_ext.id = events.id AND sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_PRESTART : SAMPLES_RAW_PRESTART)) + "), "
-                             "'Samples', (WITH ext AS (SELECT samples, sampletype FROM events_ext WHERE events_ext.id = events.id) SELECT "
+  uint64_t StartTime = params["StartTime"];
+  string   Samples   = params["Samples"];
+  DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('StartTime', starttime, 'Type', evttype, 'SampleRate', samplerate, 'Reference', reference, 'Peak', peak, 'Change', change, 'Duration', duration, 'Notes', notes, "
+                             "'Length', (SELECT array_length(samples, 1) FROM events_ext WHERE events_ext.starttime = events.starttime AND sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_PRESTART : SAMPLES_RAW_PRESTART)) + "), "
+                             "'Samples', (WITH ext AS (SELECT samples, sampletype FROM events_ext WHERE events_ext.starttime = events.starttime) SELECT "
                              " (SELECT samples FROM ext WHERE sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_PRESTART : SAMPLES_RAW_PRESTART)) + ") || "
                              " (SELECT samples FROM ext where sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_POSSTART : SAMPLES_RAW_POSSTART)) + ") || "
                              " (SELECT samples FROM ext WHERE sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_PREEND   : SAMPLES_RAW_PREEND)) + ") || "
                              " (SELECT samples FROM ext WHERE sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_POSEND   : SAMPLES_RAW_POSEND)) + ")) "
-                             ") AS result FROM events WHERE id = " + DB.Bind(ID));
+                             ") AS result FROM events WHERE starttime = " + DB.Bind(StartTime));
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
 void AnalyzerSoftEvents::SetEvent(const json &params, Response &response) {
-  if((params.contains("EventID") == false) || (params["EventID"].is_string() == false)) return HTTPServer::FillResponse(response, "'EventID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Notes") == false) || (params["Notes"].is_string() == false)) return HTTPServer::FillResponse(response, "'Notes' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Database DB(pSerial);
-  string ID    = params["EventID"];
-  string Notes = params["Notes"];
-  bool Result = DB.ExecSentenceNoResult("UPDATE events SET Notes = " + DB.Bind(Notes) + " WHERE id = " + DB.Bind(ID));
+  uint64_t StartTime = params["StartTime"];
+  string   Notes     = params["Notes"];
+  bool     Result    = DB.ExecSentenceNoResult("UPDATE events SET Notes = " + DB.Bind(Notes) + " WHERE starttime = " + DB.Bind(StartTime));
   HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoftEvents::DelEvent(const json &params, Response &response) {
-  if((params.contains("EventID") == false) || (params["EventID"].is_string() == false)) return HTTPServer::FillResponse(response, "'EventID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Database DB(pSerial);
-  string ID = params["EventID"];
-  bool Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE id = " + DB.Bind(ID));
+  uint64_t StartTime = params["StartTime"];
+  bool     Result    = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(StartTime));
   HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 // ---------------------------------------------------------------------------------------------------------------------

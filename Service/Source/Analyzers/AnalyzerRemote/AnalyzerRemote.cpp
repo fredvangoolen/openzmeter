@@ -108,7 +108,7 @@ void AnalyzerRemote::HandleRequest(const Analyzer::AnalyzerRights rights, const 
   pSendPending.emplace(Sequence, Request);
   pthread_cond_signal(&pCond);
   clock_gettime(CLOCK_REALTIME, &Time);
-  Time.tv_sec = Time.tv_sec + 10;
+  Time.tv_sec = Time.tv_sec + 20;
   pthread_cond_timedwait(&Request->Cond, &pMutex, &Time);
   if(Request->Map != NULL) {
     Request->Map->erase(Sequence);
