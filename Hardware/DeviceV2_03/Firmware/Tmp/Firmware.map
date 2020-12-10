@@ -1,0 +1,265 @@
+
+Allocating common symbols
+Common symbol       size              file
+
+ADC_Read            0x90              Tmp/Main.c.o
+USB_Device          0x34              Tmp/USB.c.o
+SysTicks            0x4               Tmp/Main.c.o
+Samples_Buffer      0x1606            Tmp/Main.c.o
+SignalsStatus       0x2               Tmp/Main.c.o
+USB_Buffer          0x20              Tmp/USB.c.o
+SysStatus           0x2               Tmp/Main.c.o
+ButtonStatus        0x2               Tmp/Main.c.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+flash            0x0000000008000000 0x0000000000008000
+ram              0x0000000020000000 0x0000000000001800
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+LOAD Tmp/Main.c.o
+LOAD Tmp/System.c.o
+LOAD Tmp/USB.c.o
+                0x0000000008000000                . = ORIGIN (flash)
+
+.text           0x0000000008000000     0x199c
+ *(.vectors)
+ .vectors       0x0000000008000000       0xc0 Tmp/System.c.o
+                0x0000000008000000                Vectors
+ *(.text)
+ .text          0x00000000080000c0      0xa6c Tmp/Main.c.o
+                0x00000000080000c0                USB_HandleEP1_TX
+                0x00000000080001c0                USB_HandleEP2_RX
+                0x000000000800025c                SysTick_ISR
+                0x0000000008000480                Suspend
+                0x00000000080004b8                DMA_CH1_ISR
+                0x00000000080005ec                USB_SetConfiguration
+                0x0000000008000650                Setup
+                0x0000000008000884                Sleep
+                0x0000000008000898                Loop
+ .text          0x0000000008000b2c       0x58 Tmp/System.c.o
+                0x0000000008000b2c                Default_Handler
+                0x0000000008000b30                Init
+ .text          0x0000000008000b84      0xe18 Tmp/USB.c.o
+                0x0000000008000b84                USB_SetAddress
+                0x0000000008000ba8                EPT
+                0x0000000008000bbc                EPR
+                0x0000000008000bd0                USB_IntToUnicode
+                0x0000000008000bf8                USB_GetNextPMA
+                0x0000000008000c3c                USB_StallEP
+                0x0000000008000d04                USB_StalledEP
+                0x0000000008000d44                USB_Init
+                0x0000000008000d60                USB_Enable
+                0x0000000008000db4                USB_GetInfo
+                0x0000000008000dd8                USB_Connect
+                0x0000000008000e24                USB_ConfigEP
+                0x0000000008000f88                USB_DeconfigEP
+                0x0000000008000fb8                USB_RegisterEP
+                0x0000000008000fcc                USB_ReadPMA
+                0x0000000008001020                USB_ReadEP
+                0x0000000008001240                USB_WritePMA
+                0x00000000080012a0                USB_WriteEP
+                0x00000000080014a4                USB_StallEP0
+                0x00000000080014cc                USB_HandleEP0_Complete
+                0x00000000080014e4                USB_HandleEP0_Process
+                0x00000000080016d4                USB_HandleEP0_TX
+                0x0000000008001754                USB_HandleEP0_RX
+                0x0000000008001850                USB_HandleEP0
+                0x000000000800187c                USB_ISR
+
+.glue_7         0x000000000800199c        0x0
+ .glue_7        0x000000000800199c        0x0 linker stubs
+
+.glue_7t        0x000000000800199c        0x0
+ .glue_7t       0x000000000800199c        0x0 linker stubs
+
+.vfp11_veneer   0x000000000800199c        0x0
+ .vfp11_veneer  0x000000000800199c        0x0 linker stubs
+
+.v4_bx          0x000000000800199c        0x0
+ .v4_bx         0x000000000800199c        0x0 linker stubs
+
+.iplt           0x000000000800199c        0x0
+ .iplt          0x000000000800199c        0x0 Tmp/Main.c.o
+
+.rel.dyn        0x000000000800199c        0x0
+ .rel.iplt      0x000000000800199c        0x0 Tmp/Main.c.o
+
+.rodata         0x000000000800199c       0xa4
+ .rodata        0x000000000800199c       0xa4 Tmp/USB.c.o
+                0x00000000080019c4                StringLangID
+                0x00000000080019c8                StringVendor
+                0x00000000080019d4                StringProduct
+                0x0000000008001a0c                USB_Descriptor
+                0x0000000008001a20                USB_ConfigDescriptor
+                0x0000000020000000                . = ORIGIN (ram)
+
+.data           0x0000000020000000        0x0 load address 0x0000000008001a40
+                0x0000000008001a40                INIT_DATA_VALUES = LOADADDR (.data)
+                0x0000000020000000                INIT_DATA_START = .
+ *(.data)
+ .data          0x0000000020000000        0x0 Tmp/Main.c.o
+ .data          0x0000000020000000        0x0 Tmp/System.c.o
+ .data          0x0000000020000000        0x0 Tmp/USB.c.o
+                0x0000000020000000                INIT_DATA_END = .
+                0x0000000020000000                BSS_START = .
+
+.igot.plt       0x0000000020000000        0x0 load address 0x0000000008001a40
+ .igot.plt      0x0000000020000000        0x0 Tmp/Main.c.o
+
+.bss            0x0000000020000000     0x16fc load address 0x0000000008001a40
+ *(.bss)
+ .bss           0x0000000020000000        0x0 Tmp/Main.c.o
+ .bss           0x0000000020000000        0x0 Tmp/System.c.o
+ .bss           0x0000000020000000        0x0 Tmp/USB.c.o
+ COMMON         0x0000000020000000     0x16a6 Tmp/Main.c.o
+                0x0000000020000000                ADC_Read
+                0x0000000020000090                SysTicks
+                0x0000000020000094                Samples_Buffer
+                0x000000002000169c                SignalsStatus
+                0x00000000200016a0                SysStatus
+                0x00000000200016a4                ButtonStatus
+ *fill*         0x00000000200016a6        0x2 
+ COMMON         0x00000000200016a8       0x54 Tmp/USB.c.o
+                0x00000000200016a8                USB_Device
+                0x00000000200016dc                USB_Buffer
+                0x00000000200016fc                BSS_END = .
+OUTPUT(Tmp/Firmware elf32-littlearm)
+
+.debug_info     0x0000000000000000     0x33e4
+ .debug_info    0x0000000000000000     0x15fd Tmp/Main.c.o
+ .debug_info    0x00000000000015fd      0x11a Tmp/System.c.o
+ .debug_info    0x0000000000001717     0x1ccd Tmp/USB.c.o
+
+.debug_abbrev   0x0000000000000000      0xa96
+ .debug_abbrev  0x0000000000000000      0x454 Tmp/Main.c.o
+ .debug_abbrev  0x0000000000000454       0xda Tmp/System.c.o
+ .debug_abbrev  0x000000000000052e      0x568 Tmp/USB.c.o
+
+.debug_loc      0x0000000000000000     0x17b4
+ .debug_loc     0x0000000000000000      0x452 Tmp/Main.c.o
+ .debug_loc     0x0000000000000452       0x76 Tmp/System.c.o
+ .debug_loc     0x00000000000004c8     0x12ec Tmp/USB.c.o
+
+.debug_aranges  0x0000000000000000       0x60
+ .debug_aranges
+                0x0000000000000000       0x20 Tmp/Main.c.o
+ .debug_aranges
+                0x0000000000000020       0x20 Tmp/System.c.o
+ .debug_aranges
+                0x0000000000000040       0x20 Tmp/USB.c.o
+
+.debug_ranges   0x0000000000000000      0x468
+ .debug_ranges  0x0000000000000000      0x178 Tmp/Main.c.o
+ .debug_ranges  0x0000000000000178      0x2f0 Tmp/USB.c.o
+
+.debug_line     0x0000000000000000      0x963
+ .debug_line    0x0000000000000000      0x3ab Tmp/Main.c.o
+ .debug_line    0x00000000000003ab       0x55 Tmp/System.c.o
+ .debug_line    0x0000000000000400      0x563 Tmp/USB.c.o
+
+.debug_str      0x0000000000000000     0x1001
+ .debug_str     0x0000000000000000      0x9a6 Tmp/Main.c.o
+                                        0xa43 (size before relaxing)
+ .debug_str     0x00000000000009a6       0x67 Tmp/System.c.o
+                                        0x17b (size before relaxing)
+ .debug_str     0x0000000000000a0d      0x5f4 Tmp/USB.c.o
+                                        0xb10 (size before relaxing)
+
+.comment        0x0000000000000000       0x57
+ .comment       0x0000000000000000       0x57 Tmp/Main.c.o
+                                         0x58 (size before relaxing)
+ .comment       0x0000000000000057       0x58 Tmp/System.c.o
+ .comment       0x0000000000000057       0x58 Tmp/USB.c.o
+
+.ARM.attributes
+                0x0000000000000000       0x31
+ .ARM.attributes
+                0x0000000000000000       0x31 Tmp/Main.c.o
+ .ARM.attributes
+                0x0000000000000031       0x31 Tmp/System.c.o
+ .ARM.attributes
+                0x0000000000000062       0x31 Tmp/USB.c.o
+
+.debug_frame    0x0000000000000000      0x3d4
+ .debug_frame   0x0000000000000000      0x120 Tmp/Main.c.o
+ .debug_frame   0x0000000000000120       0x38 Tmp/System.c.o
+ .debug_frame   0x0000000000000158      0x27c Tmp/USB.c.o
+
+Cross Reference Table
+
+Symbol                                            File
+ADC_Read                                          Tmp/Main.c.o
+BSS_END                                           Tmp/System.c.o
+BSS_START                                         Tmp/System.c.o
+ButtonStatus                                      Tmp/Main.c.o
+DMA_CH1_ISR                                       Tmp/Main.c.o
+                                                  Tmp/System.c.o
+Default_Handler                                   Tmp/System.c.o
+EPR                                               Tmp/USB.c.o
+                                                  Tmp/Main.c.o
+EPT                                               Tmp/USB.c.o
+                                                  Tmp/Main.c.o
+INIT_DATA_END                                     Tmp/System.c.o
+INIT_DATA_START                                   Tmp/System.c.o
+INIT_DATA_VALUES                                  Tmp/System.c.o
+Init                                              Tmp/System.c.o
+Loop                                              Tmp/Main.c.o
+                                                  Tmp/System.c.o
+Samples_Buffer                                    Tmp/Main.c.o
+Setup                                             Tmp/Main.c.o
+                                                  Tmp/System.c.o
+SignalsStatus                                     Tmp/Main.c.o
+Sleep                                             Tmp/Main.c.o
+StringLangID                                      Tmp/USB.c.o
+StringProduct                                     Tmp/USB.c.o
+StringVendor                                      Tmp/USB.c.o
+Suspend                                           Tmp/Main.c.o
+SysStatus                                         Tmp/Main.c.o
+SysTick_ISR                                       Tmp/Main.c.o
+                                                  Tmp/System.c.o
+SysTicks                                          Tmp/Main.c.o
+USB_Buffer                                        Tmp/USB.c.o
+USB_ConfigDescriptor                              Tmp/USB.c.o
+USB_ConfigEP                                      Tmp/USB.c.o
+                                                  Tmp/Main.c.o
+USB_Connect                                       Tmp/USB.c.o
+                                                  Tmp/Main.c.o
+USB_DeconfigEP                                    Tmp/USB.c.o
+                                                  Tmp/Main.c.o
+USB_Descriptor                                    Tmp/USB.c.o
+USB_Device                                        Tmp/USB.c.o
+                                                  Tmp/Main.c.o
+USB_Enable                                        Tmp/USB.c.o
+                                                  Tmp/Main.c.o
+USB_GetInfo                                       Tmp/USB.c.o
+USB_GetNextPMA                                    Tmp/USB.c.o
+USB_HandleEP0                                     Tmp/USB.c.o
+USB_HandleEP0_Complete                            Tmp/USB.c.o
+USB_HandleEP0_Process                             Tmp/USB.c.o
+USB_HandleEP0_RX                                  Tmp/USB.c.o
+USB_HandleEP0_TX                                  Tmp/USB.c.o
+USB_HandleEP1_TX                                  Tmp/Main.c.o
+USB_HandleEP2_RX                                  Tmp/Main.c.o
+USB_ISR                                           Tmp/USB.c.o
+                                                  Tmp/System.c.o
+USB_Init                                          Tmp/USB.c.o
+                                                  Tmp/Main.c.o
+USB_IntToUnicode                                  Tmp/USB.c.o
+USB_ReadEP                                        Tmp/USB.c.o
+                                                  Tmp/Main.c.o
+USB_ReadPMA                                       Tmp/USB.c.o
+USB_RegisterEP                                    Tmp/USB.c.o
+                                                  Tmp/Main.c.o
+USB_SetAddress                                    Tmp/USB.c.o
+USB_SetConfiguration                              Tmp/Main.c.o
+                                                  Tmp/USB.c.o
+USB_StallEP                                       Tmp/USB.c.o
+USB_StallEP0                                      Tmp/USB.c.o
+USB_StalledEP                                     Tmp/USB.c.o
+USB_WriteEP                                       Tmp/USB.c.o
+USB_WritePMA                                      Tmp/USB.c.o
+Vectors                                           Tmp/System.c.o
