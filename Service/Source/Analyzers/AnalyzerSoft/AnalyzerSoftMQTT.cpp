@@ -200,7 +200,7 @@ void *AnalyzerSoftMQTT::Thread() {
       sprintf(Port, "%u", Url.Port());
       int Error = getaddrinfo(Url.Host().c_str(), Port, &Hints, &ServInfo);
       if(Error != 0) {
-        LogFile::Error("%s:%d -> (%s)", __FILE__, __LINE__, strerror(errno));
+        LogFile::Warning("%s:%d -> (%s)", __FILE__, __LINE__, strerror(errno));
         usleep(1000000);
         continue;
       }

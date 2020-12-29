@@ -1,4 +1,4 @@
-18501658866001892
+18575404723670251
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -50589,12 +50589,313 @@ emi filter
 5
 5
 Footprints
-Converter_DCDC_F0505N-1WR3
-Isloated DC-DC, http://power.murata.com/data/power/ncl/kdc_cre1.pdf
-Isloated DC-DC
+803062
+
+
+0
+0
+0
+Footprints
+803562
+
+
+0
+0
+0
+Footprints
+853160
+
+
+0
+0
+0
+Footprints
+BatteryHolder_Keystone_1042_1x18650
+Battery holder for 18650 cylindrical cells http://www.keyelco.com/product.cfm/product_id/918
+18650 Keystone 1042 Li-ion
+0
+4
+2
+Footprints
+Buzzer_9x5.5RM4
+Generic Buzzer, D12mm height 9.5mm with RM7.6mm
+buzzer
+0
+2
+2
+Footprints
+CD32_3.5x3.0
+Inductor, CD32 3.5x3.0
+inductor Wuerth smd
+0
+2
+2
+Footprints
+CD43_4.5x4.0
+Inductor, CD32 3.5x3.0
+inductor Wuerth smd
+0
+2
+2
+Footprints
+CD75_7.8x7.0
+Inductor, CD32 3.5x3.0
+inductor Wuerth smd
+0
+2
+2
+Footprints
+CP_Radial_D5.0mm_P2.50mm
+CP, Radial series, Radial, pin pitch=2.50mm, , diameter=5mm, Electrolytic Capacitor
+CP Radial series Radial pin pitch 2.50mm  diameter 5mm Electrolytic Capacitor
+0
+2
+2
+Footprints
+CP_Radial_D10.0mm_P5.00mm
+CP, Radial series, Radial, pin pitch=5.00mm, , diameter=10mm, Electrolytic Capacitor
+CP Radial series Radial pin pitch 5.00mm  diameter 10mm Electrolytic Capacitor
+0
+2
+2
+Footprints
+C_0603_1608Metric
+Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf), generated with kicad-footprint-generator
+capacitor
+0
+2
+2
+Footprints
+C_0805_2012Metric
+Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing), generated with kicad-footprint-generator
+capacitor
+0
+2
+2
+Footprints
+DIP-8_W7.62mm
+8-lead though-hole mounted DIP package, row spacing 7.62 mm (300 mils)
+THT DIP DIL PDIP 2.54mm 7.62mm 300mil
+0
+8
+8
+Footprints
+D_SMA
+Diode SMA (DO-214AC)
+Diode SMA (DO-214AC)
+0
+2
+2
+Footprints
+D_SOD-323
+SOD-323
+SOD-323
+0
+2
+2
+Footprints
+JST_PH_B2B-PH-K_1x02_P2.00mm_Vertical
+JST PH series connector, B2B-PH-K (http://www.jst-mfg.com/product/pdf/eng/ePH.pdf), generated with kicad-footprint-generator
+connector JST PH side entry
+0
+2
+2
+Footprints
+KF2EDGR_2.54x4
+
+
 0
 4
 4
+Footprints
+LED_D3.0mm
+LED, diameter 3.0mm, 2 pins
+LED diameter 3.0mm 2 pins
+0
+2
+2
+Footprints
+LQFP-32_7x7mm_Pitch0.8mm
+LQFP32: plastic low profile quad flat package; 32 leads; body 7 x 7 x 1.4 mm (see NXP sot358-1_po.pdf and sot358-1_fr.pdf)
+QFP 0.8
+0
+32
+32
+Footprints
+L_Axial_L12.0mm_D5.0mm_P5.08mm_Vertical_Fastron_MISC
+Inductor, Axial series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=12*5mm^2, Fastron, MISC, http://cdn-reichelt.de/documents/datenblatt/B400/DS_MISC.pdf
+Inductor Axial series Axial Vertical pin pitch 5.08mm  length 12mm diameter 5mm Fastron MISC
+0
+2
+2
+Footprints
+L_Radial_D8.0mm_P3.00mm
+Inductor, Radial series, Radial, pin pitch=3.00mm, , diameter=7mm, http://www.abracon.com/Magnetics/radial/AIUR-16.pdf
+Inductor Radial series Radial pin pitch 3.00mm  diameter 7mm
+0
+2
+2
+Footprints
+L_Radial_D8.7mm_P5.00mm_Fastron_07HCP
+Inductor, Radial series, Radial, pin pitch=5.00mm, , diameter=8.7mm, Fastron, 07HCP, http://cdn-reichelt.de/documents/datenblatt/B400/DS_07HCP.pdf
+Inductor Radial series Radial pin pitch 5.00mm  diameter 8.7mm Fastron 07HCP
+0
+2
+2
+Footprints
+L_Radial_D10mm_P5.00mm
+Inductor, Radial series, Radial, pin pitch=5.00mm, , diameter=8.7mm, Fastron, 07HCP, http://cdn-reichelt.de/documents/datenblatt/B400/DS_07HCP.pdf
+Inductor Radial series Radial pin pitch 5.00mm  diameter 8.7mm Fastron 07HCP
+0
+2
+2
+Footprints
+L_Wuerth_MAPI-4020
+Inductor, CD32 3.5x3.0
+inductor Wuerth smd
+0
+2
+2
+Footprints
+MountingHole_3.2mm_M3
+Mounting Hole 3.2mm, no annular, M3
+mounting hole 3.2mm no annular m3
+0
+0
+0
+Footprints
+NanoPI Air
+
+
+0
+4
+4
+Footprints
+OSHW-Logo_5.7x6mm_SilkScreen
+Open Source Hardware Logo
+Logo OSHW
+0
+0
+0
+Footprints
+PhoenixContact_MC_1,5_4-G-3.81_1x04_P3.81mm_Horizontal
+Generic Phoenix Contact connector footprint for: MC_1,5/4-G-3.81; number of pins: 04; pin pitch: 3.81mm; Angled || order number: 1803293 8A 160V
+phoenix_contact connector MC_01x04_G_3.81mm
+0
+4
+4
+Footprints
+PinHeader_1x03_P2.54mm_Vertical
+Through hole straight pin header, 1x03, 2.54mm pitch, single row
+Through hole pin header THT 1x03 2.54mm single row
+0
+3
+3
+Footprints
+RJ11
+RJ12 connector  https://cdn.amphenol-icc.com/media/wysiwyg/files/drawing/c-bmj-0082.pdf
+RJ12 connector
+0
+6
+6
+Footprints
+RJ11_4P4C
+RJ12 connector  https://cdn.amphenol-icc.com/media/wysiwyg/files/drawing/c-bmj-0082.pdf
+RJ12 connector
+0
+4
+4
+Footprints
+RV_Disc_D7mm_W3.4mm_P5mm
+Varistor, diameter 7mm, width 3.4mm, pitch 5mm
+varistor SIOV
+0
+2
+2
+Footprints
+R_0603_1608Metric
+Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf), generated with kicad-footprint-generator
+resistor
+0
+2
+2
+Footprints
+R_1206_3216Metric
+Resistor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf), generated with kicad-footprint-generator
+resistor
+0
+2
+2
+Footprints
+SIM5300EA
+
+
+0
+68
+68
+Footprints
+SIM5320
+
+
+0
+82
+82
+Footprints
+SOIC-14_3.9x8.7mm_P1.27mm
+14-Lead Plastic Small Outline (SL) - Narrow, 3.90 mm Body [SOIC] (see Microchip Packaging Specification 00000049BS.pdf)
+SOIC 1.27
+0
+14
+14
+Footprints
+SOIC-14_3.9x8.7mm_Pitch1.27mm
+14-Lead Plastic Small Outline (SL) - Narrow, 3.90 mm Body [SOIC] (see Microchip Packaging Specification 00000049BS.pdf)
+SOIC 1.27
+0
+14
+14
+Footprints
+SOT-23
+SOT-23, Standard
+SOT-23
+0
+3
+3
+Footprints
+SOT-23-5
+5-pin SOT23 package
+SOT-23-5
+0
+5
+5
+Footprints
+SOT-23-6
+6-pin SOT-23 package
+SOT-23-6
+0
+6
+6
+Footprints
+SW_Tactile_SKHH_Angled
+tactile switch 6mm ALPS SKHH right angle http://www.alps.com/prod/info/E/HTML/Tact/SnapIn/SKHH/SKHHLUA010.html
+tactile switch 6mm ALPS SKHH right angle
+0
+4
+2
+Footprints
+TSOT-23-6
+6-pin TSOT23 package, http://cds.linear.com/docs/en/packaging/SOT_6_05-08-1636.pdf
+TSOT-23-6 MK06A TSOT-6
+0
+6
+6
+Footprints
+TSSOP-14_4.4x5mm_P0.65mm
+14-Lead Plastic Thin Shrink Small Outline (ST)-4.4 mm Body [TSSOP] (see Microchip Packaging Specification 00000049BS.pdf)
+SSOP 0.65
+0
+14
+14
 Fuse
 Fuse_0402_1005Metric
 Fuse SMD 0402 (1005 Metric), square (rectangular) end terminal, IPC_7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf), generated with kicad-footprint-generator
@@ -74752,6 +75053,34 @@ Current transducer
 0
 10
 10
+Sensor_Motion
+InvenSense_QFN-24_3x3mm_P0.4mm
+24-Lead Plastic QFN (3mm x 3mm); Pitch 0.4mm; EP 1.7x1.54mm; for InvenSense motion sensors; keepout area marked (Package see: https://store.invensense.com/datasheets/invensense/MPU9250REV1.0.pdf; See also https://www.invensense.com/wp-content/uploads/2015/02/InvenSense-MEMS-Handling.pdf)
+QFN 0.4
+0
+24
+24
+Sensor_Motion
+InvenSense_QFN-24_3x3mm_P0.4mm_NoMask
+24-Lead Plastic QFN (3mm x 3mm); Pitch 0.4mm; EP 1.7x1.54mm; for InvenSense motion sensors; Mask removed below exposed pad; keepout area marked (Package see: https://store.invensense.com/datasheets/invensense/MPU9250REV1.0.pdf; See also https://www.invensense.com/wp-content/uploads/2015/02/InvenSense-MEMS-Handling.pdf)
+QFN 0.4
+0
+25
+24
+Sensor_Motion
+InvenSense_QFN-24_4x4mm_P0.5mm
+24-Lead Plastic QFN (4mm x 4mm); Pitch 0.5mm; EP 2.7x2.6mm; for InvenSense motion sensors; keepout area marked (Package see: https://store.invensense.com/datasheets/invensense/MPU-6050_DataSheet_V3%204.pdf; See also https://www.invensense.com/wp-content/uploads/2015/02/InvenSense-MEMS-Handling.pdf)
+QFN 0.5
+0
+24
+24
+Sensor_Motion
+InvenSense_QFN-24_4x4mm_P0.5mm_NoMask
+24-Lead Plastic QFN (4mm x 4mm); Pitch 0.5mm; EP 2.7x2.6mm; for InvenSense motion sensors; Mask removed below exposed pad; keepout area marked (Package see: https://store.invensense.com/datasheets/invensense/MPU-6050_DataSheet_V3%204.pdf; See also https://www.invensense.com/wp-content/uploads/2015/02/InvenSense-MEMS-Handling.pdf)
+QFN 0.5
+0
+25
+24
 Sensor_Pressure
 Freescale_98ARH99066A
 https://www.nxp.com/docs/en/data-sheet/MPXH6250A.pdf

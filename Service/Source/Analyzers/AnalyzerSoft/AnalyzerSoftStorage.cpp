@@ -185,14 +185,19 @@ void AnalyzerSoftStorage::GetSeries(const json &params, Response &response) cons
     if(Series & SERIE_UNBALANCE_STAT)            { Headers.push_back("Unbalance_Stats");           Cols.append(", stat_unbalance"); }
     sink.os << "[\n  " + Headers.dump();
     Database DB(pSerial);
-    do {
-      DB.ExecSentenceAsyncResult("SELECT sampletime, json_build_array(" + Cols + ") AS result FROM " + ((Aggreg == "1M") ? "aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m" : "aggreg_" + Aggreg) + " WHERE sampletime >= " + DB.Bind(Start) + " ORDER BY sampletime ASC LIMIT 1000");
+    uint16_t PendingRows = 1000;
+    while(sink.is_writable()) {
+      DB.ExecSentenceAsyncResult("SELECT sampletime, json_build_array(" + Cols + ") AS result FROM " + ((Aggreg == "1M") ? "aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m" : "aggreg_" + Aggreg) + " WHERE sampletime >= " + DB.Bind(Start) + " ORDER BY sampletime ASC LIMIT " + DB.Bind(PendingRows));
       while(DB.FecthRow()) {
-        Start = DB.ResultUInt64("sampletime") + 1;
+        Start = DB.ResultUInt64("sampletime");
         if(Start > To) break;
+        PendingRows--;
         sink.os << ",\n  " + DB.ResultString("result");
       }
-    } while((DB.RowIndex() != 0) && (Start < To) && sink.is_writable());
+      if(PendingRows != 0) break;
+      PendingRows = 1000;
+      Start = Start + 1;
+    }
     sink.os << "\n]";
     sink.done();
     return true;
