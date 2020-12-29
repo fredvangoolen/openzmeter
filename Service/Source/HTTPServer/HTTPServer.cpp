@@ -48,6 +48,7 @@ HTTPServer::HTTPServer() {
   set_keep_alive_max_count(UINT32_MAX);
   set_read_timeout(30);
   set_write_timeout(30);
+  set_tcp_nodelay(true);
   new_task_queue = [] { return new HTTPRequestPoll(); };
   Config = json::object();
   Config["Port"] = pPort;
@@ -201,7 +202,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
 }
 void HTTPServer::HandlePost(const Request &request, Response &response, const ContentReader &content_reader) {
   string URL      = string(request.path).erase(0, pRelativePath.size());
-  string UserName = "";
+//  string UserName = "";
   string Body;
   auto   DefReader = [&](const char *data, size_t length) -> bool {
     if((Body.size() + length) > 0x800000) {

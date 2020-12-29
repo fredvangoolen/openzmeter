@@ -36,7 +36,7 @@
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pMode(mode) {
-  Database DB(id);
+  Database DB(id, true);
   LogFile::Debug("Creating AnalyzerSoft database tables");
   DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
   pMutex          = PTHREAD_MUTEX_INITIALIZER;

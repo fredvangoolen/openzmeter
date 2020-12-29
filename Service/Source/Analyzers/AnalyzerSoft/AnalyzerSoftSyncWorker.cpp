@@ -53,21 +53,24 @@ void AnalyzerSoftSyncWorker::Run(const string &cookie, const URL &url, const str
   pCookie   = cookie;
   pPath     = url.Path();
   if((pPort != url.Port()) || (pHost != url.Host()) || (pClient == NULL)) {
-    if(pClient != NULL) {
-      delete pClient;
-      pClient = NULL;
-    }
     pPort = url.Port();
     pHost = url.Host();
-    pClient = new Client(pHost, pPort);
-    pClient->set_keep_alive(true);
-    pClient->set_compress(false);
-    pClient->set_read_timeout(30);
-    pClient->set_write_timeout(30);
-    pClient->set_connection_timeout(30);
+    ResetClient();
   }
   pthread_cond_signal(&pCond);
   pthread_mutex_unlock(&pMutex);
+}
+void  AnalyzerSoftSyncWorker::ResetClient() {
+  if(pClient != NULL) {
+    delete pClient;
+    pClient = NULL;
+  }
+  pClient = new Client(pHost, pPort);
+  pClient->set_keep_alive(false);
+  pClient->set_compress(false);
+  pClient->set_read_timeout(30);
+  pClient->set_write_timeout(30);
+  pClient->set_connection_timeout(30);
 }
 void *AnalyzerSoftSyncWorker::Thread() {
   nice(15);
@@ -113,40 +116,20 @@ void *AnalyzerSoftSyncWorker::Thread() {
     else if(pMethod == "addPermission")  pAnalyzer->AddPermission(pParams, Resp);
     else if(pMethod == "setPermission")  pAnalyzer->SetPermission(pParams, Resp);
     else if(pMethod == "delPermission")  pAnalyzer->DelPermission(pParams, Resp);
-
     Headers Header  = {{"Accept", "application/json"}, {"Cookie", pCookie}, {"X-Analyzer", pAnalyzer->Serial().c_str()}, {"X-Sequence", pSequence.c_str()}, {"X-Status", to_string(Resp.status).c_str()}};
-    uint8_t Retry   = 5;
-    while((Retry-- != 0) && (pTerminate == false)) {
-      if(Resp.is_chunked_content_provider == false) {
-        auto Tmp = pClient->Post((pPath + "/setRemote").c_str(), Header, Resp.body, Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type").c_str() : "text/plain");
-        if((Tmp != nullptr) && (Tmp->status == HTTP_OK)) {
-          LogFile::Debug("Remote request '%s' for analyzer '%s' completed", pMethod.c_str(), pAnalyzer->Serial().c_str());
-          break;
-        } else if(Tmp != nullptr) {
-          LogFile::Debug("Remote request '%s' for analyzer '%s' failed (ERROR: %d)", pMethod.c_str(), pAnalyzer->Serial().c_str());
-        } else {
-          LogFile::Debug("Remote request '%s' for analyzer '%s' failed (can not connect)", pMethod.c_str(), pAnalyzer->Serial().c_str());
-          usleep(100000);
-        }
+    for(uint8_t Retry = 10; Retry > 0; Retry--) {
+      auto Tmp = (Resp.is_chunked_content_provider_ == false) ?
+        pClient->Post((pPath + "/setRemote").c_str(), Header, Resp.body, Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type").c_str() : "text/plain") :
+        pClient->Post((pPath + "/setRemote").c_str(), Header, [&](size_t, DataSink &s) { return Resp.content_provider_(0, 0, s); }, Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type").c_str() : "text/plain");
+      if((Tmp != nullptr) && (Tmp->status == HTTP_OK)) {
+        LogFile::Debug("Remote request '%s' for analyzer '%s' completed", pMethod.c_str(), pAnalyzer->Serial().c_str());
+        break;
+      } else if(Tmp != nullptr) {
+        if(Retry == 1) LogFile::Warning("Remote request '%s' for analyzer '%s' failed (ERROR: %d)", pMethod.c_str(), pAnalyzer->Serial().c_str(), Tmp->status);
+        ResetClient();
       } else {
-        auto Writer = [&](size_t offset, size_t length, DataSink &sink) -> bool {
-          DataSink sink2;
-          sink2.is_writable = [&](void) { return sink.is_writable(); };
-          sink2.write = [&](const char *d, size_t l) { return sink.write(d, l); };
-          sink2.done = [&](void) { };
-          return Resp.content_provider_(0, 0, sink2);
-        };
-        auto Tmp = pClient->Post((pPath + "/setRemote").c_str(), Header, 0, Writer, Resp.has_header("Content-Type") ? Resp.get_header_value("Content-Type").c_str() : "text/plain");
-        if(Resp.content_provider_resource_releaser_) Resp.content_provider_resource_releaser_();
-        if((Tmp != nullptr) && (Tmp->status == HTTP_OK)) {
-          LogFile::Debug("Remote request '%s' for analyzer '%s' completed", pMethod.c_str(), pAnalyzer->Serial().c_str());
-          break;
-        } else if(Tmp != nullptr) {
-          LogFile::Debug("Remote request '%s' for analyzer '%s' failed (ERROR: %d)", pMethod.c_str(), pAnalyzer->Serial().c_str(), Tmp->status);
-        } else {
-          LogFile::Debug("Remote request '%s' for analyzer '%s' failed (can not connect)", pMethod.c_str(), pAnalyzer->Serial().c_str());
-          usleep(100000);
-        }
+        if(Retry == 1) LogFile::Warning("Remote request '%s' for analyzer '%s' failed (can not connect)", pMethod.c_str(), pAnalyzer->Serial().c_str());
+        ResetClient();
       }
     }
     pthread_mutex_lock(&pMutex);

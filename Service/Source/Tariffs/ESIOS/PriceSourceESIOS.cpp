@@ -33,15 +33,27 @@ bool PriceSourceESIOS::Register() {
 PriceSource *PriceSourceESIOS::CreateInstance() {
   return new PriceSourceESIOS();
 }
+PriceSourceESIOS::PriceSourceESIOS() {
+  pLoadedTime = 0;
+  for(uint16_t V = 0; V < ESIOSManager::pVariables.size(); V++) pLoaded[ESIOSManager::pVariables[V].VarName] = 0.0;
+}
 void PriceSourceESIOS::PrepareRange(const uint64_t from, const uint64_t to) {
   pDB.ExecSentenceAsyncResult("SELECT " + pQueryColumns + " FROM esios WHERE timestamp >= " + pDB.Bind(from) + " AND timestamp <=" + pDB.Bind(to) + " ORDER BY timestamp ASC");
-  pDB.FecthRow();
+//  pDB.FecthRow();
 }
 void PriceSourceESIOS::GetParams(const uint64_t sampletime, map<string, float> &vars) {
-  while((pDB.LoadedRow() == true) && ((pDB.ResultUInt64("timestamp") / 3600000) < (sampletime / 3600000))) pDB.FecthRow();
-  if((pDB.LoadedRow() == true) && ((pDB.ResultUInt64("timestamp") / 3600000) == (sampletime / 3600000))) {
+  while((pLoadedTime / 3600000) < (sampletime / 3600000)) {
+    pDB.FecthRow();
+    pLoadedTime = pDB.ResultUInt64("timestamp");
     for(uint16_t V = 0; V < ESIOSManager::pVariables.size(); V++) {
       float Tmp = pDB.ResultFloat(ESIOSManager::pVariables[V].VarName);
+      pLoaded[ESIOSManager::pVariables[V].VarName] = isnan(Tmp) ? 0 : Tmp;
+    }
+  }
+//  while((pDB.LoadedRow() == true) && ((pDB.ResultUInt64("timestamp") / 3600000) < (sampletime / 3600000))) pDB.FecthRow();
+  if((pLoadedTime / 3600000) == (sampletime / 3600000)) {
+    for(uint16_t V = 0; V < ESIOSManager::pVariables.size(); V++) {
+      float Tmp = pLoaded[ESIOSManager::pVariables[V].VarName];
       vars[ESIOSManager::pVariables[V].VarName] = isnan(Tmp) ? 0 : Tmp;
     }
   } else {

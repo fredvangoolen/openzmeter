@@ -44,6 +44,7 @@ class AnalyzerSoftSyncWorker final {
     Client            *pClient;
   private:
     void *Thread();
+    void  ResetClient();
   public :
     AnalyzerSoftSyncWorker(AnalyzerSoftSync *parent, AnalyzerSoft *analyzer);
     ~AnalyzerSoftSyncWorker();

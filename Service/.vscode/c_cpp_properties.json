@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/Libs",
+                "${workspaceFolder}/Source/Devices",
+                "/usr/include/postgresql"
+            ],
+            "defines": ["CPPHTTPLIB_ZLIB_SUPPORT", "CPPHTTPLIB_OPENSSL_SUPPORT", "__BUILD__=\"NONE\"", "OPENWRT"],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

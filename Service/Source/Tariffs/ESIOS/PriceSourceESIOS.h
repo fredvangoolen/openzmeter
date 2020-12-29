@@ -22,10 +22,13 @@
 class PriceSourceESIOS final : public PriceSource {
   private :
     static bool         pRegistered;
-   static  string       pQueryColumns;
+    static string       pQueryColumns;
   private :
     Database            pDB;
+    uint64_t            pLoadedTime;
+    map<string, float>  pLoaded;
   private :
+    PriceSourceESIOS();
     static bool         Register();
     static PriceSource *CreateInstance();
     static json         GetVarsInfo();

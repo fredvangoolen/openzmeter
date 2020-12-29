@@ -120,7 +120,7 @@ void *AnalyzerSoftSync::Thread() {
         HTTPClient = NULL;
       }
       HTTPClient = new Client(Url->Host(), Url->Port());
-      HTTPClient->set_compress(false);
+      HTTPClient->set_compress(true);
       HTTPClient->set_keep_alive(true);
       HTTPClient->set_read_timeout(30);
       HTTPClient->set_write_timeout(30);
@@ -131,21 +131,21 @@ void *AnalyzerSoftSync::Thread() {
     string   Buffer;
     Request  Req;
     Response Res;
-    json     Content     = json::object();
-    Content["Analyzer"]  = pParent->Serial();
-    Content["Name"]      = Name;
-    Req.method           = "POST";
-    Req.path             = Url->Path() + "/getRemote";
-    Req.headers          = {{"Cookie", Cookie}, { "Accept", "text/event-stream" }, {"Content-Type", "application/json"}};
-    Req.body             = Content.dump();
-    Req.response_handler = [&](const Response &response) -> bool {
+    json     Content      = json::object();
+    Content["Analyzer"]   = pParent->Serial();
+    Content["Name"]       = Name;
+    Req.method            = "POST";
+    Req.path              = Url->Path() + "/getRemote";
+    Req.headers           = {{"Cookie", Cookie}, { "Accept", "text/event-stream" }, {"Content-Type", "application/json"}};
+    Req.body              = Content.dump();
+    Req.response_handler_ = [&](const Response &response) -> bool {
       if(pTerminate == true) return false;
       if(response.status == HTTP_OK) return true;
       LogFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)", pParent->Serial().c_str(), response.status);
       usleep(1000000);
       return false;
     };
-    Req.content_receiver = [&](const char *data, size_t data_length, uint64_t offset, uint64_t total_length) -> bool {
+    Req.content_receiver_ = [&](const char *data, size_t data_length, uint64_t offset, uint64_t total_length) -> bool {
       pthread_mutex_lock(&pMutex);
       if((pTerminate == true) || (pReAuth == true) || (pUser != User) || (pName != Name) || (pPass != Pass) || (pServer != Server)) {
         pthread_mutex_unlock(&pMutex);
@@ -175,7 +175,8 @@ void *AnalyzerSoftSync::Thread() {
       }
       return true;
     };
-    if(HTTPClient->send(Req, Res) == false) pReAuth = true;
+    Error E;
+    if(HTTPClient->send(Req, Res, E) == false) pReAuth = true;
   }
   if(HTTPClient != NULL) delete HTTPClient;
   if(Url != NULL)        delete Url;
