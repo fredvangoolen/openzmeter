@@ -20,7 +20,7 @@
 #include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 map<string, Analyzer*>  AnalyzerManager::pAnalyzers;
-RWLocks                 AnalyzerManager::pAnalyzersLock;
+pthread_rwlock_t        AnalyzerManager::pAnalyzersLock = PTHREAD_RWLOCK_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("getAnalyzers",    GetAnalyzersCallback);
@@ -99,9 +99,9 @@ AnalyzerManager::~AnalyzerManager() {
   LogFile::Debug("AnalyzerManager stopped");
 }
 bool AnalyzerManager::AddAnalyzer(Analyzer *analyzer, const string &user) {
-  pAnalyzersLock.WriteLock();
+  pthread_rwlock_wrlock(&pAnalyzersLock);
   auto Result = pAnalyzers.insert({analyzer->Serial(), analyzer});
-  pAnalyzersLock.Unlock();
+  pthread_rwlock_unlock(&pAnalyzersLock);
   if(Result.second == true) {
     Database DB;
     if(user != "admin") DB.ExecSentenceNoResult("INSERT INTO permissions(username, serial, read, write, config, eventsread, alarmsread) VALUES(" + DB.Bind(user) + ", " + DB.Bind(analyzer->Serial()) + ", true, true, true, 0, 0) ON CONFLICT(username, serial) DO NOTHING");
@@ -110,29 +110,29 @@ bool AnalyzerManager::AddAnalyzer(Analyzer *analyzer, const string &user) {
   return Result.second;
 }
 bool AnalyzerManager::DelAnalyzer(const string &serial) {
-  pAnalyzersLock.WriteLock();
+  pthread_rwlock_wrlock(&pAnalyzersLock);
   uint32_t Erased = pAnalyzers.erase(serial);
-  pAnalyzersLock.Unlock();
+  pthread_rwlock_unlock(&pAnalyzersLock);
   return (Erased == 1);
 }
 bool AnalyzerManager::HandleModbus(uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len) {
-  pAnalyzersLock.ReadLock();
+  pthread_rwlock_rdlock(&pAnalyzersLock);
   auto Analyzer = pAnalyzers.find(serial);
   bool Ret = (Analyzer != pAnalyzers.end()) ? Analyzer->second->HandleModbus(buff, start, len) : false;
-  pAnalyzersLock.Unlock();
+  pthread_rwlock_unlock(&pAnalyzersLock);
   return Ret;
 }
 void AnalyzerManager::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
   if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string Serial = params["Analyzer"];
-  pAnalyzersLock.ReadLock();
+  pthread_rwlock_rdlock(&pAnalyzersLock);
   auto Analyzer = pAnalyzers.find(Serial);
   if(Analyzer != pAnalyzers.end()) {
     (Analyzer->second->*method)(params, response);
   } else {
     HTTPServer::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
   }
-  pAnalyzersLock.Unlock();
+  pthread_rwlock_unlock(&pAnalyzersLock);
 }
 void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
@@ -143,18 +143,18 @@ void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &respons
       Database DB;
       DB.ExecSentenceAsyncResult("SELECT serial FROM permissions WHERE username = " + DB.Bind(UserName) + " AND (read = true OR write = true OR config = true)");
       while(DB.FecthRow() && sink.is_writable()) {
-        pAnalyzersLock.ReadLock();
+        pthread_rwlock_rdlock(&pAnalyzersLock);
         auto Tmp = pAnalyzers.find(DB.ResultString("serial"));
         if(Tmp != pAnalyzers.end()) sink.os << ((Items++ != 0) ? ",\n  " : "") + Tmp->second->GetJSONDescriptor().dump();
-        pAnalyzersLock.Unlock();
+        pthread_rwlock_unlock(&pAnalyzersLock);
       }
     } else {
-      pAnalyzersLock.ReadLock();
+      pthread_rwlock_rdlock(&pAnalyzersLock);
       for(auto Tmp : pAnalyzers) {
         if(sink.is_writable() == false) break;
         sink.os << ((Items++ != 0) ? ",\n  " : "") + Tmp.second->GetJSONDescriptor().dump();
       }
-      pAnalyzersLock.Unlock();
+      pthread_rwlock_unlock(&pAnalyzersLock);
     }
     sink.os << "\n]";
     sink.done();

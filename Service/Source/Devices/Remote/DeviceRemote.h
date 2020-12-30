@@ -24,7 +24,7 @@ using namespace std;
 class DeviceRemote final : public Device {
   private :
     static bool                         pRegistered;
-    static RWLocks                      pLocks;
+    static pthread_rwlock_t             pLocks;
     static map<string, AnalyzerRemote*> pAnalyzers;
   private :
     static bool  Register();

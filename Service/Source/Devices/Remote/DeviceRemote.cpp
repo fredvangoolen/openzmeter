@@ -25,7 +25,7 @@
 #include "ConfigFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool                         DeviceRemote::pRegistered = DeviceRemote::Register();
-RWLocks                      DeviceRemote::pLocks;
+pthread_rwlock_t             DeviceRemote::pLocks = PTHREAD_RWLOCK_INITIALIZER;
 map<string, AnalyzerRemote*> DeviceRemote::pAnalyzers;
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceRemote::Register() {
@@ -43,14 +43,14 @@ DeviceRemote::~DeviceRemote() {
   LogFile::Info("Stopping device with serial '%s'", pSerial.c_str());
   HTTPServer::UnregisterCallback("setRemote");
   HTTPServer::UnregisterCallback("getRemote");
-  pLocks.WriteLock();
+  pthread_rwlock_wrlock(&pLocks);
   while(pAnalyzers.size() > 0) {
     auto Analyzer = pAnalyzers.begin();
     AnalyzerManager::DelAnalyzer(Analyzer->second->Serial());
     delete Analyzer->second;
     pAnalyzers.erase(Analyzer);
   }
-  pLocks.Unlock();
+  pthread_rwlock_unlock(&pLocks);
   LogFile::Info("Device with serial '%s' stopped", pSerial.c_str());
 }
 uint32_t DeviceRemote::AnalyzersCount() {
@@ -66,7 +66,7 @@ json DeviceRemote::CheckConfig(const json &config) {
 }
 void DeviceRemote::Configure(const json &config) {
   ConfigFile::WriteConfig("/Devices/" + pSerial, config);
-  pLocks.WriteLock();
+  pthread_rwlock_wrlock(&pLocks);
   bool Enabled = config["Enabled"];
   if((pEnabled == false) && (Enabled == true)) {
     LogFile::Info("Starting 'Remote' driver");
@@ -84,7 +84,7 @@ void DeviceRemote::Configure(const json &config) {
     }
   }
   pEnabled = Enabled;
-  pLocks.Unlock();
+  pthread_rwlock_unlock(&pLocks);
 }
 void DeviceRemote::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
@@ -101,37 +101,38 @@ void DeviceRemote::SetDevice(const json &params, Response &response) {
 void DeviceRemote::GetRemoteCallback(const json &params, Response &response) {
   if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string Serial = params["Analyzer"];
-  pLocks.ReadLock();
+  pthread_rwlock_rdlock(&pLocks);
   auto Tmp = pAnalyzers.find(Serial);
   if(Tmp != pAnalyzers.end()) {
     Tmp->second->GetRemote(params, response);
-    pLocks.Unlock();
+    pthread_rwlock_unlock(&pLocks);
     return;
   }
-  pLocks.Unlock();
+  pthread_rwlock_unlock(&pLocks);
   AnalyzerRemote *Analyzer = new AnalyzerRemote(Serial);
+  pthread_rwlock_wrlock(&pLocks);
   if(AnalyzerManager::AddAnalyzer(Analyzer, params["UserName"]) == false) {
     delete Analyzer;
+    pthread_rwlock_unlock(&pLocks);
     return HTTPServer::FillResponse(response, "'Analyzer' not allowed on remote system", "text/plain", HTTP_BAD_REQUEST);
   }
-  pLocks.WriteLock();
-  LogFile::Info("Added remote analyzer '%s'", Serial.c_str());
   pAnalyzers.insert( { Serial, Analyzer } );
-  pLocks.Unlock();
-  pLocks.ReadLock();
+  pthread_rwlock_unlock(&pLocks);
+  LogFile::Info("Added remote analyzer '%s'", Serial.c_str());
+  pthread_rwlock_rdlock(&pLocks);
   Analyzer->GetRemote(params, response);
-  pLocks.Unlock();
+  pthread_rwlock_unlock(&pLocks);
 }
 void DeviceRemote::SetRemoteCallback(const map<string, string> &params, Response &response, const ContentReader &content_reader) {
   string Serial = params.find("X-Analyzer")->second;
-  pLocks.ReadLock();
+  pthread_rwlock_rdlock(&pLocks);
   auto Tmp = pAnalyzers.find(Serial);
   if(Tmp != pAnalyzers.end()) {
     Tmp->second->SetRemote(params, response, content_reader);
-    pLocks.Unlock();
+    pthread_rwlock_unlock(&pLocks);
     return;
   }
-  pLocks.Unlock();
+  pthread_rwlock_unlock(&pLocks);
   HTTPServer::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
 }
 //----------------------------------------------------------------------------------------------------------------------

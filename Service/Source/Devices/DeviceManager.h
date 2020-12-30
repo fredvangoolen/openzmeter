@@ -26,7 +26,7 @@ class DeviceManager final {
   private :
     static vector<void (*)()>   pDrivers;
     static map<string, Device*> pDevices;         //Initiated by devices, cleared on destroy
-    static RWLocks              pDevicesLock;     //Control access to critical sections
+    static pthread_rwlock_t     pDevicesLock;     //Control access to critical sections
   private :
     static void CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response));
     static void GetDevicesCallback(const json &params, Response &response);

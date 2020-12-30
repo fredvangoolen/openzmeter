@@ -284,8 +284,7 @@
     computed: {
       Vars: function() {
         var Vars = [{ Name: 'Period', Description: 'Index of evaluated period (From 1 to ' + this.Rate.Periods.length + ')', Value: null, Units: ''}];
-
-        for(var V = 0; V < this.analyzer.RateModules[this.Rate.Module].length; V++) Vars.push({ Name: this.analyzer.RateModules[this.Rate.Module][V].Name, Description: this.analyzer.RateModules[this.Rate.Module][V].Description, Value: this.Round(this.analyzer.RateModules[this.Rate.Module][V].Value, 4), Units: ''});
+        for(var V = 0; V < this.analyzer.PriceModules[this.Rate.Module].length; V++) Vars.push({ Name: this.analyzer.PriceModules[this.Rate.Module][V].Name, Description: this.analyzer.PriceModules[this.Rate.Module][V].Description, Value: this.Round(this.analyzer.PriceModules[this.Rate.Module][V].Value, 4), Units: ''});
         return Vars;
       },
       Cycles: function() {

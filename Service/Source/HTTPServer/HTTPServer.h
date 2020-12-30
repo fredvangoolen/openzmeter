@@ -21,7 +21,6 @@
 #include "cpp-httplib/httplib.h"
 #include "Database.h"
 #include "Tools.h"
-#include "RWLocks.h"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 using namespace httplib;
@@ -52,7 +51,7 @@ class HTTPServer final : private Server {
       Func2_t          Function;
     } Call_t;
   private :
-    static RWLocks                      pLock;            //Control access to pCallbacks vector
+    static pthread_rwlock_t             pLock;            //Control access to pCallbacks vector
     static map<string, Func1_t>         pCallbacks1;      //List of callbacks without reader
     static map<string, Call_t>          pCallbacks2;      //List of callbacks with reader
     static string                       pRelativePath;    //Relative path of server

@@ -14,7 +14,7 @@
             </div>
           </div>
           <div class="panel-body">
-            <spinner v-if="ShowSpinner"></spinner>
+            <spinner v-if="ShowSpinner" :progress="Progress"></spinner>
             <calendar :data="Data" :analyzer="analyzer" :year="Year" :range.sync="Range" @update:export="CalendarData=$event"></calendar>
           </div>
         </div>
@@ -43,20 +43,34 @@
   export default {
     props: { analyzer: { type: Object } },
     data: function() {
-      return { Range: [0, 1], Year: null, Data: null, ShowSpinner: true, CalendarData: [] };
+      return { Range: [0, 1], Year: null, Data: null, ShowSpinner: true, Progress: 0, CalendarData: [] };
     },
     watch: {
       Year: function(val) {
         this.ShowSpinner = true;
+        this.Progress = 0;
         this.Data = null;
-        var To = moment.tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
-        var From = moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getCosts', { From: From, To: To, Series: ['Active_Energy', 'Period'], Analyzer: this.analyzer.Analyzer, Group: 0 }).then(
-          (result) => {
-            this.ShowSpinner = false;
-            this.Data = result.data;
-          }
-        );
+        var Count = 0;
+        var Data = [];
+        for(var month = 0; month < 12; month++) {
+          var To = moment.tz(this.analyzer.TimeZone).year(val).month(month).endOf('month').valueOf();
+          var From = moment.tz(this.analyzer.TimeZone).year(val).month(month).startOf('month').valueOf();
+          this.$http.post('getCosts', { From: From, To: To, Series: ['Active_Energy', 'Period'], Analyzer: this.analyzer.Analyzer, Group: 0 }).then(
+            (result) => {
+              if(Count == 0) {
+                Data = result.data;
+              } else {
+                Data = Data.concat(result.data.slice(1));
+              }
+              Count++;
+              this.Progress = (Count / 12.0) * 100.0;
+              if(Count == 12) {
+                this.Data = Data;
+                this.ShowSpinner = false;
+              }
+            }
+          );
+        }
       }
     },
     methods: {

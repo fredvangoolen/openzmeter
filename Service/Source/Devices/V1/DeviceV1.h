@@ -54,7 +54,7 @@ class DeviceV1 final : public Device {
     int32_t                      pRunAverageValues[2];     //Average wave value of last second
     uint32_t                     pRunAverageCounter;       //Somple count for average
     float                        pAverageValues[2];        //Average wave value of last second
-    RWLocks                      pAverageLocks;            //Lock access to average values
+    pthread_rwlock_t             pAverageLocks;            //Lock access to average values
     AnalyzerSoft                *pAnalyzer;
     uint8_t                      pVoltageDelayPos;
     int16_t                      pVoltageDelay[DEVICEV1_VOLTAGEDELAY];

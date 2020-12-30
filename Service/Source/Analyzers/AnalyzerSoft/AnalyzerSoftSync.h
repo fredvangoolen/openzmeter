@@ -25,7 +25,7 @@ using namespace std;
 class AnalyzerSoft;
 class AnalyzerSoftSync {
   private :
-    bool                          pTerminate;        //Sync terminate signal
+    volatile bool                 pTerminate;        //Sync terminate signal
     bool                          pReAuth;           //Need to clear cookie flag
     pthread_t                     pThread;           //Export thread
     pthread_cond_t                pCond;             //Wait workers condition

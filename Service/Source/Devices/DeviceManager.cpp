@@ -22,7 +22,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 vector<void (*)()> __attribute__((init_priority(200))) DeviceManager::pDrivers;
 map<string, Device*>                                   DeviceManager::pDevices;
-RWLocks                                                DeviceManager::pDevicesLock;
+pthread_rwlock_t                                       DeviceManager::pDevicesLock = PTHREAD_RWLOCK_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
   for(auto Func : pDrivers) Func();
@@ -36,16 +36,16 @@ DeviceManager::~DeviceManager() {
   HTTPServer::UnregisterCallback("getDevice");
   HTTPServer::UnregisterCallback("setDevice");
   LogFile::Info("Stopping devices...");
-  pDevicesLock.WriteLock();
+  pthread_rwlock_wrlock(&pDevicesLock);
   for(auto &Device : pDevices) delete Device.second;
   pDevices.clear();
-  pDevicesLock.Unlock();
+  pthread_rwlock_unlock(&pDevicesLock);
   LogFile::Debug("DeviceManager stopped");
 }
 void DeviceManager::AddDevice(Device *dev) {
-  pDevicesLock.WriteLock();
+  pthread_rwlock_wrlock(&pDevicesLock);
   pDevices.insert({ dev->Serial(), dev });
-  pDevicesLock.Unlock();
+  pthread_rwlock_unlock(&pDevicesLock);
 }
 void DeviceManager::AddDriver(void (*func)()) {
   pDrivers.push_back(func);
@@ -53,22 +53,22 @@ void DeviceManager::AddDriver(void (*func)()) {
 void DeviceManager::CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response)) {
   if((params.contains("Serial") == false) || (params["Serial"].is_string() == false)) return HTTPServer::FillResponse(response, "'Serial' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string Serial = params["Serial"];
-  pDevicesLock.ReadLock();
+  pthread_rwlock_rdlock(&pDevicesLock);
   auto Device = pDevices.find(Serial);
   if(Device == pDevices.end()) {
     HTTPServer::FillResponse(response, "Device not found", "text/plain", HTTP_BAD_REQUEST);
   } else {
     (Device->second->*method)(params, response);
   }
-  pDevicesLock.Unlock();
+  pthread_rwlock_unlock(&pDevicesLock);
 }
 void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Response = json::array();
-  pDevicesLock.ReadLock();
+  pthread_rwlock_rdlock(&pDevicesLock);
   for(auto &Device : pDevices) Response.push_back(Device.second->GetJSONDescriptor());
-  pDevicesLock.Unlock();
+  pthread_rwlock_unlock(&pDevicesLock);
   HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void DeviceManager::GetDeviceCallback(const json &params, Response &response) {

@@ -59,7 +59,7 @@ class DeviceV2 final : public Device {
     int32_t                      pRunAverageValues[7];     //Average wave value of last second
     uint32_t                     pRunAverageCounter;       //Somple count for average
     float                        pAverageValues[7];        //Average wave value of last second
-    RWLocks                      pAverageLocks;            //Lock access to average values
+    pthread_rwlock_t             pAverageLocks;            //Lock access to average values
     bool                         pButtonAction;            //Last action readed
     uint8_t                      pChannelsDelaySize[7];    //Delay line size for each channel
     uint8_t                      pChannelsDelayPos[7];     //Delay line position for each channel
