@@ -93,6 +93,7 @@ void DeviceV2::GetInstances() {
 }
 DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device V2") {
   pBuffer             = (int16_t*)malloc(DEVICEV2_BUFFERSIZE * sizeof(uint16_t) * 7);
+  pAverageLocks       = PTHREAD_RWLOCK_INITIALIZER;
   pConfigLock         = PTHREAD_MUTEX_INITIALIZER;
   pThread             = 0;
   pBufferHead         = 0;
@@ -521,7 +522,7 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
-  pAverageLocks.ReadLock();
+  pthread_rwlock_rdlock(&pAverageLocks);
   Config["Wave_Average"] = json::object();
   Config["Wave_Average"]["Voltage"] = json::array();
   Config["Wave_Average"]["Voltage"].push_back(pAverageValues[0]);
@@ -532,7 +533,7 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   Config["Wave_Average"]["Current"].push_back(pAverageValues[4]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[5]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
-  pAverageLocks.Unlock();
+  pthread_rwlock_unlock(&pAverageLocks);
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void  DeviceV2::SetDevice(const json &params, Response &response) {
@@ -552,9 +553,9 @@ void DeviceV2::BufferAppend() {
   for(uint8_t Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] += pCapture[Ch];
   pRunAverageCounter++;
   if(pRunAverageCounter == (DEVICEV2_SAMPLEFREQ * 10)) {
-    pAverageLocks.WriteLock();
+    pthread_rwlock_wrlock(&pAverageLocks);
     for(uint8_t Ch = 0; Ch < 7; Ch++) pAverageValues[Ch] = pRunAverageValues[Ch] / (DEVICEV2_SAMPLEFREQ * 10.0);
-    pAverageLocks.Unlock();
+    pthread_rwlock_unlock(&pAverageLocks);
     memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
     pRunAverageCounter = 0;
   }

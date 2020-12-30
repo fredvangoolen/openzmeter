@@ -15,7 +15,7 @@
             </div>
           </div>
           <div class="panel-body" style="min-height: 300px">
-            <spinner :class="{ 'hide': !ShowSpinner }"></spinner>
+            <spinner v-if="ShowSpinner" :progress="Progress"></spinner>
             <heatmap-table :data="Data" :aggreg="Aggreg" :analyzer="analyzer" :range.sync="Range" @update:export="ExportData=$event"></heatmap-table>
           </div>
         </div>
@@ -36,21 +36,35 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Aggreg: '1H', Range: [0, 1], Data: null, Year: 0, ShowSpinner: true, ExportData: null };
+      return { Aggreg: '1H', Range: [0, 1], Data: null, Year: 0, ShowSpinner: true, Progress: 0, ExportData: null };
     },
     watch: {
       Year: function(val) {
         this.ShowSpinner = true;
+        this.Progress = 0;
         this.Data = null;
-        var To = moment.tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf();
-        var From = moment.tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf();
-        this.$http.post('getSeries', { From: From, To: To, Aggreg: '15M', Series: ['Active_Energy'], Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            this.ShowSpinner = false;
-            this.Data = Object.seal(result.data);
-          },
-          (fail) => {}
-        );
+        var Count = 0;
+        var Data = [];
+        for(var month = 0; month < 12; month++) {
+          var To = moment.tz(this.analyzer.TimeZone).year(val).month(month).endOf('month').valueOf();
+          var From = moment.tz(this.analyzer.TimeZone).year(val).month(month).startOf('month').valueOf();
+          this.$http.post('getSeries', { From: From, To: To, Aggreg: '15M', Series: ['Active_Energy'], Analyzer: this.analyzer.Analyzer }).then(
+            (result) => {
+              if(Count == 0) {
+                Data = result.data;
+              } else {
+                Data = Data.concat(result.data.slice(1));
+              }
+              Count++;
+              this.Progress = (Count / 12.0) * 100.0;
+              if(Count == 12) {
+                this.Data = Data;
+                this.ShowSpinner = false;
+              }
+            },
+            (fail) => {}
+          );
+        }
       }
     },
     methods: {

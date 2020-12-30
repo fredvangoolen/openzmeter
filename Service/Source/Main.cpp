@@ -89,11 +89,10 @@ int main(int argc, char** argv) {
   UserManager      User;                           // Create user manager
   TariffManager    TariffManager;                  // Create tariffs interface
   ESIOSManager     Esios;                          // Create ESIOS manager
-  Telegram         TelegramBoot;                   // Create Telegram manager
-  ModbusTCP        Modbus;                         // Create ModbusTCP
-
   AnalyzerManager  AnalyzerManager;                // Create analyzers interface
   DeviceManager    DeviceManager;                  // Create devices interface
+  Telegram         TelegramBoot;                   // Create Telegram manager
+  ModbusTCP        Modbus;                         // Create ModbusTCP
 
   while(!Terminate) MessageLoop::HandleEvents();
   return EXIT_SUCCESS;

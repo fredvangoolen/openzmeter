@@ -16,28 +16,28 @@
 #include "Status.h"
 //----------------------------------------------------------------------------------------------------------------------
 //queue<string>    SysSupport::pSystemActions;
-RWLocks  Status::pLock;
-json     Status::pStatus = json::object();
+pthread_rwlock_t  Status::pLock = PTHREAD_RWLOCK_INITIALIZER;
+json              Status::pStatus = json::object();
 //----------------------------------------------------------------------------------------------------------------------
 Status::Status() {
 }
 Status::~Status() {
 }
 void Status::SetValue(const string &path, const json &value) {
-  pLock.WriteLock();
+  pthread_rwlock_wrlock(&pLock);
   pStatus[json::json_pointer(path)] = value;
-  pLock.Unlock();
+  pthread_rwlock_unlock(&pLock);
 }
 json Status::GetValue(const string &path) {
-  pLock.ReadLock();
+  pthread_rwlock_rdlock(&pLock);
   json Result = pStatus[json::json_pointer(path)];
-  pLock.Unlock();
+  pthread_rwlock_unlock(&pLock);
   return Result;
 }
 json Status::GetJSON() {
-  pLock.ReadLock();
+  pthread_rwlock_rdlock(&pLock);
   json Result = pStatus;
-  pLock.Unlock();
+  pthread_rwlock_unlock(&pLock);
   return Result;
 }
 //----------------------------------------------------------------------------------------------------------------------

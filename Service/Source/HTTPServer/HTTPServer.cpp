@@ -33,7 +33,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 map<string, HTTPServer::Func1_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks1;
 map<string, HTTPServer::Call_t>  __attribute__((init_priority(200))) HTTPServer::pCallbacks2;
-RWLocks                                                              HTTPServer::pLock;
+pthread_rwlock_t                                                     HTTPServer::pLock = PTHREAD_RWLOCK_INITIALIZER;
 string                                                               HTTPServer::pRelativePath = "/";
 uint16_t                                                             HTTPServer::pPort   = 8080;
 pthread_t                                                            HTTPServer::pThread = 0;
@@ -90,23 +90,23 @@ void HTTPServer::FillResponse(Response &response, const char *body, const size_t
   response.status = status;
 }
 void HTTPServer::RegisterCallback(const string &handleName, const Func1_t function) {
-  pLock.WriteLock();
+  pthread_rwlock_wrlock(&pLock);
   pCallbacks1.insert({handleName, function});
-  pLock.Unlock();
+  pthread_rwlock_unlock(&pLock);
 }
 void HTTPServer::RegisterCallback(const string &handleName, const Func2_t function, const vector<string> &params) {
-  pLock.WriteLock();
+  pthread_rwlock_wrlock(&pLock);
   Call_t Call;
   Call.Function = function;
   Call.Headers = params;
   pCallbacks2.insert({handleName, Call});
-  pLock.Unlock();
+  pthread_rwlock_unlock(&pLock);
 }
 void HTTPServer::UnregisterCallback(const string &handleName) {
-  pLock.WriteLock();
+  pthread_rwlock_wrlock(&pLock);
   pCallbacks1.erase(handleName);
   pCallbacks2.erase(handleName);
-  pLock.Unlock();
+  pthread_rwlock_unlock(&pLock);
 }
 string HTTPServer::ParseCookie(const string &cookie) {
   string CookieNum = "";
@@ -201,9 +201,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   return FillResponse(response, PatchString(File, "{{ RELATIVE_PATH }}", pRelativePath), "text/html", HTTP_OK);
 }
 void HTTPServer::HandlePost(const Request &request, Response &response, const ContentReader &content_reader) {
-  string URL      = string(request.path).erase(0, pRelativePath.size());
-//  string UserName = "";
-  string Body;
+  string Body, URL = string(request.path).erase(0, pRelativePath.size());
   auto   DefReader = [&](const char *data, size_t length) -> bool {
     if((Body.size() + length) > 0x800000) {
       Body = "";
@@ -225,29 +223,29 @@ void HTTPServer::HandlePost(const Request &request, Response &response, const Co
     return User;
   };
   LogFile::Debug("HTTP POST '%s'", URL.c_str());
-  pLock.ReadLock();
+  pthread_rwlock_rdlock(&pLock);
   auto Callback2 = pCallbacks2.find(URL);
   if(Callback2 != pCallbacks2.end()) {
     string              User = GetUser();
     map<string, string> Params;
     if(User.empty()) {
-      pLock.Unlock();
+      pthread_rwlock_unlock(&pLock);
       return FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
     }
     Params.insert({ "UserName", User });
     for(uint8_t n = 0; n < Callback2->second.Headers.size(); n++) {
       if(request.has_header(Callback2->second.Headers[n].c_str()) == false) {
-        pLock.Unlock();
+        pthread_rwlock_unlock(&pLock);
         return FillResponse(response, "'" + Callback2->second.Headers[n] + "' header required", "text/plain", HTTP_BAD_REQUEST);
       } else {
         Params.insert({Callback2->second.Headers[n], request.get_header_value(Callback2->second.Headers[n].c_str())});
       }
     }
     Callback2->second.Function(Params, response, content_reader);
-    pLock.Unlock();
+    pthread_rwlock_unlock(&pLock);
     return;
   }
-  pLock.Unlock();
+  pthread_rwlock_unlock(&pLock);
   content_reader(DefReader);
   if(Body.empty() == true) return FillResponse(response, "Body is empty or too large", "text/plain", HTTP_PAYLOAD_TOO_LARGE);
   json Params = json::parse(Body, NULL, false);
@@ -257,14 +255,14 @@ void HTTPServer::HandlePost(const Request &request, Response &response, const Co
   if((request.has_header("REMOTE_ADDR") == true) && (request.get_header_value("REMOTE_ADDR") != "127.0.0.1")) Params.erase("UserName");
   if(Params.contains("UserName") == false) Params["UserName"] = GetUser();
   if(Params["UserName"] == "") return FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
-  pLock.ReadLock();
+  pthread_rwlock_rdlock(&pLock);
   auto Callback1 = pCallbacks1.find(URL);
   if(Callback1 != pCallbacks1.end()) {
     Callback1->second(Params, response);
-    pLock.Unlock();
+    pthread_rwlock_unlock(&pLock);
     return;
   }
-  pLock.Unlock();
+  pthread_rwlock_unlock(&pLock);
   FillResponse(response, "Method not found", "text/plain", HTTP_METHOD_NOT_ALLOWED);
 }
 //----------------------------------------------------------------------------------------------------------------------

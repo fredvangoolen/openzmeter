@@ -32,6 +32,7 @@
 #include "MessageLoop.h"
 #include "URL.h"
 #include "AnalyzerSoftAlarms.h"
+#include "PriceSource.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
@@ -306,9 +307,10 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   string UserName = params["UserName"];
   json Response = ConfigFile::ReadConfig(pConfigPath);
-  Response["Online"]     = Online();
-  Response["Mode"]       = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
-  Response["SampleRate"] = pSamplerate;
+  Response["Online"]       = Online();
+  Response["Mode"]         = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
+  Response["SampleRate"]   = pSamplerate;
+  Response["PriceModules"] = PriceSource::GetVarsInfo();
   HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {

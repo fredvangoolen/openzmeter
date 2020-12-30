@@ -25,7 +25,7 @@ class AnalyzerManager final {
   friend class APIGetAnalyzers;
   private :
     static map<string, Analyzer*>  pAnalyzers;       //Initiated by analyzer
-    static RWLocks                 pAnalyzersLock;   //Control access to critical sections
+    static pthread_rwlock_t        pAnalyzersLock;   //Control access to critical sections
   private :
     static void CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response));
     static void GetAnalyzersCallback(const json &params, Response &response);

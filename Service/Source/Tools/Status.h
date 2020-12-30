@@ -17,14 +17,13 @@
 #include <string>
 #include <queue>
 #include "HTTPServer.h"
-#include "RWLocks.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class Status final {
   private :
-    static json     pStatus;
-    static RWLocks  pLock;
+    static json              pStatus;
+    static pthread_rwlock_t  pLock;
   public :
     static json GetJSON();
     static void SetValue(const string &path, const json &value);

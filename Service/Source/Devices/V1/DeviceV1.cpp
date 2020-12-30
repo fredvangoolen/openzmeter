@@ -82,6 +82,7 @@ void DeviceV1::GetInstances() {
 }
 DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial, "V1", "Capture device V1") {
   pBuffer             = (int16_t*)malloc(DEVICEV1_BUFFERSIZE * sizeof(uint16_t) * 2);
+  pAverageLocks       = PTHREAD_RWLOCK_INITIALIZER;
   pConfigLock         = PTHREAD_MUTEX_INITIALIZER;
   pThread             = 0;
   pBufferHead         = 0;
@@ -309,11 +310,11 @@ void DeviceV1::GetDevice(const json &params, Response &response) {
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
   Config.erase("Analyzer");
-  pAverageLocks.ReadLock();
+  pthread_rwlock_rdlock(&pAverageLocks);
   Config["Wave_Average"] = json::object();
   Config["Wave_Average"]["Voltage"] = pAverageValues[0];
   Config["Wave_Average"]["Current"] = pAverageValues[1];
-  pAverageLocks.Unlock();
+  pthread_rwlock_unlock(&pAverageLocks);
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void DeviceV1::SetDevice(const json &params, Response &response) {
@@ -329,9 +330,9 @@ void DeviceV1::BufferAppend(int16_t *sample) {
   for(uint8_t Ch = 0; Ch < 2; Ch++) pRunAverageValues[Ch] += sample[Ch];
   pRunAverageCounter++;
   if(pRunAverageCounter == (DEVICEV1_SAMPLEFREQ * 10)) {
-    pAverageLocks.WriteLock();
+    pthread_rwlock_wrlock(&pAverageLocks);
     for(uint8_t Ch = 0; Ch < 2; Ch++) pAverageValues[Ch] = pRunAverageValues[Ch] / (DEVICEV1_SAMPLEFREQ * 10.0);
-    pAverageLocks.Unlock();
+    pthread_rwlock_unlock(&pAverageLocks);
     memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
     pRunAverageCounter = 0;
   }

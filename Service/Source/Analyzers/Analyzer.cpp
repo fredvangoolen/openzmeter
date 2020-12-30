@@ -20,43 +20,44 @@
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 Analyzer::Analyzer(const string &id) : pSerial(id) {
-  pName     = "Unnamed analyzer";
-  pLastSave = 0;
+  pMembersLocks = PTHREAD_RWLOCK_INITIALIZER;
+  pName         = "Unnamed analyzer";
+  pLastSave     = 0;
 }
 Analyzer::~Analyzer() {
 }
 json Analyzer::GetJSONDescriptor() {
   json Response = json::object();
   Response["Analyzer"] = pSerial;
-  pMembersLocks.ReadLock();
+  pthread_rwlock_rdlock(&pMembersLocks);
   Response["Name"] = pName;
   Response["Online"] = ((Tools::GetTime64() - pLastSave) < 20000);
-  pMembersLocks.Unlock();
+  pthread_rwlock_unlock(&pMembersLocks);
   return Response;
 }
 string Analyzer::Serial() {
   return pSerial;
 }
 string Analyzer::Name() {
-  pMembersLocks.ReadLock();
+  pthread_rwlock_rdlock(&pMembersLocks);
   string Name = pName;
-  pMembersLocks.Unlock();
+  pthread_rwlock_unlock(&pMembersLocks);
   return Name;
 }
 void Analyzer::Name(const string &name) {
-  pMembersLocks.WriteLock();
+  pthread_rwlock_wrlock(&pMembersLocks);
   pName = name;
-  pMembersLocks.Unlock();
+  pthread_rwlock_unlock(&pMembersLocks);
 }
 void Analyzer::Online(const bool online) {
-  pMembersLocks.WriteLock();
+  pthread_rwlock_wrlock(&pMembersLocks);
   pLastSave = (online == true) ? Tools::GetTime64() : 0;
-  pMembersLocks.Unlock();
+  pthread_rwlock_unlock(&pMembersLocks);
 }
 bool Analyzer::Online() {
-  pMembersLocks.ReadLock();
+  pthread_rwlock_rdlock(&pMembersLocks);
   bool Online = ((Tools::GetTime64() - pLastSave) < 2000);
-  pMembersLocks.Unlock();
+  pthread_rwlock_unlock(&pMembersLocks);
   return Online;
 }
 bool Analyzer::CheckRights(const string &user, const AnalyzerRights neededAccess) {
