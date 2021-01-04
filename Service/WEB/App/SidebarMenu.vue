@@ -54,7 +54,6 @@
 </template>
 
 <script>
-  import moment from 'moment';
   export default {
     props: { analyzer: Object, expanded: Boolean },
     data() {

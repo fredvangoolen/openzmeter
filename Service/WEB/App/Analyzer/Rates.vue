@@ -27,7 +27,6 @@
   import AnalyzerRate from './Rate.vue';
   import vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
-  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { analyzer: Object },

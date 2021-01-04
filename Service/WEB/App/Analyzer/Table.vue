@@ -40,7 +40,6 @@
 </template>
 
 <script>
-  import Vue from 'vue';
   import AnalyzerConfigure from './Configure.vue';
   import AnalyzerPermissions from './Permissions.vue';
   import AnalyzerRates from './Rates.vue';
