@@ -247,7 +247,6 @@
 
 <script>
   import vuetable from 'vuetable-2';
-  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   export default {
     props: { analyzer: Object, rate: Object },

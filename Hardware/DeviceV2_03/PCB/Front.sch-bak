@@ -164,7 +164,7 @@ U 1 1 5FF0F7E5
 P 3150 1375
 F 0 "BT3" H 3268 1471 50  0000 L CNN
 F 1 "Battery_Cell" H 3268 1380 50  0000 L CNN
-F 2 "Battery:BatteryHolder_Keystone_1042_1x18650" V 3150 1435 50  0001 C CNN
+F 2 "Footprints:BatteryHolder_Keystone_1042_1x18650" V 3150 1435 50  0001 C CNN
 F 3 "~" V 3150 1435 50  0001 C CNN
 	1    3150 1375
 	1    0    0    -1  

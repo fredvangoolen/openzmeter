@@ -13,6 +13,7 @@
     </div>
   </div>
 </template>
+
 <script>
   export default {
     props: { progress: Number },
@@ -21,7 +22,8 @@
     }
   }
 </script>
-<style>
+
+<style scoped>
   .spinner {
     margin: auto auto;
     text-align: center;

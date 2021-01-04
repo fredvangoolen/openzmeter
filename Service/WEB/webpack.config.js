@@ -12,9 +12,9 @@ module.exports = {
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new VueLoaderPlugin(),
     new webpack.ProvidePlugin({
-    $: "jquery",
-    jQuery: "jquery",
-    "window.jQuery": "jquery"
+      $: "jquery",
+      jQuery: "jquery",
+      "window.jQuery": "jquery"
     })
   ],
   module: {
@@ -34,11 +34,12 @@ module.exports = {
         loader: '@intlify/vue-i18n-loader'
       }, {
         test: /\.js$/,
+        exclude: /node_modules/,
         loader: 'babel-loader',
         options: {
-          compact: true
-        },
-        exclude: /node_modules/
+          compact: true,
+          plugins: ['@babel/plugin-syntax-dynamic-import']
+        }
       }, {
         test: /\.(png|svg|woff2|ttf|eot|woff)$/i,
         use: [{

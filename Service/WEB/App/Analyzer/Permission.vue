@@ -35,7 +35,6 @@
         <toggle class="float-right" onText="Yes" offText="No" v-model="Permission.Configure"></toggle>
         <div class="help">Allow to change all analyzer settings, modify rates, alarms, and restore database backups</div>
       </div>
-
     </div>
   </dlg>
 </template>

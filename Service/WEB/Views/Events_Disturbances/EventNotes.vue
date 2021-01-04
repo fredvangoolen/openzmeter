@@ -29,7 +29,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setEvent', { Analyzer: this.analyzer.Analyzer, Notes: this.Event.Notes, EventID: this.Event.id } ).then(
+        this.$http.post('setEvent', { Analyzer: this.analyzer.Analyzer, Notes: this.Event.Notes, StartTime: this.Event.StartTime } ).then(
           (result) => { this.$emit('close', true); },
           (fail) =>  {
             this.Error = 'Failed to save analyzer!';
