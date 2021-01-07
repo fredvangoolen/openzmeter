@@ -12,12 +12,12 @@
     </div>
     <div class="panel-body" @mouseenter="Paused=true" @mouseleave="Paused=false">
       <spinner v-if="data==null"></spinner>
-      <cubism :index="0" ref="g0" title="Active Power" :data="Data" :now="DataNow" :format="Formatter_Active_Power" :paused="Paused"></cubism>
-      <cubism :index="1" ref="g1" title="Reactive Power" :data="Data" :now="DataNow" :format="Formatter_Reactive_Power" :paused="Paused"></cubism>
-      <cubism :index="2" ref="g2" title="Power Factor" :data="Data" :now="DataNow" :format="Formatter_Power_Factor" :paused="Paused"></cubism>
-      <cubism :index="3" ref="g3" title="Phi" :data="Data" :now="DataNow" :format="Formatter_Phi" :paused="Paused"></cubism>
-      <cubism :index="4" ref="g4" title="Voltage THD" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="Paused"></cubism>
-      <cubism :index="5" ref="g5" title="Current THD" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="Paused"></cubism>
+      <cubism :index="0" ref="g0" title="Active Power" :data="Data" :now="DataNow" :format="Formatter_Active_Power" :paused="Paused" @init="Init"></cubism>
+      <cubism :index="1" ref="g1" title="Reactive Power" :data="Data" :now="DataNow" :format="Formatter_Reactive_Power" :paused="Paused" @init="Init"></cubism>
+      <cubism :index="2" ref="g2" title="Power Factor" :data="Data" :now="DataNow" :format="Formatter_Power_Factor" :paused="Paused" @init="Init"></cubism>
+      <cubism :index="3" ref="g3" title="Phi" :data="Data" :now="DataNow" :format="Formatter_Phi" :paused="Paused" @init="Init"></cubism>
+      <cubism :index="4" ref="g4" title="Voltage THD" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="Paused" @init="Init"></cubism>
+      <cubism :index="5" ref="g5" title="Current THD" :data="Data" :now="DataNow" :format="Formatter_Percent" :paused="Paused" @init="Init"></cubism>
     </div>
   </div>
 </template>
@@ -29,7 +29,7 @@
   export default {
     props: { analyzer: { type: Object }, data: Object, dataNow: Object },
     data() {
-      return { Phase: null, Paused: false };
+      return { Linked: false, Phase: null, Paused: false };
     },
     computed: {
       Data: function() {
@@ -89,11 +89,13 @@
           Header.push(Row);
         }
         return Object.seal(Header);
+      },
+      Init: function() {
+        if((this.Linked == true) || (this.$refs.g0 == null) || (this.$refs.g1 == null) || (this.$refs.g2 == null) || (this.$refs.g3.Graph == null) || (this.$refs.g4.Graph == null) || (this.$refs.g5.Graph == null)) return;
+        var Graphs = [ this.$refs.g0.Graph, this.$refs.g1.Graph, this.$refs.g2.Graph, this.$refs.g3.Graph, this.$refs.g4.Graph, this.$refs.g5.Graph ];
+        Dygraph.synchronize(Graphs, { range: false, zoom: false });
+        this.Linked = true;
       }
-    },
-    mounted: function() {
-      var Graphs = [ this.$refs.g0.Graph, this.$refs.g1.Graph, this.$refs.g2.Graph, this.$refs.g3.Graph, this.$refs.g4.Graph, this.$refs.g5.Graph ];
-      Dygraph.synchronize(Graphs, { range: false, zoom: false });
     }
   }
 </script>

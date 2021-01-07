@@ -629,6 +629,10 @@
       "description": "Manage analyzer alarms"
     },
     {
+      "name": "Rates",
+      "description": "Manage analyzer rates"
+    },
+    {
       "name": "Devices",
       "description": "Devices configuration and listing"
     },
@@ -2398,6 +2402,52 @@
           },
           "501": {
             "description": "Tariff name not found"
+          }
+        }
+      }
+    },
+    "/getRates": {
+      "post": {
+        "summary": "Get configured rate list for an analyzer",
+        "tags": [
+          "Rates"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "IncludeDef": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [],
+                "example": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "Name": "ESP_2.0A",
+                    "UserName": "admin"
+                  },
+                  {
+                    "Name": "ESP_2.0DHA",
+                    "UserName": "admin"
+                  }
+                ]
+              }
+            }
+          },
+          "401": {
+            "description": "Not logged in"
           }
         }
       }

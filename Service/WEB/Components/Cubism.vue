@@ -127,6 +127,7 @@
         return ticks;
       };
       this.Graph = new Dygraph(this.$refs.graph, [[0, 0]], Opt);
+      this.$emit('init');
     },
     beforeDestroy: function() {
       if(this.Graph != null) this.Graph.destroy();

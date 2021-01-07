@@ -39,7 +39,7 @@ default: READCONFIG $(EXECUTABLE_TARGET)
 clean-c:
 	@rm -rf Tmp/$(TARGET)/Libs Tmp/$(TARGET)/openZmeter Tmp/$(TARGET)/*.o Tmp/$(TARGET)/Source
 clean:
-	@rm -rf Tmp/$(TARGET)
+	@rm -rf Tmp/$(TARGET) Tmp/*.js
 
 READCONFIG:
 	@echo "Building version '$(BUILD_NAME)_$(BUILD_DATE)'"
@@ -69,6 +69,7 @@ endif
 # Build steps
 $(WEB_TARGET): $(WEB_SOURCE)
 	@echo "Building WEB interface"
+	@rm -f Tmp/*.js
 	@if [ ! -d "WEB/node_modules" ]; then cd WEB; npm install; fi
 	@cd WEB; npm run --silent build
 

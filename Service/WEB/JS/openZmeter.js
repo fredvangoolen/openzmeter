@@ -282,8 +282,8 @@ const openZmeter = {
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
           Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread }));
         } else {
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1 }));
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1] }));
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1 }));
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1] }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(

@@ -168,7 +168,7 @@ void AnalyzerSoftStorage::GetSeries(const json &params, Response &response) cons
     if(Series & SERIE_ACTIVE_ENERGY)             { Headers.push_back("Active_Energy");             Cols.append((Aggreg == "1H") ? ", active_power" : ", ARRAY(SELECT UNNEST(active_power) / 4.0)"); }
     if(Series & SERIE_REACTIVE_POWER)            { Headers.push_back("Reactive_Power");            Cols.append(", reactive_power"); }
     if(Series & SERIE_REACTIVE_ENERGY)           { Headers.push_back("Reactive_Energy");           Cols.append((Aggreg == "1H") ? ", reactive_power" : ", ARRAY(SELECT UNNEST(reactive_power) / 4.0)"); };
-    if(Series & SERIE_APPARENT_POWER)            { Headers.push_back("Apparent_Power");            Cols.append(", ARRAY(SELECT v * i FROM UNNEST(rms_v, rms_i) as t(v, i) LIMIT array_length(rms_v, 1))"); }
+    if(Series & SERIE_APPARENT_POWER)            { Headers.push_back("Apparent_Power");            Cols.append(", ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1))"); }
     if(Series & SERIE_POWER_FACTOR)              { Headers.push_back("Power_Factor");              Cols.append(", power_factor"); }
     if(Series & SERIE_VOLTAGE_THD)               { Headers.push_back("Voltage_THD");               Cols.append(", thd_v"); }
     if(Series & SERIE_CURRENT_THD)               { Headers.push_back("Current_THD");               Cols.append(", thd_i"); }

@@ -66,12 +66,11 @@
         this.TimeLineDataset.clear();
         if(this.events == null) return;
         var Count = {Interruption: 0, Swell: 0, Dip: 0, RVC: 0 };
-        var StartTimeCol  = this.events.Headers.indexOf("Time");
+        var StartTimeCol  = this.events.Headers.indexOf("StartTime");
         var SampleRateCol = this.events.Headers.indexOf("SampleRate");
         var DurationCol   = this.events.Headers.indexOf("Duration");
         var TypeCol       = this.events.Headers.indexOf("Type");
         for(var i = 0; i < this.events.Rows.length; i++) {
-//          if(this.events.Deleted[i] == true) continue;
           var Item = {
             id: i,
             start: this.events.Rows[i][StartTimeCol],

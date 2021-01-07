@@ -8,7 +8,7 @@
             <slot name="header"></slot>
           </div>
           <div class="modal-body">
-            <spinner v-if="loading"></spinner>
+            <spinner v-if="loading" :progress="progress"></spinner>
             <slot></slot>
           </div>
           <div class="panel-footer" v-if="$slots['footer']">
@@ -22,7 +22,7 @@
 
 <script>
   export default {
-    props: { loading: Boolean, fullscreen: Boolean },
+    props: { loading: Boolean, fullscreen: Boolean, progress: Number },
     data: function() {
       return { };
     },
