@@ -12,7 +12,7 @@
     </div>
     <div class="row">
       <div class="col-xs-12">
-        <detail-tabs :tabs="['200MS','3S', '1M', '10M', '15M', '1H', 'Events', 'Alarms', 'Ratejgks']" v-model="ActiveTab"></detail-tabs>
+        <detail-tabs :tabs="['200MS','3S', '1M', '10M', '15M', '1H', 'Events', 'Alarms', 'Rates']" v-model="ActiveTab"></detail-tabs>
         <table v-if="ActiveTab=='200MS'">
           <tr>
             <td class="first-row">Store 200 miliseconds data. Table persistence is limited to an hour.</td>
@@ -58,7 +58,7 @@
           </tr>
           <tr class="line">
             <td>Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span></td>
-            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="alert('NOT IMPLEMENTED!')">Execute</button></td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs disabled" @click="alert('NOT IMPLEMENTED!')">Execute</button></td>
           </tr>
         </table>
         <table v-if="ActiveTab=='1M'">
@@ -88,7 +88,7 @@
           </tr>
           <tr class="line">
             <td>Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span></td>
-            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button></td>
+            <td class="action"><button type="button" class="btn btn-default btn-xs disabled" @click="alert('NOT IMPLEMENTED!')">Execute</button></td>
           </tr>
         </table>
         <table v-if="ActiveTab=='10M'">
@@ -127,7 +127,7 @@
               Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-default btn-xs disabled" @click="alert('NOT IMPLEMENTED!')">Execute</button>
             </td>
           </tr>
         </table>
@@ -167,7 +167,7 @@
               Restore data from file<br><span  class="help">Stored rows in overlapped period are replaced with new ones</span>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-default btn-xs disabled" @click="alert('NOT IMPLEMENTED!')">Execute</button>
             </td>
           </tr>
         </table>
@@ -199,7 +199,7 @@
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Download('1H', Get1HMRanged)">Execute</button>
+              <button type="button" class="btn btn-default btn-xs" @click="Download('1H', Get1HRanged)">Execute</button>
             </td>
           </tr>
           <tr class="line">
@@ -207,7 +207,7 @@
               Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-default btn-xs disabled" @click="alert('NOT IMPLEMENTED!')">Execute</button>
             </td>
           </tr>
         </table>
@@ -247,7 +247,7 @@
               Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Download('Events', GetEventsRanged)">Execute</button>
+              <button type="button" class="btn btn-default btn-xs disabled" @click="alert('NOT IMPLEMENTED!')">Execute</button>
             </td>
           </tr>
         </table>
@@ -290,7 +290,7 @@
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Delete('1H', DelEventsRanged)">Execute</button>
+              <button type="button" class="btn btn-danger btn-xs" @click="Delete('1H', DelAlarmsRanged)">Execute</button>
             </td>
           </tr>
           <tr class="line">
@@ -317,7 +317,7 @@
         </table>
         <table v-if="ActiveTab=='Rates'">
           <tr>
-            <td class="first-row">Store configured alarms and rates</td>
+            <td class="first-row">Store configured rates</td>
             <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Rates')) }}</td>
           </tr>
           <tr class="line">
@@ -329,13 +329,13 @@
           <tr class="line">
             <td>Save all configured rates</td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Delete('Rates')">Execute</button>
+              <button type="button" class="btn btn-default btn-xs" @click="Download('Rates')">Execute</button>
             </td>
           </tr>
           <tr class="line">
             <td>Restore configured rates</td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Delete('Rates')">Execute</button>
+              <button type="button" class="btn btn-default btn-xs" @click="Updoad('Rates')">Execute</button>
             </td>
           </tr>
         </table>
@@ -420,21 +420,49 @@
       Download: function(aggreg, all) {
         this.ShowSpinner = true;
         var Series = [];
-        if(aggreg == '200MS') Series = ['Voltage', 'Current', 'Unbalance', 'Frequency', 'Flag', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi', 'Voltage_Harmonics', 'Voltage_Harmonics_Complex', 'Current_Harmonics', 'Current_Harmonics_Complex', 'Power_Harmonics'];
-        if(aggreg == '3S')    Series = ['Voltage', 'Current', 'Frequency', 'Flag', 'Active_Power', 'Reactive_Power'];
-        if(aggreg == '1M')    Series = ['Voltage', 'Current', 'Frequency', 'Flag', 'Power_Factor', 'Unbalance', 'Voltage_THD', 'Current_THD', 'Active_Power', 'Reactive_Power', 'Phi', 'Voltage_Harmonics', 'Current_Harmonics', 'Power_Harmonics'];
-
-        var From = (all) ? 0 : this.From;
-        var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
-        fetch('getSeries', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg, Series: Series}), headers: { 'Content-Type': 'application/json' } }).then(
-          (res) => {
-            const fileStream = streamSaver.createWriteStream(aggreg + '.json', null);
-            const writeStream = fileStream.getWriter();
-            const reader = res.body.getReader();
-            const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
-            pump().then(() => { this.ShowSpinner = false; });
-          }
-        );
+        if(aggreg == 'Rates') {
+          fetch('getRates', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, IncludeDef: true }), headers: { 'Content-Type': 'application/json' } }).then(
+            (res) => {
+              const fileStream = streamSaver.createWriteStream('Rates.json', null);
+              const writeStream = fileStream.getWriter();
+              const reader = res.body.getReader();
+              const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
+              pump().then(() => { this.ShowSpinner = false; });
+            },
+            (fail) => { this.ShowSpinner = false; }
+          );
+        } else if(aggreg == 'AlarmsDef') {
+          fetch('getAlarmsDef', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer }), headers: { 'Content-Type': 'application/json' } }).then(
+            (res) => {
+              const fileStream = streamSaver.createWriteStream('AlarmsDef.json', null);
+              const writeStream = fileStream.getWriter();
+              const reader = res.body.getReader();
+              const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
+              pump().then(() => { this.ShowSpinner = false; });
+            },
+            (fail) => { this.ShowSpinner = false; }
+          );
+        } else if(aggreg == 'Alarms') {
+        } else if(aggreg == 'Events') {
+        } else {
+          if(aggreg == '200MS') Series = ['Frequency', 'Unbalance', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi', 'Voltage_Harmonics', 'Voltage_Harmonics_Complex', 'Current_Harmonics', 'Current_Harmonics_Complex', 'Power_Harmonics'];
+          if(aggreg == '3S')    Series = ['Frequency', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power'];
+          if(aggreg == '1M')    Series = ['Frequency', 'Unbalance', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi', 'Voltage_Harmonics', 'Current_Harmonics', 'Power_Harmonics'];
+          if(aggreg == '10M')   Series = ['Frequency', 'Flag', 'Voltage', 'Current'];
+          if(aggreg == '15M')   Series = ['Active_Power', 'Active_Energy', 'Reactive_Power', 'Reactive_Energy', 'Apparent_Power'];
+          if(aggreg == '1H')    Series = ['Frequency', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Active_Energy', 'Reactive_Power', 'Reactive_Energy', 'Apparent_Power', 'Voltage_Stats', 'Frequency_Stats', 'Voltage_THD_Stats', 'Voltage_Harmonics_Stats', 'Unbalance_Stats'];
+          var From = (all) ? 0 : this.From;
+          var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
+          fetch('getSeries', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg, Series: Series}), headers: { 'Content-Type': 'application/json' } }).then(
+            (res) => {
+              const fileStream = streamSaver.createWriteStream(aggreg + '.json', null);
+              const writeStream = fileStream.getWriter();
+              const reader = res.body.getReader();
+              const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
+              pump().then(() => { this.ShowSpinner = false; });
+            }
+          );
+        }
       },
 
 

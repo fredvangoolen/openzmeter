@@ -48,7 +48,6 @@ class AnalyzerManager final {
     static void GetAlarmsDefCallback(const json &params, Response &response);
     static void TestAlarmCallback(const json &params, Response &response);
     static void AddAlarmDefCallback(const json &params, Response &response);
-    static void GetAlarmDefCallback(const json &params, Response &response);
     static void SetAlarmDefCallback(const json &params, Response &response);
     static void DelAlarmDefCallback(const json &params, Response &response);
     static void GetAlarmsCallback(const json &params, Response &response);

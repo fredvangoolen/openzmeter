@@ -15,6 +15,7 @@
     "bootstrap-loader": "^1.0.10",
     "bootstrap-year-calendar": "^1.1.1",
     "chroma-js": "^2.1.0",
+    "clarinet": "^0.12.4",
     "complex": "^3.0.1",
     "eonasdan-bootstrap-datetimepicker": "^4.17.47",
     "highlight-within-textarea": "^2.0.5",

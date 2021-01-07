@@ -4,6 +4,7 @@
 
 <script>
   import Dygraph from 'JS/dygraph.js';
+  import 'JS/dygraph-crosshair.js';
   import chroma from 'chroma-js';
   import * as oZm from 'JS/openZmeter.js';
   import Vue from 'vue';

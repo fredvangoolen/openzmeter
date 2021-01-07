@@ -26,11 +26,13 @@ void AnalyzerSoftRates::Config(const string &timezone) {
   load_time_zone(timezone, &pTimeZone);
 }
 void AnalyzerSoftRates::GetRates(const json &params, Response &response) const {
-  auto Func = [&](uint64_t offset, DataSink &sink) -> bool {
+  bool IncludeDef = false;
+  if(params.contains("IncludeDef") && params["IncludeDef"].is_boolean() && (params["IncludeDef"] == true)) IncludeDef = true;
+  auto Func = [&, IncludeDef](uint64_t offset, DataSink &sink) -> bool {
     uint32_t Items = 0;
     sink.os << "[\n  ";
     Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy')) AS result FROM rates");
+    DB.ExecSentenceAsyncResult(string("SELECT jsonb_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy'))") + (IncludeDef ? " || template::jsonb " : " ") + "AS result FROM rates");
     while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " + DB.ResultString("result") : DB.ResultString("result"));
     sink.os << "\n]";
     sink.done();
@@ -58,7 +60,7 @@ void AnalyzerSoftRates::GetRate(const json &params, Response &response) const {
   if((params.contains("RateID") == false) || (params["RateID"].is_string() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string ID = params["RateID"];
   Database DB(pSerial);
-  DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('Name', name, 'Group', ordering, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy')) || template::jsonb AS result FROM rates WHERE id = " + DB.Bind(ID));
+  DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy')) || template::jsonb AS result FROM rates WHERE id = " + DB.Bind(ID));
   if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
