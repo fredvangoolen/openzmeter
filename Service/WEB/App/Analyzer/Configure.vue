@@ -137,6 +137,7 @@
 <script>
   import Vuetable from 'vuetable-2';
   import InputSpin from 'Components/InputSpin.vue';
+  import moment from 'moment';
   export default {
     props: { analyzer: Object },
     data() {

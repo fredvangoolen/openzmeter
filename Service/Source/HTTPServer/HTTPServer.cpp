@@ -48,7 +48,6 @@ HTTPServer::HTTPServer() {
   set_keep_alive_max_count(UINT32_MAX);
   set_read_timeout(30);
   set_write_timeout(30);
-  set_tcp_nodelay(true);
   new_task_queue = [] { return new HTTPRequestPoll(); };
   Config = json::object();
   Config["Port"] = pPort;

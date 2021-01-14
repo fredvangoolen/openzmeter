@@ -192,6 +192,7 @@ using socket_t = int;
 #include <fcntl.h>
 #include <fstream>
 #include <functional>
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <map>
@@ -214,7 +215,6 @@ using socket_t = int;
 #include <openssl/applink.c>
 #endif
 
-#include <iomanip>
 #include <iostream>
 #include <sstream>
 
@@ -597,6 +597,7 @@ inline void default_socket_options(socket_t sock) {
 class Server {
 public:
   using Handler = std::function<void(const Request &, Response &)>;
+  using HandlerWithReturn = std::function<bool(const Request &, Response &)>;
   using HandlerWithContentReader = std::function<void(
       const Request &, Response &, const ContentReader &content_reader)>;
   using Expect100ContinueHandler =
@@ -627,7 +628,11 @@ public:
                                                const char *mime);
   void set_file_request_handler(Handler handler);
 
+  void set_error_handler(HandlerWithReturn handler);
   void set_error_handler(Handler handler);
+  void set_pre_routing_handler(HandlerWithReturn handler);
+  void set_post_routing_handler(Handler handler);
+
   void set_expect_100_continue_handler(Expect100ContinueHandler handler);
   void set_logger(Logger logger);
 
@@ -680,7 +685,8 @@ private:
   bool listen_internal();
 
   bool routing(Request &req, Response &res, Stream &strm);
-  bool handle_file_request(Request &req, Response &res, bool head = false);
+  bool handle_file_request(const Request &req, Response &res,
+                           bool head = false);
   bool dispatch_request(Request &req, Response &res, const Handlers &handlers);
   bool
   dispatch_request_for_content_reader(Request &req, Response &res,
@@ -733,7 +739,9 @@ private:
   Handlers delete_handlers_;
   HandlersForContentReader delete_handlers_for_content_reader_;
   Handlers options_handlers_;
-  Handler error_handler_;
+  HandlerWithReturn error_handler_;
+  HandlerWithReturn pre_routing_handler_;
+  Handler post_routing_handler_;
   Logger logger_;
   Expect100ContinueHandler expect_100_continue_handler_;
 
@@ -817,6 +825,10 @@ public:
   Result Head(const char *path, const Headers &headers);
 
   Result Post(const char *path);
+  Result Post(const char *path, const char *body, size_t content_length,
+              const char *content_type);
+  Result Post(const char *path, const Headers &headers, const char *body,
+              size_t content_length, const char *content_type);
   Result Post(const char *path, const std::string &body,
               const char *content_type);
   Result Post(const char *path, const Headers &headers, const std::string &body,
@@ -839,6 +851,10 @@ public:
               const MultipartFormDataItems &items, const std::string &boundary);
 
   Result Put(const char *path);
+  Result Put(const char *path, const char *body, size_t content_length,
+             const char *content_type);
+  Result Put(const char *path, const Headers &headers, const char *body,
+             size_t content_length, const char *content_type);
   Result Put(const char *path, const std::string &body,
              const char *content_type);
   Result Put(const char *path, const Headers &headers, const std::string &body,
@@ -855,6 +871,11 @@ public:
   Result Put(const char *path, const Params &params);
   Result Put(const char *path, const Headers &headers, const Params &params);
 
+  Result Patch(const char *path);
+  Result Patch(const char *path, const char *body, size_t content_length,
+               const char *content_type);
+  Result Patch(const char *path, const Headers &headers, const char *body,
+               size_t content_length, const char *content_type);
   Result Patch(const char *path, const std::string &body,
                const char *content_type);
   Result Patch(const char *path, const Headers &headers,
@@ -870,9 +891,13 @@ public:
                const char *content_type);
 
   Result Delete(const char *path);
+  Result Delete(const char *path, const Headers &headers);
+  Result Delete(const char *path, const char *body, size_t content_length,
+                const char *content_type);
+  Result Delete(const char *path, const Headers &headers, const char *body,
+                size_t content_length, const char *content_type);
   Result Delete(const char *path, const std::string &body,
                 const char *content_type);
-  Result Delete(const char *path, const Headers &headers);
   Result Delete(const char *path, const Headers &headers,
                 const std::string &body, const char *content_type);
 
@@ -1033,14 +1058,12 @@ private:
                       bool close_connection, Error &error);
   std::unique_ptr<Response> send_with_content_provider(
       const char *method, const char *path, const Headers &headers,
-      const std::string &body, size_t content_length,
-      ContentProvider content_provider,
+      const char *body, size_t content_length, ContentProvider content_provider,
       ContentProviderWithoutLength content_provider_without_length,
       const char *content_type, Error &error);
   Result send_with_content_provider(
       const char *method, const char *path, const Headers &headers,
-      const std::string &body, size_t content_length,
-      ContentProvider content_provider,
+      const char *body, size_t content_length, ContentProvider content_provider,
       ContentProviderWithoutLength content_provider_without_length,
       const char *content_type);
 
@@ -1095,6 +1118,10 @@ public:
   Result Head(const char *path, const Headers &headers);
 
   Result Post(const char *path);
+  Result Post(const char *path, const char *body, size_t content_length,
+              const char *content_type);
+  Result Post(const char *path, const Headers &headers, const char *body,
+              size_t content_length, const char *content_type);
   Result Post(const char *path, const std::string &body,
               const char *content_type);
   Result Post(const char *path, const Headers &headers, const std::string &body,
@@ -1116,6 +1143,10 @@ public:
   Result Post(const char *path, const Headers &headers,
               const MultipartFormDataItems &items, const std::string &boundary);
   Result Put(const char *path);
+  Result Put(const char *path, const char *body, size_t content_length,
+             const char *content_type);
+  Result Put(const char *path, const Headers &headers, const char *body,
+             size_t content_length, const char *content_type);
   Result Put(const char *path, const std::string &body,
              const char *content_type);
   Result Put(const char *path, const Headers &headers, const std::string &body,
@@ -1131,6 +1162,11 @@ public:
              const char *content_type);
   Result Put(const char *path, const Params &params);
   Result Put(const char *path, const Headers &headers, const Params &params);
+  Result Patch(const char *path);
+  Result Patch(const char *path, const char *body, size_t content_length,
+               const char *content_type);
+  Result Patch(const char *path, const Headers &headers, const char *body,
+               size_t content_length, const char *content_type);
   Result Patch(const char *path, const std::string &body,
                const char *content_type);
   Result Patch(const char *path, const Headers &headers,
@@ -1146,9 +1182,13 @@ public:
                const char *content_type);
 
   Result Delete(const char *path);
+  Result Delete(const char *path, const Headers &headers);
+  Result Delete(const char *path, const char *body, size_t content_length,
+                const char *content_type);
+  Result Delete(const char *path, const Headers &headers, const char *body,
+                size_t content_length, const char *content_type);
   Result Delete(const char *path, const std::string &body,
                 const char *content_type);
-  Result Delete(const char *path, const Headers &headers);
   Result Delete(const char *path, const Headers &headers,
                 const std::string &body, const char *content_type);
 
@@ -1455,6 +1495,27 @@ inline bool is_valid_path(const std::string &path) {
   }
 
   return true;
+}
+
+inline std::string encode_query_param(const std::string &value) {
+  std::ostringstream escaped;
+  escaped.fill('0');
+  escaped << std::hex;
+
+  for (auto c : value) {
+    if (std::isalnum(static_cast<uint8_t>(c)) || c == '-' || c == '_' ||
+        c == '.' || c == '!' || c == '~' || c == '*' || c == '\'' || c == '(' ||
+        c == ')') {
+      escaped << c;
+    } else {
+      escaped << std::uppercase;
+      escaped << '%' << std::setw(2)
+              << static_cast<int>(static_cast<unsigned char>(c));
+      escaped << std::nouppercase;
+    }
+  }
+
+  return escaped.str();
 }
 
 inline std::string encode_url(const std::string &s) {
@@ -2135,6 +2196,25 @@ inline void get_remote_ip_and_port(socket_t sock, std::string &ip, int &port) {
   }
 }
 
+inline constexpr unsigned int str2tag_core(const char *s, size_t l,
+                                           unsigned int h) {
+  return (l == 0) ? h
+                  : str2tag_core(s + 1, l - 1,
+                                 (h * 33) ^ static_cast<unsigned char>(*s));
+}
+
+inline unsigned int str2tag(const std::string &s) {
+  return str2tag_core(s.data(), s.size(), 0);
+}
+
+namespace udl {
+
+inline constexpr unsigned int operator"" _(const char *s, size_t l) {
+  return str2tag_core(s, l, 0);
+}
+
+} // namespace udl
+
 inline const char *
 find_content_type(const std::string &path,
                   const std::map<std::string, std::string> &user_data) {
@@ -2143,40 +2223,60 @@ find_content_type(const std::string &path,
   auto it = user_data.find(ext);
   if (it != user_data.end()) { return it->second.c_str(); }
 
-  if (ext == "txt") {
-    return "text/plain";
-  } else if (ext == "html" || ext == "htm") {
-    return "text/html";
-  } else if (ext == "css") {
-    return "text/css";
-  } else if (ext == "jpeg" || ext == "jpg") {
-    return "image/jpg";
-  } else if (ext == "vtt") {
-    return "text/vtt";
-  } else if (ext == "png") {
-    return "image/png";
-  } else if (ext == "gif") {
-    return "image/gif";
-  } else if (ext == "svg") {
-    return "image/svg+xml";
-  } else if (ext == "ico") {
-    return "image/x-icon";
-  } else if (ext == "json") {
-    return "application/json";
-  } else if (ext == "pdf") {
-    return "application/pdf";
-  } else if (ext == "js") {
-    return "application/javascript";
-  } else if (ext == "wasm") {
-    return "application/wasm";
-  } else if (ext == "xml") {
-    return "application/xml";
-  } else if (ext == "xhtml") {
-    return "application/xhtml+xml";
-  } else if (ext == "mp4") {
-    return "video/mp4";
+  using udl::operator""_;
+
+  switch (str2tag(ext)) {
+  default: return nullptr;
+  case "css"_: return "text/css";
+  case "csv"_: return "text/csv";
+  case "txt"_: return "text/plain";
+  case "vtt"_: return "text/vtt";
+  case "htm"_:
+  case "html"_: return "text/html";
+
+  case "apng"_: return "image/apng";
+  case "avif"_: return "image/avif";
+  case "bmp"_: return "image/bmp";
+  case "gif"_: return "image/gif";
+  case "png"_: return "image/png";
+  case "svg"_: return "image/svg+xml";
+  case "webp"_: return "image/webp";
+  case "ico"_: return "image/x-icon";
+  case "tif"_: return "image/tiff";
+  case "tiff"_: return "image/tiff";
+  case "jpg"_:
+  case "jpeg"_: return "image/jpeg";
+
+  case "mp4"_: return "video/mp4";
+  case "mpeg"_: return "video/mpeg";
+  case "webm"_: return "video/webm";
+
+  case "mp3"_: return "audio/mp3";
+  case "mpga"_: return "audio/mpeg";
+  case "weba"_: return "audio/webm";
+  case "wav"_: return "audio/wave";
+
+  case "otf"_: return "font/otf";
+  case "ttf"_: return "font/ttf";
+  case "woff"_: return "font/woff";
+  case "woff2"_: return "font/woff2";
+
+  case "7z"_: return "application/x-7z-compressed";
+  case "atom"_: return "application/atom+xml";
+  case "pdf"_: return "application/pdf";
+  case "js"_:
+  case "mjs"_: return "application/javascript";
+  case "json"_: return "application/json";
+  case "rss"_: return "application/rss+xml";
+  case "tar"_: return "application/x-tar";
+  case "xht"_:
+  case "xhtml"_: return "application/xhtml+xml";
+  case "xslt"_: return "application/xslt+xml";
+  case "xml"_: return "application/xml";
+  case "gz"_: return "application/gzip";
+  case "zip"_: return "application/zip";
+  case "wasm"_: return "application/wasm";
   }
-  return nullptr;
 }
 
 inline const char *status_message(int status) {
@@ -3006,7 +3106,7 @@ inline std::string params_to_query_str(const Params &params) {
     if (it != params.begin()) { query += "&"; }
     query += it->first;
     query += "=";
-    query += encode_url(it->second);
+    query += encode_query_param(it->second);
   }
   return query;
 }
@@ -3494,7 +3594,8 @@ inline bool load_system_certs_on_windows(X509_STORE *store) {
   if (!hStore) { return false; }
 
   PCCERT_CONTEXT pContext = NULL;
-  while (pContext = CertEnumCertificatesInStore(hStore, pContext)) {
+  while ((pContext = CertEnumCertificatesInStore(hStore, pContext)) !=
+         nullptr) {
     auto encoded_cert =
         static_cast<const unsigned char *>(pContext->pbCertEncoded);
 
@@ -4066,14 +4167,23 @@ inline void Server::set_file_request_handler(Handler handler) {
   file_request_handler_ = std::move(handler);
 }
 
-inline void Server::set_error_handler(Handler handler) {
+inline void Server::set_error_handler(HandlerWithReturn handler) {
   error_handler_ = std::move(handler);
 }
 
-inline void Server::set_tcp_nodelay(bool on) { tcp_nodelay_ = on; }
+inline void Server::set_error_handler(Handler handler) {
+  error_handler_ = [handler](const Request &req, Response &res) {
+    handler(req, res);
+    return true;
+  };
+}
 
-inline void Server::set_socket_options(SocketOptions socket_options) {
-  socket_options_ = std::move(socket_options);
+inline void Server::set_pre_routing_handler(HandlerWithReturn handler) {
+  pre_routing_handler_ = std::move(handler);
+}
+
+inline void Server::set_post_routing_handler(Handler handler) {
+  post_routing_handler_ = std::move(handler);
 }
 
 inline void Server::set_logger(Logger logger) { logger_ = std::move(logger); }
@@ -4081,6 +4191,12 @@ inline void Server::set_logger(Logger logger) { logger_ = std::move(logger); }
 inline void
 Server::set_expect_100_continue_handler(Expect100ContinueHandler handler) {
   expect_100_continue_handler_ = std::move(handler);
+}
+
+inline void Server::set_tcp_nodelay(bool on) { tcp_nodelay_ = on; }
+
+inline void Server::set_socket_options(SocketOptions socket_options) {
+  socket_options_ = std::move(socket_options);
 }
 
 inline void Server::set_keep_alive_max_count(size_t count) {
@@ -4138,7 +4254,7 @@ inline void Server::stop() {
 inline bool Server::parse_request_line(const char *s, Request &req) {
   const static std::regex re(
       "(GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH|PRI) "
-      "(([^?]+)(?:\\?(.*?))?) (HTTP/1\\.[01])\r\n");
+      "(([^? ]+)(?:\\?([^ ]*?))?) (HTTP/1\\.[01])\r\n");
 
   std::cmatch m;
   if (std::regex_match(s, m, re)) {
@@ -4174,13 +4290,15 @@ inline bool Server::write_response_core(Stream &strm, bool close_connection,
                                         bool need_apply_ranges) {
   assert(res.status != -1);
 
-  if (400 <= res.status && error_handler_) { error_handler_(req, res); }
+  if (400 <= res.status && error_handler_ && error_handler_(req, res)) {
+    need_apply_ranges = true;
+  }
 
   std::string content_type;
   std::string boundary;
   if (need_apply_ranges) { apply_ranges(req, res, content_type, boundary); }
 
-  // Headers
+  // Prepare additional headers
   if (close_connection || req.get_header_value("Connection") == "close") {
     res.set_header("Connection", "close");
   } else {
@@ -4204,19 +4322,23 @@ inline bool Server::write_response_core(Stream &strm, bool close_connection,
     res.set_header("Accept-Ranges", "bytes");
   }
 
-  detail::BufferStream bstrm;
+  if (post_routing_handler_) { post_routing_handler_(req, res); }
 
-  // Response line
-  if (!bstrm.write_format("HTTP/1.1 %d %s\r\n", res.status,
-                          detail::status_message(res.status))) {
-    return false;
+  // Response line and headers
+  {
+    detail::BufferStream bstrm;
+
+    if (!bstrm.write_format("HTTP/1.1 %d %s\r\n", res.status,
+                            detail::status_message(res.status))) {
+      return false;
+    }
+
+    if (!detail::write_headers(bstrm, res, Headers())) { return false; }
+
+    // Flush buffer
+    auto &data = bstrm.get_buffer();
+    strm.write(data.data(), data.size());
   }
-
-  if (!detail::write_headers(bstrm, res, Headers())) { return false; }
-
-  // Flush buffer
-  auto &data = bstrm.get_buffer();
-  strm.write(data.data(), data.size());
 
   // Body
   auto ret = true;
@@ -4285,7 +4407,6 @@ Server::write_content_with_provider(Stream &strm, const Request &req,
                                                   is_shutting_down);
     }
   }
-  return true;
 }
 
 inline bool Server::read_content(Stream &strm, Request &req, Response &res) {
@@ -4382,7 +4503,7 @@ inline bool Server::read_content_core(Stream &strm, Request &req, Response &res,
   return true;
 }
 
-inline bool Server::handle_file_request(Request &req, Response &res,
+inline bool Server::handle_file_request(const Request &req, Response &res,
                                         bool head) {
   for (const auto &entry : base_dirs_) {
     // Prefix match
@@ -4421,7 +4542,7 @@ Server::create_server_socket(const char *host, int port, int socket_flags,
         if (::bind(sock, ai.ai_addr, static_cast<socklen_t>(ai.ai_addrlen))) {
           return false;
         }
-        if (::listen(sock, 500)) { // Listen through 5 channels
+        if (::listen(sock, 5)) { // Listen through 5 channels
           return false;
         }
         return true;
@@ -4506,6 +4627,8 @@ inline bool Server::listen_internal() {
 }
 
 inline bool Server::routing(Request &req, Response &res, Stream &strm) {
+  if (pre_routing_handler_ && pre_routing_handler_(req, res)) { return true; }
+
   // File handler
   bool is_head_request = req.method == "HEAD";
   if ((req.method == "GET" || is_head_request) &&
@@ -5204,14 +5327,7 @@ inline bool ClientImpl::write_content_with_provider(Stream &strm,
 
 inline bool ClientImpl::write_request(Stream &strm, const Request &req,
                                       bool close_connection, Error &error) {
-  detail::BufferStream bstrm;
-
-  // Request line
-  const auto &path = detail::encode_url(req.path);
-
-  bstrm.write_format("%s %s HTTP/1.1\r\n", req.method.c_str(), path.c_str());
-
-  // Additonal headers
+  // Prepare additional headers
   Headers headers;
   if (close_connection) { headers.emplace("Connection", "close"); }
 
@@ -5281,13 +5397,21 @@ inline bool ClientImpl::write_request(Stream &strm, const Request &req,
         proxy_bearer_token_auth_token_, true));
   }
 
-  detail::write_headers(bstrm, req, headers);
+  // Request line and headers
+  {
+    detail::BufferStream bstrm;
 
-  // Flush buffer
-  auto &data = bstrm.get_buffer();
-  if (!detail::write_data(strm, data.data(), data.size())) {
-    error = Error::Write;
-    return false;
+    const auto &path = detail::encode_url(req.path);
+    bstrm.write_format("%s %s HTTP/1.1\r\n", req.method.c_str(), path.c_str());
+
+    detail::write_headers(bstrm, req, headers);
+
+    // Flush buffer
+    auto &data = bstrm.get_buffer();
+    if (!detail::write_data(strm, data.data(), data.size())) {
+      error = Error::Write;
+      return false;
+    }
   }
 
   // Body
@@ -5302,8 +5426,7 @@ inline bool ClientImpl::write_request(Stream &strm, const Request &req,
 
 inline std::unique_ptr<Response> ClientImpl::send_with_content_provider(
     const char *method, const char *path, const Headers &headers,
-    const std::string &body, size_t content_length,
-    ContentProvider content_provider,
+    const char *body, size_t content_length, ContentProvider content_provider,
     ContentProviderWithoutLength content_provider_without_length,
     const char *content_type, Error &error) {
 
@@ -5356,7 +5479,7 @@ inline std::unique_ptr<Response> ClientImpl::send_with_content_provider(
         }
       }
     } else {
-      if (!compressor.compress(body.data(), body.size(), true,
+      if (!compressor.compress(body, content_length, true,
                                [&](const char *data, size_t data_len) {
                                  req.body.append(data, data_len);
                                  return true;
@@ -5379,7 +5502,8 @@ inline std::unique_ptr<Response> ClientImpl::send_with_content_provider(
       req.is_chunked_content_provider_ = true;
       req.headers.emplace("Transfer-Encoding", "chunked");
     } else {
-      req.body = body;
+      req.body.assign(body, content_length);
+      ;
     }
   }
 
@@ -5389,8 +5513,7 @@ inline std::unique_ptr<Response> ClientImpl::send_with_content_provider(
 
 inline Result ClientImpl::send_with_content_provider(
     const char *method, const char *path, const Headers &headers,
-    const std::string &body, size_t content_length,
-    ContentProvider content_provider,
+    const char *body, size_t content_length, ContentProvider content_provider,
     ContentProviderWithoutLength content_provider_without_length,
     const char *content_type) {
   auto error = Error::Success;
@@ -5595,6 +5718,19 @@ inline Result ClientImpl::Post(const char *path) {
   return Post(path, std::string(), nullptr);
 }
 
+inline Result ClientImpl::Post(const char *path, const char *body,
+                               size_t content_length,
+                               const char *content_type) {
+  return Post(path, Headers(), body, content_length, content_type);
+}
+
+inline Result ClientImpl::Post(const char *path, const Headers &headers,
+                               const char *body, size_t content_length,
+                               const char *content_type) {
+  return send_with_content_provider("POST", path, headers, body, content_length,
+                                    nullptr, nullptr, content_type);
+}
+
 inline Result ClientImpl::Post(const char *path, const std::string &body,
                                const char *content_type) {
   return Post(path, Headers(), body, content_type);
@@ -5603,8 +5739,9 @@ inline Result ClientImpl::Post(const char *path, const std::string &body,
 inline Result ClientImpl::Post(const char *path, const Headers &headers,
                                const std::string &body,
                                const char *content_type) {
-  return send_with_content_provider("POST", path, headers, body, 0, nullptr,
-                                    nullptr, content_type);
+  return send_with_content_provider("POST", path, headers, body.data(),
+                                    body.size(), nullptr, nullptr,
+                                    content_type);
 }
 
 inline Result ClientImpl::Post(const char *path, const Params &params) {
@@ -5628,7 +5765,7 @@ inline Result ClientImpl::Post(const char *path, const Headers &headers,
                                size_t content_length,
                                ContentProvider content_provider,
                                const char *content_type) {
-  return send_with_content_provider("POST", path, headers, std::string(),
+  return send_with_content_provider("POST", path, headers, nullptr,
                                     content_length, std::move(content_provider),
                                     nullptr, content_type);
 }
@@ -5636,9 +5773,8 @@ inline Result ClientImpl::Post(const char *path, const Headers &headers,
 inline Result ClientImpl::Post(const char *path, const Headers &headers,
                                ContentProviderWithoutLength content_provider,
                                const char *content_type) {
-  return send_with_content_provider("POST", path, headers, std::string(), 0,
-                                    nullptr, std::move(content_provider),
-                                    content_type);
+  return send_with_content_provider("POST", path, headers, nullptr, 0, nullptr,
+                                    std::move(content_provider), content_type);
 }
 
 inline Result ClientImpl::Post(const char *path, const Headers &headers,
@@ -5692,6 +5828,18 @@ inline Result ClientImpl::Put(const char *path) {
   return Put(path, std::string(), nullptr);
 }
 
+inline Result ClientImpl::Put(const char *path, const char *body,
+                              size_t content_length, const char *content_type) {
+  return Put(path, Headers(), body, content_length, content_type);
+}
+
+inline Result ClientImpl::Put(const char *path, const Headers &headers,
+                              const char *body, size_t content_length,
+                              const char *content_type) {
+  return send_with_content_provider("PUT", path, headers, body, content_length,
+                                    nullptr, nullptr, content_type);
+}
+
 inline Result ClientImpl::Put(const char *path, const std::string &body,
                               const char *content_type) {
   return Put(path, Headers(), body, content_type);
@@ -5700,8 +5848,9 @@ inline Result ClientImpl::Put(const char *path, const std::string &body,
 inline Result ClientImpl::Put(const char *path, const Headers &headers,
                               const std::string &body,
                               const char *content_type) {
-  return send_with_content_provider("PUT", path, headers, body, 0, nullptr,
-                                    nullptr, content_type);
+  return send_with_content_provider("PUT", path, headers, body.data(),
+                                    body.size(), nullptr, nullptr,
+                                    content_type);
 }
 
 inline Result ClientImpl::Put(const char *path, size_t content_length,
@@ -5721,7 +5870,7 @@ inline Result ClientImpl::Put(const char *path, const Headers &headers,
                               size_t content_length,
                               ContentProvider content_provider,
                               const char *content_type) {
-  return send_with_content_provider("PUT", path, headers, std::string(),
+  return send_with_content_provider("PUT", path, headers, nullptr,
                                     content_length, std::move(content_provider),
                                     nullptr, content_type);
 }
@@ -5729,9 +5878,8 @@ inline Result ClientImpl::Put(const char *path, const Headers &headers,
 inline Result ClientImpl::Put(const char *path, const Headers &headers,
                               ContentProviderWithoutLength content_provider,
                               const char *content_type) {
-  return send_with_content_provider("PUT", path, headers, std::string(), 0,
-                                    nullptr, std::move(content_provider),
-                                    content_type);
+  return send_with_content_provider("PUT", path, headers, nullptr, 0, nullptr,
+                                    std::move(content_provider), content_type);
 }
 
 inline Result ClientImpl::Put(const char *path, const Params &params) {
@@ -5744,6 +5892,24 @@ inline Result ClientImpl::Put(const char *path, const Headers &headers,
   return Put(path, headers, query, "application/x-www-form-urlencoded");
 }
 
+inline Result ClientImpl::Patch(const char *path) {
+  return Patch(path, std::string(), nullptr);
+}
+
+inline Result ClientImpl::Patch(const char *path, const char *body,
+                                size_t content_length,
+                                const char *content_type) {
+  return Patch(path, Headers(), body, content_length, content_type);
+}
+
+inline Result ClientImpl::Patch(const char *path, const Headers &headers,
+                                const char *body, size_t content_length,
+                                const char *content_type) {
+  return send_with_content_provider("PATCH", path, headers, body,
+                                    content_length, nullptr, nullptr,
+                                    content_type);
+}
+
 inline Result ClientImpl::Patch(const char *path, const std::string &body,
                                 const char *content_type) {
   return Patch(path, Headers(), body, content_type);
@@ -5752,8 +5918,9 @@ inline Result ClientImpl::Patch(const char *path, const std::string &body,
 inline Result ClientImpl::Patch(const char *path, const Headers &headers,
                                 const std::string &body,
                                 const char *content_type) {
-  return send_with_content_provider("PATCH", path, headers, body, 0, nullptr,
-                                    nullptr, content_type);
+  return send_with_content_provider("PATCH", path, headers, body.data(),
+                                    body.size(), nullptr, nullptr,
+                                    content_type);
 }
 
 inline Result ClientImpl::Patch(const char *path, size_t content_length,
@@ -5773,7 +5940,7 @@ inline Result ClientImpl::Patch(const char *path, const Headers &headers,
                                 size_t content_length,
                                 ContentProvider content_provider,
                                 const char *content_type) {
-  return send_with_content_provider("PATCH", path, headers, std::string(),
+  return send_with_content_provider("PATCH", path, headers, nullptr,
                                     content_length, std::move(content_provider),
                                     nullptr, content_type);
 }
@@ -5781,26 +5948,26 @@ inline Result ClientImpl::Patch(const char *path, const Headers &headers,
 inline Result ClientImpl::Patch(const char *path, const Headers &headers,
                                 ContentProviderWithoutLength content_provider,
                                 const char *content_type) {
-  return send_with_content_provider("PATCH", path, headers, std::string(), 0,
-                                    nullptr, std::move(content_provider),
-                                    content_type);
+  return send_with_content_provider("PATCH", path, headers, nullptr, 0, nullptr,
+                                    std::move(content_provider), content_type);
 }
 
 inline Result ClientImpl::Delete(const char *path) {
   return Delete(path, Headers(), std::string(), nullptr);
 }
 
-inline Result ClientImpl::Delete(const char *path, const std::string &body,
-                                 const char *content_type) {
-  return Delete(path, Headers(), body, content_type);
-}
-
 inline Result ClientImpl::Delete(const char *path, const Headers &headers) {
   return Delete(path, headers, std::string(), nullptr);
 }
 
+inline Result ClientImpl::Delete(const char *path, const char *body,
+                                 size_t content_length,
+                                 const char *content_type) {
+  return Delete(path, Headers(), body, content_length, content_type);
+}
+
 inline Result ClientImpl::Delete(const char *path, const Headers &headers,
-                                 const std::string &body,
+                                 const char *body, size_t content_length,
                                  const char *content_type) {
   Request req;
   req.method = "DELETE";
@@ -5809,9 +5976,20 @@ inline Result ClientImpl::Delete(const char *path, const Headers &headers,
   req.path = path;
 
   if (content_type) { req.headers.emplace("Content-Type", content_type); }
-  req.body = body;
+  req.body.assign(body, content_length);
 
   return send(req);
+}
+
+inline Result ClientImpl::Delete(const char *path, const std::string &body,
+                                 const char *content_type) {
+  return Delete(path, Headers(), body.data(), body.size(), content_type);
+}
+
+inline Result ClientImpl::Delete(const char *path, const Headers &headers,
+                                 const std::string &body,
+                                 const char *content_type) {
+  return Delete(path, headers, body.data(), body.size(), content_type);
 }
 
 inline Result ClientImpl::Options(const char *path) {
@@ -6235,8 +6413,9 @@ inline bool SSLServer::process_and_close_socket(socket_t sock) {
       },
       [](SSL * /*ssl*/) { return true; });
 
+  bool ret = false;
   if (ssl) {
-    auto ret = detail::process_server_socket_ssl(
+    ret = detail::process_server_socket_ssl(
         ssl, sock, keep_alive_max_count_, keep_alive_timeout_sec_,
         read_timeout_sec_, read_timeout_usec_, write_timeout_sec_,
         write_timeout_usec_,
@@ -6250,12 +6429,11 @@ inline bool SSLServer::process_and_close_socket(socket_t sock) {
     // the connection appeared to be closed.
     const bool shutdown_gracefully = ret;
     detail::ssl_delete(ctx_mutex_, ssl, shutdown_gracefully);
-    return ret;
   }
 
   detail::shutdown_socket(sock);
   detail::close_socket(sock);
-  return false;
+  return ret;
 }
 
 // SSL HTTP client implementation
@@ -6753,6 +6931,15 @@ inline Result Client::Head(const char *path, const Headers &headers) {
 }
 
 inline Result Client::Post(const char *path) { return cli_->Post(path); }
+inline Result Client::Post(const char *path, const char *body,
+                           size_t content_length, const char *content_type) {
+  return cli_->Post(path, body, content_length, content_type);
+}
+inline Result Client::Post(const char *path, const Headers &headers,
+                           const char *body, size_t content_length,
+                           const char *content_type) {
+  return cli_->Post(path, headers, body, content_length, content_type);
+}
 inline Result Client::Post(const char *path, const std::string &body,
                            const char *content_type) {
   return cli_->Post(path, body, content_type);
@@ -6805,6 +6992,15 @@ inline Result Client::Post(const char *path, const Headers &headers,
   return cli_->Post(path, headers, items, boundary);
 }
 inline Result Client::Put(const char *path) { return cli_->Put(path); }
+inline Result Client::Put(const char *path, const char *body,
+                          size_t content_length, const char *content_type) {
+  return cli_->Put(path, body, content_length, content_type);
+}
+inline Result Client::Put(const char *path, const Headers &headers,
+                          const char *body, size_t content_length,
+                          const char *content_type) {
+  return cli_->Put(path, headers, body, content_length, content_type);
+}
 inline Result Client::Put(const char *path, const std::string &body,
                           const char *content_type) {
   return cli_->Put(path, body, content_type);
@@ -6843,6 +7039,16 @@ inline Result Client::Put(const char *path, const Headers &headers,
                           const Params &params) {
   return cli_->Put(path, headers, params);
 }
+inline Result Client::Patch(const char *path) { return cli_->Patch(path); }
+inline Result Client::Patch(const char *path, const char *body,
+                            size_t content_length, const char *content_type) {
+  return cli_->Patch(path, body, content_length, content_type);
+}
+inline Result Client::Patch(const char *path, const Headers &headers,
+                            const char *body, size_t content_length,
+                            const char *content_type) {
+  return cli_->Patch(path, headers, body, content_length, content_type);
+}
 inline Result Client::Patch(const char *path, const std::string &body,
                             const char *content_type) {
   return cli_->Patch(path, body, content_type);
@@ -6875,12 +7081,21 @@ inline Result Client::Patch(const char *path, const Headers &headers,
   return cli_->Patch(path, headers, std::move(content_provider), content_type);
 }
 inline Result Client::Delete(const char *path) { return cli_->Delete(path); }
+inline Result Client::Delete(const char *path, const Headers &headers) {
+  return cli_->Delete(path, headers);
+}
+inline Result Client::Delete(const char *path, const char *body,
+                             size_t content_length, const char *content_type) {
+  return cli_->Delete(path, body, content_length, content_type);
+}
+inline Result Client::Delete(const char *path, const Headers &headers,
+                             const char *body, size_t content_length,
+                             const char *content_type) {
+  return cli_->Delete(path, headers, body, content_length, content_type);
+}
 inline Result Client::Delete(const char *path, const std::string &body,
                              const char *content_type) {
   return cli_->Delete(path, body, content_type);
-}
-inline Result Client::Delete(const char *path, const Headers &headers) {
-  return cli_->Delete(path, headers);
 }
 inline Result Client::Delete(const char *path, const Headers &headers,
                              const std::string &body,

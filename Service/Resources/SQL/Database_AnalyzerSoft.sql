@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS aggreg_200ms (
+CREATE UNLOGGED TABLE IF NOT EXISTS aggreg_200ms (
   sampletime     bigint NOT NULL PRIMARY KEY,
   rms_v          real[] NOT NULL,
   rms_i          real[] NOT NULL,
