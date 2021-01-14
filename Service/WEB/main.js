@@ -54,6 +54,7 @@ Vue.component('Toggle', (resolve) => { import('Components/Toggle.vue').then((Com
 Vue.component('ViewSpinner', (resolve) => { import('Components/ViewSpinner.vue').then((Comp) => { resolve(Comp.default); }); } );
 //Views ----------------------------------------
 import App from 'App/App.vue';
+var __webpack_public_path__ = window.location.pathname;
 var Routes = new Router({
   linkActiveClass: 'active',
   mode: 'history',
