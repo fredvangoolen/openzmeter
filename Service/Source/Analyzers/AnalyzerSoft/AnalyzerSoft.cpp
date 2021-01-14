@@ -111,7 +111,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   ConfigOUT["Save200MS"] = false;
   ConfigOUT["EventsEnabled"] = false;
   ConfigOUT["AlarmsEnabled"] = false;
-  ConfigOUT["Alarms"] = json::array();
+//  ConfigOUT["Alarms"] = json::array();
   ConfigOUT["Rates"] = json::array();
   if(!config.is_object()) return ConfigOUT;
   if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
@@ -139,7 +139,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   if(config.contains("Save200MS") && config["Save200MS"].is_boolean()) ConfigOUT["Save200MS"] = config["Save200MS"];
   if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
   if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
-  if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = AnalyzerSoftAlarms::CheckConfig(config["Alarms"]);
+//  if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = AnalyzerSoftAlarms::CheckConfig(config["Alarms"]);
   return ConfigOUT;
 }
 void AnalyzerSoft::Configure(const json &options) {
