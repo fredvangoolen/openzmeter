@@ -78,23 +78,26 @@
         var Weeks = {};
         Weeks['All year'] = this.InitWeek(0);
         if((this.TransferEvents.Data == null) || (this.TransferSeries.Data == null)) return Weeks;
-        var TimeCol = this.TransferEvents.Data.Headers.indexOf('Time');
+        var TimeCol       = this.TransferEvents.Data.Headers.indexOf('Time');
+        var DurationCol   = this.TransferEvents.Data.Headers.indexOf('Duration');
+        var SampleRateCol = this.TransferEvents.Data.Headers.indexOf('SampleRate');
+        var PeakCol       = this.TransferEvents.Data.Headers.indexOf('Peak');
         for(var i = 0; i < this.TransferEvents.Data.Rows.length; i++) {
           var Week = 'Week ' + moment(this.TransferEvents.Data.Rows[i][TimeCol]).tz(this.analyzer.TimeZone).isoWeek();
-          if(Weeks[Week] == null) Weeks[Week] = this.InitWeek(this.Events.StartTime[i]);
-          var Duration = this.Events.Duration[i] / this.Events.SampleRate[i];
-          var Percent = this.MaxDiff(this.Events.Peak[i]);
+          if(Weeks[Week] == null) Weeks[Week] = this.InitWeek(this.TransferEvents.Data.Rows[i][TimeCol]);
+          var Duration = this.TransferEvents.Data.Rows[i][DurationCol] / this.TransferEvents.Data.Rows[i][SampleRateCol];
+          var Percent = this.MaxDiff(this.TransferEvents.Data.Rows[i][PeakCol]);
           if((Duration < 60.0) && ((Percent < -15.0) || (Percent > -10.0))) {
             Weeks[Week].Dip = Weeks[Week].Dip + 1;
-            Weeks['All year'].Dip = Weeks[0].Dip + 1;
+            Weeks['All year'].Dip = Weeks['All year'].Dip + 1;
           }
           if((Duration < 180.0) && (Percent < -99.0)) {
             Weeks[Week].Short = Weeks[Week].Short + 1;
-            Weeks['All year'].Short = Weeks[0].Short + 1;
+            Weeks['All year'].Short = Weeks['All year'].Short + 1;
           }
           if((Duration > 180) && (Percent < -99)) {
             Weeks[Week].Long = Weeks[Week].Long + 1;
-            Weeks['All year'].Long = Weeks[0].Long + 1;
+            Weeks['All year'].Long = Weeks['All year'].Long + 1;
           }
         }
         TimeCol = this.TransferSeries.Data.Headers.indexOf('Time');

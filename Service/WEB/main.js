@@ -1,10 +1,10 @@
 //Main libs and style --------------------------------------------------------------------------------------------------
 import jQuery from 'jquery';
 import Bootstrap from 'bootstrap';
-import Vue from 'vue';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'CSS/openZmeter.css';
 //VUE components -------------------------------------------------------------------------------------------------------
+import Vue from 'vue';
 import VueI18n from 'vue-i18n';
 Vue.use(VueI18n);
 import Router from 'vue-router';
@@ -20,75 +20,114 @@ addEventListener('click', evt => blur(evt));
 import openZmeter from 'JS/openZmeter.js';
 Vue.use(openZmeter);
 // Custom components ---------------------------------------------------------------------------------------------------
-Vue.component('Avatar', (resolve) => { import('Components/Avatar.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ButtonExpand', (resolve) => { import('Components/ButtonExpand.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ButtonExport', (resolve) => { import('Components/ButtonExport.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ButtonPause', (resolve) => { import('Components/ButtonPause.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ColorBar', (resolve) => { import('Components/ColorBar.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ColorPicker', (resolve) => { import('Components/ColorPicker.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('Cubism', (resolve) => { import('Components/Cubism.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('Dlg', (resolve) => { import('Components/Dialog.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('DatePicker', (resolve) => { import('Components/DatePicker.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('DlgFs', (resolve) => { import('Components/DialogFullscreen.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('Graph', (resolve) => { import('Components/Graph.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('InputMath', (resolve) => { import('Components/InputMath.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('InputSpin', (resolve) => { import('Components/InputSpin.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('OptionAdder', (resolve) => { import('Components/OptionAdder.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('OptionPicker', (resolve) => { import('Components/OptionPicker.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('Password', (resolve) => { import('Components/Password.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ProgressBar', (resolve) => { import('Components/ProgressBar.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('Spinner', (resolve) => { import('Components/Spinner.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('YearConfig', (resolve) => { import('Components/YearConfig.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('DayConfig', (resolve) => { import('Components/DayConfig.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ToolbarAggregation', (resolve) => { import('Components/ToolbarAggregation.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ToolbarYears', (resolve) => { import('Components/ToolbarYears.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ToolbarPager', (resolve) => { import('Components/ToolbarPager.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ToolbarPeriod', (resolve) => { import('Components/ToolbarPeriod.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ToolbarColorItems', (resolve) => { import('Components/ToolbarColorItems.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ToolbarPeriodB', (resolve) => { import('Components/ToolbarPeriodB.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ToolbarPhases', (resolve) => { import('Components/ToolbarPhases.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ToolbarOptions', (resolve) => { import('Components/ToolbarOptions.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ToolbarWeeks', (resolve) => { import('Components/ToolbarWeeks.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('DetailTabs', (resolve) => { import('Components/Tabs.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('Toggle', (resolve) => { import('Components/Toggle.vue').then((Comp) => { resolve(Comp.default); }); } );
-Vue.component('ViewSpinner', (resolve) => { import('Components/ViewSpinner.vue').then((Comp) => { resolve(Comp.default); }); } );
+import Avatar from 'Components/Avatar.vue';
+Vue.component('Avatar', Avatar);
+import ButtonExpand from 'Components/ButtonExpand.vue';
+Vue.component('ButtonExpand', ButtonExpand);
+import ButtonExport from 'Components/ButtonExport.vue';
+Vue.component('ButtonExport', ButtonExport);
+import ButtonPause from 'Components/ButtonPause.vue';
+Vue.component('ButtonPause', ButtonPause);
+import ColorBar from 'Components/ColorBar.vue';
+Vue.component('ColorBar', ColorBar);
+import ColorPicker from 'Components/ColorPicker.vue';
+Vue.component('ColorPicker', ColorPicker);
+import Cubism from 'Components/Cubism.vue';
+Vue.component('Cubism', Cubism);
+import Dlg from 'Components/Dialog.vue';
+Vue.component('Dlg', Dlg);
+import DatePicker from 'Components/DatePicker.vue';
+Vue.component('DatePicker', DatePicker);
+import DlgFs from 'Components/DialogFullscreen.vue';
+Vue.component('DlgFs', DlgFs);
+import Graph from 'Components/Graph.vue';
+Vue.component('Graph', Graph);
+import InputMath from 'Components/InputMath.vue';
+Vue.component('InputMath', InputMath);
+import InputSpin from 'Components/InputSpin.vue';
+Vue.component('InputSpin', InputSpin);
+import OptionAdder from 'Components/OptionAdder.vue';
+Vue.component('OptionAdder', OptionAdder);
+import OptionPicker from 'Components/OptionPicker.vue';
+Vue.component('OptionPicker', OptionPicker);
+import Password from 'Components/Password.vue';
+Vue.component('Password', Password);
+import ProgressBar from 'Components/ProgressBar.vue';
+Vue.component('ProgressBar', ProgressBar);
+import Spinner from 'Components/Spinner.vue';
+Vue.component('Spinner', Spinner);
+import YearConfig from 'Components/YearConfig.vue';
+Vue.component('YearConfig', YearConfig);
+import DayConfig from 'Components/DayConfig.vue';
+Vue.component('DayConfig', DayConfig);
+import ToolbarAggregation from 'Components/ToolbarAggregation.vue';
+Vue.component('ToolbarAggregation', ToolbarAggregation);
+import ToolbarYears from 'Components/ToolbarYears.vue';
+Vue.component('ToolbarYears', ToolbarYears);
+import ToolbarPager from 'Components/ToolbarPager.vue';
+Vue.component('ToolbarPager', ToolbarPager);
+import ToolbarPeriod from 'Components/ToolbarPeriod.vue';
+Vue.component('ToolbarPeriod', ToolbarPeriod);
+import ToolbarColorItems from 'Components/ToolbarColorItems.vue';
+Vue.component('ToolbarColorItems', ToolbarColorItems);
+import ToolbarPeriodB from 'Components/ToolbarPeriodB.vue';
+Vue.component('ToolbarPeriodB', ToolbarPeriodB);
+import ToolbarPhases from 'Components/ToolbarPhases.vue';
+Vue.component('ToolbarPhases', ToolbarPhases);
+import ToolbarOptions from 'Components/ToolbarOptions.vue';
+Vue.component('ToolbarOptions', ToolbarOptions);
+import ToolbarWeeks from 'Components/ToolbarWeeks.vue';
+Vue.component('ToolbarWeeks', ToolbarWeeks);
+import DetailTabs from 'Components/Tabs.vue';
+Vue.component('DetailTabs', DetailTabs);
+import Toggle from 'Components/Toggle.vue';
+Vue.component('Toggle', Toggle);
 //Views ----------------------------------------
 import App from 'App/App.vue';
-var Routes = new Router({
-  linkActiveClass: 'active',
-  mode: 'history',
-  routes: [
-    { path: '/', redirect: '/Dashboard' },
-    { path: '/Dashboard',           component: () => import('Views/Dashboard/View.vue') },
-    { path: '/Analysis/Voltage',    component: () => import('Views/Analysis_Voltage/View.vue') },
-    { path: '/Analysis/Current',    component: () => import('Views/Analysis_Current/View.vue') },
-    { path: '/Analysis/Power',      component: () => import('Views/Analysis_Power/View.vue') },
-    { path: '/Analysis/Energy',     component: () => import('Views/Analysis_Energy/View.vue') },
-    { path: '/Analysis/Frequency',  component: () => import('Views/Analysis_Frequency/View.vue') },
-    { path: '/Analysis/200MS',      component: () => import('Views/Analysis_200MS/View.vue') },
-    { path: '/Events/ITIC',         component: () => import('Views/Events_ITIC/View.vue') },
-    { path: '/Events/Disturbances', component: () => import('Views/Events_Disturbances/View.vue') },
-    { path: '/Events/EN50160',      component: () => import('Views/Events_EN50160/View.vue') },
-    { path: '/Events/Alarms',       component: () => import('Views/Events_Alarms/View.vue') },
-    { path: '/Stats/Costs',         component: () => import('Views/Stats_Costs/View.vue') },
-    { path: '/Stats/Heatmap',       component: () => import('Views/Stats_Heatmap/View.vue') },
-    { path: '/Stats/Distribution',  component: () => import('Views/Stats_Distribution/View.vue') },
-    { path: '/Settings',            component: () => import('Views/Settings/View.vue') },
-    { path: '/About',               component: () => import('Views/About/View.vue') },
-    { path: '*',                    component: () => import('Views/PageNotFound.vue') }
-  ]
-});
+import Dashboard from 'Views/Dashboard/View.vue';
+import AnalysisVoltage from 'Views/Analysis_Voltage/View.vue';
+import AnalysisCurrent from 'Views/Analysis_Current/View.vue';
+import AnalysisPower from 'Views/Analysis_Power/View.vue';
+import AnalysisEnergy from 'Views/Analysis_Energy/View.vue';
+import AnalysisFrequency from 'Views/Analysis_Frequency/View.vue';
+import Analysis200MS from 'Views/Analysis_200MS/View.vue';
+import EventsITIC from 'Views/Events_ITIC/View.vue';
+import EventsDisturbances from 'Views/Events_Disturbances/View.vue';
+import EventsEN50160 from 'Views/Events_EN50160/View.vue';
+import EventsAlarms from 'Views/Events_Alarms/View.vue';
+import StatsCosts from 'Views/Stats_Costs/View.vue';
+import StatsHeatmap from 'Views/Stats_Heatmap/View.vue';
+import StatsDistribution from 'Views/Stats_Distribution/View.vue';
+import Settings from 'Views/Settings/View.vue';
+import About from 'Views/About/View.vue';
+import PageNotFound from 'Views/PageNotFound.vue';
 var Main = new Vue({
   i18n: new VueI18n( { locale: 'es', fallbackLocale: 'en'} ),
   el: '#app',
   data: { Loading: false },
   render: h => h(App),
-  router: Routes
-});
-Routes.beforeEach((to, from, next) => {
-  Main.Loading = true;
-  next();
-});
-Routes.afterEach(() => {
-  Main.Loading = false;
+  router: new Router({
+    linkActiveClass: 'active',
+    mode: 'history',
+    routes: [
+      { path: '/', redirect: '/Dashboard' },
+      { path: '/Dashboard',           component: Dashboard },
+      { path: '/Analysis/Voltage',    component: AnalysisVoltage },
+      { path: '/Analysis/Current',    component: AnalysisCurrent },
+      { path: '/Analysis/Power',      component: AnalysisPower },
+      { path: '/Analysis/Energy',     component: AnalysisEnergy },
+      { path: '/Analysis/Frequency',  component: AnalysisFrequency },
+      { path: '/Analysis/200MS',      component: Analysis200MS },
+      { path: '/Events/ITIC',         component: EventsITIC },
+      { path: '/Events/Disturbances', component: EventsDisturbances },
+      { path: '/Events/EN50160',      component: EventsEN50160 },
+      { path: '/Events/Alarms',       component: EventsAlarms },
+      { path: '/Stats/Costs',         component: StatsCosts },
+      { path: '/Stats/Heatmap',       component: StatsHeatmap },
+      { path: '/Stats/Distribution',  component: StatsDistribution },
+      { path: '/Settings',            component: Settings },
+      { path: '/About',               component: About },
+      { path: '*',                    component: PageNotFound }
+    ]
+  })
 });
