@@ -1,4 +1,3 @@
-__webpack_public_path__ = window.location.pathname;
 //Main libs and style --------------------------------------------------------------------------------------------------
 import jQuery from 'jquery';
 import Bootstrap from 'bootstrap';
