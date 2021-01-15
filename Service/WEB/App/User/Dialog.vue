@@ -81,6 +81,7 @@
 </template>
 
 <script>
+  import moment from 'moment';
   import PassDlg from './Password.vue';
   export default {
     props: { user: Object },
