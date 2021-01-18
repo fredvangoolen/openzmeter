@@ -19,6 +19,7 @@
 #include "cctz/time_zone.h"
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
+#include "DatabaseQueue.h"
 #include "Worker.h"
 #include "AnalyzerSoftFFTs.h"
 #include "AnalyzerSoftRates.h"
@@ -48,6 +49,7 @@ class AnalyzerSoft : public Analyzer {
     const uint8_t              pCurrentChannels;         //Current channels
     const AnalyzerMode         pMode;                    //Operation mode
   private : //Internal classes
+    DatabaseQueue             *pDB;                      //Database connection
     AnalyzerSoftSync          *pSync;                    //Remote sync object
     AnalyzerSoftMQTT          *pMQTT;                    //MQTT Control object
     AnalyzerSoftRates         *pRates;                   //Rate handle class

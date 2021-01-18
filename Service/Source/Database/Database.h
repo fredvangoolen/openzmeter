@@ -25,14 +25,11 @@
 using namespace std;
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
-class Database final {
+class Database {
   private :
-//    string lastquery;
     PGconn      *pDBConn;
     PGresult    *pResult;
     uint64_t     pLastTime;
-//    bool         pLoadedRow;
-//    uint32_t     pRowPos;
   private :
     void     ClearAsync();
   public :
@@ -51,17 +48,15 @@ class Database final {
     string   BindID(const string &string) const;
   public :
     Database(const string &schema = "public", const bool create = false);
-    ~Database();
+    virtual ~Database();
     bool     ExecSentenceNoResult(const string &sql);
     bool     ExecSentenceAsyncResult(const string &sql);
     bool     ExecResource(const string &file);
     bool     FecthRow();
-//    bool     LoadedRow();
     string   ResultString(const string &name) const;
     float    ResultFloat(const string &name) const;
     uint64_t ResultUInt64(const string &name) const;
     json     ResultJSON(const string &name) const;
     uint64_t LastUse() const;
-//    uint32_t RowIndex() const;
 };
 //----------------------------------------------------------------------------------------------------------------------

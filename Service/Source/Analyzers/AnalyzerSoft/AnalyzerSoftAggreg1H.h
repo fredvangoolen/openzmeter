@@ -43,7 +43,7 @@ class AnalyzerSoftAggreg1H final : public AnalyzerSoftAggreg {
   private :
     float CalcChange(const float in, const float reference);
   public :
-    AnalyzerSoftAggreg1H(const string &serial, const Analyzer::AnalyzerMode mode);
+    AnalyzerSoftAggreg1H(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db);
     ~AnalyzerSoftAggreg1H();
     void Config(const float nominalVoltage, const float nominalFreq);
     void Accumulate(const AnalyzerSoftAggreg200MS *src);

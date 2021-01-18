@@ -15,17 +15,16 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAggreg15M.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAggreg15M::AnalyzerSoftAggreg15M(const string &serial, const Analyzer::AnalyzerMode mode) : AnalyzerSoftAggreg(serial, mode) {
+AnalyzerSoftAggreg15M::AnalyzerSoftAggreg15M(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db) : AnalyzerSoftAggreg(serial, mode, db) {
   Reset();
 }
 AnalyzerSoftAggreg15M::~AnalyzerSoftAggreg15M() {
 }
 void AnalyzerSoftAggreg15M::Save() const {
-  Database DB(pSerial);
-  DB.ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" +
-  DB.Bind(pTimestamp) + ", " +
-  DB.Bind(pActive_Power, pVoltageChannels) + ", " +
-  DB.Bind(pReactive_Power, pVoltageChannels) + ")");
+  pDB->ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" +
+  pDB->Bind(pTimestamp) + ", " +
+  pDB->Bind(pActive_Power, pVoltageChannels) + ", " +
+  pDB->Bind(pReactive_Power, pVoltageChannels) + ")");
 }
 void AnalyzerSoftAggreg15M::Reset() {
   pSamples = 0;
