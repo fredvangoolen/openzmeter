@@ -26,7 +26,7 @@ const     uint8_t AnalyzerSoftAggreg1H::HarmonicsAllowedLen;
 constexpr float   AnalyzerSoftAggreg1H::UnbalanceRanges[];
 const     uint8_t AnalyzerSoftAggreg1H::UnbalanceRangesLen;
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAggreg1H::AnalyzerSoftAggreg1H(const string &serial, const Analyzer::AnalyzerMode mode) : AnalyzerSoftAggreg(serial, mode) {
+AnalyzerSoftAggreg1H::AnalyzerSoftAggreg1H(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db) : AnalyzerSoftAggreg(serial, mode, db) {
   pNominalFrequency = 0;
   pNominalVoltage   = 0;
   pMutex            = PTHREAD_MUTEX_INITIALIZER;
@@ -41,20 +41,19 @@ void AnalyzerSoftAggreg1H::Config(const float nominalVoltage, const float nomina
   pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoftAggreg1H::Save() const {
-  Database DB(pSerial);
-  DB.ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) VALUES(" +
-  DB.Bind(pTimestamp) + ", " +
-  DB.Bind(pVoltage, pVoltageChannels) + ", " +
-  DB.Bind(pCurrent, pCurrentChannels) + ", " +
-  DB.Bind(pFrequency) + ", " +
-  DB.Bind(pFlag) + ", " +
-  DB.Bind(pActive_Power, pVoltageChannels) + ", " +
-  DB.Bind(pReactive_Power, pVoltageChannels) + ", " +
-  DB.Bind(pStatsVoltage, VoltageRangesLen) + ", " +
-  DB.Bind(pStatsFrequency, FrequencyRangesLen) + ", " +
-  DB.Bind(pStatsTHD, THDRangesLen) + ", " +
-  DB.Bind(pStatsHarmonics, 2) + ", " +
-  DB.Bind(pStatsUnbalance, UnbalanceRangesLen) + ")");
+  pDB->ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) VALUES(" +
+  pDB->Bind(pTimestamp) + ", " +
+  pDB->Bind(pVoltage, pVoltageChannels) + ", " +
+  pDB->Bind(pCurrent, pCurrentChannels) + ", " +
+  pDB->Bind(pFrequency) + ", " +
+  pDB->Bind(pFlag) + ", " +
+  pDB->Bind(pActive_Power, pVoltageChannels) + ", " +
+  pDB->Bind(pReactive_Power, pVoltageChannels) + ", " +
+  pDB->Bind(pStatsVoltage, VoltageRangesLen) + ", " +
+  pDB->Bind(pStatsFrequency, FrequencyRangesLen) + ", " +
+  pDB->Bind(pStatsTHD, THDRangesLen) + ", " +
+  pDB->Bind(pStatsHarmonics, 2) + ", " +
+  pDB->Bind(pStatsUnbalance, UnbalanceRangesLen) + ")");
 }
 void AnalyzerSoftAggreg1H::Reset() {
   pSamples = 0;

@@ -15,8 +15,9 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoft.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAggreg::AnalyzerSoftAggreg(const string &serial, const Analyzer::AnalyzerMode mode) {
+AnalyzerSoftAggreg::AnalyzerSoftAggreg(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db) {
   pSerial = serial;
+  pDB     = db;
   pVoltageChannels = (mode == Analyzer::PHASE1) ? 1 : 3;
   pCurrentChannels = (mode == Analyzer::PHASE1) ? 1 : (mode == Analyzer::PHASE3) ? 3 : 4;
   Reset();

@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAggreg10M.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAggreg10M::AnalyzerSoftAggreg10M(const string &serial, const Analyzer::AnalyzerMode mode) : AnalyzerSoftAggreg(serial, mode) {
+AnalyzerSoftAggreg10M::AnalyzerSoftAggreg10M(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db) : AnalyzerSoftAggreg(serial, mode, db) {
   Reset();
 }
 AnalyzerSoftAggreg10M::~AnalyzerSoftAggreg10M() {
@@ -26,13 +26,12 @@ void AnalyzerSoftAggreg10M::Accumulate(const AnalyzerSoftAggreg200MS *src) {
   AnalyzerSoftAggreg::Accumulate(src);
 }
 void AnalyzerSoftAggreg10M::Save() const {
-  Database DB(pSerial);
-  DB.ExecSentenceNoResult("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" +
-  DB.Bind(pTimestamp) + ", " +
-  DB.Bind(pVoltage, pVoltageChannels) + ", " +
-  DB.Bind(pCurrent, pCurrentChannels) + ", " +
-  DB.Bind(pFrequency) + ", " +
-  DB.Bind(pFlag) + ")");
+  pDB->ExecSentenceNoResult("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" +
+  pDB->Bind(pTimestamp) + ", " +
+  pDB->Bind(pVoltage, pVoltageChannels) + ", " +
+  pDB->Bind(pCurrent, pCurrentChannels) + ", " +
+  pDB->Bind(pFrequency) + ", " +
+  pDB->Bind(pFlag) + ")");
 }
 void AnalyzerSoftAggreg10M::Reset() {
   pSamples = 0;

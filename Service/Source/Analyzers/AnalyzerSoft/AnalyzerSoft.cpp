@@ -37,9 +37,9 @@
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pMode(mode) {
-  Database DB(id, true);
   LogFile::Debug("Creating AnalyzerSoft database tables");
-  DB.ExecResource("SQL/Database_AnalyzerSoft.sql");
+  pDB = new DatabaseQueue(id, true);
+  pDB->ExecResource("SQL/Database_AnalyzerSoft.sql");
   pMutex          = PTHREAD_MUTEX_INITIALIZER;
   pFFTs           = new AnalyzerSoftFFTs(mode);
   pMQTT           = new AnalyzerSoftMQTT(pSerial);
@@ -49,12 +49,12 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pSync           = new AnalyzerSoftSync(this);
   pInputBlock     = new AnalyzerSoftBlock(mode, samplerate);
   pFrequency      = new AnalyzerSoftFrequency(samplerate);
-  pAggreg200MS    = new AnalyzerSoftAggreg200MS(pSerial, mode);
-  pAggreg3S       = new AnalyzerSoftAggreg3S(pSerial, mode);
-  pAggreg1M       = new AnalyzerSoftAggreg1M(pSerial, mode);
-  pAggreg10M      = new AnalyzerSoftAggreg10M(pSerial, mode);
-  pAggreg15M      = new AnalyzerSoftAggreg15M(pSerial, mode);
-  pAggreg1H       = new AnalyzerSoftAggreg1H(pSerial, mode);
+  pAggreg200MS    = new AnalyzerSoftAggreg200MS(pSerial, mode, pDB);
+  pAggreg3S       = new AnalyzerSoftAggreg3S(pSerial, mode, pDB);
+  pAggreg1M       = new AnalyzerSoftAggreg1M(pSerial, mode, pDB);
+  pAggreg10M      = new AnalyzerSoftAggreg10M(pSerial, mode, pDB);
+  pAggreg15M      = new AnalyzerSoftAggreg15M(pSerial, mode, pDB);
+  pAggreg1H       = new AnalyzerSoftAggreg1H(pSerial, mode, pDB);
   pStorage        = new AnalyzerSoftStorage(pSerial, mode);
   pAnalyzerWorker = new Worker((mode == PHASE1) ? "Analyzer_1P" : (mode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N", [&](void *a) { this->Analyzer_Func(); });
   MessageLoop::RegisterListener("AnalyzerSoft_" + pSerial + "_PeriodicTasks", [&]() { this->PeriodicTasks(); }, 60000);
@@ -78,6 +78,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   delete pAlarms;
   delete pRates;
   delete pFFTs;
+  delete pDB;
   LogFile::Info("Analyzer with serial '%s' stopped", pSerial.c_str());
 }
 bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
