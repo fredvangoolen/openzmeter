@@ -111,13 +111,13 @@ void *ESIOSManager::Thread_Func(void *params) {
     string   Token = pToken;
     uint64_t To    = pSyncDate + 863999999;
     pthread_mutex_unlock(&pMutex);
-    LogFile::Debug("ESIOS request start (Up to %" PRIu64 ")", To);
+    LogFile::Debug("ESIOSManager", "ESIOS request start (Up to %" PRIu64 ")", To);
     bool     Fail   = false;
     for(uint16_t V = 0; (Fail == false) && (V < pVariables.size()); V++) Fail = !FetchIndicator(Client, Token, pVariables[V], To);
     if(Fail == true) {
       usleep(1000000);
     } else {
-      LogFile::Debug("ESIOS request finished");
+      LogFile::Debug("ESIOSManager", "ESIOS request finished");
       pthread_mutex_lock(&pMutex);
       if(pSyncDate < (Tools::GetTime64() + 864000000)) pSyncDate = pSyncDate + 864000000;
       pthread_mutex_unlock(&pMutex);

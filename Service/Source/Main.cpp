@@ -32,7 +32,6 @@
 #include "TariffManager.h"
 #include "ConfigFile.h"
 #include "UpdateManager.h"
-#include "Status.h"
 #include "System.h"
 #include "MODBus.h"
 #include "DatabasePool.h"
@@ -42,7 +41,7 @@
 volatile bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
-  LogFile::Info("Shutting down. Please wait while all task ends...");
+  LogFile::Info("System", "Shutting down. Please wait while all task ends...");
   Terminate = true;
 }
 int main(int argc, char** argv) {
@@ -78,7 +77,6 @@ int main(int argc, char** argv) {
   DatabasePool     DBPool;                         // Init database pool
   HTTPServer       HTTPServer;                     // Init WEB service
   MessageLoop      Loop;                           // Create application message loop
-  Status           StatusObj;                      // Create status manager
   System           Sys;                            // System status and actions
 
   BluetoothManager BT;                             // Create bluetooth manager

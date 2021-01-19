@@ -71,6 +71,6 @@ void HTTPRequestPoll::PeriodicTasks() {
     delete Tmp;
   }
   pthread_mutex_unlock(&pMutex);
-  LogFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)", pFreeWorkers.size(), pRunningWorkers);
+  LogFile::Debug("HTTPServer", "Adjusted HTTP workers pool to %d connections (plus %u in use)", pFreeWorkers.size(), pRunningWorkers);
 }
 //----------------------------------------------------------------------------------------------------------------------

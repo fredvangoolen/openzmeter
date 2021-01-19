@@ -61,12 +61,12 @@ class DeviceV1 final : public Device {
   private :
     static bool  Register();
     static void  GetInstances();
-    static void *Capture_Thread(void *args);
     static void  ReadCallback(struct libusb_transfer *transfer);
     static int   PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data);
     static json  CheckConfig(const json &config);
   private :
     DeviceV1(const string &serial, const uint16_t version);
+    void    *Thread();
     void     ClearAnalyzers();
     void     Configure(const json &config);
     uint32_t AnalyzersCount();

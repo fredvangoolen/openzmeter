@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include "cpp-httplib/httplib.h"
+#include "nlohmann/json.hpp"
 //#include "telegrab/telegrab.hpp"
 #include "cctz/time_zone.h"
 #include "nlohmann/json.hpp"
@@ -24,6 +25,7 @@
 using namespace std;
 using namespace cctz;
 using namespace httplib;
+using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 #define TELEGRAM_POLLING_SEC    3
 #define TELEGRAM_UPDATE_LIMIT 100

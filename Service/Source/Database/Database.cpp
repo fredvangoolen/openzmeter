@@ -30,7 +30,6 @@
 Database::Database(const string &schema, const bool create) {
   pDBConn       = NULL;
   pResult       = NULL;
-//  pLoadedRow    = false;
   for(uint8_t Retry = 0; Retry < 10; Retry++) {
     pDBConn = DatabasePool::PopConnection();
     if(pDBConn != NULL) break;
@@ -56,30 +55,19 @@ Database::~Database() {
   if(pDBConn != NULL) DatabasePool::PushConnection(pDBConn);
 }
 bool Database::FecthRow() {
-//  pLoadedRow = false;
   if(pResult != NULL) {
     PQclear(pResult);
     pResult = NULL;
   }
   if(pDBConn == NULL) return false;
   pResult = PQgetResult(pDBConn);
-  if((pResult != NULL) && (PQresultStatus(pResult) == PGRES_SINGLE_TUPLE)) {
-//    pLoadedRow = true;
-//    pRowPos++;
-    return true;
-  }
+  if((pResult != NULL) && (PQresultStatus(pResult) == PGRES_SINGLE_TUPLE)) return true;
   if(pResult != NULL) {
     PQclear(pResult);
     pResult = NULL;
   }
   return false;
 }
-//bool Database::LoadedRow() {
-//  return pLoadedRow;
-//}
-//uint32_t Database::RowIndex() const {
-//  return pRowPos;
-//}
 bool Database::ExecResource(const string &file) {
   size_t Len;
   ClearAsync();
@@ -105,10 +93,9 @@ bool Database::ExecSentenceNoResult(const string &sql) {
 bool Database::ExecSentenceAsyncResult(const string &sql) {
   if(pDBConn == NULL) return false;
   ClearAsync();
-//  lastquery = sql;
   if(PQsendQuery(pDBConn, sql.c_str()) == 0) {
     char *Save;
-    LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LogFile::Error("Database", "Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     printf("%s\n", sql.c_str());
     return false;
   }
@@ -117,7 +104,6 @@ bool Database::ExecSentenceAsyncResult(const string &sql) {
     LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     return false;
   }
-//  pRowPos = 0;
   return true;
 }
 void Database::ClearAsync() {

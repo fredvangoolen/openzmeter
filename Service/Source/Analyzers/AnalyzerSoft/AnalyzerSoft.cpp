@@ -27,7 +27,6 @@
 #include "AnalyzerSoft.h"
 #include "ConfigFile.h"
 #include "LogFile.h"
-#include "Status.h"
 #include "Telegram.h"
 #include "MessageLoop.h"
 #include "URL.h"
@@ -37,11 +36,11 @@
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pMode(mode) {
-  LogFile::Debug("Creating AnalyzerSoft database tables");
+  LogFile::Debug("AnalyzerSoft", "Creating AnalyzerSoft database tables");
   pDB = new DatabaseQueue(id, true);
   pDB->ExecResource("SQL/Database_AnalyzerSoft.sql");
   pMutex          = PTHREAD_MUTEX_INITIALIZER;
-  pFFTs           = new AnalyzerSoftFFTs(mode);
+  pFFTs           = new AnalyzerSoftFFTs(pSerial, mode);
   pMQTT           = new AnalyzerSoftMQTT(pSerial);
   pRates          = new AnalyzerSoftRates(pSerial);
   pAlarms         = new AnalyzerSoftAlarms(pMQTT, pSerial);
@@ -294,7 +293,7 @@ void AnalyzerSoft::Analyzer_Func() {
   }
   pMQTT->PublishAggreg("200MS", pAggreg200MS);
   pAlarms->Wait();
-  if(pAggreg200MS->Flag() == true) Status::SetValue("/Last_Event", pAggreg200MS->Timestamp());
+  if(pAggreg200MS->Flag() == true) LogFile::SetValue(pSerial.c_str(), "/Last_Event", pAggreg200MS->Timestamp());
   pNowDataLock.ProviderWait();
   LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")", pSerial.c_str(), Tools::GetTime64() - Start, pInputBlock->Sequence(), pAggreg200MS->Timestamp());
   pAggreg200MS->Reset();

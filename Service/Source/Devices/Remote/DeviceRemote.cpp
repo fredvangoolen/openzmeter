@@ -33,14 +33,14 @@ bool DeviceRemote::Register() {
   return true;
 }
 void DeviceRemote::GetInstances() {
-  LogFile::Info("Adding 'Remote' device driver instance with serial 'REMOTE'");
+  LogFile::Info("REMOTE", "Adding 'Remote' device driver instance with serial 'REMOTE'");
   DeviceManager::AddDevice(new DeviceRemote());
 }
 DeviceRemote::DeviceRemote() : Device("REMOTE", "Remote", "Allow repplication of remote openZmeter devices in local machine") {
   Configure(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
 }
 DeviceRemote::~DeviceRemote() {
-  LogFile::Info("Stopping device with serial '%s'", pSerial.c_str());
+  LogFile::Info("REMOTE", "Stopping device with serial '%s'", pSerial.c_str());
   HTTPServer::UnregisterCallback("setRemote");
   HTTPServer::UnregisterCallback("getRemote");
   pthread_rwlock_wrlock(&pLocks);
@@ -51,7 +51,7 @@ DeviceRemote::~DeviceRemote() {
     pAnalyzers.erase(Analyzer);
   }
   pthread_rwlock_unlock(&pLocks);
-  LogFile::Info("Device with serial '%s' stopped", pSerial.c_str());
+  LogFile::Info("REMOTE", "Device with serial '%s' stopped", pSerial.c_str());
 }
 uint32_t DeviceRemote::AnalyzersCount() {
   return pAnalyzers.size();
@@ -69,11 +69,11 @@ void DeviceRemote::Configure(const json &config) {
   pthread_rwlock_wrlock(&pLocks);
   bool Enabled = config["Enabled"];
   if((pEnabled == false) && (Enabled == true)) {
-    LogFile::Info("Starting 'Remote' driver");
+    LogFile::Info("REMOTE", "Starting 'Remote' driver");
     HTTPServer::RegisterCallback("setRemote", SetRemoteCallback, { "X-Sequence", "X-Analyzer", "X-Status", "Content-Type" });
     HTTPServer::RegisterCallback("getRemote", GetRemoteCallback);
   } else if((pEnabled == true) && (Enabled == false)) {
-    LogFile::Info("Stopping 'Remote' driver...");
+    LogFile::Info("REMOTE", "Stopping 'Remote' driver...");
     HTTPServer::UnregisterCallback("setRemote");
     HTTPServer::UnregisterCallback("getRemote");
     while(pAnalyzers.size() > 0) {
@@ -118,7 +118,7 @@ void DeviceRemote::GetRemoteCallback(const json &params, Response &response) {
   }
   pAnalyzers.insert( { Serial, Analyzer } );
   pthread_rwlock_unlock(&pLocks);
-  LogFile::Info("Added remote analyzer '%s'", Serial.c_str());
+  LogFile::Info("REMOTE", "Added remote analyzer '%s'", Serial.c_str());
   pthread_rwlock_rdlock(&pLocks);
   Analyzer->GetRemote(params, response);
   pthread_rwlock_unlock(&pLocks);

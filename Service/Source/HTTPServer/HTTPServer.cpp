@@ -57,17 +57,17 @@ HTTPServer::HTTPServer() {
   MessageLoop::RegisterListener("HTTPServer_PeriodicTasks", PeriodicTasks, 60000);
   if(pthread_create(&pThread, NULL, [](void *params) { return ((HTTPServer*)params)->Thread(); }, (void*)this) != 0) {
     pThread = 0;
-    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  } else {
-    pthread_setname_np(pThread, "HTTPServer");
+    LogFile::Error("HTTPServer", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    return;
   }
+  if(pthread_setname_np(pThread, "HTTPServer") != 0) LogFile::Error("HTTPServer", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 HTTPServer::~HTTPServer() {
-  LogFile::Debug("Stopping HTTPServer");
+  LogFile::Debug("HTTPServer", "Stopping HTTPServer");
   MessageLoop::UnregisterListener("HTTPServer_PeriodicTasks");
   stop();
   if(pThread != 0) pthread_join(pThread, NULL);
-  LogFile::Debug("HTTPServer stopped");
+  LogFile::Debug("HTTPServer", "HTTPServer stopped");
 }
 void HTTPServer::PeriodicTasks() {
   if(Tools::GetTime64() < 1296000000) return;
@@ -76,8 +76,8 @@ void HTTPServer::PeriodicTasks() {
 }
 void *HTTPServer::Thread() {
   nice(10);
-  LogFile::Info("HTTP server starting on port %hu with relative path '%s'", pPort, pRelativePath.c_str());
-  if(listen("0.0.0.0", pPort) == false) LogFile::Error("HTTP port (%hu) already in use", pPort);
+  LogFile::Info("HTTPServer", "HTTP server starting on port %hu with relative path '%s'", pPort, pRelativePath.c_str());
+  if(listen("0.0.0.0", pPort) == false) LogFile::Error("HTTPServer", "HTTP port (%hu) already in use", pPort);
   return NULL;
 }
 void HTTPServer::FillResponse(Response &response, const string &body, const char *mime, const int status) {
@@ -128,7 +128,7 @@ const char *HTTPServer::MimeType(const string &file) {
   } else if((FileNameLen >= 5) && (file.compare(FileNameLen - 3, 3, ".md")) == 0) {
     return "text/markdown";
   }
-  LogFile::Debug("No mimetype defined for request '%s'", file.c_str());
+  LogFile::Debug("HTTPServer", "No mimetype defined for request '%s'", file.c_str());
   return "text/plain";
 }
 string HTTPServer::PatchFile(const string &file, const string &find, const string &replace) {
@@ -162,9 +162,8 @@ void HTTPServer::LogInCallback(const json &params, Response &response) {
     if(DB.FecthRow()) response.set_header("Set-Cookie", "SESSION=" + DB.ResultString("id"));
     if(UpdateLastLogin) DB.ExecSentenceNoResult("UPDATE users SET lastlogin = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(User));
     return FillResponse(response, Response.dump(), "application/json", HTTP_OK);
-  } else {
-    return FillResponse(response, "", "application/json", HTTP_UNAUTHORIZED);
   }
+  return FillResponse(response, "", "application/json", HTTP_UNAUTHORIZED);
 }
 void HTTPServer::LogOutCallback(const Request &request, Response &response) {
   if(request.has_header("Cookie")) {
@@ -180,7 +179,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   string URL      = string(request.path).erase(0, pRelativePath.size());
   size_t Size     = 0;
   string UserName = "";
-  LogFile::Debug("HTTP GET '%s'", URL.c_str());
+  LogFile::Debug("HTTPServer", "HTTP GET '%s'", URL.c_str());
   const char *Tmp = (const char*)ResourceFile::GetFile(string("WEB/") + URL, &Size);
   if(Size != 0) return FillResponse(response, Tmp, Size, MimeType(URL), HTTP_OK);
   if(request.has_header("Cookie")) {
@@ -221,7 +220,7 @@ void HTTPServer::HandlePost(const Request &request, Response &response, const Co
     }
     return User;
   };
-  LogFile::Debug("HTTP POST '%s'", URL.c_str());
+  LogFile::Debug("HTTPServer", "HTTP POST '%s'", URL.c_str());
   pthread_rwlock_rdlock(&pLock);
   auto Callback2 = pCallbacks2.find(URL);
   if(Callback2 != pCallbacks2.end()) {

@@ -32,6 +32,7 @@ class AnalyzerSoftFFTs final {
     static pthread_mutex_t pFFTMutex;             //Planer mutex
     static uint32_t        pFFTRunning;           //Currently running FFTs
   private :
+    string                 pSerial;               //Parent serial number
     uint8_t                pVoltageChannels;      //Avaliable voltage channels
     uint8_t                pCurrentChannels;      //Avaliable current channels
     Worker                *pVoltageFFT[3];        //Voltage FFT worker
@@ -48,7 +49,7 @@ class AnalyzerSoftFFTs final {
   public :
    static float CalcAngle(const Complex_t &a, const Complex_t &b);
   public :
-    AnalyzerSoftFFTs(const Analyzer::AnalyzerMode mode);
+    AnalyzerSoftFFTs(const string &serial, const Analyzer::AnalyzerMode mode);
     ~AnalyzerSoftFFTs();
     void      Config(const uint8_t inCycles);
     void      Run(const AnalyzerSoftBlock *block);

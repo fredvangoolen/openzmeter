@@ -13,45 +13,21 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "RWLocks.h"
-#include "stdio.h"
+#pragma once
+#include <termios.h>
+#include <string>
 //----------------------------------------------------------------------------------------------------------------------
-RWLocks::RWLocks() {
-  pMutex = PTHREAD_MUTEX_INITIALIZER;
-  pReadersCondition = PTHREAD_COND_INITIALIZER;
-  pWritersCondition = PTHREAD_COND_INITIALIZER;
-  pWriters          = 0;
-  pReaders          = 0;
-  pWriter           = false;
-}
-RWLocks::~RWLocks() {
-}
-void RWLocks::ReadLock() {
-  pthread_mutex_lock(&pMutex);
-  while((pWriters > 0) || (pWriter == true)) pthread_cond_wait(&pReadersCondition, &pMutex);
-  pReaders++;
-  pthread_mutex_unlock(&pMutex);
-}
-void RWLocks::WriteLock() {
-  pthread_mutex_lock(&pMutex);
-  pWriters++;
-  while((pReaders > 0) || (pWriter == true)) pthread_cond_wait(&pWritersCondition, &pMutex);
-  pWriters--;
-  pWriter = true;
-  pthread_mutex_unlock(&pMutex);
-}
-void RWLocks::Unlock() {
-  pthread_mutex_lock(&pMutex);
-  if(pWriter == true) {
-    pWriter = false;
-  } else {
-    pReaders--;
-  }
-  if(pWriters > 0) {
-    pthread_cond_signal(&pWritersCondition);
-  } else {
-    pthread_cond_broadcast(&pReadersCondition);
-  }
-  pthread_mutex_unlock(&pMutex);
-}
+using namespace std;
+//----------------------------------------------------------------------------------------------------------------------
+class Tools {
+  private :
+    static termios pConsoleAttr;
+  private :
+    static void ResetConsole();
+  public :
+    static void      DisableEcho();
+    static void      RunDaemon();
+    static uint64_t  GetTime64();
+    static string    GetUUID();
+};
 //----------------------------------------------------------------------------------------------------------------------

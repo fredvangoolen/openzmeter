@@ -21,6 +21,7 @@
 #include "Analyzer.h"
 #include "DatabaseQueue.h"
 #include "Worker.h"
+#include "ProviderLocks.h"
 #include "AnalyzerSoftFFTs.h"
 #include "AnalyzerSoftRates.h"
 #include "AnalyzerSoftBlock.h"

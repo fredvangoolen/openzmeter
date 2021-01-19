@@ -13,31 +13,27 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "Status.h"
+#pragma once
+#include <stdint.h>
+#include <pthread.h>
 //----------------------------------------------------------------------------------------------------------------------
-//queue<string>    SysSupport::pSystemActions;
-pthread_rwlock_t  Status::pLock = PTHREAD_RWLOCK_INITIALIZER;
-json              Status::pStatus = json::object();
+using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-Status::Status() {
-}
-Status::~Status() {
-}
-void Status::SetValue(const string &path, const json &value) {
-  pthread_rwlock_wrlock(&pLock);
-  pStatus[json::json_pointer(path)] = value;
-  pthread_rwlock_unlock(&pLock);
-}
-json Status::GetValue(const string &path) {
-  pthread_rwlock_rdlock(&pLock);
-  json Result = pStatus[json::json_pointer(path)];
-  pthread_rwlock_unlock(&pLock);
-  return Result;
-}
-json Status::GetJSON() {
-  pthread_rwlock_rdlock(&pLock);
-  json Result = pStatus;
-  pthread_rwlock_unlock(&pLock);
-  return Result;
-}
-//----------------------------------------------------------------------------------------------------------------------
+class ProviderLocks {
+  //Provider wait until all consumers ends, consumers wait until provider write
+  private :
+    volatile bool     pTerminate;
+    volatile bool     pDataReady;
+    volatile uint32_t pConsumers;
+    pthread_mutex_t   pMutex;
+    pthread_cond_t    pConsumerEnterCond;
+    pthread_cond_t    pConsumerWaitCond;
+    pthread_cond_t    pProducerCond;
+  public :
+    ProviderLocks();
+    ~ProviderLocks();
+    void ProviderWrite();
+    void ProviderWait();
+    bool ConsumerWait(uint32_t timeoutSec);
+    void ConsumerEnds();
+};
