@@ -16,8 +16,7 @@
  #include "AnalyzerSoftMQTT.h"
  #include "URL.h"
  #include "LogFile.h"
- #include "Status.h"
-// ---------------------------------------------------------------------------------------------------------------------
+ // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftMQTT::AnalyzerSoftMQTT(const string &serial) {
   pMutex      = PTHREAD_MUTEX_INITIALIZER;
   pSerial     = serial;
@@ -237,7 +236,7 @@ void *AnalyzerSoftMQTT::Thread() {
       }
       uint64_t Now = Tools::GetTime64();
       if((StatusTimer == 0) || (StatusTimer + 10000) < Now) {
-        json   Msg = Status::GetJSON();
+        json   Msg = LogFile::ToJSON();
         Msg["Online"] = true;
         string TextMsg = Msg.dump();
         string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Status" : pSerial + "/Status";

@@ -46,7 +46,7 @@ void *DatabaseQueue::Thread() {
     if(pTerminate == true) return NULL;
     string Query = pQueue.front();
     pQueue.pop();
-    pthread_mutex_lock(&pMutex);
+    pthread_mutex_unlock(&pMutex);
     Database::ExecSentenceAsyncResult(Query);
   }
   return NULL;

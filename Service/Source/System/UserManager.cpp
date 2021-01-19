@@ -18,7 +18,7 @@
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 UserManager::UserManager() {
-  LogFile::Info("Starting User manager");
+  LogFile::Info("UserManager", "Starting User manager");
   HTTPServer::RegisterCallback("getUsers",        GetUsersCallback);
   HTTPServer::RegisterCallback("getUser",         GetUserCallback);
   HTTPServer::RegisterCallback("setUser",         SetUserCallback);
@@ -27,7 +27,7 @@ UserManager::UserManager() {
   HTTPServer::RegisterCallback("delUser",         DelUserCallback);
 }
 UserManager::~UserManager() {
-  LogFile::Info("Stopping user manager...");
+  LogFile::Info("UserManager", "Stopping user manager...");
   HTTPServer::UnregisterCallback("getVersion");
   HTTPServer::UnregisterCallback("getUsers");
   HTTPServer::UnregisterCallback("getUser");
@@ -35,7 +35,7 @@ UserManager::~UserManager() {
   HTTPServer::UnregisterCallback("setUserPassword");
   HTTPServer::UnregisterCallback("addUser");
   HTTPServer::UnregisterCallback("delUser");
-  LogFile::Info("User manager stoped");
+  LogFile::Info("UserManager", "User manager stoped");
 }
 void UserManager::GetUsersCallback(const json &params, Response &response) {
   string UserName = params["UserName"];

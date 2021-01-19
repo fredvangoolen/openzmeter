@@ -25,11 +25,13 @@
 using namespace std;
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
-int             LogFile::pFile     = 0;
-LogFile::Type   LogFile::pLevel    = LogFile::ERROR;
-bool            LogFile::pConsole  = true;
-pthread_mutex_t LogFile::pMutex    = PTHREAD_MUTEX_INITIALIZER;
-bool            LogFile::pDebug    = false;
+int                                 LogFile::pFile     = 0;
+LogFile::Type                       LogFile::pLevel    = LogFile::ERROR;
+bool                                LogFile::pConsole  = true;
+pthread_rwlock_t                    LogFile::pLock     = PTHREAD_RWLOCK_INITIALIZER;
+pthread_mutex_t                     LogFile::pMutex    = PTHREAD_MUTEX_INITIALIZER;
+bool                                LogFile::pDebug    = false;
+map<string, LogFile::Component_t*>  LogFile::pComponents;
 //----------------------------------------------------------------------------------------------------------------------
 LogFile::LogFile() {
   string Name = "/var/log/openZmeter.log";
@@ -52,37 +54,80 @@ LogFile::~LogFile() {
   if(pFile != -1) close(pFile);
   pthread_mutex_unlock(&pMutex);
 }
+void LogFile::SetValue(const string &comp, const string &prop, const json &value) {
+  pthread_rwlock_rdlock(&pLock);
+  Component_t *Comp   = NULL;
+  auto         CompIt = pComponents.find(comp);
+  if(CompIt != pComponents.end()) {
+    Comp = CompIt->second;
+    pthread_rwlock_wrlock(&Comp->Lock);
+    pthread_rwlock_unlock(&pLock);
+  } else {
+    pthread_rwlock_unlock(&pLock);
+    Comp = new Component_t;
+    Comp->Lock       = PTHREAD_RWLOCK_INITIALIZER;
+    Comp->Properties = json::object();
+    pthread_rwlock_wrlock(&Comp->Lock);
+    pthread_rwlock_wrlock(&pLock);
+    pComponents.insert({comp, Comp});
+    pthread_rwlock_unlock(&pLock);
+  }
+  Comp->Properties[json::json_pointer(prop)] = value;
+  pthread_rwlock_unlock(&Comp->Lock);
+}
+json LogFile::GetValue(const string &comp, const string &prop) {
+  pthread_rwlock_rdlock(&pLock);
+  auto         CompIt = pComponents.find(comp);
+  if(CompIt == pComponents.end()) {
+    pthread_rwlock_unlock(&pLock);
+    return nullptr;
+  }
+  Component_t *Comp = CompIt->second;
+  pthread_rwlock_rdlock(&Comp->Lock);
+  pthread_rwlock_unlock(&pLock);
+  json Result = Comp->Properties[json::json_pointer(prop)];
+  pthread_rwlock_unlock(&Comp->Lock);
+  return Result;
+}
+json LogFile::ToJSON() {
+  return json::object();
+}
+json LogFile::GetComponent(const string &comp) {
+  json Result = json::array();
+  //Busco comp y meto los mensajes
+  return Result;
+}
 void LogFile::EnableDebug() {
   pDebug = true;
 }
-void LogFile::Debug(const char* msg, ...) {
+void LogFile::Debug(const string &comp, const char* msg, ...) {
   va_list args;
   va_start(args, msg);
-  Msg(DEBUG, msg, args);
+  Msg(DEBUG, comp, msg, args);
   va_end(args);
 }
-void LogFile::Info(const char* msg, ...) {
+void LogFile::Info(const string &comp, const char* msg, ...) {
   va_list args;
   va_start(args, msg);
-  Msg(INFO, msg, args);
+  Msg(INFO, comp, msg, args);
   va_end(args);
 }
-void LogFile::Warning(const char* msg, ...) {
+void LogFile::Warning(const string &comp, const char* msg, ...) {
   va_list args;
   va_start(args, msg);
-  Msg(WARNING, msg, args);
+  Msg(WARNING, comp, msg, args);
   va_end(args);
 }
-void LogFile::Error(const char* msg, ...) {
+void LogFile::Error(const string &comp, const char* msg, ...) {
   va_list args;
   va_start(args, msg);
-  Msg(ERROR, msg, args);
+  Msg(ERROR, comp, msg, args);
   va_end(args);
 }
 void LogFile::CloseConsole() {
   pConsole = false;
 }
-void LogFile::Msg(Type type, const char *msg, va_list params) {
+void LogFile::Msg(Type type, const string &comp, const char *msg, va_list params) {
   if((pDebug == false) && (type == DEBUG)) return;
   if(((type > pLevel) || (pFile == -1)) && (pConsole == false)) return;
   char   DateStr[32];

@@ -22,7 +22,8 @@
 pthread_mutex_t     AnalyzerSoftFFTs::pFFTMutex   = PTHREAD_MUTEX_INITIALIZER;
 uint32_t            AnalyzerSoftFFTs::pFFTRunning = 0;
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftFFTs::AnalyzerSoftFFTs(const Analyzer::AnalyzerMode mode) {
+AnalyzerSoftFFTs::AnalyzerSoftFFTs(const string &serial, const Analyzer::AnalyzerMode mode) {
+  pSerial          = serial;
   pVoltageChannels = (mode == Analyzer::PHASE1) ? 1 : 3;
   pCurrentChannels = (mode == Analyzer::PHASE1) ? 1 : (mode == Analyzer::PHASE3) ? 3 : 4;
   for(uint8_t i = 0; i < pVoltageChannels; i++) {
@@ -50,7 +51,7 @@ AnalyzerSoftFFTs::~AnalyzerSoftFFTs() {
   }
   pthread_mutex_lock(&pFFTMutex);
   if(pFFTRunning == 0) {
-    LogFile::Debug("Clearing FFT cached plans");
+    LogFile::Debug(pSerial.c_str(), "Clearing FFT cached plans");
     fftwf_cleanup();
   }
   pthread_mutex_unlock(&pFFTMutex);

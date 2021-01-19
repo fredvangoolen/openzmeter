@@ -27,14 +27,16 @@ Worker::Worker(const string &name, function<void(void*)> callback, int8_t nice) 
   pMutex     = PTHREAD_MUTEX_INITIALIZER;
   pRunParam  = NULL;
   pThread    = 0;
-  pCallback = callback;
+  pCallback  = callback;
   if(pthread_create(&pThread, NULL, [](void *params) { return ((Worker*)params)->Thread(); }, (void*)this) != 0) {
     pThread = 0;
-    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    LogFile::Error("System", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return;
   }
-  if(nice != 0) setpriority(PRIO_PROCESS, pThread, -nice);
-  pthread_setname_np(pThread, name.c_str());
+  if(nice != 0) {
+    if(setpriority(PRIO_PROCESS, pThread, -nice) != 0) LogFile::Error("System", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  }
+  if(pthread_setname_np(pThread, name.c_str()) != 0) LogFile::Error("System", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 Worker::~Worker() {
   pthread_mutex_lock(&pMutex);

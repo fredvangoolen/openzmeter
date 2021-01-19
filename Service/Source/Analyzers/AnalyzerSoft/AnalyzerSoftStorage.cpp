@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftStorage.h"
-#include "Status.h"
+#include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftStorage::AnalyzerSoftStorage(const string &serial, const Analyzer::AnalyzerMode mode) {
   pSerial = serial;
@@ -30,7 +30,7 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
     if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
     uint64_t To = Tools::GetTime64();
     if(Serie == "SYSTEM") {
-      Result["System"] = Status::GetJSON();
+      Result["System"] = LogFile::ToJSON();
     } else if(Serie == "UNREAD_EVENTS") {
       string UserName = params["UserName"];
       Result["Unread_Events"] = json::object();
