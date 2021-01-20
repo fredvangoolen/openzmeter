@@ -32,7 +32,7 @@
 #include "TariffManager.h"
 #include "ConfigFile.h"
 #include "UpdateManager.h"
-#include "System.h"
+#include "SystemManager.h"
 #include "MODBus.h"
 #include "DatabasePool.h"
 #include "MessageLoop.h"
@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
   DatabasePool     DBPool;                         // Init database pool
   HTTPServer       HTTPServer;                     // Init WEB service
   MessageLoop      Loop;                           // Create application message loop
-  System           Sys;                            // System status and actions
+  SystemManager    Sys;                            // System status and actions
 
   BluetoothManager BT;                             // Create bluetooth manager
   WifiManager      Wifi;                           // Create wifi manager

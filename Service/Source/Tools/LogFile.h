@@ -32,7 +32,7 @@ class LogFile final {
     } Message_t;
     typedef struct {
       json                 Properties;
-      map<Type, Message_t> Messages;
+      list<Message_t>      Debug;
       pthread_rwlock_t     Lock;
     } Component_t;
   private :
@@ -45,6 +45,8 @@ class LogFile final {
     static bool                      pDebug;
   private :
     static void Msg(Type type, const string &comp, const char *msg, va_list params);
+    static json GetComponent(Component_t *comp);
+    static json ToJSON(const Message_t &msg);
   public :
     LogFile();
     virtual ~LogFile();

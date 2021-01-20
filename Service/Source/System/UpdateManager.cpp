@@ -16,7 +16,7 @@
 #include "UpdateManager.h"
 #include "LogFile.h"
 #ifdef OPENWRT // ======================================================================================================
-#include "System.h"
+#include "SystemManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 UpdateManager::UpdateManager() {
   LogFile::Info("Starting Update manager");
@@ -33,10 +33,10 @@ void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   int ResultCode = 0;
   if(params.contains("Force") && params["Force"].is_boolean() && (params["Force"] == true)) {
-    System::Exec("opkg update", &ResultCode);
+    SystemManager::Exec("opkg update", &ResultCode);
     if(ResultCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   }
-  string Result = System::Exec("opkg list-upgradable", &ResultCode);
+  string Result = SystemManager::Exec("opkg list-upgradable", &ResultCode);
   if(ResultCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   json Response = json::array();
   size_t Pos = 0;

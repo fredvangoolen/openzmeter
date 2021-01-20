@@ -77,7 +77,7 @@ void LogFile::SetValue(const string &comp, const string &prop, const json &value
 }
 json LogFile::GetValue(const string &comp, const string &prop) {
   pthread_rwlock_rdlock(&pLock);
-  auto         CompIt = pComponents.find(comp);
+  auto CompIt = pComponents.find(comp);
   if(CompIt == pComponents.end()) {
     pthread_rwlock_unlock(&pLock);
     return nullptr;
@@ -90,12 +90,39 @@ json LogFile::GetValue(const string &comp, const string &prop) {
   return Result;
 }
 json LogFile::ToJSON() {
-  return json::object();
+  json Result = json::object();
+  pthread_rwlock_rdlock(&pLock);
+  for(auto Comp : pComponents) Result[Comp.first] = GetComponent(Comp.second);
+  pthread_rwlock_unlock(&pLock);
+  return Result;
+}
+json LogFile::GetComponent(Component_t *comp) {
+  json Result = json::object();
+  pthread_rwlock_rdlock(&comp->Lock);
+  Result["Status"] = comp->Properties;
+  Result["Logs"] = json::object();
+  Result["Logs"]["Debug"] = json::array();
+  for(auto &Msg : comp->Debug) Result["Logs"]["Debug"].push_back(ToJSON(Msg));
+
+
+
+  pthread_rwlock_unlock(&comp->Lock);
+  return Result;
+}
+json LogFile::ToJSON(const Message_t &msg) {
+  json Result = json::object();
+  Result["Time"] = msg.Time;
+  Result["Message"] = msg.Message;
+  return Result;
 }
 json LogFile::GetComponent(const string &comp) {
-  json Result = json::array();
-  //Busco comp y meto los mensajes
-  return Result;
+  pthread_rwlock_rdlock(&pLock);
+  auto CompIt = pComponents.find(comp);
+  if(CompIt == pComponents.end()) {
+    pthread_rwlock_unlock(&pLock);
+    return nullptr;
+  }
+  return GetComponent(CompIt->second);
 }
 void LogFile::EnableDebug() {
   pDebug = true;
