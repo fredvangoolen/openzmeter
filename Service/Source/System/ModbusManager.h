@@ -31,7 +31,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
-class ModbusTCP final {
+class ModbusManager final {
   private :
     typedef struct {
       uint64_t       LastTime;     //Last time event
@@ -73,8 +73,8 @@ class ModbusTCP final {
     static void  GetModbusTCP(const json &params, Response &response);
     static void  SetModbusTCP(const json &params, Response &response);
   public :
-    ModbusTCP();
-    ~ModbusTCP();
+    ModbusManager();
+    ~ModbusManager();
 };
 //#ifndef ModbusTCPSlave_h
 //#define ModbusTCPSlave_h

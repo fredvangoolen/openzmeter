@@ -27,22 +27,29 @@ using namespace cctz;
 using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
 class Rate final : public Tariff {
-  public :
-    string             Name;
-    string             Script;
-    string             PowerCostScript;
-    vector<float>      PowerCost;
-    string             EnergyCostScript;
-    vector<float>      EnergyCost;
-    uint64_t           StartDate;
-    string             PriceSrc;
-    uint64_t           EndDate;
-    vector<uint64_t>   BillingCycles;
-    vector<RateTax>    Taxes;
-    vector<float>      Contracted;
+  private :
+    string             pName;
+    uint8_t            pGroup;
+    string             pID;
+    string             pPowerCostScript;
+    vector<float>      pPowerCost;
+    string             pEnergyCostScript;
+    vector<float>      pEnergyCost;
+    uint64_t           pStartDate;
+    string             pPriceSrc;
+    uint64_t           pEndDate;
+    vector<uint64_t>   pBillingCycles;
+    vector<RateTax>    pTaxes;
+    vector<float>      pContracted;
+    bool               pContractedEqual;
   public :
     static json CheckConfig(const json &config);
   public :
     Rate(const json &config, const time_zone &tz);
+    json GetConfig() const;
+    uint64_t StartDate() const;
+    uint64_t EndDate() const;
+    uint8_t  Group() const;
+  friend class RatesEval;
 };
 // ---------------------------------------------------------------------------------------------------------------------

@@ -14,17 +14,23 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
+#include <string>
 #include "nlohmann/json.hpp"
 // ---------------------------------------------------------------------------------------------------------------------
+using namespace std;
 using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
 class TariffYear final {
-  public :
-    uint16_t     Year;
-    uint16_t     Days[366];
+  private :
+    uint16_t     pYear;
+    uint16_t     pDays[366];
+    uint16_t     pUsedDays;
   public :
     static json CheckConfig(const json &config, const uint16_t dayTypes);
   public :
     TariffYear(const json &config);
+    json     GetConfig() const;
+    uint16_t Year() const;
+  friend class RatesEval;
 };
 // ---------------------------------------------------------------------------------------------------------------------

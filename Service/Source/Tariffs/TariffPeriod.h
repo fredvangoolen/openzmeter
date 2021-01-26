@@ -23,16 +23,18 @@ using namespace std;
 using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
 class TariffPeriod final {
-  public :
-    string                        Name;
-    float                         DefaultPowerCost;
-    float                         DefaultEnergyCost;
-    string                        Color;
-    string                        Script;
-    vector<TariffConcept>         Concepts;
+  private :
+    string                 pName;
+    float                  pDefaultPowerCost;
+    float                  pDefaultEnergyCost;
+    string                 pColor;
+    string                 pScript;
+    vector<TariffConcept>  pConcepts;
   public :
     static json CheckConfig(const json &config);
   public :
     TariffPeriod(const json &config);
+    json GetConfig() const;
+  friend class RatesEval;
 };
 // ---------------------------------------------------------------------------------------------------------------------

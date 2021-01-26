@@ -84,7 +84,7 @@
     },
     methods: {
       SetTitle: function() {
-        if(this.TitleFrame == 0) {
+        if((this.TitleFrame == 0) || (this.analyzer == null)) {
           document.title = "openZmeter";
           this.TitleFrame = 1;
         } else if(this.TitleFrame == 1) {

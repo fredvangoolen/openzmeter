@@ -27,29 +27,27 @@ using namespace cctz;
 class AnalyzerSoftMQTT;
 class AnalyzerSoftAlarms final {
   private :
-    float                           pNominalVoltage;
-    float                           pNominalFrequency;
-    pthread_mutex_t                 pConfigMutex;
-    pthread_mutex_t                 pAlarmsMutex;
-    map<string, AnalyzerSoftAlarm*> pAlarms;
-    string                          pSerial;
-    Worker                         *pWorker;
-    string                          pRunningAggreg;
-    AnalyzerSoftMQTT               *pMQTT;
-    time_zone                       pTimeZone;
+    float                                pNominalVoltage;
+    float                                pNominalFrequency;
+    pthread_rwlock_t                     pLock;
+    multimap<string, AnalyzerSoftAlarm>  pAlarms;
+    string                               pSerial;
+    Worker                              *pWorker;
+    AnalyzerSoftMQTT                    *pMQTT;
+    DatabaseQueue                       *pDB;
+    time_zone                            pTimeZone;
   private :
-    void Alarms_Func(AnalyzerSoftAggreg *aggreg);
+    void Alarms_Func(const string &name, AnalyzerSoftAggreg *params);
   public :
-    AnalyzerSoftAlarms(AnalyzerSoftMQTT *mqtt, const string &serial);
+    static json CheckConfig(const json &config);
+  public :
+    AnalyzerSoftAlarms(const string &serial, AnalyzerSoftMQTT *mqtt, DatabaseQueue *db);
     ~AnalyzerSoftAlarms();
-    void Config(const bool enabled, const float nominalVoltage, const float nominalFreq, const string &tz);
-    void Run(const string &name, const AnalyzerSoftAggreg *params);
+    void Config(const bool enabled, const float nominalVoltage, const float nominalFreq, const string &tz, const json &alarms);
+    void Run(const string &name, AnalyzerSoftAggreg *params);
     void Wait();
-    void GetAlarmsDef(const json &params, Response &response);
     void TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS *aggreg);
-    void AddAlarmDef(const json &params, Response &response);
-    void SetAlarmDef(const json &params, Response &response);
-    void DelAlarmDef(const json &params, Response &response);
+    json GetConfig();
     void GetAlarms(const json &params, Response &response);
     void GetAlarmsRange(const json &params, Response &response);
     void DelAlarm(const json &params, Response &response);

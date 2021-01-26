@@ -23,13 +23,15 @@ using json = nlohmann::json;
 class RateTax final {
   public :
     enum Tax_Type { TAX_PERCENT, TAX_PERCENT_POWER, TAX_PERCENT_ENERGY, TAX_PERCENT_ENERGY_POWER, TAX_FIXED };
-  public :
-    Tax_Type    Type;
-    float       Value;
-    string      Description;
+  private :
+    Tax_Type    pType;
+    float       pValue;
+    string      pDescription;
   public :
     static json CheckConfig(const json &config);
   public :
     RateTax(const json &config);
+    json GetConfig() const;
+  friend class RatesEval;
 };
 // ---------------------------------------------------------------------------------------------------------------------

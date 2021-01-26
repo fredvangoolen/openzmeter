@@ -40,24 +40,19 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("getEvent",        GetEventCallback);
   HTTPServer::RegisterCallback("setEvent",        SetEventCallback);
   HTTPServer::RegisterCallback("delEvent",        DelEventCallback);
-  HTTPServer::RegisterCallback("getAlarmsDef",    GetAlarmsDefCallback);
   HTTPServer::RegisterCallback("testAlarm",       TestAlarmCallback);
-  HTTPServer::RegisterCallback("addAlarmDef",     AddAlarmDefCallback);
-  HTTPServer::RegisterCallback("setAlarmDef",     SetAlarmDefCallback);
-  HTTPServer::RegisterCallback("delAlarmDef",     DelAlarmDefCallback);
   HTTPServer::RegisterCallback("getAlarms",       GetAlarmsCallback);
   HTTPServer::RegisterCallback("getAlarmsRange",  GetAlarmsRangeCallback);
   HTTPServer::RegisterCallback("delAlarm",        DelAlarmCallback);
   HTTPServer::RegisterCallback("delAlarmsRange",  DelAlarmsRangeCallback);
-  HTTPServer::RegisterCallback("getRates",        GetRatesCallback);
-  HTTPServer::RegisterCallback("getRate",         GetRateCallback);
-  HTTPServer::RegisterCallback("addRate",         AddRateCallback);
-  HTTPServer::RegisterCallback("setRate",         SetRateCallback);
-  HTTPServer::RegisterCallback("delRate",         DelRateCallback);
-  HTTPServer::RegisterCallback("getPermissions",  GetPermissionsCallback);
-  HTTPServer::RegisterCallback("addPermission",   AddPermissionCallback);
-  HTTPServer::RegisterCallback("setPermission",   SetPermissionCallback);
-  HTTPServer::RegisterCallback("delPermission",   DelPermissionCallback);
+//  HTTPServer::RegisterCallback("getRate",         GetRateCallback);
+//  HTTPServer::RegisterCallback("addRate",         AddRateCallback);
+//  HTTPServer::RegisterCallback("setRate",         SetRateCallback);
+//  HTTPServer::RegisterCallback("delRate",         DelRateCallback);
+//  HTTPServer::RegisterCallback("getPermissions",  GetPermissionsCallback);
+//  HTTPServer::RegisterCallback("addPermission",   AddPermissionCallback);
+//  HTTPServer::RegisterCallback("setPermission",   SetPermissionCallback);
+//  HTTPServer::RegisterCallback("delPermission",   DelPermissionCallback);
 }
 AnalyzerManager::~AnalyzerManager() {
   LogFile::Debug("AnalyzerManager", "Stopping AnalyzerManager");
@@ -78,24 +73,19 @@ AnalyzerManager::~AnalyzerManager() {
   HTTPServer::UnregisterCallback("getEvent");
   HTTPServer::UnregisterCallback("setEvent");
   HTTPServer::UnregisterCallback("delEvent");
-  HTTPServer::UnregisterCallback("getAlarmsDef");
   HTTPServer::UnregisterCallback("testAlarm");
-  HTTPServer::UnregisterCallback("addAlarmDef");
-  HTTPServer::UnregisterCallback("setAlarmDef");
-  HTTPServer::UnregisterCallback("delAlarmDef");
   HTTPServer::UnregisterCallback("getAlarms");
   HTTPServer::UnregisterCallback("getAlarmsRange");
   HTTPServer::UnregisterCallback("delAlarm");
   HTTPServer::UnregisterCallback("delAlarmsRange");
-  HTTPServer::UnregisterCallback("getRates");
-  HTTPServer::UnregisterCallback("getRate");
-  HTTPServer::UnregisterCallback("addRate");
-  HTTPServer::UnregisterCallback("setRate");
-  HTTPServer::UnregisterCallback("delRate");
-  HTTPServer::UnregisterCallback("getPermissions");
-  HTTPServer::UnregisterCallback("addPermission");
-  HTTPServer::UnregisterCallback("setPermission");
-  HTTPServer::UnregisterCallback("delPermission");
+//  HTTPServer::UnregisterCallback("getRate");
+//  HTTPServer::UnregisterCallback("addRate");
+//  HTTPServer::UnregisterCallback("setRate");
+//  HTTPServer::UnregisterCallback("delRate");
+//  HTTPServer::UnregisterCallback("getPermissions");
+//  HTTPServer::UnregisterCallback("addPermission");
+//  HTTPServer::UnregisterCallback("setPermission");
+//  HTTPServer::UnregisterCallback("delPermission");
   LogFile::Debug("AnalyzerManager", "AnalyzerManager stopped");
 }
 bool AnalyzerManager::AddAnalyzer(Analyzer *analyzer, const string &user) {
@@ -210,20 +200,8 @@ void AnalyzerManager::SetEventCallback(const json &params, Response &response) {
 void AnalyzerManager::DelEventCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::DelEvent);
 }
-void AnalyzerManager::GetAlarmsDefCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetAlarmsDef);
-}
 void AnalyzerManager::TestAlarmCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::TestAlarm);
-}
-void AnalyzerManager::AddAlarmDefCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::AddAlarmDef);
-}
-void AnalyzerManager::SetAlarmDefCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::SetAlarmDef);
-}
-void AnalyzerManager::DelAlarmDefCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::DelAlarmDef);
 }
 void AnalyzerManager::GetAlarmsCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::GetAlarms);
@@ -237,31 +215,28 @@ void AnalyzerManager::DelAlarmCallback(const json &params, Response &response) {
 void AnalyzerManager::DelAlarmsRangeCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::DelAlarmsRange);
 }
-void AnalyzerManager::GetRatesCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetRates);
-}
-void AnalyzerManager::GetRateCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetRate);
-}
-void AnalyzerManager::AddRateCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::AddRate);
-}
-void AnalyzerManager::SetRateCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::SetRate);
-}
-void AnalyzerManager::DelRateCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::DelRate);
-}
-void AnalyzerManager::GetPermissionsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetPermissions);
-}
-void AnalyzerManager::AddPermissionCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::AddPermission);
-}
-void AnalyzerManager::SetPermissionCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::SetPermission);
-}
-void AnalyzerManager::DelPermissionCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::DelPermission);
-}
+//void AnalyzerManager::GetRateCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Analyzer::GetRate);
+//}
+//void AnalyzerManager::AddRateCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Analyzer::AddRate);
+//}
+//void AnalyzerManager::SetRateCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Analyzer::SetRate);
+//}
+//void AnalyzerManager::DelRateCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Analyzer::DelRate);
+//}
+//void AnalyzerManager::GetPermissionsCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Analyzer::GetPermissions);
+//}
+//void AnalyzerManager::AddPermissionCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Analyzer::AddPermission);
+//}
+//void AnalyzerManager::SetPermissionCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Analyzer::SetPermission);
+//}
+//void AnalyzerManager::DelPermissionCallback(const json &params, Response &response) {
+//  CallAnalyzerFunction(params, response, &Analyzer::DelPermission);
+//}
 //----------------------------------------------------------------------------------------------------------------------

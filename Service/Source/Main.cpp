@@ -21,7 +21,7 @@
 #include "LogFile.h"
 #include "PidFile.h"
 #include "HTTPServer.h"
-#include "Telegram.h"
+#include "TelegramManager.h"
 #include "DeviceManager.h"
 #include "UserManager.h"
 #include "NTPManager.h"
@@ -33,7 +33,7 @@
 #include "ConfigFile.h"
 #include "UpdateManager.h"
 #include "SystemManager.h"
-#include "MODBus.h"
+#include "ModbusManager.h"
 #include "DatabasePool.h"
 #include "MessageLoop.h"
 #include "ESIOS/ESIOSManager.h"
@@ -89,8 +89,8 @@ int main(int argc, char** argv) {
   ESIOSManager     Esios;                          // Create ESIOS manager
   AnalyzerManager  AnalyzerManager;                // Create analyzers interface
   DeviceManager    DeviceManager;                  // Create devices interface
-  Telegram         TelegramBoot;                   // Create Telegram manager
-  ModbusTCP        Modbus;                         // Create ModbusTCP
+  TelegramManager  TelegramBoot;                   // Create Telegram manager
+  ModbusManager    Modbus;                         // Create ModbusTCP
 
   while(!Terminate) MessageLoop::HandleEvents();
   return EXIT_SUCCESS;

@@ -13,26 +13,26 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
-#include "Telegram.h"
+#include "TelegramManager.h"
 #include "HTTPServer.h"
 #include "ConfigFile.h"
 #include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
-json                      Telegram::pStatus      = json::object();
-string                    Telegram::pToken       = "";
-pthread_t                 Telegram::pThread      = 0;
-pthread_mutex_t           Telegram::pMutex       = PTHREAD_MUTEX_INITIALIZER;
-volatile bool             Telegram::pTerminate   = false;
-uint32_t                  Telegram::pUsedWorkers = 0;
-Headers                   Telegram::pHeaders     = {{"Accept", "application/json"}, {"Host", "api.telegram.org"}, {"Accept-Encoding", "gzip, deflate"}, {"Connection", "keep-alive"}};
-list<Telegram::Worker_t*> Telegram::pFreeWorkers;
+json                             TelegramManager::pStatus      = json::object();
+string                           TelegramManager::pToken       = "";
+pthread_t                        TelegramManager::pThread      = 0;
+pthread_mutex_t                  TelegramManager::pMutex       = PTHREAD_MUTEX_INITIALIZER;
+volatile bool                    TelegramManager::pTerminate   = false;
+uint32_t                         TelegramManager::pUsedWorkers = 0;
+Headers                          TelegramManager::pHeaders     = {{"Accept", "application/json"}, {"Host", "api.telegram.org"}, {"Accept-Encoding", "gzip, deflate"}, {"Connection", "keep-alive"}};
+list<TelegramManager::Worker_t*> TelegramManager::pFreeWorkers;
 //----------------------------------------------------------------------------------------------------------------------
-Telegram::Telegram() {
+TelegramManager::TelegramManager() {
   HTTPServer::RegisterCallback("getTelegram", GetTelegramCallback);
   HTTPServer::RegisterCallback("setTelegram", SetTelegramCallback);
   Configure(CheckConfig(ConfigFile::ReadConfig("/Telegram")));
 }
-Telegram::~Telegram() {
+TelegramManager::~TelegramManager() {
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
   HTTPServer::UnregisterCallback("getTelegram");
@@ -53,7 +53,7 @@ Telegram::~Telegram() {
     delete Tmp;
   }
 }
-void Telegram::Configure(const json &config) {
+void TelegramManager::Configure(const json &config) {
   ConfigFile::WriteConfig("/Telegram", config);
   bool Enable = config["Enabled"];
   pthread_mutex_lock(&pMutex);
@@ -73,7 +73,7 @@ void Telegram::Configure(const json &config) {
   }
   pthread_mutex_unlock(&pMutex);
 }
-json Telegram::CheckConfig(const json &config) {
+json TelegramManager::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Token"] = "";
   ConfigOUT["Enabled"] = false;
@@ -83,7 +83,7 @@ json Telegram::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-void Telegram::GetTelegramCallback(const json &params, Response &response) {
+void TelegramManager::GetTelegramCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Telegram");
   pthread_mutex_lock(&pMutex);
@@ -91,14 +91,15 @@ void Telegram::GetTelegramCallback(const json &params, Response &response) {
   pthread_mutex_unlock(&pMutex);
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
-void Telegram::SetTelegramCallback(const json &params, Response &response) {
+void TelegramManager::SetTelegramCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Token") == false) || (params["Token"].is_string() == false)) return HTTPServer::FillResponse(response, "'Token' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Configure(CheckConfig(params));
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
-void *Telegram::Thread_Func(void *params) {
+void *TelegramManager::Thread_Func(void *params) {
+  return NULL;
   LogFile::Debug("Telegram", "Telegram BOT started");
   nice(10);
   bool       Connected  = false;
@@ -162,22 +163,22 @@ void *Telegram::Thread_Func(void *params) {
           if(Tmp == NULL) {
             Tmp = new Worker_t;
             Tmp->Client = new SSLClient("api.telegram.org", 443);
-            Tmp->Thread = new Worker("TelegramWorker", [](void *param2) {
-              Worker_t *Work = (Worker_t*)param2;
-              HandleUpdate(Work->Client, Work->JSON);
-              Work->Token = "";
-              Work->JSON = nullptr;
-              pthread_mutex_lock(&pMutex);
-              Work->LastTime = Tools::GetTime64();
-              pFreeWorkers.push_front(Work);
-              pUsedWorkers--;
-              pthread_mutex_unlock(&pMutex);
-            }, 15);
+//            Tmp->Thread = new Worker("TelegramWorker", [](void *param2) {
+//              Worker_t *Work = (Worker_t*)param2;
+//              HandleUpdate(Work->Client, Work->JSON);
+//              Work->Token = "";
+//              Work->JSON = nullptr;
+//              pthread_mutex_lock(&pMutex);
+//              Work->LastTime = Tools::GetTime64();
+//              pFreeWorkers.push_front(Work);
+//              pUsedWorkers--;
+//              pthread_mutex_unlock(&pMutex);
+//            }, 15);
           }
           if(Tmp != NULL) {
             Tmp->Token = pToken;
             Tmp->JSON  = Item;
-            Tmp->Thread->Run(Tmp);
+//            Tmp->Thread->Run(Tmp);
           }
         }
       } else {
@@ -193,7 +194,7 @@ void *Telegram::Thread_Func(void *params) {
   pthread_mutex_unlock(&pMutex);
   return NULL;
 }
-void Telegram::PeriodicTasks() {
+void TelegramManager::PeriodicTasks() {
   pthread_mutex_lock(&pMutex);
   uint64_t Time = Tools::GetTime64();
   while(pFreeWorkers.size() > 0) {
@@ -207,7 +208,7 @@ void Telegram::PeriodicTasks() {
   LogFile::Debug("Telegram", "Adjusted Telegram workers pool to %d connections (plus %u in use)", pFreeWorkers.size(), pUsedWorkers);
   pthread_mutex_unlock(&pMutex);
 }
-void Telegram::SendAlarm(const string &analyzer, const time_zone &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered) {
+void TelegramManager::SendAlarm(const string &analyzer, const time_zone &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered) {
   Database  DB;
 //  time_zone Timezone;
   json      Tmp = json::object();
@@ -223,7 +224,7 @@ void Telegram::SendAlarm(const string &analyzer, const time_zone &tz, const uint
 //  return true; ///TODO: Comprobar valores devueltos
 //}
 //----------------------------------------------------------------------------------------------------------------------
-void Telegram::HandleUpdate(SSLClient *client, const json &JSON) {
+void TelegramManager::HandleUpdate(SSLClient *client, const json &JSON) {
   printf("%s\n", JSON.dump().c_str());
   Database DB;
   if(JSON.contains("message") && JSON["message"].is_object() &&

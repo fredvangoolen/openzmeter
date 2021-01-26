@@ -5,8 +5,7 @@
       <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">{{ $t('Main') }}</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Expression' }" @click="View='Expression'">{{ $t('Expression') }}</button>
-        <button type="button" class="btn btn-default btn-xs" @click="Save" data-title="tooltip" title="Save alarm and events config"><img :src="require('Imgs/diskette.png')"></button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')" data-title="tooltip" title="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('update', Alarm)" data-title="tooltip" title="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
       </div>
     </template>
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
@@ -45,26 +44,14 @@
 
 <script>
   export default {
-    props: { analyzer: Object, alarm: Object },
+    props: { analyzer: Object, alarm: Number },
     data: function() {
       return { ShowSpinner: false, Alarm: null, Data: null, Vars: [], View: 'Main', Error: null };
     },
     created: function() {
-      this.Alarm = Object.assign({ Analyzer: this.analyzer.Analyzer }, this.alarm);
+      this.Alarm = Object.assign({ }, this.analyzer.Alarms[this.alarm]);
     },
     methods: {
-      Save: function() {
-        this.ShowSpinner = true;
-        this.$http.post((this.Alarm.AlarmID == null) ? 'addAlarmDef' : 'setAlarmDef', this.Alarm).then(
-          (result) => { this.$emit('close'); },
-          (fail) => {
-            this.ShowSpinner = false;
-            this.Error = 'Failed to save alarm!';
-            setTimeout(() => { this.Error = null; }, 5000);
-          }
-        );
-
-      },
       FillValues: function(data) {
         var Result = [];
         if(data == null) return Result;

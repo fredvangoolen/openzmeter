@@ -21,21 +21,21 @@ using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class Worker {
   private :
-    void                 *pRunParam;
-    volatile bool         pWorking;
+//    void                 *pRunParam;
+//    volatile bool         pWorking;
     volatile bool         pTerminate;
     pthread_t             pThread;
     pthread_mutex_t       pMutex;
     pthread_cond_t        pCondWake;
     pthread_cond_t        pCondWait;
-    function<void(void*)> pCallback;
+    function<void()>      pCallback;
   private :
     void *Thread();
   public :
-    Worker(const string &name, function<void(void*)> callback, int8_t nice = 0);
+    Worker(const string &name, int8_t nice = 0);
     ~Worker();
     bool IsWorking();
-    void Run(void *param);
+    void Run(function<void()> callback);
     void Wait();
 };
 // ---------------------------------------------------------------------------------------------------------------------

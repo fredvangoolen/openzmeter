@@ -23,16 +23,16 @@
           <div class="help">Evaluate math expressions with analysis params and generate alarms</div>
         </div>
       </div>
-      <vuetable ref="table" :fields="columns" :api-mode="false" :data="Alarms" class="table small table-striped">
+      <vuetable ref="table" :fields="columns" :api-mode="false" :data="Analyzer.Alarms" track-by="ID" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
-            <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowData)">Edit</button>
-            <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData)">Delete</button>
+            <button type="button" class="btn btn-default btn-xs" @click="Edit(props.rowIndex)">Edit</button>
+            <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowIndex)">Delete</button>
           </div>
         </template>
       </vuetable>
     </dlg>
-    <analyzer-alarm v-if="Alarm!=null" @close="GetAlarms" :analyzer="analyzer" :alarm="Alarm"></analyzer-alarm>
+    <analyzer-alarm v-if="Alarm!=null" @update="Update($event)" :analyzer="analyzer" :alarm="Alarm"></analyzer-alarm>
   </div>
 </template>
 
@@ -44,7 +44,7 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { Analyzer: null, ShowSpinner: false, Alarms: [], Alarm: null, Error: null,
+      return { Analyzer: null, ShowSpinner: false, Alarm: null, Error: null,
         columns: [
           { name: 'Name', title: 'Name' },
           { name: '__slot:actions', title: '' }
@@ -56,34 +56,22 @@
     },
     created: function() {
       this.Analyzer = Object.assign({}, this.analyzer);
-      this.GetAlarms();
     },
     methods: {
-      GetAlarms: function() {
+      Update: function(alarm) {
+        this.Analyzer.Alarms[this.Alarm] = alarm;
         this.Alarm = null;
-        this.ShowSpinner = true;
-        this.$http.post('getAlarmsDef', { Analyzer: this.analyzer.Analyzer }).then(
-          (result) => {
-            this.Alarms = result.data;
-            this.ShowSpinner = false;
-          },
-          (fail) => {}
-        );
       },
       Add: function() {
-        this.Alarm = { Name: 'Unnamed alarm', Priority: 1, Aggreg: '1M', Samples: 10, Window: 20, Expression: '' };
+        this.Analyzer.Alarms.push({ Name: 'Unnamed alarm', Priority: 1, Aggreg: '1M', Samples: 10, Window: 20, Expression: '' });
+        this.Alarm = this.Analyzer.Alarms.length - 1;
       },
       Edit: function(row) {
-        this.ShowSpinner = true;
         this.Alarm = row
       },
       Delete: function(row) {
-        if(confirm("Delete '" + row.Name + "' alarm?") == false) return;
-        this.ShowSpinner = true;
-        this.$http.post('delAlarmDef', { Analyzer: this.analyzer.Analyzer, AlarmID: row.AlarmID }).then(
-          (result) => { this.GetAlarms(); },
-          (fail) => { this.ShowSpinner = false; }
-        );
+        if(confirm("Delete '" + this.Analyzer.Alarms[row].Name + "' alarm?") == false) return;
+        this.Analyzer.Alarms.splice(row, 1);
       },
       Save: function() {
         this.ShowSpinner = true;

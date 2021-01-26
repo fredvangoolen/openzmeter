@@ -22,7 +22,7 @@ TariffScript::TariffScript(const string &expr) {
 }
 TariffScript::~TariffScript() {
 }
-string TariffScript::CheckConfig(const string &script, set<string> &variables) {
+void TariffScript::CheckConfig(const string &script, set<string> &variables) {
   typedef struct {
     set<string> *Variables;
     float        TmpVar;
@@ -42,9 +42,8 @@ string TariffScript::CheckConfig(const string &script, set<string> &variables) {
     TmpParser.SetExpr(script);
     TmpParser.Eval();
   } catch(Parser::exception_type &e) {
-    return "'Script' parse failed (" + e.GetMsg() + ")";
+    throw string("'Script' parse failed (" + e.GetMsg() + ")");
   }
-  return "";
 }
 float TariffScript::Eval() {
   if(pInitialized == false) {

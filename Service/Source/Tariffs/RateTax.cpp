@@ -16,18 +16,25 @@
 #include "RateTax.h"
 // ---------------------------------------------------------------------------------------------------------------------
 RateTax::RateTax(const json &config) {
-  Description = config["Description"];
-  Value = config["Value"];
-  Type = (config["Type"] == "PERCENT_TOTAL") ? TAX_PERCENT : (config["Type"] == "PERCENT_ENERGY") ? TAX_PERCENT_ENERGY : (config["Type"] == "PERCENT_POWER") ? TAX_PERCENT_POWER : (config["Type"] == "PERCENT_ENERGY_POWER") ? TAX_PERCENT_ENERGY_POWER : TAX_FIXED;
+  pDescription = config["Description"];
+  pValue = config["Value"];
+  pType = (config["Type"] == "PERCENT_TOTAL") ? TAX_PERCENT : (config["Type"] == "PERCENT_ENERGY") ? TAX_PERCENT_ENERGY : (config["Type"] == "PERCENT_POWER") ? TAX_PERCENT_POWER : (config["Type"] == "PERCENT_ENERGY_POWER") ? TAX_PERCENT_ENERGY_POWER : TAX_FIXED;
+}
+json RateTax::GetConfig() const {
+  json Result = json::object();
+  Result["Description"] = pDescription;
+  Result["Value"] = pValue;
+  Result["Type"] = (pType == TAX_PERCENT) ? "PERCENT_TOTAL" : (pType == TAX_PERCENT_ENERGY) ? "PERCENT_ENERGY" : (pType == TAX_PERCENT_POWER) ? "PERCENT_POWER" : (pType == TAX_PERCENT_ENERGY_POWER) ? "PERCENT_ENERGY_POWER" : "FIXED_QUANTITY";
+  return Result;
 }
 json RateTax::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
-  if(config.is_object() == false) return "'Tax' is not an object";
-  if((config.contains("Description") == false) || (config["Description"].is_string() == false)) return "'Description' param is required";
+  if(config.is_object() == false) throw string("'Tax' is not an object");
+  if((config.contains("Description") == false) || (config["Description"].is_string() == false)) throw string("'Description' param is required");
   ConfigOUT["Description"] = config["Description"];
-  if((config.contains("Value") == false) || (config["Value"].is_number() == false)) return "'Value' param is required";
+  if((config.contains("Value") == false) || (config["Value"].is_number() == false)) throw string("'Value' param is required");
   ConfigOUT["Value"] = config["Value"];
-  if((config.contains("Type") == false) || (config["Type"].is_string() == false) || ((config["Type"] != "PERCENT_TOTAL") && (config["Type"] != "PERCENT_ENERGY") && (config["Type"] != "PERCENT_POWER") && (config["Type"] != "PERCENT_ENERGY_POWER") && (config["Type"] != "FIXED_QUANTITY"))) return "'Type' param is required";
+  if((config.contains("Type") == false) || (config["Type"].is_string() == false) || ((config["Type"] != "PERCENT_TOTAL") && (config["Type"] != "PERCENT_ENERGY") && (config["Type"] != "PERCENT_POWER") && (config["Type"] != "PERCENT_ENERGY_POWER") && (config["Type"] != "FIXED_QUANTITY"))) throw string("'Type' param is required");
   ConfigOUT["Type"] = config["Type"];
   return ConfigOUT;
 }

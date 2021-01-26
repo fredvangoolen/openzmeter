@@ -19,75 +19,76 @@
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftRates::AnalyzerSoftRates(const string &serial) {
   pSerial = serial;
+  pLock   = PTHREAD_RWLOCK_INITIALIZER;
+  pRates.resize(10);
 }
 AnalyzerSoftRates::~AnalyzerSoftRates() {
 }
-void AnalyzerSoftRates::Config(const string &timezone) {
+json AnalyzerSoftRates::CheckConfig(const json &config) {
+  json ConfigOUT = json::array();
+  if(config.is_array() == false) return ConfigOUT;
+  for(auto &Rate : config) ConfigOUT.push_back(Rate::CheckConfig(Rate));
+  return ConfigOUT;
+}
+void AnalyzerSoftRates::Config(const string &timezone, const json &rates) {
+  pthread_rwlock_wrlock(&pLock);
   load_time_zone(timezone, &pTimeZone);
+  for(uint8_t n = 0; n < 10; n++) pRates[n].clear();
+  for(auto &Rate : rates) {
+    uint8_t Group = Rate["Group"];
+     pRates[Group].emplace_back(Rate, pTimeZone);
+  }
+  for(uint8_t n = 0; n < 10; n++) pRates[n].sort([](Rate &a, Rate &b) { return a.StartDate() < b.StartDate(); });
+  pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerSoftRates::GetRates(const json &params, Response &response) const {
-  bool IncludeDef = false;
-  if(params.contains("IncludeDef") && params["IncludeDef"].is_boolean() && (params["IncludeDef"] == true)) IncludeDef = true;
-  auto Func = [&, IncludeDef](uint64_t offset, DataSink &sink) -> bool {
-    uint32_t Items = 0;
-    sink.os << "[\n  ";
-    Database DB(pSerial);
-    DB.ExecSentenceAsyncResult(string("SELECT jsonb_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy'))") + (IncludeDef ? " || template::jsonb " : " ") + "AS result FROM rates");
-    while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " + DB.ResultString("result") : DB.ResultString("result"));
-    sink.os << "\n]";
-    sink.done();
-    return true;
-  };
-  response.set_chunked_content_provider("application/json", Func);
+json AnalyzerSoftRates::GetConfig() {
+  json Result = json::array();
+  pthread_rwlock_rdlock(&pLock);
+  for(auto &Group : pRates) {
+    for(auto &Rate : Group) Result.push_back(Rate.GetConfig());
+  }
+  pthread_rwlock_unlock(&pLock);
+  return Result;
 }
-void AnalyzerSoftRates::AddRate(const json &params, Response &response) const {
-  json    Config = Rate::CheckConfig(params);
-  if(Config.is_string()) return HTTPServer::FillResponse(response, Config, "text/plain", HTTP_BAD_REQUEST);
-  string  Name      = Config["Name"];
-  uint8_t Group     = Config["Group"];
-  string  StartDate = Config["StartDate"];
-  string  EndDate   = Config["EndDate"];
-  string  RateID    = Tools::GetUUID();
-  Config.erase("Name");
-  Config.erase("Group");
-  Config.erase("StartDate");
-  Config.erase("EndDate");
-  Database DB(pSerial);
-  bool Result = DB.ExecSentenceNoResult("INSERT INTO rates (id, name, ordering, startdate, enddate, template) VALUES (" + DB.Bind(RateID) + ", " + DB.Bind(Name) + ", " + DB.Bind(Group) + ", to_date(" + DB.Bind(StartDate) + ", 'DD/MM/YYYY'), to_date(" + DB.Bind(EndDate) + ", 'DD/MM/YYYY'), " + DB.Bind(Config.dump()) + ")");
-  HTTPServer::FillResponse(response, "", "application/json", Result ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
-void AnalyzerSoftRates::GetRate(const json &params, Response &response) const {
-  if((params.contains("RateID") == false) || (params["RateID"].is_string() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string ID = params["RateID"];
-  Database DB(pSerial);
-  DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy')) || template::jsonb AS result FROM rates WHERE id = " + DB.Bind(ID));
-  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
-}
-void AnalyzerSoftRates::SetRate(const json &params, Response &response) const {
-  if((params.contains("RateID") == false) || (params["RateID"].is_string() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string  RateID = params["RateID"];
-  json    Config = Rate::CheckConfig(params);
-  if(Config.is_string()) return HTTPServer::FillResponse(response, Config, "text/plain", HTTP_BAD_REQUEST);
-  string  Name      = Config["Name"];
-  uint8_t Group     = Config["Group"];
-  string  StartDate = Config["StartDate"];
-  string  EndDate   = Config["EndDate"];
-  Config.erase("Name");
-  Config.erase("Group");
-  Config.erase("StartDate");
-  Config.erase("EndDate");
-  Database DB(pSerial);
-  bool Result = DB.ExecSentenceNoResult("UPDATE rates SET name = " + DB.Bind(Name) + ", ordering = " + DB.Bind(Group) + ", startdate = to_date(" + DB.Bind(StartDate) + ", 'DD/MM/YYYY'), enddate = to_date(" + DB.Bind(EndDate) + ", 'DD/MM/YYYY'), template = " + DB.Bind(Config.dump()) + " WHERE id = " + DB.Bind(RateID));
-  HTTPServer::FillResponse(response, "", "application/json", Result ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
-void AnalyzerSoftRates::DelRate(const json &params, Response &response) const {
-  if((params.contains("RateID") == false) || (params["RateID"].is_string() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string ID = params["RateID"];
-  Database DB(pSerial);
-  bool Result = DB.ExecSentenceNoResult("DELETE FROM rates WHERE id = " + DB.Bind(ID));
-  HTTPServer::FillResponse(response, "", "application/json", Result ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
+//void AnalyzerSoftRates::GetRates(const json &params, Response &response) const {
+//  bool IncludeDef = false;
+//  if(params.contains("IncludeDef") && params["IncludeDef"].is_boolean() && (params["IncludeDef"] == true)) IncludeDef = true;
+//  auto Func = [&, IncludeDef](uint64_t offset, DataSink &sink) -> bool {
+//    uint32_t Items = 0;
+//    sink.os << "[\n  ";
+//    Database DB(pSerial);
+//    DB.ExecSentenceAsyncResult(string("SELECT jsonb_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy'))") + (IncludeDef ? " || template::jsonb " : " ") + "AS result FROM rates");
+//    while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " + DB.ResultString("result") : DB.ResultString("result"));
+//    sink.os << "\n]";
+//    sink.done();
+//    return true;
+//  };
+//  response.set_chunked_content_provider("application/json", Func);
+//}
+//void AnalyzerSoftRates::AddRate(const json &params, Response &response) const {
+//  json    Config = Rate::CheckConfig(params);
+//  if(Config.is_string()) return HTTPServer::FillResponse(response, Config, "text/plain", HTTP_BAD_REQUEST);
+//  string  Name      = Config["Name"];
+//  uint8_t Group     = Config["Group"];
+//  string  StartDate = Config["StartDate"];
+//  string  EndDate   = Config["EndDate"];
+//  string  RateID    = Tools::GetUUID();
+//  Config.erase("Name");
+//  Config.erase("Group");
+//  Config.erase("StartDate");
+//  Config.erase("EndDate");
+//  Database DB(pSerial);
+//  bool Result = DB.ExecSentenceNoResult("INSERT INTO rates (id, name, ordering, startdate, enddate, template) VALUES (" + DB.Bind(RateID) + ", " + DB.Bind(Name) + ", " + DB.Bind(Group) + ", to_date(" + DB.Bind(StartDate) + ", 'DD/MM/YYYY'), to_date(" + DB.Bind(EndDate) + ", 'DD/MM/YYYY'), " + DB.Bind(Config.dump()) + ")");
+//  HTTPServer::FillResponse(response, "", "application/json", Result ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+//}
+//void AnalyzerSoftRates::GetRate(const json &params, Response &response) const {
+//  if((params.contains("RateID") == false) || (params["RateID"].is_string() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//  string ID = params["RateID"];
+//  Database DB(pSerial);
+//  DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy')) || template::jsonb AS result FROM rates WHERE id = " + DB.Bind(ID));
+//  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+//  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+//}
 void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
   if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);

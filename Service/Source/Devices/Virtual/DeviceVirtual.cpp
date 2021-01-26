@@ -63,10 +63,10 @@ json DeviceVirtual::CheckConfig(const json &config) {
   ConfigOUT["Enabled"] = false;
   ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1);
   if(config.is_object()) {
-    if(config.contains("Voltage") && config["Voltage"].is_number() && (config["Voltage"] >= 10) && (config["Voltage"] <= 1000)) ConfigOUT["Voltage"] = config["Voltage"];
+    if(config.contains("Voltage") && config["Voltage"].is_number() && (config["Voltage"] >= 10) && (config["Voltage"] <= 100000)) ConfigOUT["Voltage"] = config["Voltage"];
     if(config.contains("Frequency") && config["Frequency"].is_number() && (((config["Frequency"] >= 10) && (config["Frequency"] <= 100)) || (config["Frequency"] == 0.0))) ConfigOUT["Frequency"] = config["Frequency"];
-    if(config.contains("SampleRate") && config["SampleRate"].is_number() && (config["SampleRate"] >= 10000) && (config["SampleRate"] <= 100000)) ConfigOUT["SampleRate"] = config["SampleRate"];
-    if(config.contains("Current") && config["Current"].is_number() && (config["Current"] >= 0.1) && (config["Current"] <= 1000)) ConfigOUT["Current"] = config["Current"];
+    if(config.contains("SampleRate") && config["SampleRate"].is_number() && (config["SampleRate"] >= 5000) && (config["SampleRate"] <= 1000000)) ConfigOUT["SampleRate"] = config["SampleRate"];
+    if(config.contains("Current") && config["Current"].is_number() && (config["Current"] >= 0.1) && (config["Current"] <= 10000)) ConfigOUT["Current"] = config["Current"];
     if(config.contains("CurrentPhase") && config["CurrentPhase"].is_number() && (config["CurrentPhase"] >= -180.0) && (config["CurrentPhase"] <= 180.0)) ConfigOUT["CurrentPhase"] = config["CurrentPhase"];
     if(config.contains("Mode") && config["Mode"].is_string() && ((config["Mode"] == "1PHASE") || (config["Mode"] == "3PHASE") || (config["Mode"] == "3PHASE+N"))) ConfigOUT["Mode"] = config["Mode"];
     if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];

@@ -40,7 +40,7 @@ Rate *RatesEvalProvider::InitRates(const uint64_t from, const uint64_t to) {
       pLoadedRate = NULL;
     }
     pLoadedRate = new Rate(JsonRate, pTimeZone);
-    if(pLoadedRate->EndDate >= from) return pLoadedRate;
+    if(pLoadedRate->EndDate() >= from) return pLoadedRate;
   }
   return NULL;
 }

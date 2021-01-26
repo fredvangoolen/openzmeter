@@ -21,13 +21,15 @@ using json = nlohmann::json;
 using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class TariffDay {
-  public :
-      string                        Name;
-      string                        Color;
-      uint16_t                      Quarters[96];
+  private :
+    string    pName;
+    string    pColor;
+    uint16_t  pQuarters[96];
   public :
     static json CheckConfig(const json &config, const uint16_t periods);
   public :
     TariffDay(const json &config);
+    json GetConfig() const;
+  friend class RatesEval;
 };
 // ---------------------------------------------------------------------------------------------------------------------

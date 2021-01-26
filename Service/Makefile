@@ -54,7 +54,7 @@ endif
 ifeq ($(DEBUG), true)
 	CFLAGS += -O0 -g -ggdb3
 else
-	CFLAGS   += -O3 -flto -fwhole-program
+	CFLAGS   += -Os -flto -fwhole-program
 	LDFLAGS  += -flto
 endif
 ifeq ($(OS_TARGET), OPENWRT)
@@ -69,26 +69,23 @@ endif
 # Build steps
 $(WEB_TARGET): $(WEB_SOURCE)
 	@echo "Building WEB interface"
-	@rm -f Tmp/*.js
+	@rm -f $(WEB_TARGET)
 	@if [ ! -d "WEB/node_modules" ]; then cd WEB; npm install; fi
 	@cd WEB; npm run --silent build
 
 $(RESOURCES_TARGET): $(RESOURCES_SOURCE) $(WEB_TARGET)
 	@echo  "Building resource file"
 	@rm -f $(RESOURCES_TARGET) Tmp/ResourceFiles
-	@printf "%s\000" $(words $(RESOURCES_SOURCE) $(shell find Tmp -name "*.js")) > Tmp/ResourceFiles
+	@printf "%s\000" $(words $(RESOURCES_SOURCE) $(WEB_TARGET)) > Tmp/ResourceFiles
 	@for FILE in $(RESOURCES_SOURCE); \
 	do \
 		echo "  Append " $$FILE ; \
 		printf '%s\000%d\000' `echo $$FILE | cut -d'/' -f2-` `stat --printf="%s" $$FILE` >> Tmp/ResourceFiles ; \
 		cat $$FILE >> Tmp/ResourceFiles ; \
 	done
-	@for FILE in $(shell find Tmp -name "*.js") ; \
-	do \
-		echo "  Append " $$FILE ; \
-		printf 'WEB/%s\000%d\000' `echo $$FILE | cut -d'/' -f2-` `stat --printf="%s" $$FILE` >> Tmp/ResourceFiles ; \
-		cat $$FILE >> Tmp/ResourceFiles ; \
-	done
+	@echo "  Append " $(WEB_TARGET) ; \
+		printf 'WEB/%s\000%d\000' `echo $(WEB_TARGET) | cut -d'/' -f2-` `stat --printf="%s" $(WEB_TARGET)` >> Tmp/ResourceFiles ; \
+		cat $(WEB_TARGET) >> Tmp/ResourceFiles ;
 	@cd Tmp; $(LD) -s -r -b binary -o $(TARGET)/ResourceFiles.o ResourceFiles
 	@rm -f Tmp/ResourceFiles
 

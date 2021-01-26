@@ -94,23 +94,20 @@ class AnalyzerSoft : public Analyzer {
     void GetEvent(const json &params, Response &response) override;
     void SetEvent(const json &params, Response &response) override;
     void DelEvent(const json &params, Response &response) override;
-    void GetAlarmsDef(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
-    void AddAlarmDef(const json &params, Response &response) override;
-    void SetAlarmDef(const json &params, Response &response) override;
-    void DelAlarmDef(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;
     void GetAlarmsRange(const json &params, Response &response) override;
     void DelAlarm(const json &params, Response &response) override;
     void DelAlarmsRange(const json &params, Response &response) override;
-    void GetRates(const json &params, Response &response) override;
-    void AddRate(const json &params, Response &response) override;
-    void GetRate(const json &params, Response &response) override;
-    void SetRate(const json &params, Response &response) override;
-    void DelRate(const json &params, Response &response) override;
+//    void AddRate(const json &params, Response &response) override;
+//    void GetRate(const json &params, Response &response) override;
+//    void SetRate(const json &params, Response &response) override;
+//    void DelRate(const json &params, Response &response) override;
     bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
   public :
     static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode);
+  protected :
+    virtual void ResultsReady(AnalyzerSoftAggreg200MS *params);
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();

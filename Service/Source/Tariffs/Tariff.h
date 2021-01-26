@@ -26,18 +26,20 @@ using namespace cctz;
 using namespace mu;
 //----------------------------------------------------------------------------------------------------------------------
 class Tariff {
-  public :
-    string                        Description;
-    string                        Currency;
-    string                        PowerUnits;
-    string                        EnergyUnits;
-    vector<TariffConcept>         Concepts;
-    vector<TariffPeriod>          Periods;
-    vector<TariffDay>             Days;
-    vector<TariffYear>            Years;
+  protected :
+    string                  pDescription;
+    string                  pCurrency;
+    string                  pPowerUnits;
+    string                  pEnergyUnits;
+    string                  pScript;
+    vector<TariffConcept>   pConcepts;
+    vector<TariffPeriod>    pPeriods;
+    vector<TariffDay>       pDays;
+    vector<TariffYear>      pYears;
   public :
     static json CheckConfig(const json &config);
   public :
     Tariff(const json &config);
+    json GetConfig() const;
 };
 //----------------------------------------------------------------------------------------------------------------------

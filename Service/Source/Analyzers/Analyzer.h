@@ -57,20 +57,15 @@ class Analyzer {
     virtual void GetEvent(const json &params, Response &response) = 0;
     virtual void SetEvent(const json &params, Response &response) = 0;
     virtual void DelEvent(const json &params, Response &response) = 0;
-    virtual void GetAlarmsDef(const json &params, Response &response) = 0;
     virtual void TestAlarm(const json &params, Response &response) = 0;
-    virtual void AddAlarmDef(const json &params, Response &response) = 0;
-    virtual void SetAlarmDef(const json &params, Response &response) = 0;
-    virtual void DelAlarmDef(const json &params, Response &response) = 0;
     virtual void GetAlarms(const json &params, Response &response) = 0;
     virtual void GetAlarmsRange(const json &params, Response &response) = 0;
     virtual void DelAlarm(const json &params, Response &response) = 0;
     virtual void DelAlarmsRange(const json &params, Response &response) = 0;
-    virtual void GetRates(const json &params, Response &response) = 0;
-    virtual void AddRate(const json &params, Response &response) = 0;
-    virtual void GetRate(const json &params, Response &response) = 0;
-    virtual void SetRate(const json &params, Response &response) = 0;
-    virtual void DelRate(const json &params, Response &response) = 0;
+//    virtual void AddRate(const json &params, Response &response) = 0;
+//    virtual void GetRate(const json &params, Response &response) = 0;
+//    virtual void SetRate(const json &params, Response &response) = 0;
+//    virtual void DelRate(const json &params, Response &response) = 0;
     virtual bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) = 0;
   public :
     virtual ~Analyzer();

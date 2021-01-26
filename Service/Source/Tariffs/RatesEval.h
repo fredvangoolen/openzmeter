@@ -55,8 +55,6 @@ class RatesEval final {
     uint64_t                      pNowDate;           //Current system time
     uint64_t                      pCurrent;           //Current evaluation time
     uint64_t                      pLoadedPeriodDate;  //Active bill period start
-//    Database                     *pRateDB;            //Rate fetch connection
-//    Database                     *pDataDB;            //Data fetch connection
     Rate                         *pLoadedRate;        //Currently loaded Rate (if any)
     vector<TariffYear>::iterator  pYearPtr;           //Active rate year
     vector<uint64_t>::iterator    pBillPtr;           //Active rate bill date
