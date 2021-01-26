@@ -16,17 +16,24 @@
 #include "TariffConcept.h"
 // ---------------------------------------------------------------------------------------------------------------------
 TariffConcept::TariffConcept(const json &config) {
-  Description = config["Description"];
-  Variable = config["Variable"];
-  Type = (config["Type"] == "INFO") ? CONCEPT_INFO : (config["Type"] == "COST_POWER") ? CONCEPT_COST_POWER : (config["Type"] == "COST_ENERGY") ? CONCEPT_COST_ENERGY : CONCEPT_COST;
+  pDescription = config["Description"];
+  pVariable = config["Variable"];
+  pType = (config["Type"] == "INFO") ? CONCEPT_INFO : (config["Type"] == "COST_POWER") ? CONCEPT_COST_POWER : (config["Type"] == "COST_ENERGY") ? CONCEPT_COST_ENERGY : CONCEPT_COST;
+}
+json TariffConcept::GetConfig() const {
+  json Result = json::object();
+  Result["Description"] = pDescription;
+  Result["Variable"] = pVariable;
+  Result["Type"] = (pType == CONCEPT_INFO) ? "INFO" : (pType["Type"] == CONCEPT_COST_POWER) ? "COST_POWER" : (pType == CONCEPT_COST_ENERGY) ? "COST_ENERGY" : "COST";
+  return Result;
 }
 json TariffConcept::CheckConfig(const json &config, const set<string> &variables) {
   json ConfigOUT = json::object();
-  if((config.contains("Description") == false) || (config["Description"].is_string() == false)) return "'Description' param is required";
+  if((config.contains("Description") == false) || (config["Description"].is_string() == false)) throw string("'Description' param is required");
   ConfigOUT["Description"] = config["Description"];
-  if((config.contains("Type") == false) || (config["Type"].is_string() == false) || ((config["Type"] != "INFO") && (config["Type"] != "COST_POWER") && (config["Type"] != "COST_ENERGY") && (config["Type"] != "COST"))) return "'Type' param is required";
+  if((config.contains("Type") == false) || (config["Type"].is_string() == false) || ((config["Type"] != "INFO") && (config["Type"] != "COST_POWER") && (config["Type"] != "COST_ENERGY") && (config["Type"] != "COST"))) throw string("'Type' param is required");
   ConfigOUT["Type"] = config["Type"];
-  if((config.contains("Variable") == false) || (config["Variable"].is_string() == false) || (variables.find(config["Variable"]) == variables.end())) return "'Variable' param is required";
+  if((config.contains("Variable") == false) || (config["Variable"].is_string() == false) || (variables.find(config["Variable"]) == variables.end())) throw string("'Variable' param is required");
   ConfigOUT["Variable"] = config["Variable"];
   return ConfigOUT;
 }

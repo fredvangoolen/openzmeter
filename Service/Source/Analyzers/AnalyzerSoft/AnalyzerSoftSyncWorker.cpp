@@ -98,24 +98,21 @@ void *AnalyzerSoftSyncWorker::Thread() {
     else if(pMethod == "getEvent")       pAnalyzer->GetEvent(pParams, Resp);
     else if(pMethod == "setEvent")       pAnalyzer->SetEvent(pParams, Resp);
     else if(pMethod == "delEvent")       pAnalyzer->DelEvent(pParams, Resp);
-    else if(pMethod == "getAlarmsDef")   pAnalyzer->GetAlarmsDef(pParams, Resp);
     else if(pMethod == "testAlarm")      pAnalyzer->TestAlarm(pParams, Resp);
-    else if(pMethod == "addAlarmDef")    pAnalyzer->AddAlarmDef(pParams, Resp);
-    else if(pMethod == "setAlarmDef")    pAnalyzer->SetAlarmDef(pParams, Resp);
-    else if(pMethod == "delAlarmDef")    pAnalyzer->DelAlarmDef(pParams, Resp);
+//    else if(pMethod == "delAlarmDef")    pAnalyzer->DelAlarmDef(pParams, Resp);
     else if(pMethod == "getAlarms")      pAnalyzer->GetAlarms(pParams, Resp);
     else if(pMethod == "getAlarmsRange") pAnalyzer->GetAlarmsRange(pParams, Resp);
     else if(pMethod == "delAlarm")       pAnalyzer->DelAlarm(pParams, Resp);
     else if(pMethod == "delAlarmsRange") pAnalyzer->DelAlarmsRange(pParams, Resp);
-    else if(pMethod == "getRates")       pAnalyzer->GetRates(pParams, Resp);
-    else if(pMethod == "getRate")        pAnalyzer->GetRate(pParams, Resp);
-    else if(pMethod == "addRate")        pAnalyzer->AddRate(pParams, Resp);
-    else if(pMethod == "setRate")        pAnalyzer->SetRate(pParams, Resp);
-    else if(pMethod == "delRate")        pAnalyzer->DelRate(pParams, Resp);
-    else if(pMethod == "getPermissions") pAnalyzer->GetPermissions(pParams, Resp);
-    else if(pMethod == "addPermission")  pAnalyzer->AddPermission(pParams, Resp);
-    else if(pMethod == "setPermission")  pAnalyzer->SetPermission(pParams, Resp);
-    else if(pMethod == "delPermission")  pAnalyzer->DelPermission(pParams, Resp);
+//    else if(pMethod == "getRates")       pAnalyzer->GetRates(pParams, Resp);
+//    else if(pMethod == "getRate")        pAnalyzer->GetRate(pParams, Resp);
+//    else if(pMethod == "addRate")        pAnalyzer->AddRate(pParams, Resp);
+//    else if(pMethod == "setRate")        pAnalyzer->SetRate(pParams, Resp);
+//    else if(pMethod == "delRate")        pAnalyzer->DelRate(pParams, Resp);
+//    else if(pMethod == "getPermissions") pAnalyzer->GetPermissions(pParams, Resp);
+//    else if(pMethod == "addPermission")  pAnalyzer->AddPermission(pParams, Resp);
+//    else if(pMethod == "setPermission")  pAnalyzer->SetPermission(pParams, Resp);
+//    else if(pMethod == "delPermission")  pAnalyzer->DelPermission(pParams, Resp);
     Headers Header  = {{"Accept", "application/json"}, {"Cookie", pCookie}, {"X-Analyzer", pAnalyzer->Serial().c_str()}, {"X-Sequence", pSequence.c_str()}, {"X-Status", to_string(Resp.status).c_str()}};
     for(uint8_t Retry = 10; Retry > 0; Retry--) {
       auto Tmp = (Resp.is_chunked_content_provider_ == false) ?

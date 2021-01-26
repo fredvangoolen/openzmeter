@@ -111,12 +111,3 @@ CREATE TABLE IF NOT EXISTS alarms_ext (
   release       bigint            NULL,
   PRIMARY KEY(trigger, id)
 ) WITH (OIDS=FALSE);
-
-CREATE TABLE IF NOT EXISTS rates (
-  id            character varying NOT NULL PRIMARY KEY,
-  name          character varying NOT NULL,
-  ordering      smallint          NOT NULL,
-  startdate     date              NOT NULL,
-  enddate       date              NOT NULL,
-  template      jsonb             NOT NULL
-) WITH (OIDS=FALSE);

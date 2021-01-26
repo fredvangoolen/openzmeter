@@ -14,11 +14,11 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "SystemManager.h"
+#include "LogFile.h"
 #ifdef OPENWRT // ======================================================================================================
 #include <sys/param.h>
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
-#include "LogFile.h"
 #include "MessageLoop.h"
 // ---------------------------------------------------------------------------------------------------------------------
 SystemManager::SystemManager() {
@@ -54,41 +54,41 @@ bool SystemManager::ReadFile(const string filename, string &res) {
 void SystemManager::PeriodicTasks() {
   struct sysinfo Info;
   if(sysinfo(&Info) == 0) {
-    LogFile::SetValue("System", "/Uptime", Info.uptime);
-    LogFile::SetValue("System", "/Swap/Total", (uint64_t)Info.totalswap * Info.mem_unit);
-    LogFile::SetValue("System", "/Swap/Usage", ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap);
-    LogFile::SetValue("System", "/CPU/Usage", MIN(100.0, ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0));
+    //LogFile::SetValue("System", "/Uptime", Info.uptime);
+    //LogFile::SetValue("System", "/Swap/Total", (uint64_t)Info.totalswap * Info.mem_unit);
+    //LogFile::SetValue("System", "/Swap/Usage", ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap);
+    //LogFile::SetValue("System", "/CPU/Usage", MIN(100.0, ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0));
   } else {
-    LogFile::SetValue("System", "/Uptime", nullptr);
-    LogFile::SetValue("System", "/Swap/Total", nullptr);
-    LogFile::SetValue("System", "/Swap/Usage", nullptr);
-    LogFile::SetValue("System", "/CPU/Usage", nullptr);
+    //LogFile::SetValue("System", "/Uptime", nullptr);
+    //LogFile::SetValue("System", "/Swap/Total", nullptr);
+    //LogFile::SetValue("System", "/Swap/Usage", nullptr);
+    //LogFile::SetValue("System", "/CPU/Usage", nullptr);
   }
   struct statvfs Disk;
   if(statvfs("/", &Disk) == 0) {
-    LogFile::SetValue("System", "/Disk/Total", (uint64_t)Disk.f_blocks * Disk.f_frsize);
-    LogFile::SetValue("System", "/Disk/Usage", ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks);
+    //LogFile::SetValue("System", "/Disk/Total", (uint64_t)Disk.f_blocks * Disk.f_frsize);
+    //LogFile::SetValue("System", "/Disk/Usage", ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks);
   } else {
-    LogFile::SetValue("System", "/Disk/Total", nullptr);
-    LogFile::SetValue("System", "/Disk/Usage", nullptr);
+    //LogFile::SetValue("System", "/Disk/Total", nullptr);
+    //LogFile::SetValue("System", "/Disk/Usage", nullptr);
   }
   string Memory;
   if(ReadFile("/proc/meminfo", Memory) == true) {
-    LogFile::SetValue("System", "/RAM/Total",   ParseProcMem("MemTotal", Memory));
-    LogFile::SetValue("System", "/RAM/Free",    ParseProcMem("MemFree", Memory));
-    LogFile::SetValue("System", "/RAM/Cached",  ParseProcMem("Cached", Memory));
-    LogFile::SetValue("System", "/RAM/Buffers", ParseProcMem("Buffers", Memory));
+    //LogFile::SetValue("System", "/RAM/Total",   ParseProcMem("MemTotal", Memory));
+    //LogFile::SetValue("System", "/RAM/Free",    ParseProcMem("MemFree", Memory));
+    //LogFile::SetValue("System", "/RAM/Cached",  ParseProcMem("Cached", Memory));
+    //LogFile::SetValue("System", "/RAM/Buffers", ParseProcMem("Buffers", Memory));
   } else {
-    LogFile::SetValue("System", "/RAM/Total",   nullptr);
-    LogFile::SetValue("System", "/RAM/Free",    nullptr);
-    LogFile::SetValue("System", "/RAM/Cached",  nullptr);
-    LogFile::SetValue("System", "/RAM/Buffers", nullptr);
+    //LogFile::SetValue("System", "/RAM/Total",   nullptr);
+    //LogFile::SetValue("System", "/RAM/Free",    nullptr);
+    //LogFile::SetValue("System", "/RAM/Cached",  nullptr);
+    //LogFile::SetValue("System", "/RAM/Buffers", nullptr);
   }
   string Temperature;
   if(ReadFile("/sys/class/thermal/thermal_zone0/temp", Temperature) == true) {
-    LogFile::SetValue("System", "/Temperature", (Temperature.empty()) ? json(nullptr) : json(stoi(Temperature) / 1000.0));
+    //LogFile::SetValue("System", "/Temperature", (Temperature.empty()) ? json(nullptr) : json(stoi(Temperature) / 1000.0));
   } else {
-    LogFile::SetValue("System", "/Temperature", nullptr);
+    //LogFile::SetValue("System", "/Temperature", nullptr);
   }
   //Status::SetValue("/TimeSet", Tools::GetTime64() > 946684800000);
 }
@@ -125,5 +125,5 @@ SystemManager::~SystemManager() {
 }
 #endif // ==============================================================================================================
 void SystemManager::GetSystemCallback(const json &params, Response &response) {
-
+  HTTPServer::FillResponse(response, LogFile::ToJSON().dump(), "application/json", HTTP_OK);
 }

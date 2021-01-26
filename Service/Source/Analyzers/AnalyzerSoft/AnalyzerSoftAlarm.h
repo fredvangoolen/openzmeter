@@ -40,15 +40,17 @@ class AnalyzerSoftAlarm final {
     Parser            pEvaluator;
     uint8_t          *pResults;
     bool              pInitialized;
+    bool              pEnabled;
     string            pExpression;
     uint64_t          pTriggerTime;
   public :
     static json CheckConfig(const json &config);
   public :
-    AnalyzerSoftAlarm(const string &serial, const string &uid, const string &expr, const string &name, const uint8_t prio, const uint16_t samples, const uint16_t window, const string &aggreg, float &voltage, float &freq);
+    AnalyzerSoftAlarm(const string &serial, float &voltage, float &freq, const json &config);
     ~AnalyzerSoftAlarm();
-    Alarm_Result PushAggreg(const string &aggreg, AnalyzerSoftAggreg *data);
-    string  Name() const;
-    uint8_t Priority() const;
+    Alarm_Result PushAggreg(AnalyzerSoftAggreg *data);
+    string       Name() const;
+    uint8_t      Priority() const;
+    json         GetConfig() const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

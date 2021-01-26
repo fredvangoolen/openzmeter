@@ -52,20 +52,15 @@ class AnalyzerRemote : public Analyzer {
     void DelEvent(const json &params, Response &response) override;
     void GetCosts(const json &params, Response &response) override;
     void GetBills(const json &params, Response &response) override;
-    void GetAlarmsDef(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
-    void AddAlarmDef(const json &params, Response &response) override;
-    void SetAlarmDef(const json &params, Response &response) override;
-    void DelAlarmDef(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;
     void GetAlarmsRange(const json &params, Response &response) override;
     void DelAlarm(const json &params, Response &response) override;
     void DelAlarmsRange(const json &params, Response &response) override;
-    void GetRates(const json &params, Response &response) override;
-    void AddRate(const json &params, Response &response) override;
-    void GetRate(const json &params, Response &response) override;
-    void SetRate(const json &params, Response &response) override;
-    void DelRate(const json &params, Response &response) override;
+//    void AddRate(const json &params, Response &response) override;
+//    void GetRate(const json &params, Response &response) override;
+//    void SetRate(const json &params, Response &response) override;
+//    void DelRate(const json &params, Response &response) override;
     bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
   public :
     void GetRemote(const json &params, Response &response);

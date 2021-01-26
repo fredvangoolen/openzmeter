@@ -17,65 +17,106 @@
 #include "PriceSource.h"
 // ---------------------------------------------------------------------------------------------------------------------
 Rate::Rate(const json &config, const time_zone &tz) : Tariff(config) {
-  Name = config["Name"];
-  for(uint16_t T = 0; T < config["Taxes"].size(); T++) Taxes.emplace_back(config["Taxes"][T]);
-  Script = config["Script"];
+  pName  = config["Name"];
+  pID    = config["RateID"];
+  pGroup = config["Group"];
+  for(uint16_t T = 0; T < config["Taxes"].size(); T++) pTaxes.emplace_back(config["Taxes"][T]);
   if(config["ContractedPower"].is_number()) {
-    Contracted = vector<float>(Periods.size(), config["ContractedPower"]);
+    pContracted = vector<float>(pPeriods.size(), config["ContractedPower"]);
+    pContractedEqual = true;
   } else if(config["ContractedPower"].is_array()) {
-    for(uint16_t P = 0; P < Periods.size(); P++) Contracted.emplace_back(config["ContractedPower"][P]);
+    for(uint16_t P = 0; P < pPeriods.size(); P++) pContracted.emplace_back(config["ContractedPower"][P]);
+    pContractedEqual = false;
   }
   if(config["PowerCost"].is_string()) {
-    PowerCostScript = config["PowerCost"];
+    pPowerCostScript = config["PowerCost"];
   } else {
-    for(uint16_t P = 0; P < Periods.size(); P++) PowerCost.emplace_back(config["PowerCost"][P]);
+    for(uint16_t P = 0; P < pPeriods.size(); P++) pPowerCost.emplace_back(config["PowerCost"][P]);
   }
   if(config["EnergyCost"].is_string()) {
-    EnergyCostScript = config["EnergyCost"];
+    pEnergyCostScript = config["EnergyCost"];
   } else {
-    for(uint16_t P = 0; P < Periods.size(); P++) EnergyCost.emplace_back(config["EnergyCost"][P]);
+    for(uint16_t P = 0; P < pPeriods.size(); P++) pEnergyCost.emplace_back(config["EnergyCost"][P]);
   }
   chrono::system_clock::time_point TimePoint;
   parse("%d/%m/%Y", config["StartDate"], tz, &TimePoint);
-  StartDate = TimePoint.time_since_epoch().count() / 1000000;
+  pStartDate = TimePoint.time_since_epoch().count() / 1000000;
   parse("%d/%m/%Y", config["EndDate"], tz, &TimePoint);
-  EndDate = TimePoint.time_since_epoch().count() / 1000000 + 86399999;
+  pEndDate = TimePoint.time_since_epoch().count() / 1000000 + 86399999;
   for(uint16_t B = 0; B < config["Billing"].size(); B++) {
     parse("%d/%m/%Y", config["Billing"][B], tz, &TimePoint);
     uint64_t Time = TimePoint.time_since_epoch().count() / 1000000 + 86399999;
-    if((Time > StartDate) && (Time < EndDate)) BillingCycles.emplace_back(Time);
+    if((Time > pStartDate) && (Time < pEndDate)) pBillingCycles.emplace_back(Time);
   }
-  sort(BillingCycles.begin(), BillingCycles.end());
-  PriceSrc = config["Module"];
+  sort(pBillingCycles.begin(), pBillingCycles.end());
+  pPriceSrc = config["Module"];
+}
+json Rate::GetConfig() const{
+  json Result = json::object();
+  Result["Name"] = pName;
+  Result["RateID"] = pID;
+  Result["Group"] = pGroup;
+  Result["Taxes"] = json::array();
+  for(uint16_t T = 0; T < pTaxes.size(); T++) Result["Taxes"].push_back(pTaxes[T].GetConfig());
+  if(pContractedEqual == true) {
+    Result["ContractedPower"] = pContracted[0];
+  } else {
+    Result["ContractedPower"] = json::array();
+    for(uint16_t P = 0; P < pPeriods.size(); P++) Result["ContractedPower"].push_back(pContracted[P]);
+  }
+  if(pPowerCostScript.empty() == false) {
+    Result["PowerCost"] = pPowerCostScript;
+  } else {
+    Result["PowerCost"] = json::array();
+    for(uint16_t P = 0; P < pPeriods.size(); P++) Result["PowerCost"].push_back(pPowerCost[P]);
+  }
+  if(pEnergyCostScript.empty() == false) {
+    Result["EnergyCost"] = pEnergyCostScript;
+  } else {
+    Result["EnergyCost"] = json::array();
+    for(uint16_t P = 0; P < pPeriods.size(); P++) Result["EnergyCost"].push_back(pEnergyCost[P]);
+  }
+  Result["StartDate"] = format("%d/%m/%Y", chrono::system_clock::time_point(chrono::nanoseconds(pStartDate * 1000000)), utc_time_zone());
+  Result["EndDate"] = format("%d/%m/%Y", chrono::system_clock::time_point(chrono::nanoseconds(pEndDate * 1000000)), utc_time_zone());
+  Result["Billing"] = json::array();
+  for(uint16_t B = 0; B < pBillingCycles.size(); B++) Result["Billing"].push_back(format("%d/%m/%Y", chrono::system_clock::time_point(chrono::nanoseconds(pBillingCycles[B] * 1000000)), utc_time_zone()));
+  Result["Module"] = pPriceSrc;
+  return Result;
+}
+uint64_t Rate::EndDate() const {
+  return pEndDate;
+}
+uint64_t Rate::StartDate() const {
+  return pStartDate;
+}
+uint8_t Rate::Group() const {
+  return pGroup;
 }
 json Rate::CheckConfig(const json &config) {
   json ConfigOUT = Tariff::CheckConfig(config);
-  if(ConfigOUT.is_string()) return ConfigOUT;
-  if((config.contains("Name") == false) || (config["Name"].is_string() == false)) return "'Name' param is required";
+  if((config.contains("Name") == false) || (config["Name"].is_string() == false)) throw string("'Name' param is required");
   ConfigOUT["Name"] = config["Name"];
-  if((config.contains("Group") == false) || (config["Group"].is_number_integer() == false) || (config["Group"] < 0) || (config["Group"] > 10)) return "'Group' param is requiered";
+  if((config.contains("Group") == false) || (config["Group"].is_number_integer() == false) || (config["Group"] < 0) || (config["Group"] > 10)) throw string("'Group' param is requiered");
   ConfigOUT["Group"] = config["Group"];
-  if((config.contains("Taxes") == false) || (config["Taxes"].is_array() == false)) return "'Taxes' param is required";
+  if((config.contains("RateID") == false) || (config["RateID"].is_string() == false)) throw string("'RateID' param is required");
+  ConfigOUT["RateID"] = config["RateID"];
+  if((config.contains("Taxes") == false) || (config["Taxes"].is_array() == false)) throw string("'Taxes' param is required");
   ConfigOUT["Taxes"] = json::array();
-  for(uint16_t T = 0; T < config["Taxes"].size(); T++) {
-    json Tax = RateTax::CheckConfig(config["Taxes"][T]);
-    if(Tax.is_string()) return Tax;
-    ConfigOUT["Taxes"].push_back(Tax);
-  }
+  for(uint16_t T = 0; T < config["Taxes"].size(); T++) ConfigOUT["Taxes"].push_back(RateTax::CheckConfig(config["Taxes"][T]));
   if((config.contains("ContractedPower") == true) && (config["ContractedPower"].is_array() == true) && (config["ContractedPower"].size() == ConfigOUT["Periods"].size())) {
     ConfigOUT["ContractedPower"] = json::array();
     for(uint16_t P = 0; P < config["ContractedPower"].size(); P++) {
-      if(config["ContractedPower"][P].is_number() == false) return "'ContractedPower' param is required";
+      if(config["ContractedPower"][P].is_number() == false) throw string("'ContractedPower' param is required");
       ConfigOUT["ContractedPower"].push_back(config["ContractedPower"][P]);
     }
   } else if((config.contains("ContractedPower") == true) && (config["ContractedPower"].is_number() == true)) {
     ConfigOUT["ContractedPower"] = config["ContractedPower"];
   } else {
-    return "'ContractedPower' param is required";
+    throw string("'ContractedPower' param is required");
   }
-  if((config.contains("Module") == false) || (config["Module"].is_string() == false)) return "'Module' param is required";
+  if((config.contains("Module") == false) || (config["Module"].is_string() == false)) throw string("'Module' param is required");
   PriceSource *Module = PriceSource::CreateInstance(config["Module"]);
-  if(Module == NULL) return "'Module' param is invalid";
+  if(Module == NULL) throw string("'Module' param is invalid");
   ConfigOUT["Module"] = config["Module"];
   map<string, float> Variables;
   Module->GetParams(0, Variables);
@@ -84,7 +125,7 @@ json Rate::CheckConfig(const json &config) {
   if((config.contains("PowerCost") == true) && (config["PowerCost"].is_array() == true) && (config["PowerCost"].size() == ConfigOUT["Periods"].size())) {
     ConfigOUT["PowerCost"] = json::array();
     for(uint16_t P = 0; P < config["PowerCost"].size(); P++) {
-      if(config["PowerCost"][P].is_number() == false) return "'PowerCost' param is required";
+      if(config["PowerCost"][P].is_number() == false) throw string("'PowerCost' param is required");
       ConfigOUT["PowerCost"].push_back(config["PowerCost"][P]);
     }
   } else if((config.contains("PowerCost") == true) && (config["PowerCost"].is_string() == true)) {
@@ -95,15 +136,15 @@ json Rate::CheckConfig(const json &config) {
       TmpParser.SetExpr(config["PowerCost"]);
       TmpParser.Eval();
     } catch(Parser::exception_type &e) {
-      return "'PowerCost' parse failed (" + e.GetMsg() + ")";
+      throw string("'PowerCost' parse failed (" + e.GetMsg() + ")");
     }
   } else {
-    return "'PowerCost' param is required";
+    throw string("'PowerCost' param is required");
   }
   if((config.contains("EnergyCost") == true) && (config["EnergyCost"].is_array() == true) && (config["EnergyCost"].size() == ConfigOUT["Periods"].size())) {
     ConfigOUT["EnergyCost"] = json::array();
     for(uint16_t P = 0; P < config["EnergyCost"].size(); P++) {
-      if(config["EnergyCost"][P].is_number() == false) return "'EnergyCost' param is required";
+      if(config["EnergyCost"][P].is_number() == false) throw string("'EnergyCost' param is required");
       ConfigOUT["EnergyCost"].push_back(config["EnergyCost"][P]);
     }
   } else if((config.contains("EnergyCost") == true) && (config["EnergyCost"].is_string() == true)) {
@@ -114,28 +155,28 @@ json Rate::CheckConfig(const json &config) {
       TmpParser.SetExpr(config["EnergyCost"]);
       TmpParser.Eval();
     } catch(Parser::exception_type &e) {
-      return "'PowerCost' parse failed (" + e.GetMsg() + ")";
+      throw string("'PowerCost' parse failed (" + e.GetMsg() + ")");
     }
   } else {
-    return "'EnergyCost' param is required";
+    throw string("'EnergyCost' param is required");
   }
   chrono::system_clock::time_point TimePoint;
-  if((config.contains("StartDate") == false) || (config["StartDate"].is_string() == false) || (parse("%d/%m/%Y", config["StartDate"], utc_time_zone(), &TimePoint) == false)) return "'StartDate' param is required";
+  if((config.contains("StartDate") == false) || (config["StartDate"].is_string() == false) || (parse("%d/%m/%Y", config["StartDate"], utc_time_zone(), &TimePoint) == false)) throw string("'StartDate' param is required");
   ConfigOUT["StartDate"] = format("%d/%m/%Y", TimePoint, utc_time_zone());
   civil_day StartDate = civil_day(convert(TimePoint, utc_time_zone()));
-  if((config.contains("EndDate") == false) || (config["EndDate"].is_string() == false) || (parse("%d/%m/%Y", config["EndDate"], utc_time_zone(), &TimePoint) == false)) return "'EndDate' param is required";
+  if((config.contains("EndDate") == false) || (config["EndDate"].is_string() == false) || (parse("%d/%m/%Y", config["EndDate"], utc_time_zone(), &TimePoint) == false)) throw string("'EndDate' param is required");
   ConfigOUT["EndDate"] = format("%d/%m/%Y", TimePoint, utc_time_zone());
   civil_day EndDate = civil_day(convert(TimePoint, utc_time_zone()));
   for(uint16_t Y = StartDate.year(); Y <= EndDate.year(); Y++) {
-    if(find_if(ConfigOUT["Years"].begin(), ConfigOUT["Years"].end(), [&](const json &a) -> bool { return (a["Year"] == Y); }) == ConfigOUT["Years"].end()) return "Missing year(s) in defined range";
+    if(find_if(ConfigOUT["Years"].begin(), ConfigOUT["Years"].end(), [&](const json &a) -> bool { return (a["Year"] == Y); }) == ConfigOUT["Years"].end()) throw string("Missing year(s) in defined range");
   }
-  if((config.contains("Billing") == false) || (config["Billing"].is_array() == false)) return "'Billing' param is required";
+  if((config.contains("Billing") == false) || (config["Billing"].is_array() == false)) throw string("'Billing' param is required");
   ConfigOUT["Billing"] = json::array();
   vector<civil_day> Billing;
   for(uint16_t B = 0; B < config["Billing"].size(); B++) {
-    if((config["Billing"][B].is_string() == false) || (parse("%d/%m/%Y", config["Billing"][B], utc_time_zone(), &TimePoint) == false)) return "'Billing' param is required";
+    if((config["Billing"][B].is_string() == false) || (parse("%d/%m/%Y", config["Billing"][B], utc_time_zone(), &TimePoint) == false)) throw string("'Billing' param is required");
     civil_day BillDate = civil_day(convert(TimePoint, utc_time_zone()));
-    if((BillDate <= StartDate) || (BillDate >= EndDate) || (find_if(Billing.begin(), Billing.end(), [&](const civil_day &day) -> bool { return day == BillDate; }) != Billing.end())) return "'Billing' param is invalid or repeated";
+    if((BillDate <= StartDate) || (BillDate >= EndDate) || (find_if(Billing.begin(), Billing.end(), [&](const civil_day &day) -> bool { return day == BillDate; }) != Billing.end())) throw string("'Billing' param is invalid or repeated");
     ConfigOUT["Billing"].push_back(format("%d/%m/%Y", TimePoint, utc_time_zone()));
   }
   return ConfigOUT;

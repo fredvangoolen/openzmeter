@@ -29,12 +29,12 @@ AnalyzerSoftFFTs::AnalyzerSoftFFTs(const string &serial, const Analyzer::Analyze
   for(uint8_t i = 0; i < pVoltageChannels; i++) {
     pFFTVoltageData[i].DataPtr     = NULL;
     pFFTVoltageData[i].ReservedLen = 0;
-    pVoltageFFT[i] = new Worker("FFT_V" + to_string(i), [&](void *a) { this->FFT_Func((const FFT_t *)a); }, -15);
+    pVoltageFFT[i] = new Worker("FFT_V" + to_string(i), -15);
   }
   for(uint8_t i = 0; i < pCurrentChannels; i++) {
     pFFTCurrentData[i].DataPtr     = NULL;
     pFFTCurrentData[i].ReservedLen = 0;
-    pCurrentFFT[i] = new Worker("FFT_I" + to_string(i), [&](void *a) { this->FFT_Func((const FFT_t *)a); }, -15);
+    pCurrentFFT[i] = new Worker("FFT_I" + to_string(i), -15);
   }
   pInLen  = 0;
   pOutLen = 0;
@@ -71,7 +71,7 @@ void AnalyzerSoftFFTs::Run(const AnalyzerSoftBlock *block) {
       pFFTVoltageData[i].DataPtr[n].Im = 0.0;
       pFFTVoltageData[i].DataPtr[n].Re = block->VoltageSample(i, n);
     }
-    pVoltageFFT[i]->Run(&pFFTVoltageData[i]);
+    pVoltageFFT[i]->Run([&, i]() { this->FFT_Func(&pFFTVoltageData[i]); });
   }
   for(uint8_t i = 0; i < pCurrentChannels; i++) {
     if(pInLen > pFFTCurrentData[i].ReservedLen) {
@@ -82,7 +82,7 @@ void AnalyzerSoftFFTs::Run(const AnalyzerSoftBlock *block) {
       pFFTCurrentData[i].DataPtr[n].Im = 0.0;
       pFFTCurrentData[i].DataPtr[n].Re = block->CurrentSample(i, n);
     }
-    pCurrentFFT[i]->Run(&pFFTCurrentData[i]);
+    pCurrentFFT[i]->Run([&, i]() { this->FFT_Func(&pFFTCurrentData[i]); });
   }
 }
 void AnalyzerSoftFFTs::Wait() {

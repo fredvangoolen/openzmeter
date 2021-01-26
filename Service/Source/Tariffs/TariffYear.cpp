@@ -19,17 +19,28 @@
 using namespace cctz;
 // ---------------------------------------------------------------------------------------------------------------------
 TariffYear::TariffYear(const json &config) {
-  Year = config["Year"];
-  for(uint16_t D = 0; D < config["Days"].size(); D++) Days[D] = config["Days"][D];
+  pYear     = config["Year"];
+  pUsedDays = config["Days"].size();
+  for(uint16_t D = 0; D < config["Days"].size(); D++) pDays[D] = config["Days"][D];
+}
+json TariffYear::GetConfig() const {
+  json Result = json::object();
+  Result["Year"] = pYear;
+  Result["Days"] = json::array();
+  for(uint16_t D = 0; D < pUsedDays; D++) Result["Days"].push_back(pDays[D]);
+  return Result;
+}
+uint16_t TariffYear::Year() const {
+  return pYear;
 }
 json TariffYear::CheckConfig(const json &config, const uint16_t dayTypes) {
   json ConfigOUT = json::object();
-  if((config.contains("Year") == false) || (config["Year"].is_number_integer() == false) || (config["Year"] < 2000) || (config["Year"] > 2100)) return "'Year' param is required";
+  if((config.contains("Year") == false) || (config["Year"].is_number_integer() == false) || (config["Year"] < 2000) || (config["Year"] > 2100)) throw string("'Year' param is required");
   ConfigOUT["Year"] = config["Year"];
-  if((config.contains("Days") == false) || (config["Days"].is_array() == false) || (config["Days"].size() != (size_t)get_yearday(civil_day(config["Year"], 12, 31)))) return "'Days' param is required";
+  if((config.contains("Days") == false) || (config["Days"].is_array() == false) || (config["Days"].size() != (size_t)get_yearday(civil_day(config["Year"], 12, 31)))) throw string("'Days' param is required");
   ConfigOUT["Days"] = json::array();
   for(uint16_t D = 0; D < config["Days"].size(); D++) {
-    if((config["Days"][D].is_number_unsigned() == false) || (config["Days"][D] >= dayTypes)) return "'Days' param is required";
+    if((config["Days"][D].is_number_unsigned() == false) || (config["Days"][D] >= dayTypes)) throw string("'Days' param is required");
     ConfigOUT["Days"].push_back(config["Days"][D]);
   }
   return ConfigOUT;

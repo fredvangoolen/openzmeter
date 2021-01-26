@@ -16,37 +16,43 @@
 #include "TariffPeriod.h"
 // ---------------------------------------------------------------------------------------------------------------------
 TariffPeriod::TariffPeriod(const json &config) {
-  Color = config["Color"];
-  DefaultPowerCost = config["DefaultPowerCost"];
-  DefaultEnergyCost = config["DefaultEnergyCost"];
-  Name = config["Name"];
-  Script = config["Script"];
-  for(uint16_t C = 0; C < config["Concepts"].size(); C++) Concepts.emplace_back(config["Concepts"][C]);
+  pColor = config["Color"];
+  pDefaultPowerCost = config["DefaultPowerCost"];
+  pDefaultEnergyCost = config["DefaultEnergyCost"];
+  pName = config["Name"];
+  pScript = config["Script"];
+  for(uint16_t C = 0; C < config["Concepts"].size(); C++) pConcepts.emplace_back(config["Concepts"][C]);
+}
+json TariffPeriod::GetConfig() const {
+  json Result = json::object();
+  Result["Color"] = pColor;
+  Result["DefaultPowerCost"] = pDefaultPowerCost;
+  Result["DefaultEnergyCost"] = pDefaultEnergyCost;
+  Result["Name"] = pName;
+  Result["Script"] = pScript;
+  Result["Concepts"] = json::array();
+  for(uint16_t C = 0; C < pConcepts.size(); C++) Result["Concepts"].push_back(pConcepts[C].GetConfig());
+  return Result;
 }
 json TariffPeriod::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
-  if(config.is_object() == false) return "'Concept' must be an object";
-  if((config.contains("Color") == false) || (config["Color"].is_string() == false)) return "'Color' param is required";
+  if(config.is_object() == false) throw string("'Concept' must be an object");
+  if((config.contains("Color") == false) || (config["Color"].is_string() == false)) throw string("'Color' param is required");
   ConfigOUT["Color"] = config["Color"];
-  if((config.contains("DefaultPowerCost") == false) || (config["DefaultPowerCost"].is_number() == false)) return "'DefaultPowerCost' param is required";
+  if((config.contains("DefaultPowerCost") == false) || (config["DefaultPowerCost"].is_number() == false)) throw string("'DefaultPowerCost' param is required");
   ConfigOUT["DefaultPowerCost"] = config["DefaultPowerCost"];
-  if((config.contains("DefaultEnergyCost") == false) || (config["DefaultEnergyCost"].is_number() == false)) return "'DefaultEnergyCost' param is required";
+  if((config.contains("DefaultEnergyCost") == false) || (config["DefaultEnergyCost"].is_number() == false)) throw string("'DefaultEnergyCost' param is required");
   ConfigOUT["DefaultEnergyCost"] = config["DefaultEnergyCost"];
-  if((config.contains("Name") == false) || (config["Name"].is_string() == false)) return "'Name' param is required";
+  if((config.contains("Name") == false) || (config["Name"].is_string() == false)) throw string("'Name' param is required");
   ConfigOUT["Name"] = config["Name"];
-  if((config.contains("Script") == false) || (config["Script"].is_string() == false)) return "'Script' param is required";
+  if((config.contains("Script") == false) || (config["Script"].is_string() == false)) throw string("'Script' param is required");
   set<string> Variables = {"ContractedPower", "PowerCost", "EnergyCost", "ActivePower", "ActiveEnergy", "ReactivePower", "ReactiveEnergy"};
-  string Res = TariffScript::CheckConfig(config["Script"], Variables);
-  if(Res.empty() == false) return Res;
-  if(Variables.find("Cost") == Variables.end()) return "'Cost' is not defined in 'Script'";
+  TariffScript::CheckConfig(config["Script"], Variables);
+  if(Variables.find("Cost") == Variables.end()) throw string("'Cost' is not defined in 'Script'");
   ConfigOUT["Script"] = config["Script"];
-  if((config.contains("Concepts") == false) || (config["Concepts"].is_array() == false)) return "'Concepts' param is required";
+  if((config.contains("Concepts") == false) || (config["Concepts"].is_array() == false)) throw string("'Concepts' param is required");
   ConfigOUT["Concepts"] = json::array();
-  for(uint16_t C = 0; C < config["Concepts"].size(); C++) {
-    json Concept = TariffConcept::CheckConfig(config["Concepts"][C], Variables);
-    if(Concept.is_string()) return Concept;
-    ConfigOUT["Concepts"].push_back(Concept);
-  }
+  for(uint16_t C = 0; C < config["Concepts"].size(); C++) ConfigOUT["Concepts"].push_back(TariffConcept::CheckConfig(config["Concepts"][C], Variables));
   return ConfigOUT;
 }
 // ---------------------------------------------------------------------------------------------------------------------

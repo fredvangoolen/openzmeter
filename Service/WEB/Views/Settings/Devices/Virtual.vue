@@ -36,7 +36,7 @@
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Samplerate</label>
-        <input-spin :min="10000" :max="100000" :big="true" v-model="Settings.SampleRate" :increment="100" :decimals="0" prepend="Hz"></input-spin>
+        <input-spin :min="10000" :max="1000000" :big="true" v-model="Settings.SampleRate" :increment="100" :decimals="0" prepend="Hz"></input-spin>
       </div>
     </div>
   </dlg>

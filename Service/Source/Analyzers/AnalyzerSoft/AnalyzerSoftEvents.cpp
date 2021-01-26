@@ -70,15 +70,14 @@ void AnalyzerSoftEvents::Config(const bool enabled, const float nominalVoltage, 
     delete pWorker;
     pWorker = NULL;
   } else if((enabled == true) && (pWorker == NULL)) {
-    pWorker = new Worker("EventsDet", [&](void *a) { this->Events_Func((const AnalyzerSoftBlock *)a); });
+    pWorker = new Worker("EventsDet");
   }
   pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoftEvents::Run(const AnalyzerSoftBlock *block, const uint64_t timestamp) {
   pthread_mutex_lock(&pMutex);
   pHaveEvent = false;
-  pTimestamp = timestamp;
-  if(pWorker != NULL) pWorker->Run((void*)block);
+  if(pWorker != NULL) pWorker->Run([=]() { this->Events_Func(block, timestamp); });
   pthread_mutex_unlock(&pMutex);
 }
 bool AnalyzerSoftEvents::Wait() {
@@ -125,7 +124,7 @@ void AnalyzerSoftEvents::SaveSamples(const uint64_t &time, const uint8_t type, c
   Result.append("}'");
   DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples) VALUES (" + DB.Bind(time) + ", " + DB.Bind(type) + ", " + Result + ")");
 }
-void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
+void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint64_t timestamp) {
   uint16_t Pos = 0;
   if(pNominalFrequency == 0.0) return;
   for(uint8_t i = 0; i < block->Cycles(); i++) {
@@ -202,7 +201,7 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block) {
       if(pEvent->SamplesDuration == 0) {
         string Type = EventTypeToString(pEvent->Type);
         LogFile::Debug("New event '%s' started on analyzer '%s'", Type.c_str(), pSerial.c_str());
-        pEvent->Start = pTimestamp + (uint32_t)((Pos * 1000) / pSamplerate);
+        pEvent->Start = timestamp + (uint32_t)((Pos * 1000) / pSamplerate);
         Database DB(pSerial);
         DB.ExecSentenceNoResult("INSERT INTO events(starttime, evttype, samplerate, reference, peak, change, notes, duration) VALUES (" + DB.Bind(pEvent->Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", '', 0)");
         SaveSamples(pEvent->Start, SAMPLES_RMS_PRESTART, pPrevCyclesLen);

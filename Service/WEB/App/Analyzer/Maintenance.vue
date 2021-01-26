@@ -421,6 +421,7 @@
         this.ShowSpinner = true;
         var Series = [];
         if(aggreg == 'Rates') {
+          ///TODO lo mismo que alarmas, se guarda con la config del analyzer
           fetch('getRates', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, IncludeDef: true }), headers: { 'Content-Type': 'application/json' } }).then(
             (res) => {
               const fileStream = streamSaver.createWriteStream('Rates.json', null);
@@ -432,6 +433,7 @@
             (fail) => { this.ShowSpinner = false; }
           );
         } else if(aggreg == 'AlarmsDef') {
+          ///TODO: Guardar datos del analyzer, no es necesario recuperar nada
           fetch('getAlarmsDef', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer }), headers: { 'Content-Type': 'application/json' } }).then(
             (res) => {
               const fileStream = streamSaver.createWriteStream('AlarmsDef.json', null);

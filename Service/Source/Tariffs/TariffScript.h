@@ -29,7 +29,7 @@ class TariffScript final {
     string        pExpression;
     bool          pInitialized;
   public :
-    static string CheckConfig(const string &script, set<string> &variables);
+    static void CheckConfig(const string &script, set<string> &variables);
   private :
     static float *VariableFactory(const char_type *name, void *params);
   public :

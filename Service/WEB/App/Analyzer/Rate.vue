@@ -4,16 +4,15 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Rates &raquo; Edit</h4></div>
       <div class="pull-right btn-group" v-if="Rate.Periods==null">
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('update', Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
       <toolbar-pager v-if="Rate.Periods==null" class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['Name', 'StartDate', 'EndDate']"></toolbar-pager>
       <div class="pull-right btn-group" v-if="Rate.Periods!=null">
-        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save rates config"></button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Periods</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Concepts' }" @click="View='Concepts'">Concepts</button>
         <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Cycles' }" @click="View='Cycles'">Cycles</button>
-        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('update', Rate)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
       </div>
     </template>
     <div class="row" v-if="Rate.Periods==null">
@@ -250,7 +249,7 @@
   import * as oZm from 'JS/openZmeter.js';
   import moment from 'moment';
   export default {
-    props: { analyzer: Object, rate: Object },
+    props: { analyzer: Object, rate: Number },
     data() {
       return { View: 'Main', Rate: null, ShowSpinner: false, FilterTariffs: [], Tariffs: [], FilterTaxes: [], FilterCycles: [], FilterCycles: [], SelDate: null, Error: null,
         BillDayNames: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th'],
@@ -273,11 +272,11 @@
       };
     },
     created: function() {
-      if(this.rate == null) {
-        this.Rate = { Analyzer: this.analyzer.Analyzer, Name: 'Unname rate', Description: '', Group: 0, StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxes: [], Billing: [] };
-      } else {
-        this.Rate = Object.assign({ Analyzer: this.analyzer.Analyzer}, this.rate);
-      }
+      //if(this.rate == null) {
+      //  this.Rate = { Analyzer: this.analyzer.Analyzer, Name: 'Unname rate', Description: '', Group: 0, StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxes: [], Billing: [] };
+      //} else {
+        this.Rate = Object.assign({ }, this.analyzer.Rates[this.rate]);
+      //}
       this.SelDate = this.Rate.StartDate;
       if(this.Rate.Periods == null) this.LoadTariffs();
     },

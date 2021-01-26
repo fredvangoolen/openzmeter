@@ -23,17 +23,17 @@ using namespace cctz;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftRates final {
   private :
-    string         pSerial;
-    time_zone      pTimeZone;
+    string                    pSerial;
+    time_zone                 pTimeZone;
+    vector<list<Rate> >       pRates;
+    pthread_rwlock_t          pLock;
+  public :
+    static json CheckConfig(const json &config);
   public :
     AnalyzerSoftRates(const string &serial);
     ~AnalyzerSoftRates();
-    void Config(const string &timezone);
-    void GetRates(const json &params, Response &response) const;
-    void AddRate(const json &params, Response &response) const;
-    void GetRate(const json &params, Response &response) const;
-    void SetRate(const json &params, Response &response) const;
-    void DelRate(const json &params, Response &response) const;
+    void Config(const string &timezone, const json &rates);
+    json GetConfig();
     void GetCosts(const json &params, Response &response) const;
     void GetBills(const json &params, Response &response) const;
 };

@@ -29,45 +29,49 @@ void Tools::ResetConsole() {
 void Tools::DisableEcho() {
   struct termios tattr;
   if(!isatty(STDIN_FILENO)) return;
-  tcgetattr(STDIN_FILENO, &pConsoleAttr);
-  atexit(ResetConsole);
-  tcgetattr (STDIN_FILENO, &tattr);
+  if(tcgetattr(STDIN_FILENO, &pConsoleAttr) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(atexit(ResetConsole) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(tcgetattr (STDIN_FILENO, &tattr) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   tattr.c_lflag &= ~(ICANON | ECHO);
   tattr.c_cc[VMIN] = 1;
   tattr.c_cc[VTIME] = 0;
-  tcsetattr (STDIN_FILENO, TCSAFLUSH, &tattr);
+  if(tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 uint64_t Tools::GetTime64() {
   struct timespec Time;
   if(clock_gettime(CLOCK_REALTIME, &Time) != 0) {
-    LogFile::Error("System", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return 0;
   }
   return (uint64_t)Time.tv_sec * 1000 + Time.tv_nsec / 1000000;
 }
 string Tools::GetUUID() {
-  uuid_t SessionID;
-  char   SessionIDText[37];
-  uuid_generate(SessionID);
-  uuid_unparse_upper(SessionID, SessionIDText);
-  return SessionIDText;
+  uuid_t UUID;
+  char   UUIDText[37];
+  uuid_generate(UUID);
+  uuid_unparse_upper(UUID, UUIDText);
+  return UUIDText;
+}
+bool Tools::ValidUUID(const string &uuid) {
+  uuid_t UUID;
+  return (uuid_parse(uuid.c_str(), UUID) == 0);
 }
 void Tools::RunDaemon() {
-  LogFile::Info("System", "Move to background task");
+  LogFile::Info("Move to background task");
   pid_t ProcID = fork();
   if(ProcID < 0) {
-    LogFile::Error("System", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     exit(1);
   }
   if(ProcID > 0) exit(0);
   umask(0);
   pid_t SID = setsid();
   if(SID < 0) {
-    LogFile::Error("System", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     exit(1);
   }
   LogFile::CloseConsole();
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
+  if(close(STDIN_FILENO) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(close(STDOUT_FILENO) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(close(STDERR_FILENO) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }

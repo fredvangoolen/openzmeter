@@ -186,20 +186,8 @@ void AnalyzerRemote::GetCosts(const json &params, Response &response) {
 void AnalyzerRemote::GetBills(const json &params, Response &response) {
   HandleRequest(READ, "getBills", params, response);
 }
-void AnalyzerRemote::GetAlarmsDef(const json &params, Response &response) {
-  HandleRequest(READ, "getAlarmsDef", params, response);
-}
 void AnalyzerRemote::TestAlarm(const json &params, Response &response) {
   HandleRequest(READ, "testAlarm", params, response);
-}
-void AnalyzerRemote::AddAlarmDef(const json &params, Response &response) {
-  HandleRequest(CONFIG, "addAlarmDef", params, response);
-}
-void AnalyzerRemote::SetAlarmDef(const json &params, Response &response) {
-  HandleRequest(CONFIG, "setAlarmDef", params, response);
-}
-void AnalyzerRemote::DelAlarmDef(const json &params, Response &response) {
-  HandleRequest(CONFIG, "delAlarmDef", params, response);
 }
 void AnalyzerRemote::GetAlarms(const json &params, Response &response) {
   HandleRequest(READ, "getAlarms", params, response);
@@ -213,21 +201,18 @@ void AnalyzerRemote::DelAlarmsRange(const json &params, Response &response) {
 void AnalyzerRemote::DelAlarm(const json &params, Response &response) {
   HandleRequest(WRITE, "delAlarm", params, response);
 }
-void AnalyzerRemote::GetRates(const json &params, Response &response) {
-  HandleRequest(READ, "getRates", params, response);
-}
-void AnalyzerRemote::AddRate(const json &params, Response &response) {
-  HandleRequest(CONFIG, "addRate", params, response);
-}
-void AnalyzerRemote::GetRate(const json &params, Response &response) {
-  HandleRequest(READ, "getRate", params, response);
-}
-void AnalyzerRemote::SetRate(const json &params, Response &response) {
-  HandleRequest(CONFIG, "setRate", params, response);
-}
-void AnalyzerRemote::DelRate(const json &params, Response &response) {
-  HandleRequest(CONFIG, "delRate", params, response);
-}
+//void AnalyzerRemote::AddRate(const json &params, Response &response) {
+//  HandleRequest(CONFIG, "addRate", params, response);
+//}
+//void AnalyzerRemote::GetRate(const json &params, Response &response) {
+//  HandleRequest(READ, "getRate", params, response);
+//}
+//void AnalyzerRemote::SetRate(const json &params, Response &response) {
+//  HandleRequest(CONFIG, "setRate", params, response);
+//}
+//void AnalyzerRemote::DelRate(const json &params, Response &response) {
+//  HandleRequest(CONFIG, "delRate", params, response);
+//}
 bool AnalyzerRemote::HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) {
 //  uint8_t Pending = len;
 

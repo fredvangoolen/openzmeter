@@ -25,7 +25,7 @@ string           WifiManager::pNetworkWIFI   = "lan";
 string           WifiManager::pWirelessWIFI  = "default_radio";
 // ---------------------------------------------------------------------------------------------------------------------
 WifiManager::WifiManager() {
-  LogFile::Info("Starting Wifi manager");
+  LogFile::Info("WifiManager", "Starting Wifi manager");
   json Config = ConfigFile::ReadConfig("/WIFI");
   if(Config.is_object() == true) {
     if(Config["Interface"].is_string()) pInterfaceWIFI = Config["Interface"];
@@ -43,24 +43,24 @@ WifiManager::WifiManager() {
   HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
 }
 WifiManager::~WifiManager() {
-  LogFile::Info("Stopping Wifi manager...");
+  LogFile::Info("WifiManager", "Stopping Wifi manager...");
   HTTPServer::UnregisterCallback("scanWIFI");
   HTTPServer::UnregisterCallback("getWIFI");
   HTTPServer::UnregisterCallback("setWIFI");
   MessageLoop::UnregisterListener("WIFI_PeriodicTasks");
-  LogFile::Info("Stopping Wifi manager...");
+  LogFile::Info("WifiManager", "Stopping Wifi manager...");
 }
 void WifiManager::PeriodicTasks() {
   json Params = json::object();
   Params["device"] = pInterfaceWIFI;
-  json Result = System::uBusCall("iwinfo", "info", Params);
-  Status::SetValue("/WIFI_Network", ((Result == nullptr) || (Result.is_object() == false) || (Result["ssid"].is_string() == false)) ? json() : Result["ssid"]);
-  Status::SetValue("/WIFI_Power", ((Result == nullptr) || (Result.is_object() == false) || (Result["quality"].is_number() == false) || (Result["quality_max"].is_number() == false)) ? json() : json(Result["quality"].get<int>() * 100.0 / Result["quality_max"].get<int>()));
+  json Result = SystemManager::uBusCall("iwinfo", "info", Params);
+  //LogFile::SetValue("WifiManager", "/Network", ((Result == nullptr) || (Result.is_object() == false) || (Result["ssid"].is_string() == false)) ? json() : Result["ssid"]);
+  //LogFile::SetValue("WifiManager", "/WIFI_Power", ((Result == nullptr) || (Result.is_object() == false) || (Result["quality"].is_number() == false) || (Result["quality_max"].is_number() == false)) ? json() : json(Result["quality"].get<int>() * 100.0 / Result["quality_max"].get<int>()));
 }
 void WifiManager::ScanWIFICallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::array();
-  string CommandStr = System::Exec("ubus call iwinfo scan '{\"device\":\"" + pInterfaceWIFI + "\"}'");
+  string CommandStr = SystemManager::Exec("ubus call iwinfo scan '{\"device\":\"" + pInterfaceWIFI + "\"}'");
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if((Tmp.is_discarded() == true) || (Tmp.is_object() == false) || (Tmp["results"].is_array() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
@@ -80,14 +80,14 @@ void WifiManager::ScanWIFICallback(const json &params, Response &response) {
 void WifiManager::GetWIFICallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::object();
-  string CommandStr = System::Exec("ubus call network.device status '{\"name\":\"" + pInterfaceWIFI + "\"}'");
+  string CommandStr = SystemManager::Exec("ubus call network.device status '{\"name\":\"" + pInterfaceWIFI + "\"}'");
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
     if(Tmp.is_object() && Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
     if(Result["Enabled"] == false) return HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
   }
-  CommandStr = System::Exec("ubus call uci get '{\"config\":\"network\", \"section\":\"" + pNetworkWIFI + "\"}'");
+  CommandStr = SystemManager::Exec("ubus call uci get '{\"config\":\"network\", \"section\":\"" + pNetworkWIFI + "\"}'");
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
@@ -106,7 +106,7 @@ void WifiManager::GetWIFICallback(const json &params, Response &response) {
       }
     }
   }
-  CommandStr = System::Exec("ubus call uci get '{\"config\":\"wireless\", \"section\":\"" + pWirelessWIFI + "\"}'");
+  CommandStr = SystemManager::Exec("ubus call uci get '{\"config\":\"wireless\", \"section\":\"" + pWirelessWIFI + "\"}'");
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
@@ -121,7 +121,7 @@ void WifiManager::GetWIFICallback(const json &params, Response &response) {
     }
   }
   Result["Status"] = json::object();
-  CommandStr = System::Exec("ubus call network.interface." + pNetworkWIFI + " status");
+  CommandStr = SystemManager::Exec("ubus call network.interface." + pNetworkWIFI + " status");
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
@@ -136,7 +136,7 @@ void WifiManager::GetWIFICallback(const json &params, Response &response) {
       }
     }
   }
-  CommandStr = System::Exec("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
+  CommandStr = SystemManager::Exec("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);

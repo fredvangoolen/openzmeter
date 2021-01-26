@@ -56,32 +56,32 @@ void RatesEval::FindStart() {
   pCurrent = pFrom;
   pLoadedRate = pProvider->InitRates(pFrom, pTo);
   if((pSeriesMask != 0) || (pLoadedRate == NULL)) return;
-  uint64_t Time = pLoadedRate->StartDate + 899999;
-  for(uint16_t n = 0; n < pLoadedRate->BillingCycles.size(); n++) {
-    if(pFrom < pLoadedRate->BillingCycles[n]) {
+  uint64_t Time = pLoadedRate->pStartDate + 899999;
+  for(uint16_t n = 0; n < pLoadedRate->pBillingCycles.size(); n++) {
+    if(pFrom < pLoadedRate->pBillingCycles[n]) {
       pFrom    = Time;
       pCurrent = pFrom;
       return;
     }
-    Time = pLoadedRate->BillingCycles[n] + 900000;
+    Time = pLoadedRate->pBillingCycles[n] + 900000;
   }
   pFrom    = Time;
   pCurrent = pFrom;
 }
 void RatesEval::LoadRate() {
   if(pPeriods.size() > 0) return;
-  pYearPtr          = pLoadedRate->Years.begin();
-  pBillPtr          = pLoadedRate->BillingCycles.begin();
-  pLoadedPeriodDate = pLoadedRate->StartDate;
-  pPriceModule      = PriceSource::CreateInstance(pLoadedRate->PriceSrc);
-  pPriceModule->PrepareRange(pCurrent, (pBillPtr != pLoadedRate->BillingCycles.end()) ? *pBillPtr : pLoadedRate->EndDate);
+  pYearPtr          = pLoadedRate->pYears.begin();
+  pBillPtr          = pLoadedRate->pBillingCycles.begin();
+  pLoadedPeriodDate = pLoadedRate->pStartDate;
+  pPriceModule      = PriceSource::CreateInstance(pLoadedRate->pPriceSrc);
+  pPriceModule->PrepareRange(pCurrent, (pBillPtr != pLoadedRate->pBillingCycles.end()) ? *pBillPtr : pLoadedRate->pEndDate);
   pPriceModule->GetParams(0, pPriceVariables);
-  while((pBillPtr != pLoadedRate->BillingCycles.end()) && (*pBillPtr < pCurrent)) {
+  while((pBillPtr != pLoadedRate->pBillingCycles.end()) && (*pBillPtr < pCurrent)) {
     pLoadedPeriodDate = *pBillPtr;
     pBillPtr++;
   }
-  for(uint16_t P = 0; P < pLoadedRate->Periods.size(); P++) {
-    TariffScript *Script = new TariffScript(pLoadedRate->Periods[P].Script);
+  for(uint16_t P = 0; P < pLoadedRate->pPeriods.size(); P++) {
+    TariffScript *Script = new TariffScript(pLoadedRate->pPeriods[P].pScript);
     Script->Var("ContractedPower", &pContractedPower);
     Script->Var("PowerCost",       &pPowerCost);
     Script->Var("EnergyCost",      &pEnergyCost);
@@ -91,24 +91,24 @@ void RatesEval::LoadRate() {
     Script->Var("ReactiveEnergy",  &pReactiveEnergy);
     pPeriods.push_back(Script);
   }
-  pScript = new TariffScript(pLoadedRate->Script);
+  pScript = new TariffScript(pLoadedRate->pScript);
   pScript->Var("Period",         &pPeriod);
   pScript->Var("ActivePower",    &pActivePower);
   pScript->Var("ActiveEnergy",   &pActiveEnergy);
   pScript->Var("ReactivePower",  &pReactivePower);
   pScript->Var("ReactiveEnergy", &pReactiveEnergy);
-  for(uint16_t P = 0; P < pLoadedRate->Periods.size(); P++) {
-    pScript->Var("ContractedPower_P" + to_string(P + 1), &pLoadedRate->Contracted[P]);
-    pScript->Var("EnergyCost_P" + to_string(P + 1),      (pLoadedRate->EnergyCost.size() == 0) ? &pEnergyCost : &pLoadedRate->EnergyCost[P]);
-    pScript->Var("PowerCost_P" + to_string(P + 1),       (pLoadedRate->PowerCost.size() == 0)  ? &pPowerCost  : &pLoadedRate->PowerCost[P]);
+  for(uint16_t P = 0; P < pLoadedRate->pPeriods.size(); P++) {
+    pScript->Var("ContractedPower_P" + to_string(P + 1), &pLoadedRate->pContracted[P]);
+    pScript->Var("EnergyCost_P" + to_string(P + 1),      (pLoadedRate->pEnergyCost.size() == 0) ? &pEnergyCost : &pLoadedRate->pEnergyCost[P]);
+    pScript->Var("PowerCost_P" + to_string(P + 1),       (pLoadedRate->pPowerCost.size() == 0)  ? &pPowerCost  : &pLoadedRate->pPowerCost[P]);
   }
-  if(pLoadedRate->EnergyCost.size() == 0) {
-    pEnergyScript = new TariffScript(pLoadedRate->EnergyCostScript);
+  if(pLoadedRate->pEnergyCost.size() == 0) {
+    pEnergyScript = new TariffScript(pLoadedRate->pEnergyCostScript);
     for(auto &Var : pPriceVariables) pEnergyScript->Var(Var.first, &Var.second);
     pEnergyScript->Var("Period", &pPeriod);
   }
-  if(pLoadedRate->PowerCost.size() == 0) {
-    pPowerScript = new TariffScript(pLoadedRate->PowerCostScript);
+  if(pLoadedRate->pPowerCost.size() == 0) {
+    pPowerScript = new TariffScript(pLoadedRate->pPowerCostScript);
     for(auto &Var : pPriceVariables) pPowerScript->Var(Var.first, &Var.second);
     pPowerScript->Var("Period", &pPeriod);
   }
@@ -136,8 +136,8 @@ void RatesEval::UnloadRate() {
 }
 json RatesEval::HandleSample() {
   while(pLoadedRate != NULL) {
-    if(pCurrent < pLoadedRate->StartDate) break;
-    if((pCurrent >= pLoadedRate->StartDate) && (pCurrent <= pLoadedRate->EndDate)) {
+    if(pCurrent < pLoadedRate->pStartDate) break;
+    if((pCurrent >= pLoadedRate->pStartDate) && (pCurrent <= pLoadedRate->pEndDate)) {
       LoadRate();
       break;
     }
@@ -150,19 +150,19 @@ json RatesEval::HandleSample() {
   json         Result = nullptr;
   civil_second Time   = convert(chrono::system_clock::from_time_t(pCurrent / 1000), pTimeZone);
   if(pPeriods.size() > 0) {
-    while(Time.year() > pYearPtr->Year) pYearPtr++;
-    uint16_t Period = pLoadedRate->Days[pYearPtr->Days[get_yearday(civil_day(Time)) - 1]].Quarters[Time.hour() * 4 + Time.minute() / 15];
+    while(Time.year() > pYearPtr->pYear) pYearPtr++;
+    uint16_t Period = pLoadedRate->pDays[pYearPtr->pDays[get_yearday(civil_day(Time)) - 1]].pQuarters[Time.hour() * 4 + Time.minute() / 15];
     pPeriod = (Period + 1.0);
-    if((pLoadedRate->EnergyCost.size() == 0) || (pLoadedRate->PowerCost.size() == 0)) pPriceModule->GetParams(pCurrent, pPriceVariables);
+    if((pLoadedRate->pEnergyCost.size() == 0) || (pLoadedRate->pPowerCost.size() == 0)) pPriceModule->GetParams(pCurrent, pPriceVariables);
     pPeriod          = Period + 1.0;
-    pColor           = pLoadedRate->Periods[Period].Color;
-    pContractedPower = pLoadedRate->Contracted[Period];
-    pEnergyCost      = (pLoadedRate->EnergyCost.size() == 0) ? pEnergyScript->Eval() : pLoadedRate->EnergyCost[Period];
-    pPowerCost       = (pLoadedRate->PowerCost.size() == 0)  ? pPowerScript->Eval()  : pLoadedRate->PowerCost[Period];
+    pColor           = pLoadedRate->pPeriods[Period].pColor;
+    pContractedPower = pLoadedRate->pContracted[Period];
+    pEnergyCost      = (pLoadedRate->pEnergyCost.size() == 0) ? pEnergyScript->Eval() : pLoadedRate->pEnergyCost[Period];
+    pPowerCost       = (pLoadedRate->pPowerCost.size() == 0)  ? pPowerScript->Eval()  : pLoadedRate->pPowerCost[Period];
     pScript->Eval();
     pPeriods[Period]->Eval();
     pCost = pScript->Var("Cost") + pPeriods[Period]->Var("Cost");
-    if(pCurrent == ((pBillPtr != pLoadedRate->BillingCycles.end()) ? *pBillPtr : pLoadedRate->EndDate)) {
+    if(pCurrent == ((pBillPtr != pLoadedRate->pBillingCycles.end()) ? *pBillPtr : pLoadedRate->pEndDate)) {
       Result = (pSeriesMask == 0) ? BuildBill() : BuildSample(true);
       UnloadRate();
     } else {
@@ -181,102 +181,102 @@ json RatesEval::BuildBill() {
   json Row          = json::object();
   Row["From"]        = pLoadedPeriodDate;
   Row["To"]          = pCurrent;
-  Row["Currency"]    = pLoadedRate->Currency;
-  Row["PowerUnits"]  = pLoadedRate->PowerUnits;
-  Row["EnergyUnits"] = pLoadedRate->EnergyUnits;
-  Row["Name"]        = pLoadedRate->Name;
-  Row["Description"] = pLoadedRate->Description;
+  Row["Currency"]    = pLoadedRate->pCurrency;
+  Row["PowerUnits"]  = pLoadedRate->pPowerUnits;
+  Row["EnergyUnits"] = pLoadedRate->pEnergyUnits;
+  Row["Name"]        = pLoadedRate->pName;
+  Row["Description"] = pLoadedRate->pDescription;
   Row["Periods"]     = json::array();
   Row["Complete"]    = (pNowDate >= pCurrent);
-  for(uint16_t P = 0; P < pLoadedRate->Periods.size(); P++) {
+  for(uint16_t P = 0; P < pLoadedRate->pPeriods.size(); P++) {
     json Period = json::array();
-    for(uint16_t C = 0; C < pLoadedRate->Periods[P].Concepts.size(); C++) {
+    for(uint16_t C = 0; C < pLoadedRate->pPeriods[P].pConcepts.size(); C++) {
       json Concept = json::object();
-      Concept["Description"] = pLoadedRate->Periods[P].Concepts[C].Description;
-      if(pLoadedRate->Periods[P].Concepts[C].Type == TariffConcept::CONCEPT_COST) {
-        float Cost = pPeriods[P]->Var(pLoadedRate->Periods[P].Concepts[C].Variable);
+      Concept["Description"] = pLoadedRate->pPeriods[P].pConcepts[C].pDescription;
+      if(pLoadedRate->pPeriods[P].pConcepts[C].pType == TariffConcept::CONCEPT_COST) {
+        float Cost = pPeriods[P]->Var(pLoadedRate->pPeriods[P].pConcepts[C].pVariable);
         Concept["Value"] = Cost;
         Concept["Type"] = "COST";
         GeneralTerm += Cost;
-      } else if(pLoadedRate->Periods[P].Concepts[C].Type == TariffConcept::CONCEPT_COST_ENERGY) {
-        float Cost = pPeriods[P]->Var(pLoadedRate->Periods[P].Concepts[C].Variable);
+      } else if(pLoadedRate->pPeriods[P].pConcepts[C].pType == TariffConcept::CONCEPT_COST_ENERGY) {
+        float Cost = pPeriods[P]->Var(pLoadedRate->pPeriods[P].pConcepts[C].pVariable);
         Concept["Value"] = Cost;
         Concept["Type"] = "COST_ENERGY";
         EnergyTerm += Cost;
-      } else if(pLoadedRate->Periods[P].Concepts[C].Type == TariffConcept::CONCEPT_COST_POWER) {
-        float Cost = pPeriods[P]->Var(pLoadedRate->Periods[P].Concepts[C].Variable);
+      } else if(pLoadedRate->pPeriods[P].pConcepts[C].pType == TariffConcept::CONCEPT_COST_POWER) {
+        float Cost = pPeriods[P]->Var(pLoadedRate->pPeriods[P].pConcepts[C].pVariable);
         Concept["Value"] = Cost;
         Concept["Type"] = "COST_POWER";
         PowerTerm += Cost;
       } else {
         Concept["Type"] = "INFO";
-        Concept["Value"] = pPeriods[P]->Var(pLoadedRate->Periods[P].Concepts[C].Variable);
+        Concept["Value"] = pPeriods[P]->Var(pLoadedRate->pPeriods[P].pConcepts[C].pVariable);
       }
       Period.push_back(Concept);
     }
     Row["Periods"].push_back(Period);
   }
   Row["General"] = json::array();
-  for(uint16_t C = 0; C < pLoadedRate->Concepts.size(); C++) {
+  for(uint16_t C = 0; C < pLoadedRate->pConcepts.size(); C++) {
     json Concept = json::object();
-    Concept["Description"] = pLoadedRate->Concepts[C].Description;
-    if(pLoadedRate->Concepts[C].Type == TariffConcept::CONCEPT_COST) {
-      float Cost = pScript->Var(pLoadedRate->Concepts[C].Variable);
+    Concept["Description"] = pLoadedRate->pConcepts[C].pDescription;
+    if(pLoadedRate->pConcepts[C].pType == TariffConcept::CONCEPT_COST) {
+      float Cost = pScript->Var(pLoadedRate->pConcepts[C].pVariable);
       Concept["Value"] = Cost;
       Concept["Type"] = "COST";
       GeneralTerm += Cost;
-    } else if(pLoadedRate->Concepts[C].Type == TariffConcept::CONCEPT_COST_ENERGY) {
-      float Cost = pScript->Var(pLoadedRate->Concepts[C].Variable);
+    } else if(pLoadedRate->pConcepts[C].pType == TariffConcept::CONCEPT_COST_ENERGY) {
+      float Cost = pScript->Var(pLoadedRate->pConcepts[C].pVariable);
       Concept["Value"] = Cost;
       Concept["Type"] = "COST_ENERGY";
       EnergyTerm += Cost;
-    } else if(pLoadedRate->Concepts[C].Type == TariffConcept::CONCEPT_COST_POWER) {
-      float Cost = pScript->Var(pLoadedRate->Concepts[C].Variable);
+    } else if(pLoadedRate->pConcepts[C].pType == TariffConcept::CONCEPT_COST_POWER) {
+      float Cost = pScript->Var(pLoadedRate->pConcepts[C].pVariable);
       Concept["Value"] = Cost;
       Concept["Type"] = "COST_POWER";
       PowerTerm += Cost;
     } else {
       Concept["Type"] = "INFO";
-      Concept["Value"] = pScript->Var(pLoadedRate->Concepts[C].Variable);
+      Concept["Value"] = pScript->Var(pLoadedRate->pConcepts[C].pVariable);
     }
     Row["General"].push_back(Concept);
   }
   float Total = EnergyTerm + PowerTerm + GeneralTerm;
   Row["Taxes"] = json::array();
-  for(uint16_t T = 0; T < pLoadedRate->Taxes.size(); T++) {
+  for(uint16_t T = 0; T < pLoadedRate->pTaxes.size(); T++) {
     json Tax = json::object();
-    if(pLoadedRate->Taxes[T].Type == RateTax::TAX_PERCENT_ENERGY) {
+    if(pLoadedRate->pTaxes[T].pType == RateTax::TAX_PERCENT_ENERGY) {
       Tax["Type"] = "PERCENT_ENERGY";
-      Tax["Value"] = EnergyTerm * (pLoadedRate->Taxes[T].Value / 100.0);
-      Total += EnergyTerm * (pLoadedRate->Taxes[T].Value / 100.0);
-    } else if(pLoadedRate->Taxes[T].Type == RateTax::TAX_PERCENT_POWER) {
+      Tax["Value"] = EnergyTerm * (pLoadedRate->pTaxes[T].pValue / 100.0);
+      Total += EnergyTerm * (pLoadedRate->pTaxes[T].pValue / 100.0);
+    } else if(pLoadedRate->pTaxes[T].pType == RateTax::TAX_PERCENT_POWER) {
       Tax["Type"] = "PERCENT_POWER";
-      Tax["Value"] = PowerTerm * (pLoadedRate->Taxes[T].Value / 100.0);
-      Total += PowerTerm * (pLoadedRate->Taxes[T].Value / 100.0);
-    } else if(pLoadedRate->Taxes[T].Type == RateTax::TAX_PERCENT_ENERGY_POWER) {
+      Tax["Value"] = PowerTerm * (pLoadedRate->pTaxes[T].pValue / 100.0);
+      Total += PowerTerm * (pLoadedRate->pTaxes[T].pValue / 100.0);
+    } else if(pLoadedRate->pTaxes[T].pType == RateTax::TAX_PERCENT_ENERGY_POWER) {
       Tax["Type"] = "PERCENT_ENERGY_POWER";
-      Tax["Value"] = (EnergyTerm + PowerTerm) * (pLoadedRate->Taxes[T].Value / 100.0);
-      Total += (EnergyTerm + PowerTerm) * (pLoadedRate->Taxes[T].Value / 100.0);
-    } else if(pLoadedRate->Taxes[T].Type == RateTax::TAX_FIXED) {
+      Tax["Value"] = (EnergyTerm + PowerTerm) * (pLoadedRate->pTaxes[T].pValue / 100.0);
+      Total += (EnergyTerm + PowerTerm) * (pLoadedRate->pTaxes[T].pValue / 100.0);
+    } else if(pLoadedRate->pTaxes[T].pType == RateTax::TAX_FIXED) {
       Tax["Type"] = "FIXED_QUANTITY";
-      Tax["Value"] = pLoadedRate->Taxes[T].Value;
-      GeneralTerm += pLoadedRate->Taxes[T].Value;
-      Total += pLoadedRate->Taxes[T].Value;
+      Tax["Value"] = pLoadedRate->pTaxes[T].pValue;
+      GeneralTerm += pLoadedRate->pTaxes[T].pValue;
+      Total += pLoadedRate->pTaxes[T].pValue;
     } else {
       continue;
     }
-    Tax["Description"] = pLoadedRate->Taxes[T].Description;
+    Tax["Description"] = pLoadedRate->pTaxes[T].pDescription;
     Row["Taxes"].push_back(Tax);
   }
   float Tmp = 0.0;
-  for(uint16_t T = 0; T < pLoadedRate->Taxes.size(); T++) {
-    if(pLoadedRate->Taxes[T].Type == RateTax::TAX_PERCENT) {
+  for(uint16_t T = 0; T < pLoadedRate->pTaxes.size(); T++) {
+    if(pLoadedRate->pTaxes[T].pType == RateTax::TAX_PERCENT) {
       json Tax = json::object();
-      Tax["Description"] = pLoadedRate->Taxes[T].Description;
+      Tax["Description"] = pLoadedRate->pTaxes[T].pDescription;
       Tax["Type"] = "PERCENT_TOTAL";
-      Tax["Value"] = Total * (pLoadedRate->Taxes[T].Value / 100.0);
+      Tax["Value"] = Total * (pLoadedRate->pTaxes[T].pValue / 100.0);
       Row["Taxes"].push_back(Tax);
-      Tmp += Total * (pLoadedRate->Taxes[T].Value / 100.0);
+      Tmp += Total * (pLoadedRate->pTaxes[T].pValue / 100.0);
     }
   }
   Row["Total"] = Total + Tmp;
@@ -328,8 +328,8 @@ json RatesEval::FetchRow() {
     }
     if((pSeriesMask != 0) && (pCurrent == pTo)) pFinished = true;
     if((pSeriesMask == 0) && (pCurrent >= pTo)) {
-      if((pLoadedRate != NULL) && (pLoadedRate->EndDate == pCurrent)) pFinished = true;
-      if((pLoadedRate != NULL) && (pBillPtr != pLoadedRate->BillingCycles.end()) && (*pBillPtr == pCurrent)) pFinished = true;
+      if((pLoadedRate != NULL) && (pLoadedRate->pEndDate == pCurrent)) pFinished = true;
+      if((pLoadedRate != NULL) && (pBillPtr != pLoadedRate->pBillingCycles.end()) && (*pBillPtr == pCurrent)) pFinished = true;
       if((pLoadedRate == NULL) && (pCurrent >= pTo)) pFinished = true;
     }
   }

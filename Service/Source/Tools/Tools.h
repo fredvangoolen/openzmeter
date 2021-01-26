@@ -29,5 +29,6 @@ class Tools {
     static void      RunDaemon();
     static uint64_t  GetTime64();
     static string    GetUUID();
+    static bool      ValidUUID(const string &uuid);
 };
 //----------------------------------------------------------------------------------------------------------------------

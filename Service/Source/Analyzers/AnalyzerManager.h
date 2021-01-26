@@ -22,7 +22,6 @@
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerManager final {
-  friend class APIGetAnalyzers;
   private :
     static map<string, Analyzer*>  pAnalyzers;       //Initiated by analyzer
     static pthread_rwlock_t        pAnalyzersLock;   //Control access to critical sections
@@ -45,24 +44,19 @@ class AnalyzerManager final {
     static void GetEventCallback(const json &params, Response &response);
     static void SetEventCallback(const json &params, Response &response);
     static void DelEventCallback(const json &params, Response &response);
-    static void GetAlarmsDefCallback(const json &params, Response &response);
     static void TestAlarmCallback(const json &params, Response &response);
-    static void AddAlarmDefCallback(const json &params, Response &response);
-    static void SetAlarmDefCallback(const json &params, Response &response);
-    static void DelAlarmDefCallback(const json &params, Response &response);
     static void GetAlarmsCallback(const json &params, Response &response);
     static void GetAlarmsRangeCallback(const json &params, Response &response);
     static void DelAlarmCallback(const json &params, Response &response);
     static void DelAlarmsRangeCallback(const json &params, Response &response);
-    static void GetRatesCallback(const json &params, Response &response);
-    static void GetRateCallback(const json &params, Response &response);
-    static void AddRateCallback(const json &params, Response &response);
-    static void SetRateCallback(const json &params, Response &response);
-    static void DelRateCallback(const json &params, Response &response);
-    static void GetPermissionsCallback(const json &params, Response &response);
-    static void AddPermissionCallback(const json &params, Response &response);
-    static void SetPermissionCallback(const json &params, Response &response);
-    static void DelPermissionCallback(const json &params, Response &response);
+//    static void GetRateCallback(const json &params, Response &response);
+//    static void AddRateCallback(const json &params, Response &response);
+//    static void SetRateCallback(const json &params, Response &response);
+//    static void DelRateCallback(const json &params, Response &response);
+//    static void GetPermissionsCallback(const json &params, Response &response);
+//    static void AddPermissionCallback(const json &params, Response &response);
+//    static void SetPermissionCallback(const json &params, Response &response);
+//    static void DelPermissionCallback(const json &params, Response &response);
   public :
     static bool AddAnalyzer(Analyzer *analyzer, const string &user = "admin");
     static bool DelAnalyzer(const string &serial);

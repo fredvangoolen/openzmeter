@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <map>
-#include <list>
+#include <deque>
 #include <pthread.h>
 #include <stdarg.h>
 #include "nlohmann/json.hpp"
@@ -25,40 +25,41 @@ using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
 class LogFile final {
   private :
+    static const uint16_t MaxMessages = 100;
+  private :
     enum Type { ERROR = 0, WARNING = 1, INFO = 2, DEBUG = 3 };
-    typedef struct {
+    typedef struct Message_t {
       uint64_t  Time;
       string    Message;
+      Message_t(const uint64_t time, const char *msg) { Time = time; Message = msg; }
     } Message_t;
-    typedef struct {
-      json                 Properties;
-      list<Message_t>      Debug;
-      pthread_rwlock_t     Lock;
-    } Component_t;
   private :
-    static map<string, Component_t*> pComponents;
-    static pthread_mutex_t           pMutex;
-    static pthread_rwlock_t          pLock;
-    static bool                      pConsole;
-    static int                       pFile;
-    static Type                      pLevel;
-    static bool                      pDebug;
+    static deque<Message_t>  pDebug;
+    static uint64_t          pDebugCount;
+    static deque<Message_t>  pWarning;
+    static uint64_t          pWarningCount;
+    static deque<Message_t>  pInfo;
+    static uint64_t          pInfoCount;
+    static deque<Message_t>  pError;
+    static uint64_t          pErrorCount;
+    static pthread_mutex_t   pMutex;
+    static pthread_rwlock_t  pLock;
+    static bool              pConsole;
+    static int               pFile;
+    static Type              pLevel;
+    static bool              pDebugEnabled;
   private :
-    static void Msg(Type type, const string &comp, const char *msg, va_list params);
-    static json GetComponent(Component_t *comp);
-    static json ToJSON(const Message_t &msg);
+    static void Msg(Type type, const char *msg, va_list params);
+    static json ToJSON(const Type type, const Message_t &msg);
   public :
     LogFile();
     virtual ~LogFile();
   public :
     static void EnableDebug();
     static void CloseConsole();
-    static json GetComponent(const string &comp);
     static json ToJSON();
-    static void SetValue(const string &comp, const string &prop, const json &value);
-    static json GetValue(const string &comp, const string &prop);
-    static void Info(const string &comp, const char *msg, ...);
-    static void Warning(const string &comp, const char *msg, ...);
-    static void Error(const string &comp, const char *msg, ...);
-    static void Debug(const string &comp, const char *msg, ...);
+    static void Info(const char *msg, ...);
+    static void Warning(const char *msg, ...);
+    static void Error(const char *msg, ...);
+    static void Debug(const char *msg, ...);
 };

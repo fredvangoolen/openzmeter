@@ -19,63 +19,64 @@
 #include "Worker.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
-Worker::Worker(const string &name, function<void(void*)> callback, int8_t nice) {
-  pWorking   = false;
+Worker::Worker(const string &name, int8_t nice) {
+//  pWorking   = false;
   pTerminate = false;
   pCondWake  = PTHREAD_COND_INITIALIZER;
   pCondWait  = PTHREAD_COND_INITIALIZER;
   pMutex     = PTHREAD_MUTEX_INITIALIZER;
-  pRunParam  = NULL;
+//  pRunParam  = NULL;
   pThread    = 0;
-  pCallback  = callback;
+  pCallback  = NULL;
   if(pthread_create(&pThread, NULL, [](void *params) { return ((Worker*)params)->Thread(); }, (void*)this) != 0) {
     pThread = 0;
-    LogFile::Error("System", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return;
+  } else {
+    if(pthread_setname_np(pThread, name.c_str()) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    if((nice != 0) && (setpriority(PRIO_PROCESS, pThread, -nice) != 0)) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   }
-  if(nice != 0) {
-    if(setpriority(PRIO_PROCESS, pThread, -nice) != 0) LogFile::Error("System", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  }
-  if(pthread_setname_np(pThread, name.c_str()) != 0) LogFile::Error("System", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 Worker::~Worker() {
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   pTerminate = true;
-  pthread_cond_signal(&pCondWake);
-  pthread_mutex_unlock(&pMutex);
-  if(pThread != 0) pthread_join(pThread, NULL);
+  if(pthread_cond_signal(&pCondWake) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if((pThread != 0) && (pthread_join(pThread, NULL) != 0)) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
-void Worker::Run(void *param) {
-  pthread_mutex_lock(&pMutex);
-  pWorking = true;
-  pRunParam = param;
-  pthread_cond_signal(&pCondWake);
-  pthread_mutex_unlock(&pMutex);
+void Worker::Run(function<void()> callback) {
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(pTerminate == false) {
+    pCallback = std::move(callback);
+    pthread_cond_signal(&pCondWake);
+  }
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 bool Worker::IsWorking() {
-  pthread_mutex_lock(&pMutex);
-  bool Result = pWorking;
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  bool Result = (pCallback != NULL);
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   return Result;
 }
 void *Worker::Thread() {
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   while(pTerminate == false) {
-    pthread_mutex_lock(&pMutex);
-    while((pTerminate == false) && (pWorking == false)) pthread_cond_wait(&pCondWake, &pMutex);
-    if((pTerminate == false) && (pWorking == true)) {
-      pthread_mutex_unlock(&pMutex);
-      pCallback(pRunParam);
-      pthread_mutex_lock(&pMutex);
+    if(pCallback == NULL) {
+      if(pthread_cond_wait(&pCondWake, &pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    } else {
+      if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+      pCallback();
+      if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+      pCallback = NULL;
+      if(pthread_cond_broadcast(&pCondWait) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     }
-    pWorking = false;
-    pthread_cond_broadcast(&pCondWait);
-    pthread_mutex_unlock(&pMutex);
   }
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   return NULL;
 }
 void Worker::Wait() {
-  pthread_mutex_lock(&pMutex);
-  while((pTerminate == false) && (pWorking == true)) pthread_cond_wait(&pCondWait, &pMutex);
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  while((pTerminate == false) && (pCallback != NULL)) pthread_cond_wait(&pCondWait, &pMutex);
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 // ---------------------------------------------------------------------------------------------------------------------

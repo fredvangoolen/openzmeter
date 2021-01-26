@@ -37,6 +37,7 @@ class DeviceV2 final : public Device {
   private :
     static bool                  pRegistered;
   private :
+    deque<DeviceV2Analyzer*>     pRunningAnalyzers;        //Running analyzers
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pThread;                  //Descriptor del hilo de captura
     volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
@@ -61,6 +62,7 @@ class DeviceV2 final : public Device {
     float                        pAverageValues[7];        //Average wave value of last second
     pthread_rwlock_t             pAverageLocks;            //Lock access to average values
     bool                         pButtonAction;            //Last action readed
+    uint64_t                     pLastEvent;               //Last event generated
     uint8_t                      pChannelsDelaySize[7];    //Delay line size for each channel
     uint8_t                      pChannelsDelayPos[7];     //Delay line position for each channel
     int16_t                     *pChannelsDelay;           //Channel delay line buffers

@@ -117,6 +117,8 @@ const char *HTTPServer::MimeType(const string &file) {
   size_t FileNameLen = file.length();
   if((FileNameLen >= 3) && (file.compare(FileNameLen - 3, 3, ".js")) == 0) {
     return "text/javascript";
+  } else if((FileNameLen >= 3) && (file.compare(FileNameLen - 3, 3, ".gz"))  == 0) {
+    return "application/x-gzip";
   } else if((FileNameLen >= 4) && (file.compare(FileNameLen - 4, 4, ".png"))  == 0) {
     return "image/png";
   } else if((FileNameLen >= 4) && (file.compare(FileNameLen - 4, 4, ".ico"))  == 0) {

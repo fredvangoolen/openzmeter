@@ -19,15 +19,15 @@
 #include "SystemManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 UpdateManager::UpdateManager() {
-  LogFile::Info("Starting Update manager");
+  LogFile::Info("UpdateManager", "Starting Update manager");
   HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
   HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
 }
 UpdateManager::~UpdateManager() {
-  LogFile::Info("Stopping Update manager...");
+  LogFile::Info("UpdateManager", "Stopping Update manager...");
   HTTPServer::UnregisterCallback("getUpdates");
   HTTPServer::UnregisterCallback("setUpgrade");
-  LogFile::Info("Update manager stoped");
+  LogFile::Info("UpdateManager", "Update manager stoped");
 }
 void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

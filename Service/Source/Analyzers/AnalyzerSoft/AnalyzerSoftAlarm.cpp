@@ -16,15 +16,16 @@
 #include "AnalyzerSoftAlarm.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAlarm::AnalyzerSoftAlarm(const string &serial, const string &uid, const string &expr, const string &name, const uint8_t prio, const uint16_t samples, const uint16_t window, const string &aggreg, float &voltage, float &freq) {
+AnalyzerSoftAlarm::AnalyzerSoftAlarm(const string &serial, float &voltage, float &freq, const json &config) {
   pSerial      = serial;
-  pUID         = uid;
-  pExpression  = expr;
-  pName        = name;
-  pPriority    = prio;
-  pSamples     = samples;
-  pWindow      = window;
-  pAggreg      = aggreg;
+  pUID         = config["AlarmID"];
+  pExpression  = config["Expression"];
+  pName        = config["Name"];
+  pPriority    = config["Priority"];
+  pSamples     = config["Samples"];
+  pWindow      = config["Window"];
+  pAggreg      = config["Aggreg"];
+  pEnabled     = config["Enabled"];
   pResultPos   = 0;
   pResultCount = 0;
   pTriggerTime = 0;
@@ -39,22 +40,26 @@ AnalyzerSoftAlarm::~AnalyzerSoftAlarm() {
 }
 json AnalyzerSoftAlarm::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
-  ConfigOUT["Name"] = "No name";
-  ConfigOUT["Priority"] = 0;
+  ConfigOUT["AlarmID"]    = Tools::GetUUID();
+  ConfigOUT["Name"]       = "No name";
+  ConfigOUT["Priority"]   = 0;
   ConfigOUT["Expression"] = "";
-  ConfigOUT["Aggreg"] = "3S";
-  ConfigOUT["Samples"] = 10;
-  ConfigOUT["Window"] = 12;
+  ConfigOUT["Aggreg"]     = "3S";
+  ConfigOUT["Samples"]    = 10;
+  ConfigOUT["Window"]     = 12;
+  ConfigOUT["Enabled"]    = true;
+  if((config.contains("AlarmID") == true) && (config["AlarmID"].is_string() == true) && (Tools::ValidUUID(config["AlarmID"]) == true)) ConfigOUT["AlarmID"] = config["AlarmID"];
   if((config.contains("Name") == true) && (config["Name"].is_string() == true)) ConfigOUT["Name"] = config["Name"];
   if((config.contains("Priority") == true) && (config["Priority"].is_number_unsigned() == false) && (config["Priority"] < 3)) ConfigOUT["Priority"] = config["Priority"];
   if((config.contains("Expression") == true) && (config["Expression"].is_string() == true)) ConfigOUT["Expression"] = config["Expression"];
   if((config.contains("Aggreg") == true) && (config["Aggreg"].is_string() == true) && ((config["Aggreg"] == "200MS") || (config["Aggreg"] == "3S") || (config["Aggreg"] == "1M") || (config["Aggreg"] == "10M") || (config["Aggreg"] == "15M") || (config["Aggreg"] == "1H"))) ConfigOUT["Aggreg"] = config["Aggreg"];
   if((config.contains("Samples") == true) && (config["Samples"].is_number_unsigned() == true) && (config["Samples"] <= 1000)) ConfigOUT["Samples"] = config["Samples"];
   if((config.contains("Window") == true) && (config["Window"].is_number_unsigned() == true) && (config["Window"] > ConfigOUT["Samples"])) ConfigOUT["Window"] = config["Window"];
+  if((config.contains("Enabled") == true) && (config["Enabled"].is_boolean() == true)) ConfigOUT["Enabled"] = config["Enabled"];
   return ConfigOUT;
 }
-AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(const string &aggreg, AnalyzerSoftAggreg *data) {
-  if(pAggreg != aggreg) return NONE;
+AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(AnalyzerSoftAggreg *data) {
+  if(pEnabled == false) return NONE;
   if(pInitialized == false) {
     data->muParserInit(pEvaluator, pExpression);
     pInitialized = true;
@@ -92,5 +97,17 @@ string AnalyzerSoftAlarm::Name() const {
 }
 uint8_t AnalyzerSoftAlarm::Priority() const {
   return pPriority;
+}
+json AnalyzerSoftAlarm::GetConfig() const {
+  json Result = json::object();
+  Result["AlarmID"]    = pUID;
+  Result["Expression"] = pExpression;
+  Result["Name"]       = pName;
+  Result["Priority"]   = pPriority;
+  Result["Samples"]    = pSamples;
+  Result["Window"]     = pWindow;
+  Result["Aggreg"]     = pAggreg;
+  Result["Enabled"]    = pEnabled;
+  return Result;
 }
 // ---------------------------------------------------------------------------------------------------------------------

@@ -30,7 +30,7 @@ using json = nlohmann::json;
 #define TELEGRAM_POLLING_SEC    3
 #define TELEGRAM_UPDATE_LIMIT 100
 //----------------------------------------------------------------------------------------------------------------------
-class Telegram final {
+class TelegramManager final {
   private :
     typedef struct {
       uint64_t              LastTime;     //Last time event
@@ -55,8 +55,8 @@ class Telegram final {
     static json  CheckConfig(const json &config);
     static void *Thread_Func(void *params);
   public :
-    Telegram();
-    ~Telegram();
+    TelegramManager();
+    ~TelegramManager();
   public :
     static void  SendAlarm(const string &analyzer, const time_zone &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered);
     static bool  SendMessage(const json &msg, Client *client);

@@ -136,6 +136,7 @@ uint32_t DeviceV2::AnalyzersCount() {
 }
 void DeviceV2::ClearAnalyzers() {
   pthread_mutex_lock(&pConfigLock);
+  pRunningAnalyzers.clear();
   for(uint8_t n = 0; n < pAnalyzersCount; n++) {
     AnalyzerManager::DelAnalyzer(pAnalyzers[n]->Serial());
     delete pAnalyzers[n];
@@ -456,7 +457,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
         if(StatusRecv == true) continue;
         float Battery_Volt = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
 //        LogFile::SetValue("Devices", "/Battery_Voltage", Battery_Volt);
-        float Battery_Level  = (Battery_Volt - 2.96) * 80.65;
+//        float Battery_Level  = (Battery_Volt - 2.96) * 80.65;
 //        Status::SetValue("/Battery_Level", (Battery_Level > 100.0) ? 100.0 : Battery_Level);
 //        Status::SetValue("/Charging", (Sample & 0x0002) ? true: false);
 //        Status::SetValue("/Powered", (Sample & 0x0001) ? true: false);
@@ -553,9 +554,11 @@ void DeviceV2::BufferAppend() {
   pRunAverageCounter++;
   if(pRunAverageCounter == (DEVICEV2_SAMPLEFREQ * 10)) {
     pthread_rwlock_wrlock(&pAverageLocks);
-    for(uint8_t Ch = 0; Ch < 7; Ch++) pAverageValues[Ch] = pRunAverageValues[Ch] / (DEVICEV2_SAMPLEFREQ * 10.0);
+    for(uint8_t Ch = 0; Ch < 7; Ch++) {
+      pAverageValues[Ch] = pRunAverageValues[Ch] / (DEVICEV2_SAMPLEFREQ * 10.0);
+      pRunAverageValues[Ch] = 0;
+    }
     pthread_rwlock_unlock(&pAverageLocks);
-    memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
     pRunAverageCounter = 0;
   }
   if(pEnabled == false) return;
@@ -568,11 +571,14 @@ void DeviceV2::BufferAppend() {
     pBufferTail = 0;
     LogFile::Error("Capture buffer overflow in device '%s'", pSerial.c_str());
   }
-  for(uint8_t n = 0; n < pAnalyzersCount; n++) {
-    if(pAnalyzers[n]->IsWorking() == true) return;
+  while(pRunningAnalyzers.size() > 0) {
+    DeviceV2Analyzer *Analyzer = pRunningAnalyzers.front();
+    if(Analyzer->IsWorking() == true) return;
+    uint64_t LastEvent = Analyzer->GetLastEvent();
+    if(LastEvent > pLastEvent) pLastEvent = LastEvent;
+    pRunningAnalyzers.pop_front();
   }
-  bool AnalyzerRun = false;
-  for(uint8_t max = 0; (max < 5) && (pBufferTail != pBufferHead) && (AnalyzerRun == false); max++) {
+  for(uint8_t Max = 0; (Max < 2) && (pBufferTail != pBufferHead) && (pRunningAnalyzers.size() == 0); Max++) {
     float Values[7];
     int16_t *DelayPtr = pChannelsDelay;
     int16_t *Ptr      = &pBuffer[pBufferTail * 7];
@@ -591,7 +597,9 @@ void DeviceV2::BufferAppend() {
     Values[4] = (Values[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
     Values[5] = (Values[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
     Values[6] = (Values[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
-    for(uint8_t n = 0; n < pAnalyzersCount; n++) AnalyzerRun |= pAnalyzers[n]->BufferAppend(Values, Used);
+    for(uint8_t n = 0; n < pAnalyzersCount; n++) {
+      if(pAnalyzers[n]->BufferAppend(Values, Used) == true) pRunningAnalyzers.push_back(pAnalyzers[n]);
+    }
   }
 }
 //----------------------------------------------------------------------------------------------------------------------

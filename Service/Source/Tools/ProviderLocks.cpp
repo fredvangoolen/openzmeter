@@ -62,7 +62,7 @@ bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
   pthread_mutex_lock(&pMutex);
   while((Error == 0) && (pDataReady == true) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerEnterCond, &pMutex, &To);
   if((Error != 0) && (Error != ETIMEDOUT)) {
-    LogFile::Error("System", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
   } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
@@ -72,7 +72,7 @@ bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
   pConsumers++;
   while((Error == 0) && (pDataReady == false) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerWaitCond, &pMutex, &To);
   if((Error != 0) && (Error != ETIMEDOUT)) {
-    LogFile::Error("System", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     pthread_mutex_unlock(&pMutex);
     return false;
   } else if((pTerminate == true) || (Error == ETIMEDOUT)) {

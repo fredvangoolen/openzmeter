@@ -24,13 +24,15 @@ using namespace std;
 class TariffConcept final {
   public :
     enum Concept_Type { CONCEPT_INFO, CONCEPT_COST_ENERGY, CONCEPT_COST_POWER, CONCEPT_COST };
-  public :
-    string        Description;
-    string        Variable;
-    Concept_Type  Type;
+  private :
+    string        pDescription;
+    string        pVariable;
+    Concept_Type  pType;
   public :
     static json CheckConfig(const json &config, const set<string> &variables);
   public :
     TariffConcept(const json &config);
+    json GetConfig() const;
+  friend class RatesEval;
 };
 // ---------------------------------------------------------------------------------------------------------------------

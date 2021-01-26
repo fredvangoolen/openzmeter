@@ -66,10 +66,10 @@ class AnalyzerSoftEvents final {
     uint16_t         pPrevCyclesPos;            //Previous cycles write pos
     float           *pPrevCycles;               //Previous cycles
     bool             pHaveEvent;                //Flag to block event
-    uint64_t         pTimestamp;                //Current block start time
+//    uint64_t         pTimestamp;                //Current block start time
   private :
     Event_t *InitEvent();
-    void     Events_Func(const AnalyzerSoftBlock *block);
+    void     Events_Func(const AnalyzerSoftBlock *block, const uint64_t timestamp);
     bool     FindRunningEvent(const uint32_t mask) const;
     float    CalcChange(const float in, const float reference) const;
     string   EventTypeToString(const EventType type) const;

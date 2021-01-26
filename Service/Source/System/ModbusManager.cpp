@@ -16,23 +16,24 @@
 #include <poll.h>
 #include "LogFile.h"
 #include "ConfigFile.h"
-#include "MODBus.h"
+#include "ModbusManager.h"
 #include "AnalyzerManager.h"
 // ---------------------------------------------------------------------------------------------------------------------
-pthread_mutex_t            ModbusTCP::pMutex       = PTHREAD_MUTEX_INITIALIZER;
-pthread_t                  ModbusTCP::pThread      = 0;
-volatile bool              ModbusTCP::pTerminate   = false;
-uint16_t                   ModbusTCP::pPort        = 502;
-uint32_t                   ModbusTCP::pUsedWorkers = 0;
-list<ModbusTCP::Worker_t*> ModbusTCP::pFreeWorkers;
-vector<string>             ModbusTCP::pAnalyzers;
+pthread_mutex_t                ModbusManager::pMutex       = PTHREAD_MUTEX_INITIALIZER;
+pthread_t                      ModbusManager::pThread      = 0;
+volatile bool                  ModbusManager::pTerminate   = false;
+uint16_t                       ModbusManager::pPort        = 502;
+uint32_t                       ModbusManager::pUsedWorkers = 0;
+list<ModbusManager::Worker_t*> ModbusManager::pFreeWorkers;
+vector<string>                 ModbusManager::pAnalyzers;
 // ---------------------------------------------------------------------------------------------------------------------
-ModbusTCP::ModbusTCP() {
+ModbusManager::ModbusManager() {
+  LogFile::Info("ModbusManager", "Manager started");
   Configure(CheckConfig(ConfigFile::ReadConfig("/ModbusTCP")));
   HTTPServer::RegisterCallback("getModbusTCP", GetModbusTCP);
   HTTPServer::RegisterCallback("setModbusTCP", SetModbusTCP);
 }
-ModbusTCP::~ModbusTCP() {
+ModbusManager::~ModbusManager() {
   LogFile::Info("ModbusTCP", "Stopping ModbusTCP server...");
   HTTPServer::UnregisterCallback("getModbusTCP");
   HTTPServer::UnregisterCallback("setModbusTCP");
@@ -42,7 +43,7 @@ ModbusTCP::~ModbusTCP() {
   }
   LogFile::Info("ModbusTCP", "ModbusTCP server stoped");
 }
-json ModbusTCP::CheckConfig(const json &config) {
+json ModbusManager::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Port"]    = 502;
   ConfigOUT["Enabled"] = false;
@@ -58,7 +59,7 @@ json ModbusTCP::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-void ModbusTCP::Configure(const json &config) {
+void ModbusManager::Configure(const json &config) {
   pthread_mutex_lock(&pMutex);
   if(pThread != 0) {
     LogFile::Info("ModbusTCP", "Stopping ModbusTCP server...");
@@ -84,12 +85,12 @@ void ModbusTCP::Configure(const json &config) {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void ModbusTCP::GetModbusTCP(const json &params, Response &response) {
+void ModbusManager::GetModbusTCP(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/ModbusTCP");
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
-void ModbusTCP::SetModbusTCP(const json &params, Response &response) {
+void ModbusManager::SetModbusTCP(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Port") == false) || (params["Port"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Port' param is requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -97,7 +98,8 @@ void ModbusTCP::SetModbusTCP(const json &params, Response &response) {
   Configure(CheckConfig(params));
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
-void *ModbusTCP::Thread(void *) {
+void *ModbusManager::Thread(void *) {
+  return NULL;
   sockaddr_in Server;
   pollfd      Poll;
   int         Opt = 1;
@@ -130,28 +132,28 @@ void *ModbusTCP::Thread(void *) {
       pthread_mutex_unlock(&pMutex);
       if(Tmp == NULL) {
         Tmp         = new Worker_t;
-        Tmp->Thread = new Worker("ModbusTCPWorker", [](void *param) {
-          Worker_t *Work = (Worker_t*)param;
-          Connection_Handle(Work->ClientSock, Work->Client);
-          close(Work->ClientSock);
-          pthread_mutex_lock(&pMutex);
-          Work->LastTime = Tools::GetTime64();
-          pFreeWorkers.push_front(Work);
-          pUsedWorkers--;
-          pthread_mutex_unlock(&pMutex);
-        }, 15);
+//        Tmp->Thread = new Worker("ModbusTCPWorker", [](void *param) {
+//          Worker_t *Work = (Worker_t*)param;
+//          Connection_Handle(Work->ClientSock, Work->Client);
+//          close(Work->ClientSock);
+//          pthread_mutex_lock(&pMutex);
+//          Work->LastTime = Tools::GetTime64();
+//          pFreeWorkers.push_front(Work);
+//          pUsedWorkers--;
+//          pthread_mutex_unlock(&pMutex);
+//        }, 15);
       }
       if(Tmp != NULL) {
         int Size        = sizeof(sockaddr_in);
         Tmp->ClientSock = accept(Sock, (sockaddr *)&Tmp->Client, (socklen_t*)&Size);
         fcntl(Tmp->ClientSock, F_SETFL, O_NONBLOCK);
-        Tmp->Thread->Run(Tmp);
+//        Tmp->Thread->Run(Tmp);
       }
     }
 	}
 	return NULL;
 }
-void ModbusTCP::Connection_Handle(const int clientSock, const sockaddr_in &client) {
+void ModbusManager::Connection_Handle(const int clientSock, const sockaddr_in &client) {
   char        Buff[INET_ADDRSTRLEN];
   PacketIN_t  PacketIN;
   PacketOUT_t PacketOUT;
