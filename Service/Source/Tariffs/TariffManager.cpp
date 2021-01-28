@@ -16,7 +16,6 @@
 #include "TariffManager.h"
 #include "Tariff.h"
 #include "RatesEval.h"
-#include "RatesEvalProvider.h"
 // ---------------------------------------------------------------------------------------------------------------------
 TariffManager::TariffManager() {
   HTTPServer::RegisterCallback("getTariffs",     GetTariffsCallback);
@@ -99,13 +98,13 @@ void TariffManager::EvalRatesCallback(const json &params, Response &response) {
   uint64_t  To       = params["To"];
   json      Response = json::array();
   cctz::load_time_zone(params["TimeZone"], &TimeZone);
-  RatesEvalProvider Provider(TimeZone, params["Rates"], params["Samples"]);
-  RatesEval Eval(TimeZone, From, To, Provider);
-  json Result = Eval.FetchRow();
-  while(Result != nullptr) {
-    Response.push_back(Result);
-    Result = Eval.FetchRow();
-  }
+  //RatesEvalProvider Provider(TimeZone, params["Rates"], params["Samples"]);
+//  RatesEval Eval(TimeZone, From, To, Provider);
+//  json Result = Eval.FetchRow();
+//  while(Result != nullptr) {
+//    Response.push_back(Result);
+//    Result = Eval.FetchRow();
+//  }
   HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 // ---------------------------------------------------------------------------------------------------------------------

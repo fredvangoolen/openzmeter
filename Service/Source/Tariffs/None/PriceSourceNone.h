@@ -21,10 +21,10 @@ class PriceSourceNone final : public PriceSource {
     static bool         pRegistered;
   private :
     static bool         Register();
-    static PriceSource *CreateInstance();
-    static json         GetVarsInfo();
+    static PriceSource *Instance();
+    static json         VarsInfo();
+    static void         VarsFill(map<string, float> &params);
   public :
-    void GetParams(const uint64_t sampletime, map<string, float> &vars) override;
-    void PrepareRange(const uint64_t from, const uint64_t to) override;
+    void GetSample(const uint64_t sampletime, map<string, float> &vars) override;
 };
 //----------------------------------------------------------------------------------------------------------------------

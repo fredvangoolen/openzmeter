@@ -23,17 +23,18 @@ using json = nlohmann::json;
 class PriceSource {
   protected :
     typedef struct {
-      PriceSource* (*Constructor)();
-      json         (*Info)();
+      PriceSource* (*Instance)();
+      json         (*VarsInfo)();
+      void         (*VarsFill)(map<string, float> &params);
     } Module_t;
   protected :
     static map<string, Module_t> pModules;
   public :
-    static PriceSource *CreateInstance(const string &name);
-    static json         GetVarsInfo();
+    static PriceSource *Instance(const string &name, map<string, float> &params);
+    static bool         CheckConfig(const string &name, map<string, float> &params);
+    static json         VarsInfo();
   public :
     virtual ~PriceSource();
-    virtual void GetParams(const uint64_t sampletime, map<string, float> &vars) = 0;
-    virtual void PrepareRange(const uint64_t from, const uint64_t to) = 0;
+    virtual void GetSample(const uint64_t sampletime, map<string, float> &vars) = 0;
 };
 // ---------------------------------------------------------------------------------------------------------------------

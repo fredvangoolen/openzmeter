@@ -30,10 +30,10 @@ class PriceSourceESIOS final : public PriceSource {
   private :
     PriceSourceESIOS();
     static bool         Register();
-    static PriceSource *CreateInstance();
-    static json         GetVarsInfo();
+    static PriceSource *Instance();
+    static json         VarsInfo();
+    static void         VarsFill(map<string, float> &params);
   public :
-    void PrepareRange(const uint64_t from, const uint64_t to);
-    void GetParams(const uint64_t sampletime, map<string, float> &vars);
+    void GetSample(const uint64_t sampletime, map<string, float> &vars);
 };
 // ---------------------------------------------------------------------------------------------------------------------

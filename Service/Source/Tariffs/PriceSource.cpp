@@ -17,14 +17,21 @@
 //----------------------------------------------------------------------------------------------------------------------
 map<string, PriceSource::Module_t>  __attribute__((init_priority(200))) PriceSource::pModules;
 //----------------------------------------------------------------------------------------------------------------------
-PriceSource *PriceSource::CreateInstance(const string &name) {
+PriceSource *PriceSource::Instance(const string &name, map<string, float> &params) {
   auto Tmp = pModules.find(name);
   if(Tmp == pModules.end()) return NULL;
-  return Tmp->second.Constructor();
+  Tmp->second.VarsFill(params);
+  return Tmp->second.Instance();
 }
-json PriceSource::GetVarsInfo() {
+bool PriceSource::CheckConfig(const string &name, map<string, float> &params) {
+  auto Tmp = pModules.find(name);
+  if(Tmp == pModules.end()) return false;
+  Tmp->second.VarsFill(params);
+  return true;
+}
+json PriceSource::VarsInfo() {
   json Result = json::object();
-  for(auto M : pModules) Result[M.first] = M.second.Info();
+  for(auto &M : pModules) Result[M.first] = M.second.VarsInfo();
   return Result;
 }
 PriceSource::~PriceSource() {

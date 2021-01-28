@@ -115,12 +115,9 @@ json Rate::CheckConfig(const json &config) {
     throw string("'ContractedPower' param is required");
   }
   if((config.contains("Module") == false) || (config["Module"].is_string() == false)) throw string("'Module' param is required");
-  PriceSource *Module = PriceSource::CreateInstance(config["Module"]);
-  if(Module == NULL) throw string("'Module' param is invalid");
-  ConfigOUT["Module"] = config["Module"];
   map<string, float> Variables;
-  Module->GetParams(0, Variables);
-  delete Module;
+  if(PriceSource::CheckConfig(config["Module"], Variables) == false) throw string("'Module' param is invalid");
+  ConfigOUT["Module"] = config["Module"];
   Variables.insert( {"Period", 0.0 });
   if((config.contains("PowerCost") == true) && (config["PowerCost"].is_array() == true) && (config["PowerCost"].size() == ConfigOUT["Periods"].size())) {
     ConfigOUT["PowerCost"] = json::array();

@@ -20,7 +20,6 @@
 #include "muParser/muParser.h"
 #include "Rate.h"
 #include "PriceSource.h"
-#include "RatesEvalProvider.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 using namespace std;
@@ -46,20 +45,24 @@ class RatesEval final {
       Parser             Script;
       map<string, float> Variables;
     } LoadedPeriod_t;
+    typedef function<uint64_t(const uint64_t &currenttime,  float &active, float &reactive)> SampleFunc;
   private :
     bool                          pFinished;          //Evaluation end flag
     time_zone                     pTimeZone;          //Current datazone
-    uint64_t                      pFrom;              //Requested period start
+    uint64_t                      pSampleTime;        //Current sample time
+    float                         pSampleActive;      //Current sample active power
+    float                         pSampleReactive;    //Current sample reactive power
     uint64_t                      pTo;                //Requested period end
     uint16_t                      pSeriesMask;        //Output series or 0 for bill mode
     uint64_t                      pNowDate;           //Current system time
     uint64_t                      pCurrent;           //Current evaluation time
     uint64_t                      pLoadedPeriodDate;  //Active bill period start
-    Rate                         *pLoadedRate;        //Currently loaded Rate (if any)
+    vector<Rate>                  pRates;             //Avaliable rate list
+    vector<Rate>::iterator        pRatePtr;           //Current rate ptr (Only active if pPeriods.size > 0)
     vector<TariffYear>::iterator  pYearPtr;           //Active rate year
     vector<uint64_t>::iterator    pBillPtr;           //Active rate bill date
-    TariffScript                 *pScript;            //Loaded rate script
     vector<TariffScript*>         pPeriods;           //Loaded rate period scripts
+    TariffScript                 *pScript;            //Loaded rate script
     PriceSource                  *pPriceModule;       //Active price module (if any)
     TariffScript                 *pEnergyScript;      //Energy price calculator script (if any)
     TariffScript                 *pPowerScript;       //Power price calculator script (if any)
@@ -74,17 +77,15 @@ class RatesEval final {
     float                         pContractedPower;   //Evaluated period contracted power
     float                         pEnergyCost;        //Evaluated period energy cost
     float                         pPowerCost;         //Evaluated period power cost
-    RatesEvalProvider            *pProvider;          //Data provider for required data
-    RatesEvalProvider::Sample_t  *pSample;            //Current loaded sample
+    SampleFunc                    pGetSample;         //Function to retrieve new samples
   private :
-    void LoadRate();
-    void UnloadRate();
+    void LoadPeriod();
+    void UnloadPeriod();
     json HandleSample();
-    void FindStart();
     json BuildBill();
     json BuildSample(const bool bill);
   public :
-    RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to, RatesEvalProvider &provider, const uint16_t serieMask = 0);
+    RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to, const vector<Rate> &rates, SampleFunc getSample, const uint16_t serieMask = 0);
     ~RatesEval();
     json Headers();
     json FetchRow();

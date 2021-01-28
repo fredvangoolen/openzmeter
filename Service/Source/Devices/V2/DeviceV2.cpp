@@ -168,7 +168,7 @@ json DeviceV2::CheckConfig(const json &config) {
   ConfigOUT["Calculated"]["Enabled"]  = false;
   ConfigOUT["Calculated"]["Voltage"]  = "CH1";
   ConfigOUT["Calculated"]["Current"]  = vector<string>(4, "UNUSED");
-  ConfigOUT["Calculated"]["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1);
+  ConfigOUT["Calculated"]["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1, false);
   if(config.is_object()) {
     if(config.contains("VoltageGain") && config["VoltageGain"].is_array() && (config["VoltageGain"].size() == ConfigOUT["VoltageGain"].size())) {
       for(uint8_t n = 0; n < ConfigOUT["VoltageGain"].size(); n++) {
@@ -204,7 +204,7 @@ json DeviceV2::CheckConfig(const json &config) {
         json Output     = json::object();
         bool Error      = false;
         Output["Mode"]  = "1PHASE";
-        Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1);
+        Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1, false);
         if(Tmp.contains("Mode") && Tmp["Mode"].is_string() && ((Tmp["Mode"] == "1PHASE") || (Tmp["Mode"] == "3PHASE") || (Tmp["Mode"] == "3PHASE+N"))) Output["Mode"] = Tmp["Mode"];
         if(Output["Mode"] == "1PHASE") {
           Output["Voltage"] = "CH1";
@@ -233,7 +233,7 @@ json DeviceV2::CheckConfig(const json &config) {
             CurrentMask |= (1 << Channel);
           }
         }
-        if(Tmp.contains("Analyzer") && Tmp["Analyzer"].is_object()) Output["Analyzer"] = AnalyzerSoft::CheckConfig(Tmp["Analyzer"], (Output["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Output["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N);
+        if(Tmp.contains("Analyzer") && Tmp["Analyzer"].is_object()) Output["Analyzer"] = AnalyzerSoft::CheckConfig(Tmp["Analyzer"], (Output["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Output["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N, false);
         if(Error == false) ConfigOUT["Outputs"].push_back(Output);
       }
     }
@@ -242,11 +242,11 @@ json DeviceV2::CheckConfig(const json &config) {
       Output["Mode"]  = "1PHASE";
       Output["Voltage"] = "CH1";
       Output["Current"] = "+CH1";
-      Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1);
+      Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1, false);
       ConfigOUT["Outputs"].push_back(Output);
     }
     if(config.contains("Calculated") && config["Calculated"].is_object()) {
-      if(config["Calculated"].contains("Analyzer") && config["Calculated"]["Analyzer"].is_object()) ConfigOUT["Calculated"]["Analyzer"] = AnalyzerSoft::CheckConfig(config["Calculated"]["Analyzer"], Analyzer::PHASE1);
+      if(config["Calculated"].contains("Analyzer") && config["Calculated"]["Analyzer"].is_object()) ConfigOUT["Calculated"]["Analyzer"] = AnalyzerSoft::CheckConfig(config["Calculated"]["Analyzer"], Analyzer::PHASE1, false);
       if(config["Calculated"].contains("Voltage") && config["Calculated"]["Voltage"].is_string() && ((config["Calculated"]["Voltage"] == "CH1") || (config["Calculated"]["Voltage"] == "CH2") || (config["Calculated"]["Voltage"] == "CH3"))) ConfigOUT["Calculated"]["Voltage"] = config["Calculated"]["Voltage"];
       vector<bool> AvaliableChannels = vector<bool>(4, false);
       for(auto Tmp : ConfigOUT["Outputs"]) {

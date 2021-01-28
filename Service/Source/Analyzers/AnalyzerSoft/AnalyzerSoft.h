@@ -99,13 +99,9 @@ class AnalyzerSoft : public Analyzer {
     void GetAlarmsRange(const json &params, Response &response) override;
     void DelAlarm(const json &params, Response &response) override;
     void DelAlarmsRange(const json &params, Response &response) override;
-//    void AddRate(const json &params, Response &response) override;
-//    void GetRate(const json &params, Response &response) override;
-//    void SetRate(const json &params, Response &response) override;
-//    void DelRate(const json &params, Response &response) override;
     bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
   public :
-    static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode);
+    static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, const bool except);
   protected :
     virtual void ResultsReady(AnalyzerSoftAggreg200MS *params);
   public :
