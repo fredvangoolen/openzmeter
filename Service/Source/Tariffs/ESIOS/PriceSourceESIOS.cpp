@@ -25,23 +25,23 @@ string PriceSourceESIOS::pQueryColumns;
 bool   PriceSourceESIOS::pRegistered = PriceSourceESIOS::Register();
 //----------------------------------------------------------------------------------------------------------------------
 bool PriceSourceESIOS::Register() {
-  PriceSource::pModules.insert( { "ESP_ESIOS", { CreateInstance, GetVarsInfo } } );
-  for(uint16_t V = 0; V < ESIOSManager::pVariables.size(); V++) pQueryColumns += ESIOSManager::pVariables[V].VarName + ", ";
+  PriceSource::pModules.insert( { "ESP_ESIOS", { Instance, VarsInfo, VarsFill } } );
+  for(auto &Tmp : ESIOSManager::pVariables) pQueryColumns += Tmp.VarName + ", ";
   pQueryColumns += "timestamp";
   return true;
 }
-PriceSource *PriceSourceESIOS::CreateInstance() {
+PriceSource *PriceSourceESIOS::Instance() {
   return new PriceSourceESIOS();
 }
 PriceSourceESIOS::PriceSourceESIOS() {
   pLoadedTime = 0;
-  for(uint16_t V = 0; V < ESIOSManager::pVariables.size(); V++) pLoaded[ESIOSManager::pVariables[V].VarName] = 0.0;
+  for(auto &Tmp : ESIOSManager::pVariables) pLoaded[Tmp.VarName] = 0.0;
 }
-void PriceSourceESIOS::PrepareRange(const uint64_t from, const uint64_t to) {
-  pDB.ExecSentenceAsyncResult("SELECT " + pQueryColumns + " FROM esios WHERE timestamp >= " + pDB.Bind(from) + " AND timestamp <=" + pDB.Bind(to) + " ORDER BY timestamp ASC");
+//void PriceSourceESIOS::PrepareRange(const uint64_t from, const uint64_t to) {
+//  pDB.ExecSentenceAsyncResult("SELECT " + pQueryColumns + " FROM esios WHERE timestamp >= " + pDB.Bind(from) + " AND timestamp <=" + pDB.Bind(to) + " ORDER BY timestamp ASC");
 //  pDB.FecthRow();
-}
-void PriceSourceESIOS::GetParams(const uint64_t sampletime, map<string, float> &vars) {
+//}
+void PriceSourceESIOS::GetSample(const uint64_t sampletime, map<string, float> &vars) {
   while((pLoadedTime / 3600000) < (sampletime / 3600000)) {
     pDB.FecthRow();
     pLoadedTime = pDB.ResultUInt64("timestamp");
@@ -60,7 +60,7 @@ void PriceSourceESIOS::GetParams(const uint64_t sampletime, map<string, float> &
     for(uint16_t V = 0; V < ESIOSManager::pVariables.size(); V++) vars[ESIOSManager::pVariables[V].VarName] = 0.0;
   }
 }
-json PriceSourceESIOS::GetVarsInfo() {
+json PriceSourceESIOS::VarsInfo() {
   json Tmp = json::array();
   uint64_t Now = Tools::GetTime64();
   Database DB;
@@ -79,5 +79,8 @@ json PriceSourceESIOS::GetVarsInfo() {
     Tmp.push_back(Var);
   }
   return Tmp;
+}
+void PriceSourceESIOS::VarsFill(map<string, float> &params) {
+  for(auto &Tmp : ESIOSManager::pVariables) params.insert({ Tmp.VarName, 0.0 });
 }
 //----------------------------------------------------------------------------------------------------------------------

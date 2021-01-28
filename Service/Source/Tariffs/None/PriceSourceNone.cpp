@@ -18,17 +18,18 @@
 bool  PriceSourceNone::pRegistered = Register();
 //----------------------------------------------------------------------------------------------------------------------
 bool PriceSourceNone::Register() {
-  pModules.insert( { "NONE", { CreateInstance, GetVarsInfo } } );
+  pModules.insert( { "NONE", { Instance, VarsInfo, VarsFill } } );
   return true;
 }
-PriceSource *PriceSourceNone::CreateInstance() {
+PriceSource *PriceSourceNone::Instance() {
   return new PriceSourceNone();
 }
-json PriceSourceNone::GetVarsInfo() {
+json PriceSourceNone::VarsInfo() {
   json Result = json::array();
   return Result;
 }
-void PriceSourceNone::GetParams(const uint64_t sampletime, map<string, float> &vars) {
+void PriceSourceNone::VarsFill(map<string, float> &params) {
 }
-void PriceSourceNone::PrepareRange(const uint64_t from, const uint64_t to) {
+void PriceSourceNone::GetSample(const uint64_t sampletime, map<string, float> &vars) {
 }
+//----------------------------------------------------------------------------------------------------------------------

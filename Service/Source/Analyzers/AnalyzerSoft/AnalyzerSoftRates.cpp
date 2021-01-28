@@ -15,7 +15,6 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "RatesEval.h"
 #include "AnalyzerSoftRates.h"
-#include "AnalyzerSoftRatesProvider.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftRates::AnalyzerSoftRates(const string &serial) {
   pSerial = serial;
@@ -24,21 +23,24 @@ AnalyzerSoftRates::AnalyzerSoftRates(const string &serial) {
 }
 AnalyzerSoftRates::~AnalyzerSoftRates() {
 }
-json AnalyzerSoftRates::CheckConfig(const json &config) {
+json AnalyzerSoftRates::CheckConfig(const json &config, const bool except) {
   json ConfigOUT = json::array();
   if(config.is_array() == false) return ConfigOUT;
-  for(auto &Rate : config) ConfigOUT.push_back(Rate::CheckConfig(Rate));
+  for(auto &Rate : config) {
+    try {
+      ConfigOUT.push_back(Rate::CheckConfig(Rate));
+    } catch(const string &err) {
+      if(except == true) throw err;
+    }
+  }
   return ConfigOUT;
 }
 void AnalyzerSoftRates::Config(const string &timezone, const json &rates) {
   pthread_rwlock_wrlock(&pLock);
   load_time_zone(timezone, &pTimeZone);
   for(uint8_t n = 0; n < 10; n++) pRates[n].clear();
-  for(auto &Rate : rates) {
-    uint8_t Group = Rate["Group"];
-     pRates[Group].emplace_back(Rate, pTimeZone);
-  }
-  for(uint8_t n = 0; n < 10; n++) pRates[n].sort([](Rate &a, Rate &b) { return a.StartDate() < b.StartDate(); });
+  for(auto &Rate : rates) pRates[(uint8_t)Rate["Group"]].emplace_back(Rate, pTimeZone);
+  for(uint8_t n = 0; n < 10; n++) sort(pRates[n].begin(), pRates[n].end(), [](Rate &a, Rate &b) { return a.StartDate() < b.StartDate(); });
   pthread_rwlock_unlock(&pLock);
 }
 json AnalyzerSoftRates::GetConfig() {
@@ -50,46 +52,7 @@ json AnalyzerSoftRates::GetConfig() {
   pthread_rwlock_unlock(&pLock);
   return Result;
 }
-//void AnalyzerSoftRates::GetRates(const json &params, Response &response) const {
-//  bool IncludeDef = false;
-//  if(params.contains("IncludeDef") && params["IncludeDef"].is_boolean() && (params["IncludeDef"] == true)) IncludeDef = true;
-//  auto Func = [&, IncludeDef](uint64_t offset, DataSink &sink) -> bool {
-//    uint32_t Items = 0;
-//    sink.os << "[\n  ";
-//    Database DB(pSerial);
-//    DB.ExecSentenceAsyncResult(string("SELECT jsonb_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy'))") + (IncludeDef ? " || template::jsonb " : " ") + "AS result FROM rates");
-//    while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " + DB.ResultString("result") : DB.ResultString("result"));
-//    sink.os << "\n]";
-//    sink.done();
-//    return true;
-//  };
-//  response.set_chunked_content_provider("application/json", Func);
-//}
-//void AnalyzerSoftRates::AddRate(const json &params, Response &response) const {
-//  json    Config = Rate::CheckConfig(params);
-//  if(Config.is_string()) return HTTPServer::FillResponse(response, Config, "text/plain", HTTP_BAD_REQUEST);
-//  string  Name      = Config["Name"];
-//  uint8_t Group     = Config["Group"];
-//  string  StartDate = Config["StartDate"];
-//  string  EndDate   = Config["EndDate"];
-//  string  RateID    = Tools::GetUUID();
-//  Config.erase("Name");
-//  Config.erase("Group");
-//  Config.erase("StartDate");
-//  Config.erase("EndDate");
-//  Database DB(pSerial);
-//  bool Result = DB.ExecSentenceNoResult("INSERT INTO rates (id, name, ordering, startdate, enddate, template) VALUES (" + DB.Bind(RateID) + ", " + DB.Bind(Name) + ", " + DB.Bind(Group) + ", to_date(" + DB.Bind(StartDate) + ", 'DD/MM/YYYY'), to_date(" + DB.Bind(EndDate) + ", 'DD/MM/YYYY'), " + DB.Bind(Config.dump()) + ")");
-//  HTTPServer::FillResponse(response, "", "application/json", Result ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-//}
-//void AnalyzerSoftRates::GetRate(const json &params, Response &response) const {
-//  if((params.contains("RateID") == false) || (params["RateID"].is_string() == false)) return HTTPServer::FillResponse(response, "'RateID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-//  string ID = params["RateID"];
-//  Database DB(pSerial);
-//  DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('RateID', id, 'Name', name, 'Group', ordering, 'StartDate', to_char(startdate, 'dd/mm/yyyy'), 'EndDate', to_char(enddate, 'dd/mm/yyyy')) || template::jsonb AS result FROM rates WHERE id = " + DB.Bind(ID));
-//  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-//  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
-//}
-void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
+void AnalyzerSoftRates::GetCosts(const json &params, Response &response) {
   if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
@@ -128,9 +91,26 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
     }
   }
-  auto Func = [&, From, To, Group, Series](uint64_t offset, DataSink &sink) -> bool {
-    AnalyzerSoftRatesProvider Provider(pSerial, pTimeZone, Group);
-    RatesEval Eval(pTimeZone, From, To, Provider, Series);
+  auto Func = [&, From, To, Group, Series](uint64_t offset, DataSink &sink) {
+    Database DB(pSerial);
+    auto GetSample = [&](const uint64_t &currenttime, float &active, float &reactive) -> uint64_t {
+      if(DB.FecthRow() == true) {
+        active     = DB.ResultFloat("active");
+        reactive   = DB.ResultFloat("reactive");
+        return DB.ResultUInt64("sampletime");
+      } else {
+        DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive FROM aggreg_15m WHERE sampletime >= " + DB.Bind(currenttime) + " ORDER BY sampletime ASC LIMIT 1000");
+        if(DB.FecthRow() == true) {
+          active     = DB.ResultFloat("active");
+          reactive   = DB.ResultFloat("reactive");
+          return DB.ResultUInt64("sampletime");
+        }
+      }
+      return UINT64_MAX;
+    };
+    pthread_rwlock_rdlock(&pLock);
+    RatesEval Eval(pTimeZone, From, To, pRates[Group], GetSample, Series);
+    pthread_rwlock_unlock(&pLock);
     sink.os << "[\n  " << Eval.Headers().dump();
     json Result = Eval.FetchRow();
     while((Result != nullptr) && sink.is_writable()) {
@@ -143,7 +123,7 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) const {
   };
   response.set_chunked_content_provider("application/json", Func);
 }
-void AnalyzerSoftRates::GetBills(const json &params, Response &response) const {
+void AnalyzerSoftRates::GetBills(const json &params, Response &response) {
   if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
@@ -151,10 +131,27 @@ void AnalyzerSoftRates::GetBills(const json &params, Response &response) const {
   uint64_t From  = params["From"];
   uint64_t To    = params["To"];
   uint8_t  Group = params["Group"];
-  auto Func = [&, From, To, Group](uint64_t offset, DataSink &sink) -> bool {
+  auto Func = [&, From, To, Group](uint64_t offset, DataSink &sink) {
+    Database DB(pSerial);
+    auto GetSample = [&](const uint64_t &currenttime, float &active, float &reactive) -> uint64_t {
+      if(DB.FecthRow() == true) {
+        active     = DB.ResultFloat("active");
+        reactive   = DB.ResultFloat("reactive");
+        return DB.ResultUInt64("sampletime");
+      } else {
+        DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive FROM aggreg_15m WHERE sampletime >= " + DB.Bind(currenttime) + " ORDER BY sampletime ASC LIMIT 1000");
+        if(DB.FecthRow() == true) {
+          active     = DB.ResultFloat("active");
+          reactive   = DB.ResultFloat("reactive");
+          return DB.ResultUInt64("sampletime");
+        }
+      }
+      return UINT64_MAX;
+    };
     uint32_t Items = 0;
-    AnalyzerSoftRatesProvider Provider(pSerial, pTimeZone, Group);
-    RatesEval Eval(pTimeZone, From, To, Provider);
+    pthread_rwlock_rdlock(&pLock);
+    RatesEval Eval(pTimeZone, From, To, pRates[Group], GetSample);
+    pthread_rwlock_unlock(&pLock);
     sink.os << "[\n  ";
     json Result = Eval.FetchRow();
     while((Result != nullptr) && sink.is_writable()) {

@@ -56,11 +56,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pStorage        = new AnalyzerSoftStorage(pSerial, mode);
   pAnalyzerWorker = new Worker((mode == PHASE1) ? "Analyzer_1P" : (mode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");
   MessageLoop::RegisterListener("AnalyzerSoft_" + pSerial + "_PeriodicTasks", [&]() { this->PeriodicTasks(); }, 60000);
-  try {
-    Configure(CheckConfig(ConfigFile::ReadConfig(optionPath), mode));
-  } catch(...) {
-    Configure(CheckConfig(json::object(), mode));
-  }
+  Configure(ConfigFile::ReadConfig(optionPath));
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LogFile::Info("Stopping analyzer with serial '%s'", pSerial.c_str());
@@ -93,7 +89,7 @@ bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, co
 bool AnalyzerSoft::IsWorking() {
   return pAnalyzerWorker->IsWorking();
 }
-json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode mode) {
+json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, const bool except) {
   json ConfigOUT = json::object();
   ConfigOUT["Name"] = "Unnamed analyzer";
   ConfigOUT["NominalVoltage"] = 230.0;
@@ -143,7 +139,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
   if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
   if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = AnalyzerSoftAlarms::CheckConfig(config["Alarms"]);
-  if(config.contains("Rates") && config["Rates"].is_array()) ConfigOUT["Rates"] = AnalyzerSoftRates::CheckConfig(config["Rates"]);
+  if(config.contains("Rates") && config["Rates"].is_array()) ConfigOUT["Rates"] = AnalyzerSoftRates::CheckConfig(config["Rates"], except);
   return ConfigOUT;
 }
 void AnalyzerSoft::Configure(const json &options) {
@@ -320,13 +316,13 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   Response["Online"]       = Online();
   Response["Mode"]         = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"]   = pSamplerate;
-  Response["PriceModules"] = PriceSource::GetVarsInfo();
+  Response["PriceModules"] = PriceSource::VarsInfo();
   HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   try {
-    Configure(CheckConfig(params, pMode));
+    Configure(CheckConfig(params, pMode, true));
     HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
   } catch(const string &err) {
     HTTPServer::FillResponse(response, err, "text/plain", HTTP_BAD_REQUEST);

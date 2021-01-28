@@ -25,16 +25,16 @@ class AnalyzerSoftRates final {
   private :
     string                    pSerial;
     time_zone                 pTimeZone;
-    vector<list<Rate> >       pRates;
+    vector<vector<Rate> >     pRates;
     pthread_rwlock_t          pLock;
   public :
-    static json CheckConfig(const json &config);
+    static json CheckConfig(const json &config, const bool except);
   public :
     AnalyzerSoftRates(const string &serial);
     ~AnalyzerSoftRates();
     void Config(const string &timezone, const json &rates);
     json GetConfig();
-    void GetCosts(const json &params, Response &response) const;
-    void GetBills(const json &params, Response &response) const;
+    void GetCosts(const json &params, Response &response);
+    void GetBills(const json &params, Response &response);
 };
 // ---------------------------------------------------------------------------------------------------------------------
