@@ -41,7 +41,7 @@
     bottom: 0px;
     right: 0px;
   }
-  @media (min-width: 640px) {
+  @media (min-width: 840px) {
     #contents {
       top: 56px;
     }

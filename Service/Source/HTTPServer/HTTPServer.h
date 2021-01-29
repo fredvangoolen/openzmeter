@@ -55,6 +55,7 @@ class HTTPServer final : private Server {
     static map<string, Func1_t>         pCallbacks1;      //List of callbacks without reader
     static map<string, Call_t>          pCallbacks2;      //List of callbacks with reader
     static string                       pRelativePath;    //Relative path of server
+    static string                       pLogoImg;         //Aditional logo image
   private:
     static uint16_t                     pPort;
     static pthread_t                    pThread;

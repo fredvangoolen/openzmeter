@@ -21,14 +21,19 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class Tools {
   private :
+    static const string Base64;
+  private :
     static termios pConsoleAttr;
   private :
     static void ResetConsole();
+    static bool isBase64(const uint8_t c);
   public :
     static void      DisableEcho();
     static void      RunDaemon();
     static uint64_t  GetTime64();
     static string    GetUUID();
+    static string    DecodeBase64(const string &input);
+    static string    EncodeBase64(const string &input);
     static bool      ValidUUID(const string &uuid);
 };
 //----------------------------------------------------------------------------------------------------------------------
