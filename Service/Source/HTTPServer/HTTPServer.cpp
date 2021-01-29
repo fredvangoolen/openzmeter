@@ -41,8 +41,13 @@ pthread_t                                                            HTTPServer:
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
   json Config = ConfigFile::ReadConfig("/HTTPServer");
+  bool SaveLogo = false;
   if(!Config.is_object()) Config = json::object();
-  if(Config["Logo"].is_string()) pLogoImg = Tools::DecodeBase64(Config["Logo"]);
+  if(Config["Logo"].is_string()) {
+    string Logo = Tools::DecodeBase64(Config["Logo"]);
+    if(pLogoImg != Logo) SaveLogo = true;
+    pLogoImg = Logo;
+  }
   if(Config["Port"].is_number_unsigned()) pPort = Config["Port"];
   if(Config["RelativePath"].is_string()) pRelativePath = Config["RelativePath"];
   Get(".*", HandleGet);
@@ -52,7 +57,7 @@ HTTPServer::HTTPServer() {
   set_write_timeout(30);
   new_task_queue = [] { return new HTTPRequestPoll(); };
   Config = json::object();
-  Config["Logo"] = Tools::EncodeBase64(pLogoImg);
+  if(SaveLogo == true) Config["Logo"] = Tools::EncodeBase64(pLogoImg);
   Config["Port"] = pPort;
   Config["RelativePath"] = pRelativePath;
   ConfigFile::WriteConfig("/HTTPServer", Config);
