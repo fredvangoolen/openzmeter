@@ -495,11 +495,12 @@ legend{
         margin-left: auto;
     }
 
-    .indicators{
-        position: relative;
-    }
 }
-
+@media(min-width:840px) {
+  .indicators{
+    position: relative;
+  }
+}
 .btn:active, .btn.active {
     background-color: #428bca;
     color: white;

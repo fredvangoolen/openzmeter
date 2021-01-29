@@ -3,7 +3,7 @@
     <div class="navbar-header">
       <button type="button" class="navbar-toggle" @mouseenter="$emit('expandmenu')" @click="$emit('expandmenu')"><img :src="require('Imgs/application_menu.png')"></button>
       <div class="navbar-brand">
-        <img :src="require('Imgs/Logo.png')">
+        <img src="MainLogo.png">
         <div data-toggle="tooltip" :title="'Uptime: ' + Uptime" v-if="Time != null"><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
         <div data-toggle="tooltip" :title="'Disk usage: ' + SDTip" v-if="SDUse != null"><img :src="require('Imgs/sd_memory_adapter.png')">{{ SDUse }}</div>
         <div data-toggle="tooltip" :title="'RAM usage: ' + RAMTip" v-if="RAMUse != null"><img :src="require('Imgs/ddr_memory.png')">{{ RAMUse }}</div>
@@ -110,12 +110,16 @@
 </script>
 
 <style scoped>
+  .navbar-brand > img {
+    height: 28px;
+  }
   .navbar-header {
     position: relative;
     background-color: #474544;
     width: 100%;
     z-index: 95;
     height: 56px;
+    float: inherit;
   }
   .navbar-toggle {
     padding: 6px 5px;
@@ -145,6 +149,8 @@
   }
   .navbar-brand > img {
     margin-top: 4px;
+    height: 28px;
+    max-width: 428px;
   }
   .navbar-brand > div {
     font-size: 10px;
@@ -179,7 +185,7 @@
     z-index: 90;
     top: 0px;
   }
-  @media(min-width:640px) {
+  @media(min-width:840px) {
     .indicator-bar {
       background-image: none;
       position: absolute;
