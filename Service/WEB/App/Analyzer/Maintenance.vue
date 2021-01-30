@@ -12,7 +12,7 @@
     </div>
     <div class="row">
       <div class="col-xs-12">
-        <detail-tabs :tabs="['200MS','3S', '1M', '10M', '15M', '1H', 'Events', 'Alarms', 'Rates']" v-model="ActiveTab"></detail-tabs>
+        <detail-tabs :tabs="['200MS','3S', '1M', '10M', '15M', '1H', 'Events', 'Alarms', 'Settings']" v-model="ActiveTab"></detail-tabs>
         <table v-if="ActiveTab=='200MS'">
           <tr>
             <td class="first-row">Store 200 miliseconds data. Table persistence is limited to an hour.</td>
@@ -258,30 +258,6 @@
           </tr>
           <tr class="line">
             <td>
-              Delete all alarms definitions
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Delete('AlarmsDef')">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td>
-              Save all alarms definitions
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Download('AlarmsDef')">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td>
-              Restore alarms definitions
-            </td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td>
               Delete registered alarms
               <div style="display:flex">
                 <input type="checkbox" v-model="DelAlarmsRanged">
@@ -311,31 +287,24 @@
               Restore registered alarms<br><span class="help">Stored rows in overlapped period are replaced with new ones</span>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-default btn-xs disabled" @click="Execute">Execute</button>
             </td>
           </tr>
         </table>
-        <table v-if="ActiveTab=='Rates'">
+        <table v-if="ActiveTab=='Settings'">
           <tr>
-            <td class="first-row">Store configured rates</td>
-            <td class="first-row text-right action">{{ BestUnitsBin(TableSize('Rates')) }}</td>
+            <td colspan="2" class="first-row">Analyzer settings.<br><span class="help">Include defined alarms and configured rates.</span></td>
           </tr>
           <tr class="line">
-            <td>Delete all configured rates</td>
+            <td>Save analyzer settings</td>
             <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Delete('Rates')">Execute</button>
+              <button type="button" class="btn btn-default btn-xs" @click="Download('Analyzer')">Execute</button>
             </td>
           </tr>
           <tr class="line">
-            <td>Save all configured rates</td>
+            <td>Restore analyzer settings</td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Download('Rates')">Execute</button>
-            </td>
-          </tr>
-          <tr class="line">
-            <td>Restore configured rates</td>
-            <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Updoad('Rates')">Execute</button>
+              <button type="button" class="btn btn-default btn-xs disabled" @click="Updoad('Analyzer')">Execute</button>
             </td>
           </tr>
         </table>
@@ -420,32 +389,42 @@
       Download: function(aggreg, all) {
         this.ShowSpinner = true;
         var Series = [];
-        if(aggreg == 'Rates') {
-          ///TODO lo mismo que alarmas, se guarda con la config del analyzer
-          fetch('getRates', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, IncludeDef: true }), headers: { 'Content-Type': 'application/json' } }).then(
+        if(aggreg == 'Analyzer') {
+          fetch('getAnalyzer', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer }), headers: { 'Content-Type': 'application/json' } }).then(
             (res) => {
-              const fileStream = streamSaver.createWriteStream('Rates.json', null);
+              const fileStream = streamSaver.createWriteStream('Analyzer.json', null);
               const writeStream = fileStream.getWriter();
-              const reader = res.body.getReader();
-              const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
-              pump().then(() => { this.ShowSpinner = false; });
-            },
-            (fail) => { this.ShowSpinner = false; }
-          );
-        } else if(aggreg == 'AlarmsDef') {
-          ///TODO: Guardar datos del analyzer, no es necesario recuperar nada
-          fetch('getAlarmsDef', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer }), headers: { 'Content-Type': 'application/json' } }).then(
-            (res) => {
-              const fileStream = streamSaver.createWriteStream('AlarmsDef.json', null);
-              const writeStream = fileStream.getWriter();
-              const reader = res.body.getReader();
+              var data = new Blob([JSON.stringify(this.analyzer, null, 2)], { type: 'application/json' });
+              const reader = data.stream().getReader();
               const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
               pump().then(() => { this.ShowSpinner = false; });
             },
             (fail) => { this.ShowSpinner = false; }
           );
         } else if(aggreg == 'Alarms') {
+          var From = (all) ? 0 : this.From;
+          var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
+          fetch('getAlarms', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To }), headers: { 'Content-Type': 'application/json' } }).then(
+            (res) => {
+              const fileStream = streamSaver.createWriteStream('Alarms.json', null);
+              const writeStream = fileStream.getWriter();
+              const reader = res.body.getReader();
+              const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
+              pump().then(() => { this.ShowSpinner = false; });
+            }
+          );
         } else if(aggreg == 'Events') {
+          var From = (all) ? 0 : this.From;
+          var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
+          fetch('getEvents', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Waves: ['RAW', 'RMS'] }), headers: { 'Content-Type': 'application/json' } }).then(
+            (res) => {
+              const fileStream = streamSaver.createWriteStream('Events.json', null);
+              const writeStream = fileStream.getWriter();
+              const reader = res.body.getReader();
+              const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
+              pump().then(() => { this.ShowSpinner = false; });
+            }
+          );
         } else {
           if(aggreg == '200MS') Series = ['Frequency', 'Unbalance', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi', 'Voltage_Harmonics', 'Voltage_Harmonics_Complex', 'Current_Harmonics', 'Current_Harmonics_Complex', 'Power_Harmonics'];
           if(aggreg == '3S')    Series = ['Frequency', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power'];

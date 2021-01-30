@@ -46,6 +46,7 @@
     data() {
       return { Analyzer: null, ShowSpinner: false, Alarm: null, Error: null,
         columns: [
+          { name: 'Enabled', title: 'Enabled', callback: this.FormatEnabled },
           { name: 'Name', title: 'Name' },
           { name: '__slot:actions', title: '' }
         ]
@@ -58,12 +59,18 @@
       this.Analyzer = Object.assign({}, this.analyzer);
     },
     methods: {
+      UUID: function() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); });
+      },
+      FormatEnabled: function(value, close) {
+        return (value === true) ? '&#9635;' : '&#9633;';
+      },
       Update: function(alarm) {
         this.Analyzer.Alarms[this.Alarm] = alarm;
         this.Alarm = null;
       },
       Add: function() {
-        this.Analyzer.Alarms.push({ Name: 'Unnamed alarm', Priority: 1, Aggreg: '1M', Samples: 10, Window: 20, Expression: '' });
+        this.Analyzer.Alarms.push({ Name: 'Unnamed alarm', AlarmID: this.UUID(), Priority: 1, Aggreg: '1M', Samples: 10, Window: 20, Expression: '' });
         this.Alarm = this.Analyzer.Alarms.length - 1;
       },
       Edit: function(row) {
@@ -91,10 +98,16 @@
 
 <style scoped>
   @media screen and (min-width: 600px) {
-    .table >>> th:nth-child(2) {
+    .table >>> th:nth-child(1) {
+      width: 60px;
+    }
+    .table >>> td:nth-child(1) {
+      text-align: center;
+    }
+    .table >>> th:nth-child(3) {
       width: 94px;
     }
-    .table >>> td:nth-child(2) {
+    .table >>> td:nth-child(3) {
       text-align: right;
     }
   }

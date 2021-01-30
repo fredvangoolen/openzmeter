@@ -48,7 +48,7 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
       string UserName = params["UserName"];
       Result["Unread_Alarms"] = json::object();
       Database DB(pSerial);
-      DB.ExecSentenceAsyncResult("SELECT alarmsread, (SELECT count(*) FROM alarms_ext WHERE trigger > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
+      DB.ExecSentenceAsyncResult("SELECT alarmsread, (SELECT count(*) FROM alarms WHERE trigger > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
       Result["Unread_Alarms"]["To"]    = To;
       if(DB.FecthRow() == false) {
         Result["Unread_Alarms"]["From"]  = 0;
@@ -78,8 +78,7 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
         "SELECT 'Aggreg_15M' AS name, size FROM sizes WHERE tablename = 'aggreg_15m' UNION "
         "SELECT 'Aggreg_1H' AS name, size FROM sizes WHERE tablename = 'aggreg_1h' UNION "
         "SELECT 'Events' AS name, SUM(size) FROM sizes WHERE tablename IN ('events', 'events_ext') UNION "
-        "SELECT 'Alarms' AS name, size FROM sizes WHERE tablename IN ('alarms', 'alarms_ext') UNION "
-        "SELECT 'Rates' AS name, SUM(size) FROM sizes WHERE tablename = 'rates'");
+        "SELECT 'Alarms' AS name, size FROM sizes WHERE tablename = 'alarms'");
       while(DB.FecthRow()) {
         json Row = json::object();
         Row["Table"] = DB.ResultString("name");

@@ -55,7 +55,7 @@ AnalyzerManager::AnalyzerManager() {
 //  HTTPServer::RegisterCallback("delPermission",   DelPermissionCallback);
 }
 AnalyzerManager::~AnalyzerManager() {
-  LogFile::Debug("AnalyzerManager", "Stopping AnalyzerManager");
+  LogFile::Debug("Stopping AnalyzerManager");
   HTTPServer::UnregisterCallback("getAnalyzers");
   HTTPServer::UnregisterCallback("getAnalyzer");
   HTTPServer::UnregisterCallback("setAnalyzer");
@@ -86,7 +86,7 @@ AnalyzerManager::~AnalyzerManager() {
 //  HTTPServer::UnregisterCallback("addPermission");
 //  HTTPServer::UnregisterCallback("setPermission");
 //  HTTPServer::UnregisterCallback("delPermission");
-  LogFile::Debug("AnalyzerManager", "AnalyzerManager stopped");
+  LogFile::Debug("AnalyzerManager stopped");
 }
 bool AnalyzerManager::AddAnalyzer(Analyzer *analyzer, const string &user) {
   pthread_rwlock_wrlock(&pAnalyzersLock);

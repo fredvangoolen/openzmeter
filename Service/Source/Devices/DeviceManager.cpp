@@ -25,27 +25,29 @@ map<string, Device*>                                   DeviceManager::pDevices;
 pthread_rwlock_t                                       DeviceManager::pDevicesLock = PTHREAD_RWLOCK_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
+  LogFile::Debug("Starting DeviceManager....");
   for(auto Func : pDrivers) Func();
   HTTPServer::RegisterCallback("getDevices",     GetDevicesCallback);
   HTTPServer::RegisterCallback("getDevice",      GetDeviceCallback);
   HTTPServer::RegisterCallback("setDevice",      SetDeviceCallback);
+  LogFile::Debug("DeviceManager started");
 }
 DeviceManager::~DeviceManager() {
-  LogFile::Debug("DeviceManager", "Stopping DeviceManager");
+  LogFile::Debug("Stopping DeviceManager...");
   HTTPServer::UnregisterCallback("getDevices");
   HTTPServer::UnregisterCallback("getDevice");
   HTTPServer::UnregisterCallback("setDevice");
-  LogFile::Info("DeviceManager", "Stopping devices...");
-  pthread_rwlock_wrlock(&pDevicesLock);
+  LogFile::Info("Stopping devices...");
+  if(pthread_rwlock_wrlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   for(auto &Device : pDevices) delete Device.second;
   pDevices.clear();
-  pthread_rwlock_unlock(&pDevicesLock);
-  LogFile::Debug("DeviceManager", "DeviceManager stopped");
+  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  LogFile::Debug("DeviceManager stopped");
 }
 void DeviceManager::AddDevice(Device *dev) {
-  pthread_rwlock_wrlock(&pDevicesLock);
+  if(pthread_rwlock_wrlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   pDevices.insert({ dev->Serial(), dev });
-  pthread_rwlock_unlock(&pDevicesLock);
+  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 void DeviceManager::AddDriver(void (*func)()) {
   pDrivers.push_back(func);
@@ -53,22 +55,22 @@ void DeviceManager::AddDriver(void (*func)()) {
 void DeviceManager::CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response)) {
   if((params.contains("Serial") == false) || (params["Serial"].is_string() == false)) return HTTPServer::FillResponse(response, "'Serial' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   string Serial = params["Serial"];
-  pthread_rwlock_rdlock(&pDevicesLock);
+  if(pthread_rwlock_rdlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   auto Device = pDevices.find(Serial);
   if(Device == pDevices.end()) {
     HTTPServer::FillResponse(response, "Device not found", "text/plain", HTTP_BAD_REQUEST);
   } else {
     (Device->second->*method)(params, response);
   }
-  pthread_rwlock_unlock(&pDevicesLock);
+  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Response = json::array();
-  pthread_rwlock_rdlock(&pDevicesLock);
+  if(pthread_rwlock_rdlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   for(auto &Device : pDevices) Response.push_back(Device.second->GetJSONDescriptor());
-  pthread_rwlock_unlock(&pDevicesLock);
+  if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void DeviceManager::GetDeviceCallback(const json &params, Response &response) {

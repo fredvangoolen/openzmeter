@@ -13,6 +13,10 @@
     <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="(Data!=null)&&(Data.Result==null)&&(View=='Expression')">Expresion evaluation fail:<br/>{{ Data.Error }}</div>
     <div class="row" v-if="View=='Main'">
       <div class="col-xs-12">
+        <label class="control-label" style="line-height: 22px">Enabled</label>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="Alarm.Enabled"></toggle>
+      </div>
+      <div class="col-xs-12">
         <label class="control-label">{{ $t('Name') }}</label>
         <input type="text" class="form-control form-control-sm" v-model="Alarm.Name"/>
       </div>

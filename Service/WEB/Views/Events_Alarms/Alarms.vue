@@ -49,15 +49,36 @@
       SetAlarms: function() {
         this.Alarms = [];
         if((this.alarms == null) || (this.analyzer == null)) return;
-        var NameCol    = this.alarms.Headers.indexOf('Name');
+        var IDs   = [];
+        var Names = [];
+        for(var n = 0; n < this.analyzer.Alarms.length; n++) {
+          IDs.push(this.analyzer.Alarms[n].AlarmID);
+          Names.push(this.analyzer.Alarms[n].Name);
+        }
+        var IDCol    = this.alarms.Headers.indexOf('AlarmID');
         var TriggerCol = this.alarms.Headers.indexOf('Trigger');
         var ReleaseCol = this.alarms.Headers.indexOf('Release');
-        for(var n = 0; n < this.alarms.Rows.length; n++) this.Alarms.push({ StartDate: this.analyzer.FormatDateTime(this.alarms.Rows[n][TriggerCol]), EndDate: (this.alarms.Rows[n][ReleaseCol] == null) ? '-' : this.analyzer.FormatDateTime(this.alarms.Rows[n][ReleaseCol]), Name: this.alarms.Rows[n][NameCol] });
+        for(var n = 0; n < this.alarms.Rows.length; n++) {
+          var Index = IDs.indexOf(this.alarms.Rows[n][IDCol]);
+          this.Alarms.push({ StartDate: this.analyzer.FormatDateTime(this.alarms.Rows[n][TriggerCol]), EndDate: (this.alarms.Rows[n][ReleaseCol] == null) ? '-' : this.analyzer.FormatDateTime(this.alarms.Rows[n][ReleaseCol]), Name: Names[Index] });
+        }
       },
       Export: function() {
-        var Export = [['Trigger Time', 'Release Time', 'Name']];
+        var Export = [['Name', 'Trigger Time', 'Release Time']];
         if((this.alarms == null) || (this.analyzer == null)) return;
-        Export.concat(this.alarms.Rows);
+        var IDs   = [];
+        var Names = [];
+        for(var n = 0; n < this.analyzer.Alarms.length; n++) {
+          IDs.push(this.analyzer.Alarms[n].AlarmID);
+          Names.push(this.analyzer.Alarms[n].Name);
+        }
+        var IDCol    = this.alarms.Headers.indexOf('AlarmID');
+        var TriggerCol = this.alarms.Headers.indexOf('Trigger');
+        var ReleaseCol = this.alarms.Headers.indexOf('Release');
+        for(var n = 0; n < this.alarms.Rows.length; n++) {
+          var Index = IDs.indexOf(this.alarms.Rows[n][IDCol]);
+          Export.push([Names[Index], this.analyzer.FormatDateTime(this.alarms.Rows[n][TriggerCol]), (this.alarms.Rows[n][ReleaseCol] == null) ? '-' : this.analyzer.FormatDateTime(this.alarms.Rows[n][ReleaseCol])]);
+        }
         return Object.seal(Export);
       }
     },

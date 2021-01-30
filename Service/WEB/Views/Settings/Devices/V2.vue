@@ -265,10 +265,10 @@
           }
           this.CalcCh = VoltageCh;
           if(VoltageCh[this.Settings.Calculated.Voltage].Count < 2) this.Settings.Calculated.Voltage = this.AvaliableVoltageChannels[0].name;
-          if(this.CalcCh[Settings.Calculated.Voltage].CH1 == false) Settings.Calculated.Current[0] = "UNUSED";
-          if(this.CalcCh[Settings.Calculated.Voltage].CH2 == false) Settings.Calculated.Current[1] = "UNUSED";
-          if(this.CalcCh[Settings.Calculated.Voltage].CH3 == false) Settings.Calculated.Current[2] = "UNUSED";
-          if(this.CalcCh[Settings.Calculated.Voltage].CH4 == false) Settings.Calculated.Current[3] = "UNUSED";
+          if(this.CalcCh[this.Settings.Calculated.Voltage].CH1 == false) this.Settings.Calculated.Current[0] = "UNUSED";
+          if(this.CalcCh[this.Settings.Calculated.Voltage].CH2 == false) this.Settings.Calculated.Current[1] = "UNUSED";
+          if(this.CalcCh[this.Settings.Calculated.Voltage].CH3 == false) this.Settings.Calculated.Current[2] = "UNUSED";
+          if(this.CalcCh[this.Settings.Calculated.Voltage].CH4 == false) this.Settings.Calculated.Current[3] = "UNUSED";
         }
       }
     },

@@ -7,8 +7,6 @@
   import { DataSet } from "vis-data/peer";
   import { Timeline } from "vis-timeline/peer";
   import "vis-timeline/styles/vis-timeline-graph2d.css";
-  import 'CSS/jquery.qtip.css';
-  import qtip from 'JS/jquery.qtip.js';
   export default {
     props: { analyzer: Object, alarms: Object },
     data: function() {
@@ -38,28 +36,28 @@
       SetAlarms: function() {
         this.TimeLineGroups.clear();
         this.TimeLineDataset.clear();
-        var Groups = [];
-        var Counts = [];
+        var IDs   = [];
+        var Names = [];
+        var Count = [];
+        var Prio  = [];
         var Colors = ['green', 'yellow', 'red'];
         if((this.alarms == null) || (this.analyzer == null)) return;
-        var NameCol    = this.alarms.Headers.indexOf('Name');
+        for(var n = 0; n < this.analyzer.Alarms.length; n++) {
+          IDs.push(this.analyzer.Alarms[n].AlarmID);
+          Names.push(this.analyzer.Alarms[n].Name);
+          Count.push(0);
+          Prio.push(this.analyzer.Alarms[n].Priority);
+        }
+        var IDCol      = this.alarms.Headers.indexOf('AlarmID');
         var TriggerCol = this.alarms.Headers.indexOf('Trigger');
         var ReleaseCol = this.alarms.Headers.indexOf('Release');
         for(var n = 0; n < this.alarms.Rows.length; n++) {
-          var Index = Groups.indexOf(this.alarms.Rows[n][NameCol]);
-          if(Index == -1) {
-            Groups.push(this.alarms.Rows[n][NameCol]);
-            Counts.push(0);
-            Index = Groups.length - 1;
-          }
-          Counts[Index] = Counts[Index] + 1;
-          var Row = { start: this.alarms.Rows[n][TriggerCol], className: Colors[0], group: Index, end: (this.alarms.Rows[n][ReleaseCol] == null) ? moment().valueOf() : this.alarms.Rows[n][ReleaseCol] };
-          this.TimeLineDataset.add(Row);
+          var Index = IDs.indexOf(this.alarms.Rows[n][IDCol]);
+          Count[Index] = Count[Index] + 1;
+          this.TimeLineDataset.add({ start: this.alarms.Rows[n][TriggerCol], className: Colors[Prio[Index]], group: IDs[Index], end: (this.alarms.Rows[n][ReleaseCol] == null) ? this.alarms.Rows[n][TriggerCol] : this.alarms.Rows[n][ReleaseCol] });
         }
         this.TimeLine.setWindow(this.alarms.From, this.alarms.To);
-        for(var n = 0; n < Groups.length; n++) {
-          this.TimeLineGroups.add({ id: n, content: '<div class="fixed_container"><div class="overflow_container" data-toggle="tooltip" title="' + Groups[n] + '">' + Groups[n] + '</div><span class="badge">' + Counts[n] + '</span></div>'});
-        }
+        for(var n = 0; n < IDs.length; n++) this.TimeLineGroups.add({ id: IDs[n], title: Names[n], content: '<div><div>' + Names[n] + '</div><span class="badge">' + Count[n] + '</span></div>'});
         this.TimeLine.setGroups(this.TimeLineGroups);
       }
     }
@@ -79,15 +77,26 @@
     border-color: #5cb85c;
     background-color: #7cc67c;
   }
-  div >>> .fixed_container {
+  div >>> .vis-inner > div {
     width: 200px;
     line-height: 18px;
   }
-  div >>> .badge {
+  div >>> .vis-inner > div > span {
     margin-top: 0px;
     float: right;
+    min-width: 10px;
+    padding: 3px 7px;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-color: #777777;
+    border-radius: 10px;
   }
-  div >>> .overflow_container {
+  div >>> .vis-inner > div > div {
     width: 150px;
     text-overflow: ellipsis;
     display: inline-block;

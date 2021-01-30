@@ -21,8 +21,6 @@ using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class Worker {
   private :
-//    void                 *pRunParam;
-//    volatile bool         pWorking;
     volatile bool         pTerminate;
     pthread_t             pThread;
     pthread_mutex_t       pMutex;
