@@ -95,7 +95,7 @@ bool Database::ExecSentenceAsyncResult(const string &sql) {
   ClearAsync();
   if(PQsendQuery(pDBConn, sql.c_str()) == 0) {
     char *Save;
-    LogFile::Error("Database", "Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
+    LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
 //    printf("%s\n", sql.c_str());
     return false;
   }

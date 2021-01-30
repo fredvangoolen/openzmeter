@@ -43,40 +43,45 @@ void AnalyzerSoftAlarms::Config(const bool enabled, const float nominalVoltage, 
   pNominalFrequency = nominalFreq;
   cctz::load_time_zone(tz, &pTimeZone);
   if((enabled == false) && (pWorker != NULL)) {
-    pAlarms.clear();
     delete pWorker;
     pWorker = NULL;
   } else if((enabled == true) && (pWorker == NULL)) {
     pWorker = new Worker("AlarmsDet");
   }
+  for(auto &List : pAlarms) {
+    for(auto &Alarm : List.second) delete Alarm;
+  }
   pAlarms.clear();
   string IDs;
   for(auto &Alarm : alarms) {
-    pAlarms.emplace(std::piecewise_construct, std::forward_as_tuple(Alarm["Aggreg"]), std::forward_as_tuple(pSerial, pNominalVoltage, pNominalFrequency, Alarm));
-    string ID = Alarm["AlarmID"];
-    IDs = (IDs.size() == 0) ? IDs + pDB->Bind(ID) : IDs + ", " + ID;
+    string Aggreg = Alarm["Aggreg"];
+    string ID     = Alarm["AlarmID"];
+    pAlarms.emplace(std::piecewise_construct, std::make_tuple(Aggreg), std::make_tuple()).first->second.emplace_back(new AnalyzerSoftAlarm(pSerial, pNominalVoltage, pNominalFrequency, Alarm, pDB));
+    IDs = (IDs.size() == 0) ? IDs + pDB->Bind(ID) : IDs + ", " + pDB->Bind(ID);
   }
   if(IDs.empty() == false) pDB->ExecSentenceNoResult("DELETE FROM alarms WHERE id NOT IN(" + IDs + ")");
   pthread_rwlock_unlock(&pLock);
 }
 void AnalyzerSoftAlarms::Alarms_Func(const string &name, AnalyzerSoftAggreg *params) {
   pthread_rwlock_rdlock(&pLock);
-  auto Range = pAlarms.equal_range(name);
-  for(auto it = Range.first; it != Range.second; it++) {
-    auto Result = it->second.PushAggreg(params);
-    if(Result == AnalyzerSoftAlarm::TRIGGERED) {
-      pMQTT->PublishAlarm(params->Timestamp(), it->second.Name(), it->second.Priority(), true);
-      TelegramManager::SendAlarm(pSerial, pTimeZone, params->Timestamp(), it->second.Name(), it->second.Priority(), true);
-    } else if(Result == AnalyzerSoftAlarm::RELEASED) {
-      pMQTT->PublishAlarm(params->Timestamp(), it->second.Name(), it->second.Priority(), false);
-      TelegramManager::SendAlarm(pSerial, pTimeZone, params->Timestamp(), it->second.Name(), it->second.Priority(), false);
+  auto List = pAlarms.find(name);
+  if(List != pAlarms.end()) {
+    for(auto &Alarm : List->second) {
+      auto Result = Alarm->PushAggreg(params);
+      if(Result == AnalyzerSoftAlarm::TRIGGERED) {
+        pMQTT->PublishAlarm(params->Timestamp(), Alarm->Name(), Alarm->Priority(), true);
+        TelegramManager::SendAlarm(pSerial, pTimeZone, params->Timestamp(), Alarm->Name(), Alarm->Priority(), true);
+      } else if(Result == AnalyzerSoftAlarm::RELEASED) {
+        pMQTT->PublishAlarm(params->Timestamp(), Alarm->Name(), Alarm->Priority(), false);
+        TelegramManager::SendAlarm(pSerial, pTimeZone, params->Timestamp(), Alarm->Name(), Alarm->Priority(), false);
+      }
     }
   }
   pthread_rwlock_unlock(&pLock);
 }
 void AnalyzerSoftAlarms::Run(const string &aggreg, AnalyzerSoftAggreg *params) {
   pthread_rwlock_rdlock(&pLock);
-  if(pWorker != NULL) pWorker->Run([&]() { this->Alarms_Func(aggreg, params); });
+  if(pWorker != NULL) pWorker->Run([&, aggreg, params]() { this->Alarms_Func(aggreg, params); });
   pthread_rwlock_unlock(&pLock);
 }
 void AnalyzerSoftAlarms::Wait() {
@@ -87,7 +92,10 @@ void AnalyzerSoftAlarms::Wait() {
 json AnalyzerSoftAlarms::GetConfig() {
   json Result = json::array();
   pthread_rwlock_rdlock(&pLock);
-  for(auto &Alarm : pAlarms) Result.push_back(Alarm.second.GetConfig());
+  for(auto &List : pAlarms) {
+    for(auto &Alarm : List.second)
+    Result.push_back(Alarm->GetConfig());
+  }
   pthread_rwlock_unlock(&pLock);
   return Result;
 }
@@ -131,7 +139,7 @@ void AnalyzerSoftAlarms::GetAlarms(const json &params, Response &response) {
 }
 void AnalyzerSoftAlarms::GetAlarmsRange(const json &params, Response &response) {
   Database DB(pSerial);
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('To', max(trigger), 'From', min(trigger)) AS ranges FROM alarms_ext");
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('To', max(trigger), 'From', min(trigger)) AS ranges FROM alarms");
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("ranges"), "application/json", HTTP_OK);
 }

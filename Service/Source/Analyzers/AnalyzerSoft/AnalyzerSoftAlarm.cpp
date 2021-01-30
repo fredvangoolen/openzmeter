@@ -16,8 +16,9 @@
 #include "AnalyzerSoftAlarm.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAlarm::AnalyzerSoftAlarm(const string &serial, float &voltage, float &freq, const json &config) {
+AnalyzerSoftAlarm::AnalyzerSoftAlarm(const string &serial, float &voltage, float &freq, const json &config, DatabaseQueue *db) {
   pSerial      = serial;
+  pDB          = db;
   pUID         = config["AlarmID"];
   pExpression  = config["Expression"];
   pName        = config["Name"];
@@ -74,19 +75,17 @@ AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(AnalyzerSoftAggreg
       *Byte |= (1 << Bit);
     }
   } catch (Parser::exception_type &e) {
-    LogFile::Debug("Alarm expresion evaluation failed on analyzer '%s'", pSerial.c_str());
+    LogFile::Debug("Alarm expresion evaluation failed on analyzer '%s' (%s)", pSerial.c_str(), e.GetMsg().c_str());
   }
   pResultPos = (pResultPos + 1) % pWindow;
   if((pResultCount == pSamples) && (pTriggerTime == 0)) {
     pTriggerTime = data->Timestamp();
     LogFile::Debug("Alarm triggered on analyzer '%s'", pSerial.c_str());
-    Database DB(pSerial);
-    DB.ExecSentenceNoResult("INSERT INTO alarms_ext(id, trigger, release) VALUES(" + DB.Bind(pUID) + ", " + DB.Bind(pTriggerTime) + ", null)");
+    pDB->ExecSentenceNoResult("INSERT INTO alarms(id, trigger, release) VALUES(" + pDB->Bind(pUID) + ", " + pDB->Bind(pTriggerTime) + ", null)");
     return TRIGGERED;
   } else if((pResultCount == 0) && (pTriggerTime != 0)) {
     LogFile::Debug("Alarm reseted on analyzer '%s'", pSerial.c_str());
-    Database DB(pSerial);
-    DB.ExecSentenceNoResult("UPDATE alarms_ext SET release = " + DB.Bind(data->Timestamp()) + " WHERE id = " + DB.Bind(pUID) + " AND trigger = " + DB.Bind(pTriggerTime));
+    pDB->ExecSentenceNoResult("UPDATE alarms SET release = " + pDB->Bind(data->Timestamp()) + " WHERE id = " + pDB->Bind(pUID) + " AND trigger = " + pDB->Bind(pTriggerTime));
     pTriggerTime = 0;
     return RELEASED;
   }

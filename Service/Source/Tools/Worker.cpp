@@ -20,12 +20,10 @@
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 Worker::Worker(const string &name, int8_t nice) {
-//  pWorking   = false;
   pTerminate = false;
   pCondWake  = PTHREAD_COND_INITIALIZER;
   pCondWait  = PTHREAD_COND_INITIALIZER;
   pMutex     = PTHREAD_MUTEX_INITIALIZER;
-//  pRunParam  = NULL;
   pThread    = 0;
   pCallback  = NULL;
   if(pthread_create(&pThread, NULL, [](void *params) { return ((Worker*)params)->Thread(); }, (void*)this) != 0) {

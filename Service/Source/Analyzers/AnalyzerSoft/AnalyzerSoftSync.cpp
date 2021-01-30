@@ -62,7 +62,7 @@ void AnalyzerSoftSync::Config(const json &config, const string &name) {
     pName      = name;
     if(pThread == 0) {
       if(pthread_create(&pThread, NULL, [](void *params) { return ((AnalyzerSoftSync*)params)->Thread(); }, this) != 0) {
-        LogFile::Error(pParent->pSerial.c_str(), "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+        LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         pThread = 0;
       } else {
         pthread_setname_np(pThread, "Sync");
@@ -86,7 +86,7 @@ bool AnalyzerSoftSync::Login(const string &path, Client *client, const string &u
   Content["UpdateLastLogin"] = false;
   auto Response = client->Post((path + "/logIn").c_str(), Header, Content.dump(), "application/json");
   if((Response != nullptr) && (Response->status == HTTP_OK) && (Response->has_header("Set-Cookie") == true)) {
-    LogFile::Debug(pParent->pSerial.c_str(), "Analyzer '%s' logged on remote server", pParent->Serial().c_str());
+    LogFile::Debug("Analyzer '%s' logged on remote server", pParent->Serial().c_str());
     cookie = Response->get_header_value("Set-Cookie");
     return true;
   } else {
@@ -141,7 +141,7 @@ void *AnalyzerSoftSync::Thread() {
     Req.response_handler_ = [&](const Response &response) -> bool {
       if(pTerminate == true) return false;
       if(response.status == HTTP_OK) return true;
-      LogFile::Debug(pParent->pSerial.c_str(), "Failed request to remote server in analyzer '%s' (ERROR: %d)", pParent->Serial().c_str(), response.status);
+      LogFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)", pParent->Serial().c_str(), response.status);
       usleep(1000000);
       return false;
     };
@@ -163,7 +163,7 @@ void *AnalyzerSoftSync::Thread() {
           Buffer = Buffer.substr(6);
           json Content = json::parse(Buffer, NULL, false);
           if(!Content.is_discarded() && Content.is_object() && Content["Sequence"].is_string() && Content["Method"].is_string()) {
-            LogFile::Debug(pParent->pSerial.c_str(), "Analyzer '%s' receive query from remote server", pParent->Serial().c_str());
+            LogFile::Debug("Analyzer '%s' receive query from remote server", pParent->Serial().c_str());
             string ID     = Content["Sequence"];
             string Method = Content["Method"];
             Content.erase("Sequence");
@@ -192,7 +192,7 @@ void AnalyzerSoftSync::PeriodicTasks() {
     delete Tmp;
   }
   pthread_mutex_unlock(&pMutex);
-  LogFile::Debug(pParent->pSerial.c_str(), "Adjusted HTTP workers pool to %d connections (plus %u in use)", pFreeWorkers.size(), pRunningWorkers);
+  LogFile::Debug("Adjusted HTTP workers pool to %d connections (plus %u in use)", pFreeWorkers.size(), pRunningWorkers);
 }
 void AnalyzerSoftSync::PushWorker(AnalyzerSoftSyncWorker *worker, const bool fail) {
   pthread_mutex_lock(&pMutex);

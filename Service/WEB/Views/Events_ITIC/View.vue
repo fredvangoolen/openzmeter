@@ -42,7 +42,6 @@
   import ByType from './ByType.vue';
   import ByRms from './ByRMS.vue';
   import ByDuration from './ByDuration.vue';
-  import Graph from 'Components/Graph.vue';
   import moment from 'moment';
   export default {
     props: { analyzer: Object },
@@ -53,17 +52,22 @@
       this.TransferEvents.SingleShot = true;
     },
     watch: {
-      analyzer: function() { this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf()]); },
-      Year: function(val) { this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf()]); }
+      analyzer: function() { if(this.Year == null) return; this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(this.Year).startOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(this.Year).endOf('year').valueOf()]); },
+      Year: function(val) { if(this.analyzer == null) return ; this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf()]); }
     },
     beforeDestroy: function() {
       this.TransferEvents.Destroy();
     },
     methods: {
       Export: function() {
-        if(this.Data == null) return [];
+        if(this.TransferEvents.Data == null) return [];
         var Data =  [['Start', 'Type', 'Duration', 'Notes']];
-        for(var i in this.Data.StartTime) Data.push([this.Data.StartTime[i], this.Data.Type[i], this.Round(this.Data.Duration[i] / this.Data.SampleRate[i], 3), this.Data.Notes[i]]);
+        var StartCol = this.TransferEvents.Data.Headers.indexOf('StartTime');
+        var TypeCol  = this.TransferEvents.Data.Headers.indexOf('Type');
+        var DurationCol = this.TransferEvents.Data.Headers.indexOf('Duration');
+        var SamplerateCol = this.TransferEvents.Data.Headers.indexOf('SampleRate');
+        var NotesCol = this.TransferEvents.Data.Headers.indexOf('Notes');
+        for(var i = 0; i < this.TransferEvents.Data.Rows.length; i++) Data.push([this.analyzer.FormatDateTime(this.TransferEvents.Data.Rows[i][StartCol]), this.TransferEvents.Data.Rows[i][TypeCol], this.Round(this.TransferEvents.Data.Rows[i][DurationCol] / this.TransferEvents.Data.Rows[i][SamplerateCol], 3), this.TransferEvents.Data.Rows[i][NotesCol]]);
         return Object.seal(Data);
       }
     },

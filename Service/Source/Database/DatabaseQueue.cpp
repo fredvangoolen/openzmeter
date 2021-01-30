@@ -26,14 +26,14 @@ DatabaseQueue::DatabaseQueue(const string &schema, const bool create) : Database
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return;
   }
-  pthread_setname_np(pThread, "DatabaseQueue");
+  if(pthread_setname_np(pThread, "DatabaseQueue") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 DatabaseQueue::~DatabaseQueue() {
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   pTerminate = true;
-  pthread_cond_signal(&pCond);
-  pthread_mutex_unlock(&pMutex);
-  if(pThread != 0) pthread_join(pThread, NULL);
+  if(pthread_cond_signal(&pCond) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if((pThread != 0) && (pthread_join(pThread, NULL) != 0)) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 void DatabaseQueue::ExecSentenceNoResult(const string &sql) {
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
@@ -42,19 +42,19 @@ void DatabaseQueue::ExecSentenceNoResult(const string &sql) {
   if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 void *DatabaseQueue::Thread() {
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   while(pTerminate == false) {
     if(pQueue.empty() == true) {
-      pthread_cond_wait(&pCond, &pMutex);
+      if(pthread_cond_wait(&pCond, &pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     } else {
       string Query = pQueue.front();
       pQueue.pop();
-      pthread_mutex_unlock(&pMutex);
+      if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       Database::ExecSentenceNoResult(Query);
-      pthread_mutex_lock(&pMutex);
+      if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     }
   }
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   return NULL;
 }
 // ---------------------------------------------------------------------------------------------------------------------

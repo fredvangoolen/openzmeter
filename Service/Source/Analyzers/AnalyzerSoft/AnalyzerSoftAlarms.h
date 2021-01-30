@@ -27,15 +27,15 @@ using namespace cctz;
 class AnalyzerSoftMQTT;
 class AnalyzerSoftAlarms final {
   private :
-    float                                pNominalVoltage;
-    float                                pNominalFrequency;
-    pthread_rwlock_t                     pLock;
-    multimap<string, AnalyzerSoftAlarm>  pAlarms;
-    string                               pSerial;
-    Worker                              *pWorker;
-    AnalyzerSoftMQTT                    *pMQTT;
-    DatabaseQueue                       *pDB;
-    time_zone                            pTimeZone;
+    float                                     pNominalVoltage;
+    float                                     pNominalFrequency;
+    pthread_rwlock_t                          pLock;
+    map<string, vector<AnalyzerSoftAlarm*> >  pAlarms;
+    string                                    pSerial;
+    Worker                                   *pWorker;
+    AnalyzerSoftMQTT                         *pMQTT;
+    DatabaseQueue                            *pDB;
+    time_zone                                 pTimeZone;
   private :
     void Alarms_Func(const string &name, AnalyzerSoftAggreg *params);
   public :

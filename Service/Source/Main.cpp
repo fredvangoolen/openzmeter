@@ -41,7 +41,7 @@
 volatile bool Terminate = false;
 //---------------------------------------------------------------------------------------------------------------------
 void SignalHandler(int signal) {
-  LogFile::Info("System", "Shutting down. Please wait while all task ends...");
+  LogFile::Info("Shutting down. Please wait while all task ends...");
   Terminate = true;
 }
 int main(int argc, char** argv) {

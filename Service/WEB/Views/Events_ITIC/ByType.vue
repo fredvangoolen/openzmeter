@@ -43,9 +43,10 @@
         Opt.axes.x.axisLabelFormatter = (x) => { return (((x % 1) == 0) && (x >= 0) && (x < this.Types.length)) ? this.Types[x] : ''; };
         for(var i = 0; i < this.Types.length; i++) Opt.file.push([i, 0]);
         if(this.data != null) {
-          for(var i in this.data.StartTime) {
+          var TypeCol  = this.data.Headers.indexOf('Type');
+          for(var i = 1; i < this.data.Rows.length; i++) {
             for(var j in this.Types) {
-              if(this.data.Type[i] == this.Types[j]) Opt.file[j][1] = Opt.file[j][1] + 1;
+              if(this.data.Rows[i][TypeCol] == this.Types[j]) Opt.file[j][1] = Opt.file[j][1] + 1;
             }
           }
         }

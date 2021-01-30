@@ -54,10 +54,10 @@
     data() {
       return { View: null, Analyzers: [], FilterAnalyzers: [], ShowSpinner: false, Analyzer: null, Filter: '',
         Columns: [
-          {name: 'Online', title: 'Online', callback: this.OnlineStatus},
-          {name: 'Name', title: 'Description'},
-          {name: 'Analyzer', title: 'Serial'},
-          {name: '__slot:actions', title: ''}
+          { name: 'Online', title: 'Online', callback: this.OnlineStatus },
+          { name: 'Name', title: 'Description' },
+          { name: 'Analyzer', title: 'Serial' },
+          { name: '__slot:actions', title: '' }
         ]
       };
     },

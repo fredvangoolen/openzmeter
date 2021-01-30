@@ -51,7 +51,7 @@ AnalyzerSoftFFTs::~AnalyzerSoftFFTs() {
   }
   pthread_mutex_lock(&pFFTMutex);
   if(pFFTRunning == 0) {
-    LogFile::Debug(pSerial.c_str(), "Clearing FFT cached plans");
+    LogFile::Debug("Clearing FFT cached plans");
     fftwf_cleanup();
   }
   pthread_mutex_unlock(&pFFTMutex);
