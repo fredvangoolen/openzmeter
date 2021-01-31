@@ -36,11 +36,15 @@ Database::Database(const string &schema, const bool create) {
     usleep(1000000);
   }
   if((create == true) && (ExecSentenceNoResult("CREATE SCHEMA IF NOT EXISTS " + BindID(schema)) == false)) {
+    char *Save;
+    LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     PQfinish(pDBConn);
     pDBConn = NULL;
     return;
   }
   if(ExecSentenceNoResult("SET search_path TO " +  Bind(schema) + ", public") == false) {
+    char *Save;
+    LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
     PQfinish(pDBConn);
     pDBConn = NULL;
     return;
@@ -208,12 +212,22 @@ json Database::ResultJSON(const string &name) const {
   if(Result.is_discarded()) return nullptr;
   return Result;
 }
+json Database::ResultJSON(const int32_t col) const {
+  json Result = json::parse(ResultString(col), NULL, false);
+  if(Result.is_discarded()) return nullptr;
+  return Result;
+}
 string Database::ResultString(const string &name) const {
   if(pResult == NULL) return "";
   int32_t Col = PQfnumber(pResult, name.c_str());
   if(Col == -1) return "";
   if(PQgetisnull(pResult, 0, Col) == 1) return "";
   return PQgetvalue(pResult, 0, Col);
+}
+string Database::ResultString(const int32_t col) const {
+  if(pResult == NULL) return "";
+  if(PQgetisnull(pResult, 0, col) == 1) return "";
+  return PQgetvalue(pResult, 0, col);
 }
 float Database::ResultFloat(const string &name) const {
   if(pResult == NULL) return NAN;
@@ -222,11 +236,21 @@ float Database::ResultFloat(const string &name) const {
   if(PQgetisnull(pResult, 0, Col) == 1) return NAN;
   return atof(PQgetvalue(pResult, 0, Col));
 }
+float Database::ResultFloat(const int32_t col) const {
+  if(pResult == NULL) return NAN;
+  if(PQgetisnull(pResult, 0, col) == 1) return NAN;
+  return atof(PQgetvalue(pResult, 0, col));
+}
 uint64_t Database::ResultUInt64(const string &name) const {
   if(pResult == NULL) return 0;
   int32_t Col = PQfnumber(pResult, name.c_str());
   if(Col == -1) return 0;
   if(PQgetisnull(pResult, 0, Col) == 1) return 0;
   return strtoull(PQgetvalue(pResult, 0, Col), NULL, 10);
+}
+uint64_t Database::ResultUInt64(const int32_t col) const {
+  if(pResult == NULL) return 0;
+  if(PQgetisnull(pResult, 0, col) == 1) return 0;
+  return strtoull(PQgetvalue(pResult, 0, col), NULL, 10);
 }
 //----------------------------------------------------------------------------------------------------------------------

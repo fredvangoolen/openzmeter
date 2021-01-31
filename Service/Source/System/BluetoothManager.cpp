@@ -27,7 +27,7 @@ pthread_t        BluetoothManager::pThread      = 0;
 pthread_mutex_t  BluetoothManager::pMutex       = PTHREAD_MUTEX_INITIALIZER;
 // ---------------------------------------------------------------------------------------------------------------------
 BluetoothManager::BluetoothManager() {
-  LogFile::Info("BluetoothManager", "Starting Bluetooth manager");
+  LogFile::Info("Starting BluetoothManager...");
   HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback);
   HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback);
   json Config = ConfigFile::ReadConfig("/Bluetooth");
@@ -47,23 +47,24 @@ BluetoothManager::BluetoothManager() {
     pthread_setname_np(pThread, "Bluetooth");
   }
   MessageLoop::RegisterListener("Bluetooth_Toogle", ToggleEnable);
+  LogFile::Info("BluetoothManager started");
 }
 BluetoothManager::~BluetoothManager() {
-  LogFile::Info("BluetoothManager", "Stopping bluetooth manager...");
+  LogFile::Info("Stopping BluetoothManager...");
   MessageLoop::UnregisterListener("Bluetooth_Toogle");
   HTTPServer::UnregisterCallback("getBluetooth");
   HTTPServer::UnregisterCallback("setBluetooth");
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   pThread = 0;
-  LogFile::Info("BluetoothManager", "Bluetooth manager stoped");
+  LogFile::Info("BluetoothManager stoped");
 }
 void BluetoothManager::ToggleEnable() {
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   json Config = json::object();
   Config["Enabled"] = !pEnable;
   ConfigFile::WriteConfig("/Bluetooth", Config);
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 void *BluetoothManager::Thread(void *params) {
   DBusConnection *DBus = NULL;

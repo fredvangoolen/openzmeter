@@ -23,7 +23,7 @@
 string EthernetManager::pInterface = "";
 // ---------------------------------------------------------------------------------------------------------------------
 EthernetManager::EthernetManager() {
-  LogFile::Info("Ethernet", "Starting Ethernet manager");
+  LogFile::Info("Starting EthernetManager...");
   json Config = ConfigFile::ReadConfig("/EthernetInterface");
   if(Config.is_string() == true) pInterface = Config;
   ConfigFile::WriteConfig("/EthernetInterface", pInterface);
@@ -32,13 +32,14 @@ EthernetManager::EthernetManager() {
     HTTPServer::RegisterCallback("getEthernet", GetEthernetCallback);
     HTTPServer::RegisterCallback("setEthernet", SetEthernetCallback);
   }
+  LogFile::Info("EthernetManager started");
 }
 EthernetManager::~EthernetManager() {
-  LogFile::Info("Ethernet", "Stopping Ethernet manager...");
+  LogFile::Info("Stopping EthernetManager...");
   HTTPServer::UnregisterCallback("getEthernet");
   HTTPServer::UnregisterCallback("setEthernet");
   MessageLoop::UnregisterListener("Ethernet_PeriodicTasks");
-  LogFile::Info("Ethernet", "Ethernet manager stoped");
+  LogFile::Info("EthernetManager stoped");
 }
 void EthernetManager::PeriodicTasks() {
   json Params = json::object();

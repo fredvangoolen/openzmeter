@@ -25,7 +25,7 @@ string           WifiManager::pNetworkWIFI   = "lan";
 string           WifiManager::pWirelessWIFI  = "default_radio";
 // ---------------------------------------------------------------------------------------------------------------------
 WifiManager::WifiManager() {
-  LogFile::Info("WifiManager", "Starting Wifi manager");
+  LogFile::Info("Starting WifiManager...");
   json Config = ConfigFile::ReadConfig("/WIFI");
   if(Config.is_object() == true) {
     if(Config["Interface"].is_string()) pInterfaceWIFI = Config["Interface"];
@@ -41,14 +41,15 @@ WifiManager::WifiManager() {
   HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
   HTTPServer::RegisterCallback("getWIFI",  GetWIFICallback);
   HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
+  LogFile::Info("WifiManager started");
 }
 WifiManager::~WifiManager() {
-  LogFile::Info("WifiManager", "Stopping Wifi manager...");
+  LogFile::Info("Stopping WifiManager...");
   HTTPServer::UnregisterCallback("scanWIFI");
   HTTPServer::UnregisterCallback("getWIFI");
   HTTPServer::UnregisterCallback("setWIFI");
   MessageLoop::UnregisterListener("WIFI_PeriodicTasks");
-  LogFile::Info("WifiManager", "Stopping Wifi manager...");
+  LogFile::Info("WifiManager stoped");
 }
 void WifiManager::PeriodicTasks() {
   json Params = json::object();

@@ -20,15 +20,16 @@
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 NTPManager::NTPManager() {
-  LogFile::Info("NTPManager", "Starting NTP manager");
+  LogFile::Info("Starting NTPManager...");
   HTTPServer::RegisterCallback("getNTP",       GetNTPCallback);
   HTTPServer::RegisterCallback("setNTP",       SetNTPCallback);
+  LogFile::Info("NTPManager started");
 }
 NTPManager::~NTPManager() {
-  LogFile::Info("NTPManager", "Stopping NTP manager...");
+  LogFile::Info("Stopping NTPManager...");
   HTTPServer::UnregisterCallback("getNTP");
   HTTPServer::UnregisterCallback("setNTP");
-  LogFile::Info("NTPManager", "NTP manager stoped");
+  LogFile::Info("NTPManager stoped");
 }
 void NTPManager::GetNTPCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
