@@ -25,7 +25,7 @@ map<string, Device*>                                   DeviceManager::pDevices;
 pthread_rwlock_t                                       DeviceManager::pDevicesLock = PTHREAD_RWLOCK_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 DeviceManager::DeviceManager() {
-  LogFile::Debug("Starting DeviceManager....");
+  LogFile::Debug("Starting DeviceManager...");
   for(auto Func : pDrivers) Func();
   HTTPServer::RegisterCallback("getDevices",     GetDevicesCallback);
   HTTPServer::RegisterCallback("getDevice",      GetDeviceCallback);

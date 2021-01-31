@@ -95,15 +95,15 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) {
     Database DB(pSerial);
     auto GetSample = [&](const uint64_t &currenttime, float &active, float &reactive) -> uint64_t {
       if(DB.FecthRow() == true) {
-        active     = DB.ResultFloat("active");
-        reactive   = DB.ResultFloat("reactive");
-        return DB.ResultUInt64("sampletime");
+        active     = DB.ResultFloat(1);
+        reactive   = DB.ResultFloat(2);
+        return DB.ResultUInt64(0);
       } else {
-        DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive FROM aggreg_15m WHERE sampletime >= " + DB.Bind(currenttime) + " ORDER BY sampletime ASC LIMIT 1000");
+        DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s), (SELECT SUM(s) FROM UNNEST(reactive_power) s) FROM aggreg_15m WHERE sampletime >= " + DB.Bind(currenttime) + " ORDER BY sampletime ASC LIMIT 1000");
         if(DB.FecthRow() == true) {
-          active     = DB.ResultFloat("active");
-          reactive   = DB.ResultFloat("reactive");
-          return DB.ResultUInt64("sampletime");
+          active     = DB.ResultFloat(1);
+          reactive   = DB.ResultFloat(2);
+          return DB.ResultUInt64(0);
         }
       }
       return UINT64_MAX;
@@ -135,15 +135,15 @@ void AnalyzerSoftRates::GetBills(const json &params, Response &response) {
     Database DB(pSerial);
     auto GetSample = [&](const uint64_t &currenttime, float &active, float &reactive) -> uint64_t {
       if(DB.FecthRow() == true) {
-        active     = DB.ResultFloat("active");
-        reactive   = DB.ResultFloat("reactive");
-        return DB.ResultUInt64("sampletime");
+        active     = DB.ResultFloat(1);
+        reactive   = DB.ResultFloat(2);
+        return DB.ResultUInt64(0);
       } else {
-        DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s) as active, (SELECT SUM(s) FROM UNNEST(reactive_power) s) as reactive FROM aggreg_15m WHERE sampletime >= " + DB.Bind(currenttime) + " ORDER BY sampletime ASC LIMIT 1000");
+        DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s), (SELECT SUM(s) FROM UNNEST(reactive_power) s) FROM aggreg_15m WHERE sampletime >= " + DB.Bind(currenttime) + " ORDER BY sampletime ASC LIMIT 1000");
         if(DB.FecthRow() == true) {
-          active     = DB.ResultFloat("active");
-          reactive   = DB.ResultFloat("reactive");
-          return DB.ResultUInt64("sampletime");
+          active     = DB.ResultFloat(1);
+          reactive   = DB.ResultFloat(2);
+          return DB.ResultUInt64(0);
         }
       }
       return UINT64_MAX;

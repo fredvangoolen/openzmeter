@@ -56,18 +56,18 @@ DatabasePool::DatabasePool() {
 }
 DatabasePool::~DatabasePool() {
   MessageLoop::UnregisterListener("DatabasePool_PeriodicTasks");
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   while(pConnectionPool.size() > 0) {
     Connection_t Connection = pConnectionPool.front();
     pConnectionPool.pop_front();
     PQfinish(Connection.Connection);
   }
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 void DatabasePool::PeriodicTasks() {
   Database DB;
   DB.ExecSentenceNoResult("VACUUM");
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   uint64_t Time = Tools::GetTime64();
   while(pConnectionPool.size() > 0) {
     auto Tmp = pConnectionPool.back();
@@ -76,17 +76,17 @@ void DatabasePool::PeriodicTasks() {
     pConnectionPool.pop_back();
   }
   LogFile::Debug("Adjusted database queries pool to %d connections", pConnectionPool.size());
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 PGconn *DatabasePool::PopConnection() {
   PGconn *Tmp = NULL;
   bool    New = false;
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   if(pConnectionPool.size() > 0) {
     Tmp = pConnectionPool.front().Connection;
     pConnectionPool.pop_front();
   }
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   if(Tmp == NULL) {
     Tmp = PQconnectdb(pConnectionString.c_str());
     LogFile::Debug("New connection to database server started");
@@ -114,11 +114,11 @@ PGconn *DatabasePool::PopConnection() {
 }
 void DatabasePool::PushConnection(PGconn *conn) {
   if(conn == NULL) return;
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   Connection_t Connection;
   Connection.LastTime = Tools::GetTime64();
   Connection.Connection = conn;
   pConnectionPool.push_front(Connection);
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 // ---------------------------------------------------------------------------------------------------------------------

@@ -54,9 +54,13 @@ class Database {
     bool     ExecResource(const string &file);
     bool     FecthRow();
     string   ResultString(const string &name) const;
+    string   ResultString(const int32_t col) const;
     float    ResultFloat(const string &name) const;
+    float    ResultFloat(const int32_t col) const;
     uint64_t ResultUInt64(const string &name) const;
+    uint64_t ResultUInt64(const int32_t col) const;
     json     ResultJSON(const string &name) const;
+    json     ResultJSON(const int32_t col) const;
     uint64_t LastUse() const;
 };
 //----------------------------------------------------------------------------------------------------------------------

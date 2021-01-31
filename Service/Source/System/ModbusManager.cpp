@@ -28,20 +28,21 @@ list<ModbusManager::Worker_t*> ModbusManager::pFreeWorkers;
 vector<string>                 ModbusManager::pAnalyzers;
 // ---------------------------------------------------------------------------------------------------------------------
 ModbusManager::ModbusManager() {
-  LogFile::Info("ModbusManager", "Manager started");
+  LogFile::Info("Starting ModbusManager...");
   Configure(CheckConfig(ConfigFile::ReadConfig("/ModbusTCP")));
   HTTPServer::RegisterCallback("getModbusTCP", GetModbusTCP);
   HTTPServer::RegisterCallback("setModbusTCP", SetModbusTCP);
+  LogFile::Info("ModbusManager started");
 }
 ModbusManager::~ModbusManager() {
-  LogFile::Info("ModbusTCP", "Stopping ModbusTCP server...");
+  LogFile::Info("Stopping ModbusManager...");
   HTTPServer::UnregisterCallback("getModbusTCP");
   HTTPServer::UnregisterCallback("setModbusTCP");
   if(pThread != 0) {
     pTerminate = true;
     pthread_join(pThread, NULL);
   }
-  LogFile::Info("ModbusTCP", "ModbusTCP server stoped");
+  LogFile::Info("ModbusManager stoped");
 }
 json ModbusManager::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
