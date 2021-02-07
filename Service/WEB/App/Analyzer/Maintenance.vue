@@ -226,7 +226,7 @@
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Delete('1H', DelEventsRanged)">Execute</button>
+              <button type="button" class="btn btn-danger btn-xs" @click="Delete('Events', DelEventsRanged)">Execute</button>
             </td>
           </tr>
           <tr class="line">
@@ -416,7 +416,7 @@
         } else if(aggreg == 'Events') {
           var From = (all) ? 0 : this.From;
           var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
-          fetch('getEvents', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Waves: ['RAW', 'RMS'] }), headers: { 'Content-Type': 'application/json' } }).then(
+          fetch('getEvents', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Samples: true }), headers: { 'Content-Type': 'application/json' } }).then(
             (res) => {
               const fileStream = streamSaver.createWriteStream('Events.json', null);
               const writeStream = fileStream.getWriter();

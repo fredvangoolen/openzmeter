@@ -18,8 +18,9 @@
 #include <sys/resource.h>
 #include "Worker.h"
 #include "LogFile.h"
+#include "Tools.h"
 // ---------------------------------------------------------------------------------------------------------------------
-Worker::Worker(const string &name, int8_t nice) {
+Worker::Worker(const string &name, const Worker::Prio prio) {
   pTerminate = false;
   pCondWake  = PTHREAD_COND_INITIALIZER;
   pCondWait  = PTHREAD_COND_INITIALIZER;
@@ -29,10 +30,8 @@ Worker::Worker(const string &name, int8_t nice) {
   if(pthread_create(&pThread, NULL, [](void *params) { return ((Worker*)params)->Thread(); }, (void*)this) != 0) {
     pThread = 0;
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-    return;
   } else {
-    if(pthread_setname_np(pThread, name.c_str()) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-    if((nice != 0) && (setpriority(PRIO_PROCESS, pThread, -nice) != 0)) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    SetThreadProperties(pThread, name, prio);
   }
 }
 Worker::~Worker() {
@@ -76,5 +75,49 @@ void Worker::Wait() {
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   while((pTerminate == false) && (pCallback != NULL)) pthread_cond_wait(&pCondWait, &pMutex);
   if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+}
+void Worker::SetThreadNice(pthread_t &thread, const Worker::Prio prio) {
+
+}
+void Worker::SetThreadProperties(pthread_t thread, const string &name, const Worker::Prio prio) {
+  if(pthread_setname_np(thread, name.c_str()) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));;
+  rlimit      Limits;
+  sched_param Param;
+  if(getrlimit(RLIMIT_RTPRIO, &Limits) != 0) {
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    return SetThreadNice(thread, prio);
+  }
+  int Min = sched_get_priority_min(SCHED_FIFO);
+  if(Min == -1) {
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    return SetThreadNice(thread, prio);
+  }
+  int Max = sched_get_priority_max(SCHED_FIFO);
+  if(Max == -1) {
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    return SetThreadNice(thread, prio);
+  }
+  Param.sched_priority = (prio == IDLE) ? 1 : (prio == LOW) ? 10 : (prio == NORMAL) ? 30 : (prio == ABOUTNORMAL) ? 40 : 90;
+  if(Param.sched_priority < Min) Param.sched_priority = Min;
+  if(Param.sched_priority > Max) Param.sched_priority = Max;
+  if(Limits.rlim_max < (rlim_t)Param.sched_priority) {
+    Limits.rlim_max = Param.sched_priority;
+    if(setrlimit(RLIMIT_RTPRIO, &Limits) != 0) {
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+      return SetThreadNice(thread, prio);
+    }
+  }
+  if(Limits.rlim_cur < (rlim_t)Param.sched_priority) {
+    Limits.rlim_cur = Param.sched_priority;
+    if(setrlimit(RLIMIT_RTPRIO, &Limits) != 0) {
+      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+      return SetThreadNice(thread, prio);
+    }
+  }
+  Param.sched_priority = Param.sched_priority;
+  if(pthread_setschedparam(thread, SCHED_FIFO, &Param) != 0) {
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    return SetThreadNice(thread, prio);
+  }
 }
 // ---------------------------------------------------------------------------------------------------------------------

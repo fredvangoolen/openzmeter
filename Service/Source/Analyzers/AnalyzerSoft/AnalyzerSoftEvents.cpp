@@ -47,35 +47,37 @@ AnalyzerSoftEvents::~AnalyzerSoftEvents() {
   for(auto &Prev : pEvents) delete Prev;
   pEvents.clear();
 }
-void AnalyzerSoftEvents::Config(const bool enabled, const float nominalVoltage, const float nominalFreq) {
+void AnalyzerSoftEvents::Config(const bool enabled) {
   pthread_mutex_lock(&pMutex);
-  if(pPrevCycles != NULL) free(pPrevCycles);
-  if(pPrevSamples != NULL) free(pPrevSamples);
-  if(pEvent != NULL) delete pEvent;
-  for(auto &Prev : pEvents) delete Prev;
-  pEvents.clear();
-  pNominalVoltage   = nominalVoltage;
-  pNominalFrequency = nominalFreq;
-  pPrevCycles       = NULL;
-  pPrevSamples      = NULL;
-  pEvent            = NULL;
-  pPrevStationary   = false;
-  pPrevSamplesLen   = Event_RAW_Time * pSamplerate;
-  pPrevSamplesPos   = 0;
-  pPrevCyclesPos    = 0;
-  pPrevCyclesLen    = (nominalFreq * 2) - 1;
-  pPrevSamples      = (float*)calloc(pPrevSamplesLen * pVoltageChannels, sizeof(float));
-  pPrevCycles       = (float*)calloc(pPrevCyclesLen * pVoltageChannels, sizeof(float));
   if((enabled == false) && (pWorker != NULL)) {
     delete pWorker;
     pWorker = NULL;
   } else if((enabled == true) && (pWorker == NULL)) {
-    pWorker = new Worker("EventsDet");
+    pWorker = new Worker("EventsDet", Worker::ABOUTNORMAL);
   }
   pthread_mutex_unlock(&pMutex);
 }
-void AnalyzerSoftEvents::Run(const AnalyzerSoftBlock *block, const uint64_t timestamp) {
+void AnalyzerSoftEvents::Run(const AnalyzerSoftBlock *block, const uint64_t timestamp, const float nominalVoltage, const float nominalFreq) {
   pthread_mutex_lock(&pMutex);
+  if((pNominalVoltage != nominalVoltage) || (pNominalFrequency != nominalFreq)) {
+    if(pPrevCycles != NULL) free(pPrevCycles);
+    if(pPrevSamples != NULL) free(pPrevSamples);
+    if(pEvent != NULL) delete pEvent;
+    for(auto &Prev : pEvents) delete Prev;
+    pEvents.clear();
+    pNominalVoltage   = nominalVoltage;
+    pNominalFrequency = nominalFreq;
+    pPrevCycles       = NULL;
+    pPrevSamples      = NULL;
+    pEvent            = NULL;
+    pPrevStationary   = false;
+    pPrevSamplesLen   = Event_RAW_Time * pSamplerate;
+    pPrevSamplesPos   = 0;
+    pPrevCyclesPos    = 0;
+    pPrevCyclesLen    = (nominalFreq * 2) - 1;
+    pPrevSamples      = (float*)calloc(pPrevSamplesLen * pVoltageChannels, sizeof(float));
+    pPrevCycles       = (float*)calloc(pPrevCyclesLen * pVoltageChannels, sizeof(float));
+  }
   pHaveEvent = false;
   if(pWorker != NULL) pWorker->Run([=]() { this->Events_Func(block, timestamp); });
   pthread_mutex_unlock(&pMutex);
@@ -104,6 +106,7 @@ void AnalyzerSoftEvents::SaveSamples(const uint64_t &time, const uint8_t type, c
   uint16_t ReadPos;
   Database DB(pSerial);
   float   *Ptr, *Row;
+  string Type = (type == SAMPLES_RAW_PRESTART) ? "RAW_PRESTART" : (type == SAMPLES_RAW_POSSTART) ? "RAW_POSSTART" : (type == SAMPLES_RAW_PREEND)   ? "RAW_PREEND" : (type == SAMPLES_RAW_POSEND)   ? "RAW_POSEND" : (type == SAMPLES_RMS_PRESTART) ? "RMS_PRESTART" : (type == SAMPLES_RMS_POSSTART) ? "RMS_POSSTART" : (type == SAMPLES_RMS_PREEND)   ? "RMS_PREEND" : "RMS_POSEND";
   string   Result = "'{";
   if((type == SAMPLES_RAW_PRESTART) || (type == SAMPLES_RAW_POSSTART) || (type == SAMPLES_RAW_PREEND) || (type == SAMPLES_RAW_POSEND)) {
     MaxLen  = pPrevSamplesLen;
@@ -122,7 +125,7 @@ void AnalyzerSoftEvents::SaveSamples(const uint64_t &time, const uint8_t type, c
     Result.append("}");
   }
   Result.append("}'");
-  DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples) VALUES (" + DB.Bind(time) + ", " + DB.Bind(type) + ", " + Result + ")");
+  DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples) VALUES (" + DB.Bind(time) + ", " + DB.Bind(Type) + ", " + Result + ")");
 }
 void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint64_t timestamp) {
   uint16_t Pos = 0;
@@ -251,18 +254,40 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint6
 void AnalyzerSoftEvents::GetEvents(const json &params, Response &response) {
   if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t To = params["To"];
-  uint64_t From = params["From"];
+  uint64_t To      = params["To"];
+  uint64_t From    = params["From"];
+  bool     Samples = false;
   Database DB(pSerial);
+  if((params.contains("Samples") == true) && (params["Samples"].is_boolean() == true)) Samples = params["Samples"];
   if((params.contains("Update") == true) && (params["Update"].is_boolean() == true) && (params["Update"] == true)) {
     string UserName = params["UserName"];
     DB.ExecSentenceNoResult("UPDATE permissions SET eventsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
   }
-  auto Func = [&, To, From](uint64_t offset, DataSink &sink) -> bool {
+  auto Func = [&, To, From, Samples](uint64_t offset, DataSink &sink) -> bool {
     json Headers = {"StartTime", "Type", "SampleRate", "Reference", "Peak", "Change", "Duration", "Notes"};
+    string QuerySamples;
+    if(Samples) {
+      Headers.push_back("LengthRAW");
+      Headers.push_back("SamplesRAW");
+      Headers.push_back("LengthRMS");
+      Headers.push_back("SamplesRMS");
+      QuerySamples = ", "
+      "(SELECT array_length(samples, 1) FROM events_ext WHERE events_ext.starttime = events.starttime AND sampletype = 'RAW_PRESTART'),"
+      " (WITH ext AS (SELECT samples, sampletype FROM events_ext WHERE events_ext.starttime = events.starttime)"
+      "  SELECT (SELECT samples FROM ext WHERE sampletype = 'RAW_PRESTART') || (SELECT samples FROM ext where sampletype = 'RAW_POSSTART') || (SELECT samples FROM ext WHERE sampletype = 'RAW_PREEND') || (SELECT samples FROM ext WHERE sampletype = 'RAW_POSEND')),"
+      "(SELECT array_length(samples, 1) FROM events_ext WHERE events_ext.starttime = events.starttime AND sampletype = 'RMS_PRESTART'), "
+      " (WITH ext AS (SELECT samples, sampletype FROM events_ext WHERE events_ext.starttime = events.starttime)"
+      "  SELECT (SELECT samples FROM ext WHERE sampletype = 'RMS_PRESTART') || (SELECT samples FROM ext where sampletype = 'RMS_POSSTART') || (SELECT samples FROM ext WHERE sampletype = 'RMS_PREEND') || (SELECT samples FROM ext WHERE sampletype = 'RMS_POSEND'))";
+    } else {
+      Headers.push_back("AvaliableRAW");
+      Headers.push_back("AvaliableRMS");
+      QuerySamples = ", "
+        "(SELECT COALESCE(array_length(samples, 1), 0) > 0 FROM events_ext WHERE events_ext.starttime = events.starttime AND sampletype = 'RAW_PRESTART'), "
+        "(SELECT COALESCE(array_length(samples, 1), 0) > 0 FROM events_ext WHERE events_ext.starttime = events.starttime AND sampletype = 'RMS_PRESTART')";
+    }
     sink.os << "[\n  " << Headers.dump();
     Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT json_build_array(starttime, evttype, samplerate, reference, peak, change, duration, notes) AS result FROM events WHERE starttime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To) + " ORDER BY starttime ASC");
+    DB.ExecSentenceAsyncResult("SELECT json_build_array(starttime, evttype, samplerate, reference, peak, change, duration, notes" + QuerySamples + ") AS result FROM events WHERE starttime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To) + " ORDER BY starttime ASC");
     while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " + DB.ResultString("result");
     sink.os << "\n]";
     sink.done();
@@ -291,12 +316,8 @@ void AnalyzerSoftEvents::GetEvent(const json &params, Response &response) {
   uint64_t StartTime = params["StartTime"];
   string   Samples   = params["Samples"];
   DB.ExecSentenceAsyncResult("SELECT jsonb_build_object('StartTime', starttime, 'Type', evttype, 'SampleRate', samplerate, 'Reference', reference, 'Peak', peak, 'Change', change, 'Duration', duration, 'Notes', notes, "
-                             "'Length', (SELECT array_length(samples, 1) FROM events_ext WHERE events_ext.starttime = events.starttime AND sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_PRESTART : SAMPLES_RAW_PRESTART)) + "), "
-                             "'Samples', (WITH ext AS (SELECT samples, sampletype FROM events_ext WHERE events_ext.starttime = events.starttime) SELECT "
-                             " (SELECT samples FROM ext WHERE sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_PRESTART : SAMPLES_RAW_PRESTART)) + ") || "
-                             " (SELECT samples FROM ext where sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_POSSTART : SAMPLES_RAW_POSSTART)) + ") || "
-                             " (SELECT samples FROM ext WHERE sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_PREEND   : SAMPLES_RAW_PREEND)) + ") || "
-                             " (SELECT samples FROM ext WHERE sampletype = " + DB.Bind((uint8_t)((Samples == "RMS") ? SAMPLES_RMS_POSEND   : SAMPLES_RAW_POSEND)) + ")) "
+                             "'Length', (SELECT array_length(samples, 1) FROM events_ext WHERE events_ext.starttime = events.starttime AND sampletype = '" + Samples + "_PRESTART'), "
+                             "'Samples', (WITH ext AS (SELECT samples, sampletype FROM events_ext WHERE events_ext.starttime = events.starttime) SELECT (SELECT samples FROM ext WHERE sampletype = '" + Samples + "_PRESTART') || (SELECT samples FROM ext where sampletype = '" + Samples + "_POSSTART') || (SELECT samples FROM ext WHERE sampletype = '" + Samples + "_PREEND') || (SELECT samples FROM ext WHERE sampletype = '" + Samples + "_POSEND')) "
                              ") AS result FROM events WHERE starttime = " + DB.Bind(StartTime));
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);

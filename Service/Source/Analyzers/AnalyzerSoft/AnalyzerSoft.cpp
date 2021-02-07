@@ -39,13 +39,16 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pDB = new DatabaseQueue(id, true);
   pDB->ExecResource("SQL/Database_AnalyzerSoft.sql");
   pMutex          = PTHREAD_MUTEX_INITIALIZER;
+  pCond           = PTHREAD_COND_INITIALIZER;
+  pTerminate      = false;
+  pWorkingBlock   = NULL;
   pFFTs           = new AnalyzerSoftFFTs(pSerial, mode);
   pMQTT           = new AnalyzerSoftMQTT(pSerial);
   pRates          = new AnalyzerSoftRates(pSerial);
   pAlarms         = new AnalyzerSoftAlarms(pSerial, pMQTT, pDB);
   pEvents         = new AnalyzerSoftEvents(pSerial, mode, samplerate);
   pSync           = new AnalyzerSoftSync(this);
-  pInputBlock     = new AnalyzerSoftBlock(mode, samplerate);
+  pZeroCross      = new AnalyzerSoftZeroCrossing(mode, samplerate);
   pFrequency      = new AnalyzerSoftFrequency(samplerate);
   pAggreg200MS    = new AnalyzerSoftAggreg200MS(pSerial, mode, pDB);
   pAggreg3S       = new AnalyzerSoftAggreg3S(pSerial, mode, pDB);
@@ -54,14 +57,27 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAggreg15M      = new AnalyzerSoftAggreg15M(pSerial, mode, pDB);
   pAggreg1H       = new AnalyzerSoftAggreg1H(pSerial, mode, pDB);
   pStorage        = new AnalyzerSoftStorage(pSerial, mode);
-  pAnalyzerWorker = new Worker((mode == PHASE1) ? "Analyzer_1P" : (mode == PHASE3) ? "Analyzer_3P" : "Analyzer_3P+N");
   MessageLoop::RegisterListener("AnalyzerSoft_" + pSerial + "_PeriodicTasks", [&]() { this->PeriodicTasks(); }, 60000);
-  Configure(ConfigFile::ReadConfig(optionPath));
+  if(pthread_create(&pThread, NULL, [](void *params) -> void* { ((AnalyzerSoft*)params)->Thread(); return NULL; }, this) != 0) {
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    pThread = 0;
+  } else {
+    Worker::SetThreadProperties(pThread, "Analyzer", Worker::ABOUTNORMAL);
+  }
+  Config(ConfigFile::ReadConfig(optionPath));
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LogFile::Info("Stopping analyzer with serial '%s'", pSerial.c_str());
   MessageLoop::UnregisterListener("AnalyzerSoft_" + pSerial + "_PeriodicTasks");
-  delete pAnalyzerWorker;
+  pthread_mutex_lock(&pMutex);
+  pTerminate = true;
+  pthread_cond_signal(&pCond);
+  pthread_mutex_unlock(&pMutex);
+  pthread_join(pThread, NULL);
+  while(pPendingBlocks.size() > 0) {
+    delete pPendingBlocks.front();
+    pPendingBlocks.pop_front();
+  }
   delete pAggreg1H;
   delete pAggreg15M;
   delete pAggreg10M;
@@ -69,7 +85,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   delete pAggreg3S;
   delete pAggreg200MS;
   delete pFrequency;
-  delete pInputBlock;
+  delete pZeroCross;
   delete pMQTT;
   delete pSync;
   delete pEvents;
@@ -79,15 +95,13 @@ AnalyzerSoft::~AnalyzerSoft() {
   delete pDB;
   LogFile::Info("Analyzer with serial '%s' stopped", pSerial.c_str());
 }
-bool AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage) {
-  if(pAggreg200MS->Timestamp() == 0) pAggreg200MS->setTimestamp(Tools::GetTime64() - (uint64_t)((buffUsage * 1000) / pSamplerate));
-  bool Result = pInputBlock->PushSample(voltageSamples, currentSamples);
-  if(Result == false) return false;
-  pAnalyzerWorker->Run([&]() { this->Analyzer_Func(); });
-  return true;
-}
-bool AnalyzerSoft::IsWorking() {
-  return pAnalyzerWorker->IsWorking();
+void AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
+  AnalyzerSoftBlock *Result = pZeroCross->PushSample(voltageSamples, currentSamples);
+  if(Result == NULL) return;
+  pthread_mutex_lock(&pMutex);
+  pthread_cond_signal(&pCond);
+  pPendingBlocks.push_back(Result);
+  pthread_mutex_unlock(&pMutex);
 }
 json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, const bool except) {
   json ConfigOUT = json::object();
@@ -142,164 +156,177 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   if(config.contains("Rates") && config["Rates"].is_array()) ConfigOUT["Rates"] = AnalyzerSoftRates::CheckConfig(config["Rates"], except);
   return ConfigOUT;
 }
-void AnalyzerSoft::Configure(const json &options) {
+void AnalyzerSoft::Config(const json &options) {
   ConfigFile::WriteConfig(pConfigPath, options);
   Name(options["Name"]);
   pthread_mutex_lock(&pMutex);
-  float NominalVoltage   = options["NominalVoltage"];
-  float NominalFrequency = options["NominalFrequency"];
-  pSave200MS             = options["Save200MS"];
-  if(NominalFrequency != pFrequency->NominalFrequency()) {
-    pAggreg200MS->Reset();
-    pFrequency->Config(NominalFrequency);
-    pInputBlock->Config(NominalFrequency);
-    pFFTs->Config((NominalFrequency == 0.0) ? 0 : (NominalFrequency == 50.0) ? 10 : 12);
-  }
-  pAggreg1H->Config(NominalVoltage, NominalFrequency);
+  pNominalVoltage   = options["NominalVoltage"];
+  pNominalFrequency = options["NominalFrequency"];
+  pSave200MS        = options["Save200MS"];
+  pZeroCross->Config(pNominalVoltage, pNominalFrequency);
   pRates->Config(options["TimeZone"], options["Rates"]);
-  pAlarms->Config(options["AlarmsEnabled"], NominalVoltage, NominalFrequency, options["TimeZone"], options["Alarms"]);
-  pEvents->Config(options["EventsEnabled"], NominalVoltage, NominalFrequency);
+  pAlarms->Config(options["AlarmsEnabled"], options["TimeZone"], options["Alarms"]);
+  pEvents->Config(options["EventsEnabled"]);
   pSync->Config(options["Sync"], options["Name"]);
   pMQTT->Config(options);
   pthread_mutex_unlock(&pMutex);
 }
-void AnalyzerSoft::Analyzer_Func() {
-  uint64_t Start     = Tools::GetTime64();
-  uint16_t BlockSize = pInputBlock->BlockSamples();
-  pFFTs->Run(pInputBlock);
-  pEvents->Run(pInputBlock, pAggreg200MS->Timestamp());
-  pAggreg200MS->setFrequency(pFrequency->Frequency(pInputBlock));
-  for(uint8_t j = 0; j < pVoltageChannels; j++) {
-    float Voltage     = 0.0;
-    float Current     = 0.0;
-    float ActivePower = 0.0;
-    for(uint16_t i = 0; i < BlockSize; i++) {
-      Voltage     += pInputBlock->VoltageSample(j, i) * pInputBlock->VoltageSample(j, i);
-      Current     += pInputBlock->CurrentSample(j, i) * pInputBlock->CurrentSample(j, i);
-      ActivePower += pInputBlock->VoltageSample(j, i) * pInputBlock->CurrentSample(j, i);
+void AnalyzerSoft::Thread() {
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  while(pTerminate == false) {
+    if(pPendingBlocks.size() == 0) {
+      if(pthread_cond_wait(&pCond, &pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    } else {
+      pWorkingBlock = pPendingBlocks.front();
+      pPendingBlocks.pop_front();
+      if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+      uint64_t Start     = Tools::GetTime64();
+      uint16_t BlockSize = pWorkingBlock->Samples();
+      pAggreg200MS->Reset();
+      pAggreg200MS->setTimestamp(pWorkingBlock->Timestamp());
+      pFFTs->Run(pWorkingBlock, (pWorkingBlock->NominalFrequency() == 0.0) ? 0 : (pWorkingBlock->NominalFrequency() == 50.0) ? 10 : 12);
+      pEvents->Run(pWorkingBlock, pAggreg200MS->Timestamp(), pWorkingBlock->NominalVoltage(), pWorkingBlock->NominalFrequency());
+      pAlarms->ConfigNominals(pWorkingBlock->NominalVoltage(), pWorkingBlock->NominalFrequency());
+      pAggreg200MS->setFrequency(pFrequency->Frequency(pWorkingBlock));
+      for(uint8_t j = 0; j < pVoltageChannels; j++) {
+        float Voltage     = 0.0;
+        float Current     = 0.0;
+        float ActivePower = 0.0;
+        for(uint16_t i = 0; i < BlockSize; i++) {
+          Voltage     += pWorkingBlock->VoltageSample(j, i) * pWorkingBlock->VoltageSample(j, i);
+          Current     += pWorkingBlock->CurrentSample(j, i) * pWorkingBlock->CurrentSample(j, i);
+          ActivePower += pWorkingBlock->VoltageSample(j, i) * pWorkingBlock->CurrentSample(j, i);
+        }
+        pAggreg200MS->setVoltage(j, sqrt(Voltage / BlockSize));
+        pAggreg200MS->setCurrent(j, sqrt(Current / BlockSize));
+        pAggreg200MS->setActivePower(j, ActivePower / BlockSize);
+        pAggreg200MS->setApparentPower(j, pAggreg200MS->Voltage(j) * pAggreg200MS->Current(j));
+        pAggreg200MS->setActiveEnergy(j, (pAggreg200MS->ActivePower(j) * BlockSize) / (pSamplerate * 3600.0));
+        pAggreg200MS->setPowerFactor(j, pAggreg200MS->ActivePower(j) / pAggreg200MS->ApparentPower(j));
+        pAggreg200MS->setReactiveEnergy(j, (pAggreg200MS->ReactivePower(j) * BlockSize) / (pSamplerate * 3600.0));
+      }
+      pFFTs->Wait();
+      for(uint8_t j = 0; j < pVoltageChannels; j++) {
+        float THDv        = 0.0;
+        float THDi        = 0.0;
+        for(uint8_t i = 0; i < 50; i++) {
+          pAggreg200MS->setVoltageHarmonic(j, i, pFFTs->VoltageHarmonic(j, i));
+          if(i > 0) THDv += pFFTs->VoltageHarmonicPower(j, i);
+          pAggreg200MS->setCurrentHarmonic(j, i, pFFTs->CurrentHarmonic(j, i));
+          if(i > 0) THDi += pFFTs->CurrentHarmonicPower(j, i);
+          pAggreg200MS->setPowerHarmonic(j, i, pFFTs->VoltageHarmonicPower(j, i) * pFFTs->CurrentHarmonicPower(j, i) * cos(AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, i), pFFTs->VoltageHarmonic(j, i))));
+        }
+        pAggreg200MS->setVoltageTHD(j, (THDv / pAggreg200MS->VoltageHarmonic(j, 0)) * 100.0);
+        pAggreg200MS->setCurrentTHD(j, (THDi / pAggreg200MS->CurrentHarmonic(j, 0)) * 100.0);
+        pAggreg200MS->setVoltagePhase(j, (j == 0) ? 0.0 : AnalyzerSoftFFTs::CalcAngle(pFFTs->VoltageHarmonic(j, 0), pFFTs->VoltageHarmonic(0, 0)) * 180.0 / M_PI);
+        pAggreg200MS->setReactivePower(j, pFFTs->VoltageHarmonicPower(j, 0) * pFFTs->CurrentHarmonicPower(j, 0) * sin(-AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, 0), pFFTs->VoltageHarmonic(j, 0))));
+        pAggreg200MS->setPhi(j, AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, 0), pFFTs->VoltageHarmonic(j, 0)) * 180.0 / M_PI);
+      }
+      if((pMode == PHASE3N) || (pMode == PHASE3)) {
+        complex<float> A(cos(120.0 * M_PI / 180.0), sin(120.0 * M_PI / 180.0));
+        complex<float> V1(pFFTs->VoltageHarmonic(0, 0).Re, pFFTs->VoltageHarmonic(0, 0).Im);
+        complex<float> V2(pFFTs->VoltageHarmonic(1, 0).Re, pFFTs->VoltageHarmonic(1, 0).Im);
+        complex<float> V3(pFFTs->VoltageHarmonic(2, 0).Re, pFFTs->VoltageHarmonic(2, 0).Im);
+        pAggreg200MS->setUnbalance(((abs(V1 + A * A * V2 + A * V3) / 3.0) / (abs(V1 + A * V2 + A * A * V3) / 3.0)) * 100.0);
+      }
+      if(pMode == PHASE3N) {
+        float Current = 0.0;
+        float THD     = 0.0;
+        for(uint16_t i = 0; i < BlockSize; i++) Current += pWorkingBlock->CurrentSample(3, i) * pWorkingBlock->CurrentSample(3, i);
+        pAggreg200MS->setCurrent(3, sqrt(Current / BlockSize));
+        for(uint8_t i = 0; i < 50; i++) {
+          pAggreg200MS->setCurrentHarmonic(3, i, pFFTs->CurrentHarmonic(3, i));
+          if(i > 0) THD += pFFTs->CurrentHarmonicPower(3, i);
+        }
+        pAggreg200MS->setCurrentTHD(3, (THD / pAggreg200MS->CurrentHarmonic(3, 0)) * 100.0);
+      }
+      pAggreg200MS->setFlag(pEvents->Wait());
+      if(pWorkingBlock->Sequence() < 100) {
+        if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+        LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pWorkingBlock->Sequence());
+      } else {
+        Online(true);
+        pNowDataLock.ProviderWrite();
+        if((pWorkingBlock->Sequence() % 15) == 0) {
+          LogFile::Debug("Storing 3S aggregation for analyzer '%s'", pSerial.c_str());
+          if(pAggreg3S->Normalize() == true) {
+            pAlarms->Run("3S", pAggreg3S);
+            pAggreg3S->Save();
+            pAggreg1H->AccumulateStats(pAggreg3S, pWorkingBlock->NominalFrequency());
+            pMQTT->PublishAggreg("3S", pAggreg3S);
+            pAlarms->Wait();
+          }
+          pAggreg3S->Reset();
+        }
+        pAggreg3S->Accumulate(pAggreg200MS);
+        if((pAggreg1M->Timestamp() != 0) && ((pAggreg1M->Timestamp() / 60000) < (pAggreg200MS->Timestamp() / 60000))) {
+          LogFile::Debug("Storing 1M aggregation for analyzer '%s'", pSerial.c_str());
+          if(pAggreg1M->Normalize() == true) {
+            pAlarms->Run("1M", pAggreg1M);
+            pAggreg1M->Save();
+            pMQTT->PublishAggreg("1M", pAggreg1M);
+            pAlarms->Wait();
+          }
+          pAggreg1M->Reset();
+        }
+        pAggreg1M->Accumulate(pAggreg200MS);
+        if((pAggreg10M->Timestamp() != 0) && ((pAggreg10M->Timestamp() / 600000) < (pAggreg200MS->Timestamp() / 600000))) {
+          LogFile::Debug("Storing 10M aggregation for analyzer '%s", pSerial.c_str());
+          if(pAggreg10M->Normalize() == true) {
+            pAlarms->Run("10M", pAggreg10M);
+            pAggreg1H->AccumulateStats(pAggreg10M, pWorkingBlock->NominalVoltage());
+            pAggreg10M->Save();
+            pMQTT->PublishAggreg("10M", pAggreg10M);
+            pAlarms->Wait();
+          }
+          pAggreg10M->Reset();
+        }
+        pAggreg10M->Accumulate(pAggreg200MS);
+        if((pAggreg15M->Timestamp() != 0) && ((pAggreg15M->Timestamp() / 900000) < (pAggreg200MS->Timestamp() / 900000))) {
+          LogFile::Debug("Storing 15M aggregation for analyzer '%s'", pSerial.c_str());
+          if(pAggreg15M->Normalize() == true) {
+            pAlarms->Run("15M", pAggreg15M);
+            pAggreg15M->Save();
+            pMQTT->PublishAggreg("15M", pAggreg15M);
+            pAlarms->Wait();
+          }
+          pAggreg15M->Reset();
+        }
+        pAggreg15M->Accumulate(pAggreg200MS);
+        if((pAggreg1H->Timestamp() != 0) && ((pAggreg1H->Timestamp() / 3600000) < (pAggreg200MS->Timestamp() / 3600000))) {
+          LogFile::Debug("Storing 1H aggregation for analyzer '%s'", pSerial.c_str());
+          if(pAggreg1H->Normalize() == true) {
+            pAlarms->Run("1H", pAggreg1H);
+            pAggreg1H->Save();
+            pMQTT->PublishAggreg("1H", pAggreg1H);
+            pAlarms->Wait();
+          }
+          pAggreg1H->Reset();
+        }
+        pAggreg1H->Accumulate(pAggreg200MS);
+        pAlarms->Run("200MS", pAggreg200MS);
+        if(pSave200MS) {
+          LogFile::Debug("Storing 200MS aggregation for analyzer '%s'", pSerial.c_str());
+          pAggreg200MS->Save();
+        }
+        pMQTT->PublishAggreg("200MS", pAggreg200MS);
+        pAlarms->Wait();
+        pNowDataLock.ProviderWait();
+        ResultsReady(pAggreg200MS);
+        uint64_t TotalTime = Tools::GetTime64() - Start;
+        if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+        if(TotalTime > 200) {
+          LogFile::Warning("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (%d pending blocks)", pSerial.c_str(), TotalTime, pWorkingBlock->Sequence(), pPendingBlocks.size());
+        } else {
+          LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (%d pending blocks)", pSerial.c_str(), TotalTime, pWorkingBlock->Sequence(), pPendingBlocks.size());
+        }
+      }
+      delete pWorkingBlock;
     }
-    pAggreg200MS->setVoltage(j, sqrt(Voltage / BlockSize));
-    pAggreg200MS->setCurrent(j, sqrt(Current / BlockSize));
-    pAggreg200MS->setActivePower(j, ActivePower / BlockSize);
-    pAggreg200MS->setApparentPower(j, pAggreg200MS->Voltage(j) * pAggreg200MS->Current(j));
-    pAggreg200MS->setActiveEnergy(j, (pAggreg200MS->ActivePower(j) * BlockSize) / (pSamplerate * 3600.0));
-    pAggreg200MS->setPowerFactor(j, pAggreg200MS->ActivePower(j) / pAggreg200MS->ApparentPower(j));
-    pAggreg200MS->setReactiveEnergy(j, (pAggreg200MS->ReactivePower(j) * BlockSize) / (pSamplerate * 3600.0));
   }
-  pFFTs->Wait();
-  for(uint8_t j = 0; j < pVoltageChannels; j++) {
-    float THDv        = 0.0;
-    float THDi        = 0.0;
-    for(uint8_t i = 0; i < 50; i++) {
-      pAggreg200MS->setVoltageHarmonic(j, i, pFFTs->VoltageHarmonic(j, i));
-      if(i > 0) THDv += pFFTs->VoltageHarmonicPower(j, i);
-      pAggreg200MS->setCurrentHarmonic(j, i, pFFTs->CurrentHarmonic(j, i));
-      if(i > 0) THDi += pFFTs->CurrentHarmonicPower(j, i);
-      pAggreg200MS->setPowerHarmonic(j, i, pFFTs->VoltageHarmonicPower(j, i) * pFFTs->CurrentHarmonicPower(j, i) * cos(AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, i), pFFTs->VoltageHarmonic(j, i))));
-    }
-    pAggreg200MS->setVoltageTHD(j, (THDv / pAggreg200MS->VoltageHarmonic(j, 0)) * 100.0);
-    pAggreg200MS->setCurrentTHD(j, (THDi / pAggreg200MS->CurrentHarmonic(j, 0)) * 100.0);
-    pAggreg200MS->setVoltagePhase(j, (j == 0) ? 0.0 : AnalyzerSoftFFTs::CalcAngle(pFFTs->VoltageHarmonic(j, 0), pFFTs->VoltageHarmonic(0, 0)) * 180.0 / M_PI);
-    pAggreg200MS->setReactivePower(j, pFFTs->VoltageHarmonicPower(j, 0) * pFFTs->CurrentHarmonicPower(j, 0) * sin(-AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, 0), pFFTs->VoltageHarmonic(j, 0))));
-    pAggreg200MS->setPhi(j, AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, 0), pFFTs->VoltageHarmonic(j, 0)) * 180.0 / M_PI);
-  }
-  if((pMode == PHASE3N) || (pMode == PHASE3)) {
-    complex<float> A(cos(120.0 * M_PI / 180.0), sin(120.0 * M_PI / 180.0));
-    complex<float> V1(pFFTs->VoltageHarmonic(0, 0).Re, pFFTs->VoltageHarmonic(0, 0).Im);
-    complex<float> V2(pFFTs->VoltageHarmonic(1, 0).Re, pFFTs->VoltageHarmonic(1, 0).Im);
-    complex<float> V3(pFFTs->VoltageHarmonic(2, 0).Re, pFFTs->VoltageHarmonic(2, 0).Im);
-    pAggreg200MS->setUnbalance(((abs(V1 + A * A * V2 + A * V3) / 3.0) / (abs(V1 + A * V2 + A * A * V3) / 3.0)) * 100.0);
-  }
-  if(pMode == PHASE3N) {
-    float Current = 0.0;
-    float THD     = 0.0;
-    for(uint16_t i = 0; i < BlockSize; i++) Current += pInputBlock->CurrentSample(3, i) * pInputBlock->CurrentSample(3, i);
-    pAggreg200MS->setCurrent(3, sqrt(Current / BlockSize));
-    for(uint8_t i = 0; i < 50; i++) {
-      pAggreg200MS->setCurrentHarmonic(3, i, pFFTs->CurrentHarmonic(3, i));
-      if(i > 0) THD += pFFTs->CurrentHarmonicPower(3, i);
-    }
-    pAggreg200MS->setCurrentTHD(3, (THD / pAggreg200MS->CurrentHarmonic(3, 0)) * 100.0);
-  }
-  pAggreg200MS->setFlag(pEvents->Wait());
-  if(pInputBlock->Sequence() < 100) {
-    LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pInputBlock->Sequence());
-    pAggreg200MS->Reset();
-    return;
-  }
-  Online(true);
-  pNowDataLock.ProviderWrite();
-  if((pInputBlock->Sequence() % 15) == 0) {
-    LogFile::Debug("Storing 3S aggregation for analyzer '%s'", pSerial.c_str());
-    if(pAggreg3S->Normalize() == true) {
-      pAlarms->Run("3S", pAggreg3S);
-      pAggreg3S->Save();
-      pAggreg1H->AccumulateStats(pAggreg3S);
-      pMQTT->PublishAggreg("3S", pAggreg3S);
-      pAlarms->Wait();
-    }
-    pAggreg3S->Reset();
-  }
-  pAggreg3S->Accumulate(pAggreg200MS);
-  if((pAggreg1M->Timestamp() != 0) && ((pAggreg1M->Timestamp() / 60000) < (pAggreg200MS->Timestamp() / 60000))) {
-    LogFile::Debug("Storing 1M aggregation for analyzer '%s'", pSerial.c_str());
-    if(pAggreg1M->Normalize() == true) {
-      pAlarms->Run("1M", pAggreg1M);
-      pAggreg1M->Save();
-      pMQTT->PublishAggreg("1M", pAggreg1M);
-      pAlarms->Wait();
-    }
-    pAggreg1M->Reset();
-  }
-  pAggreg1M->Accumulate(pAggreg200MS);
-  if((pAggreg10M->Timestamp() != 0) && ((pAggreg10M->Timestamp() / 600000) < (pAggreg200MS->Timestamp() / 600000))) {
-    LogFile::Debug("Storing 10M aggregation for analyzer '%s", pSerial.c_str());
-    if(pAggreg10M->Normalize() == true) {
-      pAlarms->Run("10M", pAggreg10M);
-      pAggreg1H->AccumulateStats(pAggreg10M);
-      pAggreg10M->Save();
-      pMQTT->PublishAggreg("10M", pAggreg10M);
-      pAlarms->Wait();
-    }
-    pAggreg10M->Reset();
-  }
-  pAggreg10M->Accumulate(pAggreg200MS);
-  if((pAggreg15M->Timestamp() != 0) && ((pAggreg15M->Timestamp() / 900000) < (pAggreg200MS->Timestamp() / 900000))) {
-    LogFile::Debug("Storing 15M aggregation for analyzer '%s'", pSerial.c_str());
-    if(pAggreg15M->Normalize() == true) {
-      pAlarms->Run("15M", pAggreg15M);
-      pAggreg15M->Save();
-      pMQTT->PublishAggreg("15M", pAggreg15M);
-      pAlarms->Wait();
-    }
-    pAggreg15M->Reset();
-  }
-  pAggreg15M->Accumulate(pAggreg200MS);
-  if((pAggreg1H->Timestamp() != 0) && ((pAggreg1H->Timestamp() / 3600000) < (pAggreg200MS->Timestamp() / 3600000))) {
-    LogFile::Debug("Storing 1H aggregation for analyzer '%s'", pSerial.c_str());
-    if(pAggreg1H->Normalize() == true) {
-      pAlarms->Run("1H", pAggreg1H);
-      pAggreg1H->Save();
-      pMQTT->PublishAggreg("1H", pAggreg1H);
-      pAlarms->Wait();
-    }
-    pAggreg1H->Reset();
-  }
-  pAggreg1H->Accumulate(pAggreg200MS);
-  pAlarms->Run("200MS", pAggreg200MS);
-  if(pSave200MS) {
-    LogFile::Debug("Storing 200MS aggregation for analyzer '%s'", pSerial.c_str());
-    pAggreg200MS->Save();
-  }
-  pMQTT->PublishAggreg("200MS", pAggreg200MS);
-  pAlarms->Wait();
-//  if(pAggreg200MS->Flag() == true) Status::SetValue(pSerial.c_str(), "/Last_Event", pAggreg200MS->Timestamp());
-  pNowDataLock.ProviderWait();
-  ResultsReady(pAggreg200MS);
-  LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (Sampletime: %" PRIu64 ")", pSerial.c_str(), Tools::GetTime64() - Start, pInputBlock->Sequence(), pAggreg200MS->Timestamp());
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 void AnalyzerSoft::ResultsReady(AnalyzerSoftAggreg200MS *params) {
-  params->Reset();
 }
 void AnalyzerSoft::PeriodicTasks() {
   Database DB(pSerial);
@@ -322,7 +349,7 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
 void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
   if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   try {
-    Configure(CheckConfig(params, pMode, true));
+    Config(CheckConfig(params, pMode, true));
     HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
   } catch(const string &err) {
     HTTPServer::FillResponse(response, err, "text/plain", HTTP_BAD_REQUEST);
@@ -345,8 +372,8 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
     }
     if(pAggreg200MS->GetSeriesJSON(Serie, Result) == true) continue;
     if(pFFTs->GetSeriesJSON(Serie, Result) == true) continue;
-    if(pInputBlock->GetSeriesJSON(Serie, Result) == true) continue;
-    if(pGA->GetSeriesNow(Serie, Result) == true) continue;
+    if(pWorkingBlock->GetSeriesJSON(Serie, Result) == true) continue;
+//    if(pGA->GetSeriesNow(Serie, Result) == true) continue;
     // == "GA_POWER") {
 //      Result["GA_Power"] = CalcGA();
  //     continue;
@@ -362,63 +389,64 @@ void AnalyzerSoft::GetStatus(const json &params, Response &response) {
   pStorage->GetStatus(params, response);
 }
 void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  typedef struct {
-    uint64_t Block;
-    bool     Current;
-    bool     Voltage;
-  } WaveStream_t;
-  WaveStream_t *Params = (WaveStream_t *)calloc(sizeof(WaveStream_t), 1);
-  Params->Block = 0;
-  for(uint8_t i = 0; i < params["Series"].size(); i++) {
-    if(params["Series"][i].is_string() == false) {
-      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    } else if(params["Series"][i] == "Current_Samples") {
-      Params->Current = true;
-    } else if(params["Series"][i] == "Voltage_Samples") {
-      Params->Voltage = true;
-    } else {
-      return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);
-    }
-  }
-  auto Func = [this, Params](uint64_t offset, DataSink &sink) {
-    if(pNowDataLock.ConsumerWait(5) == false) {
-      sink.done();
-      return false;
-    }
-    Params->Block = (Params->Block == 0) ? pInputBlock->Sequence() : Params->Block + 1;
-    if(Params->Block != pInputBlock->Sequence()) {
-      pNowDataLock.ConsumerEnds();
-      sink.done();
-      return false;
-    }
-    json Result = json::object();
+  //if(CheckRights(params["UserName"], READ) == false)
+  return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+//  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//  typedef struct {
+//    uint64_t Block;
+//    bool     Current;
+//    bool     Voltage;
+//  } WaveStream_t;
+//  WaveStream_t *Params = (WaveStream_t *)calloc(sizeof(WaveStream_t), 1);
+//  Params->Block = 0;
+//  for(uint8_t i = 0; i < params["Series"].size(); i++) {
+//    if(params["Series"][i].is_string() == false) {
+//      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//    } else if(params["Series"][i] == "Current_Samples") {
+//      Params->Current = true;
+//    } else if(params["Series"][i] == "Voltage_Samples") {
+//      Params->Voltage = true;
+//    } else {
+//      return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);
+//    }
+//  }
+//  auto Func = [this, Params](uint64_t offset, DataSink &sink) {
+//    if(pNowDataLock.ConsumerWait(5) == false) {
+//      sink.done();
+//      return false;
+//    }
+//    Params->Block = (Params->Block == 0) ? pInputBlock->Sequence() : Params->Block + 1;
+//    if(Params->Block != pInputBlock->Sequence()) {
+//      pNowDataLock.ConsumerEnds();
+//      sink.done();
+//      return false;
+//    }
+//    json Result = json::object();
 //    Result["Samples"] = pBlockSamples;
-    if(Params->Voltage) {
-      Result["Voltage_Samples"] = json::array();
-      for(uint8_t n = 0; n < pVoltageChannels; n++) {
-        Result["Voltage_Samples"].push_back(json::array());
+//    if(Params->Voltage) {
+//      Result["Voltage_Samples"] = json::array();
+//      for(uint8_t n = 0; n < pVoltageChannels; n++) {
+//        Result["Voltage_Samples"].push_back(json::array());
 //        for(uint16_t i = 0; i < pBlockSamples; i++) Result["Voltage_Samples"][n].push_back(pVoltageSamples[n * pMaxSamples + i]);
-      }
-    }
-    if(Params->Current) {
-      Result["Current_Samples"] = json::array();
-      for(uint8_t n = 0; n < pCurrentChannels; n++) {
-        Result["Current_Samples"].push_back(json::array());
+//      }
+//    }
+//    if(Params->Current) {
+//      Result["Current_Samples"] = json::array();
+//      for(uint8_t n = 0; n < pCurrentChannels; n++) {
+//        Result["Current_Samples"].push_back(json::array());
 //        for(uint16_t i = 0; i < pBlockSamples; i++) Result["Current_Samples"][n].push_back(pCurrentSamples[n * pMaxSamples + i]);
-      }
-    }
-    pNowDataLock.ConsumerEnds();
-    string Data = Result.dump() + "\n\n";
-    sink.write(Data.c_str(), Data.size());
-    sink.done();
-    return true;
-  };
-  auto Free = [Params]() {
-    free(Params);
-  };
-  response.set_chunked_content_provider("application/json", Func, Free);
+//      }
+//    }
+//    pNowDataLock.ConsumerEnds();
+//    string Data = Result.dump() + "\n\n";
+//    sink.write(Data.c_str(), Data.size());
+//    sink.done();
+//    return true;
+//  };
+//  auto Free = [Params]() {
+//    free(Params);
+//  };
+//  response.set_chunked_content_provider("application/json", Func, Free);
 }
 void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
   if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

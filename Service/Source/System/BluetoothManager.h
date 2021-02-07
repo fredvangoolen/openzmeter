@@ -26,6 +26,7 @@ class BluetoothManager final {
     static pthread_mutex_t  pMutex;        //Shared variables lock
     static pthread_t        pThread;       //bluetooth manager thread
     static bool             pEnable;       //Enable or disable
+    static bool             pEnabled;      //Current status
     static string           pServerName;   //bluetooth network name
     static string           pInterface;    //bluetooth bridge name
   private :
@@ -40,11 +41,13 @@ class BluetoothManager final {
   public :
     BluetoothManager();
     ~BluetoothManager();
+    bool Enabled();
 };
 #else // ===============================================================================================================
 class BluetoothManager final {
   public :
     BluetoothManager();
     ~BluetoothManager();
+    bool Enabled();
 };
 #endif // ==============================================================================================================

@@ -27,10 +27,16 @@ class Worker {
     pthread_cond_t        pCondWake;
     pthread_cond_t        pCondWait;
     function<void()>      pCallback;
+  public :
+    enum Prio { IDLE, LOW, NORMAL, ABOUTNORMAL, HIGH, HIGHEST };
   private :
     void *Thread();
+  private :
+    static void SetThreadNice(pthread_t &thread, const Prio prio);
   public :
-    Worker(const string &name, int8_t nice = 0);
+    static void SetThreadProperties(pthread_t thread, const string &name, const Prio prio);
+  public :
+    Worker(const string &name, const Prio prio);
     ~Worker();
     bool IsWorking();
     void Run(function<void()> callback);

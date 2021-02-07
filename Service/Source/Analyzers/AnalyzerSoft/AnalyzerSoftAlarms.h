@@ -43,7 +43,8 @@ class AnalyzerSoftAlarms final {
   public :
     AnalyzerSoftAlarms(const string &serial, AnalyzerSoftMQTT *mqtt, DatabaseQueue *db);
     ~AnalyzerSoftAlarms();
-    void Config(const bool enabled, const float nominalVoltage, const float nominalFreq, const string &tz, const json &alarms);
+    void Config(const bool enabled, const string &tz, const json &alarms);
+    void ConfigNominals(const float nominalVoltage, const float nominalFreq);
     void Run(const string &name, AnalyzerSoftAggreg *params);
     void Wait();
     void TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS *aggreg);

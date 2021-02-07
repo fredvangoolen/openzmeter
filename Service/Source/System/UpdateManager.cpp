@@ -19,9 +19,10 @@
 #include "SystemManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 UpdateManager::UpdateManager() {
-  LogFile::Info("UpdateManager", "Starting Update manager");
+  LogFile::Info("Starting UpdateManager...");
   HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
   HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
+  LogFile::Info("UpdateManager started");
 }
 UpdateManager::~UpdateManager() {
   LogFile::Info("UpdateManager", "Stopping Update manager...");

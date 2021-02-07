@@ -13,7 +13,6 @@ const openZmeter = {
         }
         var Data = { Headers: data[0], Rows: data.slice(1), Aggreg: aggreg, From: range[0], To: range[1] };
         if(Transfer.Aggreg != '15M') {
-          var TimeCol = data[0].indexOf('Time');
           var ActivePowerCol = data[0].indexOf('Active_Power');
           var ReactivePowerCol = data[0].indexOf('Reactive_Power');
           var ActiveEnergyCol = data[0].indexOf('Active_Energy');

@@ -64,7 +64,7 @@ void TelegramManager::Configure(const json &config) {
       pThread = 0;
       LogFile::Error("Telegram", "%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     } else {
-      pthread_setname_np(pThread, "TelegramServer");
+      Worker::SetThreadProperties(pThread, "TelegramServer", Worker::LOW);
     }
   } else if((Enable == false) && (pThread != 0)) {
     pTerminate = true;
@@ -99,9 +99,7 @@ void TelegramManager::SetTelegramCallback(const json &params, Response &response
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
 void *TelegramManager::Thread_Func(void *params) {
-  return NULL;
   LogFile::Debug("Telegram", "Telegram BOT started");
-  nice(10);
   bool       Connected  = false;
   int32_t    LastUpdate = 0;
   SSLClient  Client("api.telegram.org", 443);

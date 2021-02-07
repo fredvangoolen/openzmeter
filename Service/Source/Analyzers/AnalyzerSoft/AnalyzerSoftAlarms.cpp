@@ -37,16 +37,18 @@ json AnalyzerSoftAlarms::CheckConfig(const json &config) {
   for(auto &Alarm : config) ConfigOUT.push_back(AnalyzerSoftAlarm::CheckConfig(Alarm));
   return ConfigOUT;
 }
-void AnalyzerSoftAlarms::Config(const bool enabled, const float nominalVoltage, const float nominalFreq, const string &tz, const json &alarms) {
-  pthread_rwlock_wrlock(&pLock);
+void AnalyzerSoftAlarms::ConfigNominals(const float nominalVoltage, const float nominalFreq) {
   pNominalVoltage   = nominalVoltage;
   pNominalFrequency = nominalFreq;
+}
+void AnalyzerSoftAlarms::Config(const bool enabled, const string &tz, const json &alarms) {
+  pthread_rwlock_wrlock(&pLock);
   cctz::load_time_zone(tz, &pTimeZone);
   if((enabled == false) && (pWorker != NULL)) {
     delete pWorker;
     pWorker = NULL;
   } else if((enabled == true) && (pWorker == NULL)) {
-    pWorker = new Worker("AlarmsDet");
+    pWorker = new Worker("AlarmsDet", Worker::ABOUTNORMAL);
   }
   for(auto &List : pAlarms) {
     for(auto &Alarm : List.second) delete Alarm;
@@ -59,7 +61,11 @@ void AnalyzerSoftAlarms::Config(const bool enabled, const float nominalVoltage, 
     pAlarms.emplace(std::piecewise_construct, std::make_tuple(Aggreg), std::make_tuple()).first->second.emplace_back(new AnalyzerSoftAlarm(pSerial, pNominalVoltage, pNominalFrequency, Alarm, pDB));
     IDs = (IDs.size() == 0) ? IDs + pDB->Bind(ID) : IDs + ", " + pDB->Bind(ID);
   }
-  if(IDs.empty() == false) pDB->ExecSentenceNoResult("DELETE FROM alarms WHERE id NOT IN(" + IDs + ")");
+  if(alarms.size() == 0) {
+    pDB->ExecSentenceNoResult("DELETE FROM alarms");
+  } else {
+    pDB->ExecSentenceNoResult("DELETE FROM alarms WHERE id NOT IN(" + IDs + ")");
+  }
   pthread_rwlock_unlock(&pLock);
 }
 void AnalyzerSoftAlarms::Alarms_Func(const string &name, AnalyzerSoftAggreg *params) {
@@ -103,8 +109,8 @@ void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, Analy
   if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Parser Evaluator;
   json   Result = json::object();
-  Evaluator.DefineVar("Nominal_Voltage", &pNominalVoltage);
-  Evaluator.DefineVar("Nominal_Frequency", &pNominalFrequency);
+  Evaluator.DefineVar("NominalVoltage", &pNominalVoltage);
+  Evaluator.DefineVar("NominalFrequency", &pNominalFrequency);
   aggreg->muParserInit(Evaluator, params["Expression"]);
   Result["Variables"] = json::object();
   for(auto Var : Evaluator.GetVar()) Result["Variables"][Var.first] = *Var.second;

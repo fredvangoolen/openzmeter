@@ -16,6 +16,7 @@
  #include "AnalyzerSoftMQTT.h"
  #include "URL.h"
  #include "LogFile.h"
+ #include "Worker.h"
  // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftMQTT::AnalyzerSoftMQTT(const string &serial) {
   pMutex      = PTHREAD_MUTEX_INITIALIZER;
@@ -112,7 +113,7 @@ void AnalyzerSoftMQTT::Config(const json &config) {
         LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         pThread = 0;
       } else {
-        pthread_setname_np(pThread, "MQTT");
+        Worker::SetThreadProperties(pThread, "MQTT", Worker::LOW);
       }
     }
   }
@@ -165,7 +166,6 @@ void AnalyzerSoftMQTT::PublishAlarm(const uint64_t time, const string &name, con
   pthread_mutex_unlock(&pMutex);
 }
 void *AnalyzerSoftMQTT::Thread() {
-  nice(10);
   string   User, Pass, Server;
   uint64_t StatusTimer = 0;
   while(pTerminate == false) {

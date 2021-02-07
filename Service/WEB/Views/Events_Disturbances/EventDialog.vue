@@ -18,7 +18,6 @@
   import Graph from 'Components/Graph.vue';
   import Dygraph from 'JS/dygraph.js';
   import * as oZm from 'JS/openZmeter.js';
-  import ToolbarPhases from 'Components/ToolbarPhases.vue';
   export default {
     props: { analyzer: Object, mode: String, event: Object },
     data: function() {
@@ -27,6 +26,7 @@
     computed: {
       GraphOptions: function() {
         var Opt = { file: [], axes: { x:{}, y: {}} };
+        var Gap = 0;
         if(this.Phases == null) return Opt;
         Opt.visibility = this.Phases;
         Opt.plugins = [ new Dygraph.Plugins.Crosshair( { direction: "vertical" } ) ];
@@ -44,7 +44,7 @@
         Opt.includeZero = true;
         Opt.showRangeSelector = false;
         Opt.labels = ['Sample'].concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels));
-        Opt.colors = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, false).Colors;//  oZm.ColorArray(oZm.Series['Voltage'].Color, oZm.Series['Voltage'].Names(Analyzer).length) } );
+        Opt.colors = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, false).Colors;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 2, true) + ' V'; };
@@ -53,19 +53,19 @@
         for(var i = 0; i < this.event.Samples.length; i++) {
           Opt.file.push([Opt.file.length].concat(this.event.Samples[i]));
           if((this.event.Samples.length == (4 * this.event.Length)) && (i == (2 * this.event.Length))) {
-            for(var n = 0; n < (this.event.Length * 0.1); n++) Opt.file.push([Opt.file.length].concat(new Array(this.event.Samples[0].length).fill(null)));
+            Gap = Math.round(this.event.Length * 0.1);
+            for(var n = 0; n < Gap; n++) Opt.file.push([Opt.file.length].concat(new Array(this.event.Samples[0].length).fill(null)));
           }
-
         }
         Opt.axes.x.axisLabelFormatter = (x) => {
           var EventDuration = this.event.Duration / this.event.SampleRate;
-//          if(x <= (this.event.Prev_Samples[0].length + this.event.Inner_Samples[0].length / 2.0)) {
-//            return this.Round((x - this.event.Prev_Samples[0].length) / ((this.mode == 'RMS') ? (this.analyzer.NominalFrequency * 2.0) : (this.analyzer.SampleRate)), 2, true);
-//          } else if(x >= (this.GraphOptions.file.length - (this.event.Post_Samples[0].length + this.event.Inner_Samples[0].length / 2.0))) {
-//            return this.Round(EventDuration + (x - (this.GraphOptions.file.length - this.event.Post_Samples[0].length)) / ((this.mode == 'RMS') ? (this.analyzer.NominalFrequency * 2.0) : (this.analyzer.SampleRate)), 2, true);
-//          } else {
-//            return '';
-//          }
+          if(x < (this.event.Length * 2)) {
+            return this.Round((x - this.event.Length) / ((this.mode == 'RMS') ? (this.analyzer.NominalFrequency * 2.0) : (this.event.SampleRate)), 2, true);
+          } else if(x > ((this.event.Length * 2) + Gap)) {
+            return this.Round(EventDuration + (x - (Opt.file.length - this.event.Length)) / ((this.mode == 'RMS') ? (this.analyzer.NominalFrequency * 2.0) : (this.event.SampleRate)), 2, true);
+          } else {
+            return '';
+          }
         };
         Opt.axes.x.valueFormatter = (x) => { return Opt.axes.x.axisLabelFormatter(x) + ' ms'; };
         Opt.underlayCallback = (canvas, area, g) => {

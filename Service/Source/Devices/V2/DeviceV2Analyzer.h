@@ -25,13 +25,12 @@ class DeviceV2Analyzer final : public AnalyzerSoft {
     uint8_t                 pCurrentChannels;
     bool                    pCalc;
     uint64_t                pLastEvent;
-    pthread_mutex_t         pMutex;
   private :
     void ResultsReady(AnalyzerSoftAggreg200MS *params) override;
   public :
     DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerMode mode, const string &configPath, const float samplerate, const uint8_t *voltage, const uint8_t *current, const bool *invert);
     DeviceV2Analyzer(const string &name, const string &configPath, const float samplerate, const uint8_t voltage, const float *current);
-    bool BufferAppend(const float *values, const uint32_t buffUsage);
+    void     BufferAppend(const float *values);
     uint64_t GetLastEvent();
 };
 // ---------------------------------------------------------------------------------------------------------------------

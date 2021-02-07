@@ -26,8 +26,7 @@
 #define DEVICEV2_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
 #define DEVICEV2_ENDPOINT_OUT      0x02                          //Endpoint de escritura de datos
 #define DEVICEV2_SAMPLEFREQ       24000                          //Frequencia de muestreo
-#define DEVICEV2_TRANSFERS           24                          //Numero de transferencias a encolar
-#define DEVICEV2_BUFFERSIZE    0x040000
+#define DEVICEV2_TRANSFERS          128                          //Numero de transferencias a encolar
 #define DEVICEV2_CONTROL_SETSTATUS 0x20
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2 final : public Device {
@@ -37,15 +36,11 @@ class DeviceV2 final : public Device {
   private :
     static bool                  pRegistered;
   private :
-    deque<DeviceV2Analyzer*>     pRunningAnalyzers;        //Running analyzers
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pThread;                  //Descriptor del hilo de captura
     volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
     DeviceV2Analyzer            *pAnalyzers[5];            //Listado de analyzadores
     uint8_t                      pAnalyzersCount;          //Used Analyzers
-    int16_t                     *pBuffer;                  //Read buffer
-    uint32_t                     pBufferTail;              //pBuffer read pos
-    uint32_t                     pBufferHead;              //pBuffer write pos
     pthread_mutex_t              pConfigLock;              //Block configuration params
     float                        pVoltageGain[3];          //Ganancia de tension
     float                        pCurrentGain[4];          //Ganancia de corriente
@@ -66,6 +61,9 @@ class DeviceV2 final : public Device {
     uint8_t                      pChannelsDelaySize[7];    //Delay line size for each channel
     uint8_t                      pChannelsDelayPos[7];     //Delay line position for each channel
     int16_t                     *pChannelsDelay;           //Channel delay line buffers
+    float                        pBatteryVoltage;          //Device battery voltage
+    bool                         pMainsPowered;            //Device is mains powered
+    bool                         pCharging;                //Device batery is charging
   private :
     static bool  Register();
     static void  GetInstances();
@@ -77,7 +75,6 @@ class DeviceV2 final : public Device {
     void     Configure(const json &config);
     void     GetDevice(const json &params, Response &response) override;
     void     SetDevice(const json &params, Response &response) override;
-    void     BufferAppend();
     void    *Thread();
     void     ReadCallback(struct libusb_transfer *transfer);
     int      PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event);

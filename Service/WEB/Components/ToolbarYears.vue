@@ -10,7 +10,7 @@
       </div>
     </div>
   </div>
-</template> 
+</template>
 
 <script>
   import moment from 'moment';
@@ -35,12 +35,13 @@
     methods: {
       GetYears: function() {
         var Years = [];
-        this.$http.post("getSeriesRange", { Aggreg: this.aggreg, Analyzer: this.analyzer.Analyzer }).then( 
+        this.$http.post("getSeriesRange", { Aggreg: this.aggreg, Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
             var StartYear = moment(result.data.From).year();
             var EndYear = moment(result.data.To).year();
             for(var year = StartYear; year <= EndYear; year++) Years.push(year);
             this.Years = Years.reverse();
+            if(this.Years.length == 0) this.Years.push(moment().year());
             var Stored = null;
             if(this.storage != null) {
               Stored = parseInt(localStorage.getItem(this.storage));
@@ -56,7 +57,7 @@
               this.$emit('input', null);
             }
           }
-        ); 
+        );
       }
     }
   }

@@ -33,8 +33,8 @@ AnalyzerSoftAlarm::AnalyzerSoftAlarm(const string &serial, float &voltage, float
   pInitialized = false;
   pEvaluator   = Parser();
   pResults     = (uint8_t*)calloc(ceil(pWindow / 8), 1);
-  pEvaluator.DefineVar("Nominal_Voltage", &voltage);
-  pEvaluator.DefineVar("Nominal_Frequency", &freq);
+  pEvaluator.DefineVar("NominalVoltage", &voltage);
+  pEvaluator.DefineVar("NominalFrequency", &freq);
 }
 AnalyzerSoftAlarm::~AnalyzerSoftAlarm() {
   if(pResults != NULL) free(pResults);

@@ -17,6 +17,7 @@
 #include "HTTPRequestPoll.h"
 #include "Tools.h"
 #include "LogFile.h"
+#include "Worker.h"
 // ---------------------------------------------------------------------------------------------------------------------
 HTTPRequestWorker::HTTPRequestWorker(HTTPRequestPoll *parent) {
   pTerminate = false;
@@ -27,9 +28,9 @@ HTTPRequestWorker::HTTPRequestWorker(HTTPRequestPoll *parent) {
   if(pthread_create(&pThread, NULL, [](void *params) { return ((HTTPRequestWorker*)params)->Thread(); }, this) != 0) {
     pThread = 0;
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-    return;
+  } else {
+    Worker::SetThreadProperties(pThread, "HTTPWorker", Worker::LOW);
   }
-  pthread_setname_np(pThread, "HTTPWorker");
 }
 void HTTPRequestWorker::Run(function<void()> fn) {
   pthread_mutex_lock(&pMutex);
@@ -38,7 +39,6 @@ void HTTPRequestWorker::Run(function<void()> fn) {
   pthread_mutex_unlock(&pMutex);
 }
 void *HTTPRequestWorker::Thread() {
-  nice(15);
   while(true) {
     pthread_mutex_lock(&pMutex);
     while((pTerminate == false) && (pFunction == NULL)) pthread_cond_wait(&pCond, &pMutex);

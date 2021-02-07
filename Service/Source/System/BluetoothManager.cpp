@@ -17,10 +17,12 @@
 #ifdef OPENWRT // ======================================================================================================
 #include "ConfigFile.h"
 #include "LogFile.h"
+#include "Worker.h"
 #include "MessageLoop.h"
 // ---------------------------------------------------------------------------------------------------------------------
 volatile bool    BluetoothManager::pTerminate   = false;
 bool             BluetoothManager::pEnable      = false;
+bool             BluetoothManager::pEnabled     = false;
 string           BluetoothManager::pInterface   = "bt";
 string           BluetoothManager::pServerName  = "";
 pthread_t        BluetoothManager::pThread      = 0;
@@ -44,7 +46,7 @@ BluetoothManager::BluetoothManager() {
     pThread = 0;
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   } else {
-    pthread_setname_np(pThread, "Bluetooth");
+    Worker::SetThreadProperties(pThread, "Bluetooth", Worker::LOW);
   }
   MessageLoop::RegisterListener("Bluetooth_Toogle", ToggleEnable);
   LogFile::Info("BluetoothManager started");
@@ -59,6 +61,12 @@ BluetoothManager::~BluetoothManager() {
   pThread = 0;
   LogFile::Info("BluetoothManager stoped");
 }
+bool BluetoothManager::Enabled() {
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  bool Result = pEnabled;
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  return Result;
+}
 void BluetoothManager::ToggleEnable() {
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   json Config = json::object();
@@ -68,8 +76,6 @@ void BluetoothManager::ToggleEnable() {
 }
 void *BluetoothManager::Thread(void *params) {
   DBusConnection *DBus = NULL;
-  nice(5);
-  bool Enabled = false;
   //LogFile::SetValue("BluetoothManager", "/Bluetooth_Enabled", Enabled);
 //  chmod("/dev/watchdog", S_IWUSR | S_IWGRP | S_IWOTH);
 //  int WatchdogFD = open("/dev/watchdog", O_WRONLY);
@@ -81,14 +87,14 @@ void *BluetoothManager::Thread(void *params) {
 //    ioctl(WatchdogFD, WDIOC_SETTIMEOUT, &Timeout);
 //  }
 //    if(WatchdogFD != 0) write(WatchdogFD, "\0", 1);
-  while((pTerminate == false) || (Enabled == true)) {
+  while((pTerminate == false) || (pEnabled == true)) {
     bool Enable = (pTerminate == false) ? pEnable : false;
     if(DBus == NULL) {
       DBusError Error;
       dbus_error_init(&Error);
       DBus = dbus_bus_get(DBUS_BUS_SYSTEM, &Error);
       if(dbus_error_is_set(&Error)) {
-        LogFile::Error("Can not open DBus connection (%s)", Error.message);
+        LogFile::Error("%s:%d -> %s", Error.message);
         dbus_error_free(&Error);
         usleep(1000000);
         continue;
@@ -113,7 +119,7 @@ void *BluetoothManager::Thread(void *params) {
         dbus_message_unref(Reply);
       }
       dbus_message_unref(Msg);
-    } else if((Enabled == false) && (Enable == true)) {
+    } else if((pEnabled == false) && (Enable == true)) {
       DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "RegisterAgent");
       DBusMessageIter ArgsIter;
       dbus_message_iter_init_append(Msg, &ArgsIter);
@@ -150,13 +156,13 @@ void *BluetoothManager::Thread(void *params) {
       Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
       if(Reply) dbus_message_unref(Reply);
       dbus_message_unref(Msg);
-      LogFile::Info("BluetoothManager", "Bluetooth interface UP");
-      pthread_mutex_lock(&pMutex);
+      LogFile::Info("BluetoothManager -> Interface UP");
+      if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       pServerName = NetName;
-      pthread_mutex_unlock(&pMutex);
-      Enabled = true;
+      pEnabled = true;
+      if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
      // LogFile::SetValue("BluetoothManager", "/Bluetooth_Enabled", Enabled);
-    } else if((Enabled == true) && (Enable == false)) {
+    } else if((pEnabled == true) && (Enable == false)) {
       if(SendBoolBT(DBus, "Powered", false) == false) continue;
       DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "UnregisterAgent");
       DBusMessageIter ArgsIter;
@@ -173,11 +179,11 @@ void *BluetoothManager::Thread(void *params) {
       Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
       if(Reply) dbus_message_unref(Reply);
       dbus_message_unref(Msg);
-      LogFile::Info("BluetoothManager", "Bluetooth interface DOWN");
-      pthread_mutex_lock(&pMutex);
+      LogFile::Info("BluetoothManager -> Interface DOWN");
+      if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       pServerName = "";
-      pthread_mutex_unlock(&pMutex);
-      Enabled = false;
+      pEnabled = false;
+      if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       //LogFile::SetValue("BluetoothManager", "/Bluetooth_Enabled", Enabled);
     }
   }
@@ -262,18 +268,19 @@ bool BluetoothManager::SendStringBT(DBusConnection *bus, const char *property, c
 void BluetoothManager::GetBluetoothCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Bluetooth");
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   Config["Name"] = pServerName;
-  pthread_mutex_unlock(&pMutex);
+  Config["Running"] = pEnabled;
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void BluetoothManager::SetBluetoothCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   json Config = json::object();
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   pEnable = params["Enabled"];
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   Config["Enabled"] = pEnable;
   Config["Interface"] = pInterface;
   ConfigFile::WriteConfig("/Bluetooth", Config);
@@ -283,5 +290,8 @@ void BluetoothManager::SetBluetoothCallback(const json &params, Response &respon
 BluetoothManager::BluetoothManager() {
 }
 BluetoothManager::~BluetoothManager() {
+}
+bool BluetoothManager::Enabled() {
+  return false;
 }
 #endif // ==============================================================================================================
