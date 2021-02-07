@@ -51,8 +51,7 @@ class AnalyzerSoftFFTs final {
   public :
     AnalyzerSoftFFTs(const string &serial, const Analyzer::AnalyzerMode mode);
     ~AnalyzerSoftFFTs();
-    void      Config(const uint8_t inCycles);
-    void      Run(const AnalyzerSoftBlock *block);
+    void      Run(const AnalyzerSoftBlock *block, const uint8_t inCycles);
     void      Wait();
     uint16_t  OutLen() const;
     Complex_t VoltageHarmonic(const uint8_t channel, const uint8_t index) const;

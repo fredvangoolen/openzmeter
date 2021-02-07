@@ -1,7 +1,7 @@
 <template>
   <div class="panel panel-other">
     <div class="panel-heading clearfix">
-      <div class="header-text">Current version: {{ (Version==null) ? 'Wait...' : Version }}</div>
+      <div class="header-text">Current version: {{ (Version==null) ? 'Loading data...' : Version }}</div>
       <div class="header-buttons">
         <div class="btn-group">
           <button type="button" class="btn btn-success btn-xs" @click="Upgrade">Upgrade selected</button>

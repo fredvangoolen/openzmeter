@@ -12,7 +12,7 @@
             <button type="button" class="btn btn-default btn-xs" :class="{ active: GraphSeries=='Power' }" @click="GraphSeries='Power'">Power</button>
           </div>
           <div class="btn-group">
-            <button-export :rows="Export" file="Evolution"></button-export>
+            <!--button-export :rows="Export" file="Evolution"></button-export-->
             <button-expand v-model="Expanded"></button-expand>
           </div>
         </portal>
@@ -124,36 +124,7 @@
         Opt.axes.x.ticker = (min, max, pixels) => { return Graph.Formatters.X_HourlyFull(min, max, pixels, (this.analyzer != null) ? this.analyzer.TimeZone : null); };
         if(this.TransferGraph.Data == null) return Opt;
         Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.TransferGraph.Data) };
-
-//        if(this.GroupDay) {
-//          Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDate(x); };
-//          Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDate(x); };
-//          if(this.GraphSeries=='Energy') {
-//            var PrevDay     = null;
-//            var EnergySum   = 0;
-//            var EnergyPrice = 0;
-//            var Samples     = 0;
-//            for(var n = 0; n < this.bill.Sampletime.length; n++) {
-//              var Date = moment(this.bill.Sampletime[n]).tz(this.analyzer.TimeZone);
-//              if((PrevDay != null) && (PrevDay.isSame(Date, 'day'))) {
-//                EnergySum += this.bill.Active_Power[n] / 4.0;
-//                EnergyPrice += this.bill.Period_Energy_Cost[n];
-//                Samples++;
-//              } else {
-//                if(Samples != 0) Opt.file.push([PrevDay.valueOf(), EnergySum, EnergyPrice /Samples]);
-//                Samples = 0;
-//                EnergySum = this.bill.Active_Power[n] / 4.0;
-//                EnergyPrice = this.bill.Period_Energy_Cost[n];
-//                PrevDay = Date;
-//              }
-//            }
-//            if(Samples != 0) Opt.file.push([PrevDay.valueOf(), EnergySum, EnergyPrice /Samples]);
-//          }
-//        } else {
-//          Opt.xAxisHeight = 20;
-//          Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatDateTime(x); };
-//          Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.FormatDateTime(x, '<br/>'); };
-//        }
+        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
         if(this.GraphSeries == 'Energy') {
           var EnergyCol = this.TransferGraph.Data.Headers.indexOf('Active_Energy');
@@ -162,24 +133,19 @@
           Opt.colors = [this.analyzer.Color.Active_Energy, '#d9534f'];
           Opt.series = { 'Energy': { axis: 'y', plotter: (e) => { Graph.Plotters.BarOffset(e, (this.Aggreg == '1D') ? 86400000 : (this.Aggreg == '1H') ? 3600000 : 900000); } }, 'Energy cost': { axis: 'y2' } };
           for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) Opt.file.push([this.TransferGraph.Data.Rows[n][TimeCol], this.TransferGraph.Data.Rows[n][EnergyCol], this.TransferGraph.Data.Rows[n][CostCol]]);
-//          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true, false], { incZero: 1.0 });
-//          var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
-        Opt.axes.y.valueFormatter = (x, opts, seriesName) => { return Graph.Formatters.Y_UnitScale(x, 'Wh', 2, true);  };
-        Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
-
-
-
+          Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, 'Wh', 2, true);  };
+          Opt.axes.y2.valueFormatter = (x) => { return this.Round(x, 2, true) + this.bill.Currency + '/' + this.bill.EnergyUnits; };
         } else {
+          var ActiveCol = this.TransferGraph.Data.Headers.indexOf('Active_Power');
+          var CostCol = this.TransferGraph.Data.Headers.indexOf('Power_Cost');
+          var ContractedCol = this.TransferGraph.Data.Headers.indexOf('Contracted');
           Opt.labels = ['Time', 'Power', 'Contracted', 'Cost'];
           Opt.colors = [this.analyzer.Color.Active_Power, '#428bca', '#d9534f'];
-          Opt.series = { 'Power': { axis: 'y', fillGraph: true }, 'Power': { axis: 'y' }, 'Cost': { axis: 'y2' } };
-          for(var n = 0; n < this.data.Sampletime.length; n++) Opt.file.push([this.bill.Sampletime[n], this.bill.Active_Power[n], this.bill.Period_Power_Contracted[n], this.bill.Period_Power_Cost[n]]);
-//          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true, true, false], { incZero: 1.0 });
-//          var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
-//          Opt.axes.y.valueFormatter = (x) => { return this.Round(this.ScaleUnits(x, Units), 2, true) + ' ' + this.bill.PowerUnits; };
-//          Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(this.ScaleUnits(x, Units), 2, true); };
+          Opt.series = { 'Power': { axis: 'y', fillGraph: true, plotter: (e) => { Graph.Plotters.LineOffset(e, (this.Aggreg == '1D') ? 86400000 : (this.Aggreg == '1H') ? 3600000 : 900000); } }, 'Contracted': { axis: 'y', strokeWidth: 1.0 }, 'Cost': { axis: 'y2' } };
+          for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) Opt.file.push([this.TransferGraph.Data.Rows[n][TimeCol], this.TransferGraph.Data.Rows[n][ActiveCol], this.TransferGraph.Data.Rows[n][ContractedCol] * 1000.0, this.TransferGraph.Data.Rows[n][CostCol]]);
+          Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, 'W', 2, true); };
+          Opt.axes.y2.valueFormatter = (x) => { return this.Round(x, 2, true) + this.bill.Currency + '/' + this.bill.PowerUnits; };
         }
-        Opt.axes.y2.valueFormatter = (x) => { return this.Round(x, 2, true) + ' ' + this.bill.Currency + '/' + this.bill.EnergyUnits; };
         Opt.axes.y2.axisLabelFormatter = (x) => { return this.Round(x, 2, true); };
         return Object.seal(Opt);
       }

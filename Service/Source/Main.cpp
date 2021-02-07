@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.\n\n", argv[i]);
     }
   }
-  pthread_setname_np(pthread_self(), "Main");
+  Worker::SetThreadProperties(pthread_self(), "Main", Worker::NORMAL);
   ConfigFile       ConfigFile(ConfigFileName);     // Load config file
   PidFile          PIDFile;                        // Create PID file
   LogFile          LogFile;                        // Create LOG file

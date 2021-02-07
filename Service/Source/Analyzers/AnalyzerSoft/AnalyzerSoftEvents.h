@@ -66,7 +66,6 @@ class AnalyzerSoftEvents final {
     uint16_t         pPrevCyclesPos;            //Previous cycles write pos
     float           *pPrevCycles;               //Previous cycles
     bool             pHaveEvent;                //Flag to block event
-//    uint64_t         pTimestamp;                //Current block start time
   private :
     Event_t *InitEvent();
     void     Events_Func(const AnalyzerSoftBlock *block, const uint64_t timestamp);
@@ -77,8 +76,8 @@ class AnalyzerSoftEvents final {
   public :
     AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftEvents();
-    void Config(const bool enabled, const float nominalVoltage, const float nominalFreq);
-    void Run(const AnalyzerSoftBlock *block, const uint64_t timestamp);
+    void Config(const bool enabled);
+    void Run(const AnalyzerSoftBlock *block, const uint64_t timestamp, const float nominalVoltage, const float nominalFreq);
     bool Wait();
     void GetEvents(const json &params, Response &response);
     void GetEventsRange(const json &params, Response &response);

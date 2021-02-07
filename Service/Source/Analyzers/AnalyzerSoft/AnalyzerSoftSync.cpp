@@ -65,7 +65,7 @@ void AnalyzerSoftSync::Config(const json &config, const string &name) {
         LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         pThread = 0;
       } else {
-        pthread_setname_np(pThread, "Sync");
+        Worker::SetThreadProperties(pThread, "Sync", Worker::LOW);
       }
     }
   } else if(Enabled == false) {
@@ -96,7 +96,6 @@ bool AnalyzerSoftSync::Login(const string &path, Client *client, const string &u
   }
 }
 void *AnalyzerSoftSync::Thread() {
-  nice(10);
   string  Cookie, User, Pass, Server, Name;
   URL    *Url        = NULL;
   Client *HTTPClient = NULL;

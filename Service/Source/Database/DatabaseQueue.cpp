@@ -15,6 +15,8 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "DatabaseQueue.h"
 #include "LogFile.h"
+#include "Tools.h"
+#include "Worker.h"
 // ---------------------------------------------------------------------------------------------------------------------
 DatabaseQueue::DatabaseQueue(const string &schema, const bool create) : Database(schema, create) {
   pThread    = 0;
@@ -24,9 +26,9 @@ DatabaseQueue::DatabaseQueue(const string &schema, const bool create) : Database
   if(pthread_create(&pThread, NULL, [](void *params) { return ((DatabaseQueue*)params)->Thread(); }, (void*)this) != 0) {
     pThread = 0;
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-    return;
+  } else {
+    Worker::SetThreadProperties(pThread, "DatabaseQueue", Worker::NORMAL);
   }
-  if(pthread_setname_np(pThread, "DatabaseQueue") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 DatabaseQueue::~DatabaseQueue() {
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));

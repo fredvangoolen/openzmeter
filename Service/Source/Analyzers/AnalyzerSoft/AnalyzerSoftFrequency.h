@@ -36,8 +36,6 @@ class AnalyzerSoftFrequency final {
   public :
     AnalyzerSoftFrequency(const float samplerate);
     ~AnalyzerSoftFrequency();
-    void  Config(const float freq);
     float Frequency(const AnalyzerSoftBlock *block);
-    float NominalFrequency();
 };
 // ---------------------------------------------------------------------------------------------------------------------

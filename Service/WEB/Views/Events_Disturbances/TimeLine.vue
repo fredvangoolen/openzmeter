@@ -7,8 +7,6 @@
   import { DataSet } from "vis-data/peer";
   import { Timeline } from "vis-timeline/peer";
   import "vis-timeline/styles/vis-timeline-graph2d.css";
-//  import 'CSS/jquery.qtip.css';
-//  import qtip from 'JS/jquery.qtip.js';
   export default {
     props: { analyzer: Object, events: Object },
     data: function() {
@@ -31,9 +29,9 @@
         margin: { item: 10, axis: 5 },
         orientation: 'top',
         tooltip: {
-      followMouse: true,
-      overflowMethod: 'cap'
-    }
+          followMouse: true,
+          overflowMethod: 'cap'
+        }
       });
       this.TimeLine.setGroups(this.TimeLineGroups);
 //      $(document).on("mouseover", '.vis-item', (e) => {
@@ -78,8 +76,6 @@
             title: '<table>' +
                      '<tr><td><strong>Time</strong></td><td> : ' + this.analyzer.FormatDateTime(this.events.Rows[i][StartTimeCol]) + '</td></tr>' +
                      '<tr><td><strong>Duration</strong></td><td> : ' + this.Round(this.events.Rows[i][DurationCol] / this.events.Rows[i][SampleRateCol], 2) + ' sec</td></tr>' +
-//                     '<tr><td><strong>ΔU<sub>max</sub></strong></td><td> : ' + this.$refs.table.Events[i].Change + ' V</td></tr>' +
-//                     '<tr><td><strong>% ΔU<sub>max</sub></strong></td><td> : ' + this.$refs.table.Events[i].Percent + '%</td></tr>' +
                      '</table>'
           };
           if(this.events.Rows[i][TypeCol] == 'INTERRUPTION') {
@@ -101,11 +97,33 @@
           }
           this.TimeLineDataset.add(Item);
         }
-        this.TimeLineGroups.update({ id: 1, content: '<div style="width:150px">Dips<span class="pull-right badge">' + Count.Dip + '</span></div>'});
-        this.TimeLineGroups.update({ id: 2, content: '<div style="width:150px">Swells<span class="pull-right badge">' + Count.Swell + '</span></div>'});
-        this.TimeLineGroups.update({ id: 3, content: '<div style="width:150px">Interruptions<span class="pull-right badge">' + Count.Interruption + '</span></div>'});
-        this.TimeLineGroups.update({ id: 4, content: '<div style="width:150px">RVC<span class="pull-right badge">' + Count.RVC + '</span></div>'});
+        this.TimeLineGroups.update({ id: 1, content: '<div>Dips<span>' + Count.Dip + '</span></div>'});
+        this.TimeLineGroups.update({ id: 2, content: '<div>Swells<span>' + Count.Swell + '</span></div>'});
+        this.TimeLineGroups.update({ id: 3, content: '<div>Interruptions<span>' + Count.Interruption + '</span></div>'});
+        this.TimeLineGroups.update({ id: 4, content: '<div>RVC<span>' + Count.RVC + '</span></div>'});
       }
     }
   }
 </script>
+
+<style scoped>
+  div >>> .vis-inner > div {
+    width: 150px;
+    line-height: 18px;
+  }
+  div >>> .vis-inner > div > span {
+    margin-top: 0px;
+    float: right;
+    min-width: 10px;
+    padding: 3px 7px;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-color: #777777;
+    border-radius: 10px;
+  }
+</style>

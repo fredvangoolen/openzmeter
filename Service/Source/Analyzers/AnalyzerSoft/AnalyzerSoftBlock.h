@@ -17,49 +17,30 @@
 #include "Analyzer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftBlock {
-  public :
-    enum AppendResult { NONE, FULL_CYCLE, FULL_BLOCK};
   private :
-    static const uint8_t FILTERSTAGES =  5; //Filter stages for zerocrossing
-  private :
-    typedef struct {
-      float  A0;
-      float  A1;
-      float  A2;
-      float  B1;
-      float  B2;
-      float  ChannelsZ1[3];
-      float  ChannelsZ2[3];
-    } Filter_t;
-  private :
-    pthread_mutex_t pMutex;                       //Control access to some sections
     uint64_t        pSequence;                    //Sequence number of analyzed blocks
-    Filter_t        pFilters[FILTERSTAGES];       //Filter bank
+    uint64_t        pTimestamp;                   //Current block timestamp
     uint8_t         pVoltageChannels;             //Number of voltage channels
     uint8_t         pCurrentChannels;             //Number of current channels
     uint8_t         pBlockCyclesCount;            //Block cycles count
-    uint8_t         pMaxCycles;                   //Allowed cicles for configured frequency
-    uint16_t        pMaxSamples;                  //Max samples for configured frequency
     uint16_t        pBlockSamples;                //Number of samples in block
-    uint16_t        pDelaySize;                   //Delay samples
-    uint16_t        pDelayPos;                    //Delay pos
     uint16_t        pBlockCycles[24];             //Max block sizes
     float          *pVoltageSamples;              //Output voltage signal
     float          *pCurrentSamples;              //Output current signal
-    float          *pDelayVoltage;                //Delay line for voltage
-    float          *pDelayCurrent;                //Delay line for current
-    float           pLastSamples[3];              //Filter samples backup
-    float           pSamplerate;                  //Velocidad de muestreo
     float           pNominalFrequency;            //Configured grid frequency
+    float           pNominalVoltage;              //Configured grid voltage
   public :
-    AnalyzerSoftBlock(const Analyzer::AnalyzerMode mode, const float samplerate);
+    AnalyzerSoftBlock(const uint8_t vChanels, const uint8_t cChannels, const uint64_t seq, const uint16_t maxLen, const float nominalVolt, const float nominalFreq);
     ~AnalyzerSoftBlock();
-    void      Config(const float nominalFreq);
-    bool      PushSample(float *voltageSamples, float *currentSamples);
-    uint16_t  BlockSamples() const;
+    void      PushSample(float *voltageSamples, float *currentSamples);
+    void      PushCycle(uint16_t len);
+    uint16_t  Samples() const;
     uint8_t   Cycles() const;
     uint16_t  CycleLen(const uint8_t cycle) const;
     uint64_t  Sequence() const;
+    float     NominalFrequency() const;
+    float     NominalVoltage() const;
+    uint64_t  Timestamp() const;
     float     VoltageSample(const uint8_t ch, const uint16_t sample) const;
     float     CurrentSample(const uint8_t ch, const uint16_t sample) const;
     bool      GetSeriesJSON(const string &serie, json &result);

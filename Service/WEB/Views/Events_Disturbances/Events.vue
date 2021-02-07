@@ -16,8 +16,8 @@
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
             <button type="button" class="btn btn-xs btn-success" @click="Edit(props.rowData)">Add notes</button>
-            <button type="button" class="btn btn-xs btn-default" @click="RMS(props.rowData)">RMS</button>
-            <button type="button" class="btn btn-xs btn-default" @click="RAW(props.rowData)">Wave</button>
+            <button type="button" class="btn btn-xs btn-default" :class="{ disabled: !props.rowData.AvaliableRAW }" @click="RMS(props.rowData)">RMS</button>
+            <button type="button" class="btn btn-xs btn-default" :class="{ disabled: !props.rowData.AvaliableRAW }" @click="RAW(props.rowData)">Wave</button>
             <button type="button" class="btn btn-danger btn-xs"  @click="Delete(props.rowData)">Delete</button>
           </div>
         </template>
@@ -66,10 +66,13 @@
         var SampleRateCol = this.events.Headers.indexOf("SampleRate");
         var DurationCol   = this.events.Headers.indexOf("Duration");
         var NotesCol      = this.events.Headers.indexOf("Notes");
+        var RawCol        = this.events.Headers.indexOf("AvaliableRAW");
+        var RmsCol        = this.events.Headers.indexOf("AvaliableRMS");
         for(var x = 0; x < this.events.Rows.length; x++) {
           Events.push({ StartTime: this.events.Rows[x][StartTimeCol], Type: this.events.Rows[x][TypeCol],
                         Reference: this.events.Rows[x][ReferenceCol], Peak: this.events.Rows[x][PeakCol], Change: this.events.Rows[x][ChangeCol],
-                        SampleRate: this.events.Rows[x][SampleRateCol], Duration: this.events.Rows[x][DurationCol], Notes: this.events.Rows[x][NotesCol]
+                        SampleRate: this.events.Rows[x][SampleRateCol], Duration: this.events.Rows[x][DurationCol], Notes: this.events.Rows[x][NotesCol],
+                        AvaliableRAW: this.events.Rows[x][RawCol], AvaliableRMS: this.events.Rows[x][RmsCol]
           });
         }
         this.Events = Events;
@@ -122,7 +125,6 @@
           },
           (fail) => {
             this.ShowSpinner = false;
-            alert("Event samples are not avaliable now. Maybe event is still running or deleted.");
           }
         );
       },
@@ -136,7 +138,6 @@
           },
           (fail) => {
             this.ShowSpinner = false;
-            alert("Event samples are not avaliable now. Maybe event is still running or deleted.");
           }
         );
       },
@@ -144,11 +145,18 @@
         var Selection = this.$refs.table.selectedTo;
         if(confirm('Delete ' + Selection.length + ' event(s)?') == false) return;
         this.ShowSpinner = true;
-        for(var n = 0; n < Selection.length; n++) {
-          this.$http.post('delEvent', { StartTime: Selection[n], Analyzer: this.analyzer.Analyzer });
-          this.$emit('eventschanged');
-        }
-        this.ShowSpinner = false;
+        var Promises = [];
+        for(var n = 0; n < Selection.length; n++) Promises.push(this.$http.post('delEvent', { StartTime: Selection[n], Analyzer: this.analyzer.Analyzer }));
+        Promise.all(Promises).then(
+          () => {
+            this.$emit('eventschanged');
+            this.ShowSpinner = false;
+            this.$refs.table.selectedTo = [];
+          },
+          () => {
+            this.ShowSpinner = false;
+          }
+        );
       },
       Delete: function(evt) {
         if(confirm("Delete selected event?")) {

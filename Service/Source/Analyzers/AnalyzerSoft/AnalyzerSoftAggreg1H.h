@@ -32,9 +32,6 @@ class AnalyzerSoftAggreg1H final : public AnalyzerSoftAggreg {
     static constexpr uint8_t HarmonicsAllowedLen = (sizeof(HarmonicsAllowed) / sizeof(float));
   private :
     uint16_t        pSamples;
-    pthread_mutex_t pMutex;
-    float           pNominalVoltage;
-    float           pNominalFrequency;
     uint16_t        pStatsFrequency[FrequencyRangesLen]; //Distribucion de frecuencias
     uint16_t        pStatsVoltage[VoltageRangesLen];     //Distribucion de tensiones
     uint16_t        pStatsTHD[THDRangesLen];             //Cada posicion representa un rango desde 0% hasta 8% (y el ultimo otros valores)
@@ -45,12 +42,11 @@ class AnalyzerSoftAggreg1H final : public AnalyzerSoftAggreg {
   public :
     AnalyzerSoftAggreg1H(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db);
     ~AnalyzerSoftAggreg1H();
-    void Config(const float nominalVoltage, const float nominalFreq);
     void Accumulate(const AnalyzerSoftAggreg200MS *src);
     void Save() const;
     void Reset();
     bool Normalize();
-    void AccumulateStats(const AnalyzerSoftAggreg3S *params);
-    void AccumulateStats(const AnalyzerSoftAggreg10M *params);
+    void AccumulateStats(const AnalyzerSoftAggreg3S *params, const float nominalFreq);
+    void AccumulateStats(const AnalyzerSoftAggreg10M *params, const float nominalVolt);
 };
 // ---------------------------------------------------------------------------------------------------------------------

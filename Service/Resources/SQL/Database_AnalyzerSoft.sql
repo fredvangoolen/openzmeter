@@ -88,11 +88,17 @@ CREATE TABLE IF NOT EXISTS events (
   duration    bigint            NOT NULL
 ) WITH (OIDS=FALSE);
 
+DO $$ BEGIN
+  CREATE TYPE event_sample_type AS ENUM ('RAW_PRESTART', 'RAW_POSSTART', 'RAW_PREEND', 'RAW_POSEND', 'RMS_PRESTART', 'RMS_POSSTART', 'RMS_PREEND', 'RMS_POSEND');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
+
 CREATE TABLE IF NOT EXISTS events_ext (
   starttime   bigint            NOT NULL REFERENCES events(starttime) ON UPDATE CASCADE ON DELETE CASCADE,
-  sampletype  smallint          NOT NULL,
+  sampletype  event_sample_type NOT NULL,
   samples     real[],
-  PRIMARY KEY (starttime, sampletype)
+  UNIQUE(starttime, sampletype)
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS alarms (
@@ -100,5 +106,5 @@ CREATE TABLE IF NOT EXISTS alarms (
   trigger       bigint            NOT NULL,
   release       bigint            NULL
 ) WITH (OIDS=FALSE);
-CREATE INDEX ON alarms(id);
-CREATE INDEX ON alarms(trigger);
+CREATE INDEX IF NOT EXISTS alarms_id_idx ON alarms(id);
+CREATE INDEX IF NOT EXISTS alarms_trigger_idx ON alarms(trigger);

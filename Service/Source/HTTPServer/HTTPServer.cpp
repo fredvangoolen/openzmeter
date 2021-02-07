@@ -30,6 +30,7 @@
 #include "ResourceFile.h"
 #include "HTTPRequestPoll.h"
 #include "MessageLoop.h"
+#include "Worker.h"
 //----------------------------------------------------------------------------------------------------------------------
 map<string, HTTPServer::Func1_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks1;
 map<string, HTTPServer::Call_t>  __attribute__((init_priority(200))) HTTPServer::pCallbacks2;
@@ -40,14 +41,10 @@ uint16_t                                                             HTTPServer:
 pthread_t                                                            HTTPServer::pThread = 0;
 //----------------------------------------------------------------------------------------------------------------------
 HTTPServer::HTTPServer() {
-  json Config = ConfigFile::ReadConfig("/HTTPServer");
-  bool SaveLogo = false;
+  json   Config = ConfigFile::ReadConfig("/HTTPServer");
+  string Logo   = pLogoImg;
   if(!Config.is_object()) Config = json::object();
-  if(Config["Logo"].is_string()) {
-    string Logo = Tools::DecodeBase64(Config["Logo"]);
-    if(pLogoImg != Logo) SaveLogo = true;
-    pLogoImg = Logo;
-  }
+  if(Config["Logo"].is_string()) Logo = Config["Logo"];
   if(Config["Port"].is_number_unsigned()) pPort = Config["Port"];
   if(Config["RelativePath"].is_string()) pRelativePath = Config["RelativePath"];
   Get(".*", HandleGet);
@@ -57,18 +54,19 @@ HTTPServer::HTTPServer() {
   set_write_timeout(30);
   new_task_queue = [] { return new HTTPRequestPoll(); };
   Config = json::object();
-  if(SaveLogo == true) Config["Logo"] = Tools::EncodeBase64(pLogoImg);
+  if(Logo != pLogoImg) Config["Logo"] = Logo;
   Config["Port"] = pPort;
   Config["RelativePath"] = pRelativePath;
   ConfigFile::WriteConfig("/HTTPServer", Config);
+  pLogoImg = Tools::DecodeBase64(Logo);
   RegisterCallback("getVersion", GetVersionCallback);
   MessageLoop::RegisterListener("HTTPServer_PeriodicTasks", PeriodicTasks, 60000);
   if(pthread_create(&pThread, NULL, [](void *params) { return ((HTTPServer*)params)->Thread(); }, (void*)this) != 0) {
     pThread = 0;
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-    return;
+  } else {
+    Worker::SetThreadProperties(pThread, "HTTPServer", Worker::NORMAL);
   }
-  if(pthread_setname_np(pThread, "HTTPServer") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 HTTPServer::~HTTPServer() {
   LogFile::Debug("Stopping HTTPServer");
@@ -83,7 +81,6 @@ void HTTPServer::PeriodicTasks() {
   DB.ExecSentenceNoResult("DELETE FROM sessions WHERE timestamp < " + DB.Bind(Tools::GetTime64() - 1296000000));
 }
 void *HTTPServer::Thread() {
-  nice(10);
   LogFile::Info("HTTP server starting on port %hu with relative path '%s'", pPort, pRelativePath.c_str());
   if(listen("0.0.0.0", pPort) == false) LogFile::Error("HTTP port (%hu) already in use", pPort);
   return NULL;
@@ -191,7 +188,10 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   string UserName = "";
   LogFile::Debug("HTTP GET '%s'", URL.c_str());
   const char *Tmp = (const char*)ResourceFile::GetFile(string("WEB/") + URL, &Size);
-  if(Size != 0) return FillResponse(response, Tmp, Size, MimeType(URL), HTTP_OK);
+  if(Size != 0) {
+    response.set_header("Cache-Control", "public, max-age=604800, immutable");
+    return FillResponse(response, Tmp, Size, MimeType(URL), HTTP_OK);
+  }
   if(request.has_header("Cookie")) {
     string Cookie = ParseCookie(request.get_header_value("Cookie"));
     if(Cookie != "") {

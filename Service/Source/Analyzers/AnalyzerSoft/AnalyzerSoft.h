@@ -25,6 +25,7 @@
 #include "AnalyzerSoftFFTs.h"
 #include "AnalyzerSoftRates.h"
 #include "AnalyzerSoftBlock.h"
+#include "AnalyzerSoftZeroCrossing.h"
 #include "AnalyzerSoftEvents.h"
 #include "AnalyzerSoftGA.h"
 #include "AnalyzerSoftAggreg200MS.h"
@@ -50,11 +51,11 @@ class AnalyzerSoft : public Analyzer {
     const uint8_t              pCurrentChannels;         //Current channels
     const AnalyzerMode         pMode;                    //Operation mode
   private : //Internal classes
-    DatabaseQueue             *pDB;                      //Database connection
     AnalyzerSoftSync          *pSync;                    //Remote sync object
     AnalyzerSoftMQTT          *pMQTT;                    //MQTT Control object
     AnalyzerSoftRates         *pRates;                   //Rate handle class
-    AnalyzerSoftBlock         *pInputBlock;              //Block maker class
+    AnalyzerSoftZeroCrossing  *pZeroCross;               //Zero crosing and block builder
+    DatabaseQueue             *pDB;                      //Database connection
     AnalyzerSoftAlarms        *pAlarms;                  //Alarms control
     AnalyzerSoftEvents        *pEvents;                  //Events detector
     AnalyzerSoftFrequency     *pFrequency;               //Frequency meter
@@ -67,15 +68,20 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerSoftAggreg15M     *pAggreg15M;               //15 minutes aggregation
     AnalyzerSoftAggreg1H      *pAggreg1H;                //1 hour aggregation
     AnalyzerSoftStorage       *pStorage;                 //Control stored data
+    AnalyzerSoftBlock         *pWorkingBlock;            //Current block
+    deque<AnalyzerSoftBlock*>  pPendingBlocks;           //Pending blocks to analyze
   private :
+    volatile bool              pTerminate;               //Terminate thread
+    pthread_t                  pThread;                  //Analyzer thread
     pthread_mutex_t            pMutex;                   //Locks access to analysis shared variables
+    pthread_cond_t             pCond;                    //Thread wake condition
+    float                      pNominalVoltage;          //Configured nominal voltage
+    float                      pNominalFrequency;        //Configured nominal frequency
     bool                       pSave200MS;               //Save 10/12 cycles aggregation to database
     ProviderLocks              pNowDataLock;             //GetSeriesNow access control
-  private : //Workers
-    Worker                    *pAnalyzerWorker;          //Analyzer worker
   private :
-    void Analyzer_Func();
-    void Configure(const json &options);
+    void Thread();
+    void Config(const json &options);
     void PeriodicTasks();
   public :
     void GetAnalyzer(const json &params, Response &response) override;
@@ -107,7 +113,6 @@ class AnalyzerSoft : public Analyzer {
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();
-    bool BufferAppend(float *voltageSamples, float *currentSamples, const uint32_t buffUsage);
-    bool IsWorking();
+    void BufferAppend(float *voltageSamples, float *currentSamples);
 };
 //----------------------------------------------------------------------------------------------------------------------

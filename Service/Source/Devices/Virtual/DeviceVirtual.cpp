@@ -27,21 +27,22 @@ bool DeviceVirtual::Register() {
   return true;
 }
 void DeviceVirtual::GetInstances() {
-  LogFile::Info("VIRTUAL", "Adding 'Virtual' device driver instance with serial 'VIRTUAL'");
   DeviceManager::AddDevice(new DeviceVirtual());
 }
 DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of real capture device for testing") {
+  LogFile::Info("Starting DeviceVirtual...");
   pThread   = 0;
   pLock     = PTHREAD_MUTEX_INITIALIZER;
   pAnalyzer = NULL;
   Configure(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
+  LogFile::Info("DeviceVirtual started");
 }
 DeviceVirtual::~DeviceVirtual() {
-  LogFile::Info("VIRTUAL", "Stopping device with serial '%s'", pSerial.c_str());
+  LogFile::Info("Stopping DeviceVirtual...");
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   ClearAnalyzers();
-  LogFile::Info("VIRTUAL", "Device with serial '%s' stopped", pSerial.c_str());
+  LogFile::Info("DeviceVirtual stopped");
 }
 void DeviceVirtual::ClearAnalyzers() {
   pthread_mutex_lock(&pLock);
@@ -107,7 +108,7 @@ void DeviceVirtual::Configure(const json &config) {
       ClearAnalyzers();
       pThread = 0;
     } else {
-      pthread_setname_np(pThread, "DeviceVirtual");
+      Worker::SetThreadProperties(pThread, "DeviceVirtual", Worker::NORMAL);
     }
   }
 }
@@ -136,7 +137,7 @@ void *DeviceVirtual::Capture_Thread(void *args) {
   while(!This->pTerminate) {
     float Voltage[3], Current[4];
     uint64_t TimeI = Tools::GetTime64() - StartTime;
-    if((This->pAnalyzer->IsWorking() == false) && ((TimeI * This->pSampleRate / 1000) > GeneratedSamples)) {
+    if((TimeI * This->pSampleRate / 1000) > GeneratedSamples) {
       Voltage[0] = (This->pFrequency > 0.0) ? This->pVoltage * M_SQRT2 * sin(Time) : This->pVoltage;
       Current[0] = (This->pFrequency > 0.0) ? This->pCurrent * M_SQRT2 * sin(Time + Phase) : This->pCurrent;
       if((TimeI >= 50000) && (TimeI < 60000)) {
@@ -158,7 +159,7 @@ void *DeviceVirtual::Capture_Thread(void *args) {
       GeneratedSamples++;
       Time += TimeInc;
       if(Time > (2.0 * M_PI)) Time -= 2.0 * M_PI;
-      This->pAnalyzer->BufferAppend(Voltage, Current, 0);
+      This->pAnalyzer->BufferAppend(Voltage, Current);
     } else {
       usleep(10000);
     }

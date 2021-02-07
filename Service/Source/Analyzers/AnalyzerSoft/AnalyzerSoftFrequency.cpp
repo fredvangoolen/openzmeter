@@ -19,33 +19,20 @@
 #include "AnalyzerSoftFrequency.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftFrequency::AnalyzerSoftFrequency(const float samplerate) {
- pMutex       = PTHREAD_MUTEX_INITIALIZER;
- pSamplerate  = samplerate;
- pFreqCycles  = NULL;
- pMinCycle    = 0;
- pMaxCycle    = 0;
- Config(0.0);
+  pSamplerate       = samplerate;
+  pFreqCycles       = NULL;
+  pMinCycle         = 0;
+  pMaxCycle         = 0;
+  pNominalFrequency = 0.0;
+  pBufferLen        = 0;
+  pFreqCyclesPos    = 0;
+  pFreqCyclesLen    = 0;
+  pInvalidValues    = 0;
+  pMinCycle         = 0;
+  pMaxCycle         = 0;
 }
 AnalyzerSoftFrequency::~AnalyzerSoftFrequency() {
   if(pFreqCycles != NULL) free(pFreqCycles);
-}
-void AnalyzerSoftFrequency::Config(const float freq) {
-  pthread_mutex_lock(&pMutex);
-  pBufferLen        = 0;
-  pFreqCyclesPos    = 0;
-  pFreqCyclesLen    = SECONDS * freq;
-  pNominalFrequency = freq;
-  pInvalidValues    = SECONDS * freq;
-  pMinCycle         = pSamplerate / (freq * 1.15 * 2.0);
-  pMaxCycle         = pSamplerate / (freq * 0.85 * 2.0);
-  if(pFreqCyclesLen != 0) {
-    pFreqCycles = (uint16_t*)realloc(pFreqCycles, pFreqCyclesLen * sizeof(uint16_t));
-    memset(pFreqCycles, 0, SECONDS * freq * sizeof(uint16_t));
-  } else {
-    if(pFreqCycles != NULL) free(pFreqCycles);
-    pFreqCycles = NULL;
-  }
-  pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoftFrequency::PushCycle(const uint16_t len) {
   if(pNominalFrequency == 0) return;
@@ -64,16 +51,24 @@ void AnalyzerSoftFrequency::PushCycle(const uint16_t len) {
   pFreqCyclesPos = (pFreqCyclesPos + 1) % pFreqCyclesLen;
 }
 float AnalyzerSoftFrequency::Frequency(const AnalyzerSoftBlock *block) {
-  pthread_mutex_lock(&pMutex);
+  if(block->NominalFrequency() != pNominalFrequency) {
+    pBufferLen        = 0;
+    pFreqCyclesPos    = 0;
+    pNominalFrequency = block->NominalFrequency();
+    pFreqCyclesLen    = SECONDS * pNominalFrequency;
+    pInvalidValues    = SECONDS * pNominalFrequency;
+    pMinCycle         = pSamplerate / (pNominalFrequency * 1.15 * 2.0);
+    pMaxCycle         = pSamplerate / (pNominalFrequency * 0.85 * 2.0);
+    if(pFreqCyclesLen != 0) {
+      pFreqCycles = (uint16_t*)realloc(pFreqCycles, pFreqCyclesLen * sizeof(uint16_t));
+      memset(pFreqCycles, 0, SECONDS * pNominalFrequency * sizeof(uint16_t));
+    } else {
+      if(pFreqCycles != NULL) free(pFreqCycles);
+      pFreqCycles = NULL;
+    }
+  }
   for(uint8_t n = 0; n < block->Cycles(); n++) PushCycle(block->CycleLen(n));
   float Val = ((pNominalFrequency == 0) || (pInvalidValues != 0)) ? 0.0 : pFreqCyclesLen / ((2.0 * pBufferLen) / pSamplerate);
-  pthread_mutex_unlock(&pMutex);
-  return Val;
-}
-float AnalyzerSoftFrequency::NominalFrequency() {
-  pthread_mutex_lock(&pMutex);
-  float Val = pNominalFrequency;
-  pthread_mutex_unlock(&pMutex);
   return Val;
 }
 // ---------------------------------------------------------------------------------------------------------------------

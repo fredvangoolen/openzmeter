@@ -2,6 +2,7 @@
   <div class="panel panel-other">
     <div class="panel-heading">By duration</div>
     <div class="panel-body">
+      <spinner v-if="data==null"></spinner>
       <graph :options="GraphOptions"></graph>
     </div>
   </div>

@@ -31,7 +31,6 @@ DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerM
   for(uint8_t Ch = 0; Ch < pCurrentChannels; Ch++) pInvertMap[Ch]  = (invert[Ch] == true) ? -1.0 : 1.0;
   pCalc      = false;
   pLastEvent = 0;
-  pMutex     = PTHREAD_MUTEX_INITIALIZER;
 }
 DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const string &configPath, const float samplerate, const uint8_t voltage, const float *current) : AnalyzerSoft(name, Analyzer::PHASE1, configPath, samplerate) {
   pVoltageChannels = 1;
@@ -41,7 +40,7 @@ DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const string &configPath,
   for(uint8_t Ch = 0; Ch < pCurrentChannels; Ch++) pCurrentMap[Ch] = 0;
   for(uint8_t Ch = 0; Ch < pCurrentChannels; Ch++) pInvertMap[Ch]  = current[Ch];
 }
-bool DeviceV2Analyzer::BufferAppend(const float *values, const uint32_t buffUsage) {
+void DeviceV2Analyzer::BufferAppend(const float *values) {
   float Voltage[3], Current[4];
   if(pCalc == false) {
     for(uint8_t Ch = 0; Ch < pVoltageChannels; Ch++) Voltage[Ch] = values[pVoltageMap[Ch]];
@@ -50,18 +49,12 @@ bool DeviceV2Analyzer::BufferAppend(const float *values, const uint32_t buffUsag
     Voltage[0] = values[pVoltageMap[0]];
     Current[0] = values[3] * pInvertMap[0] + values[4] * pInvertMap[1] + values[5] * pInvertMap[2] + values[6] * pInvertMap[3];
   }
-  return AnalyzerSoft::BufferAppend(Voltage, Current, buffUsage);
+  AnalyzerSoft::BufferAppend(Voltage, Current);
 }
 void DeviceV2Analyzer::ResultsReady(AnalyzerSoftAggreg200MS *params) {
-  pthread_mutex_lock(&pMutex);
   if(params->Flag() == true) pLastEvent = params->Timestamp();
-  pthread_mutex_unlock(&pMutex);
-  params->Reset();
 }
 uint64_t DeviceV2Analyzer::GetLastEvent() {
-  pthread_mutex_lock(&pMutex);
-  uint64_t Result = pLastEvent;
-  pthread_mutex_unlock(&pMutex);
-  return Result;
+  return pLastEvent;
 }
 // ---------------------------------------------------------------------------------------------------------------------

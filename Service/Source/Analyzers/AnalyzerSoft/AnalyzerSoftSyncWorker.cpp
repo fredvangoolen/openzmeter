@@ -33,7 +33,7 @@ AnalyzerSoftSyncWorker::AnalyzerSoftSyncWorker(AnalyzerSoftSync *parent, Analyze
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return;
   }
-  pthread_setname_np(pThread, "SyncWorker");
+  Worker::SetThreadProperties(pThread, "SyncWorker", Worker::LOW);
 }
 AnalyzerSoftSyncWorker::~AnalyzerSoftSyncWorker() {
   pthread_mutex_lock(&pMutex);
@@ -73,7 +73,6 @@ void  AnalyzerSoftSyncWorker::ResetClient() {
   pClient->set_connection_timeout(30);
 }
 void *AnalyzerSoftSyncWorker::Thread() {
-  nice(15);
   while(true) {
     pthread_mutex_lock(&pMutex);
     while((pTerminate == false) && (pMethod.empty() == true)) pthread_cond_wait(&pCond, &pMutex);

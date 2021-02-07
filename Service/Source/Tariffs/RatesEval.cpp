@@ -36,13 +36,13 @@ RatesEval::RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to
       return;
     }
   } else {
-    pLoadedPeriodDate = pRatePtr->pStartDate;
     pYearPtr          = pRatePtr->pYears.begin();
     if(pRatePtr->pBillingCycles.size() == 0) {
       if(pSeriesMask == 0) pCurrent = pRatePtr->pStartDate + 899999;
     } else {
-      for(pBillPtr = pRatePtr->pBillingCycles.begin(); (pBillPtr != pRatePtr->pBillingCycles.end()) && (pCurrent > *pBillPtr); pBillPtr++) pLoadedPeriodDate = *pBillPtr + 1;
-      if(pSeriesMask == 0) pCurrent = pLoadedPeriodDate + 899999;
+      uint64_t Time = pRatePtr->pStartDate + 899999;
+      for(pBillPtr = pRatePtr->pBillingCycles.begin(); (pBillPtr != pRatePtr->pBillingCycles.end()) && (pCurrent > *pBillPtr); pBillPtr++) Time = *pBillPtr + 900000;
+      if(pSeriesMask == 0) pCurrent = Time;
     }
     LoadPeriod();
   }
@@ -93,7 +93,8 @@ void RatesEval::UnloadPeriod() {
   pPriceVariables.clear();
 }
 void RatesEval::LoadPeriod() {
-  pPriceModule = PriceSource::Instance(pRatePtr->pPriceSrc, pPriceVariables);
+  pLoadedPeriodDate = pCurrent - 899999;
+  pPriceModule      = PriceSource::Instance(pRatePtr->pPriceSrc, pPriceVariables);
   for(uint16_t P = 0; P < pRatePtr->pPeriods.size(); P++) {
     TariffScript *Tmp = new TariffScript(pRatePtr->pPeriods[P].pScript);
     Tmp->Var("ContractedPower", &pContractedPower);
@@ -319,11 +320,11 @@ json RatesEval::FetchRow() {
   while((Row == nullptr) && (pFinished == false)) {
     Row = HandleSample();
     if((pSeriesMask != 0) && (pCurrent == pTo)) pFinished = true;
-    if((pSeriesMask == 0) && (pCurrent >= pTo)) {
+    if((pSeriesMask == 0) && (pCurrent > pTo)) {
       if(pRatePtr != pRates.end()) {
-        if(pCurrent == ((pBillPtr != pRatePtr->pBillingCycles.end()) ? *pBillPtr : pRatePtr->pEndDate)) pFinished = true;
+        if(pCurrent > ((pBillPtr != pRatePtr->pBillingCycles.end()) ? *pBillPtr : pRatePtr->pEndDate)) pFinished = true;
       } else {
-        if(pCurrent >= pTo) pFinished = true;
+        if(pCurrent > pTo) pFinished = true;
       }
     }
   }
