@@ -3,7 +3,7 @@
     <img class="icon" :src="require('Imgs/disconnect32.png')">
     <div class="name">{{ (analyzer == null) ? 'None selected' : analyzer.Name }}</div>
     <div class="btn-group">
-      <button type="button" class="btn btn-default btn-xs" @click="ShowDialog=true" data-toggle="tooltip" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" @click="ShowDialog=true" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
     </div>
     <analyzer-table v-if="ShowDialog" :analyzer="analyzer" @update:analyzer="SetAnalyzer($event)" @close="ShowDialog=false"></analyzer-table>
   </div>

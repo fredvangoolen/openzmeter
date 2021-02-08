@@ -23,7 +23,7 @@
         <label class="control-label">Voltage channel offset</label>
         <div style="display: flex">
           <input-spin :min="-20" :max="20" :big="true" v-model="Settings.VoltageOffset" :increment="0.01" :decimals="2" style="flex-grow: 100"></input-spin>
-          <button type="button" class="btn btn-default btn-xs" @click="SetVoltageOffset" data-toggle="tooltip" :disabled="Settings.Wave_Average.Voltage == 0.0" :title="'Last second offset: ' + Round(Settings.Wave_Average.Voltage, 2, false)"><img :src="require('Imgs/wand.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="SetVoltageOffset" :disabled="Settings.Wave_Average.Voltage == 0.0" :title="'Last second offset: ' + Round(Settings.Wave_Average.Voltage, 2, false)"><img :src="require('Imgs/wand.png')"></button>
         </div>
       </div>
       <div class="col-xs-12 col-sm-6">
@@ -41,7 +41,7 @@
         <label class="control-label">Current channel offset</label>
         <div style="display: flex">
           <input-spin :big="true" :min="-1" :max="1" v-model="Settings.CurrentOffset" :increment="0.01" :decimals="2" style="flex-grow: 100"></input-spin>
-          <button type="button" class="btn btn-default btn-xs" @click="SetCurrentOffset" data-toggle="tooltip" :disabled="Settings.Wave_Average.Current == 0.0" :title="'Last second offset: ' + Round(Settings.Wave_Average.Current, 2, false)"><img :src="require('Imgs/wand.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="SetCurrentOffset" :disabled="Settings.Wave_Average.Current == 0.0" :title="'Last second offset: ' + Round(Settings.Wave_Average.Current, 2, false)"><img :src="require('Imgs/wand.png')"></button>
         </div>
       </div>
     </div>

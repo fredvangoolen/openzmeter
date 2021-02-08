@@ -16,7 +16,7 @@
         <td colspan="4">11</td>
       </tr>
       <tr>
-        <td v-for="(s, idx) in value.slice(0, 48)" :style="{ background: colors[s] }" :key="idx" @click="SetQuarter(idx)" @mousemove="SetQuarter(idx, $event)" data-toggle="tooltip" :title="names[s]"></td>
+        <td v-for="(s, idx) in value.slice(0, 48)" :style="{ background: colors[s] }" :key="idx" @click="SetQuarter(idx)" @mousemove="SetQuarter(idx, $event)" :title="names[s]"></td>
       </tr>
     </table>
     <table class="stripe-table">
@@ -35,7 +35,7 @@
         <td colspan="4">23</td>
       </tr>
       <tr>
-        <td v-for="(s, idx) in value.slice(48, 96)" :style="{ background: colors[s] }" :key="idx" @click="SetQuarter(48 + idx)" @mousemove="SetQuarter(48 + idx, $event)" data-toggle="tooltip" :title="names[s]"></td>
+        <td v-for="(s, idx) in value.slice(48, 96)" :style="{ background: colors[s] }" :key="idx" @click="SetQuarter(48 + idx)" @mousemove="SetQuarter(48 + idx, $event)" :title="names[s]"></td>
       </tr>
     </table>
   </div>

@@ -3,7 +3,7 @@
     <div class="panel-heading">
       <div class="float-left">Grid Voltage</div>
       <div class="float-right" v-if="(((data.VoltageIN / data.VoltageSamples) * 100.0) < 95)">
-        <img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
+        <img :src="require('Imgs/exclamation.png')" title="Limit exceded">
       </div>
       <div class="clearfix"></div>
     </div>

@@ -28,15 +28,15 @@
             <detail-tabs key="Period_Tabs" :tabs="['General'].concat(Array(Tariff.Template.Periods.length).fill(0).map((n, idx) => { return 'P' + (idx + 1)}))" v-model="ActivePeriod" :light="true"></detail-tabs>
           </td><td style="width: 64px; text-align: right;">
             <div class="btn-group">
-              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Periods.length==1" @click="DeletePeriod" data-toggle="tooltip" title="Delete last period"><img :src="require('Imgs/cross.png')"></button>
-              <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/plus.png')" @click="AddPeriod" data-toggle="tooltip" title="Add new period"></button>
+              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Periods.length==1" @click="DeletePeriod" title="Delete last period"><img :src="require('Imgs/cross.png')"></button>
+              <button class="btn btn-default btn-xs" type="button"><img :src="require('Imgs/plus.png')" @click="AddPeriod" title="Add new period"></button>
             </div>
           </td></tr></table>
           <div class="panel-tab panel panel-dialog" style="margin-bottom: 0px" v-if="ActivePeriod=='General'">
             <div class="panel-heading">
               <div class="pull-right btn-group">
-                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit tariff script" @click="View='Expresion'"><img :src="require('Imgs/math_functions.png')"></button>
-                <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new tariff concept" @click="Tariff.Template.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
+                <button class="btn btn-default btn-xs" type="button" title="Edit tariff script" @click="View='Expresion'"><img :src="require('Imgs/math_functions.png')"></button>
+                <button class="btn btn-default btn-xs" type="button" title="Add new tariff concept" @click="Tariff.Template.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
               </div>
               <toolbar-pager class="pull-right" :pageSize="10" :input="Tariff.Template.Concepts" :output.sync="FilterConcepts" :filtercols="['Description', 'Variable']"></toolbar-pager>
               <div class="clearfix"></div>
@@ -86,8 +86,8 @@
             <div class="panel panel-dialog panel-tab" v-if="ActivePeriod=='P'+(idx+1)" style="margin-bottom: 0px">
               <div class="panel-heading">
                 <div class="pull-right btn-group">
-                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Edit period script" @click="View='ExpresionPeriods'"><img :src="require('Imgs/math_functions.png')"></button>
-                  <button class="btn btn-default btn-xs" type="button" data-toggle="tooltip" title="Add new period concept" @click="period.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
+                  <button class="btn btn-default btn-xs" type="button" title="Edit period script" @click="View='ExpresionPeriods'"><img :src="require('Imgs/math_functions.png')"></button>
+                  <button class="btn btn-default btn-xs" type="button" title="Add new period concept" @click="period.Concepts.push({Description: 'Unnamed concept', Variable: '', Type: 'INFO'})"><img :src="require('Imgs/plus.png')"></button>
                 </div>
                 <toolbar-pager class="pull-right" :pageSize="10" :input="period.Concepts" :output.sync="FilterConcepts" :filtercols="['Description', 'Variable']"></toolbar-pager>
                 <div class="clearfix"></div>
@@ -146,8 +146,8 @@
             <detail-tabs key="Day_Tabs" :tabs="new Array(Tariff.Template.Days.length).fill(0).map((n, idx) => { return 'D' + (idx + 1)})" v-model="ActiveDay" :light="true"></detail-tabs>
           </td><td style="width: 64px; text-align: right">
             <div class="btn-group">
-              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Days.length==1" data-toggle="tooltip" title="Delete last day" @click="DeleteDay"><img :src="require('Imgs/cross.png')"></button>
-              <button class="btn btn-default btn-xs" type="button" @click="AddDay"><img :src="require('Imgs/plus.png')" data-toggle="tooltip" title="Add new day"></button>
+              <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Days.length==1" title="Delete last day" @click="DeleteDay"><img :src="require('Imgs/cross.png')"></button>
+              <button class="btn btn-default btn-xs" type="button" @click="AddDay"><img :src="require('Imgs/plus.png')" title="Add new day"></button>
             </div>
           </td></tr></table>
           <div v-for="(day, idx) in Tariff.Template.Days" :key="idx">
@@ -181,12 +181,12 @@
             </td>
             <td style="width:130px; text-align: right;">
               <div class="btn-group">
-                <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Years.length==1" @click="DeleteYear" data-toggle="tooltip" title="Delete this year"><img :src="require('Imgs/cross.png')"></button>
+                <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Years.length==1" @click="DeleteYear" title="Delete this year"><img :src="require('Imgs/cross.png')"></button>
               </div>
               <div class="btn-group">
                 <input-spin :max="2100" :min="2000" :decimals="0" :increment="1" v-model="NewYearSelect" style="width:90px">
                   <template v-slot:buttons>
-                    <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Years.map((year) => { return year.Year; }).includes(NewYearSelect)" @click="AddYear" data-toggle="tooltip" title="Add new year"><img :src="require('Imgs/plus.png')"></button>
+                    <button class="btn btn-default btn-xs" type="button" :disabled="Tariff.Template.Years.map((year) => { return year.Year; }).includes(NewYearSelect)" @click="AddYear" title="Add new year"><img :src="require('Imgs/plus.png')"></button>
                   </template>
                 </input-spin>
               </div>
@@ -241,7 +241,7 @@
   import vuetable from 'vuetable-2';
   import moment from 'moment';
   export default {
-    props: { tariff: Object },
+    props: { tariff: Object, source: Object },
     data: function() {
       return { Error: null, View: 'Main', ActivePeriod: 'P1', ActivePeriodIdx: 0, ActiveDay: 'D1', ActiveDayIdx: 0, ActiveYear: '2020', NewYearSelect: moment().year(), Tariff: null, ShowSpinner: false, FilterConcepts: [],
                Columns: [
@@ -288,7 +288,10 @@
       }
     },
     created: function() {
-      if(this.tariff == null) {
+      if(this.source != null) {
+        this.Tariff = Object.assign({}, this.source);
+        this.Tariff.Name += '_Copy';
+      } else if(this.tariff == null) {
         this.Tariff = { Name: 'No name', Template: { Description: 'Write a tariff description here', Currency: '€', EnergyUnits: 'kWh', PowerUnits: 'kW', Script: '', Concepts: [], Periods: [], Days: [], Years: [] } };
         this.AddPeriod();
         this.AddDay();

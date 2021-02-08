@@ -1,17 +1,17 @@
 <template>
   <dlg :loading="ShowSpinner">
     <template v-slot:header>
-      <div class="pull-left"><h4 class="modal-title">Events &raquo; Add notes</h4></div>
+      <div class="pull-left"><h4 class="modal-title">Events &raquo; Delete</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" :disabled="ShowSpinner" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save"></button>
+        <button type="button" class="btn btn-default btn-xs btn-danger" :disabled="ShowSpinner" @click="Delete">Delete</button>
         <button type="button" class="btn btn-default btn-xs" @click="$emit('close', false)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </template>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
+    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px">Delete {{ event.length }} events?<br>Select event deletion mode</div>
     <div class="row">
       <div class="col-xs-12">
-        <label class="control-label">Notes</label>
-        <textarea type="text" class="form-control" v-model="Event.Notes"></textarea>
+        <label>Mode:</label>
+        <option-picker :options="[{name: 'All', value: 'ALL'}, {name: 'Only samples', value: 'SAMPLES_ONLY'}, {name: 'RMS samples only', value: 'SAMPLES_RMS'}, {name: 'RAW samples only', value: 'SAMPLES_RAW'}]" v-model="Mode" :big="true"></option-picker>
       </div>
     </div>
   </dlg>
@@ -19,31 +19,20 @@
 
 <script>
   export default {
-    props: { analyzer: Object, event: Object },
+    props: { analyzer: Object, event: Array },
     data: function() {
-      return { ShowSpinner: false, Error: null, Event: null };
-    },
-    created: function() {
-      this.Event = Object.assign({}, this.event);
+      return { ShowSpinner: false, Mode: 'ALL' };
     },
     methods: {
-      Save: function() {
+      Delete: function() {
         this.ShowSpinner = true;
-        this.$http.post('setEvent', { Analyzer: this.analyzer.Analyzer, Notes: this.Event.Notes, StartTime: this.Event.StartTime } ).then(
-          (result) => { this.$emit('close', true); },
-          (fail) =>  {
-            this.Error = 'Failed to save analyzer!';
-            this.ShowSpinner = false;
-            setTimeout(function() { this.Error = null; }.bind(this), 2000);
-          }
+        var Promises = [];
+        for(var n = 0; n < this.event.length; n++) Promises.push(this.$http.post('delEvent', { StartTime: this.event[n], Analyzer: this.analyzer.Analyzer, Mode: this.Mode }));
+        Promise.all(Promises).then(
+          () => { this.$emit('close', true); },
+          () => { this.ShowSpinner = false; }
         );
       }
     }
   };
 </script>
-
-<style scoped>
-  textarea {
-    resize: none;
-  }
-</style>

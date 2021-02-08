@@ -4,8 +4,8 @@
       <div class="pull-left"><h4 class="modal-title">ModbusTCP</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save and close" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Save and close" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </div>
     </template>
@@ -23,7 +23,7 @@
         <div key="Analyzers" class="panel-tab panel panel-dialog" style="margin-bottom: 0px" v-if="ActiveTab=='Analyzers'">
           <div class="panel-heading">
             <div class="pull-right btn-group">
-              <button type="button" class="btn btn-default btn-xs" @click="Config.Analyzers.push('ANALYZER_SERIAL')" data-toggle="tooltip" title="Add exported analyzer"><img :src="require('Imgs/plus.png')"></button>
+              <button type="button" class="btn btn-default btn-xs" @click="Config.Analyzers.push('ANALYZER_SERIAL')" title="Add exported analyzer"><img :src="require('Imgs/plus.png')"></button>
             </div>
             <toolbar-pager class="pull-right" :pageSize="10" :input="Analyzers" :output.sync="FilterAnalyzers" :filtercols="['id', 'Serial']"></toolbar-pager>
             <div class="clearfix"></div>

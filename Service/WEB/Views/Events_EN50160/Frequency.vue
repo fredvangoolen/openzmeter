@@ -3,7 +3,7 @@
     <div class="panel-heading">
       <div class="float-left">Grid frequency</div>
       <div class="float-right" v-if="(((data.FrequencyIN / data.FrequencySamples) * 100.0) < 99.5)">
-        <img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
+        <img :src="require('Imgs/exclamation.png')" title="Limit exceded">
       </div>
       <div class="clearfix"></div>
     </div>

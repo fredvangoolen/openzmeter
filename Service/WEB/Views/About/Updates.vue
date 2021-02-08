@@ -5,7 +5,7 @@
       <div class="header-buttons">
         <div class="btn-group">
           <button type="button" class="btn btn-success btn-xs" @click="Upgrade">Upgrade selected</button>
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Update" @click="Update(true)"><img :src="require('Imgs/update.png')"> Check updates</button>
+          <button type="button" class="btn btn-default btn-xs" title="Update" @click="Update(true)"><img :src="require('Imgs/update.png')"> Check updates</button>
         </div>
       </div>
     </div>

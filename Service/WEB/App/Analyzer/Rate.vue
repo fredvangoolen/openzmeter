@@ -63,7 +63,7 @@
             <div class="panel-heading">
               Contracted Power
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: !Array.isArray(Rate.ContractedPower) }" @click="Rate.ContractedPower=Array.isArray(Rate.ContractedPower) ? Rate.ContractedPower[0] : Array(Rate.Periods.length).fill(Rate.ContractedPower)" data-toggle="tooltip" title="Link all periods value"><img :src="require('Imgs/link.png')"></button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: !Array.isArray(Rate.ContractedPower) }" @click="Rate.ContractedPower=Array.isArray(Rate.ContractedPower) ? Rate.ContractedPower[0] : Array(Rate.Periods.length).fill(Rate.ContractedPower)" title="Link all periods value"><img :src="require('Imgs/link.png')"></button>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -85,8 +85,8 @@
             <div class="panel-heading">
               Power Cost
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.PowerCost) != 'string') }" @click="Rate.PowerCost=Rate.Periods.map((val) => { return val.DefaultPowerCost;})" data-toggle="tooltip" title="Power cost is a fixed value">Fixed</button>
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.PowerCost) == 'string') }" @click="Rate.PowerCost='0'" data-toggle="tooltip" title="Power cost computed from avaliable variables">Computed</button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.PowerCost) != 'string') }" @click="Rate.PowerCost=Rate.Periods.map((val) => { return val.DefaultPowerCost;})" title="Power cost is a fixed value">Fixed</button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.PowerCost) == 'string') }" @click="Rate.PowerCost='0'" title="Power cost computed from avaliable variables">Computed</button>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -99,7 +99,7 @@
                   </td>
                   <td style="width:30px">
                     <div class="btn-group">
-                      <button type="button" class="btn btn-default btn-xs" @click="$set(Rate.PowerCost, idx, Rate.Periods[idx].DefaultPowerCost)" data-toggle="tooltip" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
+                      <button type="button" class="btn btn-default btn-xs" @click="$set(Rate.PowerCost, idx, Rate.Periods[idx].DefaultPowerCost)" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
                     </div>
                   </td>
                 </tr>
@@ -109,7 +109,7 @@
               <div class="input-group input-group-xs">
                 <input type="text" class="form-control" value="Configured from expression" :disabled="true">
                 <span class="input-group-btn">
-                  <button type="button" class="btn btn-default btn-xs" @click="View='PowerCostExpression'" data-toggle="tooltip" title="Set power costs expression"><img :src="require('Imgs/math_functions.png')"></button>
+                  <button type="button" class="btn btn-default btn-xs" @click="View='PowerCostExpression'" title="Set power costs expression"><img :src="require('Imgs/math_functions.png')"></button>
                 </span>
               </div>
             </div>
@@ -118,8 +118,8 @@
             <div class="panel-heading">
               Energy Cost
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.EnergyCost) != 'string') }" @click="Rate.EnergyCost=Rate.Periods.map((val) => { return val.DefaultEnergyCost;})" data-toggle="tooltip" title="Energy cost is a fixed value">Fixed</button>
-                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.EnergyCost) == 'string') }" @click="Rate.EnergyCost='0'" data-toggle="tooltip" title="Energy cost computed from avaliable variables">Computed</button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.EnergyCost) != 'string') }" @click="Rate.EnergyCost=Rate.Periods.map((val) => { return val.DefaultEnergyCost;})" title="Energy cost is a fixed value">Fixed</button>
+                <button type="button" class="btn btn-default btn-xs" :class="{ active: (typeof(Rate.EnergyCost) == 'string') }" @click="Rate.EnergyCost='0'" title="Energy cost computed from avaliable variables">Computed</button>
               </div>
               <div class="clearfix"></div>
             </div>
@@ -132,7 +132,7 @@
                   </td>
                   <td style="width:30px">
                     <div class="btn-group">
-                      <button type="button" class="btn btn-default btn-xs" @click="Rate.EnergyCost[idx]=Rate.Periods[idx].DefaultEnergyCost" data-toggle="tooltip" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
+                      <button type="button" class="btn btn-default btn-xs" @click="Rate.EnergyCost[idx]=Rate.Periods[idx].DefaultEnergyCost" title="Set tariff default costs"><img :src="require('Imgs/wand.png')"></button>
                     </div>
                   </td>
                 </tr>
@@ -142,7 +142,7 @@
               <div class="input-group input-group-xs">
                 <input type="text" class="form-control" value="Configured from expression" :disabled="true">
                 <span class="input-group-btn">
-                  <button type="button" class="btn btn-default btn-xs" @click="View='EnergyCostExpression'" data-toggle="tooltip" title="Set energy costs expression"><img :src="require('Imgs/math_functions.png')"></button>
+                  <button type="button" class="btn btn-default btn-xs" @click="View='EnergyCostExpression'" title="Set energy costs expression"><img :src="require('Imgs/math_functions.png')"></button>
                 </span>
               </div>
             </div>
@@ -154,7 +154,7 @@
           <div class="panel panel-dialog" style="margin-bottom: 0px">
             <div class="panel-heading">
               <div class="pull-right btn-group">
-                <button type="button" class="btn btn-default btn-xs" @click="Rate.Taxes.push({Description: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0})" data-toggle="tooltip" title="Add concept"><img :src="require('Imgs/plus.png')"></button>
+                <button type="button" class="btn btn-default btn-xs" @click="Rate.Taxes.push({Description: 'Unnamed tax', Type: 'PERCENT_TOTAL', Value: 0.0})" title="Add concept"><img :src="require('Imgs/plus.png')"></button>
               </div>
               <toolbar-pager class="pull-right" :pageSize="10" :input="Rate.Taxes" :output.sync="FilterTaxes" :filtercols="['Description']"></toolbar-pager>
               <div class="clearfix"></div>
@@ -185,7 +185,7 @@
           <div class="panel panel-dialog" style="margin-bottom: 0px">
             <div class="panel-heading">
               <div class="btn-group pull-right">
-                <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add end bill cycle day" :disabled="ValidBillDate" @click="AddBillDay"><img :src="require('Imgs/plus.png')"></button>
+                <button type="button" class="btn btn-default btn-xs" title="Add end bill cycle day" :disabled="ValidBillDate" @click="AddBillDay"><img :src="require('Imgs/plus.png')"></button>
                 <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Create bills on selected day of month"><img :src="require('Imgs/wand.png')"><span class="caret"></span></button>
                 <ul class="dropdown-menu" style="max-height: 142px; overflow-y: auto">
                   <li v-for="(name, idx) in BillDayNames" :key="idx"><a @click="BuildPeriods(idx)">{{ name }}</a></li>

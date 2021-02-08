@@ -6,7 +6,7 @@
         <toolbar-options storage="SystemOptions" :options="['Debug', 'Warning', 'Error', 'Info']" v-model="Options"></toolbar-options>
         <toolbar-pager :pageSize="20" :input="Messages" :output.sync="FilterMessages" :filtercols="['Message', 'Date']"></toolbar-pager>
         <div class="btn-group">
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Update" @click="Update"><img :src="require('Imgs/update.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Update" @click="Update"><img :src="require('Imgs/update.png')"></button>
         </div>
       </div>
     </div>

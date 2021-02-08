@@ -27,9 +27,9 @@
     </div>
     <div class="submenu" :class="{ show: (Submenu == 'Events') }" v-if="analyzer!=null">
       <router-link to="/Events/ITIC" v-if="analyzer.NominalFrequency!=0">ITIC</router-link>
-      <a @click="ShowDisturbances" v-if="analyzer.NominalFrequency!=0">Disturbances<span class="badge badge-submenu" v-if="UnreadEvents>0">{{ UnreadEvents }}</span></a>
+      <router-link :to="{ path: '/Events/Disturbances', query: (this.UnreadEvents != 0) ? { From: this.TransferNow.Data.Unread_Events.From, To: this.TransferNow.Data.Unread_Events.To } : null }" v-if="analyzer.NominalFrequency!=0">Disturbances<span class="badge badge-submenu" v-if="UnreadEvents>0">{{ UnreadEvents }}</span></router-link>
       <router-link to="/Events/EN50160" v-if="analyzer.NominalFrequency!=0">EN50160</router-link>
-      <a @click="ShowAlarms">Alarms<span class="badge badge-submenu" v-if="UnreadAlarms>0">{{ UnreadAlarms }}</span></a>
+      <router-link :to="{ path: '/Events/Alarms', query: (this.UnreadAlarms != 0) ? { From: this.TransferNow.Data.Unread_Alarms.From, To: this.TransferNow.Data.Unread_Alarms.To } : null }">Alarms<span class="badge badge-submenu" v-if="UnreadAlarms>0">{{ UnreadAlarms }}</span></router-link>
     </div>
     <div class="item" @click="Submenu = (Submenu == 'Costs') ? null : 'Costs'" v-if="analyzer!=null">
       <img class="icon" :src="require('Imgs/table_money.png')">
@@ -99,20 +99,6 @@
           }
           this.TitleFrame = 0;
         }
-      },
-      ShowDisturbances: function() {
-        if(this.UnreadEvents != 0) {
-          this.$router.push({ path: '/Events/Disturbances', query: { From: this.TransferNow.Data.Unread_Events.From, To: this.TransferNow.Data.Unread_Events.To } });
-        } else {
-          this.$router.push('/Events/Disturbances');
-        }
-      },
-      ShowAlarms: function() {
-        if(this.UnreadAlarms != 0) {
-          this.$router.push({ path: '/Events/Alarms', query: { From: this.TransferNow.Data.Unread_Alarms.From, To: this.TransferNow.Data.Unread_Alarms.To } });
-        } else {
-          this.$router.push('/Events/Alarms');
-        }
       }
     },
     mounted: function() {
@@ -140,6 +126,7 @@
     transition: margin-left 0.2s;
     text-decoration: none;
     position: relative;
+    cursor: pointer;
   }
   .icon {
     height: 24px;

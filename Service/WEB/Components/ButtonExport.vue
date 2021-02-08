@@ -1,5 +1,5 @@
 <template>
-  <button type="button" class="btn btn-default btn-xs" @click="Show" data-toggle="tooltip" title="Export data to CSV file"><img :src="require('Imgs/table_export.png')">
+  <button type="button" class="btn btn-default btn-xs" @click="Show" title="Export data to CSV file"><img :src="require('Imgs/table_export.png')">
     <dlg v-if="ShowDialog">
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Export</h4></div>

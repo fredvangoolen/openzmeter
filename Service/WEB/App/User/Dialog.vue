@@ -4,8 +4,8 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">User</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save changes" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Discard" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Save changes" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Discard" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </template>
       <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
@@ -16,8 +16,8 @@
               <div class="rounded-panel">
                 <div class="popover-title"><strong>Profile image</strong>
                   <div class="pull-right btn-group">
-                    <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Browse image" @click="LoadImage" v-if="User.Photo==''"><img :src="require('Imgs/folder_explorer.png')"></button>
-                    <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Remove image" @click="ClearImage" v-if="User.Photo!=''"><img :src="require('Imgs/cross.png')"></button>
+                    <button type="button" class="btn btn-default btn-xs" title="Browse image" @click="LoadImage" v-if="User.Photo==''"><img :src="require('Imgs/folder_explorer.png')"></button>
+                    <button type="button" class="btn btn-default btn-xs" title="Remove image" @click="ClearImage" v-if="User.Photo!=''"><img :src="require('Imgs/cross.png')"></button>
                   </div>
                 </div>
                 <div class="popover-content" style="text-align: center">
@@ -34,7 +34,7 @@
               <div class="input-group">
                 <input type="text" class="form-control" v-model="User.User" :disabled="user!=null">
                 <span class="input-group-btn">
-                  <button class="btn btn-default" data-toggle="tooltip" title="Change password" type="button" @click="ShowDialog=true"><img :src="require('Imgs/key.png')"></button>
+                  <button class="btn btn-default" title="Change password" type="button" @click="ShowDialog=true"><img :src="require('Imgs/key.png')"></button>
                 </span>
               </div>
             </div>
