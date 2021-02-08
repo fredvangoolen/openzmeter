@@ -3,7 +3,7 @@
     <div class="panel-heading clearfix">
       <div class="header-text">Last events</div>
       <div class="header-buttons clearfix">
-        <toolbar-pager :pageSize="10" :input="Events" :output.sync="FilterEvents" :filtercols="['Date', 'Type', 'Notes']"></toolbar-pager>
+        <toolbar-pager :pageSize="pagesize" :input="Events" :output.sync="FilterEvents" :filtercols="['Date', 'Type', 'Notes']"></toolbar-pager>
         <div class="btn-group">
           <button class="btn btn-default btn-xs btn-danger" type="button" @click="DeleteSelected">Delete selection</button>
           <button-export file="Events" :rows="Export"></button-export>
@@ -36,19 +36,19 @@
   import EventDialog from './EventDialog.vue';
   import EventNotes from './EventNotes.vue';
   export default {
-    props: { analyzer: Object, events: Object },
+    props: { analyzer: Object, events: Object, pagesize: Number },
     data: function() {
       return { Event: null, View: null, Events: [], FilterEvents: [], ShowSpinner: false,
                Columns: [
-                {name: '__checkbox'},
-                {name: 'StartTime', title: 'Date', callback: this.FormatDate },
-                {name: 'Type', title: 'Type'},
-                {name: '', title: 'Duration <em>(s)</em>', callback: this.DurationFormat },
-                {name: '', title: 'ΔU <em>(V)</em>', callback: this.ChangeFormat },
-                {name: '', title: 'ΔU <em>(%)</em>', callback: this.PercentFormat },
-                {name: 'Notes', title: 'Notes'},
-                {name: '__slot:actions', title: ''}
-              ]
+                 { name: '__checkbox'},
+                 { name: 'StartTime', title: 'Date', callback: this.FormatDate },
+                 { name: 'Type', title: 'Type' },
+                 { name: '', title: 'Duration <em>(s)</em>', callback: this.DurationFormat },
+                 { name: '', title: 'ΔU <em>(V)</em>', callback: this.ChangeFormat },
+                 { name: '', title: 'ΔU <em>(%)</em>', callback: this.PercentFormat },
+                 { name: 'Notes', title: 'Notes' },
+                 { name: '__slot:actions', title: '' }
+               ]
       };
     },
     updated: function() {
@@ -57,7 +57,7 @@
     watch: {
       events: function() {
         var Events = [];
-        if(this.events == null) return [];
+        if((this.events == null) || (this.analyzer == null)) return;
         var StartTimeCol  = this.events.Headers.indexOf("StartTime");
         var TypeCol       = this.events.Headers.indexOf("Type");
         var ReferenceCol  = this.events.Headers.indexOf("Reference");
@@ -141,7 +141,7 @@
           }
         );
       },
-      DeleteSelected: function(evt) {
+      DeleteSelected: function() {
         var Selection = this.$refs.table.selectedTo;
         if(confirm('Delete ' + Selection.length + ' event(s)?') == false) return;
         this.ShowSpinner = true;

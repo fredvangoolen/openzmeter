@@ -2,15 +2,23 @@
   <dlg :loading="ShowSpinner">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Maintenance</h4></div>
-      <div class="pull-right btn-group" v-if="!ShowSpinner">
+      <div class="pull-right btn-group" v-if="InSize==null">
         <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </template>
     <input type="file" name="name" style="display: none;" ref="filename" @change="FileSet" accept="application/gzip, .gz"/>
-    <div class="alert-info alert alert text-center" style="margin-bottom: 5px; padding: 5px">
+    <div class="alert-info alert text-center" style="margin-bottom: 5px; padding: 5px" v-if="InSize==null">
       Analyzer data takes currently <strong>{{ BestUnitsBin(TotalSize) }}</strong>
     </div>
-    <div class="row">
+    <div class="row" v-if="InSize!=null">
+      <div v-if="OutSize!=null" class="alert-info alert text-center" style="margin-bottom: 5px; padding: 5px">
+        Downloaded {{ BestUnitsBin(InSize) }}, compressed {{ BestUnitsBin(OutSize) }}
+      </div>
+      <div v-else class="alert-success alert text-center" style="margin-bottom: 5px; padding: 5px">
+        Saving file...
+      </div>
+    </div>
+    <div class="row" v-else>
       <div class="col-xs-12">
         <detail-tabs :tabs="['200MS','3S', '1M', '10M', '15M', '1H', 'Events', 'Alarms', 'Settings']" v-model="ActiveTab"></detail-tabs>
         <table v-if="ActiveTab=='200MS'">
@@ -221,8 +229,9 @@
               Delete events data
               <div style="display:flex">
                 <input type="checkbox" v-model="DelEventsRanged">
-                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelEventsRanged" v-model="From" style="flex-grow:2"></date-picker>
-                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelEventsRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelEventsRanged" v-model="From"></date-picker>
+                <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!DelEventsRanged" v-model="To"></date-picker>
+                <label>Mode:</label><option-picker style="width: 136px" :options="[{name: 'All', value: 'ALL'}, {name: 'Only samples', value: 'SAMPLES_ONLY'}, {name: 'RMS samples only', value: 'SAMPLES_RMS'}, {name: 'RAW samples only', value: 'SAMPLES_RAW'}]" v-model="DelEventsMode"></option-picker>
               </div>
             </td>
             <td class="action">
@@ -236,6 +245,7 @@
                 <input type="checkbox" v-model="GetEventsRanged">
                 <label>From:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!GetEventsRanged" v-model="From" style="flex-grow:2"></date-picker>
                 <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!GetEventsRanged" v-model="To" style="flex-grow:2"></date-picker>
+                <label>Mode:</label><option-picker style="width: 136px" :options="[{name: 'All', value: 'ALL'}, {name: 'Only description', value: 'DESCRIPTOR_ONLY'}, {name: 'With RMS samples', value: 'SAMPLES_RMS'}, {name: 'With RAW samples', value: 'SAMPLES_RAW'}]" v-model="DelEventsMode"></option-picker>
               </div>
             </td>
             <td class="action">
@@ -266,7 +276,7 @@
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-danger btn-xs" @click="Delete('1H', DelAlarmsRanged)">Execute</button>
+              <button type="button" class="btn btn-danger btn-xs" @click="Delete('Alarms', DelAlarmsRanged)">Execute</button>
             </td>
           </tr>
           <tr class="line">
@@ -287,7 +297,7 @@
               Restore registered alarms<br><span class="help">Stored rows in overlapped period are replaced with new ones</span>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs disabled" @click="Execute">Execute</button>
+              <button type="button" class="btn btn-default btn-xs disabled">Execute</button>
             </td>
           </tr>
         </table>
@@ -304,7 +314,7 @@
           <tr class="line">
             <td>Restore analyzer settings</td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs disabled" @click="Updoad('Analyzer')">Execute</button>
+              <button type="button" class="btn btn-default btn-xs disabled">Execute</button>
             </td>
           </tr>
         </table>
@@ -314,16 +324,21 @@
 </template>
 
 <script>
-  import vuetable from 'vuetable-2';
   import * as oZm from 'JS/openZmeter.js';
   import streamSaver from 'streamsaver'
+  import Pako from 'pako';
+  import FileSaver from 'file-saver';
   export default {
     props: { analyzer: Object },
     data() {
-      return { ShowSpinner: false, Action: 'Clear all', From: 0, To: 0, Storage: [], ActiveTab: null,
-               Del3SRanged: false, Get3SRanged: false, Del1MRanged: false, Get1MRanged: false, Del10MRanged: false, Get10MRanged: false,
-               Del15MRanged: false, Get15MRanged: false, Del1HRanged: false, Get1HRanged: false,
-               DelEventsRanged: false, GetEventsRanged: false,  DelAlarmsRanged: false, GetAlarmsRanged: false
+      return { ShowSpinner: false, From: 0, To: 0, Storage: {}, ActiveTab: null, InSize: null, OutSize: null,
+               Del3SRanged: false, Get3SRanged: false,
+               Del1MRanged: false, Get1MRanged: false,
+               Del10MRanged: false, Get10MRanged: false,
+               Del15MRanged: false, Get15MRanged: false,
+               Del1HRanged: false, Get1HRanged: false,
+               DelEventsRanged: false, GetEventsRanged: false, DelEventsMode: 'ALL', GetEventsMode: 'ALL',
+               DelAlarmsRanged: false, GetAlarmsRanged: false
       };
     },
     watch: {
@@ -355,15 +370,13 @@
     computed: {
       TotalSize: function() {
         var TotalSize = 0;
-        for(var n = 0; n < this.Storage.length; n++) TotalSize += this.Storage[n].Size;
+        for(var n in this.Storage) TotalSize += this.Storage[n];
         return TotalSize;
       }
     },
     methods: {
       TableSize: function(name) {
-        for(var n = 0; n < this.Storage.length; n++) {
-          if(this.Storage[n].Table == name) return this.Storage[n].Size;
-        }
+        if(this.Storage[name] != null) return this.Storage[name];
         return 0;
       },
       GetStorage: function() {
@@ -374,7 +387,9 @@
             this.Storage = result.body.Storage;
             this.ShowSpinner = false;
           },
-          (fail) => {}
+          (fail) => {
+            this.ShowSpinner = false;
+          }
         );
       },
       Clear: function(aggreg, all) {
@@ -386,102 +401,80 @@
           (fail) => { this.ShowSpinner = false; }
         );
       },
+      CreateFile: function(filename, reader) {
+        var Deflator = new Pako.Deflate({level: 9, gzip: true});
+        var Chunks = [];
+        this.InSize = 0;
+        this.OutSize = 0;
+        Deflator.onEnd = () => {
+          FileSaver.saveAs(new Blob(Chunks, {type: "application/x-gzip"}), filename + '.json.gz');
+          this.OutSize = null;
+          setTimeout(() => { this.InSize = null; }, 5000);
+        };
+        Deflator.onData = (chunk) => {
+          this.OutSize += chunk.length;
+          Chunks.push(chunk);
+        };
+        var Recv = ({ value, done }) => {
+          if(done) {
+            Deflator.push('', true);
+            return;
+          } else {
+            this.InSize += value.length;
+            Deflator.push(value, false);
+            return reader.read().then(Recv);
+          }
+        };
+        reader.read().then(Recv);
+      },
       Download: function(aggreg, all) {
-        this.ShowSpinner = true;
-        var Series = [];
+        var From = (all) ? 0 : this.From;
+        var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
         if(aggreg == 'Analyzer') {
           fetch('getAnalyzer', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer }), headers: { 'Content-Type': 'application/json' } }).then(
-            (res) => {
-              const fileStream = streamSaver.createWriteStream('Analyzer.json', null);
-              const writeStream = fileStream.getWriter();
-              var data = new Blob([JSON.stringify(this.analyzer, null, 2)], { type: 'application/json' });
-              const reader = data.stream().getReader();
-              const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
-              pump().then(() => { this.ShowSpinner = false; });
-            },
-            (fail) => { this.ShowSpinner = false; }
+            (res) => { this.CreateFile('Analyzer', res.body.getReader()); }
           );
         } else if(aggreg == 'Alarms') {
-          var From = (all) ? 0 : this.From;
-          var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
           fetch('getAlarms', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To }), headers: { 'Content-Type': 'application/json' } }).then(
-            (res) => {
-              const fileStream = streamSaver.createWriteStream('Alarms.json', null);
-              const writeStream = fileStream.getWriter();
-              const reader = res.body.getReader();
-              const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
-              pump().then(() => { this.ShowSpinner = false; });
-            }
+            (res) => { this.CreateFile('Alarms', res.body.getReader()); }
           );
         } else if(aggreg == 'Events') {
-          var From = (all) ? 0 : this.From;
-          var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
           fetch('getEvents', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Samples: true }), headers: { 'Content-Type': 'application/json' } }).then(
-            (res) => {
-              const fileStream = streamSaver.createWriteStream('Events.json', null);
-              const writeStream = fileStream.getWriter();
-              const reader = res.body.getReader();
-              const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
-              pump().then(() => { this.ShowSpinner = false; });
-            }
+            (res) => { this.CreateFile('Events', res.body.getReader()); }
           );
         } else {
+          var Series = [];
           if(aggreg == '200MS') Series = ['Frequency', 'Unbalance', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi', 'Voltage_Harmonics', 'Voltage_Harmonics_Complex', 'Current_Harmonics', 'Current_Harmonics_Complex', 'Power_Harmonics'];
           if(aggreg == '3S')    Series = ['Frequency', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power'];
           if(aggreg == '1M')    Series = ['Frequency', 'Unbalance', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi', 'Voltage_Harmonics', 'Current_Harmonics', 'Power_Harmonics'];
           if(aggreg == '10M')   Series = ['Frequency', 'Flag', 'Voltage', 'Current'];
           if(aggreg == '15M')   Series = ['Active_Power', 'Active_Energy', 'Reactive_Power', 'Reactive_Energy', 'Apparent_Power'];
           if(aggreg == '1H')    Series = ['Frequency', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Active_Energy', 'Reactive_Power', 'Reactive_Energy', 'Apparent_Power', 'Voltage_Stats', 'Frequency_Stats', 'Voltage_THD_Stats', 'Voltage_Harmonics_Stats', 'Unbalance_Stats'];
-          var From = (all) ? 0 : this.From;
-          var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
           fetch('getSeries', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg, Series: Series}), headers: { 'Content-Type': 'application/json' } }).then(
-            (res) => {
-              const fileStream = streamSaver.createWriteStream(aggreg + '.json', null);
-              const writeStream = fileStream.getWriter();
-              const reader = res.body.getReader();
-              const pump = () => reader.read().then(({ value, done }) => { return done ? writeStream.close() : writeStream.write(value).then(pump); });
-              pump().then(() => { this.ShowSpinner = false; });
-            }
+            (res) => { this.CreateFile(aggreg, res.body.getReader()); }
           );
         }
       },
-
-
-
-
-
-
-
-
-
-      Execute: function() {
-        var Selection = this.$refs.table.selectedTo;
-        for(var n = 0; n < Selection.length; n++) {
-          if(this.Action == 'Clear table') {
-            this.$http.post('delSeries', { Analyzer: this.analyzer.Analyzer, Aggreg: this.$refs.table.selectedTo }).then();
-          } else if(this.Action == 'Clear range') {
-
-          }
+      Delete: function(aggreg, all) {
+        this.ShowSpinner = true;
+        if(aggreg == 'Alarms') {
+          var From = (all) ? 0 : this.From;
+          var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
+          this.$http.post('delAlarmsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To }).then(
+            () => { this.ShowSpinner = false; },
+            () => { this.ShowSpinner = false; }
+          );
+        } else if(aggreg == 'Events') {
+          this.$http.post('delEventsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Mode: DelEventsMode }).then(
+            () => { this.ShowSpinner = false; },
+            () => { this.ShowSpinner = false; }
+          );
+        } else {
+          this.$http.post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg }).then(
+            () => { this.ShowSpinner = false; },
+            () => { this.ShowSpinner = false; }
+          );
         }
-      },
-
-//      Show: function (analyzer) {
-
-//        this.DBSize = this.BestUnitsBin(analyzer.Size);
-//        this.StartDate = moment.tz(this.Analyzer.TimeZone).startOf('year').valueOf();
-//        this.EndDate = moment.tz(this.Analyzer.TimeZone).endOf('year').valueOf();
-//        this.View = 'Main';
-//        this.$refs.Dialog.Show();
-//        this.$nextTick(function () {
-//          this.$refs.StartDate.SetDate(this.StartDate);
-//          this.$refs.EndDate.SetDate(this.EndDate);
-//        });
-//      },
-      SetStartDate: function(date) {
-        this.StartDate = date.startOf('day').valueOf();
-      },
-      SetEndDate: function(date) {
-        this.EndDate = date.endOf('day').valueOf();
       },
       Back: function () {
         this.$refs.Dialog.Close();
@@ -517,13 +510,13 @@
       },
       BackupRange: function () {
 //        this.View = 'Save';
-        this.Deflator = new Pako.Deflate({level: 9, gzip: true});
-        this.DateText = moment.tz(this.StartDate, this.Analyzer.TimeZone).format('DD/MM/YYYY');
-        this.Chunks = [];
-        this.TotalSize = 0;
-        this.SizeText = this.BestUnitsBin(this.TotalSize);
-        this.Progress = 0;
-        this.Range = this.EndDate - this.StartDate;
+//        this.Deflator = new Pako.Deflate({level: 9, gzip: true});
+//        this.DateText = moment.tz(this.StartDate, this.Analyzer.TimeZone).format('DD/MM/YYYY');
+//        this.Chunks = [];
+//        this.TotalSize = 0;
+//        this.SizeText = this.BestUnitsBin(this.TotalSize);
+//        this.Progress = 0;
+//        this.Range = this.EndDate - this.StartDate;
         this.Deflator.onEnd = () => {
           FileSaver.saveAs(new Blob(this.Chunks, {type: "application/gzip"}), this.Analyzer.Analyzer + '.gz');
           this.View = 'Main';
@@ -568,15 +561,8 @@
 
         };
         FetchFunc('3S', Series3S);
-      },
-      ClearRange: function () {},
-      Restore: function () {
-        this.$refs.filename.click();
-      },
-      BackupAll: function () {},
-      ClearAll: function () {}
-    },
-    components: { vuetable }
+      }
+    }
   }
 </script>
 

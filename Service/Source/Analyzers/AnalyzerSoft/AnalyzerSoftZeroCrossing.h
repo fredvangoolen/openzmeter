@@ -20,7 +20,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftZeroCrossing {
   private :
-    static const uint8_t FILTERSTAGES =  5; //Filter stages for zerocrossing
+    static const uint8_t FILTERSTAGES = 1; //Filter stages for zerocrossing
   private :
     typedef struct {
       float  A0;
@@ -37,15 +37,11 @@ class AnalyzerSoftZeroCrossing {
     Filter_t           pFilters[FILTERSTAGES];      //Filter bank
     uint8_t            pVoltageChannels;            //Number of voltage channels
     uint8_t            pCurrentChannels;            //Number of current channels
-//    uint8_t          pBlockCyclesCount;           //Block cycles count
     uint8_t            pMaxCycles;                  //Allowed cicles for configured frequency
     uint16_t           pMaxSamples;                 //Max samples for configured frequency
-//    uint16_t         pBlockSamples;               //Number of samples in block
     uint16_t           pDelaySize;                  //Delay samples
     uint16_t           pDelayPos;                   //Delay pos
     uint16_t           pCycleLen;                   //Current cicle length
-//    float           *pVoltageSamples;             //Output voltage signal
-//    float           *pCurrentSamples;             //Output current signal
     float             *pDelayVoltage;               //Delay line for voltage
     float             *pDelayCurrent;               //Delay line for current
     float              pLastSamples[3];             //Filter samples backup
@@ -58,14 +54,5 @@ class AnalyzerSoftZeroCrossing {
     ~AnalyzerSoftZeroCrossing();
     void               Config(const float nominalVolt, const float nominalFreq);
     AnalyzerSoftBlock *PushSample(float *voltageSamples, float *currentSamples);
-//    uint16_t  BlockSamples() const;
-//    uint8_t   Cycles() const;
-//    uint16_t  CycleLen(const uint8_t cycle) const;
-//    uint64_t  Sequence() const;
-//    float     NominalFrequency();
-//    float     NominalVoltage();
-//    float     VoltageSample(const uint8_t ch, const uint16_t sample) const;
-//    float     CurrentSample(const uint8_t ch, const uint16_t sample) const;
-//    bool      GetSeriesJSON(const string &serie, json &result);
 };
 // ---------------------------------------------------------------------------------------------------------------------

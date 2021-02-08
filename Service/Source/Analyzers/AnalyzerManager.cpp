@@ -45,10 +45,6 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("getAlarmsRange",  GetAlarmsRangeCallback);
   HTTPServer::RegisterCallback("delAlarm",        DelAlarmCallback);
   HTTPServer::RegisterCallback("delAlarmsRange",  DelAlarmsRangeCallback);
-//  HTTPServer::RegisterCallback("getRate",         GetRateCallback);
-//  HTTPServer::RegisterCallback("addRate",         AddRateCallback);
-//  HTTPServer::RegisterCallback("setRate",         SetRateCallback);
-//  HTTPServer::RegisterCallback("delRate",         DelRateCallback);
 //  HTTPServer::RegisterCallback("getPermissions",  GetPermissionsCallback);
 //  HTTPServer::RegisterCallback("addPermission",   AddPermissionCallback);
 //  HTTPServer::RegisterCallback("setPermission",   SetPermissionCallback);
