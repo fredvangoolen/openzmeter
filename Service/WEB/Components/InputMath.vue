@@ -8,7 +8,7 @@
     <tr>
       <td class="first-row">
         <div class="btn-group" v-if="this.$listeners.evaluate">
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Reload variables and evaluate" @click="$emit('evaluate')"><img :src="require('Imgs/evaluate_formula.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Reload variables and evaluate" @click="$emit('evaluate')"><img :src="require('Imgs/evaluate_formula.png')"></button>
         </div>
         <option-adder :icon="require('Imgs/math_functions.png')" :options="Functions" @add="Insert"></option-adder>
         <option-adder :icon="require('Imgs/sql_join_outer_exclude.png')" :options="Operators" @add="Insert"></option-adder>

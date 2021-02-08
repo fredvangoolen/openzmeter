@@ -3,7 +3,7 @@
     <div class="panel-heading">
       <div class="header">Users</div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add user" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
+        <button type="button" class="btn btn-default btn-xs" title="Add user" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
       </div>
       <toolbar-pager class="pull-right" :pageSize="10" :input="Users" :output.sync="FilterUsers" :filtercols="['User', 'Name', 'TimeZone', 'Email']"></toolbar-pager>
     </div>

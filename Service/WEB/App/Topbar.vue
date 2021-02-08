@@ -4,12 +4,12 @@
       <button type="button" class="navbar-toggle" @mouseenter="$emit('expandmenu')" @click="$emit('expandmenu')"><img :src="require('Imgs/application_menu.png')"></button>
       <div class="navbar-brand">
         <img src="MainLogo.png">
-        <div data-toggle="tooltip" :title="'Uptime: ' + Uptime" v-if="Time != null"><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
-        <div data-toggle="tooltip" :title="'Disk usage: ' + SDTip" v-if="SDUse != null"><img :src="require('Imgs/sd_memory_adapter.png')">{{ SDUse }}</div>
-        <div data-toggle="tooltip" :title="'RAM usage: ' + RAMTip" v-if="RAMUse != null"><img :src="require('Imgs/ddr_memory.png')">{{ RAMUse }}</div>
+        <div :title="'Uptime: ' + Uptime" v-if="Time != null"><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
+        <div :title="'Disk usage: ' + SDTip" v-if="SDUse != null"><img :src="require('Imgs/sd_memory_adapter.png')">{{ SDUse }}</div>
+        <div :title="'RAM usage: ' + RAMTip" v-if="RAMUse != null"><img :src="require('Imgs/ddr_memory.png')">{{ RAMUse }}</div>
         <div><img :src="require('Imgs/chip.png')" v-if="CPUUse != null">{{ CPUUse }}</div>
-        <div data-toggle="tooltip" :title="'WiFi network: ' + WIFINetwork" v-if="WIFIPower != null"><img :src="require('Imgs/network_wireless.png')">{{ WIFIPower }}</div>
-        <div data-toggle="tooltip" :title="'Ethernet network'" v-if="Ethernet != null"><img :src="require('Imgs/network_ethernet.png')">{{ Ethernet }}</div>
+        <div :title="'WiFi network: ' + WIFINetwork" v-if="WIFIPower != null"><img :src="require('Imgs/network_wireless.png')">{{ WIFIPower }}</div>
+        <div :title="'Ethernet network'" v-if="Ethernet != null"><img :src="require('Imgs/network_ethernet.png')">{{ Ethernet }}</div>
         <div data-status="tooltip" :title="'Battery status: ' + BatteryStatus" v-if="BatteryLevel != null"><img :src="require('Imgs/battery.png')">{{ BatteryLevel }}</div>
         <div v-if="Temp != null"><img :src="require('Imgs/temperature_normal.png')">{{ Temp }}</div>
       </div>
@@ -173,7 +173,7 @@
     margin-right: 1px;
   }
   .indicator-bar {
-    cursor: grabbing;
+    cursor: pointer;
     background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
     text-align: center;
     font-size: 14px;

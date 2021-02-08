@@ -12,7 +12,7 @@
           <td>Su</td>
         </tr>
         <tr v-for="(week, idx) in month.Weeks" :key="idx">
-          <td v-for="(s, idx) in week" :key="idx" :class="{ empty: s.Number==null }" :style="{ background: colors[value[s.Index]]}" data-toggle="tooltip" :title="names[value[s.Index]]" @click="SetDay(s.Index)" @mousemove="SetDay(s.Index, $event)">{{ s.Number }}</td>
+          <td v-for="(s, idx) in week" :key="idx" :class="{ empty: s.Number==null }" :style="{ background: colors[value[s.Index]]}" :title="names[value[s.Index]]" @click="SetDay(s.Index)" @mousemove="SetDay(s.Index, $event)">{{ s.Number }}</td>
         </tr>
     </table>
   </div>

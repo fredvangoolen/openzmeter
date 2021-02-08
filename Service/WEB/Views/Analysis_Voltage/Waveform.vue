@@ -7,7 +7,7 @@
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="true" :current="true" v-model="Phases"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Current']" v-model="Options"></toolbar-options>
         <div class="btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="ShowStream=true" data-toggle="tooltip" title="Stream waves in realtime"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="ShowStream=true" title="Stream waves in realtime"><img :src="require('Imgs/diskette.png')"></button>
           <button-export file="Waveform" :rows="Export"></button-export>
           <button-expand v-model="Expanded"></button-expand>
           <button-pause :value="paused" @input="$emit('update:paused', $event)"></button-pause>

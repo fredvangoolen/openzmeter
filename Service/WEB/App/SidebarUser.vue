@@ -3,8 +3,8 @@
     <img class="icon" :src="require('Imgs/user32.png')">
     <div class="name">{{ (user==null) ? '-' : user.Name }}</div>
     <div class="btn-group">
-      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User edit" @click="ShowDialog=true"><img :src="require('Imgs/user_edit.png')"></button>
-      <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" title="User edit" @click="ShowDialog=true"><img :src="require('Imgs/user_edit.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
     </div>
     <user-logout ref="logout"></user-logout>
     <user-edit v-if="ShowDialog" :user="user" @close="ShowDialog=false"></user-edit>

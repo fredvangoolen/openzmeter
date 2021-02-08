@@ -18,27 +18,28 @@
             <button type="button" class="btn btn-xs btn-success" @click="Edit(props.rowData)">Add notes</button>
             <button type="button" class="btn btn-xs btn-default" :class="{ disabled: !props.rowData.AvaliableRAW }" @click="RMS(props.rowData)">RMS</button>
             <button type="button" class="btn btn-xs btn-default" :class="{ disabled: !props.rowData.AvaliableRAW }" @click="RAW(props.rowData)">Wave</button>
-            <button type="button" class="btn btn-danger btn-xs"  @click="Delete(props.rowData)">Delete</button>
+            <button type="button" class="btn btn-danger btn-xs"  @click="DeleteEvent(props.rowData)">Delete</button>
           </div>
         </template>
       </vuetable>
     </div>
     <event-dialog v-if="(View=='RMS')||(View=='RAW')" :mode="View" :analyzer="analyzer" :event="Event" @close="View=null"></event-dialog>
     <event-notes v-if="View=='Notes'" :analyzer="analyzer" :event="Event" @close="UpdateEvent"></event-notes>
+    <event-delete :analyzer="analyzer" :event="Delete" v-if="Delete!=null" @close="UpdateEvent"></event-delete>
   </div>
 </template>
 
 <script>
   import Vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
-  import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   import EventDialog from './EventDialog.vue';
   import EventNotes from './EventNotes.vue';
+  import EventDelete from './EventDelete.vue';
   export default {
     props: { analyzer: Object, events: Object, pagesize: Number },
     data: function() {
-      return { Event: null, View: null, Events: [], FilterEvents: [], ShowSpinner: false,
+      return { Event: null, View: null, Events: [], FilterEvents: [], ShowSpinner: false, Delete: null,
                Columns: [
                  { name: '__checkbox'},
                  { name: 'StartTime', title: 'Date', callback: this.FormatDate },
@@ -113,6 +114,7 @@
       },
       UpdateEvent: function(update) {
         this.View = null;
+        this.Delete = null;
         if(update) this.$emit('eventschanged');
       },
       RMS: function(evt) {
@@ -143,27 +145,11 @@
       },
       DeleteSelected: function() {
         var Selection = this.$refs.table.selectedTo;
-        if(confirm('Delete ' + Selection.length + ' event(s)?') == false) return;
-        this.ShowSpinner = true;
-        var Promises = [];
-        for(var n = 0; n < Selection.length; n++) Promises.push(this.$http.post('delEvent', { StartTime: Selection[n], Analyzer: this.analyzer.Analyzer }));
-        Promise.all(Promises).then(
-          () => {
-            this.$emit('eventschanged');
-            this.ShowSpinner = false;
-            this.$refs.table.selectedTo = [];
-          },
-          () => {
-            this.ShowSpinner = false;
-          }
-        );
+        this.Delete = [];
+        for(var n = 0; n < Selection.length; n++) this.Delete.push(Selection[n]);
       },
-      Delete: function(evt) {
-        if(confirm("Delete selected event?")) {
-          this.$http.post('delEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer }).then(
-            (result, n) => { this.$emit('eventschanged'); }
-          );
-        }
+      DeleteEvent: function(evt) {
+        this.Delete = [evt.StartTime];
       },
       Export: function() {
         var Export = [['Date', 'Type', 'Duration', 'ΔU (V)', 'Notes']];
@@ -171,7 +157,7 @@
         return Object.seal(Export);
       }
     },
-    components: { Vuetable, EventDialog, EventNotes }
+    components: { Vuetable, EventDialog, EventNotes, EventDelete }
   }
 </script>
 

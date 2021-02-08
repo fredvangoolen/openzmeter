@@ -4,8 +4,8 @@
       <div class="pull-left"><h4 class="modal-title">NTP synchronization</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Save" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
-          <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Save" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </div>
     </template>

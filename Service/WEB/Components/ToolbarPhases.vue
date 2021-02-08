@@ -1,9 +1,9 @@
 <template>
   <div class="btn-group" v-if="analyzer.Mode != '1PHASE'">
-    <button type="button" @click="Toggle(0)" :class="{ active: (Active[0]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[0]"><img :src="PhaseImgs[0]"></button>
-    <button type="button" @click="Toggle(1)" :class="{ active: (Active[1]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[1]"><img :src="PhaseImgs[1]"></button>
-    <button type="button" @click="Toggle(2)" :class="{ active: (Active[2]==true) }" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[2]"><img :src="PhaseImgs[2]"></button>
-    <button type="button" @click="Toggle(3)" :class="{ active: (Active[3]==true) }" v-if="(analyzer.Mode=='3PHASE+N') && (current==true)" class="btn btn-default btn-xs" data-toggle="tooltip" :title="'Show phase ' + analyzer.PhaseNames[3]"><img :src="PhaseImgs[3]"></button>
+    <button type="button" @click="Toggle(0)" :class="{ active: (Active[0]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + analyzer.PhaseNames[0]"><img :src="PhaseImgs[0]"></button>
+    <button type="button" @click="Toggle(1)" :class="{ active: (Active[1]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + analyzer.PhaseNames[1]"><img :src="PhaseImgs[1]"></button>
+    <button type="button" @click="Toggle(2)" :class="{ active: (Active[2]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + analyzer.PhaseNames[2]"><img :src="PhaseImgs[2]"></button>
+    <button type="button" @click="Toggle(3)" :class="{ active: (Active[3]==true) }" v-if="(analyzer.Mode=='3PHASE+N') && (current==true)" class="btn btn-default btn-xs" :title="'Show phase ' + analyzer.PhaseNames[3]"><img :src="PhaseImgs[3]"></button>
   </div>
 </template>
 

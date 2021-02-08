@@ -3,7 +3,7 @@
     <div class="panel-heading">
       <div class="float-left">Voltage unbalance</div>
       <div class="float-right" v-if="(((data.UnbalanceIN / data.UnbalanceSamples) * 100.0) < 100)">
-        <img :src="require('Imgs/exclamation.png')" data-toggle="tooltip" title="Limit exceded">
+        <img :src="require('Imgs/exclamation.png')" title="Limit exceded">
       </div>
       <div class="clearfix"></div>
     </div>

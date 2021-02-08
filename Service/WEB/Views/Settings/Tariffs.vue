@@ -3,7 +3,7 @@
     <div class="panel-heading clearfix">
       <div class="huge-small pull-left">Tariffs</div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
+        <button type="button" class="btn btn-default btn-xs" title="Add tariff" @click="Add"><img :src="require('Imgs/plus.png')"> Add</button>
       </div>
       <toolbar-pager class="pull-right" :pageSize="10" :input="Tariffs" :output.sync="FilterTariffs" :filtercols="['TimeZone', 'Name', 'StartDate', 'EndDate']"></toolbar-pager>
     </div>
@@ -16,6 +16,7 @@
             <template slot="actions" slot-scope="props">
               <div class="btn-group">
                 <button class="btn btn-xs btn-default" @click="Edit(props.rowData)">Edit</button>
+                <button class="btn btn-xs btn-default" @click="Duplicate(props.rowData)" title="Duplicate tariff"><img :src="require('Imgs/page_copy.png')"></button>
                 <button class="btn btn-xs btn-danger" @click="Delete(props.rowData)">Delete</button>
               </div>
             </template>
@@ -33,7 +34,7 @@
         </div>
       </div>
     </div>
-    <tariff v-if="ShowDialog" :tariff="Tariff" @close="LoadTariffs"></tariff>
+    <tariff v-if="ShowDialog" :tariff="Tariff" :source="SourceTariff" @close="LoadTariffs"></tariff>
     <esp-esios v-if="Module!=null && Module.Name=='ESP_ESIOS'" :settings="Module" @close="Module=null"></esp-esios>
   </div>
 </template>
@@ -47,7 +48,7 @@
   import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
-      return { ShowSpinner: true, Tariffs: [], FilterTariffs: [], ShowDialog: false, Enabled: false, Tariff: null, Module: null,
+      return { ShowSpinner: true, Tariffs: [], FilterTariffs: [], ShowDialog: false, Enabled: false, Tariff: null, SourceTariff: null, Module: null,
         Modules: [
           { Name: 'ESP_ESIOS', Description: 'Fetch hourly prices from spanish ESIOS (Sistema de informacion del operador del sistema)' }
         ],
@@ -89,10 +90,24 @@
         );
       },
       Add: function() {
+        this.SourceTariff = null;
         this.Tariff = null;
         this.ShowDialog = true;
       },
+      Duplicate: function(tariff) {
+        this.Tariff = null;
+        this.ShowSpinner = true;
+        this.$http.post('getTariff', { Name: tariff.Name }).then(
+          (result) => {
+            this.SourceTariff = result.body;
+            this.ShowDialog = true;
+            this.ShowSpinner = false;
+          },
+          (fail) => {}
+        );
+      },
       Edit: function(tariff) {
+        this.SourceTariff = null;
         this.ShowSpinner = true;
         this.$http.post('getTariff', { Name: tariff.Name }).then(
           (result) => {
@@ -139,15 +154,9 @@
       text-align: center;
     }
     .table >>> th:nth-child(3) {
-      width: 100px;
+      width: 120px;
     }
     .table >>> td:nth-child(3) {
-      text-align: right;
-    }
-    .table.modules >>> th:nth-child(3) {
-      width: 80px;
-    }
-    .table.modules >>> td:nth-child(3) {
       text-align: right;
     }
   }

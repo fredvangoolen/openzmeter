@@ -6,7 +6,7 @@
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="false" v-model="Phase"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Log']" v-model="Options"></toolbar-options>
         <div class="btn-group">
-          <button type="button" class="btn btn-default btn-xs" v-if="Names.length==20" data-toggle="tooltip" title="Show full 50 harmonics view" @click="Names=Names.concat(['21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'])"><img :src="require('Imgs/table_rows_insert_below_word.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" v-if="Names.length==20" title="Show full 50 harmonics view" @click="Names=Names.concat(['21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'])"><img :src="require('Imgs/table_rows_insert_below_word.png')"></button>
           <button-export file="Evolution" :rows="Export"></button-export>
         </div>
       </div>

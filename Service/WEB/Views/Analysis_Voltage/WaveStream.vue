@@ -3,7 +3,7 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Waveform stream</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" data-toggle="tooltip" title="Close dialog" v-if="Abort==null" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" title="Close dialog" v-if="Abort==null" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
       </div>
     </template>
     <div class="row" v-if="Abort==null">
@@ -19,7 +19,7 @@
         <option-picker :options="[{name: 'Voltage', value: 'Voltage' }, {name: 'Current', value: 'CURRENT'}, {name: 'Voltage and Current', value: 'Voltage_Current'}]" v-model="DownloadSamples" :big="true"></option-picker>
       </div>
       <div class="col-xs-12" style="margin-top: 5px">
-        <button type="button" class="btn btn-default btn-sm" style="width:100%" data-toggle="tooltip" title="Close dialog" @click="StartStream">Start</button>
+        <button type="button" class="btn btn-default btn-sm" style="width:100%" title="Close dialog" @click="StartStream">Start</button>
       </div>
     </div>
     <div class="row" v-if="Abort!=null">
@@ -28,7 +28,7 @@
         <div class="alert alert-error text-center" style="margin: 5px 0px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
       </div>
       <div class="col-md-12">
-        <button type="button" class="btn btn-default btn-sm" style="width:100%" data-toggle="tooltip" title="Terminate streaming" @click="StopStream">Stop</button>
+        <button type="button" class="btn btn-default btn-sm" style="width:100%" title="Terminate streaming" @click="StopStream">Stop</button>
       </div>
     </div>
   </dlg>
