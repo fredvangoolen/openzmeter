@@ -69,22 +69,16 @@ void AnalyzerSoftStorage::GetStatus(const json &params, Response &response) {
       if(DB.FecthRow() == true) Result["Last_Access"] = DB.ResultJSON("access");
     } else if(Serie == "Storage") {
       Database DB;
-      Result["Storage"] = json::array();
-      DB.ExecSentenceAsyncResult("WITH sizes AS (SELECT tablename, pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)) AS size from pg_tables WHERE schemaname = " + DB.Bind(pSerial) + ") "
-        "SELECT 'Aggreg_200MS' AS name, size FROM sizes WHERE tablename = 'aggreg_200ms' UNION "
-        "SELECT 'Aggreg_3S' AS name, size FROM sizes WHERE tablename = 'aggreg_3s' UNION "
-        "SELECT 'Aggreg_1M' AS name, SUM(size) FROM sizes WHERE tablename IN ('aggreg_1m', 'aggreg_ext_1m') UNION "
-        "SELECT 'Aggreg_10M' AS name, size FROM sizes WHERE tablename = 'aggreg_10m' UNION "
-        "SELECT 'Aggreg_15M' AS name, size FROM sizes WHERE tablename = 'aggreg_15m' UNION "
-        "SELECT 'Aggreg_1H' AS name, size FROM sizes WHERE tablename = 'aggreg_1h' UNION "
-        "SELECT 'Events' AS name, SUM(size) FROM sizes WHERE tablename IN ('events', 'events_ext') UNION "
-        "SELECT 'Alarms' AS name, size FROM sizes WHERE tablename = 'alarms'");
-      while(DB.FecthRow()) {
-        json Row = json::object();
-        Row["Table"] = DB.ResultString("name");
-        Row["Size"]  = DB.ResultUInt64("size");
-        Result["Storage"].push_back(Row);
-      }
+      DB.ExecSentenceAsyncResult("WITH sizes AS (SELECT tablename, pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)) AS size FROM pg_tables WHERE schemaname = " + DB.Bind(pSerial) + ") SELECT json_build_object("
+                                 "'Aggreg_200MS', (SELECT size FROM sizes WHERE tablename = 'aggreg_200ms'),"
+                                 "'Aggreg_3S', (SELECT size FROM sizes WHERE tablename = 'aggreg_3s'),"
+                                 "'Aggreg_1M', (SELECT SUM(size) FROM sizes WHERE tablename IN ('aggreg_1m', 'aggreg_ext_1m')),"
+                                 "'Aggreg_10M', (SELECT size FROM sizes WHERE tablename = 'aggreg_10m'),"
+                                 "'Aggreg_15M', (SELECT size FROM sizes WHERE tablename = 'aggreg_15m'),"
+                                 "'Aggreg_1H', (SELECT size FROM sizes WHERE tablename = 'aggreg_1h'),"
+                                 "'Events', (SELECT SUM(size) FROM sizes WHERE tablename IN ('events', 'events_ext')),"
+                                 "'Alarms', (SELECT size FROM sizes WHERE tablename = 'alarms')) as tables");
+      if(DB.FecthRow() == true) Result["Storage"] = DB.ResultJSON("tables");
     }
   }
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
@@ -221,6 +215,6 @@ void AnalyzerSoftStorage::DelSeriesRange(const json &params, Response &response)
   uint64_t To     = params["To"];
   if((Aggreg != "200MS") && (Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' param must be '200MS', 3S', '1M', '10M', '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
   Database DB(pSerial);
-  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM aggreg_" + Aggreg + " WHERE sampletime >= " + DB.Bind(From) + " AND sampletime <= " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM aggreg_" + Aggreg + " WHERE sampletime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 // ---------------------------------------------------------------------------------------------------------------------

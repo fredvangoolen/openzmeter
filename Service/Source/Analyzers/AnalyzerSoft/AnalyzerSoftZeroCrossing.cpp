@@ -72,7 +72,7 @@ void AnalyzerSoftZeroCrossing::Config(const float nominalVolt, const float nomin
         memset(pFilters[n].ChannelsZ1, 0, sizeof(Filter_t::ChannelsZ1));
         memset(pFilters[n].ChannelsZ2, 0, sizeof(Filter_t::ChannelsZ2));
       }
-      pDelaySize = ((pSamplerate / pNominalFrequency) / 2.0) * FILTERSTAGES + 2;
+      pDelaySize = ((pSamplerate / pNominalFrequency) / 2.0) * FILTERSTAGES;
       pDelayVoltage = (float*)calloc(sizeof(float), pDelaySize * pVoltageChannels);
       pDelayCurrent = (float*)calloc(sizeof(float), pDelaySize * pCurrentChannels);
     }

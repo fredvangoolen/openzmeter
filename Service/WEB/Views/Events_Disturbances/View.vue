@@ -15,7 +15,7 @@
       </div>
     </div>
     <div class="col-lg-12">
-      <events-table :analyzer="analyzer" :events="TransferEvents.Data" @eventschanged="UpdateEvents"></events-table>
+      <events-table :analyzer="analyzer" :events="TransferEvents.Data" @eventschanged="UpdateEvents" :pagesize="50"></events-table>
     </div>
   </div>
   <div v-else-if="analyzer==null">

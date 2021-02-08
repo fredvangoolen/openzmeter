@@ -15,7 +15,7 @@
       </div>
     </div>
     <div class="col-lg-12">
-      <alarms-table :analyzer="analyzer" :alarms="TransferAlarms.Data"></alarms-table>
+      <alarms-table :analyzer="analyzer" :alarms="TransferAlarms.Data" @alarmschanged="UpdateAlarms"></alarms-table>
     </div>
   </div>
   <div v-else-if="analyzer==null">
@@ -34,13 +34,12 @@
       return { Range: null, TransferAlarms: this.AlarmsTransfer() };
     },
     created: function () {
+      this.TransferAlarms.SingleShot = true;
       if((this.$route.query.From != null) && (this.$route.query.To != null)) {
         localStorage.setItem('PeriodAlarms', JSON.stringify([parseInt(this.$route.query.From), parseInt(this.$route.query.To)]));
         this.TransferAlarms.UpdateUnread = true;
       }
       history.pushState({}, null, this.$route.path);
-      this.TransferAlarms.SingleShot = true;
-      this.TransferAlarms.Update(this.analyzer, this.Range);
     },
     beforeDestroy: function() {
       this.TransferAlarms.Destroy();
@@ -48,6 +47,12 @@
     watch: {
       analyzer: function() { this.TransferAlarms.Update(this.analyzer, this.Range); },
       Range: function() { this.TransferAlarms.Update(this.analyzer, this.Range); }
+    },
+    methods: {
+      UpdateAlarms: function() {
+        this.TransferAlarms.Data = null;
+        this.TransferAlarms.Update(this.analyzer, this.Range);
+      }
     },
     components: { AlarmsTable, TimeLine }
   }
