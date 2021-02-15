@@ -40,6 +40,5 @@ class Tariff {
     static json CheckConfig(const json &config);
   public :
     Tariff(const json &config);
-    json GetConfig() const;
 };
 //----------------------------------------------------------------------------------------------------------------------

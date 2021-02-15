@@ -52,6 +52,5 @@ class AnalyzerSoftAlarm final {
     Alarm_Result PushAggreg(AnalyzerSoftAggreg *data);
     string       Name() const;
     uint8_t      Priority() const;
-    json         GetConfig() const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

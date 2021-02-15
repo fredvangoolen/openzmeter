@@ -17,6 +17,7 @@
 #include <vector>
 #include <complex>
 #include "nlohmann/json.hpp"
+#include "AnalyzerAccess.h"
 #include "Tools.h"
 #include "Database.h"
 #include "HTTPServer.h"
@@ -27,8 +28,8 @@ using namespace std;
 class Analyzer {
   public :
     enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
-    enum AnalyzerRights { READ, WRITE, CONFIG };
   private :
+    AnalyzerAccess   *pAccess;                  //Permision utils
     pthread_rwlock_t  pMembersLocks;            //Locks for configurations
     uint64_t          pLastSave;                //Timestamp of last save or communication
     string            pName;                    //Analyzer description
@@ -62,19 +63,11 @@ class Analyzer {
     virtual void GetAlarmsRange(const json &params, Response &response) = 0;
     virtual void DelAlarm(const json &params, Response &response) = 0;
     virtual void DelAlarmsRange(const json &params, Response &response) = 0;
-//    virtual void AddRate(const json &params, Response &response) = 0;
-//    virtual void GetRate(const json &params, Response &response) = 0;
-//    virtual void SetRate(const json &params, Response &response) = 0;
-//    virtual void DelRate(const json &params, Response &response) = 0;
     virtual bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) = 0;
   public :
-    virtual ~Analyzer();
-    string   Serial();
-    json     GetJSONDescriptor();
-    bool     CheckRights(const string &user, const AnalyzerRights neededAccess);
-    void     GetPermissions(const json &params, Response &response);
-    void     AddPermission(const json &params, Response &response);
-    void     SetPermission(const json &params, Response &response);
-    void     DelPermission(const json &params, Response &response);
+    virtual        ~Analyzer();
+    string          Serial();
+    json            GetJSONDescriptor();
+    AnalyzerAccess *Access();
 };
 //----------------------------------------------------------------------------------------------------------------------

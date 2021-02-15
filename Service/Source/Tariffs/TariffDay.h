@@ -29,7 +29,6 @@ class TariffDay {
     static json CheckConfig(const json &config, const uint16_t periods);
   public :
     TariffDay(const json &config);
-    json GetConfig() const;
   friend class RatesEval;
 };
 // ---------------------------------------------------------------------------------------------------------------------

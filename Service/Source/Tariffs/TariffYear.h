@@ -24,12 +24,10 @@ class TariffYear final {
   private :
     uint16_t     pYear;
     uint16_t     pDays[366];
-    uint16_t     pUsedDays;
   public :
     static json CheckConfig(const json &config, const uint16_t dayTypes);
   public :
     TariffYear(const json &config);
-    json     GetConfig() const;
     uint16_t Year() const;
   friend class RatesEval;
 };

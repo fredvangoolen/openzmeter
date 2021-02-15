@@ -89,7 +89,7 @@
       <div class="col-xs-12" style="margin-top:5px;">
         <div style="display: flex">
           <label class="control-label" style="line-height: 22px; min-width: 180px">Outputs configuration model</label>
-          <option-picker :options="[ {name: '3PHASE+N', value: '3PHASE+N'}, {name: '3PHASE', value: '3PHASE'}, {name: '3PHASE + 1PHASE', value: '3PHASE + 1PHASE'}, {name: '1PHASE', value: '1PHASE'}, {name: '1PHASE + 1PHASE', value: '1PHASE + 1PHASE'}, {name: '1PHASE + 1PHASE + 1PHASE', value: '1PHASE + 1PHASE + 1PHASE'}, {name: '1PHASE + 1PHASE + 1PHASE + 1PHASE', value: '1PHASE + 1PHASE + 1PHASE + 1PHASE'}]" v-model="OutputMode"></option-picker>
+          <option-picker :options="[ {name: 'NONE', value: 'NONE'}, {name: '3PHASE+N', value: '3PHASE+N'}, {name: '3PHASE', value: '3PHASE'}, {name: '3PHASE + 1PHASE', value: '3PHASE + 1PHASE'}, {name: '1PHASE', value: '1PHASE'}, {name: '1PHASE + 1PHASE', value: '1PHASE + 1PHASE'}, {name: '1PHASE + 1PHASE + 1PHASE', value: '1PHASE + 1PHASE + 1PHASE'}, {name: '1PHASE + 1PHASE + 1PHASE + 1PHASE', value: '1PHASE + 1PHASE + 1PHASE + 1PHASE'}]" v-model="OutputMode"></option-picker>
         </div>
       </div>
       <div class="col-xs-12">
@@ -210,6 +210,7 @@
         if(this.Settings.Outputs[idx].Mode == '3PHASE') Phase3++;
         if(this.Settings.Outputs[idx].Mode == '1PHASE') Phase1++;
       }
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase1 == 0)) this.OutputMode = 'NONE';
       if((Phase3N == 1) && (Phase3 == 0) && (Phase1 == 0)) this.OutputMode = '3PHASE+N';
       if((Phase3N == 0) && (Phase3 == 1) && (Phase1 == 0)) this.OutputMode = '3PHASE';
       if((Phase3N == 0) && (Phase3 == 1) && (Phase1 == 1)) this.OutputMode = '3PHASE + 1PHASE';
@@ -231,7 +232,9 @@
       OutputMode: function(val, old) {
         if(old == null) return;
         this.$set(this.Settings, 'Outputs', []);
-        if(val == '3PHASE+N') {
+        if(val == 'NONE') {
+          this.$set(this.Settings, 'Outputs', [ ]);
+        } else if(val == '3PHASE+N') {
           this.$set(this.Settings, 'Outputs', [ { Mode: '3PHASE+N', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3', '+CH4'] } ]);
         } else if(val == '3PHASE') {
           this.$set(this.Settings, 'Outputs', [ { Mode: '3PHASE', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3'] } ]);
@@ -264,7 +267,7 @@
             }
           }
           this.CalcCh = VoltageCh;
-          if(VoltageCh[this.Settings.Calculated.Voltage].Count < 2) this.Settings.Calculated.Voltage = this.AvaliableVoltageChannels[0].name;
+          if(VoltageCh[this.Settings.Calculated.Voltage].Count < 2) this.Settings.Calculated.Voltage = (this.AvaliableVoltageChannels.length > 0) ? this.AvaliableVoltageChannels[0].name : "CH1";
           if(this.CalcCh[this.Settings.Calculated.Voltage].CH1 == false) this.Settings.Calculated.Current[0] = "UNUSED";
           if(this.CalcCh[this.Settings.Calculated.Voltage].CH2 == false) this.Settings.Calculated.Current[1] = "UNUSED";
           if(this.CalcCh[this.Settings.Calculated.Voltage].CH3 == false) this.Settings.Calculated.Current[2] = "UNUSED";

@@ -15,7 +15,7 @@ EXECUTABLE_SOURCE = $(shell find Source -name "*.cpp" ! -type d -print)
 CFLAGS  += -DCPPHTTPLIB_USE_POLL -DCPPHTTPLIB_TCP_NODELAY -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" \
            -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/AnalyzerSoft -I Source/Analyzers/AnalyzerRemote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools -I Libs -I Libs/mqtt-c \
 					 -fsingle-precision-constant -Wno-psabi -Wall
-LDFLAGS += -lstdc++ -lpq -lz -lpthread -lm -lssl -lcrypto -luuid -lfftw3f -lusb-1.0
+LDFLAGS += -lpq -lz -lpthread -lm -lssl -lcrypto -lusb-1.0 -luuid -l:libfftw3f.a -l:libstdc++.a
 
 #Add libs (cctz, nlohmann, muparser, httplib, mqtt-c)
 EXECUTABLE_SOURCE += $(shell find Libs/cctz -name "*.cpp" ! -type d -print)

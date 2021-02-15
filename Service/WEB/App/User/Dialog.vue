@@ -89,7 +89,7 @@
       return { ShowDialog: false, User: null, TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false, Error: null };
     },
     created: function() {
-      this.User = (this.user == null) ? { User: 'login_name', Name: 'Full name', Email: 'example@example.com', Telegram: '0', Address: 'user address', Photo: '', Company: 'Company name', TimeZone: 'UTC', Password: ''} : this.user;
+      this.User = (this.user == null) ? { User: 'login_name', Name: 'Full name', Email: 'example@example.com', Telegram: 0, Address: 'user address', Photo: '', Company: 'Company name', TimeZone: 'UTC', Password: ''} : this.user;
     },
     methods: {
       Save: function() {

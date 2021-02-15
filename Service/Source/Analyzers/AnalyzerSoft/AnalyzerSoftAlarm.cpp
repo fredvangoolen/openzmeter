@@ -97,16 +97,4 @@ string AnalyzerSoftAlarm::Name() const {
 uint8_t AnalyzerSoftAlarm::Priority() const {
   return pPriority;
 }
-json AnalyzerSoftAlarm::GetConfig() const {
-  json Result = json::object();
-  Result["AlarmID"]    = pUID;
-  Result["Expression"] = pExpression;
-  Result["Name"]       = pName;
-  Result["Priority"]   = pPriority;
-  Result["Samples"]    = pSamples;
-  Result["Window"]     = pWindow;
-  Result["Aggreg"]     = pAggreg;
-  Result["Enabled"]    = pEnabled;
-  return Result;
-}
 // ---------------------------------------------------------------------------------------------------------------------

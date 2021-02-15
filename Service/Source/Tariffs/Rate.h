@@ -46,7 +46,6 @@ class Rate final : public Tariff {
     static json CheckConfig(const json &config);
   public :
     Rate(const json &config, const time_zone &tz);
-    json GetConfig() const;
     uint64_t StartDate() const;
     uint64_t EndDate() const;
     uint8_t  Group() const;

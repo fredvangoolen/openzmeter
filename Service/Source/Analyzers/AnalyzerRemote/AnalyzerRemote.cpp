@@ -87,8 +87,8 @@ void AnalyzerRemote::SetRemote(const map<string, string> &params, Response &resp
   close(WriteFD);
   return HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
-void AnalyzerRemote::HandleRequest(const Analyzer::AnalyzerRights rights, const string &url, const json &params, Response &response) {
-  if(CheckRights(params["UserName"], rights) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void AnalyzerRemote::HandleRequest(const AnalyzerAccess::Access rights, const string &url, const json &params, Response &response) {
+  if(Access()->TestUser(params["UserName"], rights) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   timespec   Time;
   string     Sequence = Tools::GetUUID();
   Request_t *Request  = new Request_t;
@@ -139,67 +139,67 @@ void AnalyzerRemote::HandleRequest(const Analyzer::AnalyzerRights rights, const 
   response.set_chunked_content_provider(Request->ResMime.c_str(), Func, Free);
 }
 void AnalyzerRemote::GetAnalyzer(const json &params, Response &response) {
-  HandleRequest(READ, "getAnalyzer", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getAnalyzer", params, response);
 }
 void AnalyzerRemote::SetAnalyzer(const json &params, Response &response) {
-  HandleRequest(CONFIG, "setAnalyzer", params, response);
+  HandleRequest(AnalyzerAccess::CONFIG, "setAnalyzer", params, response);
 }
 void AnalyzerRemote::GetSeries(const json &params, Response &response) {
-  HandleRequest(READ, "getSeries", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getSeries", params, response);
 }
 void AnalyzerRemote::GetSeriesNow(const json &params, Response &response) {
-  HandleRequest(READ, "getSeriesNow", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getSeriesNow", params, response);
 }
 void AnalyzerRemote::GetStatus(const json &params, Response &response) {
-  HandleRequest(READ, "getStatus", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getStatus", params, response);
 }
 void AnalyzerRemote::GetWaveStream(const json &params, Response &response) {
-  HandleRequest(READ, "getWaveStream", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getWaveStream", params, response);
 }
 void AnalyzerRemote::GetSeriesRange(const json &params, Response &response) {
-  HandleRequest(READ, "getSeriesRange", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getSeriesRange", params, response);
 }
 void AnalyzerRemote::DelSeriesRange(const json &params, Response &response) {
-  HandleRequest(WRITE, "delSeriesRange", params, response);
+  HandleRequest(AnalyzerAccess::WRITE, "delSeriesRange", params, response);
 }
 void AnalyzerRemote::GetEvents(const json &params, Response &response) {
-  HandleRequest(READ, "getEvents", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getEvents", params, response);
 }
 void AnalyzerRemote::GetEventsRange(const json &params, Response &response) {
-  HandleRequest(READ, "getEventsRange", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getEventsRange", params, response);
 }
 void AnalyzerRemote::DelEventsRange(const json &params, Response &response) {
-  HandleRequest(WRITE, "delEventsRange", params, response);
+  HandleRequest(AnalyzerAccess::WRITE, "delEventsRange", params, response);
 }
 void AnalyzerRemote::GetEvent(const json &params, Response &response) {
-  HandleRequest(READ, "getEvent", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getEvent", params, response);
 }
 void AnalyzerRemote::SetEvent(const json &params, Response &response) {
-  HandleRequest(WRITE, "setEvent", params, response);
+  HandleRequest(AnalyzerAccess::WRITE, "setEvent", params, response);
 }
 void AnalyzerRemote::DelEvent(const json &params, Response &response) {
-  HandleRequest(WRITE, "delEvent", params, response);
+  HandleRequest(AnalyzerAccess::WRITE, "delEvent", params, response);
 }
 void AnalyzerRemote::GetCosts(const json &params, Response &response) {
-  HandleRequest(READ, "getCosts", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getCosts", params, response);
 }
 void AnalyzerRemote::GetBills(const json &params, Response &response) {
-  HandleRequest(READ, "getBills", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getBills", params, response);
 }
 void AnalyzerRemote::TestAlarm(const json &params, Response &response) {
-  HandleRequest(READ, "testAlarm", params, response);
+  HandleRequest(AnalyzerAccess::READ, "testAlarm", params, response);
 }
 void AnalyzerRemote::GetAlarms(const json &params, Response &response) {
-  HandleRequest(READ, "getAlarms", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getAlarms", params, response);
 }
 void AnalyzerRemote::GetAlarmsRange(const json &params, Response &response) {
-  HandleRequest(READ, "getAlarmsRange", params, response);
+  HandleRequest(AnalyzerAccess::READ, "getAlarmsRange", params, response);
 }
 void AnalyzerRemote::DelAlarmsRange(const json &params, Response &response) {
-  HandleRequest(WRITE, "delAlarmsRange", params, response);
+  HandleRequest(AnalyzerAccess::WRITE, "delAlarmsRange", params, response);
 }
 void AnalyzerRemote::DelAlarm(const json &params, Response &response) {
-  HandleRequest(WRITE, "delAlarm", params, response);
+  HandleRequest(AnalyzerAccess::WRITE, "delAlarm", params, response);
 }
 //void AnalyzerRemote::AddRate(const json &params, Response &response) {
 //  HandleRequest(CONFIG, "addRate", params, response);

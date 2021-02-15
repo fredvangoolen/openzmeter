@@ -126,6 +126,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   ConfigOUT["AlarmsEnabled"] = false;
   ConfigOUT["Alarms"] = json::array();
   ConfigOUT["Rates"] = json::array();
+  ConfigOUT["Users"] = AnalyzerAccess::CheckUsers(json::object());
   if(!config.is_object()) return ConfigOUT;
   if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
   if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
@@ -154,11 +155,13 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
   if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = AnalyzerSoftAlarms::CheckConfig(config["Alarms"]);
   if(config.contains("Rates") && config["Rates"].is_array()) ConfigOUT["Rates"] = AnalyzerSoftRates::CheckConfig(config["Rates"], except);
+  if(config.contains("Users") && config["Users"].is_object()) ConfigOUT["Users"] = AnalyzerAccess::CheckUsers(config["Users"]);
   return ConfigOUT;
 }
 void AnalyzerSoft::Config(const json &options) {
   ConfigFile::WriteConfig(pConfigPath, options);
   Name(options["Name"]);
+  Access()->SetUsers(options["Users"]);
   pthread_mutex_lock(&pMutex);
   pNominalVoltage   = options["NominalVoltage"];
   pNominalFrequency = options["NominalFrequency"];
@@ -337,17 +340,18 @@ void AnalyzerSoft::PeriodicTasks() {
 }
 //----------------------------------------------------------------------------------------------------------------------
 void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   string UserName = params["UserName"];
   json   Response = ConfigFile::ReadConfig(pConfigPath);
   Response["Online"]       = Online();
   Response["Mode"]         = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"]   = pSamplerate;
   Response["PriceModules"] = PriceSource::VarsInfo();
+  Response["Users"]        = Access()->GetUsers();
   HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   try {
     Config(CheckConfig(params, pMode, true));
     HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
@@ -356,11 +360,11 @@ void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
   }
 }
 void AnalyzerSoft::GetSeries(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pStorage->GetSeries(params, response);
 }
 void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   json Result  = json::object();
@@ -385,11 +389,11 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetStatus(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pStorage->GetStatus(params, response);
 }
 void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
-  //if(CheckRights(params["UserName"], READ) == false)
+  //if(TestUser(params["UserName"], READ) == false)
   return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
 //  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
 //  typedef struct {
@@ -449,83 +453,67 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
 //  response.set_chunked_content_provider("application/json", Func, Free);
 }
 void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pStorage->GetSeriesRange(params, response);
 }
 void AnalyzerSoft::DelSeriesRange(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pStorage->DelSeriesRange(params, response);
 }
 void AnalyzerSoft::GetEvents(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pEvents->GetEvents(params, response);
 }
 void AnalyzerSoft::GetEventsRange(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pEvents->GetEventsRange(params, response);
 }
 void AnalyzerSoft::DelEventsRange(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pEvents->DelEventsRange(params, response);
 }
 void AnalyzerSoft::GetEvent(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pEvents->GetEvent(params, response);
 }
 void AnalyzerSoft::SetEvent(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pEvents->SetEvent(params, response);
 }
 void AnalyzerSoft::DelEvent(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pEvents->DelEvent(params, response);
 }
 void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   pAlarms->TestAlarm(params, response, pAggreg200MS);
   pNowDataLock.ConsumerEnds();
 }
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pAlarms->GetAlarms(params, response);
 }
 void AnalyzerSoft::GetAlarmsRange(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pAlarms->GetAlarmsRange(params, response);
 }
 void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pAlarms->DelAlarm(params, response);
 }
 void AnalyzerSoft::DelAlarmsRange(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pAlarms->DelAlarmsRange(params, response);
 }
 void AnalyzerSoft::GetCosts(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pRates->GetCosts(params, response);
 }
 void AnalyzerSoft::GetBills(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pRates->GetBills(params, response);
 }
-//void AnalyzerSoft::AddRate(const json &params, Response &response) {
-//  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  pRates->AddRate(params, response);
-//}
-//void AnalyzerSoft::GetRate(const json &params, Response &response) {
-//  if(CheckRights(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  pRates->GetRate(params, response);
-//}
-//void AnalyzerSoft::SetRate(const json &params, Response &response) {
-//  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  pRates->SetRate(params, response);
-//}
-//void AnalyzerSoft::DelRate(const json &params, Response &response) {
-//  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  pRates->DelRate(params, response);
-//}
 bool AnalyzerSoft::HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) {
   if(pNowDataLock.ConsumerWait(5) == false) return false;
   pAggreg200MS->HandleModbus(buff, start, len);

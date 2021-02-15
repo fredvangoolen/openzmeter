@@ -34,7 +34,6 @@ class TariffPeriod final {
     static json CheckConfig(const json &config);
   public :
     TariffPeriod(const json &config);
-    json GetConfig() const;
   friend class RatesEval;
 };
 // ---------------------------------------------------------------------------------------------------------------------

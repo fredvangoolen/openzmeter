@@ -253,4 +253,16 @@ uint64_t Database::ResultUInt64(const int32_t col) const {
   if(PQgetisnull(pResult, 0, col) == 1) return 0;
   return strtoull(PQgetvalue(pResult, 0, col), NULL, 10);
 }
+bool Database::ResultBool(const string &name) const {
+  if(pResult == NULL) return false;
+  int32_t Col = PQfnumber(pResult, name.c_str());
+  if(Col == -1) return false;
+  if(PQgetisnull(pResult, 0, Col) == 1) return false;
+  return (strcmp(PQgetvalue(pResult, 0, Col), "t") == 0);
+}
+bool Database::ResultBool(const int32_t col) const {
+  if(pResult == NULL) return false;
+  if(PQgetisnull(pResult, 0, col) == 1) return false;
+  return (strcmp(PQgetvalue(pResult, 0, col), "t") == 0);
+}
 //----------------------------------------------------------------------------------------------------------------------

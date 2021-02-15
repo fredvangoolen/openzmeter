@@ -51,38 +51,6 @@ Rate::Rate(const json &config, const time_zone &tz) : Tariff(config) {
   sort(pBillingCycles.begin(), pBillingCycles.end());
   pPriceSrc = config["Module"];
 }
-json Rate::GetConfig() const{
-  json Result = json::object();
-  Result["Name"] = pName;
-  Result["RateID"] = pID;
-  Result["Group"] = pGroup;
-  Result["Taxes"] = json::array();
-  for(uint16_t T = 0; T < pTaxes.size(); T++) Result["Taxes"].push_back(pTaxes[T].GetConfig());
-  if(pContractedEqual == true) {
-    Result["ContractedPower"] = pContracted[0];
-  } else {
-    Result["ContractedPower"] = json::array();
-    for(uint16_t P = 0; P < pPeriods.size(); P++) Result["ContractedPower"].push_back(pContracted[P]);
-  }
-  if(pPowerCostScript.empty() == false) {
-    Result["PowerCost"] = pPowerCostScript;
-  } else {
-    Result["PowerCost"] = json::array();
-    for(uint16_t P = 0; P < pPeriods.size(); P++) Result["PowerCost"].push_back(pPowerCost[P]);
-  }
-  if(pEnergyCostScript.empty() == false) {
-    Result["EnergyCost"] = pEnergyCostScript;
-  } else {
-    Result["EnergyCost"] = json::array();
-    for(uint16_t P = 0; P < pPeriods.size(); P++) Result["EnergyCost"].push_back(pEnergyCost[P]);
-  }
-  Result["StartDate"] = format("%d/%m/%Y", chrono::system_clock::time_point(chrono::nanoseconds(pStartDate * 1000000)), utc_time_zone());
-  Result["EndDate"] = format("%d/%m/%Y", chrono::system_clock::time_point(chrono::nanoseconds(pEndDate * 1000000)), utc_time_zone());
-  Result["Billing"] = json::array();
-  for(uint16_t B = 0; B < pBillingCycles.size(); B++) Result["Billing"].push_back(format("%d/%m/%Y", chrono::system_clock::time_point(chrono::nanoseconds(pBillingCycles[B] * 1000000)), utc_time_zone()));
-  Result["Module"] = pPriceSrc;
-  return Result;
-}
 uint64_t Rate::EndDate() const {
   return pEndDate;
 }

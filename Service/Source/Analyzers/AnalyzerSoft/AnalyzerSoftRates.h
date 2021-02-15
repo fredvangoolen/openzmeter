@@ -33,7 +33,6 @@ class AnalyzerSoftRates final {
     AnalyzerSoftRates(const string &serial);
     ~AnalyzerSoftRates();
     void Config(const string &timezone, const json &rates);
-    json GetConfig();
     void GetCosts(const json &params, Response &response);
     void GetBills(const json &params, Response &response);
 };

@@ -61,6 +61,8 @@ class Database {
     uint64_t ResultUInt64(const int32_t col) const;
     json     ResultJSON(const string &name) const;
     json     ResultJSON(const int32_t col) const;
+    bool     ResultBool(const string &name) const;
+    bool     ResultBool(const int32_t col) const;
     uint64_t LastUse() const;
 };
 //----------------------------------------------------------------------------------------------------------------------

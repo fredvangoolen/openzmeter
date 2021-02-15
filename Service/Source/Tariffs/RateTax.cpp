@@ -20,13 +20,6 @@ RateTax::RateTax(const json &config) {
   pValue = config["Value"];
   pType = (config["Type"] == "PERCENT_TOTAL") ? TAX_PERCENT : (config["Type"] == "PERCENT_ENERGY") ? TAX_PERCENT_ENERGY : (config["Type"] == "PERCENT_POWER") ? TAX_PERCENT_POWER : (config["Type"] == "PERCENT_ENERGY_POWER") ? TAX_PERCENT_ENERGY_POWER : TAX_FIXED;
 }
-json RateTax::GetConfig() const {
-  json Result = json::object();
-  Result["Description"] = pDescription;
-  Result["Value"] = pValue;
-  Result["Type"] = (pType == TAX_PERCENT) ? "PERCENT_TOTAL" : (pType == TAX_PERCENT_ENERGY) ? "PERCENT_ENERGY" : (pType == TAX_PERCENT_POWER) ? "PERCENT_POWER" : (pType == TAX_PERCENT_ENERGY_POWER) ? "PERCENT_ENERGY_POWER" : "FIXED_QUANTITY";
-  return Result;
-}
 json RateTax::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   if(config.is_object() == false) throw string("'Tax' is not an object");

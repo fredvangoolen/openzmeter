@@ -49,14 +49,6 @@ class AnalyzerManager final {
     static void GetAlarmsRangeCallback(const json &params, Response &response);
     static void DelAlarmCallback(const json &params, Response &response);
     static void DelAlarmsRangeCallback(const json &params, Response &response);
-//    static void GetRateCallback(const json &params, Response &response);
-//    static void AddRateCallback(const json &params, Response &response);
-//    static void SetRateCallback(const json &params, Response &response);
-//    static void DelRateCallback(const json &params, Response &response);
-//    static void GetPermissionsCallback(const json &params, Response &response);
-//    static void AddPermissionCallback(const json &params, Response &response);
-//    static void SetPermissionCallback(const json &params, Response &response);
-//    static void DelPermissionCallback(const json &params, Response &response);
   public :
     static bool AddAnalyzer(Analyzer *analyzer, const string &user = "admin");
     static bool DelAnalyzer(const string &serial);

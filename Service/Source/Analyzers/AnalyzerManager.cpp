@@ -45,10 +45,6 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("getAlarmsRange",  GetAlarmsRangeCallback);
   HTTPServer::RegisterCallback("delAlarm",        DelAlarmCallback);
   HTTPServer::RegisterCallback("delAlarmsRange",  DelAlarmsRangeCallback);
-//  HTTPServer::RegisterCallback("getPermissions",  GetPermissionsCallback);
-//  HTTPServer::RegisterCallback("addPermission",   AddPermissionCallback);
-//  HTTPServer::RegisterCallback("setPermission",   SetPermissionCallback);
-//  HTTPServer::RegisterCallback("delPermission",   DelPermissionCallback);
 }
 AnalyzerManager::~AnalyzerManager() {
   LogFile::Debug("Stopping AnalyzerManager");
@@ -74,25 +70,12 @@ AnalyzerManager::~AnalyzerManager() {
   HTTPServer::UnregisterCallback("getAlarmsRange");
   HTTPServer::UnregisterCallback("delAlarm");
   HTTPServer::UnregisterCallback("delAlarmsRange");
-//  HTTPServer::UnregisterCallback("getRate");
-//  HTTPServer::UnregisterCallback("addRate");
-//  HTTPServer::UnregisterCallback("setRate");
-//  HTTPServer::UnregisterCallback("delRate");
-//  HTTPServer::UnregisterCallback("getPermissions");
-//  HTTPServer::UnregisterCallback("addPermission");
-//  HTTPServer::UnregisterCallback("setPermission");
-//  HTTPServer::UnregisterCallback("delPermission");
   LogFile::Debug("AnalyzerManager stopped");
 }
 bool AnalyzerManager::AddAnalyzer(Analyzer *analyzer, const string &user) {
   pthread_rwlock_wrlock(&pAnalyzersLock);
   auto Result = pAnalyzers.insert({analyzer->Serial(), analyzer});
   pthread_rwlock_unlock(&pAnalyzersLock);
-  if(Result.second == true) {
-    Database DB;
-    if(user != "admin") DB.ExecSentenceNoResult("INSERT INTO permissions(username, serial, read, write, config, eventsread, alarmsread) VALUES(" + DB.Bind(user) + ", " + DB.Bind(analyzer->Serial()) + ", true, true, true, 0, 0) ON CONFLICT(username, serial) DO NOTHING");
-    DB.ExecSentenceNoResult("INSERT INTO permissions(username, serial, read, write, config, eventsread, alarmsread) VALUES('admin', " + DB.Bind(analyzer->Serial()) + ", true, true, true, 0, 0) ON CONFLICT(username, serial) DO NOTHING");
-  }
   return Result.second;
 }
 bool AnalyzerManager::DelAnalyzer(const string &serial) {
@@ -211,28 +194,4 @@ void AnalyzerManager::DelAlarmCallback(const json &params, Response &response) {
 void AnalyzerManager::DelAlarmsRangeCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::DelAlarmsRange);
 }
-//void AnalyzerManager::GetRateCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Analyzer::GetRate);
-//}
-//void AnalyzerManager::AddRateCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Analyzer::AddRate);
-//}
-//void AnalyzerManager::SetRateCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Analyzer::SetRate);
-//}
-//void AnalyzerManager::DelRateCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Analyzer::DelRate);
-//}
-//void AnalyzerManager::GetPermissionsCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Analyzer::GetPermissions);
-//}
-//void AnalyzerManager::AddPermissionCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Analyzer::AddPermission);
-//}
-//void AnalyzerManager::SetPermissionCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Analyzer::SetPermission);
-//}
-//void AnalyzerManager::DelPermissionCallback(const json &params, Response &response) {
-//  CallAnalyzerFunction(params, response, &Analyzer::DelPermission);
-//}
 //----------------------------------------------------------------------------------------------------------------------
