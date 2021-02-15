@@ -30,23 +30,6 @@ Tariff::Tariff(const json &config) {
   for(uint16_t Y = 0; Y < config["Years"].size(); Y++) pYears.emplace_back(config["Years"][Y]);
   sort(pYears.begin(), pYears.end(), [](TariffYear &a, TariffYear &b) { return a.Year() < b.Year(); });
 }
-json Tariff::GetConfig() const {
-  json Result = json::object();
-  Result["Description"] = pDescription;
-  Result["Currency"] = pCurrency;
-  Result["PowerUnits"] = pPowerUnits;
-  Result["EnergyUnits"] = pEnergyUnits;
-  Result["Script"] = pScript;
-  Result["Periods"] = json::array();
-  for(uint16_t P = 0; P < pPeriods.size(); P++) Result["Periods"].push_back(pPeriods[P].GetConfig());
-  Result["Concepts"] = json::array();
-  for(uint16_t C = 0; C < pConcepts.size(); C++) Result["Concepts"].push_back(pConcepts[C].GetConfig());
-  Result["Days"] = json::array();
-  for(uint16_t D = 0; D < pDays.size(); D++) Result["Days"].push_back(pDays[D].GetConfig());
-  Result["Years"] = json::array();
-  for(uint16_t Y = 0; Y < pYears.size(); Y++) Result["Years"].push_back(pYears[Y].GetConfig());
-  return Result;
-}
 json Tariff::CheckConfig(const json &config) {
   if(config.is_object() == false) throw string("Tariff template is not an object");
   json ConfigOUT = json::object();

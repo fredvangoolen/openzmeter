@@ -32,7 +32,6 @@ class TariffConcept final {
     static json CheckConfig(const json &config, const set<string> &variables);
   public :
     TariffConcept(const json &config);
-    json GetConfig() const;
   friend class RatesEval;
 };
 // ---------------------------------------------------------------------------------------------------------------------

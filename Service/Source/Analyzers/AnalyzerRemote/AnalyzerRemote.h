@@ -35,7 +35,7 @@ class AnalyzerRemote : public Analyzer {
     map<string, Request_t*>     pSendPending;      //Request awaiting to be send
     map<string, Request_t*>     pResponsePending;  //Request awaiting response
   private :
-    void HandleRequest(const AnalyzerRights rights, const string &url, const json &params, Response &response);
+    void HandleRequest(const AnalyzerAccess::Access rights, const string &url, const json &params, Response &response);
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
     void GetStatus(const json &params, Response &response) override;
@@ -57,10 +57,6 @@ class AnalyzerRemote : public Analyzer {
     void GetAlarmsRange(const json &params, Response &response) override;
     void DelAlarm(const json &params, Response &response) override;
     void DelAlarmsRange(const json &params, Response &response) override;
-//    void AddRate(const json &params, Response &response) override;
-//    void GetRate(const json &params, Response &response) override;
-//    void SetRate(const json &params, Response &response) override;
-//    void DelRate(const json &params, Response &response) override;
     bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
   public :
     void GetRemote(const json &params, Response &response);

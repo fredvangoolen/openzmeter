@@ -21,7 +21,7 @@
 #include "MessageLoop.h"
 // ---------------------------------------------------------------------------------------------------------------------
 volatile bool    BluetoothManager::pTerminate   = false;
-bool             BluetoothManager::pEnable      = false;
+bool             BluetoothManager::pEnable      = true;
 bool             BluetoothManager::pEnabled     = false;
 string           BluetoothManager::pInterface   = "bt";
 string           BluetoothManager::pServerName  = "";
@@ -112,7 +112,18 @@ void *BluetoothManager::Thread(void *params) {
         DBusMessageIter Args;
         dbus_message_iter_init(Msg, &Args);
         dbus_message_iter_get_basic(&Args, &Param);
-        LogFile::Info("Authorized BT client: '%s'", Param);
+        LogFile::Info("Authorized BT connection for client: '%s'", Param);
+        DBusMessage *Reply = dbus_message_new_method_return(Msg);
+        dbus_connection_send(DBus, Reply, &Serial);
+        dbus_connection_flush(DBus);
+        dbus_message_unref(Reply);
+      } else if(dbus_message_is_method_call(Msg, "org.bluez.Agent1", "RequestAuthorization")) {
+        dbus_uint32_t Serial = 0;
+        char *Param = (char*)"";
+        DBusMessageIter Args;
+        dbus_message_iter_init(Msg, &Args);
+        dbus_message_iter_get_basic(&Args, &Param);
+        LogFile::Info("Authorized BT pairing: '%s'", Param);
         DBusMessage *Reply = dbus_message_new_method_return(Msg);
         dbus_connection_send(DBus, Reply, &Serial);
         dbus_connection_flush(DBus);

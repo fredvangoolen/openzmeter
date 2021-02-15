@@ -23,8 +23,13 @@ Analyzer::Analyzer(const string &id) : pSerial(id) {
   pMembersLocks = PTHREAD_RWLOCK_INITIALIZER;
   pName         = "Unnamed analyzer";
   pLastSave     = 0;
+  pAccess       = new AnalyzerAccess(id);
 }
 Analyzer::~Analyzer() {
+  delete pAccess;
+}
+AnalyzerAccess *Analyzer::Access() {
+  return pAccess;
 }
 json Analyzer::GetJSONDescriptor() {
   json Response = json::object();
@@ -59,48 +64,5 @@ bool Analyzer::Online() {
   bool Online = ((Tools::GetTime64() - pLastSave) < 2000);
   pthread_rwlock_unlock(&pMembersLocks);
   return Online;
-}
-bool Analyzer::CheckRights(const string &user, const AnalyzerRights neededAccess) {
-  Database DB;
-  string   Permision = (neededAccess == READ) ? "read" : (neededAccess == WRITE) ? "write" : "config";
-  DB.ExecSentenceAsyncResult("SELECT " + Permision + " AS result FROM permissions WHERE username = " + DB.Bind(user) + " AND serial = " + DB.Bind(pSerial));
-  bool Result = ((DB.FecthRow() == true) && (DB.ResultString("result") == "t"));
-  return Result;
-}
-void Analyzer::GetPermissions(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB;
-  DB.ExecSentenceAsyncResult("SELECT COALESCE(to_json(array_agg(json_build_object('User', username, 'Read', read, 'Write', write, 'Configure', config))), '[]') AS result FROM permissions WHERE serial = " + DB.Bind(pSerial));
-  if(DB.FecthRow() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
-}
-void Analyzer::AddPermission(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB;
-  string User   = params["User"];
-  bool   Read   = params["Read"];
-  bool   Write  = params["Write"];
-  bool   Config = params["Configure"];
-  bool   Result = DB.ExecSentenceNoResult("INSERT INTO permissions(username, serial, read, write, config, eventsread, alarmsread) VALUES(" + DB.Bind(User) + ", " + DB.Bind(pSerial) + ", " + DB.Bind(Read) + ", " + DB.Bind(Write) + ", " + DB.Bind(Config) + ", 0, 0)");
-  HTTPServer::FillResponse(response, "", "application/json", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
-void Analyzer::SetPermission(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB;
-  string User = params["User"];
-  if(User == "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  bool Read   = params["Read"];
-  bool Write  = params["Write"];
-  bool Config = params["Configure"];
-  bool Result = DB.ExecSentenceNoResult("UPDATE permissions SET read = " + DB.Bind(Read) + ", write = " + DB.Bind(Write) + ", config = " + DB.Bind(Config) + " WHERE username = " + DB.Bind(User) + " AND serial = " + DB.Bind(pSerial));
-  HTTPServer::FillResponse(response, "", "application/json", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
-void Analyzer::DelPermission(const json &params, Response &response) {
-  if(CheckRights(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Database DB;
-  string User = params["User"];
-  if(User == "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  bool Result = DB.ExecSentenceNoResult("DELETE FROM permissions WHERE userename = " + DB.Bind(User) + " AND serial = " + DB.Bind(pSerial));
-  HTTPServer::FillResponse(response, "", "application/json", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 //----------------------------------------------------------------------------------------------------------------------

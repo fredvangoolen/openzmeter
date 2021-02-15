@@ -95,16 +95,6 @@ void AnalyzerSoftAlarms::Wait() {
   if(pWorker != NULL) pWorker->Wait();
   pthread_rwlock_unlock(&pLock);
 }
-json AnalyzerSoftAlarms::GetConfig() {
-  json Result = json::array();
-  pthread_rwlock_rdlock(&pLock);
-  for(auto &List : pAlarms) {
-    for(auto &Alarm : List.second)
-    Result.push_back(Alarm->GetConfig());
-  }
-  pthread_rwlock_unlock(&pLock);
-  return Result;
-}
 void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS *aggreg) {
   if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Parser Evaluator;

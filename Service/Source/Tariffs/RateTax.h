@@ -31,7 +31,6 @@ class RateTax final {
     static json CheckConfig(const json &config);
   public :
     RateTax(const json &config);
-    json GetConfig() const;
   friend class RatesEval;
 };
 // ---------------------------------------------------------------------------------------------------------------------

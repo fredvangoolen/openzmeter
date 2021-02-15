@@ -20,14 +20,6 @@ TariffDay::TariffDay(const json &config) {
   pColor = config["Color"];
   for(uint8_t Q = 0; Q < 96; Q++) pQuarters[Q] = config["Quarters"][Q];
 }
-json TariffDay::GetConfig() const {
-  json Result = json::object();
-  Result["Name"] = pName;
-  Result["Color"] = pColor;
-  Result["Quarters"] = json::array();
-  for(uint8_t Q = 0; Q < 96; Q++) Result["Quarters"].push_back(pQuarters[Q]);
-  return Result;
-}
 json TariffDay::CheckConfig(const json &config, const uint16_t periods) {
   json ConfigOUT = json::object();
   if(config.is_object() == false) throw string("''Day' param is required");

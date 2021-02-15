@@ -23,17 +23,6 @@ TariffPeriod::TariffPeriod(const json &config) {
   pScript = config["Script"];
   for(uint16_t C = 0; C < config["Concepts"].size(); C++) pConcepts.emplace_back(config["Concepts"][C]);
 }
-json TariffPeriod::GetConfig() const {
-  json Result = json::object();
-  Result["Color"] = pColor;
-  Result["DefaultPowerCost"] = pDefaultPowerCost;
-  Result["DefaultEnergyCost"] = pDefaultEnergyCost;
-  Result["Name"] = pName;
-  Result["Script"] = pScript;
-  Result["Concepts"] = json::array();
-  for(uint16_t C = 0; C < pConcepts.size(); C++) Result["Concepts"].push_back(pConcepts[C].GetConfig());
-  return Result;
-}
 json TariffPeriod::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   if(config.is_object() == false) throw string("'Concept' must be an object");

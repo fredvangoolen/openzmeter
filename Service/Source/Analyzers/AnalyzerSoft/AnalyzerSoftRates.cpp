@@ -43,15 +43,6 @@ void AnalyzerSoftRates::Config(const string &timezone, const json &rates) {
   for(uint8_t n = 0; n < 10; n++) sort(pRates[n].begin(), pRates[n].end(), [](Rate &a, Rate &b) { return a.StartDate() < b.StartDate(); });
   pthread_rwlock_unlock(&pLock);
 }
-json AnalyzerSoftRates::GetConfig() {
-  json Result = json::array();
-  pthread_rwlock_rdlock(&pLock);
-  for(auto &Group : pRates) {
-    for(auto &Rate : Group) Result.push_back(Rate.GetConfig());
-  }
-  pthread_rwlock_unlock(&pLock);
-  return Result;
-}
 void AnalyzerSoftRates::GetCosts(const json &params, Response &response) {
   if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);

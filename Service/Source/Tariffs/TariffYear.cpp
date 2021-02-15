@@ -20,15 +20,7 @@ using namespace cctz;
 // ---------------------------------------------------------------------------------------------------------------------
 TariffYear::TariffYear(const json &config) {
   pYear     = config["Year"];
-  pUsedDays = config["Days"].size();
   for(uint16_t D = 0; D < config["Days"].size(); D++) pDays[D] = config["Days"][D];
-}
-json TariffYear::GetConfig() const {
-  json Result = json::object();
-  Result["Year"] = pYear;
-  Result["Days"] = json::array();
-  for(uint16_t D = 0; D < pUsedDays; D++) Result["Days"].push_back(pDays[D]);
-  return Result;
 }
 uint16_t TariffYear::Year() const {
   return pYear;
