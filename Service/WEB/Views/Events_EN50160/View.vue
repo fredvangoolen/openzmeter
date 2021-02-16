@@ -87,7 +87,7 @@
           if(Weeks[Week] == null) Weeks[Week] = this.InitWeek(this.TransferEvents.Data.Rows[i][TimeCol]);
           var Duration = this.TransferEvents.Data.Rows[i][DurationCol] / this.TransferEvents.Data.Rows[i][SampleRateCol];
           var Percent = this.MaxDiff(this.TransferEvents.Data.Rows[i][PeakCol]);
-          if((Duration < 60.0) && ((Percent < -15.0) || (Percent > -10.0))) {
+          if((Duration < 60.0) && ((Percent > -15.0) && (Percent < 10.0))) {
             Weeks[Week].Dip = Weeks[Week].Dip + 1;
             Weeks['All year'].Dip = Weeks['All year'].Dip + 1;
           }
@@ -95,7 +95,7 @@
             Weeks[Week].Short = Weeks[Week].Short + 1;
             Weeks['All year'].Short = Weeks['All year'].Short + 1;
           }
-          if((Duration > 180) && (Percent < -99)) {
+          if((Duration > 180) && (Percent < -99.0)) {
             Weeks[Week].Long = Weeks[Week].Long + 1;
             Weeks['All year'].Long = Weeks['All year'].Long + 1;
           }

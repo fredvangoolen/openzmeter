@@ -44,7 +44,7 @@
         for(var i = 0; i < this.Types.length; i++) Opt.file.push([i, 0]);
         if(this.data != null) {
           var TypeCol  = this.data.Headers.indexOf('Type');
-          for(var i = 1; i < this.data.Rows.length; i++) {
+          for(var i = 0; i < this.data.Rows.length; i++) {
             for(var j in this.Types) {
               if(this.data.Rows[i][TypeCol] == this.Types[j]) Opt.file[j][1] = Opt.file[j][1] + 1;
             }

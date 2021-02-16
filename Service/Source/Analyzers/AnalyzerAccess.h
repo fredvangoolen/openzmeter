@@ -28,8 +28,6 @@ class AnalyzerAccess final {
   private :
     string pSerial;
   public :
-    static json CheckUsers(const json &config);
-  public :
     AnalyzerAccess(const string &serial);
     ~AnalyzerAccess();
     void SetUsers(const json &config);

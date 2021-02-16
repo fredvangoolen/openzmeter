@@ -44,7 +44,7 @@
         for(var i = 0; i < this.RMSs.length; i++) Opt.file.push([i, 0]);
         if(this.data != null) {
           var PeakCol  = this.data.Headers.indexOf('Peak');
-          for(var i = 1; i < this.data.Rows.length; i++) {
+          for(var i = 0; i < this.data.Rows.length; i++) {
             var Diff = this.MaxDiff(this.data.Rows[i][PeakCol]) + 100;
             for(var j = 0; j < this.RMSs.length - 1; j++) {
               if((Diff >= this.RMSs[j]) && (Diff < this.RMSs[j + 1])) {

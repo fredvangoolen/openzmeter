@@ -28,6 +28,7 @@
 #include "WifiManager.h"
 #include "EthernetManager.h"
 #include "BluetoothManager.h"
+#include "VPNManager.h"
 #include "AnalyzerManager.h"
 #include "TariffManager.h"
 #include "ConfigFile.h"
@@ -83,6 +84,7 @@ int main(int argc, char** argv) {
   WifiManager      Wifi;                           // Create wifi manager
   EthernetManager  Ethernet;                       // Create ethernet manager
   UpdateManager    Update;                         // Create update manager
+  VPNManager       VPN;                            // Create VPN manager
   NTPManager       NTP;                            // Create NTP manager
   UserManager      User;                           // Create user manager
   TariffManager    TariffManager;                  // Create tariffs interface

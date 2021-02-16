@@ -44,7 +44,7 @@
           var PeakCol  = this.data.Headers.indexOf('Peak');
           var DurationCol = this.data.Headers.indexOf('Duration');
           var SamplerateCol = this.data.Headers.indexOf('SampleRate');
-          for(var i = 1; i < this.data.Rows.length; i++) Opt.file.push([(this.data.Rows[i][DurationCol] / this.data.Rows[i][SamplerateCol]) * 1000.0, 100 + this.MaxDiff(this.data.Rows[i][PeakCol])]);
+          for(var i = 0; i < this.data.Rows.length; i++) Opt.file.push([(this.data.Rows[i][DurationCol] / this.data.Rows[i][SamplerateCol]) * 1000.0, 100 + this.MaxDiff(this.data.Rows[i][PeakCol])]);
         }
         return Object.seal(Opt);
       }

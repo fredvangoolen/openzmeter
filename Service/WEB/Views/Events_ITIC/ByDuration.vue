@@ -45,7 +45,7 @@
         if(this.data != null) {
           var DurationCol = this.data.Headers.indexOf('Duration');
           var SamplerateCol = this.data.Headers.indexOf('SampleRate');
-          for(var i = 1; i < this.data.Rows.length; i++) {
+          for(var i = 0; i < this.data.Rows.length; i++) {
             var Duration = this.data.Rows[i][DurationCol] / this.data.Rows[i][SamplerateCol];
             for(var j = 0; j < this.Durations.length; j++) {
               if((Duration >= this.Durations[j][0]) && (Duration < this.Durations[j + 1][0])) {

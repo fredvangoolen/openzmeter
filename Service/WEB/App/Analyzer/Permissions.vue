@@ -14,20 +14,20 @@
         <span class="input-group-btn"><button type="button" class="btn btn-default" @click="Add" :disabled="NewUser.length==0"><img :src="require('Imgs/plus.png')"></button></span>
       </div>
     </div>
-    <vuetable :fields="Columns" :api-mode="false" :data="Permissions" class="table small table-striped">
+    <vuetable :fields="Columns" :api-mode="false" :data="Analyzer.Users" class="table small table-striped">
       <template slot="actions" slot-scope="props">
-        <div class="btn-group" v-if="props.rowData.User!='admin'">
-          <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData.User)">Delete</button>
+        <div class="btn-group" v-if="props.rowData.Name!='admin'">
+          <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData.Name)">Delete</button>
         </div>
       </template>
       <template slot="read" slot-scope="props">
-        <input type="checkbox" v-model="props.rowData.Read" :disabled="props.rowData.User=='admin'">
+        <input type="checkbox" v-model="props.rowData.Read" :disabled="props.rowData.Name=='admin'">
       </template>
       <template slot="write" slot-scope="props">
-        <input type="checkbox" v-model="props.rowData.Write" :disabled="props.rowData.User=='admin'">
+        <input type="checkbox" v-model="props.rowData.Write" :disabled="props.rowData.Name=='admin'">
       </template>
       <template slot="config" slot-scope="props">
-        <input type="checkbox" v-model="props.rowData.Config" :disabled="props.rowData.User=='admin'">
+        <input type="checkbox" v-model="props.rowData.Config" :disabled="props.rowData.Name=='admin'">
       </template>
     </vuetable>
   </dlg>
@@ -40,9 +40,9 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { Permissions: [], ShowSpinner: false, NewUser: '',
+      return { Analyzer: [], ShowSpinner: false, NewUser: '',
         Columns: [
-          {name: 'User', title: 'User Name'},
+          {name: 'Name', title: 'User Name'},
           {name: '__slot:read', title: 'Read' },
           {name: '__slot:write', title: 'Write' },
           {name: '__slot:config', title: 'Configure' },
@@ -54,32 +54,30 @@
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
     created: function() {
-      for(var user in this.analyzer.Users) this.Permissions.push({ User: user, Read: this.analyzer.Users[user].indexOf('R') != -1, Write: this.analyzer.Users[user].indexOf('W') != -1, Config: this.analyzer.Users[user].indexOf('C') != -1 });
+      this.Analyzer = Object.assign({}, this.analyzer);
     },
     methods: {
       Add: function() {
-        for(var n = 0; n < this.Permissions.length; n++) {
-          if(this.Permissions[n].User == this.NewUser) {
+        for(var n = 0; n < this.Analyzer.Users.length; n++) {
+          if(this.Analyzer.Users[n].Name == this.NewUser) {
             this.NewUser = '';
             return;
           }
         }
-        this.Permissions.push({ User: this.NewUser, Read: true, Write: true, Config: true });
+        this.Analyzer.Users.push({ User: this.NewUser, Read: true, Write: true, Config: true });
         this.NewUser = '';
       },
       Delete: function(row) {
         if(confirm("Delete '" + row + "' user?") == false) return;
-        for(var n = 0; n < this.Permissions.length; n++) {
-          if(this.Permissions[n].User == row) this.Permissions.splice(n, 1);
+        for(var n = 0; n < this.Analyzer.Users.length; n++) {
+          if(this.Analyzer.Users[n].Name != row) continue;
+          this.Analyzer.Users.splice(n, 1);
           return;
         }
       },
       Save: function() {
         this.ShowSpinner = true;
-        var Analyzer = Object.assign({}, this.analyzer);
-        Analyzer.Users = {};
-        for(var n = 0; n < this.Permissions.length; n++) Analyzer.Users[this.Permissions[n].User] = (this.Permissions[n].Read ? 'R' : '') + (this.Permissions[n].Write ? 'W' : '') + (this.Permissions[n].Config ? 'C' : '');
-        this.$http.post('setAnalyzer', Analyzer).then(
+        this.$http.post('setAnalyzer', this.Analyzer).then(
           (result) => { this.$emit('close', this.Analyzer); },
           (fail) => {
             this.ShowSpinner = false;

@@ -21,8 +21,8 @@
 // ---------------------------------------------------------------------------------------------------------------------
 NTPManager::NTPManager() {
   LogFile::Info("Starting NTPManager...");
-  HTTPServer::RegisterCallback("getNTP",       GetNTPCallback);
-  HTTPServer::RegisterCallback("setNTP",       SetNTPCallback);
+  HTTPServer::RegisterCallback("getNTP", GetNTPCallback);
+  HTTPServer::RegisterCallback("setNTP", SetNTPCallback);
   LogFile::Info("NTPManager started");
 }
 NTPManager::~NTPManager() {
