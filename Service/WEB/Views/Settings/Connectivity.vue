@@ -17,6 +17,7 @@
       <ntp :settings.sync="Modules.NTP.Settings" v-if="View=='NTP'" @close="View=null"></ntp>
       <telegram :settings.sync="Modules.Telegram.Settings" v-if="View=='Telegram'" @close="View=null"></telegram>
       <modbus-tcp :settings.sync="Modules.ModbusTCP.Settings" v-if="View=='ModbusTCP'" @close="View=null"></modbus-tcp>
+      <vpn :settings.sync="Modules.OpenVPN.Settings" v-if="View=='OpenVPN'" @close="View=null"></vpn>
     </div>
   </div>
 </template>
@@ -29,6 +30,7 @@
   import Ntp from './Connectivity/NTP.vue';
   import ModbusTcp from './Connectivity/ModbusTCP.vue';
   import Telegram from './Connectivity/Telegram.vue';
+  import Vpn from './Connectivity/OpenVPN.vue';
   export default {
     data: function() {
       return { View: null,
@@ -38,7 +40,8 @@
                  'Ethernet': { Module: 'Ethernet', Settings: null, Method: this.LoadEthernet },
                  'NTP': { Module: 'NTP synchronization', Settings: null, Method: this.LoadNTP },
                  'Telegram': { Module: 'Telegram Bot', Settings: null, Method: this.LoadTelegram },
-                 'ModbusTCP': { Module: 'ModbusTCP', Settings: null, Method: this.LoadModbusTCP }
+                 'ModbusTCP': { Module: 'ModbusTCP', Settings: null, Method: this.LoadModbusTCP },
+                 'OpenVPN': { Module: 'OpenVPN', Settings: null, Method: this.LoadOpenVPN }
                },
                Columns: [
                  { name: 'Module', title: 'Module' },
@@ -63,9 +66,21 @@
       this.LoadNTP(false);
       this.LoadTelegram(false);
       this.LoadModbusTCP(false);
+      this.LoadOpenVPN(false);
     },
     methods: {
-      EnabledStatus: function(value) { return (value === true) ? '&#9635;' : '&#9633;'; },
+      EnabledStatus: function(value) {
+        return (value === true) ? '&#9635;' : '&#9633;';
+      },
+      LoadOpenVPN: function(show) {
+        this.$http.post('getVPN', { }).then(
+          (result) => {
+            this.Modules.OpenVPN.Settings = result.body;
+            if(show) this.View = 'OpenVPN';
+          },
+          (fail) => { }
+        );
+      },
       LoadBluetooth: function(show) {
         this.$http.post('getBluetooth', { }).then(
           (result) => {
@@ -121,7 +136,7 @@
         );
       },
     },
-    components: { Bluetooth, Wifi, Ethernet, Ntp, ModbusTcp, Telegram, Vuetable }
+    components: { Bluetooth, Wifi, Ethernet, Ntp, ModbusTcp, Telegram, Vuetable, Vpn }
   }
 </script>
 

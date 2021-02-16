@@ -126,7 +126,6 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   ConfigOUT["AlarmsEnabled"] = false;
   ConfigOUT["Alarms"] = json::array();
   ConfigOUT["Rates"] = json::array();
-  ConfigOUT["Users"] = AnalyzerAccess::CheckUsers(json::object());
   if(!config.is_object()) return ConfigOUT;
   if(config.contains("Name") && config["Name"].is_string()) ConfigOUT["Name"] = config["Name"];
   if(config.contains("NominalVoltage") && config["NominalVoltage"].is_number() && (config["NominalVoltage"] > 10.0) && (config["NominalVoltage"] < 450.0)) ConfigOUT["NominalVoltage"] = config["NominalVoltage"];
@@ -155,13 +154,11 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
   if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = AnalyzerSoftAlarms::CheckConfig(config["Alarms"]);
   if(config.contains("Rates") && config["Rates"].is_array()) ConfigOUT["Rates"] = AnalyzerSoftRates::CheckConfig(config["Rates"], except);
-  if(config.contains("Users") && config["Users"].is_object()) ConfigOUT["Users"] = AnalyzerAccess::CheckUsers(config["Users"]);
   return ConfigOUT;
 }
 void AnalyzerSoft::Config(const json &options) {
   ConfigFile::WriteConfig(pConfigPath, options);
   Name(options["Name"]);
-  Access()->SetUsers(options["Users"]);
   pthread_mutex_lock(&pMutex);
   pNominalVoltage   = options["NominalVoltage"];
   pNominalFrequency = options["NominalFrequency"];
@@ -353,6 +350,7 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
 void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
   if(Access()->TestUser(params["UserName"], AnalyzerAccess::CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   try {
+    if(params.contains("Users") && params["Users"].is_array()) Access()->SetUsers(params["Users"]);
     Config(CheckConfig(params, pMode, true));
     HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
   } catch(const string &err) {

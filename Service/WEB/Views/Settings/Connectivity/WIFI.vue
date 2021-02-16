@@ -81,7 +81,7 @@
   export default {
     props: { settings: Object },
     data() {
-      return { View: 'Edit', WifiList: [], Timer: null, ScanTimer: null, ShowSpinner: false, Config: null, Details: '',
+      return { View: 'Edit', WifiList: [], Timer: null, ShowSpinner: false, Config: null, Details: '',
         Columns: [
           {name: 'ESSID', title: 'Name'},
           {name: 'Channel', title: 'Channel'},
@@ -92,19 +92,13 @@
     },
     created: function() {
       this.Config = Object.assign({}, this.settings);
-      this.Timer = setTimeout(this.Refresh, 100);
-    },
-    beforeDestroy: function() {
-      if(this.Timer != null) clearTimeout(this.Timer);
-      if(this.ScanTimer != null) clearTimeout(this.ScanTimer);
-      this.Timer = null;
+      this.Refresh();
     },
     methods: {
       Refresh: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
         this.$http.post('getWIFI', { }).then(
           (result) => {
-            if(this.Config == null) return;
             this.Details = 'Device IP address   : ' + result.body.Status.IP + ' (' + result.body.Status.IPMode + ')\nDNS servers         : ' + result.body.Status.DNS.join(', ') + '\nDefault gateway     : ' + result.body.Status.Gateway + '\nCurrent WIFI channel: ' + result.body.Status.Channel + ' (Signal: ' + result.body.Status.Quality + '%)';
             this.Timer = setTimeout(this.Refresh, 5000);
           },
@@ -114,38 +108,43 @@
       Scan: function() {
         if(this.View != 'Scan') this.ShowSpinner = true;
         this.View = 'Scan';
-        clearInterval(this.ScanTimer);
+        if(this.Timer != null) clearTimeout(this.Timer);
         this.$http.post('scanWIFI', { }).then(
           (result) => {
-            if(this.Timer == null) return;
             this.WifiList = result.data;
             this.ShowSpinner = false;
-            this.ScanTimer = setTimeout(this.Scan, 3000);
+            this.Timer = setTimeout(this.Scan, 5000);
           },
           (fail) => { }
         );
       },
       Back: function() {
+        if(this.Timer != null) clearTimeout(this.Timer);
         if(this.View == 'Scan') {
           this.View = 'Edit';
-          clearInterval(this.ScanTimer);
-          this.ScanTimer = null;
+          this.Refresh();
         } else {
           this.$emit('close');
         }
       },
       Select: function(row) {
-        this.View = 'Edit';
+        if(this.Timer != null) clearTimeout(this.Timer);
+        this.Refresh();
         this.Config.ESSID = row.ESSID;
+        this.View = 'Edit';
       },
       Save: function() {
+        if(this.Timer != null) clearTimeout(this.Timer);
         this.ShowSpinner = true;
         this.$http.post('setWIFI', this.Config).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');
           },
-          (fail) => { this.ShowSpinner = false; }
+          (fail) => {
+            this.Refresh();
+            this.ShowSpinner = false;
+          }
         );
       }
     },

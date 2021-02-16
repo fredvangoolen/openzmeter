@@ -45,7 +45,7 @@
         for(var i = 0; i < this.Months.length; i++) Opt.file.push([i, 0]);
         if(this.data != null) {
           var StartCol = this.data.Headers.indexOf('StartTime');
-          for(var i = 1; i < this.data.Rows.length; i++) {
+          for(var i = 0; i < this.data.Rows.length; i++) {
             var Month = moment(this.data.Rows[i][StartCol]).tz(this.analyzer.TimeZone).month();
             Opt.file[Month][1] = Opt.file[Month][1] + 1;
           }
