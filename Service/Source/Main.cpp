@@ -78,8 +78,8 @@ int main(int argc, char** argv) {
   DatabasePool     DBPool;                         // Init database pool
   HTTPServer       HTTPServer;                     // Init WEB service
   MessageLoop      Loop;                           // Create application message loop
-  SystemManager    Sys;                            // System status and actions
 
+  SystemManager    Sys;                            // System status and actions
   BluetoothManager BT;                             // Create bluetooth manager
   WifiManager      Wifi;                           // Create wifi manager
   EthernetManager  Ethernet;                       // Create ethernet manager

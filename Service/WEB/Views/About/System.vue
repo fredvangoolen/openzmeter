@@ -1,17 +1,47 @@
 <template>
-  <div class="panel panel-other">
+  <div class="panel panel-other main-panel">
     <div class="panel-heading clearfix">
       <div class="header-text">{{ (LastUpdate==null) ? 'Loading data...' : 'Last update at ' + FormatDate(LastUpdate) }}</div>
       <div class="header-buttons">
         <toolbar-options storage="SystemOptions" :options="['Debug', 'Warning', 'Error', 'Info']" v-model="Options"></toolbar-options>
         <toolbar-pager :pageSize="20" :input="Messages" :output.sync="FilterMessages" :filtercols="['Message', 'Date']"></toolbar-pager>
-        <div class="btn-group">
-          <button type="button" class="btn btn-default btn-xs" title="Update" @click="Update"><img :src="require('Imgs/update.png')"></button>
-        </div>
       </div>
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
+      <div class="cards">
+        <div class="panel panel-other card" v-if="Status.CPU!=null">
+          <img class="card-img" :src="require('Imgs/chip.png')">
+          <div>
+            <div class="card-title">CPU</div>
+            <div class="card-content"> {{ Round(Status.CPU.Usage, 1) }} %</div>
+            <div v-if="Status.CPU.Count!=null">Total of {{ Status.CPU.Count }} cores<span v-if="Status.CPU.Frequency!=null"> at {{ Status.CPU.Frequency }} MHz</span></div>
+          </div>
+        </div>
+        <div class="panel panel-other card" v-if="Status.RAM!=null">
+          <img class="card-img" :src="require('Imgs/ddr_memory.png')">
+          <div>
+            <div class="card-title">RAM</div>
+            <div class="card-content"> {{ Round((Status.RAM.Total - (Status.RAM.Free + Status.RAM.Cached + Status.RAM.Buffers)) / Status.RAM.Total * 100.0, 1) }} %</div>
+            <div>Total memory {{ Round(Status.RAM.Total / 1024 / 1024, 2) }} MB</div>
+          </div>
+        </div>
+        <div class="panel panel-other card" v-if="Status.Storage!=null">
+          <img class="card-img" :src="require('Imgs/storage.png')">
+          <div>
+            <div class="card-title">Storage</div>
+            <div class="card-content"> {{ Round((Status.Storage.Total - Status.Storage.Free) / Status.Storage.Total * 100, 1) }} %</div>
+            <div>Total space {{ Round(Status.Storage.Total / 1024 / 1024, 1) }} MB</div>
+          </div>
+        </div>
+        <div class="panel panel-other card" v-if="Status.Temperature!=null">
+          <img class="card-img" :src="require('Imgs/temperature_normal.png')">
+          <div>
+            <div class="card-title">Temperature</div>
+            <div class="card-content"> {{ Round(Status.Temperature, 1) }} ºC</div>
+          </div>
+        </div>
+      </div>
       <div class="col-xs-12">
         <vuetable ref="table" :data="FilterMessages" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
       </div>
@@ -24,7 +54,7 @@
   import moment from 'moment';
   export default {
     data: function() {
-      return { ShowSpinner: true, AllMessages: [], Messages: [], FilterMessages: [], Options: {}, LastUpdate: null,
+      return { ShowSpinner: true, AllMessages: [], Messages: [], FilterMessages: [], Options: {}, LastUpdate: null, Timer: null, Status: {},
               Columns: [
                 { name: 'Type', title: 'Type', callback: this.FormatType },
                 { name: 'Date', title: 'Date', callback: this.FormatDate },
@@ -33,7 +63,10 @@
             };
     },
     created: function() {
-      this.Update();
+      this.UpdateLog();
+    },
+    beforeDestroy: function() {
+      if(this.Timer != null) clearTimeout(this.Timer);
     },
     watch: {
       AllMessages: function() { this.Filter(); },
@@ -59,15 +92,25 @@
           this.Messages.push(this.AllMessages[n]);
         }
       },
-      Update: function() {
-        this.$http.post('getSystem', {}).then(
+      UpdateLog: function() {
+        this.$http.post('getLog', {}).then(
           (result) => {
             this.AllMessages = [];
             this.LastUpdate = moment();
             for(var n = 1; n < result.data.Messages.length; n++) this.AllMessages.push({Type: result.data.Messages[n][0], Date: result.data.Messages[n][1], Message: result.data.Messages[n][2]});
-            this.ShowSpinner = false;
+            this.UpdateSystem();
           },
-          (fail) => { }
+          (fail) => { this.UpdateSystem(); }
+        );
+      },
+      UpdateSystem: function() {
+        this.$http.post('getSystem', {}).then(
+          (result) => {
+            this.Status = result.data;
+            this.ShowSpinner = false;
+            this.Timer = setTimeout(this.UpdateLog, 5000);
+          },
+          (fail) => { this.Timer = setTimeout(this.UpdateLog, 5000); }
         );
       }
     },
@@ -76,6 +119,34 @@
 </script>
 
 <style scoped>
+  .cards {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .card {
+    min-width: 100px;
+    max-width: 1000px;
+    margin: 3px;
+    padding: 10px;
+    display: flex;
+    flex-grow: 2;
+    font-size: 12px;
+  }
+  .card-img {
+    margin: 6px;
+    width: 32px;
+    height: 32px;
+  }
+  .card-title {
+    font-weight: bold;
+    line-height: 16px;
+    font-size: 16px;
+  }
+  .card-content {
+    line-height: 28px;
+    font-size: 28px;
+    font-weight: bold;
+  }
   .header-text {
     font-size: 14px;
   }
@@ -92,5 +163,9 @@
   }
   .table >>> td:nth-child(2) {
     text-align: center;
+  }
+  .main-panel {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
   }
 </style>

@@ -15,21 +15,27 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "SystemManager.h"
 #include "LogFile.h"
+
 #ifdef OPENWRT // ======================================================================================================
 #include <sys/param.h>
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
 #include "MessageLoop.h"
 // ---------------------------------------------------------------------------------------------------------------------
+json            SystemManager::pStatus = json::object();
+pthread_mutex_t SystemManager::pMutex  = PTHREAD_MUTEX_INITIALIZER;
+// ---------------------------------------------------------------------------------------------------------------------
 SystemManager::SystemManager() {
   MessageLoop::RegisterListener("SystemManager_PeriodicTasks", PeriodicTasks, 5000);
   MessageLoop::RegisterListener("PowerOff", PowerOff);
   HTTPServer::RegisterCallback("getSystem", GetSystemCallback);
+  HTTPServer::RegisterCallback("getLog", GetLogCallback);
 }
 SystemManager::~SystemManager() {
   MessageLoop::UnregisterListener("SystemManager_PeriodicTasks");
   MessageLoop::UnregisterListener("PowerOff");
   HTTPServer::UnregisterCallback("getSystem");
+  HTTPServer::UnregisterCallback("getLog");
 }
 uint64_t SystemManager::ParseProcMem(const string &name, const string &buff) {
   auto Pos = buff.find(name + ":");
@@ -52,45 +58,56 @@ bool SystemManager::ReadFile(const string filename, string &res) {
   }
 }
 void SystemManager::PeriodicTasks() {
-  struct sysinfo Info;
-  if(sysinfo(&Info) == 0) {
-    //LogFile::SetValue("System", "/Uptime", Info.uptime);
-    //LogFile::SetValue("System", "/Swap/Total", (uint64_t)Info.totalswap * Info.mem_unit);
-    //LogFile::SetValue("System", "/Swap/Usage", ((Info.totalswap - Info.freeswap) * 100.0) / Info.totalswap);
-    //LogFile::SetValue("System", "/CPU/Usage", MIN(100.0, ((Info.loads[0] / (double)(1 << SI_LOAD_SHIFT)) / get_nprocs()) * 100.0));
-  } else {
-    //LogFile::SetValue("System", "/Uptime", nullptr);
-    //LogFile::SetValue("System", "/Swap/Total", nullptr);
-    //LogFile::SetValue("System", "/Swap/Usage", nullptr);
-    //LogFile::SetValue("System", "/CPU/Usage", nullptr);
+  json           Status = json::object();
+  string File;
+  if(ReadFile("/proc/stat", File) == true) {
+    istringstream Stream(File);
+    string  Text;
+    uint8_t Field = 0;
+    float   Usage = 0.0;
+    while(getline(Stream, Text, ' ')) {
+      if(Text.empty()) continue;
+      if((Field > 0) && (Field < 4)) Usage += atoi(Text.c_str());
+      if(Field == 4) {
+        Status["CPU"]["Usage"] = (Usage * 100.0) / atoi(Text.c_str());
+        break;
+      }
+      Field++;
+    }
+    Status["CPU"]["Count"] = get_nprocs();
+    if(ReadFile("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq", File) == true) {
+      Status["CPU"]["Frequency"] = atoi(File.c_str()) / 1000.0;
+    }
+  }
+  if(ReadFile("/proc/uptime", File) == true) {
+    istringstream Stream(File);
+    string  Text;
+    getline(Stream, Text, ' ');
+    Status["Uptime"] = atof(Text.c_str());
+  }
+  if(ReadFile("/proc/meminfo", File) == true) {
+    Status["RAM"] = json::object();
+    Status["RAM"]["Total"] = ParseProcMem("MemTotal", File);
+    Status["RAM"]["Free"] = ParseProcMem("MemFree", File);
+    Status["RAM"]["Cached"] = ParseProcMem("Cached", File);
+    Status["RAM"]["Buffers"] = ParseProcMem("Buffers", File);
+    Status["Swap"] = json::object();
+    Status["Swap"]["Total"] = ParseProcMem("SwapTotal", File);
+    Status["Swap"]["Free"] = ParseProcMem("SwapFree", File);
   }
   struct statvfs Disk;
   if(statvfs("/", &Disk) == 0) {
-    //LogFile::SetValue("System", "/Disk/Total", (uint64_t)Disk.f_blocks * Disk.f_frsize);
-    //LogFile::SetValue("System", "/Disk/Usage", ((Disk.f_blocks - Disk.f_bfree) * 100.0) / Disk.f_blocks);
-  } else {
-    //LogFile::SetValue("System", "/Disk/Total", nullptr);
-    //LogFile::SetValue("System", "/Disk/Usage", nullptr);
+    Status["Storage"] = json::object();
+    Status["Storage"]["Total"] = (uint64_t)Disk.f_blocks * Disk.f_frsize;
+    Status["Storage"]["Free"] = (uint64_t)Disk.f_bfree * Disk.f_frsize;
   }
-  string Memory;
-  if(ReadFile("/proc/meminfo", Memory) == true) {
-    //LogFile::SetValue("System", "/RAM/Total",   ParseProcMem("MemTotal", Memory));
-    //LogFile::SetValue("System", "/RAM/Free",    ParseProcMem("MemFree", Memory));
-    //LogFile::SetValue("System", "/RAM/Cached",  ParseProcMem("Cached", Memory));
-    //LogFile::SetValue("System", "/RAM/Buffers", ParseProcMem("Buffers", Memory));
-  } else {
-    //LogFile::SetValue("System", "/RAM/Total",   nullptr);
-    //LogFile::SetValue("System", "/RAM/Free",    nullptr);
-    //LogFile::SetValue("System", "/RAM/Cached",  nullptr);
-    //LogFile::SetValue("System", "/RAM/Buffers", nullptr);
+  if(ReadFile("/sys/class/thermal/thermal_zone0/temp", File) == true) {
+    Status["Temperature"] = atoi(File.c_str()) / 1000.0;
   }
-  string Temperature;
-  if(ReadFile("/sys/class/thermal/thermal_zone0/temp", Temperature) == true) {
-    //LogFile::SetValue("System", "/Temperature", (Temperature.empty()) ? json(nullptr) : json(stoi(Temperature) / 1000.0));
-  } else {
-    //LogFile::SetValue("System", "/Temperature", nullptr);
-  }
-  //Status::SetValue("/TimeSet", Tools::GetTime64() > 946684800000);
+  Status["Time"] = Tools::GetTime64();
+  pthread_mutex_lock(&pMutex);
+  pStatus = Status;
+  pthread_mutex_unlock(&pMutex);
 }
 void SystemManager::PowerOff() {
   Exec("poweroff");
@@ -116,14 +133,26 @@ json SystemManager::uBusCall(const string &path, const string &method, const jso
   if(Tmp.is_discarded() == true) return nullptr;
   return Tmp;
 }
-#else // ===============================================================================================================
-SystemManager::SystemManager() {
-  HTTPServer::RegisterCallback("getSystem", GetSystemCallback);
-}
-SystemManager::~SystemManager() {
-  HTTPServer::UnregisterCallback("getSystem");
-}
-#endif // ==============================================================================================================
 void SystemManager::GetSystemCallback(const json &params, Response &response) {
+  pthread_mutex_lock(&pMutex);
+  HTTPServer::FillResponse(response, pStatus.dump(), "application/json", HTTP_OK);
+  pthread_mutex_unlock(&pMutex);
+}
+json SystemManager::Status() {
+  pthread_mutex_lock(&pMutex);
+  json Status = pStatus;
+  pthread_mutex_unlock(&pMutex);
+  return Status;
+}
+void SystemManager::GetLogCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, LogFile::ToJSON().dump(), "application/json", HTTP_OK);
 }
+#else // ===============================================================================================================
+SystemManager::SystemManager() {
+}
+SystemManager::~SystemManager() {
+}
+json SystemManager::Status() {
+  return json::object();
+}
+#endif // ==============================================================================================================

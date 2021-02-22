@@ -8,17 +8,18 @@
 </template>
 
 <script>
-  import SwaggerUI from 'swagger-ui';
+  import Swagger from 'swagger-ui';
   import 'swagger-ui/dist/swagger-ui.css';
   export default {
    data: function() {
      return { ShowSpinner: true };
    },
    mounted: function() {
-     this.$http.get('API.json').then(
+
+  this.$http.get('API.json').then(
        (result) => {
          result.data.servers[0].url = document.baseURI;
-         const ui = SwaggerUI( { spec: result.data, domNode: this.$refs.swagger, layout: 'BaseLayout', deepLinking: false, displayRequestDuration: true, defaultModelsExpandDepth: 0 } );
+         const ui = Swagger( { spec: result.data, domNode: this.$refs.swagger, layout: 'BaseLayout', deepLinking: false, displayRequestDuration: true, defaultModelsExpandDepth: 0 } );
          this.ShowSpinner = false;
        },
        (fail) => { }
@@ -40,5 +41,9 @@
   }
   .col-12 >>> .opblock-section-request-body > .opblock-section-header {
     display: none;
+  }
+  .panel-other {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
   }
 </style>

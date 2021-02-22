@@ -102,27 +102,18 @@ AnalyzerSoftEvents::Event_t *AnalyzerSoftEvents::InitEvent() {
   return Event;
 }
 void AnalyzerSoftEvents::SaveSamples(const uint64_t &time, const uint8_t type, const uint16_t len) {
-  uint16_t MaxLen;
-  uint16_t ReadPos;
   Database DB(pSerial);
-  float   *Ptr, *Row;
-  string Type = (type == SAMPLES_RAW_PRESTART) ? "RAW_PRESTART" : (type == SAMPLES_RAW_POSSTART) ? "RAW_POSSTART" : (type == SAMPLES_RAW_PREEND)   ? "RAW_PREEND" : (type == SAMPLES_RAW_POSEND)   ? "RAW_POSEND" : (type == SAMPLES_RMS_PRESTART) ? "RMS_PRESTART" : (type == SAMPLES_RMS_POSSTART) ? "RMS_POSSTART" : (type == SAMPLES_RMS_PREEND)   ? "RMS_PREEND" : "RMS_POSEND";
-  string   Result = "'{";
-  if((type == SAMPLES_RAW_PRESTART) || (type == SAMPLES_RAW_POSSTART) || (type == SAMPLES_RAW_PREEND) || (type == SAMPLES_RAW_POSEND)) {
-    MaxLen  = pPrevSamplesLen;
-    ReadPos = pPrevSamplesPos + (pPrevSamplesLen - len);
-    Ptr     = pPrevSamples;
-  } else {
-    MaxLen  = pPrevCyclesLen;
-    ReadPos = pPrevCyclesPos + (pPrevCyclesLen - len);
-    Ptr     = pPrevCycles;
-  }
+  string   Type    = (type == SAMPLES_RAW_PRESTART) ? "RAW_PRESTART" : (type == SAMPLES_RAW_POSSTART) ? "RAW_POSSTART" : (type == SAMPLES_RAW_PREEND)   ? "RAW_PREEND" : (type == SAMPLES_RAW_POSEND)   ? "RAW_POSEND" : (type == SAMPLES_RMS_PRESTART) ? "RMS_PRESTART" : (type == SAMPLES_RMS_POSSTART) ? "RMS_POSSTART" : (type == SAMPLES_RMS_PREEND)   ? "RMS_PREEND" : "RMS_POSEND";
+  uint16_t MaxLen  = ((type == SAMPLES_RAW_PRESTART) || (type == SAMPLES_RAW_POSSTART) || (type == SAMPLES_RAW_PREEND) || (type == SAMPLES_RAW_POSEND)) ? pPrevSamplesLen : pPrevCyclesLen;
+  uint16_t ReadPos = ((type == SAMPLES_RAW_PRESTART) || (type == SAMPLES_RAW_POSSTART) || (type == SAMPLES_RAW_PREEND) || (type == SAMPLES_RAW_POSEND)) ? (pPrevSamplesPos + (pPrevSamplesLen - len)) %  pPrevSamplesLen : (pPrevCyclesPos + (pPrevCyclesLen - len)) % pPrevCyclesLen;
+  float   *Ptr     = ((type == SAMPLES_RAW_PRESTART) || (type == SAMPLES_RAW_POSSTART) || (type == SAMPLES_RAW_PREEND) || (type == SAMPLES_RAW_POSEND)) ? pPrevSamples : pPrevCycles;
+  string   Result  = "'{";
   for(uint16_t i = 0; i < len; i++) {
-    ReadPos = (ReadPos + 1) % MaxLen;
-    Row     = &Ptr[ReadPos * pVoltageChannels];
+    float *Row = &Ptr[ReadPos * pVoltageChannels];
     Result.append((i == 0) ? "{" : ", {");
     for(uint32_t n = 0; n < pVoltageChannels; n++) Result.append(((n == 0) ? "" : ", ") + (isnan(Row[n]) ? string("NULL") : to_string(Row[n])));
     Result.append("}");
+    ReadPos = (ReadPos + 1) % MaxLen;
   }
   Result.append("}'");
   DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples) VALUES (" + DB.Bind(time) + ", " + DB.Bind(Type) + ", " + Result + ")");

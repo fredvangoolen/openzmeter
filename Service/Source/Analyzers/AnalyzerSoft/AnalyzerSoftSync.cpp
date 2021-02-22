@@ -58,9 +58,9 @@ void AnalyzerSoftSync::Config(const json &config, const string &name) {
     pServer    = config["Server"];
     pUser      = config["User"];
     pPass      = config["Pass"];
-    pTerminate = false;
     pName      = name;
     if(pThread == 0) {
+      pTerminate = false;
       if(pthread_create(&pThread, NULL, [](void *params) { return ((AnalyzerSoftSync*)params)->Thread(); }, this) != 0) {
         LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         pThread = 0;
@@ -91,7 +91,6 @@ bool AnalyzerSoftSync::Login(const string &path, Client *client, const string &u
     return true;
   } else {
     LogFile::Debug(pParent->pSerial.c_str(), "Analyzer '%s' can not login on remote server", pParent->Serial().c_str());
-    usleep(1000000);
     return false;
   }
 }
@@ -137,14 +136,14 @@ void *AnalyzerSoftSync::Thread() {
     Req.path              = Url->Path() + "/getRemote";
     Req.headers           = {{"Cookie", Cookie}, { "Accept", "text/event-stream" }, {"Content-Type", "application/json"}};
     Req.body              = Content.dump();
-    Req.response_handler_ = [&](const Response &response) -> bool {
+    Req.response_handler = [&](const Response &response) -> bool {
       if(pTerminate == true) return false;
       if(response.status == HTTP_OK) return true;
       LogFile::Debug("Failed request to remote server in analyzer '%s' (ERROR: %d)", pParent->Serial().c_str(), response.status);
       usleep(1000000);
       return false;
     };
-    Req.content_receiver_ = [&](const char *data, size_t data_length, uint64_t offset, uint64_t total_length) -> bool {
+    Req.content_receiver = [&](const char *data, size_t data_length, uint64_t offset, uint64_t total_length) -> bool {
       pthread_mutex_lock(&pMutex);
       if((pTerminate == true) || (pReAuth == true) || (pUser != User) || (pName != Name) || (pPass != Pass) || (pServer != Server)) {
         pthread_mutex_unlock(&pMutex);

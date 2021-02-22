@@ -353,10 +353,6 @@ img {
   left: 0px;
   z-index: 100;
 }
-div.scrtabs-tab-container + div.panel {
-  border-top-left-radius: 0px;
-  border-top-right-radius: 0px;
-}
 
 /*--------------------------------------------------------------------------------------------------------------------*/
 
