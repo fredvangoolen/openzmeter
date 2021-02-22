@@ -26,12 +26,12 @@ class AnalyzerSoftEvents final {
     enum EventType { EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC };
     enum EventSamples { SAMPLES_RAW_PRESTART = 0x01,
                         SAMPLES_RAW_POSSTART = 0x02,
-                        SAMPLES_RAW_PREEND   = 0x03,
-                        SAMPLES_RAW_POSEND   = 0x04,
+                        SAMPLES_RAW_PREEND   = 0x04,
+                        SAMPLES_RAW_POSEND   = 0x08,
                         SAMPLES_RMS_PRESTART = 0x10,
                         SAMPLES_RMS_POSSTART = 0x20,
-                        SAMPLES_RMS_PREEND   = 0x30,
-                        SAMPLES_RMS_POSEND   = 0x40
+                        SAMPLES_RMS_PREEND   = 0x40,
+                        SAMPLES_RMS_POSEND   = 0x80
                       };
     typedef struct {
       EventType      Type;                      //Running event type

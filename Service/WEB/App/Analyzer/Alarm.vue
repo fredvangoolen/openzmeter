@@ -109,8 +109,10 @@
       "Occurrences": "Occurrences",
       "Window": "Window",
       "200 miliseconds": "200 miliseconds"
-    },
-    "es": {
+    }
+  }
+</i18n>
+/*    "es": {
       "Title": "Analyzador » Alarmas » Editar",
       "Main": "Principal",
       "Expression": "Expresión",
@@ -120,6 +122,4 @@
       "Occurrences": "Ocurrencias",
       "Window": "Ventana",
       "200 miliseconds": "200 milisegundos"
-    }
-  }
-</i18n>
+    }*/

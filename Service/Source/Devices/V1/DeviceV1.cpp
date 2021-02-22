@@ -84,12 +84,9 @@ void DeviceV1::GetInstances() {
 }
 DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial, "V1", "Capture device V1") {
   LogFile::Info("Starting DeviceV1 with serial '%s'...", serial.c_str());
-//  pBuffer             = (int16_t*)malloc(DEVICEV1_BUFFERSIZE * sizeof(uint16_t) * 2);
   pAverageLocks       = PTHREAD_RWLOCK_INITIALIZER;
   pConfigLock         = PTHREAD_MUTEX_INITIALIZER;
   pThread             = 0;
-//  pBufferHead         = 0;
-//  pBufferTail         = 0;
   pHWVersion          = version;
   pVoltageGain        = 0.0;
   pCurrentGain        = 0.0;
@@ -131,7 +128,6 @@ DeviceV1::~DeviceV1() {
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   ClearAnalyzers();
-//  if(pBuffer != NULL) free(pBuffer);
   LogFile::Info("DeviceV1 with serial '%s' stopped", pSerial.c_str());
 }
 void DeviceV1::ClearAnalyzers() {

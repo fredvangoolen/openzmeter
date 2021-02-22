@@ -28,7 +28,7 @@
     "portal-vue": "^2.1.7",
     "sse.js": "^0.4.5",
     "streamsaver": "^2.0.4",
-    "swagger-ui": "^3.33.0",
+    "swagger-ui": "^3.43.0",
     "vis-data": "^7.0.0",
     "vis-timeline": "^7.3.9",
     "vue": "^2.6.12",

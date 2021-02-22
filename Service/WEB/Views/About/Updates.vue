@@ -115,4 +115,8 @@
     background-color: #111 !important;
     color: #ddd;
   }
+  .panel-other {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+  }
 </style>

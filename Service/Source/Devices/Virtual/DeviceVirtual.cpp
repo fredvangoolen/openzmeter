@@ -124,7 +124,7 @@ void DeviceVirtual::SetDevice(const json &params, Response &response) {
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = params;
   Config["Analyzer"] = ConfigFile::ReadConfig("/Devices/" + pSerial + "/Analyzer");
-  Configure(Config);
+  Configure(CheckConfig(Config));
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void *DeviceVirtual::Capture_Thread(void *args) {

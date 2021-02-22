@@ -19,6 +19,9 @@
       "AlarmTemplate": {
         "type": "object",
         "properties": {
+          "Enabled": {
+            "type": "boolean"
+          },
           "Name": {
             "type": "string"
           },
@@ -39,6 +42,7 @@
           }
         },
         "example": {
+          "Enabled": true,
           "Name": "Alarm1",
           "Priority": 0,
           "Expression": "ActivePower>100",
@@ -86,18 +90,21 @@
           "TimeZone": "UTC"
         }
       },
+      "RateTemplate": {
+        "type": "object"
+      },
       "TariffTemplate": {
         "type": "object",
         "properties": {
           "Name": {
-            "type": "integer"
+            "type": "string"
           },
           "Template": {
             "type": "object"
           }
         },
         "example": {
-          "Name": "ESP_2.0A",
+          "Name": "ESP_2.0A_2020",
           "Template": {
             "Days": [
               {
@@ -674,55 +681,6 @@
     }
   ],
   "paths": {
-    "/delAlarm": {
-      "post": {
-        "summary": "Delete detected alarm",
-        "tags": [
-          "Alarms"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "AlarmID": "xxxxxxxxxx",
-                  "Trigger": 1603790565225
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "AlarmID": {
-                    "type": "string"
-                  },
-                  "Trigger": {
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "AlarmID",
-                  "Trigger"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "400": {
-            "description": "On missing params"
-          },
-          "500": {
-            "description": "Fail to delete alarm"
-          }
-        }
-      }
-    },
     "/getAnalyzers": {
       "post": {
         "summary": "Get list of avaliable analyzers",
@@ -762,6 +720,78 @@
       }
     },
     "/getAnalyzer": {
+      "post": {
+        "summary": "Get analyzer details",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx"
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "Analyzer"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "AlarmsEnabled": true,
+                  "EventsEnabled": true,
+                  "MQTT": {
+                    "Enabled": false,
+                    "Export10M": false,
+                    "Export15M": false,
+                    "Export1H": false,
+                    "Export1M": true,
+                    "Export3S": true,
+                    "ExportAlarms": false,
+                    "ExportConfig": false,
+                    "Pass": "",
+                    "Prefix": "/OZM",
+                    "Server": "mqtt://test.mosquitto.org",
+                    "User": ""
+                  },
+                  "MaxCurrent": 35,
+                  "MinCurrent": 0.1,
+                  "Mode": "1PHASE",
+                  "Name": "Unnamed analyzer",
+                  "NominalFrequency": 50,
+                  "NominalVoltage": 230,
+                  "Online": true,
+                  "SampleRate": 24000,
+                  "Save200MS": true,
+                  "Sync": {
+                    "Enabled": false,
+                    "Pass": "",
+                    "Server": "",
+                    "User": ""
+                  },
+                  "Tags": [],
+                  "TimeZone": "UTC"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/setAnalyzer": {
       "post": {
         "summary": "Get analyzer details",
         "tags": [
@@ -902,6 +932,1521 @@
       }
     },
     "/getSeries": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getCosts": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.41
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getBills": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getSeriesRange": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delSeriesRange": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getEvents": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getEventsRange": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delEventsRange": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getEvent": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/setEvent": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delEvent": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/testAlarm": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getAlarms": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getAlarmsRange": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delAlarm": {
+      "post": {
+        "summary": "Get analyzer serie",
+        "tags": [
+          "Analyzers"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "xxxxxxxxxx",
+                  "Series": [
+                    "Voltage",
+                    "Current"
+                  ]
+                },
+                "properties": {
+                  "Analyzer": {
+                    "type": "string"
+                  },
+                  "Aggreg": {
+                    "type": "string",
+                    "enum": [
+                      "200MS",
+                      "3S",
+                      "1M",
+                      "10M",
+                      "15M",
+                      "1H"
+                    ]
+                  },
+                  "From": {
+                    "type": "number"
+                  },
+                  "To": {
+                    "type": "number"
+                  },
+                  "Series": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "Voltage",
+                        "Current",
+                        "Active_Power",
+                        "Reactive_Power",
+                        "Active_Energy",
+                        "Reactive_Energy",
+                        "Voltage_Samples",
+                        "Voltage_THD",
+                        "Phi",
+                        "Power_Factor"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "Analyzer",
+                  "Series"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "example": [
+                  [
+                    "Time",
+                    "Voltage"
+                  ],
+                  [
+                    1599307199999,
+                    [
+                      239.383
+                    ]
+                  ],
+                  [
+                    1599310799999,
+                    [
+                      241.35
+                    ]
+                  ],
+                  [
+                    1599314399999,
+                    [
+                      236.431
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delAlarmsRange": {
       "post": {
         "summary": "Get analyzer serie",
         "tags": [

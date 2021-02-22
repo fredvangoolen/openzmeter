@@ -70,23 +70,13 @@ bool BluetoothManager::Enabled() {
 void BluetoothManager::ToggleEnable() {
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   json Config = json::object();
-  Config["Enabled"] = !pEnable;
+  pEnable = !pEnable;
+  Config["Enabled"] = pEnable;
   ConfigFile::WriteConfig("/Bluetooth", Config);
   if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 void *BluetoothManager::Thread(void *params) {
   DBusConnection *DBus = NULL;
-  //LogFile::SetValue("BluetoothManager", "/Bluetooth_Enabled", Enabled);
-//  chmod("/dev/watchdog", S_IWUSR | S_IWGRP | S_IWOTH);
-//  int WatchdogFD = open("/dev/watchdog", O_WRONLY);
-//  if(WatchdogFD == -1) {
-//    LogFile::Error("Watchdog is not avaliable (%s)", strerror(errno));
-//    WatchdogFD = 0;
-//  } else {
-//    int Timeout = 20;
-//    ioctl(WatchdogFD, WDIOC_SETTIMEOUT, &Timeout);
-//  }
-//    if(WatchdogFD != 0) write(WatchdogFD, "\0", 1);
   while((pTerminate == false) || (pEnabled == true)) {
     bool Enable = (pTerminate == false) ? pEnable : false;
     if(DBus == NULL) {
@@ -167,12 +157,11 @@ void *BluetoothManager::Thread(void *params) {
       Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
       if(Reply) dbus_message_unref(Reply);
       dbus_message_unref(Msg);
-      LogFile::Info("BluetoothManager -> Interface UP");
+      LogFile::Info("BluetoothManager interface UP");
       if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       pServerName = NetName;
       pEnabled = true;
       if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-     // LogFile::SetValue("BluetoothManager", "/Bluetooth_Enabled", Enabled);
     } else if((pEnabled == true) && (Enable == false)) {
       if(SendBoolBT(DBus, "Powered", false) == false) continue;
       DBusMessage *Msg = dbus_message_new_method_call("org.bluez", "/org/bluez", "org.bluez.AgentManager1", "UnregisterAgent");
@@ -190,20 +179,14 @@ void *BluetoothManager::Thread(void *params) {
       Reply = dbus_connection_send_with_reply_and_block(DBus, Msg, DBUS_TIMEOUT_USE_DEFAULT, NULL);
       if(Reply) dbus_message_unref(Reply);
       dbus_message_unref(Msg);
-      LogFile::Info("BluetoothManager -> Interface DOWN");
+      LogFile::Info("BluetoothManager interface DOWN");
       if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       pServerName = "";
       pEnabled = false;
       if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-      //LogFile::SetValue("BluetoothManager", "/Bluetooth_Enabled", Enabled);
     }
   }
   if(DBus != NULL) dbus_connection_unref(DBus);
-//  if(WatchdogFD != 0) {
-//    write(WatchdogFD, "V", 1);
-//    close(WatchdogFD);
-//  }
-//  LogFile::Debug("Watchdog stopped");
   return NULL;
 }
 string BluetoothManager::GetMacBT(DBusConnection *bus) {

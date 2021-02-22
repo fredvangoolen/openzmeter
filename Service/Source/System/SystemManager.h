@@ -24,22 +24,28 @@ using namespace std;
 #ifdef OPENWRT // ======================================================================================================
 class SystemManager final {
   private :
+    static json             pStatus;
+    static pthread_mutex_t  pMutex;
+  private :
     static void     PeriodicTasks();
     static void     PowerOff();
     static uint64_t ParseProcMem(const string &name, const string &buff);
     static bool     ReadFile(const string filename, string &res);
     static void     GetSystemCallback(const json &params, Response &response);
+    static void     GetLogCallback(const json &params, Response &response);
   public :
     static string Exec(const string &command, int *resultCode = NULL);
     static json   uBusCall(const string &path, const string &method, const json &params = nullptr);
+  public :
+    static json Status();
   public :
     SystemManager();
     ~SystemManager();
 };
 #else // ===============================================================================================================
 class SystemManager final {
-  private :
-    static void GetSystemCallback(const json &params, Response &response);
+  public :
+    static json Status();
   public :
     SystemManager();
     ~SystemManager();

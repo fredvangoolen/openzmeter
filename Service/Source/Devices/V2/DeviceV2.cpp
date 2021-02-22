@@ -21,6 +21,7 @@
 #include "AnalyzerManager.h"
 #include "Tools.h"
 #include "MessageLoop.h"
+#include "BluetoothManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceV2::pRegistered = DeviceV2::Register();
 //----------------------------------------------------------------------------------------------------------------------
@@ -86,12 +87,9 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
   pBatteryVoltage     = 0;
   pMainsPowered       = false;
   pCharging           = false;
-//  pBuffer             = (int16_t*)malloc(DEVICEV2_BUFFERSIZE * sizeof(uint16_t) * 7);
   pAverageLocks       = PTHREAD_RWLOCK_INITIALIZER;
   pConfigLock         = PTHREAD_MUTEX_INITIALIZER;
   pThread             = 0;
-//  pBufferHead         = 0;
-//  pBufferTail         = 0;
   pChannelsDelay      = NULL;
   pButtonAction       = false;
   pDeviceHandle       = NULL;
@@ -134,7 +132,6 @@ uint32_t DeviceV2::AnalyzersCount() {
 }
 void DeviceV2::ClearAnalyzers() {
   pthread_mutex_lock(&pConfigLock);
-//  pRunningAnalyzers.clear();
   for(uint8_t n = 0; n < pAnalyzersCount; n++) {
     AnalyzerManager::DelAnalyzer(pAnalyzers[n]->Serial());
     delete pAnalyzers[n];
@@ -148,7 +145,6 @@ DeviceV2::~DeviceV2() {
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   ClearAnalyzers();
-//  if(pBuffer != NULL) free(pBuffer);
   if(pChannelsDelay != NULL) free(pChannelsDelay);
   LogFile::Info("DeviceV2 with serial '%s' stopped", pSerial.c_str());
 }
@@ -352,7 +348,7 @@ void *DeviceV2::Thread() {
 //      if(SysStatus->Time_IsSet == false) Status = (Status & 0xFFFC) | 0x0001;           //Stat=RED
 //      if(SysStatus->Events == true) Status = (Status & 0xC01C) | 0x0021;                //Stat=RED and short BEEP
 //      if(SysStatus->WIFI_Network.empty() == false) Status = (Status & 0xFFF3) | 0x000C; //Wifi=GREEN
-//      if(SysStatus->BT_Network.empty() == false) Status = (Status & 0xFFEF) | 0x0010;   //Bt=BLUE
+      if(BluetoothManager::Enabled() == true) Status = (Status & 0xFFEF) | 0x0010;   //Bt=BLUE
 //      SysStatus->Lock.Unlock();
       Status |= (pHighGain == true) ? 0x4000 : 0x0000;
       SignalTransfer->Submit(&Status, sizeof(Status));
@@ -450,9 +446,6 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
         if(StatusRecv == true) continue;
         pBatteryVoltage = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
         uint8_t Action = (Sample & 0x0300) >> 8;
-//        LogFile::SetValue("Devices", "/Battery_Voltage", Battery_Volt);
-//        float Battery_Level  = (Battery_Volt - 2.96) * 80.65;
-//        Status::SetValue("/Battery_Level", (Battery_Level > 100.0) ? 100.0 : Battery_Level);
         pCharging      = (Sample & 0x0002) ? true: false;
         pMainsPowered  = (Sample & 0x0001) ? true: false;
         if((Action == CLICK) && (pButtonAction == false)) {
@@ -551,6 +544,11 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
   Config["Wave_Average"]["Current"].push_back(pAverageValues[5]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
   pthread_rwlock_unlock(&pAverageLocks);
+  pthread_mutex_lock(&pConfigLock);
+  Config["MainsPowered"] = pMainsPowered;
+  Config["Charging"] = pCharging;
+  Config["BatteryVoltage"] = pBatteryVoltage;
+  pthread_mutex_unlock(&pConfigLock);
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void  DeviceV2::SetDevice(const json &params, Response &response) {

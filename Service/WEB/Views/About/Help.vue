@@ -78,4 +78,8 @@
   .fa{
     color:#4183D7;
   }
+  .panel-other {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+  }
 </style>

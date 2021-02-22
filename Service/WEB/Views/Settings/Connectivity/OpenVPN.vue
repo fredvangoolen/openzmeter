@@ -1,7 +1,7 @@
 <template>
   <dlg :loading="ShowSpinner">
     <template v-slot:header>
-      <div class="pull-left"><h4 class="modal-title">NTP synchronization</h4></div>
+      <div class="pull-left"><h4 class="modal-title">OpenVPN</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" title="Save" @click="Save"><img :src="require('Imgs/diskette.png')"></button>

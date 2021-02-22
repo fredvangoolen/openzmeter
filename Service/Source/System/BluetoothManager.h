@@ -39,15 +39,17 @@ class BluetoothManager final {
     static void     GetBluetoothCallback(const json &params, Response &response);
     static void     SetBluetoothCallback(const json &params, Response &response);
   public :
+    static bool Enabled();
+  public :
     BluetoothManager();
     ~BluetoothManager();
-    bool Enabled();
 };
 #else // ===============================================================================================================
 class BluetoothManager final {
   public :
+    static bool Enabled();
+  public :
     BluetoothManager();
     ~BluetoothManager();
-    bool Enabled();
 };
 #endif // ==============================================================================================================

@@ -26,10 +26,3 @@
     components: { Api, License, Changelog, Help, Updates, System }
   }
 </script>
-
-<style scoped>
-  .row >>> .panel {
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
-  }
-</style>
