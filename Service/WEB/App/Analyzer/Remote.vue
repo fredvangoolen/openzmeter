@@ -41,15 +41,15 @@
       <div class="col-xs-12"><hr style="margin: 5px 0px 5px 0px"/></div>
       <div class="col-xs-8">
         <label class="control-label" style="line-height: 22px">Broker</label>
-        <input type="text" class="form-control form-control-sm" v-model="Analyzer.MQTT.Server">
+        <input type="text" class="form-control" v-model="Analyzer.MQTT.Server">
       </div>
       <div class="col-xs-4">
         <label class="control-label" style="line-height: 22px">Prefix</label>
-        <input type="text" class="form-control form-control-sm" v-model="Analyzer.MQTT.Prefix">
+        <input type="text" class="form-control" v-model="Analyzer.MQTT.Prefix">
       </div>
       <div class="col-xs-6">
         <label class="control-label" style="line-height: 22px">User</label>
-        <input type="text" class="form-control form-control-sm" v-model="Analyzer.MQTT.User">
+        <input type="text" class="form-control" v-model="Analyzer.MQTT.User">
       </div>
       <div class="col-xs-6">
         <label class="control-label" style="line-height: 22px">Password</label>

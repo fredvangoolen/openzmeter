@@ -18,13 +18,13 @@
 #include <pthread.h>
 #include "Tools.h"
 #include "cctz/time_zone.h"
-#include "AnalyzerSoft.h"
 #include "AnalyzerSoftAlarm.h"
 #include "AnalyzerSoftAggreg200MS.h"
+#include "AnalyzerSoftMQTT.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 // ---------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoftMQTT;
+//class AnalyzerSoftMQTT;
 class AnalyzerSoftAlarms final {
   private :
     float                                     pNominalVoltage;
@@ -47,10 +47,8 @@ class AnalyzerSoftAlarms final {
     void ConfigNominals(const float nominalVoltage, const float nominalFreq);
     void Run(const string &name, AnalyzerSoftAggreg *params);
     void Wait();
-    void TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS *aggreg);
-    void GetAlarms(const json &params, Response &response);
-    void GetAlarmsRange(const json &params, Response &response);
-    void DelAlarm(const json &params, Response &response);
-    void DelAlarmsRange(const json &params, Response &response);
+    void TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS *aggreg) const;
+    void DelAlarm(const json &params, Response &response) const;
+    void DelAlarmsRange(const json &params, Response &response) const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

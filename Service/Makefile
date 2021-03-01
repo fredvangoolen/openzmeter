@@ -13,7 +13,7 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort)
 EXECUTABLE_TARGET = Tmp/$(TARGET)/openZmeter
 EXECUTABLE_SOURCE = $(shell find Source -name "*.cpp" ! -type d -print)
 CFLAGS  += -DCPPHTTPLIB_USE_POLL -DCPPHTTPLIB_TCP_NODELAY -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" \
-           -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/AnalyzerSoft -I Source/Analyzers/AnalyzerRemote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools -I Libs -I Libs/mqtt-c \
+           -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/Soft -I Source/Analyzers/Default -I Source/Analyzers/Remote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools -I Libs -I Libs/mqtt-c \
 					 -fsingle-precision-constant -Wno-psabi -Wall
 LDFLAGS += -lpq -lz -lpthread -lm -lssl -lcrypto -lusb-1.0 -luuid -l:libfftw3f.a -l:libstdc++.a
 

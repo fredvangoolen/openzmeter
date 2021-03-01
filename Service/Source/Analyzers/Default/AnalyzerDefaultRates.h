@@ -14,26 +14,26 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <string>
-#include <map>
-#include <pthread.h>
-#include "nlohmann/json.hpp"
+#include "cctz/time_zone.h"
+#include "HTTPServer.h"
+#include "Rate.h"
+#include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
-using json = nlohmann::json;
-using namespace std;
+using namespace cctz;
 // ---------------------------------------------------------------------------------------------------------------------
-class AnalyzerAccess final {
-  public :
-    enum Access { READ = 0x01, WRITE = 0x02, CONFIG = 0x04 };
+class AnalyzerDefaultRates final {
   private :
-    string pSerial;
+    string                    pSerial;
+    time_zone                 pTimeZone;
+    vector<vector<Rate> >     pRates;
+    pthread_rwlock_t          pLock;
   public :
-    AnalyzerAccess(const string &serial);
-    ~AnalyzerAccess();
-    void SetUsers(const json &config);
-    json GetUsers();
-    void SetTime(const string &user, const uint64_t &alarm, const uint64_t &event);
-    json GetTime(const string &user);
-    bool TestUser(const string &user, const Access neededAccess);
+    static json CheckConfig(const json &config, const bool except);
+  public :
+    AnalyzerDefaultRates(const string &serial);
+    ~AnalyzerDefaultRates();
+    void Config(const string &timezone, const json &rates);
+    void GetCosts(const json &params, Response &response);
+    void GetBills(const json &params, Response &response);
 };
 // ---------------------------------------------------------------------------------------------------------------------

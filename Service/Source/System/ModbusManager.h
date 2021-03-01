@@ -67,7 +67,7 @@ class ModbusManager final {
     static vector<string>  pAnalyzers;
   private :
     static json  CheckConfig(const json &config);
-    static void  Configure(const json &config);
+    static void  Config(const json &config);
     static void *Thread(void *args);
     static void  Connection_Handle(const int clientSock, const sockaddr_in &client);
     static void  GetModbusTCP(const json &params, Response &response);

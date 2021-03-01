@@ -29,25 +29,23 @@
 #include "LogFile.h"
 #include "MessageLoop.h"
 #include "URL.h"
-#include "AnalyzerSoftAlarms.h"
 #include "PriceSource.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pMode(mode) {
-  LogFile::Debug("Creating AnalyzerSoft database tables");
-  pDB = new DatabaseQueue(id, true);
-  pDB->ExecResource("SQL/Database_AnalyzerSoft.sql");
+AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id, mode), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4) {
   pMutex          = PTHREAD_MUTEX_INITIALIZER;
   pCond           = PTHREAD_COND_INITIALIZER;
   pTerminate      = false;
   pWorkingBlock   = NULL;
+  pDefStorage     = new AnalyzerDefaultStorage(pSerial);
+  pDB             = new DatabaseQueue(id, true);
   pFFTs           = new AnalyzerSoftFFTs(pSerial, mode);
   pMQTT           = new AnalyzerSoftMQTT(pSerial);
-  pRates          = new AnalyzerSoftRates(pSerial);
+  pDefRates       = new AnalyzerDefaultRates(pSerial);
   pAlarms         = new AnalyzerSoftAlarms(pSerial, pMQTT, pDB);
   pEvents         = new AnalyzerSoftEvents(pSerial, mode, samplerate);
-  pSync           = new AnalyzerSoftSync(this);
+  pSync           = new AnalyzerSoftSync(pSerial, mode, samplerate);
   pZeroCross      = new AnalyzerSoftZeroCrossing(mode, samplerate);
   pFrequency      = new AnalyzerSoftFrequency(samplerate);
   pAggreg200MS    = new AnalyzerSoftAggreg200MS(pSerial, mode, pDB);
@@ -56,15 +54,15 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAggreg10M      = new AnalyzerSoftAggreg10M(pSerial, mode, pDB);
   pAggreg15M      = new AnalyzerSoftAggreg15M(pSerial, mode, pDB);
   pAggreg1H       = new AnalyzerSoftAggreg1H(pSerial, mode, pDB);
-  pStorage        = new AnalyzerSoftStorage(pSerial, mode);
-  MessageLoop::RegisterListener("AnalyzerSoft_" + pSerial + "_PeriodicTasks", [&]() { this->PeriodicTasks(); }, 60000);
+  pStorage        = new AnalyzerSoftStorage(pSerial);
+  MessageLoop::RegisterListener("AnalyzerSoft_" + pSerial + "_PeriodicTasks", [&]() { this->pDefStorage->CleanOldSamples(); }, 60000);
   if(pthread_create(&pThread, NULL, [](void *params) -> void* { ((AnalyzerSoft*)params)->Thread(); return NULL; }, this) != 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     pThread = 0;
   } else {
     Worker::SetThreadProperties(pThread, "Analyzer", Worker::ABOUTNORMAL);
   }
-  Config(ConfigFile::ReadConfig(optionPath));
+  Config(CheckConfig(ConfigFile::ReadConfig(optionPath), mode, false));
 }
 AnalyzerSoft::~AnalyzerSoft() {
   LogFile::Info("Stopping analyzer with serial '%s'", pSerial.c_str());
@@ -78,6 +76,8 @@ AnalyzerSoft::~AnalyzerSoft() {
     delete pPendingBlocks.front();
     pPendingBlocks.pop_front();
   }
+  delete pStorage;
+  delete pDefStorage;
   delete pAggreg1H;
   delete pAggreg15M;
   delete pAggreg10M;
@@ -90,7 +90,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   delete pSync;
   delete pEvents;
   delete pAlarms;
-  delete pRates;
+  delete pDefRates;
   delete pFFTs;
   delete pDB;
   LogFile::Info("Analyzer with serial '%s' stopped", pSerial.c_str());
@@ -153,7 +153,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   if(config.contains("EventsEnabled") && config["EventsEnabled"].is_boolean()) ConfigOUT["EventsEnabled"] = config["EventsEnabled"];
   if(config.contains("AlarmsEnabled") && config["AlarmsEnabled"].is_boolean()) ConfigOUT["AlarmsEnabled"] = config["AlarmsEnabled"];
   if(config.contains("Alarms") && config["Alarms"].is_array()) ConfigOUT["Alarms"] = AnalyzerSoftAlarms::CheckConfig(config["Alarms"]);
-  if(config.contains("Rates") && config["Rates"].is_array()) ConfigOUT["Rates"] = AnalyzerSoftRates::CheckConfig(config["Rates"], except);
+  if(config.contains("Rates") && config["Rates"].is_array()) ConfigOUT["Rates"] = AnalyzerDefaultRates::CheckConfig(config["Rates"], except);
   return ConfigOUT;
 }
 void AnalyzerSoft::Config(const json &options) {
@@ -164,12 +164,13 @@ void AnalyzerSoft::Config(const json &options) {
   pNominalFrequency = options["NominalFrequency"];
   pSave200MS        = options["Save200MS"];
   pZeroCross->Config(pNominalVoltage, pNominalFrequency);
-  pRates->Config(options["TimeZone"], options["Rates"]);
+  pDefRates->Config(options["TimeZone"], options["Rates"]);
   pAlarms->Config(options["AlarmsEnabled"], options["TimeZone"], options["Alarms"]);
   pEvents->Config(options["EventsEnabled"]);
-  pSync->Config(options["Sync"], options["Name"]);
+  pSync->Config(options["Sync"], pConfigPath);
   pMQTT->Config(options);
   pthread_mutex_unlock(&pMutex);
+  Configured(true);
 }
 void AnalyzerSoft::Thread() {
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
@@ -328,50 +329,11 @@ void AnalyzerSoft::Thread() {
 }
 void AnalyzerSoft::ResultsReady(AnalyzerSoftAggreg200MS *params) {
 }
-void AnalyzerSoft::PeriodicTasks() {
-  Database DB(pSerial);
-  uint64_t Now = Tools::GetTime64();
-  if(Now > 86400000) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Now - 86400000));   //Delete 1 day old
-  if(Now > 3600000)  DB.ExecSentenceNoResult("DELETE FROM aggreg_200ms WHERE sampletime < " + DB.Bind(Now - 3600000));     //Delete 1 hour old
-  pSync->PeriodicTasks();
-}
-//----------------------------------------------------------------------------------------------------------------------
-void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  string UserName = params["UserName"];
-  json   Response = ConfigFile::ReadConfig(pConfigPath);
-  Response["Online"]       = Online();
-  Response["Mode"]         = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
-  Response["SampleRate"]   = pSamplerate;
-  Response["PriceModules"] = PriceSource::VarsInfo();
-  Response["Users"]        = Access()->GetUsers();
-  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
-}
-void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  try {
-    if(params.contains("Users") && params["Users"].is_array()) Access()->SetUsers(params["Users"]);
-    Config(CheckConfig(params, pMode, true));
-    HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
-  } catch(const string &err) {
-    HTTPServer::FillResponse(response, err, "text/plain", HTTP_BAD_REQUEST);
-  }
-}
-void AnalyzerSoft::GetSeries(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pStorage->GetSeries(params, response);
-}
-void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+json AnalyzerSoft::GetSeriesNow(const json &series) {
   json Result  = json::object();
   Result["Time"] = pAggreg200MS->Timestamp();
-  for(auto &Serie : params["Series"]) {
-    if(Serie.is_string() == false) {
-      pNowDataLock.ConsumerEnds();
-      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    }
+  for(auto &Serie : series) {
+    if(Serie.is_string() == false) return nullptr;
     if(pAggreg200MS->GetSeriesJSON(Serie, Result) == true) continue;
     if(pFFTs->GetSeriesJSON(Serie, Result) == true) continue;
     if(pWorkingBlock->GetSeriesJSON(Serie, Result) == true) continue;
@@ -380,14 +342,52 @@ void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
 //      Result["GA_Power"] = CalcGA();
  //     continue;
  //   }
-    pNowDataLock.ConsumerEnds();
-    return HTTPServer::FillResponse(response, "Unknown serie name", "application/json", HTTP_BAD_REQUEST);
+    return nullptr;
   }
+  return Result;
+}
+json AnalyzerSoft::GetSeriesNow() {
+
+}
+//----------------------------------------------------------------------------------------------------------------------
+void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  string UserName = params["UserName"];
+  json   Response = ConfigFile::ReadConfig(pConfigPath);
+  Response["Online"]       = Online();
+  Response["OnlineTime"]   = OnlineTime();
+  Response["User"]         = pOwner;
+  Response["Mode"]         = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
+  Response["SampleRate"]   = pSamplerate;
+  Response["PriceModules"] = PriceSource::VarsInfo();
+  Response["Users"]        = GetUsers();
+  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
+  if(TestUser(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  try {
+    if(params.contains("Users") && params["Users"].is_array()) SetUsers(params["Users"]);
+    Config(CheckConfig(params, pMode, true));
+    HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
+  } catch(const string &err) {
+    HTTPServer::FillResponse(response, err, "text/plain", HTTP_BAD_REQUEST);
+  }
+}
+void AnalyzerSoft::GetSeries(const json &params, Response &response) {
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pDefStorage->GetSeries(params, response);
+}
+void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  json Result = GetSeriesNow(params["Series"]);
   pNowDataLock.ConsumerEnds();
+  if(Result == nullptr) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetStatus(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pStorage->GetStatus(params, response);
 }
 void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
@@ -451,67 +451,73 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
 //  response.set_chunked_content_provider("application/json", Func, Free);
 }
 void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pStorage->GetSeriesRange(params, response);
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pDefStorage->GetSeriesRange(params, response);
 }
 void AnalyzerSoft::DelSeriesRange(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pStorage->DelSeriesRange(params, response);
 }
 void AnalyzerSoft::GetEvents(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pEvents->GetEvents(params, response);
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pDefStorage->GetEvents(params, response);
 }
 void AnalyzerSoft::GetEventsRange(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pEvents->GetEventsRange(params, response);
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pDefStorage->GetEventsRange(params, response);
 }
 void AnalyzerSoft::DelEventsRange(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pEvents->DelEventsRange(params, response);
 }
 void AnalyzerSoft::GetEvent(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pEvents->GetEvent(params, response);
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pDefStorage->GetEvent(params, response);
 }
 void AnalyzerSoft::SetEvent(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pEvents->SetEvent(params, response);
 }
 void AnalyzerSoft::DelEvent(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pEvents->DelEvent(params, response);
 }
 void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   pAlarms->TestAlarm(params, response, pAggreg200MS);
   pNowDataLock.ConsumerEnds();
 }
 void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms->GetAlarms(params, response);
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pDefStorage->GetAlarms(params, response);
 }
 void AnalyzerSoft::GetAlarmsRange(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms->GetAlarmsRange(params, response);
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pDefStorage->GetAlarmsRange(params, response);
 }
 void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pAlarms->DelAlarm(params, response);
 }
 void AnalyzerSoft::DelAlarmsRange(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pAlarms->DelAlarmsRange(params, response);
 }
 void AnalyzerSoft::GetCosts(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pRates->GetCosts(params, response);
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pDefRates->GetCosts(params, response);
 }
 void AnalyzerSoft::GetBills(const json &params, Response &response) {
-  if(Access()->TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pRates->GetBills(params, response);
+  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  pDefRates->GetBills(params, response);
 }
+void AnalyzerSoft::SetRemote(const json &params, Response &response) {
+  HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
+}
+void AnalyzerSoft::SetSeries(const json &params, Response &response) {}
+void AnalyzerSoft::SetEvents(const json &params, Response &response) {}
+void AnalyzerSoft::SetAlarms(const json &params, Response &response) {}
 bool AnalyzerSoft::HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) {
   if(pNowDataLock.ConsumerWait(5) == false) return false;
   pAggreg200MS->HandleModbus(buff, start, len);

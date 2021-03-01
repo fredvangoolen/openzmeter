@@ -23,19 +23,19 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceRemote final : public Device {
   private :
-    static bool                         pRegistered;
-    static pthread_rwlock_t             pLocks;
-    static map<string, AnalyzerRemote*> pAnalyzers;
+    static bool                  pRegistered;
+  private :
+    pthread_mutex_t              pMutex;
+    vector<AnalyzerRemote*>      pAnalyzers;
   private :
     static bool  Register();
     static void  GetInstances();
     static json  CheckConfig(const json &config);
-    static void  GetRemoteCallback(const json &params, Response &response);
-    static void  SetRemoteCallback(const map<string, string> &params, Response &response, const ContentReader &content_reader);
   private :
     DeviceRemote();
     uint32_t AnalyzersCount();
-    void     Configure(const json &config);
+    void     ClearAnalyzers();
+    void     Config(const json &config);
     void     GetDevice(const json &params, Response &response) override;
     void     SetDevice(const json &params, Response &response) override;
   public :

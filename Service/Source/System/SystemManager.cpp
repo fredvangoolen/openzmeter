@@ -149,8 +149,13 @@ void SystemManager::GetLogCallback(const json &params, Response &response) {
 }
 #else // ===============================================================================================================
 SystemManager::SystemManager() {
+  HTTPServer::RegisterCallback("getLog", GetLogCallback);
 }
 SystemManager::~SystemManager() {
+  HTTPServer::UnregisterCallback("getLog");
+}
+void SystemManager::GetLogCallback(const json &params, Response &response) {
+  HTTPServer::FillResponse(response, LogFile::ToJSON().dump(), "application/json", HTTP_OK);
 }
 json SystemManager::Status() {
   return json::object();

@@ -98,11 +98,9 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
   pRunAverageCounter  = 0;
   pTerminate          = false;
   pCaptureSize        = 0xFF;
-  pAnalyzersCount     = 0;
-  memset(pAnalyzers, 0, sizeof(pAnalyzers));
   memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
   memset(pAverageValues, 0 , sizeof(pAverageValues));
-  Configure(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
+  Config(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
   int Error = libusb_init(&pContext);
   if(Error < 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, libusb_error_name(Error));
@@ -126,18 +124,17 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
 }
 uint32_t DeviceV2::AnalyzersCount() {
   pthread_mutex_lock(&pConfigLock);
-  uint32_t Count = pAnalyzersCount;
+  uint32_t Count = pAnalyzers.size();
   pthread_mutex_unlock(&pConfigLock);
   return Count;
 }
 void DeviceV2::ClearAnalyzers() {
   pthread_mutex_lock(&pConfigLock);
-  for(uint8_t n = 0; n < pAnalyzersCount; n++) {
-    AnalyzerManager::DelAnalyzer(pAnalyzers[n]->Serial());
-    delete pAnalyzers[n];
-    pAnalyzers[n] = NULL;
+  while(pAnalyzers.size() > 0) {
+    AnalyzerManager::DelAnalyzer(pAnalyzers.back()->Serial());
+    delete pAnalyzers.back();
+    pAnalyzers.pop_back();
   }
-  pAnalyzersCount = 0;
   pthread_mutex_unlock(&pConfigLock);
 }
 DeviceV2::~DeviceV2() {
@@ -263,7 +260,7 @@ json DeviceV2::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-void DeviceV2::Configure(const json& config) {
+void DeviceV2::Config(const json& config) {
   ClearAnalyzers();
   pthread_mutex_lock(&pConfigLock);
   ConfigFile::WriteConfig("/Devices/" + pSerial, config);
@@ -288,7 +285,7 @@ void DeviceV2::Configure(const json& config) {
   memset(pChannelsDelay, 0, sizeof(int16_t) * DelayLen);
   pHighGain = config["HighGain"];
   pEnabled = config["Enabled"];
-  for(auto Tmp : config["Outputs"]) {
+  for(auto &Tmp : config["Outputs"]) {
     Analyzer::AnalyzerMode  Mode = (Tmp["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Tmp["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
     string                  Name = pSerial;
     uint8_t VoltageMap[3];
@@ -300,7 +297,7 @@ void DeviceV2::Configure(const json& config) {
       VoltageMap[0] = (Voltage[2] - '1');
       CurrentMap[0] = (Current[3] - '1') + 3;
       InvertMap[0]  = (Current[0] == '+') ? false : true;
-      Name          = Name + "_1P_CH" + to_string(Current[3] - '0');
+      Name          = Name + "_CH" + to_string(Current[3] - '0') + "_1P";
     } else {
       for(uint8_t Ch = 0; Ch < Tmp["Voltage"].size(); Ch++) {
         string Voltage = Tmp["Voltage"][Ch];
@@ -313,17 +310,15 @@ void DeviceV2::Configure(const json& config) {
       }
       Name = Name + ((Mode == Analyzer::PHASE3) ? "_3P" : "_3PN");
     }
-    pAnalyzers[pAnalyzersCount] = new DeviceV2Analyzer(Name, Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzersCount) + "/Analyzer", DEVICEV2_SAMPLEFREQ, VoltageMap, CurrentMap, InvertMap);
-    AnalyzerManager::AddAnalyzer(pAnalyzers[pAnalyzersCount]);
-    pAnalyzersCount++;
+    pAnalyzers.push_back(new DeviceV2Analyzer(Name, Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzers.size()) + "/Analyzer", DEVICEV2_SAMPLEFREQ, VoltageMap, CurrentMap, InvertMap));
+    AnalyzerManager::AddAnalyzer(pAnalyzers.back());
   }
   if(config["Calculated"]["Enabled"]) {
     string Voltage = config["Calculated"]["Voltage"];
     float CurrentMap[4];
     for(uint8_t Ch = 0; Ch < 4; Ch++) CurrentMap[Ch] = (config["Calculated"]["Current"][Ch] == "UNUSED") ? 0.0 : (config["Calculated"]["Current"][Ch] == "ADD") ? 1.0 : -1.0;
-    pAnalyzers[pAnalyzersCount] = new DeviceV2Analyzer(pSerial + "_1P_CAL", "/Devices/" + pSerial + "/Calculated/Analyzer", DEVICEV2_SAMPLEFREQ, Voltage[2] - '1', CurrentMap);
-    AnalyzerManager::AddAnalyzer(pAnalyzers[pAnalyzersCount]);
-    pAnalyzersCount++;
+    pAnalyzers.push_back(new DeviceV2Analyzer(pSerial + "_CAL_1P", "/Devices/" + pSerial + "/Calculated/Analyzer", DEVICEV2_SAMPLEFREQ, Voltage[2] - '1', CurrentMap));
+    AnalyzerManager::AddAnalyzer(pAnalyzers.back());
   }
   pthread_mutex_unlock(&pConfigLock);
 }
@@ -485,7 +480,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
             Values[4] = (Values[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
             Values[5] = (Values[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
             Values[6] = (Values[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
-            for(uint8_t n = 0; n < pAnalyzersCount; n++) pAnalyzers[n]->BufferAppend(Values);
+            for(auto &Tmp : pAnalyzers) Tmp->BufferAppend(Values);
           }
           pCaptureSize = 0;
         } else {
@@ -554,14 +549,14 @@ void DeviceV2::GetDevice(const json &params, Response &response) {
 void  DeviceV2::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = params;
+  json ConfigIN = params;
   json Orig = ConfigFile::ReadConfig("/Devices/" + pSerial);
-  if(Config.contains("Outputs") && Orig.contains("Outputs") && Config["Outputs"].is_array() && Orig["Outputs"].is_array()) {
-    for(uint8_t n = 0; n < Config["Outputs"].size(); n++) {
-      if(n < Orig["Outputs"].size() && (Config["Outputs"][n].contains("Mode") && Orig["Outputs"][n].contains("Mode")) && Orig["Outputs"][n].contains("Analyzer") && (Config["Outputs"][n]["Mode"] == Orig["Outputs"][n]["Mode"])) Config["Outputs"][n]["Analyzer"] = Orig["Outputs"][n]["Analyzer"];
+  if(ConfigIN.contains("Outputs") && Orig.contains("Outputs") && ConfigIN["Outputs"].is_array() && Orig["Outputs"].is_array()) {
+    for(uint8_t n = 0; n < ConfigIN["Outputs"].size(); n++) {
+      if(n < Orig["Outputs"].size() && (ConfigIN["Outputs"][n].contains("Mode") && Orig["Outputs"][n].contains("Mode")) && Orig["Outputs"][n].contains("Analyzer") && (ConfigIN["Outputs"][n]["Mode"] == Orig["Outputs"][n]["Mode"])) ConfigIN["Outputs"][n]["Analyzer"] = Orig["Outputs"][n]["Analyzer"];
     }
   }
-  Configure(CheckConfig(Config));
+  Config(CheckConfig(ConfigIN));
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 //----------------------------------------------------------------------------------------------------------------------

@@ -79,11 +79,8 @@ class AnalyzerSoftEvents final {
     void Config(const bool enabled);
     void Run(const AnalyzerSoftBlock *block, const uint64_t timestamp, const float nominalVoltage, const float nominalFreq);
     bool Wait();
-    void GetEvents(const json &params, Response &response);
-    void GetEventsRange(const json &params, Response &response);
-    void DelEventsRange(const json &params, Response &response);
-    void GetEvent(const json &params, Response &response);
-    void SetEvent(const json &params, Response &response);
-    void DelEvent(const json &params, Response &response);
+    void DelEventsRange(const json &params, Response &response) const;
+    void SetEvent(const json &params, Response &response) const;
+    void DelEvent(const json &params, Response &response) const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

@@ -34,7 +34,7 @@ DeviceVirtual::DeviceVirtual() : Device("VIRTUAL", "Virtual", "Emulate most of r
   pThread   = 0;
   pLock     = PTHREAD_MUTEX_INITIALIZER;
   pAnalyzer = NULL;
-  Configure(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
+  Config(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
   LogFile::Info("DeviceVirtual started");
 }
 DeviceVirtual::~DeviceVirtual() {
@@ -81,7 +81,7 @@ uint32_t DeviceVirtual::AnalyzersCount() {
   pthread_mutex_unlock(&pLock);
   return Count;
 }
-void DeviceVirtual::Configure(const json &config) {
+void DeviceVirtual::Config(const json &config) {
   ConfigFile::WriteConfig("/Devices/" + pSerial, config);
   if(pThread != 0) {
     pTerminate = true;
@@ -90,7 +90,7 @@ void DeviceVirtual::Configure(const json &config) {
   }
   ClearAnalyzers();
   pthread_mutex_lock(&pLock);
-  string ModeString = config["Mode"];
+  string ModeString = (config["Mode"] == "1PHASE") ? "_1P" : (config["Mode"] == "3PHASE") ? "_3P" : "_3PN";
   pVoltage          = config["Voltage"];
   pFrequency        = config["Frequency"];
   pSampleRate       = config["SampleRate"];
@@ -98,12 +98,12 @@ void DeviceVirtual::Configure(const json &config) {
   pCurrentPhase     = config["CurrentPhase"];
   pMode             = (config["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (config["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
   pEnabled          = config["Enabled"];
-  pAnalyzer         = new AnalyzerSoft(pSerial + "_" + ModeString, pMode, "/Devices/" + pSerial + "/Analyzer", pSampleRate);
+  pAnalyzer         = new AnalyzerSoft(pSerial + ModeString, pMode, "/Devices/" + pSerial + "/Analyzer", pSampleRate);
   AnalyzerManager::AddAnalyzer(pAnalyzer);
   pthread_mutex_unlock(&pLock);
   if(pEnabled == true) {
     pTerminate = false;
-    if(pthread_create(&pThread, NULL, Capture_Thread, this) != 0) {
+    if(pthread_create(&pThread, NULL, [](void *params) { return ((DeviceVirtual*)params)->Thread(); }, this) != 0) {
       LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       ClearAnalyzers();
       pThread = 0;
@@ -122,24 +122,23 @@ void DeviceVirtual::GetDevice(const json &params, Response &response) {
 void DeviceVirtual::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = params;
-  Config["Analyzer"] = ConfigFile::ReadConfig("/Devices/" + pSerial + "/Analyzer");
-  Configure(CheckConfig(Config));
+  json ConfigIN = params;
+  ConfigIN["Analyzer"] = ConfigFile::ReadConfig("/Devices/" + pSerial + "/Analyzer");
+  Config(CheckConfig(ConfigIN));
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
-void *DeviceVirtual::Capture_Thread(void *args) {
-  DeviceVirtual *This = (DeviceVirtual*)args;
+void *DeviceVirtual::Thread() {
   uint64_t       StartTime        = Tools::GetTime64();
   uint64_t       GeneratedSamples = 0;
   float          Time             = 0;
-  float          Phase            = This->pCurrentPhase * M_PI / 180.0;
-  float          TimeInc          = 2.0 * M_PI / (This->pSampleRate / This->pFrequency);
-  while(!This->pTerminate) {
+  float          Phase            = pCurrentPhase * M_PI / 180.0;
+  float          TimeInc          = 2.0 * M_PI / (pSampleRate / pFrequency);
+  while(!pTerminate) {
     float Voltage[3], Current[4];
     uint64_t TimeI = Tools::GetTime64() - StartTime;
-    if((TimeI * This->pSampleRate / 1000) > GeneratedSamples) {
-      Voltage[0] = (This->pFrequency > 0.0) ? This->pVoltage * M_SQRT2 * sin(Time) : This->pVoltage;
-      Current[0] = (This->pFrequency > 0.0) ? This->pCurrent * M_SQRT2 * sin(Time + Phase) : This->pCurrent;
+    if((TimeI * pSampleRate / 1000) > GeneratedSamples) {
+      Voltage[0] = (pFrequency > 0.0) ? pVoltage * M_SQRT2 * sin(Time) : pVoltage;
+      Current[0] = (pFrequency > 0.0) ? pCurrent * M_SQRT2 * sin(Time + Phase) : pCurrent;
       if((TimeI >= 50000) && (TimeI < 60000)) {
         Voltage[0] = Voltage[0] * 1.12;
       } else if((TimeI >= 90000) && (TimeI < 100000)) {
@@ -149,17 +148,17 @@ void *DeviceVirtual::Capture_Thread(void *args) {
       } else if(TimeI >= 121000) {
         Voltage[0] = Voltage[0] * 0.98;
       }
-      if((This->pMode == Analyzer::PHASE3) || (This->pMode == Analyzer::PHASE3N)) {
-        Voltage[1] = (This->pFrequency > 0.0) ? This->pVoltage * M_SQRT2 * sin(Time - 120.0 * M_PI / 180.0) : This->pVoltage;
-        Current[1] = (This->pFrequency > 0.0) ? This->pCurrent * M_SQRT2 * sin(Time + Phase - 120.0 * M_PI / 180.0) : This->pCurrent;
-        Voltage[2] = (This->pFrequency > 0.0) ? This->pVoltage * M_SQRT2 * sin(Time - 240.0 * M_PI / 180.0)  : This->pVoltage;
-        Current[2] = (This->pFrequency > 0.0) ? This->pCurrent * M_SQRT2 * sin(Time + Phase - 240.0 * M_PI / 180.0) : This->pCurrent;
+      if((pMode == Analyzer::PHASE3) || (pMode == Analyzer::PHASE3N)) {
+        Voltage[1] = (pFrequency > 0.0) ? pVoltage * M_SQRT2 * sin(Time - 120.0 * M_PI / 180.0) : pVoltage;
+        Current[1] = (pFrequency > 0.0) ? pCurrent * M_SQRT2 * sin(Time + Phase - 120.0 * M_PI / 180.0) : pCurrent;
+        Voltage[2] = (pFrequency > 0.0) ? pVoltage * M_SQRT2 * sin(Time - 240.0 * M_PI / 180.0)  : pVoltage;
+        Current[2] = (pFrequency > 0.0) ? pCurrent * M_SQRT2 * sin(Time + Phase - 240.0 * M_PI / 180.0) : pCurrent;
       }
-      if(This->pMode == Analyzer::PHASE3) (This->pFrequency > 0.0) ? Current[3] = Current[0] + Current[1] + Current[2] : 0;
+      if(pMode == Analyzer::PHASE3) (pFrequency > 0.0) ? Current[3] = Current[0] + Current[1] + Current[2] : 0;
       GeneratedSamples++;
       Time += TimeInc;
       if(Time > (2.0 * M_PI)) Time -= 2.0 * M_PI;
-      This->pAnalyzer->BufferAppend(Voltage, Current);
+      pAnalyzer->BufferAppend(Voltage, Current);
     } else {
       usleep(10000);
     }

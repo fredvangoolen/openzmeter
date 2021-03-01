@@ -17,37 +17,44 @@
 #include <map>
 #include <pthread.h>
 #include <string>
+#include "Analyzer.h"
 #include "HTTPServer.h"
-#include "AnalyzerSoftSyncWorker.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoft;
 class AnalyzerSoftSync {
   private :
+    enum Stage { DISABLED, LOGIN, CONFIG, CONNECTED };
+  private :
     volatile bool                 pTerminate;        //Sync terminate signal
-    bool                          pReAuth;           //Need to clear cookie flag
+    Stage                         pStage;            //Connection stage
     pthread_t                     pThread;           //Export thread
-    pthread_cond_t                pCond;             //Wait workers condition
     pthread_mutex_t               pMutex;            //Shared variables lock
-    AnalyzerSoft                 *pParent;           //Parent analyzer
+    string                        pSerial;           //Analyzer serial number
+    string                        pConfigPath;       //Analyzer config path
     string                        pServer;           //Export server address
     string                        pUser;             //Export server user
     string                        pPass;             //Export server password
-    string                        pName;             //Analyzer name
-    list<AnalyzerSoftSyncWorker*> pFreeWorkers;      //Avaliable workers
-    uint32_t                      pRunningWorkers;   //Currently active workers
+    float                         pSampleRate;       //parent samplerate
+    Analyzer::AnalyzerMode        pMode;             //parent mode
+    bool                          pRequestNow;       //Send now data
+    json                          pNow;              //Now data to send
+    uint64_t                      pLastSample200MS;
+    uint64_t                      pLastSample3S;
+    uint64_t                      pLastSample1M;
+    uint64_t                      pLastSample10M;
+    uint64_t                      pLastSample15M;
+    uint64_t                      pLastSample1H;
+    uint64_t                      pLastEvent;
+    uint64_t                      pLastAlarm;
   private :
-    void                   *Thread();
-    bool                    Login(const string &path, Client *client, const string &user, const string &pass, string &cookie);
-    AnalyzerSoftSyncWorker *PopWorker();
+    void *Thread();
   public :
     static json CheckConfig(const json &config);
   public :
-    AnalyzerSoftSync(AnalyzerSoft *parent);
+    AnalyzerSoftSync(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftSync();
-    void Config(const json &config, const string &name);
-    void PeriodicTasks();
-    void PushWorker(AnalyzerSoftSyncWorker *worker, const bool fail);
+    void Config(const json &config, const string &path);
+
 };
 // ---------------------------------------------------------------------------------------------------------------------

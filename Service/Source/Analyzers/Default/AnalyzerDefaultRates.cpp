@@ -14,16 +14,16 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "RatesEval.h"
-#include "AnalyzerSoftRates.h"
+#include "AnalyzerDefaultRates.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftRates::AnalyzerSoftRates(const string &serial) {
+AnalyzerDefaultRates::AnalyzerDefaultRates(const string &serial) {
   pSerial = serial;
   pLock   = PTHREAD_RWLOCK_INITIALIZER;
   pRates.resize(10);
 }
-AnalyzerSoftRates::~AnalyzerSoftRates() {
+AnalyzerDefaultRates::~AnalyzerDefaultRates() {
 }
-json AnalyzerSoftRates::CheckConfig(const json &config, const bool except) {
+json AnalyzerDefaultRates::CheckConfig(const json &config, const bool except) {
   json ConfigOUT = json::array();
   if(config.is_array() == false) return ConfigOUT;
   for(auto &Rate : config) {
@@ -35,7 +35,7 @@ json AnalyzerSoftRates::CheckConfig(const json &config, const bool except) {
   }
   return ConfigOUT;
 }
-void AnalyzerSoftRates::Config(const string &timezone, const json &rates) {
+void AnalyzerDefaultRates::Config(const string &timezone, const json &rates) {
   pthread_rwlock_wrlock(&pLock);
   load_time_zone(timezone, &pTimeZone);
   for(uint8_t n = 0; n < 10; n++) pRates[n].clear();
@@ -43,7 +43,7 @@ void AnalyzerSoftRates::Config(const string &timezone, const json &rates) {
   for(uint8_t n = 0; n < 10; n++) sort(pRates[n].begin(), pRates[n].end(), [](Rate &a, Rate &b) { return a.StartDate() < b.StartDate(); });
   pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerSoftRates::GetCosts(const json &params, Response &response) {
+void AnalyzerDefaultRates::GetCosts(const json &params, Response &response) {
   if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
@@ -90,7 +90,7 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) {
         reactive   = DB.ResultFloat(2);
         return DB.ResultUInt64(0);
       } else {
-        DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s), (SELECT SUM(s) FROM UNNEST(reactive_power) s) FROM aggreg_15m WHERE sampletime >= " + DB.Bind(currenttime) + " ORDER BY sampletime ASC LIMIT 1000");
+        DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s), (SELECT SUM(s) FROM UNNEST(reactive_power) s) FROM aggreg_15m WHERE sampletime >= " + DB.Bind(currenttime) + " ORDER BY sampletime ASC LIMIT 100");
         if(DB.FecthRow() == true) {
           active     = DB.ResultFloat(1);
           reactive   = DB.ResultFloat(2);
@@ -114,7 +114,7 @@ void AnalyzerSoftRates::GetCosts(const json &params, Response &response) {
   };
   response.set_chunked_content_provider("application/json", Func);
 }
-void AnalyzerSoftRates::GetBills(const json &params, Response &response) {
+void AnalyzerDefaultRates::GetBills(const json &params, Response &response) {
   if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);

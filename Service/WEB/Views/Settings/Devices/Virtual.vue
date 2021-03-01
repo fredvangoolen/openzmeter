@@ -49,7 +49,7 @@
       return { Loading: false, Error: null, Settings: null };
     },
     created: function() {
-      this.Settings = Object.assign(this.settings);
+      this.Settings = Object.assign({}, this.settings);
     },
     methods: {
       Save: function () {

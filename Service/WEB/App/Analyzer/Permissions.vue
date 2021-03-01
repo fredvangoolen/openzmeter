@@ -16,18 +16,18 @@
     </div>
     <vuetable :fields="Columns" :api-mode="false" :data="Analyzer.Users" class="table small table-striped">
       <template slot="actions" slot-scope="props">
-        <div class="btn-group" v-if="props.rowData.Name!='admin'">
-          <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData.Name)">Delete</button>
+        <div class="btn-group" v-if="(props.rowData.User!='admin')&&(props.rowData.User!=Analyzer.User)">
+          <button type="button" class="btn btn-danger btn-xs" @click="Delete(props.rowData.User)">Delete</button>
         </div>
       </template>
       <template slot="read" slot-scope="props">
-        <input type="checkbox" v-model="props.rowData.Read" :disabled="props.rowData.Name=='admin'">
+        <input type="checkbox" v-model="props.rowData.Read" :disabled="(props.rowData.User=='admin')||(props.rowData.User==Analyzer.User)">
       </template>
       <template slot="write" slot-scope="props">
-        <input type="checkbox" v-model="props.rowData.Write" :disabled="props.rowData.Name=='admin'">
+        <input type="checkbox" v-model="props.rowData.Write" :disabled="(props.rowData.User=='admin')||(props.rowData.User==Analyzer.User)">
       </template>
       <template slot="config" slot-scope="props">
-        <input type="checkbox" v-model="props.rowData.Config" :disabled="props.rowData.Name=='admin'">
+        <input type="checkbox" v-model="props.rowData.Config" :disabled="(props.rowData.User=='admin')||(props.rowData.User==Analyzer.User)">
       </template>
     </vuetable>
   </dlg>
@@ -42,7 +42,7 @@
     data() {
       return { Analyzer: [], ShowSpinner: false, NewUser: '',
         Columns: [
-          {name: 'Name', title: 'User Name'},
+          {name: 'User', title: 'User Name'},
           {name: '__slot:read', title: 'Read' },
           {name: '__slot:write', title: 'Write' },
           {name: '__slot:config', title: 'Configure' },
@@ -59,7 +59,7 @@
     methods: {
       Add: function() {
         for(var n = 0; n < this.Analyzer.Users.length; n++) {
-          if(this.Analyzer.Users[n].Name == this.NewUser) {
+          if(this.Analyzer.Users[n].User == this.NewUser) {
             this.NewUser = '';
             return;
           }
@@ -70,7 +70,7 @@
       Delete: function(row) {
         if(confirm("Delete '" + row + "' user?") == false) return;
         for(var n = 0; n < this.Analyzer.Users.length; n++) {
-          if(this.Analyzer.Users[n].Name != row) continue;
+          if(this.Analyzer.Users[n].User != row) continue;
           this.Analyzer.Users.splice(n, 1);
           return;
         }
