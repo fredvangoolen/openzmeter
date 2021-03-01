@@ -44,6 +44,8 @@ class SystemManager final {
 };
 #else // ===============================================================================================================
 class SystemManager final {
+  private :
+    static void GetLogCallback(const json &params, Response &response);
   public :
     static json Status();
   public :

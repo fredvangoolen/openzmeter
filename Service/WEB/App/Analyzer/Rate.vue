@@ -275,7 +275,7 @@
       //if(this.rate == null) {
       //  this.Rate = { Analyzer: this.analyzer.Analyzer, Name: 'Unname rate', Description: '', Group: 0, StartDate: moment().format('DD/MM/YYYY'), EndDate: moment().format('DD/MM/YYYY'), Module: 'NONE', ContractedPower: 0, PowerCost: '0', EnergyCost: '0', Taxes: [], Billing: [] };
       //} else {
-        this.Rate = Object.assign({ }, this.analyzer.Rates[this.rate]);
+        this.Rate = Object.assign({}, this.analyzer.Rates[this.rate]);
       //}
       this.SelDate = this.Rate.StartDate;
       if(this.Rate.Periods == null) this.LoadTariffs();

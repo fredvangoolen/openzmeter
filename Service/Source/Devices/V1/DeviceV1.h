@@ -38,9 +38,6 @@ class DeviceV1 final : public Device {
     uint16_t                     pHWVersion;               //Version de hardware
     pthread_t                    pThread;                  //Descriptor del hilo de captura
     volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
-//    int16_t                     *pBuffer;                  //Read buffer
-//    uint32_t                     pBufferTail;              //pBuffer read pos
-//    uint32_t                     pBufferHead;              //pBuffer write pos
     pthread_mutex_t              pConfigLock;              //Block configuration params
     float                        pVoltageGain;             //Voltage gain
     float                        pCurrentGain;             //Current gain
@@ -65,7 +62,7 @@ class DeviceV1 final : public Device {
     DeviceV1(const string &serial, const uint16_t version);
     void    *Thread();
     void     ClearAnalyzers();
-    void     Configure(const json &config);
+    void     Config(const json &config);
     uint32_t AnalyzersCount();
     void     ReadCallback(struct libusb_transfer *transfer);
     int      PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event);

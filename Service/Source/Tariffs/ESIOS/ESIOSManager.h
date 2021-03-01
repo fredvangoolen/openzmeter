@@ -45,7 +45,7 @@ class ESIOSManager final {
   private :
     static void     GetESIOSCallback(const json &params, Response &response);
     static void     SetESIOSCallback(const json &params, Response &response);
-    static void     Configure(const json &config);
+    static void     Config(const json &config);
     static json     CheckConfig(const json &config);
     static void    *Thread_Func(void *params);
     static bool     FetchIndicator(SSLClient &client, const string &token, const Variable_t &var, uint64_t to);

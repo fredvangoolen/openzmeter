@@ -39,7 +39,7 @@ void TariffManager::GetTariffsCallback(const json &params, Response &response) {
     uint32_t Items = 0;
     sink.os << "[\n  ";
     Database DB;
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'UserName', username) as result FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ") ORDER BY name ASC"));
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'User', username) as result FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ") ORDER BY name ASC"));
     while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " + DB.ResultString("result") : DB.ResultString("result"));
     sink.os << "\n]";
     sink.done();
@@ -52,7 +52,7 @@ void TariffManager::GetTariffCallback(const json &params, Response &response) {
   Database DB;
   string Name = params["Name"];
   string UserName = params["UserName"];
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'UserName', username, 'Template', template) as result FROM tariffs WHERE name = " + DB.Bind(Name) + ((UserName == "admin") ? "" : " AND username = " + DB.Bind(UserName)));
+  DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'User', username, 'Template', template) as result FROM tariffs WHERE name = " + DB.Bind(Name) + ((UserName == "admin") ? "" : " AND username = " + DB.Bind(UserName)));
   if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }

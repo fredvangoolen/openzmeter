@@ -23,7 +23,6 @@
 #include "Worker.h"
 #include "ProviderLocks.h"
 #include "AnalyzerSoftFFTs.h"
-#include "AnalyzerSoftRates.h"
 #include "AnalyzerSoftBlock.h"
 #include "AnalyzerSoftZeroCrossing.h"
 #include "AnalyzerSoftEvents.h"
@@ -38,22 +37,23 @@
 #include "AnalyzerSoftFrequency.h"
 #include "AnalyzerSoftSync.h"
 #include "AnalyzerSoftMQTT.h"
+#include "AnalyzerSoftAlarms.h"
+#include "AnalyzerDefaultStorage.h"
+#include "AnalyzerDefaultRates.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace httplib;
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoftAlarms;
 class AnalyzerSoft : public Analyzer {
   private : //Not modified after creation
     const float                pSamplerate;              //Velocidad de muestreo
     const string               pConfigPath;              //Path to configuration
     const uint8_t              pVoltageChannels;         //Voltage channels
     const uint8_t              pCurrentChannels;         //Current channels
-    const AnalyzerMode         pMode;                    //Operation mode
   private : //Internal classes
     AnalyzerSoftSync          *pSync;                    //Remote sync object
     AnalyzerSoftMQTT          *pMQTT;                    //MQTT Control object
-    AnalyzerSoftRates         *pRates;                   //Rate handle class
+    AnalyzerDefaultRates      *pDefRates;                //Rate handle class
     AnalyzerSoftZeroCrossing  *pZeroCross;               //Zero crosing and block builder
     DatabaseQueue             *pDB;                      //Database connection
     AnalyzerSoftAlarms        *pAlarms;                  //Alarms control
@@ -68,6 +68,7 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerSoftAggreg15M     *pAggreg15M;               //15 minutes aggregation
     AnalyzerSoftAggreg1H      *pAggreg1H;                //1 hour aggregation
     AnalyzerSoftStorage       *pStorage;                 //Control stored data
+    AnalyzerDefaultStorage    *pDefStorage;              //Read stored data
     AnalyzerSoftBlock         *pWorkingBlock;            //Current block
     deque<AnalyzerSoftBlock*>  pPendingBlocks;           //Pending blocks to analyze
   private :
@@ -82,12 +83,14 @@ class AnalyzerSoft : public Analyzer {
   private :
     void Thread();
     void Config(const json &options);
-    void PeriodicTasks();
+    json GetSeriesNow(const json &series);
+    json GetSeriesNow();
   public :
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
     void GetStatus(const json &params, Response &response) override;
     void GetSeries(const json &params, Response &response) override;
+    void SetSeries(const json &params, Response &response) override;
     void GetSeriesNow(const json &params, Response &response) override;
     void GetCosts(const json &params, Response &response) override;
     void GetBills(const json &params, Response &response) override;
@@ -95,6 +98,7 @@ class AnalyzerSoft : public Analyzer {
     void GetSeriesRange(const json &params, Response &response) override;
     void DelSeriesRange(const json &params, Response &response) override;
     void GetEvents(const json &params, Response &response) override;
+    void SetEvents(const json &params, Response &response) override;
     void GetEventsRange(const json &params, Response &response) override;
     void DelEventsRange(const json &params, Response &response) override;
     void GetEvent(const json &params, Response &response) override;
@@ -102,9 +106,11 @@ class AnalyzerSoft : public Analyzer {
     void DelEvent(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;
+    void SetAlarms(const json &params, Response &response) override;
     void GetAlarmsRange(const json &params, Response &response) override;
     void DelAlarm(const json &params, Response &response) override;
     void DelAlarmsRange(const json &params, Response &response) override;
+    void SetRemote(const json &params, Response &response) override;
     bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
   public :
     static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, const bool except);

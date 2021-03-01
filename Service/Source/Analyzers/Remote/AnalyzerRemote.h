@@ -15,36 +15,41 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <map>
+#include "DatabaseQueue.h"
 #include "HTTPServer.h"
 #include "Analyzer.h"
+#include "AnalyzerDefaultStorage.h"
+#include "AnalyzerDefaultRates.h"
+#include "AnalyzerRemoteActions.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerRemote : public Analyzer {
   private :
-    typedef struct Request_t {
-      int                      Pipe[2];
-      json                     ReqParams;
-      string                   ResMime;
-      uint16_t                 ResCode;
-      pthread_cond_t           Cond;
-      map<string, Request_t*> *Map;
-    } Request_t;
+    DatabaseQueue             *pDB;                      //Database connection
+    pthread_mutex_t            pMutex;                   //Control access to shared variables
+    uint64_t                   pLastClientReq;           //Last client request
+    AnalyzerDefaultStorage    *pDefStorage;              //Data retrieve from database functions
+    AnalyzerRemoteActions     *pActions;                 //Data save to database functions
+    AnalyzerDefaultRates      *pDefRates;                //Rate calculation from database stored data
+    json                       pConfig;                  //Cached analyzer configuration
+    json                       pNow;                     //Cached version of now data
+//    pthread_cond_t              pCond;             //Wake getRemote as needed
+//    map<string, Request_t*>     pSendPending;      //Request awaiting to be send
+//    map<string, Request_t*>     pResponsePending;  //Request awaiting response
   private :
-    volatile bool               pTerminate;        //Termination signal
-    pthread_mutex_t             pMutex;            //Control access to shared variables and maps
-    pthread_cond_t              pCond;             //Wake getRemote as needed
-    map<string, Request_t*>     pSendPending;      //Request awaiting to be send
-    map<string, Request_t*>     pResponsePending;  //Request awaiting response
+    void SetClientConnected();
+    bool isClientConnected();
   private :
-    void HandleRequest(const AnalyzerAccess::Access rights, const string &url, const json &params, Response &response);
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
     void GetStatus(const json &params, Response &response) override;
     void GetSeries(const json &params, Response &response) override;
+    void SetSeries(const json &params, Response &response) override;
     void GetSeriesNow(const json &params, Response &response) override;
     void GetWaveStream(const json &params, Response &response) override;
     void GetSeriesRange(const json &params, Response &response) override;
     void DelSeriesRange(const json &params, Response &response) override;
     void GetEvents(const json &params, Response &response) override;
+    void SetEvents(const json &params, Response &response) override;
     void GetEventsRange(const json &params, Response &response) override;
     void DelEventsRange(const json &params, Response &response) override;
     void GetEvent(const json &params, Response &response) override;
@@ -54,15 +59,15 @@ class AnalyzerRemote : public Analyzer {
     void GetBills(const json &params, Response &response) override;
     void TestAlarm(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;
+    void SetAlarms(const json &params, Response &response) override;
     void GetAlarmsRange(const json &params, Response &response) override;
     void DelAlarm(const json &params, Response &response) override;
     void DelAlarmsRange(const json &params, Response &response) override;
+    void SetRemote(const json &params, Response &response) override;
+    void SetRemote(const map<string, string> &params, Response &response);
     bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
   public :
-    void GetRemote(const json &params, Response &response);
-    void SetRemote(const map<string, string> &params, Response &response, const ContentReader &content_reader);
-  public :
-    AnalyzerRemote(const string &id);
+    AnalyzerRemote(const string &id, const AnalyzerMode mode, const string &user);
     ~AnalyzerRemote();
 };
 //----------------------------------------------------------------------------------------------------------------------

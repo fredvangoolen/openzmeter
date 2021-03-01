@@ -29,7 +29,7 @@ vector<string>                 ModbusManager::pAnalyzers;
 // ---------------------------------------------------------------------------------------------------------------------
 ModbusManager::ModbusManager() {
   LogFile::Info("Starting ModbusManager...");
-  Configure(CheckConfig(ConfigFile::ReadConfig("/ModbusTCP")));
+  Config(CheckConfig(ConfigFile::ReadConfig("/ModbusTCP")));
   HTTPServer::RegisterCallback("getModbusTCP", GetModbusTCP);
   HTTPServer::RegisterCallback("setModbusTCP", SetModbusTCP);
   LogFile::Info("ModbusManager started");
@@ -60,7 +60,7 @@ json ModbusManager::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-void ModbusManager::Configure(const json &config) {
+void ModbusManager::Config(const json &config) {
   pthread_mutex_lock(&pMutex);
   if(pThread != 0) {
     LogFile::Info("ModbusTCP", "Stopping ModbusTCP server...");
@@ -96,7 +96,7 @@ void ModbusManager::SetModbusTCP(const json &params, Response &response) {
   if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Port") == false) || (params["Port"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Port' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Analyzers") == false) || (params["Analyzers"].is_array() == false)) return HTTPServer::FillResponse(response, "'Analyzers' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Configure(CheckConfig(params));
+  Config(CheckConfig(params));
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
 void *ModbusManager::Thread(void *) {
