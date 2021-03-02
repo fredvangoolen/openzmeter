@@ -19,7 +19,6 @@
 #include "cctz/time_zone.h"
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
-#include "DatabaseQueue.h"
 #include "Worker.h"
 #include "ProviderLocks.h"
 #include "AnalyzerSoftFFTs.h"
@@ -38,8 +37,10 @@
 #include "AnalyzerSoftSync.h"
 #include "AnalyzerSoftMQTT.h"
 #include "AnalyzerSoftAlarms.h"
-#include "AnalyzerDefaultStorage.h"
-#include "AnalyzerDefaultRates.h"
+
+#include "AnalyzerSeries.h"
+#include "AnalyzerRates.h"
+#include "AnalyzerAccess.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace httplib;
 using namespace cctz;
@@ -50,29 +51,30 @@ class AnalyzerSoft : public Analyzer {
     const string               pConfigPath;              //Path to configuration
     const uint8_t              pVoltageChannels;         //Voltage channels
     const uint8_t              pCurrentChannels;         //Current channels
-  private : //Internal classes
-    AnalyzerSoftSync          *pSync;                    //Remote sync object
-    AnalyzerSoftMQTT          *pMQTT;                    //MQTT Control object
-    AnalyzerDefaultRates      *pDefRates;                //Rate handle class
-    AnalyzerSoftZeroCrossing  *pZeroCross;               //Zero crosing and block builder
-    DatabaseQueue             *pDB;                      //Database connection
-    AnalyzerSoftAlarms        *pAlarms;                  //Alarms control
-    AnalyzerSoftEvents        *pEvents;                  //Events detector
-    AnalyzerSoftFrequency     *pFrequency;               //Frequency meter
-    AnalyzerSoftFFTs          *pFFTs;                    //FFT executor
+    AnalyzerAccess             pAccess;                  //Access control class
+    AnalyzerSoftZeroCrossing   pZeroCross;               //Zero crosing and block builder
+    AnalyzerSoftFrequency      pFrequency;               //Frequency meter
+    AnalyzerSoftFFTs           pFFTs;                    //FFT executor
+    AnalyzerSoftAggreg200MS    pAggreg200MS;             //200ms aggregation
+    AnalyzerSoftAggreg3S       pAggreg3S;                //3 seconds aggregation
+    AnalyzerSoftAggreg1M       pAggreg1M;                //1 minute aggregation
+    AnalyzerSoftAggreg10M      pAggreg10M;               //10 minutes aggregation
+    AnalyzerSoftAggreg15M      pAggreg15M;               //15 minutes aggregation
+    AnalyzerSoftAggreg1H       pAggreg1H;                //1 hour aggregation
+
+
+    AnalyzerRates              pRates;                   //Rate handle class
+    AnalyzerSeries             pSeries;                  //Read stored data
+    AnalyzerSoftEvents         pEvents;                  //Events detector
+    AnalyzerSoftAlarms         pAlarms;                  //Alarms control
+    AnalyzerSoftSync           pSync;                    //Remote sync object
+    AnalyzerSoftMQTT           pMQTT;                    //MQTT Control object
     AnalyzerSoftGA            *pGA;                      //Geometric algebra calculator
-    AnalyzerSoftAggreg200MS   *pAggreg200MS;             //200ms aggregation
-    AnalyzerSoftAggreg3S      *pAggreg3S;                //3 seconds aggregation
-    AnalyzerSoftAggreg1M      *pAggreg1M;                //1 minute aggregation
-    AnalyzerSoftAggreg10M     *pAggreg10M;               //10 minutes aggregation
-    AnalyzerSoftAggreg15M     *pAggreg15M;               //15 minutes aggregation
-    AnalyzerSoftAggreg1H      *pAggreg1H;                //1 hour aggregation
     AnalyzerSoftStorage       *pStorage;                 //Control stored data
-    AnalyzerDefaultStorage    *pDefStorage;              //Read stored data
     AnalyzerSoftBlock         *pWorkingBlock;            //Current block
-    deque<AnalyzerSoftBlock*>  pPendingBlocks;           //Pending blocks to analyze
   private :
     volatile bool              pTerminate;               //Terminate thread
+    deque<AnalyzerSoftBlock*>  pPendingBlocks;           //Pending blocks to analyze
     pthread_t                  pThread;                  //Analyzer thread
     pthread_mutex_t            pMutex;                   //Locks access to analysis shared variables
     pthread_cond_t             pCond;                    //Thread wake condition
@@ -115,7 +117,7 @@ class AnalyzerSoft : public Analyzer {
   public :
     static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, const bool except);
   protected :
-    virtual void ResultsReady(AnalyzerSoftAggreg200MS *params);
+    virtual void ResultsReady(AnalyzerSoftAggreg200MS &params);
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();

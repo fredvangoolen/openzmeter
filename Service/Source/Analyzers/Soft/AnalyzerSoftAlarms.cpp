@@ -17,13 +17,11 @@
 #include "TelegramManager.h"
 #include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAlarms::AnalyzerSoftAlarms(const string &serial, AnalyzerSoftMQTT *mqtt, DatabaseQueue *db) {
-  pSerial           = serial;
+AnalyzerSoftAlarms::AnalyzerSoftAlarms(const string &serial, AnalyzerSoftMQTT *mqtt) : AnalyzerAlarms(serial) {
   pNominalVoltage   = 230.0;
   pNominalFrequency = 50.0;
   pWorker           = NULL;
   pMQTT             = mqtt;
-  pDB               = db;
   pLock             = PTHREAD_RWLOCK_INITIALIZER;
 }
 AnalyzerSoftAlarms::~AnalyzerSoftAlarms() {
@@ -54,40 +52,41 @@ void AnalyzerSoftAlarms::Config(const bool enabled, const string &tz, const json
     for(auto &Alarm : List.second) delete Alarm;
   }
   pAlarms.clear();
-  string IDs;
+  Database DB(pSerial);
+  string   IDs;
   for(auto &Alarm : alarms) {
     string Aggreg = Alarm["Aggreg"];
     string ID     = Alarm["AlarmID"];
-    pAlarms.emplace(std::piecewise_construct, std::make_tuple(Aggreg), std::make_tuple()).first->second.emplace_back(new AnalyzerSoftAlarm(pSerial, pNominalVoltage, pNominalFrequency, Alarm, pDB));
-    IDs = (IDs.size() == 0) ? IDs + pDB->Bind(ID) : IDs + ", " + pDB->Bind(ID);
+    pAlarms.emplace(std::piecewise_construct, std::make_tuple(Aggreg), std::make_tuple()).first->second.emplace_back(new AnalyzerSoftAlarm(pSerial, pNominalVoltage, pNominalFrequency, Alarm));
+    IDs.append((IDs.size() == 0) ? DB.Bind(ID) : ", " + DB.Bind(ID));
   }
   if(alarms.size() == 0) {
-    pDB->ExecSentenceNoResult("DELETE FROM alarms");
+    DB.ExecSentenceNoResult("DELETE FROM alarms");
   } else {
-    pDB->ExecSentenceNoResult("DELETE FROM alarms WHERE id NOT IN(" + IDs + ")");
+    DB.ExecSentenceNoResult("DELETE FROM alarms WHERE id NOT IN(" + IDs + ")");
   }
   pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerSoftAlarms::Alarms_Func(const string &name, AnalyzerSoftAggreg *params) {
+void AnalyzerSoftAlarms::Alarms_Func(const string &name, AnalyzerSoftAggreg &params) {
   pthread_rwlock_rdlock(&pLock);
   auto List = pAlarms.find(name);
   if(List != pAlarms.end()) {
     for(auto &Alarm : List->second) {
       auto Result = Alarm->PushAggreg(params);
       if(Result == AnalyzerSoftAlarm::TRIGGERED) {
-        pMQTT->PublishAlarm(params->Timestamp(), Alarm->Name(), Alarm->Priority(), true);
-        TelegramManager::SendAlarm(pSerial, pTimeZone, params->Timestamp(), Alarm->Name(), Alarm->Priority(), true);
+        pMQTT->PublishAlarm(params.Timestamp(), Alarm->Name(), Alarm->Priority(), true);
+        TelegramManager::SendAlarm(pSerial, pTimeZone, params.Timestamp(), Alarm->Name(), Alarm->Priority(), true);
       } else if(Result == AnalyzerSoftAlarm::RELEASED) {
-        pMQTT->PublishAlarm(params->Timestamp(), Alarm->Name(), Alarm->Priority(), false);
-        TelegramManager::SendAlarm(pSerial, pTimeZone, params->Timestamp(), Alarm->Name(), Alarm->Priority(), false);
+        pMQTT->PublishAlarm(params.Timestamp(), Alarm->Name(), Alarm->Priority(), false);
+        TelegramManager::SendAlarm(pSerial, pTimeZone, params.Timestamp(), Alarm->Name(), Alarm->Priority(), false);
       }
     }
   }
   pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerSoftAlarms::Run(const string &aggreg, AnalyzerSoftAggreg *params) {
+void AnalyzerSoftAlarms::Run(const string &aggreg, AnalyzerSoftAggreg &params) {
   pthread_rwlock_rdlock(&pLock);
-  if(pWorker != NULL) pWorker->Run([&, aggreg, params]() { this->Alarms_Func(aggreg, params); });
+  if(pWorker != NULL) pWorker->Run([&, aggreg]() { this->Alarms_Func(aggreg, params); });
   pthread_rwlock_unlock(&pLock);
 }
 void AnalyzerSoftAlarms::Wait() {
@@ -95,7 +94,7 @@ void AnalyzerSoftAlarms::Wait() {
   if(pWorker != NULL) pWorker->Wait();
   pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS *aggreg) const {
+void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS &aggreg) const {
   if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   Parser Evaluator;
   json   Result = json::object();
@@ -103,7 +102,7 @@ void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, Analy
   float  NominalFrequency = pNominalFrequency;
   Evaluator.DefineVar("NominalVoltage", &NominalVoltage);
   Evaluator.DefineVar("NominalFrequency", &NominalFrequency);
-  aggreg->muParserInit(Evaluator, params["Expression"]);
+  aggreg.muParserInit(Evaluator, params["Expression"]);
   Result["Variables"] = json::object();
   for(auto Var : Evaluator.GetVar()) Result["Variables"][Var.first] = *Var.second;
   try {
@@ -112,21 +111,5 @@ void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, Analy
     Result["Error"] = e.GetMsg();
   }
   return HTTPServer::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
-}
-void AnalyzerSoftAlarms::DelAlarm(const json &params, Response &response) const {
-  if((params.contains("AlarmID") == false) || (params["AlarmID"].is_string() == false)) return HTTPServer::FillResponse(response, "'AlarmID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Trigger") == false) || (params["Trigger"].is_number() == false)) return HTTPServer::FillResponse(response, "'Trigger' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string   ID       = params["AlarmID"];
-  uint64_t Trigger = params["Trigger"];
-  Database DB(pSerial);
-  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms WHERE id = " + DB.Bind(ID) + " AND trigger = " + DB.Bind(Trigger)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
-void AnalyzerSoftAlarms::DelAlarmsRange(const json &params, Response &response) const {
-  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t From   = params["From"];
-  uint64_t To     = params["To"];
-  Database DB(pSerial);
-  HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms WHERE trigger BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 // ---------------------------------------------------------------------------------------------------------------------

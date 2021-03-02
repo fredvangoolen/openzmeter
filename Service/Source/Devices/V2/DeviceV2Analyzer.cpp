@@ -51,8 +51,9 @@ void DeviceV2Analyzer::BufferAppend(const float *values) {
   }
   AnalyzerSoft::BufferAppend(Voltage, Current);
 }
-void DeviceV2Analyzer::ResultsReady(AnalyzerSoftAggreg200MS *params) {
-  if(params->Flag() == true) pLastEvent = params->Timestamp();
+void DeviceV2Analyzer::ResultsReady(AnalyzerSoftAggreg200MS &params) {
+  if(params.Flag() == true) pLastEvent = params.Timestamp();
+  AnalyzerSoft::ResultsReady(params);
 }
 uint64_t DeviceV2Analyzer::GetLastEvent() {
   return pLastEvent;

@@ -21,23 +21,20 @@
 #include "LogFile.h"
 #include "PriceSource.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerRemote::AnalyzerRemote(const string &id, const AnalyzerMode mode, const string &user) : Analyzer(id, mode, user) {
-  pDB            = new DatabaseQueue(id, true);
-  pDefStorage    = new AnalyzerDefaultStorage(id);
+AnalyzerRemote::AnalyzerRemote(const string &id, const AnalyzerMode mode, const string &user) : Analyzer(id, mode, user), pAccess(id, user), pRates(id), pSeries(id), pAlarms(id), pEvents(id) {
+  LogFile::Debug("Creating tables for analyzer '%s'", pSerial.c_str());
+  Database DB(id, true);
+  DB.ExecResource("SQL/Database_Analyzer.sql");
+
   pActions       = new AnalyzerRemoteActions(id);
-  pDefRates      = new AnalyzerDefaultRates(id);
+
   pLastClientReq = 0;
   pConfig        = nullptr;
   pMutex         = PTHREAD_MUTEX_INITIALIZER;
-  MessageLoop::RegisterListener("AnalyzerRemote_" + pSerial + "_PeriodicTasks", [&]() { this->pDefStorage->CleanOldSamples(); }, 60000);
 }
 AnalyzerRemote::~AnalyzerRemote() {
   LogFile::Info("Stopping analyzer with serial '%s'", pSerial.c_str());
-  MessageLoop::UnregisterListener("AnalyzerRemote_" + pSerial + "_PeriodicTasks");
   delete pActions;
-  delete pDefRates;
-  delete pDefStorage;
-  delete pDB;
   LogFile::Info("Analyzer with serial '%s' stopped", pSerial.c_str());
 }
 void AnalyzerRemote::SetClientConnected() {
@@ -53,7 +50,7 @@ bool AnalyzerRemote::isClientConnected() {
   return Result;
 }
 void AnalyzerRemote::GetAnalyzer(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
   pthread_mutex_lock(&pMutex);
@@ -64,89 +61,89 @@ void AnalyzerRemote::GetAnalyzer(const json &params, Response &response) {
   Response["Mode"]         = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["User"]         = pOwner;
   Response["PriceModules"] = PriceSource::VarsInfo();
-  Response["Users"]        = GetUsers();
+  Response["Users"]        = pAccess.Users();
   return HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerRemote::GetSeries(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
-  pDefStorage->GetSeries(params, response);
+  pSeries.GetSeries(params, response);
 }
 void AnalyzerRemote::GetSeriesRange(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
-  pDefStorage->GetSeriesRange(params, response);
+  pSeries.GetSeriesRange(params, response);
 }
 void AnalyzerRemote::GetEvents(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
-  pDefStorage->GetEvents(params, response);
+  pEvents.GetEvents(params, response);
 }
 void AnalyzerRemote::GetEventsRange(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
-  pDefStorage->GetEventsRange(params, response);
+  pEvents.GetEventsRange(params, response);
 }
 void AnalyzerRemote::GetEvent(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
-  pDefStorage->GetEvent(params, response);
+  pEvents.GetEvent(params, response);
 }
 void AnalyzerRemote::GetCosts(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
-  pDefRates->GetCosts(params, response);
+  pRates.GetCosts(params, response);
 }
 void AnalyzerRemote::GetBills(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
-  pDefRates->GetBills(params, response);
+  pRates.GetBills(params, response);
 }
 void AnalyzerRemote::GetAlarms(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
-  pDefStorage->GetAlarms(params, response);
+  pAlarms.GetAlarms(params, response);
 }
 void AnalyzerRemote::GetAlarmsRange(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
-  pDefStorage->GetAlarmsRange(params, response);
+  pAlarms.GetAlarmsRange(params, response);
 }
 void AnalyzerRemote::DelAlarmsRange(const json &params, Response &response) {
-  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
   pActions->DelAlarmsRange(params, response);
 }
 void AnalyzerRemote::DelAlarm(const json &params, Response &response) {
-  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
   pActions->DelAlarm(params, response);
 }
 void AnalyzerRemote::DelSeriesRange(const json &params, Response &response) {
-  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
   pActions->DelSeriesRange(params, response);
 }
 void AnalyzerRemote::DelEventsRange(const json &params, Response &response) {
-  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
   pActions->DelEventsRange(params, response);
 }
 void AnalyzerRemote::DelEvent(const json &params, Response &response) {
-  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
   pActions->DelEventsRange(params, response);
@@ -155,7 +152,7 @@ void AnalyzerRemote::DelEvent(const json &params, Response &response) {
 
 
 void AnalyzerRemote::SetAnalyzer(const json &params, Response &response) {
-  if(TestUser(params["UserName"], CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::CONFIG) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
   //Tengo que flushear datos del local?
@@ -165,13 +162,13 @@ void AnalyzerRemote::SetAnalyzer(const json &params, Response &response) {
 //  HandleRequest(AnalyzerAccess::CONFIG, "setAnalyzer", params, response);
 }
 void AnalyzerRemote::GetSeriesNow(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
 //HACER
 }
 void AnalyzerRemote::GetStatus(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
 //HACER
@@ -180,13 +177,13 @@ void AnalyzerRemote::GetWaveStream(const json &params, Response &response) {
 //  HandleRequest(AnalyzerAccess::READ, "getWaveStream", params, response);
 }
 void AnalyzerRemote::SetEvent(const json &params, Response &response) {
-  if(TestUser(params["UserName"], WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::WRITE) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
 //HACER
 }
 void AnalyzerRemote::TestAlarm(const json &params, Response &response) {
-  if(TestUser(params["UserName"], READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(pAccess.TestUser(params["UserName"], AnalyzerAccess::READ) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
   SetClientConnected();
 //HACER
@@ -197,7 +194,7 @@ void AnalyzerRemote::SetRemote(const json &params, Response &response) {
   Online(true);
   if(params.contains("Config") && params["Config"].is_object()) {
     pConfig = AnalyzerSoft::CheckConfig(params["Config"], pMode, false);
-    pDefRates->Config(params["Config"]["TimeZone"], params["Config"]["Rates"]);
+    pRates.Config(pConfig["TimeZone"], pConfig["Rates"]);
     //Leo samplerate y compruebo tambien el modo, si el modo no coincide tengo que devolver un error
     Configured(true);
   }
@@ -206,35 +203,31 @@ void AnalyzerRemote::SetRemote(const json &params, Response &response) {
     pNow = params["Now"];
     pthread_mutex_unlock(&pMutex);
   }
-  if(params.contains("Actions") && params["Action"].is_array()) {
-
-
-    if(params.contains("Samples") && params["Samples"].is_object()) {
-  //    "Samples": {
-  //     "200MS": [{...}, {...}],
-  //     "3S": [{...}, {...}],
-  //     ...     //Se envian muestras nuevas que haya desde la ultima conexion, limitar cantidad para que no sea una burrada de consulta
+  if(params.contains("Actions") && params["Actions"].is_array()) {
+    for(auto &Action : params["Actions"]) {
+      Response Resp;
+      if((Action.contains("Type") == false) || (Action["Type"].is_string() == false)) continue;
+      string Type = Action["Type"];
+      if(Type == "SetSeries") {
+        pSeries.SetSeries(Action["Params"], Resp);
+      } else {
+        LogFile::Warning("AnayzerRemote receive invalid action from remote analyzer '%s' (%s)", pSerial.c_str(), Type.c_str());
+        continue;
+      }
+      if(Resp.status != HTTP_OK) LogFile::Warning("AnayzerRemote action from remote analyzer '%s' (%s) fails", pSerial.c_str(), Type.c_str());
     }
-    if(params.contains("Alarms") && params["Alarms"].is_array()) {
-  //    "Alarms": [{...}],  //Si hay algun cambio en alguna alarma lo envio ,limitar cantidad
-    }
-    if(params.contains("Events") && params["Events"].is_array()) {
-  //    "Events": [{...}],  //Si hay algun cambio en un evento lo mando, limitar cantidad
-    }
-
   }
   Database DB(pSerial);
-  json     Response          = json::object();
-  Response["Now"]            = isClientConnected();
-  Response["Last"]           = json::object();
-  Response["Last"]["200MS"]  = (DB.ExecSentenceAsyncResult("SELECT max(sampletime) from aggreg_200ms") && DB.FecthRow()) ? DB.ResultUInt64(0) + 1 : UINT64_MAX;
-  Response["Last"]["3S"]     = (DB.ExecSentenceAsyncResult("SELECT max(sampletime) from aggreg_3s")    && DB.FecthRow()) ? DB.ResultUInt64(0) + 1 : UINT64_MAX;
-  Response["Last"]["1M"]     = (DB.ExecSentenceAsyncResult("SELECT max(sampletime) from aggreg_1m")    && DB.FecthRow()) ? DB.ResultUInt64(0) + 1 : UINT64_MAX;
-  Response["Last"]["10M"]    = (DB.ExecSentenceAsyncResult("SELECT max(sampletime) from aggreg_10m")   && DB.FecthRow()) ? DB.ResultUInt64(0) + 1 : UINT64_MAX;
-  Response["Last"]["15M"]    = (DB.ExecSentenceAsyncResult("SELECT max(sampletime) from aggreg_15m")   && DB.FecthRow()) ? DB.ResultUInt64(0) + 1 : UINT64_MAX;
-  Response["Last"]["1H"]     = (DB.ExecSentenceAsyncResult("SELECT max(sampletime) from aggreg_1h")    && DB.FecthRow()) ? DB.ResultUInt64(0) + 1 : UINT64_MAX;
-  Response["Last"]["Alarms"] = UINT64_MAX;
-  Response["Last"]["Events"] = UINT64_MAX;
+  json     Response       = json::object();
+  Response["Now"]         = isClientConnected();
+  Response["Time_200MS"]  = (DB.ExecSentenceAsyncResult("SELECT COALESCE(max(sampletime), 0) from aggreg_200ms") && DB.FecthRow()) ? DB.ResultUInt64(0) : UINT64_MAX;
+  Response["Time_3S"]     = (DB.ExecSentenceAsyncResult("SELECT COALESCE(max(sampletime), 0) from aggreg_3s")    && DB.FecthRow()) ? DB.ResultUInt64(0) : UINT64_MAX;
+  Response["Time_1M"]     = (DB.ExecSentenceAsyncResult("SELECT COALESCE(max(sampletime), 0) from aggreg_1m")    && DB.FecthRow()) ? DB.ResultUInt64(0) : UINT64_MAX;
+  Response["Time_10M"]    = (DB.ExecSentenceAsyncResult("SELECT COALESCE(max(sampletime), 0) from aggreg_10m")   && DB.FecthRow()) ? DB.ResultUInt64(0) : UINT64_MAX;
+  Response["Time_15M"]    = (DB.ExecSentenceAsyncResult("SELECT COALESCE(max(sampletime), 0) from aggreg_15m")   && DB.FecthRow()) ? DB.ResultUInt64(0) : UINT64_MAX;
+  Response["Time_1H"]     = (DB.ExecSentenceAsyncResult("SELECT COALESCE(max(sampletime), 0) from aggreg_1h")    && DB.FecthRow()) ? DB.ResultUInt64(0) : UINT64_MAX;
+  Response["Time_Alarms"] = (DB.ExecSentenceAsyncResult("SELECT COALESCE(max(changetime), 0) from alarms")       && DB.FecthRow()) ? DB.ResultUInt64(0) : UINT64_MAX;
+  Response["Time_Events"] = (DB.ExecSentenceAsyncResult("SELECT COALESCE(max(changetime), 0) from events")       && DB.FecthRow()) ? DB.ResultUInt64(0) : UINT64_MAX;
 //  Response["Action"] =
 //ActionResult
 

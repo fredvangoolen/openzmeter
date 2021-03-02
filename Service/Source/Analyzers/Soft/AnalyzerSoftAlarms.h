@@ -21,34 +21,31 @@
 #include "AnalyzerSoftAlarm.h"
 #include "AnalyzerSoftAggreg200MS.h"
 #include "AnalyzerSoftMQTT.h"
+#include "AnalyzerAlarms.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 // ---------------------------------------------------------------------------------------------------------------------
 //class AnalyzerSoftMQTT;
-class AnalyzerSoftAlarms final {
+class AnalyzerSoftAlarms final : public AnalyzerAlarms {
   private :
     float                                     pNominalVoltage;
     float                                     pNominalFrequency;
     pthread_rwlock_t                          pLock;
     map<string, vector<AnalyzerSoftAlarm*> >  pAlarms;
-    string                                    pSerial;
     Worker                                   *pWorker;
     AnalyzerSoftMQTT                         *pMQTT;
-    DatabaseQueue                            *pDB;
     time_zone                                 pTimeZone;
   private :
-    void Alarms_Func(const string &name, AnalyzerSoftAggreg *params);
+    void Alarms_Func(const string &name, AnalyzerSoftAggreg &params);
   public :
     static json CheckConfig(const json &config);
   public :
-    AnalyzerSoftAlarms(const string &serial, AnalyzerSoftMQTT *mqtt, DatabaseQueue *db);
+    AnalyzerSoftAlarms(const string &serial, AnalyzerSoftMQTT *mqtt);
     ~AnalyzerSoftAlarms();
     void Config(const bool enabled, const string &tz, const json &alarms);
     void ConfigNominals(const float nominalVoltage, const float nominalFreq);
-    void Run(const string &name, AnalyzerSoftAggreg *params);
+    void Run(const string &name, AnalyzerSoftAggreg &params);
     void Wait();
-    void TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS *aggreg) const;
-    void DelAlarm(const json &params, Response &response) const;
-    void DelAlarmsRange(const json &params, Response &response) const;
+    void TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS &aggreg) const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

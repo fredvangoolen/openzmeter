@@ -15,21 +15,27 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <map>
-#include "DatabaseQueue.h"
 #include "HTTPServer.h"
 #include "Analyzer.h"
-#include "AnalyzerDefaultStorage.h"
-#include "AnalyzerDefaultRates.h"
+#include "AnalyzerAccess.h"
+#include "AnalyzerSeries.h"
+#include "AnalyzerRates.h"
+#include "AnalyzerEvents.h"
+#include "AnalyzerAlarms.h"
 #include "AnalyzerRemoteActions.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerRemote : public Analyzer {
   private :
-    DatabaseQueue             *pDB;                      //Database connection
     pthread_mutex_t            pMutex;                   //Control access to shared variables
     uint64_t                   pLastClientReq;           //Last client request
-    AnalyzerDefaultStorage    *pDefStorage;              //Data retrieve from database functions
+    AnalyzerAccess             pAccess;                  //Access control class
+    AnalyzerRates              pRates;                   //Rate calculation from database stored data
+    AnalyzerSeries             pSeries;
+    AnalyzerAlarms             pAlarms;
+    AnalyzerEvents             pEvents;
+
     AnalyzerRemoteActions     *pActions;                 //Data save to database functions
-    AnalyzerDefaultRates      *pDefRates;                //Rate calculation from database stored data
+
     json                       pConfig;                  //Cached analyzer configuration
     json                       pNow;                     //Cached version of now data
 //    pthread_cond_t              pCond;             //Wake getRemote as needed

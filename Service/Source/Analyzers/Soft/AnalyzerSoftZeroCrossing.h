@@ -20,7 +20,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftZeroCrossing {
   private :
-    static const uint8_t FILTERSTAGES = 1; //Filter stages for zerocrossing
+    static const uint8_t FILTERSTAGES = 5; //Filter stages for zerocrossing
   private :
     typedef struct {
       float  A0;
@@ -32,11 +32,12 @@ class AnalyzerSoftZeroCrossing {
       float  ChannelsZ2[3];
     } Filter_t;
   private :
+    const float        pSamplerate;                 //Velocidad de muestreo
+    const uint8_t      pVoltageChannels;            //Number of voltage channels
+    const uint8_t      pCurrentChannels;            //Number of current channels
     pthread_mutex_t    pMutex;                      //Configuration mutex
     uint64_t           pSequence;                   //Sequence number of analyzed blocks
     Filter_t           pFilters[FILTERSTAGES];      //Filter bank
-    uint8_t            pVoltageChannels;            //Number of voltage channels
-    uint8_t            pCurrentChannels;            //Number of current channels
     uint8_t            pMaxCycles;                  //Allowed cicles for configured frequency
     uint16_t           pMaxSamples;                 //Max samples for configured frequency
     uint16_t           pDelaySize;                  //Delay samples
@@ -45,7 +46,6 @@ class AnalyzerSoftZeroCrossing {
     float             *pDelayVoltage;               //Delay line for voltage
     float             *pDelayCurrent;               //Delay line for current
     float              pLastSamples[3];             //Filter samples backup
-    float              pSamplerate;                 //Velocidad de muestreo
     float              pNominalFrequency;           //Configured grid frequency
     float              pNominalVoltage;             //Configured grid voltage
     AnalyzerSoftBlock *pWorkingBlock;               //Current filling block

@@ -24,7 +24,7 @@ class AnalyzerSoftAggreg200MS final : public AnalyzerSoftAggreg {
     AnalyzerSoftFFTs::Complex_t pVoltage_HarmonicsComplex[150];             //Harmonicos del canal de tension
     AnalyzerSoftFFTs::Complex_t pCurrent_HarmonicsComplex[200];             //Harmonicos del canal de corriente
   public :
-    AnalyzerSoftAggreg200MS(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db);
+    AnalyzerSoftAggreg200MS(const string &serial, const Analyzer::AnalyzerMode mode);
     ~AnalyzerSoftAggreg200MS();
     Complex_t VoltageHarmonicComplex(const uint8_t channel, const uint8_t harmonic) const;
     Complex_t CurrentHarmonicComplex(const uint8_t channel, const uint8_t harmonic) const;

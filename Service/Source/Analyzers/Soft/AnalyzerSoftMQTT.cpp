@@ -119,30 +119,29 @@ void AnalyzerSoftMQTT::Config(const json &config) {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void AnalyzerSoftMQTT::PublishAggreg(const string &aggreg, const AnalyzerSoftAggreg *params) {
+void AnalyzerSoftMQTT::PublishAggreg(const string &aggreg, const AnalyzerSoftAggreg &params) {
   pthread_mutex_lock(&pMutex);
   if((pClient.socketfd != -1) && (((aggreg == "200MS") && (p200MS == true)) || ((aggreg == "3S") && (p3S == true)) || ((aggreg == "1M") && (p1M == true)) || ((aggreg == "10M") && (p10M == true)) || ((aggreg == "15M") && (p15M == true)) || ((aggreg == "1H") && (p1H == true)))) {
     json Result = json::object();
-    Result["Time"] = params->Timestamp();
-    params->GetSeriesJSON("TIME", Result);
-    params->GetSeriesJSON("Frequency", Result);
-    params->GetSeriesJSON("Flag", Result);
-    params->GetSeriesJSON("Unbalance", Result);
-    params->GetSeriesJSON("Voltage", Result);
-    params->GetSeriesJSON("Current", Result);
-    params->GetSeriesJSON("Active_Power", Result);
-    params->GetSeriesJSON("Reactive_Power", Result);
-    params->GetSeriesJSON("Active_Energy", Result);
-    params->GetSeriesJSON("Reactive_Energy", Result);
-    params->GetSeriesJSON("Apparent_Power", Result);
-    params->GetSeriesJSON("Power_Factor", Result);
-    params->GetSeriesJSON("Voltage_THD", Result);
-    params->GetSeriesJSON("Current_THD", Result);
-    params->GetSeriesJSON("Voltage_Harmonics", Result);
-    params->GetSeriesJSON("Current_Harmonics", Result);
-    params->GetSeriesJSON("Power_Harmonics", Result);
-    params->GetSeriesJSON("Phi", Result);
-    params->GetSeriesJSON("Voltage_Phase", Result);
+    Result["Time"] = params.Timestamp();
+    params.GetSeriesJSON("Frequency", Result);
+    params.GetSeriesJSON("Flag", Result);
+    params.GetSeriesJSON("Unbalance", Result);
+    params.GetSeriesJSON("Voltage", Result);
+    params.GetSeriesJSON("Current", Result);
+    params.GetSeriesJSON("Active_Power", Result);
+    params.GetSeriesJSON("Reactive_Power", Result);
+    params.GetSeriesJSON("Active_Energy", Result);
+    params.GetSeriesJSON("Reactive_Energy", Result);
+    params.GetSeriesJSON("Apparent_Power", Result);
+    params.GetSeriesJSON("Power_Factor", Result);
+    params.GetSeriesJSON("Voltage_THD", Result);
+    params.GetSeriesJSON("Current_THD", Result);
+    params.GetSeriesJSON("Voltage_Harmonics", Result);
+    params.GetSeriesJSON("Current_Harmonics", Result);
+    params.GetSeriesJSON("Power_Harmonics", Result);
+    params.GetSeriesJSON("Phi", Result);
+    params.GetSeriesJSON("Voltage_Phase", Result);
     string TextMsg = Result.dump();
     string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/" + aggreg : pSerial + "/" + aggreg;
     mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1);

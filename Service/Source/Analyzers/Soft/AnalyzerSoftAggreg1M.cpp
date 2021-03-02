@@ -15,28 +15,29 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAggreg1M.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAggreg1M::AnalyzerSoftAggreg1M(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db) : AnalyzerSoftAggreg(serial, mode, db) {
+AnalyzerSoftAggreg1M::AnalyzerSoftAggreg1M(const string &serial, const Analyzer::AnalyzerMode mode) : AnalyzerSoftAggreg(serial, mode) {
   Reset();
 }
 AnalyzerSoftAggreg1M::~AnalyzerSoftAggreg1M() {
 }
 void AnalyzerSoftAggreg1M::Save() const {
-  pDB->ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" +
-  pDB->Bind(pTimestamp) + ", " +
-  pDB->Bind(pVoltage, pVoltageChannels) + ", " +
-  pDB->Bind(pCurrent, pCurrentChannels) + ", " +
-  pDB->Bind(pFrequency) + ", " +
-  pDB->Bind(pFlag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance, harmonics_v, harmonics_i, harmonics_p) SELECT sampletime, " +
-  pDB->Bind(pActive_Power, pVoltageChannels) + ", " +
-  pDB->Bind(pReactive_Power, pVoltageChannels) + ", " +
-  pDB->Bind(pPower_Factor, pVoltageChannels) + ", " +
-  pDB->Bind(pVoltage_THD, pVoltageChannels) + ", " +
-  pDB->Bind(pCurrent_THD, pCurrentChannels) + ", " +
-  pDB->Bind(pPhi, pVoltageChannels) + ", " +
-  pDB->Bind(pUnbalance) + ", " +
-  pDB->Bind(pVoltage_Harmonics, pVoltageChannels, 50) + ", " +
-  pDB->Bind(pCurrent_Harmonics, pCurrentChannels, 50) + ", " +
-  pDB->Bind(pPower_Harmonics, pVoltageChannels, 50) + " FROM Sample");
+  Database DB(pSerial);
+  DB.ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" +
+  DB.Bind(pTimestamp) + ", " +
+  DB.Bind(pVoltage, pVoltageChannels) + ", " +
+  DB.Bind(pCurrent, pCurrentChannels) + ", " +
+  DB.Bind(pFrequency) + ", " +
+  DB.Bind(pFlag) + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance, harmonics_v, harmonics_i, harmonics_p) SELECT sampletime, " +
+  DB.Bind(pActive_Power, pVoltageChannels) + ", " +
+  DB.Bind(pReactive_Power, pVoltageChannels) + ", " +
+  DB.Bind(pPower_Factor, pVoltageChannels) + ", " +
+  DB.Bind(pVoltage_THD, pVoltageChannels) + ", " +
+  DB.Bind(pCurrent_THD, pCurrentChannels) + ", " +
+  DB.Bind(pPhi, pVoltageChannels) + ", " +
+  DB.Bind(pUnbalance) + ", " +
+  DB.Bind(pVoltage_Harmonics, pVoltageChannels, 50) + ", " +
+  DB.Bind(pCurrent_Harmonics, pCurrentChannels, 50) + ", " +
+  DB.Bind(pPower_Harmonics, pVoltageChannels, 50) + " FROM Sample");
 }
 void AnalyzerSoftAggreg1M::Reset() {
   pSamples = 0;
@@ -48,9 +49,9 @@ bool AnalyzerSoftAggreg1M::Normalize() {
   pSamples = 1;
   return true;
 }
-void AnalyzerSoftAggreg1M::Accumulate(const AnalyzerSoftAggreg200MS *src) {
+void AnalyzerSoftAggreg1M::Accumulate(const AnalyzerSoftAggreg200MS &src) {
   pSamples++;
-  if(pTimestamp == 0) pTimestamp = src->Timestamp() / 60000 * 60000 + 59999;
+  if(pTimestamp == 0) pTimestamp = src.Timestamp() / 60000 * 60000 + 59999;
   AnalyzerSoftAggreg::Accumulate(src);
 }
 // ---------------------------------------------------------------------------------------------------------------------

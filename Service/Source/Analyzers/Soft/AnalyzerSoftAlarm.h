@@ -43,13 +43,12 @@ class AnalyzerSoftAlarm final {
     bool              pEnabled;
     string            pExpression;
     uint64_t          pTriggerTime;
-    DatabaseQueue    *pDB;
   public :
     static json CheckConfig(const json &config);
   public :
-    AnalyzerSoftAlarm(const string &serial, float &voltage, float &freq, const json &config, DatabaseQueue *db);
+    AnalyzerSoftAlarm(const string &serial, float &voltage, float &freq, const json &config);
     ~AnalyzerSoftAlarm();
-    Alarm_Result PushAggreg(AnalyzerSoftAggreg *data);
+    Alarm_Result PushAggreg(AnalyzerSoftAggreg &data);
     string       Name() const;
     uint8_t      Priority() const;
 };

@@ -22,10 +22,9 @@ constexpr float AnalyzerSoftEvents::Event_INT;
 constexpr float AnalyzerSoftEvents::Event_Hysteresis;
 constexpr float AnalyzerSoftEvents::Event_RAW_Time;
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate) {
+AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate) : AnalyzerEvents(serial) {
   pMutex            = PTHREAD_MUTEX_INITIALIZER;
   pVoltageChannels  = (mode == Analyzer::PHASE1) ? 1 : 3;
-  pSerial           = serial;
   pSamplerate       = samplerate;
   pNominalVoltage   = 230.0;
   pEvent            = NULL;
@@ -241,52 +240,5 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint6
     Pos             = Pos + CycleLen;
     pPrevStationary = Stationary && (pEvent == NULL);
   }
-}
-void AnalyzerSoftEvents::DelEventsRange(const json &params, Response &response) const {
-  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Mode") == false) || (params["Mode"].is_string() == false) || ((params["Mode"] != "ALL") && (params["Mode"] != "SAMPLES_ONLY") && (params["Mode"] != "SAMPLES_RAW") && (params["Mode"] != "SAMPLES_RMS"))) return HTTPServer::FillResponse(response, "'Mode' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Database DB(pSerial);
-  uint64_t From   = params["From"];
-  uint64_t To     = params["To"];
-  string   Mode   = params["Mode"];
-  bool     Result = false;
-  if(Mode == "ALL") {
-    Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To));
-  } else if(Mode == "SAMPLES_ONLY") {
-    Result = DB.ExecSentenceNoResult("DELETE FROM events_ext WHERE starttime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To));
-  } else if(Mode == "SAMPLES_RAW") {
-    Result = DB.ExecSentenceNoResult("DELETE FROM events_ext WHERE starttime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To) + " AND sampletype IN ('RAW_PRESTART', 'RAW_POSSTART', 'RAW_PREEND', 'RAW_POSEND')");
-  } else if(Mode == "SAMPLES_RMS") {
-    Result = DB.ExecSentenceNoResult("DELETE FROM events_ext WHERE starttime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To) + " AND sampletype IN ('RMS_PRESTART', 'RMS_POSSTART', 'RMS_PREEND', 'RMS_POSEND')");
-  }
-  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
-void AnalyzerSoftEvents::SetEvent(const json &params, Response &response) const {
-  if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Notes") == false) || (params["Notes"].is_string() == false)) return HTTPServer::FillResponse(response, "'Notes' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Database DB(pSerial);
-  uint64_t StartTime = params["StartTime"];
-  string   Notes     = params["Notes"];
-  bool     Result    = DB.ExecSentenceNoResult("UPDATE events SET Notes = " + DB.Bind(Notes) + " WHERE starttime = " + DB.Bind(StartTime));
-  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
-}
-void AnalyzerSoftEvents::DelEvent(const json &params, Response &response) const {
-  if((params.contains("StartTime") == false) || (params["StartTime"].is_number() == false)) return HTTPServer::FillResponse(response, "'StartTime' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Mode") == false) || (params["Mode"].is_string() == false) || ((params["Mode"] != "ALL") && (params["Mode"] != "SAMPLES_ONLY") && (params["Mode"] != "SAMPLES_RAW") && (params["Mode"] != "SAMPLES_RMS"))) return HTTPServer::FillResponse(response, "'Mode' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Database DB(pSerial);
-  uint64_t StartTime = params["StartTime"];
-  string   Mode      = params["Mode"];
-  bool     Result    = false;
-  if(Mode == "ALL") {
-    Result = DB.ExecSentenceNoResult("DELETE FROM events WHERE starttime = " + DB.Bind(StartTime));
-  } else if(Mode == "SAMPLES_ONLY") {
-    Result = DB.ExecSentenceNoResult("DELETE FROM events_ext WHERE starttime = " + DB.Bind(StartTime));
-  } else if(Mode == "SAMPLES_RAW") {
-    Result = DB.ExecSentenceNoResult("DELETE FROM events_ext WHERE starttime = " + DB.Bind(StartTime) + " AND sampletype IN ('RAW_PRESTART', 'RAW_POSSTART', 'RAW_PREEND', 'RAW_POSEND')");
-  } else if(Mode == "SAMPLES_RMS") {
-    Result = DB.ExecSentenceNoResult("DELETE FROM events_ext WHERE starttime = " + DB.Bind(StartTime) + " AND sampletype IN ('RMS_PRESTART', 'RMS_POSSTART', 'RMS_PREEND', 'RMS_POSEND')");
-  }
-  HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
 // ---------------------------------------------------------------------------------------------------------------------

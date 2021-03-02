@@ -15,16 +15,17 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAggreg15M.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAggreg15M::AnalyzerSoftAggreg15M(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db) : AnalyzerSoftAggreg(serial, mode, db) {
+AnalyzerSoftAggreg15M::AnalyzerSoftAggreg15M(const string &serial, const Analyzer::AnalyzerMode mode) : AnalyzerSoftAggreg(serial, mode) {
   Reset();
 }
 AnalyzerSoftAggreg15M::~AnalyzerSoftAggreg15M() {
 }
 void AnalyzerSoftAggreg15M::Save() const {
-  pDB->ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" +
-  pDB->Bind(pTimestamp) + ", " +
-  pDB->Bind(pActive_Power, pVoltageChannels) + ", " +
-  pDB->Bind(pReactive_Power, pVoltageChannels) + ")");
+  Database DB(pSerial);
+  DB.ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" +
+  DB.Bind(pTimestamp) + ", " +
+  DB.Bind(pActive_Power, pVoltageChannels) + ", " +
+  DB.Bind(pReactive_Power, pVoltageChannels) + ")");
 }
 void AnalyzerSoftAggreg15M::Reset() {
   pSamples = 0;
@@ -36,9 +37,9 @@ bool AnalyzerSoftAggreg15M::Normalize() {
   pSamples = 1;
   return true;
 }
-void AnalyzerSoftAggreg15M::Accumulate(const AnalyzerSoftAggreg200MS *src) {
+void AnalyzerSoftAggreg15M::Accumulate(const AnalyzerSoftAggreg200MS &src) {
   pSamples++;
-  if(pTimestamp == 0) pTimestamp = src->Timestamp() / 900000 * 900000 + 899999;
+  if(pTimestamp == 0) pTimestamp = src.Timestamp() / 900000 * 900000 + 899999;
   AnalyzerSoftAggreg::Accumulate(src);
 }
 // ---------------------------------------------------------------------------------------------------------------------

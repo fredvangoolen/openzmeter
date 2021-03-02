@@ -14,21 +14,26 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <queue>
+#include "cctz/time_zone.h"
+#include "HTTPServer.h"
+#include "Rate.h"
 #include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
-class DatabaseQueue final : public Database {
+using namespace cctz;
+// ---------------------------------------------------------------------------------------------------------------------
+class AnalyzerRates {
   private :
-    queue<string>     pQueue;
-    pthread_t         pThread;
-    pthread_mutex_t   pMutex;
-    pthread_cond_t    pCond;
-    volatile bool     pTerminate;
-  private :
-    void *Thread();
+    const string              pSerial;
+    time_zone                 pTimeZone;
+    vector<vector<Rate> >     pRates;
+    pthread_rwlock_t          pLock;
   public :
-    DatabaseQueue(const string &schema = "public", const bool create = false);
-    ~DatabaseQueue();
-    void ExecSentenceNoResult(const string &sql);
+    static json CheckConfig(const json &config, const bool except);
+  public :
+    AnalyzerRates(const string &serial);
+    virtual ~AnalyzerRates();
+    void Config(const string &timezone, const json &rates);
+    void GetCosts(const json &params, Response &response);
+    void GetBills(const json &params, Response &response);
 };
 // ---------------------------------------------------------------------------------------------------------------------

@@ -14,31 +14,25 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <pthread.h>
-#include <inttypes.h>
 #include "cpp-httplib/httplib.h"
-#include "Analyzer.h"
-#include "Database.h"
+#include "nlohmann/json.hpp"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace httplib;
+using namespace std;
+using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
-class AnalyzerDefaultStorage {
+class AnalyzerSeries {
   private :
-    string  pSerial;
+    const string pSerial;
   public :
     void GetSeries(const json &params, Response &response) const;
     void SetSeries(const json &params, Response &response) const;
     void GetSeriesRange(const json &params, Response &response) const;
-    void GetEvents(const json &params, Response &response) const;
-    void SetEvents(const json &params, Response &response) const;
-    void GetEventsRange(const json &params, Response &response) const;
-    void GetEvent(const json &params, Response &response) const;
-    void GetAlarms(const json &params, Response &response) const;
-    void SetAlarms(const json &params, Response &response) const;
-    void GetAlarmsRange(const json &params, Response &response) const;
-  public :
-    AnalyzerDefaultStorage(const string &id);
-    ~AnalyzerDefaultStorage();
+    void DelSeriesRange(const json &params, Response &response) const;
+  private :
     void CleanOldSamples() const;
+  public :
+    AnalyzerSeries(const string &id);
+    virtual ~AnalyzerSeries();
 };
 //----------------------------------------------------------------------------------------------------------------------

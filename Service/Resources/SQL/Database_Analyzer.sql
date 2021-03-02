@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS aggreg_1h (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS events (
+  changetime  bigint            NOT NULL,
   starttime   bigint            NOT NULL PRIMARY KEY,
   evttype     character varying NOT NULL,
   samplerate  real              NOT NULL,
@@ -87,6 +88,7 @@ CREATE TABLE IF NOT EXISTS events (
   notes       text              NOT NULL,
   duration    bigint            NOT NULL
 ) WITH (OIDS=FALSE);
+CREATE INDEX IF NOT EXISTS events_changetime_idx ON events(changetime);
 
 DO $$ BEGIN
   CREATE TYPE event_sample_type AS ENUM ('RAW_PRESTART', 'RAW_POSSTART', 'RAW_PREEND', 'RAW_POSEND', 'RMS_PRESTART', 'RMS_POSSTART', 'RMS_PREEND', 'RMS_POSEND');
@@ -102,9 +104,11 @@ CREATE TABLE IF NOT EXISTS events_ext (
 ) WITH (OIDS=FALSE);
 
 CREATE TABLE IF NOT EXISTS alarms (
+  changetime    bigint            NOT NULL,
   id            character varying NOT NULL,
   trigger       bigint            NOT NULL,
   release       bigint            NULL
 ) WITH (OIDS=FALSE);
+CREATE INDEX IF NOT EXISTS alarms_changetime_idx ON alarms(changetime);
 CREATE INDEX IF NOT EXISTS alarms_id_idx ON alarms(id);
 CREATE INDEX IF NOT EXISTS alarms_trigger_idx ON alarms(trigger);

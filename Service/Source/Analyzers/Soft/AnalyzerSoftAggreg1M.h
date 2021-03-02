@@ -21,9 +21,9 @@ class AnalyzerSoftAggreg1M : public AnalyzerSoftAggreg {
   private :
     uint16_t pSamples;
   public :
-    AnalyzerSoftAggreg1M(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db);
+    AnalyzerSoftAggreg1M(const string &serial, const Analyzer::AnalyzerMode mode);
     ~AnalyzerSoftAggreg1M();
-    void Accumulate(const AnalyzerSoftAggreg200MS *src);
+    void Accumulate(const AnalyzerSoftAggreg200MS &src);
     void Save() const;
     void Reset();
     bool Normalize();

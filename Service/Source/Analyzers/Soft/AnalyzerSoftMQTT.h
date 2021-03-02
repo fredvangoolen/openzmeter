@@ -54,7 +54,7 @@ class AnalyzerSoftMQTT final {
     AnalyzerSoftMQTT(const string &serial);
     ~AnalyzerSoftMQTT();
     void Config(const json &config);
-    void PublishAggreg(const string &aggreg, const AnalyzerSoftAggreg *params);
+    void PublishAggreg(const string &aggreg, const AnalyzerSoftAggreg &params);
     void PublishAlarm(const uint64_t time, const string &name, const uint8_t prio, const bool triggered);
 };
 // ---------------------------------------------------------------------------------------------------------------------
