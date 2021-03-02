@@ -17,13 +17,11 @@
 #include <stdint.h>
 #include "muParser/muParser.h"
 #include "Analyzer.h"
-#include "DatabaseQueue.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace mu;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftAggreg {
   protected :
-    DatabaseQueue *pDB;                               //Database queue
     string         pSerial;                           //Serial number of parent analyzer
     uint8_t        pVoltageChannels;                  //Avaliable voltage channels
     uint8_t        pCurrentChannels;                  //Avaliable current channels
@@ -69,10 +67,10 @@ class AnalyzerSoftAggreg {
     float        PowerFactor(const uint8_t channel) const;
     virtual bool GetSeriesJSON(const string &serie, json &result) const;
   protected :
-    AnalyzerSoftAggreg(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db);
+    AnalyzerSoftAggreg(const string &serial, const Analyzer::AnalyzerMode mode);
     virtual ~AnalyzerSoftAggreg();
     void Normalize(const uint16_t samples);
     void Reset();
-    void Accumulate(const AnalyzerSoftAggreg *src);
+    void Accumulate(const AnalyzerSoftAggreg &src);
 };
 // ---------------------------------------------------------------------------------------------------------------------

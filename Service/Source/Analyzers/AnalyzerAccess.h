@@ -14,26 +14,27 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "cctz/time_zone.h"
-#include "HTTPServer.h"
-#include "Rate.h"
-#include "Database.h"
+#include "nlohmann/json.hpp"
 // ---------------------------------------------------------------------------------------------------------------------
-using namespace cctz;
+using namespace std;
+using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
-class AnalyzerDefaultRates final {
+class AnalyzerAccess {
+  public :
+    enum Access { READ = 0x01, WRITE = 0x02, CONFIG = 0x04 };
   private :
-    string                    pSerial;
-    time_zone                 pTimeZone;
-    vector<vector<Rate> >     pRates;
-    pthread_rwlock_t          pLock;
+    const string pSerial;
+    const string pOwner;
   public :
-    static json CheckConfig(const json &config, const bool except);
+    static json CheckConfig(const json &config, const string &owner = "admin");
   public :
-    AnalyzerDefaultRates(const string &serial);
-    ~AnalyzerDefaultRates();
-    void Config(const string &timezone, const json &rates);
-    void GetCosts(const json &params, Response &response);
-    void GetBills(const json &params, Response &response);
+    void Config(const json &config) const;
+    json Users() const;
+    void SetTime(const string &user, const uint64_t &alarm, const uint64_t &event) const;
+    json GetTime(const string &user) const;
+    bool TestUser(const string &user, const Access neededAccess) const;
+  public :
+    AnalyzerAccess(const string &serial, const string &owner = "admin");
+    virtual ~AnalyzerAccess();
 };
 // ---------------------------------------------------------------------------------------------------------------------

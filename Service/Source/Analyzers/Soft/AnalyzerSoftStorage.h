@@ -27,6 +27,6 @@ class AnalyzerSoftStorage final {
     AnalyzerSoftStorage(const string &serial);
     ~AnalyzerSoftStorage();
     void GetStatus(const json &params, Response &response) const;
-    void DelSeriesRange(const json &params, Response &response) const;
+
 };
 // ---------------------------------------------------------------------------------------------------------------------

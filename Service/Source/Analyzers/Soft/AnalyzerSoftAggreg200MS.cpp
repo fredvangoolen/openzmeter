@@ -15,28 +15,29 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAggreg200MS.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAggreg200MS::AnalyzerSoftAggreg200MS(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db) : AnalyzerSoftAggreg(serial, mode, db) {
+AnalyzerSoftAggreg200MS::AnalyzerSoftAggreg200MS(const string &serial, const Analyzer::AnalyzerMode mode) : AnalyzerSoftAggreg(serial, mode) {
   Reset();
 }
 AnalyzerSoftAggreg200MS::~AnalyzerSoftAggreg200MS() {
 }
 void AnalyzerSoftAggreg200MS::Save() const {
-  pDB->ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance, harmonics_v, harmonics_i, harmonics_p) VALUES(" +
-  pDB->Bind(pTimestamp) + ", " +
-  pDB->Bind(pVoltage, pVoltageChannels) + ", " +
-  pDB->Bind(pCurrent, pCurrentChannels) + ", " +
-  pDB->Bind(pFrequency) + ", " +
-  pDB->Bind(pFlag) + ", " +
-  pDB->Bind(pActive_Power, pVoltageChannels) + ", " +
-  pDB->Bind(pReactive_Power, pVoltageChannels) + ", " +
-  pDB->Bind(pPower_Factor, pVoltageChannels) + ", " +
-  pDB->Bind(pVoltage_THD, pVoltageChannels) + ", " +
-  pDB->Bind(pCurrent_THD, pCurrentChannels) + ", " +
-  pDB->Bind(pPhi, pVoltageChannels) + ", " +
-  pDB->Bind(pUnbalance) + ", " +
-  pDB->Bind((float*)pVoltage_HarmonicsComplex, pVoltageChannels, 50, 2) + ", " +
-  pDB->Bind((float*)pCurrent_HarmonicsComplex, pCurrentChannels, 50, 2) + ", " +
-  pDB->Bind(pPower_Harmonics, pVoltageChannels, 50) + ")");
+  Database DB(pSerial);
+  DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance, harmonics_v, harmonics_i, harmonics_p) VALUES(" +
+  DB.Bind(pTimestamp) + ", " +
+  DB.Bind(pVoltage, pVoltageChannels) + ", " +
+  DB.Bind(pCurrent, pCurrentChannels) + ", " +
+  DB.Bind(pFrequency) + ", " +
+  DB.Bind(pFlag) + ", " +
+  DB.Bind(pActive_Power, pVoltageChannels) + ", " +
+  DB.Bind(pReactive_Power, pVoltageChannels) + ", " +
+  DB.Bind(pPower_Factor, pVoltageChannels) + ", " +
+  DB.Bind(pVoltage_THD, pVoltageChannels) + ", " +
+  DB.Bind(pCurrent_THD, pCurrentChannels) + ", " +
+  DB.Bind(pPhi, pVoltageChannels) + ", " +
+  DB.Bind(pUnbalance) + ", " +
+  DB.Bind((float*)pVoltage_HarmonicsComplex, pVoltageChannels, 50, 2) + ", " +
+  DB.Bind((float*)pCurrent_HarmonicsComplex, pCurrentChannels, 50, 2) + ", " +
+  DB.Bind(pPower_Harmonics, pVoltageChannels, 50) + ")");
 }
 void AnalyzerSoftAggreg200MS::Reset() {
   AnalyzerSoftAggreg::Reset();

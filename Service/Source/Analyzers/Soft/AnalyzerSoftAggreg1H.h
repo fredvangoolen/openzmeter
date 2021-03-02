@@ -40,13 +40,13 @@ class AnalyzerSoftAggreg1H final : public AnalyzerSoftAggreg {
   private :
     float CalcChange(const float in, const float reference);
   public :
-    AnalyzerSoftAggreg1H(const string &serial, const Analyzer::AnalyzerMode mode, DatabaseQueue *db);
+    AnalyzerSoftAggreg1H(const string &serial, const Analyzer::AnalyzerMode mode);
     ~AnalyzerSoftAggreg1H();
-    void Accumulate(const AnalyzerSoftAggreg200MS *src);
+    void Accumulate(const AnalyzerSoftAggreg200MS &src);
     void Save() const;
     void Reset();
     bool Normalize();
-    void AccumulateStats(const AnalyzerSoftAggreg3S *params, const float nominalFreq);
-    void AccumulateStats(const AnalyzerSoftAggreg10M *params, const float nominalVolt);
+    void AccumulateStats(const AnalyzerSoftAggreg3S &params, const float nominalFreq);
+    void AccumulateStats(const AnalyzerSoftAggreg10M &params, const float nominalVolt);
 };
 // ---------------------------------------------------------------------------------------------------------------------

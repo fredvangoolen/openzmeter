@@ -22,8 +22,7 @@
 pthread_mutex_t     AnalyzerSoftFFTs::pFFTMutex   = PTHREAD_MUTEX_INITIALIZER;
 uint32_t            AnalyzerSoftFFTs::pFFTRunning = 0;
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftFFTs::AnalyzerSoftFFTs(const string &serial, const Analyzer::AnalyzerMode mode) {
-  pSerial          = serial;
+AnalyzerSoftFFTs::AnalyzerSoftFFTs(const Analyzer::AnalyzerMode mode) {
   pVoltageChannels = (mode == Analyzer::PHASE1) ? 1 : 3;
   pCurrentChannels = (mode == Analyzer::PHASE1) ? 1 : (mode == Analyzer::PHASE3) ? 3 : 4;
   for(uint8_t i = 0; i < pVoltageChannels; i++) {

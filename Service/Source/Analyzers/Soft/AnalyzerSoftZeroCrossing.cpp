@@ -15,7 +15,8 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftZeroCrossing.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftZeroCrossing::AnalyzerSoftZeroCrossing(const Analyzer::AnalyzerMode mode, const float samplerate) {
+AnalyzerSoftZeroCrossing::AnalyzerSoftZeroCrossing(const Analyzer::AnalyzerMode mode, const float samplerate) : pSamplerate(samplerate),
+  pVoltageChannels((mode == Analyzer::PHASE1) ? 1 : 3), pCurrentChannels((mode == Analyzer::PHASE1) ? 1 : (mode == Analyzer::PHASE3) ? 3 : 4) {
   pWorkingBlock      = NULL;
   pMutex             = PTHREAD_MUTEX_INITIALIZER;
   pDelayVoltage      = NULL;
@@ -24,19 +25,8 @@ AnalyzerSoftZeroCrossing::AnalyzerSoftZeroCrossing(const Analyzer::AnalyzerMode 
   pSequence          = 0;
   pCycleLen          = 0;
   pDelayPos          = 0;
-  pSamplerate        = samplerate;
   pMaxCycles         = 1;
   pMaxSamples        = pSamplerate * 0.2;
-  if(mode == Analyzer::PHASE1) {
-    pVoltageChannels = 1;
-    pCurrentChannels = 1;
-  } else if(mode == Analyzer::PHASE3) {
-    pVoltageChannels = 3;
-    pCurrentChannels = 3;
-  } else {
-    pVoltageChannels = 3;
-    pCurrentChannels = 4;
-  }
   memset(pFilters, 0, sizeof(pFilters));
 }
 AnalyzerSoftZeroCrossing::~AnalyzerSoftZeroCrossing() {

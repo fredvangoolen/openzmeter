@@ -18,10 +18,11 @@
 #include <inttypes.h>
 #include "Worker.h"
 #include "AnalyzerSoftBlock.h"
+#include "AnalyzerEvents.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoftEvents final {
+class AnalyzerSoftEvents final : public AnalyzerEvents {
   private :
     enum EventType { EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC };
     enum EventSamples { SAMPLES_RAW_PRESTART = 0x01,
@@ -50,7 +51,6 @@ class AnalyzerSoftEvents final {
     static constexpr float Event_RAW_Time   =  0.5;   //Time in seconds before and after event to store RAW samples
   private :
     pthread_mutex_t  pMutex;                    //Configuration lock
-    string           pSerial;                   //Analyzer serial
     uint8_t          pVoltageChannels;          //Input channels
     float            pSamplerate;               //Input samplerate
     float            pNominalVoltage;           //Nominal voltage
@@ -79,8 +79,6 @@ class AnalyzerSoftEvents final {
     void Config(const bool enabled);
     void Run(const AnalyzerSoftBlock *block, const uint64_t timestamp, const float nominalVoltage, const float nominalFreq);
     bool Wait();
-    void DelEventsRange(const json &params, Response &response) const;
-    void SetEvent(const json &params, Response &response) const;
-    void DelEvent(const json &params, Response &response) const;
+
 };
 // ---------------------------------------------------------------------------------------------------------------------

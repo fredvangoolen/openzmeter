@@ -27,7 +27,6 @@ using namespace std;
 class Analyzer {
   public :
     enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
-    enum Access { READ = 0x01, WRITE = 0x02, CONFIG = 0x04 };
   private :
     pthread_rwlock_t   pMembersLocks;            //Locks for configurations
     uint64_t           pLastSave;                //Timestamp of last save or communication
@@ -74,12 +73,6 @@ class Analyzer {
     virtual void DelAlarmsRange(const json &params, Response &response) = 0;
     virtual void SetRemote(const json &params, Response &response) = 0;
     virtual bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) = 0;
-  protected :
-    void SetUsers(const json &config);
-    json GetUsers();
-    void SetTime(const string &user, const uint64_t &alarm, const uint64_t &event);
-    json GetTime(const string &user);
-    bool TestUser(const string &user, const Access neededAccess);
   public :
     virtual        ~Analyzer();
     string          Serial();
