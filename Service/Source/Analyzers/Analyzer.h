@@ -70,12 +70,13 @@ class Analyzer {
     virtual void SetAlarms(const json &params, Response &response) = 0;
     virtual void GetAlarmsRange(const json &params, Response &response) = 0;
     virtual void DelAlarm(const json &params, Response &response) = 0;
+    virtual void SetAlarm(const json &params, Response &response) = 0;
     virtual void DelAlarmsRange(const json &params, Response &response) = 0;
     virtual void SetRemote(const json &params, Response &response) = 0;
     virtual bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) = 0;
   public :
-    virtual        ~Analyzer();
-    string          Serial();
-    json            GetJSONDescriptor();
+    virtual ~Analyzer();
+    string   Serial();
+    json     GetJSONDescriptor();
 };
 //----------------------------------------------------------------------------------------------------------------------

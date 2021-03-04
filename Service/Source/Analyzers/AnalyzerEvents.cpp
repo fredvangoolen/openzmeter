@@ -136,4 +136,7 @@ void AnalyzerEvents::DelEvent(const json &params, Response &response) const {
   }
   HTTPServer::FillResponse(response, "", "text/plain", (Result == true) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
+void AnalyzerEvents::SetEvents(const json &params, Response &response) const {
+
+}
 // ---------------------------------------------------------------------------------------------------------------------

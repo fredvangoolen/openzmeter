@@ -32,12 +32,10 @@
 #include "AnalyzerSoftAggreg10M.h"
 #include "AnalyzerSoftAggreg15M.h"
 #include "AnalyzerSoftAggreg1H.h"
-#include "AnalyzerSoftStorage.h"
 #include "AnalyzerSoftFrequency.h"
 #include "AnalyzerSoftSync.h"
 #include "AnalyzerSoftMQTT.h"
 #include "AnalyzerSoftAlarms.h"
-
 #include "AnalyzerSeries.h"
 #include "AnalyzerRates.h"
 #include "AnalyzerAccess.h"
@@ -46,7 +44,7 @@ using namespace httplib;
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoft : public Analyzer {
-  private : //Not modified after creation
+  private :
     const float                pSamplerate;              //Velocidad de muestreo
     const string               pConfigPath;              //Path to configuration
     const uint8_t              pVoltageChannels;         //Voltage channels
@@ -61,16 +59,13 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerSoftAggreg10M      pAggreg10M;               //10 minutes aggregation
     AnalyzerSoftAggreg15M      pAggreg15M;               //15 minutes aggregation
     AnalyzerSoftAggreg1H       pAggreg1H;                //1 hour aggregation
-
-
     AnalyzerRates              pRates;                   //Rate handle class
     AnalyzerSeries             pSeries;                  //Read stored data
     AnalyzerSoftEvents         pEvents;                  //Events detector
     AnalyzerSoftAlarms         pAlarms;                  //Alarms control
     AnalyzerSoftSync           pSync;                    //Remote sync object
     AnalyzerSoftMQTT           pMQTT;                    //MQTT Control object
-    AnalyzerSoftGA            *pGA;                      //Geometric algebra calculator
-    AnalyzerSoftStorage       *pStorage;                 //Control stored data
+//    AnalyzerSoftGA            *pGA;                      //Geometric algebra calculator
     AnalyzerSoftBlock         *pWorkingBlock;            //Current block
   private :
     volatile bool              pTerminate;               //Terminate thread
@@ -85,8 +80,8 @@ class AnalyzerSoft : public Analyzer {
   private :
     void Thread();
     void Config(const json &options);
-    json GetSeriesNow(const json &series);
-    json GetSeriesNow();
+    json GetSeriesNow(const vector<string> &series);
+    void HandleAction(const string &name, const json &params);
   public :
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
@@ -109,8 +104,9 @@ class AnalyzerSoft : public Analyzer {
     void TestAlarm(const json &params, Response &response) override;
     void GetAlarms(const json &params, Response &response) override;
     void SetAlarms(const json &params, Response &response) override;
-    void GetAlarmsRange(const json &params, Response &response) override;
+    void SetAlarm(const json &params, Response &response) override;
     void DelAlarm(const json &params, Response &response) override;
+    void GetAlarmsRange(const json &params, Response &response) override;
     void DelAlarmsRange(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
     bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;

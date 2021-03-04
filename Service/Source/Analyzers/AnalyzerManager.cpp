@@ -43,6 +43,7 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("testAlarm",       TestAlarmCallback);
   HTTPServer::RegisterCallback("getAlarms",       GetAlarmsCallback);
   HTTPServer::RegisterCallback("getAlarmsRange",  GetAlarmsRangeCallback);
+  HTTPServer::RegisterCallback("setAlarm",        SetAlarmCallback);
   HTTPServer::RegisterCallback("delAlarm",        DelAlarmCallback);
   HTTPServer::RegisterCallback("delAlarmsRange",  DelAlarmsRangeCallback);
   HTTPServer::RegisterCallback("setRemote",       SetRemoteCallback);
@@ -70,6 +71,7 @@ AnalyzerManager::~AnalyzerManager() {
   HTTPServer::UnregisterCallback("getAlarms");
   HTTPServer::UnregisterCallback("getAlarmsRange");
   HTTPServer::UnregisterCallback("delAlarm");
+  HTTPServer::UnregisterCallback("setAlarm");
   HTTPServer::UnregisterCallback("delAlarmsRange");
   HTTPServer::UnregisterCallback("setRemote");
   LogFile::Debug("AnalyzerManager stopped");
@@ -114,11 +116,17 @@ void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &respons
     sink.os << "[\n  ";
     if(UserName != "admin") {
       Database DB;
-      DB.ExecSentenceAsyncResult("SELECT serial FROM permissions WHERE username = " + DB.Bind(UserName) + " AND (read = true OR write = true OR config = true)");
+      DB.ExecSentenceAsyncResult("SELECT serial, read, write, config FROM permissions WHERE username = " + DB.Bind(UserName) + " AND (read = true OR write = true OR config = true)");
       while(DB.FecthRow() && sink.is_writable()) {
         pthread_rwlock_rdlock(&pAnalyzersLock);
         auto Tmp = pAnalyzers.find(DB.ResultString("serial"));
-        if((Tmp != pAnalyzers.end()) && (Tmp->second->Configured() == true)) sink.os << ((Items++ != 0) ? ",\n  " : "") + Tmp->second->GetJSONDescriptor().dump();
+        if((Tmp != pAnalyzers.end()) && (Tmp->second->Configured() == true)) {
+          json Analyzer = Tmp->second->GetJSONDescriptor();
+          Analyzer["Read"]   = DB.ResultBool("read");
+          Analyzer["Write"]  = DB.ResultBool("write");
+          Analyzer["Config"] = DB.ResultBool("config");
+          sink.os << ((Items++ != 0) ? ",\n  " : "") + Analyzer.dump();
+        }
         pthread_rwlock_unlock(&pAnalyzersLock);
       }
     } else {
@@ -126,7 +134,11 @@ void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &respons
       for(auto &Tmp : pAnalyzers) {
         if(Tmp.second->Configured() == false) continue;
         if(sink.is_writable() == false) break;
-        sink.os << ((Items++ != 0) ? ",\n  " : "") + Tmp.second->GetJSONDescriptor().dump();
+        json Analyzer = Tmp.second->GetJSONDescriptor();
+        Analyzer["Read"]   = true;
+        Analyzer["Write"]  = true;
+        Analyzer["Config"] = true;
+        sink.os << ((Items++ != 0) ? ",\n  " : "") + Analyzer.dump();
       }
       pthread_rwlock_unlock(&pAnalyzersLock);
     }
@@ -195,6 +207,9 @@ void AnalyzerManager::GetAlarmsRangeCallback(const json &params, Response &respo
 }
 void AnalyzerManager::DelAlarmCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::DelAlarm);
+}
+void AnalyzerManager::SetAlarmCallback(const json &params, Response &response) {
+  CallAnalyzerFunction(params, response, &Analyzer::SetAlarm);
 }
 void AnalyzerManager::DelAlarmsRangeCallback(const json &params, Response &response) {
   CallAnalyzerFunction(params, response, &Analyzer::DelAlarmsRange);

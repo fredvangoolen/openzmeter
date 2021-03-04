@@ -64,4 +64,10 @@ void AnalyzerAlarms::DelAlarmsRange(const json &params, Response &response) cons
   Database DB(pSerial);
   HTTPServer::FillResponse(response, "", "application/json", DB.ExecSentenceNoResult("DELETE FROM alarms WHERE trigger BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
 }
+void AnalyzerAlarms::SetAlarm(const json &params, Response &response) const {
+
+}
+void AnalyzerAlarms::SetAlarms(const json &params, Response &response) const {
+
+}
 // ---------------------------------------------------------------------------------------------------------------------

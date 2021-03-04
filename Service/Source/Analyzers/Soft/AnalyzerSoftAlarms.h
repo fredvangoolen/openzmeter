@@ -25,7 +25,6 @@
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 // ---------------------------------------------------------------------------------------------------------------------
-//class AnalyzerSoftMQTT;
 class AnalyzerSoftAlarms final : public AnalyzerAlarms {
   private :
     float                                     pNominalVoltage;

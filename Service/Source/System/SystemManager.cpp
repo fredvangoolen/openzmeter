@@ -138,7 +138,7 @@ void SystemManager::GetSystemCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, pStatus.dump(), "application/json", HTTP_OK);
   pthread_mutex_unlock(&pMutex);
 }
-json SystemManager::Status() {
+json SystemManager::ToJSON() {
   pthread_mutex_lock(&pMutex);
   json Status = pStatus;
   pthread_mutex_unlock(&pMutex);
@@ -157,7 +157,7 @@ SystemManager::~SystemManager() {
 void SystemManager::GetLogCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, LogFile::ToJSON().dump(), "application/json", HTTP_OK);
 }
-json SystemManager::Status() {
+json SystemManager::ToJSON() {
   return json::object();
 }
 #endif // ==============================================================================================================

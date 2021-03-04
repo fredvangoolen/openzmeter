@@ -28,6 +28,7 @@ class AnalyzerAlarms {
     void GetAlarms(const json &params, Response &response) const;
     void SetAlarms(const json &params, Response &response) const;
     void DelAlarm(const json &params, Response &response) const;
+    void SetAlarm(const json &params, Response &response) const;
     void GetAlarmsRange(const json &params, Response &response) const;
     void DelAlarmsRange(const json &params, Response &response) const;
   public :
