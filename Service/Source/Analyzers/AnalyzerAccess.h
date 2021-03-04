@@ -15,6 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include "nlohmann/json.hpp"
+#include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using json = nlohmann::json;
@@ -28,13 +29,11 @@ class AnalyzerAccess {
   public :
     static json CheckConfig(const json &config, const string &owner = "admin");
   public :
-    void Config(const json &config) const;
-    json Users() const;
-    void SetTime(const string &user, const uint64_t &alarm, const uint64_t &event) const;
-    json GetTime(const string &user) const;
-    bool TestUser(const string &user, const Access neededAccess) const;
-  public :
     AnalyzerAccess(const string &serial, const string &owner = "admin");
     virtual ~AnalyzerAccess();
+    void Config(const json &config) const;
+    json Users() const;
+    json GetStatus(const vector<string> &series, const string &user = "admin") const;
+    bool TestUser(const Access neededAccess, const string &user = "admin") const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

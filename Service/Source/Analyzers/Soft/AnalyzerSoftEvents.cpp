@@ -115,7 +115,7 @@ void AnalyzerSoftEvents::SaveSamples(const uint64_t &time, const uint8_t type, c
     ReadPos = (ReadPos + 1) % MaxLen;
   }
   Result.append("}'");
-  DB.ExecSentenceNoResult("INSERT INTO events_ext(starttime, sampletype, samples) VALUES (" + DB.Bind(time) + ", " + DB.Bind(Type) + ", " + Result + ")");
+  DB.ExecSentenceNoResult("WITH Event AS (UPDATE events SET changetime = " + DB.Bind(Tools::GetTime64()) + " WHERE starttime = " + DB.Bind(time) + " RETURNING startime) INSERT INTO events_ext(starttime, sampletype, samples) SELECT startime, " + DB.Bind(Type) + ", " + Result + " FROM Event");
 }
 void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint64_t timestamp) {
   uint16_t Pos = 0;
@@ -153,11 +153,11 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint6
         LogFile::Debug("Event '%s' closed on analyzer '%s'", Type.c_str(), pSerial.c_str());
         Database DB(pSerial);
         if(pEvent->Type == EVT_RVC) memcpy(pEvent->ChangeValue, RMS_Avg, sizeof(float) * pVoltageChannels);
-        DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", reference = " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", peak = " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", change = " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", duration = " + DB.Bind(pEvent->SamplesDuration) + " WHERE starttime = " + DB.Bind(pEvent->Start));
         if(pEvent->CyclesDuration  < pPrevCyclesLen)  SaveSamples(pEvent->Start, SAMPLES_RMS_POSSTART, 0);
         if(pEvent->SamplesDuration < pPrevSamplesLen) SaveSamples(pEvent->Start, SAMPLES_RAW_POSSTART, 0);
         SaveSamples(pEvent->Start, SAMPLES_RMS_PREEND, (pEvent->CyclesDuration < pPrevCyclesLen) ? pEvent->CyclesDuration : (pEvent->CyclesDuration < (pPrevCyclesLen * 2)) ? pEvent->CyclesDuration - pPrevCyclesLen : pPrevCyclesLen);
         SaveSamples(pEvent->Start, SAMPLES_RAW_PREEND, (pEvent->SamplesDuration < pPrevSamplesLen) ? pEvent->SamplesDuration : (pEvent->SamplesDuration < (pPrevSamplesLen * 2)) ? pEvent->SamplesDuration - pPrevSamplesLen : pPrevSamplesLen);
+        DB.ExecSentenceNoResult("UPDATE events SET evttype = " + DB.Bind(Type) + ", reference = " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", peak = " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", change = " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", duration = " + DB.Bind(pEvent->SamplesDuration) + " WHERE starttime = " + DB.Bind(pEvent->Start));
         pEvent->CyclesDuration  = 0;
         pEvent->SamplesDuration = 0;
         pEvents.push_back(pEvent);
@@ -196,7 +196,7 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint6
         LogFile::Debug("New event '%s' started on analyzer '%s'", Type.c_str(), pSerial.c_str());
         pEvent->Start = timestamp + (uint32_t)((Pos * 1000) / pSamplerate);
         Database DB(pSerial);
-        DB.ExecSentenceNoResult("INSERT INTO events(starttime, evttype, samplerate, reference, peak, change, notes, duration) VALUES (" + DB.Bind(pEvent->Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", '', 0)");
+        DB.ExecSentenceNoResult("INSERT INTO events(changetime, starttime, evttype, samplerate, reference, peak, change, notes, duration) VALUES (" + DB.Bind(Tools::GetTime64()) + ", " + DB.Bind(pEvent->Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", '', 0)");
         SaveSamples(pEvent->Start, SAMPLES_RMS_PRESTART, pPrevCyclesLen);
         SaveSamples(pEvent->Start, SAMPLES_RAW_PRESTART, pPrevSamplesLen);
       } else if(pEvent->Type == EVT_INTERRUPTION) {

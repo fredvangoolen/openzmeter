@@ -81,12 +81,12 @@ AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(AnalyzerSoftAggreg
     Database DB(pSerial);
     pTriggerTime = data.Timestamp();
     LogFile::Debug("Alarm triggered on analyzer '%s'", pSerial.c_str());
-    DB.ExecSentenceNoResult("INSERT INTO alarms(id, trigger, release) VALUES(" + DB.Bind(pUID) + ", " + DB.Bind(pTriggerTime) + ", null)");
+    DB.ExecSentenceNoResult("INSERT INTO alarms(changetime, id, trigger, release) VALUES(" + DB.Bind(Tools::GetTime64()) + ", " + DB.Bind(pUID) + ", " + DB.Bind(pTriggerTime) + ", null)");
     return TRIGGERED;
   } else if((pResultCount == 0) && (pTriggerTime != 0)) {
     Database DB(pSerial);
     LogFile::Debug("Alarm reseted on analyzer '%s'", pSerial.c_str());
-    DB.ExecSentenceNoResult("UPDATE alarms SET release = " + DB.Bind(data.Timestamp()) + " WHERE id = " + DB.Bind(pUID) + " AND trigger = " + DB.Bind(pTriggerTime));
+    DB.ExecSentenceNoResult("UPDATE alarms SET changetime = " + DB.Bind(Tools::GetTime64()) + ", release = " + DB.Bind(data.Timestamp()) + " WHERE id = " + DB.Bind(pUID) + " AND trigger = " + DB.Bind(pTriggerTime));
     pTriggerTime = 0;
     return RELEASED;
   }

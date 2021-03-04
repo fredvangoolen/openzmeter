@@ -37,7 +37,7 @@ class SystemManager final {
     static string Exec(const string &command, int *resultCode = NULL);
     static json   uBusCall(const string &path, const string &method, const json &params = nullptr);
   public :
-    static json Status();
+    static json ToJSON();
   public :
     SystemManager();
     ~SystemManager();
@@ -47,7 +47,7 @@ class SystemManager final {
   private :
     static void GetLogCallback(const json &params, Response &response);
   public :
-    static json Status();
+    static json ToJSON();
   public :
     SystemManager();
     ~SystemManager();

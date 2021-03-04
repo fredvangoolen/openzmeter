@@ -48,6 +48,7 @@ class AnalyzerManager final {
     static void GetAlarmsCallback(const json &params, Response &response);
     static void GetAlarmsRangeCallback(const json &params, Response &response);
     static void DelAlarmCallback(const json &params, Response &response);
+    static void SetAlarmCallback(const json &params, Response &response);
     static void DelAlarmsRangeCallback(const json &params, Response &response);
     static void SetRemoteCallback(const json &params, Response &response);
   public :

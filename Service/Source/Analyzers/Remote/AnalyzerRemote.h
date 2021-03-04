@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <map>
+#include <queue>
 #include "HTTPServer.h"
 #include "Analyzer.h"
 #include "AnalyzerAccess.h"
@@ -22,28 +22,31 @@
 #include "AnalyzerRates.h"
 #include "AnalyzerEvents.h"
 #include "AnalyzerAlarms.h"
-#include "AnalyzerRemoteActions.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerRemote : public Analyzer {
   private :
-    pthread_mutex_t            pMutex;                   //Control access to shared variables
+    static const uint16_t      pMaxActions = 100;        //Max allowed pending tasks
+  private :
+    pthread_mutex_t            pMutex;                   //Actions queue mutex
+    queue<json>                pPendingActions;          //Queue of pending actions
+    pthread_rwlock_t           pLock;                    //Control access to shared variables
     uint64_t                   pLastClientReq;           //Last client request
-    AnalyzerAccess             pAccess;                  //Access control class
-    AnalyzerRates              pRates;                   //Rate calculation from database stored data
-    AnalyzerSeries             pSeries;
-    AnalyzerAlarms             pAlarms;
-    AnalyzerEvents             pEvents;
-
-    AnalyzerRemoteActions     *pActions;                 //Data save to database functions
-
     json                       pConfig;                  //Cached analyzer configuration
     json                       pNow;                     //Cached version of now data
-//    pthread_cond_t              pCond;             //Wake getRemote as needed
-//    map<string, Request_t*>     pSendPending;      //Request awaiting to be send
-//    map<string, Request_t*>     pResponsePending;  //Request awaiting response
+    json                       pStatus;                  //Cached version of status data
+    float                      pSamplerate;              //Cached samplerate
   private :
-    void SetClientConnected();
-    bool isClientConnected();
+    AnalyzerAccess             pAccess;                  //Access control class
+    AnalyzerRates              pRates;                   //Rate calculation from database stored data
+    AnalyzerSeries             pSeries;                  //Series base class
+    AnalyzerAlarms             pAlarms;                  //Alarms base class
+    AnalyzerEvents             pEvents;                  //Events base class
+  private :
+    void     SetClientConnected();
+    bool     isClientConnected();
+    void     PushAction(const string name, const json &params);
+    json     GetActions(const uint16_t max);
+    uint16_t PendingActions();
   private :
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
@@ -68,6 +71,7 @@ class AnalyzerRemote : public Analyzer {
     void SetAlarms(const json &params, Response &response) override;
     void GetAlarmsRange(const json &params, Response &response) override;
     void DelAlarm(const json &params, Response &response) override;
+    void SetAlarm(const json &params, Response &response) override;
     void DelAlarmsRange(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
     void SetRemote(const map<string, string> &params, Response &response);

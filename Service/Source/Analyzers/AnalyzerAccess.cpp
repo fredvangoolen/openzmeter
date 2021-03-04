@@ -16,6 +16,8 @@
 #include <set>
 #include "AnalyzerAccess.h"
 #include "Database.h"
+#include "LogFile.h"
+#include "SystemManager.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerAccess::AnalyzerAccess(const string &serial, const string &owner) : pSerial(serial), pOwner(owner) {
   Database DB;
@@ -24,13 +26,7 @@ AnalyzerAccess::AnalyzerAccess(const string &serial, const string &owner) : pSer
 }
 AnalyzerAccess::~AnalyzerAccess() {
 }
-void AnalyzerAccess::SetTime(const string &user, const uint64_t &alarm, const uint64_t &event) const {
-}
-json AnalyzerAccess::GetTime(const string &user) const {
-  json Result = json::object();
-  return Result;
-}
-bool AnalyzerAccess::TestUser(const string &user, const Access neededAccess) const {
+bool AnalyzerAccess::TestUser(const Access neededAccess, const string &user) const {
   Database DB;
   string   Permision = (neededAccess == READ) ? "read" : (neededAccess == WRITE) ? "write" : "config";
   DB.ExecSentenceAsyncResult("SELECT " + Permision + " AS result FROM permissions WHERE username = " + DB.Bind(user) + " AND serial = " + DB.Bind(pSerial));
@@ -89,5 +85,55 @@ void AnalyzerAccess::Config(const json &config) const {
     Users.append((Users.size() == 0) ? DB.Bind(UserName) : ", " + DB.Bind(UserName));
   }
   DB.ExecSentenceNoResult("DELETE FROM permissions WHERE serial = " + DB.Bind(pSerial) + " AND username NOT IN (" + Users + ")");
+}
+json AnalyzerAccess::GetStatus(const vector<string> &series, const string &user) const {
+  json     Result = json::object();
+  uint64_t To     = Tools::GetTime64();
+  Result["Time"]  = To;
+  for(auto &Serie : series) {
+    if(Serie == "Log") {
+      Result["Log"] = LogFile::ToJSON();
+    } else if(Serie == "System") {
+      Result["System"] = SystemManager::ToJSON();
+    } else if(Serie == "Events") {
+      Result["Events"] = json::object();
+      Database DB(pSerial);
+      DB.ExecSentenceAsyncResult("SELECT eventsread, (SELECT count(*) FROM events WHERE changetime > eventsread) AS events FROM permissions WHERE username = " + DB.Bind(user) + " AND serial = " + DB.Bind(pSerial));
+      if(DB.FecthRow() == false) {
+        Result["Events"]["LastRead"] = 0;
+        Result["Events"]["Count"]    = 0;
+      } else {
+        Result["Events"]["LastRead"] = DB.ResultUInt64("eventsread");
+        Result["Events"]["Count"]    = DB.ResultUInt64("events");
+      }
+    } else if(Serie == "Alarms") {
+      Result["Alarms"] = json::object();
+      Database DB(pSerial);
+      DB.ExecSentenceAsyncResult("SELECT alarmsread, (SELECT count(*) FROM alarms WHERE changetime > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(user) + " AND serial = " + DB.Bind(pSerial));
+      Result["Unread_Alarms"]["To"]    = To;
+      if(DB.FecthRow() == false) {
+        Result["Alarms"]["LastRead"] = 0;
+        Result["Alarms"]["Count"]    = 0;
+      } else {
+        Result["Alarms"]["LastRead"] = DB.ResultUInt64("alarmsread");
+        Result["Alarms"]["Count"]    = DB.ResultUInt64("alarms");
+      }
+    } else if(Serie == "Storage") {
+      Database DB;
+      DB.ExecSentenceAsyncResult("WITH sizes AS (SELECT tablename, pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)) AS size FROM pg_tables WHERE schemaname = " + DB.Bind(pSerial) + ") SELECT json_build_object("
+                                 "'Aggreg_200MS', (SELECT size FROM sizes WHERE tablename = 'aggreg_200ms'),"
+                                 "'Aggreg_3S', (SELECT size FROM sizes WHERE tablename = 'aggreg_3s'),"
+                                 "'Aggreg_1M', (SELECT SUM(size) FROM sizes WHERE tablename IN ('aggreg_1m', 'aggreg_ext_1m')),"
+                                 "'Aggreg_10M', (SELECT size FROM sizes WHERE tablename = 'aggreg_10m'),"
+                                 "'Aggreg_15M', (SELECT size FROM sizes WHERE tablename = 'aggreg_15m'),"
+                                 "'Aggreg_1H', (SELECT size FROM sizes WHERE tablename = 'aggreg_1h'),"
+                                 "'Events', (SELECT SUM(size) FROM sizes WHERE tablename IN ('events', 'events_ext')),"
+                                 "'Alarms', (SELECT size FROM sizes WHERE tablename = 'alarms')) as tables");
+      if(DB.FecthRow() == true) Result["Storage"] = DB.ResultJSON("tables");
+    } else {
+      return nullptr;
+    }
+  }
+  return Result;
 }
 // ---------------------------------------------------------------------------------------------------------------------

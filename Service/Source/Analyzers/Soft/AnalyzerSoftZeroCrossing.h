@@ -18,7 +18,7 @@
 #include "Analyzer.h"
 #include "AnalyzerSoftBlock.h"
 // ---------------------------------------------------------------------------------------------------------------------
-class AnalyzerSoftZeroCrossing {
+class AnalyzerSoftZeroCrossing final {
   private :
     static const uint8_t FILTERSTAGES = 5; //Filter stages for zerocrossing
   private :

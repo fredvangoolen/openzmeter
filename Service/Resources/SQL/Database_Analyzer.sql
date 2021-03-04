@@ -107,7 +107,8 @@ CREATE TABLE IF NOT EXISTS alarms (
   changetime    bigint            NOT NULL,
   id            character varying NOT NULL,
   trigger       bigint            NOT NULL,
-  release       bigint            NULL
+  release       bigint            NULL,
+  notes         text              NOT NULL
 ) WITH (OIDS=FALSE);
 CREATE INDEX IF NOT EXISTS alarms_changetime_idx ON alarms(changetime);
 CREATE INDEX IF NOT EXISTS alarms_id_idx ON alarms(id);
