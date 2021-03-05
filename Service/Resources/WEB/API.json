@@ -890,7 +890,7 @@
                     "items": {
                       "type": "string",
                       "enum": [
-                        "SYSTEM",
+                        "System",
                         "UNREAD_EVENTS",
                         "UNREAD_ALARMS",
                         "PERMISSIONS",

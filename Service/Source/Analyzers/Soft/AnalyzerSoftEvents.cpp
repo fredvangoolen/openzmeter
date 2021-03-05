@@ -115,7 +115,7 @@ void AnalyzerSoftEvents::SaveSamples(const uint64_t &time, const uint8_t type, c
     ReadPos = (ReadPos + 1) % MaxLen;
   }
   Result.append("}'");
-  DB.ExecSentenceNoResult("WITH Event AS (UPDATE events SET changetime = " + DB.Bind(Tools::GetTime64()) + " WHERE starttime = " + DB.Bind(time) + " RETURNING startime) INSERT INTO events_ext(starttime, sampletype, samples) SELECT startime, " + DB.Bind(Type) + ", " + Result + " FROM Event");
+  DB.ExecSentenceNoResult("WITH Event AS (UPDATE events SET changetime = " + DB.Bind(Tools::GetTime64()) + " WHERE starttime = " + DB.Bind(time) + " RETURNING starttime) INSERT INTO events_ext(starttime, sampletype, samples) SELECT starttime, " + DB.Bind(Type) + ", " + Result + " FROM Event");
 }
 void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint64_t timestamp) {
   uint16_t Pos = 0;

@@ -39,7 +39,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAggreg200MS(id, mode), pAggreg3S(id, mode), pAggreg1M(id, mode), pAggreg10M(id, mode), pAggreg15M(id, mode), pAggreg1H(id, mode),
   pRates(id), pSeries(id), pEvents(id, mode, samplerate), pAlarms(id, &pMQTT), pSync(id, mode, samplerate), pMQTT(id) {
   LogFile::Debug("Creating tables for analyzer '%s'", pSerial.c_str());
-  Database DB(pSerial);
+  Database DB(pSerial, true);
   DB.ExecResource("SQL/Database_Analyzer.sql");
   pMutex          = PTHREAD_MUTEX_INITIALIZER;
   pCond           = PTHREAD_COND_INITIALIZER;
@@ -327,7 +327,6 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   string UserName = params["UserName"];
   json   Response = ConfigFile::ReadConfig(pConfigPath);
-  Response["Driver"]       = "Soft";
   Response["Online"]       = Online();
   Response["OnlineTime"]   = OnlineTime();
   Response["User"]         = pOwner;

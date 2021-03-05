@@ -38,17 +38,7 @@ class AnalyzerSoftSync final {
     string                        pPass;             //Export server password
     float                         pSampleRate;       //parent samplerate
     Analyzer::AnalyzerMode        pMode;             //parent mode
-    bool                          pRequestNow;       //Send now data
-    bool                          pRequestStatus;    //Send status data
     queue<json>                   pPendingActions;   //Queue of pending actions
-    uint64_t                      pLastSample200MS;
-    uint64_t                      pLastSample3S;
-    uint64_t                      pLastSample1M;
-    uint64_t                      pLastSample10M;
-    uint64_t                      pLastSample15M;
-    uint64_t                      pLastSample1H;
-    uint64_t                      pLastEvent;
-    uint64_t                      pLastAlarm;
   private :
     function<void(const string &name, const json &params)>  pHandleAction;  //Handle server actions
     function<json(const vector<string> &series)>            pStatus;        //Get analyzer status
