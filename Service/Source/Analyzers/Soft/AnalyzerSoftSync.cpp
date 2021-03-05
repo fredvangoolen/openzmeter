@@ -60,15 +60,6 @@ void AnalyzerSoftSync::Config(const json &config, const string &path, function<v
   pUser            = config["User"];
   pPass            = config["Pass"];
   pStage           = (config["Enabled"] == true) ? LOGIN : DISABLED;
-  pRequestNow      = false;
-  pLastSample200MS = UINT64_MAX;
-  pLastSample3S    = UINT64_MAX;
-  pLastSample1M    = UINT64_MAX;
-  pLastSample10M   = UINT64_MAX;
-  pLastSample15M   = UINT64_MAX;
-  pLastSample1H    = UINT64_MAX;
-  pLastEvent       = UINT64_MAX;
-  pLastAlarm       = UINT64_MAX;
   pTerminate       = false;
   if((pStage != DISABLED) && (pThread == 0)) {
     if(pthread_create(&pThread, NULL, [](void *params) { return ((AnalyzerSoftSync*)params)->Thread(); }, this) != 0) {
@@ -90,8 +81,19 @@ void AnalyzerSoftSync::PushAction(const string name, const json &params) {
   pthread_mutex_unlock(&pMutex);
 }
 void *AnalyzerSoftSync::Thread() {
-  string  Cookie, Path;
-  Client *HTTPClient = NULL;
+  string         Cookie;
+  string         Path;
+  vector<string> RequestNow;
+  vector<string> RequestStatus;
+  Client        *HTTPClient      = NULL;
+  uint64_t       LastSample200MS = UINT64_MAX;
+  uint64_t       LastSample3S    = UINT64_MAX;
+  uint64_t       LastSample1M    = UINT64_MAX;
+  uint64_t       LastSample10M   = UINT64_MAX;
+  uint64_t       LastSample15M   = UINT64_MAX;
+  uint64_t       LastSample1H    = UINT64_MAX;
+  uint64_t       LastEvent       = UINT64_MAX;
+  uint64_t       LastAlarm       = UINT64_MAX;
   pthread_mutex_lock(&pMutex);
   while((pTerminate == false) && (pStage != DISABLED)) {
     pthread_mutex_unlock(&pMutex);
@@ -130,57 +132,57 @@ void *AnalyzerSoftSync::Thread() {
         Content["SampleRate"] = pSampleRate;
         Content["Mode"]       = (pMode == Analyzer::PHASE1) ? "1PHASE" : (pMode == Analyzer::PHASE3) ? "3PHASE" : "3PHASE+N";
       }
-      if(pRequestNow == true) {
-        json Now = pNow({"Frequency", "Flag", "Unbalance", "Voltage", "Current", "Active_Power", "Reactive_Power", "Active_Energy", "Reactive_Energy", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Phase", "Voltage_Harmonics", "Current_Harmonics", "Power_Harmonics", "Voltage_Harmonics_Complex", "Current_Harmonics_Complex", "Voltage_FFT", "Current_FFT", "Voltage_Samples", "Current_Samples"});
+      if(RequestNow.size() > 0) {
+        json Now = pNow(RequestNow);
         if(Now != nullptr) Content["Now"] = Now;
       }
-      if(pRequestStatus == true) {
-        json Status = pStatus({"Log", "System", "Events", "Alarms", "Storage"});
+      if(RequestStatus.size()) {
+        json Status = pStatus(RequestStatus);
         if(Status != nullptr) Content["Status"] = Status;
       }
-      if(pLastSample200MS != UINT64_MAX) {
+      if(LastSample200MS != UINT64_MAX) {
         json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "200MS"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics", "Voltage_Harmonics_Complex", "Current_Harmonics", "Current_Harmonics_Complex", "Power_Harmonics"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, unbalance, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), power_factor, thd_v, thd_i, phi, (SELECT array_agg(harmonics_v) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_v[ch][h][1],2.0) + pow(harmonics_v[ch][h][2], 2.0))) harmonics_v FROM (SELECT generate_series(1, array_length(harmonics_v, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3), harmonics_v, (SELECT array_agg(harmonics_i) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_i[ch][h][1],2.0) + pow(harmonics_i[ch][h][2], 2.0))) harmonics_i FROM (SELECT generate_series(1, array_length(harmonics_i, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3), harmonics_i, harmonics_p) FROM aggreg_200ms WHERE sampletime >= " + DB.Bind(pLastSample200MS) + " ORDER BY sampletime ASC LIMIT 100");
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, unbalance, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), power_factor, thd_v, thd_i, phi, (SELECT array_agg(harmonics_v) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_v[ch][h][1],2.0) + pow(harmonics_v[ch][h][2], 2.0))) harmonics_v FROM (SELECT generate_series(1, array_length(harmonics_v, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3), harmonics_v, (SELECT array_agg(harmonics_i) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_i[ch][h][1],2.0) + pow(harmonics_i[ch][h][2], 2.0))) harmonics_i FROM (SELECT generate_series(1, array_length(harmonics_i, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3), harmonics_i, harmonics_p) FROM aggreg_200ms WHERE sampletime > " + DB.Bind(LastSample200MS) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
         if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
       }
-      if(pLastSample3S != UINT64_MAX) {
+      if(LastSample3S != UINT64_MAX) {
         json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "3S"}, {"Samples", json::array()}, {"Headers", { "Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Apparent_Power"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}')) FROM aggreg_3s WHERE sampletime >= " + DB.Bind(pLastSample3S) + " ORDER BY sampletime ASC LIMIT 50");
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}')) FROM aggreg_3s WHERE sampletime > " + DB.Bind(LastSample3S) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
         if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
       }
-      if(pLastSample1M != UINT64_MAX) {
+      if(LastSample1M != UINT64_MAX) {
         json Action = {{"Type", "SetSeries"}, {"Params", {{ "Aggreg", "1M"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics", "Current_Harmonics", "Power_Harmonics"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, unbalance, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i, harmonics_p) FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m WHERE sampletime >= " + DB.Bind(pLastSample1M) + " ORDER BY sampletime ASC LIMIT 10");
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, unbalance, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i, harmonics_p) FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m WHERE sampletime > " + DB.Bind(LastSample1M) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
         if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
       }
-      if(pLastSample10M != UINT64_MAX) {
+      if(LastSample10M != UINT64_MAX) {
         json Action = {{"Type", "SetSeries"}, {"Params", {{ "Aggreg", "10M"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Flag", "Voltage", "Current"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i) FROM aggreg_10m WHERE sampletime >= " + DB.Bind(pLastSample10M) + " ORDER BY sampletime ASC LIMIT 10");
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i) FROM aggreg_10m WHERE sampletime > " + DB.Bind(LastSample10M) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
         if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
       }
-      if(pLastSample15M != UINT64_MAX) {
+      if(LastSample15M != UINT64_MAX) {
         json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "15M"}, {"Samples", json::array()}, {"Headers", {"Time", "Active_Power", "Active_Energy", "Reactive_Power", "Reactive_Energy", "Apparent_Power"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, active_power, ARRAY(SELECT UNNEST(active_power) / 4.0), reactive_power, ARRAY(SELECT UNNEST(reactive_power) / 4.0), NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}')) FROM aggreg_15m WHERE sampletime >= " + DB.Bind(pLastSample15M) + " ORDER BY sampletime ASC LIMIT 10");
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, active_power, ARRAY(SELECT UNNEST(active_power) / 4.0), reactive_power, ARRAY(SELECT UNNEST(reactive_power) / 4.0), NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}')) FROM aggreg_15m WHERE sampletime > " + DB.Bind(LastSample15M) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
         if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
       }
-      if(pLastSample1H != UINT64_MAX) {
+      if(LastSample1H != UINT64_MAX) {
         json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "1H"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Active_Energy", "Reactive_Power", "Reactive_Energy", "Apparent_Power", "Voltage_Stats", "Frequency_Stats", "Voltage_THD_Stats", "Voltage_Harmonics_Stats", "Unbalance_Stats"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i, active_power, active_power, reactive_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) FROM aggreg_1h WHERE sampletime >= " + DB.Bind(pLastSample1H) + " ORDER BY sampletime ASC LIMIT 10");
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i, active_power, active_power, reactive_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) FROM aggreg_1h WHERE sampletime > " + DB.Bind(LastSample1H) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
         if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
       }
-      if(pLastAlarm != UINT64_MAX) {
+      if(LastAlarm != UINT64_MAX) {
 //        Content["Alarms"] = json::array();
       }
-      if(pLastEvent != UINT64_MAX) {
+      if(LastEvent != UINT64_MAX) {
 //        Content["Events"] = json::array();
       }
-      while((Content["Actions"].size() < 10) && (pPendingActions.empty() == false)) {
+      while(pPendingActions.empty() == false) {
         Content["Actions"].push_back(pPendingActions.front());
         pPendingActions.pop();
       }
@@ -192,16 +194,26 @@ void *AnalyzerSoftSync::Thread() {
         if(Content.is_discarded()) {
           LogFile::Error("Malformed JSON params in AnalyzerSoft::Sync");
         } else {
-          if(Content.contains("Now") && Content["Now"].is_boolean())                pRequestNow      = Content["Now"];
-          if(Content.contains("Status") && Content["Status"].is_boolean())          pRequestStatus   = Content["Status"];
-          if(Content.contains("Time_200MS")  && Content["Time_200MS"].is_number())  pLastSample200MS = Content["Time_200MS"];
-          if(Content.contains("Time_3S")     && Content["Time_3S"].is_number())     pLastSample3S    = Content["Time_3S"];
-          if(Content.contains("Time_1M")     && Content["Time_1M"].is_number())     pLastSample1M    = Content["Time_1M"];
-          if(Content.contains("Time_10M")    && Content["Time_10M"].is_number())    pLastSample10M   = Content["Time_10M"];
-          if(Content.contains("Time_15M")    && Content["Time_15M"].is_number())    pLastSample15M   = Content["Time_15M"];
-          if(Content.contains("Time_1H")     && Content["Time_1H"].is_number())     pLastSample1H    = Content["Time_1H"];
-          if(Content.contains("Time_Alarms") && Content["Time_Alarms"].is_number()) pLastAlarm       = Content["Time_Alarms"];
-          if(Content.contains("Time_Events") && Content["Time_Events"].is_number()) pLastEvent       = Content["Time_Events"];
+          RequestNow.clear();
+          if(Content.contains("Now") && Content["Now"].is_array()) {
+            for(auto &Item : Content["Now"]) {
+              if(Item.is_string()) RequestNow.push_back(Item);
+            }
+          }
+          RequestStatus.clear();
+          if(Content.contains("Status") && Content["Status"].is_array()) {
+            for(auto &Item : Content["Status"]) {
+              if(Item.is_string()) RequestStatus.push_back(Item);
+            }
+          }
+          if(Content.contains("Time_200MS")  && Content["Time_200MS"].is_number())  LastSample200MS = Content["Time_200MS"];
+          if(Content.contains("Time_3S")     && Content["Time_3S"].is_number())     LastSample3S    = Content["Time_3S"];
+          if(Content.contains("Time_1M")     && Content["Time_1M"].is_number())     LastSample1M    = Content["Time_1M"];
+          if(Content.contains("Time_10M")    && Content["Time_10M"].is_number())    LastSample10M   = Content["Time_10M"];
+          if(Content.contains("Time_15M")    && Content["Time_15M"].is_number())    LastSample15M   = Content["Time_15M"];
+          if(Content.contains("Time_1H")     && Content["Time_1H"].is_number())     LastSample1H    = Content["Time_1H"];
+          if(Content.contains("Time_Alarms") && Content["Time_Alarms"].is_number()) LastAlarm       = Content["Time_Alarms"];
+          if(Content.contains("Time_Events") && Content["Time_Events"].is_number()) LastEvent       = Content["Time_Events"];
           if(Content.contains("Actions") && Content["Actions"].is_array()) {
             for(auto &Action : Content["Actions"]) {
               if(Action.contains("Type") && Action["Type"].is_string() && Action.contains("Params")) pHandleAction(Action["Type"], Action["Params"]);

@@ -22,31 +22,22 @@
 #include "AnalyzerRates.h"
 #include "AnalyzerEvents.h"
 #include "AnalyzerAlarms.h"
+#include "AnalyzerRemoteNow.h"
+#include "AnalyzerRemoteActions.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerRemote : public Analyzer {
   private :
-    static const uint16_t      pMaxActions = 100;        //Max allowed pending tasks
-  private :
-    pthread_mutex_t            pMutex;                   //Actions queue mutex
-    queue<json>                pPendingActions;          //Queue of pending actions
     pthread_rwlock_t           pLock;                    //Control access to shared variables
-    uint64_t                   pLastClientReq;           //Last client request
-    json                       pConfig;                  //Cached analyzer configuration
-    json                       pNow;                     //Cached version of now data
-    json                       pStatus;                  //Cached version of status data
     float                      pSamplerate;              //Cached samplerate
+    json                       pConfig;                  //Cached analyzer configuration
   private :
     AnalyzerAccess             pAccess;                  //Access control class
     AnalyzerRates              pRates;                   //Rate calculation from database stored data
     AnalyzerSeries             pSeries;                  //Series base class
     AnalyzerAlarms             pAlarms;                  //Alarms base class
     AnalyzerEvents             pEvents;                  //Events base class
-  private :
-    void     SetClientConnected();
-    bool     isClientConnected();
-    void     PushAction(const string name, const json &params);
-    json     GetActions(const uint16_t max);
-    uint16_t PendingActions();
+    AnalyzerRemoteNow          pNow;                     //Manage temporal data
+    AnalyzerRemoteActions      pActions;                 //Manage pending actions
   private :
     void GetAnalyzer(const json &params, Response &response) override;
     void SetAnalyzer(const json &params, Response &response) override;
@@ -75,6 +66,8 @@ class AnalyzerRemote : public Analyzer {
     void DelAlarmsRange(const json &params, Response &response) override;
     void SetRemote(const json &params, Response &response) override;
     void SetRemote(const map<string, string> &params, Response &response);
+  private :
+    void HandleAction(const string &name, const json &params);
     bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) override;
   public :
     AnalyzerRemote(const string &id, const AnalyzerMode mode, const string &user);

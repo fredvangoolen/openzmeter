@@ -34,7 +34,7 @@
       return { Grouped: false,
                Transfer1: this.NowTransfer(['Voltage', 'Current', 'Active_Power', 'Frequency']),
                Transfer2: this.SeriesTransfer(['Active_Energy']),
-               Transfer3: this.StatusTransfer(['SYSTEM']) };
+               Transfer3: this.StatusTransfer(['System']) };
     },
     created: function() {
       this.Transfer1.Update(this.analyzer);
