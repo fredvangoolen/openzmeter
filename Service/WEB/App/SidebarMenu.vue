@@ -55,31 +55,26 @@
 
 <script>
   export default {
-    props: { analyzer: Object, expanded: Boolean },
+    props: { analyzer: Object, expanded: Boolean, status: Object },
     data() {
-      return { Submenu: null, AnalyzerSelected: false, TransferNow: this.StatusTransfer(['Events', 'Alarms']), TitleFrame: 0 }
+      return { Submenu: null, AnalyzerSelected: false, TitleFrame: 0 }
     },
     created: function() {
-      this.TransferNow.Update(this.analyzer);
       setInterval(() => { this.SetTitle(); }, 2000)
     },
     computed: {
       UnreadEvents: function() {
-        if((this.analyzer == null) || (this.analyzer.NominalFrequency == 0)) return 0;
-        if(this.TransferNow.Data == null) return 0;
-        return this.TransferNow.Data.Events.Count;
+        if(this.status == null) return 0;
+        return this.status.Events.Count;
       },
       UnreadAlarms: function() {
-        if(this.TransferNow.Data == null) return 0;
-        return this.TransferNow.Data.Alarms.Count;
+        if(this.status == null) return 0;
+        return this.status.Alarms.Count;
       }
     },
     watch: {
       expanded: function(val) {
         if(val == false) this.Submenu = null;
-      },
-      analyzer: function() {
-        this.TransferNow.Update(this.analyzer);
       }
     },
     methods: {

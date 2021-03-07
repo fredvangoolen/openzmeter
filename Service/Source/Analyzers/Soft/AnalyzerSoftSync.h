@@ -27,6 +27,8 @@ class AnalyzerSoftSync final {
   private :
     enum Stage { DISABLED, LOGIN, CONFIG, CONNECTED };
   private :
+    static const uint16_t         pMaxActions = 100; //Max allowed pending tasks
+  private :
     volatile bool                 pTerminate;        //Sync terminate signal
     Stage                         pStage;            //Connection stage
     pthread_t                     pThread;           //Export thread
@@ -51,6 +53,7 @@ class AnalyzerSoftSync final {
     AnalyzerSoftSync(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftSync();
     void Config(const json &config, const string &path, function<void(const string &name, const json &params)> handleAction, function<json(const vector<string> &series)> status, function<json(const vector<string> &series)> now);
-    void PushAction(const string name, const json &params);
+    void Push(const string name, const json &params);
+    bool ShouldPush();
 };
 // ---------------------------------------------------------------------------------------------------------------------

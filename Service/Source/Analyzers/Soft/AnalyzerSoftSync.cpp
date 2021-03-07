@@ -32,6 +32,12 @@ AnalyzerSoftSync::~AnalyzerSoftSync() {
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
 }
+bool AnalyzerSoftSync::ShouldPush() {
+  pthread_mutex_lock(&pMutex);
+  uint16_t Count = pPendingActions.size();
+  pthread_mutex_unlock(&pMutex);
+  return (Count < pMaxActions);
+}
 json AnalyzerSoftSync::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Enabled"] = false;
@@ -71,7 +77,7 @@ void AnalyzerSoftSync::Config(const json &config, const string &path, function<v
   }
   pthread_mutex_unlock(&pMutex);
 }
-void AnalyzerSoftSync::PushAction(const string name, const json &params) {
+void AnalyzerSoftSync::Push(const string name, const json &params) {
   json Action = json::object();
   Action["Type"] = name;
   Action["Params"] = params;
@@ -144,43 +150,56 @@ void *AnalyzerSoftSync::Thread() {
         json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "200MS"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics", "Voltage_Harmonics_Complex", "Current_Harmonics", "Current_Harmonics_Complex", "Power_Harmonics"}}}}};
         DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, unbalance, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), power_factor, thd_v, thd_i, phi, (SELECT array_agg(harmonics_v) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_v[ch][h][1],2.0) + pow(harmonics_v[ch][h][2], 2.0))) harmonics_v FROM (SELECT generate_series(1, array_length(harmonics_v, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3), harmonics_v, (SELECT array_agg(harmonics_i) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_i[ch][h][1],2.0) + pow(harmonics_i[ch][h][2], 2.0))) harmonics_i FROM (SELECT generate_series(1, array_length(harmonics_i, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3), harmonics_i, harmonics_p) FROM aggreg_200ms WHERE sampletime > " + DB.Bind(LastSample200MS) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
-        if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
+        if(Action["Params"]["Samples"].size() > 0) Content["Actions"].push_back(Action);
       }
       if(LastSample3S != UINT64_MAX) {
         json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "3S"}, {"Samples", json::array()}, {"Headers", { "Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Apparent_Power"}}}}};
         DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}')) FROM aggreg_3s WHERE sampletime > " + DB.Bind(LastSample3S) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
-        if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
+        if(Action["Params"]["Samples"].size() > 0) Content["Actions"].push_back(Action);
       }
       if(LastSample1M != UINT64_MAX) {
         json Action = {{"Type", "SetSeries"}, {"Params", {{ "Aggreg", "1M"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics", "Current_Harmonics", "Power_Harmonics"}}}}};
         DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, unbalance, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i, harmonics_p) FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m WHERE sampletime > " + DB.Bind(LastSample1M) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
-        if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
+        if(Action["Params"]["Samples"].size() > 0) Content["Actions"].push_back(Action);
       }
       if(LastSample10M != UINT64_MAX) {
         json Action = {{"Type", "SetSeries"}, {"Params", {{ "Aggreg", "10M"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Flag", "Voltage", "Current"}}}}};
         DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i) FROM aggreg_10m WHERE sampletime > " + DB.Bind(LastSample10M) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
-        if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
+        if(Action["Params"]["Samples"].size() > 0) Content["Actions"].push_back(Action);
       }
       if(LastSample15M != UINT64_MAX) {
         json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "15M"}, {"Samples", json::array()}, {"Headers", {"Time", "Active_Power", "Active_Energy", "Reactive_Power", "Reactive_Energy", "Apparent_Power"}}}}};
         DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, active_power, ARRAY(SELECT UNNEST(active_power) / 4.0), reactive_power, ARRAY(SELECT UNNEST(reactive_power) / 4.0), NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}')) FROM aggreg_15m WHERE sampletime > " + DB.Bind(LastSample15M) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
-        if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
+        if(Action["Params"]["Samples"].size() > 0) Content["Actions"].push_back(Action);
       }
       if(LastSample1H != UINT64_MAX) {
         json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "1H"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Active_Energy", "Reactive_Power", "Reactive_Energy", "Apparent_Power", "Voltage_Stats", "Frequency_Stats", "Voltage_THD_Stats", "Voltage_Harmonics_Stats", "Unbalance_Stats"}}}}};
         DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i, active_power, active_power, reactive_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) FROM aggreg_1h WHERE sampletime > " + DB.Bind(LastSample1H) + " ORDER BY sampletime ASC LIMIT 100");
         while(DB.FecthRow() == true) Action["Params"]["Samples"].push_back(DB.ResultJSON(0));
-        if(Action["Params"]["Samples"].size() > 1) Content["Actions"].push_back(Action);
+        if(Action["Params"]["Samples"].size() > 0) Content["Actions"].push_back(Action);
       }
       if(LastAlarm != UINT64_MAX) {
-//        Content["Alarms"] = json::array();
+        json Action = {{"Type", "SetAlarms"}, {"Params", {{"Alarms", json::array()}, {"Headers", {"ChangeTime", "AlarmID", "Trigger", "Release"}}}}};
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, id, trigger, release) as result FROM alarms WHERE changetime > " + DB.Bind(LastAlarm) + " ORDER BY trigger ASC LIMIT 100");
+        while(DB.FecthRow() == true) Action["Params"]["Alarms"].push_back(DB.ResultJSON(0));
+        if(Action["Params"]["Alarms"].size() > 0) Content["Actions"].push_back(Action);
       }
       if(LastEvent != UINT64_MAX) {
-//        Content["Events"] = json::array();
+        json Action = {{"Type", "SetEvents"}, {"Params", {{"Events", json::array()}, {"Headers", {"ChangeTime", "StartTime", "Type", "SampleRate", "Reference", "Peak", "Change", "Duration", "Notes", "LengthRAW", "SamplesRAW", "LengthRMS", "SamplesRMS"}}}}};
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, starttime, evttype, samplerate, reference, peak, change, duration, notes, "
+          "(SELECT array_length(samples, 1) FROM events_ext WHERE events_ext.starttime = events.starttime AND sampletype = 'RAW_PRESTART'),"
+          " (WITH ext AS (SELECT samples, sampletype FROM events_ext WHERE events_ext.starttime = events.starttime)"
+          "  SELECT (SELECT samples FROM ext WHERE sampletype = 'RAW_PRESTART') || (SELECT samples FROM ext where sampletype = 'RAW_POSSTART') || (SELECT samples FROM ext WHERE sampletype = 'RAW_PREEND') || (SELECT samples FROM ext WHERE sampletype = 'RAW_POSEND')), "
+          "(SELECT array_length(samples, 1) FROM events_ext WHERE events_ext.starttime = events.starttime AND sampletype = 'RMS_PRESTART'), "
+          " (WITH ext AS (SELECT samples, sampletype FROM events_ext WHERE events_ext.starttime = events.starttime)"
+          "  SELECT (SELECT samples FROM ext WHERE sampletype = 'RMS_PRESTART') || (SELECT samples FROM ext where sampletype = 'RMS_POSSTART') || (SELECT samples FROM ext WHERE sampletype = 'RMS_PREEND') || (SELECT samples FROM ext WHERE sampletype = 'RMS_POSEND'))"
+          ") AS result FROM events WHERE changeTime > " + DB.Bind(LastEvent) + " ORDER BY starttime ASC LIMIT 5");
+        while(DB.FecthRow() == true) Action["Params"]["Events"].push_back(DB.ResultJSON(0));
+        if(Action["Params"]["Events"].size() > 0) Content["Actions"].push_back(Action);
       }
       while(pPendingActions.empty() == false) {
         Content["Actions"].push_back(pPendingActions.front());

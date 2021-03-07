@@ -140,7 +140,11 @@ string HTTPServer::PatchString(string &src, const string &find, const string &re
 }
 void HTTPServer::GetVersionCallback(const json &params, Response &response) {
   json Result = json::object();
-  Result["Version"] = __BUILD__;
+  Result["Version"]   = __BUILD__;
+  Result["Functions"] = json::array();
+  pthread_rwlock_rdlock(&pLock);
+  for(auto &Callback : pCallbacks) Result["Functions"].push_back(Callback.first);
+  pthread_rwlock_unlock(&pLock);
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void HTTPServer::LogInCallback(const json &params, Response &response) {

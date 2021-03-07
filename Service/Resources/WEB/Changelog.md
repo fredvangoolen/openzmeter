@@ -1,3 +1,7 @@
+## [feb-2021]
+  - Fix in events detection and recording
+  - Remote sync works
+
 ## [sep-2020]
   - Lots of internal changes to reduce memory and CPU usage.
   - API changed to stream data from database without need to load entire dataset.

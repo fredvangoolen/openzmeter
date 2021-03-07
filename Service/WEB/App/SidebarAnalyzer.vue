@@ -1,27 +1,36 @@
 <template>
   <div class="this" :class="{ expanded: expanded }">
-    <img class="icon" :src="require('Imgs/disconnect32.png')">
-    <div class="name">{{ (analyzer == null) ? 'None selected' : analyzer.Name }}</div>
-    <div class="btn-group">
-      <button type="button" class="btn btn-default btn-xs" @click="ShowDialog=true" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
+    <div class="collapse-icon">
+      <img class="icon" :src="require('Imgs/disconnect32.png')">
+      <img class="badge-icon" :src="require('Imgs/bullet_green.png')" v-if="(status!=null)&&(status.Online==true)&&((status.PendingActions==null)||(status.PendingActions==0))">
+      <img class="badge-icon" :src="require('Imgs/bullet_red.png')" v-if="(status!=null)&&(status.Online==false)&&((status.PendingActions==null)||(status.PendingActions==0))">
+      <span class="badge badge-menu badge-red" v-if="(status!=null)&&(status.Online==false)&&((status.PendingActions!=null)||(status.PendingActions>0))">{{ status.PendingActions }}</span>
+      <span class="badge badge-menu badge-green" v-if="(status!=null)&&(status.Online==false)&&((status.PendingActions!=null)||(status.PendingActions>0))">{{ status.PendingActions }}</span>
     </div>
-    <analyzer-table v-if="ShowDialog" :analyzer="analyzer" @update:analyzer="SetAnalyzer($event)" @close="ShowDialog=false"></analyzer-table>
+    <div class="btn-group">
+      <button type="button" class="btn btn-default btn-xs" @click="Dialog='Table'" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
+      <button type="button" class="btn btn-default btn-xs" :disabled="analyzer==null" @click="Dialog='Info'" title="Analyzer information and status"><img :src="require('Imgs/system_monitor.png')"></button>
+    </div>
+    <div class="name">{{ (analyzer == null) ? 'None selected' : analyzer.Name }}</div>
+    <analyzer-table v-if="Dialog=='Table'" :analyzer="analyzer" @update:analyzer="SetAnalyzer($event)" @close="Dialog=null"></analyzer-table>
+    <analyzer-info v-if="Dialog=='Info'" :analyzer="analyzer" @close="Dialog=null"></analyzer-info>
   </div>
 </template>
 
 <script>
   import AnalyzerTable from './Analyzer/Table.vue';
+  import AnalyzerInfo from './Analyzer/Info.vue';
   import moment from 'moment';
   import 'moment-timezone';
   export default {
-    props: { analyzer: Object, expanded: Boolean },
+    props: { analyzer: Object, expanded: Boolean, status: Object },
     data() {
-      return { ShowDialog: false };
+      return { Dialog: null };
     },
     created: function() {
       if(localStorage.getItem("Analyzer") == null) {
         this.SetAnalyzer(null);
-        this.ShowDialog = true;
+        this.Dialog = 'Table';
       } else {
         this.$http.post('getAnalyzer', { Analyzer: localStorage.getItem("Analyzer") }).then(
           (result) => {
@@ -30,7 +39,7 @@
           },
           (fail) => {
             this.SetAnalyzer(null);
-            this.ShowDialog = true;
+            this.Dialog = 'Table';
           }
         );
       }
@@ -126,11 +135,14 @@
         this.$router.push({path: '/Events/Disturbances'});
       }
     },
-    components: { AnalyzerTable }
+    components: { AnalyzerTable, AnalyzerInfo }
   }
 </script>
 
 <style scoped>
+  .collapse-icon {
+    position: relative;
+  }
   .this {
     background-color: #474544;
     color: #FAFAFA;
@@ -152,7 +164,7 @@
     margin: 4px 12px;
   }
   .name {
-    width: 226px;
+    width: 192px;
     padding-left: 2px;
     line-height: 24px;
     padding-top: 4px;
@@ -162,7 +174,7 @@
   }
   .btn-group {
     margin-top: 4px;
-    margin-right: -3px;
+    margin-left: -1px;
   }
   .btn-group > .btn {
     background: #444;
@@ -175,5 +187,24 @@
   .btn-group > .btn:hover {
     background: #555;
     border-color: #333;
+  }
+  .badge-icon {
+    position: absolute;
+    top: 17px;
+    right: 8px;
+  }
+  .badge-menu {
+    position: absolute;
+    top: 16px;
+    right: 12px;
+    font-size: 9px;
+    padding: 1px 2px;
+    border-radius: 3px;
+  }
+  .badge-red {
+    background: #c9302c;
+  }
+  .badge-green {
+    background: #5cb85c;
   }
 </style>
