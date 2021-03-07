@@ -30,9 +30,9 @@ Analyzer::~Analyzer() {
 json Analyzer::GetJSONDescriptor() {
   json Response = json::object();
   Response["Analyzer"] = pSerial;
+  Response["User"] = pOwner;
   pthread_rwlock_rdlock(&pMembersLocks);
   Response["Name"] = pName;
-  Response["User"] = pOwner;
   Response["Online"] = ((Tools::GetTime64() - pLastSave) < 20000);
   pthread_rwlock_unlock(&pMembersLocks);
   return Response;

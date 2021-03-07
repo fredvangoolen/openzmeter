@@ -46,6 +46,8 @@ void AnalyzerRemote::HandleAction(const string &name, const json &params) {
     pEvents.DelEventsRange(params, Resp);
   } else if(name == "DelEvent") {
     pEvents.DelEvent(params, Resp);
+  } else if(name == "SetEvent") {
+    pEvents.SetEvent(params, Resp);
   } else if(name == "SetAlarms") {
     pAlarms.SetAlarms(params, Resp);
   } else if(name == "SetAlarm") {
@@ -55,10 +57,10 @@ void AnalyzerRemote::HandleAction(const string &name, const json &params) {
   } else if(name == "DelAlarmsRange") {
     pAlarms.DelAlarmsRange(params, Resp);
   } else {
-    LogFile::Warning("AnayzerRemote receive invalid action from remote analyzer '%s' (%s)", pSerial.c_str(), name.c_str());
+    LogFile::Warning("AnayzerRemote receive invalid action from AnalyzerSoft '%s' (%s)", pSerial.c_str(), name.c_str());
     return;
   }
-  if(Resp.status != HTTP_OK) LogFile::Warning("AnayzerRemote action from remote analyzer '%s' (%s) fails", pSerial.c_str(), name.c_str());
+  if(Resp.status != HTTP_OK) LogFile::Warning("AnayzerRemote action from remote AnalyzerSoft '%s' (%s) fails", pSerial.c_str(), name.c_str());
 }
 void AnalyzerRemote::GetAnalyzer(const json &params, Response &response) {
   if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -73,7 +75,6 @@ void AnalyzerRemote::GetAnalyzer(const json &params, Response &response) {
   Response["SampleRate"]     = pSamplerate;
   Response["PriceModules"]   = PriceSource::VarsInfo();
   Response["Users"]          = pAccess.Users();
-  Response["PendingActions"] = pActions.Count();
   return HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerRemote::SetAnalyzer(const json &params, Response &response) {
@@ -100,7 +101,11 @@ void AnalyzerRemote::SetAnalyzer(const json &params, Response &response) {
 void AnalyzerRemote::GetStatus(const json &params, Response &response) {
   if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if(Configured() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pNow.GetStatus(params, response);
+  json Extra = json::object();
+  Extra["PendingActions"] = pActions.Count();
+  Extra["Online"]         = Online();
+  Extra["OnlineTime"]     = OnlineTime();
+  pNow.GetStatus(params, response, Extra);
 }
 void AnalyzerRemote::GetSeries(const json &params, Response &response) {
   if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

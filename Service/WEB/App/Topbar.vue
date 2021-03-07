@@ -4,14 +4,14 @@
       <button type="button" class="navbar-toggle" @mouseenter="$emit('expandmenu')" @click="$emit('expandmenu')"><img :src="require('Imgs/application_menu.png')"></button>
       <div class="navbar-brand">
         <img src="MainLogo.png">
-        <div :title="'Uptime: ' + Uptime" v-if="Time != null"><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div>
+        <!--div :title="'Uptime: ' + Uptime" v-if="Time != null"><img :src="require('Imgs/system_monitor.png')">{{ Time }}</div-->
         <!--div :title="'Disk usage: ' + SDTip" v-if="SDUse != null"><img :src="require('Imgs/sd_memory_adapter.png')">{{ SDUse }}</div-->
         <!--div :title="'RAM usage: ' + RAMTip" v-if="RAMUse != null"><img :src="require('Imgs/ddr_memory.png')">{{ RAMUse }}</div-->
         <!--div><img :src="require('Imgs/chip.png')" v-if="CPUUse != null">{{ CPUUse }}</div-->
         <!--div :title="'WiFi network: ' + WIFINetwork" v-if="WIFIPower != null"><img :src="require('Imgs/network_wireless.png')">{{ WIFIPower }}</div-->
         <!--div :title="'Ethernet network'" v-if="Ethernet != null"><img :src="require('Imgs/network_ethernet.png')">{{ Ethernet }}</div-->
         <!--div data-status="tooltip" :title="'Battery status: ' + BatteryStatus" v-if="BatteryLevel != null"><img :src="require('Imgs/battery.png')">{{ BatteryLevel }}</div-->
-        <div v-if="Temp != null"><img :src="require('Imgs/temperature_normal.png')">{{ Temp }}</div>
+        <!--div v-if="Temp != null"><img :src="require('Imgs/temperature_normal.png')">{{ Temp }}</div-->
       </div>
     </div>
     <div class="indicator-bar" v-if="analyzer != null" @click="Grouped = !Grouped">
@@ -29,72 +29,69 @@
   import moment from 'moment';
   import * as oZm from 'JS/openZmeter.js';
   export default {
-    props: { analyzer: Object, expanded: Boolean },
+    props: { analyzer: Object, expanded: Boolean, status: Object },
     data () {
       return { Grouped: false,
                Transfer1: this.NowTransfer(['Voltage', 'Current', 'Active_Power', 'Frequency']),
-               Transfer2: this.SeriesTransfer(['Active_Energy']),
-               Transfer3: this.StatusTransfer(['System']) };
+               Transfer2: this.SeriesTransfer(['Active_Energy'])
+      };
     },
     created: function() {
       this.Transfer1.Update(this.analyzer);
       this.Transfer2.Update(this.analyzer, '15M', 'Day');
-      this.Transfer3.Update(this.analyzer);
     },
     beforeDestroy: function() {
       this.Transfer1.Destroy();
       this.Transfer2.Destroy();
-      this.Transfer3.Destroy();
     },
     watch: {
-      analyzer: function(analyzer) {
+      analyzer: function() {
         this.$nextTick(() => {
           this.Transfer1.Update(this.analyzer);
           this.Transfer2.Update(this.analyzer, '15M', 'Day');
-          this.Transfer3.Update(this.analyzer);
         });
       }
     },
     computed: {
-      Uptime: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Uptime != null)) ? moment.duration(this.Transfer3.Data.System.Uptime, "seconds").humanize() : null;
-      },
-      Time: function() {
-        return (this.Transfer1.Data != null) ? moment(this.Transfer1.Data.Sampletime).format('HH:mm:ss') : null;
-      },
-      SDTip: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Disk_Total != null) && (this.Transfer3.Data.System.Disk_Usage != null)) ? this.BestUnitsBin(this.Transfer3.Data.System.Disk_Total * this.Transfer3.Data.System.Disk_Usage / 100.0) + ' of ' + this.BestUnitsBin(this.Transfer3.Data.System.Disk_Total) : null;
-      },
-      SDUse: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Disk_Usage != null)) ? Math.round(this.Transfer3.Data.System.Disk_Usage) + '%' : null;
-      },
-      RAMTip: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.RAM_Total != null) && (this.Transfer3.Data.System.RAM_Usage != null)) ? this.BestUnitsBin(this.Transfer3.Data.System.RAM_Total * this.Transfer3.Data.System.RAM_Usage / 100.0) + ' of ' + this.BestUnitsBin(this.Transfer3.Data.System.RAM_Total) : null;
-      },
-      RAMUse: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.RAM_Usage != null)) ? Math.round(this.Transfer3.Data.System.RAM_Usage) + '%' : null;
-      },
-      CPUUse: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.CPU_Usage != null)) ? Math.round(this.Transfer3.Data.System.CPU_Usage) + '%' : null;
-      },
-      Temp: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Temperature != null)) ? Math.round(this.Transfer3.Data.System.Temperature) + '°' : null;
-      },
-      WIFINetwork: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.WIFI_Network != null)) ? this.Transfer3.Data.System.WIFI_Network : null;
-      },
-      WIFIPower: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.WIFI_Power != null)) ? Math.round(this.Transfer3.Data.System.WIFI_Power) + '%' : null;
-      },
-      Ethernet: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Ethernet_Enabled != null)) ? (this.Transfer3.Data.System.Ethernet_Enabled == true) ? 'ON' : 'OFF' : null;
-      },
-      BatteryLevel: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Battery_Level != null)) ? Math.round(this.Transfer3.Data.System.Battery_Level) + '%' : null;
-      },
-      BatteryStatus: function() {
-        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Battery_Voltage != null)) ? (this.Transfer3.Data.System.Battery_Voltage < 3) ? 'Uncharged or not mounted' : this.Round(this.Transfer3.Data.System.Battery_Voltage, 2) + 'V' : null;
-      },
+//      Uptime: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Uptime != null)) ? moment.duration(this.Transfer3.Data.System.Uptime, "seconds").humanize() : null;
+//      },
+//      Time: function() {
+//        return (this.Transfer1.Data != null) ? moment(this.Transfer1.Data.Sampletime).format('HH:mm:ss') : null;
+//      },
+//      SDTip: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Disk_Total != null) && (this.Transfer3.Data.System.Disk_Usage != null)) ? this.BestUnitsBin(this.Transfer3.Data.System.Disk_Total * this.Transfer3.Data.System.Disk_Usage / 100.0) + ' of ' + this.BestUnitsBin(this.Transfer3.Data.System.Disk_Total) : null;
+//      },
+//      SDUse: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Disk_Usage != null)) ? Math.round(this.Transfer3.Data.System.Disk_Usage) + '%' : null;
+//      },
+//      RAMTip: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.RAM_Total != null) && (this.Transfer3.Data.System.RAM_Usage != null)) ? this.BestUnitsBin(this.Transfer3.Data.System.RAM_Total * this.Transfer3.Data.System.RAM_Usage / 100.0) + ' of ' + this.BestUnitsBin(this.Transfer3.Data.System.RAM_Total) : null;
+//      },
+//      RAMUse: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.RAM_Usage != null)) ? Math.round(this.Transfer3.Data.System.RAM_Usage) + '%' : null;
+//      },
+//      CPUUse: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.CPU_Usage != null)) ? Math.round(this.Transfer3.Data.System.CPU_Usage) + '%' : null;
+//      },
+//      Temp: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Temperature != null)) ? Math.round(this.Transfer3.Data.System.Temperature) + '°' : null;
+//      },
+//      WIFINetwork: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.WIFI_Network != null)) ? this.Transfer3.Data.System.WIFI_Network : null;
+//      },
+//      WIFIPower: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.WIFI_Power != null)) ? Math.round(this.Transfer3.Data.System.WIFI_Power) + '%' : null;
+//      },
+//      Ethernet: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Ethernet_Enabled != null)) ? (this.Transfer3.Data.System.Ethernet_Enabled == true) ? 'ON' : 'OFF' : null;
+//      },
+//      BatteryLevel: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Battery_Level != null)) ? Math.round(this.Transfer3.Data.System.Battery_Level) + '%' : null;
+//      },
+//      BatteryStatus: function() {
+//        return ((this.Transfer3.Data != null) && (this.Transfer3.Data.System.Battery_Voltage != null)) ? (this.Transfer3.Data.System.Battery_Voltage < 3) ? 'Uncharged or not mounted' : this.Round(this.Transfer3.Data.System.Battery_Voltage, 2) + 'V' : null;
+//      },
       EnergyUsage: function() {
         var Energy = new Array(this.analyzer.VoltageChannels).fill(0);
         if(this.Transfer2.Data == null) return { Active_Energy: Energy };
@@ -110,9 +107,6 @@
 </script>
 
 <style scoped>
-  .navbar-brand > img {
-    height: 28px;
-  }
   .navbar-header {
     position: relative;
     background-color: #474544;
@@ -148,7 +142,7 @@
     }
   }
   .navbar-brand > img {
-    margin-top: 4px;
+    margin-top: 14px;
     height: 28px;
     max-width: 428px;
   }

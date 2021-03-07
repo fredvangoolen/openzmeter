@@ -24,7 +24,7 @@ AnalyzerRemoteNow::AnalyzerRemoteNow() {
 }
 AnalyzerRemoteNow::~AnalyzerRemoteNow() {
 }
-void AnalyzerRemoteNow::SetRemote(const json &params, json response) {
+void AnalyzerRemoteNow::SetRemote(const json &params, json &response) {
   if(params.contains("Now") && params["Now"].is_object()) {
     pthread_rwlock_wrlock(&pLock);
     pNow = params["Now"];
@@ -46,75 +46,53 @@ void AnalyzerRemoteNow::SetRemote(const json &params, json response) {
     if(Serie.second > Time) Status.push_back(Serie.first);
   }
   pthread_rwlock_unlock(&pLock);
-  if(Now.size() > 0)    response["Now"]    = Now;
+  if(Now.size() > 0) response["Now"] = Now;
   if(Status.size() > 0) response["Status"] = Status;
 }
 void AnalyzerRemoteNow::GetSeriesNow(const json &params, Response &response) {
   if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint64_t Time = Tools::GetTime64();
-  pthread_rwlock_wrlock(&pLock);
   for(auto &Serie : params["Series"]) {
-    if(Serie.is_string() == false) {
-      pthread_rwlock_unlock(&pLock);
-      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    }
-    auto Item = pNow.find(Serie);
-    if(Item == pNow.end()) {
-      pthread_rwlock_unlock(&pLock);
-      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    }
-    *Item = Time;
+    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    auto Item = pNowRequest.find(Serie);
+    if(Item == pNowRequest.end()) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    pthread_rwlock_wrlock(&pLock);
+    Item->second = Time;
+    pthread_rwlock_unlock(&pLock);
   }
-  pthread_rwlock_unlock(&pLock);
   pthread_rwlock_rdlock(&pLock);
   json Result = json::object();
-  if(pNow.contains("Time") == false) {
-    pthread_rwlock_unlock(&pLock);
-    return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  }
   Result["Time"] = pNow["Time"];
   for(auto &Serie : params["Series"]) {
-    auto Item = pNow.find(Serie);
-    if(Item == pNow.end()) {
+    if(pNow.contains(Serie) == false) {
       pthread_rwlock_unlock(&pLock);
       return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
     }
-    Result[(string)Serie] = *Item;
+    Result[(string)Serie] = pNow[(string)Serie];
   }
   pthread_rwlock_unlock(&pLock);
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
-void AnalyzerRemoteNow::GetStatus(const json &params, Response &response) {
+void AnalyzerRemoteNow::GetStatus(const json &params, Response &response, const json extraProps) {
   if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint64_t Time = Tools::GetTime64();
-  pthread_rwlock_wrlock(&pLock);
   for(auto &Serie : params["Series"]) {
-    if(Serie.is_string() == false) {
-      pthread_rwlock_unlock(&pLock);
-      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    }
-    auto Item = pStatus.find(Serie);
-    if(Item == pStatus.end()) {
-      pthread_rwlock_unlock(&pLock);
-      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    }
-    *Item = Time;
-  }
-  pthread_rwlock_unlock(&pLock);
-  pthread_rwlock_rdlock(&pLock);
-  json Result = json::object();
-  if(pStatus.contains("Time") == false) {
+    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    auto Item = pStatusRequest.find(Serie);
+    if(Item == pStatusRequest.end()) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    pthread_rwlock_wrlock(&pLock);
+    Item->second = Time;
     pthread_rwlock_unlock(&pLock);
-    return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   }
+  pthread_rwlock_rdlock(&pLock);
+  json Result = extraProps;
   Result["Time"] = pStatus["Time"];
   for(auto &Serie : params["Series"]) {
-    auto Item = pStatus.find(Serie);
-    if(Item == pStatus.end()) {
+    if(pStatus.contains(Serie) == false) {
       pthread_rwlock_unlock(&pLock);
       return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
     }
-    Result[(string)Serie] = *Item;
+    Result[(string)Serie] = pStatus[(string)Serie];
   }
   pthread_rwlock_unlock(&pLock);
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);

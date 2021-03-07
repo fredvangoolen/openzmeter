@@ -30,9 +30,9 @@ class AnalyzerRemoteNow final {
     pthread_rwlock_t           pLock;                    //Control access to shared variables
   public :
     void GetSeriesNow(const json &params, Response &response);
-    void GetStatus(const json &params, Response &response);
+    void GetStatus(const json &params, Response &response, const json extraProps = json::object());
   public :
-    void SetRemote(const json &params, json response);
+    void SetRemote(const json &params, json &response);
   public :
     AnalyzerRemoteNow();
     ~AnalyzerRemoteNow();
