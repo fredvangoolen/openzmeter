@@ -114,7 +114,7 @@
     data: function() {
       return { ActiveTab: null, Aggreg: null, Range: null, ActiveHeight: 300, ReactiveHeight: 300, ExpandedActive: false, ExpandedReactive: false, DialogHeight: 300, Paused: false, ShowContracted: true,
                ExpandedApparent: false, AppaerentHeight: 300,
-               TransferNow: this.NowTransfer(['Frequency', 'Voltage_Samples', 'Current_Samples', 'Power_Harmonics', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Phi', 'GA_POWER']),
+               TransferNow: this.NowTransfer(['Frequency', 'Voltage_Samples', 'Current_Samples', 'Power_Harmonics', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Phi']),
                Transfer3S: this.SeriesTransfer(['Active_Power', 'Reactive_Power']),
                Transfer1M: this.SeriesTransfer(['Active_Power', 'Reactive_Power']),
                TransferGraph: this.PriceTransfer(['Active_Power', 'Reactive_Power', 'Contracted', 'Period', 'Color', 'Bill']),

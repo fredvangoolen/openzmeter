@@ -14,10 +14,9 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <vector>
+#include <set>
 #include <complex>
 #include "nlohmann/json.hpp"
-#include "AnalyzerAccess.h"
 #include "Tools.h"
 #include "Database.h"
 #include "HTTPServer.h"
@@ -29,23 +28,30 @@ class Analyzer {
   public :
     enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
   private :
-    AnalyzerAccess   *pAccess;                  //Permision utils
-    pthread_rwlock_t  pMembersLocks;            //Locks for configurations
-    uint64_t          pLastSave;                //Timestamp of last save or communication
-    string            pName;                    //Analyzer description
-  public :
-    const string      pSerial;                  //Serial number
+    pthread_rwlock_t   pMembersLocks;            //Locks for configurations
+    uint64_t           pLastSave;                //Timestamp of last save or communication
+    bool               pConfigured;              //Control if analyzer is configured
+    string             pName;                    //Analyzer description
   protected :
-    Analyzer(const string &id);
-    string Name();
-    void   Name(const string &name);
-    void   Online(const bool online);
-    bool   Online();
+    const string       pSerial;                  //Serial number
+    const string       pOwner;                   //Analyzer owner user
+    const AnalyzerMode pMode;                    //Analyzer mode
+  protected :
+    Analyzer(const string &id, const AnalyzerMode mode, const string &user = "admin");
+  public :
+    bool     Configured();
+    void     Configured(const bool conf);
+    string   Name();
+    void     Name(const string &name);
+    void     Online(const bool online);
+    bool     Online();
+    uint64_t OnlineTime();
   public :
     virtual void GetAnalyzer(const json &params, Response &response) = 0;
     virtual void SetAnalyzer(const json &params, Response &response) = 0;
     virtual void GetStatus(const json &params, Response &response) = 0;
     virtual void GetSeries(const json &params, Response &response) = 0;
+    virtual void SetSeries(const json &params, Response &response) = 0;
     virtual void GetSeriesNow(const json &params, Response &response) = 0;
     virtual void GetCosts(const json &params, Response &response) = 0;
     virtual void GetBills(const json &params, Response &response) = 0;
@@ -53,6 +59,7 @@ class Analyzer {
     virtual void GetSeriesRange(const json &params, Response &response) = 0;
     virtual void DelSeriesRange(const json &params, Response &response) = 0;
     virtual void GetEvents(const json &params, Response &response) = 0;
+    virtual void SetEvents(const json &params, Response &response) = 0;
     virtual void GetEventsRange(const json &params, Response &response) = 0;
     virtual void DelEventsRange(const json &params, Response &response) = 0;
     virtual void GetEvent(const json &params, Response &response) = 0;
@@ -60,14 +67,16 @@ class Analyzer {
     virtual void DelEvent(const json &params, Response &response) = 0;
     virtual void TestAlarm(const json &params, Response &response) = 0;
     virtual void GetAlarms(const json &params, Response &response) = 0;
+    virtual void SetAlarms(const json &params, Response &response) = 0;
     virtual void GetAlarmsRange(const json &params, Response &response) = 0;
     virtual void DelAlarm(const json &params, Response &response) = 0;
+    virtual void SetAlarm(const json &params, Response &response) = 0;
     virtual void DelAlarmsRange(const json &params, Response &response) = 0;
+    virtual void SetRemote(const json &params, Response &response) = 0;
     virtual bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) = 0;
   public :
-    virtual        ~Analyzer();
-    string          Serial();
-    json            GetJSONDescriptor();
-    AnalyzerAccess *Access();
+    virtual ~Analyzer();
+    string   Serial();
+    json     GetJSONDescriptor();
 };
 //----------------------------------------------------------------------------------------------------------------------

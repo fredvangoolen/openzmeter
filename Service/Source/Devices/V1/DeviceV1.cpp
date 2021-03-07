@@ -101,7 +101,7 @@ DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial
   pRunAverageCounter  = 0;
   memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
   memset(pAverageValues, 0 , sizeof(pAverageValues));
-  Configure(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
+  Config(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
   int Error = libusb_init(&pContext);
   if(Error < 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, libusb_error_name(Error));
@@ -159,7 +159,7 @@ json DeviceV1::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-void DeviceV1::Configure(const json& config) {
+void DeviceV1::Config(const json& config) {
   ClearAnalyzers();
   pthread_mutex_lock(&pConfigLock);
   ConfigFile::WriteConfig("/Devices/" + pSerial, config);
@@ -173,7 +173,7 @@ void DeviceV1::Configure(const json& config) {
   pEnabled         = config["Enabled"];
   pVoltageDelayPos = 0;
   memset(pVoltageDelay, 0, sizeof(pVoltageDelay));
-  pAnalyzer = new AnalyzerSoft(pSerial, Analyzer::PHASE1, "/Devices/" + pSerial + "/Analyzer", DEVICEV1_SAMPLEFREQ);
+  pAnalyzer = new AnalyzerSoft(pSerial + "_1P", Analyzer::PHASE1, "/Devices/" + pSerial + "/Analyzer", DEVICEV1_SAMPLEFREQ);
   AnalyzerManager::AddAnalyzer(pAnalyzer);
   pthread_mutex_unlock(&pConfigLock);
 }
@@ -329,10 +329,10 @@ void DeviceV1::GetDevice(const json &params, Response &response) {
 void DeviceV1::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Config = params;
+  json ConfigIN = params;
   json Orig = ConfigFile::ReadConfig("/Devices/" + pSerial);
-  Config["Analyzer"] = Orig["Analyzer"];
-  Configure(CheckConfig(Config));
+  ConfigIN["Analyzer"] = Orig["Analyzer"];
+  Config(CheckConfig(ConfigIN));
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
 

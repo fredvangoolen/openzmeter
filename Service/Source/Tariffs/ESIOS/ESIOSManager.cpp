@@ -44,7 +44,7 @@ ESIOSManager::ESIOSManager() {
   for(uint16_t V = 0; V < pVariables.size(); V++) DB.ExecSentenceNoResult("ALTER TABLE esios ADD COLUMN IF NOT EXISTS " + DB.BindID(pVariables[V].VarName) + " real NULL");
   HTTPServer::RegisterCallback("getESIOS", GetESIOSCallback);
   HTTPServer::RegisterCallback("setESIOS", SetESIOSCallback);
-  Configure(CheckConfig(ConfigFile::ReadConfig("/ESIOS")));
+  Config(CheckConfig(ConfigFile::ReadConfig("/ESIOS")));
 }
 ESIOSManager::~ESIOSManager() {
   pthread_mutex_lock(&pMutex);
@@ -64,7 +64,7 @@ json ESIOSManager::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-void ESIOSManager::Configure(const json &config) {
+void ESIOSManager::Config(const json &config) {
   ConfigFile::WriteConfig("/ESIOS", config);
   bool Enable = config["Enabled"];
   pthread_mutex_lock(&pMutex);
@@ -96,7 +96,7 @@ void ESIOSManager::SetESIOSCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Token") == false) || (params["Token"].is_string() == false)) return HTTPServer::FillResponse(response, "'Token' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Configure(CheckConfig(params));
+  Config(CheckConfig(params));
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
 void *ESIOSManager::Thread_Func(void *params) {

@@ -48,9 +48,11 @@ class AnalyzerManager final {
     static void GetAlarmsCallback(const json &params, Response &response);
     static void GetAlarmsRangeCallback(const json &params, Response &response);
     static void DelAlarmCallback(const json &params, Response &response);
+    static void SetAlarmCallback(const json &params, Response &response);
     static void DelAlarmsRangeCallback(const json &params, Response &response);
+    static void SetRemoteCallback(const json &params, Response &response);
   public :
-    static bool AddAnalyzer(Analyzer *analyzer, const string &user = "admin");
+    static bool AddAnalyzer(Analyzer *analyzer);
     static bool DelAnalyzer(const string &serial);
     static bool HandleModbus(uint8_t *buff, const string &serial, const uint16_t start, const uint8_t len);
   public :

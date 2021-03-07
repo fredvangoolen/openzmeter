@@ -1,11 +1,11 @@
 <template>
   <div class="this" :class="{ expanded: expanded }">
     <img class="icon" :src="require('Imgs/user32.png')">
-    <div class="name">{{ (user==null) ? '-' : user.Name }}</div>
     <div class="btn-group">
       <button type="button" class="btn btn-default btn-xs" title="User edit" @click="ShowDialog=true"><img :src="require('Imgs/user_edit.png')"></button>
       <button type="button" class="btn btn-default btn-xs" title="User logout" @click="Logout"><img :src="require('Imgs/user_go.png')"></button>
     </div>
+    <div class="name">{{ (user==null) ? '-' : user.Name }}</div>
     <user-logout ref="logout"></user-logout>
     <user-edit v-if="ShowDialog" :user="user" @close="ShowDialog=false"></user-edit>
     <offline ref="offline"></offline>
@@ -68,7 +68,7 @@
     margin: 4px 12px;
   }
   .name {
-    width: 197px;
+    width: 192px;
     padding-left: 2px;
     line-height: 24px;
     padding-top: 4px;
@@ -78,7 +78,7 @@
   }
   .btn-group {
     margin-top: 4px;
-    margin-right: -3px;
+    margin-left: -1px;
   }
   .btn-group > .btn {
     background: #444;

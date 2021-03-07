@@ -1,9 +1,9 @@
 <template>
   <div class="navbar-nav" @mouseenter="$emit('expandmenu')" :class="{ 'expanded': expanded }">
     <div class="menu-wrapper">
-      <sidebar-analyzer :analyzer="analyzer" @update:analyzer="$emit('update:analyzer', $event)" :expanded="expanded"></sidebar-analyzer>
+      <sidebar-analyzer :analyzer="analyzer" @update:analyzer="$emit('update:analyzer', $event)" :expanded="expanded" :status="status"></sidebar-analyzer>
       <sidebar-user :user="user" @update:user="$emit('update:user', $event)" :expanded="expanded"></sidebar-user>
-      <sidebar-menu :analyzer="analyzer" :expanded="expanded"></sidebar-menu>
+      <sidebar-menu :analyzer="analyzer" :expanded="expanded" :status="status"></sidebar-menu>
     </div>
   </div>
 </template>
@@ -13,7 +13,7 @@ import SidebarUser from './SidebarUser.vue';
 import SidebarAnalyzer from './SidebarAnalyzer.vue';
 import SidebarMenu from './SidebarMenu.vue';
 export default {
-  props: { analyzer: Object, user: Object, expanded: Boolean },
+  props: { analyzer: Object, user: Object, expanded: Boolean, status: Object },
   data() {
     return { };
   },

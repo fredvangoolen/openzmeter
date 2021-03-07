@@ -51,7 +51,7 @@ class TelegramManager final {
   private :
     static void  GetTelegramCallback(const json &params, Response &response);
     static void  SetTelegramCallback(const json &params, Response &response);
-    static void  Configure(const json &config);
+    static void  Config(const json &config);
     static json  CheckConfig(const json &config);
     static void *Thread_Func(void *params);
   public :

@@ -32,8 +32,7 @@
 #include "MessageLoop.h"
 #include "Worker.h"
 //----------------------------------------------------------------------------------------------------------------------
-map<string, HTTPServer::Func1_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks1;
-map<string, HTTPServer::Call_t>  __attribute__((init_priority(200))) HTTPServer::pCallbacks2;
+map<string, HTTPServer::Func1_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
 pthread_rwlock_t                                                     HTTPServer::pLock = PTHREAD_RWLOCK_INITIALIZER;
 string                                                               HTTPServer::pRelativePath = "/";
 string                                                               HTTPServer::pLogoImg = "iVBORw0KGgoAAAANSUhEUgAAAPgAAAAcCAMAAAB72oKtAAABFFBMVEUAAAD////////////////////////////86eH////////////////////////////pcBz//////////v7////////////////////////ocBz////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////mbB7////////////pcBrpcBzmbx3pcBvpcBzocBvpcRzpcBvyrYDocBvobxvocBzocRzpcBzpbhzmbx3pbxvsbx3ncBznch7piz3////ocBxhu/u6AAAAWnRSTlMA5P3f7gXr5gP16PnbQ+H34/LYGQjV0s0/LuDColVMKBCJWyK3ppd+OhPGv4QyqxYNCp6aaSWyjnIryZNtNmMedhBHvHpQ7z7q5bwc+E7WM8imY0WGdiiSdy5XSb+iAAAIGklEQVRYw9VXZ7cSMRCd7LKNLUh7gFSp0qXDE33Ye+/r//8fZibZgkeeejzHo/cLmyE7mTuZuckC4cbYLfYhBnPnuq3YuDZhtuKMpvC38PRKDI/fwW/C1OAXUJ+kfN+3K/XA0Lim+xzlmhxnh75A6mDC38HLrzE8fAS/hfpC/5Utup0KaG2FoaT6Ep0Gjlc4lmjfgL8B80qc+Gv4HTTzSd+Bn2OpRLTmuKG3EpHhbMrzx/wYyn+F+auHssofct5PnsHvII/7Az/FfZ8QMS+m44b8VPP8I5Q1+Ht48Pjr1+eff69YeLzKHn6Km8QmOZT0RlCjCrAGBWEY5KpoUObN29KygF9Ao7npLG5npXZe3y5hN+os9jHBzN0dVRbb6yQaF7XNTWhUu51u9Sitd67yDX+JT333fgVa+3ln4/I36odKp1eHAK3lzc6oKdTZbSY5naXrug0g7LbdSq8q6jTLzUWzuOn0aqCVOaueBtqeWl2pQg9LhXspqqII4BrPQw1zOfIJS/gZ+hNGeskqyOOgJ3x1mETvRrshE7PwqLISmTHvyoTle116xXJKcW3HQv/IH8Z62tfLBm5BOlMsJ/EhWQHC3TOy26xr8hzolsKfLctKXFDDOzQ3xe7j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";
@@ -95,21 +94,12 @@ void HTTPServer::FillResponse(Response &response, const char *body, const size_t
 }
 void HTTPServer::RegisterCallback(const string &handleName, const Func1_t function) {
   pthread_rwlock_wrlock(&pLock);
-  pCallbacks1.insert({handleName, function});
-  pthread_rwlock_unlock(&pLock);
-}
-void HTTPServer::RegisterCallback(const string &handleName, const Func2_t function, const vector<string> &params) {
-  pthread_rwlock_wrlock(&pLock);
-  Call_t Call;
-  Call.Function = function;
-  Call.Headers = params;
-  pCallbacks2.insert({handleName, Call});
+  pCallbacks.insert({handleName, function});
   pthread_rwlock_unlock(&pLock);
 }
 void HTTPServer::UnregisterCallback(const string &handleName) {
   pthread_rwlock_wrlock(&pLock);
-  pCallbacks1.erase(handleName);
-  pCallbacks2.erase(handleName);
+  pCallbacks.erase(handleName);
   pthread_rwlock_unlock(&pLock);
 }
 string HTTPServer::ParseCookie(const string &cookie) {
@@ -150,7 +140,11 @@ string HTTPServer::PatchString(string &src, const string &find, const string &re
 }
 void HTTPServer::GetVersionCallback(const json &params, Response &response) {
   json Result = json::object();
-  Result["Version"] = __BUILD__;
+  Result["Version"]   = __BUILD__;
+  Result["Functions"] = json::array();
+  pthread_rwlock_rdlock(&pLock);
+  for(auto &Callback : pCallbacks) Result["Functions"].push_back(Callback.first);
+  pthread_rwlock_unlock(&pLock);
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void HTTPServer::LogInCallback(const json &params, Response &response) {
@@ -210,16 +204,8 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   string File = PatchFile("WEB/Index.html", "{{ VERSION }}", __BUILD__);
   return FillResponse(response, PatchString(File, "{{ RELATIVE_PATH }}", pRelativePath), "text/html", HTTP_OK);
 }
-void HTTPServer::HandlePost(const Request &request, Response &response, const ContentReader &content_reader) {
-  string Body, URL = string(request.path).erase(0, pRelativePath.size());
-  auto   DefReader = [&](const char *data, size_t length) -> bool {
-    if((Body.size() + length) > 0x800000) {
-      Body = "";
-      return false;
-    }
-    Body.append(data, length);
-    return true;
-  };
+void HTTPServer::HandlePost(const Request &request, Response &response) {
+  string URL = string(request.path).erase(0, pRelativePath.size());
   auto GetUser = [&]() {
     string User = "";
     if(request.has_header("Cookie")) {
@@ -233,42 +219,17 @@ void HTTPServer::HandlePost(const Request &request, Response &response, const Co
     return User;
   };
   LogFile::Debug("HTTP POST '%s'", URL.c_str());
-  pthread_rwlock_rdlock(&pLock);
-  auto Callback2 = pCallbacks2.find(URL);
-  if(Callback2 != pCallbacks2.end()) {
-    string              User = GetUser();
-    map<string, string> Params;
-    if(User.empty()) {
-      pthread_rwlock_unlock(&pLock);
-      return FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
-    }
-    Params.insert({ "UserName", User });
-    for(uint8_t n = 0; n < Callback2->second.Headers.size(); n++) {
-      if(request.has_header(Callback2->second.Headers[n].c_str()) == false) {
-        pthread_rwlock_unlock(&pLock);
-        return FillResponse(response, "'" + Callback2->second.Headers[n] + "' header required", "text/plain", HTTP_BAD_REQUEST);
-      } else {
-        Params.insert({Callback2->second.Headers[n], request.get_header_value(Callback2->second.Headers[n].c_str())});
-      }
-    }
-    Callback2->second.Function(Params, response, content_reader);
-    pthread_rwlock_unlock(&pLock);
-    return;
-  }
-  pthread_rwlock_unlock(&pLock);
-  content_reader(DefReader);
-  if(Body.empty() == true) return FillResponse(response, "Body is empty or too large", "text/plain", HTTP_PAYLOAD_TOO_LARGE);
-  json Params = json::parse(Body, NULL, false);
+  json Params = json::parse(request.body, NULL, false);
   if(Params.is_discarded()) return FillResponse(response, "Malformed JSON params", "text/plain", HTTP_BAD_REQUEST);
   if(URL == "logIn") return LogInCallback(Params, response);
   if(URL == "logOut") return LogOutCallback(request, response);
-  if((request.has_header("REMOTE_ADDR") == true) && (request.get_header_value("REMOTE_ADDR") != "127.0.0.1")) Params.erase("UserName");
+  if(request.remote_addr != "127.0.0.1") Params.erase("UserName");
   if(Params.contains("UserName") == false) Params["UserName"] = GetUser();
   if(Params["UserName"] == "") return FillResponse(response, "Unauthorided access to API", "text/plain", HTTP_UNAUTHORIZED);
   pthread_rwlock_rdlock(&pLock);
-  auto Callback1 = pCallbacks1.find(URL);
-  if(Callback1 != pCallbacks1.end()) {
-    Callback1->second(Params, response);
+  auto Callback = pCallbacks.find(URL);
+  if(Callback != pCallbacks.end()) {
+    Callback->second(Params, response);
     pthread_rwlock_unlock(&pLock);
     return;
   }

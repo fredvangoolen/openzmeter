@@ -65,7 +65,7 @@
   }
 </script>
 
-<style>
+<style scoped>
   .modal-title {
     float: left;
   }

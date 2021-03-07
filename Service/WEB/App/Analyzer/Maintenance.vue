@@ -325,7 +325,6 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import streamSaver from 'streamsaver'
   import Pako from 'pako';
   import FileSaver from 'file-saver';
   export default {

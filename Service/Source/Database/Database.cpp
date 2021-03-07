@@ -86,7 +86,7 @@ bool Database::ExecSentenceNoResult(const string &sql) {
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
     char *Save;
     LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-    printf("%s\n", sql.c_str());
+//    printf("%s\n", sql.c_str());
     PQclear(Result);
     return false;
   } else {
@@ -100,7 +100,7 @@ bool Database::ExecSentenceAsyncResult(const string &sql) {
   if(PQsendQuery(pDBConn, sql.c_str()) == 0) {
     char *Save;
     LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-    printf("%s\n", sql.c_str());
+//    printf("%s\n", sql.c_str());
     return false;
   }
   if(PQsetSingleRowMode(pDBConn) == 0) {
@@ -119,6 +119,52 @@ void Database::ClearAsync() {
     }
     pResult = PQgetResult(pDBConn);
   } while(pResult != NULL);
+}
+
+string Database::Bind(const json &param, const DataType type) {
+  if(type == UINT) {
+    return param.is_number_unsigned() ? Bind((uint64_t)param) : Bind((uint64_t)0);
+  } else if(type == FLOAT) {
+    return param.is_number() ? Bind((float)param) : Bind(NAN);
+  } else if(type == BOOL) {
+    return param.is_boolean() ? Bind((bool)param) : Bind(false);
+  } else if(type == ARRAY_FLOAT) {
+    if(param.is_array() == false) return "NULL";
+    string Result = "'{";
+    for(uint32_t i = 0; i < param.size(); i++) Result.append(((i == 0) ? "" : ", ") + Bind(param[i], Database::FLOAT));
+    return Result + "}'";
+  } else if(type == ARRAY_ARRAY_FLOAT) {
+    if(param.is_array() == false) return "NULL";
+    string Result = "'{";
+    for(uint32_t i = 0; i < param.size(); i++) {
+      if(param[i].is_array() == false) return "NULL";
+      Result.append((i == 0) ? "{" : ", {");
+      for(uint32_t n = 0; n < param[i].size(); n++) Result.append(((n == 0) ? "" : ", ") + Bind(param[i][n], Database::FLOAT));
+      Result.append("}");
+    }
+    return Result + "}'";
+  } else if(type == ARRAY_ARRAY_ARRAY_FLOAT) {
+    if(param.is_array() == false) return "NULL";
+    string Result = "'{";
+    for(uint32_t i = 0; i < param.size(); i++) {
+      if(param[i].is_array() == false) return "NULL";
+      Result.append((i == 0) ? "{" : ", {");
+      for(uint32_t n = 0; n < param[i].size(); n++) {
+        if(param[i][n].is_array() == false) return "NULL";
+        Result.append((n == 0) ? "{" : ", {");
+        for(uint32_t m = 0; m < param[i][n][m]; m++) Result.append(((m == 0) ? "" : ", ") + Bind(param[i][n][m], Database::FLOAT));
+        Result.append("}");
+      }
+      Result.append("}");
+    }
+    return Result + "}'";
+  } else if(type == ARRAY_UINT) {
+    if(param.is_array() == false) return "NULL";
+    string Result = "'{";
+    for(uint32_t i = 0; i < param.size(); i++) Result.append(((i == 0) ? "" : ", ") + Bind(param[i], Database::UINT));
+    return Result + "}'";
+  }
+  return NULL;
 }
 string Database::Bind(const uint8_t param) const {
   return to_string(param);
