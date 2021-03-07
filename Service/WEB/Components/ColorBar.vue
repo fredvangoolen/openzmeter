@@ -35,7 +35,7 @@
   }
 </script>
 
-<style>
+<style scoped>
   .color-bar {
     display: inline-block;
     vertical-align: text-bottom;

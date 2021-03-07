@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
+#include <regex>
 #include <string.h>
 #include <pthread.h>
 #include <errno.h>
@@ -24,9 +25,7 @@
 #include "LogFile.h"
 #include "ConfigFile.h"
 //----------------------------------------------------------------------------------------------------------------------
-bool                         DeviceRemote::pRegistered = DeviceRemote::Register();
-pthread_rwlock_t             DeviceRemote::pLocks = PTHREAD_RWLOCK_INITIALIZER;
-map<string, AnalyzerRemote*> DeviceRemote::pAnalyzers;
+bool DeviceRemote::pRegistered = DeviceRemote::Register();
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceRemote::Register() {
   DeviceManager::AddDriver(GetInstances);
@@ -37,21 +36,24 @@ void DeviceRemote::GetInstances() {
   DeviceManager::AddDevice(new DeviceRemote());
 }
 DeviceRemote::DeviceRemote() : Device("REMOTE", "Remote", "Allow repplication of remote openZmeter devices in local machine") {
-  Configure(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
+  LogFile::Info("Starting DeviceRemote...");
+  pMutex = PTHREAD_MUTEX_INITIALIZER;
+  Config(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
+  LogFile::Info("DeviceManager started");
+}
+void DeviceRemote::ClearAnalyzers() {
+  pthread_mutex_lock(&pMutex);
+  while(pAnalyzers.size() > 0) {
+    AnalyzerManager::DelAnalyzer(pAnalyzers.back()->Serial());
+    delete pAnalyzers.back();
+    pAnalyzers.pop_back();
+  }
+  pthread_mutex_unlock(&pMutex);
 }
 DeviceRemote::~DeviceRemote() {
-  LogFile::Info("Stopping device with serial '%s'", pSerial.c_str());
-  HTTPServer::UnregisterCallback("setRemote");
-  HTTPServer::UnregisterCallback("getRemote");
-  pthread_rwlock_wrlock(&pLocks);
-  while(pAnalyzers.size() > 0) {
-    auto Analyzer = pAnalyzers.begin();
-    AnalyzerManager::DelAnalyzer(Analyzer->second->Serial());
-    delete Analyzer->second;
-    pAnalyzers.erase(Analyzer);
-  }
-  pthread_rwlock_unlock(&pLocks);
-  LogFile::Info("Device with serial '%s' stopped", pSerial.c_str());
+  LogFile::Info("Stopping DeviceRemote");
+  ClearAnalyzers();
+  LogFile::Info("DeviceRemote stopped");
 }
 uint32_t DeviceRemote::AnalyzersCount() {
   return pAnalyzers.size();
@@ -59,80 +61,59 @@ uint32_t DeviceRemote::AnalyzersCount() {
 json DeviceRemote::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Enabled"] = false;
-  if(config.is_object()) {
-    if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
+  ConfigOUT["Analyzers"] = json::array();
+  if(config.is_object() == false) return ConfigOUT;
+  if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
+  if(config.contains("Analyzers") && config["Analyzers"].is_array()) {
+    set<string> Analyzers;
+    regex Validator("^[0-9A-F]{24}(_CAL|_CH1|_CH2|_CH3|_CH4)(_1P|_3P|_3PN)$");
+    for(auto &Analyzer : config["Analyzers"]) {
+      if(Analyzer.is_object() == false) continue;
+      if((Analyzer.contains("User") == false) || (Analyzer["User"].is_string() == false)) continue;
+      if((Analyzer.contains("Analyzer") == false) || (Analyzer["Analyzer"].is_string() == false)) continue;
+      string UserName = Analyzer["User"];
+      string Serial   = Analyzer["Analyzer"];
+      json   Tmp      = json::object();
+      Tmp["User"]     = UserName;
+      Tmp["Analyzer"] = Serial;
+      if((regex_match(Serial, Validator) == false) || (Analyzers.find(Serial) != Analyzers.end())) continue;
+      ConfigOUT["Analyzers"].push_back(Tmp);
+      Analyzers.insert(Serial);
+    }
   }
   return ConfigOUT;
 }
-void DeviceRemote::Configure(const json &config) {
+void DeviceRemote::Config(const json &config) {
   ConfigFile::WriteConfig("/Devices/" + pSerial, config);
-  pthread_rwlock_wrlock(&pLocks);
-  bool Enabled = config["Enabled"];
-  if((pEnabled == false) && (Enabled == true)) {
-    LogFile::Info("REMOTE", "Starting 'Remote' driver");
-    HTTPServer::RegisterCallback("setRemote", SetRemoteCallback, { "X-Sequence", "X-Analyzer", "X-Status", "Content-Type" });
-    HTTPServer::RegisterCallback("getRemote", GetRemoteCallback);
-  } else if((pEnabled == true) && (Enabled == false)) {
-    LogFile::Info("REMOTE", "Stopping 'Remote' driver...");
-    HTTPServer::UnregisterCallback("setRemote");
-    HTTPServer::UnregisterCallback("getRemote");
-    while(pAnalyzers.size() > 0) {
-      auto Analyzer = pAnalyzers.begin();
-      AnalyzerManager::DelAnalyzer(Analyzer->second->Serial());
-      delete Analyzer->second;
-      pAnalyzers.erase(Analyzer);
+  ClearAnalyzers();
+  pthread_mutex_lock(&pMutex);
+  pEnabled = config["Enabled"];
+  if(pEnabled == true) {
+    for(auto &Analyzer : config["Analyzers"]) {
+      string                 Serial = Analyzer["Analyzer"];
+      Analyzer::AnalyzerMode Mode = (Serial.find("_1P") != string::npos) ? Analyzer::PHASE1 : (Serial.find("_3P") != string::npos) ? Analyzer::PHASE3 : Analyzer::PHASE3N;
+      pAnalyzers.push_back(new AnalyzerRemote(Serial, Mode, Analyzer["User"]));
+      AnalyzerManager::AddAnalyzer(pAnalyzers.back());
     }
   }
-  pEnabled = Enabled;
-  pthread_rwlock_unlock(&pLocks);
+  pthread_mutex_unlock(&pMutex);
 }
 void DeviceRemote::GetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
+  Database DB;
+  for(auto &Analyzer : Config["Analyzers"]) {
+    string Serial = Analyzer["Analyzer"];
+    DB.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)))::bigint FROM pg_tables WHERE schemaname = " + DB.Bind(Serial));
+    Analyzer["Size"] = (DB.FecthRow() == true) ? DB.ResultUInt64(0) : 0;
+  }
   HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
 }
 void DeviceRemote::SetDevice(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  Configure(CheckConfig(params));
+  Config(CheckConfig(params));
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
-}
-void DeviceRemote::GetRemoteCallback(const json &params, Response &response) {
-  if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string Serial = params["Analyzer"];
-  pthread_rwlock_rdlock(&pLocks);
-  auto Tmp = pAnalyzers.find(Serial);
-  if(Tmp != pAnalyzers.end()) {
-    Tmp->second->GetRemote(params, response);
-    pthread_rwlock_unlock(&pLocks);
-    return;
-  }
-  pthread_rwlock_unlock(&pLocks);
-  AnalyzerRemote *Analyzer = new AnalyzerRemote(Serial);
-  pthread_rwlock_wrlock(&pLocks);
-  if(AnalyzerManager::AddAnalyzer(Analyzer, params["UserName"]) == false) {
-    delete Analyzer;
-    pthread_rwlock_unlock(&pLocks);
-    return HTTPServer::FillResponse(response, "'Analyzer' not allowed on remote system", "text/plain", HTTP_BAD_REQUEST);
-  }
-  pAnalyzers.insert( { Serial, Analyzer } );
-  pthread_rwlock_unlock(&pLocks);
-  LogFile::Info("REMOTE", "Added remote analyzer '%s'", Serial.c_str());
-  pthread_rwlock_rdlock(&pLocks);
-  Analyzer->GetRemote(params, response);
-  pthread_rwlock_unlock(&pLocks);
-}
-void DeviceRemote::SetRemoteCallback(const map<string, string> &params, Response &response, const ContentReader &content_reader) {
-  string Serial = params.find("X-Analyzer")->second;
-  pthread_rwlock_rdlock(&pLocks);
-  auto Tmp = pAnalyzers.find(Serial);
-  if(Tmp != pAnalyzers.end()) {
-    Tmp->second->SetRemote(params, response, content_reader);
-    pthread_rwlock_unlock(&pLocks);
-    return;
-  }
-  pthread_rwlock_unlock(&pLocks);
-  HTTPServer::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
 }
 //----------------------------------------------------------------------------------------------------------------------

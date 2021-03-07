@@ -21,8 +21,7 @@
       <div class="col-xs-12" style="margin-top:5px;">
         <label class="control-label" style="line-height: 22px">Start on boot</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.Enabled"></toggle>
-      </div>
-      <div class="col-xs-12">
+        <hr style="margin: 5px 0px 5px 0px"/>
         <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Device inputs can be calibrated to compensate components derating over time.</div>
       </div>
       <div class="col-xs-12">
@@ -153,7 +152,7 @@
             </tr>
           </table>
           <table v-if="item.Mode == '1PHASE'">
-            <tr><td colspan="2" class="border-bottom">1PHASE<span class="serial-number">{{ Settings.Serial }}_1P_{{ item.Current.substr(1) }}</span></td></tr>
+            <tr><td colspan="2" class="border-bottom">1PHASE<span class="serial-number">{{ Settings.Serial }}_{{ item.Current.substr(1) }}_1P</span></td></tr>
             <tr>
               <td class="text-center border-right"><strong>Voltage</strong></td>
               <td class="text-center"><strong>Current</strong></td>
@@ -165,7 +164,7 @@
           </table>
         </div>
         <table v-if="CalcCh != null && CalcCh.Enabled">
-          <tr><td colspan="6" class="border-bottom">1PHASE<span class="serial-number">{{ Settings.Serial }}_1P_CAL</span></td></tr>
+          <tr><td colspan="6" class="border-bottom">1PHASE<span class="serial-number">{{ Settings.Serial }}_CAL_1P</span></td></tr>
           <tr>
             <td class="text-center border-right"><strong>Enabled</strong></td>
             <td class="text-center border-right"><strong>Voltage</strong></td>

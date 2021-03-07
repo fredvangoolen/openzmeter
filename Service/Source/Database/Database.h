@@ -26,6 +26,8 @@ using namespace std;
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class Database {
+  public :
+    enum DataType { UINT, FLOAT, BOOL, ARRAY_FLOAT, ARRAY_ARRAY_FLOAT, ARRAY_ARRAY_ARRAY_FLOAT, ARRAY_UINT };
   private :
     PGconn      *pDBConn;
     PGresult    *pResult;
@@ -33,6 +35,7 @@ class Database {
   private :
     void     ClearAsync();
   public :
+    string   Bind(const json &param, const DataType type);
     string   Bind(const uint8_t param) const;
     string   Bind(const uint16_t param) const;
     string   Bind(const uint32_t param) const;

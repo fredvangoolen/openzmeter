@@ -1,6 +1,6 @@
 //Main libs and style --------------------------------------------------------------------------------------------------
 import jQuery from 'jquery';
-import Bootstrap from 'bootstrap';
+import 'bootstrap/dist/js/bootstrap.js';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'CSS/openZmeter.css';
 //VUE components -------------------------------------------------------------------------------------------------------

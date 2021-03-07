@@ -55,6 +55,7 @@
       return { View: null, Analyzers: [], FilterAnalyzers: [], ShowSpinner: false, Analyzer: null, Filter: '',
         Columns: [
           { name: 'Online', title: 'Online', callback: this.OnlineStatus },
+          { name: 'User', title: 'Owner' },
           { name: 'Name', title: 'Description' },
           { name: 'Analyzer', title: 'Serial' },
           { name: '__slot:actions', title: '' }
@@ -182,14 +183,14 @@
       text-align: center;
       font-size: 14px;
     }
-    .table >>> th:nth-child(3) {
+    .table >>> th:nth-child(4) {
       width: 180px;
       text-align: center;
     }
-    .table >>> td:nth-child(3) {
+    .table >>> td:nth-child(4) {
       text-align: center;
     }
-    .table >>> th:nth-child(4) {
+    .table >>> th:nth-child(5) {
       width: 90px;
     }
   }

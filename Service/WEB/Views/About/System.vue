@@ -9,7 +9,7 @@
     </div>
     <div class="panel-body">
       <spinner v-if="ShowSpinner"></spinner>
-      <div class="cards">
+      <div class="cards" v-if="Status!=null">
         <div class="panel panel-other card" v-if="Status.CPU!=null">
           <img class="card-img" :src="require('Imgs/chip.png')">
           <div>
@@ -110,7 +110,11 @@
             this.ShowSpinner = false;
             this.Timer = setTimeout(this.UpdateLog, 5000);
           },
-          (fail) => { this.Timer = setTimeout(this.UpdateLog, 5000); }
+          (fail) => {
+            this.Timer = setTimeout(this.UpdateLog, 5000);
+            this.Status = null;
+            this.ShowSpinner = false;
+          }
         );
       }
     },

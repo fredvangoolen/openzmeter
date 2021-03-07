@@ -19,21 +19,18 @@
 #include "Analyzer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
-Analyzer::Analyzer(const string &id) : pSerial(id) {
+Analyzer::Analyzer(const string &id, const AnalyzerMode mode, const string &user) : pSerial(id), pOwner(user), pMode(mode) {
   pMembersLocks = PTHREAD_RWLOCK_INITIALIZER;
   pName         = "Unnamed analyzer";
   pLastSave     = 0;
-  pAccess       = new AnalyzerAccess(id);
+  pConfigured   = false;
 }
 Analyzer::~Analyzer() {
-  delete pAccess;
-}
-AnalyzerAccess *Analyzer::Access() {
-  return pAccess;
 }
 json Analyzer::GetJSONDescriptor() {
   json Response = json::object();
   Response["Analyzer"] = pSerial;
+  Response["User"] = pOwner;
   pthread_rwlock_rdlock(&pMembersLocks);
   Response["Name"] = pName;
   Response["Online"] = ((Tools::GetTime64() - pLastSave) < 20000);
@@ -42,6 +39,17 @@ json Analyzer::GetJSONDescriptor() {
 }
 string Analyzer::Serial() {
   return pSerial;
+}
+bool Analyzer::Configured() {
+  pthread_rwlock_rdlock(&pMembersLocks);
+  bool Conf = pConfigured;
+  pthread_rwlock_unlock(&pMembersLocks);
+  return Conf;
+}
+void Analyzer::Configured(const bool conf) {
+  pthread_rwlock_rdlock(&pMembersLocks);
+  pConfigured = conf;
+  pthread_rwlock_unlock(&pMembersLocks);
 }
 string Analyzer::Name() {
   pthread_rwlock_rdlock(&pMembersLocks);
@@ -62,6 +70,12 @@ void Analyzer::Online(const bool online) {
 bool Analyzer::Online() {
   pthread_rwlock_rdlock(&pMembersLocks);
   bool Online = ((Tools::GetTime64() - pLastSave) < 2000);
+  pthread_rwlock_unlock(&pMembersLocks);
+  return Online;
+}
+uint64_t Analyzer::OnlineTime() {
+  pthread_rwlock_rdlock(&pMembersLocks);
+  uint64_t Online = pLastSave;
   pthread_rwlock_unlock(&pMembersLocks);
   return Online;
 }

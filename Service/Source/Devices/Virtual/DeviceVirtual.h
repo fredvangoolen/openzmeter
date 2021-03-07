@@ -37,13 +37,13 @@ class DeviceVirtual final : public Device {
   private :
     static bool  Register();
     static void  GetInstances();
-    static void *Capture_Thread(void *args);
     static json  CheckConfig(const json &config);
   private :
     DeviceVirtual();
+    void    *Thread();
     uint32_t AnalyzersCount();
     void     ClearAnalyzers();
-    void     Configure(const json &config);
+    void     Config(const json &config);
     void     GetDevice(const json &params, Response &response) override;
     void     SetDevice(const json &params, Response &response) override;
   public :

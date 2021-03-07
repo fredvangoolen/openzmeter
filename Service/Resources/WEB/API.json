@@ -16,6 +16,12 @@
   ],
   "components": {
     "schemas": {
+      "AnalyzerListTemplate": {
+        "type": "object",
+        "properties": {
+
+        }
+      },
       "AlarmTemplate": {
         "type": "object",
         "properties": {
@@ -890,7 +896,7 @@
                     "items": {
                       "type": "string",
                       "enum": [
-                        "SYSTEM",
+                        "System",
                         "UNREAD_EVENTS",
                         "UNREAD_ALARMS",
                         "PERMISSIONS",
@@ -2838,7 +2844,7 @@
     },
     "/getVersion": {
       "post": {
-        "summary": "Ver service version",
+        "summary": "Get service version and compiled in functions",
         "tags": [
           "System"
         ],
@@ -2858,7 +2864,8 @@
             "content": {
               "application/json": {
                 "example": {
-                  "Version": "xxxxxxx"
+                  "Version": "branch_yyyymmdd.hh.mm",
+                  "Functions": ["getVersion", "getSeries"]
                 }
               }
             }

@@ -58,7 +58,7 @@
           { name: '__slot:actions', title: '' }
         ],
         ColumnsTariffs: [
-          { name: 'UserName', title: 'Owner' },
+          { name: 'User', title: 'Owner' },
           { name: 'Name', title: 'Name' },
           { name: '__slot:actions', title: '' }
         ]

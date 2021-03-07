@@ -53,7 +53,7 @@
       return { ShowSpinner: false, Alarm: null, Data: null, Vars: [], View: 'Main', Error: null };
     },
     created: function() {
-      this.Alarm = Object.assign({ }, this.analyzer.Alarms[this.alarm]);
+      this.Alarm = Object.assign({}, this.analyzer.Alarms[this.alarm]);
     },
     methods: {
       FillValues: function(data) {

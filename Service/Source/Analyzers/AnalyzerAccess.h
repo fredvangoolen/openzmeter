@@ -14,26 +14,26 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <string>
-#include <map>
-#include <pthread.h>
 #include "nlohmann/json.hpp"
+#include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
-using json = nlohmann::json;
 using namespace std;
+using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
-class AnalyzerAccess final {
+class AnalyzerAccess {
   public :
     enum Access { READ = 0x01, WRITE = 0x02, CONFIG = 0x04 };
   private :
-    string pSerial;
+    const string pSerial;
+    const string pOwner;
   public :
-    AnalyzerAccess(const string &serial);
-    ~AnalyzerAccess();
-    void SetUsers(const json &config);
-    json GetUsers();
-    void SetTime(const string &user, const uint64_t &alarm, const uint64_t &event);
-    json GetTime(const string &user);
-    bool TestUser(const string &user, const Access neededAccess);
+    static json CheckConfig(const json &config, const string &owner = "admin");
+  public :
+    AnalyzerAccess(const string &serial, const string &owner = "admin");
+    virtual ~AnalyzerAccess();
+    void Config(const json &config) const;
+    json Users() const;
+    json GetStatus(const vector<string> &series, const string &user = "admin") const;
+    bool TestUser(const Access neededAccess, const string &user = "admin") const;
 };
 // ---------------------------------------------------------------------------------------------------------------------
