@@ -20,7 +20,7 @@ AnalyzerRemoteNow::AnalyzerRemoteNow() {
   pStatus        = json::object();
   pLock          = PTHREAD_RWLOCK_INITIALIZER;
   pNowRequest    = {{"Frequency", 0}, {"Flag", 0}, {"Unbalance", 0}, {"Voltage", 0}, {"Current", 0}, {"Active_Power", 0}, {"Reactive_Power", 0}, {"Active_Energy", 0}, {"Reactive_Energy", 0}, {"Apparent_Power", 0}, {"Power_Factor", 0}, {"Voltage_THD", 0}, {"Current_THD", 0}, {"Phi", 0}, {"Voltage_Phase", 0}, {"Voltage_Harmonics", 0}, {"Current_Harmonics", 0}, {"Power_Harmonics", 0}, {"Voltage_Harmonics_Complex", 0}, {"Current_Harmonics_Complex", 0}, {"Voltage_FFT", 0}, {"Current_FFT", 0}, {"Voltage_Samples", 0}, {"Current_Samples", 0}};
-  pStatusRequest = {{"Log", 0}, {"System", 0}, {"Events", 0}, {"Alarms", 0}, {"Storage", 0}};
+  pStatusRequest = {{"Log", 0}, {"System", 0}, {"SystemLog", 0}, {"Events", 0}, {"Alarms", 0}, {"Storage", 0}};
 }
 AnalyzerRemoteNow::~AnalyzerRemoteNow() {
 }

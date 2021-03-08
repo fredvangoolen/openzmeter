@@ -1,3931 +1,2727 @@
-{
-  "openapi": "3.0.1",
-  "info": {
-    "title": "openZmeter API",
-    "version": "1.1.0",
-    "description": "Full API definition of openZmeter daemon. Not all functions are avaliable on all systems, not for all users or not all time.",
-    "license": {
-      "name": "GNU General Public License v3.0",
-      "url": "https://www.gnu.org/licenses/gpl-3.0.html"
-    }
-  },
-  "servers": [
-    {
-      "url": "/"
-    }
-  ],
-  "components": {
-    "schemas": {
-      "AnalyzerListTemplate": {
-        "type": "object",
-        "properties": {
+openapi: 3.0.1
+info:
+  title: openZmeter API
+  version: 1.1.0
+  description: 'Full API definition of openZmeter daemon. Not all functions are avaliable on all systems, not for all users or not all time.'
+  license:
+    name: GNU General Public License v3.0
+    url: 'https://www.gnu.org/licenses/gpl-3.0.html'
+servers:
+  - url: /
+components:
+  schemas:
+    UserListTemplate:
+      type: object
+      properties:
+        User:
+          type: string
+        Name:
+          type: string
+        Email:
+          type: string
+        TimeZone:
+          type: string
+      example:
+        User: admin
+        Name: System administrator
+        Email: example@example.com
+        TimeZone: UTC
+      required:
+        - User
+        - Name
+        - Email
+        - TimeZone
+    UserTemplate:
+      type: object
+      properties:
+        User:
+          type: string
+        Name:
+          type: string
+        Address:
+          type: string
+        Company:
+          type: string
+        Photo:
+          type: string
+        Email:
+          type: string
+        Telegram:
+          type: number
+        TimeZone:
+          type: string
+      example:
+        User: admin
+        Name: System administrator
+        Address: ''
+        Company: ''
+        Photo: ''
+        Email: ''
+        Telegram: 0
+        TimeZone: UTC
+      required:
+        - User
+        - Name
+        - Address
+        - Company
+        - Photo
+        - Email
+        - Telegram
+        - TimeZone
 
-        }
-      },
-      "AlarmTemplate": {
-        "type": "object",
-        "properties": {
-          "Enabled": {
-            "type": "boolean"
-          },
-          "Name": {
-            "type": "string"
-          },
-          "Priority": {
-            "type": "number"
-          },
-          "Expression": {
-            "type": "string"
-          },
-          "Aggreg": {
-            "type": "string"
-          },
-          "Samples": {
-            "type": "number"
-          },
-          "Window": {
-            "type": "number"
-          }
-        },
-        "example": {
-          "Enabled": true,
-          "Name": "Alarm1",
-          "Priority": 0,
-          "Expression": "ActivePower>100",
-          "Aggreg": "3S",
-          "Samples": 10,
-          "Window": 20
-        }
-      },
-      "UserTemplate": {
-        "type": "object",
-        "properties": {
-          "User": {
-            "type": "string"
-          },
-          "Name": {
-            "type": "string"
-          },
-          "Address": {
-            "type": "string"
-          },
-          "Company": {
-            "type": "string"
-          },
-          "Photo": {
-            "type": "string"
-          },
-          "Email": {
-            "type": "string"
-          },
-          "Telegram": {
-            "type": "number"
-          },
-          "TimeZone": {
-            "type": "string"
-          }
-        },
-        "example": {
-          "User": "admin",
-          "Name": "System administrator",
-          "Address": "",
-          "Company": "",
-          "Photo": "",
-          "Email": "",
-          "Telegram": 0,
-          "TimeZone": "UTC"
-        }
-      },
-      "RateTemplate": {
-        "type": "object"
-      },
-      "TariffTemplate": {
-        "type": "object",
-        "properties": {
-          "Name": {
-            "type": "string"
-          },
-          "Template": {
-            "type": "object"
-          }
-        },
-        "example": {
-          "Name": "ESP_2.0A_2020",
-          "Template": {
-            "Days": [
-              {
-                "Name": "Day 1",
-                "Color": "#fffff0",
-                "Quarters": [
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0
-                ]
-              }
-            ],
-            "Years": [
-              {
-                "Days": [
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0,
-                  0
-                ],
-                "Year": 2020
-              }
-            ],
-            "Script": "Cost=(ContractedPower_P1*PowerCost_P1)/96,\nContracted=ContractedPower_P1,\nTotalCost=TotalCost+Cost",
-            "Periods": [
-              {
-                "Name": "All day",
-                "Color": "#fffff0",
-                "Script": "Cost=(ActiveEnergy/1000.0)*EnergyCost,\nTotalCost=TotalCost+Cost,\nTotalConsumed=TotalConsumed+ActiveEnergy/1000",
-                "Concepts": [
-                  {
-                    "Type": "INFO",
-                    "Variable": "TotalConsumed",
-                    "Description": "Consumed energy (kWh)"
-                  },
-                  {
-                    "Type": "COST_ENERGY",
-                    "Variable": "TotalCost",
-                    "Description": "Consumed energy cost"
-                  }
-                ],
-                "DefaultPowerCost": 0.104228,
-                "DefaultEnergyCost": 0.135343
-              }
-            ],
-            "Concepts": [
-              {
-                "Type": "INFO",
-                "Variable": "Contracted",
-                "Description": "Contracted power (kW)"
-              },
-              {
-                "Type": "COST_POWER",
-                "Variable": "TotalCost",
-                "Description": "Contracted power cost"
-              }
-            ],
-            "Currency": "€",
-            "PowerUnits": "kW",
-            "Description": "Spanish 2.0A tariff. Constant price. Without seasons.",
-            "EnergyUnits": "kWh"
-          }
-        }
-      }
-    }
-  },
-  "tags": [
-    {
-      "name": "Analyzers",
-      "description": "Analyzer information queries"
-    },
-    {
-      "name": "Devices",
-      "description": "Devices configuration and listing"
-    },
-    {
-      "name": "Tariffs",
-      "description": "Manage tariffs"
-    },
-    {
-      "name": "System",
-      "description": "System management functions"
-    },
-    {
-      "name": "Users",
-      "description": "Manage system users"
-    },
-    {
-      "name": "Bluetooth",
-      "description": "Manage bluetooth services, if avaliable"
-    },
-    {
-      "name": "Ethernet",
-      "description": "Manage ethernet connection, if avaliable"
-    },
-    {
-      "name": "WIFI",
-      "description": "Manage WiFi connection, if avaliable"
-    },
-    {
-      "name": "ModbusTCP",
-      "description": "Manage modbusTCP services"
-    },
-    {
-      "name": "Telegram",
-      "description": "Manage Telegram bot services"
-    },
-    {
-      "name": "Updates",
-      "description": "Search and install system package updates"
-    },
-    {
-      "name": "NTP",
-      "description": "Manage NTP (network time protocol) client configuration, if avaliable."
-    },
-    {
-      "name": "Price modules",
-      "description": "Additional price modules configuration"
-    }
-  ],
-  "paths": {
-    "/getAnalyzers": {
-      "post": {
-        "summary": "Get list of avaliable analyzers",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "example": {},
-              "schema": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  {
-                    "Analyzer": "120052009034E42413032302_1P_CH0",
-                    "Name": "Unnamed analyzer",
-                    "Online": true
-                  },
-                  {
-                    "Analyzer": "VIRTUAL_3PHASE+N",
-                    "Name": "Unnamed analyzer",
-                    "Online": false
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getAnalyzer": {
-      "post": {
-        "summary": "Get analyzer details",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx"
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "Analyzer"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "AlarmsEnabled": true,
-                  "EventsEnabled": true,
-                  "MQTT": {
-                    "Enabled": false,
-                    "Export10M": false,
-                    "Export15M": false,
-                    "Export1H": false,
-                    "Export1M": true,
-                    "Export3S": true,
-                    "ExportAlarms": false,
-                    "ExportConfig": false,
-                    "Pass": "",
-                    "Prefix": "/OZM",
-                    "Server": "mqtt://test.mosquitto.org",
-                    "User": ""
-                  },
-                  "MaxCurrent": 35,
-                  "MinCurrent": 0.1,
-                  "Mode": "1PHASE",
-                  "Name": "Unnamed analyzer",
-                  "NominalFrequency": 50,
-                  "NominalVoltage": 230,
-                  "Online": true,
-                  "SampleRate": 24000,
-                  "Save200MS": true,
-                  "Sync": {
-                    "Enabled": false,
-                    "Pass": "",
-                    "Server": "",
-                    "User": ""
-                  },
-                  "Tags": [],
-                  "TimeZone": "UTC"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/setAnalyzer": {
-      "post": {
-        "summary": "Get analyzer details",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx"
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "Analyzer"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "AlarmsEnabled": true,
-                  "EventsEnabled": true,
-                  "MQTT": {
-                    "Enabled": false,
-                    "Export10M": false,
-                    "Export15M": false,
-                    "Export1H": false,
-                    "Export1M": true,
-                    "Export3S": true,
-                    "ExportAlarms": false,
-                    "ExportConfig": false,
-                    "Pass": "",
-                    "Prefix": "/OZM",
-                    "Server": "mqtt://test.mosquitto.org",
-                    "User": ""
-                  },
-                  "MaxCurrent": 35,
-                  "MinCurrent": 0.1,
-                  "Mode": "1PHASE",
-                  "Name": "Unnamed analyzer",
-                  "NominalFrequency": 50,
-                  "NominalVoltage": 230,
-                  "Online": true,
-                  "SampleRate": 24000,
-                  "Save200MS": true,
-                  "Sync": {
-                    "Enabled": false,
-                    "Pass": "",
-                    "Server": "",
-                    "User": ""
-                  },
-                  "Tags": [],
-                  "TimeZone": "UTC"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getStatus": {
-      "post": {
-        "summary": "Get analyzer status",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "UNREAD_EVENTS",
-                    "PERMISSIONS"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "System",
-                        "UNREAD_EVENTS",
-                        "UNREAD_ALARMS",
-                        "PERMISSIONS",
-                        "LAST_ACCESS",
-                        "Storage"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "Permissions": {
-                    "Configure": true,
-                    "Read": true,
-                    "Write": true
-                  },
-                  "Unread_Events": {
-                    "Count": 0,
-                    "From": 0,
-                    "To": 1599317246998
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getSeries": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getCosts": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.41
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getBills": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getSeriesRange": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/delSeriesRange": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getEvents": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getEventsRange": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/delEventsRange": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getEvent": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/setEvent": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/delEvent": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/testAlarm": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getAlarms": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getAlarmsRange": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/delAlarm": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/delAlarmsRange": {
-      "post": {
-        "summary": "Get analyzer serie",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx",
-                  "Series": [
-                    "Voltage",
-                    "Current"
-                  ]
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "Aggreg": {
-                    "type": "string",
-                    "enum": [
-                      "200MS",
-                      "3S",
-                      "1M",
-                      "10M",
-                      "15M",
-                      "1H"
-                    ]
-                  },
-                  "From": {
-                    "type": "number"
-                  },
-                  "To": {
-                    "type": "number"
-                  },
-                  "Series": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "Voltage",
-                        "Current",
-                        "Active_Power",
-                        "Reactive_Power",
-                        "Active_Energy",
-                        "Reactive_Energy",
-                        "Voltage_Samples",
-                        "Voltage_THD",
-                        "Phi",
-                        "Power_Factor"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "Series"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  [
-                    "Time",
-                    "Voltage"
-                  ],
-                  [
-                    1599307199999,
-                    [
-                      239.383
-                    ]
-                  ],
-                  [
-                    1599310799999,
-                    [
-                      241.35
-                    ]
-                  ],
-                  [
-                    1599314399999,
-                    [
-                      236.431
-                    ]
-                  ]
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/logIn": {
-      "post": {
-        "summary": "Authorize to access the system",
-        "tags": [
-          "System"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "required": [
-                  "UserName",
-                  "Password"
-                ],
-                "example": {
-                  "UserName": "test",
-                  "Password": "test",
-                  "UpdateLastLogin": true
-                },
-                "properties": {
-                  "UserName": {
-                    "type": "string"
-                  },
-                  "Password": {
-                    "type": "string"
-                  },
-                  "UpdateLastLogin": {
-                    "type": "boolean"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "LastLogin": 1000000
-                }
-              }
-            },
-            "headers": {
-              "Set-Cookie": {
-                "description": "Cookie value for current session",
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "On missing params"
-          },
-          "401": {
-            "description": "On invalid login params"
-          }
-        }
-      }
-    },
-    "/logOut": {
-      "post": {
-        "summary": "Close active user session",
-        "tags": [
-          "System"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "example": {},
-              "schema": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          }
-        }
-      }
-    },
-    "/getDevices": {
-      "post": {
-        "summary": "Get list of avaliable system devices",
-        "tags": [
-          "Devices"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "example": {},
-              "schema": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  {
-                    "Analyzers": 1,
-                    "Driver": "V2",
-                    "Enabled": true,
-                    "Name": "Capture device V2",
-                    "Serial": "F100A1009034E42413032302"
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    "/getDevice": {
-      "post": {
-        "summary": "Get device configuration (Each device driver have its own properties)",
-        "tags": [
-          "Devices"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "required": [
-                  "Serial"
-                ],
-                "example": {
-                  "Serial": "VIRTUAL"
-                },
-                "properties": {
-                  "Serial": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "Current": 5,
-                  "CurrentPhase": -10.1,
-                  "Enabled": false,
-                  "Frequency": 50,
-                  "Mode": "3PHASE+N",
-                  "SampleRate": 10000,
-                  "Voltage": 230
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/setDevice": {
-      "post": {
-        "summary": "Set device configuration (Each device driver have its own properties)",
-        "tags": [
-          "Devices"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "required": [
-                  "Serial"
-                ],
-                "example": {
-                  "Current": 5,
-                  "CurrentPhase": -10.1,
-                  "Enabled": true,
-                  "Frequency": 60,
-                  "Mode": "3PHASE+N",
-                  "SampleRate": 10000,
-                  "Voltage": 230,
-                  "Serial": "VIRTUAL"
-                },
-                "properties": {
-                  "Serial": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          }
-        }
-      }
-    },
-    "/getBluetooth": {
-      "post": {
-        "summary": "Get bluetooth configuration",
-        "tags": [
-          "Bluetooth"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {}
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "Enabled": true,
-                  "Interface": "br-bt",
-                  "Name": "openZmeter_xxxx"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "503": {
-            "description": "Function not avaliable"
-          }
-        }
-      }
-    },
-    "/setBluetooth": {
-      "post": {
-        "summary": "Set bluetooth configuration",
-        "tags": [
-          "Bluetooth"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "required": [
-                  "Enabled"
-                ],
-                "example": {
-                  "Enabled": true
-                },
-                "properties": {
-                  "Enabled": {
-                    "type": "boolean"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "503": {
-            "description": "Function not avaliable"
-          }
-        }
-      }
-    },
-    "/getVersion": {
-      "post": {
-        "summary": "Get service version and compiled in functions",
-        "tags": [
-          "System"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {}
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "Version": "branch_yyyymmdd.hh.mm",
-                  "Functions": ["getVersion", "getSeries"]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          }
-        }
-      }
-    },
-    "/getEthernet": {
-      "post": {
-        "summary": "Get ethernet configuration",
-        "tags": [
-          "Ethernet"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {}
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "DNS": [
-                    "192.168.1.1",
-                    "8.8.8.8"
-                  ],
-                  "Enabled": true,
-                  "Gateway": "192.168.1.1",
-                  "IP": "192.168.1.92",
-                  "IPMode": "DHCP",
-                  "Netmask": "255.255.255.0",
-                  "Status": {
-                    "Connected": true,
-                    "DNS": [
-                      "192.168.1.1",
-                      "8.8.8.8",
-                      "192.168.0.1"
-                    ],
-                    "Gateway": "192.168.0.1",
-                    "IP": "192.168.0.87",
-                    "IPMode": "DHCP"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "500": {
-            "description": "Configuration can not be read"
-          },
-          "503": {
-            "description": "Function not avaliable"
-          }
-        }
-      }
-    },
-    "/setEthernet": {
-      "post": {
-        "summary": "Set ethernet configuration",
-        "tags": [
-          "Ethernet"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "required": [
-                  "DNS",
-                  "Enabled",
-                  "Gateway",
-                  "IP",
-                  "IPMode",
-                  "Netmask"
-                ],
-                "example": {
-                  "DNS": [
-                    "192.168.1.1",
-                    "8.8.8.8"
-                  ],
-                  "Enabled": true,
-                  "Gateway": "192.168.1.1",
-                  "IP": "192.168.1.92",
-                  "IPMode": "DHCP",
-                  "Netmask": "255.255.255.0"
-                },
-                "properties": {
-                  "DNS": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "Gateway": {
-                    "type": "string"
-                  },
-                  "IP": {
-                    "type": "string"
-                  },
-                  "IPMode": {
-                    "type": "string",
-                    "enum": [
-                      "STATIC",
-                      "DHCP"
-                    ]
-                  },
-                  "Netmask": {
-                    "type": "string"
-                  },
-                  "Enabled": {
-                    "type": "boolean"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "500": {
-            "description": "Configuration can not be saved"
-          },
-          "503": {
-            "description": "Function not avaliable"
-          }
-        }
-      }
-    },
-    "/getUpdates": {
-      "post": {
-        "summary": "Get avaliable updates for installed packages. If 'Force' is true, update package list from update server",
-        "tags": [
-          "Updates"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Force": true
-                },
-                "properties": {
-                  "Force": {
-                    "type": "boolean"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  {
-                    "From": "20191219.1025",
-                    "Package": "openZmeter-devel",
-                    "To": "20200509.2103"
-                  },
-                  {
-                    "From": "2.16.6-1",
-                    "Package": "libmbedtls",
-                    "To": "2.16.7-1"
-                  }
-                ]
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "500": {
-            "description": "Can not get avaliable updates"
-          },
-          "503": {
-            "description": "Function not avaliable"
-          }
-        }
-      }
-    },
-    "/setUpgrade": {
-      "post": {
-        "summary": "Upgrade requested packages",
-        "tags": [
-          "Updates"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Packages": [
-                    "openZmeter-devel"
-                  ]
-                },
-                "properties": {
-                  "Pacakages": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Upgrading is taking place",
-            "content": {
-              "text/event-stream": {
-                "example": "event: text\ndata: console messages...\n\nevent: status\ndata: OK (Upgrade finished)\n\n"
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "500": {
-            "description": "Can not upgrade requested packages"
-          },
-          "503": {
-            "description": "Function not avaliable"
-          }
-        }
-      }
-    },
-    "/getUsers": {
-      "post": {
-        "summary": "Get user list",
-        "tags": [
-          "Users"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {}
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  {
-                    "User": "admin",
-                    "Name": "System administrator",
-                    "Email": "",
-                    "TimeZone": "UTC"
-                  }
-                ]
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "500": {
-            "description": "Can retrieve user list"
-          }
-        }
-      }
-    },
-    "/getUser": {
-      "post": {
-        "summary": "Get user details",
-        "tags": [
-          "Users"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Name": "admin"
-                },
-                "required": [
-                  "Name"
-                ],
-                "properties": {
-                  "Name": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserTemplate"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user, or requested user differs from calling one"
-          },
-          "500": {
-            "description": "User not found"
-          }
-        }
-      }
-    },
-    "/setUser": {
-      "post": {
-        "summary": "Update user details",
-        "tags": [
-          "Users"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserTemplate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user, or requested user differs from calling one"
-          },
-          "500": {
-            "description": "Can not save user"
-          }
-        }
-      }
-    },
-    "/addUser": {
-      "post": {
-        "summary": "Add user",
-        "tags": [
-          "Users"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/UserTemplate"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "Password": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "Password"
-                    ],
-                    "example": {
-                      "Password": "xxxx"
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "500": {
-            "description": "Can not save user"
-          }
-        }
-      }
-    },
-    "/setUserPassword": {
-      "post": {
-        "summary": "Update user password",
-        "tags": [
-          "Users"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "User",
-                  "Password"
-                ],
-                "properties": {
-                  "User": {
-                    "type": "string"
-                  },
-                  "Password": {
-                    "type": "string"
-                  },
-                  "PrevPassword": {
-                    "type": "string"
-                  }
-                },
-                "example": {
-                  "User": "xxxx",
-                  "Password": "xxxx",
-                  "PrevPassword": "xxxxxxx"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user, or requested user differs from calling one"
-          }
-        }
-      }
-    },
-    "/delUser": {
-      "post": {
-        "summary": "Remove user",
-        "tags": [
-          "Users"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "User": {
-                    "type": "string"
-                  }
-                },
-                "example": {
-                  "User": "xxxx"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          }
-        }
-      }
-    },
-    "/getWIFI": {
-      "post": {
-        "summary": "Get WiFi configuration",
-        "tags": [
-          "WIFI"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {}
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "DNS": [
-                    "192.168.1.1",
-                    "8.8.8.8"
-                  ],
-                  "ESSID": "WIFI",
-                  "Enabled": true,
-                  "Gateway": "192.168.1.1",
-                  "IP": "192.168.1.92",
-                  "IPMode": "DHCP",
-                  "Key": "xxxxxxxxxx",
-                  "KeyMode": "WPA2",
-                  "Netmask": "255.255.255.0",
-                  "Status": {
-                    "Channel": 11,
-                    "Connected": true,
-                    "DNS": [
-                      "192.168.1.1",
-                      "8.8.8.8",
-                      "192.168.0.1"
-                    ],
-                    "ESSID": "WIFI",
-                    "Gateway": "192.168.0.1",
-                    "IP": "192.168.0.87",
-                    "IPMode": "DHCP",
-                    "Quality": 68
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "500": {
-            "description": "Configuration can not be read"
-          },
-          "503": {
-            "description": "Function not avaliable"
-          }
-        }
-      }
-    },
-    "/setWIFI": {
-      "post": {
-        "summary": "Set bluetooth configuration",
-        "tags": [
-          "WIFI"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "required": [
-                  "DNS",
-                  "ESSID",
-                  "Enabled",
-                  "Gateway",
-                  "IP",
-                  "IPMode",
-                  "Key",
-                  "KeyMode",
-                  "Netmask"
-                ],
-                "example": {
-                  "DNS": [
-                    "192.168.1.1",
-                    "8.8.8.8"
-                  ],
-                  "ESSID": "WIFI",
-                  "Enabled": true,
-                  "Gateway": "192.168.1.1",
-                  "IP": "192.168.1.92",
-                  "IPMode": "DHCP",
-                  "Key": "xxxxxxxxxx",
-                  "KeyMode": "WPA2",
-                  "Netmask": "255.255.255.0"
-                },
-                "properties": {
-                  "DNS": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "ESSID": {
-                    "type": "string"
-                  },
-                  "Gateway": {
-                    "type": "string"
-                  },
-                  "IP": {
-                    "type": "string"
-                  },
-                  "IPMode": {
-                    "type": "string",
-                    "enum": [
-                      "STATIC",
-                      "DHCP"
-                    ]
-                  },
-                  "Key": {
-                    "type": "string"
-                  },
-                  "KeyMode": {
-                    "type": "string",
-                    "enum": [
-                      "NONE",
-                      "WEP",
-                      "WPA",
-                      "WPA2"
-                    ]
-                  },
-                  "Netmask": {
-                    "type": "string"
-                  },
-                  "Enabled": {
-                    "type": "boolean"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "500": {
-            "description": "Configuration can not be saved"
-          },
-          "503": {
-            "description": "Function not avaliable"
-          }
-        }
-      }
-    },
-    "/getNTP": {
-      "post": {
-        "summary": "Get NPT configuration",
-        "tags": [
-          "NTP"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {}
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "Enabled": true,
-                  "Server": "hora.roa.es",
-                  "Time": 1598430332332
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "503": {
-            "description": "Function not avaliable"
-          }
-        }
-      }
-    },
-    "/setNTP": {
-      "post": {
-        "summary": "Set NTP configuration, if Server is disabled, 'Time' values is set as local UTC time",
-        "tags": [
-          "NTP"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "required": [
-                  "Enabled",
-                  "Server",
-                  "Time"
-                ],
-                "example": {
-                  "Enabled": true,
-                  "Server": "hora.roa.es",
-                  "Time": 1598430332332
-                },
-                "properties": {
-                  "Enabled": {
-                    "type": "boolean"
-                  },
-                  "Server": {
-                    "type": "string"
-                  },
-                  "Time": {
-                    "type": "number"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          },
-          "503": {
-            "description": "Function not avaliable"
-          }
-        }
-      }
-    },
-    "/getTariffs": {
-      "post": {
-        "summary": "Get configured tariffs list",
-        "tags": [
-          "Tariffs"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {}
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  {
-                    "Name": "ESP_2.0A",
-                    "UserName": "admin"
-                  },
-                  {
-                    "Name": "ESP_2.0DHA",
-                    "UserName": "admin"
-                  }
-                ]
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          }
-        }
-      }
-    },
-    "/getTariff": {
-      "post": {
-        "summary": "Get full tariff configuration",
-        "tags": [
-          "Tariffs"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "required": [
-                  "Name"
-                ],
-                "example": {
-                  "Name": "ESP_2,0A"
-                },
-                "properties": {
-                  "Name": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/TariffTemplate"
-                    },
-                    {
-                      "type": "object",
-                      "example": {
-                        "UserName": "admin"
-                      },
-                      "properties": {
-                        "UserName": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "501": {
-            "description": "Tariff name not found"
-          }
-        }
-      }
-    },
-    "/setTariff": {
-      "post": {
-        "summary": "Update tariff configuration",
-        "tags": [
-          "Tariffs"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TariffTemplate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "501": {
-            "description": "Tariff name not found"
-          }
-        }
-      }
-    },
-    "/addTariff": {
-      "post": {
-        "summary": "Add tariff configuration",
-        "tags": [
-          "Tariffs"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TariffTemplate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "501": {
-            "description": "Tariff name already exists"
-          }
-        }
-      }
-    },
-    "/delTariff": {
-      "post": {
-        "summary": "Add tariff configuration",
-        "tags": [
-          "Tariffs"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "example": {
-                  "Name": "ESP_2.0A"
-                },
-                "properties": {
-                  "Name": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "501": {
-            "description": "Tariff name not found or not owned by calling user"
-          }
-        }
-      }
-    },
-    "/getESIOS": {
-      "post": {
-        "summary": "Get ESIOS price fetch module configuration",
-        "tags": [
-          "Price modules"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {}
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "Enabled": false,
-                  "LastDate": 1262304000000,
-                  "Token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          }
-        }
-      }
-    },
-    "/setESIOS": {
-      "post": {
-        "summary": "Set ESIOS price fecth module configuration",
-        "tags": [
-          "Price modules"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "required": [
-                  "Enabled",
-                  "Token"
-                ],
-                "example": {
-                  "Enabled": true,
-                  "Token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                },
-                "properties": {
-                  "Enabled": {
-                    "type": "boolean"
-                  },
-                  "Token": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "403": {
-            "description": "Not admin user"
-          }
-        }
-      }
-    }
-  }
-}
+
+
+    AnalyzerListTemplate:
+      type: object
+      properties: {}
+    AlarmTemplate:
+      type: object
+      properties:
+        Enabled:
+          type: boolean
+        Name:
+          type: string
+        Priority:
+          type: number
+        Expression:
+          type: string
+        Aggreg:
+          type: string
+        Samples:
+          type: number
+        Window:
+          type: number
+      example:
+        Enabled: true
+        Name: Alarm1
+        Priority: 0
+        Expression: ActivePower>100
+        Aggreg: 3S
+        Samples: 10
+        Window: 20
+    RateTemplate:
+      type: object
+    TariffTemplate:
+      type: object
+      properties:
+        Name:
+          type: string
+        Template:
+          type: object
+      example:
+        Name: ESP_2.0A_2020
+        Template:
+          Days:
+            - Name: Day 1
+              Color: '#fffff0'
+              Quarters:
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+          Years:
+            - Days:
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0
+              Year: 2020
+          Script: |-
+            Cost=(ContractedPower_P1*PowerCost_P1)/96,
+            Contracted=ContractedPower_P1,
+            TotalCost=TotalCost+Cost
+          Periods:
+            - Name: All day
+              Color: '#fffff0'
+              Script: |-
+                Cost=(ActiveEnergy/1000.0)*EnergyCost,
+                TotalCost=TotalCost+Cost,
+                TotalConsumed=TotalConsumed+ActiveEnergy/1000
+              Concepts:
+                - Type: INFO
+                  Variable: TotalConsumed
+                  Description: Consumed energy (kWh)
+                - Type: COST_ENERGY
+                  Variable: TotalCost
+                  Description: Consumed energy cost
+              DefaultPowerCost: 0.104228
+              DefaultEnergyCost: 0.135343
+          Concepts:
+            - Type: INFO
+              Variable: Contracted
+              Description: Contracted power (kW)
+            - Type: COST_POWER
+              Variable: TotalCost
+              Description: Contracted power cost
+          Currency: €
+          PowerUnits: kW
+          Description: Spanish 2.0A tariff. Constant price. Without seasons.
+          EnergyUnits: kWh
+tags:
+  - name: Analyzers
+    description: Analyzer information queries
+  - name: Devices
+    description: Devices configuration and listing
+  - name: Tariffs
+    description: Manage tariffs
+  - name: System
+    description: System management functions
+  - name: Users
+    description: Manage system users
+  - name: Bluetooth
+    description: 'Manage bluetooth services, if avaliable'
+  - name: Ethernet
+    description: 'Manage ethernet connection, if avaliable'
+  - name: WIFI
+    description: 'Manage WiFi connection, if avaliable'
+  - name: ModbusTCP
+    description: Manage modbusTCP services
+  - name: Telegram
+    description: Manage Telegram bot services
+  - name: Updates
+    description: Search and install system package updates
+  - name: NTP
+    description: 'Manage NTP (network time protocol) client configuration, if avaliable.'
+  - name: Price modules
+    description: Additional price modules configuration
+paths:
+  /getAnalyzers:
+    post:
+      summary: Get list of avaliable analyzers
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {}
+            schema: {}
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - Analyzer: 120052009034E42413032302_1P_CH0
+                  Name: Unnamed analyzer
+                  Online: true
+                - Analyzer: VIRTUAL_3PHASE+N
+                  Name: Unnamed analyzer
+                  Online: false
+  /getAnalyzer:
+    post:
+      summary: Get analyzer details
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+              properties:
+                Analyzer:
+                  type: string
+              required:
+                - Analyzer
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                AlarmsEnabled: true
+                EventsEnabled: true
+                MQTT:
+                  Enabled: false
+                  Export10M: false
+                  Export15M: false
+                  Export1H: false
+                  Export1M: true
+                  Export3S: true
+                  ExportAlarms: false
+                  ExportConfig: false
+                  Pass: ''
+                  Prefix: /OZM
+                  Server: 'mqtt://test.mosquitto.org'
+                  User: ''
+                MaxCurrent: 35
+                MinCurrent: 0.1
+                Mode: 1PHASE
+                Name: Unnamed analyzer
+                NominalFrequency: 50
+                NominalVoltage: 230
+                Online: true
+                SampleRate: 24000
+                Save200MS: true
+                Sync:
+                  Enabled: false
+                  Pass: ''
+                  Server: ''
+                  User: ''
+                Tags: []
+                TimeZone: UTC
+  /setAnalyzer:
+    post:
+      summary: Get analyzer details
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+              properties:
+                Analyzer:
+                  type: string
+              required:
+                - Analyzer
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                AlarmsEnabled: true
+                EventsEnabled: true
+                MQTT:
+                  Enabled: false
+                  Export10M: false
+                  Export15M: false
+                  Export1H: false
+                  Export1M: true
+                  Export3S: true
+                  ExportAlarms: false
+                  ExportConfig: false
+                  Pass: ''
+                  Prefix: /OZM
+                  Server: 'mqtt://test.mosquitto.org'
+                  User: ''
+                MaxCurrent: 35
+                MinCurrent: 0.1
+                Mode: 1PHASE
+                Name: Unnamed analyzer
+                NominalFrequency: 50
+                NominalVoltage: 230
+                Online: true
+                SampleRate: 24000
+                Save200MS: true
+                Sync:
+                  Enabled: false
+                  Pass: ''
+                  Server: ''
+                  User: ''
+                Tags: []
+                TimeZone: UTC
+  /getStatus:
+    post:
+      summary: Get analyzer status
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - System
+                  - SystemLog
+                  - Log
+                  - Events
+                  - Alarms
+                  - Storage
+              properties:
+                Analyzer:
+                  type: string
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - System
+                      - SystemLog
+                      - Log
+                      - Events
+                      - Alarms
+                      - Storage
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              schema:
+                properties:
+                  Log:
+                    type: object
+                    properties:
+                      Debug_Total:
+                        type: number
+                      Error_Total:
+                        type: number
+                      Info_Total:
+                        type: number
+                      Warning_Total:
+                        type: number
+                      Messages:
+                        type: array
+                        items:
+                          type: object
+
+
+                  Alarms:
+                    type: object
+                    required:
+                      - Count
+                      - LastRead
+                    properties:
+                      Count:
+                        type: number
+                      LastRead:
+                        type: number
+                    example:
+                      Count: 0
+                      LastRead: 1599317246998
+                  Events:
+                    type: object
+                    properties:
+                      Count:
+                        type: number
+                      LastRead:
+                        type: number
+                    example:
+                      Count: 0
+                      LastRead: 1599317246998
+                  Online:
+                    type: boolean
+                    example: true
+                  OnlineTime:
+                    type: number
+                    example: 1599317246998
+                  Time:
+                    type: number
+                    example: 1599317246998
+                  SystemLog:
+                    type: string
+                required:
+                  - Online
+                  - OnlineTime
+                  - Time
+
+  /getSeries:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /getCosts:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.41
+  /getBills:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /getSeriesRange:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /delSeriesRange:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /getEvents:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /getEventsRange:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /delEventsRange:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /getEvent:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /setEvent:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /delEvent:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /testAlarm:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /getAlarms:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /getAlarmsRange:
+    post:
+      summary: Get analyzer serie
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: xxxxxxxxxx
+                Series:
+                  - Voltage
+                  - Current
+              properties:
+                Analyzer:
+                  type: string
+                Aggreg:
+                  type: string
+                  enum:
+                    - 200MS
+                    - 3S
+                    - 1M
+                    - 10M
+                    - 15M
+                    - 1H
+                From:
+                  type: number
+                To:
+                  type: number
+                Series:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - Voltage
+                      - Current
+                      - Active_Power
+                      - Reactive_Power
+                      - Active_Energy
+                      - Reactive_Energy
+                      - Voltage_Samples
+                      - Voltage_THD
+                      - Phi
+                      - Power_Factor
+              required:
+                - Analyzer
+                - Series
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - - Time
+                  - Voltage
+                - - 1599307199999
+                  - - 239.383
+                - - 1599310799999
+                  - - 241.35
+                - - 1599314399999
+                  - - 236.431
+  /delAlarm:
+    post:
+      summary: Delete alarm
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: VIRTUAL_3PN
+                AlarmID: alarm_UUID
+                Trigger: 1599314399999
+              properties:
+                Analyzer:
+                  type: string
+                AlarmID:
+                  type: string
+                Trigger:
+                  type: number
+              required:
+                - Analyzer
+                - AlarmID
+                - Trigger
+      responses:
+        '200':
+          description: On success
+        '400':
+          description: Missing or wrong params
+        '401':
+          description: Not logged in
+        '500':
+          description: 'Can not find alarm, can not write to database or other internal errors'
+  /delAlarmsRange:
+    post:
+      summary: Delete stored alarms in a date range
+      tags:
+        - Analyzers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Analyzer: VIRTUAL_3PN
+                From: 1599314399999
+                To: 1609314399999
+              properties:
+                Analyzer:
+                  type: string
+                From:
+                  type: number
+                To:
+                  type: number
+              required:
+                - Analyzer
+                - From
+                - To
+      responses:
+        '200':
+          description: On success
+        '400':
+          description: Missing or wrong params
+        '401':
+          description: Not logged in
+        '500':
+          description: 'Can not write to database or other internal errors'
+  /logIn:
+    post:
+      summary: Authorize to access the system
+      tags:
+        - System
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - UserName
+                - Password
+              example:
+                UserName: test
+                Password: test
+                UpdateLastLogin: true
+              properties:
+                UserName:
+                  type: string
+                Password:
+                  type: string
+                UpdateLastLogin:
+                  type: boolean
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                LastLogin: 1000000
+          headers:
+            Set-Cookie:
+              description: Cookie value for current session
+              schema:
+                type: string
+        '400':
+          description: On missing params
+        '401':
+          description: On invalid login params
+  /logOut:
+    post:
+      summary: Close active user session
+      tags:
+        - System
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {}
+            schema: {}
+      responses:
+        '200':
+          description: On success
+  /getDevices:
+    post:
+      summary: Get list of avaliable system devices
+      tags:
+        - Devices
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example: {}
+            schema: {}
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - Analyzers: 1
+                  Driver: V2
+                  Enabled: true
+                  Name: Capture device V2
+                  Serial: F100A1009034E42413032302
+  /getDevice:
+    post:
+      summary: Get device configuration (Each device driver have its own properties)
+      tags:
+        - Devices
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - Serial
+              example:
+                Serial: VIRTUAL
+              properties:
+                Serial:
+                  type: string
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                Current: 5
+                CurrentPhase: -10.1
+                Enabled: false
+                Frequency: 50
+                Mode: 3PHASE+N
+                SampleRate: 10000
+                Voltage: 230
+  /setDevice:
+    post:
+      summary: Set device configuration (Each device driver have its own properties)
+      tags:
+        - Devices
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - Serial
+              example:
+                Current: 5
+                CurrentPhase: -10.1
+                Enabled: true
+                Frequency: 60
+                Mode: 3PHASE+N
+                SampleRate: 10000
+                Voltage: 230
+                Serial: VIRTUAL
+              properties:
+                Serial:
+                  type: string
+      responses:
+        '200':
+          description: On success
+  /getBluetooth:
+    post:
+      summary: Get bluetooth configuration
+      tags:
+        - Bluetooth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example: {}
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                Enabled: true
+                Interface: br-bt
+                Name: openZmeter_xxxx
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '503':
+          description: Function not avaliable
+  /setBluetooth:
+    post:
+      summary: Set bluetooth configuration
+      tags:
+        - Bluetooth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - Enabled
+              example:
+                Enabled: true
+              properties:
+                Enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: On success
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '503':
+          description: Function not avaliable
+  /getVersion:
+    post:
+      summary: Get service version and compiled in functions
+      tags:
+        - System
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example: {}
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                Version: branch_yyyymmdd.hh.mm
+                Functions:
+                  - getVersion
+                  - getSeries
+        '401':
+          description: Not logged in
+  /getEthernet:
+    post:
+      summary: Get ethernet configuration
+      tags:
+        - Ethernet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example: {}
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                DNS:
+                  - 192.168.1.1
+                  - 8.8.8.8
+                Enabled: true
+                Gateway: 192.168.1.1
+                IP: 192.168.1.92
+                IPMode: DHCP
+                Netmask: 255.255.255.0
+                Status:
+                  Connected: true
+                  DNS:
+                    - 192.168.1.1
+                    - 8.8.8.8
+                    - 192.168.0.1
+                  Gateway: 192.168.0.1
+                  IP: 192.168.0.87
+                  IPMode: DHCP
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '500':
+          description: Configuration can not be read
+        '503':
+          description: Function not avaliable
+  /setEthernet:
+    post:
+      summary: Set ethernet configuration
+      tags:
+        - Ethernet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - DNS
+                - Enabled
+                - Gateway
+                - IP
+                - IPMode
+                - Netmask
+              example:
+                DNS:
+                  - 192.168.1.1
+                  - 8.8.8.8
+                Enabled: true
+                Gateway: 192.168.1.1
+                IP: 192.168.1.92
+                IPMode: DHCP
+                Netmask: 255.255.255.0
+              properties:
+                DNS:
+                  type: array
+                  items:
+                    type: string
+                Gateway:
+                  type: string
+                IP:
+                  type: string
+                IPMode:
+                  type: string
+                  enum:
+                    - STATIC
+                    - DHCP
+                Netmask:
+                  type: string
+                Enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: On success
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '500':
+          description: Configuration can not be saved
+        '503':
+          description: Function not avaliable
+  /getUpdates:
+    post:
+      summary: 'Get avaliable updates for installed packages. If ''Force'' is true, update package list from update server'
+      tags:
+        - Updates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Force: true
+              properties:
+                Force:
+                  type: boolean
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - From: '20191219.1025'
+                  Package: openZmeter-devel
+                  To: '20200509.2103'
+                - From: 2.16.6-1
+                  Package: libmbedtls
+                  To: 2.16.7-1
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '500':
+          description: Can not get avaliable updates
+        '503':
+          description: Function not avaliable
+  /setUpgrade:
+    post:
+      summary: Upgrade requested packages
+      tags:
+        - Updates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Packages:
+                  - openZmeter-devel
+              properties:
+                Pacakages:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Upgrading is taking place
+          content:
+            text/event-stream:
+              example: |+
+                event: text
+                data: console messages...
+
+                event: status
+                data: OK (Upgrade finished)
+
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '500':
+          description: Can not upgrade requested packages
+        '503':
+          description: Function not avaliable
+  /getUsers:
+    post:
+      summary: Get user list
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example: {}
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserListTemplate'
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+  /getUser:
+    post:
+      summary: Get user details
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                Name: admin
+              required:
+                - Name
+              properties:
+                Name:
+                  type: string
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTemplate'
+        '400':
+          description: Missing or wrong params
+        '401':
+          description: Not logged in
+        '403':
+          description: 'Not admin user, or requested user differs from calling one'
+        '500':
+          description: User not found
+  /setUser:
+    post:
+      summary: Update user details
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserTemplate'
+      responses:
+        '200':
+          description: On success
+        '400':
+          description: Missing or wrong params
+        '401':
+          description: Not logged in
+        '403':
+          description: 'Not admin user, or requested user differs from calling one'
+        '500':
+          description: Can not save user
+  /addUser:
+    post:
+      summary: Add user to system
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/UserTemplate'
+                - type: object
+                  properties:
+                    Password:
+                      type: string
+                  required:
+                    - Password
+                  example:
+                    Password: xxxx
+      responses:
+        '200':
+          description: On success
+        '400':
+          description: Missing or wrong param
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '500':
+          description: Can not save user
+  /setUserPassword:
+    post:
+      summary: Update user password
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - User
+                - Password
+              properties:
+                User:
+                  type: string
+                Password:
+                  type: string
+                PrevPassword:
+                  type: string
+                  description: Only needed if changing own password
+              example:
+                User: xxxx
+                Password: xxxx
+                PrevPassword: xxxx
+      responses:
+        '200':
+          description: On success
+        '400':
+          description: Missing or wrong param
+        '401':
+          description: Not logged in
+        '403':
+          description: 'Not admin user, or requested user differs from calling one'
+        '500':
+          description: Can not save user
+  /delUser:
+    post:
+      summary: Remove user
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                User:
+                  type: string
+              required:
+                - User
+              example:
+                User: xxxx
+      responses:
+        '200':
+          description: On success
+        '400':
+          description: Missing or wrong param
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '500':
+          description: Can not save user
+  /getWIFI:
+    post:
+      summary: Get WiFi configuration
+      tags:
+        - WIFI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example: {}
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                DNS:
+                  - 192.168.1.1
+                  - 8.8.8.8
+                ESSID: WIFI
+                Enabled: true
+                Gateway: 192.168.1.1
+                IP: 192.168.1.92
+                IPMode: DHCP
+                Key: xxxxxxxxxx
+                KeyMode: WPA2
+                Netmask: 255.255.255.0
+                Status:
+                  Channel: 11
+                  Connected: true
+                  DNS:
+                    - 192.168.1.1
+                    - 8.8.8.8
+                    - 192.168.0.1
+                  ESSID: WIFI
+                  Gateway: 192.168.0.1
+                  IP: 192.168.0.87
+                  IPMode: DHCP
+                  Quality: 68
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '500':
+          description: Configuration can not be read
+        '503':
+          description: Function not avaliable
+  /setWIFI:
+    post:
+      summary: Set bluetooth configuration
+      tags:
+        - WIFI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - DNS
+                - ESSID
+                - Enabled
+                - Gateway
+                - IP
+                - IPMode
+                - Key
+                - KeyMode
+                - Netmask
+              example:
+                DNS:
+                  - 192.168.1.1
+                  - 8.8.8.8
+                ESSID: WIFI
+                Enabled: true
+                Gateway: 192.168.1.1
+                IP: 192.168.1.92
+                IPMode: DHCP
+                Key: xxxxxxxxxx
+                KeyMode: WPA2
+                Netmask: 255.255.255.0
+              properties:
+                DNS:
+                  type: array
+                  items:
+                    type: string
+                ESSID:
+                  type: string
+                Gateway:
+                  type: string
+                IP:
+                  type: string
+                IPMode:
+                  type: string
+                  enum:
+                    - STATIC
+                    - DHCP
+                Key:
+                  type: string
+                KeyMode:
+                  type: string
+                  enum:
+                    - NONE
+                    - WEP
+                    - WPA
+                    - WPA2
+                Netmask:
+                  type: string
+                Enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: On success
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '500':
+          description: Configuration can not be saved
+        '503':
+          description: Function not avaliable
+  /getNTP:
+    post:
+      summary: Get NPT configuration
+      tags:
+        - NTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example: {}
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                Enabled: true
+                Server: hora.roa.es
+                Time: 1598430332332
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '503':
+          description: Function not avaliable
+  /setNTP:
+    post:
+      summary: 'Set NTP configuration, if Server is disabled, ''Time'' values is set as local UTC time'
+      tags:
+        - NTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - Enabled
+                - Server
+                - Time
+              example:
+                Enabled: true
+                Server: hora.roa.es
+                Time: 1598430332332
+              properties:
+                Enabled:
+                  type: boolean
+                Server:
+                  type: string
+                Time:
+                  type: number
+      responses:
+        '200':
+          description: On success
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+        '503':
+          description: Function not avaliable
+  /getTariffs:
+    post:
+      summary: Get configured tariffs list
+      tags:
+        - Tariffs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example: {}
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                - Name: ESP_2.0A
+                  UserName: admin
+                - Name: ESP_2.0DHA
+                  UserName: admin
+        '401':
+          description: Not logged in
+  /getTariff:
+    post:
+      summary: Get full tariff configuration
+      tags:
+        - Tariffs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - Name
+              example:
+                Name: 'ESP_2,0A'
+              properties:
+                Name:
+                  type: string
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/TariffTemplate'
+                  - type: object
+                    example:
+                      UserName: admin
+                    properties:
+                      UserName:
+                        type: string
+        '401':
+          description: Not logged in
+        '501':
+          description: Tariff name not found
+  /setTariff:
+    post:
+      summary: Update tariff configuration
+      tags:
+        - Tariffs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TariffTemplate'
+      responses:
+        '200':
+          description: On success
+        '401':
+          description: Not logged in
+        '501':
+          description: Tariff name not found
+  /addTariff:
+    post:
+      summary: Add tariff configuration
+      tags:
+        - Tariffs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TariffTemplate'
+      responses:
+        '200':
+          description: On success
+        '401':
+          description: Not logged in
+        '501':
+          description: Tariff name already exists
+  /delTariff:
+    post:
+      summary: remove tariff configuration
+      tags:
+        - Tariffs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                Name: ESP_2.0A
+              properties:
+                Name:
+                  type: string
+              required:
+                - Name
+      responses:
+        '200':
+          description: On success
+        '400':
+          description: On missing params
+        '401':
+          description: Not logged in
+        '501':
+          description: Tariff name not found or not owned by calling user
+  /getESIOS:
+    post:
+      summary: Get ESIOS price fetch module configuration
+      tags:
+        - Price modules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              example: {}
+      responses:
+        '200':
+          description: On success
+          content:
+            application/json:
+              example:
+                Enabled: false
+                LastDate: 1262304000000
+                Token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
+  /setESIOS:
+    post:
+      summary: Set ESIOS price fecth module configuration
+      tags:
+        - Price modules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              required:
+                - Enabled
+                - Token
+              example:
+                Enabled: true
+                Token: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+              properties:
+                Enabled:
+                  type: boolean
+                Token:
+                  type: string
+      responses:
+        '200':
+          description: On success
+        '401':
+          description: Not logged in
+        '403':
+          description: Not admin user
