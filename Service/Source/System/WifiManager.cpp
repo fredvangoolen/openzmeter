@@ -20,9 +20,11 @@
 #include "MessageLoop.h"
 #include "ConfigFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
-string           WifiManager::pInterfaceWIFI = "wlan0";
-string           WifiManager::pNetworkWIFI   = "lan";
-string           WifiManager::pWirelessWIFI  = "default_radio";
+WifiManager::WifiStat WifiManager::pWifiStat      = WifiManager::DISABLED;
+pthread_mutex_t       WifiManager::pMutex         = PTHREAD_MUTEX_INITIALIZER;
+string                WifiManager::pInterfaceWIFI = "wlan0";
+string                WifiManager::pNetworkWIFI   = "lan";
+string                WifiManager::pWirelessWIFI  = "default_radio";
 // ---------------------------------------------------------------------------------------------------------------------
 WifiManager::WifiManager() {
   LogFile::Info("Starting WifiManager...");
@@ -36,6 +38,7 @@ WifiManager::WifiManager() {
   Config["Interface"] = pInterfaceWIFI;
   Config["Network"] = pNetworkWIFI;
   Config["Config"] = pWirelessWIFI;
+  PeriodicTasks();
   ConfigFile::WriteConfig("/WIFI", Config);
   MessageLoop::RegisterListener("WIFI_PeriodicTasks", PeriodicTasks, 5000);
   HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
@@ -52,43 +55,50 @@ WifiManager::~WifiManager() {
   LogFile::Info("WifiManager stoped");
 }
 void WifiManager::PeriodicTasks() {
-  json Params = json::object();
-  Params["device"] = pInterfaceWIFI;
-  json Result = SystemManager::uBusCall("iwinfo", "info", Params);
-  //LogFile::SetValue("WifiManager", "/Network", ((Result == nullptr) || (Result.is_object() == false) || (Result["ssid"].is_string() == false)) ? json() : Result["ssid"]);
-  //LogFile::SetValue("WifiManager", "/WIFI_Power", ((Result == nullptr) || (Result.is_object() == false) || (Result["quality"].is_number() == false) || (Result["quality_max"].is_number() == false)) ? json() : json(Result["quality"].get<int>() * 100.0 / Result["quality_max"].get<int>()));
+  WifiStat Stat = DISABLED;
+  json Result = SystemManager::uBusCall("uci", "get", { {"config", "network"}, {"section", pNetworkWIFI} });
+  if(Result.is_object() && Result.contains("values") && Result["values"].is_object() && Result["values"].contains("enabled") && Result["values"]["enabled"].is_string()) {
+    Stat = (Result["values"]["enabled"] == "1") ? CONFIGURED : DISABLED;
+    Result = SystemManager::uBusCall("network.interface", "status", { {"interface", pNetworkWIFI} });
+    if(Result.is_object() && Result.contains("up") && Result["up"].is_boolean()) {
+      Stat = (Result["up"] == true) ? CONNECTED : CONFIGURED;
+      int Code;
+      SystemManager::Exec("ping -c 1 8.8.8.8", &Code);
+      Stat = (Code == 0) ? INTERNET : CONNECTED;
+    }
+  }
+  pthread_mutex_lock(&pMutex);
+  pWifiStat = Stat;
+  pthread_mutex_unlock(&pMutex);
+
+}
+WifiManager::WifiStat WifiManager::Enabled() {
+  pthread_mutex_lock(&pMutex);
+  WifiStat Stat = pWifiStat;
+  pthread_mutex_unlock(&pMutex);
+  return Stat;
 }
 void WifiManager::ScanWIFICallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::array();
-  string CommandStr = SystemManager::Exec("ubus call iwinfo scan '{\"device\":\"" + pInterfaceWIFI + "\"}'");
-  if(CommandStr.empty() == false) {
-    json Tmp = json::parse(CommandStr, NULL, false);
-    if((Tmp.is_discarded() == true) || (Tmp.is_object() == false) || (Tmp["results"].is_array() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-    for(uint Pos = 0; Pos < Tmp["results"].size(); Pos++) {
-      json AP = json::object();
-      if(Tmp["results"][Pos]["ssid"].is_string()) AP["ESSID"] = Tmp["results"][Pos]["ssid"];
-      if(Tmp["results"][Pos]["channel"].is_number()) AP["Channel"] = Tmp["results"][Pos]["channel"];
-      if(Tmp["results"][Pos]["quality"].is_number() && Tmp["results"][Pos]["quality_max"].is_number()) {
-        float Current = Tmp["results"][Pos]["quality"], Max = Tmp["results"][Pos]["quality_max"];
-        AP["Quality"] = (int)(Current * 100.0 / Max);
-      }
-      Result.push_back(AP);
+  json Tmp = SystemManager::uBusCall("iwinfo", "scan", {{"device", pInterfaceWIFI}});
+  if((Tmp.is_object() == false) || (Tmp["results"].is_array() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  for(uint Pos = 0; Pos < Tmp["results"].size(); Pos++) {
+    json AP = json::object();
+    if(Tmp["results"][Pos]["ssid"].is_string()) AP["ESSID"] = Tmp["results"][Pos]["ssid"];
+    if(Tmp["results"][Pos]["channel"].is_number()) AP["Channel"] = Tmp["results"][Pos]["channel"];
+    if(Tmp["results"][Pos]["quality"].is_number() && Tmp["results"][Pos]["quality_max"].is_number()) {
+      float Current = Tmp["results"][Pos]["quality"], Max = Tmp["results"][Pos]["quality_max"];
+      AP["Quality"] = (int)(Current * 100.0 / Max);
     }
+    Result.push_back(AP);
   }
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void WifiManager::GetWIFICallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::object();
-  string CommandStr = SystemManager::Exec("ubus call network.device status '{\"name\":\"" + pInterfaceWIFI + "\"}'");
-  if(CommandStr.empty() == false) {
-    json Tmp = json::parse(CommandStr, NULL, false);
-    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-    if(Tmp.is_object() && Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
-    if(Result["Enabled"] == false) return HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
-  }
-  CommandStr = SystemManager::Exec("ubus call uci get '{\"config\":\"network\", \"section\":\"" + pNetworkWIFI + "\"}'");
+  string CommandStr = SystemManager::Exec("ubus call uci get '{\"config\":\"network\", \"section\":\"" + pNetworkWIFI + "\"}'");
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
@@ -104,6 +114,8 @@ void WifiManager::GetWIFICallback(const json &params, Response &response) {
         if(Tmp["values"]["gateway"].is_string()) Result["Gateway"] = Tmp["values"]["gateway"];
         Result["DNS"] = json::array();
         if(Tmp["values"]["dns"].is_array()) Result["DNS"] = Tmp["values"]["dns"];
+        Result["Enabled"] = false;
+        if(Tmp["values"]["enabled"].is_string()) Result["Enabled"] = (Tmp["values"]["enabled"] == "1");
       }
     }
   }
@@ -197,4 +209,7 @@ void WifiManager::SetWIFICallback(const json &params, Response &response) {
 #else // ===============================================================================================================
 WifiManager::WifiManager() {}
 WifiManager::~WifiManager() {}
+WifiManager::WifiStat WifiManager::Enabled() {
+  return WifiManager::DISABLED;
+}
 #endif // ==============================================================================================================

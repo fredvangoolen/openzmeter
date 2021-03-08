@@ -58,7 +58,7 @@ bool SystemManager::ReadFile(const string filename, string &res) {
   }
 }
 void SystemManager::PeriodicTasks() {
-  json           Status = json::object();
+  json   Status = json::object();
   string File;
   if(ReadFile("/proc/stat", File) == true) {
     istringstream Stream(File);

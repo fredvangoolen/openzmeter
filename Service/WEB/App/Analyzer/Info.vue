@@ -62,6 +62,7 @@
     computed: {
       Messages: function() {
         var Text = '';
+        if(this.TransferStatus.Data == null) return Text;
         for(var n = 1; n < this.TransferStatus.Data.Log.Messages.length; n++) {
           Text += this.TransferStatus.Data.Log.Messages[n][0] + ' - ';
           Text += moment(this.TransferStatus.Data.Log.Messages[n][1]).format('DD/MM/YYYY - HH:mm:ss') + ' - ';

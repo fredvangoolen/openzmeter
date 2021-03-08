@@ -18,21 +18,31 @@
 #include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class WifiManager final {
+  public :
+    enum WifiStat {DISABLED, CONFIGURED, CONNECTED, INTERNET};
   private :
-    static string      pInterfaceWIFI;
-    static string      pNetworkWIFI;
-    static string      pWirelessWIFI;
+    static WifiStat        pWifiStat;
+    static pthread_mutex_t pMutex;
+    static string          pInterfaceWIFI;
+    static string          pNetworkWIFI;
+    static string          pWirelessWIFI;
   private :
-    static void PeriodicTasks();
-    static void GetWIFICallback(const json &params, Response &response);
-    static void SetWIFICallback(const json &params, Response &response);
-    static void ScanWIFICallback(const json &params, Response &response);
+    static void     PeriodicTasks();
+    static void     GetWIFICallback(const json &params, Response &response);
+    static void     SetWIFICallback(const json &params, Response &response);
+    static void     ScanWIFICallback(const json &params, Response &response);
+  public :
+    static WifiStat Enabled();
   public :
     WifiManager();
     ~WifiManager();
 };
 #else // ===============================================================================================================
 class WifiManager final {
+  public :
+    enum WifiStat {DISABLED, ENABLED, CONNECTED, INTERNET};
+  public :
+    static WifiStat Enabled();
   public :
     WifiManager();
     ~WifiManager();
