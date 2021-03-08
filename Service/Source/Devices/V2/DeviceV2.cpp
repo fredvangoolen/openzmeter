@@ -22,6 +22,7 @@
 #include "Tools.h"
 #include "MessageLoop.h"
 #include "BluetoothManager.h"
+#include "WifiManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 bool DeviceV2::pRegistered = DeviceV2::Register();
 //----------------------------------------------------------------------------------------------------------------------
@@ -334,18 +335,27 @@ void *DeviceV2::Thread() {
     if(pTerminate == true) continue;
     if((pDeviceHandle != NULL) && (TimeCounter++ > 50)) {
       TimeCounter = 0;
-      uint16_t Status = 0x0006; //Stat=GREEN y Wifi=RED
-//      SysSupport::SystemStatus_t *SysStatus = SysSupport::GetSystemStatus();
-//      SysStatus->Lock.ReadLock();
-//      if(SysStatus->RAM_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;              //Stat=YELLOW
-//      if(SysStatus->CPU_Usage > 70.0) Status = (Status & 0xFFFC) | 0x0003;              //Stat=YELLOW
-//      if(SysStatus->Disk_Usage > 90.0) Status = (Status & 0xFFFC) | 0x0003;             //Stat=YELLOW
-//      if(SysStatus->Time_IsSet == false) Status = (Status & 0xFFFC) | 0x0001;           //Stat=RED
-//      if(SysStatus->Events == true) Status = (Status & 0xC01C) | 0x0021;                //Stat=RED and short BEEP
-//      if(SysStatus->WIFI_Network.empty() == false) Status = (Status & 0xFFF3) | 0x000C; //Wifi=GREEN
-      if(BluetoothManager::Enabled() == true) Status = (Status & 0xFFEF) | 0x0010;   //Bt=BLUE
-//      SysStatus->Lock.Unlock();
-      Status |= (pHighGain == true) ? 0x4000 : 0x0000;
+      uint16_t Status = 0x0000;
+      if(pEnabled == false) {
+        Status |= 0x0001;
+      } else {
+        bool Online = true;
+        for(auto &Tmp : pAnalyzers) {
+          if(Tmp->Online() == false) Online = false;
+        }
+        Status |= (Online ? 0x0002 : 0x0003);
+      }
+      WifiManager::WifiStat WifiStat = WifiManager::Enabled();
+      if(WifiStat == WifiManager::CONFIGURED) {
+        Status |= 0x0004;
+      } else if(WifiStat == WifiManager::CONNECTED) {
+        Status |= 0x000C;
+      } else if(WifiStat == WifiManager::INTERNET) {
+        Status |= 0x0008;
+      }
+      if(BluetoothManager::Enabled()) Status |= 0x0010;
+      if((Tools::GetTime64() - pLastEvent) < 2000) Status |= 0x0020;
+      if(pHighGain == true) Status |= 0x4000;
       SignalTransfer->Submit(&Status, sizeof(Status));
       pSubmittedTransfers++;
     }
@@ -448,7 +458,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
         } else if((Action == LONG_CLICK) && (pButtonAction == false)) {
           MessageLoop::SendMessage("PowerOff");
         }
-        pButtonAction = (Action == NONE);
+        pButtonAction = (Action != NONE);
         StatusRecv = true;
       } else if(pCaptureSize == Seq) {
         pCapture[pCaptureSize] = Sample - 4096;

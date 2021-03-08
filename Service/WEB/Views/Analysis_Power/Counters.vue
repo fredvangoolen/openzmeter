@@ -85,7 +85,6 @@
         var TimeCol = this.dataGraph.Headers.indexOf('Time');
         var ActiveCol = this.dataGraph.Headers.indexOf('Active_Power');
         var ReactiveCol = this.dataGraph.Headers.indexOf('Reactive_Power');
-        var ContractedCol = this.dataGraph.Headers.indexOf('Power_Contracted');
         for(var x in this.dataGraph.Rows) {
           if((this.serie == 'Active_Power') && (this.dataGraph.Rows[x][ActiveCol] == null)) continue;
           if((this.serie == 'Reactive_Power') && (this.dataGraph.Rows[x][ReactiveCol] == null)) continue;
@@ -109,16 +108,15 @@
       },
       FormatSum: function(val) {
         var Sum = 0;
-        for(var n in val['Active_Power']) Sum = Sum + (this.serie == 'Active_Power') ? val.Active_Power[n] : (this.serie == 'Reactive_Power') ? val.Reactive_Power[n] : Math.sqrt(Math.pow(val.Active_Power[n], 2.0) + Math.pow(val.Reactive_Power[n], 2.0));
+        for(var n in val.Active_Power) Sum = Sum + ((this.serie == 'Active_Power') ? val.Active_Power[n] : (this.serie == 'Reactive_Power') ? val.Reactive_Power[n] : Math.sqrt(Math.pow(val.Active_Power[n], 2.0) + Math.pow(val.Reactive_Power[n], 2.0)));
         return this.FormatHTML(Sum);
       },
-      FormatPhases: function(values) {
-        var Return = '';
-        if(values.length > 1) {
-          for(var n = 0; n < values.length; n++) {
-            var Format = oZm.Series[this.variable].FormatValue(values[n]);
-            Return += Format.Value + Format.Units +'<br>';
-          }
+      FormatPhases: function(val) {
+        var Return = [];
+        if(this.serie == 'Apparent_Power') {
+          for(var n in val.Active_Power) Return.push(this.FormatHTML(Math.sqrt(Math.pow(val.Active_Power[n], 2.0) + Math.pow(val.Reactive_Power[n], 2.0))));
+        } else {
+          for(var n in val.Active_Power) Return.push(this.FormatHTML(val[this.serie][n]));
         }
         return Return;
       },

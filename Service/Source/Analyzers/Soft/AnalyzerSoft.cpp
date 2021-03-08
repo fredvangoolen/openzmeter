@@ -129,6 +129,8 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
 }
 void AnalyzerSoft::Config(const json &options) {
   ConfigFile::WriteConfig(pConfigPath, options);
+  Configured(false);
+  Online(false);
   Name(options["Name"]);
   pthread_mutex_lock(&pMutex);
   pNominalVoltage   = options["NominalVoltage"];
