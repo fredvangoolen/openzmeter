@@ -33,11 +33,13 @@ class SystemManager final {
     static bool     ReadFile(const string filename, string &res);
     static void     GetSystemCallback(const json &params, Response &response);
     static void     GetLogCallback(const json &params, Response &response);
+    static void     GetSystemLogCallback(const json &params, Response &response);
   public :
     static string Exec(const string &command, int *resultCode = NULL);
     static json   uBusCall(const string &path, const string &method, const json &params = nullptr);
   public :
-    static json ToJSON();
+    static json   ToJSON();
+    static string SystemLog();
   public :
     SystemManager();
     ~SystemManager();
@@ -47,7 +49,8 @@ class SystemManager final {
   private :
     static void GetLogCallback(const json &params, Response &response);
   public :
-    static json ToJSON();
+    static json   ToJSON();
+    static string SystemLog();
   public :
     SystemManager();
     ~SystemManager();

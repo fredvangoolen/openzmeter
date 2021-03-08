@@ -30,12 +30,14 @@ SystemManager::SystemManager() {
   MessageLoop::RegisterListener("PowerOff", PowerOff);
   HTTPServer::RegisterCallback("getSystem", GetSystemCallback);
   HTTPServer::RegisterCallback("getLog", GetLogCallback);
+  HTTPServer::RegisterCallback("getSystemLog", GetSystemLogCallback);
 }
 SystemManager::~SystemManager() {
   MessageLoop::UnregisterListener("SystemManager_PeriodicTasks");
   MessageLoop::UnregisterListener("PowerOff");
   HTTPServer::UnregisterCallback("getSystem");
   HTTPServer::UnregisterCallback("getLog");
+  HTTPServer::UnregisterCallback("getSystemLog");
 }
 uint64_t SystemManager::ParseProcMem(const string &name, const string &buff) {
   auto Pos = buff.find(name + ":");
@@ -134,6 +136,8 @@ json SystemManager::uBusCall(const string &path, const string &method, const jso
   return Tmp;
 }
 void SystemManager::GetSystemCallback(const json &params, Response &response) {
+  string UserName = params["UserName"];
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   pthread_mutex_lock(&pMutex);
   HTTPServer::FillResponse(response, pStatus.dump(), "application/json", HTTP_OK);
   pthread_mutex_unlock(&pMutex);
@@ -145,7 +149,17 @@ json SystemManager::ToJSON() {
   return Status;
 }
 void SystemManager::GetLogCallback(const json &params, Response &response) {
+  string UserName = params["UserName"];
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   HTTPServer::FillResponse(response, LogFile::ToJSON().dump(), "application/json", HTTP_OK);
+}
+void SystemManager::GetSystemLogCallback(const json &params, Response &response) {
+  string UserName = params["UserName"];
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  HTTPServer::FillResponse(response, SystemLog(), "text/plain", HTTP_OK);
+}
+string SystemManager::SystemLog() {
+  return Exec("logread");
 }
 #else // ===============================================================================================================
 SystemManager::SystemManager() {
@@ -159,5 +173,8 @@ void SystemManager::GetLogCallback(const json &params, Response &response) {
 }
 json SystemManager::ToJSON() {
   return json::object();
+}
+string SystemManager::SystemLog() {
+  return "";
 }
 #endif // ==============================================================================================================

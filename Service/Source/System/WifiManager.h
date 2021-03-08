@@ -40,7 +40,7 @@ class WifiManager final {
 #else // ===============================================================================================================
 class WifiManager final {
   public :
-    enum WifiStat {DISABLED, ENABLED, CONNECTED, INTERNET};
+    enum WifiStat {DISABLED, CONFIGURED, CONNECTED, INTERNET};
   public :
     static WifiStat Enabled();
   public :
