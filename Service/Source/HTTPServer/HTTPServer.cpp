@@ -33,6 +33,7 @@
 #include "Worker.h"
 //----------------------------------------------------------------------------------------------------------------------
 map<string, HTTPServer::Func1_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
+map<string, json>                __attribute__((init_priority(200))) HTTPServer::pComponents;
 pthread_rwlock_t                                                     HTTPServer::pLock = PTHREAD_RWLOCK_INITIALIZER;
 string                                                               HTTPServer::pRelativePath = "/";
 string                                                               HTTPServer::pLogoImg = "iVBORw0KGgoAAAANSUhEUgAAAPgAAAAcCAMAAAB72oKtAAABFFBMVEUAAAD////////////////////////////86eH////////////////////////////pcBz//////////v7////////////////////////ocBz////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////mbB7////////////pcBrpcBzmbx3pcBvpcBzocBvpcRzpcBvyrYDocBvobxvocBzocRzpcBzpbhzmbx3pbxvsbx3ncBznch7piz3////ocBxhu/u6AAAAWnRSTlMA5P3f7gXr5gP16PnbQ+H34/LYGQjV0s0/LuDColVMKBCJWyK3ppd+OhPGv4QyqxYNCp6aaSWyjnIryZNtNmMedhBHvHpQ7z7q5bwc+E7WM8imY0WGdiiSdy5XSb+iAAAIGklEQVRYw9VXZ7cSMRCd7LKNLUh7gFSp0qXDE33Ye+/r//8fZibZgkeeejzHo/cLmyE7mTuZuckC4cbYLfYhBnPnuq3YuDZhtuKMpvC38PRKDI/fwW/C1OAXUJ+kfN+3K/XA0Lim+xzlmhxnh75A6mDC38HLrzE8fAS/hfpC/5Utup0KaG2FoaT6Ep0Gjlc4lmjfgL8B80qc+Gv4HTTzSd+Bn2OpRLTmuKG3EpHhbMrzx/wYyn+F+auHssofct5PnsHvII/7Az/FfZ8QMS+m44b8VPP8I5Q1+Ht48Pjr1+eff69YeLzKHn6Km8QmOZT0RlCjCrAGBWEY5KpoUObN29KygF9Ao7npLG5npXZe3y5hN+os9jHBzN0dVRbb6yQaF7XNTWhUu51u9Sitd67yDX+JT333fgVa+3ln4/I36odKp1eHAK3lzc6oKdTZbSY5naXrug0g7LbdSq8q6jTLzUWzuOn0aqCVOaueBtqeWl2pQg9LhXspqqII4BrPQw1zOfIJS/gZ+hNGeskqyOOgJ3x1mETvRrshE7PwqLISmTHvyoTle116xXJKcW3HQv/IH8Z62tfLBm5BOlMsJ/EhWQHC3TOy26xr8hzolsKfLctKXFDDOzQ3xe7j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";
@@ -58,7 +59,8 @@ HTTPServer::HTTPServer() {
   Config["RelativePath"] = pRelativePath;
   ConfigFile::WriteConfig("/HTTPServer", Config);
   pLogoImg = Tools::DecodeBase64(Logo);
-  RegisterCallback("getVersion", GetVersionCallback);
+  RegisterCallback("getVersion", GetVersionCallback, DocGetVersion);
+  RegisterCallback("getAPI", GetAPICallback, DocGetAPI);
   MessageLoop::RegisterListener("HTTPServer_PeriodicTasks", PeriodicTasks, 60000);
   if(pthread_create(&pThread, NULL, [](void *params) { return ((HTTPServer*)params)->Thread(); }, (void*)this) != 0) {
     pThread = 0;
@@ -70,6 +72,8 @@ HTTPServer::HTTPServer() {
 HTTPServer::~HTTPServer() {
   LogFile::Debug("Stopping HTTPServer");
   MessageLoop::UnregisterListener("HTTPServer_PeriodicTasks");
+  UnregisterCallback("getVersion");
+  UnregisterCallback("getAPI");
   stop();
   if(pThread != 0) pthread_join(pThread, NULL);
   LogFile::Debug("HTTPServer stopped");
@@ -92,14 +96,26 @@ void HTTPServer::FillResponse(Response &response, const char *body, const size_t
   response.set_content(body, size, mime);
   response.status = status;
 }
-void HTTPServer::RegisterCallback(const string &handleName, const Func1_t function) {
+void HTTPServer::RegisterCallback(const string &handleName, const Func1_t function, const json &doc) {
   pthread_rwlock_wrlock(&pLock);
   pCallbacks.insert({handleName, function});
+  pComponents.insert({handleName, doc});
   pthread_rwlock_unlock(&pLock);
 }
 void HTTPServer::UnregisterCallback(const string &handleName) {
   pthread_rwlock_wrlock(&pLock);
   pCallbacks.erase(handleName);
+  pComponents.erase(handleName);
+  pthread_rwlock_unlock(&pLock);
+}
+void HTTPServer::RegisterDoc(const string &name, const json &content) {
+  pthread_rwlock_wrlock(&pLock);
+  pComponents.insert({name, content});
+  pthread_rwlock_unlock(&pLock);
+}
+void HTTPServer::UnregisterDoc(const string &name) {
+  pthread_rwlock_wrlock(&pLock);
+  pComponents.erase(name);
   pthread_rwlock_unlock(&pLock);
 }
 string HTTPServer::ParseCookie(const string &cookie) {
@@ -147,6 +163,15 @@ void HTTPServer::GetVersionCallback(const json &params, Response &response) {
   pthread_rwlock_unlock(&pLock);
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
+void HTTPServer::GetAPICallback(const json &params, Response &response) {
+  pthread_rwlock_rdlock(&pLock);
+  json Result = DocBase;
+  Result["servers"].push_back({{ "url", pRelativePath }});
+  Result["info"]["version"] = __BUILD__;
+  for(auto &Component : pComponents) Result.merge_patch(Component.second);
+  pthread_rwlock_unlock(&pLock);
+  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+}
 void HTTPServer::LogInCallback(const json &params, Response &response) {
   if((params.contains("Password") == false) || (params["Password"].is_string() == false)) return FillResponse(response, "'Password' param requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("UserName") == false) || (params["UserName"].is_string() == false)) return FillResponse(response, "'UserName' param requiered", "text/plain", HTTP_BAD_REQUEST);
@@ -164,7 +189,7 @@ void HTTPServer::LogInCallback(const json &params, Response &response) {
     if(UpdateLastLogin) DB.ExecSentenceNoResult("UPDATE users SET lastlogin = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(User));
     return FillResponse(response, Response.dump(), "application/json", HTTP_OK);
   }
-  return FillResponse(response, "", "application/json", HTTP_UNAUTHORIZED);
+  return FillResponse(response, "", "text/plain", HTTP_UNAUTHORIZED);
 }
 void HTTPServer::LogOutCallback(const Request &request, Response &response) {
   if(request.has_header("Cookie")) {
@@ -174,7 +199,7 @@ void HTTPServer::LogOutCallback(const Request &request, Response &response) {
       DB.ExecSentenceNoResult("DELETE FROM sessions WHERE id = " + DB.Bind(Cookie));
     }
   }
-  return FillResponse(response, "", "application/json", HTTP_OK);
+  return FillResponse(response, "", "text/plain", HTTP_OK);
 }
 void HTTPServer::HandleGet(const Request &request, Response &response) {
   string URL      = string(request.path).erase(0, pRelativePath.size());

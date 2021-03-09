@@ -106,7 +106,6 @@ void SystemManager::PeriodicTasks() {
   if(ReadFile("/sys/class/thermal/thermal_zone0/temp", File) == true) {
     Status["Temperature"] = atoi(File.c_str()) / 1000.0;
   }
-  Status["Time"] = Tools::GetTime64();
   pthread_mutex_lock(&pMutex);
   pStatus = Status;
   pthread_mutex_unlock(&pMutex);

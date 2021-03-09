@@ -15,9 +15,8 @@
       return { ShowSpinner: true };
     },
     mounted: function() {
-      this.$http.get('API.json').then(
+      this.$http.post('getAPI', {}).then(
         (result) => {
-          result.data.servers[0].url = document.baseURI;
           this.$refs.api.loadSpec(result.data);
           this.ShowSpinner = false;
         },
