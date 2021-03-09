@@ -60,3 +60,105 @@ class AnalyzerManager final {
     ~AnalyzerManager();
 };
 //----------------------------------------------------------------------------------------------------------------------
+
+// Module OpenAPI documentation ========================================================================================
+static const auto DocAnalyzer = R"({
+  "tags": [ { "name": "Analyzers", "description": "Analyzer information queries" } ],
+  "components": {
+    "schemas": {
+      "AnalyzerListTemplate": {
+        "type": "object",
+        "properties": {
+          "Analyzer": { "type": "string" },
+          "Config": { "type": "boolean" },
+          "Name": { "type": "string" },
+          "Online": { "type": "boolean" },
+          "Read": { "type": "boolean" },
+          "User": { "type": "string" },
+          "Write": { "type": "boolean" }
+        },
+        "required": [ "Analyzer", "Config", "Name", "Online", "Read", "User", "Write" ],
+        "example": {
+          "Analyzer": "VIRTUAL_3PN",
+          "Config": true,
+          "Name": "Unnamed analyzer",
+          "Online": false,
+          "Read": true,
+          "User": "admin",
+          "Write": true
+        }
+      },
+      "AlarmTemplate": {
+        "type": "object",
+        "properties": {
+          "Enabled": { "type": "boolean" },
+          "Name": { "type": "string" },
+          "Priority": { "type": "number" },
+          "Expression": { "type": "string" },
+          "Aggreg": { "type": "string", "enum": [ "200MS", "3S", "1M", "10M", "15M", "1H" ] },
+          "Samples": { "type": "number" },
+          "Window": { "type": "number" }
+        },
+        "example": {
+          "Enabled": true,
+          "Name": "Alarm1",
+          "Priority": 0,
+          "Expression": "Active_Power>100",
+          "Aggreg": "3S",
+          "Samples": 10,
+          "Window": 20
+        }
+      }
+    }
+  }
+})"_json;
+static const auto GetAnalyzers = R"({
+  "paths": {
+    "/getAnalyzers": {
+      "post": {
+        "summary": "Get list of avaliable analyzers",
+        "tags": [ "Analyzers" ],
+        "requestBody": { "$ref": "#/components/requestBodies/EmptyObject" },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items" : { "$ref": "#/components/schemas/AnalyzerListTemplate" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/401Response" }
+        }
+      }
+    }
+  }
+})"_json;
+
+//    static void GetAnalyzerCallback(const json &params, Response &response);
+//    static void SetAnalyzerCallback(const json &params, Response &response);
+//    static void GetStatusCallback(const json &params, Response &response);
+//    static void GetSeriesCallback(const json &params, Response &response);
+//    static void GetSeriesNowCallback(const json &params, Response &response);
+//    static void GetCostsCallback(const json &params, Response &response);
+//    static void GetBillsCallback(const json &params, Response &response);
+//    static void GetWaveStream(const json &params, Response &response);
+//    static void GetSeriesRangeCallback(const json &params, Response &response);
+//    static void DelSeriesRangeCallback(const json &params, Response &response);
+//    static void GetEventsCallback(const json &params, Response &response);
+//    static void GetEventsRangeCallback(const json &params, Response &response);
+//    static void DelEventsRangeCallback(const json &params, Response &response);
+//    static void GetEventCallback(const json &params, Response &response);
+//    static void SetEventCallback(const json &params, Response &response);
+//    static void DelEventCallback(const json &params, Response &response);
+//    static void TestAlarmCallback(const json &params, Response &response);
+//    static void GetAlarmsCallback(const json &params, Response &response);
+//    static void GetAlarmsRangeCallback(const json &params, Response &response);
+//    static void DelAlarmCallback(const json &params, Response &response);
+//    static void SetAlarmCallback(const json &params, Response &response);
+//    static void DelAlarmsRangeCallback(const json &params, Response &response);
+//    static void SetRemoteCallback(const json &params, Response &response);
+//======================================================================================================================

@@ -68,6 +68,7 @@ static const auto DocGetBluetooth = R"({
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": [ "Enabled", "Running", "Interface", "Name" ],
                   "properties": {
                     "Enabled": { "type": "boolean" },
                     "Running": { "type": "boolean" },

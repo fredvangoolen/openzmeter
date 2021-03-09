@@ -190,6 +190,7 @@ static const auto DocBase = R"({
                   "properties": {
                     "LastLogin": { "type": "number" }
                   },
+                  "required": [ "LastLogin" ],
                   "example": {
                     "LastLogin": 1000000
                   }
@@ -240,6 +241,7 @@ static const auto DocGetVersion = R"({
                     "Version": { "type": "string" },
                     "Functions": { "type": "array", "items": { "type": "string" }}
                   },
+                  "required": [ "Version", "Functions" ],
                   "example": {
                     "Version": "branch_yyyymmdd.hh.mm",
                     "Functions": [ "getVersion", "getSeries" ]
