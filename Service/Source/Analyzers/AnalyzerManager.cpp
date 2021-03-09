@@ -23,7 +23,8 @@ map<string, Analyzer*>  AnalyzerManager::pAnalyzers;
 pthread_rwlock_t        AnalyzerManager::pAnalyzersLock = PTHREAD_RWLOCK_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerManager::AnalyzerManager() {
-  HTTPServer::RegisterCallback("getAnalyzers",    GetAnalyzersCallback);
+  HTTPServer::RegisterDoc("Analyzer", DocAnalyzer);
+  HTTPServer::RegisterCallback("getAnalyzers",    GetAnalyzersCallback,   GetAnalyzers);
   HTTPServer::RegisterCallback("getAnalyzer",     GetAnalyzerCallback);
   HTTPServer::RegisterCallback("setAnalyzer",     SetAnalyzerCallback);
   HTTPServer::RegisterCallback("getStatus",       GetStatusCallback);

@@ -61,41 +61,6 @@
         "type": "object",
         "properties": {}
       },
-      "AlarmTemplate": {
-        "type": "object",
-        "properties": {
-          "Enabled": {
-            "type": "boolean"
-          },
-          "Name": {
-            "type": "string"
-          },
-          "Priority": {
-            "type": "number"
-          },
-          "Expression": {
-            "type": "string"
-          },
-          "Aggreg": {
-            "type": "string"
-          },
-          "Samples": {
-            "type": "number"
-          },
-          "Window": {
-            "type": "number"
-          }
-        },
-        "example": {
-          "Enabled": true,
-          "Name": "Alarm1",
-          "Priority": 0,
-          "Expression": "ActivePower>100",
-          "Aggreg": "3S",
-          "Samples": 10,
-          "Window": 20
-        }
-      },
       "RateTemplate": {
         "type": "object"
       },
@@ -634,10 +599,6 @@
   },
   "tags": [
     {
-      "name": "Analyzers",
-      "description": "Analyzer information queries"
-    },
-    {
       "name": "Devices",
       "description": "Devices configuration and listing"
     },
@@ -679,39 +640,6 @@
     }
   ],
   "paths": {
-    "/getAnalyzers": {
-      "post": {
-        "summary": "Get list of avaliable analyzers",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "example": {},
-              "schema": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": [
-                  {
-                    "Analyzer": "VIRTUAL_3PN",
-                    "Name": "Unnamed analyzer",
-                    "Online": false
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
     "/getAnalyzer": {
       "post": {
         "summary": "Get analyzer details",

@@ -149,15 +149,15 @@ void AnalyzerSoftAggreg::muParserInit(Parser &parser, const string &expression) 
   parser.DefineVar("Frequency", &pFrequency);
   AppendArray("Voltage", pVoltage, pVoltageChannels);
   AppendArray("Current", pCurrent, pCurrentChannels);
-  AppendArray("ActivePower", pActive_Power, pVoltageChannels);
-  AppendArray("ReactivePower", pReactive_Power, pVoltageChannels);
-  AppendArray("ApparentPower", pApparent_Power, pVoltageChannels);
-  AppendArray("PowerFactor", pPower_Factor, pVoltageChannels);
-  AppendArray("VoltageTHD", pVoltage_THD, pVoltageChannels);
-  AppendArray("CurrentTHD", pCurrent_THD, pCurrentChannels);
+  AppendArray("Active_Power", pActive_Power, pVoltageChannels);
+  AppendArray("Reactive_Power", pReactive_Power, pVoltageChannels);
+  AppendArray("Apparent_Power", pApparent_Power, pVoltageChannels);
+  AppendArray("Power_Factor", pPower_Factor, pVoltageChannels);
+  AppendArray("Voltage_THD", pVoltage_THD, pVoltageChannels);
+  AppendArray("Current_THD", pCurrent_THD, pCurrentChannels);
   AppendArray("Phi", pPhi, pVoltageChannels);
   if(pVoltageChannels > 1) {
-    AppendArray("VoltagePhase", pVoltage_Phase, pVoltageChannels);
+    AppendArray("Voltage_Phase", pVoltage_Phase, pVoltageChannels);
     parser.DefineVar("Unbalance", &pUnbalance);
   }
   parser.SetExpr(expression);
