@@ -24,8 +24,8 @@ pthread_rwlock_t        AnalyzerManager::pAnalyzersLock = PTHREAD_RWLOCK_INITIAL
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterDoc("Analyzer", DocAnalyzer);
-  HTTPServer::RegisterCallback("getAnalyzers",    GetAnalyzersCallback,   GetAnalyzers);
-  HTTPServer::RegisterCallback("getAnalyzer",     GetAnalyzerCallback);
+  HTTPServer::RegisterCallback("getAnalyzers",    GetAnalyzersCallback,   DocGetAnalyzers);
+  HTTPServer::RegisterCallback("getAnalyzer",     GetAnalyzerCallback,    DocGetAnalyzer);
   HTTPServer::RegisterCallback("setAnalyzer",     SetAnalyzerCallback);
   HTTPServer::RegisterCallback("getStatus",       GetStatusCallback);
   HTTPServer::RegisterCallback("getSeries",       GetSeriesCallback);
@@ -45,7 +45,7 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("getAlarms",       GetAlarmsCallback);
   HTTPServer::RegisterCallback("getAlarmsRange",  GetAlarmsRangeCallback);
   HTTPServer::RegisterCallback("setAlarm",        SetAlarmCallback);
-  HTTPServer::RegisterCallback("delAlarm",        DelAlarmCallback);
+  HTTPServer::RegisterCallback("delAlarm",        DelAlarmCallback,       DocDelAlarm);
   HTTPServer::RegisterCallback("delAlarmsRange",  DelAlarmsRangeCallback);
   HTTPServer::RegisterCallback("setRemote",       SetRemoteCallback);
 }

@@ -640,78 +640,6 @@
     }
   ],
   "paths": {
-    "/getAnalyzer": {
-      "post": {
-        "summary": "Get analyzer details",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "xxxxxxxxxx"
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "Analyzer"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success",
-            "content": {
-              "application/json": {
-                "example": {
-                  "AlarmsEnabled": true,
-                  "EventsEnabled": true,
-                  "MQTT": {
-                    "Enabled": false,
-                    "Export10M": false,
-                    "Export15M": false,
-                    "Export1H": false,
-                    "Export1M": true,
-                    "Export3S": true,
-                    "ExportAlarms": false,
-                    "ExportConfig": false,
-                    "Pass": "",
-                    "Prefix": "/OZM",
-                    "Server": "mqtt://test.mosquitto.org",
-                    "User": ""
-                  },
-                  "MaxCurrent": 35,
-                  "MinCurrent": 0.1,
-                  "Mode": "1PHASE",
-                  "Name": "Unnamed analyzer",
-                  "NominalFrequency": 50,
-                  "NominalVoltage": 230,
-                  "Online": true,
-                  "SampleRate": 24000,
-                  "Save200MS": true,
-                  "Sync": {
-                    "Enabled": false,
-                    "Pass": "",
-                    "Server": "",
-                    "User": ""
-                  },
-                  "Tags": [],
-                  "TimeZone": "UTC"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/setAnalyzer": {
       "post": {
         "summary": "Get analyzer details",
@@ -2245,58 +2173,7 @@
         }
       }
     },
-    "/delAlarm": {
-      "post": {
-        "summary": "Delete alarm",
-        "tags": [
-          "Analyzers"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "example": {
-                  "Analyzer": "VIRTUAL_3PN",
-                  "AlarmID": "alarm_UUID",
-                  "Trigger": 1599314399999
-                },
-                "properties": {
-                  "Analyzer": {
-                    "type": "string"
-                  },
-                  "AlarmID": {
-                    "type": "string"
-                  },
-                  "Trigger": {
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "Analyzer",
-                  "AlarmID",
-                  "Trigger"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "On success"
-          },
-          "400": {
-            "description": "Missing or wrong params"
-          },
-          "401": {
-            "description": "Not logged in"
-          },
-          "500": {
-            "description": "Can not find alarm, can not write to database or other internal errors"
-          }
-        }
-      }
-    },
+
     "/delAlarmsRange": {
       "post": {
         "summary": "Delete stored alarms in a date range",
