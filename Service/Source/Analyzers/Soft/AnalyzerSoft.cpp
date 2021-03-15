@@ -129,8 +129,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
 }
 void AnalyzerSoft::Config(const json &options) {
   ConfigFile::WriteConfig(pConfigPath, options);
-  Configured(false);
-  Online(false);
+  State(SYNCING);
   Name(options["Name"]);
   pthread_mutex_lock(&pMutex);
   pNominalVoltage   = options["NominalVoltage"];
@@ -143,7 +142,6 @@ void AnalyzerSoft::Config(const json &options) {
   pSync.Config(options["Sync"], pConfigPath, [&](const string &name, const json &params) { HandleAction(name, params); }, [&](const vector<string> &series) { return pAccess.GetStatus(series); }, [&](const vector<string> &series) { return GetSeriesNow(series); });
   pMQTT.Config(options);
   pthread_mutex_unlock(&pMutex);
-  Configured(true);
 }
 void AnalyzerSoft::Thread() {
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
@@ -219,7 +217,7 @@ void AnalyzerSoft::Thread() {
         if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pWorkingBlock->Sequence());
       } else {
-        Online(true);
+        State(ONLINE);
         pNowDataLock.ProviderWrite();
         if((pWorkingBlock->Sequence() % 15) == 0) {
           LogFile::Debug("Storing 3S aggregation for analyzer '%s'", pSerial.c_str());
@@ -352,8 +350,6 @@ void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
   if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   string UserName = params["UserName"];
   json   Response = ConfigFile::ReadConfig(pConfigPath);
-  Response["Online"]       = Online();
-  Response["OnlineTime"]   = OnlineTime();
   Response["User"]         = pOwner;
   Response["Mode"]         = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"]   = pSamplerate;
@@ -397,8 +393,7 @@ void AnalyzerSoft::GetStatus(const json &params, Response &response) {
   }
   json Result = pAccess.GetStatus(Series, params["UserName"]);
   if(Result == nullptr) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Result["Online"]     = Online();
-  Result["OnlineTime"] = OnlineTime();
+  Result["State"] = (State() == UNCONFIGURED) ? "UNCONFIGURED" : (State() == OFFLINE) ? "OFFLINE" : (State() == SYNCING) ? "SYNCING" : "ONLINE";
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {

@@ -34,11 +34,11 @@ void AnalyzerAlarms::GetAlarms(const json &params, Response &response) const {
     string UserName = params["UserName"];
     DB.ExecSentenceNoResult("UPDATE permissions SET alarmsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
   }
-  auto Func = [&, To, From](uint64_t offset, DataSink &sink) -> bool {
+  auto Func = [&, To, From, LastChange](uint64_t offset, DataSink &sink) -> bool {
     json Headers = {"ChangeTime", "AlarmID", "Trigger", "Release", "Notes"};
     sink.os << "[\n  " << Headers.dump();
     Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, id, trigger, release, notes) as result FROM alarms WHERE trigger BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To) + " AND lastchange > " + DB.Bind(LastChange) +" ORDER BY trigger ASC");
+    DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, id, trigger, release, notes) as result FROM alarms WHERE trigger BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To) + " AND changetime > " + DB.Bind(LastChange) +" ORDER BY trigger ASC");
     while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " + DB.ResultString("result");
     sink.os << "\n]";
     sink.done();

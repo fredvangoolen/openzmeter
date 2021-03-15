@@ -341,7 +341,7 @@ void *DeviceV2::Thread() {
       } else {
         bool Online = true;
         for(auto &Tmp : pAnalyzers) {
-          if(Tmp->Online() == false) Online = false;
+          if(Tmp->State() != Analyzer::ONLINE) Online = false;
         }
         Status |= (Online ? 0x0002 : 0x0003);
       }

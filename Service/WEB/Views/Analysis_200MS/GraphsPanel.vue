@@ -30,7 +30,7 @@
     props: { serie: String, analyzer: Object, paused: Boolean, range: [String, Array] },
     data() {
       return { ShowSpinner: true, Phases: null, Expanded: false, DialogHeight: 300,
-               TransferGraph: this.CreateSeriesTransfer(this, [this.serie])
+               TransferGraph: this.SeriesTransfer([this.serie])
       };
     },
     created: function() {

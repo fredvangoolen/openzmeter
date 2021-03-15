@@ -27,11 +27,12 @@ using namespace std;
 class Analyzer {
   public :
     enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
+    enum AnalyzerState { UNCONFIGURED, OFFLINE, SYNCING, ONLINE };
   private :
     pthread_rwlock_t   pMembersLocks;            //Locks for configurations
-    uint64_t           pLastSave;                //Timestamp of last save or communication
-    bool               pConfigured;              //Control if analyzer is configured
+    AnalyzerState      pState;                   //Timestamp of last save or communication
     string             pName;                    //Analyzer description
+    uint64_t           pLastTime;                //Last state change timestamp
   protected :
     const string       pSerial;                  //Serial number
     const string       pOwner;                   //Analyzer owner user
@@ -39,13 +40,10 @@ class Analyzer {
   protected :
     Analyzer(const string &id, const AnalyzerMode mode, const string &user = "admin");
   public :
-    bool     Configured();
-    void     Configured(const bool conf);
+    AnalyzerState State();
+    void          State(const AnalyzerState conf);
     string   Name();
     void     Name(const string &name);
-    void     Online(const bool online);
-    bool     Online();
-    uint64_t OnlineTime();
   public :
     virtual void GetAnalyzer(const json &params, Response &response) = 0;
     virtual void SetAnalyzer(const json &params, Response &response) = 0;

@@ -2,10 +2,12 @@
   <div class="this" :class="{ expanded: expanded }">
     <div class="collapse-icon">
       <img class="icon" :src="require('Imgs/disconnect32.png')">
-      <img class="badge-icon" :src="require('Imgs/bullet_green.png')" v-if="(status!=null)&&(status.Online==true)&&((status.PendingActions==null)||(status.PendingActions==0))">
-      <img class="badge-icon" :src="require('Imgs/bullet_red.png')" v-if="(status!=null)&&(status.Online==false)&&((status.PendingActions==null)||(status.PendingActions==0))">
-      <span class="badge badge-menu badge-red" v-if="(status!=null)&&(status.Online==false)&&((status.PendingActions!=null)||(status.PendingActions>0))">{{ status.PendingActions }}</span>
-      <span class="badge badge-menu badge-green" v-if="(status!=null)&&(status.Online==false)&&((status.PendingActions!=null)||(status.PendingActions>0))">{{ status.PendingActions }}</span>
+      <img class="badge-icon" :src="require('Imgs/bullet_green.png')" v-if="(status!=null)&&(status.State=='ONLINE')&&((status.PendingActions==null)||(status.PendingActions==0))">
+      <img class="badge-icon" :src="require('Imgs/bullet_yellow.png')" v-if="(status!=null)&&(status.State=='SYNCING')&&((status.PendingActions==null)||(status.PendingActions==0))">
+      <img class="badge-icon" :src="require('Imgs/bullet_red.png')" v-if="(status!=null)&&(status.State=='OFFLINE')&&((status.PendingActions==null)||(status.PendingActions==0))">
+      <span class="badge badge-menu badge-red" v-if="(status!=null)&&(status.State=='ONLINE')&&((status.PendingActions!=null)||(status.PendingActions>0))">{{ status.PendingActions }}</span>
+      <span class="badge badge-menu badge-yellow" v-if="(status!=null)&&(status.Online=='SYNCING')&&((status.PendingActions!=null)||(status.PendingActions>0))">{{ status.PendingActions }}</span>
+      <span class="badge badge-menu badge-green" v-if="(status!=null)&&(status.Online=='OFFLINE')&&((status.PendingActions!=null)||(status.PendingActions>0))">{{ status.PendingActions }}</span>
     </div>
     <div class="btn-group">
       <button type="button" class="btn btn-default btn-xs" @click="Dialog='Table'" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>
@@ -206,5 +208,8 @@
   }
   .badge-green {
     background: #5cb85c;
+  }
+  .badge-yellow {
+    background: #f0ad4e;
   }
 </style>

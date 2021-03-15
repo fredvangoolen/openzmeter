@@ -38,7 +38,7 @@ void AnalyzerEvents::GetEvents(const json &params, Response &response) const {
     string UserName = params["UserName"];
     DB.ExecSentenceNoResult("UPDATE permissions SET eventsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(UserName) + " AND serial = " + DB.Bind(pSerial));
   }
-  auto Func = [&, To, From, Samples](uint64_t offset, DataSink &sink) -> bool {
+  auto Func = [&, To, From, Samples, LastChange](uint64_t offset, DataSink &sink) -> bool {
     json Headers = {"ChangeTime", "StartTime", "Type", "SampleRate", "Reference", "Peak", "Change", "Duration", "Notes"};
     string QuerySamples;
     if((Samples == "ALL") || (Samples == "RAW")) {
@@ -66,7 +66,7 @@ void AnalyzerEvents::GetEvents(const json &params, Response &response) const {
     }
     sink.os << "[\n  " << Headers.dump();
     Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, starttime, evttype, samplerate, reference, peak, change, duration, notes" + QuerySamples + ") AS result FROM events WHERE starttime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To) + " AND lastchange > " + DB.Bind(LastChange) + " ORDER BY starttime ASC");
+    DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, starttime, evttype, samplerate, reference, peak, change, duration, notes" + QuerySamples + ") AS result FROM events WHERE starttime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To) + " AND changetime > " + DB.Bind(LastChange) + " ORDER BY starttime ASC");
     while(DB.FecthRow() && sink.is_writable()) sink.os << ",\n  " + DB.ResultString("result");
     sink.os << "\n]";
     sink.done();

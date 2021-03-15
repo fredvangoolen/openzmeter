@@ -122,19 +122,18 @@ void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &respons
       while(DB.FecthRow() && sink.is_writable()) {
         pthread_rwlock_rdlock(&pAnalyzersLock);
         auto Tmp = pAnalyzers.find(DB.ResultString("serial"));
-        if((Tmp != pAnalyzers.end()) && (Tmp->second->Configured() == true)) {
-          json Analyzer = Tmp->second->GetJSONDescriptor();
-          Analyzer["Read"]   = DB.ResultBool("read");
-          Analyzer["Write"]  = DB.ResultBool("write");
-          Analyzer["Config"] = DB.ResultBool("config");
-          sink.os << ((Items++ != 0) ? ",\n  " : "") + Analyzer.dump();
-        }
+        if((Tmp == pAnalyzers.end()) || (Tmp->second->State() == Analyzer::UNCONFIGURED)) continue;
+        json Analyzer = Tmp->second->GetJSONDescriptor();
+        Analyzer["Read"]   = DB.ResultBool("read");
+        Analyzer["Write"]  = DB.ResultBool("write");
+        Analyzer["Config"] = DB.ResultBool("config");
+        sink.os << ((Items++ != 0) ? ",\n  " : "") + Analyzer.dump();
         pthread_rwlock_unlock(&pAnalyzersLock);
       }
     } else {
       pthread_rwlock_rdlock(&pAnalyzersLock);
       for(auto &Tmp : pAnalyzers) {
-        if(Tmp.second->Configured() == false) continue;
+        if(Tmp.second->State() == Analyzer::UNCONFIGURED) continue;
         if(sink.is_writable() == false) break;
         json Analyzer = Tmp.second->GetJSONDescriptor();
         Analyzer["Read"]   = true;

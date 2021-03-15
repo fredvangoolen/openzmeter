@@ -34,7 +34,6 @@
       return { Range: null, TransferAlarms: this.AlarmsTransfer() };
     },
     created: function () {
-      this.TransferAlarms.SingleShot = true;
       if((this.$route.query.From != null) && (this.$route.query.To != null)) {
         localStorage.setItem('PeriodAlarms', JSON.stringify([parseInt(this.$route.query.From), parseInt(this.$route.query.To)]));
         this.TransferAlarms.UpdateUnread = true;

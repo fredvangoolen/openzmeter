@@ -79,7 +79,6 @@ int main(int argc, char** argv) {
   PidFile          PIDFile;                        // Create PID file
   LogFile          LogFile;                        // Create LOG file
   DatabasePool     DBPool;                         // Init database pool
-  HTTPServer       HTTPServer;                     // Init WEB service
   MessageLoop      Loop;                           // Create application message loop
 
   SystemManager    Sys;                            // System status and actions
@@ -96,6 +95,8 @@ int main(int argc, char** argv) {
   DeviceManager    DeviceManager;                  // Create devices interface
   TelegramManager  TelegramBoot;                   // Create Telegram manager
   ModbusManager    Modbus;                         // Create ModbusTCP
+
+  HTTPServer       HTTPServer;                     // Init WEB service
 
   while(!Terminate) MessageLoop::HandleEvents();
   return EXIT_SUCCESS;

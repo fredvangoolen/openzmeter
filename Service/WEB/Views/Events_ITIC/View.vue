@@ -48,9 +48,6 @@
     data: function() {
       return { Year: null, TransferEvents: this.EventsTransfer(this) };
     },
-    created: function() {
-      this.TransferEvents.SingleShot = true;
-    },
     watch: {
       analyzer: function() { if(this.Year == null) return; this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(this.Year).startOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(this.Year).endOf('year').valueOf()]); },
       Year: function(val) { if(this.analyzer == null) return ; this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(val).startOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(val).endOf('year').valueOf()]); }
