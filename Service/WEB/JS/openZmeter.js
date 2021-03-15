@@ -1,7 +1,7 @@
 const openZmeter = {
   install: function(Vue, options) {
     Vue.prototype.PriceTransfer = (series) => {
-      var Transfer = { SingleShot: false, Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
+      var Transfer = { Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -57,7 +57,10 @@ const openZmeter = {
         Transfer.Data = Object.seal(Data);
       };
       Transfer.Update = (analyzer, aggreg, range) => {
-        if((analyzer == null) || (aggreg == null) || (range == null)) return;
+        if((analyzer == null) || (aggreg == null) || (range == null)) {
+          this.Data = null;
+          return;
+        }
         var Cancelled = false;
         var ReqRange  = analyzer.CalcRange(range, aggreg);
         if(aggreg == '1H') ReqRange[0] = ReqRange[0] / 3600000 * 3600000;
@@ -72,7 +75,7 @@ const openZmeter = {
           (result) => {
             if(Cancelled == true) return;
             Transfer.SetData(ReqRange, aggreg, result.body);
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
           },
           (fail) => {
             if(Cancelled == true) return;
@@ -83,13 +86,16 @@ const openZmeter = {
       return Transfer;
     };
     Vue.prototype.StatusTransfer = (series) => {
-      var Transfer = { SingleShot: false, Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null };
+      var Transfer = { Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
       };
       Transfer.Update = (analyzer) => {
-        if(analyzer == null) return;
+        if(analyzer == null) {
+          this.Data = null;
+          return;
+        }
         var Cancelled = false;
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -100,7 +106,7 @@ const openZmeter = {
           (result) => {
             if(Cancelled == true) return;
             Transfer.Data = Object.seal(result.body);
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 3000);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 3000);
           },
           (fail) => {
             if(Cancelled == true) return;
@@ -111,13 +117,16 @@ const openZmeter = {
       return Transfer;
     };
     Vue.prototype.NowTransfer = (series) => {
-      var Transfer = { SingleShot: false, Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null };
+      var Transfer = { Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
       };
       Transfer.Update = (analyzer) => {
-        if(analyzer == null) return;
+        if(analyzer == null) {
+          this.Data = null;
+          return;
+        }
         var Cancelled = false;
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -128,7 +137,7 @@ const openZmeter = {
           (result) => {
             if(Cancelled == true) return;
             Transfer.Data = Object.seal(result.body);
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 1500);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 1500);
           },
           (fail) => {
             if(Cancelled == true) return;
@@ -140,7 +149,7 @@ const openZmeter = {
       return Transfer;
     };
     Vue.prototype.SeriesTransfer = (series) => {
-      var Transfer = { Timer: null, SingleShot: false, CancelFunc: null, Data: null, LastData: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
+      var Transfer = { Timer: null, CancelFunc: null, Data: null, LastData: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -163,7 +172,10 @@ const openZmeter = {
          }
       };
       Transfer.Update = (analyzer, aggreg, range) => {
-        if((analyzer == null) || (aggreg == null) || (range == null)) return;
+        if((analyzer == null) || (aggreg == null) || (range == null)) {
+          this.Data = null;
+          return;
+        }
         var Promises  = [];
         var Cancelled = false;
         var ReqRange  = analyzer.CalcRange(range, aggreg);
@@ -189,7 +201,7 @@ const openZmeter = {
             if(Transfer.Data != null) Data = Data.concat(Transfer.Data.Rows);
             if((result.length == 2) && (result[1].body.length > 1)) Data = Data.concat(result[1].body.slice(1));
             Transfer.SetData(ReqRange, aggreg, Data);
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, (aggreg == "200MS") ? 0 : 3000);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, (aggreg == "200MS") ? 0 : 3000);
           },
           (fail) => {
             if(Cancelled == true) return;
@@ -200,7 +212,7 @@ const openZmeter = {
       return Transfer;
     },
     Vue.prototype.AlarmsTransfer = () => {
-      var Transfer = { Timer: null, SingleShot: false, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null };
+      var Transfer = { Timer: null, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null, LastChange: 0 };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -208,14 +220,18 @@ const openZmeter = {
       Transfer.SetData = (range, data) => {
         if(data == null) {
           Transfer.Data = null;
+          this.LastChange = 0;
           return;
         }
         var Data = { Headers: data[0], Rows: data.slice(1), From: range[0], To: range[1]};
+        for(var n = 0; n < Data.Rows.length; n++) this.LastChange = Math.max(this.LastChange, Data.Rows[n][0]);
         Transfer.Data = Object.seal(Data);
-        Transfer.LastData = (Transfer.Data.Rows.length == 0) ? null : Object.seal(Transfer.Data.Rows.slice(-1)[1]);
       };
       Transfer.Update = (analyzer, range) => {
-        if((analyzer == null) || (range == null)) return;
+        if((analyzer == null) || (range == null)) {
+          this.Data = null;
+          return;
+        }
         var Promises  = [];
         var Cancelled = false;
         var ReqRange  = analyzer.CalcRange(range);
@@ -227,10 +243,11 @@ const openZmeter = {
         Transfer.Analyzer  = analyzer;
         Transfer.Range     = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread }));
+          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, LastChange: 0 }));
         } else {
-          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1 }));
-          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1] }));
+          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, LastChange: 0 }));
+          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, LastChange: 0 }));
+          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, LastChange: this.LastChange }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
@@ -239,9 +256,18 @@ const openZmeter = {
             if(Cancelled == true) return;
             var Data = result[0].body;
             if(Transfer.Data != null) Data = Data.concat(Transfer.Data.Rows);
-            if((result.length == 2) && (result[1].body.length > 1)) Data = Data.concat(result[1].body.slice(1));
+            if(result.length == 3) {
+              if(result[1].body.length > 1) Data = Data.concat(result[1].body.slice(1));
+              if(result[2].body.length > 1) {
+                for(var n = 1; n < result[2].body.length; n++) {
+                  for(var i = 0; i < Data.length; i++) {
+                    if(Data[i][1] == result[2].body[n][1]) Data[i] = result[2].body[n];
+                  }
+                }
+              }
+            }
             Transfer.SetData(ReqRange, Data);
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
           },
           (fail) => {
             if(Cancelled == true) return;
@@ -252,7 +278,7 @@ const openZmeter = {
       return Transfer;
     },
     Vue.prototype.EventsTransfer = () => {
-      var Transfer = { Timer: null, SingleShot: false, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null };
+      var Transfer = { Timer: null, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null, LastChange: 0 };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -260,14 +286,18 @@ const openZmeter = {
       Transfer.SetData = (range, data) => {
         if(data == null) {
           Transfer.Data = null;
+          this.LastChange = 0;
           return;
         }
         var Data = { Headers: data[0], Rows: data.slice(1), From: range[0], To: range[1]};
+        for(var n = 0; n < Data.Rows.length; n++) this.LastChange = Math.max(this.LastChange, Data.Rows[n][0]);
         Transfer.Data = Object.seal(Data);
-        Transfer.LastData = (Transfer.Data.Rows.length == 0) ? null : Object.seal(Transfer.Data.Rows.slice(-1)[0]);
       };
       Transfer.Update = (analyzer, range) => {
-        if((analyzer == null) || (range == null)) return;
+        if((analyzer == null) || (range == null)) {
+          this.Data = null;
+          return;
+        }
         var Promises  = [];
         var Cancelled = false;
         var ReqRange  = analyzer.CalcRange(range);
@@ -279,340 +309,34 @@ const openZmeter = {
         Transfer.Analyzer  = analyzer;
         Transfer.Range     = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, Mode: 'DESCRIPTOR_ONLY' }));
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, Samples: 'NONE', LastChange: 0 }));
         } else {
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1, Mode: 'DESCRIPTOR_ONLY' }));
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1], Mode: 'DESCRIPTOR_ONLY' }));
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, Samples: 'NONE', LastChange: 0 }));
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: 0 }));
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: this.LastChange }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
           (result) => {
             if(Cancelled == true) return;
-            if(Cancelled == true) return;
             var Data = result[0].body;
             if(Transfer.Data != null) Data = Data.concat(Transfer.Data.Rows);
-            if((result.length == 2) && (result[1].body.length > 1)) Data = Data.concat(result[1].body.slice(1));
+            if(result.length == 3) {
+              if(result[1].body.length > 1) Data = Data.concat(result[1].body.slice(1));
+              if(result[2].body.length > 1) {
+                for(var n = 1; n < result[2].body.length; n++) {
+                  for(var i = 0; i < Data.length; i++) {
+                    if(Data[i][1] == result[2].body[n][1]) Data[i] = result[2].body[n];
+                  }
+                }
+              }
+            }
             Transfer.SetData(ReqRange, Data);
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
+            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
           },
           (fail) => {
             if(Cancelled == true) return;
             Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Range); }, 3000);
-          }
-        );
-      };
-      return Transfer;
-    },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    Vue.prototype.CreateSeriesTransfer = (parent, series) => {
-      var Transfer = { This: parent, SingleShot: false, Timer: null, CancelFunc: null, Data: null, LastData: null, UpdateUnread: false, Periods: null, Series: series, Analyzer: null, Aggreg: null, Range: null, AggregFail: null };
-      Transfer.Destroy = () => {
-        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
-        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
-      };
-
-      Transfer.SetData = (data) => {
-        Transfer.Data = Object.seal(data);
-        if((data == null) || (data.Sampletime.length == 0)) {
-          Transfer.LastData = null;
-        } else {
-          var LastData = {};
-          for(var n in data) {
-            if(Array.isArray(data[n])) LastData[n] = data[n].slice(-1)[0];
-          }
-          Transfer.LastData = Object.seal(LastData);
-        }
-      };
-      Transfer.UpdateAlarms = (analyzer, range) => {
-        if((analyzer == null) || (range == null)) return;
-        var Cancelled = false;
-        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
-        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
-        var ReqRange = analyzer.CalcRange(range);
-        var Data = { };
-        if((Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer == analyzer.Analyzer)) Data = Object.assign(Data, Transfer.Data);
-        if((Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.Data = null;
-        Transfer.Analyzer  = analyzer;
-        Transfer.Range     = range;
-        Data.From   = null;
-        Data.To     = null;
-        if(Data.AlarmTime != null) {
-          var Pos = 0;
-          for(var n = 0; n < Data.AlarmTime.length; n++) {
-            if(Data.AlarmTime[n] < ReqRange[0])
-              Pos++;
-            else
-              break;
-          }
-          if(Pos != 0) {
-            for(var serie in Data) {
-              if(Array.isArray(Data[serie]) == true) Data[serie].splice(0, Pos);
-            }
-          }
-          var Pos = 0;
-          for(var n = 0; n < Data.AlarmTime.length; n++) {
-            if(Data.AlarmTime[n] <= ReqRange[1])
-              Pos++;
-            else
-              break;
-          }
-          if(Pos != 0) {
-            for(var serie in Data) {
-              if(Array.isArray(Data[serie]) == true) Data[serie].splice(Pos);
-            }
-          }
-          Data.From = Data.AlarmTime[0];
-          Data.To = Data.AlarmTime.slice(-1)[0];
-        }
-        var Promises = [];
-        if((Data.From == null) || (Data.To == null)) {
-          Promises.push(Transfer.This.$http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread }));
-          Transfer.UpdateUnread = false;
-        } else {
-          if(ReqRange[0] < Data.From) Promises.push(Transfer.This.$http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Data.From - 1, Series: series }));
-          if(ReqRange[1] > Data.To) Promises.push(Transfer.This.$http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: Data.To + 1, To: ReqRange[1], Series: series }));
-        }
-        if(Promises.length == 0) {
-          Data.From = ReqRange[0];
-          Data.To = ReqRange[1];
-          Transfer.Data = Object.seal(Data);
-          if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateAlarms(Transfer.Analyzer, Transfer.Range); }, 3000);
-          return;
-        }
-        Transfer.CancelFunc = () => { Cancelled = true; };
-        Promise.all(Promises).then(
-          (result) => {
-            if(Cancelled == true) return;
-            for(var n in result) {
-              var After = ((result[n].body.AlarmTime.length > 0) && (Data.From != null) && (Data.From > result[n].body.AlarmTime[0]));
-              for(var serie in result[n].body) {
-                if(Array.isArray(result[n].body[serie]) == false) continue
-                if((Data.From == null) || (Data.To == null))
-                  Data[serie] = result[n].body[serie];
-                else if(After == true)
-                  Data[serie] = result[n].body[serie].concat(Data[serie]);
-                else
-                  Data[serie] = Data[serie].concat(result[n].body[serie]);
-              }
-            }
-            Data.From = ReqRange[0];
-            Data.To = ReqRange[1];
-            Transfer.Data = Object.seal(Data);
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateAlarms(Transfer.Analyzer, Transfer.Range); }, 3000);
-          },
-          (fail) => {
-            if(Cancelled == true) return;
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateAlarms(Transfer.Analyzer, Transfer.Range); }, 3000);
-          }
-        );
-      };
-      Transfer.UpdateEvents = (analyzer, range) => {
-        if((analyzer == null) || (range == null)) return;
-        var Cancelled = false;
-        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
-        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
-        var ReqRange = analyzer.CalcRange(range);
-        var Data = { };
-        if((Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer == analyzer.Analyzer)) Data = Object.assign(Data, Transfer.Data);
-        if((Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.Data = null;
-        Transfer.Analyzer  = analyzer;
-        Transfer.Range     = range;
-        Data.From   = null;
-        Data.To     = null;
-        if(Data.StartTime != null) {
-          var Pos = 0;
-          for(var n = 0; n < Data.StartTime.length; n++) {
-            if(Data.StartTime[n] < ReqRange[0])
-              Pos++;
-            else
-              break;
-          }
-          if(Pos != 0) {
-            for(var serie in Data) {
-              if(Array.isArray(Data[serie]) == true) Data[serie].splice(0, Pos);
-            }
-          }
-          var Pos = 0;
-          for(var n = 0; n < Data.StartTime.length; n++) {
-            if(Data.StartTime[n] <= ReqRange[1])
-              Pos++;
-            else
-              break;
-          }
-          if(Pos != 0) {
-            for(var serie in Data) {
-              if(Array.isArray(Data[serie]) == true) Data[serie].splice(Pos);
-            }
-          }
-          Data.From = Data.StartTime[0];
-          Data.To = Data.StartTime.slice(-1)[0];
-        }
-        var Promises = [];
-        if((Data.From == null) || (Data.To == null)) {
-          Promises.push(Transfer.This.$http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread }));
-          Transfer.UpdateUnread = false;
-        } else {
-          if(ReqRange[0] < Data.From) Promises.push(Transfer.This.$http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Data.From - 1, Series: series }));
-          if(ReqRange[1] > Data.To) Promises.push(Transfer.This.$http.post('getEvents', { Analyzer: analyzer.Analyzer, From: Data.To + 1, To: ReqRange[1], Series: series }));
-        }
-        if(Promises.length == 0) {
-          Data.From = ReqRange[0];
-          Data.To = ReqRange[1];
-          Transfer.Data = Object.seal(Data);
-          if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
-          return;
-        }
-        Transfer.CancelFunc = () => { Cancelled = true; };
-        Promise.all(Promises).then(
-          (result) => {
-            if(Cancelled == true) return;
-            for(var n in result) {
-              var After = ((result[n].body.StartTime.length > 0) && (Data.From != null) && (Data.From > result[n].body.StartTime[0]));
-              for(var serie in result[n].body) {
-                if(Array.isArray(result[n].body[serie]) == false) continue;
-                if((Data.From == null) || (Data.To == null))
-                  Data[serie] = result[n].body[serie];
-                else if(After == true)
-                  Data[serie] = result[n].body[serie].concat(Data[serie]);
-                else
-                  Data[serie] = Data[serie].concat(result[n].body[serie]);
-              }
-              if((Data.From == null) || (Data.To == null))
-                Data.Deleted = Array(result[n].body.StartTime.length).fill(false);
-              else if(After == true)
-                Data.Deleted = Array(result[n].body.StartTime.length).fill(false).concat(Data[serie]);
-              else
-                Data.Deleted = Data.Deleted.concat(Array(result[n].body.StartTime.length).fill(false));
-            }
-            Data.From = ReqRange[0];
-            Data.To = ReqRange[1];
-            Transfer.Data = Object.seal(Data);
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
-          },
-          (fail) => {
-            if(Cancelled == true) return;
-            if(Transfer.SingleShot == false) Transfer.Timer = setTimeout(() => { Transfer.UpdateEvents(Transfer.Analyzer, Transfer.Range); }, 3000);
-          }
-        );
-      };
-      Transfer.Update = (analyzer, aggreg, range) => {
-        if((analyzer == null) || (aggreg == null) || (range == null)) return;
-        var Cancelled = false;
-        var Period    = (aggreg == '200MS') ? 200 : (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
-        if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
-        if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
-        var ReqRange = analyzer.CalcRange(range, aggreg);
-        var Data = { };
-        if((Transfer.Aggreg == aggreg) && (Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer == analyzer.Analyzer)) Data = Object.assign(Data, Transfer.Data);
-        if((Transfer.Aggreg != aggreg) || (Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer) || (Transfer.Range != range)) Transfer.SetData(null);
-        Transfer.Analyzer  = analyzer;
-        Transfer.Aggreg    = aggreg;
-        Transfer.Range     = range;
-        Data.Aggreg = aggreg;
-        Data.From   = null;
-        Data.To     = null;
-        if(Data.Sampletime != null) {
-          var Pos = 0;
-          for(var n = 0; n < Data.Sampletime.length; n++) {
-            if(Data.Sampletime[n] < ReqRange[0])
-              Pos++;
-            else
-              break;
-          }
-          if(Pos != 0) {
-            for(var serie in Data) {
-              if(Array.isArray(Data[serie]) == true) Data[serie].splice(0, Pos);
-            }
-          }
-          var Pos = 0;
-          for(var n = 0; n < Data.Sampletime.length; n++) {
-            if(Data.Sampletime[n] <= ReqRange[1])
-              Pos++;
-            else
-              break;
-          }
-          if(Pos != 0) {
-            for(var serie in Data) {
-              if(Array.isArray(Data[serie]) == true) Data[serie].splice(Pos);
-            }
-          }
-          Data.From = Data.Sampletime[0];
-          Data.To = Data.Sampletime.slice(-1)[0];
-        }
-        var Promises = [];
-        if((Data.From == null) || (Data.To == null)) {
-          Promises.push(Transfer.This.$http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }));
-        } else {
-          if((ReqRange[0] < Data.From) && (((Data.From - 1) - ReqRange[0]) > Period)) Promises.push(Transfer.This.$http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: Data.From - 1, Series: series }));
-          if((ReqRange[1] > Data.To)  && ((ReqRange[1] - (Data.To + 1)) > Period)) Promises.push(Transfer.This.$http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: Data.To + 1, To: ReqRange[1], Series: series }));
-        }
-        if(Promises.length == 0) {
-          Data.From = ReqRange[0];
-          Data.To = ReqRange[1];
-          Transfer.SetData(Data);
-          Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, (Period == 200) ? 100 : 3000);
-          return;
-        }
-        Transfer.CancelFunc = () => { Cancelled = true; };
-        Promise.all(Promises).then(
-          (result) => {
-            if(Cancelled == true) return;
-            for(var n in result) {
-              var After = ((Data.From != null) && (result[n].body.Sampletime.length > 0) && (Data.From > result[n].body.Sampletime[0]));
-              for(var serie in result[n].body) {
-                if(Array.isArray(result[n].body[serie]) == false) continue
-                if((Data.From == null) || (Data.To == null))
-                  Data[serie] = result[n].body[serie];
-                else if(After == true)
-                  Data[serie] = result[n].body[serie].concat(Data[serie]);
-                else
-                  Data[serie] = Data[serie].concat(result[n].body[serie]);
-              }
-            }
-            Data.From = ReqRange[0];
-            Data.To = ReqRange[1];
-            Transfer.SetData(Data);
-            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, (Period == 200) ? 0 : 3000);
-          },
-          (fail) => {
-            if(Cancelled == true) return;
-            if(fail.status == 400) {
-              if(Transfer.AggregFail != null) Transfer.AggregFail();
-              return;
-            }
-            Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, (Period == 200) ? 0 : 3000);
           }
         );
       };

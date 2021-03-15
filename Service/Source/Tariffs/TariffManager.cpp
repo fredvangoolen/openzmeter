@@ -26,7 +26,7 @@ TariffManager::TariffManager() {
   HTTPServer::RegisterCallback("setTariff",  SetTariffCallback,  "API/Tariffs/SetTariff.json");
   HTTPServer::RegisterCallback("delTariff",  DelTariffCallback,  "API/Tariffs/DelTariff.json");
   HTTPServer::RegisterCallback("addTariff",  AddTariffCallback,  "API/Tariffs/AddTariff.json");
-  HTTPServer::RegisterCallback("evalRates",  EvalRatesCallback);
+//  HTTPServer::RegisterCallback("evalRates",  EvalRatesCallback);
   LogFile::Info("TariffManager started");
 }
 TariffManager::~TariffManager() {
@@ -36,7 +36,7 @@ TariffManager::~TariffManager() {
   HTTPServer::UnregisterCallback("setTariff");
   HTTPServer::UnregisterCallback("delTariff");
   HTTPServer::UnregisterCallback("addTariff");
-  HTTPServer::UnregisterCallback("evalRates");
+//  HTTPServer::UnregisterCallback("evalRates");
   HTTPServer::UnregisterDoc("Tariffs");
   LogFile::Info("TariffManager stoped");
 }
@@ -93,18 +93,18 @@ void TariffManager::AddTariffCallback(const json &params, Response &response) {
   DB.ExecSentenceAsyncResult("INSERT INTO tariffs(name, username, template) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(UserName) + ", " + DB.Bind(Conf.dump()) + ") RETURNING name");
   return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
-void TariffManager::EvalRatesCallback(const json &params, Response &response) {
-  if((params.contains("Rates") == false) || (params["Rates"].is_array() == false)) return HTTPServer::FillResponse(response, "'Rates' param is required", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPServer::FillResponse(response, "'TimeZone' param is required", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Samples") == false) || (params["Samples"].is_array() == false)) return HTTPServer::FillResponse(response, "'Samples' param is required", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
-  time_zone TimeZone;
-  uint64_t  From     = params["From"];
-  uint64_t  To       = params["To"];
-  json      Response = json::array();
-  cctz::load_time_zone(params["TimeZone"], &TimeZone);
+//void TariffManager::EvalRatesCallback(const json &params, Response &response) {
+//  if((params.contains("Rates") == false) || (params["Rates"].is_array() == false)) return HTTPServer::FillResponse(response, "'Rates' param is required", "text/plain", HTTP_BAD_REQUEST);
+//  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPServer::FillResponse(response, "'TimeZone' param is required", "text/plain", HTTP_BAD_REQUEST);
+//  if((params.contains("Samples") == false) || (params["Samples"].is_array() == false)) return HTTPServer::FillResponse(response, "'Samples' param is required", "text/plain", HTTP_BAD_REQUEST);
+//  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
+//  time_zone TimeZone;
+//  uint64_t  From     = params["From"];
+//  uint64_t  To       = params["To"];
+//  json      Response = json::array();
+//  cctz::load_time_zone(params["TimeZone"], &TimeZone);
   //RatesEvalProvider Provider(TimeZone, params["Rates"], params["Samples"]);
 //  RatesEval Eval(TimeZone, From, To, Provider);
 //  json Result = Eval.FetchRow();
@@ -112,6 +112,6 @@ void TariffManager::EvalRatesCallback(const json &params, Response &response) {
 //    Response.push_back(Result);
 //    Result = Eval.FetchRow();
 //  }
-  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
-}
+//  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+//}
 // ---------------------------------------------------------------------------------------------------------------------

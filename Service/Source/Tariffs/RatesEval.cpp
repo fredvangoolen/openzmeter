@@ -51,23 +51,6 @@ RatesEval::RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to
 RatesEval::~RatesEval() {
   UnloadPeriod();
 }
-//json RatesEval::Headers() {
-//  if(pSeriesMask == 0) return nullptr;
-//  json Header = json::array();
-//  if(pSeriesMask & SERIE_TIMESTAMP)       Header.push_back("Time");
-//  if(pSeriesMask & SERIE_ACTIVE_POWER)    Header.push_back("Active_Power");
-//  if(pSeriesMask & SERIE_ACTIVE_ENERGY)   Header.push_back("Active_Energy");
-//  if(pSeriesMask & SERIE_REACTIVE_POWER)  Header.push_back("Reactive_Power");
-//  if(pSeriesMask & SERIE_REACTIVE_ENERGY) Header.push_back("Reactive_Energy");
-//  if(pSeriesMask & SERIE_COST)            Header.push_back("Cost");
-//  if(pSeriesMask & SERIE_POWER_COST)      Header.push_back("Power_Cost");
-//  if(pSeriesMask & SERIE_ENERGY_COST)     Header.push_back("Energy_Cost");
-//  if(pSeriesMask & SERIE_PERIOD)          Header.push_back("Period");
-//  if(pSeriesMask & SERIE_COLOR)           Header.push_back("Color");
-//  if(pSeriesMask & SERIE_CONTRACTED)      Header.push_back("Contracted");
-//  if(pSeriesMask & SERIE_BILL)            Header.push_back("Bill");
-//  return Header;
-//}
 void RatesEval::UnloadPeriod() {
   if(pPriceModule != NULL) {
     delete pPriceModule;

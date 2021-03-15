@@ -102,7 +102,7 @@
             this.Details = 'Device IP address   : ' + result.body.Status.IP + ' (' + result.body.Status.IPMode + ')\nDNS servers         : ' + result.body.Status.DNS.join(', ') + '\nDefault gateway     : ' + result.body.Status.Gateway + '\nCurrent WIFI channel: ' + result.body.Status.Channel + ' (Signal: ' + result.body.Status.Quality + '%)';
             this.Timer = setTimeout(this.Refresh, 5000);
           },
-          (fail) => { }
+          (fail) => { this.Timer = setTimeout(this.Refresh, 5000); }
         );
       },
       Scan: function() {
@@ -115,7 +115,7 @@
             this.ShowSpinner = false;
             this.Timer = setTimeout(this.Scan, 5000);
           },
-          (fail) => { }
+          (fail) => { this.Timer = setTimeout(this.Scan, 5000); }
         );
       },
       Back: function() {

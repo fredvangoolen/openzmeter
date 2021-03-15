@@ -4,7 +4,7 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Analyzers</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
         <toolbar-pager class="pull-right" :pageSize="10" :input="Analyzers" :output.sync="FilterAnalyzers" :filtercols="['Name', 'Analyzer']"></toolbar-pager>
       </template>
@@ -13,18 +13,23 @@
         <p>If you are an administrator, check device settings, otherwise request permission.</p>
       </div>
       <vuetable key="analyzers" :fields="Columns" :data="FilterAnalyzers" :api-mode="false" class="table small table-striped">
+        <template slot="state" slot-scope="props">
+          <img :src="require('Imgs/bullet_green.png')" v-if="props.rowData.State=='ONLINE'">
+          <img :src="require('Imgs/bullet_yellow.png')" v-if="props.rowData.State=='SYNCING'">
+          <img :src="require('Imgs/bullet_red.png')" v-if="props.rowData.State=='OFFLINE'">
+        </template>
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
             <button type="button" class="btn btn-success btn-xs" :disabled="((analyzer != null) && (analyzer.Analyzer == props.rowData.Analyzer))" @click="Select(props.rowData.Analyzer, true)">Select</button>
             <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown"><span class="caret"></span></button>
             <ul class="dropdown-menu pull-right">
-              <li><a @click="Alarms(props.rowData.Analyzer)">Alarms and events</a></li>
-              <li><a @click="Configure(props.rowData.Analyzer)">Configure</a></li>
-              <li><a @click="Permissions(props.rowData.Analyzer)">Permissions</a></li>
-              <li><a @click="Rates(props.rowData.Analyzer)">Rates</a></li>
-              <li><a @click="Remote(props.rowData.Analyzer)">Remote access</a></li>
+              <li><a @click="LoadView('Alarms', props.rowData.Analyzer)">Alarms and events</a></li>
+              <li><a @click="LoadView('Configure', props.rowData.Analyzer)">Configure</a></li>
+              <li><a @click="LoadView('Permissions', props.rowData.Analyzer)">Permissions</a></li>
+              <li><a @click="LoadView('Rates', props.rowData.Analyzer)">Rates</a></li>
+              <li><a @click="LoadView('Remote', props.rowData.Analyzer)">Remote access</a></li>
               <li role="separator" class="divider"></li>
-              <li><a @click="Maintenance(props.rowData.Analyzer)">Maintenance</a></li>
+              <li><a @click="LoadView('Maintenance', props.rowData.Analyzer)">Maintenance</a></li>
             </ul>
           </div>
         </template>
@@ -52,9 +57,9 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { View: null, Analyzers: [], FilterAnalyzers: [], ShowSpinner: false, Analyzer: null, Filter: '',
+      return { View: null, Analyzers: [], FilterAnalyzers: [], ShowSpinner: true, Analyzer: null, Filter: '', Timer: null,
         Columns: [
-          { name: 'Online', title: 'Online', callback: this.OnlineStatus },
+          { name: '__slot:state', title: 'Online' },
           { name: 'User', title: 'Owner' },
           { name: 'Name', title: 'Description' },
           { name: 'Analyzer', title: 'Serial' },
@@ -70,17 +75,16 @@
     },
     methods: {
       GetAnalyzers: function() {
-        this.ShowSpinner = true;
+        if(this.Timer != null) clearTimeout(this.Timer);
         this.$http.post("getAnalyzers", {}).then(
           (result) => {
             this.Analyzers = result.data;
+            console.log(this.Analyzers);
             this.ShowSpinner = false;
+            this.Timer = setTimeout(this.GetAnalyzers, 5000);
           },
-          (fail) => {}
+          (fail) => { this.Timer = setTimeout(this.GetAnalyzers, 5000); }
         );
-      },
-      OnlineStatus: function(value, close) {
-        return (value === true) ? '&#9635;' : '&#9633;';
       },
       Select: function(analyzer, close) {
         this.$emit('update:analyzer', null);
@@ -88,85 +92,34 @@
         localStorage.setItem('Analyzer', analyzer);
         this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
+            if(this.Timer != null) clearTimeout(this.Timer);
             result.data.Analyzer = analyzer;
             this.$emit('update:analyzer', result.data);
             this.ShowSpinner = false;
             if(close == true) this.$emit('close');
-          },
-          (fail) => {}
+          }
         );
       },
       CloseSelect: function(analyzer) {
         this.View = null;
-        if(analyzer == null) return;
         this.GetAnalyzers();
         if(analyzer == this.analyzer.Analyzer) this.Select(analyzer, false);
       },
-      Configure: function(analyzer) {
+      LoadView: function(view, analyzer) {
         this.ShowSpinner = true;
         this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
+            if(this.Timer != null) clearTimeout(this.Timer);
             result.data.Analyzer = analyzer;
             this.Analyzer = result.data;
-            this.View = 'Configure';
+            this.View = view;
             this.ShowSpinner = false;
           }
         );
       },
-      Rates: function(analyzer) {
-        this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
-          (result) => {
-            result.data.Analyzer = analyzer;
-            this.Analyzer = result.data;
-            this.View = 'Rates';
-            this.ShowSpinner = false;
-          }
-        );
-      },
-      Alarms: function(analyzer) {
-        this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
-          (result) => {
-            result.data.Analyzer = analyzer;
-            this.Analyzer = result.data;
-            this.View = 'Alarms';
-            this.ShowSpinner = false;
-          }
-        );
-      },
-      Remote: function(analyzer) {
-        this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
-          (result) => {
-            result.data.Analyzer = analyzer;
-            this.Analyzer = result.data;
-            this.View = 'Remote';
-            this.ShowSpinner = false;
-          }
-        );
-      },
-      Permissions: function(analyzer) {
-        this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
-          (result) => {
-            result.data.Analyzer = analyzer;
-            this.Analyzer = result.data;
-            this.View = 'Permissions';
-            this.ShowSpinner = false;
-          }
-        );
-      },
-      Maintenance: function(analyzer) {
-        this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
-          (result) => {
-            result.data.Analyzer = analyzer;
-            this.Analyzer = result.data;
-            this.View = 'Maintenance';
-            this.ShowSpinner = false;
-          }
-        );
+      Back: function() {
+        if(this.Timer != null) clearTimeout(this.Timer);
+        this.$emit('close');
       }
     },
     components: { Vuetable, AnalyzerRemote, AnalyzerConfigure, AnalyzerRates, AnalyzerMaintenance, AnalyzerAlarms, AnalyzerPermissions }

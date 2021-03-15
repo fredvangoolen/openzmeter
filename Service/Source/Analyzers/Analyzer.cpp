@@ -22,8 +22,7 @@
 Analyzer::Analyzer(const string &id, const AnalyzerMode mode, const string &user) : pSerial(id), pOwner(user), pMode(mode) {
   pMembersLocks = PTHREAD_RWLOCK_INITIALIZER;
   pName         = "Unnamed analyzer";
-  pLastSave     = 0;
-  pConfigured   = false;
+  pState        = UNCONFIGURED;
 }
 Analyzer::~Analyzer() {
 }
@@ -33,23 +32,12 @@ json Analyzer::GetJSONDescriptor() {
   Response["User"] = pOwner;
   pthread_rwlock_rdlock(&pMembersLocks);
   Response["Name"] = pName;
-  Response["Online"] = ((Tools::GetTime64() - pLastSave) < 20000);
+  Response["State"] = (State() == UNCONFIGURED) ? "UNCONFIGURED" : (State() == OFFLINE) ? "OFFLINE" : (State() == SYNCING) ? "SYNCING" : "ONLINE";
   pthread_rwlock_unlock(&pMembersLocks);
   return Response;
 }
 string Analyzer::Serial() {
   return pSerial;
-}
-bool Analyzer::Configured() {
-  pthread_rwlock_rdlock(&pMembersLocks);
-  bool Conf = pConfigured;
-  pthread_rwlock_unlock(&pMembersLocks);
-  return Conf;
-}
-void Analyzer::Configured(const bool conf) {
-  pthread_rwlock_rdlock(&pMembersLocks);
-  pConfigured = conf;
-  pthread_rwlock_unlock(&pMembersLocks);
 }
 string Analyzer::Name() {
   pthread_rwlock_rdlock(&pMembersLocks);
@@ -62,21 +50,18 @@ void Analyzer::Name(const string &name) {
   pName = name;
   pthread_rwlock_unlock(&pMembersLocks);
 }
-void Analyzer::Online(const bool online) {
+void Analyzer::State(const Analyzer::AnalyzerState state) {
   pthread_rwlock_wrlock(&pMembersLocks);
-  pLastSave = (online == true) ? Tools::GetTime64() : 0;
+  pState    = state;
+  pLastTime = Tools::GetTime64();
   pthread_rwlock_unlock(&pMembersLocks);
 }
-bool Analyzer::Online() {
+Analyzer::AnalyzerState Analyzer::State() {
+  uint64_t Now = Tools::GetTime64() - 5000;
   pthread_rwlock_rdlock(&pMembersLocks);
-  bool Online = ((Tools::GetTime64() - pLastSave) < 2000);
+  AnalyzerState State = pState;
+  if((State != UNCONFIGURED) && (pLastTime < Now)) State = OFFLINE;
   pthread_rwlock_unlock(&pMembersLocks);
-  return Online;
-}
-uint64_t Analyzer::OnlineTime() {
-  pthread_rwlock_rdlock(&pMembersLocks);
-  uint64_t Online = pLastSave;
-  pthread_rwlock_unlock(&pMembersLocks);
-  return Online;
+  return State;
 }
 //----------------------------------------------------------------------------------------------------------------------
