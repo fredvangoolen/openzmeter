@@ -16,12 +16,12 @@
 #include "RatesEval.h"
 #include "Tools.h"
 // ---------------------------------------------------------------------------------------------------------------------
-RatesEval::RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to, const vector<Rate> &rates, RatesEval::SampleFunc getSample, const uint16_t serieMask) {
+RatesEval::RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to, const vector<Rate> &rates, RatesEval::SampleFunc getSample, const vector<string> &series) {
   pTimeZone     = tz;
   pFinished     = false;
   pGetSample    = getSample;
   pPriceModule  = NULL;
-  pSeriesMask   = serieMask;
+  pSeries       = series;
   pRates        = rates;
   pScript       = NULL;
   pEnergyScript = NULL;
@@ -31,18 +31,18 @@ RatesEval::RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to
   pTo           = (to / 3600000) * 3600000 + 899999;
   for(pRatePtr = pRates.begin(); (pRatePtr != pRates.end()) && (pRatePtr->pEndDate < pCurrent); pRatePtr++);
   if(pRatePtr == pRates.end()) {
-    if(pSeriesMask == 0) {
+    if(pSeries.empty() == true) {
       pFinished = true;
       return;
     }
   } else {
     pYearPtr          = pRatePtr->pYears.begin();
     if(pRatePtr->pBillingCycles.size() == 0) {
-      if(pSeriesMask == 0) pCurrent = pRatePtr->pStartDate + 899999;
+      if(pSeries.empty() == true) pCurrent = pRatePtr->pStartDate + 899999;
     } else {
       uint64_t Time = pRatePtr->pStartDate + 899999;
       for(pBillPtr = pRatePtr->pBillingCycles.begin(); (pBillPtr != pRatePtr->pBillingCycles.end()) && (pCurrent > *pBillPtr); pBillPtr++) Time = *pBillPtr + 900000;
-      if(pSeriesMask == 0) pCurrent = Time;
+      if(pSeries.empty() == true) pCurrent = Time;
     }
     LoadPeriod();
   }
@@ -51,23 +51,23 @@ RatesEval::RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to
 RatesEval::~RatesEval() {
   UnloadPeriod();
 }
-json RatesEval::Headers() {
-  if(pSeriesMask == 0) return nullptr;
-  json Header = json::array();
-  if(pSeriesMask & SERIE_TIMESTAMP)       Header.push_back("Time");
-  if(pSeriesMask & SERIE_ACTIVE_POWER)    Header.push_back("Active_Power");
-  if(pSeriesMask & SERIE_ACTIVE_ENERGY)   Header.push_back("Active_Energy");
-  if(pSeriesMask & SERIE_REACTIVE_POWER)  Header.push_back("Reactive_Power");
-  if(pSeriesMask & SERIE_REACTIVE_ENERGY) Header.push_back("Reactive_Energy");
-  if(pSeriesMask & SERIE_COST)            Header.push_back("Cost");
-  if(pSeriesMask & SERIE_POWER_COST)      Header.push_back("Power_Cost");
-  if(pSeriesMask & SERIE_ENERGY_COST)     Header.push_back("Energy_Cost");
-  if(pSeriesMask & SERIE_PERIOD)          Header.push_back("Period");
-  if(pSeriesMask & SERIE_COLOR)           Header.push_back("Color");
-  if(pSeriesMask & SERIE_CONTRACTED)      Header.push_back("Contracted");
-  if(pSeriesMask & SERIE_BILL)            Header.push_back("Bill");
-  return Header;
-}
+//json RatesEval::Headers() {
+//  if(pSeriesMask == 0) return nullptr;
+//  json Header = json::array();
+//  if(pSeriesMask & SERIE_TIMESTAMP)       Header.push_back("Time");
+//  if(pSeriesMask & SERIE_ACTIVE_POWER)    Header.push_back("Active_Power");
+//  if(pSeriesMask & SERIE_ACTIVE_ENERGY)   Header.push_back("Active_Energy");
+//  if(pSeriesMask & SERIE_REACTIVE_POWER)  Header.push_back("Reactive_Power");
+//  if(pSeriesMask & SERIE_REACTIVE_ENERGY) Header.push_back("Reactive_Energy");
+//  if(pSeriesMask & SERIE_COST)            Header.push_back("Cost");
+//  if(pSeriesMask & SERIE_POWER_COST)      Header.push_back("Power_Cost");
+//  if(pSeriesMask & SERIE_ENERGY_COST)     Header.push_back("Energy_Cost");
+//  if(pSeriesMask & SERIE_PERIOD)          Header.push_back("Period");
+//  if(pSeriesMask & SERIE_COLOR)           Header.push_back("Color");
+//  if(pSeriesMask & SERIE_CONTRACTED)      Header.push_back("Contracted");
+//  if(pSeriesMask & SERIE_BILL)            Header.push_back("Bill");
+//  return Header;
+//}
 void RatesEval::UnloadPeriod() {
   if(pPriceModule != NULL) {
     delete pPriceModule;
@@ -238,27 +238,29 @@ json RatesEval::BuildBill() {
 }
 json RatesEval::BuildSample(const bool bill) {
   json Row = json::array();
-  if(pSeriesMask & SERIE_TIMESTAMP)       Row.push_back(pCurrent);
-  if(pSeriesMask & SERIE_ACTIVE_POWER)    Row.push_back(pActivePower);
-  if(pSeriesMask & SERIE_ACTIVE_ENERGY)   Row.push_back(pActiveEnergy);
-  if(pSeriesMask & SERIE_REACTIVE_POWER)  Row.push_back(pReactivePower);
-  if(pSeriesMask & SERIE_REACTIVE_ENERGY) Row.push_back(pReactiveEnergy);
-  if(pPeriods.size() == 0) {
-    if(pSeriesMask & SERIE_COST)          Row.push_back(nullptr);
-    if(pSeriesMask & SERIE_POWER_COST)    Row.push_back(nullptr);
-    if(pSeriesMask & SERIE_ENERGY_COST)   Row.push_back(nullptr);
-    if(pSeriesMask & SERIE_PERIOD)        Row.push_back(nullptr);
-    if(pSeriesMask & SERIE_COLOR)         Row.push_back(nullptr);
-    if(pSeriesMask & SERIE_CONTRACTED)    Row.push_back(nullptr);
-  } else {
-    if(pSeriesMask & SERIE_COST)          Row.push_back(pCost);
-    if(pSeriesMask & SERIE_POWER_COST)    Row.push_back(pPowerCost);
-    if(pSeriesMask & SERIE_ENERGY_COST)   Row.push_back(pEnergyCost);
-    if(pSeriesMask & SERIE_PERIOD)        Row.push_back((uint16_t)pPeriod);
-    if(pSeriesMask & SERIE_COLOR)         Row.push_back(pColor);
-    if(pSeriesMask & SERIE_CONTRACTED)    Row.push_back(pContractedPower);
+  for(auto &Serie : pSeries) {
+    if(Serie == "Time")            Row.push_back(pCurrent);
+    if(Serie == "Active_Power")    Row.push_back(pActivePower);
+    if(Serie == "Active_Energy")   Row.push_back(pActiveEnergy);
+    if(Serie == "Reactive_Power")  Row.push_back(pReactivePower);
+    if(Serie == "Reactive_Energy") Row.push_back(pReactiveEnergy);
+    if(pPeriods.size() == 0) {
+      if(Serie == "Cost")          Row.push_back(nullptr);
+      if(Serie == "Power_Cost")    Row.push_back(nullptr);
+      if(Serie == "Energy_Cost")   Row.push_back(nullptr);
+      if(Serie == "Period")        Row.push_back(nullptr);
+      if(Serie == "Color")         Row.push_back(nullptr);
+      if(Serie == "Contracted")    Row.push_back(nullptr);
+    } else {
+      if(Serie == "Cost")          Row.push_back(pCost);
+      if(Serie == "Power_Cost")    Row.push_back(pPowerCost);
+      if(Serie == "Energy_Cost")   Row.push_back(pEnergyCost);
+      if(Serie == "Period")        Row.push_back((uint16_t)pPeriod);
+      if(Serie == "Color")         Row.push_back(pColor);
+      if(Serie == "Contracted")    Row.push_back(pContractedPower);
+    }
+    if(Serie == "Bill")            Row.push_back(bill);
   }
-  if(pSeriesMask & SERIE_BILL)            Row.push_back(bill);
   return Row;
 }
 json RatesEval::HandleSample() {
@@ -305,13 +307,13 @@ json RatesEval::HandleSample() {
     pPeriods[Period]->Eval();
     pCost = pScript->Var("Cost") + pPeriods[Period]->Var("Cost");
     if(pCurrent == ((pBillPtr != pRatePtr->pBillingCycles.end()) ? *pBillPtr : pRatePtr->pEndDate)) {
-      Result    = (pSeriesMask == 0) ? BuildBill() : BuildSample(true);
+      Result    = (pSeries.empty() == true) ? BuildBill() : BuildSample(true);
       pCurrent += 900000;
       UnloadPeriod();
       return Result;
     }
   }
-  if(pSeriesMask != 0) Result = BuildSample(false);
+  if(pSeries.empty()) Result = BuildSample(false);
   pCurrent += 900000;
   return Result;
 }
@@ -319,8 +321,8 @@ json RatesEval::FetchRow() {
   json Row = nullptr;
   while((Row == nullptr) && (pFinished == false)) {
     Row = HandleSample();
-    if((pSeriesMask != 0) && (pCurrent == pTo)) pFinished = true;
-    if((pSeriesMask == 0) && (pCurrent > pTo)) {
+    if((pSeries.empty() == false) && (pCurrent == pTo)) pFinished = true;
+    if((pSeries.empty() == true) && (pCurrent > pTo)) {
       if(pRatePtr != pRates.end()) {
         if(pCurrent > ((pBillPtr != pRatePtr->pBillingCycles.end()) ? *pBillPtr : pRatePtr->pEndDate)) pFinished = true;
       } else {

@@ -1,36 +1,36 @@
 FROM alpine:3.8
 
 #install packages ----------------------------------------------------------
-RUN apk add --no-cache asciidoc bash bc binutils bzip2 cdrkit coreutils diffutils findutils flex g++ gawk gcc gettext git grep intltool libxslt linux-headers make ncurses-dev patch perl python2-dev python3-dev tar unzip  util-linux wget zlib-dev xz npm openssh-client curl
+RUN apk add --no-cache asciidoc bash bc binutils bzip2 cdrkit coreutils diffutils findutils flex g++ gawk gcc gettext git grep intltool libxslt linux-headers make ncurses-dev patch perl python2-dev python3-dev tar unzip  util-linux wget zlib-dev xz npm openssh-client curl rsync
 
 #Download openWRT ----------------------------------------------------------
 RUN mkdir /opt && cd /opt && git clone https://git.openwrt.org/openwrt/openwrt.git openWRT_SDK
-RUN cd /opt/openWRT_SDK && git checkout openwrt-19.07
-RUN cd /opt/openWRT_SDK && ./scripts/feeds update -a && ./scripts/feeds install -a
+WORKDIR /opt/openWRT_SDK
+RUN git checkout openwrt-19.07
+RUN ./scripts/feeds update -a && ./scripts/feeds install -a
 
 #Setup openWRT SDK ---------------------------------------------------------
-RUN echo "CONFIG_TARGET_sunxi=y" > /opt/openWRT_SDK/.config
-RUN echo "CONFIG_TARGET_sunxi_cortexa7=y" >> /opt/openWRT_SDK/.config
-RUN echo "CONFIG_TARGET_sunxi_cortexa7_DEVICE_sun8i-h3-nanopi-neo=y" >> /opt/openWRT_SDK/.config
-RUN cd /opt/openWRT_SDK && make defconfig
+RUN echo "CONFIG_TARGET_sunxi=y" > .config
+RUN echo "CONFIG_TARGET_sunxi_cortexa7=y" >> .config
+RUN echo "CONFIG_TARGET_sunxi_cortexa7_DEVICE_sun8i-h3-nanopi-neo=y" >> .config
+RUN make defconfig
 
 #Generate required openWRT packages ----------------------------------------
 ENV FORCE_UNSAFE_CONFIGURE=1
-RUN cd /opt/openWRT_SDK && make tools/install V=sc -j32
-RUN cd /opt/openWRT_SDK && make toolchain/install V=sc -j32
-RUN cd /opt/openWRT_SDK && make package/usign/host/compile V=sc -j32
-RUN cd /opt/openWRT_SDK && make package/zlib/compile V=sc -j32
-RUN cd /opt/openWRT_SDK && make package/postgresql/compile V=sc -j32
-RUN cd /opt/openWRT_SDK && make package/openssl/compile V=sc -j32
-RUN cd /opt/openWRT_SDK && make package/wireless-tools/compile V=sc-j32
-RUN cd /opt/openWRT_SDK && make package/dbus/compile V=sc -j32
-RUN cd /opt/openWRT_SDK && make package/libusb/compile V=sc -j32
-RUN cd /opt/openWRT_SDK && BUILD_VARIANT="single" make package/fftw3/compile V=sc -j32
-RUN cd /opt/openWRT_SDK && make package/util-linux/compile V=sc -j32
-RUN cd /opt/openWRT_SDK && make package/mosquitto/compile V=sc -j32
+RUN make tools/install V=sc -j1
+RUN make toolchain/install V=sc -j1
+RUN make package/usign/host/compile V=sc -j1
+RUN make package/zlib/compile V=sc -j1
+RUN make package/postgresql/compile V=sc -j1
+RUN make package/openssl/compile V=sc -j1
+RUN make package/wireless-tools/compile V=sc-j1
+RUN make package/dbus/compile V=sc -j1
+RUN make package/libusb/compile V=sc -j1
+RUN BUILD_VARIANT="single" make package/fftw3/compile V=sc -j1
+RUN make package/util-linux/compile V=sc -j1
 
 #Clean intermediate files --------------------------------------------------
-RUN cd /opt/openWRT_SDK && rm -rf build_dir
+#RUN cd /opt/openWRT_SDK && rm -rf build_dir
 
 # OpenWRT SDK --------------------------------------------------------------
 ENV SDK_DIR "/opt/openWRT_SDK"

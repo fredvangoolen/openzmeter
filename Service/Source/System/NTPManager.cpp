@@ -34,7 +34,7 @@ NTPManager::~NTPManager() {
 void NTPManager::GetNTPCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::object();
-  string CommandStr = SystemManager::Exec("ubus call uci get '{\"config\":\"system\", \"section\":\"ntp\"}'");
+  string CommandStr = SystemManager::uBusCall("uci", "get", { {"config", "system"}, {"section", "ntp"} } );
   if(CommandStr.empty() == false) {
     json Tmp = json::parse(CommandStr, NULL, false);
     if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);

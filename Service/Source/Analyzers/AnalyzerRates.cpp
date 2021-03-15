@@ -48,40 +48,40 @@ void AnalyzerRates::GetCosts(const json &params, Response &response) {
   if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t From   = params["From"];
-  uint64_t To     = params["To"];
-  uint8_t  Group  = params["Group"];
-  uint16_t Series = RatesEval::SERIE_TIMESTAMP;
+  uint64_t       From    = params["From"];
+  uint64_t       To      = params["To"];
+  uint8_t        Group   = params["Group"];
+  vector<string> Headers = vector<string>({"Time"});
   for(auto &Serie : params["Series"]) {
-    if(Serie.is_string() == false) {
+    if((Serie.is_string() == false) || (find(Headers.begin(), Headers.end(), Serie) != Headers.end())) {
       return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
     } else if(Serie == "Active_Power") {
-      Series |= RatesEval::SERIE_ACTIVE_POWER;
+      Headers.push_back("Active_Power");
     } else if(Serie == "Active_Energy") {
-      Series |= RatesEval::SERIE_ACTIVE_ENERGY;
+      Headers.push_back("Active_Energy");
     } else if(Serie == "Reactive_Power") {
-      Series |= RatesEval::SERIE_REACTIVE_POWER;
+      Headers.push_back("Reactive_Power");
     } else if(Serie == "Reactive_Energy") {
-      Series |= RatesEval::SERIE_REACTIVE_ENERGY;
+      Headers.push_back("Reactive_Energy");
     } else if(Serie == "Cost") {
-      Series |= RatesEval::SERIE_COST;
+      Headers.push_back("Cost");
     } else if(Serie == "Power_Cost") {
-      Series |= RatesEval::SERIE_POWER_COST;
+      Headers.push_back("Power_Cost");
     } else if(Serie == "Energy_Cost") {
-      Series |= RatesEval::SERIE_ENERGY_COST;
+      Headers.push_back("Energy_Cost");
     } else if(Serie == "Period") {
-      Series |= RatesEval::SERIE_PERIOD;
+      Headers.push_back("Period");
     } else if(Serie == "Color") {
-      Series |= RatesEval::SERIE_COLOR;
+      Headers.push_back("Color");
     } else if(Serie == "Contracted") {
-      Series |= RatesEval::SERIE_CONTRACTED;
+      Headers.push_back("Contracted");
     } else if(Serie == "Bill") {
-      Series |= RatesEval::SERIE_BILL;
+      Headers.push_back("Bill");
     } else {
       return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
     }
   }
-  auto Func = [&, From, To, Group, Series](uint64_t offset, DataSink &sink) {
+  auto Func = [&, From, To, Group, Headers](uint64_t offset, DataSink &sink) {
     Database DB(pSerial);
     auto GetSample = [&](const uint64_t &currenttime, float &active, float &reactive) -> uint64_t {
       if(DB.FecthRow() == true) {
@@ -99,9 +99,9 @@ void AnalyzerRates::GetCosts(const json &params, Response &response) {
       return UINT64_MAX;
     };
     pthread_rwlock_rdlock(&pLock);
-    RatesEval Eval(pTimeZone, From, To, pRates[Group], GetSample, Series);
+    RatesEval Eval(pTimeZone, From, To, pRates[Group], GetSample, Headers);
     pthread_rwlock_unlock(&pLock);
-    sink.os << "[\n  " << Eval.Headers().dump();
+    sink.os << "[\n  " << json(Headers).dump();
     json Result = Eval.FetchRow();
     while((Result != nullptr) && sink.is_writable()) {
       sink.os << ",\n  " + Result.dump();

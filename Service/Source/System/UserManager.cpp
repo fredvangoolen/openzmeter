@@ -19,12 +19,12 @@
 // ---------------------------------------------------------------------------------------------------------------------
 UserManager::UserManager() {
   LogFile::Info("Starting UserManager...");
-  HTTPServer::RegisterCallback("getUsers",        GetUsersCallback);
-  HTTPServer::RegisterCallback("getUser",         GetUserCallback);
-  HTTPServer::RegisterCallback("setUser",         SetUserCallback);
-  HTTPServer::RegisterCallback("setUserPassword", SetUserPasswordCallback);
-  HTTPServer::RegisterCallback("addUser",         AddUserCallback);
-  HTTPServer::RegisterCallback("delUser",         DelUserCallback);
+  HTTPServer::RegisterCallback("getUsers",        GetUsersCallback,        "API/User/GetUsers.json");
+  HTTPServer::RegisterCallback("getUser",         GetUserCallback,         "API/User/GetUser.json");
+  HTTPServer::RegisterCallback("setUser",         SetUserCallback,         "API/User/SetUser.json");
+  HTTPServer::RegisterCallback("setUserPassword", SetUserPasswordCallback, "API/User/SetUserPassword.json");
+  HTTPServer::RegisterCallback("addUser",         AddUserCallback,         "API/User/AddUser.json");
+  HTTPServer::RegisterCallback("delUser",         DelUserCallback,         "API/User/DelUser.json");
   LogFile::Info("UserManager started");
 }
 UserManager::~UserManager() {
@@ -100,7 +100,7 @@ void UserManager::SetUserPasswordCallback(const json &params, Response &response
     DB.ExecSentenceAsyncResult("UPDATE users SET password = MD5(" + DB.Bind(Password) + ") WHERE username = " + DB.Bind(User) + " AND password = MD5(" + DB.Bind(PrevPassword) + ") RETURNING username");
     return HTTPServer::FillResponse(response, "", "text/plain", (DB.FecthRow() == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
   } else {
-    DB.ExecSentenceAsyncResult("UPDATE users SET password = MD5(" + DB.Bind(Password) + ") WHERE username = " + DB.Bind(User) + ") RETURNING username");
+    DB.ExecSentenceAsyncResult("UPDATE users SET password = MD5(" + DB.Bind(Password) + ") WHERE username = " + DB.Bind(User) + " RETURNING username");
     return HTTPServer::FillResponse(response, "", "text/plain", (DB.FecthRow() == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
   }
 }

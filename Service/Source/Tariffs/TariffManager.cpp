@@ -16,22 +16,29 @@
 #include "TariffManager.h"
 #include "Tariff.h"
 #include "RatesEval.h"
+#include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 TariffManager::TariffManager() {
-  HTTPServer::RegisterCallback("getTariffs",     GetTariffsCallback);
-  HTTPServer::RegisterCallback("getTariff",      GetTariffCallback);
-  HTTPServer::RegisterCallback("setTariff",      SetTariffCallback);
-  HTTPServer::RegisterCallback("delTariff",      DelTariffCallback);
-  HTTPServer::RegisterCallback("addTariff",      AddTariffCallback);
-  HTTPServer::RegisterCallback("evalRates",      EvalRatesCallback);
+  LogFile::Info("Starting TariffManager...");
+  HTTPServer::RegisterDoc("Tariffs", "API/Tariffs/Tariffs.json");
+  HTTPServer::RegisterCallback("getTariffs", GetTariffsCallback, "API/Tariffs/GetTariffs.json");
+  HTTPServer::RegisterCallback("getTariff",  GetTariffCallback,  "API/Tariffs/GetTariff.json");
+  HTTPServer::RegisterCallback("setTariff",  SetTariffCallback,  "API/Tariffs/SetTariff.json");
+  HTTPServer::RegisterCallback("delTariff",  DelTariffCallback,  "API/Tariffs/DelTariff.json");
+  HTTPServer::RegisterCallback("addTariff",  AddTariffCallback,  "API/Tariffs/AddTariff.json");
+  HTTPServer::RegisterCallback("evalRates",  EvalRatesCallback);
+  LogFile::Info("TariffManager started");
 }
 TariffManager::~TariffManager() {
+  LogFile::Info("Stopping TariffManager...");
   HTTPServer::UnregisterCallback("getTariffs");
   HTTPServer::UnregisterCallback("getTariff");
   HTTPServer::UnregisterCallback("setTariff");
   HTTPServer::UnregisterCallback("delTariff");
   HTTPServer::UnregisterCallback("addTariff");
   HTTPServer::UnregisterCallback("evalRates");
+  HTTPServer::UnregisterDoc("Tariffs");
+  LogFile::Info("TariffManager stoped");
 }
 void TariffManager::GetTariffsCallback(const json &params, Response &response) {
   string UserName = params["UserName"];

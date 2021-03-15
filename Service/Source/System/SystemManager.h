@@ -20,8 +20,6 @@
 using json = nlohmann::json;
 using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
-
-#ifdef OPENWRT // ======================================================================================================
 class SystemManager final {
   private :
     static json             pStatus;
@@ -32,27 +30,16 @@ class SystemManager final {
     static uint64_t ParseProcMem(const string &name, const string &buff);
     static bool     ReadFile(const string filename, string &res);
     static void     GetSystemCallback(const json &params, Response &response);
-    static void     GetLogCallback(const json &params, Response &response);
-    static void     GetSystemLogCallback(const json &params, Response &response);
   public :
     static string Exec(const string &command, int *resultCode = NULL);
+#ifdef OPENWRT
     static json   uBusCall(const string &path, const string &method, const json &params = nullptr);
+#endif
   public :
-    static json   ToJSON();
+    static json   Status();
     static string SystemLog();
   public :
     SystemManager();
     ~SystemManager();
 };
-#else // ===============================================================================================================
-class SystemManager final {
-  private :
-    static void GetLogCallback(const json &params, Response &response);
-  public :
-    static json   ToJSON();
-    static string SystemLog();
-  public :
-    SystemManager();
-    ~SystemManager();
-};
-#endif // ==============================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------

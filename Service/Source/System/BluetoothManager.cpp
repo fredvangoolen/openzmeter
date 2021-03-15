@@ -14,6 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "BluetoothManager.h"
+#include "ResourceFile.h"
 #include "ConfigFile.h"
 #include "LogFile.h"
 #include "Worker.h"
@@ -31,9 +32,9 @@ pthread_mutex_t  BluetoothManager::pMutex       = PTHREAD_MUTEX_INITIALIZER;
 // ---------------------------------------------------------------------------------------------------------------------
 BluetoothManager::BluetoothManager() {
   LogFile::Info("Starting BluetoothManager...");
-  HTTPServer::RegisterDoc("Bluetooth", DocBluetooth);
-  HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback, DocGetBluetooth);
-  HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback, DocSetBluetooth);
+  HTTPServer::RegisterDoc("Bluetooth", "API/Bluetooth/Bluetooth.json");
+  HTTPServer::RegisterCallback("getBluetooth", GetBluetoothCallback, "API/Bluetooth/GetBluetooth.json");
+  HTTPServer::RegisterCallback("setBluetooth", SetBluetoothCallback, "API/Bluetooth/SetBluetooth.json");
 #ifdef OPENWRT
   json Config = ConfigFile::ReadConfig("/Bluetooth");
   if(Config.is_object() == true) {

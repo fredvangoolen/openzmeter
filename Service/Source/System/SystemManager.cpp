@@ -15,8 +15,6 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "SystemManager.h"
 #include "LogFile.h"
-
-#ifdef OPENWRT // ======================================================================================================
 #include <sys/param.h>
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
@@ -28,16 +26,12 @@ pthread_mutex_t SystemManager::pMutex  = PTHREAD_MUTEX_INITIALIZER;
 SystemManager::SystemManager() {
   MessageLoop::RegisterListener("SystemManager_PeriodicTasks", PeriodicTasks, 5000);
   MessageLoop::RegisterListener("PowerOff", PowerOff);
-  HTTPServer::RegisterCallback("getSystem", GetSystemCallback);
-  HTTPServer::RegisterCallback("getLog", GetLogCallback);
-  HTTPServer::RegisterCallback("getSystemLog", GetSystemLogCallback);
+  HTTPServer::RegisterCallback("getSystem", GetSystemCallback, "API/GetSystem.json");
 }
 SystemManager::~SystemManager() {
   MessageLoop::UnregisterListener("SystemManager_PeriodicTasks");
   MessageLoop::UnregisterListener("PowerOff");
   HTTPServer::UnregisterCallback("getSystem");
-  HTTPServer::UnregisterCallback("getLog");
-  HTTPServer::UnregisterCallback("getSystemLog");
 }
 uint64_t SystemManager::ParseProcMem(const string &name, const string &buff) {
   auto Pos = buff.find(name + ":");
@@ -85,7 +79,7 @@ void SystemManager::PeriodicTasks() {
     istringstream Stream(File);
     string  Text;
     getline(Stream, Text, ' ');
-    Status["Uptime"] = atof(Text.c_str());
+    Status["Uptime"] = (uint64_t)(atof(Text.c_str()) * 1000);
   }
   if(ReadFile("/proc/meminfo", File) == true) {
     Status["RAM"] = json::object();
@@ -127,6 +121,7 @@ string SystemManager::Exec(const string &command, int *resultCode) {
   if(resultCode != NULL) *resultCode = Code;
   return Result;
 }
+#ifdef OPENWRT
 json SystemManager::uBusCall(const string &path, const string &method, const json &params) {
   string Res = Exec("ubus call " + path + " " + method + " " + ((params.is_null() == true) ? "" : "'" + params.dump() + "'"));
   if(Res.empty() == true) return nullptr;
@@ -134,46 +129,41 @@ json SystemManager::uBusCall(const string &path, const string &method, const jso
   if(Tmp.is_discarded() == true) return nullptr;
   return Tmp;
 }
-void SystemManager::GetSystemCallback(const json &params, Response &response) {
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pthread_mutex_lock(&pMutex);
-  HTTPServer::FillResponse(response, pStatus.dump(), "application/json", HTTP_OK);
-  pthread_mutex_unlock(&pMutex);
-}
-json SystemManager::ToJSON() {
+#endif
+json SystemManager::Status() {
   pthread_mutex_lock(&pMutex);
   json Status = pStatus;
   pthread_mutex_unlock(&pMutex);
   return Status;
 }
-void SystemManager::GetLogCallback(const json &params, Response &response) {
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  HTTPServer::FillResponse(response, LogFile::ToJSON().dump(), "application/json", HTTP_OK);
-}
-void SystemManager::GetSystemLogCallback(const json &params, Response &response) {
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  HTTPServer::FillResponse(response, SystemLog(), "text/plain", HTTP_OK);
-}
 string SystemManager::SystemLog() {
+#ifdef OPENWRT
   return Exec("logread");
-}
-#else // ===============================================================================================================
-SystemManager::SystemManager() {
-  HTTPServer::RegisterCallback("getLog", GetLogCallback);
-}
-SystemManager::~SystemManager() {
-  HTTPServer::UnregisterCallback("getLog");
-}
-void SystemManager::GetLogCallback(const json &params, Response &response) {
-  HTTPServer::FillResponse(response, LogFile::ToJSON().dump(), "application/json", HTTP_OK);
-}
-json SystemManager::ToJSON() {
-  return json::object();
-}
-string SystemManager::SystemLog() {
+#else
   return "";
+#endif
 }
-#endif // ==============================================================================================================
+void SystemManager::GetSystemCallback(const json &params, Response &response) {
+  string UserName = params["UserName"];
+  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  vector<string> Series;
+  for(auto &Serie : params["Series"]) {
+    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    Series.push_back(Serie);
+  }
+  json Result = json::object();
+  for(auto &Serie : Series) {
+    if(Serie == "Log") {
+      Result["Log"] = LogFile::ToJSON();
+    } else if(Serie == "Status") {
+      Result["Status"] = SystemManager::Status();
+    } else if(Serie == "SystemLog") {
+      Result["SystemLog"] = SystemManager::SystemLog();
+    } else {
+      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    }
+  }
+  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+}
+// ---------------------------------------------------------------------------------------------------------------------

@@ -26,20 +26,20 @@ using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class RatesEval final {
   public :
-    enum SeriesMask {
-      SERIE_TIMESTAMP       = 0x0001,
-      SERIE_ACTIVE_POWER    = 0x0002,
-      SERIE_ACTIVE_ENERGY   = 0x0004,
-      SERIE_REACTIVE_POWER  = 0x0008,
-      SERIE_REACTIVE_ENERGY = 0x0010,
-      SERIE_COST            = 0x0020,
-      SERIE_PERIOD          = 0x0040,
-      SERIE_COLOR           = 0x0080,
-      SERIE_CONTRACTED      = 0x0100,
-      SERIE_BILL            = 0x0200,
-      SERIE_ENERGY_COST     = 0x0400,
-      SERIE_POWER_COST      = 0x0800
-    };
+//    enum SeriesMask {
+//      SERIE_TIMESTAMP       = 0x0001,
+//      SERIE_ACTIVE_POWER    = 0x0002,
+//      SERIE_ACTIVE_ENERGY   = 0x0004,
+//      SERIE_REACTIVE_POWER  = 0x0008,
+//      SERIE_REACTIVE_ENERGY = 0x0010,
+//      SERIE_COST            = 0x0020,
+//      SERIE_PERIOD          = 0x0040,
+//      SERIE_COLOR           = 0x0080,
+//      SERIE_CONTRACTED      = 0x0100,
+//      SERIE_BILL            = 0x0200,
+//      SERIE_ENERGY_COST     = 0x0400,
+//      SERIE_POWER_COST      = 0x0800
+//    };
   private :
     typedef struct {
       Parser             Script;
@@ -53,7 +53,7 @@ class RatesEval final {
     float                         pSampleActive;      //Current sample active power
     float                         pSampleReactive;    //Current sample reactive power
     uint64_t                      pTo;                //Requested period end
-    uint16_t                      pSeriesMask;        //Output series or 0 for bill mode
+    vector<string>                pSeries;            //Output series or empty for bill mode
     uint64_t                      pNowDate;           //Current system time
     uint64_t                      pCurrent;           //Current evaluation time
     uint64_t                      pLoadedPeriodDate;  //Active bill period start
@@ -85,7 +85,7 @@ class RatesEval final {
     json BuildBill();
     json BuildSample(const bool bill);
   public :
-    RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to, const vector<Rate> &rates, SampleFunc getSample, const uint16_t serieMask = 0);
+    RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to, const vector<Rate> &rates, SampleFunc getSample, const vector<string> &series = {});
     ~RatesEval();
     json Headers();
     json FetchRow();

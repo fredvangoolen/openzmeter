@@ -63,7 +63,7 @@
             };
     },
     created: function() {
-      this.UpdateLog();
+      this.UpdateSystem();
     },
     beforeDestroy: function() {
       if(this.Timer != null) clearTimeout(this.Timer);
@@ -92,26 +92,18 @@
           this.Messages.push(this.AllMessages[n]);
         }
       },
-      UpdateLog: function() {
-        this.$http.post('getLog', {}).then(
+      UpdateSystem: function() {
+        this.$http.post('getSystem', { Series: ['Status', 'Log']}).then(
           (result) => {
             this.AllMessages = [];
             this.LastUpdate = moment();
-            for(var n = 1; n < result.data.Messages.length; n++) this.AllMessages.push({Type: result.data.Messages[n][0], Date: result.data.Messages[n][1], Message: result.data.Messages[n][2]});
-            this.UpdateSystem();
-          },
-          (fail) => { this.UpdateSystem(); }
-        );
-      },
-      UpdateSystem: function() {
-        this.$http.post('getSystem', {}).then(
-          (result) => {
-            this.Status = result.data;
+            for(var n = 1; n < result.data.Log.Messages.length; n++) this.AllMessages.push({Type: result.data.Log.Messages[n][0], Date: result.data.Log.Messages[n][1], Message: result.data.Log.Messages[n][2]});
+            this.Status = result.data.Status;
             this.ShowSpinner = false;
-            this.Timer = setTimeout(this.UpdateLog, 5000);
+            this.Timer = setTimeout(this.UpdateSystem, 5000);
           },
           (fail) => {
-            this.Timer = setTimeout(this.UpdateLog, 5000);
+            this.Timer = setTimeout(this.UpdateSystem, 5000);
             this.Status = null;
             this.ShowSpinner = false;
           }

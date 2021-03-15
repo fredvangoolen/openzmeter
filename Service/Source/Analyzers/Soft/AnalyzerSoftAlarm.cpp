@@ -81,7 +81,7 @@ AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(AnalyzerSoftAggreg
     Database DB(pSerial);
     pTriggerTime = data.Timestamp();
     LogFile::Debug("Alarm triggered on analyzer '%s'", pSerial.c_str());
-    DB.ExecSentenceNoResult("INSERT INTO alarms(changetime, id, trigger, release) VALUES(" + DB.Bind(Tools::GetTime64()) + ", " + DB.Bind(pUID) + ", " + DB.Bind(pTriggerTime) + ", null)");
+    DB.ExecSentenceNoResult("INSERT INTO alarms(changetime, id, trigger, release, notes) VALUES(" + DB.Bind(Tools::GetTime64()) + ", " + DB.Bind(pUID) + ", " + DB.Bind(pTriggerTime) + ", null, '')");
     return TRIGGERED;
   } else if((pResultCount == 0) && (pTriggerTime != 0)) {
     Database DB(pSerial);
