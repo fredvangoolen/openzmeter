@@ -9,7 +9,6 @@
 
 <script>
   import 'rapidoc';
-  import 'swagger-ui/dist/swagger-ui.css';
   export default {
     data: function() {
       return { ShowSpinner: true };
