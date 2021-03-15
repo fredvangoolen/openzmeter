@@ -42,8 +42,8 @@ vector<ESIOSManager::Variable_t> ESIOSManager::pVariables = {
 ESIOSManager::ESIOSManager() {
   Database DB;
   for(uint16_t V = 0; V < pVariables.size(); V++) DB.ExecSentenceNoResult("ALTER TABLE esios ADD COLUMN IF NOT EXISTS " + DB.BindID(pVariables[V].VarName) + " real NULL");
-  HTTPServer::RegisterCallback("getESIOS", GetESIOSCallback);
-  HTTPServer::RegisterCallback("setESIOS", SetESIOSCallback);
+  HTTPServer::RegisterCallback("getESIOS", GetESIOSCallback, "API/Tariffs/ESIOS/GetESIOS.json");
+  HTTPServer::RegisterCallback("setESIOS", SetESIOSCallback, "API/Tariffs/ESIOS/SetESIOS.json");
   Config(CheckConfig(ConfigFile::ReadConfig("/ESIOS")));
 }
 ESIOSManager::~ESIOSManager() {

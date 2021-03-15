@@ -18,7 +18,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
-class ResourceFile {
+class ResourceFile final {
   private :
     typedef struct {
       uint32_t Size;
@@ -27,6 +27,9 @@ class ResourceFile {
   private :
     static map<string, File_t> pFiles;
   public :
+    ResourceFile();
+    ~ResourceFile();
     static uint8_t *GetFile(const string name, size_t *size);
+    static string   GetFile(const string name);
 };
 // ---------------------------------------------------------------------------------------------------------------------

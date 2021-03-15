@@ -215,7 +215,7 @@ void AnalyzerSoft::Thread() {
         pAggreg200MS.setCurrentTHD(3, (THD / pAggreg200MS.CurrentHarmonic(3, 0)) * 100.0);
       }
       pAggreg200MS.setFlag(pEvents.Wait());
-      if(pWorkingBlock->Sequence() < 100) {
+      if(pWorkingBlock->Sequence() < 10) {
         if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pWorkingBlock->Sequence());
       } else {

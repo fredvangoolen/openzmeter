@@ -94,7 +94,7 @@ json AnalyzerAccess::GetStatus(const vector<string> &series, const string &user)
     if(Serie == "Log") {
       Result["Log"] = LogFile::ToJSON();
     } else if(Serie == "System") {
-      Result["System"] = SystemManager::ToJSON();
+      Result["System"] = SystemManager::Status();
     } else if(Serie == "SystemLog") {
       Result["SystemLog"] = SystemManager::SystemLog();
     } else if(Serie == "Events") {

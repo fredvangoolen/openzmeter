@@ -19,6 +19,7 @@
 #include <cctz/time_zone.h>
 #include "Tools.h"
 #include "LogFile.h"
+#include "ResourceFile.h"
 #include "PidFile.h"
 #include "HTTPServer.h"
 #include "TelegramManager.h"
@@ -72,6 +73,8 @@ int main(int argc, char** argv) {
     }
   }
   Worker::SetThreadProperties(pthread_self(), "Main", Worker::NORMAL);
+
+  ResourceFile     Resources;                      // Init resources
   ConfigFile       ConfigFile(ConfigFileName);     // Load config file
   PidFile          PIDFile;                        // Create PID file
   LogFile          LogFile;                        // Create LOG file

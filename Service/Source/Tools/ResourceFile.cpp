@@ -20,26 +20,33 @@ extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
 map<string, ResourceFile::File_t> ResourceFile::pFiles;
 //----------------------------------------------------------------------------------------------------------------------
+ResourceFile::ResourceFile() {
+  char *Ptr = _binary_ResourceFiles_start;
+  uint32_t FileCount = atoi(Ptr);
+  Ptr = &Ptr[strlen(Ptr) + 1];
+  for(uint32_t i = 0; i < FileCount; i++) {
+    File_t File;
+    string Name = Ptr;
+    Ptr = &Ptr[strlen(Ptr) + 1];
+    File.Size = atoi(Ptr);
+    Ptr = &Ptr[strlen(Ptr) + 1];
+    File.Ptr = (uint8_t*)Ptr;
+    Ptr = &Ptr[File.Size];
+    pFiles.insert({Name, File});
+  }
+}
+ResourceFile::~ResourceFile() {
+}
 uint8_t *ResourceFile::GetFile(string name, size_t *size) {
   *size = 0;
-  if(pFiles.size() == 0) {
-    char *Ptr = _binary_ResourceFiles_start;
-    uint32_t FileCount = atoi(Ptr);
-    Ptr = &Ptr[strlen(Ptr) + 1];
-    for(uint32_t i = 0; i < FileCount; i++) {
-      File_t File;
-      string Name = Ptr;
-      Ptr = &Ptr[strlen(Ptr) + 1];
-      File.Size = atoi(Ptr);
-      Ptr = &Ptr[strlen(Ptr) + 1];
-      File.Ptr = (uint8_t*)Ptr;
-      Ptr = &Ptr[File.Size];
-      pFiles.insert({Name, File});
-    }
-  }
   auto File = pFiles.find(name);
   if(File == pFiles.end()) return NULL;
   *size = File->second.Size;
   return File->second.Ptr;
+}
+string ResourceFile::GetFile(const string name) {
+  size_t Size;
+  uint8_t *Data = GetFile(name, &Size);
+  return (Size == 0) ? string() : string((char*)Data, Size);
 }
 //----------------------------------------------------------------------------------------------------------------------

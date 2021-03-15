@@ -23,30 +23,30 @@ map<string, Analyzer*>  AnalyzerManager::pAnalyzers;
 pthread_rwlock_t        AnalyzerManager::pAnalyzersLock = PTHREAD_RWLOCK_INITIALIZER;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerManager::AnalyzerManager() {
-  HTTPServer::RegisterDoc("Analyzer", DocAnalyzer);
-  HTTPServer::RegisterCallback("getAnalyzers",    GetAnalyzersCallback,   DocGetAnalyzers);
-  HTTPServer::RegisterCallback("getAnalyzer",     GetAnalyzerCallback,    DocGetAnalyzer);
+  HTTPServer::RegisterDoc("Analyzer", "API/Analyzer/Analyzer.json");
+  HTTPServer::RegisterCallback("getAnalyzers",    GetAnalyzersCallback,   "API/Analyzer/GetAnalyzers.json");
+  HTTPServer::RegisterCallback("getAnalyzer",     GetAnalyzerCallback,    "API/Analyzer/GetAnalyzer.json");
   HTTPServer::RegisterCallback("setAnalyzer",     SetAnalyzerCallback);
-  HTTPServer::RegisterCallback("getStatus",       GetStatusCallback);
-  HTTPServer::RegisterCallback("getSeries",       GetSeriesCallback);
+  HTTPServer::RegisterCallback("getStatus",       GetStatusCallback,      "API/Analyzer/GetStatus.json");
+  HTTPServer::RegisterCallback("getSeries",       GetSeriesCallback,      "API/Analyzer/GetSeries.json");
   HTTPServer::RegisterCallback("getSeriesNow",    GetSeriesNowCallback);
-  HTTPServer::RegisterCallback("getCosts",        GetCostsCallback);
-  HTTPServer::RegisterCallback("getBills",        GetBillsCallback);
+  HTTPServer::RegisterCallback("getCosts",        GetCostsCallback,       "API/Analyzer/GetCosts.json");
+  HTTPServer::RegisterCallback("getBills",        GetBillsCallback,       "API/Analyzer/GetBills.json");
   HTTPServer::RegisterCallback("getWaveStream",   GetWaveStream);
-  HTTPServer::RegisterCallback("getSeriesRange",  GetSeriesRangeCallback);
-  HTTPServer::RegisterCallback("delSeriesRange",  DelSeriesRangeCallback);
-  HTTPServer::RegisterCallback("getEvents",       GetEventsCallback);
-  HTTPServer::RegisterCallback("getEventsRange",  GetEventsRangeCallback);
-  HTTPServer::RegisterCallback("delEventsRange",  DelEventsRangeCallback);
-  HTTPServer::RegisterCallback("getEvent",        GetEventCallback);
-  HTTPServer::RegisterCallback("setEvent",        SetEventCallback);
-  HTTPServer::RegisterCallback("delEvent",        DelEventCallback);
+  HTTPServer::RegisterCallback("getSeriesRange",  GetSeriesRangeCallback, "API/Analyzer/GetSeriesRange.json");
+  HTTPServer::RegisterCallback("delSeriesRange",  DelSeriesRangeCallback, "API/Analyzer/DelSeriesRange.json");
+  HTTPServer::RegisterCallback("getEvents",       GetEventsCallback,      "API/Analyzer/GetEvents.json");
+  HTTPServer::RegisterCallback("getEventsRange",  GetEventsRangeCallback, "API/Analyzer/GetEventsRange.json");
+  HTTPServer::RegisterCallback("delEventsRange",  DelEventsRangeCallback, "API/Analyzer/DelEventsRange.json");
+  HTTPServer::RegisterCallback("getEvent",        GetEventCallback,       "API/Analyzer/GetEvent.json");
+  HTTPServer::RegisterCallback("setEvent",        SetEventCallback,       "API/Analyzer/SetEvent.json");
+  HTTPServer::RegisterCallback("delEvent",        DelEventCallback,       "API/Analyzer/DelEvent.json");
   HTTPServer::RegisterCallback("testAlarm",       TestAlarmCallback);
-  HTTPServer::RegisterCallback("getAlarms",       GetAlarmsCallback);
-  HTTPServer::RegisterCallback("getAlarmsRange",  GetAlarmsRangeCallback);
-  HTTPServer::RegisterCallback("setAlarm",        SetAlarmCallback);
-  HTTPServer::RegisterCallback("delAlarm",        DelAlarmCallback,       DocDelAlarm);
-  HTTPServer::RegisterCallback("delAlarmsRange",  DelAlarmsRangeCallback);
+  HTTPServer::RegisterCallback("getAlarms",       GetAlarmsCallback,      "API/Analyzer/GetAlarms.json");
+  HTTPServer::RegisterCallback("getAlarmsRange",  GetAlarmsRangeCallback, "API/Analyzer/GetAlarmsRange.json");
+  HTTPServer::RegisterCallback("setAlarm",        SetAlarmCallback,       "API/Analyzer/SetAlarm.json");
+  HTTPServer::RegisterCallback("delAlarm",        DelAlarmCallback,       "API/Analyzer/DelAlarm.json");
+  HTTPServer::RegisterCallback("delAlarmsRange",  DelAlarmsRangeCallback, "API/Analyzer/DelAlarmsRange.json");
   HTTPServer::RegisterCallback("setRemote",       SetRemoteCallback);
 }
 AnalyzerManager::~AnalyzerManager() {
@@ -75,6 +75,7 @@ AnalyzerManager::~AnalyzerManager() {
   HTTPServer::UnregisterCallback("setAlarm");
   HTTPServer::UnregisterCallback("delAlarmsRange");
   HTTPServer::UnregisterCallback("setRemote");
+  HTTPServer::UnregisterDoc("Analyzer");
   LogFile::Debug("AnalyzerManager stopped");
 }
 bool AnalyzerManager::AddAnalyzer(Analyzer *analyzer) {
