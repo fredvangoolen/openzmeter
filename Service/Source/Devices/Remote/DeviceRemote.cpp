@@ -66,7 +66,7 @@ json DeviceRemote::CheckConfig(const json &config) {
   if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
   if(config.contains("Analyzers") && config["Analyzers"].is_array()) {
     set<string> Analyzers;
-    regex Validator("^[0-9A-F]{24}(_CAL|_CH1|_CH2|_CH3|_CH4)(_1P|_3P|_3PN)$");
+    regex Validator("^[0-9A-F]{24}(_CAL|_CH1|_CH2|_CH3|_CH4)?(_1P|_3P|_3PN)$");
     for(auto &Analyzer : config["Analyzers"]) {
       if(Analyzer.is_object() == false) continue;
       if((Analyzer.contains("User") == false) || (Analyzer["User"].is_string() == false)) continue;
