@@ -57,7 +57,7 @@
     },
     computed: {
       CanAdd: function() {
-        return (this.NewAnalyzer.match("^[0-9A-F]{24}(_CAL|_CH1|_CH2|_CH3|_CH4)(_1P|_3P|_3PN)$") != null);
+        return (this.NewAnalyzer.match("^[0-9A-F]{24}(_CAL|_CH1|_CH2|_CH3|_CH4)?(_1P|_3P|_3PN)$") != null);
       }
     },
     updated: function() {
