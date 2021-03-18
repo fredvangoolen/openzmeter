@@ -46,7 +46,7 @@ class AnalyzerSoftSync final {
     function<json(const vector<string> &series)>            pStatus;        //Get analyzer status
     function<json(const vector<string> &series)>            pNow;           //get now data to send
   private :
-    void *Thread();
+    void  *Thread();
   public :
     static json CheckConfig(const json &config);
   public :

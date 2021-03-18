@@ -23,6 +23,8 @@ class AnalyzerRemoteNow final {
   private :
     static const uint32_t      pTimeout = 60000;         //Request persistance time (ms)
   private :
+    const string               pSerial;                  //Analyzer serial
+  private :
     json                       pNow;                     //Cached version of now data
     json                       pStatus;                  //Cached version of status data
     map<string, uint64_t>      pNowRequest;              //Avaliable series last request rime
@@ -34,7 +36,7 @@ class AnalyzerRemoteNow final {
   public :
     void SetRemote(const json &params, json &response);
   public :
-    AnalyzerRemoteNow();
+    AnalyzerRemoteNow(const string &serial);
     ~AnalyzerRemoteNow();
 };
 // ---------------------------------------------------------------------------------------------------------------------

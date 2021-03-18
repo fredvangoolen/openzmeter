@@ -14,69 +14,56 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "NTPManager.h"
-#ifdef OPENWRT // ======================================================================================================
 #include <sys/time.h>
 #include "SystemManager.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 NTPManager::NTPManager() {
   LogFile::Info("Starting NTPManager...");
+#ifdef OPENWRT
   HTTPServer::RegisterCallback("getNTP", GetNTPCallback);
   HTTPServer::RegisterCallback("setNTP", SetNTPCallback);
+#endif
   LogFile::Info("NTPManager started");
 }
 NTPManager::~NTPManager() {
   LogFile::Info("Stopping NTPManager...");
+#ifdef OPENWRT
   HTTPServer::UnregisterCallback("getNTP");
   HTTPServer::UnregisterCallback("setNTP");
+#endif
   LogFile::Info("NTPManager stoped");
 }
+#ifdef OPENWRT
 void NTPManager::GetNTPCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::object();
-  string CommandStr = SystemManager::uBusCall("uci", "get", { {"config", "system"}, {"section", "ntp"} } );
-  if(CommandStr.empty() == false) {
-    json Tmp = json::parse(CommandStr, NULL, false);
-    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-    if(Tmp.is_object()) {
-      if(Tmp["values"].is_object()) {
-        if(Tmp["values"]["enabled"].is_string()) {
-          string Value = Tmp["values"]["enabled"];
-          Result["Enabled"] = (Value == "1");
-        }
-        if(Tmp["values"]["server"].is_string()) Result["Server"] = Tmp["values"]["server"];
-      }
-    }
-  }
+  json Tmp = SystemManager::uBusCall("uci", "get", { {"config", "system"}, {"section", "ntp"} } );
+  if((Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  Result["Enabled"] = false;
+  if(Tmp["values"]["enabled"].is_string()) Result["Enabled"] = (Tmp["values"]["enabled"] == "1");
+  Result["Server"] = "";
+  if(Tmp["values"]["server"].is_string()) Result["Server"] = Tmp["values"]["server"];
   Result["Time"] = Tools::GetTime64();
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void NTPManager::SetNTPCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json Result;
-  int ErrorCode = 0;
   if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Server") == false) || (params["Server"].is_string() == false)) return HTTPServer::FillResponse(response, "'Server' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  bool Enabled  = params["Enabled"];
-  string Server = params["Server"];
-  SystemManager::Exec("ubus call uci set '{\"config\":\"system\", \"section\":\"ntp\", \"values\":{\"enabled\":\"" + string((Enabled == true) ? "1" : "0") + "\", \"server\":\"" + Server + "\"}}'", &ErrorCode);
-  if(ErrorCode == 0) SystemManager::Exec("uci commit", &ErrorCode);
-  if(ErrorCode == 0) SystemManager::Exec("reload_config", &ErrorCode);
-  if((params["Enabled"] == false) && params.contains("Time") && params["Time"].is_number()) {
-    uint64_t Time = params["Time"];
+  if((params.contains("Time") == false) || (params["Time"].is_number() == false)) return HTTPServer::FillResponse(response, "'Time' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  bool     Enabled = params["Enabled"];
+  string   Server  = params["Server"];
+  uint64_t Time    = params["Time"];
+  SystemManager::uBusCall("uci", "set", { {"config", "system"}, {"section", "ntp"} , {"values", { {"enabled", (Enabled == true) ? "1" : "0"}, {"server", Server} } } });
+  SystemManager::Exec("uci commit && /etc/init.d/network restart");
+  if(Enabled == false) {
     timeval TimeVal;
     TimeVal.tv_sec  = Time / 1000;
     TimeVal.tv_usec = Time % 1000;
-    if(settimeofday(&TimeVal, NULL) != 0) {
-      Result["Status"] = false;
-      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-    }
+    if(settimeofday(&TimeVal, NULL) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   }
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
-#else // ===============================================================================================================
-NTPManager::NTPManager() {
-}
-NTPManager::~NTPManager() {
-}
-#endif // ==============================================================================================================
+#endif
+// ---------------------------------------------------------------------------------------------------------------------

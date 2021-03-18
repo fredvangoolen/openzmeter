@@ -4,7 +4,8 @@
       <div class="pull-left"><h4 class="modal-title">OpenVPN</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" title="Save" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
+        <button type="button" class="btn btn-default btn-xs" v-if="View=='Edit'" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes and close"></button>
+          <button type="button" class="btn btn-default btn-xs" v-if="View=='Edit'" @click="Apply"><img :src="require('Imgs/update.png')" alt="Apply changes"></button>
           <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </div>
@@ -17,11 +18,11 @@
       <div class="col-xs-12"><hr style="margin-top: 5px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12">
         <label class="control-label">Config file (OpenVPN with embedded certificates)</label>
-        <textarea rows="20" class="form-control" v-model="Config.Config"></textarea>
+        <textarea rows="10" class="form-control" v-model="Config.Config" spellcheck="false"></textarea>
       </div>
       <div class="col-xs-12">
-        <label class="control-label">Details</label>
-        <textarea rows="2" class="form-control" disabled :value="Config.Status"></textarea>
+        <label class="control-label">System log messages</label>
+        <textarea rows="10" class="form-control" disabled :value="SysMessages"></textarea>
       </div>
     </div>
   </dlg>
@@ -31,16 +32,30 @@
   export default {
     props: { settings: Object },
     data: function() {
-      return { ShowSpinner: false, Config: null };
+      return { ShowSpinner: false, Timer: null, Config: null, SysMessages: '' };
     },
     created: function() {
       this.Config = Object.assign({}, this.settings);
+      this.Refresh();
     },
-    beforeDestroy: function() {
-      if(this.Timer != null) clearTimeout(this.Timer);
-      this.Timer = null;
-    },
-    methods: {
+     methods: {
+      Refresh: function() {
+        if(this.Timer != null) clearTimeout(this.Timer);
+        this.$http.post('getSystem', { Series: ['SystemLog']}).then(
+          (result) => {
+            this.SysMessages = result.body.SystemLog;
+            this.Timer = setTimeout(this.Refresh, 5000);
+          },
+          (fail) => { this.Timer = setTimeout(this.Refresh, 5000); }
+        );
+      },
+      Apply: function() {
+        this.ShowSpinner = true;
+        this.$http.post('setVPN', { Enabled: this.Config.Enabled, Config: this.Config.Config }).then(
+          (result) => { this.ShowSpinner = false; },
+          (fail) => { this.ShowSpinner = false; }
+        );
+      },
       Save: function(value) {
         this.ShowSpinner = true;
         this.$http.post('setVPN', { Enabled: this.Config.Enabled, Config: this.Config.Config }).then(
@@ -59,7 +74,8 @@
   textarea {
     resize: none;
     font-family: 'Fira Code';
-    font-size: 12px;
+    font-size: 10px;
+    white-space: pre;
   }
   .help {
     font-size: 80%;

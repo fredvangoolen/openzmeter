@@ -43,6 +43,10 @@
         </div>
       </div>
       <div class="col-xs-12">
+        <label class="control-label">System log messages</label>
+        <textarea rows="10" class="form-control" disabled :value="SysMessages"></textarea>
+      </div>
+      <div class="col-xs-12">
         <vuetable ref="table" :data="FilterMessages" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
       </div>
     </div>
@@ -54,7 +58,7 @@
   import moment from 'moment';
   export default {
     data: function() {
-      return { ShowSpinner: true, AllMessages: [], Messages: [], FilterMessages: [], Options: {}, LastUpdate: null, Timer: null, Status: {},
+      return { ShowSpinner: true, SysMessages: '', AllMessages: [], Messages: [], FilterMessages: [], Options: {}, LastUpdate: null, Timer: null, Status: {},
               Columns: [
                 { name: 'Type', title: 'Type', callback: this.FormatType },
                 { name: 'Date', title: 'Date', callback: this.FormatDate },
@@ -93,12 +97,13 @@
         }
       },
       UpdateSystem: function() {
-        this.$http.post('getSystem', { Series: ['Status', 'Log']}).then(
+        this.$http.post('getSystem', { Series: ['Status', 'Log', 'SystemLog']}).then(
           (result) => {
             this.AllMessages = [];
             this.LastUpdate = moment();
             for(var n = 1; n < result.data.Log.Messages.length; n++) this.AllMessages.push({Type: result.data.Log.Messages[n][0], Date: result.data.Log.Messages[n][1], Message: result.data.Log.Messages[n][2]});
             this.Status = result.data.Status;
+            this.SysMessages = result.data.SystemLog;
             this.ShowSpinner = false;
             this.Timer = setTimeout(this.UpdateSystem, 5000);
           },
@@ -163,5 +168,11 @@
   .main-panel {
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
+  }
+  textarea {
+    resize: none;
+    font-family: 'Fira Code';
+    font-size: 10px;
+    white-space: pre;
   }
 </style>
