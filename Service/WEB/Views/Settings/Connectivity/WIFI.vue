@@ -3,10 +3,69 @@
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Wifi settings</h4></div>
       <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-if="View=='Edit'" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes"></button>
+        <button type="button" class="btn btn-default btn-xs" v-if="View=='Edit'" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes and close"></button>
+        <button type="button" class="btn btn-default btn-xs" v-if="View=='Edit'" @click="Apply"><img :src="require('Imgs/update.png')" alt="Apply changes"></button>
         <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </template>
+    <div class="row" v-if="View=='Edit'">
+      <div class="col-xs-12">
+        <label class="control-label" style="line-height: 22px">Enable</label>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
+      </div>
+      <div class="col-xs-12"><hr style="margin-top: 5px; margin-bottom: 5px; "/></div>
+    </div>
+    <div class="row" v-if="View=='Edit'">
+      <div class="col-xs-12">
+        <label class="control-label">SSID</label>
+        <div class="input-group">
+          <input type="text" class="form-control" v-model="Config.ESSID" autocomplete="off" autocapitalize="off" autocorrect="off">
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" @click="Scan"><img :src="require('Imgs/magnifier.png')" alt="Scan networks"></button>
+          </span>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <label class="control-label">Mode</label>
+        <option-picker :options="[{name: 'NONE', value: 'NONE'}, {name: 'WEP', value: 'WEP'}, {name: 'WPA', value: 'WPA'}, {name: 'WPA2', value: 'WPA2'}]" v-model="Config.KeyMode" :big="true"></option-picker>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <label class="control-label">IP Mode</label>
+        <option-picker :options="[{name: 'DHCP', value: 'DHCP'}, {name: 'STATIC', value: 'STATIC'}]" v-model="Config.IPMode" :big="true"></option-picker>
+      </div>
+      <div class="col-md-6 col-sm-12">
+        <label class="control-label">ESSID Key</label>
+        <password :disabled="Config.KeyMode=='NONE'" v-model="Config.Key"></password>
+      </div>
+      <div class="col-md-12" v-if="Config.IPMode=='STATIC'">
+        <label class="control-label">IP address</label>
+        <input type="text" class="form-control" :disabled="Config.IPMode=='DHCP'" v-model="Config.IP">
+      </div>
+      <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
+        <label class="control-label">Network mask</label>
+        <input type="text" class="form-control" v-model="Config.Netmask">
+      </div>
+      <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
+        <label class="control-label">Gateway address</label>
+        <input type="text" class="form-control" v-model="Config.Gateway">
+      </div>
+      <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
+        <label class="control-label">Primary DNS address</label>
+        <input type="text" class="form-control" v-model="Config.DNS[0]">
+      </div>
+      <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
+        <label class="control-label">Secondary DNS address</label>
+        <input type="text" class="form-control" v-model="Config.DNS[1]">
+      </div>
+      <div class="col-xs-12">
+        <label class="control-label">Details</label>
+        <textarea rows="4" class="form-control" disabled :value="Details"></textarea>
+      </div>
+      <div class="col-xs-12">
+        <label class="control-label">System log messages</label>
+        <textarea rows="10" class="form-control" disabled :value="SysMessages"></textarea>
+      </div>
+    </div>
     <div v-if="View=='Scan'">
       <vuetable ref="table" :fields="Columns" :api-mode="false" :data="WifiList" class="table small table-striped">
         <template slot="actions" slot-scope="props">
@@ -19,60 +78,6 @@
         </template>
       </vuetable>
     </div>
-    <div v-if="View=='Edit'">
-      <div class="row">
-        <div class="col-xs-12">
-          <label class="control-label" style="line-height: 22px">Enable</label>
-          <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
-        </div>
-        <div class="col-xs-12"><hr style="margin-top: 5px; margin-bottom: 5px;"/></div>
-        <div class="col-md-12">
-          <label class="control-label">SSID</label>
-          <div class="input-group">
-            <input type="text" class="form-control" v-model="Config.ESSID" autocomplete="off" autocapitalize="off" autocorrect="off">
-            <span class="input-group-btn">
-              <button type="button" class="btn btn-default" @click="Scan"><img :src="require('Imgs/magnifier.png')" alt="Scan networks"></button>
-            </span>
-          </div>
-        </div>
-        <div class="col-md-3 col-sm-6">
-          <label class="control-label">Mode</label>
-          <option-picker :options="[{name: 'NONE', value: 'NONE'}, {name: 'WEP', value: 'WEP'}, {name: 'WPA', value: 'WPA'}, {name: 'WPA2', value: 'WPA2'}]" v-model="Config.KeyMode" :big="true"></option-picker>
-        </div>
-        <div class="col-md-3 col-sm-6">
-          <label class="control-label">IP Mode</label>
-          <option-picker :options="[{name: 'DHCP', value: 'DHCP'}, {name: 'STATIC', value: 'STATIC'}]" v-model="Config.IPMode" :big="true"></option-picker>
-        </div>
-        <div class="col-md-6 col-sm-12">
-          <label class="control-label">ESSID Key</label>
-          <password :disabled="Config.KeyMode=='NONE'" v-model="Config.Key"></password>
-        </div>
-        <div class="col-md-12" v-if="Config.IPMode=='STATIC'">
-          <label class="control-label">IP address</label>
-          <input type="text" class="form-control" :disabled="Config.IPMode=='DHCP'" v-model="Config.IP">
-        </div>
-        <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
-          <label class="control-label">Network mask</label>
-          <input type="text" class="form-control" v-model="Config.Netmask">
-        </div>
-        <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
-          <label class="control-label">Gateway address</label>
-          <input type="text" class="form-control" v-model="Config.Gateway">
-        </div>
-        <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
-          <label class="control-label">Primary DNS address</label>
-          <input type="text" class="form-control" v-model="Config.DNS[0]">
-        </div>
-        <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
-          <label class="control-label">Secondary DNS address</label>
-          <input type="text" class="form-control" v-model="Config.DNS[1]">
-        </div>
-        <div class="col-xs-12">
-          <label class="control-label">Details</label>
-          <textarea rows="4" class="form-control" disabled :value="Details"></textarea>
-        </div>
-      </div>
-    </div>
   </dlg>
 </template>
 
@@ -81,7 +86,7 @@
   export default {
     props: { settings: Object },
     data() {
-      return { View: 'Edit', WifiList: [], Timer: null, ShowSpinner: false, Config: null, Details: '',
+      return { View: 'Edit', WifiList: [], Timer: null, ShowSpinner: false, Config: null, Details: '', SysMessages: '',
         Columns: [
           {name: 'ESSID', title: 'Name'},
           {name: 'Channel', title: 'Channel'},
@@ -97,9 +102,10 @@
     methods: {
       Refresh: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
-        this.$http.post('getWIFI', { }).then(
+        Promise.all([this.$http.post('getWIFI', { }), this.$http.post('getSystem', { Series: ['SystemLog']})]).then(
           (result) => {
-            this.Details = 'Device IP address   : ' + result.body.Status.IP + ' (' + result.body.Status.IPMode + ')\nDNS servers         : ' + result.body.Status.DNS.join(', ') + '\nDefault gateway     : ' + result.body.Status.Gateway + '\nCurrent WIFI channel: ' + result.body.Status.Channel + ' (Signal: ' + result.body.Status.Quality + '%)';
+            this.Details = 'Device IP address   : ' + result[0].body.Status.IP + ' (' + result[0].body.Status.IPMode + ')\nDNS servers         : ' + result[0].body.Status.DNS.join(', ') + '\nDefault gateway     : ' + result[0].body.Status.Gateway + '\nCurrent WIFI channel: ' + result[0].body.Status.Channel + ' (Signal: ' + result[0].body.Status.Quality + '%)';
+            this.SysMessages = result[1].body.SystemLog;
             this.Timer = setTimeout(this.Refresh, 5000);
           },
           (fail) => { this.Timer = setTimeout(this.Refresh, 5000); }
@@ -125,6 +131,7 @@
           this.Refresh();
         } else {
           this.$emit('close');
+          this.$emit('update:settings', this.Config);
         }
       },
       Select: function(row) {
@@ -132,6 +139,13 @@
         this.Refresh();
         this.Config.ESSID = row.ESSID;
         this.View = 'Edit';
+      },
+      Apply: function() {
+        this.ShowSpinner = true;
+        this.$http.post('setWIFI', this.Config).then(
+          (result) => { this.ShowSpinner = false; },
+          (fail) => { this.ShowSpinner = false; }
+        );
       },
       Save: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
@@ -156,7 +170,8 @@
   textarea {
     resize: none;
     font-family: 'Fira Code';
-    font-size: 12px;
+    font-size: 10px;
+    white-space: pre;
   }
   div >>> .progress {
     height: 12px;

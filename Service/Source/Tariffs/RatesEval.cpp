@@ -296,7 +296,7 @@ json RatesEval::HandleSample() {
       return Result;
     }
   }
-  if(pSeries.empty()) Result = BuildSample(false);
+  if(pSeries.empty() == false) Result = BuildSample(false);
   pCurrent += 900000;
   return Result;
 }

@@ -321,7 +321,14 @@ json AnalyzerSoft::GetSeriesNow(const vector<string> &series) {
 }
 void AnalyzerSoft::HandleAction(const string &name, const json &params) {
   Response Resp;
-  if(name == "SetSeries") {
+  if(name == "SetAnalyzer") {
+    if(params.contains("Users")) pAccess.Config(AnalyzerAccess::CheckConfig(params["Users"]));
+    try {
+      Config(CheckConfig(params, pMode, true));
+    } catch(const string &err) {
+      return LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s) fails", pSerial.c_str(), name.c_str());
+    }
+  } else if(name == "SetSeries") {
     pSeries.SetSeries(params, Resp);
   } else if(name == "DelSeriesRange") {
     pSeries.DelSeriesRange(params, Resp);

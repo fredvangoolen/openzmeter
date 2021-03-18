@@ -1,5 +1,5 @@
 <template>
-  <dlg :loading="ShowSpinner">
+  <dlg :loading="TransferStatus.Data==null">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Information</h4></div>
       <div class="pull-right btn-group">
@@ -54,7 +54,7 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { ShowSpinner: false, TransferStatus: this.StatusTransfer(['Log', 'System']) };
+      return { TransferStatus: this.StatusTransfer(['Log', 'System']) };
     },
     mounted: function() {
       this.TransferStatus.Update(this.analyzer);

@@ -22,7 +22,7 @@
 #include "PriceSource.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerRemote::AnalyzerRemote(const string &id, const AnalyzerMode mode, const string &user) : Analyzer(id, mode, user),
-  pAccess(id, user), pRates(id), pSeries(id), pAlarms(id), pEvents(id), pNow(), pActions([&](const string &n, const json &p) { return HandleAction(n, p); }) {
+  pAccess(id, user), pRates(id), pSeries(id), pAlarms(id), pEvents(id), pNow(id), pActions([&](const string &n, const json &p) { return HandleAction(n, p); }) {
   LogFile::Debug("Creating tables for analyzer '%s'", pSerial.c_str());
   Database DB(id, true);
   DB.ExecResource("SQL/Database_Analyzer.sql");

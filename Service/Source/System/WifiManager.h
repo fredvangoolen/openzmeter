@@ -14,12 +14,12 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#ifdef OPENWRT // ======================================================================================================
 #include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class WifiManager final {
   public :
-    enum WifiStat {DISABLED, CONFIGURED, CONNECTED, INTERNET};
+    enum WifiStat { DISABLED, CONFIGURED, CONNECTED, INTERNET };
+#ifdef OPENWRT
   private :
     static WifiStat        pWifiStat;
     static pthread_mutex_t pMutex;
@@ -31,20 +31,11 @@ class WifiManager final {
     static void     GetWIFICallback(const json &params, Response &response);
     static void     SetWIFICallback(const json &params, Response &response);
     static void     ScanWIFICallback(const json &params, Response &response);
+#endif
   public :
     static WifiStat Enabled();
   public :
     WifiManager();
     ~WifiManager();
 };
-#else // ===============================================================================================================
-class WifiManager final {
-  public :
-    enum WifiStat {DISABLED, CONFIGURED, CONNECTED, INTERNET};
-  public :
-    static WifiStat Enabled();
-  public :
-    WifiManager();
-    ~WifiManager();
-};
-#endif // ==============================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------

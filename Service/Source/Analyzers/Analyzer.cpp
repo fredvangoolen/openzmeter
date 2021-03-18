@@ -57,7 +57,7 @@ void Analyzer::State(const Analyzer::AnalyzerState state) {
   pthread_rwlock_unlock(&pMembersLocks);
 }
 Analyzer::AnalyzerState Analyzer::State() {
-  uint64_t Now = Tools::GetTime64() - 5000;
+  uint64_t Now = Tools::GetTime64() - 10000;
   pthread_rwlock_rdlock(&pMembersLocks);
   AnalyzerState State = pState;
   if((State != UNCONFIGURED) && (pLastTime < Now)) State = OFFLINE;

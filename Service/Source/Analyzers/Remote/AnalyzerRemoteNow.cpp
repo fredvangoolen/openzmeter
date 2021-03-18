@@ -15,12 +15,12 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerRemoteNow.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerRemoteNow::AnalyzerRemoteNow() {
+AnalyzerRemoteNow::AnalyzerRemoteNow(const string &serial) : pSerial(serial) {
   pNow           = json::object();
   pStatus        = json::object();
   pLock          = PTHREAD_RWLOCK_INITIALIZER;
   pNowRequest    = {{"Frequency", 0}, {"Flag", 0}, {"Unbalance", 0}, {"Voltage", 0}, {"Current", 0}, {"Active_Power", 0}, {"Reactive_Power", 0}, {"Active_Energy", 0}, {"Reactive_Energy", 0}, {"Apparent_Power", 0}, {"Power_Factor", 0}, {"Voltage_THD", 0}, {"Current_THD", 0}, {"Phi", 0}, {"Voltage_Phase", 0}, {"Voltage_Harmonics", 0}, {"Current_Harmonics", 0}, {"Power_Harmonics", 0}, {"Voltage_Harmonics_Complex", 0}, {"Current_Harmonics_Complex", 0}, {"Voltage_FFT", 0}, {"Current_FFT", 0}, {"Voltage_Samples", 0}, {"Current_Samples", 0}};
-  pStatusRequest = {{"Log", 0}, {"System", 0}, {"SystemLog", 0}, {"Events", 0}, {"Alarms", 0}, {"Storage", 0}};
+  pStatusRequest = {{"Log", 0}, {"System", 0}, {"SystemLog", 0}, {"Storage", 0}};
 }
 AnalyzerRemoteNow::~AnalyzerRemoteNow() {
 }
@@ -76,23 +76,49 @@ void AnalyzerRemoteNow::GetSeriesNow(const json &params, Response &response) {
 void AnalyzerRemoteNow::GetStatus(const json &params, Response &response, const json extraProps) {
   if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
   uint64_t Time = Tools::GetTime64();
+  string   User = params["UserName"];
   for(auto &Serie : params["Series"]) {
     if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    auto Item = pStatusRequest.find(Serie);
-    if(Item == pStatusRequest.end()) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    pthread_rwlock_wrlock(&pLock);
-    Item->second = Time;
-    pthread_rwlock_unlock(&pLock);
+    if((Serie != "Events") && (Serie != "Alarms")) {
+      auto Item = pStatusRequest.find(Serie);
+      if(Item == pStatusRequest.end()) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+      pthread_rwlock_wrlock(&pLock);
+      Item->second = Time;
+      pthread_rwlock_unlock(&pLock);
+    }
   }
   pthread_rwlock_rdlock(&pLock);
   json Result = extraProps;
   Result["Time"] = pStatus["Time"];
   for(auto &Serie : params["Series"]) {
-    if(pStatus.contains(Serie) == false) {
+    if(Serie == "Events") {
+      Result["Events"] = json::object();
+      Database DB(pSerial);
+      DB.ExecSentenceAsyncResult("SELECT eventsread, (SELECT count(*) FROM events WHERE changetime > eventsread) AS events FROM permissions WHERE username = " + DB.Bind(User) + " AND serial = " + DB.Bind(pSerial));
+      if(DB.FecthRow() == false) {
+        Result["Events"]["LastRead"] = 0;
+        Result["Events"]["Count"]    = 0;
+      } else {
+        Result["Events"]["LastRead"] = DB.ResultUInt64("eventsread");
+        Result["Events"]["Count"]    = DB.ResultUInt64("events");
+      }
+    } else if(Serie == "Alarms") {
+      Result["Alarms"] = json::object();
+      Database DB(pSerial);
+      DB.ExecSentenceAsyncResult("SELECT alarmsread, (SELECT count(*) FROM alarms WHERE changetime > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(User) + " AND serial = " + DB.Bind(pSerial));
+      if(DB.FecthRow() == false) {
+        Result["Alarms"]["LastRead"] = 0;
+        Result["Alarms"]["Count"]    = 0;
+      } else {
+        Result["Alarms"]["LastRead"] = DB.ResultUInt64("alarmsread");
+        Result["Alarms"]["Count"]    = DB.ResultUInt64("alarms");
+      }
+    } else if(pStatus.contains(Serie) == true) {
+      Result[(string)Serie] = pStatus[(string)Serie];
+    } else {
       pthread_rwlock_unlock(&pLock);
       return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
     }
-    Result[(string)Serie] = pStatus[(string)Serie];
   }
   pthread_rwlock_unlock(&pLock);
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);

@@ -14,23 +14,27 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "VPNManager.h"
-#ifdef OPENWRT // ======================================================================================================
 #include <sys/time.h>
 #include "SystemManager.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 VPNManager::VPNManager() {
   LogFile::Info("Starting VPNManager...");
+#ifdef OPENWRT
   HTTPServer::RegisterCallback("getVPN", GetVPNCallback);
   HTTPServer::RegisterCallback("setVPN", SetVPNCallback);
+#endif
   LogFile::Info("VPNManager started");
 }
 VPNManager::~VPNManager() {
   LogFile::Info("Stopping VPNManager...");
+#ifdef OPENWRT
   HTTPServer::UnregisterCallback("getVPN");
   HTTPServer::UnregisterCallback("setVPN");
+#endif
   LogFile::Info("VPNManager stoped");
 }
+#ifdef OPENWRT
 void VPNManager::GetVPNCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::object();
@@ -48,21 +52,12 @@ void VPNManager::GetVPNCallback(const json &params, Response &response) {
   } while(Len > 0);
   close(File);
   Result["Config"] = Read;
-  string CommandStr = SystemManager::Exec("ubus call uci get '{\"config\":\"openvpn\", \"section\":\"custom_config\"}'");
-  if(CommandStr.empty() == false) {
-    json Tmp = json::parse(CommandStr, NULL, false);
-    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-    if(Tmp.is_object()) {
-      if(Tmp["values"].is_object()) {
-        if(Tmp["values"]["enabled"].is_string()) {
-          string Value = Tmp["values"]["enabled"];
-          Result["Enabled"] = (Value == "1");
-        }
-        if(Tmp["values"]["config"].is_string()) Result["ConfigFile"] = Tmp["values"]["config"];
-      }
-    }
-  }
-  Result["Status"] = "";
+  json Tmp = SystemManager::uBusCall("uci", "get", { {"config", "openvpn"}, {"section", "custom_config"} });
+  if(Result.is_object() && Result.contains("values") && Result["values"].is_object()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  Result["Enabled"] = true;
+  if(Tmp["values"]["enabled"].is_string()) Result["Enabled"] = (Tmp["values"]["disabled"] == "0");
+  Result["ConfigFile"] = pFileName;
+  if(Tmp["values"]["config"].is_string()) Result["ConfigFile"] = Tmp["values"]["config"];
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void VPNManager::SetVPNCallback(const json &params, Response &response) {
@@ -74,7 +69,6 @@ void VPNManager::SetVPNCallback(const json &params, Response &response) {
     LogFile::Error("Can not open '%s' (%s)", pFileName, strerror(errno));
     return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);;
   }
-  int     ErrorCode = 0;
   bool    Enabled   = params["Enabled"];
   string  Write     = params["Config"];
   ssize_t Len       = write(File, Write.c_str(), Write.size());
@@ -83,14 +77,9 @@ void VPNManager::SetVPNCallback(const json &params, Response &response) {
     close(File);
     return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);;
   }
-  SystemManager::Exec("ubus call uci set '{\"config\":\"openvpn\", \"section\":\"custom_config\", \"values\":{\"enabled\":\"" + string((Enabled == true) ? "1" : "0") + "\", \"config\":\"" + pFileName + "\"}}'", &ErrorCode);
-  if(ErrorCode == 0) SystemManager::Exec("uci commit", &ErrorCode);
-  if(ErrorCode == 0) SystemManager::Exec("reload_config", &ErrorCode);
+  SystemManager::uBusCall("uci", "set", { {"config", "openvpn"}, {"section", {"custom_config"}, {"values", { {"enabled", (Enabled == true) ? "1" : "0"}, {"config", pFileName} } } } });
+  SystemManager::Exec("uci commit && /etc/init.d/openvpn restart");
   HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
-#else // ===============================================================================================================
-VPNManager::VPNManager() {
-}
-VPNManager::~VPNManager() {
-}
-#endif // ==============================================================================================================
+#endif
+// ---------------------------------------------------------------------------------------------------------------------

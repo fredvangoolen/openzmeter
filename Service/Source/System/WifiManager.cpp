@@ -14,20 +14,22 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "WifiManager.h"
-#ifdef OPENWRT // ======================================================================================================
 #include "SystemManager.h"
 #include "LogFile.h"
 #include "MessageLoop.h"
 #include "ConfigFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
+#ifdef OPENWRT
 WifiManager::WifiStat WifiManager::pWifiStat      = WifiManager::DISABLED;
 pthread_mutex_t       WifiManager::pMutex         = PTHREAD_MUTEX_INITIALIZER;
 string                WifiManager::pInterfaceWIFI = "wlan0";
 string                WifiManager::pNetworkWIFI   = "lan";
 string                WifiManager::pWirelessWIFI  = "default_radio";
+#endif
 // ---------------------------------------------------------------------------------------------------------------------
 WifiManager::WifiManager() {
   LogFile::Info("Starting WifiManager...");
+#ifdef OPENWRT
   json Config = ConfigFile::ReadConfig("/WIFI");
   if(Config.is_object() == true) {
     if(Config["Interface"].is_string()) pInterfaceWIFI = Config["Interface"];
@@ -44,16 +46,26 @@ WifiManager::WifiManager() {
   HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
   HTTPServer::RegisterCallback("getWIFI",  GetWIFICallback);
   HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
+#endif
   LogFile::Info("WifiManager started");
 }
 WifiManager::~WifiManager() {
   LogFile::Info("Stopping WifiManager...");
+#ifdef OPENWRT
   HTTPServer::UnregisterCallback("scanWIFI");
   HTTPServer::UnregisterCallback("getWIFI");
   HTTPServer::UnregisterCallback("setWIFI");
   MessageLoop::UnregisterListener("WIFI_PeriodicTasks");
+#endif
   LogFile::Info("WifiManager stoped");
 }
+WifiManager::WifiStat WifiManager::Enabled() {
+  pthread_mutex_lock(&pMutex);
+  WifiStat Stat = pWifiStat;
+  pthread_mutex_unlock(&pMutex);
+  return Stat;
+}
+#ifdef OPENWRT
 void WifiManager::PeriodicTasks() {
   WifiStat Stat = DISABLED;
   json Result = SystemManager::uBusCall("uci", "get", { {"config", "network"}, {"section", pNetworkWIFI} });
@@ -71,12 +83,6 @@ void WifiManager::PeriodicTasks() {
   pWifiStat = Stat;
   pthread_mutex_unlock(&pMutex);
 
-}
-WifiManager::WifiStat WifiManager::Enabled() {
-  pthread_mutex_lock(&pMutex);
-  WifiStat Stat = pWifiStat;
-  pthread_mutex_unlock(&pMutex);
-  return Stat;
 }
 void WifiManager::ScanWIFICallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
@@ -98,118 +104,70 @@ void WifiManager::ScanWIFICallback(const json &params, Response &response) {
 void WifiManager::GetWIFICallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::object();
-  string CommandStr = SystemManager::Exec("ubus call uci get '{\"config\":\"network\", \"section\":\"" + pNetworkWIFI + "\"}'");
-  if(CommandStr.empty() == false) {
-    json Tmp = json::parse(CommandStr, NULL, false);
-    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-    if(Tmp.is_object()) {
-      if(Tmp["values"].is_object()) {
-        Result["IPMode"] = "DHCP";
-        if(Tmp["values"]["proto"].is_string()) Result["IPMode"] = (Tmp["values"]["proto"] == "static") ? "STATIC" : "DHCP";
-        Result["IP"] = "";
-        if(Tmp["values"]["ipaddr"].is_string()) Result["IP"] = Tmp["values"]["ipaddr"];
-        Result["Netmask"] = "";
-        if(Tmp["values"]["netmask"].is_string()) Result["Netmask"] = Tmp["values"]["netmask"];
-        Result["Gateway"] = "";
-        if(Tmp["values"]["gateway"].is_string()) Result["Gateway"] = Tmp["values"]["gateway"];
-        Result["DNS"] = json::array();
-        if(Tmp["values"]["dns"].is_array()) Result["DNS"] = Tmp["values"]["dns"];
-        Result["Enabled"] = false;
-        if(Tmp["values"]["enabled"].is_string()) Result["Enabled"] = (Tmp["values"]["enabled"] == "1");
-      }
-    }
-  }
-  CommandStr = SystemManager::Exec("ubus call uci get '{\"config\":\"wireless\", \"section\":\"" + pWirelessWIFI + "\"}'");
-  if(CommandStr.empty() == false) {
-    json Tmp = json::parse(CommandStr, NULL, false);
-    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-    if(Tmp.is_object()) {
-      if(Tmp["values"].is_object()) {
-        if(Tmp["values"]["ssid"].is_string()) Result["ESSID"] = Tmp["values"]["ssid"];
-        if(Tmp["values"]["encryption"].is_string()) Result["KeyMode"] = (Tmp["values"]["encryption"] == "none") ? "NONE" : (Tmp["values"]["encryption"] == "wep") ? "WEP" : (Tmp["values"]["encryption"] == "psk") ? "WPA" : "WPA2";
-        if(Result["KeyMode"] != "NONE") {
-          if(Tmp["values"]["key"].is_string()) Result["Key"] = Tmp["values"]["key"];
-        }
-      }
-    }
-  }
+  json Tmp = SystemManager::uBusCall("uci", "get", { {"config", "network"}, {"section", pNetworkWIFI } });
+  if((Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  Result["IPMode"] = "DHCP";
+  if(Tmp["values"]["proto"].is_string()) Result["IPMode"] = (Tmp["values"]["proto"] == "static") ? "STATIC" : "DHCP";
+  Result["IP"] = "";
+  if(Tmp["values"]["ipaddr"].is_string()) Result["IP"] = Tmp["values"]["ipaddr"];
+  Result["Netmask"] = "";
+  if(Tmp["values"]["netmask"].is_string()) Result["Netmask"] = Tmp["values"]["netmask"];
+  Result["Gateway"] = "";
+  if(Tmp["values"]["gateway"].is_string()) Result["Gateway"] = Tmp["values"]["gateway"];
+  Result["DNS"] = json::array();
+  if(Tmp["values"]["dns"].is_array()) Result["DNS"] = Tmp["values"]["dns"];
+
+  Tmp = SystemManager::uBusCall("uci", "get", { {"config", "wireless"}, {"section", pWirelessWIFI } });
+  if((Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  Result["Enabled"] = true;
+  if(Tmp["values"]["disabled"].is_string()) Result["Enabled"] = (Tmp["values"]["disabled"] == "0");
+  if(Tmp["values"]["ssid"].is_string()) Result["ESSID"] = Tmp["values"]["ssid"];
+  if(Tmp["values"]["encryption"].is_string()) Result["KeyMode"] = (Tmp["values"]["encryption"] == "none") ? "NONE" : (Tmp["values"]["encryption"] == "wep") ? "WEP" : (Tmp["values"]["encryption"] == "psk") ? "WPA" : "WPA2";
+  if((Result["KeyMode"] != "NONE") && Tmp["values"]["key"].is_string()) Result["Key"] = Tmp["values"]["key"];
+
   Result["Status"] = json::object();
-  CommandStr = SystemManager::Exec("ubus call network.interface." + pNetworkWIFI + " status");
-  if(CommandStr.empty() == false) {
-    json Tmp = json::parse(CommandStr, NULL, false);
-    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-    if(Tmp.is_object()) {
-      Result["Status"]["Connected"] = false;
-      if(Tmp["up"].is_boolean()) Result["Status"]["Connected"] = Tmp["up"];
-      if(Result["Status"]["Connected"] == true) {
-        if(Tmp["dns-server"].is_array()) Result["Status"]["DNS"] = Tmp["dns-server"];
-        if(Tmp["ipv4-address"].is_array() && Tmp["ipv4-address"][0].is_object() && Tmp["ipv4-address"][0]["address"].is_string()) Result["Status"]["IP"] = Tmp["ipv4-address"][0]["address"];
-        if(Tmp["proto"].is_string()) Result["Status"]["IPMode"] = (Tmp["proto"] == "dhcp") ? "DHCP" : "STATIC";
-        if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Status"]["Gateway"] = Tmp["route"][0]["nexthop"];
-      }
-    }
+  Tmp = SystemManager::uBusCall("network.interface." + pNetworkWIFI, "status", {});
+  if(Tmp.is_object() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  Result["Status"]["Connected"] = false;
+  if(Tmp["up"].is_boolean()) Result["Status"]["Connected"] = Tmp["up"];
+  if(Result["Status"]["Connected"] == true) {
+    if(Tmp["dns-server"].is_array()) Result["Status"]["DNS"] = Tmp["dns-server"];
+    if(Tmp["ipv4-address"].is_array() && Tmp["ipv4-address"][0].is_object() && Tmp["ipv4-address"][0]["address"].is_string()) Result["Status"]["IP"] = Tmp["ipv4-address"][0]["address"];
+    if(Tmp["proto"].is_string()) Result["Status"]["IPMode"] = (Tmp["proto"] == "dhcp") ? "DHCP" : "STATIC";
+    if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Status"]["Gateway"] = Tmp["route"][0]["nexthop"];
   }
-  CommandStr = SystemManager::Exec("ubus call iwinfo info '{\"device\":\"" + pInterfaceWIFI + "\"}'");
-  if(CommandStr.empty() == false) {
-    json Tmp = json::parse(CommandStr, NULL, false);
-    if(Tmp.is_discarded()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-    if(Tmp.is_object()) {
-      if(Tmp["ssid"].is_string()) Result["Status"]["ESSID"] = Tmp["ssid"];
-      if(Tmp["channel"].is_number()) Result["Status"]["Channel"] = Tmp["channel"];
-      if(Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
-        float Current = Tmp["quality"], Max = Tmp["quality_max"];
-        Result["Status"]["Quality"] = (int) (Current * 100.0 / Max);
-      }
-    }
+  Tmp = SystemManager::uBusCall("iwinfo", "info", { {"device", pInterfaceWIFI} });
+  if(Tmp.is_object() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  if(Tmp["ssid"].is_string()) Result["Status"]["ESSID"] = Tmp["ssid"];
+  if(Tmp["channel"].is_number()) Result["Status"]["Channel"] = Tmp["channel"];
+  if(Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
+    float Current = Tmp["quality"], Max = Tmp["quality_max"];
+    Result["Status"]["Quality"] = (int) (Current * 100.0 / Max);
   }
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void WifiManager::SetWIFICallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  int ErrorCode = 0;
-  if(params.contains("Enabled") && params["Enabled"].is_boolean()) {
-    SystemManager::Exec("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"enabled\":\"" + (params["Enabled"] ? "1" : "0") + "\"}}'", &ErrorCode);
-    if(ErrorCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("IPMode") == false) || (params["IPMode"].is_string() == false) || ((params["IPMode"] != "DHCP") && (params["IPMode"] != "STATIC"))) return HTTPServer::FillResponse(response, "'IPMode' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("ESSID") == false) || (params["ESSID"].is_string() == false)) return HTTPServer::FillResponse(response, "'ESSID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("KeyMode") == false) || (params["KeyMode"].is_string() == false) || ((params["KeyMode"] != "NONE") && (params["KeyMode"] != "WEP") && (params["KeyMode"] != "WPA") && (params["KeyMode"] != "WPA2"))) return HTTPServer::FillResponse(response, "'KeyMode' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(params["IPMode"] == "STATIC") {
+    if((params.contains("IP") == false) || (params["IP"].is_string() == false)) return HTTPServer::FillResponse(response, "'IP' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if((params.contains("Netmask") == false) || (params["Netmask"].is_string() == false)) return HTTPServer::FillResponse(response, "'Netmask' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if((params.contains("Gateway") == false) || (params["Gateway"].is_string() == false)) return HTTPServer::FillResponse(response, "'Gateway' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if((params.contains("DNS") == false) || (params["DNS"].is_array() == false) || (params["DNS"].size() != 2) || (params["DNS"][0].is_string() == false) || (params["DNS"][1].is_string() == false)) return HTTPServer::FillResponse(response, "'DNS' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    SystemManager::uBusCall("uci", "set", { {"config", "network"}, {"section", pNetworkWIFI}, {"values", {{"ipaddr", params["IP"]}, {"netmask", params["Netmask"]}, {"gateway", params["Gateway"]}, {"proto", (params["IPMode"] == "DHCP") ? "dhcp" : "static"}, {"enabled", params["Enabled"] ? "1" : "0"}, {"dns", params["DNS"]}}}});
+  } else {
+    SystemManager::uBusCall("uci", "set", { {"config", "network"}, {"section", pNetworkWIFI}, {"values", {{"proto", (params["IPMode"] == "DHCP") ? "dhcp" : "static"}, {"enabled", params["Enabled"] ? "1" : "0"}}}});
   }
-  if(params.contains("IPMode") && params["IPMode"].is_string() && ((params["IPMode"] == "DHCP") || (params["IPMode"] == "STATIC"))) {
-    SystemManager::Exec("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"proto\":\"" + ((params["IPMode"] == "DHCP") ? "dhcp" : "static") + "\"}}'", &ErrorCode);
-    if(ErrorCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  if(params["KeyMode"] == "NONE") {
+    SystemManager::uBusCall("uci", "set", { {"config", "wireless"}, {"section", pWirelessWIFI}, {"values", {{"ssid", params["ESSID"]}, {"encryption", "none"}}}});
+  } else {
+    SystemManager::uBusCall("uci", "set", { {"config", "wireless"}, {"section", pWirelessWIFI}, {"values", {{"ssid", params["ESSID"]}, {"key", params["Key"]}, {"encryption", (params["KeyMode"] == "WEP") ? "wep" : (params["KeyMode"] == "WPA") ? "psk" : "psk2"}}}});
   }
-  if(params.contains("IP") && params["IP"].is_string()) {
-    SystemManager::Exec("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"ipaddr\":" + params["IP"].dump() + "}}'", &ErrorCode);
-    if(ErrorCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  }
-  if(params.contains("Netmask") && params["Netmask"].is_string()) {
-    SystemManager::Exec("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"netmask\":" + params["Netmask"].dump() + "}}'", &ErrorCode);
-    if(ErrorCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  }
-  if(params.contains("Gateway") && params["Gateway"].is_string()) {
-    SystemManager::Exec("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"gateway\":" + params["Gateway"].dump() + "}}'", &ErrorCode);
-    if(ErrorCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  }
-  if(params.contains("DNS") && params["DNS"].is_array()) {
-    SystemManager::Exec("ubus call uci set '{\"config\":\"network\",\"section\":\"" + pNetworkWIFI + "\", \"values\": {\"dns\":" + params["DNS"].dump() + "}}'", &ErrorCode);
-    if(ErrorCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  }
-  if(params.contains("ESSID") && params["ESSID"].is_string()) {
-    SystemManager::Exec("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"ssid\":" + params["ESSID"].dump() + "}}'", &ErrorCode);
-    if(ErrorCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  }
-  if(params.contains("KeyMode") && params["KeyMode"].is_string() && ((params["KeyMode"] == "NONE") || (params["KeyMode"] == "WEP") || (params["KeyMode"] == "WPA") || (params["KeyMode"] == "WPA2"))) {
-    SystemManager::Exec("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"encryption\":\"" + ((params["KeyMode"] == "NONE") ? "none" : (params["KeyMode"] == "WEP") ? "wep" : (params["KeyMode"] == "WPA") ? "psk" : "psk2") + "\"}}'", &ErrorCode);
-    if(ErrorCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  }
-  if(params.contains("Key") && params["Key"].is_string()) {
-    SystemManager::Exec("ubus call uci set '{\"config\":\"wireless\",\"section\":\"" + pWirelessWIFI + "\", \"values\": {\"key\":" + params["Key"].dump() + "}}'", &ErrorCode);
-    if(ErrorCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  }
-  SystemManager::Exec("uci commit && ubus call network reload", &ErrorCode);
-  return HTTPServer::FillResponse(response, "", "text/plain", (ErrorCode != 0) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
+  SystemManager::Exec("uci commit && /etc/init.d/network restart");
+  return HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
 }
-#else // ===============================================================================================================
-WifiManager::WifiManager() {}
-WifiManager::~WifiManager() {}
-WifiManager::WifiStat WifiManager::Enabled() {
-  return WifiManager::DISABLED;
-}
-#endif // ==============================================================================================================
+#endif
+// ---------------------------------------------------------------------------------------------------------------------

@@ -2,12 +2,17 @@
   <div class="this" :class="{ expanded: expanded }">
     <div class="collapse-icon">
       <img class="icon" :src="require('Imgs/disconnect32.png')">
-      <img class="badge-icon" :src="require('Imgs/bullet_green.png')" v-if="(status!=null)&&(status.State=='ONLINE')&&((status.PendingActions==null)||(status.PendingActions==0))">
-      <img class="badge-icon" :src="require('Imgs/bullet_yellow.png')" v-if="(status!=null)&&(status.State=='SYNCING')&&((status.PendingActions==null)||(status.PendingActions==0))">
-      <img class="badge-icon" :src="require('Imgs/bullet_red.png')" v-if="(status!=null)&&(status.State=='OFFLINE')&&((status.PendingActions==null)||(status.PendingActions==0))">
-      <span class="badge badge-menu badge-red" v-if="(status!=null)&&(status.State=='ONLINE')&&((status.PendingActions!=null)||(status.PendingActions>0))">{{ status.PendingActions }}</span>
-      <span class="badge badge-menu badge-yellow" v-if="(status!=null)&&(status.Online=='SYNCING')&&((status.PendingActions!=null)||(status.PendingActions>0))">{{ status.PendingActions }}</span>
-      <span class="badge badge-menu badge-green" v-if="(status!=null)&&(status.Online=='OFFLINE')&&((status.PendingActions!=null)||(status.PendingActions>0))">{{ status.PendingActions }}</span>
+      <span v-if="(status!=null)&&(status.State!=null)&&(status.PendingActions!=null)&&(status.PendingActions>0)">
+        <span class="badge badge-menu badge-red" v-if="status.State=='ONLINE'">{{ status.PendingActions }}</span>
+        <span class="badge badge-menu badge-yellow" v-if="status.State=='SYNCING'">{{ status.PendingActions }}</span>
+        <span class="badge badge-menu badge-green" v-if="status.State=='OFFLINE'">{{ status.PendingActions }}</span>
+      </span>
+      <span v-else-if="(status!=null)&&(status.State!=null)">
+        <img class="badge-icon" :src="require('Imgs/bullet_green.png')" v-if="status.State=='ONLINE'">
+        <img class="badge-icon" :src="require('Imgs/bullet_yellow.png')" v-if="status.State=='SYNCING'">
+        <img class="badge-icon" :src="require('Imgs/bullet_red.png')" v-if="status.State=='OFFLINE'">
+      </span>
+      <img class="badge-icon" :src="require('Imgs/bullet_red.png')" v-else>
     </div>
     <div class="btn-group">
       <button type="button" class="btn btn-default btn-xs" @click="Dialog='Table'" title="Select and configure avaliable analyzers"><img :src="require('Imgs/magnifier.png')"></button>

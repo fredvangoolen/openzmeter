@@ -79,7 +79,6 @@
         this.$http.post("getAnalyzers", {}).then(
           (result) => {
             this.Analyzers = result.data;
-            console.log(this.Analyzers);
             this.ShowSpinner = false;
             this.Timer = setTimeout(this.GetAnalyzers, 5000);
           },

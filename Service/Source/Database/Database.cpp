@@ -152,7 +152,7 @@ string Database::Bind(const json &param, const DataType type) {
       for(uint32_t n = 0; n < param[i].size(); n++) {
         if(param[i][n].is_array() == false) return "NULL";
         Result.append((n == 0) ? "{" : ", {");
-        for(uint32_t m = 0; m < param[i][n][m]; m++) Result.append(((m == 0) ? "" : ", ") + Bind(param[i][n][m], Database::FLOAT));
+        for(uint32_t m = 0; m < param[i][n][m].size(); m++) Result.append(((m == 0) ? "" : ", ") + Bind(param[i][n][m], Database::FLOAT));
         Result.append("}");
       }
       Result.append("}");

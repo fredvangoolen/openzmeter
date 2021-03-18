@@ -15,19 +15,14 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include "HTTPServer.h"
-#ifdef OPENWRT // ======================================================================================================
 class NTPManager final {
+#ifdef OPENWRT
   private :
     static void     GetNTPCallback(const json &params, Response &response);
     static void     SetNTPCallback(const json &params, Response &response);
+#endif
   public :
     NTPManager();
     ~NTPManager();
 };
-#else // ===============================================================================================================
-class NTPManager final {
-  public :
-    NTPManager();
-    ~NTPManager();
-};
-#endif // ==============================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------

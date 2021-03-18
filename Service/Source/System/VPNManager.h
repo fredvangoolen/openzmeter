@@ -15,21 +15,16 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include "HTTPServer.h"
-#ifdef OPENWRT // ======================================================================================================
 class VPNManager final {
+#ifdef OPENWRT
   private :
     static constexpr char *pFileName = (char*)"/etc/openvpn/openZmeter.conf";
   private :
     static void     GetVPNCallback(const json &params, Response &response);
     static void     SetVPNCallback(const json &params, Response &response);
+#endif
   public :
     VPNManager();
     ~VPNManager();
 };
-#else // ===============================================================================================================
-class VPNManager final {
-  public :
-    VPNManager();
-    ~VPNManager();
-};
-#endif // ==============================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------
