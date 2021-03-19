@@ -60,10 +60,14 @@ WifiManager::~WifiManager() {
   LogFile::Info("WifiManager stoped");
 }
 WifiManager::WifiStat WifiManager::Enabled() {
+#ifdef OPENWRT
   pthread_mutex_lock(&pMutex);
   WifiStat Stat = pWifiStat;
   pthread_mutex_unlock(&pMutex);
   return Stat;
+#else
+  return DISABLED;
+#endif
 }
 #ifdef OPENWRT
 void WifiManager::PeriodicTasks() {

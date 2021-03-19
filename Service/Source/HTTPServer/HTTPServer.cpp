@@ -50,8 +50,6 @@ HTTPServer::HTTPServer() {
   Get(".*", HandleGet);
   Post(".*", HandlePost);
   set_keep_alive_max_count(UINT32_MAX);
-  set_read_timeout(30);
-  set_write_timeout(30);
   new_task_queue = [] { return new HTTPRequestPoll(); };
   Config = json::object();
   if(Logo != pLogoImg) Config["Logo"] = Logo;

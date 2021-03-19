@@ -62,9 +62,9 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerRates              pRates;                   //Rate handle class
     AnalyzerSeries             pSeries;                  //Read stored data
     AnalyzerSoftEvents         pEvents;                  //Events detector
+    AnalyzerSoftMQTT           pMQTT;                    //MQTT Control object
     AnalyzerSoftAlarms         pAlarms;                  //Alarms control
     AnalyzerSoftSync           pSync;                    //Remote sync object
-    AnalyzerSoftMQTT           pMQTT;                    //MQTT Control object
 //    AnalyzerSoftGA            *pGA;                      //Geometric algebra calculator
     AnalyzerSoftBlock         *pWorkingBlock;            //Current block
   private :

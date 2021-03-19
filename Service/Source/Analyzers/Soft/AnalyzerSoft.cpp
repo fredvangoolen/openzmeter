@@ -34,10 +34,9 @@
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) :
-  Analyzer(id, mode), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3),
-  pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pAccess(id), pZeroCross(mode, samplerate), pFrequency(samplerate), pFFTs(mode),
-  pAggreg200MS(id, mode), pAggreg3S(id, mode), pAggreg1M(id, mode), pAggreg10M(id, mode), pAggreg15M(id, mode), pAggreg1H(id, mode),
-  pRates(id), pSeries(id), pEvents(id, mode, samplerate), pAlarms(id, &pMQTT), pSync(id, mode, samplerate), pMQTT(id) {
+  Analyzer(id, mode), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pAccess(id), pZeroCross(mode, samplerate), pFrequency(samplerate), pFFTs(mode),
+  pAggreg200MS(id, mode), pAggreg3S(id, mode), pAggreg1M(id, mode), pAggreg10M(id, mode), pAggreg15M(id, mode), pAggreg1H(id, mode), pRates(id), pSeries(id), pEvents(id, mode, samplerate), pMQTT(id), pAlarms(id, &pMQTT),
+  pSync(id, optionPath, mode, samplerate, [&](const string &name, const json &params) { HandleAction(name, params); }, [&](const vector<string> &series) { return pAccess.GetStatus(series); }, [&](const vector<string> &series) { return GetSeriesNow(series); }) {
   LogFile::Debug("Creating tables for analyzer '%s'", pSerial.c_str());
   Database DB(pSerial, true);
   DB.ExecResource("SQL/Database_Analyzer.sql");
@@ -139,7 +138,7 @@ void AnalyzerSoft::Config(const json &options) {
   pRates.Config(options["TimeZone"], options["Rates"]);
   pAlarms.Config(options["AlarmsEnabled"], options["TimeZone"], options["Alarms"]);
   pEvents.Config(options["EventsEnabled"]);
-  pSync.Config(options["Sync"], pConfigPath, [&](const string &name, const json &params) { HandleAction(name, params); }, [&](const vector<string> &series) { return pAccess.GetStatus(series); }, [&](const vector<string> &series) { return GetSeriesNow(series); });
+  pSync.Config(options["Sync"]);
   pMQTT.Config(options);
   pthread_mutex_unlock(&pMutex);
 }
