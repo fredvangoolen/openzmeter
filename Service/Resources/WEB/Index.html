@@ -93,7 +93,8 @@
       var req  = new XMLHttpRequest();
       var path = 'openZmeter.js?v={{ VERSION }}';
       req.onprogress= function(evt) {
-        document.getElementById('Progress').setAttribute("style","width:" + Math.round((evt.loaded / evt.total) * 100.0) + '%');
+        var content_length = req.getResponseHeader("X-Uncompressed-Length");
+        document.getElementById('Progress').setAttribute("style","width:" + Math.round((evt.loaded / content_length) * 100.0) + '%');
       };
       req.open('GET', path, true);
       req.onload = function() {

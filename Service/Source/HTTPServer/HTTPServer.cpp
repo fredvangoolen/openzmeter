@@ -207,7 +207,20 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   const char *Tmp = (const char*)ResourceFile::GetFile(string("WEB/") + URL, &Size);
   if(Size != 0) {
     response.set_header("Cache-Control", "public, max-age=604800, immutable");
-    return FillResponse(response, Tmp, Size, MimeType(URL), HTTP_OK);
+    response.set_header("X-Uncompressed-Length", to_string(Size));
+    auto Func = [Tmp, Size](uint64_t offset, DataSink &sink) -> bool {
+      size_t      Pending = Size;
+      const char *SendPtr = Tmp;
+      while((Pending > 0) && (sink.is_writable() == true)) {
+        size_t PkgSize = (Pending > 4096) ? 4096 : Pending;
+        sink.write(SendPtr, PkgSize);
+        Pending = Pending - PkgSize;
+        SendPtr = &SendPtr[PkgSize];
+      }
+      sink.done();
+      return true;
+    };
+    return response.set_chunked_content_provider(MimeType(URL), Func);
   }
   if(request.has_header("Cookie")) {
     string Cookie = ParseCookie(request.get_header_value("Cookie"));
@@ -225,7 +238,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   }
   if(UserName == "") return response.set_redirect(string(pRelativePath + "Login").c_str());
   string File = PatchFile("WEB/Index.html", "{{ VERSION }}", __BUILD__);
-  return FillResponse(response, PatchString(File, "{{ RELATIVE_PATH }}", pRelativePath), "text/html", HTTP_OK);
+  FillResponse(response, PatchString(File, "{{ RELATIVE_PATH }}", pRelativePath), "text/html", HTTP_OK);
 }
 void HTTPServer::HandlePost(const Request &request, Response &response) {
   string URL = string(request.path).erase(0, pRelativePath.size());
