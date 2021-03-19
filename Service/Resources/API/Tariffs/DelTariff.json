@@ -1,0 +1,33 @@
+{
+  "paths": {
+    "/delTariff": {
+      "post": {
+        "summary": "Remove tariff configuration",
+        "tags": [ "Tariffs" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "example": {
+                  "Name": "ESP_2.0A"
+                },
+                "properties": {
+                  "Name": { "type": "string" }
+                },
+                "required": [ "Name" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/200Response" },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

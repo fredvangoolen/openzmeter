@@ -1,0 +1,34 @@
+{
+  "paths": {
+    "/setBluetooth": {
+      "post": {
+        "summary": "Set bluetooth configuration",
+        "tags": [
+          "Bluetooth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [ "Enabled" ],
+                "example": {
+                  "Enabled": true
+                },
+                "properties": {
+                  "Enabled": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/200Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "403": { "$ref": "#/components/responses/403Response" },
+          "405": { "$ref": "#/components/responses/403Response" }
+        }
+      }
+    }
+  }
+}

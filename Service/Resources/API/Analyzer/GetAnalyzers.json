@@ -1,0 +1,51 @@
+{
+  "components": {
+    "schemas": {
+      "AnalyzerListTemplate": {
+        "type": "object",
+        "properties": {
+          "Analyzer": { "type": "string" },
+          "Config": { "type": "boolean" },
+          "Name": { "type": "string" },
+          "State": { "type": "string", "enum": [ "UNCONFIGURED", "OFFLINE", "SYNCING", "ONLINE" ] },
+          "Read": { "type": "boolean" },
+          "User": { "type": "string" },
+          "Write": { "type": "boolean" }
+        },
+        "required": [ "Analyzer", "Config", "Name", "State", "Read", "User", "Write" ],
+        "example": {
+          "Analyzer": "VIRTUAL_3PN",
+          "Config": true,
+          "Name": "Unnamed analyzer",
+          "State": "ONLINE",
+          "Read": true,
+          "User": "admin",
+          "Write": true
+        }
+      }
+    }
+  },
+  "paths": {
+    "/getAnalyzers": {
+      "post": {
+        "summary": "Get list of avaliable analyzers",
+        "tags": [ "Analyzers" ],
+        "requestBody": { "$ref": "#/components/requestBodies/EmptyObject" },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items" : { "$ref": "#/components/schemas/AnalyzerListTemplate" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/401Response" }
+        }
+      }
+    }
+  }
+}

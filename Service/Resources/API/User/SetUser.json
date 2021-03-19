@@ -1,0 +1,25 @@
+{
+  "paths": {
+    "/setUser": {
+      "post": {
+        "summary": "Update user details",
+        "tags": [ "Users" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserTemplate" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/200Response" },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "403": { "$ref": "#/components/responses/403Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

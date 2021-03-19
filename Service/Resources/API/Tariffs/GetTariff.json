@@ -1,0 +1,155 @@
+{
+  "components": {
+    "schemas": {
+      "TariffConceptTemplate": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "Type": { "type": "string", "enum": [ "INFO", "COST_POWER", "COST_ENERGY", "COST" ] },
+            "Variable": { "type": "string" },
+            "Description": { "type": "string" }
+          },
+          "required": [ "Type", "Variable", "Description" ]
+        },
+        "example": [
+          { "Type": "INFO", "Variable": "Contracted", "Description": "Contracted power (kW)" },
+          { "Type": "COST_POWER", "Variable": "TotalCost", "Description": "Contracted power cost" }
+        ]
+      },
+      "TariffTemplate": {
+        "type": "object",
+        "properties": {
+          "Name": { "type": "string" },
+          "required": [ "Name", "Template" ],
+          "example": {
+            "Name": "ESP_2.0A_2020"
+          },
+          "Template": {
+            "type": "object",
+            "properties": {
+              "Currency": { "type": "string" },
+              "PowerUnits": { "type": "string", "enum": [ "kW", "kvar" ] },
+              "Description": { "type": "string" },
+              "EnergyUnits": { "type": "string", "enum": [ "kWh" ] },
+              "Script": { "type": "string" },
+              "Days": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "Name": { "type": "string" },
+                    "Color": { "type": "string" },
+                    "Quarters": { "type": "array", "items": { "type": "number" }}
+                  },
+                  "required": [ "Name", "Color", "Quarters" ],
+                  "example": {
+                    "Name": "Day 1",
+                    "Color": "#fffff0",
+                    "Quarters": [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+                  }
+                }
+              },
+              "Years": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "Year": { "type": "number" },
+                    "Days": { "type": "array", "items": { "type": "number" } }
+                  },
+                  "required": ["Year", "Days"],
+                  "example": {
+                    "Year": 2020,
+                    "Days": [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+                  }
+                }
+              },
+              "Periods": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [ "Name", "Color", "Script", "Concepts", "DefaultPowerCost", "DefaultEnergyCost" ],
+                  "properties": {
+                    "Name": { "type": "string" },
+                    "Color": { "type": "string" },
+                    "Script": { "type": "string" },
+                    "Concepts": { "$ref": "#/components/schemas/TariffConceptTemplate" },
+                    "DefaultPowerCost": { "type": "number" },
+                    "DefaultEnergyCost": { "type": "number" }
+                  },
+                  "example": {
+                    "Name": "All day",
+                    "Color": "#fffff0",
+                    "Script": "Cost=(ActiveEnergy/1000.0)*EnergyCost,\nTotalCost=TotalCost+Cost,\nTotalConsumed=TotalConsumed+ActiveEnergy/1000",
+                    "DefaultPowerCost": 0.10,
+                    "DefaultEnergyCost": 0.10
+                  }
+                }
+              },
+              "Concepts": { "$ref": "#/components/schemas/TariffConceptTemplate" }
+            },
+            "required": [ "Currency", "PowerUnits", "Description", "EnergyUnits", "Script", "Days", "Years", "Periods", "Concepts" ],
+            "example": {
+              "Currency": "€",
+              "PowerUnits": "kW",
+              "Description": "Spanish 2.0A tariff. Constant price. Without seasons.",
+              "EnergyUnits": "kWh",
+              "Script": "Cost=(ContractedPower_P1*PowerCost_P1)/96,\nContracted=ContractedPower_P1,\nTotalCost=TotalCost+Cost"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/getTariff": {
+      "post": {
+        "summary": "Get full tariff configuration",
+        "tags": [ "Tariffs" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [ "Name" ],
+                "example": {
+                  "Name": "ESP_2,0A"
+                },
+                "properties": {
+                  "Name": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    { "$ref": "#/components/schemas/TariffTemplate" },
+                    {
+                      "type": "object",
+                      "example": {
+                        "User": "admin"
+                      },
+                      "required": [ "User" ],
+                      "properties": {
+                        "User": { "type": "string" }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

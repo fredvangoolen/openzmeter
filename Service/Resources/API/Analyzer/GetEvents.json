@@ -1,0 +1,64 @@
+{
+  "components": {
+    "schemas": {
+      "EventListTemplate": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": { "type": "string" },
+          "example": [
+            [ "ChangeTime", "StartTime", "Type", "SampleRate", "Reference", "Peak", "Change", "Duration", "Notes", "AvaliableRAW", "AvaliableRMS" ],
+            [ 1600000000000, 1600000000000, "RVC", 24000, [230, 230, 230], [240, 240, 240], [235, 235, 235], 12000, "A note", true, true ]
+          ]
+        }
+      }
+    }
+  },
+  "paths": {
+    "/getEvents": {
+      "post": {
+        "summary": "Get events list",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "Samples": "NONE",
+                  "From": 1590000000000,
+                  "To": 1600000000000,
+                  "LastChange": 0,
+                  "Update": false
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "From": { "type": "number" },
+                  "To": { "type": "number" },
+                  "LastChange": { "type": "number" },
+                  "Samples": { "type": "string", "enum": [ "ALL", "NONE", "RAW", "RMS" ] },
+                  "Update": { "type": "boolean" }
+                },
+                "required": [ "Analyzer", "From", "To", "Samples", "Update" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": { "type": "array", "items" : { "$ref": "#/components/schemas/EventListTemplate" } }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

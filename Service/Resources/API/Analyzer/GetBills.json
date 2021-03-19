@@ -1,0 +1,113 @@
+{
+  "components": {
+    "schemas": {
+      "BillConceptTemplate": {
+        "type": "object",
+        "properties": {
+          "Description": { "type": "string" },
+          "Type": { "type": "string", "enum": [ "COST", "COST_ENERGY", "COST_POWER", "INFO" ] },
+          "Value": { "type": "number" }
+        },
+        "required": [ "Description", "Type", "Value" ],
+        "example": {
+          "Description": "This is a concept",
+          "Type": "COST_ENERGY",
+          "Value": 0.0
+        }
+      },
+      "BillTemplate": {
+        "type": "object",
+        "properties": {
+          "From": { "type": "number" },
+          "To": { "type": "number" },
+          "Currency": { "type": "string" },
+          "PowerUnits": { "type": "string" },
+          "EnergyUnits": { "type": "string" },
+          "Name": { "type": "string" },
+          "Description": { "type": "string" },
+          "Complete": { "type": "boolean" },
+          "Total": { "type": "number" },
+          "Periods": {
+            "type": "array",
+            "items": { "type": "array", "items": { "$ref": "#/components/schemas/BillConceptTemplate" } }
+          },
+          "General": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BillConceptTemplate" }
+          },
+          "Taxes": {
+            "type": "array",
+            "items": {
+              "properties": {
+                "Description": { "type": "string" },
+                "Type": { "type": "string", "enum": [ "PERCENT_ENERGY", "PERCENT_POWER", "PERCENT_ENERGY_POWER", "FIXED_QUANTITY", "PERCENT_TOTAL" ] },
+                "Value": { "type": "number" }
+              },
+              "example": {
+                "Description": "This is a tax",
+                "Type": "PERCENT_TOTAL",
+                "Value": 0.0
+              },
+              "required": [ "Description", "Type", "Value" ]
+            }
+          }
+        },
+        "example": {
+          "From": 1590000000000,
+          "To": 1600000000000,
+          "Currency": "€",
+          "PowerUnits": "kW",
+          "EnergyUnits": "kWh",
+          "Name": "This is a rate",
+          "Description": "Default rate",
+          "Complete": true,
+          "Total": 0.0
+        },
+        "required": [ "From", "To", "Currency", "PowerUnits", "EnergyUnits", "Name", "Description", "Complete", "Total", "Periods", "General", "Taxes" ]
+      }
+    }
+  },
+  "paths": {
+    "/getBills": {
+      "post": {
+        "summary": "Get analyzer calculated bills",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "From": 1590000000000,
+                  "To": 1600000000000,
+                  "Group": 0
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "From": { "type": "number" },
+                  "To": { "type": "number" },
+                  "Group": { "type": "number" }
+                },
+                "required": [ "Analyzer", "From", "To", "Group" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "On success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BillTemplate" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

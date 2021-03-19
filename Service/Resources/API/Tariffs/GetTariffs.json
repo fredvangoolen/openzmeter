@@ -1,0 +1,41 @@
+{
+  "components": {
+    "schemas": {
+      "TariffListTemplate": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "example": {
+            "Name": "ESP_2.0A",
+            "UserName": "admin"
+          },
+          "required": [ "Name", "User" ],
+          "properties": {
+            "Name": { "type": "string" },
+            "UserName": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/getTariffs": {
+      "post": {
+        "summary": "Get configured tariffs list",
+        "tags": [ "Tariffs" ],
+        "requestBody": { "$ref": "#/components/requestBodies/EmptyObject" },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TariffListTemplate" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/401Response" }
+        }
+      }
+    }
+  }
+}

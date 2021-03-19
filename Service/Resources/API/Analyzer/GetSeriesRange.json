@@ -1,0 +1,50 @@
+{
+  "paths": {
+    "/getSeriesRange": {
+      "post": {
+        "summary": "Get analyzer series date range",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "Aggreg": "1M"
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "Aggreg": { "type": "string", "enum": [ "200MS", "3S", "1M", "10M", "15M", "1H" ] }
+                },
+                "required": [ "Analyzer", "Aggreg" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "From": { "type": "number", "nullable": true },
+                    "To": { "type": "number", "nullable": true }
+                  },
+                  "example": {
+                    "From": 1599314399999,
+                    "To": 1599314399999
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}
