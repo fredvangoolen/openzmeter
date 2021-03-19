@@ -1,0 +1,65 @@
+{
+  "components": {
+    "schemas": {
+      "UserTemplate": {
+        "type": "object",
+        "allOf": [
+          { "$ref": "#/components/schemas/UserListTemplate" },
+          { "type": "object",
+            "properties": {
+              "Address": { "type": "string" },
+              "Company": { "type": "string" },
+              "Photo": { "type": "string" },
+              "Telegram": { "type": "number" }
+            },
+            "example": {
+              "Address": "",
+              "Company": "",
+              "Photo": "",
+              "Telegram": 0
+            },
+            "required": [ "Address", "Company", "Photo", "Telegram" ]
+          }
+        ]
+      }
+    }
+  },
+  "paths": {
+    "/getUser": {
+      "post": {
+        "summary": "Get user details",
+        "tags": [ "Users" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "User": "admin"
+                },
+                "required": [ "User" ],
+                "properties": {
+                  "User": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserTemplate" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "403": { "$ref": "#/components/responses/403Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

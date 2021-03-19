@@ -1,0 +1,144 @@
+{
+  "components": {
+    "schemas": {
+      "StatusTemplate" : {
+        "type": "object",
+        "properties": {
+          "CPU": {
+            "type": "object",
+            "properties": {
+              "Count": { "type": "number" },
+              "Frequency": { "type": "number" },
+              "Usage": { "type": "number" }
+            },
+            "required": [ "Count", "Frequency", "Usage" ],
+            "example": {
+              "Coun": 4,
+              "Frequency": 480000,
+              "Usage": 30
+            }
+          },
+          "RAM": {
+            "type": "object",
+            "properties": {
+              "Buffers": { "type": "number" },
+              "Cached": { "type": "number" },
+              "Free": { "type": "number" },
+              "Total": { "type": "number" }
+            },
+            "required": [ "Buffers", "Cached", "Free", "Total" ],
+            "example": {
+              "Buffers": 134217728,
+              "Cached": 134217728,
+              "Free": 134217728,
+              "Total": 536870912
+            }
+          },
+          "Storage": {
+            "type": "object",
+            "properties": {
+              "Free": { "type": "number" },
+              "Total": { "type": "number" }
+            },
+            "required": [ "Free", "Total" ],
+            "example": {
+              "Free": 1073741824,
+              "Total": 8589934592
+            }
+          },
+          "Swap": {
+            "type": "object",
+            "properties": {
+              "Free": { "type": "number" },
+              "Total": { "type": "number" }
+            },
+            "required": [ "Free", "Total" ],
+            "example": {
+              "Free": 0,
+              "Total": 0
+            }
+          },
+          "Temperature": { "type": "number" },
+          "Uptime": { "type": "number" }
+        },
+        "example": {
+          "Temperature": 43.2,
+          "Uptime": 86400
+        },
+        "required": [ "CPU", "RAM", "Storage", "Swap", "Temperature", "Uptime" ]
+      },
+      "LogTemplate": {
+        "type": "object",
+        "properties": {
+          "Debug_Total": { "type": "number" },
+          "Error_Total": { "type": "number" },
+          "Info_Total": { "type": "number" },
+          "Warning_Total": { "type": "number" },
+          "Messages": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": { "type": "string" },
+              "example": [
+                [ "Type", "Time", "Message" ],
+                [ "DEBUG", 1600000000000, "A debug message" ],
+                [ "WARNING", 1600000000000, "A warning message" ]
+              ]
+            }
+          }
+        },
+        "required": ["Debug_Total", "Error_Total", "Info_Total", "Warning_Total", "Messages" ],
+        "example": {
+          "Debug_Total": 10,
+          "Error_Total": 10,
+          "Info_Total": 10,
+          "Warning_Total": 10
+        }
+      }
+    }
+  },
+  "paths": {
+    "/getSystem": {
+      "post": {
+        "summary": "Get system information and logs",
+        "tags": [ "System" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Series": [ "Status", "SystemLog", "Log" ]
+                },
+                "properties": {
+                  "Series": { "type": "array", "items": { "type": "string", "enum": [ "System", "SystemLog", "Log" ] } }
+                },
+                "required": [ "Series" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "Log": { "$ref": "#/components/schemas/LogTemplate" },
+                    "Status": { "$ref": "#/components/schemas/StatusTemplate" },
+                    "SystemLog": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "403": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

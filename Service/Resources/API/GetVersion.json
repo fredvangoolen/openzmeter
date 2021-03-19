@@ -1,0 +1,33 @@
+{
+  "paths": {
+    "/getVersion": {
+      "post": {
+        "summary": "Get service version and compiled in functions",
+        "tags": [ "System" ],
+        "requestBody": { "$ref": "#/components/requestBodies/EmptyObject" },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Version": { "type": "string" },
+                    "Functions": { "type": "array", "items": { "type": "string" }}
+                  },
+                  "required": [ "Version", "Functions" ],
+                  "example": {
+                    "Version": "branch_yyyymmdd.hh.mm",
+                    "Functions": [ "getVersion", "getSeries" ]
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/401Response" }
+        }
+      }
+    }
+  }
+}

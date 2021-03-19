@@ -1,0 +1,36 @@
+{
+  "paths": {
+    "/delAlarm": {
+      "post": {
+        "summary": "Delete alarm",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "AlarmID": "00000000-0000-0000-0000-000000000000",
+                  "Trigger": 1600000000000
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "AlarmID": { "type": "string" },
+                  "Trigger": { "type": "number" }
+                },
+                "required": [ "Analyzer", "AlarmID", "Trigger" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/200Response" },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

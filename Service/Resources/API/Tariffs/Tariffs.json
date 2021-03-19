@@ -1,0 +1,6 @@
+{
+  "tags": [
+    { "name": "Tariffs", "description": "Manage tariffs" },
+    {  "name": "Price modules", "description": "Additional price modules configuration" }
+  ]
+}

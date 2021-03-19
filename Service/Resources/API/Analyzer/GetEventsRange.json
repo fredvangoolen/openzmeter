@@ -1,0 +1,48 @@
+{
+  "paths": {
+    "/getEventsRange": {
+      "post": {
+        "summary": "Get stored events date range",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN"
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" }
+                },
+                "required": [ "Analyzer" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "From": { "type": "number", "nullable": true },
+                    "To": { "type": "number", "nullable": true }
+                  },
+                  "example": {
+                    "From": 1599314399999,
+                    "To": 1599314399999
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

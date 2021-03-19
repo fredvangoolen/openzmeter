@@ -1,0 +1,33 @@
+{
+  "paths": {
+    "/setESIOS": {
+      "post": {
+        "summary": "Set ESIOS price fecth module configuration",
+        "tags": [ "Price modules" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [ "Enabled", "Token" ],
+                "example": {
+                  "Enabled": true,
+                  "Token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                },
+                "properties": {
+                  "Enabled": { "type": "boolean" },
+                  "Token": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/200Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "403": { "$ref": "#/components/responses/403Response" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "components": {
+    "schemas": {
+      "EventTemplate": {
+        "type": "object",
+        "required": ["ChangeTime", "StartTime", "Type", "SampleRate", "Reference", "Peak", "Change", "Duration", "Notes", "Length", "Samples"],
+        "properties": {
+          "ChangeTime": { "type": "number" },
+          "StartTime": { "type": "number" },
+          "Type": { "type": "string", "enum": ["RVC", "DIP", "SWEEL", "INTERRUPTION" ] },
+          "SampleRate": { "type": "number" },
+          "Reference": { "type": "array", "items": { "type": "number"} },
+          "Peak": { "type": "array", "items": { "type": "number"} },
+          "Change": { "type": "array", "items": { "type": "number"} },
+          "Duration": { "type": "number" },
+          "Notes": { "type": "string" },
+          "Length": { "type": "number" },
+          "Samples": { "type": "array", "items": { "type": "number"} }
+        },
+        "example": {
+          "ChangeTime": 1600000000000,
+          "StartTime": 1600000000000,
+          "Type": "RVC",
+          "SampleRate": 24000,
+          "Reference": [230.0, 230.0, 230.0],
+          "Peak": [240.0, 240.0, 240.0],
+          "Change": [235.0, 235.0, 235.0],
+          "Duration": 10000,
+          "Notes": "No note",
+          "Length": 100,
+          "Samples": [[230.0,230.0, 230.0], [230.0, 230.0, 230.0]]
+        }
+      }
+    }
+  },
+  "paths": {
+    "/getEvent": {
+      "post": {
+        "summary": "Get event details",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "Samples": "RMS",
+                  "StartTime": 1600000000000
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "StartTime": { "type": "number" },
+                  "Samples": { "type": "string", "enum": [ "RMS", "RAW" ] }
+                },
+                "required": [ "Analyzer", "StartTime", "Samples" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventTemplate" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

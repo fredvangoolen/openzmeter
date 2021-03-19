@@ -1,0 +1,34 @@
+{
+  "paths": {
+    "/delUser": {
+      "post": {
+        "summary": "Remove user",
+        "tags": [ "Users" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "User": { "type": "string" }
+                },
+                "required": [ "User" ],
+                "example": {
+                  "User": "guest"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/200Response" },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "403": { "$ref": "#/components/responses/403Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}
