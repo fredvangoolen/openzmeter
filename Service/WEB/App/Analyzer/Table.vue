@@ -76,7 +76,7 @@
     methods: {
       GetAnalyzers: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
-        this.$http.post("getAnalyzers", {}).then(
+        this.$http.post("getAnalyzers", {}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.Analyzers = result.data;
             this.ShowSpinner = false;
@@ -89,7 +89,7 @@
         this.$emit('update:analyzer', null);
         this.ShowSpinner = true;
         localStorage.setItem('Analyzer', analyzer);
-        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             if(this.Timer != null) clearTimeout(this.Timer);
             result.data.Analyzer = analyzer;
@@ -106,7 +106,7 @@
       },
       LoadView: function(view, analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer }).then(
+        this.$http.post('getAnalyzer', { Analyzer: analyzer }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             if(this.Timer != null) clearTimeout(this.Timer);
             result.data.Analyzer = analyzer;

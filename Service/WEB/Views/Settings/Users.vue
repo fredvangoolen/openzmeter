@@ -51,7 +51,7 @@
       LoadUsers: function () {
         this.ShowDialog = false;
         this.ShowSpinner = true;
-        this.$http.post('getUsers', { }).then(
+        this.$http.post('getUsers', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.Enabled = true;
             this.Users = result.data;
@@ -66,7 +66,7 @@
       },
       Delete: function(user) {
         this.ShowSpinner = true;
-        this.$http.post('delUser', { User: user.User }).then(
+        this.$http.post('delUser', { User: user.User }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.LoadUsers();
           },
@@ -77,7 +77,7 @@
       },
       Edit: function(user) {
         this.ShowSpinner = true;
-        this.$http.post('getUser', { User: user.User }).then(
+        this.$http.post('getUser', { User: user.User }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.User = result.data;
             this.ShowDialog = true;

@@ -311,7 +311,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post((this.Rate.RateID == null) ? 'addRate' : 'setRate', this.Rate).then(
+        this.$http.post((this.Rate.RateID == null) ? 'addRate' : 'setRate', this.Rate, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => { this.$emit('close'); },
           (fail) => {
             this.ShowSpinner = false;
@@ -329,7 +329,7 @@
       LoadTariffs: function() {
         this.ShowSpinner = true;
         this.Rate.Periods = null;
-        this.$http.post('getTariffs', {}).then(
+        this.$http.post('getTariffs', {}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.Tariffs = result.body;
             this.ShowSpinner = false;
@@ -339,7 +339,7 @@
       },
       LoadTariff: function(tariff) {
         this.ShowSpinner = true;
-        this.$http.post('getTariff', { Name: tariff.Name }).then(
+        this.$http.post('getTariff', { Name: tariff.Name }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             var Rate = Object.assign(this.Rate, result.body.Template);
             Rate.Name = result.body.Name;

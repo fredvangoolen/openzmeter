@@ -102,7 +102,8 @@
     methods: {
       Refresh: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
-        Promise.all([this.$http.post('getWIFI', { }), this.$http.post('getSystem', { Series: ['SystemLog']})]).then(
+        Promise.all([this.$http.post('getWIFI', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }),
+                     this.$http.post('getSystem', { Series: ['SystemLog']}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } })]).then(
           (result) => {
             this.Details = 'Device IP address   : ' + result[0].body.Status.IP + ' (' + result[0].body.Status.IPMode + ')\nDNS servers         : ' + result[0].body.Status.DNS.join(', ') + '\nDefault gateway     : ' + result[0].body.Status.Gateway + '\nCurrent WIFI channel: ' + result[0].body.Status.Channel + ' (Signal: ' + result[0].body.Status.Quality + '%)';
             this.SysMessages = result[1].body.SystemLog;
@@ -115,7 +116,7 @@
         if(this.View != 'Scan') this.ShowSpinner = true;
         this.View = 'Scan';
         if(this.Timer != null) clearTimeout(this.Timer);
-        this.$http.post('scanWIFI', { }).then(
+        this.$http.post('scanWIFI', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.WifiList = result.data;
             this.ShowSpinner = false;
@@ -142,7 +143,7 @@
       },
       Apply: function() {
         this.ShowSpinner = true;
-        this.$http.post('setWIFI', this.Config).then(
+        this.$http.post('setWIFI', this.Config, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => { this.ShowSpinner = false; },
           (fail) => { this.ShowSpinner = false; }
         );
@@ -150,7 +151,7 @@
       Save: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
         this.ShowSpinner = true;
-        this.$http.post('setWIFI', this.Config).then(
+        this.$http.post('setWIFI', this.Config, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');

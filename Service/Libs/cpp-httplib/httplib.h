@@ -2415,7 +2415,7 @@ inline bool can_compress_content_type(const std::string &content_type) {
          content_type == "application/javascript" ||
          content_type == "application/json" ||
          content_type == "application/xml" ||
-         content_type == "application/xhtml+xml";
+         content_type == "application/xhtml+xml" || content_type == "application/cbor";
 }
 
 enum class EncodingType { None = 0, Gzip, Brotli };

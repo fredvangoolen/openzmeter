@@ -14,7 +14,7 @@
       return { ShowSpinner: true };
     },
     mounted: function() {
-      this.$http.post('getAPI', {}).then(
+      this.$http.post('getAPI', {}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
         (result) => {
           this.$refs.api.loadSpec(result.data);
           this.ShowSpinner = false;

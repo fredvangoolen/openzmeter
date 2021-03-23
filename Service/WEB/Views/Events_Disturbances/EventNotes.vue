@@ -29,7 +29,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setEvent', { Analyzer: this.analyzer.Analyzer, Notes: this.Event.Notes, StartTime: this.Event.StartTime } ).then(
+        this.$http.post('setEvent', { Analyzer: this.analyzer.Analyzer, Notes: this.Event.Notes, StartTime: this.Event.StartTime }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => { this.$emit('close', false); },
           (fail) =>  {
             this.Error = 'Failed to save analyzer!';

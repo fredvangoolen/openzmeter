@@ -88,11 +88,11 @@ void WifiManager::PeriodicTasks() {
   pthread_mutex_unlock(&pMutex);
 
 }
-void WifiManager::ScanWIFICallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void WifiManager::ScanWIFICallback(HTTPRequest *req) {
+  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
   json Result = json::array();
   json Tmp = SystemManager::uBusCall("iwinfo", "scan", {{"device", pInterfaceWIFI}});
-  if((Tmp.is_object() == false) || (Tmp["results"].is_array() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  if((Tmp.is_object() == false) || (Tmp["results"].is_array() == false)) return req->Error("", HTTP_INTERNAL_SERVER_ERROR);
   for(uint Pos = 0; Pos < Tmp["results"].size(); Pos++) {
     json AP = json::object();
     if(Tmp["results"][Pos]["ssid"].is_string()) AP["ESSID"] = Tmp["results"][Pos]["ssid"];
@@ -103,64 +103,68 @@ void WifiManager::ScanWIFICallback(const json &params, Response &response) {
     }
     Result.push_back(AP);
   }
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  req->Success(Result);
 }
-void WifiManager::GetWIFICallback(const json &params, Response &response) {
+void WifiManager::GetWIFICallback(HTTPRequest *req) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if((params.contains("Full") == false) || (params["Full"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Full' param is required", "text/plain", HTTP_BAD_REQUEST);
   json Result = json::object();
-  json Tmp = SystemManager::uBusCall("uci", "get", { {"config", "network"}, {"section", pNetworkWIFI } });
-  if((Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  Result["IPMode"] = "DHCP";
-  if(Tmp["values"]["proto"].is_string()) Result["IPMode"] = (Tmp["values"]["proto"] == "static") ? "STATIC" : "DHCP";
-  Result["IP"] = "";
-  if(Tmp["values"]["ipaddr"].is_string()) Result["IP"] = Tmp["values"]["ipaddr"];
-  Result["Netmask"] = "";
-  if(Tmp["values"]["netmask"].is_string()) Result["Netmask"] = Tmp["values"]["netmask"];
-  Result["Gateway"] = "";
-  if(Tmp["values"]["gateway"].is_string()) Result["Gateway"] = Tmp["values"]["gateway"];
-  Result["DNS"] = json::array();
-  if(Tmp["values"]["dns"].is_array()) Result["DNS"] = Tmp["values"]["dns"];
-
-  Tmp = SystemManager::uBusCall("uci", "get", { {"config", "wireless"}, {"section", pWirelessWIFI } });
+  json Tmp = SystemManager::uBusCall("uci", "get", { {"config", "wireless"}, {"section", pWirelessWIFI } });
   if((Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
   Result["Enabled"] = true;
   if(Tmp["values"]["disabled"].is_string()) Result["Enabled"] = (Tmp["values"]["disabled"] == "0");
-  if(Tmp["values"]["ssid"].is_string()) Result["ESSID"] = Tmp["values"]["ssid"];
-  if(Tmp["values"]["encryption"].is_string()) Result["KeyMode"] = (Tmp["values"]["encryption"] == "none") ? "NONE" : (Tmp["values"]["encryption"] == "wep") ? "WEP" : (Tmp["values"]["encryption"] == "psk") ? "WPA" : "WPA2";
-  if((Result["KeyMode"] != "NONE") && Tmp["values"]["key"].is_string()) Result["Key"] = Tmp["values"]["key"];
 
-  Result["Status"] = json::object();
-  Tmp = SystemManager::uBusCall("network.interface." + pNetworkWIFI, "status", {});
-  if(Tmp.is_object() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  Result["Status"]["Connected"] = false;
-  if(Tmp["up"].is_boolean()) Result["Status"]["Connected"] = Tmp["up"];
-  if(Result["Status"]["Connected"] == true) {
-    if(Tmp["dns-server"].is_array()) Result["Status"]["DNS"] = Tmp["dns-server"];
-    if(Tmp["ipv4-address"].is_array() && Tmp["ipv4-address"][0].is_object() && Tmp["ipv4-address"][0]["address"].is_string()) Result["Status"]["IP"] = Tmp["ipv4-address"][0]["address"];
-    if(Tmp["proto"].is_string()) Result["Status"]["IPMode"] = (Tmp["proto"] == "dhcp") ? "DHCP" : "STATIC";
-    if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Status"]["Gateway"] = Tmp["route"][0]["nexthop"];
-  }
-  Tmp = SystemManager::uBusCall("iwinfo", "info", { {"device", pInterfaceWIFI} });
-  if(Tmp.is_object() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  if(Tmp["ssid"].is_string()) Result["Status"]["ESSID"] = Tmp["ssid"];
-  if(Tmp["channel"].is_number()) Result["Status"]["Channel"] = Tmp["channel"];
-  if(Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
-    float Current = Tmp["quality"], Max = Tmp["quality_max"];
-    Result["Status"]["Quality"] = (int) (Current * 100.0 / Max);
+  if(params["Full"] == true) {
+    if(Tmp["values"]["ssid"].is_string()) Result["ESSID"] = Tmp["values"]["ssid"];
+    if(Tmp["values"]["encryption"].is_string()) Result["KeyMode"] = (Tmp["values"]["encryption"] == "none") ? "NONE" : (Tmp["values"]["encryption"] == "wep") ? "WEP" : (Tmp["values"]["encryption"] == "psk") ? "WPA" : "WPA2";
+    if((Result["KeyMode"] != "NONE") && Tmp["values"]["key"].is_string()) Result["Key"] = Tmp["values"]["key"];
+
+    Tmp = SystemManager::uBusCall("uci", "get", { {"config", "network"}, {"section", pNetworkWIFI } });
+    if((Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+    Result["IPMode"] = "DHCP";
+    if(Tmp["values"]["proto"].is_string()) Result["IPMode"] = (Tmp["values"]["proto"] == "static") ? "STATIC" : "DHCP";
+    Result["IP"] = "";
+    if(Tmp["values"]["ipaddr"].is_string()) Result["IP"] = Tmp["values"]["ipaddr"];
+    Result["Netmask"] = "";
+    if(Tmp["values"]["netmask"].is_string()) Result["Netmask"] = Tmp["values"]["netmask"];
+    Result["Gateway"] = "";
+    if(Tmp["values"]["gateway"].is_string()) Result["Gateway"] = Tmp["values"]["gateway"];
+    Result["DNS"] = json::array();
+    if(Tmp["values"]["dns"].is_array()) Result["DNS"] = Tmp["values"]["dns"];
+
+    Result["Status"] = json::object();
+    Tmp = SystemManager::uBusCall("network.interface." + pNetworkWIFI, "status", {});
+    if(Tmp.is_object() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+    Result["Status"]["Connected"] = false;
+    if(Tmp["up"].is_boolean()) Result["Status"]["Connected"] = Tmp["up"];
+    if(Result["Status"]["Connected"] == true) {
+      if(Tmp["dns-server"].is_array()) Result["Status"]["DNS"] = Tmp["dns-server"];
+      if(Tmp["ipv4-address"].is_array() && Tmp["ipv4-address"][0].is_object() && Tmp["ipv4-address"][0]["address"].is_string()) Result["Status"]["IP"] = Tmp["ipv4-address"][0]["address"];
+      if(Tmp["proto"].is_string()) Result["Status"]["IPMode"] = (Tmp["proto"] == "dhcp") ? "DHCP" : "STATIC";
+      if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Status"]["Gateway"] = Tmp["route"][0]["nexthop"];
+    }
+    Tmp = SystemManager::uBusCall("iwinfo", "info", { {"device", pInterfaceWIFI} });
+    if(Tmp.is_object() == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+    if(Tmp["ssid"].is_string()) Result["Status"]["ESSID"] = Tmp["ssid"];
+    if(Tmp["channel"].is_number()) Result["Status"]["Channel"] = Tmp["channel"];
+    if(Tmp["quality"].is_number() && Tmp["quality_max"].is_number()) {
+      float Current = Tmp["quality"], Max = Tmp["quality_max"];
+      Result["Status"]["Quality"] = (int) (Current * 100.0 / Max);
+    }
   }
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
-void WifiManager::SetWIFICallback(const json &params, Response &response) {
+void WifiManager::SetWIFICallback(HTTPRequest *req) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("IPMode") == false) || (params["IPMode"].is_string() == false) || ((params["IPMode"] != "DHCP") && (params["IPMode"] != "STATIC"))) return HTTPServer::FillResponse(response, "'IPMode' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("ESSID") == false) || (params["ESSID"].is_string() == false)) return HTTPServer::FillResponse(response, "'ESSID' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("KeyMode") == false) || (params["KeyMode"].is_string() == false) || ((params["KeyMode"] != "NONE") && (params["KeyMode"] != "WEP") && (params["KeyMode"] != "WPA") && (params["KeyMode"] != "WPA2"))) return HTTPServer::FillResponse(response, "'KeyMode' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("IPMode") == false) || (params["IPMode"].is_string() == false) || ((params["IPMode"] != "DHCP") && (params["IPMode"] != "STATIC"))) return HTTPServer::FillResponse(response, "'IPMode' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("ESSID") == false) || (params["ESSID"].is_string() == false)) return HTTPServer::FillResponse(response, "'ESSID' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("KeyMode") == false) || (params["KeyMode"].is_string() == false) || ((params["KeyMode"] != "NONE") && (params["KeyMode"] != "WEP") && (params["KeyMode"] != "WPA") && (params["KeyMode"] != "WPA2"))) return HTTPServer::FillResponse(response, "'KeyMode' param is required", "text/plain", HTTP_BAD_REQUEST);
   if(params["IPMode"] == "STATIC") {
-    if((params.contains("IP") == false) || (params["IP"].is_string() == false)) return HTTPServer::FillResponse(response, "'IP' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    if((params.contains("Netmask") == false) || (params["Netmask"].is_string() == false)) return HTTPServer::FillResponse(response, "'Netmask' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    if((params.contains("Gateway") == false) || (params["Gateway"].is_string() == false)) return HTTPServer::FillResponse(response, "'Gateway' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    if((params.contains("DNS") == false) || (params["DNS"].is_array() == false) || (params["DNS"].size() != 2) || (params["DNS"][0].is_string() == false) || (params["DNS"][1].is_string() == false)) return HTTPServer::FillResponse(response, "'DNS' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if((params.contains("IP") == false) || (params["IP"].is_string() == false)) return HTTPServer::FillResponse(response, "'IP' param is required", "text/plain", HTTP_BAD_REQUEST);
+    if((params.contains("Netmask") == false) || (params["Netmask"].is_string() == false)) return HTTPServer::FillResponse(response, "'Netmask' param is required", "text/plain", HTTP_BAD_REQUEST);
+    if((params.contains("Gateway") == false) || (params["Gateway"].is_string() == false)) return HTTPServer::FillResponse(response, "'Gateway' param is required", "text/plain", HTTP_BAD_REQUEST);
+    if((params.contains("DNS") == false) || (params["DNS"].is_array() == false) || (params["DNS"].size() != 2) || (params["DNS"][0].is_string() == false) || (params["DNS"][1].is_string() == false)) return HTTPServer::FillResponse(response, "'DNS' param is required", "text/plain", HTTP_BAD_REQUEST);
     SystemManager::uBusCall("uci", "set", { {"config", "network"}, {"section", pNetworkWIFI}, {"values", {{"ipaddr", params["IP"]}, {"netmask", params["Netmask"]}, {"gateway", params["Gateway"]}, {"proto", (params["IPMode"] == "DHCP") ? "dhcp" : "static"}, {"enabled", params["Enabled"] ? "1" : "0"}, {"dns", params["DNS"]}}}});
   } else {
     SystemManager::uBusCall("uci", "set", { {"config", "network"}, {"section", pNetworkWIFI}, {"values", {{"proto", (params["IPMode"] == "DHCP") ? "dhcp" : "static"}, {"enabled", params["Enabled"] ? "1" : "0"}}}});

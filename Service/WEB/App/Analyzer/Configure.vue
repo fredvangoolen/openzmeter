@@ -160,7 +160,7 @@
       Save: function() {
         this.ShowSpinner = true;
         for(var prop in this.Tags) this.Analyzer.Tags[this.Tags[prop].Name] = this.Tags[prop].Value;
-        this.$http.post('setAnalyzer', this.Analyzer).then(
+        this.$http.post('setAnalyzer', this.Analyzer, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => { this.$emit('close', this.Analyzer.Analyzer); },
           (fail) => {
             this.ShowSpinner = false;

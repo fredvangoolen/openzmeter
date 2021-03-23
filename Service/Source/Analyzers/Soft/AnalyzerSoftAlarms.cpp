@@ -95,7 +95,7 @@ void AnalyzerSoftAlarms::Wait() {
   pthread_rwlock_unlock(&pLock);
 }
 void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS &aggreg) const {
-  if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is required", HTTP_BAD_REQUEST);
   Parser Evaluator;
   json   Result = json::object();
   float  NominalVoltage   = pNominalVoltage;
@@ -107,9 +107,9 @@ void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, Analy
   for(auto Var : Evaluator.GetVar()) Result["Variables"][Var.first] = *Var.second;
   try {
     Result["Result"] = Evaluator.Eval();
+    return HTTPServer::FillResponse(response, Result, params["Accept"]);
   } catch (Parser::exception_type &e) {
-    Result["Error"] = e.GetMsg();
+    return HTTPServer::FillResponse(response, e.GetMsg(), HTTP_BAD_REQUEST);
   }
-  return HTTPServer::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
 }
 // ---------------------------------------------------------------------------------------------------------------------

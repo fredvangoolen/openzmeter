@@ -3,9 +3,9 @@
     <div class="collapse-icon">
       <img class="icon" :src="require('Imgs/disconnect32.png')">
       <span v-if="(status!=null)&&(status.State!=null)&&(status.PendingActions!=null)&&(status.PendingActions>0)">
-        <span class="badge badge-menu badge-red" v-if="status.State=='ONLINE'">{{ status.PendingActions }}</span>
+        <span class="badge badge-menu badge-green" v-if="status.State=='ONLINE'">{{ status.PendingActions }}</span>
         <span class="badge badge-menu badge-yellow" v-if="status.State=='SYNCING'">{{ status.PendingActions }}</span>
-        <span class="badge badge-menu badge-green" v-if="status.State=='OFFLINE'">{{ status.PendingActions }}</span>
+        <span class="badge badge-menu badge-red" v-if="status.State=='OFFLINE'">{{ status.PendingActions }}</span>
       </span>
       <span v-else-if="(status!=null)&&(status.State!=null)">
         <img class="badge-icon" :src="require('Imgs/bullet_green.png')" v-if="status.State=='ONLINE'">
@@ -39,7 +39,7 @@
         this.SetAnalyzer(null);
         this.Dialog = 'Table';
       } else {
-        this.$http.post('getAnalyzer', { Analyzer: localStorage.getItem("Analyzer") }).then(
+        this.$http.post('getAnalyzer', { Analyzer: localStorage.getItem("Analyzer") }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             result.data.Analyzer = localStorage.getItem("Analyzer");
             this.SetAnalyzer(result.data);

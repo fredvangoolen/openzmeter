@@ -63,7 +63,7 @@
     methods: {
       Refresh: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
-        this.$http.post('getEthernet', { }).then(
+        this.$http.post('getEthernet', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             if(this.Config == null) return;
             this.Details = 'Device IP address   : ' + result.body.Status.IP + ' (' + result.body.Status.IPMode + ')\nDNS servers         : ' + result.body.Status.DNS.join(', ') + '\nDefault gateway     : ' + result.body.Status.Gateway;

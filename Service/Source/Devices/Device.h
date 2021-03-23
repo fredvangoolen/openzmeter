@@ -18,7 +18,7 @@
 #include <pthread.h>
 #include "nlohmann/json.hpp"
 #include "Analyzer.h"
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
@@ -39,7 +39,7 @@ class Device {
     string Serial() const;
   public :
     virtual ~Device();
-    virtual void GetDevice(const json &params, Response &response) = 0;
-    virtual void SetDevice(const json &params, Response &response) = 0;
+    virtual void GetDevice(HTTPRequest *req) = 0;
+    virtual void SetDevice(HTTPRequest *req) = 0;
 };
 //----------------------------------------------------------------------------------------------------------------------

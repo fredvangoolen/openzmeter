@@ -25,10 +25,10 @@ class AnalyzerSeries {
   private :
     const string pSerial;
   public :
-    void GetSeries(const json &params, Response &response) const;
-    void SetSeries(const json &params, Response &response) const;
-    void GetSeriesRange(const json &params, Response &response) const;
-    void DelSeriesRange(const json &params, Response &response) const;
+    void GetSeries(HTTPRequest *req) const;
+    void SetSeries(HTTPRequest *req) const;
+    void GetSeriesRange(HTTPRequest *req) const;
+    void DelSeriesRange(HTTPRequest *req) const;
   private :
     void CleanOldSamples() const;
   public :

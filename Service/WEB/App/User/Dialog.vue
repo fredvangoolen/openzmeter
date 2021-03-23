@@ -94,7 +94,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post((this.user == null) ? 'addUser' : 'setUser', this.User).then(
+        this.$http.post((this.user == null) ? 'addUser' : 'setUser', this.User, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.ShowSpinner = false;
             this.$emit('close');

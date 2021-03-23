@@ -76,7 +76,7 @@
       LoadTariffs: function() {
         this.ShowDialog = false;
         this.ShowSpinner = true;
-        this.$http.post('getTariffs', { }).then(
+        this.$http.post('getTariffs', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.Enabled = true;
             this.Tariffs = result.data;
@@ -97,7 +97,7 @@
       Duplicate: function(tariff) {
         this.Tariff = null;
         this.ShowSpinner = true;
-        this.$http.post('getTariff', { Name: tariff.Name }).then(
+        this.$http.post('getTariff', { Name: tariff.Name }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.SourceTariff = result.body;
             this.ShowDialog = true;
@@ -109,7 +109,7 @@
       Edit: function(tariff) {
         this.SourceTariff = null;
         this.ShowSpinner = true;
-        this.$http.post('getTariff', { Name: tariff.Name }).then(
+        this.$http.post('getTariff', { Name: tariff.Name }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.Tariff = result.body;
             this.ShowDialog = true;
@@ -120,7 +120,7 @@
       },
       Delete: function(tariff) {
         if(confirm("Delete '" + tariff.Name + "' tariff?")) {
-          this.$http.post('delTariff', { Name: tariff.Name }).then(
+          this.$http.post('delTariff', { Name: tariff.Name }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
             (result) => {
               this.LoadTariffs();
             },
@@ -130,7 +130,7 @@
       },
       Configure: function(module) {
         if(module.Name == 'ESP_ESIOS') {
-          this.$http.post('getESIOS', { }).then(
+          this.$http.post('getESIOS', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
             (result) => { this.Module = result.body; this.Module.Name = module.Name; },
             (fail) => { }
           );

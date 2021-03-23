@@ -59,10 +59,10 @@ void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {
 }
 void UpdateManager::SetUpgradeCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Packages") == false) || (params["Packages"].is_array() == false) || (params["Packages"].size() == 0)) return HTTPServer::FillResponse(response, "'Packages' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Packages") == false) || (params["Packages"].is_array() == false) || (params["Packages"].size() == 0)) return HTTPServer::FillResponse(response, "'Packages' param is required", "text/plain", HTTP_BAD_REQUEST);
   string Command = "opkg upgrade --force-depends";
   for(auto &Package : params["Packages"]) {
-    if(Package.is_string() == false) return HTTPServer::FillResponse(response, "'Packages' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if(Package.is_string() == false) return HTTPServer::FillResponse(response, "'Packages' param is required", "text/plain", HTTP_BAD_REQUEST);
     Command.append(" " + Package.get<string>());
   }
   auto Func = [Command](uint64_t offset, DataSink &sink) {

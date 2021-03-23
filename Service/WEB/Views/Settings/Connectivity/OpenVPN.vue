@@ -4,8 +4,8 @@
       <div class="pull-left"><h4 class="modal-title">OpenVPN</h4></div>
       <div class="pull-right btn-group">
         <div class="pull-right btn-group">
-        <button type="button" class="btn btn-default btn-xs" v-if="View=='Edit'" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes and close"></button>
-          <button type="button" class="btn btn-default btn-xs" v-if="View=='Edit'" @click="Apply"><img :src="require('Imgs/update.png')" alt="Apply changes"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes and close"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="Apply"><img :src="require('Imgs/update.png')" alt="Apply changes"></button>
           <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </div>
@@ -41,7 +41,7 @@
      methods: {
       Refresh: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
-        this.$http.post('getSystem', { Series: ['SystemLog']}).then(
+        this.$http.post('getSystem', { Series: ['SystemLog']}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.SysMessages = result.body.SystemLog;
             this.Timer = setTimeout(this.Refresh, 5000);
@@ -51,14 +51,14 @@
       },
       Apply: function() {
         this.ShowSpinner = true;
-        this.$http.post('setVPN', { Enabled: this.Config.Enabled, Config: this.Config.Config }).then(
+        this.$http.post('setVPN', { Enabled: this.Config.Enabled, Config: this.Config.Config }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => { this.ShowSpinner = false; },
           (fail) => { this.ShowSpinner = false; }
         );
       },
       Save: function(value) {
         this.ShowSpinner = true;
-        this.$http.post('setVPN', { Enabled: this.Config.Enabled, Config: this.Config.Config }).then(
+        this.$http.post('setVPN', { Enabled: this.Config.Enabled, Config: this.Config.Config }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');

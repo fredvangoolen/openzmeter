@@ -72,7 +72,7 @@
         if(confirm('Delete ' + Selection.length + ' alarm(s)?') == false) return;
         this.ShowSpinner = true;
         var Promises = [];
-        for(var n = 0; n < Selection.length; n++) Promises.push(this.$http.post('delAlarm', { Trigger: this.Alarms[Selection[n]].StartDate, Analyzer: this.analyzer.Analyzer, AlarmID: this.Alarms[Selection[n]].ID }));
+        for(var n = 0; n < Selection.length; n++) Promises.push(this.$http.post('delAlarm', { Trigger: this.Alarms[Selection[n]].StartDate, Analyzer: this.analyzer.Analyzer, AlarmID: this.Alarms[Selection[n]].ID }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
         Promise.all(Promises).then(
           () => {
             this.$emit('alarmschanged');
@@ -86,7 +86,7 @@
       },
       Delete: function(evt) {
         if(confirm("Delete selected alarm?")) {
-          this.$http.post('delAlarm', { Trigger: evt.StartDate, Analyzer: this.analyzer.Analyzer, AlarmID: evt.ID }).then(
+          this.$http.post('delAlarm', { Trigger: evt.StartDate, Analyzer: this.analyzer.Analyzer, AlarmID: evt.ID }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
             (result, n) => { this.$emit('alarmschanged'); }
           );
         }

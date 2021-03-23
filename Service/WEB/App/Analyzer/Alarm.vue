@@ -82,7 +82,7 @@
         this.ShowSpinner = true;
         this.View = 'Expression';
         this.Data = [];
-        this.$http.post('testAlarm', { Analyzer: this.analyzer.Analyzer, Expression: this.Alarm.Expression }).then(
+        this.$http.post('testAlarm', { Analyzer: this.analyzer.Analyzer, Expression: this.Alarm.Expression }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.ShowSpinner = false;
             this.Data = this.FillValues(result.body);

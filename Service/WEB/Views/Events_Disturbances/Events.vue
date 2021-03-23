@@ -119,7 +119,7 @@
       },
       RMS: function(evt) {
         this.ShowSpinner = true;
-        this.$http.post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Samples: 'RMS' }).then(
+        this.$http.post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Samples: 'RMS' }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.ShowSpinner = false;
             this.Event = Object.freeze(result.body);
@@ -132,7 +132,7 @@
       },
       RAW: function(evt) {
         this.ShowSpinner = true;
-        this.$http.post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Samples: 'RAW' }).then(
+        this.$http.post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Samples: 'RAW' }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.ShowSpinner = false;
             this.Event = Object.freeze(result.body);

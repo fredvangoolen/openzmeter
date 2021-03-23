@@ -98,7 +98,7 @@ bool AnalyzerManager::HandleModbus(uint8_t *buff, const string &serial, const ui
   return Ret;
 }
 void AnalyzerManager::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
-  if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is required", HTTP_BAD_REQUEST);
   string Serial = params["Analyzer"];
   pthread_rwlock_rdlock(&pAnalyzersLock);
   auto Analyzer = pAnalyzers.find(Serial);
@@ -107,7 +107,7 @@ void AnalyzerManager::CallAnalyzerFunction(const json &params, Response &respons
   } else {
     string UserName = params["UserName"];
     LogFile::Warning("User '%s' request access to not defined analyzer '%s'", UserName.c_str(), Serial.c_str());
-    HTTPServer::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
+    HTTPServer::FillResponse(response, "Analyzer not found", HTTP_BAD_REQUEST);
   }
   pthread_rwlock_unlock(&pAnalyzersLock);
 }

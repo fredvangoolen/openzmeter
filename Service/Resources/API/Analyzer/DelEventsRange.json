@@ -13,11 +13,11 @@
                   "Analyzer": "VIRTUAL_3PN",
                   "From": 1590000000000,
                   "To": 1600000000000,
-                  "Mode": "ALL"
+                  "Mode": "All"
                 },
                 "properties": {
                   "Analyzer": { "type": "string" },
-                  "Mode": { "type": "string", "enum": [ "ALL", "SAMPLES_ONLY", "SAMPLES_RMS", "SAMPLES_RAW" ] },
+                  "Mode": { "type": "string", "enum": [ "All", "Samples", "RMS", "RAW" ] },
                   "From": { "type": "number" },
                   "To": { "type": "number" }
                 },

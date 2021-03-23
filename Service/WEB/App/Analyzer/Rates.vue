@@ -73,7 +73,7 @@
       },
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setAnalyzer', this.Analyzer).then(
+        this.$http.post('setAnalyzer', this.Analyzer, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => { this.$emit('close', this.Analyzer); },
           (fail) => {
             this.ShowSpinner = false;

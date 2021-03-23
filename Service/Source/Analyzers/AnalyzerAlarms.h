@@ -25,12 +25,12 @@ class AnalyzerAlarms {
   protected :
     const string  pSerial;
   public :
-    void GetAlarms(const json &params, Response &response) const;
-    void SetAlarms(const json &params, Response &response) const;
-    void DelAlarm(const json &params, Response &response) const;
-    void SetAlarm(const json &params, Response &response) const;
-    void GetAlarmsRange(const json &params, Response &response) const;
-    void DelAlarmsRange(const json &params, Response &response) const;
+    void GetAlarms(HTTPRequest *req) const;
+    void SetAlarms(HTTPRequest *req) const;
+    void DelAlarm(HTTPRequest *req) const;
+    void SetAlarm(HTTPRequest *req) const;
+    void GetAlarmsRange(HTTPRequest *req) const;
+    void DelAlarmsRange(HTTPRequest *req) const;
   public :
     AnalyzerAlarms(const string &id);
     virtual ~AnalyzerAlarms();

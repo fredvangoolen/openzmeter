@@ -31,13 +31,13 @@
     methods: {
       GetUser: function() {
         this.ShowDialog = false;
-        this.$http.post('getUser', { User: localStorage.getItem("UserName") }).then(
+        this.$http.post('getUser', { User: localStorage.getItem("UserName") }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => { this.$emit('update:user', result.data); },
           (fail) => { this.Logout(); }
         );
       },
       Logout: function() {
-        this.$http.post('logOut', {}).then(
+        this.$http.post('logOut', {}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => { location.reload(); },
           (fail) => { location.reload(); }
         );

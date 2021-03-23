@@ -79,23 +79,23 @@ bool BluetoothManager::Enabled() {
   return false;
 #endif
 }
-void BluetoothManager::GetBluetoothCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void BluetoothManager::GetBluetoothCallback(HTTPRequest *req) {
+  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
 #ifdef OPENWRT
   json Config = ConfigFile::ReadConfig("/Bluetooth");
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   Config["Name"] = pServerName;
   Config["Running"] = pEnabled;
   if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
+  req->Success(Config);
 #else
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
+  req->Error("", HTTP_METHOD_NOT_ALLOWED);
 #endif
 }
-void BluetoothManager::SetBluetoothCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void BluetoothManager::SetBluetoothCallback(HTTPRequest *req) {
+  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
 #ifdef OPENWRT
-  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is required", "text/plain", HTTP_BAD_REQUEST);
   json Config = json::object();
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   pEnable = params["Enabled"];
@@ -103,9 +103,9 @@ void BluetoothManager::SetBluetoothCallback(const json &params, Response &respon
   Config["Enabled"] = pEnable;
   Config["Interface"] = pInterface;
   ConfigFile::WriteConfig("/Bluetooth", Config);
-  HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
+  req->Success(json::object());
 #else
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
+  req->Error("", HTTP_METHOD_NOT_ALLOWED);
 #endif
 }
 #ifdef OPENWRT
