@@ -25,21 +25,6 @@ using namespace mu;
 using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class RatesEval final {
-  public :
-//    enum SeriesMask {
-//      SERIE_TIMESTAMP       = 0x0001,
-//      SERIE_ACTIVE_POWER    = 0x0002,
-//      SERIE_ACTIVE_ENERGY   = 0x0004,
-//      SERIE_REACTIVE_POWER  = 0x0008,
-//      SERIE_REACTIVE_ENERGY = 0x0010,
-//      SERIE_COST            = 0x0020,
-//      SERIE_PERIOD          = 0x0040,
-//      SERIE_COLOR           = 0x0080,
-//      SERIE_CONTRACTED      = 0x0100,
-//      SERIE_BILL            = 0x0200,
-//      SERIE_ENERGY_COST     = 0x0400,
-//      SERIE_POWER_COST      = 0x0800
-//    };
   private :
     typedef struct {
       Parser             Script;

@@ -14,6 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAggreg200MS.h"
+#include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftAggreg200MS::AnalyzerSoftAggreg200MS(const string &serial, const Analyzer::AnalyzerMode mode) : AnalyzerSoftAggreg(serial, mode) {
   Reset();

@@ -19,6 +19,7 @@
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
 #include "MessageLoop.h"
+#include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 json            SystemManager::pStatus = json::object();
 pthread_mutex_t SystemManager::pMutex  = PTHREAD_MUTEX_INITIALIZER;
@@ -143,8 +144,8 @@ string SystemManager::SystemLog() {
   return "";
 #endif
 }
-void SystemManager::GetSystemCallback(const json &params, Response &response) {
-  string UserName = params["UserName"];
+void SystemManager::GetSystemCallback(HTTPRequest &req) {
+/*  string UserName = req.UserName();
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
   vector<string> Series;
@@ -164,6 +165,6 @@ void SystemManager::GetSystemCallback(const json &params, Response &response) {
       return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
     }
   }
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);*/
 }
 // ---------------------------------------------------------------------------------------------------------------------

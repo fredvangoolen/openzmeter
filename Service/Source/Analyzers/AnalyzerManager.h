@@ -16,7 +16,7 @@
 #pragma once
 #include <map>
 #include "Analyzer.h"
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
@@ -26,31 +26,31 @@ class AnalyzerManager final {
     static map<string, Analyzer*>  pAnalyzers;       //Initiated by analyzer
     static pthread_rwlock_t        pAnalyzersLock;   //Control access to critical sections
   private :
-    static void CallAnalyzerFunction(HTTPRequest *req, void (Analyzer::*method)(HTTPRequest *req));
-    static void GetAnalyzersCallback(HTTPRequest *req);
-    static void GetAnalyzerCallback(HTTPRequest *req);
-    static void SetAnalyzerCallback(HTTPRequest *req);
-    static void GetStatusCallback(HTTPRequest *req);
-    static void GetSeriesCallback(HTTPRequest *req);
-    static void GetSeriesNowCallback(HTTPRequest *req);
-    static void GetCostsCallback(HTTPRequest *req);
-    static void GetBillsCallback(HTTPRequest *req);
-    static void GetWaveStream(HTTPRequest *req);
-    static void GetSeriesRangeCallback(HTTPRequest *req);
-    static void DelSeriesRangeCallback(HTTPRequest *req);
-    static void GetEventsCallback(HTTPRequest *req);
-    static void GetEventsRangeCallback(HTTPRequest *req);
-    static void DelEventsRangeCallback(HTTPRequest *req);
-    static void GetEventCallback(HTTPRequest *req);
-    static void SetEventCallback(HTTPRequest *req);
-    static void DelEventCallback(HTTPRequest *req);
-    static void TestAlarmCallback(HTTPRequest *req);
-    static void GetAlarmsCallback(HTTPRequest *req);
-    static void GetAlarmsRangeCallback(HTTPRequest *req);
-    static void DelAlarmCallback(HTTPRequest *req);
-    static void SetAlarmCallback(HTTPRequest *req);
-    static void DelAlarmsRangeCallback(HTTPRequest *req);
-    static void SetRemoteCallback(HTTPRequest *req);
+    static void CallAnalyzerFunction(HTTPRequest &req, void (Analyzer::*method)(HTTPRequest &req));
+    static void GetAnalyzersCallback(HTTPRequest &req);
+    static void GetAnalyzerCallback(HTTPRequest &req);
+    static void SetAnalyzerCallback(HTTPRequest &req);
+    static void GetStatusCallback(HTTPRequest &req);
+    static void GetSeriesCallback(HTTPRequest &req);
+    static void GetSeriesNowCallback(HTTPRequest &req);
+    static void GetCostsCallback(HTTPRequest &req);
+    static void GetBillsCallback(HTTPRequest &req);
+    static void GetWaveStream(HTTPRequest &req);
+    static void GetSeriesRangeCallback(HTTPRequest &req);
+    static void DelSeriesRangeCallback(HTTPRequest &req);
+    static void GetEventsCallback(HTTPRequest &req);
+    static void GetEventsRangeCallback(HTTPRequest &req);
+    static void DelEventsRangeCallback(HTTPRequest &req);
+    static void GetEventCallback(HTTPRequest &req);
+    static void SetEventCallback(HTTPRequest &req);
+    static void DelEventCallback(HTTPRequest &req);
+    static void TestAlarmCallback(HTTPRequest &req);
+    static void GetAlarmsCallback(HTTPRequest &req);
+    static void GetAlarmsRangeCallback(HTTPRequest &req);
+    static void DelAlarmCallback(HTTPRequest &req);
+    static void SetAlarmCallback(HTTPRequest &req);
+    static void DelAlarmsRangeCallback(HTTPRequest &req);
+    static void SetRemoteCallback(HTTPRequest &req);
   public :
     static bool AddAnalyzer(Analyzer *analyzer);
     static bool DelAnalyzer(const string &serial);

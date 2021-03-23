@@ -21,8 +21,8 @@ class VPNManager final {
   private :
     static constexpr char *pFileName = (char*)"/etc/openvpn/openZmeter.conf";
   private :
-    static void GetVPNCallback(HTTPRequest *req);
-    static void SetVPNCallback(HTTPRequest *req);
+    static void GetVPNCallback(HTTPRequest &req);
+    static void SetVPNCallback(HTTPRequest &req);
 #endif
   public :
     VPNManager();

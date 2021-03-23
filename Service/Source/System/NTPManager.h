@@ -18,8 +18,8 @@
 class NTPManager final {
 #ifdef OPENWRT
   private :
-    static void     GetNTPCallback(HTTPRequest *req);
-    static void     SetNTPCallback(HTTPRequest *req);
+    static void     GetNTPCallback(HTTPRequest &req);
+    static void     SetNTPCallback(HTTPRequest &req);
 #endif
   public :
     NTPManager();

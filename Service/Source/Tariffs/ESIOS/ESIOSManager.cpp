@@ -84,19 +84,19 @@ void ESIOSManager::Config(const json &config) {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void ESIOSManager::GetESIOSCallback(HTTPRequest *req) {
-  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
+void ESIOSManager::GetESIOSCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/ESIOS");
   pthread_mutex_lock(&pMutex);
   Config["LastDate"] = pSyncDate;
   pthread_mutex_unlock(&pMutex);
-  req->Success(Config);
+  req.Success(Config);
 }
-void ESIOSManager::SetESIOSCallback(HTTPRequest *req) {
-  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
-  if(!req->CheckParamBool("Enabled") || !req->CheckParamString("Token")) return;
-  Config(CheckConfig(req->Params()));
-  req->Success(json::object());
+void ESIOSManager::SetESIOSCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamBool("Enabled") || !req.CheckParamString("Token")) return;
+  Config(CheckConfig(req.Params()));
+  req.Success(json::object());
 }
 void *ESIOSManager::Thread_Func(void *params) {
   SSLClient Client("api.esios.ree.es", 443);

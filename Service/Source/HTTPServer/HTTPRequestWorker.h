@@ -29,11 +29,11 @@ class HTTPRequestWorker final {
     pthread_t        pThread;
     pthread_mutex_t  pMutex;
     pthread_cond_t   pCond;
-    HTTPRequestPoll *pParent;
+    HTTPRequestPoll &pParent;
   private:
     void *Thread();
   public :
-    HTTPRequestWorker(HTTPRequestPoll *parent);
+    HTTPRequestWorker(HTTPRequestPoll &parent);
     ~HTTPRequestWorker();
     void     Run(function<void()> fn);
     uint64_t LastUse() const;

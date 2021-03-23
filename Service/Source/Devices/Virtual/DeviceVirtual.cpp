@@ -112,18 +112,18 @@ void DeviceVirtual::Config(const json &config) {
     }
   }
 }
-void DeviceVirtual::GetDevice(HTTPRequest *req) {
-  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
+void DeviceVirtual::GetDevice(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
   Config.erase("Analyzer");
-  req->Success(Config);
+  req.Success(Config);
 }
-void DeviceVirtual::SetDevice(HTTPRequest *req) {
-  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
-  json ConfigIN = req->Params();
+void DeviceVirtual::SetDevice(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  json ConfigIN = req.Params();
   ConfigIN["Analyzer"] = ConfigFile::ReadConfig("/Devices/" + pSerial + "/Analyzer");
   Config(CheckConfig(ConfigIN));
-  req->Success(json::object());
+  req.Success(json::object());
 }
 void *DeviceVirtual::Thread() {
   uint64_t       StartTime        = Tools::GetTime64();

@@ -18,11 +18,11 @@
 // ---------------------------------------------------------------------------------------------------------------------
 class TariffManager final {
   private :
-    static void GetTariffsCallback(HTTPRequest *req);
-    static void GetTariffCallback(HTTPRequest *req);
-    static void SetTariffCallback(HTTPRequest *req);
-    static void DelTariffCallback(HTTPRequest *req);
-    static void AddTariffCallback(HTTPRequest *req);
+    static void GetTariffsCallback(HTTPRequest &req);
+    static void GetTariffCallback(HTTPRequest &req);
+    static void SetTariffCallback(HTTPRequest &req);
+    static void DelTariffCallback(HTTPRequest &req);
+    static void AddTariffCallback(HTTPRequest &req);
 //    static void EvalRatesCallback(const json &params, Response &response);
   public :
     TariffManager();

@@ -35,7 +35,7 @@ using namespace std;
 class HTTPServer final : private Server {
   private :
     typedef struct {
-      function<void(HTTPRequest *)> Func;
+      function<void(HTTPRequest &)> Func;
       string                        APIFile;
     } Callback_t;
   private :
@@ -48,21 +48,20 @@ class HTTPServer final : private Server {
     static uint16_t                     pPort;
     static pthread_t                    pThread;
   private :
-    static void        PeriodicTasks();
-    static string      ParseCookie(const string &cookie);
-    static string      PatchFile(const string &file, const string &find, const string &replace);
-    static string      PatchString(string &src, const string &find, const string &replace);
-    static const char *MimeType(const string &file);
-    static void        HandleGet(const Request &request, Response &response);
-    static void        HandlePost(const Request &request, Response &response);
-    static void        GetVersionCallback(HTTPRequest *req);
-    static void        LogInCallback(HTTPRequest *req);
-    static void        LogOutCallback(HTTPRequest *req);
-    static void        GetAPICallback(HTTPRequest *req);
+    static string PatchFile(const string &file, const string &find, const string &replace);
+    static string PatchString(string &src, const string &find, const string &replace);
+    static string MimeType(const string &file);
+    static void   PeriodicTasks();
+    static void   HandleGet(const Request &request, Response &response);
+    static void   HandlePost(const Request &request, Response &response);
+    static void   GetVersionCallback(HTTPRequest &req);
+    static void   LogInCallback(HTTPRequest &req);
+    static void   LogOutCallback(HTTPRequest &req);
+    static void   GetAPICallback(HTTPRequest &req);
   private :
     void *Thread();
   public :
-    static void   RegisterCallback(const string &handleName, const function<void(HTTPRequest *)> function, const string &apiFile = "");
+    static void   RegisterCallback(const string &handleName, const function<void(HTTPRequest &)> func, const string &apiFile = "");
     static void   UnregisterCallback(const string &handleName);
     static void   RegisterDoc(const string &name, const json &doc);
     static void   UnregisterDoc(const string &name);

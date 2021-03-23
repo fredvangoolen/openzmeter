@@ -28,9 +28,9 @@ class WifiManager final {
     static string          pWirelessWIFI;
   private :
     static void PeriodicTasks();
-    static void GetWIFICallback(HTTPRequest *req);
-    static void SetWIFICallback(HTTPRequest *req);
-    static void ScanWIFICallback(HTTPRequest *req);
+    static void GetWIFICallback(HTTPRequest &req);
+    static void SetWIFICallback(HTTPRequest &req);
+    static void ScanWIFICallback(HTTPRequest &req);
 #endif
   public :
     static WifiStat Enabled();

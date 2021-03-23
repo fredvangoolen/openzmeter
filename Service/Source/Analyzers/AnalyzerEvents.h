@@ -24,13 +24,13 @@ class AnalyzerEvents {
   protected :
     const string  pSerial;
   public :
-    void GetEvents(HTTPRequest *req) const;
-    void SetEvents(HTTPRequest *req) const;
-    void SetEvent(HTTPRequest *req) const;
-    void DelEvent(HTTPRequest *req) const;
-    void GetEvent(HTTPRequest *req) const;
-    void GetEventsRange(HTTPRequest *req) const;
-    void DelEventsRange(HTTPRequest *req) const;
+    void GetEvents(HTTPRequest &req) const;
+    void SetEvents(HTTPRequest &req) const;
+    void SetEvent(HTTPRequest &req) const;
+    void DelEvent(HTTPRequest &req) const;
+    void GetEvent(HTTPRequest &req) const;
+    void GetEventsRange(HTTPRequest &req) const;
+    void DelEventsRange(HTTPRequest &req) const;
   public :
     AnalyzerEvents(const string &id);
     virtual ~AnalyzerEvents();

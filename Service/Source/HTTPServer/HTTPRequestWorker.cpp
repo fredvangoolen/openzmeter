@@ -19,11 +19,10 @@
 #include "LogFile.h"
 #include "Worker.h"
 // ---------------------------------------------------------------------------------------------------------------------
-HTTPRequestWorker::HTTPRequestWorker(HTTPRequestPoll *parent) {
+HTTPRequestWorker::HTTPRequestWorker(HTTPRequestPoll &parent) : pParent(parent) {
   pTerminate = false;
   pCond      = PTHREAD_COND_INITIALIZER;
   pMutex     = PTHREAD_MUTEX_INITIALIZER;
-  pParent    = parent;
   pFunction  = NULL;
   if(pthread_create(&pThread, NULL, [](void *params) { return ((HTTPRequestWorker*)params)->Thread(); }, this) != 0) {
     pThread = 0;
@@ -49,7 +48,7 @@ void *HTTPRequestWorker::Thread() {
     pFunction = NULL;
     pLastTime = Tools::GetTime64();
     pthread_mutex_unlock(&pMutex);
-    pParent->PushWorker(this);
+    pParent.PushWorker(this);
   }
 }
 HTTPRequestWorker::~HTTPRequestWorker() {

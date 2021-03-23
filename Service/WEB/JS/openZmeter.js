@@ -134,12 +134,12 @@ const openZmeter = {
         if((Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = null;
         Transfer.Analyzer  = analyzer;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Vue.http.post('getSeriesNow', CBOR.encode({ Analyzer: analyzer.Analyzer, Series: series }), { headers: { 'Accept': 'application/cbor', 'Content-Type': 'application/cbor' } }).then(
-          (result) => {
+        Vue.http.post('getSeriesNow', CBOR.encode({ Analyzer: analyzer.Analyzer, Series: series }), {  responseType: 'blob', headers: { 'Accept': 'application/cbor', 'Content-Type': 'application/cbor' } }).then(
+          (result) => { result.blob().then((blob) => { blob.arrayBuffer().then((buffer) => {
             if(Cancelled == true) return;
-            Transfer.Data = Object.seal(result.body);
+            Transfer.Data = Object.seal(CBOR.decode(buffer));
             Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 1500);
-          },
+          }); }); },
           (fail) => {
             if(Cancelled == true) return;
             Transfer.Data = null;

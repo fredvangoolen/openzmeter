@@ -14,10 +14,9 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "cpp-httplib/httplib.h"
+#include "HTTPRequest.h"
 #include "nlohmann/json.hpp"
 //----------------------------------------------------------------------------------------------------------------------
-using namespace httplib;
 using namespace std;
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
@@ -25,10 +24,10 @@ class AnalyzerSeries {
   private :
     const string pSerial;
   public :
-    void GetSeries(HTTPRequest *req) const;
-    void SetSeries(HTTPRequest *req) const;
-    void GetSeriesRange(HTTPRequest *req) const;
-    void DelSeriesRange(HTTPRequest *req) const;
+    void GetSeries(HTTPRequest &req) const;
+    void SetSeries(HTTPRequest &req) const;
+    void GetSeriesRange(HTTPRequest &req) const;
+    void DelSeriesRange(HTTPRequest &req) const;
   private :
     void CleanOldSamples() const;
   public :

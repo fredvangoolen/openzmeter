@@ -28,10 +28,10 @@ class DeviceManager final {
     static map<string, Device*> pDevices;         //Initiated by devices, cleared on destroy
     static pthread_rwlock_t     pDevicesLock;     //Control access to critical sections
   private :
-    static void CallDeviceFunction(HTTPRequest *req, void (Device::*method)(HTTPRequest *req));
-    static void GetDevicesCallback(HTTPRequest *req);
-    static void GetDeviceCallback(HTTPRequest *req);
-    static void SetDeviceCallback(HTTPRequest *req);
+    static void CallDeviceFunction(HTTPRequest &req, void (Device::*method)(HTTPRequest &req));
+    static void GetDevicesCallback(HTTPRequest &req);
+    static void GetDeviceCallback(HTTPRequest &req);
+    static void SetDeviceCallback(HTTPRequest &req);
   public :
     static void AddDriver(void (*func)());
     static void AddDevice(Device *dev);

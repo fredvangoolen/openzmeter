@@ -43,8 +43,8 @@ class ESIOSManager final {
   public :
     static vector<Variable_t>  pVariables;
   private :
-    static void     GetESIOSCallback(HTTPRequest *req);
-    static void     SetESIOSCallback(HTTPRequest *req);
+    static void     GetESIOSCallback(HTTPRequest &req);
+    static void     SetESIOSCallback(HTTPRequest &req);
     static void     Config(const json &config);
     static json     CheckConfig(const json &config);
     static void    *Thread_Func(void *params);

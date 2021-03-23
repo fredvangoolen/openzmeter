@@ -19,6 +19,7 @@
 #include "LogFile.h"
 #include "Worker.h"
 #include "MessageLoop.h"
+#include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 #ifdef OPENWRT
 volatile bool    BluetoothManager::pTerminate   = false;
@@ -79,21 +80,21 @@ bool BluetoothManager::Enabled() {
   return false;
 #endif
 }
-void BluetoothManager::GetBluetoothCallback(HTTPRequest *req) {
-  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
+void BluetoothManager::GetBluetoothCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
 #ifdef OPENWRT
   json Config = ConfigFile::ReadConfig("/Bluetooth");
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   Config["Name"] = pServerName;
   Config["Running"] = pEnabled;
   if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  req->Success(Config);
+  req.Success(Config);
 #else
-  req->Error("", HTTP_METHOD_NOT_ALLOWED);
+  req.Error("", HTTP_METHOD_NOT_ALLOWED);
 #endif
 }
-void BluetoothManager::SetBluetoothCallback(HTTPRequest *req) {
-  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
+void BluetoothManager::SetBluetoothCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
 #ifdef OPENWRT
   if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is required", "text/plain", HTTP_BAD_REQUEST);
   json Config = json::object();
@@ -103,9 +104,9 @@ void BluetoothManager::SetBluetoothCallback(HTTPRequest *req) {
   Config["Enabled"] = pEnable;
   Config["Interface"] = pInterface;
   ConfigFile::WriteConfig("/Bluetooth", Config);
-  req->Success(json::object());
+  req.Success(json::object());
 #else
-  req->Error("", HTTP_METHOD_NOT_ALLOWED);
+  req.Error("", HTTP_METHOD_NOT_ALLOWED);
 #endif
 }
 #ifdef OPENWRT

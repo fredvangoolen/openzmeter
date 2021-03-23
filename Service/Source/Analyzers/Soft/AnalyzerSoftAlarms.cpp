@@ -94,7 +94,7 @@ void AnalyzerSoftAlarms::Wait() {
   if(pWorker != NULL) pWorker->Wait();
   pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS &aggreg) const {
+void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS &aggreg) const {/*
   if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is required", HTTP_BAD_REQUEST);
   Parser Evaluator;
   json   Result = json::object();
@@ -110,6 +110,6 @@ void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, Analy
     return HTTPServer::FillResponse(response, Result, params["Accept"]);
   } catch (Parser::exception_type &e) {
     return HTTPServer::FillResponse(response, e.GetMsg(), HTTP_BAD_REQUEST);
-  }
+  }*/
 }
 // ---------------------------------------------------------------------------------------------------------------------
