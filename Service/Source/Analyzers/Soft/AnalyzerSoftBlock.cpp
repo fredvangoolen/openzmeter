@@ -14,6 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftBlock.h"
+#include "Tools.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftBlock::AnalyzerSoftBlock(const uint8_t vChanels, const uint8_t cChannels, const uint64_t seq, const uint16_t maxLen, const float nominalVolt, const float nominalFreq) {
   pVoltageChannels  = vChanels;

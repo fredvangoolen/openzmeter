@@ -72,8 +72,8 @@ class DeviceV2 final : public Device {
     void     ClearAnalyzers();
     uint32_t AnalyzersCount();
     void     Config(const json &config);
-    void     GetDevice(HTTPRequest *req) override;
-    void     SetDevice(HTTPRequest *req) override;
+    void     GetDevice(HTTPRequest &req) override;
+    void     SetDevice(HTTPRequest &req) override;
     void    *Thread();
     void     ReadCallback(struct libusb_transfer *transfer);
     int      PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event);

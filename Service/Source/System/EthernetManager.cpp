@@ -47,7 +47,7 @@ void EthernetManager::PeriodicTasks() {
   //LogFile::SetValue("Ethernet", "/Ethernet_Enabled", ((Tmp == nullptr) || (Tmp.is_object() == false) || (Tmp["up"].is_boolean() == false)) ? json() : Tmp["up"]);
 }
 void EthernetManager::GetEthernetCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   string PhyInterface = "";
   json   Result       = json::object();
   Result["Status"]    = json::object();
@@ -79,7 +79,7 @@ void EthernetManager::GetEthernetCallback(const json &params, Response &response
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void EthernetManager::SetEthernetCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   int ErrorCode = 0;
   json Params = json::object();
   Params["config"] = "network";

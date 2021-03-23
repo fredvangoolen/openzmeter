@@ -41,57 +41,47 @@ TariffManager::~TariffManager() {
   HTTPServer::UnregisterDoc("Tariffs");
   LogFile::Info("TariffManager stoped");
 }
-void TariffManager::GetTariffsCallback(HTTPRequest *req) {
-  string UserName = params["UserName"];
-  auto Func = [UserName](uint64_t offset, DataSink &sink) -> bool {
-    uint32_t Items = 0;
-    sink.os << "[\n  ";
+void TariffManager::GetTariffsCallback(HTTPRequest &req) {
+  string UserName = req.UserName();
+  auto Func = [UserName](function<bool(const json &content)> Write) {
     Database DB;
-    DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'User', username) as result FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ") ORDER BY name ASC"));
-    while(DB.FecthRow() && sink.is_writable()) sink.os << ((Items++ != 0) ? ",\n  " + DB.ResultString("result") : DB.ResultString("result"));
-    sink.os << "\n]";
-    sink.done();
-    return true;
+    DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'User', username) FROM tariffs" + ((UserName == "admin") ? "" : " WHERE username IN ('admin', " + DB.Bind(UserName) + ") ORDER BY name ASC"));
+    while(DB.FecthRow()) {
+      if(Write(DB.ResultJSON(0)) == false) return;
+    }
   };
-  response.set_chunked_content_provider("application/json", Func);
 }
-void TariffManager::GetTariffCallback(HTTPRequest *req) {
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
+void TariffManager::GetTariffCallback(HTTPRequest &req) {
+  if(!req.CheckParamString("Name")) return;
   Database DB;
-  string Name = params["Name"];
-  string UserName = params["UserName"];
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'User', username, 'Template', template) as result FROM tariffs WHERE name = " + DB.Bind(Name) + ((UserName == "admin") ? "" : " AND username = " + DB.Bind(UserName)));
-  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
+  string Name = req.Param("Name");
+  if(!DB.ExecSentenceAsyncResult("SELECT json_build_object('Name', name, 'User', username, 'Template', template) as result FROM tariffs WHERE name = " + DB.Bind(Name) + ((req.UserName() == "admin") ? "" : " AND username = " + DB.Bind(req.UserName()))) || !DB.FecthRow()) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
+  req.Success(DB.ResultJSON(0));
 }
-void TariffManager::DelTariffCallback(HTTPRequest *req) {
-  if(!req->CheckParamString("Name")) return;
+void TariffManager::DelTariffCallback(HTTPRequest &req) {
+  if(!req.CheckParamString("Name")) return;
   Database DB;
-  string Name = req->Param("Name");
-  if(DB.ExecSentenceAsyncResult("DELETE FROM tariffs WHERE name = " + DB.Bind(Name) + ((req->UserName() == "admin") ? "" : " AND username = " + DB.Bind(req->UserName())) + " RETURNING name") == false) return req->Error("", HTTP_INTERNAL_SERVER_ERROR);
-  req->Success(json::object());
+  string Name = req.Param("Name");
+  if(!DB.ExecSentenceAsyncResult("DELETE FROM tariffs WHERE name = " + DB.Bind(Name) + ((req.UserName() == "admin") ? "" : " AND username = " + DB.Bind(req.UserName())) + " RETURNING name")) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
+  req.Success(json::object());
 }
-void TariffManager::SetTariffCallback(HTTPRequest *req) {
-  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
-  json Conf = Tariff::CheckConfig(params["Template"]);
-  if(Conf.is_string()) return HTTPServer::FillResponse(response, Conf, "text/plain", HTTP_BAD_REQUEST);
-  string   UserName = params["UserName"];
-  string   Name     = params["Name"];
+void TariffManager::SetTariffCallback(HTTPRequest &req) {
+  if(!req.CheckParamObject("Template") || !req.CheckParamString("Name")) return;
+  json Conf = Tariff::CheckConfig(req.Param("Template"));
+  if(Conf.is_string()) return req.Error(Conf, HTTP_BAD_REQUEST);
+  string   Name = req.Param("Name");
   Database DB;
-  DB.ExecSentenceAsyncResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(Conf.dump()) + " WHERE name = " + DB.Bind(Name) + ((UserName != "admin") ? " AND username = " + DB.Bind(UserName) : "") + " RETURNING name");
-  return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
+  if((DB.ExecSentenceAsyncResult("UPDATE tariffs SET name = " + DB.Bind(Name) + ", template = " + DB.Bind(Conf.dump()) + " WHERE name = " + DB.Bind(Name) + ((req.UserName() != "admin") ? " AND username = " + DB.Bind(req.UserName()) : "") + " RETURNING name") == false) || (DB.FecthRow() == false)) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
+  req.Success(json::object());
 }
-void TariffManager::AddTariffCallback(HTTPRequest *req) {
-  if((params.contains("Template") == false) || (params["Template"].is_object() == false)) return HTTPServer::FillResponse(response, "'Template' param is required", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
-  json Conf = Tariff::CheckConfig(params["Template"]);
-  if(Conf.is_string()) return HTTPServer::FillResponse(response, Conf, "text/plain", HTTP_BAD_REQUEST);
-  string   UserName = params["UserName"];
-  string   Name     = params["Name"];
+void TariffManager::AddTariffCallback(HTTPRequest &req) {
+  if(!req.CheckParamObject("Template") || !req.CheckParamString("Name")) return;
+  json Conf = Tariff::CheckConfig(req.Param("Template"));
+  if(Conf.is_string()) return req.Error(Conf, HTTP_BAD_REQUEST);
+  string   Name = req.Param("Name");
   Database DB;
-  DB.ExecSentenceAsyncResult("INSERT INTO tariffs(name, username, template) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(UserName) + ", " + DB.Bind(Conf.dump()) + ") RETURNING name");
-  return HTTPServer::FillResponse(response, "", "text/plain", (!DB.FecthRow()) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
+  if(!DB.ExecSentenceAsyncResult("INSERT INTO tariffs(name, username, template) VALUES(" + DB.Bind(Name) + ", " + DB.Bind(req.UserName()) + ", " + DB.Bind(Conf.dump()) + ") RETURNING name") || !DB.FecthRow()) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
+  req.Success(json::object());
 }
 //void TariffManager::EvalRatesCallback(const json &params, Response &response) {
 //  if((params.contains("Rates") == false) || (params["Rates"].is_array() == false)) return HTTPServer::FillResponse(response, "'Rates' param is required", "text/plain", HTTP_BAD_REQUEST);

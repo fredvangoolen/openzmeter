@@ -14,6 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAggreg1H.h"
+#include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
 constexpr float   AnalyzerSoftAggreg1H::FrequencyRanges[];
 const     uint8_t AnalyzerSoftAggreg1H::FrequencyRangesLen;

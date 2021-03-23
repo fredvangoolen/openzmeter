@@ -66,8 +66,8 @@ class DeviceV1 final : public Device {
     uint32_t AnalyzersCount();
     void     ReadCallback(struct libusb_transfer *transfer);
     int      PlugCallback(struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event);
-    void     GetDevice(HTTPRequest *req) override;
-    void     SetDevice(HTTPRequest *req) override;
+    void     GetDevice(HTTPRequest &req) override;
+    void     SetDevice(HTTPRequest &req) override;
   public :
     ~DeviceV1();
 };

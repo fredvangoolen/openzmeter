@@ -98,8 +98,8 @@ void DeviceRemote::Config(const json &config) {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void DeviceRemote::GetDevice(HTTPRequest *req) {
-  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
+void DeviceRemote::GetDevice(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
   Database DB;
   for(auto &Analyzer : Config["Analyzers"]) {
@@ -107,11 +107,11 @@ void DeviceRemote::GetDevice(HTTPRequest *req) {
     DB.ExecSentenceAsyncResult("SELECT SUM(pg_total_relation_size(quote_ident(schemaname) || '.' || quote_ident(tablename)))::bigint FROM pg_tables WHERE schemaname = " + DB.Bind(Serial));
     Analyzer["Size"] = (DB.FecthRow() == true) ? DB.ResultUInt64(0) : 0;
   }
-  req->Success(Config);
+  req.Success(Config);
 }
-void DeviceRemote::SetDevice(HTTPRequest *req) {
-  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
-  Config(CheckConfig(req->Params()));
-  req->Success(json::object());
+void DeviceRemote::SetDevice(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  Config(CheckConfig(req.Params()));
+  req.Success(json::object());
 }
 //----------------------------------------------------------------------------------------------------------------------

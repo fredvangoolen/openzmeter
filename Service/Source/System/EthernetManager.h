@@ -14,15 +14,15 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 #ifdef OPENWRT // ======================================================================================================
 class EthernetManager final {
   private :
     static string    pInterface;
   private :
     static void PeriodicTasks();
-    static void GetEthernetCallback(const json &params, Response &response);
-    static void SetEthernetCallback(const json &params, Response &response);
+    static void GetEthernetCallback(HTTPRequest &req);
+    static void SetEthernetCallback(HTTPRequest &req);
   public :
     EthernetManager();
     ~EthernetManager();

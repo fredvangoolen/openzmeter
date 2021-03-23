@@ -39,7 +39,7 @@ class Device {
     string Serial() const;
   public :
     virtual ~Device();
-    virtual void GetDevice(HTTPRequest *req) = 0;
-    virtual void SetDevice(HTTPRequest *req) = 0;
+    virtual void GetDevice(HTTPRequest &req) = 0;
+    virtual void SetDevice(HTTPRequest &req) = 0;
 };
 //----------------------------------------------------------------------------------------------------------------------

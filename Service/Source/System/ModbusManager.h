@@ -16,7 +16,7 @@
 #pragma once
 #include <pthread.h>
 #include "nlohmann/json.hpp"
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 #include "Worker.h"
 // ---------------------------------------------------------------------------------------------------------------------
 #define MODBUS_FUNC_NONE 0x00
@@ -70,8 +70,8 @@ class ModbusManager final {
     static void  Config(const json &config);
     static void *Thread(void *args);
     static void  Connection_Handle(const int clientSock, const sockaddr_in &client);
-    static void  GetModbusTCP(const json &params, Response &response);
-    static void  SetModbusTCP(const json &params, Response &response);
+    static void  GetModbusTCP(HTTPRequest &req);
+    static void  SetModbusTCP(HTTPRequest &req);
   public :
     ModbusManager();
     ~ModbusManager();

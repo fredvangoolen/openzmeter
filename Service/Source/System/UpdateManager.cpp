@@ -31,7 +31,7 @@ UpdateManager::~UpdateManager() {
   LogFile::Info("UpdateManager", "Update manager stoped");
 }
 void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   int ResultCode = 0;
   if(params.contains("Force") && params["Force"].is_boolean() && (params["Force"] == true)) {
     SystemManager::Exec("opkg update", &ResultCode);
@@ -58,7 +58,7 @@ void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void UpdateManager::SetUpgradeCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Packages") == false) || (params["Packages"].is_array() == false) || (params["Packages"].size() == 0)) return HTTPServer::FillResponse(response, "'Packages' param is required", "text/plain", HTTP_BAD_REQUEST);
   string Command = "opkg upgrade --force-depends";
   for(auto &Package : params["Packages"]) {

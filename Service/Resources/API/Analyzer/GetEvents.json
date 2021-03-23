@@ -37,7 +37,7 @@
                   "From": { "type": "number" },
                   "To": { "type": "number" },
                   "LastChange": { "type": "number" },
-                  "Samples": { "type": "string", "enum": [ "ALL", "NONE", "RAW", "RMS" ] },
+                  "Samples": { "type": "string", "enum": [ "All", "None", "RAW", "RMS" ] },
                   "Update": { "type": "boolean" }
                 },
                 "required": [ "Analyzer", "From", "To", "Samples", "Update" ]

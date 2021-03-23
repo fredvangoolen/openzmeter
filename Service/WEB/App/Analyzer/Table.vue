@@ -54,6 +54,7 @@
   import Vuetable from 'vuetable-2';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
+  import CBOR from 'cbor-js';
   export default {
     props: { analyzer: Object },
     data() {
@@ -76,12 +77,12 @@
     methods: {
       GetAnalyzers: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
-        this.$http.post("getAnalyzers", {}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
-          (result) => {
-            this.Analyzers = result.data;
+        this.$http.post("getAnalyzers", CBOR.encode({}), { responseType: 'blob', headers: { 'Accept': 'application/cbor', 'Content-Type': 'application/cbor' } }).then(
+          (result) => { result.blob().then((blob) => { blob.arrayBuffer().then((buffer) => {
+            this.Analyzers = CBOR.decode(buffer);
             this.ShowSpinner = false;
             this.Timer = setTimeout(this.GetAnalyzers, 5000);
-          },
+          }); }); },
           (fail) => { this.Timer = setTimeout(this.GetAnalyzers, 5000); }
         );
       },

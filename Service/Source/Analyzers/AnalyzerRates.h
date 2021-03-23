@@ -33,7 +33,7 @@ class AnalyzerRates {
     AnalyzerRates(const string &serial);
     virtual ~AnalyzerRates();
     void Config(const string &timezone, const json &rates);
-    void GetCosts(HTTPRequest *req);
-    void GetBills(HTTPRequest *req);
+    void GetCosts(HTTPRequest &req);
+    void GetBills(HTTPRequest &req);
 };
 // ---------------------------------------------------------------------------------------------------------------------

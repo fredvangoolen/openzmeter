@@ -2483,7 +2483,7 @@ public:
     strm_.zfree = Z_NULL;
     strm_.opaque = Z_NULL;
 
-    is_valid_ = deflateInit2(&strm_, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 8,
+    is_valid_ = deflateInit2(&strm_, Z_BEST_COMPRESSION, Z_DEFLATED, 31, 8,
                              Z_DEFAULT_STRATEGY) == Z_OK;
   }
 

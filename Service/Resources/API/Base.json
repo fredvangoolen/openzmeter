@@ -86,9 +86,9 @@
           "content": {
             "application/json": {
               "schema": {
-                "required": [ "UserName", "Password" ],
+                "required": [ "UserName", "Password", "UpdateLastLogin" ],
                 "example": {
-                  "UserName": "admin",
+                  "User": "admin",
                   "Password": "admin",
                   "UpdateLastLogin": true
                 },

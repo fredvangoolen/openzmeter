@@ -14,23 +14,20 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "cpp-httplib/httplib.h"
-#include "nlohmann/json.hpp"
+#include "HTTPRequest.h"
 //----------------------------------------------------------------------------------------------------------------------
-using namespace httplib;
 using namespace std;
-using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerAlarms {
   protected :
     const string  pSerial;
   public :
-    void GetAlarms(HTTPRequest *req) const;
-    void SetAlarms(HTTPRequest *req) const;
-    void DelAlarm(HTTPRequest *req) const;
-    void SetAlarm(HTTPRequest *req) const;
-    void GetAlarmsRange(HTTPRequest *req) const;
-    void DelAlarmsRange(HTTPRequest *req) const;
+    void GetAlarms(HTTPRequest &req) const;
+    void SetAlarms(HTTPRequest &req) const;
+    void DelAlarm(HTTPRequest &req) const;
+    void SetAlarm(HTTPRequest &req) const;
+    void GetAlarmsRange(HTTPRequest &req) const;
+    void DelAlarmsRange(HTTPRequest &req) const;
   public :
     AnalyzerAlarms(const string &id);
     virtual ~AnalyzerAlarms();

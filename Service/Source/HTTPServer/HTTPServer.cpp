@@ -86,7 +86,7 @@ void *HTTPServer::Thread() {
   if(listen("0.0.0.0", pPort) == false) LogFile::Error("HTTP port (%hu) already in use", pPort);
   return NULL;
 }
-void HTTPServer::RegisterCallback(const string &handleName, const function<void(HTTPRequest*)> function, const string &apiFile = "") {
+void HTTPServer::RegisterCallback(const string &handleName, const function<void(HTTPRequest &)> function, const string &apiFile) {
   pthread_rwlock_wrlock(&pLock);
   Callback_t Callback;
   Callback.Func = function;
@@ -109,13 +109,7 @@ void HTTPServer::UnregisterDoc(const string &name) {
   pComponents.erase(name);
   pthread_rwlock_unlock(&pLock);
 }
-string HTTPServer::ParseCookie(const string &cookie) {
-  string CookieNum = "";
-  auto Begin = cookie.find("SESSION=");
-  if(Begin != string::npos) CookieNum = cookie.substr(Begin + 8, cookie.find(';', Begin) - Begin - 8);
-  return CookieNum;
-}
-const char *HTTPServer::MimeType(const string &file) {
+string HTTPServer::MimeType(const string &file) {
   size_t FileNameLen = file.length();
   if((FileNameLen >= 3) && (file.compare(FileNameLen - 3, 3, ".js")) == 0) {
     return "text/javascript";
@@ -145,16 +139,16 @@ string HTTPServer::PatchString(string &src, const string &find, const string &re
   size_t Len = src.find(find, 0);
   return (Len != string::npos) ? src.replace(Len, find.size(), replace) : src;
 }
-void HTTPServer::GetVersionCallback(HTTPRequest *req) {
+void HTTPServer::GetVersionCallback(HTTPRequest &req) {
   json Result = json::object();
   Result["Version"]   = __BUILD__;
   Result["Functions"] = json::array();
   pthread_rwlock_rdlock(&pLock);
   for(auto &Callback : pCallbacks) Result["Functions"].push_back(Callback.first);
   pthread_rwlock_unlock(&pLock);
-  req->Success(Result);
+  req.Success(Result);
 }
-void HTTPServer::GetAPICallback(HTTPRequest *req) {
+void HTTPServer::GetAPICallback(HTTPRequest &req) {
   json Result = json::parse(ResourceFile::GetFile("API/Base.json"));
   Result["servers"].push_back({{ "url", pRelativePath }});
   Result["info"]["version"] = __BUILD__;
@@ -164,35 +158,31 @@ void HTTPServer::GetAPICallback(HTTPRequest *req) {
   }
   for(auto &Component : pComponents) Result.merge_patch(json::parse(ResourceFile::GetFile(Component.second)));
   pthread_rwlock_unlock(&pLock);
-  req->Success(Result);
+  req.Success(Result);
 }
-void HTTPServer::LogInCallback(HTTPRequest *req) {
-  if(!req->CheckParamString("Password") || !req->CheckParamString("UserName") || !req->CheckParamBool("UpdateLastLogin")) return;
+void HTTPServer::LogInCallback(HTTPRequest &req) {
+  if(!req.CheckParamString("Password") || !req.CheckParamString("User") || !req.CheckParamBool("UpdateLastLogin")) return;
   Database DB;
-  json     Response        = json::object();
-  string   User            = req->Param("UserName");
-  string   Pass            = req->Param("Password");
-  bool     UpdateLastLogin = true;
+  json     Response = json::object();
+  string   User     = req.Param("User");
+  string   Pass     = req.Param("Password");
+  bool     Update   = req.Param("UpdateLastLogin");
   DB.ExecSentenceAsyncResult("SELECT lastlogin FROM users WHERE username = " + DB.Bind(User) + " AND password = MD5(" + DB.Bind(Pass) + ")");
   if(DB.FecthRow()) {
     Response["LastLogin"] = DB.ResultUInt64("lastlogin");
     DB.ExecSentenceAsyncResult("INSERT INTO sessions(id, username, timestamp) VALUES (" + DB.Bind(Tools::GetUUID()) + "," + DB.Bind(User) + ", " + DB.Bind(Tools::GetTime64()) + ") RETURNING id");
-    if(DB.FecthRow()) req->SetHeader("Set-Cookie", "SESSION=" + DB.ResultString("id"));
-    if(req->Param("UpdateLastLogin")) DB.ExecSentenceNoResult("UPDATE users SET lastlogin = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(User));
-    return req->Success(Response);
+    if(DB.FecthRow()) req.SetHeader("Set-Cookie", "SESSION=" + DB.ResultString("id"));
+    if(Update) DB.ExecSentenceNoResult("UPDATE users SET lastlogin = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(User));
+    return req.Success(Response);
   }
-  return req->Error("", HTTP_UNAUTHORIZED);
+  return req.Error("", HTTP_UNAUTHORIZED);
 }
-void HTTPServer::LogOutCallback(HTTPRequest *req) {
-
-  if(params.contains("Cookie")) {
-    string Cookie = ParseCookie(params["Cookie"]);
-    if(Cookie != "") {
-      Database DB;
-      DB.ExecSentenceNoResult("DELETE FROM sessions WHERE id = " + DB.Bind(Cookie));
-    }
+void HTTPServer::LogOutCallback(HTTPRequest &req) {
+  if(!req.Cookie().empty()) {
+    Database DB;
+    DB.ExecSentenceNoResult("DELETE FROM sessions WHERE id = " + DB.Bind(req.Cookie()));
   }
-  return req->Success(json::object());
+  return req.Success(json::object());
 }
 void HTTPServer::HandleGet(const Request &request, Response &response) {
   string URL      = string(request.path).erase(0, pRelativePath.size());
@@ -215,10 +205,13 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
       sink.done();
       return true;
     };
-    return response.set_chunked_content_provider(MimeType(URL), Func);
+    return response.set_chunked_content_provider(MimeType(URL).c_str(), Func);
   }
   if(request.has_header("Cookie")) {
-    string Cookie = ParseCookie(request.get_header_value("Cookie"));
+    string Cookie = "";
+    string Header = request.get_header_value("Cookie");
+    auto Begin = Header.find("SESSION=");
+    if(Begin != string::npos) Cookie = Header.substr(Begin + 8, Header.find(';', Begin) - Begin - 8);
     if(Cookie != "") {
       Database DB;
       DB.ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + DB.Bind(Cookie));
@@ -242,58 +235,20 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
   return;
 }
 void HTTPServer::HandlePost(const Request &request, Response &response) {
-  string URL = string(request.path).erase(0, pRelativePath.size());
-
-  HTTPRequest *Req = new HTTPRequest(request, response);
-
-  auto GetUser = [&]() {
-    string User = "";
-    if(request.has_header("Cookie")) {
-      string Cookie = ParseCookie(request.get_header_value("Cookie"));
-      if(Cookie != "") {
-        Database DB;
-        DB.ExecSentenceAsyncResult("SELECT id, username FROM sessions WHERE id = " + DB.Bind(Cookie));
-        if(DB.FecthRow()) User = DB.ResultString("username");
-      }
-    }
-    return User;
-  };
-  json Params = json::object();
+  string       URL = string(request.path).erase(0, pRelativePath.size());
+  HTTPRequest  Req(request, response);
+  if(Req.Status() != HTTP_NOT_FOUND) return;
   LogFile::Debug("HTTP POST '%s'", URL.c_str());
-  if(request.has_header("Content-Type") == false) return FillResponseError(response, "'Content-Type' header required", HTTP_BAD_REQUEST);
-  if(request.has_header("Accept") == false) return FillResponseError(response, "'Accept' header required", HTTP_BAD_REQUEST);
-  if(request.get_header_value("Accept") == "application/json") {
-    Params["Accept"] = "application/json";
-  } else if(request.get_header_value("Accept") == "application/cbor") {
-    Params["Accept"] = "application/cbor";
-  } else {
-    return FillResponseError(response, "Unsupported 'Accept' header value", HTTP_BAD_REQUEST);
-  }
-  if(request.get_header_value("Content-Type") == "application/json") {
-    Params = json::parse(request.body, NULL, false);
-    if(Params.is_discarded()) return FillResponseError(response, "Malformed JSON content", HTTP_BAD_REQUEST);
-  } else if(request.get_header_value("Content-Type") == "application/cbor") {
-    Params = json::from_cbor(request.body, true, false);
-    if(Params.is_discarded()) return FillResponseError(response, "Malformed CBOR content", HTTP_BAD_REQUEST);
-  } else {
-    return FillResponseError(response, "Unsupported 'Content-Type' header value", HTTP_BAD_REQUEST);
-  }
-  if(URL == "logIn") return LogInCallback(Params, response);
-  if(URL == "logOut") {
-    if(request.has_header("Cookie")) Params["Cookie"] = request.get_header_value("Cookie");
-    return LogOutCallback(Params, response);
-  }
-  if(request.remote_addr != "127.0.0.1") Params.erase("UserName");
-  if(Params.contains("UserName") == false) Params["UserName"] = GetUser();
-  if(Params["UserName"] == "") return FillResponseError(response, "Unauthorided access to API", HTTP_UNAUTHORIZED);
+  if(URL == "logIn") return LogInCallback(Req);
+  if(Req.UserName().empty()) return Req.Error("", HTTP_UNAUTHORIZED);
+  if(URL == "logOut") return LogOutCallback(Req);
   pthread_rwlock_rdlock(&pLock);
   auto Callback = pCallbacks.find(URL);
   if(Callback != pCallbacks.end()) {
-    Callback->second.Func(Params, response);
+    Callback->second.Func(Req);
     pthread_rwlock_unlock(&pLock);
     return;
   }
   pthread_rwlock_unlock(&pLock);
-  HTTPUtils::ResponseError(response, "Method not found", HTTP_METHOD_NOT_ALLOWED);
 }
 //----------------------------------------------------------------------------------------------------------------------

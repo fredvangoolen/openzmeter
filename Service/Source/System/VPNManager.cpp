@@ -35,21 +35,21 @@ VPNManager::~VPNManager() {
   LogFile::Info("VPNManager stoped");
 }
 #ifdef OPENWRT
-void VPNManager::GetVPNCallback(HTTPRequest *req) {
-  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
-  if(!req->CheckParamBool("Full")) return;
+void VPNManager::GetVPNCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamBool("Full")) return;
   json Result = json::object();
   json Tmp = SystemManager::uBusCall("uci", "get", { {"config", "openvpn"}, {"section", "custom_config"} });
-  if(Tmp.is_object() && Tmp.contains("values") && Tmp["values"].is_object()) return req->Error("", HTTP_INTERNAL_SERVER_ERROR);
+  if(Tmp.is_object() && Tmp.contains("values") && Tmp["values"].is_object()) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
   Result["Enabled"] = true;
   if(Tmp["values"]["enabled"].is_string()) Result["Enabled"] = (Tmp["values"]["enabled"] == "1");
-  if(req->Param("Full") == true) {
+  if(req.Param("Full") == true) {
     Result["ConfigFile"] = pFileName;
     if(Tmp["values"]["config"].is_string()) Result["ConfigFile"] = Tmp["values"]["config"];
     int File = open(pFileName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if(File < 0) {
       LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-      return req->Error("", HTTP_INTERNAL_SERVER_ERROR);
+      return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
     }
     string Read;
     char Buff[256];
@@ -61,27 +61,27 @@ void VPNManager::GetVPNCallback(HTTPRequest *req) {
     close(File);
     Result["Config"] = Read;
   }
-  req->Success(Result);
+  req.Success(Result);
 }
-void VPNManager::SetVPNCallback(HTTPRequest *req) {
-  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
-  if(!req->CheckParamBool("Enabled") || !req->CheckParamString("Config")) return;
+void VPNManager::SetVPNCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamBool("Enabled") || !req.CheckParamString("Config")) return;
   int File = open(pFileName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
   if(File < 0) {
     LogFile::Error("Can not open '%s' (%s)", pFileName, strerror(errno));
-    return req->Error("", HTTP_INTERNAL_SERVER_ERROR);
+    return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
   }
-  bool    Enabled   = req->Param("Enabled");
-  string  Write     = req->Param("Config");
+  bool    Enabled   = req.Param("Enabled");
+  string  Write     = req.Param("Config");
   ssize_t Len       = write(File, Write.c_str(), Write.size());
   if(Len == -1) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     close(File);
-    return req->Error("", HTTP_INTERNAL_SERVER_ERROR);
+    return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
   }
   SystemManager::uBusCall("uci", "set", { {"config", "openvpn"}, {"section", "custom_config"}, {"values", { {"enabled", (Enabled == true) ? "1" : "0"}, {"config", pFileName} } } } );
   SystemManager::Exec("uci commit && /etc/init.d/openvpn restart");
-  req->Success(json::object());
+  req.Success(json::object());
 }
 #endif
 // ---------------------------------------------------------------------------------------------------------------------

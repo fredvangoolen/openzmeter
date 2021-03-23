@@ -49,10 +49,10 @@ void AnalyzerRemoteNow::SetRemote(const json &params, json &response) {
   if(Now.size() > 0) response["Now"] = Now;
   if(Status.size() > 0) response["Status"] = Status;
 }
-void AnalyzerRemoteNow::GetSeriesNow(HTTPRequest *req) {
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerRemoteNow::GetSeriesNow(HTTPRequest &req) {
+/*  if(!req.CheckParamArrayString("Series")) return;
   uint64_t Time = Tools::GetTime64();
-  for(auto &Serie : params["Series"]) {
+  for(auto &Serie : req.Param("Series")) {
     if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
     auto Item = pNowRequest.find(Serie);
     if(Item == pNowRequest.end()) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
@@ -71,12 +71,12 @@ void AnalyzerRemoteNow::GetSeriesNow(HTTPRequest *req) {
     Result[(string)Serie] = pNow[(string)Serie];
   }
   pthread_rwlock_unlock(&pLock);
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  req.Success(Result);*/
 }
-void AnalyzerRemoteNow::GetStatus(const json &params, Response &response, const json extraProps) {
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerRemoteNow::GetStatus(HTTPRequest &req, const json extraProps) {
+/*  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
   uint64_t Time = Tools::GetTime64();
-  string   User = params["UserName"];
+  string   User = req.UserName();
   for(auto &Serie : params["Series"]) {
     if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
     if((Serie != "Events") && (Serie != "Alarms")) {
@@ -121,6 +121,6 @@ void AnalyzerRemoteNow::GetStatus(const json &params, Response &response, const 
     }
   }
   pthread_rwlock_unlock(&pLock);
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  req.Success(Result);*/
 }
 // ---------------------------------------------------------------------------------------------------------------------

@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include "nlohmann/json.hpp"
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 // ---------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 using namespace std;
@@ -29,7 +29,7 @@ class SystemManager final {
     static void     PowerOff();
     static uint64_t ParseProcMem(const string &name, const string &buff);
     static bool     ReadFile(const string filename, string &res);
-    static void     GetSystemCallback(const json &params, Response &response);
+    static void     GetSystemCallback(HTTPRequest &req);
   public :
     static string Exec(const string &command, int *resultCode = NULL);
 #ifdef OPENWRT

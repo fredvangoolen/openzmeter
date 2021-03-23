@@ -40,8 +40,8 @@ class BluetoothManager final {
     static void    *Thread(void *params);
 #endif
   private :
-    static void     GetBluetoothCallback(HTTPRequest *req);
-    static void     SetBluetoothCallback(HTTPRequest *req);
+    static void     GetBluetoothCallback(HTTPRequest &req);
+    static void     SetBluetoothCallback(HTTPRequest &req);
   public :
     static bool Enabled();
   public :

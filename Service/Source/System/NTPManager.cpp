@@ -36,7 +36,7 @@ NTPManager::~NTPManager() {
 }
 #ifdef OPENWRT
 void NTPManager::GetNTPCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   json Result = json::object();
   json Tmp = SystemManager::uBusCall("uci", "get", { {"config", "system"}, {"section", "ntp"} } );
   if((Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
@@ -48,7 +48,7 @@ void NTPManager::GetNTPCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
 }
 void NTPManager::SetNTPCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is required", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Server") == false) || (params["Server"].is_string() == false)) return HTTPServer::FillResponse(response, "'Server' param is required", "text/plain", HTTP_BAD_REQUEST);
   if((params.contains("Time") == false) || (params["Time"].is_number() == false)) return HTTPServer::FillResponse(response, "'Time' param is required", "text/plain", HTTP_BAD_REQUEST);
