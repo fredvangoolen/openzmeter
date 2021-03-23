@@ -52,31 +52,30 @@ void DeviceManager::AddDevice(Device *dev) {
 void DeviceManager::AddDriver(void (*func)()) {
   pDrivers.push_back(func);
 }
-void DeviceManager::CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response)) {
-  if((params.contains("Serial") == false) || (params["Serial"].is_string() == false)) return HTTPServer::FillResponse(response, "'Serial' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string Serial = params["Serial"];
+void DeviceManager::CallDeviceFunction(HTTPRequest *req, void (Device::*method)(HTTPRequest *req)) {
+  if(!req->CheckParamString("Serial")) return;
+  string Serial = req->Param("Serial");
   if(pthread_rwlock_rdlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   auto Device = pDevices.find(Serial);
   if(Device == pDevices.end()) {
-    HTTPServer::FillResponse(response, "Device not found", "text/plain", HTTP_BAD_REQUEST);
+    req->Error("Device not found", HTTP_BAD_REQUEST);
   } else {
-    (Device->second->*method)(params, response);
+    (Device->second->*method)(req);
   }
   if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
-void DeviceManager::GetDevicesCallback(const json &params, Response &response) {
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void DeviceManager::GetDevicesCallback(HTTPRequest *req) {
+  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
   json Response = json::array();
   if(pthread_rwlock_rdlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   for(auto &Device : pDevices) Response.push_back(Device.second->GetJSONDescriptor());
   if(pthread_rwlock_unlock(&pDevicesLock) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+  req->Success(Response);
 }
-void DeviceManager::GetDeviceCallback(const json &params, Response &response) {
-  CallDeviceFunction(params, response, &Device::GetDevice);
+void DeviceManager::GetDeviceCallback(HTTPRequest *req) {
+  CallDeviceFunction(req, &Device::GetDevice);
 }
-void DeviceManager::SetDeviceCallback(const json &params, Response &response) {
-  CallDeviceFunction(params, response, &Device::SetDevice);
+void DeviceManager::SetDeviceCallback(HTTPRequest *req) {
+  CallDeviceFunction(req, &Device::SetDevice);
 }
 //----------------------------------------------------------------------------------------------------------------------

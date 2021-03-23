@@ -17,7 +17,7 @@
 #include "AnalyzerRates.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerRates::AnalyzerRates(const string &serial) : pSerial(serial) {
-  pLock   = PTHREAD_RWLOCK_INITIALIZER;
+  pLock = PTHREAD_RWLOCK_INITIALIZER;
   pRates.resize(10);
 }
 AnalyzerRates::~AnalyzerRates() {
@@ -42,19 +42,19 @@ void AnalyzerRates::Config(const string &timezone, const json &rates) {
   for(uint8_t n = 0; n < 10; n++) sort(pRates[n].begin(), pRates[n].end(), [](Rate &a, Rate &b) { return a.StartDate() < b.StartDate(); });
   pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerRates::GetCosts(const json &params, Response &response) {
-  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerRates::GetCosts(HTTPRequest *req) {
+  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is required", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is required", HTTP_BAD_REQUEST);
+  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", HTTP_BAD_REQUEST);
+  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", HTTP_BAD_REQUEST);
+  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is required", HTTP_BAD_REQUEST);
   uint64_t       From    = params["From"];
   uint64_t       To      = params["To"];
   uint8_t        Group   = params["Group"];
   vector<string> Headers = vector<string>({"Time"});
   for(auto &Serie : params["Series"]) {
     if((Serie.is_string() == false) || (find(Headers.begin(), Headers.end(), Serie) != Headers.end())) {
-      return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
+      return HTTPServer::FillResponse(response, "'Series' must be array of strings", HTTP_BAD_REQUEST);
     } else if(Serie == "Active_Power") {
       Headers.push_back("Active_Power");
     } else if(Serie == "Active_Energy") {
@@ -78,7 +78,7 @@ void AnalyzerRates::GetCosts(const json &params, Response &response) {
     } else if(Serie == "Bill") {
       Headers.push_back("Bill");
     } else {
-      return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
+      return HTTPServer::FillResponse(response, "Invalid serie name", HTTP_BAD_REQUEST);
     }
   }
   auto Func = [&, From, To, Group, Headers](uint64_t offset, DataSink &sink) {
@@ -113,11 +113,11 @@ void AnalyzerRates::GetCosts(const json &params, Response &response) {
   };
   response.set_chunked_content_provider("application/json", Func);
 }
-void AnalyzerRates::GetBills(const json &params, Response &response) {
-  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerRates::GetBills(HTTPRequest *req) {
+  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is required", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is required", HTTP_BAD_REQUEST);
+  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", HTTP_BAD_REQUEST);
+  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is required", HTTP_BAD_REQUEST);
   uint64_t From  = params["From"];
   uint64_t To    = params["To"];
   uint8_t  Group = params["Group"];

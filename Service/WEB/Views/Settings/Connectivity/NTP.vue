@@ -47,7 +47,7 @@
     methods: {
       Refresh: function() {
         clearTimeout(this.Timer);
-        this.$http.post('getNTP', { }).then(
+        this.$http.post('getNTP', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             if(this.Timer == null) return;
             this.Details = 'Local timezone : ' + moment.tz.zone(moment.tz.guess()).name + '\nTime           : ' + moment(result.body.Time).format('DD/MM/YYYY HH:mm:ss');
@@ -62,7 +62,7 @@
       },
       Save: function(value) {
         this.ShowSpinner = true;
-        this.$http.post('setNTP', { Enabled: this.Config.Enabled, Server: this.Config.Server, Time: moment().valueOf() }).then(
+        this.$http.post('setNTP', { Enabled: this.Config.Enabled, Server: this.Config.Server, Time: moment().valueOf() }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');

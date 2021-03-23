@@ -55,7 +55,7 @@ void UserManager::GetUsersCallback(const json &params, Response &response) {
 }
 void UserManager::GetUserCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
-  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is required", "text/plain", HTTP_BAD_REQUEST);
   string User = params["User"];
   if((UserName != "admin") && (UserName != User)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
@@ -64,14 +64,14 @@ void UserManager::GetUserCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, DB.ResultString("result"), "application/json", HTTP_OK);
 }
 void UserManager::SetUserCallback(const json &params, Response &response) {
-  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Address") == false) || (params["Address"].is_string() == false)) return HTTPServer::FillResponse(response, "'Address' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Company") == false) || (params["Company"].is_string() == false)) return HTTPServer::FillResponse(response, "'Company' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Photo") == false) || (params["Photo"].is_string() == false)) return HTTPServer::FillResponse(response, "'Photo' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Email") == false) || (params["Email"].is_string() == false)) return HTTPServer::FillResponse(response, "'Email' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Telegram") == false) || (params["Telegram"].is_number() == false)) return HTTPServer::FillResponse(response, "'Telegram' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPServer::FillResponse(response, "'TimeZone' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Address") == false) || (params["Address"].is_string() == false)) return HTTPServer::FillResponse(response, "'Address' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Company") == false) || (params["Company"].is_string() == false)) return HTTPServer::FillResponse(response, "'Company' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Photo") == false) || (params["Photo"].is_string() == false)) return HTTPServer::FillResponse(response, "'Photo' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Email") == false) || (params["Email"].is_string() == false)) return HTTPServer::FillResponse(response, "'Email' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Telegram") == false) || (params["Telegram"].is_number() == false)) return HTTPServer::FillResponse(response, "'Telegram' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPServer::FillResponse(response, "'TimeZone' param is required", "text/plain", HTTP_BAD_REQUEST);
   string  UserName = params["UserName"];
   string  User = params["User"];
   string  Name = params["Name"];
@@ -87,15 +87,15 @@ void UserManager::SetUserCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", (Result == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
 void UserManager::SetUserPasswordCallback(const json &params, Response &response) {
-  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Password") == false) || (params["Password"].is_string() == false)) return HTTPServer::FillResponse(response, "'Password' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Password") == false) || (params["Password"].is_string() == false)) return HTTPServer::FillResponse(response, "'Password' param is required", "text/plain", HTTP_BAD_REQUEST);
   string UserName = params["UserName"];
   string User = params["User"];
   string Password = params["Password"];
   if((UserName != "admin") && (UserName != User)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
   Database DB;
   if(UserName == User) {
-    if((params.contains("PrevPassword") == false) || (params["PrevPassword"].is_string() == false)) return HTTPServer::FillResponse(response, "'PrevPassword' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if((params.contains("PrevPassword") == false) || (params["PrevPassword"].is_string() == false)) return HTTPServer::FillResponse(response, "'PrevPassword' param is required", "text/plain", HTTP_BAD_REQUEST);
     string PrevPassword = params["PrevPassword"];
     DB.ExecSentenceAsyncResult("UPDATE users SET password = MD5(" + DB.Bind(Password) + ") WHERE username = " + DB.Bind(User) + " AND password = MD5(" + DB.Bind(PrevPassword) + ") RETURNING username");
     return HTTPServer::FillResponse(response, "", "text/plain", (DB.FecthRow() == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
@@ -105,15 +105,15 @@ void UserManager::SetUserPasswordCallback(const json &params, Response &response
   }
 }
 void UserManager::AddUserCallback(const json &params, Response &response) {
-  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Address") == false) || (params["Address"].is_string() == false)) return HTTPServer::FillResponse(response, "'Address' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Company") == false) || (params["Company"].is_string() == false)) return HTTPServer::FillResponse(response, "'Company' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Photo") == false) || (params["Photo"].is_string() == false)) return HTTPServer::FillResponse(response, "'Photo' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Email") == false) || (params["Email"].is_string() == false)) return HTTPServer::FillResponse(response, "'Email' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Telegram") == false) || (params["Telegram"].is_number() == false)) return HTTPServer::FillResponse(response, "'Telegram' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPServer::FillResponse(response, "'TimeZone' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Password") == false) || (params["Password"].is_string() == false)) return HTTPServer::FillResponse(response, "'Password' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Name") == false) || (params["Name"].is_string() == false)) return HTTPServer::FillResponse(response, "'Name' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Address") == false) || (params["Address"].is_string() == false)) return HTTPServer::FillResponse(response, "'Address' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Company") == false) || (params["Company"].is_string() == false)) return HTTPServer::FillResponse(response, "'Company' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Photo") == false) || (params["Photo"].is_string() == false)) return HTTPServer::FillResponse(response, "'Photo' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Email") == false) || (params["Email"].is_string() == false)) return HTTPServer::FillResponse(response, "'Email' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Telegram") == false) || (params["Telegram"].is_number() == false)) return HTTPServer::FillResponse(response, "'Telegram' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("TimeZone") == false) || (params["TimeZone"].is_string() == false)) return HTTPServer::FillResponse(response, "'TimeZone' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Password") == false) || (params["Password"].is_string() == false)) return HTTPServer::FillResponse(response, "'Password' param is required", "text/plain", HTTP_BAD_REQUEST);
   string  UserName = params["UserName"];
   string  User     = params["User"];
   string  Password = params["Password"];
@@ -130,7 +130,7 @@ void UserManager::AddUserCallback(const json &params, Response &response) {
   HTTPServer::FillResponse(response, "", "text/plain", (Result == false) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
 }
 void UserManager::DelUserCallback(const json &params, Response &response) {
-  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("User") == false) || (params["User"].is_string() == false)) return HTTPServer::FillResponse(response, "'User' param is required", "text/plain", HTTP_BAD_REQUEST);
   string UserName = params["UserName"];
   string User = params["User"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

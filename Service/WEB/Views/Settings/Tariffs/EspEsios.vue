@@ -39,7 +39,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setESIOS', this.Config).then(
+        this.$http.post('setESIOS', this.Config, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');

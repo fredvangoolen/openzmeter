@@ -64,7 +64,7 @@ json Rate::CheckConfig(const json &config) {
   json ConfigOUT = Tariff::CheckConfig(config);
   if((config.contains("Name") == false) || (config["Name"].is_string() == false)) throw string("'Name' param is required");
   ConfigOUT["Name"] = config["Name"];
-  if((config.contains("Group") == false) || (config["Group"].is_number_integer() == false) || (config["Group"] < 0) || (config["Group"] > 10)) throw string("'Group' param is requiered");
+  if((config.contains("Group") == false) || (config["Group"].is_number_integer() == false) || (config["Group"] < 0) || (config["Group"] > 10)) throw string("'Group' param is required");
   ConfigOUT["Group"] = config["Group"];
   if((config.contains("RateID") == false) || (config["RateID"].is_string() == false)) throw string("'RateID' param is required");
   ConfigOUT["RateID"] = config["RateID"];

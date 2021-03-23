@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class WifiManager final {
   public :
@@ -27,10 +27,10 @@ class WifiManager final {
     static string          pNetworkWIFI;
     static string          pWirelessWIFI;
   private :
-    static void     PeriodicTasks();
-    static void     GetWIFICallback(const json &params, Response &response);
-    static void     SetWIFICallback(const json &params, Response &response);
-    static void     ScanWIFICallback(const json &params, Response &response);
+    static void PeriodicTasks();
+    static void GetWIFICallback(HTTPRequest *req);
+    static void SetWIFICallback(HTTPRequest *req);
+    static void ScanWIFICallback(HTTPRequest *req);
 #endif
   public :
     static WifiStat Enabled();

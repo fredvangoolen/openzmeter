@@ -352,60 +352,59 @@ void AnalyzerSoft::HandleAction(const string &name, const json &params) {
   if(Resp.status != HTTP_OK) LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s) fails", pSerial.c_str(), name.c_str());
 }
 //----------------------------------------------------------------------------------------------------------------------
-void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  string UserName = params["UserName"];
+void AnalyzerSoft::GetAnalyzer(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
   json   Response = ConfigFile::ReadConfig(pConfigPath);
   Response["User"]         = pOwner;
   Response["Mode"]         = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"]   = pSamplerate;
   Response["PriceModules"] = PriceSource::VarsInfo();
   Response["Users"]        = pAccess.Users();
-  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+  req->Success(Response);
 }
-void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::CONFIG, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void AnalyzerSoft::SetAnalyzer(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::CONFIG, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
   if(params.contains("Users")) pAccess.Config(AnalyzerAccess::CheckConfig(params["Users"]));
   try {
     Config(CheckConfig(params, pMode, true));
-    HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
+    HTTPServer::FillResponse(response, json::object(), params["Accept"]);
   } catch(const string &err) {
-    HTTPServer::FillResponse(response, err, "text/plain", HTTP_BAD_REQUEST);
+    HTTPServer::FillResponse(response, err, HTTP_BAD_REQUEST);
   }
 }
-void AnalyzerSoft::GetSeries(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pSeries.GetSeries(params, response);
+void AnalyzerSoft::GetSeries(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  pSeries.GetSeries(req);
 }
-void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerSoft::GetSeriesNow(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", HTTP_BAD_REQUEST);
   vector<string> Series;
   for(auto &Serie : params["Series"]) {
-    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is required", HTTP_BAD_REQUEST);
     Series.push_back(Serie);
   }
   json Result = GetSeriesNow(params["Series"]);
-  if(Result == nullptr) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  if(Result == nullptr) return HTTPServer::FillResponse(response, "", HTTP_METHOD_NOT_ALLOWED);
+  HTTPServer::FillResponse(response, Result, params["Accept"]);
 }
-void AnalyzerSoft::GetStatus(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerSoft::GetStatus(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", HTTP_BAD_REQUEST);
   vector<string> Series;
   for(auto &Serie : params["Series"]) {
-    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is required", HTTP_BAD_REQUEST);
     Series.push_back(Serie);
   }
   json Result = pAccess.GetStatus(Series, params["UserName"]);
-  if(Result == nullptr) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(Result == nullptr) return HTTPServer::FillResponse(response, "'Series' param is required", HTTP_BAD_REQUEST);
   Result["State"] = (State() == UNCONFIGURED) ? "UNCONFIGURED" : (State() == OFFLINE) ? "OFFLINE" : (State() == SYNCING) ? "SYNCING" : "ONLINE";
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  HTTPServer::FillResponse(response, Result, params["Accept"]);
 }
-void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
+void AnalyzerSoft::GetWaveStream(HTTPRequest *req) {
   //if(TestUser(params["UserName"], READ) == false)
-  return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  return req->Error("", HTTP_FORBIDDEN);
+//  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
 //  typedef struct {
 //    uint64_t Block;
 //    bool     Current;
@@ -415,7 +414,7 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
 //  Params->Block = 0;
 //  for(uint8_t i = 0; i < params["Series"].size(); i++) {
 //    if(params["Series"][i].is_string() == false) {
-//      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//      return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
 //    } else if(params["Series"][i] == "Current_Samples") {
 //      Params->Current = true;
 //    } else if(params["Series"][i] == "Voltage_Samples") {
@@ -462,105 +461,105 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
 //  };
 //  response.set_chunked_content_provider("application/json", Func, Free);
 }
-void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pSeries.GetSeriesRange(params, response);
+void AnalyzerSoft::GetSeriesRange(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return HTTPServer::FillResponse(response, "", HTTP_FORBIDDEN);
+  pSeries.GetSeriesRange(req);
 }
-void AnalyzerSoft::DelSeriesRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
+void AnalyzerSoft::DelSeriesRange(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req->UserName()) == false) return HTTPServer::FillResponse(response, "", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
   pSeries.DelSeriesRange(params, response);
   if(response.status == HTTP_OK) pSync.Push("DelSeriesRange", params);
 }
-void AnalyzerSoft::GetEvents(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void AnalyzerSoft::GetEvents(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return HTTPServer::FillResponse(response, "", HTTP_FORBIDDEN);
   pEvents.GetEvents(params, response);
 }
-void AnalyzerSoft::GetEventsRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pEvents.GetEventsRange(params, response);
+void AnalyzerSoft::GetEventsRange(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  pEvents.GetEventsRange(req);
 }
-void AnalyzerSoft::DelEventsRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.DelEventsRange(params, response);
+void AnalyzerSoft::DelEventsRange(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents.DelEventsRange(req);
   if(response.status == HTTP_OK) pSync.Push("DelEventsRange", params);
 }
-void AnalyzerSoft::GetEvent(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pEvents.GetEvent(params, response);
+void AnalyzerSoft::GetEvent(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  pEvents.GetEvent(req);
 }
-void AnalyzerSoft::SetEvent(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.SetEvent(params, response);
+void AnalyzerSoft::SetEvent(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents.SetEvent(req);
   if(response.status == HTTP_OK) pSync.Push("SetEvent", params);
 }
-void AnalyzerSoft::DelEvent(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.DelEvent(params, response);
+void AnalyzerSoft::DelEvent(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents.DelEvent(req);
   if(response.status == HTTP_OK) pSync.Push("DelEvent", params);
 }
-void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+void AnalyzerSoft::TestAlarm(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", HTTP_INTERNAL_SERVER_ERROR);
   pAlarms.TestAlarm(params, response, pAggreg200MS);
   pNowDataLock.ConsumerEnds();
 }
-void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms.GetAlarms(params, response);
+void AnalyzerSoft::GetAlarms(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  pAlarms.GetAlarms(req);
 }
-void AnalyzerSoft::GetAlarmsRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms.GetAlarmsRange(params, response);
+void AnalyzerSoft::GetAlarmsRange(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  pAlarms.GetAlarmsRange(req);
 }
-void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pAlarms.DelAlarm(params, response);
+void AnalyzerSoft::DelAlarm(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pAlarms.DelAlarm(req);
   if(response.status == HTTP_OK) pSync.Push("DelAlarm", params);
 }
-void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
+void AnalyzerSoft::SetAlarm(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req->UserName()) == false) return HTTPServer::FillResponse(response, "", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
   pAlarms.SetAlarm(params, response);
   if(response.status == HTTP_OK) pSync.Push("SetAlarm", params);
 }
-void AnalyzerSoft::DelAlarmsRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pAlarms.DelAlarmsRange(params, response);
+void AnalyzerSoft::DelAlarmsRange(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pAlarms.DelAlarmsRange(req);
   if(response.status == HTTP_OK) pSync.Push("DelAlarmsRange", params);
 }
-void AnalyzerSoft::GetCosts(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pRates.GetCosts(params, response);
+void AnalyzerSoft::GetCosts(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  pRates.GetCosts(req);
 }
-void AnalyzerSoft::GetBills(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pRates.GetBills(params, response);
+void AnalyzerSoft::GetBills(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  pRates.GetBills(req);
 }
-void AnalyzerSoft::SetRemote(const json &params, Response &response) {
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
+void AnalyzerSoft::SetRemote(HTTPRequest *req) {
+  req->Error("", HTTP_METHOD_NOT_ALLOWED);
 }
-void AnalyzerSoft::SetSeries(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pSeries.SetSeries(params, response);
+void AnalyzerSoft::SetSeries(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pSeries.SetSeries(req);
   if(response.status == HTTP_OK) pSync.Push("SetSeries", params);
 }
-void AnalyzerSoft::SetEvents(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.SetEvents(params, response);
+void AnalyzerSoft::SetEvents(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents.SetEvents(req);
   if(response.status == HTTP_OK) pSync.Push("SetEvents", params);
 }
-void AnalyzerSoft::SetAlarms(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pAlarms.SetAlarms(params, response);
+void AnalyzerSoft::SetAlarms(HTTPRequest *req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req->UserName()) == false) return req->Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pAlarms.SetAlarms(req);
   if(response.status == HTTP_OK) pSync.Push("SetAlarms", params);
 }
 bool AnalyzerSoft::HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) {

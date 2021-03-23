@@ -55,7 +55,7 @@
         for(var month = 0; month < 12; month++) {
           var To = moment.tz(this.analyzer.TimeZone).year(val).month(month).endOf('month').valueOf();
           var From = moment.tz(this.analyzer.TimeZone).year(val).month(month).startOf('month').valueOf();
-          this.$http.post('getCosts', { From: From, To: To, Series: ['Active_Energy', 'Period'], Analyzer: this.analyzer.Analyzer, Group: 0 }).then(
+          this.$http.post('getCosts', { From: From, To: To, Series: ['Active_Energy', 'Period'], Analyzer: this.analyzer.Analyzer, Group: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
             (result) => {
               if(Count == 0) {
                 Data = result.data;

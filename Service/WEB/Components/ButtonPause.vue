@@ -5,7 +5,7 @@
 
 <script>
   export default {
-    props: { value: { type: Boolean, requiered: true } },
+    props: { value: Boolean },
     data() {
       return { };
     }

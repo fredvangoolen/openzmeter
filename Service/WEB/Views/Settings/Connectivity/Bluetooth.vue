@@ -38,7 +38,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setBluetooth', { Enabled: this.Config.Enabled }).then(
+        this.$http.post('setBluetooth', { Enabled: this.Config.Enabled }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');

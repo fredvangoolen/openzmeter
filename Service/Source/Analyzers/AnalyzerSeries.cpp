@@ -31,12 +31,12 @@ void AnalyzerSeries::CleanOldSamples() const {
   if(Now > 86400000) DB.ExecSentenceNoResult("DELETE FROM aggreg_ext_1m WHERE sampletime < " + DB.Bind(Now - 86400000));   //Delete 1 day old
   if(Now > 3600000)  DB.ExecSentenceNoResult("DELETE FROM aggreg_200ms WHERE sampletime < " + DB.Bind(Now - 3600000));     //Delete 1 hour old
 }
-void AnalyzerSeries::GetSeries(const json &params, Response &response) const {
-  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false) || ((params["Aggreg"] != "200MS") && (params["Aggreg"] != "3S") && (params["Aggreg"] != "1M") && (params["Aggreg"] != "10M") && (params["Aggreg"] != "15M") && (params["Aggreg"] != "1H"))) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerSeries::GetSeries(HTTPRequest *req) const {
+  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is required", HTTP_BAD_REQUEST);
+  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is required", HTTP_BAD_REQUEST);
+  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", HTTP_BAD_REQUEST);
+  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false) || ((params["Aggreg"] != "200MS") && (params["Aggreg"] != "3S") && (params["Aggreg"] != "1M") && (params["Aggreg"] != "10M") && (params["Aggreg"] != "15M") && (params["Aggreg"] != "1H"))) return HTTPServer::FillResponse(response, "'Aggreg' param is required", HTTP_BAD_REQUEST);
+  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", HTTP_BAD_REQUEST);
   uint64_t       To      = params["To"];
   uint64_t       From    = params["From"];
   string         Aggreg  = params["Aggreg"];
@@ -44,7 +44,7 @@ void AnalyzerSeries::GetSeries(const json &params, Response &response) const {
   string         Cols    = "sampletime";
   for(auto Serie : params["Series"]) {
     if((Serie.is_string() == false) || (find(Headers.begin(), Headers.end(), Serie) != Headers.end())) {
-      return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
+      return HTTPServer::FillResponse(response, "'Series' must be array of strings", HTTP_BAD_REQUEST);
     } else if((Serie == "Frequency") && ((Aggreg == "200MS") || (Aggreg == "3S") || (Aggreg == "1M") || (Aggreg == "10M") || (Aggreg == "1H"))) {
       Headers.push_back("Frequency");
       Cols.append(", freq");
@@ -118,7 +118,7 @@ void AnalyzerSeries::GetSeries(const json &params, Response &response) const {
       Headers.push_back("Unbalance_Stats");
       Cols.append(", stat_unbalance");
     } else {
-      return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
+      return HTTPServer::FillResponse(response, "Invalid serie name", HTTP_BAD_REQUEST);
     }
   }
   auto Func = [&, To, From, Aggreg, Cols, Headers](uint64_t offset, DataSink &sink) -> bool {
@@ -141,10 +141,10 @@ void AnalyzerSeries::GetSeries(const json &params, Response &response) const {
   };
   response.set_chunked_content_provider("application/json", Func);
 }
-void AnalyzerSeries::SetSeries(const json &params, Response &response) const {
-  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false) || ((params["Aggreg"] != "200MS") && (params["Aggreg"] != "3S") && (params["Aggreg"] != "1M") && (params["Aggreg"] != "10M") && (params["Aggreg"] != "15M") && (params["Aggreg"] != "1H"))) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Samples") == false) || (params["Samples"].is_array() == false) || (params["Samples"].size() == 0)) return HTTPServer::FillResponse(response, "'Samples' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Headers") == false) || (params["Headers"].is_array() == false)) return HTTPServer::FillResponse(response, "'Headers' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerSeries::SetSeries(HTTPRequest *req) const {
+  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false) || ((params["Aggreg"] != "200MS") && (params["Aggreg"] != "3S") && (params["Aggreg"] != "1M") && (params["Aggreg"] != "10M") && (params["Aggreg"] != "15M") && (params["Aggreg"] != "1H"))) return HTTPServer::FillResponse(response, "'Aggreg' param is required", HTTP_BAD_REQUEST);
+  if((params.contains("Samples") == false) || (params["Samples"].is_array() == false) || (params["Samples"].size() == 0)) return HTTPServer::FillResponse(response, "'Samples' param is required", HTTP_BAD_REQUEST);
+  if((params.contains("Headers") == false) || (params["Headers"].is_array() == false)) return HTTPServer::FillResponse(response, "'Headers' param is required", HTTP_BAD_REQUEST);
   set<string> Needed;
   string      Aggreg  = params["Aggreg"];
   if(Aggreg == "200MS") {
@@ -162,22 +162,22 @@ void AnalyzerSeries::SetSeries(const json &params, Response &response) const {
   }
   map<string, uint8_t> ColDefs;
   for(uint8_t n = 0; n < params["Headers"].size(); n++) {
-    if(params["Headers"][n].is_string() == false) return HTTPServer::FillResponse(response, "'Headers' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if(params["Headers"][n].is_string() == false) return HTTPServer::FillResponse(response, "'Headers' param is required", HTTP_BAD_REQUEST);
     if(Needed.find(params["Headers"][n]) == Needed.end()) continue;
     ColDefs.insert({params["Headers"][n], n});
     Needed.erase(params["Headers"][n]);
   }
-  if(Needed.size() > 0) return HTTPServer::FillResponse(response, "'Headers' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if(Needed.size() > 0) return HTTPServer::FillResponse(response, "'Headers' param is required", HTTP_BAD_REQUEST);
   uint64_t From = UINT64_MAX;
   uint64_t To = 0;
   for(auto &Row : params["Samples"]) {
     json Val = Row[ColDefs.find("Time")->second];
-    if((Row.is_array() == false) || (Row.size() != params["Headers"].size()) || (Val.is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Samples' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if((Row.is_array() == false) || (Row.size() != params["Headers"].size()) || (Val.is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Samples' param is required", HTTP_BAD_REQUEST);
     if(Val < From) From = Val;
     if(Val > To)   To = Val;
   }
   Database DB(pSerial);
-  if(DB.ExecSentenceNoResult("DELETE FROM aggreg_" + Aggreg + " WHERE sampletime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To)) == false) HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+  if(DB.ExecSentenceNoResult("DELETE FROM aggreg_" + Aggreg + " WHERE sampletime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To)) == false) HTTPServer::FillResponse(response, "", HTTP_INTERNAL_SERVER_ERROR);
   auto FillColumn = [&](const json &row, const string &col, const Database::DataType type) {
     auto Col = ColDefs.find(col);
     return (Col == ColDefs.end()) ? "NULL" : DB.Bind(row[Col->second], type);
@@ -206,43 +206,39 @@ void AnalyzerSeries::SetSeries(const json &params, Response &response) const {
     string Voltage_Harmonics_Stats   = FillColumn(Row, "Voltage_Harmonics_Stats", Database::ARRAY_UINT);
     string Unbalance_Stats           = FillColumn(Row, "Unbalance_Stats", Database::ARRAY_UINT);
     if(Aggreg == "200MS") {
-      if(DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance, harmonics_v, harmonics_i, harmonics_p) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ", " + Active_Power + ", " + Reactive_Power + ", " + Power_Factor + ", " + Voltage_THD + ", " + Current_THD + ", " + Phi + ", " + Unbalance + ", " + Voltage_Harmonics_Complex + ", " + Current_Harmonics_Complex + ", " + Power_Harmonics + ")") == false) HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+      if(DB.ExecSentenceNoResult("INSERT INTO aggreg_200ms(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance, harmonics_v, harmonics_i, harmonics_p) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ", " + Active_Power + ", " + Reactive_Power + ", " + Power_Factor + ", " + Voltage_THD + ", " + Current_THD + ", " + Phi + ", " + Unbalance + ", " + Voltage_Harmonics_Complex + ", " + Current_Harmonics_Complex + ", " + Power_Harmonics + ")") == false) HTTPServer::FillResponse(response, "", HTTP_INTERNAL_SERVER_ERROR);
     } else if(Aggreg == "3S") {
-      if(DB.ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ", " + Active_Power + ", " + Reactive_Power + ")") == false) HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+      if(DB.ExecSentenceNoResult("INSERT INTO aggreg_3s(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ", " + Active_Power + ", " + Reactive_Power + ")") == false) HTTPServer::FillResponse(response, "", HTTP_INTERNAL_SERVER_ERROR);
     } else if(Aggreg == "1M") {
       if((Active_Power == "NULL") || (Reactive_Power == "NULL") || (Power_Factor == "NULL") || (Voltage_THD == "NULL") || (Current_THD == "NULL") || (Phi == "NULL") || (Unbalance == "NULL") || (Voltage_Harmonics == "NULL") || (Current_Harmonics == "NULL") || (Power_Harmonics == "NULL")) {
-        if(DB.ExecSentenceNoResult("INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ")") == false) HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+        if(DB.ExecSentenceNoResult("INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ")") == false) HTTPServer::FillResponse(response, "", HTTP_INTERNAL_SERVER_ERROR);
       } else {
-        if(DB.ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance, harmonics_v, harmonics_i, harmonics_p) SELECT sampletime, " + Active_Power + ", " + Reactive_Power + ", " + Power_Factor + ", " + Voltage_THD + ", " + Current_THD + ", " + Phi + ", " + Unbalance + ", " + Voltage_Harmonics + ", " + Current_Harmonics + ", " + Power_Harmonics + " FROM Sample") == false) HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+        if(DB.ExecSentenceNoResult("WITH Sample AS (INSERT INTO aggreg_1m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ") RETURNING sampletime) INSERT INTO aggreg_ext_1m(sampletime, active_power, reactive_power, power_factor, thd_v, thd_i, phi, unbalance, harmonics_v, harmonics_i, harmonics_p) SELECT sampletime, " + Active_Power + ", " + Reactive_Power + ", " + Power_Factor + ", " + Voltage_THD + ", " + Current_THD + ", " + Phi + ", " + Unbalance + ", " + Voltage_Harmonics + ", " + Current_Harmonics + ", " + Power_Harmonics + " FROM Sample") == false) HTTPServer::FillResponse(response, "", HTTP_INTERNAL_SERVER_ERROR);
       }
     } else if(Aggreg == "10M") {
-      if(DB.ExecSentenceNoResult("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ")") == false) HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+      if(DB.ExecSentenceNoResult("INSERT INTO aggreg_10m(sampletime, rms_v, rms_i, freq, flag) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ")") == false) HTTPServer::FillResponse(response, "", HTTP_INTERNAL_SERVER_ERROR);
     } else if(Aggreg == "15M") {
-      if(DB.ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" + Time + ", " + Active_Power + ", " + Reactive_Power + ")") == false) HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+      if(DB.ExecSentenceNoResult("INSERT INTO aggreg_15m(sampletime, active_power, reactive_power) VALUES(" + Time + ", " + Active_Power + ", " + Reactive_Power + ")") == false) HTTPServer::FillResponse(response, "", HTTP_INTERNAL_SERVER_ERROR);
     } else if(Aggreg == "1H") {
-      if(DB.ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ", " + Active_Power + ", " + Reactive_Power + ", " + Voltage_Stats + ", " + Frequency_Stats + ", " + Voltage_THD_Stats + ", " + Voltage_Harmonics_Stats + ", " + Unbalance_Stats + ")") == false) HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+      if(DB.ExecSentenceNoResult("INSERT INTO aggreg_1h(sampletime, rms_v, rms_i, freq, flag, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) VALUES(" + Time + ", " + Voltage + ", " + Current + ", " + Frequency + ", " + Flag + ", " + Active_Power + ", " + Reactive_Power + ", " + Voltage_Stats + ", " + Frequency_Stats + ", " + Voltage_THD_Stats + ", " + Voltage_Harmonics_Stats + ", " + Unbalance_Stats + ")") == false) HTTPServer::FillResponse(response, "", HTTP_INTERNAL_SERVER_ERROR);
     }
   }
-  HTTPServer::FillResponse(response, DB.ResultString("ranges"), "text/plain", HTTP_OK);
+  HTTPServer::FillResponse(response, json::object(), params["Accept"]);
 }
-void AnalyzerSeries::GetSeriesRange(const json &params, Response &response) const {
-  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string Aggreg = params["Aggreg"];
-  if((Aggreg != "200MS") && (Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' param must be '200MS', 3S', '1M', '10M', '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerSeries::GetSeriesRange(HTTPRequest *req) const {
+  if(!req->CheckParamEnum("Aggreg", {"200MS", "3S", "1M", "10M", "15M", "1H"})) return;
+  string Aggreg = req->Param("Aggreg");
   Database DB(pSerial);
-  DB.ExecSentenceAsyncResult("SELECT json_build_object('To', max(sampletime), 'From', min(sampletime)) AS ranges FROM aggreg_" + Aggreg);
-  if(!DB.FecthRow()) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  HTTPServer::FillResponse(response, DB.ResultString("ranges"), "text/plain", HTTP_OK);
+  if((DB.ExecSentenceAsyncResult("SELECT json_build_object('To', max(sampletime), 'From', min(sampletime)) FROM aggreg_" + Aggreg) == false) || (DB.FecthRow() == false)) return req->Error("", HTTP_INTERNAL_SERVER_ERROR);
+  req->Success(DB.ResultJSON(0));
 }
-void AnalyzerSeries::DelSeriesRange(const json &params, Response &response) const {
-  if((params.contains("Aggreg") == false) || (params["Aggreg"].is_string() == false)) return HTTPServer::FillResponse(response, "'Aggreg' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("From") == false) || (params["From"].is_number() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("To") == false) || (params["To"].is_number() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string   Aggreg = params["Aggreg"];
-  uint64_t From   = params["From"];
-  uint64_t To     = params["To"];
-  if((Aggreg != "200MS") && (Aggreg != "3S") && (Aggreg != "1M") && (Aggreg != "10M") && (Aggreg != "15M") && (Aggreg != "1H")) return HTTPServer::FillResponse(response, "'Aggreg' param must be '200MS', 3S', '1M', '10M', '15M' or '1H'", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerSeries::DelSeriesRange(HTTPRequest *req) const {
+  if(!req->CheckParamEnum("Aggreg", {"200MS", "3S", "1M", "10M", "15M", "1H"}) || !req->CheckParamNumber("From") || !req->CheckParamNumber("To")) return;
+  string   Aggreg = req->Param("Aggreg");
+  uint64_t From   = req->Param("From");
+  uint64_t To     = req->Param("To");
   Database DB(pSerial);
-  HTTPServer::FillResponse(response, "", "text/plain", DB.ExecSentenceNoResult("DELETE FROM aggreg_" + Aggreg + " WHERE sampletime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To)) ? HTTP_OK : HTTP_INTERNAL_SERVER_ERROR);
+  if(DB.ExecSentenceNoResult("DELETE FROM aggreg_" + Aggreg + " WHERE sampletime BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To)) == false) req->Error("", HTTP_INTERNAL_SERVER_ERROR);
+  req->Success(json::object());
 }
 // ---------------------------------------------------------------------------------------------------------------------

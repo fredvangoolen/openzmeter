@@ -1,3 +1,4 @@
+import CBOR from 'cbor-js';
 const openZmeter = {
   install: function(Vue, options) {
     Vue.prototype.PriceTransfer = (series) => {
@@ -71,7 +72,7 @@ const openZmeter = {
         Transfer.Aggreg    = aggreg;
         Transfer.Range     = range;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Vue.http.post('getCosts', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series, Group: 0 }).then(
+        Vue.http.post('getCosts', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series, Group: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             if(Cancelled == true) return;
             Transfer.SetData(ReqRange, aggreg, result.body);
@@ -102,7 +103,7 @@ const openZmeter = {
         if((Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = null;
         Transfer.Analyzer  = analyzer;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Vue.http.post('getStatus', { Analyzer: analyzer.Analyzer, Series: series }).then(
+        Vue.http.post('getStatus', { Analyzer: analyzer.Analyzer, Series: series }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             if(Cancelled == true) return;
             Transfer.Data = Object.seal(result.body);
@@ -133,7 +134,7 @@ const openZmeter = {
         if((Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = null;
         Transfer.Analyzer  = analyzer;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Vue.http.post('getSeriesNow', { Analyzer: analyzer.Analyzer, Series: series }).then(
+        Vue.http.post('getSeriesNow', CBOR.encode({ Analyzer: analyzer.Analyzer, Series: series }), { headers: { 'Accept': 'application/cbor', 'Content-Type': 'application/cbor' } }).then(
           (result) => {
             if(Cancelled == true) return;
             Transfer.Data = Object.seal(result.body);
@@ -188,10 +189,10 @@ const openZmeter = {
         Transfer.Aggreg   = aggreg;
         Transfer.Range    = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }));
+          Promises.push(Vue.http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
         } else {
-          Promises.push(Vue.http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1, Series: series }));
-          Promises.push(Vue.http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1], Series: series }));
+          Promises.push(Vue.http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1, Series: series }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+          Promises.push(Vue.http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1], Series: series }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
@@ -243,11 +244,11 @@ const openZmeter = {
         Transfer.Analyzer  = analyzer;
         Transfer.Range     = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, LastChange: 0 }));
+          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
         } else {
-          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, LastChange: 0 }));
-          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, LastChange: 0 }));
-          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, LastChange: this.LastChange }));
+          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, LastChange: this.LastChange }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
@@ -309,11 +310,11 @@ const openZmeter = {
         Transfer.Analyzer  = analyzer;
         Transfer.Range     = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, Samples: 'NONE', LastChange: 0 }));
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, Samples: 'NONE', LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
         } else {
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, Samples: 'NONE', LastChange: 0 }));
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: 0 }));
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: this.LastChange }));
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, Samples: 'NONE', LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: this.LastChange }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
@@ -747,24 +748,6 @@ export var Series = {
 };
 
 
-export function dblClick(event, g, context) {
-  if (!(event.offsetX && event.offsetY)) {
-    event.offsetX = event.layerX - event.target.offsetLeft;
-  }
-  var xOffset = g.toDomCoords(g.xAxisRange()[0], null)[0];
-  var x =  event.offsetX - xOffset;
-  var w = g.toDomCoords(g.xAxisRange()[1], null)[0] - xOffset;
-  var xPct = (w === 0 ? 0 : (x / w)) || 0.5;
-  var axis = g.xAxisRange();
-  var zoomInPercentage = (event.ctrlKey) ? -0.25 : 0.2;
-  var delta = axis[1] - axis[0];
-  var increment = delta * zoomInPercentage;
-  var foo = [increment * xPct, increment * (1 - xPct)];
-  g.updateOptions({
-    dateWindow: [axis[0] + foo[0], axis[1] - foo[1]]
-  });
-}
-
 export function zoom(g, zoomInPercentage, xBias, yBias) {
   xBias = xBias || 0.5;
   //yBias = yBias || 0.5;
@@ -828,15 +811,7 @@ export function ScaleToUnits(val, units) {
     return val / 1000000;
   }
 }
-///* Generate an array of colors from a base */
-export function ColorArray(base, items) {
-  var Array = [];
-  for(var i = 0; i < items; i++) {
-   Array.push(base);
-   base = chroma(base).darken();
-  }
-  return Array;
-}
+
 
 
 ////1446

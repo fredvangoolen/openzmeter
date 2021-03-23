@@ -112,20 +112,18 @@ void DeviceVirtual::Config(const json &config) {
     }
   }
 }
-void DeviceVirtual::GetDevice(const json &params, Response &response) {
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void DeviceVirtual::GetDevice(HTTPRequest *req) {
+  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
   Config.erase("Analyzer");
-  HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
+  req->Success(Config);
 }
-void DeviceVirtual::SetDevice(const json &params, Response &response) {
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json ConfigIN = params;
+void DeviceVirtual::SetDevice(HTTPRequest *req) {
+  if(req->UserName() != "admin") return req->Error("", HTTP_FORBIDDEN);
+  json ConfigIN = req->Params();
   ConfigIN["Analyzer"] = ConfigFile::ReadConfig("/Devices/" + pSerial + "/Analyzer");
   Config(CheckConfig(ConfigIN));
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
+  req->Success(json::object());
 }
 void *DeviceVirtual::Thread() {
   uint64_t       StartTime        = Tools::GetTime64();

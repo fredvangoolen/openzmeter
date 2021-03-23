@@ -14,16 +14,16 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class UserManager final {
   private :
-    static void GetUsersCallback(const json &params, Response &response);
-    static void GetUserCallback(const json &params, Response &response);
-    static void SetUserPasswordCallback(const json &params, Response &response);
-    static void SetUserCallback(const json &params, Response &response);
-    static void AddUserCallback(const json &params, Response &response);
-    static void DelUserCallback(const json &params, Response &response);
+    static void GetUsersCallback(HTTPRequest *req);
+    static void GetUserCallback(HTTPRequest *req);
+    static void SetUserPasswordCallback(HTTPRequest *req);
+    static void SetUserCallback(HTTPRequest *req);
+    static void AddUserCallback(HTTPRequest *req);
+    static void DelUserCallback(HTTPRequest *req);
   public :
     UserManager();
     ~UserManager();

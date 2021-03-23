@@ -35,7 +35,7 @@
     methods: {
       GetYears: function() {
         var Years = [];
-        this.$http.post("getSeriesRange", { Aggreg: this.aggreg, Analyzer: this.analyzer.Analyzer }).then(
+        this.$http.post("getSeriesRange", { Aggreg: this.aggreg, Analyzer: this.analyzer.Analyzer }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             var StartYear = moment(result.data.From).year();
             var EndYear = moment(result.data.To).year();

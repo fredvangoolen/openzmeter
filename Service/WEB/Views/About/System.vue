@@ -97,7 +97,7 @@
         }
       },
       UpdateSystem: function() {
-        this.$http.post('getSystem', { Series: ['Status', 'Log', 'SystemLog']}).then(
+        this.$http.post('getSystem', { Series: ['Status', 'Log', 'SystemLog']}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.AllMessages = [];
             this.LastUpdate = moment();

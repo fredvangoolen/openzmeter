@@ -48,7 +48,7 @@
         this.Driver = null;
         if(update == false) return;
         this.ShowSpinner = true;
-        this.$http.post('getDevices', {}).then(
+        this.$http.post('getDevices', {}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.Enabled = true;
             this.Devices = result.data;
@@ -59,7 +59,7 @@
       },
       Configure: function (id) {
         this.ShowSpinner = true;
-        this.$http.post('getDevice', { Serial: id.Serial } ).then(
+        this.$http.post('getDevice', { Serial: id.Serial }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.Settings = result.data;
             this.Settings.Serial = id.Serial;

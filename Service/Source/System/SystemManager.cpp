@@ -146,10 +146,10 @@ string SystemManager::SystemLog() {
 void SystemManager::GetSystemCallback(const json &params, Response &response) {
   string UserName = params["UserName"];
   if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
   vector<string> Series;
   for(auto &Serie : params["Series"]) {
-    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
     Series.push_back(Serie);
   }
   json Result = json::object();
@@ -161,7 +161,7 @@ void SystemManager::GetSystemCallback(const json &params, Response &response) {
     } else if(Serie == "SystemLog") {
       Result["SystemLog"] = SystemManager::SystemLog();
     } else {
-      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+      return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
     }
   }
   HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);

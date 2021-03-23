@@ -344,19 +344,19 @@
       ActiveTab: function(tab) {
         if((tab == '3S') || (tab == '1M') || (tab == '10M') || (tab == '15M') || (tab == '1H')) {
           this.ShowSpinner = true;
-          this.$http.post('getSeriesRange', { Analyzer: this.analyzer.Analyzer, Aggreg: tab }).then(
+          this.$http.post('getSeriesRange', { Analyzer: this.analyzer.Analyzer, Aggreg: tab }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
             (result) => { this.ShowSpinner = false; this.From = result.body.From; this.To = result.body.To; },
             (fail) => { this.ShowSpinner = false; }
           );
         } else if(tab == 'Events') {
           this.ShowSpinner = true;
-          this.$http.post('getEventsRange', { Analyzer: this.analyzer.Analyzer }).then(
+          this.$http.post('getEventsRange', { Analyzer: this.analyzer.Analyzer }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
             (result) => { this.ShowSpinner = false; this.From = result.body.From; this.To = result.body.To; },
             (fail) => { this.ShowSpinner = false; }
           );
         } else if(tab == 'Alarms') {
           this.ShowSpinner = true;
-          this.$http.post('getAlarmsRange', { Analyzer: this.analyzer.Analyzer }).then(
+          this.$http.post('getAlarmsRange', { Analyzer: this.analyzer.Analyzer }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
             (result) => { this.ShowSpinner = false; this.From = result.body.From; this.To = result.body.To; },
             (fail) => { this.ShowSpinner = false; }
           );
@@ -381,7 +381,7 @@
       GetStorage: function() {
         this.Rate = null;
         this.ShowSpinner = true;
-        this.$http.post('getStatus', { Analyzer: this.analyzer.Analyzer, Series: ['Storage'] }).then(
+        this.$http.post('getStatus', { Analyzer: this.analyzer.Analyzer, Series: ['Storage'] }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (result) => {
             this.Storage = result.body.Storage;
             this.ShowSpinner = false;
@@ -395,7 +395,7 @@
         this.ShowSpinner = true;
         var From = (all) ? 0 : this.From;
         var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
-        this.$http.post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg}).then(
+        this.$http.post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
           (res) => { this.ShowSpinner = false; this.ActiveTab = aggreg; },
           (fail) => { this.ShowSpinner = false; }
         );
@@ -459,17 +459,17 @@
         if(aggreg == 'Alarms') {
           var From = (all) ? 0 : this.From;
           var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
-          this.$http.post('delAlarmsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To }).then(
+          this.$http.post('delAlarmsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
             () => { this.ShowSpinner = false; },
             () => { this.ShowSpinner = false; }
           );
         } else if(aggreg == 'Events') {
-          this.$http.post('delEventsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Mode: DelEventsMode }).then(
+          this.$http.post('delEventsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Mode: DelEventsMode }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
             () => { this.ShowSpinner = false; },
             () => { this.ShowSpinner = false; }
           );
         } else {
-          this.$http.post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg }).then(
+          this.$http.post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
             () => { this.ShowSpinner = false; },
             () => { this.ShowSpinner = false; }
           );

@@ -93,8 +93,8 @@ void TelegramManager::GetTelegramCallback(const json &params, Response &response
 }
 void TelegramManager::SetTelegramCallback(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Token") == false) || (params["Token"].is_string() == false)) return HTTPServer::FillResponse(response, "'Token' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Token") == false) || (params["Token"].is_string() == false)) return HTTPServer::FillResponse(response, "'Token' param is required", "text/plain", HTTP_BAD_REQUEST);
   Config(CheckConfig(params));
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }

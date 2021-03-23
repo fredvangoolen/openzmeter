@@ -15,35 +15,33 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <vector>
+#include <functional>
 #include <list>
 #include <stdlib.h>
 #include "nlohmann/json.hpp"
 #include "cpp-httplib/httplib.h"
 #include "Database.h"
 #include "Tools.h"
+#include "HTTPRequest.h"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 using namespace httplib;
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
-#define HTTP_OK                     200
-#define HTTP_BAD_REQUEST            400
-#define HTTP_UNAUTHORIZED           401
-#define HTTP_FORBIDDEN              403
-#define HTTP_NOT_FOUND              404
-#define HTTP_METHOD_NOT_ALLOWED     405
-#define HTTP_INTERNAL_SERVER_ERROR  500
 #ifndef __BUILD__
 #define __BUILD__ "UNKNOWN"
 #endif
 //----------------------------------------------------------------------------------------------------------------------
 class HTTPServer final : private Server {
   private :
-    typedef void (*Func1_t)(const json &params, Response &response);
+    typedef struct {
+      function<void(HTTPRequest *)> Func;
+      string                        APIFile;
+    } Callback_t;
   private :
     static pthread_rwlock_t             pLock;            //Control access to pCallbacks vector
     static map<string, string>          pComponents;      //Components openAPI descriptor
-    static map<string, Func1_t>         pCallbacks;       //List of callbacks without reader
+    static map<string, Callback_t>      pCallbacks;       //List of callbacks without reader
     static string                       pRelativePath;    //Relative path of server
     static string                       pLogoImg;         //Aditional logo image
   private:
@@ -57,19 +55,17 @@ class HTTPServer final : private Server {
     static const char *MimeType(const string &file);
     static void        HandleGet(const Request &request, Response &response);
     static void        HandlePost(const Request &request, Response &response);
-    static void        GetVersionCallback(const json &params, Response &response);
-    static void        LogInCallback(const json &params, Response &response);
-    static void        LogOutCallback(const Request &request, Response &response);
-    static void        GetAPICallback(const json &params, Response &response);
+    static void        GetVersionCallback(HTTPRequest *req);
+    static void        LogInCallback(HTTPRequest *req);
+    static void        LogOutCallback(HTTPRequest *req);
+    static void        GetAPICallback(HTTPRequest *req);
   private :
     void *Thread();
   public :
-    static void   RegisterCallback(const string &handleName, const Func1_t function, const string &apiFile = "");
+    static void   RegisterCallback(const string &handleName, const function<void(HTTPRequest *)> function, const string &apiFile = "");
     static void   UnregisterCallback(const string &handleName);
     static void   RegisterDoc(const string &name, const json &doc);
     static void   UnregisterDoc(const string &name);
-    static void   FillResponse(Response &response, const string &body, const char *mime, const int status);
-    static void   FillResponse(Response &response, const char *body, const size_t size, const char *mime, const int status);
   public :
     HTTPServer();
     ~HTTPServer();

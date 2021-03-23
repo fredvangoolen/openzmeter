@@ -93,9 +93,9 @@ void ModbusManager::GetModbusTCP(const json &params, Response &response) {
 }
 void ModbusManager::SetModbusTCP(const json &params, Response &response) {
   if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Port") == false) || (params["Port"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Port' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Analyzers") == false) || (params["Analyzers"].is_array() == false)) return HTTPServer::FillResponse(response, "'Analyzers' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Port") == false) || (params["Port"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Port' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if((params.contains("Analyzers") == false) || (params["Analyzers"].is_array() == false)) return HTTPServer::FillResponse(response, "'Analyzers' param is required", "text/plain", HTTP_BAD_REQUEST);
   Config(CheckConfig(params));
   HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
 }
