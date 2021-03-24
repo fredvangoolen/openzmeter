@@ -131,8 +131,6 @@ json AnalyzerAccess::GetStatus(const vector<string> &series, const string &user)
                                  "'Events', (SELECT SUM(size) FROM sizes WHERE tablename IN ('events', 'events_ext')),"
                                  "'Alarms', (SELECT size FROM sizes WHERE tablename = 'alarms')) as tables");
       if(DB.FecthRow() == true) Result["Storage"] = DB.ResultJSON("tables");
-    } else {
-      return nullptr;
     }
   }
   return Result;

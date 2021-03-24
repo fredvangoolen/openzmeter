@@ -96,10 +96,10 @@ void BluetoothManager::GetBluetoothCallback(HTTPRequest &req) {
 void BluetoothManager::SetBluetoothCallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
 #ifdef OPENWRT
-  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is required", "text/plain", HTTP_BAD_REQUEST);
+  if(!req.CheckParamBool("Enabled")) return;
   json Config = json::object();
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  pEnable = params["Enabled"];
+  pEnable = req.Param("Enabled");
   if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   Config["Enabled"] = pEnable;
   Config["Interface"] = pInterface;

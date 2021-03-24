@@ -62,21 +62,21 @@ json DeviceRemote::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["Enabled"] = false;
   ConfigOUT["Analyzers"] = json::array();
+  ConfigOUT["Clear"] = json::array();
   if(config.is_object() == false) return ConfigOUT;
   if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
   if(config.contains("Analyzers") && config["Analyzers"].is_array()) {
     set<string> Analyzers;
     regex Validator("^[0-9A-F]{24}(_CAL|_CH1|_CH2|_CH3|_CH4)?(_1P|_3P|_3PN)$");
     for(auto &Analyzer : config["Analyzers"]) {
-      if(Analyzer.is_object() == false) continue;
-      if((Analyzer.contains("User") == false) || (Analyzer["User"].is_string() == false)) continue;
-      if((Analyzer.contains("Analyzer") == false) || (Analyzer["Analyzer"].is_string() == false)) continue;
+      if((Analyzer.is_object() == false) || (Analyzer.contains("User") == false) || (Analyzer["User"].is_string() == false) || (Analyzer.contains("Analyzer") == false) || (Analyzer["Analyzer"].is_string() == false)) continue;
       string UserName = Analyzer["User"];
       string Serial   = Analyzer["Analyzer"];
       json   Tmp      = json::object();
       Tmp["User"]     = UserName;
       Tmp["Analyzer"] = Serial;
       if((regex_match(Serial, Validator) == false) || (Analyzers.find(Serial) != Analyzers.end())) continue;
+      if(Analyzer.contains("Clear") && Analyzer["Clear"].is_boolean() && (Analyzer["Clear"] == true)) ConfigOUT["Clear"].push_back(Serial);
       ConfigOUT["Analyzers"].push_back(Tmp);
       Analyzers.insert(Serial);
     }
@@ -84,19 +84,23 @@ json DeviceRemote::CheckConfig(const json &config) {
   return ConfigOUT;
 }
 void DeviceRemote::Config(const json &config) {
-  ConfigFile::WriteConfig("/Devices/" + pSerial, config);
+  Database DB;
+  json     ConfigIN = config;
   ClearAnalyzers();
   pthread_mutex_lock(&pMutex);
-  pEnabled = config["Enabled"];
+  pEnabled = ConfigIN["Enabled"];
+  for(auto &Analyzer : ConfigIN["Analyzers"]) DB.ExecSentenceNoResult("DROP SCHEMA " + DB.BindID(Analyzer["Analyzer"]) + " CASCADE");
   if(pEnabled == true) {
-    for(auto &Analyzer : config["Analyzers"]) {
+    for(auto &Analyzer : ConfigIN["Analyzers"]) {
       string                 Serial = Analyzer["Analyzer"];
-      Analyzer::AnalyzerMode Mode = (Serial.find("_1P") != string::npos) ? Analyzer::PHASE1 : (Serial.find("_3PN") != string::npos) ? Analyzer::PHASE3N : Analyzer::PHASE3;
+      Analyzer::AnalyzerMode Mode   = (Serial.find("_1P") != string::npos) ? Analyzer::PHASE1 : (Serial.find("_3PN") != string::npos) ? Analyzer::PHASE3N : Analyzer::PHASE3;
       pAnalyzers.push_back(new AnalyzerRemote(Serial, Mode, Analyzer["User"]));
       AnalyzerManager::AddAnalyzer(pAnalyzers.back());
     }
   }
   pthread_mutex_unlock(&pMutex);
+  ConfigIN.erase("Clear");
+  ConfigFile::WriteConfig("/Devices/" + pSerial, ConfigIN);
 }
 void DeviceRemote::GetDevice(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);

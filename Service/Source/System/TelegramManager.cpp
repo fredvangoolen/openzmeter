@@ -83,20 +83,19 @@ json TelegramManager::CheckConfig(const json &config) {
   }
   return ConfigOUT;
 }
-void TelegramManager::GetTelegramCallback(HTTPRequest &req) {/*
-  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void TelegramManager::GetTelegramCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Telegram");
   pthread_mutex_lock(&pMutex);
   Config["Status"] = pStatus;
   pthread_mutex_unlock(&pMutex);
-  HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);*/
+  req.Success(Config);
 }
-void TelegramManager::SetTelegramCallback(HTTPRequest &req) { /*
-  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is required", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Token") == false) || (params["Token"].is_string() == false)) return HTTPServer::FillResponse(response, "'Token' param is required", "text/plain", HTTP_BAD_REQUEST);
-  Config(CheckConfig(params));
-  HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);*/
+void TelegramManager::SetTelegramCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamBool("Enabled") || !req.CheckParamString("Token")) return;
+  Config(CheckConfig(req.Params()));
+  req.Success(json::object());
 }
 void *TelegramManager::Thread_Func(void *params) {
   LogFile::Debug("Telegram", "Telegram BOT started");

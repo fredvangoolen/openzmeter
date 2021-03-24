@@ -86,7 +86,6 @@ void WifiManager::PeriodicTasks() {
   pthread_mutex_lock(&pMutex);
   pWifiStat = Stat;
   pthread_mutex_unlock(&pMutex);
-
 }
 void WifiManager::ScanWIFICallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
@@ -158,18 +157,16 @@ void WifiManager::SetWIFICallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   if(!req.CheckParamString("ESSID") || !req.CheckParamBool("Enabled") || !req.CheckParamEnum("IPMode", {"DHCP", "STATIC"}) || !req.CheckParamEnum("KeyMode", {"NONE", "WEP", "WPA", "WPA2"})) return;
   if(req.Param("IPMode") == "STATIC") {
-    if((params.contains("IP") == false) || (params["IP"].is_string() == false)) return HTTPServer::FillResponse(response, "'IP' param is required", "text/plain", HTTP_BAD_REQUEST);
-    if((params.contains("Netmask") == false) || (params["Netmask"].is_string() == false)) return HTTPServer::FillResponse(response, "'Netmask' param is required", "text/plain", HTTP_BAD_REQUEST);
-    if((params.contains("Gateway") == false) || (params["Gateway"].is_string() == false)) return HTTPServer::FillResponse(response, "'Gateway' param is required", "text/plain", HTTP_BAD_REQUEST);
-    if((params.contains("DNS") == false) || (params["DNS"].is_array() == false) || (params["DNS"].size() != 2) || (params["DNS"][0].is_string() == false) || (params["DNS"][1].is_string() == false)) return HTTPServer::FillResponse(response, "'DNS' param is required", "text/plain", HTTP_BAD_REQUEST);
-    SystemManager::uBusCall("uci", "set", { {"config", "network"}, {"section", pNetworkWIFI}, {"values", {{"ipaddr", params["IP"]}, {"netmask", params["Netmask"]}, {"gateway", params["Gateway"]}, {"proto", (params["IPMode"] == "DHCP") ? "dhcp" : "static"}, {"enabled", params["Enabled"] ? "1" : "0"}, {"dns", params["DNS"]}}}});
+    if(!req.CheckParamString("IP") || !req.CheckParamString("Netmask") || !req.CheckParamString("Gateway") || !req.CheckParamArrayString("DNS")) return;
+    SystemManager::uBusCall("uci", "set", { {"config", "network"}, {"section", pNetworkWIFI}, {"values", {{"ipaddr", req.Param("IP")}, {"netmask", req.Param("Netmask")}, {"gateway", req.Param("Gateway")}, {"proto", "static"}, {"enabled", req.Param("Enabled") ? "1" : "0"}, {"dns", req.Param("DNS")}}}});
   } else {
-    SystemManager::uBusCall("uci", "set", { {"config", "network"}, {"section", pNetworkWIFI}, {"values", {{"proto", (params["IPMode"] == "DHCP") ? "dhcp" : "static"}, {"enabled", params["Enabled"] ? "1" : "0"}}}});
+    SystemManager::uBusCall("uci", "set", { {"config", "network"}, {"section", pNetworkWIFI}, {"values", {{"proto", "dhcp"}, {"enabled", req.Param("Enabled") ? "1" : "0"}}}});
   }
   if(req.Param("KeyMode") == "NONE") {
     SystemManager::uBusCall("uci", "set", { {"config", "wireless"}, {"section", pWirelessWIFI}, {"values", {{"ssid", req.Param("ESSID")}, {"encryption", "none"}}}});
   } else {
-    SystemManager::uBusCall("uci", "set", { {"config", "wireless"}, {"section", pWirelessWIFI}, {"values", {{"ssid", params["ESSID"]}, {"key", params["Key"]}, {"encryption", (params["KeyMode"] == "WEP") ? "wep" : (params["KeyMode"] == "WPA") ? "psk" : "psk2"}}}});
+    if(!req.CheckParamString("Key")) return;
+    SystemManager::uBusCall("uci", "set", { {"config", "wireless"}, {"section", pWirelessWIFI}, {"values", {{"ssid", req.Param("ESSID")}, {"key", req.Param("Key")}, {"encryption", (req.Param("KeyMode") == "WEP") ? "wep" : (req.Param("KeyMode") == "WPA") ? "psk" : "psk2"}}}});
   }
   SystemManager::Exec("uci commit && /etc/init.d/network restart");
   req.Success(json::object());

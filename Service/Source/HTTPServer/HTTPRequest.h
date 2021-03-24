@@ -41,8 +41,9 @@ class HTTPRequest final {
     bool CheckParamString(const string &name);
     bool CheckParamBool(const string &name);
     bool CheckParamObject(const string &name);
+    bool CheckParamArray(const string &name);
     bool CheckParamEnum(const string &name, const vector<string> &values);
-    bool CheckParamSet(const string &name, const vector<string> &values);
+    bool CheckParamSet(const string &name, const vector<string> &values, const bool needAll = false);
     bool CheckParamArrayString(const string &name);
   public :
     void    Success(const json &body);

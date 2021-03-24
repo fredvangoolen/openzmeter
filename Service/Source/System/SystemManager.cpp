@@ -145,26 +145,18 @@ string SystemManager::SystemLog() {
 #endif
 }
 void SystemManager::GetSystemCallback(HTTPRequest &req) {
-/*  string UserName = req.UserName();
-  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
-  vector<string> Series;
-  for(auto &Serie : params["Series"]) {
-    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
-    Series.push_back(Serie);
-  }
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamSet("Series", {"Log", "Status", "SystemLog"})) return;
   json Result = json::object();
-  for(auto &Serie : Series) {
+  for(auto &Serie : req.Param("Series")) {
     if(Serie == "Log") {
       Result["Log"] = LogFile::ToJSON();
     } else if(Serie == "Status") {
       Result["Status"] = SystemManager::Status();
     } else if(Serie == "SystemLog") {
       Result["SystemLog"] = SystemManager::SystemLog();
-    } else {
-      return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
     }
   }
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);*/
+  req.Success(Result);
 }
 // ---------------------------------------------------------------------------------------------------------------------

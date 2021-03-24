@@ -104,9 +104,6 @@ void HTTPRequest::SuccessStreamArray(function<void(function<bool(const json &)>)
   pResponse.status = HTTP_OK;
   pResponse.set_chunked_content_provider("application/json", Func);
 }
-
-
-
 bool HTTPRequest::CheckParamNumber(const string &name) {
   if((pParams.contains(name) == false) || (pParams[name].is_number() == false)) {
     Error("'" + name + "' param is required", HTTP_BAD_REQUEST);
@@ -135,29 +132,27 @@ bool HTTPRequest::CheckParamObject(const string &name) {
   }
   return true;
 }
-bool HTTPRequest::CheckParamEnum(const string &name, const vector<string> &values) {
-  if((pParams.contains(name) == false) || (pParams[name].is_string() == false)) {
-    Error("'" + name + "' param is required", HTTP_BAD_REQUEST);
-    return false;
-  }
-  auto Tmp = find(values.begin(), values.end(), pParams[name]);
-  if(Tmp == values.end()) {
-    Error("Invalid value '" + *Tmp + "' in param '" + name + "'", HTTP_BAD_REQUEST);
-    return false;
-  }
-  return true;
-}
-bool HTTPRequest::CheckParamSet(const string &name, const vector<string> &values) {
-  vector<string> Valid = values;
+bool HTTPRequest::CheckParamArray(const string &name) {
   if((pParams.contains(name) == false) || (pParams[name].is_array() == false)) {
     Error("'" + name + "' param is required", HTTP_BAD_REQUEST);
     return false;
   }
+  return true;
+}
+bool HTTPRequest::CheckParamEnum(const string &name, const vector<string> &values) {
+  if(CheckParamString(name) == false) return false;
+  string Val = pParams[name];
+  auto Tmp   = find(values.begin(), values.end(), Val);
+  if(Tmp == values.end()) {
+    Error("Invalid value '" + Val + "' in param '" + name + "'", HTTP_BAD_REQUEST);
+    return false;
+  }
+  return true;
+}
+bool HTTPRequest::CheckParamSet(const string &name, const vector<string> &values, const bool needAll) {
+  vector<string> Valid = values;
+  if(CheckParamArrayString(name) == false) return false;
   for(auto &Item : pParams[name]) {
-    if(Item.is_string() == false) {
-      Error("'" + name + "' param is invalid", HTTP_BAD_REQUEST);
-      return false;
-    }
     auto Tmp = find(Valid.begin(), Valid.end(), Item);
     if(Tmp == Valid.end()) {
       Error("Invalid value '" + *Tmp + "' in param '" + name + "'", HTTP_BAD_REQUEST);
@@ -165,11 +160,12 @@ bool HTTPRequest::CheckParamSet(const string &name, const vector<string> &values
     }
     Valid.erase(Tmp);
   }
+  if(needAll && !Valid.empty()) {
+    Error("Incomplete param '" + name + "'", HTTP_BAD_REQUEST);
+    return false;
+  }
   return true;
 }
-
-
-
 bool HTTPRequest::CheckParamArrayString(const string &name) {
   if((pParams.contains(name) == false) || (pParams[name].is_array() == false)) {
     Error("'" + name + "' param is required", HTTP_BAD_REQUEST);
