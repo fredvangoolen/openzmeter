@@ -14,25 +14,25 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "VPNManager.h"
-#include <sys/time.h>
+#include "HTTPServer.h"
 #include "SystemManager.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 VPNManager::VPNManager() {
-  LogFile::Info("Starting VPNManager...");
 #ifdef OPENWRT
+  LogFile::Info("Starting VPNManager...");
   HTTPServer::RegisterCallback("getVPN", GetVPNCallback);
   HTTPServer::RegisterCallback("setVPN", SetVPNCallback);
-#endif
   LogFile::Info("VPNManager started");
+#endif
 }
 VPNManager::~VPNManager() {
-  LogFile::Info("Stopping VPNManager...");
 #ifdef OPENWRT
+  LogFile::Info("Stopping VPNManager...");
   HTTPServer::UnregisterCallback("getVPN");
   HTTPServer::UnregisterCallback("setVPN");
-#endif
   LogFile::Info("VPNManager stoped");
+#endif
 }
 #ifdef OPENWRT
 void VPNManager::GetVPNCallback(HTTPRequest &req) {

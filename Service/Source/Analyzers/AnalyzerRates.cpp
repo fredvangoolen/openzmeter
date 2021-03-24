@@ -48,7 +48,7 @@ void AnalyzerRates::GetCosts(HTTPRequest &req) {
   uint64_t       To      = req.Param("To");
   uint8_t        Group   = req.Param("Group");
   vector<string> Headers = {"Time"};
-  Headers.insert(Headers.begin(), req.Param("Series").begin(), req.Param("Series").end());
+  for(auto &Serie : req.Param("Series")) Headers.push_back(Serie);
   auto Func = [&, From, To, Group, Headers](function<bool(const json &content)> Write) {
     Database DB(pSerial);
     auto GetSample = [&](const uint64_t &currenttime, float &active, float &reactive) -> uint64_t {
