@@ -284,7 +284,7 @@
     methods: {
       Save: function () {
         this.Loading = true;
-        this.$http.post('setDevice', this.Settings, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('setDevice', this.Settings).then(
           (result) => { this.$emit('close', true); },
           (fail) => {
             this.Loading = false;

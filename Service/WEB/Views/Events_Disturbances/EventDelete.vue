@@ -27,7 +27,7 @@
       Delete: function() {
         this.ShowSpinner = true;
         var Promises = [];
-        for(var n = 0; n < this.event.length; n++) Promises.push(this.$http.post('delEvent', { StartTime: this.event[n], Analyzer: this.analyzer.Analyzer, Mode: this.Mode }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+        for(var n = 0; n < this.event.length; n++) Promises.push(this.Post('delEvent', { StartTime: this.event[n], Analyzer: this.analyzer.Analyzer, Mode: this.Mode }));
         Promise.all(Promises).then(
           () => { this.$emit('close', true); },
           () => { this.ShowSpinner = false; }

@@ -46,7 +46,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setUserPassword', { User: this.User.User, Password: this.User.Password1, PrevPassword: this.User.Previous }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('setUserPassword', { User: this.User.User, Password: this.User.Password1, PrevPassword: this.User.Previous }).then(
           (result) => {
             this.ShowSpinner = false;
             this.$emit('close');

@@ -72,8 +72,8 @@
         if((this.analyzer == null) || (this.Group == null) || (this.Year == null)) return;
         var To   = moment().tz(this.analyzer.TimeZone).year(this.Year).endOf('year').valueOf();
         var From = moment().tz(this.analyzer.TimeZone).year(this.Year).startOf('year').valueOf();
-        this.$http.post('getBills', { From: From, To: To, Analyzer: this.analyzer.Analyzer, Group: this.Group }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
-          (result) => { this.Bills = result.data; },
+        this.Post('getBills', { From: From, To: To, Analyzer: this.analyzer.Analyzer, Group: this.Group }).then(
+          (result) => { this.Bills = result; },
           (fail) => { }
         );
       },

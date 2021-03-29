@@ -104,7 +104,7 @@ void *AnalyzerSoftSync::Thread() {
       pthread_mutex_unlock(&pMutex);
       HTTPClient->set_compress(true);
       HTTPClient->set_keep_alive(false);
-      auto Response = HTTPClient->Post((Path + "/logIn").c_str(), { {"Accept", "application/json"} }, Content.dump(), "application/json");
+      auto Response = HTTPClient->Post((Path + "/logIn").c_str(), { {"Accept", "application/bson"} }, Content.dump(), "application/bson");
       if((Response != nullptr) && (Response->status == HTTP_OK) && (Response->has_header("Set-Cookie") == true)) {
         LogFile::Debug("Analyzer '%s' logged on remote server", pSerial.c_str());
         Cookie = Response->get_header_value("Set-Cookie");
@@ -237,9 +237,9 @@ void *AnalyzerSoftSync::Thread() {
       Content["Synced"] = Synced;
     }
     LogFile::Debug("AnalyzerSoft '%s' send %d actions to AnalyzerRemote", pSerial.c_str(), Content["Actions"].size());
-    auto Response = HTTPClient->Post((Path + "/setRemote").c_str(), {{"Accept", "application/json"}, {"Cookie", Cookie}}, Content.dump(), "application/json");
+    auto Response = HTTPClient->Post((Path + "/setRemote").c_str(), {{"Accept", "application/bson"}, {"Cookie", Cookie}}, Content.dump(), "application/bson");
     if((Response != nullptr) && (Response->status == HTTP_OK)) {
-      Content = json::parse(Response->body, NULL, false);
+      Content = json::from_bson(Response->body, NULL, false);
       if(Content.is_discarded()) {
         LogFile::Error("Malformed JSON params in AnalyzerSoft::Sync");
         Stage = LOGIN;

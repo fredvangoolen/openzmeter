@@ -338,7 +338,7 @@
         this.ActiveYear = String(this.NewYearSelect);
       },
       Save: function() {
-        this.$http.post((this.tariff == null) ? 'addTariff' : 'setTariff', this.Tariff, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post((this.tariff == null) ? 'addTariff' : 'setTariff', this.Tariff).then(
           (result) => {
             this.$emit('close');
           },

@@ -53,7 +53,7 @@
     },
     methods: {
       CheckVersion: function() {
-        this.$http.post('getVersion', {}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getVersion', {}).then(
           (result) => { this.Version = result.data.Version; },
           (fail) => { this.Version = 'Not avaliable'; }
         );
@@ -61,7 +61,7 @@
       Update: function(force) {
         this.ShowDialog = false;
         this.ShowSpinner = true;
-        this.$http.post('getUpdates', { Force: force }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getUpdates', { Force: force }).then(
           (result) => {
             for(var n = 0; n < result.data.length; n++) result.data[n].id = result.data[n].Package;
             this.Updates = result.data;

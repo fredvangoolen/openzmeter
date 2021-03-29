@@ -311,7 +311,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post((this.Rate.RateID == null) ? 'addRate' : 'setRate', this.Rate, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post((this.Rate.RateID == null) ? 'addRate' : 'setRate', this.Rate).then(
           (result) => { this.$emit('close'); },
           (fail) => {
             this.ShowSpinner = false;
@@ -329,9 +329,9 @@
       LoadTariffs: function() {
         this.ShowSpinner = true;
         this.Rate.Periods = null;
-        this.$http.post('getTariffs', {}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getTariffs', {}).then(
           (result) => {
-            this.Tariffs = result.body;
+            this.Tariffs = result;
             this.ShowSpinner = false;
           },
           (fail) => { }
@@ -339,10 +339,10 @@
       },
       LoadTariff: function(tariff) {
         this.ShowSpinner = true;
-        this.$http.post('getTariff', { Name: tariff.Name }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getTariff', { Name: tariff.Name }).then(
           (result) => {
-            var Rate = Object.assign(this.Rate, result.body.Template);
-            Rate.Name = result.body.Name;
+            var Rate = Object.assign(this.Rate, result.Template);
+            Rate.Name = result.Name;
             if(Array.isArray(Rate.PowerCost) == true) Rate.PowerCost = Rate.Periods.map((val) => { return val.DefaultPowerCost; });
             if(Array.isArray(Rate.EnergyCost) == true) Rate.EnergyCost = Rate.Periods.map((val) => { return val.DefaultEnergyCost; });
             this.Rate = Rate;

@@ -77,7 +77,7 @@
         return (value === true) ? '&#9635;' : '&#9633;';
       },
       LoadOpenVPN: function(show) {
-        this.$http.post('getVPN', { Full: show }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getVPN', { Full: show }).then(
           (result) => {
             this.Modules.OpenVPN.Settings = result.body;
             if(show) this.View = 'OpenVPN';
@@ -86,54 +86,54 @@
         );
       },
       LoadBluetooth: function(show) {
-        this.$http.post('getBluetooth', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getBluetooth', { }).then(
           (result) => {
-            this.Modules.Bluetooth.Settings = result.body;
+            this.Modules.Bluetooth.Settings = result;
             if(show) this.View = 'Bluetooth';
           },
           (fail) => { }
         );
       },
       LoadWIFI: function(show) {
-        this.$http.post('getWIFI', { Full: show }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getWIFI', { Full: show }).then(
           (result) => {
-            this.Modules.Wifi.Settings = result.body;
+            this.Modules.Wifi.Settings = result;
             if(show) this.View = 'Wifi';
           },
           (fail) => { }
         );
       },
       LoadEthernet: function(show) {
-        this.$http.post('getEthernet', {  }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getEthernet', {  }).then(
           (result) => {
-            this.Modules.Ethernet.Settings = result.body;
+            this.Modules.Ethernet.Settings = result;
             if(show) this.View = 'Ethernet';
           },
           (fail) => { }
         );
       },
       LoadNTP: function(show) {
-        this.$http.post('getNTP', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getNTP', { }).then(
           (result) => {
-            this.Modules.NTP.Settings = result.body;
+            this.Modules.NTP.Settings = result;
             if(show) this.View = 'NTP';
           },
           (fail) => { }
         );
       },
       LoadTelegram: function(show) {
-        this.$http.post('getTelegram', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getTelegram', { }).then(
           (result) => {
-            this.Modules.Telegram.Settings = result.body;
+            this.Modules.Telegram.Settings = result;
             if(show) this.View = 'Telegram';
           },
           (fail) => { }
         );
       },
       LoadModbusTCP: function(show) {
-        this.$http.post('getModbusTCP', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getModbusTCP', { }).then(
           (result) => {
-            this.Modules.ModbusTCP.Settings = result.body;
+            this.Modules.ModbusTCP.Settings = result;
             if(show) this.View = 'ModbusTCP';
           },
           (fail) => { }

@@ -41,9 +41,9 @@
      methods: {
       Refresh: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
-        this.$http.post('getSystem', { Series: ['SystemLog']}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getSystem', { Series: ['SystemLog']}).then(
           (result) => {
-            this.SysMessages = result.body.SystemLog;
+            this.SysMessages = result.SystemLog;
             this.Timer = setTimeout(this.Refresh, 5000);
           },
           (fail) => { this.Timer = setTimeout(this.Refresh, 5000); }
@@ -51,14 +51,14 @@
       },
       Apply: function() {
         this.ShowSpinner = true;
-        this.$http.post('setVPN', { Enabled: this.Config.Enabled, Config: this.Config.Config }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('setVPN', { Enabled: this.Config.Enabled, Config: this.Config.Config }).then(
           (result) => { this.ShowSpinner = false; },
           (fail) => { this.ShowSpinner = false; }
         );
       },
       Save: function(value) {
         this.ShowSpinner = true;
-        this.$http.post('setVPN', { Enabled: this.Config.Enabled, Config: this.Config.Config }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('setVPN', { Enabled: this.Config.Enabled, Config: this.Config.Config }).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');

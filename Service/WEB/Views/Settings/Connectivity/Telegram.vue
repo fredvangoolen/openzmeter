@@ -45,7 +45,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setTelegram', this.Config, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('setTelegram', this.Config).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');
