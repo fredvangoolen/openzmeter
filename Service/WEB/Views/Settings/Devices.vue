@@ -48,10 +48,10 @@
         this.Driver = null;
         if(update == false) return;
         this.ShowSpinner = true;
-        this.$http.post('getDevices', {}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getDevices', {}).then(
           (result) => {
             this.Enabled = true;
-            this.Devices = result.data;
+            this.Devices = result;
             this.ShowSpinner = false;
           },
           (fail) => {}
@@ -59,9 +59,9 @@
       },
       Configure: function (id) {
         this.ShowSpinner = true;
-        this.$http.post('getDevice', { Serial: id.Serial }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getDevice', { Serial: id.Serial }).then(
           (result) => {
-            this.Settings = result.data;
+            this.Settings = result;
             this.Settings.Serial = id.Serial;
             if(id.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
             if(id.Driver === 'V1') this.Driver = 'DeviceV1';

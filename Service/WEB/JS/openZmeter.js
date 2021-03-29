@@ -1,6 +1,13 @@
 import CBOR from 'cbor-js';
 const openZmeter = {
   install: function(Vue, options) {
+    Vue.prototype.CBOR = CBOR;
+    Vue.prototype.Post = (url, params) => {
+      const CommMode = 'application/cbor';
+      return new Promise(function(resolve, reject) {
+        Vue.http.post(url, CBOR.encode(params), { responseType: 'arraybuffer', headers: { 'Accept': CommMode, 'Content-Type': CommMode } }).then((result) => { console.log(result.data); resolve(CBOR.decode(result.data)); }, (error) => reject(error));
+      });
+    };
     Vue.prototype.PriceTransfer = (series) => {
       var Transfer = { Timer: null, CancelFunc: null, Data: null, Series: series, Analyzer: null, Aggreg: null, Range: null };
       Transfer.Destroy = () => {
@@ -72,10 +79,10 @@ const openZmeter = {
         Transfer.Aggreg    = aggreg;
         Transfer.Range     = range;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Vue.http.post('getCosts', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series, Group: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        Vue.prototype.Post('getCosts', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series, Group: 0 }).then(
           (result) => {
             if(Cancelled == true) return;
-            Transfer.SetData(ReqRange, aggreg, result.body);
+            Transfer.SetData(ReqRange, aggreg, result);
             Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, 900000);
           },
           (fail) => {
@@ -103,10 +110,10 @@ const openZmeter = {
         if((Transfer.Analyzer == null) || (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = null;
         Transfer.Analyzer  = analyzer;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Vue.http.post('getStatus', { Analyzer: analyzer.Analyzer, Series: series }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        Vue.prototype.Post('getStatus', { Analyzer: analyzer.Analyzer, Series: series }).then(
           (result) => {
             if(Cancelled == true) return;
-            Transfer.Data = Object.seal(result.body);
+            Transfer.Data = Object.seal(result);
             Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 3000);
           },
           (fail) => {
@@ -134,12 +141,12 @@ const openZmeter = {
         if((Transfer.Analyzer != null) && (Transfer.Analyzer.Analyzer != analyzer.Analyzer)) Transfer.Data = null;
         Transfer.Analyzer  = analyzer;
         Transfer.CancelFunc = () => { Cancelled = true; };
-        Vue.http.post('getSeriesNow', CBOR.encode({ Analyzer: analyzer.Analyzer, Series: series }), {  responseType: 'blob', headers: { 'Accept': 'application/cbor', 'Content-Type': 'application/cbor' } }).then(
-          (result) => { result.blob().then((blob) => { blob.arrayBuffer().then((buffer) => {
+        Vue.prototype.Post('getSeriesNow', { Analyzer: analyzer.Analyzer, Series: series }).then(
+          (result) => {
             if(Cancelled == true) return;
-            Transfer.Data = Object.seal(CBOR.decode(buffer));
+            Transfer.Data = Object.seal(result);
             Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer); }, 1500);
-          }); }); },
+          },
           (fail) => {
             if(Cancelled == true) return;
             Transfer.Data = null;
@@ -189,18 +196,18 @@ const openZmeter = {
         Transfer.Aggreg   = aggreg;
         Transfer.Range    = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+          Promises.push(Vue.prototype.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: ReqRange[1], Series: series }));
         } else {
-          Promises.push(Vue.http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1, Series: series }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
-          Promises.push(Vue.http.post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1], Series: series }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+          Promises.push(Vue.prototype.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: ReqRange[0], To: Transfer.Data.Rows[0][0] - 1, Series: series }));
+          Promises.push(Vue.prototype.Post('getSeries', { Analyzer: analyzer.Analyzer, Aggreg: aggreg, From: Transfer.Data.Rows.slice(-1)[0][0] + 1, To: ReqRange[1], Series: series }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
           (result) => {
             if(Cancelled == true) return;
-            var Data = result[0].body;
+            var Data = result[0];
             if(Transfer.Data != null) Data = Data.concat(Transfer.Data.Rows);
-            if((result.length == 2) && (result[1].body.length > 1)) Data = Data.concat(result[1].body.slice(1));
+            if((result.length == 2) && (result[1].length > 1)) Data = Data.concat(result[1].slice(1));
             Transfer.SetData(ReqRange, aggreg, Data);
             Transfer.Timer = setTimeout(() => { Transfer.Update(Transfer.Analyzer, Transfer.Aggreg, Transfer.Range); }, (aggreg == "200MS") ? 0 : 3000);
           },
@@ -244,25 +251,25 @@ const openZmeter = {
         Transfer.Analyzer  = analyzer;
         Transfer.Range     = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, LastChange: 0 }));
         } else {
-          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
-          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
-          Promises.push(Vue.http.post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, LastChange: this.LastChange }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, LastChange: 0 }));
+          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, LastChange: 0 }));
+          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, LastChange: this.LastChange }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
           (result) => {
             if(Cancelled == true) return;
             if(Cancelled == true) return;
-            var Data = result[0].body;
+            var Data = result[0];
             if(Transfer.Data != null) Data = Data.concat(Transfer.Data.Rows);
             if(result.length == 3) {
-              if(result[1].body.length > 1) Data = Data.concat(result[1].body.slice(1));
-              if(result[2].body.length > 1) {
-                for(var n = 1; n < result[2].body.length; n++) {
+              if(result[1].length > 1) Data = Data.concat(result[1].slice(1));
+              if(result[2].length > 1) {
+                for(var n = 1; n < result[2].length; n++) {
                   for(var i = 0; i < Data.length; i++) {
-                    if(Data[i][1] == result[2].body[n][1]) Data[i] = result[2].body[n];
+                    if(Data[i][1] == result[2][n][1]) Data[i] = result[2][n];
                   }
                 }
               }
@@ -310,24 +317,24 @@ const openZmeter = {
         Transfer.Analyzer  = analyzer;
         Transfer.Range     = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, Samples: 'NONE', LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, Samples: 'NONE', LastChange: 0 }));
         } else {
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, Samples: 'NONE', LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: 0 }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
-          Promises.push(Vue.http.post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: this.LastChange }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, Samples: 'NONE', LastChange: 0 }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: 0 }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: this.LastChange }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
           (result) => {
             if(Cancelled == true) return;
-            var Data = result[0].body;
+            var Data = result[0];
             if(Transfer.Data != null) Data = Data.concat(Transfer.Data.Rows);
             if(result.length == 3) {
-              if(result[1].body.length > 1) Data = Data.concat(result[1].body.slice(1));
-              if(result[2].body.length > 1) {
-                for(var n = 1; n < result[2].body.length; n++) {
+              if(result[1].length > 1) Data = Data.concat(result[1].slice(1));
+              if(result[2].length > 1) {
+                for(var n = 1; n < result[2].length; n++) {
                   for(var i = 0; i < Data.length; i++) {
-                    if(Data[i][1] == result[2].body[n][1]) Data[i] = result[2].body[n];
+                    if(Data[i][1] == result[2][n][1]) Data[i] = result[2][n];
                   }
                 }
               }

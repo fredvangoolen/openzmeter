@@ -97,13 +97,13 @@
         }
       },
       UpdateSystem: function() {
-        this.$http.post('getSystem', { Series: ['Status', 'Log', 'SystemLog']}, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getSystem', { Series: ['Status', 'Log', 'SystemLog']}).then(
           (result) => {
             this.AllMessages = [];
             this.LastUpdate = moment();
-            for(var n = 1; n < result.data.Log.Messages.length; n++) this.AllMessages.push({Type: result.data.Log.Messages[n][0], Date: result.data.Log.Messages[n][1], Message: result.data.Log.Messages[n][2]});
-            this.Status = result.data.Status;
-            this.SysMessages = result.data.SystemLog;
+            for(var n = 1; n < result.Log.Messages.length; n++) this.AllMessages.push({Type: result.Log.Messages[n][0], Date: result.Log.Messages[n][1], Message: result.Log.Messages[n][2]});
+            this.Status = result.Status;
+            this.SysMessages = result.SystemLog;
             this.ShowSpinner = false;
             this.Timer = setTimeout(this.UpdateSystem, 5000);
           },

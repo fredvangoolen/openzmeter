@@ -31,11 +31,12 @@ using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
 class HTTPRequest final {
   private :
-    Response &pResponse;
-    string    pAccept;
+    Response *pResponse;
     json      pParams;
+    string    pAccept;
     string    pUserName;
     string    pCookie;
+    uint16_t  pStatus;
   public :
     bool CheckParamNumber(const string &name);
     bool CheckParamString(const string &name);
@@ -58,7 +59,8 @@ class HTTPRequest final {
     string  UserName() const;
     int     Status() const;
   public :
-    HTTPRequest(const Request &request, Response &response);
+    HTTPRequest(const Request &request, Response *response);
+    HTTPRequest(const json &params);
     ~HTTPRequest();
 };
 // ---------------------------------------------------------------------------------------------------------------------

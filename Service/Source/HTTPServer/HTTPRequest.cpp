@@ -16,7 +16,8 @@
 #include "HTTPRequest.h"
 #include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
-HTTPRequest::HTTPRequest(const Request &request, Response &response) : pResponse(response) {
+HTTPRequest::HTTPRequest(const Request &request, Response *response) {
+  pResponse = response;
   Error("", HTTP_NOT_FOUND);
   if(request.has_header("Accept") == false) {
     Error("'Accept' header required", HTTP_BAD_REQUEST);
@@ -62,47 +63,64 @@ HTTPRequest::HTTPRequest(const Request &request, Response &response) : pResponse
     pParams.erase("UserName");
   }
 }
+HTTPRequest::HTTPRequest(const json &params) {
+  pResponse = NULL;
+  pParams   = params;
+  Error("", HTTP_NOT_FOUND);
+}
 HTTPRequest::~HTTPRequest() {
 }
 void HTTPRequest::Error(const string &body, const int status) {
-  pResponse.set_content(body, "text/plain");
-  pResponse.status = status;
+  if(pResponse != NULL) {
+    pResponse->set_content(body, "text/plain");
+    pResponse->status = status;
+  } else {
+    pStatus = status;
+  }
 }
 void HTTPRequest::Success(const json &body) {
-  if(pAccept == "application/json") {
-    pResponse.set_content(body.dump(), "application/json");
-  } else if(pAccept == "application/cbor") {
-    vector<std::uint8_t> Buff = json::to_cbor(body);
-    pResponse.set_content((char*)Buff.data(), Buff.size(), "application/cbor");
+  if(pResponse != NULL) {
+    if(pAccept == "application/json") {
+      pResponse->set_content(body.dump(), "application/json");
+    } else if(pAccept == "application/cbor") {
+      vector<std::uint8_t> Buff = json::to_cbor(body);
+      pResponse->set_content((char*)Buff.data(), Buff.size(), "application/cbor");
+    }
+    pResponse->status = HTTP_OK;
+  } else {
+    pStatus = HTTP_OK;
   }
-  pResponse.status = HTTP_OK;
 }
 void HTTPRequest::SuccessStreamArray(function<void(function<bool(const json &)>)> func) {
-  bool UseCBOR = (pAccept == "application/cbor");
-  auto Func = [func, UseCBOR](uint64_t offset, DataSink &sink) -> bool {
-    uint32_t Items = 0;
-    auto Write = [&](const json &content) -> bool {
-      if(UseCBOR) {
-        vector<uint8_t> Buff = json::to_cbor(content);
-        sink.write((char*)Buff.data(), Buff.size());
-      } else {
-        string Buff = Items ? "," : "";
-        Buff.append(content.dump());
-        sink.write(Buff.c_str(), Buff.size());
-        Items++;
-      }
-      return sink.is_writable();
+  if(pResponse != NULL) {
+    bool UseCBOR = (pAccept == "application/cbor");
+    auto Func = [func, UseCBOR](uint64_t offset, DataSink &sink) -> bool {
+      uint32_t Items = 0;
+      auto Write = [&](const json &content) -> bool {
+        if(UseCBOR) {
+          vector<uint8_t> Buff = json::to_cbor(content);
+          sink.write((char*)Buff.data(), Buff.size());
+        } else {
+          string Buff = Items ? "," : "";
+          Buff.append(content.dump());
+          sink.write(Buff.c_str(), Buff.size());
+          Items++;
+        }
+        return sink.is_writable();
+      };
+      char OpenChar  = UseCBOR ? 0x9F : '[';
+      char CloseChar = UseCBOR ? 0xFF : ']';
+      sink.write(&OpenChar, 1);
+      func(Write);
+      sink.write(&CloseChar, 1);
+      sink.done();
+      return true;
     };
-    char OpenChar  = UseCBOR ? 0x9F : '[';
-    char CloseChar = UseCBOR ? 0xFF : ']';
-    sink.write(&OpenChar, 1);
-    func(Write);
-    sink.write(&CloseChar, 1);
-    sink.done();
-    return true;
-  };
-  pResponse.status = HTTP_OK;
-  pResponse.set_chunked_content_provider("application/json", Func);
+    pResponse->status = HTTP_OK;
+    pResponse->set_chunked_content_provider("application/json", Func);
+  } else {
+    pStatus = HTTP_OK;
+  }
 }
 bool HTTPRequest::CheckParamNumber(const string &name) {
   if((pParams.contains(name) == false) || (pParams[name].is_number() == false)) {
@@ -180,7 +198,7 @@ bool HTTPRequest::CheckParamArrayString(const string &name) {
   return true;
 }
 void HTTPRequest::SetHeader(const string &name, const string &value) {
-  pResponse.set_header(name.c_str(), value.c_str());
+  if(pResponse != NULL) pResponse->set_header(name.c_str(), value.c_str());
 }
 json HTTPRequest::Params() const {
   return pParams;
@@ -195,5 +213,5 @@ string HTTPRequest::UserName() const {
   return pUserName;
 }
 int HTTPRequest::Status() const {
-  return pResponse.status;
+  return (pResponse != NULL) ? pResponse->status : pStatus;
 }

@@ -39,10 +39,10 @@
         this.SetAnalyzer(null);
         this.Dialog = 'Table';
       } else {
-        this.$http.post('getAnalyzer', { Analyzer: localStorage.getItem("Analyzer") }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getAnalyzer', { Analyzer: localStorage.getItem("Analyzer") }).then(
           (result) => {
-            result.data.Analyzer = localStorage.getItem("Analyzer");
-            this.SetAnalyzer(result.data);
+            result.Analyzer = localStorage.getItem("Analyzer");
+            this.SetAnalyzer(result);
           },
           (fail) => {
             this.SetAnalyzer(null);

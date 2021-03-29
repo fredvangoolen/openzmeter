@@ -77,12 +77,12 @@
     methods: {
       GetAnalyzers: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
-        this.$http.post("getAnalyzers", CBOR.encode({}), { responseType: 'blob', headers: { 'Accept': 'application/cbor', 'Content-Type': 'application/cbor' } }).then(
-          (result) => { result.blob().then((blob) => { blob.arrayBuffer().then((buffer) => {
-            this.Analyzers = CBOR.decode(buffer);
+        this.Post("getAnalyzers", {}).then(
+          (result) => {
+            this.Analyzers = result;
             this.ShowSpinner = false;
             this.Timer = setTimeout(this.GetAnalyzers, 5000);
-          }); }); },
+          },
           (fail) => { this.Timer = setTimeout(this.GetAnalyzers, 5000); }
         );
       },
@@ -90,11 +90,11 @@
         this.$emit('update:analyzer', null);
         this.ShowSpinner = true;
         localStorage.setItem('Analyzer', analyzer);
-        this.$http.post('getAnalyzer', { Analyzer: analyzer }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
             if(this.Timer != null) clearTimeout(this.Timer);
-            result.data.Analyzer = analyzer;
-            this.$emit('update:analyzer', result.data);
+            result.Analyzer = analyzer;
+            this.$emit('update:analyzer', result);
             this.ShowSpinner = false;
             if(close == true) this.$emit('close');
           }
@@ -107,11 +107,11 @@
       },
       LoadView: function(view, analyzer) {
         this.ShowSpinner = true;
-        this.$http.post('getAnalyzer', { Analyzer: analyzer }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getAnalyzer', { Analyzer: analyzer }).then(
           (result) => {
             if(this.Timer != null) clearTimeout(this.Timer);
-            result.data.Analyzer = analyzer;
-            this.Analyzer = result.data;
+            result.Analyzer = analyzer;
+            this.Analyzer = result;
             this.View = view;
             this.ShowSpinner = false;
           }

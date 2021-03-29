@@ -232,7 +232,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
 }
 void HTTPServer::HandlePost(const Request &request, Response &response) {
   string       URL = string(request.path).erase(0, pRelativePath.size());
-  HTTPRequest  Req(request, response);
+  HTTPRequest  Req(request, &response);
   if(Req.Status() != HTTP_NOT_FOUND) return;
   LogFile::Debug("HTTP POST '%s'", URL.c_str());
   if(URL == "logIn") return LogInCallback(Req);

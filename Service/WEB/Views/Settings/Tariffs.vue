@@ -76,10 +76,10 @@
       LoadTariffs: function() {
         this.ShowDialog = false;
         this.ShowSpinner = true;
-        this.$http.post('getTariffs', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getTariffs', { }).then(
           (result) => {
             this.Enabled = true;
-            this.Tariffs = result.data;
+            this.Tariffs = result;
             this.ShowSpinner = false;
             for(var n in this.Tariffs) {
               this.Tariffs[n].StartDate = moment.tz(this.Tariffs[n].StartDate, this.Tariffs[n].TimeZone).format('DD/MM/YYYY');
@@ -97,7 +97,7 @@
       Duplicate: function(tariff) {
         this.Tariff = null;
         this.ShowSpinner = true;
-        this.$http.post('getTariff', { Name: tariff.Name }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getTariff', { Name: tariff.Name }).then(
           (result) => {
             this.SourceTariff = result.body;
             this.ShowDialog = true;
@@ -109,7 +109,7 @@
       Edit: function(tariff) {
         this.SourceTariff = null;
         this.ShowSpinner = true;
-        this.$http.post('getTariff', { Name: tariff.Name }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+        this.Post('getTariff', { Name: tariff.Name }).then(
           (result) => {
             this.Tariff = result.body;
             this.ShowDialog = true;
@@ -120,7 +120,7 @@
       },
       Delete: function(tariff) {
         if(confirm("Delete '" + tariff.Name + "' tariff?")) {
-          this.$http.post('delTariff', { Name: tariff.Name }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+          this.Post('delTariff', { Name: tariff.Name }).then(
             (result) => {
               this.LoadTariffs();
             },
@@ -130,7 +130,7 @@
       },
       Configure: function(module) {
         if(module.Name == 'ESP_ESIOS') {
-          this.$http.post('getESIOS', { }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' } }).then(
+          this.Post('getESIOS', { }).then(
             (result) => { this.Module = result.body; this.Module.Name = module.Name; },
             (fail) => { }
           );
