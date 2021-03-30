@@ -75,6 +75,7 @@ void HTTPRequest::Error(const string &body, const int status) {
     pResponse->set_content(body, "text/plain");
     pResponse->status = status;
   } else {
+    pBody   = body;
     pStatus = status;
   }
 }
@@ -83,7 +84,7 @@ void HTTPRequest::Success(const json &body) {
     if(pAccept == "application/json") {
       pResponse->set_content(body.dump(), "application/json");
     } else if(pAccept == "application/cbor") {
-      vector<std::uint8_t> Buff = json::to_cbor(body);
+      vector<uint8_t> Buff = json::to_cbor(body);
       pResponse->set_content((char*)Buff.data(), Buff.size(), "application/cbor");
     }
     pResponse->status = HTTP_OK;
@@ -173,13 +174,13 @@ bool HTTPRequest::CheckParamSet(const string &name, const vector<string> &values
   for(auto &Item : pParams[name]) {
     auto Tmp = find(Valid.begin(), Valid.end(), Item);
     if(Tmp == Valid.end()) {
-      Error("Invalid value '" + *Tmp + "' in param '" + name + "'", HTTP_BAD_REQUEST);
+      Error("Invalid value '" + Item.get<string>() + "' in param '" + name + "'", HTTP_BAD_REQUEST);
       return false;
     }
     Valid.erase(Tmp);
   }
   if(needAll && !Valid.empty()) {
-    Error("Incomplete param '" + name + "'", HTTP_BAD_REQUEST);
+    Error("Incomplete param '" + name + "', missing value '" + Valid.front() + "'", HTTP_BAD_REQUEST);
     return false;
   }
   return true;
@@ -211,6 +212,9 @@ string HTTPRequest::Cookie() const {
 }
 string HTTPRequest::UserName() const {
   return pUserName;
+}
+string HTTPRequest::ErrorBody() const {
+  return (pResponse != NULL) ? pResponse->body : pBody;
 }
 int HTTPRequest::Status() const {
   return (pResponse != NULL) ? pResponse->status : pStatus;

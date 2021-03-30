@@ -50,7 +50,7 @@ void AnalyzerRemote::HandleAction(const string &name, const json &params) {
     LogFile::Warning("AnayzerRemote receive invalid action from AnalyzerSoft '%s' (%s)", pSerial.c_str(), name.c_str());
     return;
   }
-  if(Req.Status() != HTTP_OK) LogFile::Warning("AnayzerRemote action from remote AnalyzerSoft '%s' (%s) fails", pSerial.c_str(), name.c_str());
+  if(Req.Status() != HTTP_OK) LogFile::Warning("AnayzerRemote action from remote AnalyzerSoft '%s' (%s -> %s) fails", pSerial.c_str(), name.c_str(), Req.ErrorBody().c_str());
 }
 void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
   if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);

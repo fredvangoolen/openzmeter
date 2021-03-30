@@ -37,6 +37,7 @@ class HTTPRequest final {
     string    pUserName;
     string    pCookie;
     uint16_t  pStatus;
+    string    pBody;
   public :
     bool CheckParamNumber(const string &name);
     bool CheckParamString(const string &name);
@@ -57,6 +58,7 @@ class HTTPRequest final {
     json    Param(const string &param) const;
     string  Cookie() const;
     string  UserName() const;
+    string  ErrorBody() const;
     int     Status() const;
   public :
     HTTPRequest(const Request &request, Response *response);
