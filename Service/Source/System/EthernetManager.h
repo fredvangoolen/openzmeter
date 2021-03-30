@@ -15,23 +15,22 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include "HTTPRequest.h"
-#ifdef OPENWRT // ======================================================================================================
+// ---------------------------------------------------------------------------------------------------------------------
 class EthernetManager final {
+  public :
+    enum EthernetStat { DISABLED, CONFIGURED, CONNECTED, INTERNET };
+#ifdef OPENWRT
   private :
     static string    pInterface;
   private :
     static void PeriodicTasks();
     static void GetEthernetCallback(HTTPRequest &req);
     static void SetEthernetCallback(HTTPRequest &req);
-  public :
-    EthernetManager();
-    ~EthernetManager();
-};
-#else
-class EthernetManager final {
-  public :
-    EthernetManager();
-    ~EthernetManager();
-};
 #endif
+  public :
+    EthernetStat Enabled();
+  public :
+    EthernetManager();
+    ~EthernetManager();
+};
 // ---------------------------------------------------------------------------------------------------------------------

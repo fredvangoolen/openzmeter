@@ -75,24 +75,23 @@ void AnalyzerSoftMQTT::Config(const json &config) {
   pthread_mutex_lock(&pMutex);
   pParentConf = config;
   pConfigSend = false;
-  bool Enabled = config["MQTT"]["Enabled"];
-  if(Enabled == false) {
+  if(config["MQTT"]["Enabled"] == false) {
+    p200MS     = false;
+    p3S        = false;
+    p1M        = false;
+    p10M       = false;
+    p15M       = false;
+    p1H        = false;
+    pAlarms    = false;
+    pConfig    = false;
+    pTerminate = true;
     if(pThread != 0) {
-      pTerminate = false;
       pthread_join(pThread, NULL);
       free(pSendBuff);
       free(pRecvBuff);
       pThread = 0;
     }
-    p200MS  = false;
-    p3S     = false;
-    p1M     = false;
-    p10M    = false;
-    p15M    = false;
-    p1H     = false;
-    pAlarms = false;
-    pConfig = false;
-  } else if(Enabled == true) {
+  } else {
     pPrefix    = config["MQTT"]["Prefix"];
     pServer    = config["MQTT"]["Server"];
     pUser      = config["MQTT"]["User"];
@@ -105,8 +104,8 @@ void AnalyzerSoftMQTT::Config(const json &config) {
     p1H        = config["MQTT"]["Export1H"];
     pAlarms    = config["MQTT"]["ExportAlarms"];
     pConfig    = config["MQTT"]["ExportConfig"];
+    pTerminate = false;
     if(pThread == 0) {
-      pTerminate = false;
       if(pSendBuff == NULL) pSendBuff  = (uint8_t*)calloc(pBuffSize, 1);
       if(pRecvBuff == NULL) pRecvBuff  = (uint8_t*)calloc(pBuffSize, 1);
       mqtt_init_reconnect(&pClient, NULL, NULL, NULL);

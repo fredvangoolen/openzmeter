@@ -89,12 +89,12 @@ void AnalyzerSeries::GetSeries(HTTPRequest &req) const {
 }
 void AnalyzerSeries::SetSeries(HTTPRequest &req) const {
   if(!req.CheckParamEnum("Aggreg", {"200MS", "3S", "1M", "10M", "15M", "1H"}) || !req.CheckParamArray("Samples")) return;
-  if(req.Param("Aggreg") = "200MS" && !req.CheckParamSet("Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics_Complex", "Current_Harmonics_Complex", "Power_Harmonics"})) return;
-  else if(req.Param("Aggreg") = "3S" && !req.CheckParamSet("Headers", {"Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power"})) return;
-  else if(req.Param("Aggreg") = "1M" && !req.CheckParamSet("Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics", "Current_Harmonics", "Power_Harmonics"})) return;
-  else if(req.Param("Aggreg") = "10M" && !req.CheckParamSet("Headers", {"Time", "Frequency", "Flag", "Voltage", "Current"})) return;
-  else if(req.Param("Aggreg") = "15M" && !req.CheckParamSet("Headers", {"Time", "Active_Power", "Reactive_Power"})) return;
-  else if(req.Param("Aggreg") = "1H" && !req.CheckParamSet("Headers", {"Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Voltage_Stats", "Frequency_Stats", "Voltage_THD_Stats", "Voltage_Harmonics_Stats", "Unbalance_Stats"})) return;
+  if((req.Param("Aggreg") == "200MS") && !req.CheckParamSet("Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics_Complex", "Current_Harmonics_Complex", "Power_Harmonics"}, true)) return;
+  else if((req.Param("Aggreg") == "3S") && !req.CheckParamSet("Headers", {"Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power"}, true)) return;
+  else if((req.Param("Aggreg") == "1M") && !req.CheckParamSet("Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics", "Current_Harmonics", "Power_Harmonics"}, true)) return;
+  else if((req.Param("Aggreg") == "10M") && !req.CheckParamSet("Headers", {"Time", "Frequency", "Flag", "Voltage", "Current"}, true)) return;
+  else if((req.Param("Aggreg") == "15M") && !req.CheckParamSet("Headers", {"Time", "Active_Power", "Reactive_Power"}, true)) return;
+  else if((req.Param("Aggreg") == "1H") && !req.CheckParamSet("Headers", {"Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Voltage_Stats", "Frequency_Stats", "Voltage_THD_Stats", "Voltage_Harmonics_Stats", "Unbalance_Stats"}, true)) return;
   string         Aggreg  = req.Param("Aggreg");
   uint64_t       From    = UINT64_MAX;
   uint64_t       To      = 0;

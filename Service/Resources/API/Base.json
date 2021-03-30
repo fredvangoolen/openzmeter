@@ -27,8 +27,11 @@
       "200Response" : {
         "description": "The method executed without error",
         "content": {
-          "text/plain": {
-            "schema": { "type": "string", "example": " " }
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "example": {}
+            }
           }
         }
       },

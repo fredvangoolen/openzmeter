@@ -212,7 +212,7 @@ void AnalyzerSoft::Thread() {
         pAggreg200MS.setCurrentTHD(3, (THD / pAggreg200MS.CurrentHarmonic(3, 0)) * 100.0);
       }
       pAggreg200MS.setFlag(pEvents.Wait());
-      if(pWorkingBlock->Sequence() < 10) {
+      if(pWorkingBlock->Sequence() < 100) {
         if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pWorkingBlock->Sequence());
       } else {
@@ -324,7 +324,7 @@ void AnalyzerSoft::HandleAction(const string &name, const json &params) {
     try {
       Config(CheckConfig(params, pMode, true));
     } catch(const string &err) {
-      return LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s) fails", pSerial.c_str(), name.c_str());
+      return LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s -> %s) fails", pSerial.c_str(), name.c_str(), err.c_str());
     }
   } else {
     HTTPRequest Req(params);
@@ -341,7 +341,7 @@ void AnalyzerSoft::HandleAction(const string &name, const json &params) {
       LogFile::Warning("AnayzerSoft receive invalid action from AnalyzerRemote '%s' (%s)", pSerial.c_str(), name.c_str());
       return;
     }
-    if(Req.Status() != HTTP_OK) LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s) fails", pSerial.c_str(), name.c_str());
+    if(Req.Status() != HTTP_OK) LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s -> %s) fails", pSerial.c_str(), name.c_str(), Req.ErrorBody().c_str());
   }
 }
 //----------------------------------------------------------------------------------------------------------------------
