@@ -16,7 +16,7 @@
 #pragma once
 #include <map>
 #include "Analyzer.h"
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
@@ -26,31 +26,31 @@ class AnalyzerManager final {
     static map<string, Analyzer*>  pAnalyzers;       //Initiated by analyzer
     static pthread_rwlock_t        pAnalyzersLock;   //Control access to critical sections
   private :
-    static void CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response));
-    static void GetAnalyzersCallback(const json &params, Response &response);
-    static void GetAnalyzerCallback(const json &params, Response &response);
-    static void SetAnalyzerCallback(const json &params, Response &response);
-    static void GetStatusCallback(const json &params, Response &response);
-    static void GetSeriesCallback(const json &params, Response &response);
-    static void GetSeriesNowCallback(const json &params, Response &response);
-    static void GetCostsCallback(const json &params, Response &response);
-    static void GetBillsCallback(const json &params, Response &response);
-    static void GetWaveStream(const json &params, Response &response);
-    static void GetSeriesRangeCallback(const json &params, Response &response);
-    static void DelSeriesRangeCallback(const json &params, Response &response);
-    static void GetEventsCallback(const json &params, Response &response);
-    static void GetEventsRangeCallback(const json &params, Response &response);
-    static void DelEventsRangeCallback(const json &params, Response &response);
-    static void GetEventCallback(const json &params, Response &response);
-    static void SetEventCallback(const json &params, Response &response);
-    static void DelEventCallback(const json &params, Response &response);
-    static void TestAlarmCallback(const json &params, Response &response);
-    static void GetAlarmsCallback(const json &params, Response &response);
-    static void GetAlarmsRangeCallback(const json &params, Response &response);
-    static void DelAlarmCallback(const json &params, Response &response);
-    static void SetAlarmCallback(const json &params, Response &response);
-    static void DelAlarmsRangeCallback(const json &params, Response &response);
-    static void SetRemoteCallback(const json &params, Response &response);
+    static void CallAnalyzerFunction(HTTPRequest &req, void (Analyzer::*method)(HTTPRequest &req));
+    static void GetAnalyzersCallback(HTTPRequest &req);
+    static void GetAnalyzerCallback(HTTPRequest &req);
+    static void SetAnalyzerCallback(HTTPRequest &req);
+    static void GetStatusCallback(HTTPRequest &req);
+    static void GetSeriesCallback(HTTPRequest &req);
+    static void GetSeriesNowCallback(HTTPRequest &req);
+    static void GetCostsCallback(HTTPRequest &req);
+    static void GetBillsCallback(HTTPRequest &req);
+    static void GetWaveStream(HTTPRequest &req);
+    static void GetSeriesRangeCallback(HTTPRequest &req);
+    static void DelSeriesRangeCallback(HTTPRequest &req);
+    static void GetEventsCallback(HTTPRequest &req);
+    static void GetEventsRangeCallback(HTTPRequest &req);
+    static void DelEventsRangeCallback(HTTPRequest &req);
+    static void GetEventCallback(HTTPRequest &req);
+    static void SetEventCallback(HTTPRequest &req);
+    static void DelEventCallback(HTTPRequest &req);
+    static void TestAlarmCallback(HTTPRequest &req);
+    static void GetAlarmsCallback(HTTPRequest &req);
+    static void GetAlarmsRangeCallback(HTTPRequest &req);
+    static void DelAlarmCallback(HTTPRequest &req);
+    static void SetAlarmCallback(HTTPRequest &req);
+    static void DelAlarmsRangeCallback(HTTPRequest &req);
+    static void SetRemoteCallback(HTTPRequest &req);
   public :
     static bool AddAnalyzer(Analyzer *analyzer);
     static bool DelAnalyzer(const string &serial);

@@ -14,10 +14,9 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "cpp-httplib/httplib.h"
+#include "HTTPRequest.h"
 #include "nlohmann/json.hpp"
 //----------------------------------------------------------------------------------------------------------------------
-using namespace httplib;
 using namespace std;
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
@@ -25,13 +24,13 @@ class AnalyzerEvents {
   protected :
     const string  pSerial;
   public :
-    void GetEvents(const json &params, Response &response) const;
-    void SetEvents(const json &params, Response &response) const;
-    void SetEvent(const json &params, Response &response) const;
-    void DelEvent(const json &params, Response &response) const;
-    void GetEvent(const json &params, Response &response) const;
-    void GetEventsRange(const json &params, Response &response) const;
-    void DelEventsRange(const json &params, Response &response) const;
+    void GetEvents(HTTPRequest &req) const;
+    void SetEvents(HTTPRequest &req) const;
+    void SetEvent(HTTPRequest &req) const;
+    void DelEvent(HTTPRequest &req) const;
+    void GetEvent(HTTPRequest &req) const;
+    void GetEventsRange(HTTPRequest &req) const;
+    void DelEventsRange(HTTPRequest &req) const;
   public :
     AnalyzerEvents(const string &id);
     virtual ~AnalyzerEvents();

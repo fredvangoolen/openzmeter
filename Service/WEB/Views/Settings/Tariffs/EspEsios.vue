@@ -39,7 +39,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setESIOS', this.Config).then(
+        this.Post('setESIOS', this.Config).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');

@@ -94,7 +94,7 @@
     methods: {
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post((this.user == null) ? 'addUser' : 'setUser', this.User).then(
+        this.Post((this.user == null) ? 'addUser' : 'setUser', this.User).then(
           (result) => {
             this.ShowSpinner = false;
             this.$emit('close');

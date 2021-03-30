@@ -28,10 +28,10 @@ class DeviceManager final {
     static map<string, Device*> pDevices;         //Initiated by devices, cleared on destroy
     static pthread_rwlock_t     pDevicesLock;     //Control access to critical sections
   private :
-    static void CallDeviceFunction(const json &params, Response &response, void (Device::*method)(const json &params, Response &response));
-    static void GetDevicesCallback(const json &params, Response &response);
-    static void GetDeviceCallback(const json &params, Response &response);
-    static void SetDeviceCallback(const json &params, Response &response);
+    static void CallDeviceFunction(HTTPRequest &req, void (Device::*method)(HTTPRequest &req));
+    static void GetDevicesCallback(HTTPRequest &req);
+    static void GetDeviceCallback(HTTPRequest &req);
+    static void SetDeviceCallback(HTTPRequest &req);
   public :
     static void AddDriver(void (*func)());
     static void AddDevice(Device *dev);
@@ -40,6 +40,3 @@ class DeviceManager final {
     ~DeviceManager();
 };
 //----------------------------------------------------------------------------------------------------------------------
-
-// Module OpenAPI documentation ========================================================================================
-//======================================================================================================================

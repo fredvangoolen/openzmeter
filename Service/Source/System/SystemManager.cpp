@@ -19,6 +19,7 @@
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
 #include "MessageLoop.h"
+#include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 json            SystemManager::pStatus = json::object();
 pthread_mutex_t SystemManager::pMutex  = PTHREAD_MUTEX_INITIALIZER;
@@ -143,27 +144,19 @@ string SystemManager::SystemLog() {
   return "";
 #endif
 }
-void SystemManager::GetSystemCallback(const json &params, Response &response) {
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  vector<string> Series;
-  for(auto &Serie : params["Series"]) {
-    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    Series.push_back(Serie);
-  }
+void SystemManager::GetSystemCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamSet("Series", {"Log", "Status", "SystemLog"})) return;
   json Result = json::object();
-  for(auto &Serie : Series) {
+  for(auto &Serie : req.Param("Series")) {
     if(Serie == "Log") {
       Result["Log"] = LogFile::ToJSON();
     } else if(Serie == "Status") {
       Result["Status"] = SystemManager::Status();
     } else if(Serie == "SystemLog") {
       Result["SystemLog"] = SystemManager::SystemLog();
-    } else {
-      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
     }
   }
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  req.Success(Result);
 }
 // ---------------------------------------------------------------------------------------------------------------------

@@ -14,15 +14,15 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class TariffManager final {
   private :
-    static void GetTariffsCallback(const json &params, Response &response);
-    static void GetTariffCallback(const json &params, Response &response);
-    static void SetTariffCallback(const json &params, Response &response);
-    static void DelTariffCallback(const json &params, Response &response);
-    static void AddTariffCallback(const json &params, Response &response);
+    static void GetTariffsCallback(HTTPRequest &req);
+    static void GetTariffCallback(HTTPRequest &req);
+    static void SetTariffCallback(HTTPRequest &req);
+    static void DelTariffCallback(HTTPRequest &req);
+    static void AddTariffCallback(HTTPRequest &req);
 //    static void EvalRatesCallback(const json &params, Response &response);
   public :
     TariffManager();

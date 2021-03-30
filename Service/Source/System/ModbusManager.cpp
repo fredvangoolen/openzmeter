@@ -18,6 +18,7 @@
 #include "ConfigFile.h"
 #include "ModbusManager.h"
 #include "AnalyzerManager.h"
+#include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 pthread_mutex_t                ModbusManager::pMutex       = PTHREAD_MUTEX_INITIALIZER;
 pthread_t                      ModbusManager::pThread      = 0;
@@ -86,18 +87,16 @@ void ModbusManager::Config(const json &config) {
   }
   pthread_mutex_unlock(&pMutex);
 }
-void ModbusManager::GetModbusTCP(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void ModbusManager::GetModbusTCP(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/ModbusTCP");
-  HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
+  req.Success(Config);
 }
-void ModbusManager::SetModbusTCP(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Enabled") == false) || (params["Enabled"].is_boolean() == false)) return HTTPServer::FillResponse(response, "'Enabled' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Port") == false) || (params["Port"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'Port' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Analyzers") == false) || (params["Analyzers"].is_array() == false)) return HTTPServer::FillResponse(response, "'Analyzers' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  Config(CheckConfig(params));
-  HTTPServer::FillResponse(response, "", "application/json", HTTP_OK);
+void ModbusManager::SetModbusTCP(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamBool("Enabled") || !req.CheckParamNumber("Port") || !req.CheckParamArrayString("Analyzers")) return;
+  Config(CheckConfig(req.Params()));
+  req.Success(json::object());
 }
 void *ModbusManager::Thread(void *) {
   return NULL;

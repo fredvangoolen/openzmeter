@@ -44,8 +44,8 @@ class DeviceVirtual final : public Device {
     uint32_t AnalyzersCount();
     void     ClearAnalyzers();
     void     Config(const json &config);
-    void     GetDevice(const json &params, Response &response) override;
-    void     SetDevice(const json &params, Response &response) override;
+    void     GetDevice(HTTPRequest &req) override;
+    void     SetDevice(HTTPRequest &req) override;
   public :
     ~DeviceVirtual();
 };

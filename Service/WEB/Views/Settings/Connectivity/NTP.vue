@@ -47,10 +47,10 @@
     methods: {
       Refresh: function() {
         clearTimeout(this.Timer);
-        this.$http.post('getNTP', { }).then(
+        this.Post('getNTP', { }).then(
           (result) => {
             if(this.Timer == null) return;
-            this.Details = 'Local timezone : ' + moment.tz.zone(moment.tz.guess()).name + '\nTime           : ' + moment(result.body.Time).format('DD/MM/YYYY HH:mm:ss');
+            this.Details = 'Local timezone : ' + moment.tz.zone(moment.tz.guess()).name + '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');
             this.Timer = setTimeout(this.Refresh, 500);
           },
           (fail) => {
@@ -62,7 +62,7 @@
       },
       Save: function(value) {
         this.ShowSpinner = true;
-        this.$http.post('setNTP', { Enabled: this.Config.Enabled, Server: this.Config.Server, Time: moment().valueOf() }).then(
+        this.Post('setNTP', { Enabled: this.Config.Enabled, Server: this.Config.Server, Time: moment().valueOf() }).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');

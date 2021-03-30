@@ -27,8 +27,11 @@
       "200Response" : {
         "description": "The method executed without error",
         "content": {
-          "text/plain": {
-            "schema": { "type": "string", "example": " " }
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "example": {}
+            }
           }
         }
       },
@@ -86,9 +89,9 @@
           "content": {
             "application/json": {
               "schema": {
-                "required": [ "UserName", "Password" ],
+                "required": [ "UserName", "Password", "UpdateLastLogin" ],
                 "example": {
-                  "UserName": "admin",
+                  "User": "admin",
                   "Password": "admin",
                   "UpdateLastLogin": true
                 },

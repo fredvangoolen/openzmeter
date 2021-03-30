@@ -55,12 +55,12 @@
         for(var month = 0; month < 12; month++) {
           var To = moment.tz(this.analyzer.TimeZone).year(val).month(month).endOf('month').valueOf();
           var From = moment.tz(this.analyzer.TimeZone).year(val).month(month).startOf('month').valueOf();
-          this.$http.post('getCosts', { From: From, To: To, Series: ['Active_Energy', 'Period'], Analyzer: this.analyzer.Analyzer, Group: 0 }).then(
+          this.Post('getCosts', { From: From, To: To, Series: ['Active_Energy', 'Period'], Analyzer: this.analyzer.Analyzer, Group: 0 }).then(
             (result) => {
               if(Count == 0) {
-                Data = result.data;
+                Data = result;
               } else {
-                Data = Data.concat(result.data.slice(1));
+                Data = Data.concat(result.slice(1));
               }
               Count++;
               this.Progress = (Count / 12.0) * 100.0;

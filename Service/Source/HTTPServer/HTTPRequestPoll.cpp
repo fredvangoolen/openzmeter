@@ -45,7 +45,7 @@ HTTPRequestWorker *HTTPRequestPoll::PopWorker() {
     return Tmp;
   } else {
     pthread_mutex_unlock(&pMutex);
-    HTTPRequestWorker *Tmp = new HTTPRequestWorker(this);
+    HTTPRequestWorker *Tmp = new HTTPRequestWorker(*this);
     return Tmp;
   }
 }

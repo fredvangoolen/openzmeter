@@ -11,13 +11,13 @@
           </div>
         </template>
       </vuetable>
-      <bluetooth :settings.sync="Modules.Bluetooth.Settings" v-if="View=='Bluetooth'" @close="View=null"></bluetooth>
-      <wifi :settings.sync="Modules.Wifi.Settings" v-if="View=='Wifi'" @close="View=null"></wifi>
-      <ethernet :settings.sync="Modules.Ethernet.Settings" v-if="View=='Ethernet'" @close="View=null"></ethernet>
-      <ntp :settings.sync="Modules.NTP.Settings" v-if="View=='NTP'" @close="View=null"></ntp>
-      <telegram :settings.sync="Modules.Telegram.Settings" v-if="View=='Telegram'" @close="View=null"></telegram>
-      <modbus-tcp :settings.sync="Modules.ModbusTCP.Settings" v-if="View=='ModbusTCP'" @close="View=null"></modbus-tcp>
-      <vpn :settings.sync="Modules.OpenVPN.Settings" v-if="View=='OpenVPN'" @close="View=null"></vpn>
+      <bluetooth :settings.sync="Modules.Bluetooth.Settings" v-if="View=='Bluetooth'" @close="Update"></bluetooth>
+      <wifi :settings.sync="Modules.Wifi.Settings" v-if="View=='Wifi'" @close="Update"></wifi>
+      <ethernet :settings.sync="Modules.Ethernet.Settings" v-if="View=='Ethernet'" @close="Update"></ethernet>
+      <ntp :settings.sync="Modules.NTP.Settings" v-if="View=='NTP'" @close="Update"></ntp>
+      <telegram :settings.sync="Modules.Telegram.Settings" v-if="View=='Telegram'" @close="Update"></telegram>
+      <modbus-tcp :settings.sync="Modules.ModbusTCP.Settings" v-if="View=='ModbusTCP'" @close="Update"></modbus-tcp>
+      <vpn :settings.sync="Modules.OpenVPN.Settings" v-if="View=='OpenVPN'" @close="Update"></vpn>
     </div>
   </div>
 </template>
@@ -60,20 +60,24 @@
       }
     },
     created: function() {
-      this.LoadBluetooth(false);
-      this.LoadWIFI(false);
-      this.LoadEthernet(false);
-      this.LoadNTP(false);
-      this.LoadTelegram(false);
-      this.LoadModbusTCP(false);
-      this.LoadOpenVPN(false);
+      this.Update();
     },
     methods: {
+      Update: function() {
+        this.View = null;
+        this.LoadBluetooth(false);
+        this.LoadWIFI(false);
+        this.LoadEthernet(false);
+        this.LoadNTP(false);
+        this.LoadTelegram(false);
+        this.LoadModbusTCP(false);
+        this.LoadOpenVPN(false);
+      },
       EnabledStatus: function(value) {
         return (value === true) ? '&#9635;' : '&#9633;';
       },
       LoadOpenVPN: function(show) {
-        this.$http.post('getVPN', { }).then(
+        this.Post('getVPN', { Full: show }).then(
           (result) => {
             this.Modules.OpenVPN.Settings = result.body;
             if(show) this.View = 'OpenVPN';
@@ -82,54 +86,54 @@
         );
       },
       LoadBluetooth: function(show) {
-        this.$http.post('getBluetooth', { }).then(
+        this.Post('getBluetooth', { }).then(
           (result) => {
-            this.Modules.Bluetooth.Settings = result.body;
+            this.Modules.Bluetooth.Settings = result;
             if(show) this.View = 'Bluetooth';
           },
           (fail) => { }
         );
       },
       LoadWIFI: function(show) {
-        this.$http.post('getWIFI', { }).then(
+        this.Post('getWIFI', { Full: show }).then(
           (result) => {
-            this.Modules.Wifi.Settings = result.body;
+            this.Modules.Wifi.Settings = result;
             if(show) this.View = 'Wifi';
           },
           (fail) => { }
         );
       },
       LoadEthernet: function(show) {
-        this.$http.post('getEthernet', {  }).then(
+        this.Post('getEthernet', {  }).then(
           (result) => {
-            this.Modules.Ethernet.Settings = result.body;
+            this.Modules.Ethernet.Settings = result;
             if(show) this.View = 'Ethernet';
           },
           (fail) => { }
         );
       },
       LoadNTP: function(show) {
-        this.$http.post('getNTP', { }).then(
+        this.Post('getNTP', { }).then(
           (result) => {
-            this.Modules.NTP.Settings = result.body;
+            this.Modules.NTP.Settings = result;
             if(show) this.View = 'NTP';
           },
           (fail) => { }
         );
       },
       LoadTelegram: function(show) {
-        this.$http.post('getTelegram', { }).then(
+        this.Post('getTelegram', { }).then(
           (result) => {
-            this.Modules.Telegram.Settings = result.body;
+            this.Modules.Telegram.Settings = result;
             if(show) this.View = 'Telegram';
           },
           (fail) => { }
         );
       },
       LoadModbusTCP: function(show) {
-        this.$http.post('getModbusTCP', { }).then(
+        this.Post('getModbusTCP', { }).then(
           (result) => {
-            this.Modules.ModbusTCP.Settings = result.body;
+            this.Modules.ModbusTCP.Settings = result;
             if(show) this.View = 'ModbusTCP';
           },
           (fail) => { }

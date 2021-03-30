@@ -131,7 +131,7 @@
       },
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setModbusTCP', this.Config).then(
+        this.Post('setModbusTCP', this.Config).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');

@@ -119,10 +119,10 @@
       },
       RMS: function(evt) {
         this.ShowSpinner = true;
-        this.$http.post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Samples: 'RMS' }).then(
+        this.Post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Samples: 'RMS' }).then(
           (result) => {
             this.ShowSpinner = false;
-            this.Event = Object.freeze(result.body);
+            this.Event = Object.freeze(result);
             this.View = 'RMS';
           },
           (fail) => {
@@ -132,10 +132,10 @@
       },
       RAW: function(evt) {
         this.ShowSpinner = true;
-        this.$http.post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Samples: 'RAW' }).then(
+        this.Post('getEvent', { StartTime: evt.StartTime, Analyzer: this.analyzer.Analyzer, Samples: 'RAW' }).then(
           (result) => {
             this.ShowSpinner = false;
-            this.Event = Object.freeze(result.body);
+            this.Event = Object.freeze(result);
             this.View = 'RAW';
           },
           (fail) => {

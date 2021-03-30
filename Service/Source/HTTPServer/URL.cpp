@@ -52,9 +52,6 @@ URL::URL(const string &url) {
   if(pathStart != uriEnd) pPath = string(pathStart, queryStart);
   if(queryStart != uriEnd) pQuery = string(queryStart, url.end());
 }
-URL::Protocol_t URL::Protocol() const {
-  return Protocol_t::UNKNOWN;
-}
 uint16_t URL::Port() const {
   return pPort;
 }

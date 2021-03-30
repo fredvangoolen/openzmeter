@@ -60,7 +60,7 @@
     methods: {
       Save: function () {
         this.Loading = true;
-        this.$http.post('setDevice', this.Settings).then(
+        this.Post('setDevice', this.Settings).then(
           (result) => { this.$emit('close', true); },
           (fail) => {
             this.Loading = false;

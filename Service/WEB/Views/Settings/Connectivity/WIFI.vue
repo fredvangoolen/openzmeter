@@ -102,10 +102,10 @@
     methods: {
       Refresh: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
-        Promise.all([this.$http.post('getWIFI', { }), this.$http.post('getSystem', { Series: ['SystemLog']})]).then(
+        Promise.all([this.Post('getWIFI', { }), this.Post('getSystem', { Series: ['SystemLog']})]).then(
           (result) => {
-            this.Details = 'Device IP address   : ' + result[0].body.Status.IP + ' (' + result[0].body.Status.IPMode + ')\nDNS servers         : ' + result[0].body.Status.DNS.join(', ') + '\nDefault gateway     : ' + result[0].body.Status.Gateway + '\nCurrent WIFI channel: ' + result[0].body.Status.Channel + ' (Signal: ' + result[0].body.Status.Quality + '%)';
-            this.SysMessages = result[1].body.SystemLog;
+            this.Details = 'Device IP address   : ' + result[0].Status.IP + ' (' + result[0].Status.IPMode + ')\nDNS servers         : ' + result[0].Status.DNS.join(', ') + '\nDefault gateway     : ' + result[0].Status.Gateway + '\nCurrent WIFI channel: ' + result[0].Status.Channel + ' (Signal: ' + result[0].Status.Quality + '%)';
+            this.SysMessages = result[1].SystemLog;
             this.Timer = setTimeout(this.Refresh, 5000);
           },
           (fail) => { this.Timer = setTimeout(this.Refresh, 5000); }
@@ -115,9 +115,9 @@
         if(this.View != 'Scan') this.ShowSpinner = true;
         this.View = 'Scan';
         if(this.Timer != null) clearTimeout(this.Timer);
-        this.$http.post('scanWIFI', { }).then(
+        this.Post('scanWIFI', { }).then(
           (result) => {
-            this.WifiList = result.data;
+            this.WifiList = result;
             this.ShowSpinner = false;
             this.Timer = setTimeout(this.Scan, 5000);
           },
@@ -142,7 +142,7 @@
       },
       Apply: function() {
         this.ShowSpinner = true;
-        this.$http.post('setWIFI', this.Config).then(
+        this.Post('setWIFI', this.Config).then(
           (result) => { this.ShowSpinner = false; },
           (fail) => { this.ShowSpinner = false; }
         );
@@ -150,7 +150,7 @@
       Save: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
         this.ShowSpinner = true;
-        this.$http.post('setWIFI', this.Config).then(
+        this.Post('setWIFI', this.Config).then(
           (result) => {
             this.$emit('update:settings', this.Config);
             this.$emit('close');

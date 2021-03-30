@@ -14,14 +14,15 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
+// ---------------------------------------------------------------------------------------------------------------------
 class VPNManager final {
 #ifdef OPENWRT
   private :
     static constexpr char *pFileName = (char*)"/etc/openvpn/openZmeter.conf";
   private :
-    static void     GetVPNCallback(const json &params, Response &response);
-    static void     SetVPNCallback(const json &params, Response &response);
+    static void GetVPNCallback(HTTPRequest &req);
+    static void SetVPNCallback(HTTPRequest &req);
 #endif
   public :
     VPNManager();

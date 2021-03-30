@@ -2415,7 +2415,7 @@ inline bool can_compress_content_type(const std::string &content_type) {
          content_type == "application/javascript" ||
          content_type == "application/json" ||
          content_type == "application/xml" ||
-         content_type == "application/xhtml+xml";
+         content_type == "application/xhtml+xml" || content_type == "application/cbor";
 }
 
 enum class EncodingType { None = 0, Gzip, Brotli };
@@ -2483,7 +2483,7 @@ public:
     strm_.zfree = Z_NULL;
     strm_.opaque = Z_NULL;
 
-    is_valid_ = deflateInit2(&strm_, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 31, 8,
+    is_valid_ = deflateInit2(&strm_, Z_BEST_COMPRESSION, Z_DEFLATED, 31, 8,
                              Z_DEFAULT_STRATEGY) == Z_OK;
   }
 

@@ -82,7 +82,7 @@
       },
       Save: function() {
         this.ShowSpinner = true;
-        this.$http.post('setAnalyzer', this.Analyzer).then(
+        this.Post('setAnalyzer', this.Analyzer).then(
           (result) => { this.$emit('close', this.Analyzer); },
           (fail) => {
             this.ShowSpinner = false;

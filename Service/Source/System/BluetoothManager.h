@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 #ifdef OPENWRT
   #include <pthread.h>
   #include <iwlib.h>
@@ -40,8 +40,8 @@ class BluetoothManager final {
     static void    *Thread(void *params);
 #endif
   private :
-    static void     GetBluetoothCallback(const json &params, Response &response);
-    static void     SetBluetoothCallback(const json &params, Response &response);
+    static void     GetBluetoothCallback(HTTPRequest &req);
+    static void     SetBluetoothCallback(HTTPRequest &req);
   public :
     static bool Enabled();
   public :

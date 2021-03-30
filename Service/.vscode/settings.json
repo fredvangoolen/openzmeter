@@ -76,7 +76,8 @@
       "thread": "cpp",
       "typeindex": "cpp",
       "typeinfo": "cpp",
-      "variant": "cpp"
+      "variant": "cpp",
+      "cerrno": "cpp"
     },
     "search.exclude": {
         "**/.git": true,

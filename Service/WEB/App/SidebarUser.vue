@@ -31,13 +31,14 @@
     methods: {
       GetUser: function() {
         this.ShowDialog = false;
-        this.$http.post('getUser', { User: localStorage.getItem("UserName") }).then(
-          (result) => { this.$emit('update:user', result.data); },
-          (fail) => { this.Logout(); }
+        this.Post('getUser', { User: localStorage.getItem("UserName") }).then(
+          (result) => this.$emit('update:user', result),
+          (error) => this.Logout()
+
         );
       },
       Logout: function() {
-        this.$http.post('logOut', {}).then(
+        this.Post('logOut', {}).then(
           (result) => { location.reload(); },
           (fail) => { location.reload(); }
         );

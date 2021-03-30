@@ -45,6 +45,6 @@ class AnalyzerSoftAlarms final : public AnalyzerAlarms {
     void ConfigNominals(const float nominalVoltage, const float nominalFreq);
     void Run(const string &name, AnalyzerSoftAggreg &params);
     void Wait();
-    void TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS &aggreg) const;
+    void TestAlarm(HTTPRequest &req, AnalyzerSoftAggreg200MS &aggreg) const;
 };
 // ---------------------------------------------------------------------------------------------------------------------
