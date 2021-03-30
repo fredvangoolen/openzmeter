@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <queue>
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 #include "Analyzer.h"
 #include "AnalyzerAccess.h"
 #include "AnalyzerSeries.h"
@@ -39,32 +39,32 @@ class AnalyzerRemote : public Analyzer {
     AnalyzerRemoteNow          pNow;                     //Manage temporal data
     AnalyzerRemoteActions      pActions;                 //Manage pending actions
   private :
-    void GetAnalyzer(const json &params, Response &response) override;
-    void SetAnalyzer(const json &params, Response &response) override;
-    void GetStatus(const json &params, Response &response) override;
-    void GetSeries(const json &params, Response &response) override;
-    void SetSeries(const json &params, Response &response) override;
-    void GetSeriesNow(const json &params, Response &response) override;
-    void GetWaveStream(const json &params, Response &response) override;
-    void GetSeriesRange(const json &params, Response &response) override;
-    void DelSeriesRange(const json &params, Response &response) override;
-    void GetEvents(const json &params, Response &response) override;
-    void SetEvents(const json &params, Response &response) override;
-    void GetEventsRange(const json &params, Response &response) override;
-    void DelEventsRange(const json &params, Response &response) override;
-    void GetEvent(const json &params, Response &response) override;
-    void SetEvent(const json &params, Response &response) override;
-    void DelEvent(const json &params, Response &response) override;
-    void GetCosts(const json &params, Response &response) override;
-    void GetBills(const json &params, Response &response) override;
-    void TestAlarm(const json &params, Response &response) override;
-    void GetAlarms(const json &params, Response &response) override;
-    void SetAlarms(const json &params, Response &response) override;
-    void GetAlarmsRange(const json &params, Response &response) override;
-    void DelAlarm(const json &params, Response &response) override;
-    void SetAlarm(const json &params, Response &response) override;
-    void DelAlarmsRange(const json &params, Response &response) override;
-    void SetRemote(const json &params, Response &response) override;
+    void GetAnalyzer(HTTPRequest &req) override;
+    void SetAnalyzer(HTTPRequest &req) override;
+    void GetStatus(HTTPRequest &req) override;
+    void GetSeries(HTTPRequest &req) override;
+    void SetSeries(HTTPRequest &req) override;
+    void GetSeriesNow(HTTPRequest &req) override;
+    void GetWaveStream(HTTPRequest &req) override;
+    void GetSeriesRange(HTTPRequest &req) override;
+    void DelSeriesRange(HTTPRequest &req) override;
+    void GetEvents(HTTPRequest &req) override;
+    void SetEvents(HTTPRequest &req) override;
+    void GetEventsRange(HTTPRequest &req) override;
+    void DelEventsRange(HTTPRequest &req) override;
+    void GetEvent(HTTPRequest &req) override;
+    void SetEvent(HTTPRequest &req) override;
+    void DelEvent(HTTPRequest &req) override;
+    void GetCosts(HTTPRequest &req) override;
+    void GetBills(HTTPRequest &req) override;
+    void TestAlarm(HTTPRequest &req) override;
+    void GetAlarms(HTTPRequest &req) override;
+    void SetAlarms(HTTPRequest &req) override;
+    void GetAlarmsRange(HTTPRequest &req) override;
+    void DelAlarm(HTTPRequest &req) override;
+    void SetAlarm(HTTPRequest &req) override;
+    void DelAlarmsRange(HTTPRequest &req) override;
+    void SetRemote(HTTPRequest &req) override;
     void SetRemote(const map<string, string> &params, Response &response);
   private :
     void HandleAction(const string &name, const json &params);

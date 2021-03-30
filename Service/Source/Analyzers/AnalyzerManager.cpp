@@ -97,125 +97,119 @@ bool AnalyzerManager::HandleModbus(uint8_t *buff, const string &serial, const ui
   pthread_rwlock_unlock(&pAnalyzersLock);
   return Ret;
 }
-void AnalyzerManager::CallAnalyzerFunction(const json &params, Response &response, void (Analyzer::*method)(const json &params, Response &response)) {
-  if((params.contains("Analyzer") == false) || (params["Analyzer"].is_string() == false)) return HTTPServer::FillResponse(response, "'Analyzer' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string Serial = params["Analyzer"];
+void AnalyzerManager::CallAnalyzerFunction(HTTPRequest &req, void (Analyzer::*method)(HTTPRequest &req)) {
+  if(!req.CheckParamString("Analyzer")) return;
+  string Serial = req.Param("Analyzer");
   pthread_rwlock_rdlock(&pAnalyzersLock);
   auto Analyzer = pAnalyzers.find(Serial);
   if(Analyzer != pAnalyzers.end()) {
-    (Analyzer->second->*method)(params, response);
+    (Analyzer->second->*method)(req);
   } else {
-    string UserName = params["UserName"];
+    string UserName = req.UserName();
     LogFile::Warning("User '%s' request access to not defined analyzer '%s'", UserName.c_str(), Serial.c_str());
-    HTTPServer::FillResponse(response, "Analyzer not found", "text/plain", HTTP_BAD_REQUEST);
+    req.Error("Analyzer not found", HTTP_BAD_REQUEST);
   }
   pthread_rwlock_unlock(&pAnalyzersLock);
 }
-void AnalyzerManager::GetAnalyzersCallback(const json &params, Response &response) {
-  string UserName = params["UserName"];
-  auto Func = [UserName](uint64_t offset, DataSink &sink) -> bool {
-    uint32_t Items = 0;
-    sink.os << "[\n  ";
+void AnalyzerManager::GetAnalyzersCallback(HTTPRequest &req) {
+  string UserName = req.UserName();
+  auto Func = [UserName](function<bool(json&)> Write) {
     if(UserName != "admin") {
       Database DB;
       DB.ExecSentenceAsyncResult("SELECT serial, read, write, config FROM permissions WHERE username = " + DB.Bind(UserName) + " AND (read = true OR write = true OR config = true)");
-      while(DB.FecthRow() && sink.is_writable()) {
+      while(DB.FecthRow()) {
         pthread_rwlock_rdlock(&pAnalyzersLock);
         auto Tmp = pAnalyzers.find(DB.ResultString("serial"));
         if((Tmp == pAnalyzers.end()) || (Tmp->second->State() == Analyzer::UNCONFIGURED)) continue;
         json Analyzer = Tmp->second->GetJSONDescriptor();
+        pthread_rwlock_unlock(&pAnalyzersLock);
         Analyzer["Read"]   = DB.ResultBool("read");
         Analyzer["Write"]  = DB.ResultBool("write");
         Analyzer["Config"] = DB.ResultBool("config");
-        sink.os << ((Items++ != 0) ? ",\n  " : "") + Analyzer.dump();
-        pthread_rwlock_unlock(&pAnalyzersLock);
+        if(Write(Analyzer) == false) break;
       }
     } else {
       pthread_rwlock_rdlock(&pAnalyzersLock);
       for(auto &Tmp : pAnalyzers) {
         if(Tmp.second->State() == Analyzer::UNCONFIGURED) continue;
-        if(sink.is_writable() == false) break;
         json Analyzer = Tmp.second->GetJSONDescriptor();
         Analyzer["Read"]   = true;
         Analyzer["Write"]  = true;
         Analyzer["Config"] = true;
-        sink.os << ((Items++ != 0) ? ",\n  " : "") + Analyzer.dump();
+        if(Write(Analyzer) == false) break;
       }
       pthread_rwlock_unlock(&pAnalyzersLock);
     }
-    sink.os << "\n]";
-    sink.done();
-    return true;
   };
-  response.set_chunked_content_provider("application/json", Func);
+  req.SuccessStreamArray(Func);
 }
-void AnalyzerManager::GetAnalyzerCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetAnalyzer);
+void AnalyzerManager::GetAnalyzerCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetAnalyzer);
 }
-void AnalyzerManager::SetAnalyzerCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::SetAnalyzer);
+void AnalyzerManager::SetAnalyzerCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::SetAnalyzer);
 }
-void AnalyzerManager::GetStatusCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetStatus);
+void AnalyzerManager::GetStatusCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetStatus);
 }
-void AnalyzerManager::GetSeriesCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetSeries);
+void AnalyzerManager::GetSeriesCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetSeries);
 }
-void AnalyzerManager::GetSeriesNowCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetSeriesNow);
+void AnalyzerManager::GetSeriesNowCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetSeriesNow);
 }
-void AnalyzerManager::GetCostsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetCosts);
+void AnalyzerManager::GetCostsCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetCosts);
 }
-void AnalyzerManager::GetBillsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetBills);
+void AnalyzerManager::GetBillsCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetBills);
 }
-void AnalyzerManager::GetWaveStream(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetWaveStream);
+void AnalyzerManager::GetWaveStream(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetWaveStream);
 }
-void AnalyzerManager::GetSeriesRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetSeriesRange);
+void AnalyzerManager::GetSeriesRangeCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetSeriesRange);
 }
-void AnalyzerManager::DelSeriesRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::DelSeriesRange);
+void AnalyzerManager::DelSeriesRangeCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::DelSeriesRange);
 }
-void AnalyzerManager::GetEventsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetEvents);
+void AnalyzerManager::GetEventsCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetEvents);
 }
-void AnalyzerManager::GetEventsRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetEventsRange);
+void AnalyzerManager::GetEventsRangeCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetEventsRange);
 }
-void AnalyzerManager::DelEventsRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::DelEventsRange);
+void AnalyzerManager::DelEventsRangeCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::DelEventsRange);
 }
-void AnalyzerManager::GetEventCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetEvent);
+void AnalyzerManager::GetEventCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetEvent);
 }
-void AnalyzerManager::SetEventCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::SetEvent);
+void AnalyzerManager::SetEventCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::SetEvent);
 }
-void AnalyzerManager::DelEventCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::DelEvent);
+void AnalyzerManager::DelEventCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::DelEvent);
 }
-void AnalyzerManager::TestAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::TestAlarm);
+void AnalyzerManager::TestAlarmCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::TestAlarm);
 }
-void AnalyzerManager::GetAlarmsCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetAlarms);
+void AnalyzerManager::GetAlarmsCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetAlarms);
 }
-void AnalyzerManager::GetAlarmsRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::GetAlarmsRange);
+void AnalyzerManager::GetAlarmsRangeCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetAlarmsRange);
 }
-void AnalyzerManager::DelAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::DelAlarm);
+void AnalyzerManager::DelAlarmCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::DelAlarm);
 }
-void AnalyzerManager::SetAlarmCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::SetAlarm);
+void AnalyzerManager::SetAlarmCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::SetAlarm);
 }
-void AnalyzerManager::DelAlarmsRangeCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::DelAlarmsRange);
+void AnalyzerManager::DelAlarmsRangeCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::DelAlarmsRange);
 }
-void AnalyzerManager::SetRemoteCallback(const json &params, Response &response) {
-  CallAnalyzerFunction(params, response, &Analyzer::SetRemote);
+void AnalyzerManager::SetRemoteCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::SetRemote);
 }
 //----------------------------------------------------------------------------------------------------------------------

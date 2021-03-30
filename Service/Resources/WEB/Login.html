@@ -179,7 +179,7 @@
             }
           }
         };
-        Request.send(JSON.stringify({ UserName: document.getElementById('username').value, Password: document.getElementById('password').value }));
+        Request.send(JSON.stringify({ User: document.getElementById('username').value, Password: document.getElementById('password').value, UpdateLastLogin: true }));
       }
       document.getElementById('button').onclick = SendLogin;
       window.addEventListener("keyup", function(event) {

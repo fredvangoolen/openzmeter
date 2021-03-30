@@ -19,8 +19,6 @@
 using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class URL final {
-  public :
-    enum Protocol_t { NONE, HTTP, HTTPS, UNKNOWN };
   private :
     string   pProtocol;
     string   pHost;
@@ -29,7 +27,6 @@ class URL final {
     uint16_t pPort;
   public :
     URL(const string &url);
-    Protocol_t Protocol() const;
     uint16_t   Port() const;
     string     Host() const;
     string     Path() const;

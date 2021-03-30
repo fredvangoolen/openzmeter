@@ -344,20 +344,20 @@
       ActiveTab: function(tab) {
         if((tab == '3S') || (tab == '1M') || (tab == '10M') || (tab == '15M') || (tab == '1H')) {
           this.ShowSpinner = true;
-          this.$http.post('getSeriesRange', { Analyzer: this.analyzer.Analyzer, Aggreg: tab }).then(
-            (result) => { this.ShowSpinner = false; this.From = result.body.From; this.To = result.body.To; },
+          this.Post('getSeriesRange', { Analyzer: this.analyzer.Analyzer, Aggreg: tab }).then(
+            (result) => { this.ShowSpinner = false; this.From = result.From; this.To = result.To; },
             (fail) => { this.ShowSpinner = false; }
           );
         } else if(tab == 'Events') {
           this.ShowSpinner = true;
-          this.$http.post('getEventsRange', { Analyzer: this.analyzer.Analyzer }).then(
-            (result) => { this.ShowSpinner = false; this.From = result.body.From; this.To = result.body.To; },
+          this.Post('getEventsRange', { Analyzer: this.analyzer.Analyzer }).then(
+            (result) => { this.ShowSpinner = false; this.From = result.From; this.To = result.To; },
             (fail) => { this.ShowSpinner = false; }
           );
         } else if(tab == 'Alarms') {
           this.ShowSpinner = true;
-          this.$http.post('getAlarmsRange', { Analyzer: this.analyzer.Analyzer }).then(
-            (result) => { this.ShowSpinner = false; this.From = result.body.From; this.To = result.body.To; },
+          this.Post('getAlarmsRange', { Analyzer: this.analyzer.Analyzer }).then(
+            (result) => { this.ShowSpinner = false; this.From = result.From; this.To = result.To; },
             (fail) => { this.ShowSpinner = false; }
           );
         }
@@ -381,7 +381,7 @@
       GetStorage: function() {
         this.Rate = null;
         this.ShowSpinner = true;
-        this.$http.post('getStatus', { Analyzer: this.analyzer.Analyzer, Series: ['Storage'] }).then(
+        this.Post('getStatus', { Analyzer: this.analyzer.Analyzer, Series: ['Storage'] }).then(
           (result) => {
             this.Storage = result.body.Storage;
             this.ShowSpinner = false;
@@ -395,7 +395,7 @@
         this.ShowSpinner = true;
         var From = (all) ? 0 : this.From;
         var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
-        this.$http.post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg}).then(
+        this.Post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg}).then(
           (res) => { this.ShowSpinner = false; this.ActiveTab = aggreg; },
           (fail) => { this.ShowSpinner = false; }
         );
@@ -459,17 +459,17 @@
         if(aggreg == 'Alarms') {
           var From = (all) ? 0 : this.From;
           var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
-          this.$http.post('delAlarmsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To }).then(
+          this.Post('delAlarmsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To }).then(
             () => { this.ShowSpinner = false; },
             () => { this.ShowSpinner = false; }
           );
         } else if(aggreg == 'Events') {
-          this.$http.post('delEventsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Mode: DelEventsMode }).then(
+          this.Post('delEventsRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Mode: DelEventsMode }).then(
             () => { this.ShowSpinner = false; },
             () => { this.ShowSpinner = false; }
           );
         } else {
-          this.$http.post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg }).then(
+          this.Post('delSeriesRange', { Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg }).then(
             () => { this.ShowSpinner = false; },
             () => { this.ShowSpinner = false; }
           );

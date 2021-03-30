@@ -17,7 +17,7 @@
 #include "AnalyzerRates.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerRates::AnalyzerRates(const string &serial) : pSerial(serial) {
-  pLock   = PTHREAD_RWLOCK_INITIALIZER;
+  pLock = PTHREAD_RWLOCK_INITIALIZER;
   pRates.resize(10);
 }
 AnalyzerRates::~AnalyzerRates() {
@@ -42,46 +42,14 @@ void AnalyzerRates::Config(const string &timezone, const json &rates) {
   for(uint8_t n = 0; n < 10; n++) sort(pRates[n].begin(), pRates[n].end(), [](Rate &a, Rate &b) { return a.StartDate() < b.StartDate(); });
   pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerRates::GetCosts(const json &params, Response &response) {
-  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t       From    = params["From"];
-  uint64_t       To      = params["To"];
-  uint8_t        Group   = params["Group"];
-  vector<string> Headers = vector<string>({"Time"});
-  for(auto &Serie : params["Series"]) {
-    if((Serie.is_string() == false) || (find(Headers.begin(), Headers.end(), Serie) != Headers.end())) {
-      return HTTPServer::FillResponse(response, "'Series' must be array of strings", "text/plain", HTTP_BAD_REQUEST);
-    } else if(Serie == "Active_Power") {
-      Headers.push_back("Active_Power");
-    } else if(Serie == "Active_Energy") {
-      Headers.push_back("Active_Energy");
-    } else if(Serie == "Reactive_Power") {
-      Headers.push_back("Reactive_Power");
-    } else if(Serie == "Reactive_Energy") {
-      Headers.push_back("Reactive_Energy");
-    } else if(Serie == "Cost") {
-      Headers.push_back("Cost");
-    } else if(Serie == "Power_Cost") {
-      Headers.push_back("Power_Cost");
-    } else if(Serie == "Energy_Cost") {
-      Headers.push_back("Energy_Cost");
-    } else if(Serie == "Period") {
-      Headers.push_back("Period");
-    } else if(Serie == "Color") {
-      Headers.push_back("Color");
-    } else if(Serie == "Contracted") {
-      Headers.push_back("Contracted");
-    } else if(Serie == "Bill") {
-      Headers.push_back("Bill");
-    } else {
-      return HTTPServer::FillResponse(response, "Invalid serie name", "text/plain", HTTP_BAD_REQUEST);
-    }
-  }
-  auto Func = [&, From, To, Group, Headers](uint64_t offset, DataSink &sink) {
+void AnalyzerRates::GetCosts(HTTPRequest &req) {
+  if(!req.CheckParamNumber("To") || !req.CheckParamNumber("From") || !req.CheckParamNumber("Group") || !req.CheckParamSet("Series", {"Active_Power", "Active_Energy", "Reactive_Power", "Reactive_Energy", "Cost", "Power_Cost", "Energy_Cost", "Period", "Color", "Contracted", "Bill"})) return;
+  uint64_t       From    = req.Param("From");
+  uint64_t       To      = req.Param("To");
+  uint8_t        Group   = req.Param("Group");
+  vector<string> Headers = {"Time"};
+  for(auto &Serie : req.Param("Series")) Headers.push_back(Serie);
+  auto Func = [&, From, To, Group, Headers](function<bool(const json &content)> Write) {
     Database DB(pSerial);
     auto GetSample = [&](const uint64_t &currenttime, float &active, float &reactive) -> uint64_t {
       if(DB.FecthRow() == true) {
@@ -101,57 +69,45 @@ void AnalyzerRates::GetCosts(const json &params, Response &response) {
     pthread_rwlock_rdlock(&pLock);
     RatesEval Eval(pTimeZone, From, To, pRates[Group], GetSample, Headers);
     pthread_rwlock_unlock(&pLock);
-    sink.os << "[\n  " << json(Headers).dump();
-    json Result = Eval.FetchRow();
-    while((Result != nullptr) && sink.is_writable()) {
-      sink.os << ",\n  " + Result.dump();
-      Result = Eval.FetchRow();
+    Write(Headers);
+    while(true) {
+      json Result = Eval.FetchRow();
+      if((Result == nullptr) || (Write(Result) == false)) break;
     }
-    sink.os << "\n]";
-    sink.done();
-    return true;
   };
-  response.set_chunked_content_provider("application/json", Func);
+  req.SuccessStreamArray(Func);
 }
-void AnalyzerRates::GetBills(const json &params, Response &response) {
-  if((params.contains("To") == false) || (params["To"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'To' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("From") == false) || (params["From"].is_number_unsigned() == false)) return HTTPServer::FillResponse(response, "'From' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  if(params["From"] > params["To"]) return HTTPServer::FillResponse(response, "'From' param must be less than 'To' param", "text/plain", HTTP_BAD_REQUEST);
-  if((params.contains("Group") == false) || (params["Group"].is_number_integer() == false) || (params["Group"] < 0) || (params["Group"] > 10)) return HTTPServer::FillResponse(response, "'Group' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  uint64_t From  = params["From"];
-  uint64_t To    = params["To"];
-  uint8_t  Group = params["Group"];
-  auto Func = [&, From, To, Group](uint64_t offset, DataSink &sink) {
+void AnalyzerRates::GetBills(HTTPRequest &req) {
+  if(!req.CheckParamNumber("To") || !req.CheckParamNumber("From") || !req.CheckParamNumber("Group")) return;
+  uint64_t From  = req.Param("From");
+  uint64_t To    = req.Param("To");
+  uint8_t  Group = req.Param("Group");
+  if((Group < 0) || (Group > 10)) return req.Error("Invalid 'Group' param range", HTTP_BAD_REQUEST);
+  auto Func = [&, From, To, Group](function<bool(const json &content)> Write) {
     Database DB(pSerial);
     auto GetSample = [&](const uint64_t &currenttime, float &active, float &reactive) -> uint64_t {
       if(DB.FecthRow() == true) {
-        active     = DB.ResultFloat(1);
-        reactive   = DB.ResultFloat(2);
+        active   = DB.ResultFloat(1);
+        reactive = DB.ResultFloat(2);
         return DB.ResultUInt64(0);
       } else {
         DB.ExecSentenceAsyncResult("SELECT sampletime, (SELECT SUM(s) FROM UNNEST(active_power) s), (SELECT SUM(s) FROM UNNEST(reactive_power) s) FROM aggreg_15m WHERE sampletime >= " + DB.Bind(currenttime) + " ORDER BY sampletime ASC LIMIT 1000");
         if(DB.FecthRow() == true) {
-          active     = DB.ResultFloat(1);
-          reactive   = DB.ResultFloat(2);
+          active   = DB.ResultFloat(1);
+          reactive = DB.ResultFloat(2);
           return DB.ResultUInt64(0);
         }
       }
       return UINT64_MAX;
     };
-    uint32_t Items = 0;
     pthread_rwlock_rdlock(&pLock);
     RatesEval Eval(pTimeZone, From, To, pRates[Group], GetSample);
     pthread_rwlock_unlock(&pLock);
-    sink.os << "[\n  ";
-    json Result = Eval.FetchRow();
-    while((Result != nullptr) && sink.is_writable()) {
-      sink.os << ((Items++ != 0) ? ",\n  " + Result.dump() : Result.dump());
-      Result = Eval.FetchRow();
+    while(true) {
+     json Result = Eval.FetchRow();
+     if((Result == nullptr) || (Write(Result) == false)) break;
     }
-    sink.os << "\n]";
-    sink.done();
-    return true;
   };
-  response.set_chunked_content_provider("application/json", Func);
+  req.SuccessStreamArray(Func);
 }
 // ---------------------------------------------------------------------------------------------------------------------

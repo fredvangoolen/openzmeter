@@ -14,6 +14,8 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftAlarm.h"
+#include "Database.h"
+#include "Tools.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftAlarm::AnalyzerSoftAlarm(const string &serial, float &voltage, float &freq, const json &config) {

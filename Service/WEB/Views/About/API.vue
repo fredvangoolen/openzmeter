@@ -14,9 +14,9 @@
       return { ShowSpinner: true };
     },
     mounted: function() {
-      this.$http.post('getAPI', {}).then(
+      this.Post('getAPI', {}).then(
         (result) => {
-          this.$refs.api.loadSpec(result.data);
+          this.$refs.api.loadSpec(result);
           this.ShowSpinner = false;
         },
         (fail) => { }

@@ -14,15 +14,18 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "EthernetManager.h"
-#ifdef OPENWRT // ======================================================================================================
 #include "ConfigFile.h"
 #include "LogFile.h"
 #include "SystemManager.h"
 #include "MessageLoop.h"
+#include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------
+#ifdef OPENWRT
 string EthernetManager::pInterface = "";
+#endif
 // ---------------------------------------------------------------------------------------------------------------------
 EthernetManager::EthernetManager() {
+#ifdef OPENWRT
   LogFile::Info("Starting EthernetManager...");
   json Config = ConfigFile::ReadConfig("/EthernetInterface");
   if(Config.is_string() == true) pInterface = Config;
@@ -33,69 +36,66 @@ EthernetManager::EthernetManager() {
     HTTPServer::RegisterCallback("setEthernet", SetEthernetCallback);
   }
   LogFile::Info("EthernetManager started");
+#endif
 }
 EthernetManager::~EthernetManager() {
+#ifdef OPENWRT
   LogFile::Info("Stopping EthernetManager...");
   HTTPServer::UnregisterCallback("getEthernet");
   HTTPServer::UnregisterCallback("setEthernet");
   MessageLoop::UnregisterListener("Ethernet_PeriodicTasks");
   LogFile::Info("EthernetManager stoped");
+#endif
 }
+#ifdef OPENWRT
 void EthernetManager::PeriodicTasks() {
-  json Params = json::object();
-  json Tmp = SystemManager::uBusCall("network.interface." + pInterface, "status");
-  //LogFile::SetValue("Ethernet", "/Ethernet_Enabled", ((Tmp == nullptr) || (Tmp.is_object() == false) || (Tmp["up"].is_boolean() == false)) ? json() : Tmp["up"]);
+//  json Params = json::object();
+//  json Tmp = SystemManager::uBusCall("network.interface." + pInterface, "status");
+//LogFile::SetValue("Ethernet", "/Ethernet_Enabled", ((Tmp == nullptr) || (Tmp.is_object() == false) || (Tmp["up"].is_boolean() == false)) ? json() : Tmp["up"]);
 }
-void EthernetManager::GetEthernetCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  string PhyInterface = "";
-  json   Result       = json::object();
-  Result["Status"]    = json::object();
-  json Tmp = SystemManager::uBusCall("network.interface." + pInterface, "status");
-  if((Tmp == nullptr) || (Tmp.is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  if(Tmp["up"].is_boolean()) Result["Status"]["Connected"] = Tmp["up"];
-  if(Tmp["device"].is_string()) PhyInterface = Tmp["device"];
-  if(Tmp["dns-server"].is_array()) Result["Status"]["DNS"] = Tmp["dns-server"];
-  if(Tmp["ipv4-address"].is_array() && Tmp["ipv4-address"][0].is_object() && Tmp["ipv4-address"][0]["address"].is_string()) Result["Status"]["IP"] = Tmp["ipv4-address"][0]["address"];
-  if(Tmp["proto"].is_string()) Result["Status"]["IPMode"] = (Tmp["proto"] == "dhcp") ? "DHCP" : "STATIC";
-  if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Status"]["Gateway"] = Tmp["route"][0]["nexthop"];
+void EthernetManager::GetEthernetCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+//  string PhyInterface = "";
+//  json   Result       = json::object();
+//  Result["Status"]    = json::object();
+//  json Tmp = SystemManager::uBusCall("network.interface." + pInterface, "status");
+//  if((Tmp == nullptr) || (Tmp.is_object() == false)) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
+//  if(Tmp["up"].is_boolean()) Result["Status"]["Connected"] = Tmp["up"];
+//  if(Tmp["device"].is_string()) PhyInterface = Tmp["device"];
+//  if(Tmp["dns-server"].is_array()) Result["Status"]["DNS"] = Tmp["dns-server"];
+//  if(Tmp["ipv4-address"].is_array() && Tmp["ipv4-address"][0].is_object() && Tmp["ipv4-address"][0]["address"].is_string()) Result["Status"]["IP"] = Tmp["ipv4-address"][0]["address"];
+//  if(Tmp["proto"].is_string()) Result["Status"]["IPMode"] = (Tmp["proto"] == "dhcp") ? "DHCP" : "STATIC";
+//  if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Status"]["Gateway"] = Tmp["route"][0]["nexthop"];
 
-  json Params = json::object();
-  Params["name"] = PhyInterface;
-  Tmp = SystemManager::uBusCall("network.device", "status", Params);
-  if((Tmp == nullptr) || (Tmp.is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  if(Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
+//  json Params = json::object();
+//  Params["name"] = PhyInterface;
+//  Tmp = SystemManager::uBusCall("network.device", "status", Params);
+//  if((Tmp == nullptr) || (Tmp.is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+//  if(Tmp["up"].is_boolean()) Result["Enabled"] = Tmp["up"];
 
-  Params = json::object();
-  Params["config"] = "network";
-  Params["section"] = pInterface;
-  Tmp = SystemManager::uBusCall("uci", "get", Params);
-  if((Tmp == nullptr) || (Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  if(Tmp["values"]["proto"].is_string()) Result["IPMode"] = (Tmp["values"]["proto"] == "static") ? "STATIC" : "DHCP";
-  if(Tmp["values"]["ipaddr"].is_string()) Result["IP"] = Tmp["values"]["ipaddr"];
-  if(Tmp["values"]["netmask"].is_string()) Result["Netmask"] = Tmp["values"]["netmask"];
-  if(Tmp["values"]["gateway"].is_string()) Result["Gateway"] = Tmp["values"]["gateway"];
-  if(Tmp["values"]["dns"].is_array()) Result["DNS"] = Tmp["values"]["dns"];
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+//  Params = json::object();
+//  Params["config"] = "network";
+//  Params["section"] = pInterface;
+//  Tmp = SystemManager::uBusCall("uci", "get", Params);
+//  if((Tmp == nullptr) || (Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+//  if(Tmp["values"]["proto"].is_string()) Result["IPMode"] = (Tmp["values"]["proto"] == "static") ? "STATIC" : "DHCP";
+//  if(Tmp["values"]["ipaddr"].is_string()) Result["IP"] = Tmp["values"]["ipaddr"];
+//  if(Tmp["values"]["netmask"].is_string()) Result["Netmask"] = Tmp["values"]["netmask"];
+//  if(Tmp["values"]["gateway"].is_string()) Result["Gateway"] = Tmp["values"]["gateway"];
+//  if(Tmp["values"]["dns"].is_array()) Result["DNS"] = Tmp["values"]["dns"];
+//  req.Success(Result);
 }
-void EthernetManager::SetEthernetCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  int ErrorCode = 0;
-  json Params = json::object();
-  Params["config"] = "network";
-  Params["section"] = pInterface;
-  Params["values"] = json::object();
-  if(params.contains("Enabled") && params["Enabled"].is_boolean()) Params["values"]["enabled"] = params["Enabled"] ? "1" : "0";
-  if(params.contains("IPMode") && params["IPMode"].is_string() && ((params["IPMode"] == "DHCP") || (params["IPMode"] == "STATIC"))) Params["values"]["proto"] = (params["IPMode"] == "DHCP") ? "dhcp" : "static";
-  if(params.contains("IP") && params["IP"].is_string()) Params["values"]["ipaddr"] = params["IP"];
-  if(params.contains("Netmask") && params["Netmask"].is_string()) Params["values"]["netmask"] = params["Netmask"];
-  if(params.contains("Gateway") && params["Gateway"].is_string()) Params["values"]["gateway"] = params["Gateway"];
-  if(params.contains("DNS") && params["DNS"].is_array()) Params["values"]["dns"] = params["DNS"];
-  SystemManager::uBusCall("uci", "set", Params);
-  SystemManager::Exec("uci commit && ubus call network reload", &ErrorCode);
-  return HTTPServer::FillResponse(response, "", "text/plain", (ErrorCode != 0) ? HTTP_INTERNAL_SERVER_ERROR : HTTP_OK);
+void EthernetManager::SetEthernetCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamBool("Enabled") || !req.CheckParamEnum("IPMode", {"DHCP", "STATIC"})) return;
+  if(req.Param("IPMode") == "STATIC") {
+    if(!req.CheckParamString("IP") || !req.CheckParamString("Netmask") || !req.CheckParamString("Gateway") || !req.CheckParamArrayString("DNS")) return;
+    SystemManager::uBusCall("uci", "set", { {"config", "network"}, {"section", pInterface}, {"values", {{"ipaddr", req.Param("IP")}, {"netmask", req.Param("Netmask")}, {"gateway", req.Param("Gateway")}, {"proto", "static"}, {"enabled", req.Param("Enabled") ? "1" : "0"}, {"dns", req.Param("DNS")}}}});
+  } else {
+    SystemManager::uBusCall("uci", "set", { {"config", "network"}, {"section", pInterface}, {"values", {{"proto", "dhcp"}, {"enabled", req.Param("Enabled") ? "1" : "0"}}}});
+  }
+  SystemManager::Exec("uci commit && /etc/init.d/network restart");
+  req.Success(json::object());
 }
-#else // ===============================================================================================================
-EthernetManager::EthernetManager() {}
-EthernetManager::~EthernetManager() {}
-#endif // ==============================================================================================================
+#endif
+// ---------------------------------------------------------------------------------------------------------------------

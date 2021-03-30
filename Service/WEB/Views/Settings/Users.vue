@@ -51,10 +51,10 @@
       LoadUsers: function () {
         this.ShowDialog = false;
         this.ShowSpinner = true;
-        this.$http.post('getUsers', { }).then(
+        this.Post('getUsers', { }).then(
           (result) => {
             this.Enabled = true;
-            this.Users = result.data;
+            this.Users = result;
             this.ShowSpinner = false;
           },
           (fail) => {}
@@ -66,7 +66,7 @@
       },
       Delete: function(user) {
         this.ShowSpinner = true;
-        this.$http.post('delUser', { User: user.User }).then(
+        this.Post('delUser', { User: user.User }).then(
           (result) => {
             this.LoadUsers();
           },
@@ -77,9 +77,9 @@
       },
       Edit: function(user) {
         this.ShowSpinner = true;
-        this.$http.post('getUser', { User: user.User }).then(
+        this.Post('getUser', { User: user.User }).then(
           (result) => {
-            this.User = result.data;
+            this.User = result;
             this.ShowDialog = true;
             this.ShowSpinner = false;
           },

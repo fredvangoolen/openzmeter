@@ -14,12 +14,8 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include <set>
-#include <complex>
 #include "nlohmann/json.hpp"
-#include "Tools.h"
-#include "Database.h"
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 //----------------------------------------------------------------------------------------------------------------------
 using json = nlohmann::json;
 using namespace std;
@@ -42,35 +38,35 @@ class Analyzer {
   public :
     AnalyzerState State();
     void          State(const AnalyzerState conf);
-    string   Name();
-    void     Name(const string &name);
+    string        Name();
+    void          Name(const string &name);
   public :
-    virtual void GetAnalyzer(const json &params, Response &response) = 0;
-    virtual void SetAnalyzer(const json &params, Response &response) = 0;
-    virtual void GetStatus(const json &params, Response &response) = 0;
-    virtual void GetSeries(const json &params, Response &response) = 0;
-    virtual void SetSeries(const json &params, Response &response) = 0;
-    virtual void GetSeriesNow(const json &params, Response &response) = 0;
-    virtual void GetCosts(const json &params, Response &response) = 0;
-    virtual void GetBills(const json &params, Response &response) = 0;
-    virtual void GetWaveStream(const json &params, Response &response) = 0;
-    virtual void GetSeriesRange(const json &params, Response &response) = 0;
-    virtual void DelSeriesRange(const json &params, Response &response) = 0;
-    virtual void GetEvents(const json &params, Response &response) = 0;
-    virtual void SetEvents(const json &params, Response &response) = 0;
-    virtual void GetEventsRange(const json &params, Response &response) = 0;
-    virtual void DelEventsRange(const json &params, Response &response) = 0;
-    virtual void GetEvent(const json &params, Response &response) = 0;
-    virtual void SetEvent(const json &params, Response &response) = 0;
-    virtual void DelEvent(const json &params, Response &response) = 0;
-    virtual void TestAlarm(const json &params, Response &response) = 0;
-    virtual void GetAlarms(const json &params, Response &response) = 0;
-    virtual void SetAlarms(const json &params, Response &response) = 0;
-    virtual void GetAlarmsRange(const json &params, Response &response) = 0;
-    virtual void DelAlarm(const json &params, Response &response) = 0;
-    virtual void SetAlarm(const json &params, Response &response) = 0;
-    virtual void DelAlarmsRange(const json &params, Response &response) = 0;
-    virtual void SetRemote(const json &params, Response &response) = 0;
+    virtual void GetAnalyzer(HTTPRequest &req) = 0;
+    virtual void SetAnalyzer(HTTPRequest &req) = 0;
+    virtual void GetStatus(HTTPRequest &req) = 0;
+    virtual void GetSeries(HTTPRequest &req) = 0;
+    virtual void SetSeries(HTTPRequest &req) = 0;
+    virtual void GetSeriesNow(HTTPRequest &req) = 0;
+    virtual void GetCosts(HTTPRequest &req) = 0;
+    virtual void GetBills(HTTPRequest &req) = 0;
+    virtual void GetWaveStream(HTTPRequest &req) = 0;
+    virtual void GetSeriesRange(HTTPRequest &req) = 0;
+    virtual void DelSeriesRange(HTTPRequest &req) = 0;
+    virtual void GetEvents(HTTPRequest &req) = 0;
+    virtual void SetEvents(HTTPRequest &req) = 0;
+    virtual void GetEventsRange(HTTPRequest &req) = 0;
+    virtual void DelEventsRange(HTTPRequest &req) = 0;
+    virtual void GetEvent(HTTPRequest &req) = 0;
+    virtual void SetEvent(HTTPRequest &req) = 0;
+    virtual void DelEvent(HTTPRequest &req) = 0;
+    virtual void TestAlarm(HTTPRequest &req) = 0;
+    virtual void GetAlarms(HTTPRequest &req) = 0;
+    virtual void SetAlarms(HTTPRequest &req) = 0;
+    virtual void GetAlarmsRange(HTTPRequest &req) = 0;
+    virtual void DelAlarm(HTTPRequest &req) = 0;
+    virtual void SetAlarm(HTTPRequest &req) = 0;
+    virtual void DelAlarmsRange(HTTPRequest &req) = 0;
+    virtual void SetRemote(HTTPRequest &req) = 0;
     virtual bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) = 0;
   public :
     virtual ~Analyzer();

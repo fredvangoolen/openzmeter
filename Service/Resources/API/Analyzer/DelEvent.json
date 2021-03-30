@@ -11,15 +11,16 @@
               "schema": {
                 "example": {
                   "Analyzer": "VIRTUAL_3PN",
-                  "StartTime": 1600000000000
+                  "StartTime": 1600000000000,
+                  "Mode": "All"
                 },
                 "properties": {
                   "Analyzer": { "type": "string" },
                   "StartTime": { "type": "number" },
-                  "Samples": { "type": "string", "enum": [ "ALL", "RAW", "RMS" ]
+                  "Mode": { "type": "string", "enum": [ "All", "Samples", "RAW", "RMS" ]
                   }
                 },
-                "required": [ "Analyzer", "StartTime" ]
+                "required": [ "Analyzer", "StartTime", "Mode"]
               }
             }
           }

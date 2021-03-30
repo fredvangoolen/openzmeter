@@ -21,8 +21,8 @@
 #include "AnalyzerSoft.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftSync::AnalyzerSoftSync(const string &id, const string &path, const Analyzer::AnalyzerMode mode, float samplerate, function<void(const string &name, const json &params)> handleAction, function<json(const vector<string> &series)> status, function<json(const vector<string> &series)> now) :  pSerial(id), pConfigPath(path), pMode(mode), pSampleRate(samplerate), pHandleAction(handleAction), pStatus(status), pNow(now) {
-  pMutex      = PTHREAD_MUTEX_INITIALIZER;
-  pThread     = 0;
+  pMutex  = PTHREAD_MUTEX_INITIALIZER;
+  pThread = 0;
 }
 AnalyzerSoftSync::~AnalyzerSoftSync() {
   pTerminate = true;
@@ -38,7 +38,6 @@ void AnalyzerSoftSync::Push(const string name, const json &params) {
   json Action = json::object();
   Action["Type"] = name;
   Action["Params"] = params;
-  if(Action["Params"].contains("UserName")) Action["Params"].erase("UserName");
   pthread_mutex_lock(&pMutex);
   pPendingActions.push(Action);
   pthread_mutex_unlock(&pMutex);
@@ -59,29 +58,31 @@ json AnalyzerSoftSync::CheckConfig(const json &config) {
 }
 void AnalyzerSoftSync::Config(const json &config) {
   pthread_mutex_lock(&pMutex);
-  pServer          = config["Server"];
-  pUser            = config["User"];
-  pPass            = config["Pass"];
-  if((config["Enabled"] == true) && (pThread == 0)) {
-    pTerminate = false;
-    if(pthread_create(&pThread, NULL, [](void *params) { return ((AnalyzerSoftSync*)params)->Thread(); }, this) != 0) {
-      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-      pThread = 0;
-    } else {
-      Worker::SetThreadProperties(pThread, "Sync", Worker::LOW);
-    }
-  } else if((config["Enabled"] == false) && (pThread != 0)) {
+  pServer = config["Server"];
+  pUser   = config["User"];
+  pPass   = config["Pass"];
+  if(config["Enabled"] == false) {
     pTerminate = true;
-    pthread_join(pThread, NULL);
-    pThread = 0;
+    if(pThread != 0) {
+      pthread_join(pThread, NULL);
+      pThread = 0;
+    }
+  } else {
+    pTerminate = false;
+    if(pThread == 0) {
+      if(pthread_create(&pThread, NULL, [](void *params) { return ((AnalyzerSoftSync*)params)->Thread(); }, this) != 0) {
+        LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+        pThread = 0;
+      } else {
+        Worker::SetThreadProperties(pThread, "Sync", Worker::LOW);
+      }
+    }
   }
   pthread_mutex_unlock(&pMutex);
 }
 void *AnalyzerSoftSync::Thread() {
-  string         Cookie;
-  string         Path;
-  vector<string> RequestNow;
-  vector<string> RequestStatus;
+  string         Cookie, Path, Server, User, Pass;
+  vector<string> RequestNow, RequestStatus;
   Client        *HTTPClient      = NULL;
   uint64_t       LastSample200MS = UINT64_MAX;
   uint64_t       LastSample3S    = UINT64_MAX;
@@ -93,18 +94,27 @@ void *AnalyzerSoftSync::Thread() {
   uint64_t       LastAlarm       = UINT64_MAX;
   Stage          Stage           = LOGIN;
   while(pTerminate == false) {
+    pthread_mutex_lock(&pMutex);
+    if((User != pUser) || (Pass != pPass) || (Server != pServer)) {
+      User   = pUser;
+      Pass   = pPass;
+      Server = pServer;
+      Stage  = LOGIN;
+    }
+    pthread_mutex_unlock(&pMutex);
     if(Stage == LOGIN) {
       if(HTTPClient != NULL) delete HTTPClient;
       HTTPClient = NULL;
       pthread_mutex_lock(&pMutex);
       URL  Url(pServer);
-      json Content = { {"UserName", pUser}, {"Password", pPass}, {"UpdateLastLogin", false} };
+      json Content = { {"User", pUser}, {"Password", pPass}, {"UpdateLastLogin", false} };
       Path         = Url.Path();
       HTTPClient   = new Client(Url.Host(), Url.Port());
       pthread_mutex_unlock(&pMutex);
       HTTPClient->set_compress(true);
       HTTPClient->set_keep_alive(false);
-      auto Response = HTTPClient->Post((Path + "/logIn").c_str(), { {"Accept", "application/json"} }, Content.dump(), "application/json");
+      vector<uint8_t> Buff = json::to_cbor(Content);
+      auto Response = HTTPClient->Post((Path + "/logIn").c_str(), { {"Accept", "application/cbor"} }, (char*)Buff.data(), Buff.size(), "application/cbor");
       if((Response != nullptr) && (Response->status == HTTP_OK) && (Response->has_header("Set-Cookie") == true)) {
         LogFile::Debug("Analyzer '%s' logged on remote server", pSerial.c_str());
         Cookie = Response->get_header_value("Set-Cookie");
@@ -125,8 +135,8 @@ void *AnalyzerSoftSync::Thread() {
       Database DB(pSerial);
       json Actions = json::array();
       if(LastSample1H != UINT64_MAX) {
-        json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "1H"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Active_Energy", "Reactive_Power", "Reactive_Energy", "Apparent_Power", "Voltage_Stats", "Frequency_Stats", "Voltage_THD_Stats", "Voltage_Harmonics_Stats", "Unbalance_Stats"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i, active_power, active_power, reactive_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) FROM aggreg_1h WHERE sampletime > " + DB.Bind(LastSample1H) + " ORDER BY sampletime ASC LIMIT 2");
+        json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "1H"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Voltage_Stats", "Frequency_Stats", "Voltage_THD_Stats", "Voltage_Harmonics_Stats", "Unbalance_Stats"}}}}};
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i, active_power, reactive_power, stat_voltage, stat_frequency, stat_thd, stat_harmonics, stat_unbalance) FROM aggreg_1h WHERE sampletime > " + DB.Bind(LastSample1H) + " ORDER BY sampletime ASC LIMIT 2");
         while(DB.FecthRow() == true) {
           if(Action["Params"]["Samples"].size() == 1)
             Synced = false;
@@ -136,8 +146,8 @@ void *AnalyzerSoftSync::Thread() {
         if(Action["Params"]["Samples"].size() > 0) Actions.push_back(Action);
       }
       if(LastSample15M != UINT64_MAX) {
-        json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "15M"}, {"Samples", json::array()}, {"Headers", {"Time", "Active_Power", "Active_Energy", "Reactive_Power", "Reactive_Energy", "Apparent_Power"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, active_power, ARRAY(SELECT UNNEST(active_power) / 4.0), reactive_power, ARRAY(SELECT UNNEST(reactive_power) / 4.0), NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}')) FROM aggreg_15m WHERE sampletime > " + DB.Bind(LastSample15M) + " ORDER BY sampletime ASC LIMIT 5");
+        json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "15M"}, {"Samples", json::array()}, {"Headers", {"Time", "Active_Power", "Reactive_Power"}}}}};
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, active_power, reactive_power) FROM aggreg_15m WHERE sampletime > " + DB.Bind(LastSample15M) + " ORDER BY sampletime ASC LIMIT 5");
         while(DB.FecthRow() == true) {
           if(Action["Params"]["Samples"].size() == 4)
             Synced = false;
@@ -158,8 +168,8 @@ void *AnalyzerSoftSync::Thread() {
         if(Action["Params"]["Samples"].size() > 0) Actions.push_back(Action);
       }
       if(LastSample1M != UINT64_MAX) {
-        json Action = {{"Type", "SetSeries"}, {"Params", {{ "Aggreg", "1M"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics", "Current_Harmonics", "Power_Harmonics"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, unbalance, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i, harmonics_p) FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m WHERE sampletime > " + DB.Bind(LastSample1M) + " ORDER BY sampletime ASC LIMIT 61");
+        json Action = {{"Type", "SetSeries"}, {"Params", {{ "Aggreg", "1M"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics", "Current_Harmonics", "Power_Harmonics"}}}}};
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, unbalance, flag, rms_v, rms_i, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i, harmonics_p) FROM aggreg_1m NATURAL LEFT JOIN aggreg_ext_1m WHERE sampletime > " + DB.Bind(LastSample1M) + " ORDER BY sampletime ASC LIMIT 61");
         while(DB.FecthRow() == true) {
           if(Action["Params"]["Samples"].size() == 60)
             Synced = false;
@@ -169,8 +179,8 @@ void *AnalyzerSoftSync::Thread() {
         if(Action["Params"]["Samples"].size() > 0) Actions.push_back(Action);
       }
       if(LastSample3S != UINT64_MAX) {
-        json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "3S"}, {"Samples", json::array()}, {"Headers", { "Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Apparent_Power"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}')) FROM aggreg_3s WHERE sampletime > " + DB.Bind(LastSample3S) + " ORDER BY sampletime ASC LIMIT 1201");
+        json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "3S"}, {"Samples", json::array()}, {"Headers", { "Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power"}}}}};
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, flag, rms_v, rms_i, active_power, reactive_power) FROM aggreg_3s WHERE sampletime > " + DB.Bind(LastSample3S) + " ORDER BY sampletime ASC LIMIT 1201");
         while(DB.FecthRow() == true) {
           if(Action["Params"]["Samples"].size() == 1200)
             Synced = false;
@@ -180,8 +190,8 @@ void *AnalyzerSoftSync::Thread() {
         if(Action["Params"]["Samples"].size() > 0) Actions.push_back(Action);
       }
       if(LastSample200MS != UINT64_MAX) {
-        json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "200MS"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics", "Voltage_Harmonics_Complex", "Current_Harmonics", "Current_Harmonics_Complex", "Power_Harmonics"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, unbalance, flag, rms_v, rms_i, active_power, reactive_power, NULLIF(ARRAY(SELECT sqrt(pow(a, 2.0) + pow(r, 2.0)) FROM UNNEST(active_power, reactive_power) as t(a, r) LIMIT array_length(active_power, 1)), '{}'), power_factor, thd_v, thd_i, phi, (SELECT array_agg(harmonics_v) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_v[ch][h][1],2.0) + pow(harmonics_v[ch][h][2], 2.0))) harmonics_v FROM (SELECT generate_series(1, array_length(harmonics_v, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3), harmonics_v, (SELECT array_agg(harmonics_i) FROM (SELECT ch, array_agg(sqrt(pow(harmonics_i[ch][h][1],2.0) + pow(harmonics_i[ch][h][2], 2.0))) harmonics_i FROM (SELECT generate_series(1, array_length(harmonics_i, 1)) as ch) tmp1, (SELECT generate_series(1, 50) as h) tmp2 GROUP BY ch) tmp3), harmonics_i, harmonics_p) FROM aggreg_200ms WHERE sampletime > " + DB.Bind(LastSample200MS) + " ORDER BY sampletime ASC LIMIT 51");
+        json Action = {{"Type", "SetSeries"}, {"Params", {{"Aggreg", "200MS"}, {"Samples", json::array()}, {"Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics_Complex", "Current_Harmonics_Complex", "Power_Harmonics"}}}}};
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(sampletime, freq, unbalance, flag, rms_v, rms_i, active_power, reactive_power, power_factor, thd_v, thd_i, phi, harmonics_v, harmonics_i, harmonics_p) FROM aggreg_200ms WHERE sampletime > " + DB.Bind(LastSample200MS) + " ORDER BY sampletime ASC LIMIT 51");
         while(DB.FecthRow() == true) {
           if(Action["Params"]["Samples"].size() == 50)
             Synced = false;
@@ -237,9 +247,10 @@ void *AnalyzerSoftSync::Thread() {
       Content["Synced"] = Synced;
     }
     LogFile::Debug("AnalyzerSoft '%s' send %d actions to AnalyzerRemote", pSerial.c_str(), Content["Actions"].size());
-    auto Response = HTTPClient->Post((Path + "/setRemote").c_str(), {{"Accept", "application/json"}, {"Cookie", Cookie}}, Content.dump(), "application/json");
+    vector<uint8_t> Buff = json::to_cbor(Content);
+    auto Response = HTTPClient->Post((Path + "/setRemote").c_str(), {{"Accept", "application/cbor"}, {"Cookie", Cookie}}, (char*)Buff.data(), Buff.size(), "application/cbor");
     if((Response != nullptr) && (Response->status == HTTP_OK)) {
-      Content = json::parse(Response->body, NULL, false);
+      Content = json::from_cbor(Response->body, NULL, false);
       if(Content.is_discarded()) {
         LogFile::Error("Malformed JSON params in AnalyzerSoft::Sync");
         Stage = LOGIN;

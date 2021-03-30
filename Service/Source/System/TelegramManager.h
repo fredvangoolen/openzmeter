@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "cpp-httplib/httplib.h"
+#include "HTTPRequest.h"
 #include "nlohmann/json.hpp"
 //#include "telegrab/telegrab.hpp"
 #include "cctz/time_zone.h"
@@ -24,7 +24,6 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using namespace cctz;
-using namespace httplib;
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 #define TELEGRAM_POLLING_SEC    3
@@ -49,8 +48,8 @@ class TelegramManager final {
     static uint32_t            pUsedWorkers;
     static Headers             pHeaders;
   private :
-    static void  GetTelegramCallback(const json &params, Response &response);
-    static void  SetTelegramCallback(const json &params, Response &response);
+    static void  GetTelegramCallback(HTTPRequest &req);
+    static void  SetTelegramCallback(HTTPRequest &req);
     static void  Config(const json &config);
     static json  CheckConfig(const json &config);
     static void *Thread_Func(void *params);

@@ -19,68 +19,68 @@
 #include "SystemManager.h"
 //----------------------------------------------------------------------------------------------------------------------
 UpdateManager::UpdateManager() {
-  LogFile::Info("Starting UpdateManager...");
-  HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
-  HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
-  LogFile::Info("UpdateManager started");
+//  LogFile::Info("Starting UpdateManager...");
+//  HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
+//  HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
+//  LogFile::Info("UpdateManager started");
 }
 UpdateManager::~UpdateManager() {
-  LogFile::Info("UpdateManager", "Stopping Update manager...");
-  HTTPServer::UnregisterCallback("getUpdates");
-  HTTPServer::UnregisterCallback("setUpgrade");
-  LogFile::Info("UpdateManager", "Update manager stoped");
+//  LogFile::Info("UpdateManager", "Stopping Update manager...");
+//  HTTPServer::UnregisterCallback("getUpdates");
+//  HTTPServer::UnregisterCallback("setUpgrade");
+//  LogFile::Info("UpdateManager", "Update manager stoped");
 }
 void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  int ResultCode = 0;
-  if(params.contains("Force") && params["Force"].is_boolean() && (params["Force"] == true)) {
-    SystemManager::Exec("opkg update", &ResultCode);
-    if(ResultCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  }
-  string Result = SystemManager::Exec("opkg list-upgradable", &ResultCode);
-  if(ResultCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  json Response = json::array();
-  size_t Pos = 0;
-  while(Pos < Result.size()) {
-    json Update = json::object();
-    size_t Pos2 = Result.find(" - ", Pos);
-    Update["Package"] = Result.substr(Pos, Pos2 - Pos);
-    Pos = Pos2 + 3;
-    Pos2 = Result.find(" - ", Pos);
-    Update["From"] = Result.substr(Pos, Pos2 - Pos);
-    Pos = Pos2 + 3;
-    Pos2 = Result.find("\n", Pos);
-    if(Pos2 == string::npos) Pos2 = Result.size();
-    Update["To"] = Result.substr(Pos, Pos2 - Pos);
-    Pos = Pos2 + 1;
-    Response.push_back(Update);
-  }
-  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+//  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+//  int ResultCode = 0;
+//  if(params.contains("Force") && params["Force"].is_boolean() && (params["Force"] == true)) {
+//    SystemManager::Exec("opkg update", &ResultCode);
+//    if(ResultCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+//  }
+//  string Result = SystemManager::Exec("opkg list-upgradable", &ResultCode);
+//  if(ResultCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
+//  json Response = json::array();
+//  size_t Pos = 0;
+//  while(Pos < Result.size()) {
+//    json Update = json::object();
+//    size_t Pos2 = Result.find(" - ", Pos);
+//    Update["Package"] = Result.substr(Pos, Pos2 - Pos);
+//    Pos = Pos2 + 3;
+//    Pos2 = Result.find(" - ", Pos);
+//    Update["From"] = Result.substr(Pos, Pos2 - Pos);
+//    Pos = Pos2 + 3;
+//    Pos2 = Result.find("\n", Pos);
+//    if(Pos2 == string::npos) Pos2 = Result.size();
+//    Update["To"] = Result.substr(Pos, Pos2 - Pos);
+//    Pos = Pos2 + 1;
+//    Response.push_back(Update);
+//  }
+//  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
 void UpdateManager::SetUpgradeCallback(const json &params, Response &response) {
-  if(params["UserName"] != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Packages") == false) || (params["Packages"].is_array() == false) || (params["Packages"].size() == 0)) return HTTPServer::FillResponse(response, "'Packages' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  string Command = "opkg upgrade --force-depends";
-  for(auto &Package : params["Packages"]) {
-    if(Package.is_string() == false) return HTTPServer::FillResponse(response, "'Packages' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    Command.append(" " + Package.get<string>());
-  }
-  auto Func = [Command](uint64_t offset, DataSink &sink) {
-    char   Buffer[128];
-    string Result = "";
-    FILE  *Pipe   = popen(Command.c_str(), "r");
-    if(!Pipe) {
-      LogFile::Error("Can not exec 'opkg upgrade' (%s)", strerror(errno));
-      sink.os << "event: status\ndata: ERROR (Can not exec 'opkg upgrade')\n\n";
-      return false;
-    }
-    while((fgets(Buffer, sizeof(Buffer), Pipe) != NULL) && sink.is_writable()) sink.os << "event: text\ndata: " + string(Buffer) + "\n\n";
-    int Code = WEXITSTATUS(pclose(Pipe));
-    sink.os << ((Code == 0) ? "event: status\ndata: OK (Upgrade finished)\n\n" : "event: status\ndata: ERROR (Upgrade failed)\n\n");
-    sink.done();
-    return true;
-  };
-  response.set_chunked_content_provider("text/event-stream", Func);
+//  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+//  if((params.contains("Packages") == false) || (params["Packages"].is_array() == false) || (params["Packages"].size() == 0)) return HTTPServer::FillResponse(response, "'Packages' param is required", "text/plain", HTTP_BAD_REQUEST);
+//  string Command = "opkg upgrade --force-depends";
+//  for(auto &Package : params["Packages"]) {
+//    if(Package.is_string() == false) return HTTPServer::FillResponse(response, "'Packages' param is required", "text/plain", HTTP_BAD_REQUEST);
+//    Command.append(" " + Package.get<string>());
+//  }
+//  auto Func = [Command](uint64_t offset, DataSink &sink) {
+//    char   Buffer[128];
+//    string Result = "";
+//    FILE  *Pipe   = popen(Command.c_str(), "r");
+//    if(!Pipe) {
+//      LogFile::Error("Can not exec 'opkg upgrade' (%s)", strerror(errno));
+//      sink.os << "event: status\ndata: ERROR (Can not exec 'opkg upgrade')\n\n";
+//      return false;
+//    }
+//    while((fgets(Buffer, sizeof(Buffer), Pipe) != NULL) && sink.is_writable()) sink.os << "event: text\ndata: " + string(Buffer) + "\n\n";
+//    int Code = WEXITSTATUS(pclose(Pipe));
+//    sink.os << ((Code == 0) ? "event: status\ndata: OK (Upgrade finished)\n\n" : "event: status\ndata: ERROR (Upgrade failed)\n\n");
+//    sink.done();
+//    return true;
+//  };
+//  response.set_chunked_content_provider("text/event-stream", Func);
 }
 #else // ===============================================================================================================
 UpdateManager::UpdateManager() {

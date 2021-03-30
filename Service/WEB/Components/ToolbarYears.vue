@@ -35,10 +35,10 @@
     methods: {
       GetYears: function() {
         var Years = [];
-        this.$http.post("getSeriesRange", { Aggreg: this.aggreg, Analyzer: this.analyzer.Analyzer }).then(
+        this.Post("getSeriesRange", { Aggreg: this.aggreg, Analyzer: this.analyzer.Analyzer }).then(
           (result) => {
-            var StartYear = moment(result.data.From).year();
-            var EndYear = moment(result.data.To).year();
+            var StartYear = moment(result.From).year();
+            var EndYear = moment(result.To).year();
             for(var year = StartYear; year <= EndYear; year++) Years.push(year);
             this.Years = Years.reverse();
             if(this.Years.length == 0) this.Years.push(moment().year());

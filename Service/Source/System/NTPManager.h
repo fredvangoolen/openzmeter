@@ -14,12 +14,12 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "HTTPServer.h"
+#include "HTTPRequest.h"
 class NTPManager final {
 #ifdef OPENWRT
   private :
-    static void     GetNTPCallback(const json &params, Response &response);
-    static void     SetNTPCallback(const json &params, Response &response);
+    static void     GetNTPCallback(HTTPRequest &req);
+    static void     SetNTPCallback(HTTPRequest &req);
 #endif
   public :
     NTPManager();

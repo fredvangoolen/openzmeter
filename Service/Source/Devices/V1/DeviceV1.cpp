@@ -314,9 +314,8 @@ int DeviceV1::PlugCallback(struct libusb_context *ctx, struct libusb_device *dev
   }
   return 0;
 }
-void DeviceV1::GetDevice(const json &params, Response &response) {
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+void DeviceV1::GetDevice(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
   Config.erase("Analyzer");
   pthread_rwlock_rdlock(&pAverageLocks);
@@ -324,16 +323,15 @@ void DeviceV1::GetDevice(const json &params, Response &response) {
   Config["Wave_Average"]["Voltage"] = pAverageValues[0];
   Config["Wave_Average"]["Current"] = pAverageValues[1];
   pthread_rwlock_unlock(&pAverageLocks);
-  HTTPServer::FillResponse(response, Config.dump(), "application/json", HTTP_OK);
+  req.Success(json::object());
 }
-void DeviceV1::SetDevice(const json &params, Response &response) {
-  string UserName = params["UserName"];
-  if(UserName != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  json ConfigIN = params;
+void DeviceV1::SetDevice(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  json ConfigIN = req.Params();
   json Orig = ConfigFile::ReadConfig("/Devices/" + pSerial);
   ConfigIN["Analyzer"] = Orig["Analyzer"];
   Config(CheckConfig(ConfigIN));
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
+  req.Success(json::object());
 }
 
 

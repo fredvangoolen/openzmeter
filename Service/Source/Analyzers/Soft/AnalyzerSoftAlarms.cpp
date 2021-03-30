@@ -94,22 +94,22 @@ void AnalyzerSoftAlarms::Wait() {
   if(pWorker != NULL) pWorker->Wait();
   pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerSoftAlarms::TestAlarm(const json &params, Response &response, AnalyzerSoftAggreg200MS &aggreg) const {
-  if((params.contains("Expression") == false) || (params["Expression"].is_string() == false)) return HTTPServer::FillResponse(response, "'Expression' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerSoftAlarms::TestAlarm(HTTPRequest &req, AnalyzerSoftAggreg200MS &aggreg) const {
+  if(!req.CheckParamString("Expression")) return;
   Parser Evaluator;
   json   Result = json::object();
   float  NominalVoltage   = pNominalVoltage;
   float  NominalFrequency = pNominalFrequency;
   Evaluator.DefineVar("NominalVoltage", &NominalVoltage);
   Evaluator.DefineVar("NominalFrequency", &NominalFrequency);
-  aggreg.muParserInit(Evaluator, params["Expression"]);
+  aggreg.muParserInit(Evaluator, req.Param("Expression"));
   Result["Variables"] = json::object();
   for(auto Var : Evaluator.GetVar()) Result["Variables"][Var.first] = *Var.second;
   try {
     Result["Result"] = Evaluator.Eval();
+    return req.Success(Result);
   } catch (Parser::exception_type &e) {
-    Result["Error"] = e.GetMsg();
+    return req.Error(e.GetMsg(), HTTP_BAD_REQUEST);
   }
-  return HTTPServer::FillResponse(response, Result.dump(), "application/json", (Result.contains("Error")) ? HTTP_BAD_REQUEST : HTTP_OK);
 }
 // ---------------------------------------------------------------------------------------------------------------------

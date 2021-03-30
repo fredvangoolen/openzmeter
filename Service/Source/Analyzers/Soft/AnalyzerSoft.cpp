@@ -212,7 +212,7 @@ void AnalyzerSoft::Thread() {
         pAggreg200MS.setCurrentTHD(3, (THD / pAggreg200MS.CurrentHarmonic(3, 0)) * 100.0);
       }
       pAggreg200MS.setFlag(pEvents.Wait());
-      if(pWorkingBlock->Sequence() < 10) {
+      if(pWorkingBlock->Sequence() < 100) {
         if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pWorkingBlock->Sequence());
       } else {
@@ -300,8 +300,8 @@ void AnalyzerSoft::Thread() {
 void AnalyzerSoft::ResultsReady(AnalyzerSoftAggreg200MS &params) {
 }
 json AnalyzerSoft::GetSeriesNow(const vector<string> &series) {
-  if(pNowDataLock.ConsumerWait(5) == false) return nullptr;
   json Result  = json::object();
+  if(pNowDataLock.ConsumerWait(5) == false) return nullptr;
   Result["Time"] = pAggreg200MS.Timestamp();
   for(auto &Serie : series) {
     if(pAggreg200MS.GetSeriesJSON(Serie, Result) == true) continue;
@@ -313,99 +313,83 @@ json AnalyzerSoft::GetSeriesNow(const vector<string> &series) {
  //     continue;
  //   }
     pNowDataLock.ConsumerEnds();
-    return nullptr;
+    return string("Invalid serie '" + Serie + "'");
   }
   pNowDataLock.ConsumerEnds();
   return Result;
 }
 void AnalyzerSoft::HandleAction(const string &name, const json &params) {
-  Response Resp;
   if(name == "SetAnalyzer") {
     if(params.contains("Users")) pAccess.Config(AnalyzerAccess::CheckConfig(params["Users"]));
     try {
       Config(CheckConfig(params, pMode, true));
     } catch(const string &err) {
-      return LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s) fails", pSerial.c_str(), name.c_str());
+      return LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s -> %s) fails", pSerial.c_str(), name.c_str(), err.c_str());
     }
-  } else if(name == "SetSeries") {
-    pSeries.SetSeries(params, Resp);
-  } else if(name == "DelSeriesRange") {
-    pSeries.DelSeriesRange(params, Resp);
-  } else if(name == "SetEvents") {
-    pEvents.SetEvents(params, Resp);
-  } else if(name == "DelEventsRange") {
-    pEvents.DelEventsRange(params, Resp);
-  } else if(name == "DelEvent") {
-    pEvents.DelEvent(params, Resp);
-  } else if(name == "SetAlarms") {
-    pAlarms.SetAlarms(params, Resp);
-  } else if(name == "SetAlarm") {
-    pAlarms.SetAlarm(params, Resp);
-  } else if(name == "DelAlarm") {
-    pAlarms.DelAlarm(params, Resp);
-  } else if(name == "DelAlarmsRange") {
-    pAlarms.DelAlarmsRange(params, Resp);
   } else {
-    LogFile::Warning("AnayzerSoft receive invalid action from AnalyzerRemote '%s' (%s)", pSerial.c_str(), name.c_str());
-    return;
+    HTTPRequest Req(params);
+    if(name == "SetSeries")           pSeries.SetSeries(Req);
+    else if(name == "DelSeriesRange") pSeries.DelSeriesRange(Req);
+    else if(name == "SetEvents")      pEvents.SetEvents(Req);
+    else if(name == "DelEventsRange") pEvents.DelEventsRange(Req);
+    else if(name == "DelEvent")       pEvents.DelEvent(Req);
+    else if(name == "SetAlarms")      pAlarms.SetAlarms(Req);
+    else if(name == "SetAlarm")       pAlarms.SetAlarm(Req);
+    else if(name == "DelAlarm")       pAlarms.DelAlarm(Req);
+    else if(name == "DelAlarmsRange") pAlarms.DelAlarmsRange(Req);
+    else {
+      LogFile::Warning("AnayzerSoft receive invalid action from AnalyzerRemote '%s' (%s)", pSerial.c_str(), name.c_str());
+      return;
+    }
+    if(Req.Status() != HTTP_OK) LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s -> %s) fails", pSerial.c_str(), name.c_str(), Req.ErrorBody().c_str());
   }
-  if(Resp.status != HTTP_OK) LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s) fails", pSerial.c_str(), name.c_str());
 }
 //----------------------------------------------------------------------------------------------------------------------
-void AnalyzerSoft::GetAnalyzer(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  string UserName = params["UserName"];
+void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   json   Response = ConfigFile::ReadConfig(pConfigPath);
   Response["User"]         = pOwner;
   Response["Mode"]         = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"]   = pSamplerate;
   Response["PriceModules"] = PriceSource::VarsInfo();
   Response["Users"]        = pAccess.Users();
-  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+  req.Success(Response);
 }
-void AnalyzerSoft::SetAnalyzer(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::CONFIG, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(params.contains("Users")) pAccess.Config(AnalyzerAccess::CheckConfig(params["Users"]));
+void AnalyzerSoft::SetAnalyzer(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::CONFIG, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  json Users = nullptr;
+  if(req.CheckParamArray("Users")) Users = AnalyzerAccess::CheckConfig(req.Param("Users"));
   try {
-    Config(CheckConfig(params, pMode, true));
-    HTTPServer::FillResponse(response, "", "text/plain", HTTP_OK);
+    Config(CheckConfig(req.Params(), pMode, true));
+    if(Users != nullptr) pAccess.Config(Users);
+    req.Success(json::object());
   } catch(const string &err) {
-    HTTPServer::FillResponse(response, err, "text/plain", HTTP_BAD_REQUEST);
+    req.Error(err, HTTP_BAD_REQUEST);
   }
 }
-void AnalyzerSoft::GetSeries(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pSeries.GetSeries(params, response);
+void AnalyzerSoft::GetSeries(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pSeries.GetSeries(req);
 }
-void AnalyzerSoft::GetSeriesNow(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  vector<string> Series;
-  for(auto &Serie : params["Series"]) {
-    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    Series.push_back(Serie);
-  }
-  json Result = GetSeriesNow(params["Series"]);
-  if(Result == nullptr) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamSet("Series", {"Frequency", "Flag", "Unbalance", "Voltage", "Current", "Active_Power", "Reactive_Power", "Active_Energy", "Reactive_Energy", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Phase", "Voltage_Harmonics", "Current_Harmonics", "Power_Harmonics", "Voltage_Harmonics_Complex", "Current_Harmonics_Complex", "Voltage_FFT", "Current_FFT", "Voltage_Samples", "Current_Samples"})) return;
+  json Result = GetSeriesNow(req.Param("Series"));
+  if(Result == nullptr) return req.Error("", HTTP_METHOD_NOT_ALLOWED);
+  if(Result.is_string()) return req.Error(Result, HTTP_BAD_REQUEST);
+  req.Success(Result);
 }
-void AnalyzerSoft::GetStatus(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-  vector<string> Series;
-  for(auto &Serie : params["Series"]) {
-    if(Serie.is_string() == false) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
-    Series.push_back(Serie);
-  }
-  json Result = pAccess.GetStatus(Series, params["UserName"]);
-  if(Result == nullptr) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerSoft::GetStatus(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamSet("Series", {"Log", "System", "SystemLog", "Events", "Alarms", "Storage"})) return;
+  json Result = pAccess.GetStatus(req.Param("Series"), req.UserName());
   Result["State"] = (State() == UNCONFIGURED) ? "UNCONFIGURED" : (State() == OFFLINE) ? "OFFLINE" : (State() == SYNCING) ? "SYNCING" : "ONLINE";
-  HTTPServer::FillResponse(response, Result.dump(), "application/json", HTTP_OK);
+  req.Success(Result);
 }
-void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
-  //if(TestUser(params["UserName"], READ) == false)
-  return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+void AnalyzerSoft::GetWaveStream(HTTPRequest &req) {
+  //if(TestUser(req.UserName(), READ) == false)
+  return req.Error("", HTTP_FORBIDDEN);
+//  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
 //  typedef struct {
 //    uint64_t Block;
 //    bool     Current;
@@ -415,7 +399,7 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
 //  Params->Block = 0;
 //  for(uint8_t i = 0; i < params["Series"].size(); i++) {
 //    if(params["Series"][i].is_string() == false) {
-//      return HTTPServer::FillResponse(response, "'Series' param is requiered", "text/plain", HTTP_BAD_REQUEST);
+//      return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
 //    } else if(params["Series"][i] == "Current_Samples") {
 //      Params->Current = true;
 //    } else if(params["Series"][i] == "Voltage_Samples") {
@@ -462,106 +446,106 @@ void AnalyzerSoft::GetWaveStream(const json &params, Response &response) {
 //  };
 //  response.set_chunked_content_provider("application/json", Func, Free);
 }
-void AnalyzerSoft::GetSeriesRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pSeries.GetSeriesRange(params, response);
+void AnalyzerSoft::GetSeriesRange(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pSeries.GetSeriesRange(req);
 }
-void AnalyzerSoft::DelSeriesRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pSeries.DelSeriesRange(params, response);
-  if(response.status == HTTP_OK) pSync.Push("DelSeriesRange", params);
+void AnalyzerSoft::DelSeriesRange(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pSeries.DelSeriesRange(req);
+  if(req.Status() == HTTP_OK) pSync.Push("DelSeriesRange", req.Params());
 }
-void AnalyzerSoft::GetEvents(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pEvents.GetEvents(params, response);
+void AnalyzerSoft::GetEvents(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pEvents.GetEvents(req);
 }
-void AnalyzerSoft::GetEventsRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pEvents.GetEventsRange(params, response);
+void AnalyzerSoft::GetEventsRange(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pEvents.GetEventsRange(req);
 }
-void AnalyzerSoft::DelEventsRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.DelEventsRange(params, response);
-  if(response.status == HTTP_OK) pSync.Push("DelEventsRange", params);
+void AnalyzerSoft::DelEventsRange(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents.DelEventsRange(req);
+  if(req.Status() == HTTP_OK) pSync.Push("DelEventsRange", req.Params());
 }
-void AnalyzerSoft::GetEvent(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pEvents.GetEvent(params, response);
+void AnalyzerSoft::GetEvent(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pEvents.GetEvent(req);
 }
-void AnalyzerSoft::SetEvent(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.SetEvent(params, response);
-  if(response.status == HTTP_OK) pSync.Push("SetEvent", params);
+void AnalyzerSoft::SetEvent(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents.SetEvent(req);
+  if(req.Status() == HTTP_OK) pSync.Push("SetEvent", req.Params());
 }
-void AnalyzerSoft::DelEvent(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.DelEvent(params, response);
-  if(response.status == HTTP_OK) pSync.Push("DelEvent", params);
+void AnalyzerSoft::DelEvent(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents.DelEvent(req);
+  if(req.Status() == HTTP_OK) pSync.Push("DelEvent", req.Params());
 }
-void AnalyzerSoft::TestAlarm(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pNowDataLock.ConsumerWait(5) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-  pAlarms.TestAlarm(params, response, pAggreg200MS);
+void AnalyzerSoft::TestAlarm(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pNowDataLock.ConsumerWait(5) == false) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
+  pAlarms.TestAlarm(req, pAggreg200MS);
   pNowDataLock.ConsumerEnds();
 }
-void AnalyzerSoft::GetAlarms(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms.GetAlarms(params, response);
+void AnalyzerSoft::GetAlarms(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pAlarms.GetAlarms(req);
 }
-void AnalyzerSoft::GetAlarmsRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pAlarms.GetAlarmsRange(params, response);
+void AnalyzerSoft::GetAlarmsRange(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pAlarms.GetAlarmsRange(req);
 }
-void AnalyzerSoft::DelAlarm(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pAlarms.DelAlarm(params, response);
-  if(response.status == HTTP_OK) pSync.Push("DelAlarm", params);
+void AnalyzerSoft::DelAlarm(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pAlarms.DelAlarm(req);
+  if(req.Status() == HTTP_OK) pSync.Push("DelAlarm", req.Params());
 }
-void AnalyzerSoft::SetAlarm(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pAlarms.SetAlarm(params, response);
-  if(response.status == HTTP_OK) pSync.Push("SetAlarm", params);
+void AnalyzerSoft::SetAlarm(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pAlarms.SetAlarm(req);
+  if(req.Status() == HTTP_OK) pSync.Push("SetAlarm", req.Params());
 }
-void AnalyzerSoft::DelAlarmsRange(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pAlarms.DelAlarmsRange(params, response);
-  if(response.status == HTTP_OK) pSync.Push("DelAlarmsRange", params);
+void AnalyzerSoft::DelAlarmsRange(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pAlarms.DelAlarmsRange(req);
+  if(req.Status() == HTTP_OK) pSync.Push("DelAlarmsRange", req.Params());
 }
-void AnalyzerSoft::GetCosts(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pRates.GetCosts(params, response);
+void AnalyzerSoft::GetCosts(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pRates.GetCosts(req);
 }
-void AnalyzerSoft::GetBills(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  pRates.GetBills(params, response);
+void AnalyzerSoft::GetBills(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pRates.GetBills(req);
 }
-void AnalyzerSoft::SetRemote(const json &params, Response &response) {
-  HTTPServer::FillResponse(response, "", "text/plain", HTTP_METHOD_NOT_ALLOWED);
+void AnalyzerSoft::SetRemote(HTTPRequest &req) {
+  req.Error("", HTTP_METHOD_NOT_ALLOWED);
 }
-void AnalyzerSoft::SetSeries(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pSeries.SetSeries(params, response);
-  if(response.status == HTTP_OK) pSync.Push("SetSeries", params);
+void AnalyzerSoft::SetSeries(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pSeries.SetSeries(req);
+  if(req.Status() == HTTP_OK) pSync.Push("SetSeries", req.Params());
 }
-void AnalyzerSoft::SetEvents(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.SetEvents(params, response);
-  if(response.status == HTTP_OK) pSync.Push("SetEvents", params);
+void AnalyzerSoft::SetEvents(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents.SetEvents(req);
+  if(req.Status() == HTTP_OK) pSync.Push("SetEvents", req.Params());
 }
-void AnalyzerSoft::SetAlarms(const json &params, Response &response) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, params["UserName"]) == false) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return HTTPServer::FillResponse(response, "Too much pending actions in queue", "text/plain", HTTP_METHOD_NOT_ALLOWED);
-  pAlarms.SetAlarms(params, response);
-  if(response.status == HTTP_OK) pSync.Push("SetAlarms", params);
+void AnalyzerSoft::SetAlarms(HTTPRequest &req) {
+  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pAlarms.SetAlarms(req);
+  if(req.Status() == HTTP_OK) pSync.Push("SetAlarms", req.Params());
 }
 bool AnalyzerSoft::HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) {
   if(pNowDataLock.ConsumerWait(5) == false) return false;
