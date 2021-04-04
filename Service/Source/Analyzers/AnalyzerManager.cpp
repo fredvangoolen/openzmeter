@@ -29,7 +29,7 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("setAnalyzer",     SetAnalyzerCallback);
   HTTPServer::RegisterCallback("getStatus",       GetStatusCallback,      "API/Analyzer/GetStatus.json");
   HTTPServer::RegisterCallback("getSeries",       GetSeriesCallback,      "API/Analyzer/GetSeries.json");
-  HTTPServer::RegisterCallback("getSeriesNow",    GetSeriesNowCallback);
+  HTTPServer::RegisterCallback("getSeriesNow",    GetSeriesNowCallback,   "API/Analyzer/GetSeriesNow.json");
   HTTPServer::RegisterCallback("getCosts",        GetCostsCallback,       "API/Analyzer/GetCosts.json");
   HTTPServer::RegisterCallback("getBills",        GetBillsCallback,       "API/Analyzer/GetBills.json");
   HTTPServer::RegisterCallback("getWaveStream",   GetWaveStream);

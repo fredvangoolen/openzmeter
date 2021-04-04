@@ -22,7 +22,7 @@
 #include "PriceSource.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerRemote::AnalyzerRemote(const string &id, const AnalyzerMode mode, const string &user) : Analyzer(id, mode, user),
-  pAccess(id, user), pRates(id), pSeries(id), pAlarms(id), pEvents(id), pNow(id), pActions([&](const string &n, const json &p) { return HandleAction(n, p); }) {
+  pAccess(id, user), pRates(id), pSeries(id, mode), pAlarms(id), pEvents(id, mode), pNow(id), pActions([&](const string &n, const json &p) { return HandleAction(n, p); }) {
   LogFile::Debug("Creating tables for analyzer '%s'", pSerial.c_str());
   Database DB(id, true);
   DB.ExecResource("SQL/Database_Analyzer.sql");
@@ -50,7 +50,12 @@ void AnalyzerRemote::HandleAction(const string &name, const json &params) {
     LogFile::Warning("AnayzerRemote receive invalid action from AnalyzerSoft '%s' (%s)", pSerial.c_str(), name.c_str());
     return;
   }
-  if(Req.Status() != HTTP_OK) LogFile::Warning("AnayzerRemote action from remote AnalyzerSoft '%s' (%s -> %s) fails", pSerial.c_str(), name.c_str(), Req.ErrorBody().c_str());
+  if(Req.Status() != HTTP_OK) {
+    if(Req.ErrorBody().empty() == false)
+      LogFile::Warning("AnayzerRemote action from remote AnalyzerSoft '%s' (%s -> (%u) %s) fails", pSerial.c_str(), name.c_str(), Req.Status(), Req.ErrorBody().c_str());
+    else
+      LogFile::Warning("AnayzerRemote action from remote AnalyzerSoft '%s' (%s -> %u) fails", pSerial.c_str(), name.c_str(), Req.Status());
+  }
 }
 void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
   if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);

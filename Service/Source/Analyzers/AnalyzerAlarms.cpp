@@ -21,17 +21,17 @@ AnalyzerAlarms::AnalyzerAlarms(const string &id) : pSerial(id) {
 AnalyzerAlarms::~AnalyzerAlarms() {
 }
 void AnalyzerAlarms::GetAlarms(HTTPRequest &req) const {
-  if(!req.CheckParamNumber("To") || !req.CheckParamNumber("From") || !req.CheckParamBool("Update") || !req.CheckParamNumber("LastChange")) return;
+  if(!req.CheckParamNumber("To") || !req.CheckParamNumber("From") || !req.CheckParamBool("Update") || !req.CheckParamNumber("ChangeTime")) return;
   uint64_t To         = req.Param("To");
   uint64_t From       = req.Param("From");
-  uint64_t LastChange = req.Param("LastChange");
+  uint64_t ChangeTime = req.Param("ChangeTime");
   bool     Update     = req.Param("Update");
   Database DB(pSerial);
   if(Update == true) DB.ExecSentenceNoResult("UPDATE permissions SET alarmsread = " + DB.Bind(Tools::GetTime64()) + " WHERE username = " + DB.Bind(req.UserName()) + " AND serial = " + DB.Bind(pSerial));
-  auto Func = [&, To, From, LastChange](function<bool(const json &content)> Write) {
+  auto Func = [&, To, From, ChangeTime](function<bool(const json &content)> Write) {
     Write({"ChangeTime", "AlarmID", "Trigger", "Release", "Notes"});
     Database DB(pSerial);
-    DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, id, trigger, release, notes) FROM alarms WHERE trigger BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To) + " AND changetime > " + DB.Bind(LastChange) +" ORDER BY trigger ASC");
+    DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, id, trigger, release, notes) FROM alarms WHERE trigger BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To) + " AND changetime > " + DB.Bind(ChangeTime) +" ORDER BY trigger ASC");
     while(DB.FecthRow()) {
       if(Write(DB.ResultJSON(0)) == false) break;
     }
@@ -53,8 +53,8 @@ void AnalyzerAlarms::DelAlarm(HTTPRequest &req) const {
 }
 void AnalyzerAlarms::DelAlarmsRange(HTTPRequest &req) const {
   if(!req.CheckParamNumber("From") || !req.CheckParamNumber("To")) return;
-  uint64_t From   = req.Param("From");
-  uint64_t To     = req.Param("To");
+  uint64_t From = req.Param("From");
+  uint64_t To   = req.Param("To");
   Database DB(pSerial);
   if(DB.ExecSentenceNoResult("DELETE FROM alarms WHERE trigger BETWEEN " + DB.Bind(From) + " AND " + DB.Bind(To)) == false) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
   req.Success(json::object());
@@ -65,10 +65,33 @@ void AnalyzerAlarms::SetAlarm(HTTPRequest &req) const {
   string   ID        = req.Param("AlarmID");
   uint64_t Trigger   = req.Param("Trigger");
   string   Notes     = req.Param("Notes");
-  if(DB.ExecSentenceNoResult("UPDATE alarms SET  changetime = " + DB.Bind(Tools::GetTime64()) + ", Notes = " + DB.Bind(Notes) + " WHERE trigger = " + DB.Bind(Trigger) + " AND id = " + DB.Bind(ID)) == false) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
+  if(DB.ExecSentenceNoResult("UPDATE alarms SET changetime = " + DB.Bind(Tools::GetTime64()) + ", Notes = " + DB.Bind(Notes) + " WHERE trigger = " + DB.Bind(Trigger) + " AND id = " + DB.Bind(ID)) == false) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
   req.Success(json::object());
 }
 void AnalyzerAlarms::SetAlarms(HTTPRequest &req) const {
-  //TODO:
+  if(!req.CheckParamSet("Headers", {"ChangeTime", "AlarmID", "Trigger", "Release", "Notes"}, true) || !req.CheckParamArray("Alarms")) return;
+  vector<string> Series  = req.Param("Headers");
+  Database DB(pSerial);
+  for(auto &Row : req.Param("Alarms")) {
+    if((Row.is_array() == false) || (Row.size() != Series.size())) return req.Error("Invalid 'Samples' param", HTTP_BAD_REQUEST);
+    string ChangeTime, Trigger, Release, AlarmID, Notes;
+    auto   RowPtr = Row.begin();
+    for(auto &Col : Series) {
+      if(Col == "ChangeTime")      ChangeTime = DB.BindUint(*RowPtr);
+      else if(Col == "Trigger")    Trigger    = DB.BindUint(*RowPtr);
+      else if(Col == "Release")    Release    = DB.BindUint(*RowPtr);
+      else if(Col == "AlarmID")    AlarmID    = DB.BindString(*RowPtr);
+      else if(Col == "Notes")      Notes      = DB.BindString(*RowPtr);
+      RowPtr++;
+    }
+    if(Release.empty()) Release = "NULL";
+    if(!ChangeTime.empty() && !Trigger.empty() && !Release.empty() && !AlarmID.empty() && !Notes.empty()) {
+      if(DB.ExecSentenceNoResult("INSERT INTO alarms(changetime, trigger, release, id, notes) VALUES(" + ChangeTime + ", " + Trigger + ", " + Release + ", " + AlarmID + ", " + Notes + ") "
+                                 "ON CONFLICT(trigger, id) DO UPDATE SET changetime = EXCLUDED.changetime, release = EXCLUDED.release, notes = EXCLUDED.notes") == false) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
+    } else {
+      return req.Error("Invalid 'Alarms' param", HTTP_BAD_REQUEST);
+    }
+  }
+  req.Success(json::object());
 }
 // ---------------------------------------------------------------------------------------------------------------------

@@ -16,17 +16,6 @@
 #include "AnalyzerSoftAggreg1H.h"
 #include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
-constexpr float   AnalyzerSoftAggreg1H::FrequencyRanges[];
-const     uint8_t AnalyzerSoftAggreg1H::FrequencyRangesLen;
-constexpr float   AnalyzerSoftAggreg1H::VoltageRanges[];
-const     uint8_t AnalyzerSoftAggreg1H::VoltageRangesLen;
-constexpr float   AnalyzerSoftAggreg1H::THDRanges[];
-const     uint8_t AnalyzerSoftAggreg1H::THDRangesLen;
-constexpr float   AnalyzerSoftAggreg1H::HarmonicsAllowed[];
-const     uint8_t AnalyzerSoftAggreg1H::HarmonicsAllowedLen;
-constexpr float   AnalyzerSoftAggreg1H::UnbalanceRanges[];
-const     uint8_t AnalyzerSoftAggreg1H::UnbalanceRangesLen;
-// ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftAggreg1H::AnalyzerSoftAggreg1H(const string &serial, const Analyzer::AnalyzerMode mode) : AnalyzerSoftAggreg(serial, mode) {
   Reset();
 }
@@ -42,11 +31,11 @@ void AnalyzerSoftAggreg1H::Save() const {
   DB.Bind(pFlag) + ", " +
   DB.Bind(pActive_Power, pVoltageChannels) + ", " +
   DB.Bind(pReactive_Power, pVoltageChannels) + ", " +
-  DB.Bind(pStatsVoltage, VoltageRangesLen) + ", " +
-  DB.Bind(pStatsFrequency, FrequencyRangesLen) + ", " +
-  DB.Bind(pStatsTHD, THDRangesLen) + ", " +
+  DB.Bind(pStatsVoltage, Analyzer::VoltageRangesLen) + ", " +
+  DB.Bind(pStatsFrequency, Analyzer::FrequencyRangesLen) + ", " +
+  DB.Bind(pStatsTHD, Analyzer::THDRangesLen) + ", " +
   DB.Bind(pStatsHarmonics, 2) + ", " +
-  DB.Bind(pStatsUnbalance, UnbalanceRangesLen) + ")");
+  DB.Bind(pStatsUnbalance, Analyzer::UnbalanceRangesLen) + ")");
 }
 void AnalyzerSoftAggreg1H::Reset() {
   pSamples = 0;
@@ -63,27 +52,27 @@ float AnalyzerSoftAggreg1H::CalcChange(const float in, const float reference) {
 void AnalyzerSoftAggreg1H::AccumulateStats(const AnalyzerSoftAggreg3S &params, const float nominalFreq) {
   if(params.Flag() == true) return;
   float Variation = CalcChange(params.Frequency(), nominalFreq);
-  for(uint8_t Range = 0; Range < FrequencyRangesLen; Range++) {
-    if((Variation >= FrequencyRanges[Range]) && (Variation < FrequencyRanges[Range + 1])) pStatsFrequency[Range]++;
+  for(uint8_t Range = 0; Range < Analyzer::FrequencyRangesLen; Range++) {
+    if((Variation >= Analyzer::FrequencyRanges[Range]) && (Variation < Analyzer::FrequencyRanges[Range + 1])) pStatsFrequency[Range]++;
   }
 }
 void AnalyzerSoftAggreg1H::AccumulateStats(const AnalyzerSoftAggreg10M &params, const float nominalVolt) {
   if(params.Flag() == true) return;
-  for(uint8_t Range = 0; Range < UnbalanceRangesLen; Range++) {
-    if((params.Unbalance() >= UnbalanceRanges[Range]) && (params.Unbalance() < UnbalanceRanges[Range + 1])) pStatsUnbalance[Range]++;
+  for(uint8_t Range = 0; Range < Analyzer::UnbalanceRangesLen; Range++) {
+    if((params.Unbalance() >= Analyzer::UnbalanceRanges[Range]) && (params.Unbalance() < Analyzer::UnbalanceRanges[Range + 1])) pStatsUnbalance[Range]++;
   }
   for(uint8_t i = 0; i < pVoltageChannels; i++) {
     float Variation = CalcChange(params.Voltage(i), nominalVolt);
-    for(uint8_t Range = 0; Range < VoltageRangesLen; Range++) {
-      if((Variation >= VoltageRanges[Range]) && (Variation < VoltageRanges[Range + 1])) pStatsVoltage[Range]++;
+    for(uint8_t Range = 0; Range < Analyzer::VoltageRangesLen; Range++) {
+      if((Variation >= Analyzer::VoltageRanges[Range]) && (Variation < Analyzer::VoltageRanges[Range + 1])) pStatsVoltage[Range]++;
     }
-    for(uint8_t Range = 0; Range < THDRangesLen; Range++) {
-      if((params.VoltageTHD(i) >= THDRanges[Range]) && (params.VoltageTHD(i) < THDRanges[Range + 1])) pStatsTHD[Range]++;
+    for(uint8_t Range = 0; Range < Analyzer::THDRangesLen; Range++) {
+      if((params.VoltageTHD(i) >= Analyzer::THDRanges[Range]) && (params.VoltageTHD(i) < Analyzer::THDRanges[Range + 1])) pStatsTHD[Range]++;
     }
     bool HarmonicsInRange = true;
-    for(uint8_t n = 0; n < HarmonicsAllowedLen; n++) {
+    for(uint8_t n = 0; n < Analyzer::HarmonicsAllowedLen; n++) {
       float Variation = CalcChange(params.VoltageHarmonic(i, n + 1), nominalVolt);
-      if(Variation > HarmonicsAllowed[n]) {
+      if(Variation > Analyzer::HarmonicsAllowed[n]) {
         HarmonicsInRange = false;
         break;
       }

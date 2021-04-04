@@ -5,7 +5,7 @@ const openZmeter = {
     Vue.prototype.Post = (url, params) => {
       const CommMode = 'application/cbor';
       return new Promise(function(resolve, reject) {
-        Vue.http.post(url, CBOR.encode(params), { responseType: 'arraybuffer', headers: { 'Accept': CommMode, 'Content-Type': CommMode } }).then((result) => { console.log(result.data); resolve(CBOR.decode(result.data)); }, (error) => reject(error));
+        Vue.http.post(url, CBOR.encode(params), { responseType: 'arraybuffer', headers: { 'Accept': CommMode, 'Content-Type': CommMode } }).then((result) => resolve(CBOR.decode(result.data)), (error) => reject(error));
       });
     };
     Vue.prototype.PriceTransfer = (series) => {
@@ -317,11 +317,11 @@ const openZmeter = {
         Transfer.Analyzer  = analyzer;
         Transfer.Range     = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, Samples: 'NONE', LastChange: 0 }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, Samples: 'None', LastChange: 0 }));
         } else {
-          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, Samples: 'NONE', LastChange: 0 }));
-          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: 0 }));
-          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, Samples: 'NONE', LastChange: this.LastChange }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, Samples: 'None', LastChange: 0 }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, Samples: 'None', LastChange: 0 }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, Samples: 'None', LastChange: this.LastChange }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(

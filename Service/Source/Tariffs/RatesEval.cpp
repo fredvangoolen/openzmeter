@@ -44,7 +44,7 @@ RatesEval::RatesEval(const time_zone &tz, const uint64_t from, const uint64_t to
       for(pBillPtr = pRatePtr->pBillingCycles.begin(); (pBillPtr != pRatePtr->pBillingCycles.end()) && (pCurrent > *pBillPtr); pBillPtr++) Time = *pBillPtr + 900000;
       if(pSeries.empty() == true) pCurrent = Time;
     }
-    LoadPeriod();
+    if(pRatePtr->pStartDate <= pCurrent) LoadPeriod();
   }
   pSampleTime = pGetSample(pCurrent, pSampleActive, pSampleReactive);
 }

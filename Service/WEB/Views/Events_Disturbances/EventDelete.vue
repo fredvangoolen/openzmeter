@@ -11,7 +11,7 @@
     <div class="row">
       <div class="col-xs-12">
         <label>Mode:</label>
-        <option-picker :options="[{name: 'All', value: 'ALL'}, {name: 'Only samples', value: 'SAMPLES_ONLY'}, {name: 'RMS samples only', value: 'SAMPLES_RMS'}, {name: 'RAW samples only', value: 'SAMPLES_RAW'}]" v-model="Mode" :big="true"></option-picker>
+        <option-picker :options="[{name: 'All', value: 'All'}, {name: 'Only samples', value: 'Samples'}, {name: 'RMS samples only', value: 'RMS'}, {name: 'RAW samples only', value: 'RAW'}]" v-model="Mode" :big="true"></option-picker>
       </div>
     </div>
   </dlg>
@@ -21,7 +21,7 @@
   export default {
     props: { analyzer: Object, event: Array },
     data: function() {
-      return { ShowSpinner: false, Mode: 'ALL' };
+      return { ShowSpinner: false, Mode: 'All' };
     },
     methods: {
       Delete: function() {

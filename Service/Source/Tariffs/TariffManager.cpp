@@ -50,6 +50,7 @@ void TariffManager::GetTariffsCallback(HTTPRequest &req) {
       if(Write(DB.ResultJSON(0)) == false) return;
     }
   };
+  req.SuccessStreamArray(Func);
 }
 void TariffManager::GetTariffCallback(HTTPRequest &req) {
   if(!req.CheckParamString("Name")) return;

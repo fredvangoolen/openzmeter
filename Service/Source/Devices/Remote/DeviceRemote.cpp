@@ -89,7 +89,7 @@ void DeviceRemote::Config(const json &config) {
   ClearAnalyzers();
   pthread_mutex_lock(&pMutex);
   pEnabled = ConfigIN["Enabled"];
-  for(auto &Analyzer : ConfigIN["Analyzers"]) DB.ExecSentenceNoResult("DROP SCHEMA " + DB.BindID(Analyzer["Analyzer"]) + " CASCADE");
+  for(auto &Analyzer : ConfigIN["Clear"]) DB.ExecSentenceNoResult("DROP SCHEMA " + DB.BindID(Analyzer) + " CASCADE");
   if(pEnabled == true) {
     for(auto &Analyzer : ConfigIN["Analyzers"]) {
       string                 Serial = Analyzer["Analyzer"];

@@ -69,6 +69,7 @@
           analyzer.FormatTimeMS = this.FormatTimeMS.bind(this);
           analyzer.FormatDateTime = this.FormatDateTime.bind(this);
           analyzer.CalcRange = this.CalcRange.bind(this);
+          this.$toast.open({type:'info', message: "Selected analyzer '" + analyzer.Name + "'", duration: 3000});
         }
         this.$emit('update:analyzer', analyzer);
       },

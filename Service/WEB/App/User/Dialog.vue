@@ -8,7 +8,6 @@
           <button type="button" class="btn btn-default btn-xs" title="Discard" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </template>
-      <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
       <div class="row">
         <div class="col-xs-12 col-lg-4 col-sm-6">
           <div class="row">
@@ -86,7 +85,7 @@
   export default {
     props: { user: Object },
     data: function() {
-      return { ShowDialog: false, User: null, TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false, Error: null };
+      return { ShowDialog: false, User: null, TimeZones: moment.tz.names().map( (name) => { return { name: name, value: name }; } ), ShowSpinner: false };
     },
     created: function() {
       this.User = (this.user == null) ? { User: 'login_name', Name: 'Full name', Email: 'example@example.com', Telegram: 0, Address: 'user address', Photo: '', Company: 'Company name', TimeZone: 'UTC', Password: ''} : this.user;
@@ -98,11 +97,11 @@
           (result) => {
             this.ShowSpinner = false;
             this.$emit('close');
+            this.$toast.open({type:'success', message: "User '" + this.User.User + "' saved", duration: 3000});
           },
           (fail) => {
             this.ShowSpinner = false;
-            this.Error = 'Failed to save user!';
-            setTimeout(() => { this.Error = null; }, 1000);
+            this.$toast.open({type:'error', message: 'Failed to save user\n' + fail.body, duration: 3000});
           }
         );
       },

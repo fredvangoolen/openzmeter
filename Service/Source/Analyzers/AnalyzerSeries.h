@@ -14,6 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
+#include "Analyzer.h"
 #include "HTTPRequest.h"
 #include "nlohmann/json.hpp"
 //----------------------------------------------------------------------------------------------------------------------
@@ -22,7 +23,9 @@ using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class AnalyzerSeries {
   private :
-    const string pSerial;
+    const string  pSerial;
+    const uint8_t pVoltageChannels;
+    const uint8_t pCurrentChannels;
   public :
     void GetSeries(HTTPRequest &req) const;
     void SetSeries(HTTPRequest &req) const;
@@ -31,7 +34,7 @@ class AnalyzerSeries {
   private :
     void CleanOldSamples() const;
   public :
-    AnalyzerSeries(const string &id);
+    AnalyzerSeries(const string &id, const Analyzer::AnalyzerMode mode);
     virtual ~AnalyzerSeries();
 };
 //----------------------------------------------------------------------------------------------------------------------

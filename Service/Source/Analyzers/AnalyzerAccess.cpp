@@ -100,7 +100,7 @@ json AnalyzerAccess::GetStatus(const vector<string> &series, const string &user)
     } else if(Serie == "Events") {
       Result["Events"] = json::object();
       Database DB(pSerial);
-      DB.ExecSentenceAsyncResult("SELECT eventsread, (SELECT count(*) FROM events WHERE changetime > eventsread) AS events FROM permissions WHERE username = " + DB.Bind(user) + " AND serial = " + DB.Bind(pSerial));
+      DB.ExecSentenceAsyncResult("SELECT eventsread, (SELECT count(*) FROM events WHERE starttime > eventsread) AS events FROM permissions WHERE username = " + DB.Bind(user) + " AND serial = " + DB.Bind(pSerial));
       if(DB.FecthRow() == false) {
         Result["Events"]["LastRead"] = 0;
         Result["Events"]["Count"]    = 0;
@@ -111,7 +111,7 @@ json AnalyzerAccess::GetStatus(const vector<string> &series, const string &user)
     } else if(Serie == "Alarms") {
       Result["Alarms"] = json::object();
       Database DB(pSerial);
-      DB.ExecSentenceAsyncResult("SELECT alarmsread, (SELECT count(*) FROM alarms WHERE changetime > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(user) + " AND serial = " + DB.Bind(pSerial));
+      DB.ExecSentenceAsyncResult("SELECT alarmsread, (SELECT count(*) FROM alarms WHERE trigger > alarmsread) AS alarms FROM permissions WHERE username = " + DB.Bind(user) + " AND serial = " + DB.Bind(pSerial));
       if(DB.FecthRow() == false) {
         Result["Alarms"]["LastRead"] = 0;
         Result["Alarms"]["Count"]    = 0;
