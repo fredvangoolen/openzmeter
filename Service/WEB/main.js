@@ -13,6 +13,9 @@ import VueResource from 'vue-resource';
 Vue.use(VueResource);
 import PortalVue from 'portal-vue';
 Vue.use(PortalVue);
+import VueToast from 'vue-toast-notification';
+import 'vue-toast-notification/dist/theme-sugar.css';
+Vue.use(VueToast);
 //Other tools ----------------------------------------------------------------------------------------------------------
 import { blur } from 'auto-blur';
 addEventListener('click', evt => blur(evt));

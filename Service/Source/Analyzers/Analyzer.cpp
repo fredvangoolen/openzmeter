@@ -19,6 +19,17 @@
 #include "Analyzer.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
+constexpr float   Analyzer::FrequencyRanges[];
+const     uint8_t Analyzer::FrequencyRangesLen;
+constexpr float   Analyzer::VoltageRanges[];
+const     uint8_t Analyzer::VoltageRangesLen;
+constexpr float   Analyzer::THDRanges[];
+const     uint8_t Analyzer::THDRangesLen;
+constexpr float   Analyzer::HarmonicsAllowed[];
+const     uint8_t Analyzer::HarmonicsAllowedLen;
+constexpr float   Analyzer::UnbalanceRanges[];
+const     uint8_t Analyzer::UnbalanceRangesLen;
+//----------------------------------------------------------------------------------------------------------------------
 Analyzer::Analyzer(const string &id, const AnalyzerMode mode, const string &user) : pSerial(id), pOwner(user), pMode(mode) {
   pMembersLocks = PTHREAD_RWLOCK_INITIALIZER;
   pName         = "Unnamed analyzer";

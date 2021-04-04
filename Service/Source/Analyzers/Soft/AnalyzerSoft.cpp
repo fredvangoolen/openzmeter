@@ -35,7 +35,7 @@ using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
 AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) :
   Analyzer(id, mode), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pAccess(id), pZeroCross(mode, samplerate), pFrequency(samplerate), pFFTs(mode),
-  pAggreg200MS(id, mode), pAggreg3S(id, mode), pAggreg1M(id, mode), pAggreg10M(id, mode), pAggreg15M(id, mode), pAggreg1H(id, mode), pRates(id), pSeries(id), pEvents(id, mode, samplerate), pMQTT(id), pAlarms(id, &pMQTT),
+  pAggreg200MS(id, mode), pAggreg3S(id, mode), pAggreg1M(id, mode), pAggreg10M(id, mode), pAggreg15M(id, mode), pAggreg1H(id, mode), pRates(id), pSeries(id, mode), pEvents(id, mode, samplerate), pMQTT(id), pAlarms(id, &pMQTT),
   pSync(id, optionPath, mode, samplerate, [&](const string &name, const json &params) { HandleAction(name, params); }, [&](const vector<string> &series) { return pAccess.GetStatus(series); }, [&](const vector<string> &series) { return GetSeriesNow(series); }) {
   LogFile::Debug("Creating tables for analyzer '%s'", pSerial.c_str());
   Database DB(pSerial, true);
@@ -341,7 +341,12 @@ void AnalyzerSoft::HandleAction(const string &name, const json &params) {
       LogFile::Warning("AnayzerSoft receive invalid action from AnalyzerRemote '%s' (%s)", pSerial.c_str(), name.c_str());
       return;
     }
-    if(Req.Status() != HTTP_OK) LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s -> %s) fails", pSerial.c_str(), name.c_str(), Req.ErrorBody().c_str());
+    if(Req.Status() != HTTP_OK) {
+      if(Req.ErrorBody().empty() == false)
+        LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s -> (%u) %s) fails", pSerial.c_str(), name.c_str(), Req.Status(), Req.ErrorBody().c_str());
+      else
+        LogFile::Warning("AnayzerSoft action from AnalyzerRemote '%s' (%s -> %u) fails", pSerial.c_str(), name.c_str(), Req.Status());
+    }
   }
 }
 //----------------------------------------------------------------------------------------------------------------------

@@ -25,15 +25,7 @@ using namespace std;
 class AnalyzerSoftEvents final : public AnalyzerEvents {
   private :
     enum EventType { EVT_SWELL, EVT_DIP, EVT_INTERRUPTION, EVT_RVC };
-    enum EventSamples { SAMPLES_RAW_PRESTART = 0x01,
-                        SAMPLES_RAW_POSSTART = 0x02,
-                        SAMPLES_RAW_PREEND   = 0x04,
-                        SAMPLES_RAW_POSEND   = 0x08,
-                        SAMPLES_RMS_PRESTART = 0x10,
-                        SAMPLES_RMS_POSSTART = 0x20,
-                        SAMPLES_RMS_PREEND   = 0x40,
-                        SAMPLES_RMS_POSEND   = 0x80
-                      };
+    enum EventSamples { SAMPLES_RAW, SAMPLES_RMS };
     typedef struct {
       EventType      Type;                      //Running event type
       uint64_t       Start;                     //Event start timestamp
@@ -48,7 +40,7 @@ class AnalyzerSoftEvents final : public AnalyzerEvents {
     static constexpr float Event_DIP_SWELL  = 10.0;   //Variation in % to start a dip/swell event
     static constexpr float Event_INT        = 90.0;   //Variation in % to start a interruption
     static constexpr float Event_Hysteresis =  2.0;   //Hysteresis in % to end and event
-    static constexpr float Event_RAW_Time   =  0.5;   //Time in seconds before and after event to store RAW samples
+    static constexpr float Event_RAW_Time   =  0.2;   //Time in seconds before and after event to store RAW samples
   private :
     pthread_mutex_t  pMutex;                    //Configuration lock
     uint8_t          pVoltageChannels;          //Input channels

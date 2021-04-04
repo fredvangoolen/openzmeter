@@ -201,8 +201,8 @@ void *AnalyzerSoftSync::Thread() {
         if(Action["Params"]["Samples"].size() > 0) Actions.push_back(Action);
       }
       if(LastAlarm != UINT64_MAX) {
-        json Action = {{"Type", "SetAlarms"}, {"Params", {{"Alarms", json::array()}, {"Headers", {"ChangeTime", "AlarmID", "Trigger", "Release"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, id, trigger, release) as result FROM alarms WHERE changetime > " + DB.Bind(LastAlarm) + " ORDER BY trigger ASC LIMIT 11");
+        json Action = {{"Type", "SetAlarms"}, {"Params", {{"Alarms", json::array()}, {"Headers", {"ChangeTime", "AlarmID", "Trigger", "Release", "Notes"}}}}};
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, id, trigger, release, notes) as result FROM alarms WHERE changetime > " + DB.Bind(LastAlarm) + " ORDER BY changetime ASC LIMIT 11");
         while(DB.FecthRow() == true) {
           if(Action["Params"]["Alarms"].size() == 10)
             Synced = false;
@@ -213,14 +213,7 @@ void *AnalyzerSoftSync::Thread() {
       }
       if(LastEvent != UINT64_MAX) {
         json Action = {{"Type", "SetEvents"}, {"Params", {{"Events", json::array()}, {"Headers", {"ChangeTime", "StartTime", "Type", "SampleRate", "Reference", "Peak", "Change", "Duration", "Notes", "LengthRAW", "SamplesRAW", "LengthRMS", "SamplesRMS"}}}}};
-        DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, starttime, evttype, samplerate, reference, peak, change, duration, notes, "
-          "(SELECT array_length(samples, 1) FROM events_ext WHERE events_ext.starttime = events.starttime AND sampletype = 'RAW_PRESTART'),"
-          " (WITH ext AS (SELECT samples, sampletype FROM events_ext WHERE events_ext.starttime = events.starttime)"
-          "  SELECT (SELECT samples FROM ext WHERE sampletype = 'RAW_PRESTART') || (SELECT samples FROM ext where sampletype = 'RAW_POSSTART') || (SELECT samples FROM ext WHERE sampletype = 'RAW_PREEND') || (SELECT samples FROM ext WHERE sampletype = 'RAW_POSEND')), "
-          "(SELECT array_length(samples, 1) FROM events_ext WHERE events_ext.starttime = events.starttime AND sampletype = 'RMS_PRESTART'), "
-          " (WITH ext AS (SELECT samples, sampletype FROM events_ext WHERE events_ext.starttime = events.starttime)"
-          "  SELECT (SELECT samples FROM ext WHERE sampletype = 'RMS_PRESTART') || (SELECT samples FROM ext where sampletype = 'RMS_POSSTART') || (SELECT samples FROM ext WHERE sampletype = 'RMS_PREEND') || (SELECT samples FROM ext WHERE sampletype = 'RMS_POSEND'))"
-          ") AS result FROM events WHERE changeTime > " + DB.Bind(LastEvent) + " ORDER BY starttime ASC LIMIT 2");
+        DB.ExecSentenceAsyncResult("SELECT json_build_array(changetime, starttime, evttype, samplerate, reference, peak, change, duration, notes, size_raw, samples_raw, size_rms, samples_rms) FROM events WHERE changeTime > " + DB.Bind(LastEvent) + " ORDER BY changetime ASC LIMIT 2");
         while(DB.FecthRow() == true) {
           if(Action["Params"]["Events"].size() == 1)
             Synced = false;
@@ -285,9 +278,12 @@ void *AnalyzerSoftSync::Thread() {
         if(Synced == true) usleep(1000000);
       }
     } else {
-      if(Response != nullptr)
-        LogFile::Warning("AnalyzerSoft '%s' receive error code %d from AnalyzerRemote", pSerial.c_str(), Response->status);
-      else
+      if(Response != nullptr) {
+        if(Response->body.empty() == false)
+          LogFile::Warning("AnalyzerSoft '%s' receive error from AnalyzerRemote (%d -> %s)", pSerial.c_str(), Response->status, Response->body.c_str());
+        else
+          LogFile::Warning("AnalyzerSoft '%s' receive error from AnalyzerRemote (%d)", pSerial.c_str(), Response->status);
+      } else
         LogFile::Warning("AnalyzerSoft '%s' fail while sending data to AnalyzerRemote", pSerial.c_str());
       Stage = LOGIN;
       usleep(1000000);

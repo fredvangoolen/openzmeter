@@ -16,6 +16,7 @@
 #pragma once
 #include "HTTPRequest.h"
 #include "nlohmann/json.hpp"
+#include "Analyzer.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
 using json = nlohmann::json;
@@ -23,6 +24,7 @@ using json = nlohmann::json;
 class AnalyzerEvents {
   protected :
     const string  pSerial;
+    const uint8_t pVoltageChannels;
   public :
     void GetEvents(HTTPRequest &req) const;
     void SetEvents(HTTPRequest &req) const;
@@ -32,7 +34,7 @@ class AnalyzerEvents {
     void GetEventsRange(HTTPRequest &req) const;
     void DelEventsRange(HTTPRequest &req) const;
   public :
-    AnalyzerEvents(const string &id);
+    AnalyzerEvents(const string &id, const Analyzer::AnalyzerMode mode);
     virtual ~AnalyzerEvents();
 };
 //----------------------------------------------------------------------------------------------------------------------

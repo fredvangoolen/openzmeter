@@ -27,7 +27,7 @@ using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class Database {
   public :
-    enum DataType { UINT, FLOAT, BOOL, ARRAY_FLOAT, ARRAY_ARRAY_FLOAT, ARRAY_ARRAY_ARRAY_FLOAT, ARRAY_UINT };
+    enum DataType { ARRAY_FLOAT, ARRAY_ARRAY_FLOAT, ARRAY_ARRAY_ARRAY_FLOAT, ARRAY_UINT };
   private :
     PGconn      *pDBConn;
     PGresult    *pResult;
@@ -35,7 +35,15 @@ class Database {
   private :
     void     ClearAsync();
   public :
-    string   Bind(const json &param, const DataType type);
+    string   BindString(const json &param);
+    string   BindEnum(const json &param, const vector<string> &values);
+    string   BindUint(const json &param);
+    string   BindFloat(const json &param);
+    string   BindBool(const json &param);
+    string   BindArrayFloat(const json &param, const uint32_t lenA);
+    string   BindArrayArrayFloat(const json &param, const uint32_t lenA, const uint32_t lenB);
+    string   BindArrayArrayArrayFloat(const json &param, const uint32_t lenA, const uint32_t lenB, const uint32_t lenC);
+    string   BindArrayUint(const json &param, const uint32_t lenA);
     string   Bind(const uint8_t param) const;
     string   Bind(const uint16_t param) const;
     string   Bind(const uint32_t param) const;

@@ -121,62 +121,75 @@ void Database::ClearAsync() {
   } while(pResult != NULL);
 }
 
-string Database::Bind(const json &param, const DataType type) {
-  if(type == UINT) {
-    return param.is_number_unsigned() ? Bind((uint64_t)param) : "";
-  } else if(type == FLOAT) {
-    return param.is_number() ? Bind((float)param) : "";
-  } else if(type == BOOL) {
-    return param.is_boolean() ? Bind((bool)param) : "";
-  } else if(type == ARRAY_FLOAT) {
-    if(param.is_array() == false) return "";
-    string Result = "'{";
-    for(uint32_t i = 0; i < param.size(); i++) {
-      if(param[i].is_number() == false) return "";
-      Result.append(((i == 0) ? "" : ", ") + Bind((float)param[i]));
-    }
-    return Result + "}'";
-  } else if(type == ARRAY_ARRAY_FLOAT) {
-    if(param.is_array() == false) return "";
-    string Result = "'{";
-    for(uint32_t i = 0; i < param.size(); i++) {
-      if(param[i].is_array() == false) return "";
-      Result.append((i == 0) ? "{" : ", {");
-      for(uint32_t n = 0; n < param[i].size(); n++) {
-        if(param[i][n].is_number() == false) return "";
-        Result.append(((n == 0) ? "" : ", ") + Bind((float)param[i][n]));
-      }
-      Result.append("}");
-    }
-    return Result + "}'";
-  } else if(type == ARRAY_ARRAY_ARRAY_FLOAT) {
-    if(param.is_array() == false) return "";
-    string Result = "'{";
-    for(uint32_t i = 0; i < param.size(); i++) {
-      if(param[i].is_array() == false) return "";
-      Result.append((i == 0) ? "{" : ", {");
-      for(uint32_t n = 0; n < param[i].size(); n++) {
-        if(param[i][n].is_array() == false) return "";
-        Result.append((n == 0) ? "{" : ", {");
-        for(uint32_t m = 0; m < param[i][n][m].size(); m++) {
-          if(param[i][n][m].is_number() == false) return "";
-          Result.append(((m == 0) ? "" : ", ") + Bind((float)param[i][n][m]));
-        }
-        Result.append("}");
-      }
-      Result.append("}");
-    }
-    return Result + "}'";
-  } else if(type == ARRAY_UINT) {
-    if(param.is_array() == false) return "";
-    string Result = "'{";
-    for(uint32_t i = 0; i < param.size(); i++) {
-      if(param[i].is_number_unsigned() == false) return "";
-      Result.append(((i == 0) ? "" : ", ") + Bind((uint64_t)param[i]));
-    }
-    return Result + "}'";
+string Database::BindUint(const json &param) {
+  return param.is_number_unsigned() ? Bind((uint64_t)param) : "";
+}
+string Database::BindFloat(const json &param) {
+  return param.is_number() ? Bind((float)param) : "";
+}
+string Database::BindBool(const json &param) {
+  return param.is_boolean() ? Bind((bool)param) : "";
+}
+string Database::BindString(const json &param) {
+  return param.is_string() ? Bind((string)param) : "";
+}
+string Database::BindEnum(const json &param, const vector<string> &values) {
+  if(param.is_string() == false) return "";
+  string Val = param;
+  auto Tmp   = find(values.begin(), values.end(), Val);
+  if(Tmp == values.end()) return "";
+  return Bind(Val);
+}
+string Database::BindArrayFloat(const json &param, const uint32_t lenA) {
+  if((param.is_array() == false) || ((lenA != 0) && (param.size() != lenA))) return "";
+  string Result = "'{";
+  for(uint32_t i = 0; i < param.size(); i++) {
+    if(param[i].is_number() == false) return "";
+    Result.append(((i == 0) ? "" : ", ") + Bind((float)param[i]));
   }
-  return "";
+  return Result + "}'";
+}
+string Database::BindArrayArrayFloat(const json &param, const uint32_t lenA, const uint32_t lenB) {
+  if((param.is_array() == false) || ((lenA != 0) && (param.size() != lenA))) return "";
+  string Result = "'{";
+  for(uint32_t i = 0; i < param.size(); i++) {
+    if((param[i].is_array() == false) || (param[i].size() != lenB)) return "";
+    Result.append((i == 0) ? "{" : ", {");
+    for(uint32_t n = 0; n < param[i].size(); n++) {
+      if(param[i][n].is_number() == false) return "";
+      Result.append(((n == 0) ? "" : ", ") + Bind((float)param[i][n]));
+    }
+    Result.append("}");
+  }
+  return Result + "}'";
+}
+string Database::BindArrayArrayArrayFloat(const json &param, const uint32_t lenA, const uint32_t lenB, const uint32_t lenC) {
+  if((param.is_array() == false) || ((lenA != 0) && (param.size() != lenA))) return "";
+  string Result = "'{";
+  for(uint32_t i = 0; i < param.size(); i++) {
+    if((param[i].is_array() == false) || (param[i].size() != lenB)) return "";
+    Result.append((i == 0) ? "{" : ", {");
+    for(uint32_t n = 0; n < param[i].size(); n++) {
+      if((param[i][n].is_array() == false) || (param[i][n].size() != lenC)) return "";
+      Result.append((n == 0) ? "{" : ", {");
+      for(uint32_t m = 0; m < param[i][n][m].size(); m++) {
+        if(param[i][n][m].is_number() == false) return "";
+        Result.append(((m == 0) ? "" : ", ") + Bind((float)param[i][n][m]));
+      }
+      Result.append("}");
+    }
+    Result.append("}");
+  }
+  return Result + "}'";
+}
+string Database::BindArrayUint(const json &param, const uint32_t lenA) {
+  if((param.is_array() == false) || ((lenA != 0) && (param.size() != lenA))) return "";
+  string Result = "'{";
+  for(uint32_t i = 0; i < param.size(); i++) {
+    if(param[i].is_number_unsigned() == false) return "";
+    Result.append(((i == 0) ? "" : ", ") + Bind((uint64_t)param[i]));
+  }
+  return Result + "}'";
 }
 string Database::Bind(const uint8_t param) const {
   return to_string(param);

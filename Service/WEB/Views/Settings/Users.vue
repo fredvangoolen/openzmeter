@@ -57,7 +57,7 @@
             this.Users = result;
             this.ShowSpinner = false;
           },
-          (fail) => {}
+          (fail) => { }
         );
       },
       Add: function() {

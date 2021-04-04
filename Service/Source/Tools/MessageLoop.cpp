@@ -62,7 +62,7 @@ void MessageLoop::HandleEvents() {
 void MessageLoop::RegisterListener(const string &id, function<void()> func, uint32_t ms) {
   Listener_t Listener;
   Listener.Function = func;
-  Listener.LastCall = 0;
+  Listener.LastCall = Tools::GetTime64();
   Listener.Interval = ms;
   pthread_mutex_lock(&pListenersMutex);
   pListeners.insert({ id, Listener });

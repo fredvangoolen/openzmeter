@@ -86,30 +86,20 @@ CREATE TABLE IF NOT EXISTS events (
   peak        real[]            NOT NULL,
   change      real[]            NOT NULL,
   notes       text              NOT NULL,
-  duration    bigint            NOT NULL
+  duration    int               NOT NULL,
+  size_raw    smallint          NOT NULL,
+  size_rms    smallint          NOT NULL,
+  samples_raw real[]            NULL,
+  samples_rms real[]            NULL
 ) WITH (OIDS=FALSE);
-CREATE INDEX IF NOT EXISTS events_changetime_idx ON events(changetime);
-
-DO $$ BEGIN
-  CREATE TYPE event_sample_type AS ENUM ('RAW_PRESTART', 'RAW_POSSTART', 'RAW_PREEND', 'RAW_POSEND', 'RMS_PRESTART', 'RMS_POSSTART', 'RMS_PREEND', 'RMS_POSEND');
-EXCEPTION
-  WHEN duplicate_object THEN null;
-END $$;
-
-CREATE TABLE IF NOT EXISTS events_ext (
-  starttime   bigint            NOT NULL REFERENCES events(starttime) ON UPDATE CASCADE ON DELETE CASCADE,
-  sampletype  event_sample_type NOT NULL,
-  samples     real[],
-  UNIQUE(starttime, sampletype)
-) WITH (OIDS=FALSE);
+CREATE INDEX IF NOT EXISTS events_changetime_idx ON events USING btree (changetime);
 
 CREATE TABLE IF NOT EXISTS alarms (
-  changetime    bigint            NOT NULL,
+  changetime    serial            NOT NULL,
   id            character varying NOT NULL,
   trigger       bigint            NOT NULL,
   release       bigint            NULL,
-  notes         text              NOT NULL
+  notes         text              NOT NULL,
+  UNIQUE(trigger, id)
 ) WITH (OIDS=FALSE);
-CREATE INDEX IF NOT EXISTS alarms_changetime_idx ON alarms(changetime);
-CREATE INDEX IF NOT EXISTS alarms_id_idx ON alarms(id);
-CREATE INDEX IF NOT EXISTS alarms_trigger_idx ON alarms(trigger);
+CREATE INDEX IF NOT EXISTS alarms_changetime_idx ON alarms USING btree (changetime);

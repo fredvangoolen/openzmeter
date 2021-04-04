@@ -36,6 +36,23 @@
   content: none;
 }
 
+/* Toast style */
+.v-toast__item {
+  min-height: 32px !important;
+}
+.v-toast__text {
+  padding: 4px 10px !important;
+}
+.v-toast__icon {
+  min-height: 16px !important;
+  height: 16px !important;
+  margin-left: 10px !important;
+  width: 16px !important;
+  min-width: 16px !important;
+}
+.v-toast__item--success {
+  background-color: #5cb85c !important;
+}
 /* dataTables icons */
 table.dataTable thead .sorting_desc:after {
   content: no-open-quote;
