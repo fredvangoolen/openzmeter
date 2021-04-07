@@ -60,7 +60,7 @@
         }
       },
       "405Response": {
-        "description": "The method is not allowed in selected object",
+        "description": "The method is not allowed in selected object at this moment",
         "content": {
           "text/plain": {
             "schema": { "type": "string", "example": " " }

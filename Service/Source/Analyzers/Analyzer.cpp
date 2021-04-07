@@ -37,18 +37,11 @@ Analyzer::Analyzer(const string &id, const AnalyzerMode mode, const string &user
 }
 Analyzer::~Analyzer() {
 }
-json Analyzer::GetJSONDescriptor() {
-  json Response = json::object();
-  Response["Analyzer"] = pSerial;
-  Response["User"] = pOwner;
-  pthread_rwlock_rdlock(&pMembersLocks);
-  Response["Name"] = pName;
-  Response["State"] = (State() == UNCONFIGURED) ? "UNCONFIGURED" : (State() == OFFLINE) ? "OFFLINE" : (State() == SYNCING) ? "SYNCING" : "ONLINE";
-  pthread_rwlock_unlock(&pMembersLocks);
-  return Response;
-}
 string Analyzer::Serial() {
   return pSerial;
+}
+string Analyzer::Owner() {
+  return pOwner;
 }
 string Analyzer::Name() {
   pthread_rwlock_rdlock(&pMembersLocks);

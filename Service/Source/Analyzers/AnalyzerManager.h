@@ -60,25 +60,3 @@ class AnalyzerManager final {
     ~AnalyzerManager();
 };
 //----------------------------------------------------------------------------------------------------------------------
-
-
-
-//    static void SetAnalyzerCallback(const json &params, Response &response);
-//    static void GetStatusCallback(const json &params, Response &response);
-//    static void GetSeriesCallback(const json &params, Response &response);
-//    static void GetSeriesNowCallback(const json &params, Response &response);
-//    static void GetCostsCallback(const json &params, Response &response);
-//    static void GetBillsCallback(const json &params, Response &response);
-//    static void GetWaveStream(const json &params, Response &response);
-//    static void GetSeriesRangeCallback(const json &params, Response &response);
-//    static void GetEventsCallback(const json &params, Response &response);
-//    static void GetEventsRangeCallback(const json &params, Response &response);
-//    static void GetEventCallback(const json &params, Response &response);
-//    static void SetEventCallback(const json &params, Response &response);
-//    static void DelEventCallback(const json &params, Response &response);
-//    static void TestAlarmCallback(const json &params, Response &response);
-//    static void GetAlarmsCallback(const json &params, Response &response);
-//    static void GetAlarmsRangeCallback(const json &params, Response &response);
-
-//    static void SetRemoteCallback(const json &params, Response &response);
-//======================================================================================================================

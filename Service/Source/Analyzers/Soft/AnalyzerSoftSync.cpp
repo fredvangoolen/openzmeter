@@ -112,7 +112,7 @@ void *AnalyzerSoftSync::Thread() {
       HTTPClient   = new Client(Url.Host(), Url.Port());
       pthread_mutex_unlock(&pMutex);
       HTTPClient->set_compress(true);
-      HTTPClient->set_keep_alive(false);
+      HTTPClient->set_keep_alive(true);
       vector<uint8_t> Buff = json::to_cbor(Content);
       auto Response = HTTPClient->Post((Path + "/logIn").c_str(), { {"Accept", "application/cbor"} }, (char*)Buff.data(), Buff.size(), "application/cbor");
       if((Response != nullptr) && (Response->status == HTTP_OK) && (Response->has_header("Set-Cookie") == true)) {

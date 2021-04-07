@@ -23,7 +23,7 @@
 #include "ConfigFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 int                        LogFile::pFile         = 0;
-LogFile::Type              LogFile::pLevel        = LogFile::ERROR;
+LogFile::Type              LogFile::pLevel        = LogFile::NONE;
 bool                       LogFile::pConsole      = true;
 pthread_rwlock_t           LogFile::pLock         = PTHREAD_RWLOCK_INITIALIZER;
 pthread_mutex_t            LogFile::pMutex        = PTHREAD_MUTEX_INITIALIZER;
@@ -41,12 +41,12 @@ LogFile::LogFile() {
   string Name = "/var/log/openZmeter.log";
   json Config = ConfigFile::ReadConfig("/Log");
   if(Config.is_object()) {
-    if(Config["File"].is_string()) Name = Config["File"];
-    if(Config["Level"].is_number_unsigned()) pLevel = Config["Level"];
+    if(Config["File"].is_string())  Name = Config["File"];
+    if(Config["Level"].is_string() && ((Config["Level"] == "NONE") || (Config["Level"] == "ERROR") || (Config["Level"] == "WARNING") || (Config["Level"] == "INFO") || (Config["Level"] == "DEBUG"))) pLevel = (Config["Level"] == "NONE") ? NONE : (Config["Level"] == "ERROR") ? ERROR : (Config["Level"] == "WARNING") ? WARNING : (Config["Level"] == "INFO") ? INFO : DEBUG;
   }
   Config = json::object();
   Config["File"] = Name;
-  Config["Level"] = pLevel;
+  Config["Level"] = (pLevel == NONE) ? "NONE" : (pLevel == ERROR) ? "ERROR" : (pLevel == WARNING) ? "WARNING" : (pLevel == INFO) ? "INFO" : "DEBUG";
   ConfigFile::WriteConfig("/Log", Config);
   if(Name.empty() == false) {
     pFile = open(Name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);

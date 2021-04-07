@@ -27,7 +27,7 @@ class LogFile final {
   private :
     static const uint16_t MaxMessages = 100;
   private :
-    enum Type { ERROR = 0, WARNING = 1, INFO = 2, DEBUG = 3 };
+    enum Type { NONE, ERROR, WARNING, INFO, DEBUG };
     typedef struct Message_t {
       uint64_t  Time;
       string    Message;

@@ -44,13 +44,6 @@ class Analyzer {
     const string       pSerial;                  //Serial number
     const string       pOwner;                   //Analyzer owner user
     const AnalyzerMode pMode;                    //Analyzer mode
-  protected :
-    Analyzer(const string &id, const AnalyzerMode mode, const string &user = "admin");
-  public :
-    AnalyzerState State();
-    void          State(const AnalyzerState conf);
-    string        Name();
-    void          Name(const string &name);
   public :
     virtual void GetAnalyzer(HTTPRequest &req) = 0;
     virtual void SetAnalyzer(HTTPRequest &req) = 0;
@@ -80,8 +73,13 @@ class Analyzer {
     virtual void SetRemote(HTTPRequest &req) = 0;
     virtual bool HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) = 0;
   public :
+    Analyzer(const string &id, const AnalyzerMode mode, const string &user = "admin");
     virtual ~Analyzer();
-    string   Serial();
-    json     GetJSONDescriptor();
+    string        Serial();
+    string        Owner();
+    AnalyzerState State();
+    void          State(const AnalyzerState conf);
+    string        Name();
+    void          Name(const string &name);
 };
 //----------------------------------------------------------------------------------------------------------------------
