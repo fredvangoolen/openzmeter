@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE INDEX IF NOT EXISTS events_changetime_idx ON events USING btree (changetime);
 
 CREATE TABLE IF NOT EXISTS alarms (
-  changetime    serial            NOT NULL,
+  changetime    bigint            NOT NULL,
   id            character varying NOT NULL,
   trigger       bigint            NOT NULL,
   release       bigint            NULL,

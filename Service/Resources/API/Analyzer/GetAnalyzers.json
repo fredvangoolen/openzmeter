@@ -2,26 +2,11 @@
   "components": {
     "schemas": {
       "AnalyzerListTemplate": {
-        "type": "object",
-        "properties": {
-          "Analyzer": { "type": "string" },
-          "Config": { "type": "boolean" },
-          "Name": { "type": "string" },
-          "State": { "type": "string", "enum": [ "UNCONFIGURED", "OFFLINE", "SYNCING", "ONLINE" ] },
-          "Read": { "type": "boolean" },
-          "User": { "type": "string" },
-          "Write": { "type": "boolean" }
-        },
-        "required": [ "Analyzer", "Config", "Name", "State", "Read", "User", "Write" ],
-        "example": {
-          "Analyzer": "VIRTUAL_3PN",
-          "Config": true,
-          "Name": "Unnamed analyzer",
-          "State": "ONLINE",
-          "Read": true,
-          "User": "admin",
-          "Write": true
-        }
+        "type": "array", "items": { "type": "array" },
+        "example": [
+          ["Analyzer", "User", "Name", "State", "Read", "Write", "Config"],
+          ["VIRTUAL_3PN", "admin", "Unnamed analyzer", "ONLINE", true, true, true]
+        ]
       }
     }
   },

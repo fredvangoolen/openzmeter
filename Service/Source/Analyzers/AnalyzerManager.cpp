@@ -113,7 +113,11 @@ void AnalyzerManager::CallAnalyzerFunction(HTTPRequest &req, void (Analyzer::*me
 }
 void AnalyzerManager::GetAnalyzersCallback(HTTPRequest &req) {
   string UserName = req.UserName();
-  auto Func = [UserName](function<bool(json&)> Write) {
+  auto Func = [UserName](function<bool(const json&)> Write) {
+    Write({"Analyzer", "User", "Name", "State", "Read", "Write", "Config"});
+    auto StateToString = [](const Analyzer::AnalyzerState state) {
+      return (state == Analyzer::UNCONFIGURED) ? "UNCONFIGURED" : (state == Analyzer::OFFLINE) ? "OFFLINE" : (state == Analyzer::SYNCING) ? "SYNCING" : "ONLINE";
+    };
     if(UserName != "admin") {
       Database DB;
       DB.ExecSentenceAsyncResult("SELECT serial, read, write, config FROM permissions WHERE username = " + DB.Bind(UserName) + " AND (read = true OR write = true OR config = true)");
@@ -121,21 +125,15 @@ void AnalyzerManager::GetAnalyzersCallback(HTTPRequest &req) {
         pthread_rwlock_rdlock(&pAnalyzersLock);
         auto Tmp = pAnalyzers.find(DB.ResultString("serial"));
         if((Tmp == pAnalyzers.end()) || (Tmp->second->State() == Analyzer::UNCONFIGURED)) continue;
-        json Analyzer = Tmp->second->GetJSONDescriptor();
+        json Analyzer = { Tmp->second->Serial(), Tmp->second->Owner(), Tmp->second->Name(), StateToString(Tmp->second->State()), DB.ResultBool("read"), DB.ResultBool("write"), DB.ResultBool("config") };
         pthread_rwlock_unlock(&pAnalyzersLock);
-        Analyzer["Read"]   = DB.ResultBool("read");
-        Analyzer["Write"]  = DB.ResultBool("write");
-        Analyzer["Config"] = DB.ResultBool("config");
         if(Write(Analyzer) == false) break;
       }
     } else {
       pthread_rwlock_rdlock(&pAnalyzersLock);
       for(auto &Tmp : pAnalyzers) {
         if(Tmp.second->State() == Analyzer::UNCONFIGURED) continue;
-        json Analyzer = Tmp.second->GetJSONDescriptor();
-        Analyzer["Read"]   = true;
-        Analyzer["Write"]  = true;
-        Analyzer["Config"] = true;
+        json Analyzer = { Tmp.second->Serial(), Tmp.second->Owner(), Tmp.second->Name(), StateToString(Tmp.second->State()), true, true, true };
         if(Write(Analyzer) == false) break;
       }
       pthread_rwlock_unlock(&pAnalyzersLock);

@@ -79,7 +79,8 @@
         if(this.Timer != null) clearTimeout(this.Timer);
         this.Post("getAnalyzers", {}).then(
           (result) => {
-            this.Analyzers = result;
+            this.Analyzers = [];
+            for(var i = 1; i < result.length; i++) this.Analyzers.push({ Analyzer: result[i][0], User: result[i][1], Name: result[i][2], State: result[i][3], Read: result[i][4], Write: result[i][5], Config: result[i][6] });
             this.ShowSpinner = false;
             this.Timer = setTimeout(this.GetAnalyzers, 5000);
           },

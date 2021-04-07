@@ -29,14 +29,14 @@
                   "Samples": "NONE",
                   "From": 1590000000000,
                   "To": 1600000000000,
-                  "LastChange": 0,
+                  "ChangeTime": 0,
                   "Update": false
                 },
                 "properties": {
                   "Analyzer": { "type": "string" },
                   "From": { "type": "number" },
                   "To": { "type": "number" },
-                  "LastChange": { "type": "number" },
+                  "ChangeTime": { "type": "number" },
                   "Samples": { "type": "string", "enum": [ "All", "None", "RAW", "RMS" ] },
                   "Update": { "type": "boolean" }
                 },

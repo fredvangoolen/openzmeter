@@ -220,7 +220,7 @@ const openZmeter = {
       return Transfer;
     },
     Vue.prototype.AlarmsTransfer = () => {
-      var Transfer = { Timer: null, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null, LastChange: 0 };
+      var Transfer = { Timer: null, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null, ChangeTime: 0 };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -228,11 +228,11 @@ const openZmeter = {
       Transfer.SetData = (range, data) => {
         if(data == null) {
           Transfer.Data = null;
-          this.LastChange = 0;
+          this.ChangeTime = 0;
           return;
         }
         var Data = { Headers: data[0], Rows: data.slice(1), From: range[0], To: range[1]};
-        for(var n = 0; n < Data.Rows.length; n++) this.LastChange = Math.max(this.LastChange, Data.Rows[n][0]);
+        for(var n = 0; n < Data.Rows.length; n++) this.ChangeTime = Math.max(this.ChangeTime, Data.Rows[n][0]);
         Transfer.Data = Object.seal(Data);
       };
       Transfer.Update = (analyzer, range) => {
@@ -251,11 +251,11 @@ const openZmeter = {
         Transfer.Analyzer  = analyzer;
         Transfer.Range     = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, LastChange: 0 }));
+          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, ChangeTime: 0 }));
         } else {
-          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, LastChange: 0 }));
-          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, LastChange: 0 }));
-          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, LastChange: this.LastChange }));
+          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][2] - 1, Update: false, ChangeTime: 0 }));
+          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][2] + 1, To: ReqRange[1], Update: false, ChangeTime: 0 }));
+          Promises.push(Vue.prototype.Post('getAlarms', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, ChangeTime: this.ChangeTime }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
@@ -286,7 +286,7 @@ const openZmeter = {
       return Transfer;
     },
     Vue.prototype.EventsTransfer = () => {
-      var Transfer = { Timer: null, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null, LastChange: 0 };
+      var Transfer = { Timer: null, CancelFunc: null, Data: null, UpdateUnread: false, Analyzer: null, Range: null, ChangeTime: 0 };
       Transfer.Destroy = () => {
         if(Transfer.Timer != null) { clearTimeout(Transfer.Timer); Transfer.Timer = null; }
         if(Transfer.CancelFunc != null) { Transfer.CancelFunc(); Transfer.CancelFunc = null; }
@@ -294,11 +294,11 @@ const openZmeter = {
       Transfer.SetData = (range, data) => {
         if(data == null) {
           Transfer.Data = null;
-          this.LastChange = 0;
+          this.ChangeTime = 0;
           return;
         }
         var Data = { Headers: data[0], Rows: data.slice(1), From: range[0], To: range[1]};
-        for(var n = 0; n < Data.Rows.length; n++) this.LastChange = Math.max(this.LastChange, Data.Rows[n][0]);
+        for(var n = 0; n < Data.Rows.length; n++) this.ChangeTime = Math.max(this.ChangeTime, Data.Rows[n][0]);
         Transfer.Data = Object.seal(Data);
       };
       Transfer.Update = (analyzer, range) => {
@@ -317,11 +317,11 @@ const openZmeter = {
         Transfer.Analyzer  = analyzer;
         Transfer.Range     = range;
         if((Transfer.Data == null) || (Transfer.Data.Rows.length == 0)) {
-          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, Samples: 'None', LastChange: 0 }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: Transfer.UpdateUnread, Samples: 'None', ChangeTime: 0 }));
         } else {
-          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, Samples: 'None', LastChange: 0 }));
-          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, Samples: 'None', LastChange: 0 }));
-          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, Samples: 'None', LastChange: this.LastChange }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: Transfer.Data.Rows[0][1] - 1, Update: false, Samples: 'None', ChangeTime: 0 }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: Transfer.Data.Rows.slice(-1)[0][1] + 1, To: ReqRange[1], Update: false, Samples: 'None', ChangeTime: 0 }));
+          Promises.push(Vue.prototype.Post('getEvents', { Analyzer: analyzer.Analyzer, From: ReqRange[0], To: ReqRange[1], Update: false, Samples: 'None', ChangeTime: this.ChangeTime }));
         }
         Transfer.CancelFunc = () => { Cancelled = true; };
         Promise.all(Promises).then(
