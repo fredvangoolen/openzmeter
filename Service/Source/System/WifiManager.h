@@ -23,9 +23,8 @@ class WifiManager final {
   private :
     static WifiStat        pWifiStat;
     static pthread_mutex_t pMutex;
-    static string          pInterfaceWIFI;
+    static string          pDeviceWIFI;
     static string          pNetworkWIFI;
-    static string          pWirelessWIFI;
   private :
     static void PeriodicTasks();
     static void GetWIFICallback(HTTPRequest &req);

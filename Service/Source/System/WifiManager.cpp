@@ -23,31 +23,32 @@
 #ifdef OPENWRT
 WifiManager::WifiStat WifiManager::pWifiStat      = WifiManager::DISABLED;
 pthread_mutex_t       WifiManager::pMutex         = PTHREAD_MUTEX_INITIALIZER;
-string                WifiManager::pInterfaceWIFI = "wlan0";
 string                WifiManager::pNetworkWIFI   = "lan";
-string                WifiManager::pWirelessWIFI  = "default_radio";
+string                WifiManager::pDeviceWIFI;
 #endif
 // ---------------------------------------------------------------------------------------------------------------------
 WifiManager::WifiManager() {
 #ifdef OPENWRT
   LogFile::Info("Starting WifiManager...");
   json Config = ConfigFile::ReadConfig("/WIFI");
-  if(Config.is_object() == true) {
-    if(Config["Interface"].is_string()) pInterfaceWIFI = Config["Interface"];
-    if(Config["Network"].is_string()) pNetworkWIFI = Config["Network"];
-    if(Config["Config"].is_string()) pWirelessWIFI = Config["Config"];
+  if(Config.is_string() == true) {
+    pNetworkWIFI = Config;
+    json Tmp = SystemManager::uBusCall("network.interface." + pNetworkWIFI, "status", { });
+    if((Tmp.is_object() == false) || (Tmp["device"].is_string() == false)) {
+      LogFile::Warning("Wifi network interface not configured or not found");
+      return;
+    }
+    pDeviceWIFI = Tmp["device"];
+    PeriodicTasks();
+    ConfigFile::WriteConfig("/WIFI", pNetworkWIFI);
+    MessageLoop::RegisterListener("WIFI_PeriodicTasks", PeriodicTasks, 5000);
+    HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
+    HTTPServer::RegisterCallback("getWIFI",  GetWIFICallback);
+    HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
+    LogFile::Info("WifiManager started (Interface: %s - Device: %s)", pNetworkWIFI.c_str(), pDeviceWIFI.c_str());
+  } else {
+    ConfigFile::WriteConfig("/WIFI", nullptr);
   }
-  Config = json::object();
-  Config["Interface"] = pInterfaceWIFI;
-  Config["Network"] = pNetworkWIFI;
-  Config["Config"] = pWirelessWIFI;
-  PeriodicTasks();
-  ConfigFile::WriteConfig("/WIFI", Config);
-  MessageLoop::RegisterListener("WIFI_PeriodicTasks", PeriodicTasks, 5000);
-  HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
-  HTTPServer::RegisterCallback("getWIFI",  GetWIFICallback);
-  HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
-  LogFile::Info("WifiManager started");
 #endif
 }
 WifiManager::~WifiManager() {
@@ -91,7 +92,7 @@ void WifiManager::PeriodicTasks() {
 void WifiManager::ScanWIFICallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   json Result = json::array();
-  json Tmp = SystemManager::uBusCall("iwinfo", "scan", {{"device", pInterfaceWIFI}});
+  json Tmp = SystemManager::uBusCall("iwinfo", "scan", {{"device", pDeviceWIFI}});
   if((Tmp.is_object() == false) || (Tmp["results"].is_array() == false)) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
   for(uint Pos = 0; Pos < Tmp["results"].size(); Pos++) {
     json AP = json::object();
@@ -109,7 +110,7 @@ void WifiManager::GetWIFICallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   if(!req.CheckParamBool("Full")) return;
   json Result = json::object();
-  json Tmp = SystemManager::uBusCall("uci", "get", { {"config", "wireless"}, {"section", pWirelessWIFI } });
+  json Tmp = SystemManager::uBusCall("uci", "get", { {"config", "wireless"}, {"section", "@wifi-iface[0]" } });
   if((Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
   Result["Enabled"] = true;
   if(Tmp["values"]["disabled"].is_string()) Result["Enabled"] = (Tmp["values"]["disabled"] == "0");
@@ -143,7 +144,7 @@ void WifiManager::GetWIFICallback(HTTPRequest &req) {
       if(Tmp["proto"].is_string()) Result["Status"]["IPMode"] = (Tmp["proto"] == "dhcp") ? "DHCP" : "STATIC";
       if(Tmp["route"].is_array() && Tmp["route"][0].is_object() && Tmp["route"][0]["nexthop"].is_string()) Result["Status"]["Gateway"] = Tmp["route"][0]["nexthop"];
     }
-    Tmp = SystemManager::uBusCall("iwinfo", "info", { {"device", pInterfaceWIFI} });
+    Tmp = SystemManager::uBusCall("iwinfo", "info", { {"device", pDeviceWIFI} });
     if(Tmp.is_object() == false) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
     if(Tmp["ssid"].is_string()) Result["Status"]["ESSID"] = Tmp["ssid"];
     if(Tmp["channel"].is_number()) Result["Status"]["Channel"] = Tmp["channel"];
@@ -164,10 +165,10 @@ void WifiManager::SetWIFICallback(HTTPRequest &req) {
     SystemManager::uBusCall("uci", "set", { {"config", "network"}, {"section", pNetworkWIFI}, {"values", {{"proto", "dhcp"}, {"enabled", req.Param("Enabled") ? "1" : "0"}}}});
   }
   if(req.Param("KeyMode") == "NONE") {
-    SystemManager::uBusCall("uci", "set", { {"config", "wireless"}, {"section", pWirelessWIFI}, {"values", {{"ssid", req.Param("ESSID")}, {"encryption", "none"}}}});
+    SystemManager::uBusCall("uci", "set", { {"config", "wireless"}, {"section", "@wifi-iface[0]"}, {"values", {{"ssid", req.Param("ESSID")}, {"encryption", "none"}}}});
   } else {
     if(!req.CheckParamString("Key")) return;
-    SystemManager::uBusCall("uci", "set", { {"config", "wireless"}, {"section", pWirelessWIFI}, {"values", {{"ssid", req.Param("ESSID")}, {"key", req.Param("Key")}, {"encryption", (req.Param("KeyMode") == "WEP") ? "wep" : (req.Param("KeyMode") == "WPA") ? "psk" : "psk2"}}}});
+    SystemManager::uBusCall("uci", "set", { {"config", "wireless"}, {"section", "@wifi-iface[0]"}, {"values", {{"ssid", req.Param("ESSID")}, {"key", req.Param("Key")}, {"encryption", (req.Param("KeyMode") == "WEP") ? "wep" : (req.Param("KeyMode") == "WPA") ? "psk" : "psk2"}}}});
   }
   SystemManager::Exec("uci commit && /etc/init.d/network restart");
   req.Success(json::object());
