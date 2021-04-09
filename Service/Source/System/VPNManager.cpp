@@ -40,7 +40,7 @@ void VPNManager::GetVPNCallback(HTTPRequest &req) {
   if(!req.CheckParamBool("Full")) return;
   json Result = json::object();
   json Tmp = SystemManager::uBusCall("uci", "get", { {"config", "openvpn"}, {"section", "custom_config"} });
-  if(Tmp.is_object() && Tmp.contains("values") && Tmp["values"].is_object()) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
+  if((Tmp.is_object() == false) || (Tmp.contains("values") == false) || (Tmp["values"].is_object() == false)) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
   Result["Enabled"] = true;
   if(Tmp["values"]["enabled"].is_string()) Result["Enabled"] = (Tmp["values"]["enabled"] == "1");
   if(req.Param("Full") == true) {

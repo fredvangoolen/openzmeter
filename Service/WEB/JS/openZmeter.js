@@ -2,10 +2,29 @@ import CBOR from 'cbor-js';
 const openZmeter = {
   install: function(Vue, options) {
     Vue.prototype.CBOR = CBOR;
+    Vue.prototype.PostToastError = null;
     Vue.prototype.Post = (url, params) => {
       const CommMode = 'application/cbor';
       return new Promise(function(resolve, reject) {
-        Vue.http.post(url, CBOR.encode(params), { responseType: 'arraybuffer', headers: { 'Accept': CommMode, 'Content-Type': CommMode } }).then((result) => resolve(CBOR.decode(result.data)), (error) => reject(error));
+        Vue.http.post(url, CBOR.encode(params), { responseType: 'arraybuffer', headers: { 'Accept': CommMode, 'Content-Type': CommMode } }).then(
+          (result) => resolve(CBOR.decode(result.data)),
+          (error) => {
+            console.log(error);
+            if(error.status == 403) {
+              if(Vue.PostToastError != null) Vue.PostToastError.dismiss();
+              Vue.PostToastError = Vue.$toast.open({type:'error', message: 'User is not allowed to do requested action', duration: 3000});
+              reject(null);
+            } else if(error.status == 401) {
+              EventBus.$emit('UserUnathorized');
+            }
+
+            //Si se devuelve un unauthoriced tiene que salir el dialogo de que la sesion ha expirado
+            //Si llega internal server error sale mensaje en rojo diciendo que la operacion fallo
+            //Si no hay cneexion muestro el dialogo de sin conexion
+            //En todo lo anterior pongo error a null si es otra cosa paso el error code y el string decodificado nada mas
+            reject(error);
+          }
+        );
       });
     };
     Vue.prototype.PriceTransfer = (series) => {

@@ -16,8 +16,6 @@
 #pragma once
 #include "HTTPRequest.h"
 #ifdef OPENWRT
-  #include <pthread.h>
-  #include <iwlib.h>
   #include <dbus/dbus.h>
 #endif
 // ---------------------------------------------------------------------------------------------------------------------

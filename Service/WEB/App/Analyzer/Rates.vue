@@ -9,8 +9,7 @@
           <button type="button" class="btn btn-default btn-xs" @click="$emit('close', analyzer.Analyzer)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
         </div>
       </template>
-      <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null" v-html="Error"></div>
-      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error==null">All dates/times are in analyzer timezone.</div>
+      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">All dates/times are in analyzer timezone.</div>
       <vuetable key="rates" :fields="Columns" :data="Analyzer.Rates" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group">
@@ -33,7 +32,7 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { Error: null, ShowSpinner: false, Rates: [], Rate: null,
+      return { ShowSpinner: false, Rates: [], Rate: null,
         Columns: [
           { name: 'Group', title: 'Type', callback: this.FormatGroup },
           { name: 'Name', title: 'Name' },
@@ -77,8 +76,7 @@
           (result) => { this.$emit('close', this.Analyzer); },
           (fail) => {
             this.ShowSpinner = false;
-            this.Error = 'Failed to save analyzer!<br/>' + fail.data;
-            setTimeout(() => { this.Error = null; }, 5000);
+            this.$toast.open({type:'error', message: "Failed to save analyzer config<br>" + String.fromCharCode.apply(null, new Uint8Array(fail.data)), duration: 3000});
           }
         );
       }

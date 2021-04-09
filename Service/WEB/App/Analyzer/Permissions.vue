@@ -78,11 +78,10 @@
       Save: function() {
         this.ShowSpinner = true;
         this.Post('setAnalyzer', this.Analyzer).then(
-          (result) => { this.$emit('close', this.Analyzer); },
+          () => { this.$emit('close', this.Analyzer); },
           (fail) => {
             this.ShowSpinner = false;
-            this.Error = 'Failed to save analyzer!';
-            setTimeout(() => { this.Error = null; }, 5000);
+            this.$toast.open({type:'error', message: "Failed to save analyzer config<br>" + String.fromCharCode.apply(null, new Uint8Array(fail.data)), duration: 3000});
           }
         );
       }

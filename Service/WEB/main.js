@@ -5,8 +5,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'CSS/openZmeter.css';
 //VUE components -------------------------------------------------------------------------------------------------------
 import Vue from 'vue';
-import VueI18n from 'vue-i18n';
-Vue.use(VueI18n);
+window.EventBus = new Vue;
 import Router from 'vue-router';
 Vue.use(Router);
 import VueResource from 'vue-resource';
@@ -104,8 +103,8 @@ import StatsDistribution from 'Views/Stats_Distribution/View.vue';
 import Settings from 'Views/Settings/View.vue';
 import About from 'Views/About/View.vue';
 import PageNotFound from 'Views/PageNotFound.vue';
-var Main = new Vue({
-  i18n: new VueI18n( { locale: 'es', fallbackLocale: 'en'} ),
+new Vue({
+  //i18n: new VueI18n( { locale: 'es', fallbackLocale: 'en'} ),
   el: '#app',
   data: { Loading: false },
   render: h => h(App),
