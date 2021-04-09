@@ -2,23 +2,15 @@
   <dlg :loading="ShowSpinner">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Analyzers &raquo; Maintenance</h4></div>
-      <div class="pull-right btn-group" v-if="InSize==null">
+      <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </template>
     <input type="file" name="name" style="display: none;" ref="filename" @change="FileSet" accept="application/gzip, .gz"/>
-    <div class="alert-info alert text-center" style="margin-bottom: 5px; padding: 5px" v-if="InSize==null">
+    <div class="alert-info alert text-center" style="margin-bottom: 5px; padding: 5px">
       Analyzer data takes currently <strong>{{ BestUnitsBin(TotalSize) }}</strong>
     </div>
-    <div class="row" v-if="InSize!=null">
-      <div v-if="OutSize!=null" class="alert-info alert text-center" style="margin-bottom: 5px; padding: 5px">
-        Downloaded {{ BestUnitsBin(InSize) }}, compressed {{ BestUnitsBin(OutSize) }}
-      </div>
-      <div v-else class="alert-success alert text-center" style="margin-bottom: 5px; padding: 5px">
-        Saving file...
-      </div>
-    </div>
-    <div class="row" v-else>
+    <div class="row">
       <div class="col-xs-12">
         <detail-tabs :tabs="['200MS','3S', '1M', '10M', '15M', '1H', 'Events', 'Alarms', 'Settings']" v-model="ActiveTab"></detail-tabs>
         <table v-if="ActiveTab=='200MS'">
@@ -325,12 +317,11 @@
 
 <script>
   import * as oZm from 'JS/openZmeter.js';
-  import Pako from 'pako';
-  import FileSaver from 'file-saver';
+  import streamSaver from 'streamsaver';
   export default {
     props: { analyzer: Object },
     data() {
-      return { ShowSpinner: false, From: 0, To: 0, Storage: {}, ActiveTab: null, InSize: null, OutSize: null,
+      return { ShowSpinner: false, From: 0, To: 0, Storage: {}, ActiveTab: null,
                Del3SRanged: false, Get3SRanged: false,
                Del1MRanged: false, Get1MRanged: false,
                Del10MRanged: false, Get10MRanged: false,
@@ -383,7 +374,7 @@
         this.ShowSpinner = true;
         this.Post('getStatus', { Analyzer: this.analyzer.Analyzer, Series: ['Storage'] }).then(
           (result) => {
-            this.Storage = result.body.Storage;
+            this.Storage = result.Storage;
             this.ShowSpinner = false;
           },
           (fail) => {
@@ -401,36 +392,30 @@
         );
       },
       CreateFile: function(filename, reader) {
-        var Deflator = new Pako.Deflate({level: 9, gzip: true});
-        var Chunks = [];
-        this.InSize = 0;
-        this.OutSize = 0;
-        Deflator.onEnd = () => {
-          FileSaver.saveAs(new Blob(Chunks, {type: "application/x-gzip"}), filename + '.json.gz');
-          this.OutSize = null;
-          setTimeout(() => { this.InSize = null; }, 5000);
-        };
-        Deflator.onData = (chunk) => {
-          this.OutSize += chunk.length;
-          Chunks.push(chunk);
-        };
-        var Recv = ({ value, done }) => {
-          if(done) {
-            Deflator.push('', true);
-            return;
-          } else {
-            this.InSize += value.length;
-            Deflator.push(value, false);
-            return reader.read().then(Recv);
+        var Toast = this.$toast.open({type:'info', message: "Downloading '" + filename + "'", dismissible: false});
+        var Progress = 0;
+        var fileStream = streamSaver.createWriteStream(filename + '.cbor', null);
+        var writeStream = fileStream.getWriter();
+        var pump = () => reader.read().then(
+          ({ value, done }) => {
+            if(done) return writeStream.close();
+            Progress += value.length;
+            Toast.message = "Downloading '" + filename + "'<br>" + this.BestUnitsBin(Progress) + " saved";
+            return writeStream.write(value).then(pump);
           }
-        };
-        reader.read().then(Recv);
+        );
+        pump().then(
+          () => {
+          Toast.type = 'success';
+          Toast.dismissible = true;
+          Toast.duration = 3000;
+        });
       },
       Download: function(aggreg, all) {
         var From = (all) ? 0 : this.From;
         var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
         if(aggreg == 'Analyzer') {
-          fetch('getAnalyzer', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer }), headers: { 'Content-Type': 'application/json' } }).then(
+          fetch('getAnalyzer', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer }), headers: { 'Content-Type': 'application/cbor', 'Accept': 'application/cbor' } }).then(
             (res) => { this.CreateFile('Analyzer', res.body.getReader()); }
           );
         } else if(aggreg == 'Alarms') {
