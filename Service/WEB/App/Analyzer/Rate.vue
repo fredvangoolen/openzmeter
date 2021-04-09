@@ -309,17 +309,6 @@
       }
     },
     methods: {
-      Save: function() {
-        this.ShowSpinner = true;
-        this.Post((this.Rate.RateID == null) ? 'addRate' : 'setRate', this.Rate).then(
-          (result) => { this.$emit('close'); },
-          (fail) => {
-            this.ShowSpinner = false;
-            this.Error = 'Failed to save rate!<br/>' + fail.body;
-            setTimeout(() => { this.Error = null; }, 5000);
-          }
-        );
-      },
       TimestampToDateString: function(val) {
         return moment(val).format('DD/MM/YYYY');
       },
