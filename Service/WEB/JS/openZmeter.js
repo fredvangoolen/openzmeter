@@ -7,22 +7,30 @@ const openZmeter = {
       const CommMode = 'application/cbor';
       return new Promise(function(resolve, reject) {
         Vue.http.post(url, CBOR.encode(params), { responseType: 'arraybuffer', headers: { 'Accept': CommMode, 'Content-Type': CommMode } }).then(
-          (result) => resolve(CBOR.decode(result.data)),
+          (result) => {
+            EventBus.$emit('NoNetwork', false);
+            resolve(CBOR.decode(result.data));
+          },
           (error) => {
-            console.log(error);
-            if(error.status == 403) {
+            if(error.status == 0) {
+              EventBus.$emit('NoNetwork', true);
+              reject(null);
+            } else if(error.status == 403) {
+              EventBus.$emit('NoNetwork', false);
               if(Vue.PostToastError != null) Vue.PostToastError.dismiss();
               Vue.PostToastError = Vue.$toast.open({type:'error', message: 'User is not allowed to do requested action', duration: 3000});
               reject(null);
             } else if(error.status == 401) {
+              EventBus.$emit('NoNetwork', false);
               EventBus.$emit('UserUnathorized');
+              reject(null);
+            } else if(error.status == 500) {
+              EventBus.$emit('NoNetwork', false);
+              if(Vue.PostToastError != null) Vue.PostToastError.dismiss();
+              Vue.PostToastError = Vue.$toast.open({type:'error', message: 'An internal error happends while procesing your request', duration: 3000});
+              reject(null);
             }
-
-            //Si se devuelve un unauthoriced tiene que salir el dialogo de que la sesion ha expirado
-            //Si llega internal server error sale mensaje en rojo diciendo que la operacion fallo
-            //Si no hay cneexion muestro el dialogo de sin conexion
-            //En todo lo anterior pongo error a null si es otra cosa paso el error code y el string decodificado nada mas
-            reject(error);
+            reject({status: error.status, message: String.fromCharCode.apply(null, new Uint8Array(error.data))});
           }
         );
       });

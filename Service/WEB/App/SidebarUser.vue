@@ -8,9 +8,9 @@
     <div class="name">{{ (user==null) ? '-' : user.Name }}</div>
     <user-logout v-if="UserUnathorized"></user-logout>
     <user-edit v-if="ShowDialog" :user="user" @close="ShowDialog=false"></user-edit>
-    <offline ref="offline"></offline>
+    <offline v-if="NoNetwork"></offline>
   </div>
-</template>handl
+</template>
 
 <script>
   import UserLogout from './User/LogoutDialog.vue';
@@ -19,10 +19,11 @@
   export default {
     props: { user: null, expanded: Boolean },
     data() {
-      return { ShowDialog: false, UserUnathorized: false };
+      return { ShowDialog: false, UserUnathorized: false, NoNetwork: false };
     },
     created: function() {
       window.EventBus.$on('UserUnathorized', () => { this.UserUnathorized = true; });
+      window.EventBus.$on('NoNetwork', (b) => { this.NoNetwork = b; });
       if(localStorage.getItem("UserName") == null) {
         this.Logout();
       } else {

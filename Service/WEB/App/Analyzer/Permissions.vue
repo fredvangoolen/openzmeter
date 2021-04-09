@@ -81,7 +81,7 @@
           () => { this.$emit('close', this.Analyzer); },
           (fail) => {
             this.ShowSpinner = false;
-            this.$toast.open({type:'error', message: "Failed to save analyzer config<br>" + String.fromCharCode.apply(null, new Uint8Array(fail.data)), duration: 3000});
+            this.$toast.open({type:'error', message: "Failed to save analyzer config<br>" + error.message, duration: 3000});
           }
         );
       }
