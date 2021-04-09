@@ -84,7 +84,7 @@
             this.ShowSpinner = false;
             this.Timer = setTimeout(this.GetAnalyzers, 5000);
           },
-          (fail) => { this.Timer = setTimeout(this.GetAnalyzers, 5000); }
+          () => { this.Timer = setTimeout(this.GetAnalyzers, 5000); }
         );
       },
       Select: function(analyzer, close) {
@@ -98,7 +98,8 @@
             this.$emit('update:analyzer', result);
             this.ShowSpinner = false;
             if(close == true) this.$emit('close');
-          }
+          },
+          () => {}
         );
       },
       CloseSelect: function(analyzer) {
@@ -115,7 +116,8 @@
             this.Analyzer = result;
             this.View = view;
             this.ShowSpinner = false;
-          }
+          },
+          () => {}
         );
       },
       Back: function() {

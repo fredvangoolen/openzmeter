@@ -101,7 +101,7 @@
           },
           (fail) => {
             this.ShowSpinner = false;
-            this.$toast.open({type:'error', message: "Failed to save user<br>" + error.message, duration: 3000});
+            if(fail != null) this.$toast.open({type:'error', message: "Failed to save user<br>" + fail.message, duration: 3000});
           }
         );
       },

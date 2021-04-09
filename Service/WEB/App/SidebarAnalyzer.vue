@@ -45,8 +45,11 @@
             this.SetAnalyzer(result);
           },
           (fail) => {
-            this.SetAnalyzer(null);
-            this.Dialog = 'Table';
+            if(fail != null) {
+              this.$toast.open({type:'error', message: "Previous analyzer not found, choose new one", duration: 3000});
+              this.SetAnalyzer(null);
+              this.Dialog = 'Table';
+            }
           }
         );
       }

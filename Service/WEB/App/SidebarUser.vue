@@ -35,14 +35,13 @@
         this.ShowDialog = false;
         this.Post('getUser', { User: localStorage.getItem("UserName") }).then(
           (result) => this.$emit('update:user', result),
-          (error) => this.Logout()
-
+          () => this.Logout()
         );
       },
       Logout: function() {
         this.Post('logOut', {}).then(
-          (result) => { location.reload(); },
-          (fail) => { location.reload(); }
+          () => { location.reload(); },
+          () => { location.reload(); }
         );
       }
     },
