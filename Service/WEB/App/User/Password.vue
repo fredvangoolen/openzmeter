@@ -52,7 +52,7 @@
           },
           (fail) => {
             this.ShowSpinner = false;
-            this.$toast.open({type:'error', message: "Failed to save user password<br>" + String.fromCharCode.apply(null, new Uint8Array(fail.data)), duration: 3000});
+            this.$toast.open({type:'error', message: "Failed to save user password<br>" + error.message, duration: 3000});
           }
         );
       },
