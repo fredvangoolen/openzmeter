@@ -7,7 +7,6 @@
         <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
       </div>
     </template>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error != '' && !ShowSpinner">{{ Error }}</div>
     <div class="row">
       <div class="col-xs-9">
         <label class="control-label">Serial number</label>
@@ -141,7 +140,7 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { ShowSpinner: false, Error: '', Analyzer: null, Tags: [],
+      return { ShowSpinner: false, Analyzer: null, Tags: [],
                TimeZones: moment.tz.names().map((val) => { return { name: val, value: val }}),
                Columns: [
                  {name: 'Name', title: 'Name'},
@@ -161,11 +160,10 @@
         this.ShowSpinner = true;
         for(var prop in this.Tags) this.Analyzer.Tags[this.Tags[prop].Name] = this.Tags[prop].Value;
         this.Post('setAnalyzer', this.Analyzer).then(
-          (result) => { this.$emit('close', this.Analyzer.Analyzer); },
+          () => { this.$emit('close', this.Analyzer); },
           (fail) => {
             this.ShowSpinner = false;
-            this.Error = 'Failed to save analyzer!';
-            setTimeout(() => { this.Error = ''; }, 5000);
+            this.$toast.open({type:'error', message: "Failed to save analyzer config<br>" + String.fromCharCode.apply(null, new Uint8Array(fail.data)), duration: 3000});
           }
         );
       }

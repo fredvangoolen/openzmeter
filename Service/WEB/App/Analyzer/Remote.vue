@@ -11,7 +11,6 @@
         <button type="button" class="btn btn-default btn-xs" :class="{ active: (View=='MQTT') }" @click="View='MQTT'">MQTT</button>
       </div>
     </template>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null && !ShowSpinner">{{ Error }}</div>
     <div class="row" v-if="View=='Main'">
       <div class="col-xs-12">
         <label class="control-label" style="line-height: 22px">Enable remote access</label>
@@ -71,7 +70,7 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { ShowSpinner: false, Error: null, Analyzer: null, View: 'Main',
+      return { ShowSpinner: false, Analyzer: null, View: 'Main',
                Columns: [
                 { name: 'Source', title: 'Source' },
                 { name: 'Topic', title: 'Topic', callback: this.TopicName },
@@ -99,11 +98,10 @@
       Save: function() {
         this.ShowSpinner = true;
         this.Post('setAnalyzer', this.Analyzer).then(
-          (result) => { this.$emit('close', this.Analyzer.Analyzer); },
+          () => { this.$emit('close', this.Analyzer); },
           (fail) => {
             this.ShowSpinner = false;
-            this.Error = 'Failed to save analyzer!';
-            setTimeout(() => { this.Error = null; }, 5000);
+            this.$toast.open({type:'error', message: "Failed to save analyzer config<br>" + String.fromCharCode.apply(null, new Uint8Array(fail.data)), duration: 3000});
           }
         );
       }

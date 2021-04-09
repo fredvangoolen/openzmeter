@@ -7,7 +7,6 @@
         <button type="button" class="btn btn-default btn-xs" title="Discard" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
       </div>
     </template>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
     <div class="row">
       <div class="col-xs-12" v-if="ShowPrevious">
         <label class="control-label">Previous password</label>
@@ -29,7 +28,7 @@
   export default {
     props: { user: Object },
     data: function() {
-      return { ShowPrevious: true, User: null, Error: null, ShowSpinner: false };
+      return { ShowPrevious: true, User: null, ShowSpinner: false };
     },
     watch: {
       User: {
@@ -53,8 +52,7 @@
           },
           (fail) => {
             this.ShowSpinner = false;
-            this.Error = 'Failed to save user password!';
-            setTimeout(() => { this.Error = null; }, 1000);
+            this.$toast.open({type:'error', message: "Failed to save user password<br>" + String.fromCharCode.apply(null, new Uint8Array(fail.data)), duration: 3000});
           }
         );
       },

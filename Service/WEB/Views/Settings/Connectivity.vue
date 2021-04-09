@@ -79,7 +79,7 @@
       LoadOpenVPN: function(show) {
         this.Post('getVPN', { Full: show }).then(
           (result) => {
-            this.Modules.OpenVPN.Settings = result.body;
+            this.Modules.OpenVPN.Settings = result;
             if(show) this.View = 'OpenVPN';
           },
           (fail) => { }

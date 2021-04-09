@@ -45,7 +45,7 @@ WifiManager::WifiManager() {
     HTTPServer::RegisterCallback("scanWIFI", ScanWIFICallback);
     HTTPServer::RegisterCallback("getWIFI",  GetWIFICallback);
     HTTPServer::RegisterCallback("setWIFI",  SetWIFICallback);
-    LogFile::Info("WifiManager started (Interface: %s - Device: %s)", pNetworkWIFI.c_str(), pDeviceWIFI.c_str());
+    LogFile::Info("WifiManager started (Interface: '%s' - Device: '%s')", pNetworkWIFI.c_str(), pDeviceWIFI.c_str());
   } else {
     ConfigFile::WriteConfig("/WIFI", nullptr);
   }

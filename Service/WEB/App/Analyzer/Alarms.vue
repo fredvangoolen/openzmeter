@@ -6,10 +6,9 @@
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save alarm and events config"></button>
           <button type="button" class="btn btn-default btn-xs" @click="Add"><img :src="require('Imgs/plus.png')" alt="Add alarm"></button>
-          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', Analyzer.Analyzer)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="$emit('close', null)"><img :src="require('Imgs/arrow_undo.png')" alt="Back"></button>
         </div>
       </template>
-      <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
       <div class="row">
         <div class="col-xs-12">
           <label class="control-label" style="line-height: 22px">Events detection</label>
@@ -44,7 +43,7 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { Analyzer: null, ShowSpinner: false, Alarm: null, Error: null,
+      return { Analyzer: null, ShowSpinner: false, Alarm: null,
         columns: [
           { name: 'Enabled', title: 'Enabled', callback: this.FormatEnabled },
           { name: 'Name', title: 'Name' },
@@ -83,11 +82,10 @@
       Save: function() {
         this.ShowSpinner = true;
         this.Post('setAnalyzer', this.Analyzer).then(
-          (result) => { this.$emit('close', this.Analyzer); },
+          () => { this.$emit('close', this.Analyzer); },
           (fail) => {
             this.ShowSpinner = false;
-            this.Error = 'Failed to save analyzer!';
-            setTimeout(() => { this.Error = null; }, 5000);
+            this.$toast.open({type:'error', message: "Failed to save analyzer config<br>" + String.fromCharCode.apply(null, new Uint8Array(fail.data)), duration: 3000});
           }
         );
       }
