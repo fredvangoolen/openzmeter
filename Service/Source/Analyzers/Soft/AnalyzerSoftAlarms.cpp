@@ -20,13 +20,14 @@
 AnalyzerSoftAlarms::AnalyzerSoftAlarms(const string &serial, AnalyzerSoftMQTT *mqtt) : AnalyzerAlarms(serial) {
   pNominalVoltage   = 230.0;
   pNominalFrequency = 50.0;
-  pWorker           = NULL;
+  pEnabled          = false;
   pMQTT             = mqtt;
   pLock             = PTHREAD_RWLOCK_INITIALIZER;
+  pTask             = NULL;
 }
 AnalyzerSoftAlarms::~AnalyzerSoftAlarms() {
   pthread_rwlock_wrlock(&pLock);
-  if(pWorker != NULL) delete pWorker;
+  TaskPool::Wait(pTask);
   pthread_rwlock_unlock(&pLock);
 }
 json AnalyzerSoftAlarms::CheckConfig(const json &config) {
@@ -35,19 +36,12 @@ json AnalyzerSoftAlarms::CheckConfig(const json &config) {
   for(auto &Alarm : config) ConfigOUT.push_back(AnalyzerSoftAlarm::CheckConfig(Alarm));
   return ConfigOUT;
 }
-void AnalyzerSoftAlarms::ConfigNominals(const float nominalVoltage, const float nominalFreq) {
+void AnalyzerSoftAlarms::Config(const bool enabled, const string &tz, const json &alarms, const float nominalVoltage, const float nominalFreq) {
+  pthread_rwlock_wrlock(&pLock);
   pNominalVoltage   = nominalVoltage;
   pNominalFrequency = nominalFreq;
-}
-void AnalyzerSoftAlarms::Config(const bool enabled, const string &tz, const json &alarms) {
-  pthread_rwlock_wrlock(&pLock);
   cctz::load_time_zone(tz, &pTimeZone);
-  if((enabled == false) && (pWorker != NULL)) {
-    delete pWorker;
-    pWorker = NULL;
-  } else if((enabled == true) && (pWorker == NULL)) {
-    pWorker = new Worker("AlarmsDet", Worker::ABOUTNORMAL);
-  }
+  pEnabled = enabled;
   for(auto &List : pAlarms) {
     for(auto &Alarm : List.second) delete Alarm;
   }
@@ -86,12 +80,12 @@ void AnalyzerSoftAlarms::Alarms_Func(const string &name, AnalyzerSoftAggreg &par
 }
 void AnalyzerSoftAlarms::Run(const string &aggreg, AnalyzerSoftAggreg &params) {
   pthread_rwlock_rdlock(&pLock);
-  if(pWorker != NULL) pWorker->Run([&, aggreg]() { this->Alarms_Func(aggreg, params); });
+  if(pEnabled) pTask = TaskPool::Run([&, aggreg]() { this->Alarms_Func(aggreg, params); }, TaskPool::ABOUTNORMAL);
   pthread_rwlock_unlock(&pLock);
 }
 void AnalyzerSoftAlarms::Wait() {
   pthread_rwlock_rdlock(&pLock);
-  if(pWorker != NULL) pWorker->Wait();
+  TaskPool::Wait(pTask);
   pthread_rwlock_unlock(&pLock);
 }
 void AnalyzerSoftAlarms::TestAlarm(HTTPRequest &req, AnalyzerSoftAggreg200MS &aggreg) const {

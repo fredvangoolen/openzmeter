@@ -13,12 +13,12 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
- #include "AnalyzerSoftMQTT.h"
- #include "URL.h"
- #include "Tools.h"
- #include "LogFile.h"
- #include "Worker.h"
- // ---------------------------------------------------------------------------------------------------------------------
+#include "AnalyzerSoftMQTT.h"
+#include "URL.h"
+#include "Tools.h"
+#include "LogFile.h"
+#include "TaskPool.h"
+// ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftMQTT::AnalyzerSoftMQTT(const string &serial) {
   pMutex      = PTHREAD_MUTEX_INITIALIZER;
   pSerial     = serial;
@@ -113,7 +113,8 @@ void AnalyzerSoftMQTT::Config(const json &config) {
         LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         pThread = 0;
       } else {
-        Worker::SetThreadProperties(pThread, "MQTT", Worker::LOW);
+        if(pthread_setname_np(pThread, "MQTT") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+        TaskPool::SetThreadProperties(pThread, TaskPool::LOW);
       }
     }
   }

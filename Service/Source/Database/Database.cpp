@@ -86,7 +86,7 @@ bool Database::ExecSentenceNoResult(const string &sql) {
   if(PQresultStatus(Result) != PGRES_COMMAND_OK) {
     char *Save;
     LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-    printf("%s\n", sql.c_str());
+//    printf("%s\n", sql.c_str());
     PQclear(Result);
     return false;
   } else {
@@ -100,7 +100,7 @@ bool Database::ExecSentenceAsyncResult(const string &sql) {
   if(PQsendQuery(pDBConn, sql.c_str()) == 0) {
     char *Save;
     LogFile::Error("Error in SQL query (%s)", strtok_r(PQerrorMessage(pDBConn), "\r\n", &Save));
-    printf("%s\n", sql.c_str());
+//    printf("%s\n", sql.c_str());
     return false;
   }
   if(PQsetSingleRowMode(pDBConn) == 0) {

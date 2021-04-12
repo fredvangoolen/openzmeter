@@ -27,11 +27,11 @@
               "schema": {
                 "example": {
                   "Analyzer": "VIRTUAL_3PN",
-                  "Series": [ "System", "SystemLog", "Log", "Events", "Alarms", "Storage" ]
+                  "Series": [ "Version", "System", "SystemLog", "Log", "Events", "Alarms", "Storage" ]
                 },
                 "properties": {
                   "Analyzer": { "type": "string" },
-                  "Series": { "type": "array", "items": { "type": "string", "enum": [ "System", "SystemLog", "Log", "Events", "Alarms", "Storage" ] } }
+                  "Series": { "type": "array", "items": { "type": "string", "enum": [ "Version", "System", "SystemLog", "Log", "Events", "Alarms", "Storage" ] } }
                 },
                 "required": [ "Analyzer", "Series" ]
               }
@@ -47,6 +47,20 @@
                   "properties": {
                     "Log": { "$ref": "#/components/schemas/LogTemplate" },
                     "System": { "$ref": "#/components/schemas/StatusTemplate" },
+                    "Version": {
+                      "type": "object",
+                      "properties": {
+                        "Branch": { "type": "string" },
+                        "Arch": { "type": "string" },
+                        "Build": { "type": "string" }
+                      },
+                      "required": ["Branch", "Build", "Arch"],
+                      "example": {
+                        "Arch": "x86_64",
+                        "Branch": "devel",
+                        "Build": 2020020.21255
+                      }
+                    },
                     "Storage": {
                       "type": "object",
                       "properties": {

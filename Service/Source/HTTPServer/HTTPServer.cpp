@@ -28,9 +28,9 @@
 #include "LogFile.h"
 #include "ConfigFile.h"
 #include "ResourceFile.h"
-#include "HTTPRequestPoll.h"
+#include "HTTPRequestPool.h"
 #include "MessageLoop.h"
-#include "Worker.h"
+#include "TaskPool.h"
 //----------------------------------------------------------------------------------------------------------------------
 map<string, HTTPServer::Callback_t> __attribute__((init_priority(200))) HTTPServer::pCallbacks;
 map<string, string>                 __attribute__((init_priority(200))) HTTPServer::pComponents;
@@ -50,7 +50,7 @@ HTTPServer::HTTPServer() {
   Get(".*", HandleGet);
   Post(".*", HandlePost);
   set_keep_alive_max_count(UINT32_MAX);
-  new_task_queue = [] { return new HTTPRequestPoll(); };
+  new_task_queue = [] { return new HTTPRequestPool(); };
   Config = json::object();
   if(Logo != pLogoImg) Config["Logo"] = Logo;
   Config["Port"] = pPort;
@@ -64,7 +64,8 @@ HTTPServer::HTTPServer() {
     pThread = 0;
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   } else {
-    Worker::SetThreadProperties(pThread, "HTTPServer", Worker::NORMAL);
+    if(pthread_setname_np(pThread, "HTTPServer") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    TaskPool::SetThreadProperties(pThread, TaskPool::NORMAL);
   }
 }
 HTTPServer::~HTTPServer() {
@@ -137,7 +138,9 @@ string HTTPServer::PatchString(string &src, const string &find, const string &re
 }
 void HTTPServer::GetVersionCallback(HTTPRequest &req) {
   json Result = json::object();
-  Result["Version"]   = __BUILD__;
+  Result["Branch"]    = __BUILD_BRANCH__;
+  Result["Arch"]      = __BUILD_ARCH__;
+  Result["Build"]     = __BUILD_DATE__;
   Result["Functions"] = json::array();
   pthread_rwlock_rdlock(&pLock);
   for(auto &Callback : pCallbacks) Result["Functions"].push_back(Callback.first);

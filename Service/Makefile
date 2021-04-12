@@ -12,8 +12,8 @@ RESOURCES_SOURCE = $(shell find Resources ! -type d -print | sort)
 #Executable related components
 EXECUTABLE_TARGET = Tmp/$(TARGET)/openZmeter
 EXECUTABLE_SOURCE = $(shell find Source -name "*.cpp" ! -type d -print)
-CFLAGS  += -DCPPHTTPLIB_USE_POLL -DCPPHTTPLIB_TCP_NODELAY -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -D__BUILD__="\"$(BUILD_NAME)_$(BUILD_DATE)\"" \
-           -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/Soft -I Source/Analyzers/Remote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools -I Libs -I Libs/mqtt-c \
+CFLAGS  += -DCPPHTTPLIB_USE_POLL -DCPPHTTPLIB_TCP_NODELAY -DCPPHTTPLIB_ZLIB_SUPPORT -DCPPHTTPLIB_OPENSSL_SUPPORT -D__BUILD_DATE__="\"$(BUILD_DATE)\"" -D__BUILD_BRANCH__="\"$(BUILD_BRANCH)\"" -D__BUILD_ARCH__="\"$(BUILD_ARCH)\"" \
+           -I Source -I Source/Devices -I Source/Analyzers -I Source/Analyzers/Soft -I Source/Analyzers/Remote -I Source/Tariffs -I Source/Database -I Source/HTTPServer -I Source/System -I Source/Tools -I Libs -I Libs/mqtt-c -I Libs/cpp-httplib -I Libs/nlohmann \
 					 -fsingle-precision-constant -Wno-psabi -Wall
 LDFLAGS += -lpq -lz -lpthread -lm -lssl -lcrypto -lusb-1.0 -luuid -l:libfftw3f.a -l:libstdc++.a
 
@@ -23,8 +23,9 @@ EXECUTABLE_SOURCE += $(shell find Libs/muParser -name "*.cpp" ! -type d -print)
 EXECUTABLE_SOURCE += $(shell find Libs/mqtt-c -name "*.c" ! -type d -print)
 
 #Fill date and version if not provided
-BUILD_DATE ?= $(shell date +%Y%m%d.%H%M)
-BUILD_NAME ?= "custom"
+BUILD_DATE   ?= $(shell date +%Y%m%d.%H%M)
+BUILD_BRANCH ?= "custom"
+BUILD_ARCH   ?= "unknown"
 
 #Default flags and programs
 CC  ?= gcc

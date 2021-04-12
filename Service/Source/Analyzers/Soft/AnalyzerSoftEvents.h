@@ -16,7 +16,7 @@
 #pragma once
 #include <list>
 #include <inttypes.h>
-#include "Worker.h"
+#include "TaskPool.h"
 #include "AnalyzerSoftBlock.h"
 #include "AnalyzerEvents.h"
 // ---------------------------------------------------------------------------------------------------------------------
@@ -47,7 +47,8 @@ class AnalyzerSoftEvents final : public AnalyzerEvents {
     float            pSamplerate;               //Input samplerate
     float            pNominalVoltage;           //Nominal voltage
     float            pNominalFrequency;         //Nominal frequency
-    Worker          *pWorker;                   //Working thread
+    bool             pEnabled;                  //Events detection enabled
+    TaskPool::Task   pTask;                     //Working thread
     Event_t         *pEvent;                    //Running event
     list<Event_t*>   pEvents;                   //Close pending events
     bool             pPrevStationary;           //Steady state flag
@@ -68,9 +69,8 @@ class AnalyzerSoftEvents final : public AnalyzerEvents {
   public :
     AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftEvents();
-    void Config(const bool enabled);
-    void Run(const AnalyzerSoftBlock *block, const uint64_t timestamp, const float nominalVoltage, const float nominalFreq);
+    void Config(const bool enabled, const float nominalVoltage, const float nominalFreq);
+    void Run(const AnalyzerSoftBlock *block, const uint64_t timestamp);
     bool Wait();
-
 };
 // ---------------------------------------------------------------------------------------------------------------------

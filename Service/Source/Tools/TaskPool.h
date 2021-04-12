@@ -14,32 +14,43 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
+#include <queue>
 #include <pthread.h>
 #include <functional>
 // ---------------------------------------------------------------------------------------------------------------------
 using namespace std;
 // ---------------------------------------------------------------------------------------------------------------------
-class Worker {
+class TaskPool {
   private :
-    volatile bool         pTerminate;
-    pthread_t             pThread;
-    pthread_mutex_t       pMutex;
-    pthread_cond_t        pCondWake;
-    pthread_cond_t        pCondWait;
-    function<void()>      pCallback;
+    typedef struct {
+      pthread_t             Thread;
+      pthread_mutex_t       Mutex;
+      pthread_cond_t        Cond;
+      function<void()>      Callback;
+      uint64_t              LastUse;
+      volatile bool         Terminate;
+    } Task_t;
   public :
     enum Prio { IDLE, LOW, NORMAL, ABOUTNORMAL, HIGH, HIGHEST };
+    typedef Task_t* Task;
   private :
-    void *Thread();
+    static int             pMinPrio;
+    static int             pMaxPrio;
+    static volatile bool   pUsePrio;
+    static pthread_mutex_t pMutex;
+    static pthread_cond_t  pCond;
+    static deque<Task_t*>  pFreeTasks;
+    static uint32_t        pRunningTasks;
   private :
+    static void  PeriodicTasks();
+    static void *Thread(Task_t *task);
+  public:
+    TaskPool();
+    ~TaskPool();
+  public :
+    static Task Run(function<void()> fn, Prio prio);
+    static void Wait(Task &task);
+    static void SetThreadProperties(pthread_t thread, const Prio prio);
     static void SetThreadNice(pthread_t &thread, const Prio prio);
-  public :
-    static void SetThreadProperties(pthread_t thread, const string &name, const Prio prio);
-  public :
-    Worker(const string &name, const Prio prio);
-    ~Worker();
-    bool IsWorking();
-    void Run(function<void()> callback);
-    void Wait();
 };
 // ---------------------------------------------------------------------------------------------------------------------

@@ -17,7 +17,7 @@
 #include "ResourceFile.h"
 #include "ConfigFile.h"
 #include "LogFile.h"
-#include "Worker.h"
+#include "TaskPool.h"
 #include "MessageLoop.h"
 #include "HTTPServer.h"
 // ---------------------------------------------------------------------------------------------------------------------

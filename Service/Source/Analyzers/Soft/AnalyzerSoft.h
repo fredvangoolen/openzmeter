@@ -19,7 +19,6 @@
 #include "cctz/time_zone.h"
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
-#include "Worker.h"
 #include "ProviderLocks.h"
 #include "AnalyzerSoftFFTs.h"
 #include "AnalyzerSoftBlock.h"

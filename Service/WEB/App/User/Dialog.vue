@@ -94,7 +94,7 @@
       Save: function() {
         this.ShowSpinner = true;
         this.Post((this.user == null) ? 'addUser' : 'setUser', this.User).then(
-          (result) => {
+          () => {
             this.ShowSpinner = false;
             this.$emit('close');
             this.$toast.open({type:'success', message: "User '" + this.User.User + "' saved", duration: 3000});

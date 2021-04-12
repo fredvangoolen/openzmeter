@@ -54,7 +54,11 @@ void AnalyzerRemoteNow::GetSeriesNow(HTTPRequest &req) {
   pthread_rwlock_wrlock(&pLock);
   for(auto &Serie : req.Param("Series")) pNowRequest.find(Serie)->second = Time;
   pthread_rwlock_unlock(&pLock);
+
   pthread_rwlock_rdlock(&pLock);
+  //Tengo todas las series?
+  //Si no espero hasta 10 segundos
+
   json Result = json::object();
   Result["Time"] = pNow["Time"];
   for(auto &Serie : req.Param("Series")) {

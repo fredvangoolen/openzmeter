@@ -19,8 +19,10 @@
 class UpdateManager final {
   #ifdef OPENWRT
   private :
-    static void     GetUpdatesCallback(const json &params, Response &response);
-    static void     SetUpgradeCallback(const json &params, Response &response);
+    static string   pUpdateURL;
+  private :
+    static void  GetUpdatesCallback(HTTPRequest &req);
+    static void  SetUpgradeCallback(HTTPRequest &req);
   #endif
   public :
     UpdateManager();

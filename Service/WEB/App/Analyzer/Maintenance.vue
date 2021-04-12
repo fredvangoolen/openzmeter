@@ -414,27 +414,29 @@
       Download: function(aggreg, all) {
         var From = (all) ? 0 : this.From;
         var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
+        if(From == null) From = 0;
+        if(To == null) To = 0;
         if(aggreg == 'Analyzer') {
           fetch('getAnalyzer', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer }), headers: { 'Content-Type': 'application/cbor', 'Accept': 'application/cbor' } }).then(
             (res) => { this.CreateFile('Analyzer', res.body.getReader()); }
           );
         } else if(aggreg == 'Alarms') {
-          fetch('getAlarms', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To }), headers: { 'Content-Type': 'application/json' } }).then(
+          fetch('getAlarms', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Update: false, ChangeTime: 0 }), headers: { 'Content-Type': 'application/json', 'Accept': 'application/cbor' } }).then(
             (res) => { this.CreateFile('Alarms', res.body.getReader()); }
           );
         } else if(aggreg == 'Events') {
-          fetch('getEvents', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Samples: true }), headers: { 'Content-Type': 'application/json' } }).then(
+          fetch('getEvents', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, ChangeTime: 0, Update: false, Samples: 'All' }), headers: { 'Content-Type': 'application/json', 'Accept': 'application/cbor' } }).then(
             (res) => { this.CreateFile('Events', res.body.getReader()); }
           );
         } else {
           var Series = [];
-          if(aggreg == '200MS') Series = ['Frequency', 'Unbalance', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi', 'Voltage_Harmonics', 'Voltage_Harmonics_Complex', 'Current_Harmonics', 'Current_Harmonics_Complex', 'Power_Harmonics'];
-          if(aggreg == '3S')    Series = ['Frequency', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power'];
-          if(aggreg == '1M')    Series = ['Frequency', 'Unbalance', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Apparent_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi', 'Voltage_Harmonics', 'Current_Harmonics', 'Power_Harmonics'];
+          if(aggreg == '200MS') Series = ['Frequency', 'Unbalance', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi', 'Voltage_Harmonics_Complex', 'Current_Harmonics_Complex', 'Power_Harmonics'];
+          if(aggreg == '3S')    Series = ['Frequency', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power'];
+          if(aggreg == '1M')    Series = ['Frequency', 'Unbalance', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Power_Factor', 'Voltage_THD', 'Current_THD', 'Phi', 'Voltage_Harmonics', 'Current_Harmonics', 'Power_Harmonics'];
           if(aggreg == '10M')   Series = ['Frequency', 'Flag', 'Voltage', 'Current'];
-          if(aggreg == '15M')   Series = ['Active_Power', 'Active_Energy', 'Reactive_Power', 'Reactive_Energy', 'Apparent_Power'];
-          if(aggreg == '1H')    Series = ['Frequency', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Active_Energy', 'Reactive_Power', 'Reactive_Energy', 'Apparent_Power', 'Voltage_Stats', 'Frequency_Stats', 'Voltage_THD_Stats', 'Voltage_Harmonics_Stats', 'Unbalance_Stats'];
-          fetch('getSeries', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg, Series: Series}), headers: { 'Content-Type': 'application/json' } }).then(
+          if(aggreg == '15M')   Series = ['Active_Power', 'Reactive_Power'];
+          if(aggreg == '1H')    Series = ['Frequency', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Voltage_Stats', 'Frequency_Stats', 'Voltage_THD_Stats', 'Voltage_Harmonics_Stats', 'Unbalance_Stats'];
+          fetch('getSeries', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg, Series: Series}), headers: { 'Content-Type': 'application/json', 'Accept': 'application/cbor' } }).then(
             (res) => { this.CreateFile(aggreg, res.body.getReader()); }
           );
         }
@@ -492,60 +494,8 @@
         Inflator.onData = onDeflatedData;
         Reader.readAsArrayBuffer(File.slice(0, 65536));
       },
-      BackupRange: function () {
-//        this.View = 'Save';
-//        this.Deflator = new Pako.Deflate({level: 9, gzip: true});
-//        this.DateText = moment.tz(this.StartDate, this.Analyzer.TimeZone).format('DD/MM/YYYY');
-//        this.Chunks = [];
-//        this.TotalSize = 0;
-//        this.SizeText = this.BestUnitsBin(this.TotalSize);
-//        this.Progress = 0;
-//        this.Range = this.EndDate - this.StartDate;
-        this.Deflator.onEnd = () => {
-          FileSaver.saveAs(new Blob(this.Chunks, {type: "application/gzip"}), this.Analyzer.Analyzer + '.gz');
-          this.View = 'Main';
-        };
-        this.Deflator.onData = (chunk) => {
-          this.TotalSize += chunk.length;
-          this.SizeText = this.BestUnitsBin(this.TotalSize);
-          this.Chunks.push(chunk);
-        };
-        this.FetchDay();
-      },
-      FetchDay: function () {
-        var DayData = [];
-        var Series3S = ["Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power"];
-        var Series1M = ["Frequency","Flag", "Voltage", "Current"];
-        var Series10M = ["Frequency", "Flag", "Voltage", "Current"];
-        var Series15M = ["Active_Power", "Reactive_Power"];
-        var Series1H = ["Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Voltage_Stats", "Frequency_Stats", "Voltage_THD_Stats", "Voltage_Harmonics_Stats"];
-        var FetchFunc = (aggreg, series) => {
-          var ToDate = moment.tz(this.StartDate, this.Analyzer.TimeZone).endOf('day').valueOf();
-          $.ajax({url: 'getSeries', timeout: 20000, type: 'POST', dataType: 'json', contentType: 'application/json', data: JSON.stringify({Series: series, LastSample: 0, Analyzer: this.Analyzer.Analyzer, Aggreg: aggreg, To: ToDate, Period: 86399999}),
-          success: (result) => {
-            if(result.Sampletime.length > 0) DayData.push(result);
-            if(aggreg == '3S') FetchFunc('1M', Series1M);
-            if(aggreg == '1M') FetchFunc('10M', Series10M);
-            if(aggreg == '10M') FetchFunc('15M', Series15M);
-            if(aggreg == '15M') FetchFunc('1H', Series1H);
-            if(aggreg == '1H') {
-              this.StartDate = ToDate + 1;
-              for(var n = 0; n < DayData.length; n++) this.Deflator.push(JSON.stringify(DayData[n]), false);
-              if(ToDate == this.EndDate) this.Deflator.push('', true);
-              this.DateText = moment.tz(this.StartDate, this.Analyzer.TimeZone).format('DD/MM/YYYY');
-              this.Progress = 100 - Math.round(((this.EndDate - this.StartDate) / this.Range) * 100.0);
-              if(ToDate != this.EndDate) this.FetchDay();
-            }
-          },
-          error: () => {
-            alert("ERRORRRRRR")
-          }
-        });
 
 
-        };
-        FetchFunc('3S', Series3S);
-      }
     }
   }
 </script>
