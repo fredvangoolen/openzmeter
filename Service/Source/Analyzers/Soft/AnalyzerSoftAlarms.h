@@ -31,7 +31,8 @@ class AnalyzerSoftAlarms final : public AnalyzerAlarms {
     float                                     pNominalFrequency;
     pthread_rwlock_t                          pLock;
     map<string, vector<AnalyzerSoftAlarm*> >  pAlarms;
-    Worker                                   *pWorker;
+    bool                                      pEnabled;
+    TaskPool::Task                            pTask;
     AnalyzerSoftMQTT                         *pMQTT;
     time_zone                                 pTimeZone;
   private :
@@ -41,8 +42,7 @@ class AnalyzerSoftAlarms final : public AnalyzerAlarms {
   public :
     AnalyzerSoftAlarms(const string &serial, AnalyzerSoftMQTT *mqtt);
     ~AnalyzerSoftAlarms();
-    void Config(const bool enabled, const string &tz, const json &alarms);
-    void ConfigNominals(const float nominalVoltage, const float nominalFreq);
+    void Config(const bool enabled, const string &tz, const json &alarms, const float nominalVoltage, const float nominalFreq);
     void Run(const string &name, AnalyzerSoftAggreg &params);
     void Wait();
     void TestAlarm(HTTPRequest &req, AnalyzerSoftAggreg200MS &aggreg) const;

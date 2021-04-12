@@ -37,29 +37,21 @@ AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::Ana
   pPrevCyclesLen    = 0;
   pPrevCyclesPos    = 0;
   pPrevCycles       = NULL;
-  pWorker           = NULL;
+  pTask             = NULL;
   pHaveEvent        = false;
+  pEnabled          = false;
 }
 AnalyzerSoftEvents::~AnalyzerSoftEvents() {
-  if(pWorker != NULL) delete pWorker;
+  TaskPool::Wait(pTask);
   if(pEvent != NULL) delete pEvent;
   if(pPrevSamples != NULL) free(pPrevSamples);
   if(pPrevCycles != NULL) free(pPrevCycles);
   for(auto &Prev : pEvents) delete Prev;
   pEvents.clear();
 }
-void AnalyzerSoftEvents::Config(const bool enabled) {
+void AnalyzerSoftEvents::Config(const bool enabled, const float nominalVoltage, const float nominalFreq) {
   pthread_mutex_lock(&pMutex);
-  if((enabled == false) && (pWorker != NULL)) {
-    delete pWorker;
-    pWorker = NULL;
-  } else if((enabled == true) && (pWorker == NULL)) {
-    pWorker = new Worker("EventsDet", Worker::ABOUTNORMAL);
-  }
-  pthread_mutex_unlock(&pMutex);
-}
-void AnalyzerSoftEvents::Run(const AnalyzerSoftBlock *block, const uint64_t timestamp, const float nominalVoltage, const float nominalFreq) {
-  pthread_mutex_lock(&pMutex);
+  pEnabled = enabled;
   if((pNominalVoltage != nominalVoltage) || (pNominalFrequency != nominalFreq)) {
     if(pPrevCycles != NULL) free(pPrevCycles);
     if(pPrevSamples != NULL) free(pPrevSamples);
@@ -79,14 +71,18 @@ void AnalyzerSoftEvents::Run(const AnalyzerSoftBlock *block, const uint64_t time
     pPrevSamples      = (float*)calloc(pPrevSamplesLen * pVoltageChannels, sizeof(float));
     pPrevCycles       = (float*)calloc(pPrevCyclesLen * pVoltageChannels, sizeof(float));
   }
+  pthread_mutex_unlock(&pMutex);
+}
+void AnalyzerSoftEvents::Run(const AnalyzerSoftBlock *block, const uint64_t timestamp) {
+  pthread_mutex_lock(&pMutex);
   pHaveEvent = false;
-  if(pWorker != NULL) pWorker->Run([=]() { this->Events_Func(block, timestamp); });
+  if(pEnabled) pTask = TaskPool::Run([&, block, timestamp]() { this->Events_Func(block, timestamp); }, TaskPool::ABOUTNORMAL);
   pthread_mutex_unlock(&pMutex);
 }
 bool AnalyzerSoftEvents::Wait() {
   pthread_mutex_lock(&pMutex);
-  if(pWorker != NULL) pWorker->Wait();
-  bool Result = ((pWorker != NULL) && pHaveEvent);
+  TaskPool::Wait(pTask);
+  bool Result = (pEnabled && pHaveEvent);
   pthread_mutex_unlock(&pMutex);
   return Result;
 }
@@ -209,7 +205,7 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint6
         LogFile::Debug("New event '%s' started on analyzer '%s'", Type.c_str(), pSerial.c_str());
         pEvent->Start = timestamp + (uint32_t)((Pos * 1000) / pSamplerate);
         Database DB(pSerial);
-        DB.ExecSentenceNoResult("INSERT INTO events(starttime, evttype, samplerate, reference, peak, change, notes, duration, size_raw, size_rms) VALUES (" + DB.Bind(pEvent->Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", '', 0, " + DB.Bind(pPrevSamplesLen) + ", " + DB.Bind(pPrevCyclesLen) + ")");
+        DB.ExecSentenceNoResult("INSERT INTO events(changetime, starttime, evttype, samplerate, reference, peak, change, notes, duration, size_raw, size_rms) VALUES (" + DB.Bind(Tools::GetTime64()) + ", " + DB.Bind(pEvent->Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", '', 0, " + DB.Bind(pPrevSamplesLen) + ", " + DB.Bind(pPrevCyclesLen) + ")");
         SaveSamples(pEvent->Start, SAMPLES_RMS, pPrevCyclesLen + 1);
         SaveSamples(pEvent->Start, SAMPLES_RAW, pPrevSamplesLen);
       } else if(pEvent->Type == EVT_INTERRUPTION) {

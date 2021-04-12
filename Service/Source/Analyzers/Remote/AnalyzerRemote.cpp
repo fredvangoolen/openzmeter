@@ -94,7 +94,7 @@ void AnalyzerRemote::SetAnalyzer(HTTPRequest &req) {
 void AnalyzerRemote::GetStatus(HTTPRequest &req) {
   if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   if(State() == UNCONFIGURED) return req.Error("", HTTP_METHOD_NOT_ALLOWED);
-  if(!req.CheckParamSet("Series", {"Log", "System", "SystemLog", "Events", "Alarms", "Storage"})) return;
+  if(!req.CheckParamSet("Series", {"Version", "Log", "System", "SystemLog", "Events", "Alarms", "Storage"})) return;
   json Extra = json::object();
   Extra["PendingActions"] = pActions.Count();
   Extra["State"] = (State() == UNCONFIGURED) ? "UNCONFIGURED" : (State() == OFFLINE) ? "OFFLINE" : (State() == SYNCING) ? "SYNCING" : "ONLINE";

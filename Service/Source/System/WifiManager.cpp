@@ -81,7 +81,7 @@ void WifiManager::PeriodicTasks() {
     if(Result.is_object() && Result.contains("up") && Result["up"].is_boolean()) {
       Stat = (Result["up"] == true) ? CONNECTED : CONFIGURED;
       int Code;
-      SystemManager::Exec("ping -c 1 8.8.8.8", &Code);
+      SystemManager::Exec("ping -c 1 8.8.8.8 2> /dev/null", &Code);
       Stat = (Code == 0) ? INTERNET : CONNECTED;
     }
   }

@@ -6,6 +6,13 @@
         <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
       </div>
     </template>
+    <template v-slot:footer>
+      <div class="row" style="text-align: center">
+        <div class="col-xs-4">Branch is {{ TransferStatus.Data.Version.Branch }}</div>
+        <div class="col-xs-4">Architecture is {{ TransferStatus.Data.Version.Arch }}</div>
+        <div class="col-xs-4">Build is {{ TransferStatus.Data.Version.Build }}</div>
+      </div>
+    </template>
     <div class="cards" v-if="TransferStatus.Data!=null">
       <div class="panel panel-other card" v-if="TransferStatus.Data.System.CPU!=null">
         <img class="card-img" :src="require('Imgs/chip.png')">
@@ -54,7 +61,7 @@
   export default {
     props: { analyzer: Object },
     data() {
-      return { TransferStatus: this.StatusTransfer(['Log', 'System']) };
+      return { TransferStatus: this.StatusTransfer(['Version', 'Log', 'System']) };
     },
     mounted: function() {
       this.TransferStatus.Update(this.analyzer);

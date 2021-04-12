@@ -74,7 +74,8 @@ void AnalyzerSoftSync::Config(const json &config) {
         LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
         pThread = 0;
       } else {
-        Worker::SetThreadProperties(pThread, "Sync", Worker::LOW);
+        if(pthread_setname_np(pThread, "Sync") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+        TaskPool::SetThreadProperties(pThread, TaskPool::LOW);
       }
     }
   }

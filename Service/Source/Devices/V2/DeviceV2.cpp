@@ -112,7 +112,8 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
     libusb_exit(pContext);
     return;
   }
-  Worker::SetThreadProperties(pThread, "DeviceV2", Worker::HIGHEST);
+  if(pthread_setname_np(pThread, "DeviceV2") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  TaskPool::SetThreadProperties(pThread, TaskPool::HIGHEST);
   Error = libusb_hotplug_register_callback(pContext, (libusb_hotplug_event)(LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT), LIBUSB_HOTPLUG_ENUMERATE, DEVICEV2_VID, DEVICEV2_PID, LIBUSB_HOTPLUG_MATCH_ANY, [](struct libusb_context *ctx, struct libusb_device *dev, libusb_hotplug_event event, void *user_data) { return ((DeviceV2*)user_data)->PlugCallback(ctx, dev, event); }, this, NULL);
   if(Error < 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, libusb_error_name(Error));

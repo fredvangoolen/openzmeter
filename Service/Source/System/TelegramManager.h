@@ -16,10 +16,9 @@
 #pragma once
 #include "HTTPRequest.h"
 #include "nlohmann/json.hpp"
-//#include "telegrab/telegrab.hpp"
 #include "cctz/time_zone.h"
 #include "nlohmann/json.hpp"
-#include "Worker.h"
+#include "TaskPool.h"
 #include "Tools.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace std;
@@ -31,27 +30,21 @@ using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 class TelegramManager final {
   private :
-    typedef struct {
-      uint64_t              LastTime;     //Last time event
-      string                Token;
-      json                  JSON;
-      Worker               *Thread;
-      SSLClient            *Client;
-    } Worker_t;
-  private :
+    static pthread_mutex_t     pMutex;
+    static pthread_mutex_t     pMutexConfig;
+    static pthread_cond_t      pCond;
     static json                pStatus;
     static string              pToken;
     static pthread_t           pThread;
-    static pthread_mutex_t     pMutex;
     volatile static bool       pTerminate;
-    static list<Worker_t*>     pFreeWorkers;
-    static uint32_t            pUsedWorkers;
-    static Headers             pHeaders;
+    static uint32_t            pRunningWorkers;
   private :
     static void  GetTelegramCallback(HTTPRequest &req);
     static void  SetTelegramCallback(HTTPRequest &req);
     static void  Config(const json &config);
     static json  CheckConfig(const json &config);
+    static json  SendRequest(SSLClient &client, const string &url, const json &params);
+    static json  GetMe(SSLClient &client);
     static void *Thread_Func(void *params);
   public :
     TelegramManager();
@@ -59,7 +52,6 @@ class TelegramManager final {
   public :
     static void  SendAlarm(const string &analyzer, const time_zone &tz, const uint64_t timestamp, const string &name, const uint8_t priority, const bool triggered);
     static bool  SendMessage(const json &msg, Client *client);
-    static void  PeriodicTasks();
 //----------------------------------------------------------------------------------------------------------------------
     static void  HandleUpdate(SSLClient *client, const json &JSON);
 };

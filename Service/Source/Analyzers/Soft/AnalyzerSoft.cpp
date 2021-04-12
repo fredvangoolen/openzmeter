@@ -48,7 +48,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     pThread = 0;
   } else {
-    Worker::SetThreadProperties(pThread, "Analyzer", Worker::ABOUTNORMAL);
+    if(pthread_setname_np(pThread, "Analyzer") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    TaskPool::SetThreadProperties(pThread, TaskPool::ABOUTNORMAL);
   }
   Config(CheckConfig(ConfigFile::ReadConfig(optionPath), mode, false));
 }
@@ -136,8 +137,8 @@ void AnalyzerSoft::Config(const json &options) {
   pSave200MS        = options["Save200MS"];
   pZeroCross.Config(pNominalVoltage, pNominalFrequency);
   pRates.Config(options["TimeZone"], options["Rates"]);
-  pAlarms.Config(options["AlarmsEnabled"], options["TimeZone"], options["Alarms"]);
-  pEvents.Config(options["EventsEnabled"]);
+  pAlarms.Config(options["AlarmsEnabled"], options["TimeZone"], options["Alarms"], pNominalVoltage, pNominalFrequency);
+  pEvents.Config(options["EventsEnabled"], pNominalVoltage, pNominalFrequency);
   pSync.Config(options["Sync"]);
   pMQTT.Config(options);
   pthread_mutex_unlock(&pMutex);
@@ -156,8 +157,7 @@ void AnalyzerSoft::Thread() {
       pAggreg200MS.Reset();
       pAggreg200MS.setTimestamp(pWorkingBlock->Timestamp());
       pFFTs.Run(pWorkingBlock, (pWorkingBlock->NominalFrequency() == 0.0) ? 0 : (pWorkingBlock->NominalFrequency() == 50.0) ? 10 : 12);
-      pEvents.Run(pWorkingBlock, pAggreg200MS.Timestamp(), pWorkingBlock->NominalVoltage(), pWorkingBlock->NominalFrequency());
-      pAlarms.ConfigNominals(pWorkingBlock->NominalVoltage(), pWorkingBlock->NominalFrequency());
+      pEvents.Run(pWorkingBlock, pAggreg200MS.Timestamp());
       pAggreg200MS.setFrequency(pFrequency.Frequency(pWorkingBlock));
       for(uint8_t j = 0; j < pVoltageChannels; j++) {
         float Voltage     = 0.0;
@@ -386,7 +386,7 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
 }
 void AnalyzerSoft::GetStatus(HTTPRequest &req) {
   if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(!req.CheckParamSet("Series", {"Log", "System", "SystemLog", "Events", "Alarms", "Storage"})) return;
+  if(!req.CheckParamSet("Series", {"Version", "Log", "System", "SystemLog", "Events", "Alarms", "Storage"})) return;
   json Result = pAccess.GetStatus(req.Param("Series"), req.UserName());
   Result["State"] = (State() == UNCONFIGURED) ? "UNCONFIGURED" : (State() == OFFLINE) ? "OFFLINE" : (State() == SYNCING) ? "SYNCING" : "ONLINE";
   req.Success(Result);

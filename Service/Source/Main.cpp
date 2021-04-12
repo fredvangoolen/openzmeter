@@ -72,8 +72,9 @@ int main(int argc, char** argv) {
       printf("Option %s not recogniced. Use --help to show valid options.\n\n", argv[i]);
     }
   }
-  Worker::SetThreadProperties(pthread_self(), "Main", Worker::NORMAL);
-
+  if(pthread_setname_np(pthread_self(), "Main") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  TaskPool         Pool;                           // Task pool
+  TaskPool::SetThreadProperties(pthread_self(), TaskPool::NORMAL);
   ResourceFile     Resources;                      // Init resources
   ConfigFile       ConfigFile(ConfigFileName);     // Load config file
   PidFile          PIDFile;                        // Create PID file
@@ -95,9 +96,7 @@ int main(int argc, char** argv) {
   DeviceManager    DeviceManager;                  // Create devices interface
   TelegramManager  TelegramBoot;                   // Create Telegram manager
   ModbusManager    Modbus;                         // Create ModbusTCP
-
   HTTPServer       HTTPServer;                     // Init WEB service
-
   while(!Terminate) MessageLoop::HandleEvents();
   return EXIT_SUCCESS;
 }

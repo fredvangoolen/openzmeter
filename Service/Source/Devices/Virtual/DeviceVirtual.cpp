@@ -107,9 +107,10 @@ void DeviceVirtual::Config(const json &config) {
       LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
       ClearAnalyzers();
       pThread = 0;
-    } else {
-      Worker::SetThreadProperties(pThread, "DeviceVirtual", Worker::NORMAL);
+      return;
     }
+    if(pthread_setname_np(pThread, "DeviceVirtual") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    TaskPool::SetThreadProperties(pThread, TaskPool::NORMAL);
   }
 }
 void DeviceVirtual::GetDevice(HTTPRequest &req) {

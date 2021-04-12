@@ -91,7 +91,12 @@ json AnalyzerAccess::GetStatus(const vector<string> &series, const string &user)
   uint64_t To     = Tools::GetTime64();
   Result["Time"]  = To;
   for(auto &Serie : series) {
-    if(Serie == "Log") {
+    if(Serie == "Version") {
+      Result["Version"] = json::object();
+      Result["Version"]["Branch"] = __BUILD_BRANCH__;
+      Result["Version"]["Arch"]   = __BUILD_ARCH__;
+      Result["Version"]["Build"]  = __BUILD_DATE__;
+    } else if(Serie == "Log") {
       Result["Log"] = LogFile::ToJSON();
     } else if(Serie == "System") {
       Result["System"] = SystemManager::Status();

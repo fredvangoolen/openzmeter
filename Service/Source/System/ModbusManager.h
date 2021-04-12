@@ -17,7 +17,7 @@
 #include <pthread.h>
 #include "nlohmann/json.hpp"
 #include "HTTPRequest.h"
-#include "Worker.h"
+#include "TaskPool.h"
 // ---------------------------------------------------------------------------------------------------------------------
 #define MODBUS_FUNC_NONE 0x00
 //#define MB_FC_READ_COILS 1
@@ -33,12 +33,6 @@ using json = nlohmann::json;
 // ---------------------------------------------------------------------------------------------------------------------
 class ModbusManager final {
   private :
-    typedef struct {
-      uint64_t       LastTime;     //Last time event
-      Worker        *Thread;
-      sockaddr_in    Client;
-      int            ClientSock;
-    } Worker_t;
     typedef struct {
       uint16_t       TransactionID;
       uint16_t       ProtocolID;
@@ -59,17 +53,18 @@ class ModbusManager final {
     } PacketOUT_t;
   private :
     static pthread_mutex_t pMutex;
+    static pthread_mutex_t pMutexConfig;
+    static pthread_cond_t  pCond;
     static pthread_t       pThread;
     static volatile bool   pTerminate;
     static uint16_t        pPort;
-    static list<Worker_t*> pFreeWorkers;
-    static uint32_t        pUsedWorkers;
+    static uint32_t        pRunningWorkers;
     static vector<string>  pAnalyzers;
   private :
     static json  CheckConfig(const json &config);
     static void  Config(const json &config);
     static void *Thread(void *args);
-    static void  Connection_Handle(const int clientSock, const sockaddr_in &client);
+    static void  Connection_Handle(int sock);
     static void  GetModbusTCP(HTTPRequest &req);
     static void  SetModbusTCP(HTTPRequest &req);
   public :

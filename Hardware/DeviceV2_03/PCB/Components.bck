@@ -22,6 +22,12 @@ K Constant-current constant-voltage linear charger single cell lithium-ion batte
 F https://www.analog.com/media/en/technical-documentation/data-sheets/405442xf.pdf
 $ENDCMP
 #
+$CMP Battery_Cell
+D Single-cell battery
+K battery cell
+F ~
+$ENDCMP
+#
 $CMP Conn_01x02
 D Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)
 K connector
@@ -37,6 +43,12 @@ $ENDCMP
 $CMP LED_Dual_ACA
 D LED dual, common cathode
 K led diode bicolor dual
+$ENDCMP
+#
+$CMP MC34063AD
+D 1.5A, step-up/down/inverting switching regulator, 3-40V Vin, 100kHz, SO-8
+K smps buck boost inverting
+F http://www.onsemi.com/pub_link/Collateral/MC34063A-D.PDF
 $ENDCMP
 #
 $CMP MCP6004

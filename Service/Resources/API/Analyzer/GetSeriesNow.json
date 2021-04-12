@@ -1,0 +1,81 @@
+{
+  "components": {
+    "schemas": {
+      "SeriesNowTemplate": {
+        "type": "object",
+        "properties": {
+          "Time": { "type": "number" },
+          "Frequency": { "type": "number" },
+          "Flag": { "type": "boolean" },
+          "Unbalance": { "type": "number" },
+          "Voltage": { "type": "array", "items": { "type": "number" } },
+          "Current": { "type": "array", "items": { "type": "number" } },
+          "Active_Power": { "type": "array", "items": { "type": "number" } },
+          "Reactive_Power": { "type": "array", "items": { "type": "number" } },
+          "Active_Energy": { "type": "array", "items": { "type": "number" } },
+          "Reactive_Energy": { "type": "array", "items": { "type": "number" } },
+          "Apparent_Power": { "type": "array", "items": { "type": "number" } },
+          "Power_Factor": { "type": "array", "items": { "type": "number" } },
+          "Voltage_THD": { "type": "array", "items": { "type": "number" } },
+          "Current_THD": { "type": "array", "items": { "type": "number" } },
+          "Phi": { "type": "array", "items": { "type": "number" } },
+          "Voltage_Phase": { "type": "array", "items": { "type": "number" } },
+          "Voltage_Harmonics": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } },
+          "Current_Harmonics": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } },
+          "Power_Harmonics": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } },
+          "Voltage_Harmonics_Complex": { "type": "array", "items": { "type": "array", "items": { "type": "array", "items": { "type": "number", "minItems": 2, "maxItems": 2 } } } },
+          "Current_Harmonics_Complex": { "type": "array", "items": { "type": "array", "items": { "type": "array", "items": { "type": "number", "minItems": 2, "maxItems": 2 } } } },
+          "Voltage_FFT": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } },
+          "Current_FFT": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } },
+          "Voltage_Samples": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } },
+          "Current_Samples": { "type": "array", "items": { "type": "array", "items": { "type": "number" } } }
+        },
+        "required": ["Time"],
+        "example": {
+          "Time": 1600000000000,
+          "Voltage": [230, 230, 230]
+        }
+      }
+    }
+  },
+  "paths": {
+    "/getSeriesNow": {
+      "post": {
+        "summary": "Get last analyzer calculated series. Values are updated every 200ms.",
+        "tags": [ "Analyzers" ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "Analyzer": "VIRTUAL_3PN",
+                  "Series": ["Voltage"]
+                },
+                "properties": {
+                  "Analyzer": { "type": "string" },
+                  "Series": { "type": "array", "items": { "type": "string", "enum": ["Frequency", "Flag", "Unbalance", "Voltage", "Current", "Active_Power", "Reactive_Power", "Active_Energy", "Reactive_Energy", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Phase", "Voltage_Harmonics", "Current_Harmonics", "Power_Harmonics", "Voltage_Harmonics_Complex", "Current_Harmonics_Complex", "Voltage_FFT", "Current_FFT", "Voltage_Samples", "Current_Samples"] } }
+                },
+                "required": [ "Analyzer", "Series" ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The method executed without error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SeriesNowTemplate" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/400Response" },
+          "401": { "$ref": "#/components/responses/401Response" },
+          "405": { "$ref": "#/components/responses/405Response" },
+          "500": { "$ref": "#/components/responses/500Response" }
+        }
+      }
+    }
+  }
+}

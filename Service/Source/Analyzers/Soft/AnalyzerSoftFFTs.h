@@ -14,7 +14,7 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "Worker.h"
+#include "TaskPool.h"
 #include "Analyzer.h"
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftBlock;
@@ -27,6 +27,7 @@ class AnalyzerSoftFFTs final {
     typedef struct {
       Complex_t           *DataPtr;               //in/out data samples
       uint16_t             ReservedLen;           //Buffer size
+      TaskPool::Task       Task;                  //Running task
     } FFT_t;
   private :
     static pthread_mutex_t pFFTMutex;             //Planer mutex
@@ -34,8 +35,6 @@ class AnalyzerSoftFFTs final {
   private :
     uint8_t                pVoltageChannels;      //Avaliable voltage channels
     uint8_t                pCurrentChannels;      //Avaliable current channels
-    Worker                *pVoltageFFT[3];        //Voltage FFT worker
-    Worker                *pCurrentFFT[4];        //Current FFT worker
     FFT_t                  pFFTVoltageData[3];    //Worker data
     FFT_t                  pFFTCurrentData[4];    //Worker data
     uint16_t               pInLen;                //Input length

@@ -15,23 +15,44 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "UpdateManager.h"
 #include "LogFile.h"
-#ifdef OPENWRT // ======================================================================================================
 #include "SystemManager.h"
 //----------------------------------------------------------------------------------------------------------------------
+#ifdef OPENWRT
+string UpdateManager::pUpdateURL = "https://www.openzmeter.com/update/";
+#endif
+// ---------------------------------------------------------------------------------------------------------------------
 UpdateManager::UpdateManager() {
-//  LogFile::Info("Starting UpdateManager...");
-//  HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
-//  HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
-//  LogFile::Info("UpdateManager started");
+#ifdef OPENWRT
+  LogFile::Info("Starting UpdateManager...");
+  HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
+  HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
+  LogFile::Info("UpdateManager started");
+#endif
 }
 UpdateManager::~UpdateManager() {
-//  LogFile::Info("UpdateManager", "Stopping Update manager...");
-//  HTTPServer::UnregisterCallback("getUpdates");
-//  HTTPServer::UnregisterCallback("setUpgrade");
-//  LogFile::Info("UpdateManager", "Update manager stoped");
+#ifdef OPENWRT
+  LogFile::Info("UpdateManager", "Stopping Update manager...");
+  HTTPServer::UnregisterCallback("getUpdates");
+  HTTPServer::UnregisterCallback("setUpgrade");
+  LogFile::Info("UpdateManager", "Update manager stoped");
+#endif
 }
-void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {
-//  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
+#ifdef OPENWRT
+void UpdateManager::GetUpdatesCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  // EL JSON TIENE ESTA FORMA
+  // {
+  //  "devel": {
+//      "1231231.3423": {
+//        "ChangeLog":"dsdfsfdsf"
+//        "arm_....": "HTTPS://......"
+//      }
+//    }
+  //}
+//me descargo el JSON de versiones
+//busco mi arquitectura
+//si esta devuelvo el changelog
+
 //  int ResultCode = 0;
 //  if(params.contains("Force") && params["Force"].is_boolean() && (params["Force"] == true)) {
 //    SystemManager::Exec("opkg update", &ResultCode);
@@ -57,7 +78,7 @@ void UpdateManager::GetUpdatesCallback(const json &params, Response &response) {
 //  }
 //  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
 }
-void UpdateManager::SetUpgradeCallback(const json &params, Response &response) {
+void UpdateManager::SetUpgradeCallback(HTTPRequest &req) {
 //  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
 //  if((params.contains("Packages") == false) || (params["Packages"].is_array() == false) || (params["Packages"].size() == 0)) return HTTPServer::FillResponse(response, "'Packages' param is required", "text/plain", HTTP_BAD_REQUEST);
 //  string Command = "opkg upgrade --force-depends";
@@ -82,9 +103,5 @@ void UpdateManager::SetUpgradeCallback(const json &params, Response &response) {
 //  };
 //  response.set_chunked_content_provider("text/event-stream", Func);
 }
-#else // ===============================================================================================================
-UpdateManager::UpdateManager() {
-}
-UpdateManager::~UpdateManager() {
-}
-#endif // ==============================================================================================================
+#endif
+//----------------------------------------------------------------------------------------------------------------------
