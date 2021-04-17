@@ -34,60 +34,62 @@ ProviderLocks::ProviderLocks() {
   pProducerCond      = PTHREAD_COND_INITIALIZER;
 }
 ProviderLocks::~ProviderLocks() {
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   pTerminate = true;
-  pthread_cond_broadcast(&pConsumerEnterCond);
-  pthread_cond_broadcast(&pConsumerWaitCond);
-  pthread_cond_broadcast(&pProducerCond);
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_cond_broadcast(&pConsumerEnterCond) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(pthread_cond_broadcast(&pConsumerWaitCond) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(pthread_cond_broadcast(&pProducerCond) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 void ProviderLocks::ProviderWrite() {
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   pDataReady = true;
-  pthread_cond_broadcast(&pConsumerWaitCond);
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_cond_broadcast(&pConsumerWaitCond) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 void ProviderLocks::ProviderWait() {
-  pthread_mutex_lock(&pMutex);
-  while(pConsumers > 0) pthread_cond_wait(&pProducerCond, &pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  while(pConsumers > 0) {
+    if(pthread_cond_wait(&pProducerCond, &pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  }
   pDataReady = false;
-  pthread_cond_broadcast(&pConsumerEnterCond);
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_cond_broadcast(&pConsumerEnterCond) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 bool ProviderLocks::ConsumerWait(uint32_t timeoutSec) {
   int Error = 0;
   timespec To;
-  clock_gettime(CLOCK_REALTIME, &To);
+  if(clock_gettime(CLOCK_REALTIME, &To) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   To.tv_sec += timeoutSec;
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   while((Error == 0) && (pDataReady == true) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerEnterCond, &pMutex, &To);
   if((Error != 0) && (Error != ETIMEDOUT)) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-    pthread_mutex_unlock(&pMutex);
+    if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return false;
   } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
-    pthread_mutex_unlock(&pMutex);
+    if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return false;
   }
   pConsumers++;
   while((Error == 0) && (pDataReady == false) && (pTerminate == false)) Error = pthread_cond_timedwait(&pConsumerWaitCond, &pMutex, &To);
   if((Error != 0) && (Error != ETIMEDOUT)) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-    pthread_mutex_unlock(&pMutex);
+    if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return false;
   } else if((pTerminate == true) || (Error == ETIMEDOUT)) {
     pConsumers--;
-    if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
-    pthread_mutex_unlock(&pMutex);
+    if(pthread_cond_signal(&pProducerCond) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return false;
   }
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   return true;
 }
 void ProviderLocks::ConsumerEnds() {
-  pthread_mutex_lock(&pMutex);
+  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   pConsumers--;
-  if(pConsumers == 0) pthread_cond_signal(&pProducerCond);
-  pthread_mutex_unlock(&pMutex);
+  if(pthread_cond_signal(&pProducerCond) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
 //----------------------------------------------------------------------------------------------------------------------
