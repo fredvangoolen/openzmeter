@@ -1,8 +1,8 @@
-(module BatteryHolder_Keystone_1042_1x18650 (layer F.Cu) (tedit 60723B32)
+(module BatteryHolder_Keystone_1042_1x18650 (layer F.Cu) (tedit 607986F5)
   (descr "Battery holder for 18650 cylindrical cells http://www.keyelco.com/product.cfm/product_id/918")
   (tags "18650 Keystone 1042 Li-ion")
   (attr smd)
-  (fp_text reference BT3 (at 0 -11.5) (layer F.SilkS) hide
+  (fp_text reference BT1 (at 0 -11.5) (layer F.SilkS) hide
     (effects (font (size 1 1) (thickness 0.15)))
   )
   (fp_text value Battery_Cell (at 0 11.3) (layer F.Fab)
@@ -18,7 +18,7 @@
   (pad 3 thru_hole oval (at -35.8 9.55) (size 2.4 2.4) (drill 1.2) (layers *.Cu *.Mask))
   (pad 2 thru_hole oval (at 35.8 -9.55) (size 2.4 2.4) (drill 1.2) (layers *.Cu *.Mask))
   (pad 1 thru_hole oval (at -35.8 -9.55) (size 2.4 2.4) (drill 1.2) (layers *.Cu *.Mask))
-  (pad 4 thru_hole oval (at 35.8 9.55) (size 2.4 2.4) (drill 1.2) (layers *.Cu *.Mask))
+  (pad 2 thru_hole oval (at 35.8 9.55) (size 2.4 2.4) (drill 1.2) (layers *.Cu *.Mask))
   (pad "" np_thru_hole oval (at -27.6 17.5) (size 3.45 3.45) (drill 3.45) (layers *.Cu *.Mask))
   (pad "" np_thru_hole oval (at 27.6 -17.5) (size 3.45 3.45) (drill 3.45) (layers *.Cu *.Mask))
   (model "${KIPRJMOD}/3DLibs/18650 battery holder part.STEP"

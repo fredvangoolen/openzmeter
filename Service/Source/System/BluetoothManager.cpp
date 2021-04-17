@@ -51,7 +51,8 @@ BluetoothManager::BluetoothManager() {
     pThread = 0;
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   } else {
-    Worker::SetThreadProperties(pThread, "Bluetooth", Worker::LOW);
+    if(pthread_setname_np(pThread, "Bluetooth") != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    TaskPool::SetThreadProperties(pThread, TaskPool::LOW);
   }
   MessageLoop::RegisterListener("Bluetooth_Toogle", ToggleEnable);
 #endif
