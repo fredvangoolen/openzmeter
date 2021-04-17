@@ -29,7 +29,10 @@ class AnalyzerRemoteNow final {
     json                       pStatus;                  //Cached version of status data
     map<string, uint64_t>      pNowRequest;              //Avaliable series last request rime
     map<string, uint64_t>      pStatusRequest;           //avaliable series last request time
-    pthread_rwlock_t           pLock;                    //Control access to shared variables
+    pthread_mutex_t            pNowMutex;                //Update Now mutex
+    pthread_mutex_t            pStatusMutex;             //Update Status mutex
+    pthread_cond_t             pNowCond;                 //Update Now cond
+    pthread_cond_t             pStatusCond;              //Update Status cond
   public :
     void GetSeriesNow(HTTPRequest &req);
     void GetStatus(HTTPRequest &req, const json extraProps = json::object());
