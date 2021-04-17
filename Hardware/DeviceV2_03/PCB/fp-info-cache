@@ -1,4 +1,4 @@
-18569010186246892
+18573866297781892
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -50615,7 +50615,7 @@ Battery holder for 18650 cylindrical cells http://www.keyelco.com/product.cfm/pr
 18650 Keystone 1042 Li-ion
 0
 4
-4
+3
 Footprints
 Buzzer_9x5.5RM4
 Generic Buzzer, D12mm height 9.5mm with RM7.6mm
@@ -50648,6 +50648,13 @@ Footprints
 CP_Radial_D5.0mm_P2.50mm
 CP, Radial series, Radial, pin pitch=2.50mm, , diameter=5mm, Electrolytic Capacitor
 CP Radial series Radial pin pitch 2.50mm  diameter 5mm Electrolytic Capacitor
+0
+2
+2
+Footprints
+CP_Radial_D6.3mm_P2.50mm
+CP, Radial series, Radial, pin pitch=2.50mm, , diameter=6.3mm, Electrolytic Capacitor
+CP Radial series Radial pin pitch 2.50mm  diameter 6.3mm Electrolytic Capacitor
 0
 2
 2
@@ -50725,6 +50732,13 @@ Footprints
 L_Axial_L12.0mm_D5.0mm_P5.08mm_Vertical_Fastron_MISC
 Inductor, Axial series, Axial, Vertical, pin pitch=5.08mm, , length*diameter=12*5mm^2, Fastron, MISC, http://cdn-reichelt.de/documents/datenblatt/B400/DS_MISC.pdf
 Inductor Axial series Axial Vertical pin pitch 5.08mm  length 12mm diameter 5mm Fastron MISC
+0
+2
+2
+Footprints
+L_Radial_D6.0mm_P3.00mm
+Inductor, Radial series, Radial, pin pitch=3.00mm, , diameter=7mm, http://www.abracon.com/Magnetics/radial/AIUR-16.pdf
+Inductor Radial series Radial pin pitch 3.00mm  diameter 7mm
 0
 2
 2
@@ -50875,6 +50889,13 @@ SOT-23-6
 0
 6
 6
+Footprints
+SW_PUSH_6mm_H13mm
+tactile push button, 6x6mm e.g. PHAP33xx series, height=13mm
+tact sw push 6mm
+0
+4
+2
 Footprints
 SW_Tactile_SKHH_Angled
 tactile switch 6mm ALPS SKHH right angle http://www.alps.com/prod/info/E/HTML/Tact/SnapIn/SKHH/SKHHLUA010.html

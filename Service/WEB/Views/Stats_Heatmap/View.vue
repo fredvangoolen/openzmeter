@@ -39,35 +39,36 @@
       return { Aggreg: '1H', Range: [0, 1], Data: null, Year: 0, ShowSpinner: true, Progress: 0, ExportData: null };
     },
     watch: {
-      Year: function(val) {
+      Year: function() { this.Update(); },
+      analyzer: function() { this.Update(); }
+    },
+    methods: {
+      Update: function() {
         this.ShowSpinner = true;
         this.Progress = 0;
         this.Data = null;
         var Count = 0;
-        var Data = [];
+        var Blocks = [];
+        if((this.Year == null) || (this.analyzer == null)) return;
         for(var month = 0; month < 12; month++) {
-          var To = moment.tz(this.analyzer.TimeZone).year(val).month(month).endOf('month').valueOf();
-          var From = moment.tz(this.analyzer.TimeZone).year(val).month(month).startOf('month').valueOf();
+          var To = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).endOf('month').valueOf();
+          var From = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).startOf('month').valueOf();
           this.Post('getSeries', { From: From, To: To, Aggreg: '15M', Series: ['Active_Energy'], Analyzer: this.analyzer.Analyzer }).then(
             (result) => {
-              if(Count == 0) {
-                Data = result;
-              } else {
-                Data = Data.concat(result.slice(1));
-              }
+              Blocks[month] = (month == 0) ? result : result.slice(1);
               Count++;
               this.Progress = (Count / 12.0) * 100.0;
               if(Count == 12) {
-                this.Data = Data;
+                var Data = [];
+                for(var n = 0; n < Count; n++) Data = Data.concat(Blocks[n]);
+                this.Data = Object.seal(Data);
                 this.ShowSpinner = false;
               }
             },
             (fail) => {}
           );
         }
-      }
-    },
-    methods: {
+      },
       Export: function() {
         return this.ExportData;
       }

@@ -6,7 +6,7 @@
         <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
       </div>
     </template>
-    <template v-slot:footer>
+    <template v-slot:footer v-if="TransferStatus.Data.Version!=null">
       <div class="row" style="text-align: center">
         <div class="col-xs-4">Branch is {{ TransferStatus.Data.Version.Branch }}</div>
         <div class="col-xs-4">Architecture is {{ TransferStatus.Data.Version.Arch }}</div>

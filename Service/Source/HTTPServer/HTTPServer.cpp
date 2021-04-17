@@ -150,7 +150,7 @@ void HTTPServer::GetVersionCallback(HTTPRequest &req) {
 void HTTPServer::GetAPICallback(HTTPRequest &req) {
   json Result = json::parse(ResourceFile::GetFile("API/Base.json"));
   Result["servers"].push_back({{ "url", pRelativePath }});
-  Result["info"]["version"] = __BUILD__;
+  Result["info"]["version"] = __BUILD_DATE__;
   pthread_rwlock_rdlock(&pLock);
   for(auto &Callback : pCallbacks) {
     if(Callback.second.APIFile.empty() == false) Result.merge_patch(json::parse(ResourceFile::GetFile(Callback.second.APIFile)));
@@ -228,7 +228,7 @@ void HTTPServer::HandleGet(const Request &request, Response &response) {
     return;
   }
   if(UserName == "") return response.set_redirect(string(pRelativePath + "Login").c_str());
-  string File = PatchFile("WEB/Index.html", "{{ VERSION }}", __BUILD__);
+  string File = PatchFile("WEB/Index.html", "{{ VERSION }}", __BUILD_DATE__);
   response.set_content(PatchString(File, "{{ RELATIVE_PATH }}", pRelativePath), "text/html");
   response.status = HTTP_OK;
   return;
