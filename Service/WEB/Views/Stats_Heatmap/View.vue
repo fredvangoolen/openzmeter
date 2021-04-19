@@ -50,7 +50,7 @@
         var Count = 0;
         var Blocks = [];
         if((this.Year == null) || (this.analyzer == null)) return;
-        for(var month = 0; month < 12; month++) {
+        var GetMonth = (month) => {
           var To = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).endOf('month').valueOf();
           var From = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).startOf('month').valueOf();
           this.Post('getSeries', { From: From, To: To, Aggreg: '15M', Series: ['Active_Energy'], Analyzer: this.analyzer.Analyzer }).then(
@@ -67,7 +67,8 @@
             },
             (fail) => {}
           );
-        }
+        };
+        for(var month = 0; month < 12; month++) GetMonth(month);
       },
       Export: function() {
         return this.ExportData;

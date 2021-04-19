@@ -81,7 +81,7 @@ void AnalyzerRemoteNow::GetSeriesNow(HTTPRequest &req) {
     }
   }
   Result["Time"] = pNow["Time"];
-  for(auto &Serie : req.Param("Series")) Result[(string)Serie] = pNow[(string)Serie];
+  for(auto &Serie : Series) Result[(string)Serie] = pNow[(string)Serie];
   if(pthread_mutex_unlock(&pNowMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   req.Success(Result);
 }
@@ -136,7 +136,7 @@ void AnalyzerRemoteNow::GetStatus(HTTPRequest &req, const json extraProps) {
     }
   }
   Result["Time"] = pStatus["Time"];
-  for(auto &Serie : req.Param("Series")) Result[(string)Serie] = pStatus[(string)Serie];
+  for(auto &Serie : Series) Result[(string)Serie] = pStatus[(string)Serie];
   if(pthread_mutex_unlock(&pStatusMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   req.Success(Result);
 }

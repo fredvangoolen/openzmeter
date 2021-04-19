@@ -27,7 +27,7 @@ AnalyzerSoftAlarms::AnalyzerSoftAlarms(const string &serial, AnalyzerSoftMQTT *m
 }
 AnalyzerSoftAlarms::~AnalyzerSoftAlarms() {
   pthread_rwlock_wrlock(&pLock);
-  TaskPool::Wait(pTask);
+  if(pTask != NULL) TaskPool::Wait(pTask);
   pthread_rwlock_unlock(&pLock);
 }
 json AnalyzerSoftAlarms::CheckConfig(const json &config) {
@@ -85,7 +85,7 @@ void AnalyzerSoftAlarms::Run(const string &aggreg, AnalyzerSoftAggreg &params) {
 }
 void AnalyzerSoftAlarms::Wait() {
   pthread_rwlock_rdlock(&pLock);
-  TaskPool::Wait(pTask);
+  if(pTask != NULL) TaskPool::Wait(pTask);
   pthread_rwlock_unlock(&pLock);
 }
 void AnalyzerSoftAlarms::TestAlarm(HTTPRequest &req, AnalyzerSoftAggreg200MS &aggreg) const {

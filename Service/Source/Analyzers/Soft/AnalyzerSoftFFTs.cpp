@@ -41,11 +41,11 @@ AnalyzerSoftFFTs::AnalyzerSoftFFTs(const Analyzer::AnalyzerMode mode) {
 }
 AnalyzerSoftFFTs::~AnalyzerSoftFFTs() {
   for(uint8_t i = 0; i < pVoltageChannels; i++) {
-    TaskPool::Wait(pFFTVoltageData[i].Task);
+    if(pFFTVoltageData[i].Task != NULL) TaskPool::Wait(pFFTVoltageData[i].Task);
     if(pFFTVoltageData[i].DataPtr != NULL) free(pFFTVoltageData[i].DataPtr);
   }
   for(uint8_t i = 0; i < pCurrentChannels; i++) {
-    TaskPool::Wait(pFFTCurrentData[i].Task);
+    if(pFFTCurrentData[i].Task != NULL) TaskPool::Wait(pFFTCurrentData[i].Task);
     if(pFFTCurrentData[i].DataPtr != NULL) free(pFFTCurrentData[i].DataPtr);
   }
   pthread_mutex_lock(&pFFTMutex);
@@ -83,8 +83,12 @@ void AnalyzerSoftFFTs::Run(const AnalyzerSoftBlock *block, const uint8_t inCycle
   }
 }
 void AnalyzerSoftFFTs::Wait() {
-  for(uint8_t i = 0; i < pVoltageChannels; i++) TaskPool::Wait(pFFTVoltageData[i].Task);
-  for(uint8_t i = 0; i < pCurrentChannels; i++) TaskPool::Wait(pFFTCurrentData[i].Task);
+  for(uint8_t i = 0; i < pVoltageChannels; i++) {
+    if(pFFTVoltageData[i].Task != NULL) TaskPool::Wait(pFFTVoltageData[i].Task);
+  }
+  for(uint8_t i = 0; i < pCurrentChannels; i++) {
+    if(pFFTCurrentData[i].Task != NULL) TaskPool::Wait(pFFTCurrentData[i].Task);
+  }
 }
 void AnalyzerSoftFFTs::FFT_Func(const FFT_t *data) {
   pthread_mutex_lock(&pFFTMutex);

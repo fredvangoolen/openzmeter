@@ -241,7 +241,7 @@ void *AnalyzerSoftMQTT::Thread() {
         string TextMsg = Msg.dump();
         string Topic   = (pPrefix != "") ? pPrefix + "/" + pSerial + "/Status" : pSerial + "/Status";
         mqtt_publish(&pClient, Topic.c_str(), (void*)TextMsg.c_str(), TextMsg.size(), MQTT_PUBLISH_QOS_1);
-        LogFile::Debug("Analyzer '%s' publish config to MQTT broker", pSerial.c_str());
+        LogFile::Debug("Analyzer '%s' publish status to MQTT broker", pSerial.c_str());
         StatusTimer = Now;
       }
       pthread_mutex_unlock(&pMutex);

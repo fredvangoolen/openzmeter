@@ -1357,14 +1357,7 @@ F 3 "~" H 625 1075 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	825  975  850  975 
-Wire Wire Line
 	825  1075 850  1075
-Wire Wire Line
-	850  1075 850  975 
-Connection ~ 850  975 
-Wire Wire Line
-	850  975  875  975 
 $Comp
 L Device:C_Small C18
 U 1 1 5FB350A9
@@ -1588,7 +1581,7 @@ F 3 "" H 2775 4375 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L Connector:USB_B_Mini J1
+L PCB-rescue:USB_B_Mini-Connector J1
 U 1 1 5F700339
 P 3175 5150
 F 0 "J1" H 3200 5500 50  0000 R CNN
@@ -2023,4 +2016,17 @@ Wire Wire Line
 	1850 6200 2025 6200
 Wire Wire Line
 	1850 7000 2025 7000
+Wire Wire Line
+	825  975  875  975 
+$Comp
+L power:GND1 #PWR?
+U 1 1 608C8EE7
+P 850 1075
+F 0 "#PWR?" H 850 825 50  0001 C CNN
+F 1 "GND1" H 1025 1000 50  0000 C CNN
+F 2 "" H 850 1075 50  0001 C CNN
+F 3 "" H 850 1075 50  0001 C CNN
+	1    850  1075
+	0    -1   -1   0   
+$EndComp
 $EndSCHEMATC
