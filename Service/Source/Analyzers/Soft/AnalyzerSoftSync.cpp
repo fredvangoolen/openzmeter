@@ -114,6 +114,8 @@ void *AnalyzerSoftSync::Thread() {
       pthread_mutex_unlock(&pMutex);
       HTTPClient->set_compress(true);
       HTTPClient->set_keep_alive(true);
+      HTTPClient->set_read_timeout(120);
+      HTTPClient->set_write_timeout(120);
       vector<uint8_t> Buff = json::to_cbor(Content);
       auto Response = HTTPClient->Post((Path + "/logIn").c_str(), { {"Accept", "application/cbor"} }, (char*)Buff.data(), Buff.size(), "application/cbor");
       if((Response != nullptr) && (Response->status == HTTP_OK) && (Response->has_header("Set-Cookie") == true)) {
@@ -240,8 +242,8 @@ void *AnalyzerSoftSync::Thread() {
       }
       Content["Synced"] = Synced;
     }
-    LogFile::Debug("AnalyzerSoft '%s' send %d actions to AnalyzerRemote", pSerial.c_str(), Content["Actions"].size());
     vector<uint8_t> Buff = json::to_cbor(Content);
+    LogFile::Debug("AnalyzerSoft '%s' send %d actions to AnalyzerRemote (%d bytes)", pSerial.c_str(), Content["Actions"].size(), Buff.size());
     auto Response = HTTPClient->Post((Path + "/setRemote").c_str(), {{"Accept", "application/cbor"}, {"Cookie", Cookie}}, (char*)Buff.data(), Buff.size(), "application/cbor");
     if((Response != nullptr) && (Response->status == HTTP_OK)) {
       Content = json::from_cbor(Response->body, NULL, false);

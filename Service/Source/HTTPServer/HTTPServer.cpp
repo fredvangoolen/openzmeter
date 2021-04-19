@@ -49,6 +49,10 @@ HTTPServer::HTTPServer() {
   if(Config["RelativePath"].is_string()) pRelativePath = Config["RelativePath"];
   Get(".*", HandleGet);
   Post(".*", HandlePost);
+  set_payload_max_length(0x800000);
+  set_keep_alive_timeout(120);
+  set_read_timeout(120);
+  set_write_timeout(120);
   set_keep_alive_max_count(UINT32_MAX);
   new_task_queue = [] { return new HTTPRequestPool(); };
   Config = json::object();

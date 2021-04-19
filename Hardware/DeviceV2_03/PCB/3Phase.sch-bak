@@ -3825,4 +3825,48 @@ F 3 "" H -2000 2750 50  0001 C CNN
 	1    -2000 2750
 	1    0    0    -1  
 $EndComp
+$Comp
+L shared:ADS131E08 U?
+U 1 1 5FFFCDBC
+P 12775 4225
+F 0 "U?" H 12775 6228 60  0000 C CNN
+F 1 "ADS131E08" H 12775 6122 60  0000 C CNN
+F 2 "" H 12775 4225 60  0001 C CNN
+F 3 "" H 12775 4225 60  0001 C CNN
+	1    12775 4225
+	1    0    0    -1  
+$EndComp
+$Comp
+L MCU_ST_STM32F3:STM32F301C8Tx U?
+U 1 1 60080381
+P 12125 8575
+F 0 "U?" H 12075 6986 50  0000 C CNN
+F 1 "STM32F301C8Tx" H 12075 6895 50  0000 C CNN
+F 2 "Package_QFP:LQFP-48_7x7mm_P0.5mm" H 11525 7175 50  0001 R CNN
+F 3 "http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00093332.pdf" H 12125 8575 50  0001 C CNN
+	1    12125 8575
+	1    0    0    -1  
+$EndComp
+$Comp
+L Interface_USB:FT232H U?
+U 1 1 600846A4
+P 10250 5425
+F 0 "U?" H 10250 7106 50  0000 C CNN
+F 1 "FT232H" H 10250 7015 50  0000 C CNN
+F 2 "" H 10250 5425 50  0001 C CNN
+F 3 "https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT232H.pdf" H 10250 5425 50  0001 C CNN
+	1    10250 5425
+	1    0    0    -1  
+$EndComp
+$Comp
+L Memory_EEPROM:93CxxA U?
+U 1 1 60088E5F
+P 10075 3125
+F 0 "U?" H 10075 3606 50  0000 C CNN
+F 1 "93CxxA" H 10075 3515 50  0000 C CNN
+F 2 "" H 10075 3125 50  0001 C CNN
+F 3 "http://ww1.microchip.com/downloads/en/DeviceDoc/20001749K.pdf" H 10075 3125 50  0001 C CNN
+	1    10075 3125
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC

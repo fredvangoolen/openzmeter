@@ -57,22 +57,24 @@
         var Count = 0;
         var Blocks = [];
         if((this.Year == null) || (this.analyzer == null)) return;
-        for(var month = 0; month < 12; month++) {
-          var To = moment.tz(this.analyzer.TimeZone).year(val).month(month).endOf('month').valueOf();
-          var From = moment.tz(this.analyzer.TimeZone).year(val).month(month).startOf('month').valueOf();
+        var GetMonth = (month) => {
+          var To = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).endOf('month').valueOf();
+          var From = moment.tz(this.analyzer.TimeZone).year(this.Year).month(month).startOf('month').valueOf();
           this.Post('getCosts', { From: From, To: To, Series: ['Active_Energy', 'Period'], Analyzer: this.analyzer.Analyzer, Group: 0 }).then(
             (result) => {
               Blocks[month] = (month == 0) ? result : result.slice(1);
               Count++;
               this.Progress = (Count / 12.0) * 100.0;
               if(Count == 12) {
+                var Data = [];
                 for(var n = 0; n < Count; n++) Data = Data.concat(Blocks[n]);
                 this.Data = Object.seal(Data);
                 this.ShowSpinner = false;
               }
             }
           );
-        }
+        };
+        for(var month = 0; month < 12; month++) GetMonth(month);
       },
       Export: function() {
         return this.CalendarData;

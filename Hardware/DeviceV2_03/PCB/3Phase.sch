@@ -1295,7 +1295,7 @@ L3I_ADC
 Text GLabel 4250 7750 0    60   Input ~ 0
 NI_ADC
 $Comp
-L Components:LED_Dual_ACA D12
+L 3Phase-rescue:LED_Dual_ACA-Components D12
 U 1 1 5BFAD7FE
 P 2250 5050
 F 0 "D12" H 1975 5000 50  0000 C CNN
@@ -1306,7 +1306,7 @@ F 3 "https://es.aliexpress.com/store/product/100pcs-LED-3mm-Round-Diffused-Red-G
 	-1   0    0    1   
 $EndComp
 $Comp
-L Components:LED_Dual_ACA D10
+L 3Phase-rescue:LED_Dual_ACA-Components D10
 U 1 1 5BFADB33
 P 2250 5500
 F 0 "D10" H 2025 5375 50  0000 C CNN
@@ -1317,7 +1317,7 @@ F 3 "https://es.aliexpress.com/store/product/100pcs-LED-3mm-Round-Diffused-Red-G
 	-1   0    0    1   
 $EndComp
 $Comp
-L Components:LED_Dual_ACA D9
+L 3Phase-rescue:LED_Dual_ACA-Components D9
 U 1 1 5BFADE7C
 P 2250 5950
 F 0 "D9" H 2025 5875 50  0000 C CNN

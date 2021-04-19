@@ -42,7 +42,7 @@ AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::Ana
   pEnabled          = false;
 }
 AnalyzerSoftEvents::~AnalyzerSoftEvents() {
-  TaskPool::Wait(pTask);
+  if(pTask != NULL) TaskPool::Wait(pTask);
   if(pEvent != NULL) delete pEvent;
   if(pPrevSamples != NULL) free(pPrevSamples);
   if(pPrevCycles != NULL) free(pPrevCycles);
@@ -81,7 +81,7 @@ void AnalyzerSoftEvents::Run(const AnalyzerSoftBlock *block, const uint64_t time
 }
 bool AnalyzerSoftEvents::Wait() {
   pthread_mutex_lock(&pMutex);
-  TaskPool::Wait(pTask);
+  if(pTask != NULL) TaskPool::Wait(pTask);
   bool Result = (pEnabled && pHaveEvent);
   pthread_mutex_unlock(&pMutex);
   return Result;
