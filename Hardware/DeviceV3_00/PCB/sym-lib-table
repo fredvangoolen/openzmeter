@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name Symbols)(type Legacy)(uri ${KIPRJMOD}/Symbols.lib)(options "")(descr ""))
+  (lib (name PCB-rescue)(type Legacy)(uri ${KIPRJMOD}/PCB-rescue.lib)(options "")(descr ""))
+)
