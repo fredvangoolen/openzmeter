@@ -15,12 +15,14 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "ResourceFile.h"
 #include <string.h>
+#include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 extern char _binary_ResourceFiles_start[];
 extern char _binary_ResourceFiles_end[];
 map<string, ResourceFile::File_t> ResourceFile::pFiles;
 //----------------------------------------------------------------------------------------------------------------------
 ResourceFile::ResourceFile() {
+  LogFile::Debug("Starting ResourceFile...");
   char *Ptr = _binary_ResourceFiles_start;
   uint32_t FileCount = atoi(Ptr);
   Ptr = &Ptr[strlen(Ptr) + 1];
@@ -34,8 +36,11 @@ ResourceFile::ResourceFile() {
     Ptr = &Ptr[File.Size];
     pFiles.insert({Name, File});
   }
+  LogFile::Debug("ResourceFile started");
 }
 ResourceFile::~ResourceFile() {
+  LogFile::Debug("Stoping ResourceFile...");
+  LogFile::Debug("ResourceFile stoped");
 }
 uint8_t *ResourceFile::GetFile(string name, size_t *size) {
   *size = 0;

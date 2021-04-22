@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
   LogFile          LogFile;                        // Create LOG file
   DatabasePool     DBPool;                         // Init database pool
   MessageLoop      Loop;                           // Create application message loop
-
+  HTTPServer       HTTPServer;                     // Init WEB service
   SystemManager    Sys;                            // System status and actions
   BluetoothManager BT;                             // Create bluetooth manager
   WifiManager      Wifi;                           // Create wifi manager
@@ -96,7 +96,6 @@ int main(int argc, char** argv) {
   DeviceManager    DeviceManager;                  // Create devices interface
   TelegramManager  TelegramBoot;                   // Create Telegram manager
   ModbusManager    Modbus;                         // Create ModbusTCP
-  HTTPServer       HTTPServer;                     // Init WEB service
   while(!Terminate) MessageLoop::HandleEvents();
   return EXIT_SUCCESS;
 }

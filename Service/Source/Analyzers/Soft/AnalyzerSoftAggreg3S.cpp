@@ -21,9 +21,9 @@ AnalyzerSoftAggreg3S::AnalyzerSoftAggreg3S(const string &serial, const Analyzer:
 }
 AnalyzerSoftAggreg3S::~AnalyzerSoftAggreg3S() {
 }
-void AnalyzerSoftAggreg3S::Accumulate(const AnalyzerSoftAggreg200MS &src) {
+void AnalyzerSoftAggreg3S::Accumulate(const AnalyzerSoftAggreg200MS *src) {
   pSamples++;
-  pTimestamp = src.Timestamp();
+  pTimestamp = src->Timestamp();
   AnalyzerSoftAggreg::Accumulate(src);
 }
 void AnalyzerSoftAggreg3S::Save() const {

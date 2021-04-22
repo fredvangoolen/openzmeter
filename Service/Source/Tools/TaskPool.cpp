@@ -30,6 +30,7 @@ volatile bool            TaskPool::pUsePrio      = false;
 deque<TaskPool::Task_t*> TaskPool::pFreeTasks;
 // ---------------------------------------------------------------------------------------------------------------------
 TaskPool::TaskPool() {
+  LogFile::Debug("Starting TaskPool...");
   rlimit Limits;
   if(getrlimit(RLIMIT_RTPRIO, &Limits) != 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
@@ -57,10 +58,12 @@ TaskPool::TaskPool() {
     }
   }
   MessageLoop::RegisterListener("TaskPool_PeriodicTasks", [&]() { this->PeriodicTasks(); }, 60000);
+  LogFile::Debug("TaskPool started");
 }
 TaskPool::~TaskPool() {
-  MessageLoop::UnregisterListener("TaskPool_PeriodicTasks");
+  LogFile::Debug("Stoping TaskPool...");
   pthread_mutex_lock(&pMutex);
+  MessageLoop::UnregisterListener("TaskPool_PeriodicTasks");
   while(pRunningTasks > 0) pthread_cond_wait(&pCond, &pMutex);
   while(pFreeTasks.size() > 0) {
     Task_t *Tmp = pFreeTasks.front();
@@ -73,6 +76,7 @@ TaskPool::~TaskPool() {
     delete Tmp;
   }
   pthread_mutex_unlock(&pMutex);
+  LogFile::Debug("TaskPool stoped");
 }
 TaskPool::Task_t *TaskPool::Run(function<void()> callback, Prio prio) {
   pthread_mutex_lock(&pMutex);

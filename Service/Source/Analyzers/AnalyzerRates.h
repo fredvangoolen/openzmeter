@@ -24,6 +24,7 @@ using namespace cctz;
 class AnalyzerRates {
   private :
     const string              pSerial;
+  private :
     time_zone                 pTimeZone;
     vector<vector<Rate> >     pRates;
     pthread_rwlock_t          pLock;

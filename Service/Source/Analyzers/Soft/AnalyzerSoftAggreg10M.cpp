@@ -21,9 +21,9 @@ AnalyzerSoftAggreg10M::AnalyzerSoftAggreg10M(const string &serial, const Analyze
 }
 AnalyzerSoftAggreg10M::~AnalyzerSoftAggreg10M() {
 }
-void AnalyzerSoftAggreg10M::Accumulate(const AnalyzerSoftAggreg200MS &src) {
+void AnalyzerSoftAggreg10M::Accumulate(const AnalyzerSoftAggreg200MS *src) {
   pSamples++;
-  if(pTimestamp == 0) pTimestamp = src.Timestamp() / 600000 * 600000 + 599999;
+  if(pTimestamp == 0) pTimestamp = src->Timestamp() / 600000 * 600000 + 599999;
   AnalyzerSoftAggreg::Accumulate(src);
 }
 void AnalyzerSoftAggreg10M::Save() const {

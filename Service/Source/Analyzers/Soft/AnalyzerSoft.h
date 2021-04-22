@@ -48,22 +48,23 @@ class AnalyzerSoft : public Analyzer {
     const string               pConfigPath;              //Path to configuration
     const uint8_t              pVoltageChannels;         //Voltage channels
     const uint8_t              pCurrentChannels;         //Current channels
-    AnalyzerAccess             pAccess;                  //Access control class
-    AnalyzerSoftZeroCrossing   pZeroCross;               //Zero crosing and block builder
-    AnalyzerSoftFrequency      pFrequency;               //Frequency meter
-    AnalyzerSoftFFTs           pFFTs;                    //FFT executor
-    AnalyzerSoftAggreg200MS    pAggreg200MS;             //200ms aggregation
-    AnalyzerSoftAggreg3S       pAggreg3S;                //3 seconds aggregation
-    AnalyzerSoftAggreg1M       pAggreg1M;                //1 minute aggregation
-    AnalyzerSoftAggreg10M      pAggreg10M;               //10 minutes aggregation
-    AnalyzerSoftAggreg15M      pAggreg15M;               //15 minutes aggregation
-    AnalyzerSoftAggreg1H       pAggreg1H;                //1 hour aggregation
-    AnalyzerRates              pRates;                   //Rate handle class
-    AnalyzerSeries             pSeries;                  //Read stored data
-    AnalyzerSoftEvents         pEvents;                  //Events detector
-    AnalyzerSoftMQTT           pMQTT;                    //MQTT Control object
-    AnalyzerSoftAlarms         pAlarms;                  //Alarms control
-    AnalyzerSoftSync           pSync;                    //Remote sync object
+  private :
+    AnalyzerAccess            *pAccess;                  //Access control class
+    AnalyzerSoftZeroCrossing  *pZeroCross;               //Zero crosing and block builder
+    AnalyzerSoftFrequency     *pFrequency;               //Frequency meter
+    AnalyzerSoftFFTs          *pFFTs;                    //FFT executor
+    AnalyzerSoftAggreg200MS   *pAggreg200MS;             //200ms aggregation
+    AnalyzerSoftAggreg3S      *pAggreg3S;                //3 seconds aggregation
+    AnalyzerSoftAggreg1M      *pAggreg1M;                //1 minute aggregation
+    AnalyzerSoftAggreg10M     *pAggreg10M;               //10 minutes aggregation
+    AnalyzerSoftAggreg15M     *pAggreg15M;               //15 minutes aggregation
+    AnalyzerSoftAggreg1H      *pAggreg1H;                //1 hour aggregation
+    AnalyzerRates             *pRates;                   //Rate handle class
+    AnalyzerSeries            *pSeries;                  //Read stored data
+    AnalyzerSoftEvents        *pEvents;                  //Events detector
+    AnalyzerSoftMQTT          *pMQTT;                    //MQTT Control object
+    AnalyzerSoftAlarms        *pAlarms;                  //Alarms control
+    AnalyzerSoftSync          *pSync;                    //Remote sync object
 //    AnalyzerSoftGA            *pGA;                      //Geometric algebra calculator
     AnalyzerSoftBlock         *pWorkingBlock;            //Current block
   private :
@@ -112,7 +113,7 @@ class AnalyzerSoft : public Analyzer {
   public :
     static json CheckConfig(const json &config, const Analyzer::AnalyzerMode mode, const bool except);
   protected :
-    virtual void ResultsReady(AnalyzerSoftAggreg200MS &params);
+    virtual void ResultsReady(AnalyzerSoftAggreg200MS *params);
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();

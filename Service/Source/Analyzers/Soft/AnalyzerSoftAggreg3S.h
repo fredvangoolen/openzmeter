@@ -23,7 +23,7 @@ class AnalyzerSoftAggreg3S final : public AnalyzerSoftAggreg {
   public :
     AnalyzerSoftAggreg3S(const string &serial, const Analyzer::AnalyzerMode mode);
     ~AnalyzerSoftAggreg3S();
-    void Accumulate(const AnalyzerSoftAggreg200MS &src);
+    void Accumulate(const AnalyzerSoftAggreg200MS *src);
     void Save() const;
     void Reset();
     bool Normalize();
