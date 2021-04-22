@@ -17,6 +17,7 @@
 #include "Database.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftAggreg1H::AnalyzerSoftAggreg1H(const string &serial, const Analyzer::AnalyzerMode mode) : AnalyzerSoftAggreg(serial, mode) {
+  pMutex = PTHREAD_MUTEX_INITIALIZER;
   Reset();
 }
 AnalyzerSoftAggreg1H::~AnalyzerSoftAggreg1H() {
@@ -49,29 +50,29 @@ void AnalyzerSoftAggreg1H::Reset() {
 float AnalyzerSoftAggreg1H::CalcChange(const float in, const float reference) {
   return ((in - reference) / reference) * 100;
 }
-void AnalyzerSoftAggreg1H::AccumulateStats(const AnalyzerSoftAggreg3S &params, const float nominalFreq) {
-  if(params.Flag() == true) return;
-  float Variation = CalcChange(params.Frequency(), nominalFreq);
+void AnalyzerSoftAggreg1H::AccumulateStats(const AnalyzerSoftAggreg3S *params) {
+  if(params->Flag() == true) return;
+  float Variation = CalcChange(params->Frequency(), pNominalFrequency);
   for(uint8_t Range = 0; Range < Analyzer::FrequencyRangesLen; Range++) {
     if((Variation >= Analyzer::FrequencyRanges[Range]) && (Variation < Analyzer::FrequencyRanges[Range + 1])) pStatsFrequency[Range]++;
   }
 }
-void AnalyzerSoftAggreg1H::AccumulateStats(const AnalyzerSoftAggreg10M &params, const float nominalVolt) {
-  if(params.Flag() == true) return;
+void AnalyzerSoftAggreg1H::AccumulateStats(const AnalyzerSoftAggreg10M *params) {
+  if(params->Flag() == true) return;
   for(uint8_t Range = 0; Range < Analyzer::UnbalanceRangesLen; Range++) {
-    if((params.Unbalance() >= Analyzer::UnbalanceRanges[Range]) && (params.Unbalance() < Analyzer::UnbalanceRanges[Range + 1])) pStatsUnbalance[Range]++;
+    if((params->Unbalance() >= Analyzer::UnbalanceRanges[Range]) && (params->Unbalance() < Analyzer::UnbalanceRanges[Range + 1])) pStatsUnbalance[Range]++;
   }
   for(uint8_t i = 0; i < pVoltageChannels; i++) {
-    float Variation = CalcChange(params.Voltage(i), nominalVolt);
+    float Variation = CalcChange(params->Voltage(i), pNominalVoltage);
     for(uint8_t Range = 0; Range < Analyzer::VoltageRangesLen; Range++) {
       if((Variation >= Analyzer::VoltageRanges[Range]) && (Variation < Analyzer::VoltageRanges[Range + 1])) pStatsVoltage[Range]++;
     }
     for(uint8_t Range = 0; Range < Analyzer::THDRangesLen; Range++) {
-      if((params.VoltageTHD(i) >= Analyzer::THDRanges[Range]) && (params.VoltageTHD(i) < Analyzer::THDRanges[Range + 1])) pStatsTHD[Range]++;
+      if((params->VoltageTHD(i) >= Analyzer::THDRanges[Range]) && (params->VoltageTHD(i) < Analyzer::THDRanges[Range + 1])) pStatsTHD[Range]++;
     }
     bool HarmonicsInRange = true;
     for(uint8_t n = 0; n < Analyzer::HarmonicsAllowedLen; n++) {
-      float Variation = CalcChange(params.VoltageHarmonic(i, n + 1), nominalVolt);
+      float Variation = CalcChange(params->VoltageHarmonic(i, n + 1), pNominalVoltage);
       if(Variation > Analyzer::HarmonicsAllowed[n]) {
         HarmonicsInRange = false;
         break;
@@ -90,9 +91,15 @@ bool AnalyzerSoftAggreg1H::Normalize() {
   pSamples = 1;
   return true;
 }
-void AnalyzerSoftAggreg1H::Accumulate(const AnalyzerSoftAggreg200MS &src) {
+void AnalyzerSoftAggreg1H::Accumulate(const AnalyzerSoftAggreg200MS *src) {
   pSamples++;
-  if(pTimestamp == 0) pTimestamp = src.Timestamp() / 3600000 * 3600000 + 3599999;
+  if(pTimestamp == 0) pTimestamp = src->Timestamp() / 3600000 * 3600000 + 3599999;
   AnalyzerSoftAggreg::Accumulate(src);
+}
+void AnalyzerSoftAggreg1H::Config(const float nominalVoltage, const float nominalFreq) {
+  pthread_mutex_lock(&pMutex);
+  pNominalVoltage = nominalVoltage;
+  pNominalFrequency = nominalFreq;
+  pthread_mutex_unlock(&pMutex);
 }
 // ---------------------------------------------------------------------------------------------------------------------

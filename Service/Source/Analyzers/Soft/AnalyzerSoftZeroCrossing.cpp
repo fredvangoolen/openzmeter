@@ -14,9 +14,11 @@
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoftZeroCrossing.h"
+#include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftZeroCrossing::AnalyzerSoftZeroCrossing(const Analyzer::AnalyzerMode mode, const float samplerate) : pSamplerate(samplerate),
   pVoltageChannels((mode == Analyzer::PHASE1) ? 1 : 3), pCurrentChannels((mode == Analyzer::PHASE1) ? 1 : (mode == Analyzer::PHASE3) ? 3 : 4) {
+  LogFile::Debug("Starting AnalyzerSoftZeroCrosing...");
   pWorkingBlock      = NULL;
   pMutex             = PTHREAD_MUTEX_INITIALIZER;
   pDelayVoltage      = NULL;
@@ -28,13 +30,17 @@ AnalyzerSoftZeroCrossing::AnalyzerSoftZeroCrossing(const Analyzer::AnalyzerMode 
   pMaxCycles         = 1;
   pMaxSamples        = pSamplerate * 0.2;
   memset(pFilters, 0, sizeof(pFilters));
+  LogFile::Debug("AnalyzerSoftZeroCrosing started");
 }
 AnalyzerSoftZeroCrossing::~AnalyzerSoftZeroCrossing() {
+  LogFile::Debug("Stoping AnalyzerSoftZeroCrosing...");
   if(pDelayVoltage != NULL) free(pDelayVoltage);
   if(pDelayCurrent != NULL) free(pDelayCurrent);
   if(pWorkingBlock != NULL) delete pWorkingBlock;
+  LogFile::Debug("AnalyzerSoftZeroCrosing stoped");
 }
 void AnalyzerSoftZeroCrossing::Config(const float nominalVolt, const float nominalFreq) {
+  LogFile::Debug("Configuring AnalyzerSoftZeroCrosing...");
   pthread_mutex_lock(&pMutex);
   pNominalVoltage   = nominalVolt;
   if(pNominalFrequency != nominalFreq) {
@@ -69,6 +75,7 @@ void AnalyzerSoftZeroCrossing::Config(const float nominalVolt, const float nomin
     memset(pLastSamples, 0, sizeof(pLastSamples));
   }
   pthread_mutex_unlock(&pMutex);
+  LogFile::Debug("AnalyzerSoftZeroCrosing configured");
 }
 AnalyzerSoftBlock *AnalyzerSoftZeroCrossing::PushSample(float *voltageSamples, float *currentSamples) {
   pthread_mutex_lock(&pMutex);

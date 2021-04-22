@@ -99,8 +99,10 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
   pRunAverageCounter  = 0;
   pTerminate          = false;
   pCaptureSize        = 0xFF;
-  memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
-  memset(pAverageValues, 0 , sizeof(pAverageValues));
+  for(uint8_t n = 0; n < 7; n++) pRunAverageValues[n] = 0;
+  for(uint8_t n = 0; n < 7; n++) pAverageValues[n] = 0.0;
+  for(uint8_t n = 0; n < 7; n++) pFilterZ1[n] = 0.0;
+  for(uint8_t n = 0; n < 7; n++) pFilterZ2[n] = 0.0;
   Config(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
   int Error = libusb_init(&pContext);
   if(Error < 0) {
@@ -484,13 +486,29 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
               pChannelsDelayPos[Ch] = (pChannelsDelayPos[Ch] + 1) % pChannelsDelaySize[Ch];
               DelayPtr = &DelayPtr[pChannelsDelaySize[Ch]];
             }
-            Values[0] = (Values[0] + pVoltageOffset[0]) * 0.110266113281 * pVoltageGain[0];
-            Values[1] = (Values[1] + pVoltageOffset[1]) * 0.110266113281 * pVoltageGain[1];
-            Values[2] = (Values[2] + pVoltageOffset[2]) * 0.110266113281 * pVoltageGain[2];
-            Values[3] = (Values[3] + pCurrentOffset[0]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[0];
-            Values[4] = (Values[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
-            Values[5] = (Values[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
-            Values[6] = (Values[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
+            if(true) { //Si el filtro DC esta activado
+              Values[0] = Values[0] * 0.110266113281 * pVoltageGain[0];
+              Values[1] = Values[1] * 0.110266113281 * pVoltageGain[1];
+              Values[2] = Values[2] * 0.110266113281 * pVoltageGain[2];
+              Values[3] = Values[3] * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[0];
+              Values[4] = Values[4] * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
+              Values[5] = Values[5] * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
+              Values[6] = Values[6] * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
+              for(uint8_t Ch = 0; Ch < 7; Ch++) {
+                float In = Values[Ch];
+                Values[Ch] = In - pFilterZ1[Ch] + 0.999999 * pFilterZ2[Ch];
+                pFilterZ1[Ch] = In;
+                pFilterZ2[Ch] = Values[Ch];
+              }
+            } else {
+              Values[0] = (Values[0] + pVoltageOffset[0]) * 0.110266113281 * pVoltageGain[0];
+              Values[1] = (Values[1] + pVoltageOffset[1]) * 0.110266113281 * pVoltageGain[1];
+              Values[2] = (Values[2] + pVoltageOffset[2]) * 0.110266113281 * pVoltageGain[2];
+              Values[3] = (Values[3] + pCurrentOffset[0]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[0];
+              Values[4] = (Values[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
+              Values[5] = (Values[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
+              Values[6] = (Values[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
+            }
             for(auto &Tmp : pAnalyzers) Tmp->BufferAppend(Values);
           }
           pCaptureSize = 0;

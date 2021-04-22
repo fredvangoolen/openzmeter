@@ -18,6 +18,7 @@
 #include <string.h>
 #include "Analyzer.h"
 #include "Tools.h"
+#include "LogFile.h"
 //----------------------------------------------------------------------------------------------------------------------
 constexpr float   Analyzer::FrequencyRanges[];
 const     uint8_t Analyzer::FrequencyRangesLen;
@@ -31,9 +32,11 @@ constexpr float   Analyzer::UnbalanceRanges[];
 const     uint8_t Analyzer::UnbalanceRangesLen;
 //----------------------------------------------------------------------------------------------------------------------
 Analyzer::Analyzer(const string &id, const AnalyzerMode mode, const string &user) : pSerial(id), pOwner(user), pMode(mode) {
+  LogFile::Debug("Starting Analyzer...");
   pMembersLocks = PTHREAD_RWLOCK_INITIALIZER;
   pName         = "Unnamed analyzer";
   pState        = UNCONFIGURED;
+  LogFile::Debug("Analyzer started");
 }
 Analyzer::~Analyzer() {
 }

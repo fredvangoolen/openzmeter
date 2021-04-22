@@ -7,20 +7,22 @@
         <button type="button" class="btn btn-default btn-xs" title="Discard" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
       </div>
     </template>
-    <div class="row">
-      <div class="col-xs-12" v-if="ShowPrevious">
-        <label class="control-label">Previous password</label>
-        <password v-model="User.Previous"></password>
+    <form autocomplete="off">
+      <div class="row">
+        <div class="col-xs-12" v-if="ShowPrevious">
+          <label class="control-label">Previous password</label>
+          <password v-model="User.Previous" name="pass"></password>
+        </div>
+        <div class="col-xs-12">
+          <label class="control-label">New password</label>
+          <password v-model="User.Password1" name="new_pass"></password>
+        </div>
+        <div class="col-xs-12">
+          <label class="control-label">Confirm password</label>
+          <password v-model="User.Password2" name="new_pass2"></password>
+        </div>
       </div>
-      <div class="col-xs-12">
-        <label class="control-label">New password</label>
-        <password v-model="User.Password1"></password>
-      </div>
-      <div class="col-xs-12">
-        <label class="control-label">Confirm password</label>
-        <password v-model="User.Password2"></password>
-      </div>
-    </div>
+    </form>
   </dlg>
 </template>
 

@@ -21,6 +21,10 @@
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftAggreg1H final : public AnalyzerSoftAggreg {
   private :
+    pthread_mutex_t pMutex;
+    float           pNominalVoltage;
+    float           pNominalFrequency;
+  private :
     uint16_t        pSamples;
     uint16_t        pStatsFrequency[Analyzer::FrequencyRangesLen]; //Distribucion de frecuencias
     uint16_t        pStatsVoltage[Analyzer::VoltageRangesLen];     //Distribucion de tensiones
@@ -32,11 +36,12 @@ class AnalyzerSoftAggreg1H final : public AnalyzerSoftAggreg {
   public :
     AnalyzerSoftAggreg1H(const string &serial, const Analyzer::AnalyzerMode mode);
     ~AnalyzerSoftAggreg1H();
-    void Accumulate(const AnalyzerSoftAggreg200MS &src);
+    void Config(const float nominalVoltage, const float nominalFreq);
+    void Accumulate(const AnalyzerSoftAggreg200MS *src);
     void Save() const;
     void Reset();
     bool Normalize();
-    void AccumulateStats(const AnalyzerSoftAggreg3S &params, const float nominalFreq);
-    void AccumulateStats(const AnalyzerSoftAggreg10M &params, const float nominalVolt);
+    void AccumulateStats(const AnalyzerSoftAggreg3S *params);
+    void AccumulateStats(const AnalyzerSoftAggreg10M *params);
 };
 // ---------------------------------------------------------------------------------------------------------------------

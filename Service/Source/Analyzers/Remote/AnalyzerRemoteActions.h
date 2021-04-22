@@ -25,7 +25,7 @@ class AnalyzerRemoteActions final {
   private :
     static const uint16_t      pMaxActions = 100;                           //Max allowed pending tasks
   private :
-    pthread_mutex_t            pMutex;                                      //Actions queue mutex
+    pthread_rwlock_t           pLock;                                       //Actions queue lock
     queue<json>                pPendingActions;                             //Queue of pending actions
   private :
     function<void(const string &name, const json &params)>  pHandleAction;  //Handle server actions

@@ -20,11 +20,15 @@
 #include "SystemManager.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerAccess::AnalyzerAccess(const string &serial, const string &owner) : pSerial(serial), pOwner(owner) {
+  LogFile::Debug("Starting AnalyzerAccess...");
   Database DB;
   DB.ExecSentenceNoResult("INSERT INTO permissions(username, serial, read, write, config, eventsread, alarmsread) VALUES('admin', " + DB.Bind(pSerial) + ", true, true, true, 0, 0) ON CONFLICT(username, serial) DO NOTHING");
   if(pOwner != "admin") DB.ExecSentenceNoResult("INSERT INTO permissions(username, serial, read, write, config, eventsread, alarmsread) VALUES(" + DB.Bind(pOwner) + ", " + DB.Bind(pSerial) + ", true, true, true, 0, 0) ON CONFLICT(username, serial) DO NOTHING");
+  LogFile::Debug("AnalyzerAccess started");
 }
 AnalyzerAccess::~AnalyzerAccess() {
+  LogFile::Debug("Stoping AnalyzerAccess...");
+  LogFile::Debug("AnalyzerAccess stoped");
 }
 bool AnalyzerAccess::TestUser(const Access neededAccess, const string &user) const {
   Database DB;

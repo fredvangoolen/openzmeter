@@ -71,6 +71,6 @@ class AnalyzerSoftAggreg {
     virtual ~AnalyzerSoftAggreg();
     void Normalize(const uint16_t samples);
     void Reset();
-    void Accumulate(const AnalyzerSoftAggreg &src);
+    void Accumulate(const AnalyzerSoftAggreg *src);
 };
 // ---------------------------------------------------------------------------------------------------------------------
