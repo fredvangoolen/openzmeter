@@ -47,6 +47,7 @@ class DeviceV2 final : public Device {
     float                        pCurrentOffset[4];        //Offset de corriente
     float                        pFilterZ1[7];             //DC block filter coeff
     float                        pFilterZ2[7];             //DC block filter coeff
+    bool                         pBlockDC;                 //DC blocking enabled
     bool                         pHighGain;                //Choose high gain mode
     int16_t                      pCapture[7];              //Captured samples
     uint8_t                      pCaptureSize;             //Captured samples count

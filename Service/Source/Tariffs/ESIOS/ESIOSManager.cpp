@@ -40,19 +40,23 @@ vector<ESIOSManager::Variable_t> ESIOSManager::pVariables = {
 };
 // ---------------------------------------------------------------------------------------------------------------------
 ESIOSManager::ESIOSManager() {
+  LogFile::Debug("Starting ESIOSManager...");
   Database DB;
   for(uint16_t V = 0; V < pVariables.size(); V++) DB.ExecSentenceNoResult("ALTER TABLE esios ADD COLUMN IF NOT EXISTS " + DB.BindID(pVariables[V].VarName) + " real NULL");
   HTTPServer::RegisterCallback("getESIOS", GetESIOSCallback, "API/Tariffs/ESIOS/GetESIOS.json");
   HTTPServer::RegisterCallback("setESIOS", SetESIOSCallback, "API/Tariffs/ESIOS/SetESIOS.json");
   Config(CheckConfig(ConfigFile::ReadConfig("/ESIOS")));
+  LogFile::Debug("ESIOSManager started");
 }
 ESIOSManager::~ESIOSManager() {
+  LogFile::Debug("Stopping ESIOSManager...");
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
   HTTPServer::UnregisterCallback("getESIOS");
   HTTPServer::UnregisterCallback("setESIOS");
   pthread_mutex_unlock(&pMutex);
   if(pThread != 0) pthread_join(pThread, NULL);
+  LogFile::Debug("ESIOSManager stopped");
 }
 json ESIOSManager::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
@@ -65,6 +69,7 @@ json ESIOSManager::CheckConfig(const json &config) {
   return ConfigOUT;
 }
 void ESIOSManager::Config(const json &config) {
+  LogFile::Debug("Configuring ESIOSManager...");
   ConfigFile::WriteConfig("/ESIOS", config);
   bool Enable = config["Enabled"];
   pthread_mutex_lock(&pMutex);
@@ -83,6 +88,7 @@ void ESIOSManager::Config(const json &config) {
     pThread = 0;
   }
   pthread_mutex_unlock(&pMutex);
+  LogFile::Debug("ESIOSManager configured");
 }
 void ESIOSManager::GetESIOSCallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);

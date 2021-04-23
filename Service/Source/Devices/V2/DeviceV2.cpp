@@ -158,6 +158,7 @@ json DeviceV2::CheckConfig(const json &config) {
   ConfigOUT["CurrentDelay"] = vector<uint8_t>(4, 0);
   ConfigOUT["Enabled"] = false;
   ConfigOUT["HighGain"] = false;
+  ConfigOUT["BlockDC"] = true;
   ConfigOUT["Outputs"] = json::array();
   ConfigOUT["Calculated"] = json::object();
   ConfigOUT["Calculated"]["Enabled"]  = false;
@@ -192,6 +193,7 @@ json DeviceV2::CheckConfig(const json &config) {
     }
     if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
     if(config.contains("HighGain") && config["HighGain"].is_boolean()) ConfigOUT["HighGain"] = config["HighGain"];
+    if(config.contains("BlockDC") && config["BlockDC"].is_boolean()) ConfigOUT["BlockDC"] = config["BlockDC"];
     if(config.contains("Outputs") && config["Outputs"].is_array()) {
       uint8_t CurrentMask = 0x00;
       for(auto Tmp : config["Outputs"]) {
@@ -269,14 +271,17 @@ void DeviceV2::Config(const json& config) {
   pthread_mutex_lock(&pConfigLock);
   ConfigFile::WriteConfig("/Devices/" + pSerial, config);
   for(uint8_t Ch = 0; Ch < 3; Ch++) {
-    pVoltageGain[Ch] = config["VoltageGain"][Ch];
+    pVoltageGain[Ch] = 0.110266113281 * config["VoltageGain"][Ch].get<float>();
     pVoltageOffset[Ch] = config["VoltageOffset"][Ch];
   }
+  uint8_t  Delays[4];
   uint8_t  MaxDelay = 0;
   uint16_t DelayLen = 0;
-  uint8_t  Delays[4];
+  pHighGain = config["HighGain"];
+  pBlockDC = config["BlockDC"];
+  pEnabled = config["Enabled"];
   for(uint8_t Ch = 0; Ch < 4; Ch++) {
-    pCurrentGain[Ch] = config["CurrentGain"][Ch];
+    pCurrentGain[Ch] = config["CurrentGain"][Ch].get<float>() * (pHighGain ? 0.08132749817 : 0.15165198897);
     pCurrentOffset[Ch] = config["CurrentOffset"][Ch];
     Delays[Ch] = config["CurrentDelay"][Ch];
     if(Delays[Ch] > MaxDelay) MaxDelay = Delays[Ch];
@@ -287,8 +292,6 @@ void DeviceV2::Config(const json& config) {
   for(uint8_t Ch = 0; Ch < 7; Ch++) DelayLen = DelayLen + pChannelsDelaySize[Ch];
   pChannelsDelay = (int16_t*)realloc(pChannelsDelay, sizeof(int16_t) * DelayLen);
   memset(pChannelsDelay, 0, sizeof(int16_t) * DelayLen);
-  pHighGain = config["HighGain"];
-  pEnabled = config["Enabled"];
   for(auto &Tmp : config["Outputs"]) {
     Analyzer::AnalyzerMode  Mode = (Tmp["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Tmp["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
     string                  Name = pSerial;
@@ -486,28 +489,28 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
               pChannelsDelayPos[Ch] = (pChannelsDelayPos[Ch] + 1) % pChannelsDelaySize[Ch];
               DelayPtr = &DelayPtr[pChannelsDelaySize[Ch]];
             }
-            if(true) { //Si el filtro DC esta activado
-              Values[0] = Values[0] * 0.110266113281 * pVoltageGain[0];
-              Values[1] = Values[1] * 0.110266113281 * pVoltageGain[1];
-              Values[2] = Values[2] * 0.110266113281 * pVoltageGain[2];
-              Values[3] = Values[3] * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[0];
-              Values[4] = Values[4] * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
-              Values[5] = Values[5] * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
-              Values[6] = Values[6] * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
+            if(pBlockDC) { //Si el filtro DC esta activado
+              Values[0] = Values[0] * pVoltageGain[0];
+              Values[1] = Values[1] * pVoltageGain[1];
+              Values[2] = Values[2] * pVoltageGain[2];
+              Values[3] = Values[3] * pCurrentGain[0];
+              Values[4] = Values[4] * pCurrentGain[1];
+              Values[5] = Values[5] * pCurrentGain[2];
+              Values[6] = Values[6] * pCurrentGain[3];
               for(uint8_t Ch = 0; Ch < 7; Ch++) {
                 float In = Values[Ch];
-                Values[Ch] = In - pFilterZ1[Ch] + 0.999999 * pFilterZ2[Ch];
+                Values[Ch] = In - pFilterZ1[Ch] + 0.99999 * pFilterZ2[Ch];
                 pFilterZ1[Ch] = In;
                 pFilterZ2[Ch] = Values[Ch];
               }
             } else {
-              Values[0] = (Values[0] + pVoltageOffset[0]) * 0.110266113281 * pVoltageGain[0];
-              Values[1] = (Values[1] + pVoltageOffset[1]) * 0.110266113281 * pVoltageGain[1];
-              Values[2] = (Values[2] + pVoltageOffset[2]) * 0.110266113281 * pVoltageGain[2];
-              Values[3] = (Values[3] + pCurrentOffset[0]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[0];
-              Values[4] = (Values[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
-              Values[5] = (Values[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
-              Values[6] = (Values[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
+              Values[0] = (Values[0] + pVoltageOffset[0]) * pVoltageGain[0];
+              Values[1] = (Values[1] + pVoltageOffset[1]) * pVoltageGain[1];
+              Values[2] = (Values[2] + pVoltageOffset[2]) * pVoltageGain[2];
+              Values[3] = (Values[3] + pCurrentOffset[0]) * pCurrentGain[0];
+              Values[4] = (Values[4] + pCurrentOffset[1]) * pCurrentGain[1];
+              Values[5] = (Values[5] + pCurrentOffset[2]) * pCurrentGain[2];
+              Values[6] = (Values[6] + pCurrentOffset[3]) * pCurrentGain[3];
             }
             for(auto &Tmp : pAnalyzers) Tmp->BufferAppend(Values);
           }

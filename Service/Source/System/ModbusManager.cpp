@@ -30,9 +30,11 @@ uint32_t                       ModbusManager::pRunningWorkers = 0;
 vector<string>                 ModbusManager::pAnalyzers;
 // ---------------------------------------------------------------------------------------------------------------------
 ModbusManager::ModbusManager() {
+  LogFile::Debug("Stating ModbusManager...");
   Config(CheckConfig(ConfigFile::ReadConfig("/ModbusTCP")));
   HTTPServer::RegisterCallback("getModbusTCP", GetModbusTCP);
   HTTPServer::RegisterCallback("setModbusTCP", SetModbusTCP);
+  LogFile::Debug("ModbusManager started");
 }
 ModbusManager::~ModbusManager() {
   LogFile::Info("Stopping ModbusManager...");
