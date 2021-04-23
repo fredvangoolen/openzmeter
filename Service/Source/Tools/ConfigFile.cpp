@@ -47,12 +47,12 @@ ConfigFile::ConfigFile(const string &name) {
   LogFile::Debug("ConfigFile started");
 }
 ConfigFile::~ConfigFile() {
-  LogFile::Debug("Stoping ConfigFile...");
+  LogFile::Debug("Stopping ConfigFile...");
   pthread_mutex_lock(&pMutex);
   if(pFile != -1) close(pFile);
   pFile = -1;
   pthread_mutex_unlock(&pMutex);
-  LogFile::Debug("ConfigFile stoped");
+  LogFile::Debug("ConfigFile stopped");
 }
 bool ConfigFile::WriteConfig(const string &path, const json &val) {
   LogFile::Debug("Saving '%s' settings...", path.c_str());

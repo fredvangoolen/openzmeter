@@ -24,14 +24,18 @@ pthread_mutex_t                      MessageLoop::pMessagesMutex;
 set<string>                          MessageLoop::pMessages;
 // ---------------------------------------------------------------------------------------------------------------------
 MessageLoop::MessageLoop() {
+  LogFile::Debug("Starting MessageLoop...");
+  LogFile::Debug("MessageLoop started");
 }
 MessageLoop::~MessageLoop() {
+  LogFile::Debug("Stoping MessageLoop...");
   pthread_mutex_lock(&pListenersMutex);
   pListeners.clear();
   pthread_mutex_unlock(&pListenersMutex);
   pthread_mutex_lock(&pMessagesMutex);
   pMessages.clear();
   pthread_mutex_unlock(&pMessagesMutex);
+  LogFile::Debug("MessageLoop stoped");
 }
 void MessageLoop::SendMessage(const string &id) {
   pthread_mutex_lock(&pMessagesMutex);

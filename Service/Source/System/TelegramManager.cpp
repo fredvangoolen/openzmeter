@@ -28,9 +28,11 @@ volatile bool                    TelegramManager::pTerminate      = false;
 uint32_t                         TelegramManager::pRunningWorkers = 0;
 //----------------------------------------------------------------------------------------------------------------------
 TelegramManager::TelegramManager() {
+  LogFile::Debug("Starting TelegramManager...");
   Config(CheckConfig(ConfigFile::ReadConfig("/Telegram")));
   HTTPServer::RegisterCallback("getTelegram", GetTelegramCallback);
   HTTPServer::RegisterCallback("setTelegram", SetTelegramCallback);
+  LogFile::Debug("TelegramManager started");
 }
 TelegramManager::~TelegramManager() {
   LogFile::Info("Stopping TelegramManager...");

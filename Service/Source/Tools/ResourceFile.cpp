@@ -40,6 +40,7 @@ ResourceFile::ResourceFile() {
 }
 ResourceFile::~ResourceFile() {
   LogFile::Debug("Stoping ResourceFile...");
+  pFiles.clear();
   LogFile::Debug("ResourceFile stoped");
 }
 uint8_t *ResourceFile::GetFile(string name, size_t *size) {

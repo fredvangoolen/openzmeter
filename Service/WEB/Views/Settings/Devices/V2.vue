@@ -1,5 +1,5 @@
 <template>
-  <dlg :loading="Loading">
+  <dlg :loading="ShowSpinner">
     <template v-slot:header>
       <div class="pull-left"><h4 class="modal-title">Device &raquo; {{ Settings.Serial }}</h4></div>
       <div class="pull-right btn-group">
@@ -16,12 +16,13 @@
         <div class="col-xs-4">Battery voltage is {{ Round(Settings.BatteryVoltage, 2) }} V</div>
       </div>
     </template>
-    <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Error!=null">{{ Error }}</div>
     <div class="row" v-if="View=='Inputs'">
       <div class="col-xs-12" style="margin-top:5px;">
         <label class="control-label" style="line-height: 22px">Start on boot</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.Enabled"></toggle>
         <hr style="margin: 5px 0px 5px 0px"/>
+        <label class="control-label" style="line-height: 22px">AC Coupling</label>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.BlockDC"></toggle>
         <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Device inputs can be calibrated to compensate components derating over time.</div>
       </div>
       <div class="col-xs-12">
@@ -42,10 +43,10 @@
           <tr v-for="index in [0, 1, 2]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
             <td>
-              <input-spin :min="-200" :max="200" v-model="Settings.VoltageOffset[index]" :increment="0.01" :decimals="2"></input-spin>
+              <input-spin :min="-200" :max="200" :disabled="Settings.BlockDC==true" v-model="Settings.VoltageOffset[index]" :increment="0.01" :decimals="2"></input-spin>
             </td>
             <td>
-              <button type="button" class="btn btn-default btn-xs" @click="SetVoltageOffset(index)" :disabled="Settings.Wave_Average.Voltage[index] == 0.0" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Voltage[index], 2, false)"><img :src="require('Imgs/wand.png')"></button>
+              <button type="button" class="btn btn-default btn-xs" @click="SetVoltageOffset(index)" :disabled="Settings.BlockDC==true || Settings.Wave_Average.Voltage[index] == 0.0" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Voltage[index], 2, false)"><img :src="require('Imgs/wand.png')"></button>
             </td>
             <td>
               <input-spin :min="0.1" :max="1000" v-model="Settings.VoltageGain[index]" :increment="0.001" :decimals="3" prepend="V/V"></input-spin>
@@ -76,10 +77,10 @@
           <tr v-for="index in [0, 1, 2, 3]" :key="index">
             <td class="text-center"><strong>CH{{ index + 1 }}</strong></td>
             <td>
-              <input-spin :min="-200" :max="200" v-model="Settings.CurrentOffset[index]" :increment="0.01" :decimals="2"></input-spin>
+              <input-spin :disabled="Settings.BlockDC==true" :min="-200" :max="200" v-model="Settings.CurrentOffset[index]" :increment="0.01" :decimals="2"></input-spin>
             </td>
             <td>
-              <button type="button" class="btn btn-default btn-xs" @click="SetCurrentOffset(index)" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Current[index], 2, false)"><img :src="require('Imgs/wand.png')"></button>
+              <button type="button" class="btn btn-default btn-xs" @click="SetCurrentOffset(index)" :disabled="Settings.BlockDC==true || Settings.Wave_Average.Current[index] == 0.0" :title="'Last second offset: ' + Round(-Settings.Wave_Average.Current[index], 2, false)"><img :src="require('Imgs/wand.png')"></button>
             </td>
             <td>
               <input-spin :min="0" :max="200" v-model="Settings.CurrentDelay[index]" :increment="1" :decimals="0"></input-spin>
@@ -203,7 +204,7 @@
   export default {
     props: { settings: Object },
     data() {
-      return { View: 'Inputs', Loading: false, Error: null, OutputMode: null, Settings: null, CalcCh: null };
+      return { View: 'Inputs', ShowSpinner: false, OutputMode: null, Settings: null, CalcCh: null };
     },
     created: function() {
       this.Settings = Object.assign({}, this.settings);
@@ -283,13 +284,12 @@
     },
     methods: {
       Save: function () {
-        this.Loading = true;
+        this.ShowSpinner = true;
         this.Post('setDevice', this.Settings).then(
-          (result) => { this.$emit('close', true); },
+          () => { this.$emit('close', true); },
           (fail) => {
-            this.Loading = false;
-            this.Error = 'Failed to save device settings!';
-            setTimeout(() => { this.Error = null; }, 1000);
+            this.ShowSpinner = false;
+            if(fail != null) this.$toast.open({type:'error', message: "Failed to save device config<br>" + fail.message, duration: 3000});
           }
         );
       },

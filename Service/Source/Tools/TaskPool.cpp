@@ -88,6 +88,7 @@ TaskPool::Task_t *TaskPool::Run(function<void()> callback, Prio prio) {
   }
   pthread_mutex_unlock(&pMutex);
   if(Tmp == NULL) {
+    LogFile::Debug("TaskPool launching new worker...");
     Tmp = new Task_t;
     Tmp->Cond      = PTHREAD_COND_INITIALIZER;
     Tmp->Mutex     = PTHREAD_MUTEX_INITIALIZER;
@@ -153,6 +154,7 @@ void TaskPool::SetThreadProperties(pthread_t thread, const Prio prio) {
   }
 }
 void TaskPool::PeriodicTasks() {
+  LogFile::Debug("TaskPool adjusting workers count...");
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   uint64_t Time = Tools::GetTime64();
   while(pFreeTasks.size() > 0) {
@@ -166,7 +168,9 @@ void TaskPool::PeriodicTasks() {
     pFreeTasks.pop_back();
     delete Tmp;
   }
-  LogFile::Debug("Adjusted TaskPool to %d workers (plus %u in use)", pFreeTasks.size(), pRunningTasks);
+  uint32_t Running = pRunningTasks;
+  uint32_t Free    = pFreeTasks.size();
   if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  LogFile::Debug("Adjusted TaskPool to %d workers (plus %u in use)", Free, Running);
 }
 // ---------------------------------------------------------------------------------------------------------------------
