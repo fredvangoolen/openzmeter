@@ -200,11 +200,11 @@ using socket_t = int;
 #include <mutex>
 #include <random>
 #include <regex>
+#include <set>
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
 #include <thread>
-#include <set>
 
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
 #include <openssl/err.h>
@@ -257,7 +257,7 @@ namespace detail {
 
 template <class T, class... Args>
 typename std::enable_if<!std::is_array<T>::value, std::unique_ptr<T>>::type
-make_unique(Args &&... args) {
+make_unique(Args &&...args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
@@ -308,7 +308,7 @@ public:
   DataSink(DataSink &&) = delete;
   DataSink &operator=(DataSink &&) = delete;
 
-  std::function<void(const char *data, size_t data_len)> write;
+  std::function<bool(const char *data, size_t data_len)> write;
   std::function<void()> done;
   std::function<bool()> is_writable;
   std::ostream os;
@@ -395,7 +395,7 @@ struct Request {
   ContentReceiverWithProgress content_receiver;
   Progress progress;
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-  const SSL *ssl;
+  const SSL *ssl = nullptr;
 #endif
 
   bool has_header(const char *key) const;
@@ -487,7 +487,7 @@ public:
   virtual socket_t socket() const = 0;
 
   template <typename... Args>
-  ssize_t write_format(const char *fmt, const Args &... args);
+  ssize_t write_format(const char *fmt, const Args &...args);
   ssize_t write(const char *ptr);
   ssize_t write(const std::string &s);
 };
@@ -663,6 +663,7 @@ public:
   Server &set_expect_100_continue_handler(Expect100ContinueHandler handler);
   Server &set_logger(Logger logger);
 
+  Server &set_address_family(int family);
   Server &set_tcp_nodelay(bool on);
   Server &set_socket_options(SocketOptions socket_options);
 
@@ -782,11 +783,12 @@ private:
   Logger logger_;
   Expect100ContinueHandler expect_100_continue_handler_;
 
+  int address_family_ = AF_UNSPEC;
   bool tcp_nodelay_ = CPPHTTPLIB_TCP_NODELAY;
   SocketOptions socket_options_ = default_socket_options;
 };
 
-enum Error {
+enum class Error {
   Success = 0,
   Unknown,
   Connection,
@@ -971,12 +973,14 @@ public:
 
   void set_default_headers(Headers headers);
 
+  void set_address_family(int family);
   void set_tcp_nodelay(bool on);
   void set_socket_options(SocketOptions socket_options);
 
   void set_connection_timeout(time_t sec, time_t usec = 0);
   template <class Rep, class Period>
-  void set_connection_timeout(const std::chrono::duration<Rep, Period> &duration);
+  void
+  set_connection_timeout(const std::chrono::duration<Rep, Period> &duration);
 
   void set_read_timeout(time_t sec, time_t usec = 0);
   template <class Rep, class Period>
@@ -1091,6 +1095,7 @@ protected:
   bool keep_alive_ = false;
   bool follow_location_ = false;
 
+  int address_family_ = AF_UNSPEC;
   bool tcp_nodelay_ = CPPHTTPLIB_TCP_NODELAY;
   SocketOptions socket_options_ = nullptr;
 
@@ -1281,12 +1286,14 @@ public:
 
   void set_default_headers(Headers headers);
 
+  void set_address_family(int family);
   void set_tcp_nodelay(bool on);
   void set_socket_options(SocketOptions socket_options);
 
   void set_connection_timeout(time_t sec, time_t usec = 0);
   template <class Rep, class Period>
-  void set_connection_timeout(const std::chrono::duration<Rep, Period> &duration);
+  void
+  set_connection_timeout(const std::chrono::duration<Rep, Period> &duration);
 
   void set_read_timeout(time_t sec, time_t usec = 0);
   template <class Rep, class Period>
@@ -1605,6 +1612,7 @@ inline std::string encode_query_param(const std::string &value) {
 
 inline std::string encode_url(const std::string &s) {
   std::string result;
+  result.reserve(s.size());
 
   for (size_t i = 0; s[i]; i++) {
     switch (s[i]) {
@@ -2058,15 +2066,16 @@ inline int shutdown_socket(socket_t sock) {
 }
 
 template <typename BindOrConnect>
-socket_t create_socket(const char *host, int port, int socket_flags,
-                       bool tcp_nodelay, SocketOptions socket_options,
+socket_t create_socket(const char *host, int port, int address_family,
+                       int socket_flags, bool tcp_nodelay,
+                       SocketOptions socket_options,
                        BindOrConnect bind_or_connect) {
   // Get address info
   struct addrinfo hints;
   struct addrinfo *result;
 
   memset(&hints, 0, sizeof(struct addrinfo));
-  hints.ai_family = AF_UNSPEC;
+  hints.ai_family = address_family;
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_flags = socket_flags;
   hints.ai_protocol = 0;
@@ -2083,8 +2092,9 @@ socket_t create_socket(const char *host, int port, int socket_flags,
   for (auto rp = result; rp; rp = rp->ai_next) {
     // Create a socket
 #ifdef _WIN32
-    auto sock = WSASocketW(rp->ai_family, rp->ai_socktype, rp->ai_protocol,
-                           nullptr, 0, WSA_FLAG_NO_HANDLE_INHERIT);
+    auto sock =
+        WSASocketW(rp->ai_family, rp->ai_socktype, rp->ai_protocol, nullptr, 0,
+                   WSA_FLAG_NO_HANDLE_INHERIT | WSA_FLAG_OVERLAPPED);
     /**
      * Since the WSA_FLAG_NO_HANDLE_INHERIT is only supported on Windows 7 SP1
      * and above the socket creation fails on older Windows Systems.
@@ -2206,13 +2216,14 @@ inline std::string if2ip(const std::string &ifn) {
 }
 #endif
 
-inline socket_t create_client_socket(const char *host, int port,
-                                     bool tcp_nodelay,
-                                     SocketOptions socket_options,
-                                     time_t timeout_sec, time_t timeout_usec,
-                                     const std::string &intf, Error &error) {
+inline socket_t create_client_socket(
+    const char *host, int port, int address_family, bool tcp_nodelay,
+    SocketOptions socket_options, time_t connection_timeout_sec,
+    time_t connection_timeout_usec, time_t read_timeout_sec,
+    time_t read_timeout_usec, time_t write_timeout_sec,
+    time_t write_timeout_usec, const std::string &intf, Error &error) {
   auto sock = create_socket(
-      host, port, 0, tcp_nodelay, std::move(socket_options),
+      host, port, address_family, 0, tcp_nodelay, std::move(socket_options),
       [&](socket_t sock, struct addrinfo &ai) -> bool {
         if (!intf.empty()) {
 #ifdef USE_IF2IP
@@ -2232,14 +2243,28 @@ inline socket_t create_client_socket(const char *host, int port,
 
         if (ret < 0) {
           if (is_connection_error() ||
-              !wait_until_socket_is_ready(sock, timeout_sec, timeout_usec)) {
-            close_socket(sock);
+              !wait_until_socket_is_ready(sock, connection_timeout_sec,
+                                          connection_timeout_usec)) {
             error = Error::Connection;
             return false;
           }
         }
 
         set_nonblocking(sock, false);
+
+        {
+          timeval tv;
+          tv.tv_sec = static_cast<long>(read_timeout_sec);
+          tv.tv_usec = static_cast<decltype(tv.tv_usec)>(read_timeout_usec);
+          setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv));
+        }
+        {
+          timeval tv;
+          tv.tv_sec = static_cast<long>(write_timeout_sec);
+          tv.tv_usec = static_cast<decltype(tv.tv_usec)>(write_timeout_usec);
+          setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(tv));
+        }
+
         error = Error::Success;
         return true;
       });
@@ -2996,7 +3021,7 @@ inline bool write_content(Stream &strm, const ContentProvider &content_provider,
   auto ok = true;
   DataSink data_sink;
 
-  data_sink.write = [&](const char *d, size_t l) {
+  data_sink.write = [&](const char *d, size_t l) -> bool {
     if (ok) {
       if (write_data(strm, d, l)) {
         offset += l;
@@ -3004,6 +3029,7 @@ inline bool write_content(Stream &strm, const ContentProvider &content_provider,
         ok = false;
       }
     }
+    return ok;
   };
 
   data_sink.is_writable = [&](void) { return ok && strm.is_writable(); };
@@ -3042,11 +3068,12 @@ write_content_without_length(Stream &strm,
   auto ok = true;
   DataSink data_sink;
 
-  data_sink.write = [&](const char *d, size_t l) {
+  data_sink.write = [&](const char *d, size_t l) -> bool {
     if (ok) {
       offset += l;
       if (!write_data(strm, d, l)) { ok = false; }
     }
+    return ok;
   };
 
   data_sink.done = [&](void) { data_available = false; };
@@ -3069,30 +3096,30 @@ write_content_chunked(Stream &strm, const ContentProvider &content_provider,
   auto ok = true;
   DataSink data_sink;
 
-  data_sink.write = [&](const char *d, size_t l) {
-    if (!ok) { return; }
+  data_sink.write = [&](const char *d, size_t l) -> bool {
+    if (ok) {
+      data_available = l > 0;
+      offset += l;
 
-    data_available = l > 0;
-    offset += l;
-
-    std::string payload;
-    if (!compressor.compress(d, l, false,
-                             [&](const char *data, size_t data_len) {
-                               payload.append(data, data_len);
-                               return true;
-                             })) {
-      ok = false;
-      return;
-    }
-
-    if (!payload.empty()) {
-      // Emit chunked response header and footer for each chunk
-      auto chunk = from_i_to_hex(payload.size()) + "\r\n" + payload + "\r\n";
-      if (!write_data(strm, chunk.data(), chunk.size())) {
+      std::string payload;
+      if (compressor.compress(d, l, false,
+                              [&](const char *data, size_t data_len) {
+                                payload.append(data, data_len);
+                                return true;
+                              })) {
+        if (!payload.empty()) {
+          // Emit chunked response header and footer for each chunk
+          auto chunk =
+              from_i_to_hex(payload.size()) + "\r\n" + payload + "\r\n";
+          if (!write_data(strm, chunk.data(), chunk.size())) {
+            ok = false;
+          }
+        }
+      } else {
         ok = false;
-        return;
       }
     }
+    return ok;
   };
 
   data_sink.done = [&](void) {
@@ -3200,9 +3227,7 @@ inline void parse_query_text(const std::string &s, Params &params) {
   std::set<std::string> cache;
   split(s.data(), s.data() + s.size(), '&', [&](const char *b, const char *e) {
     std::string kv(b, e);
-    if (cache.find(kv) != cache.end()) {
-      return;
-    }
+    if (cache.find(kv) != cache.end()) { return; }
     cache.insert(kv);
 
     std::string key;
@@ -3744,9 +3769,9 @@ inline std::pair<std::string, std::string> make_digest_authentication_header(
 
   string response;
   {
-    auto H = algo == "SHA-256"
-                 ? detail::SHA_256
-                 : algo == "SHA-512" ? detail::SHA_512 : detail::MD5;
+    auto H = algo == "SHA-256"   ? detail::SHA_256
+             : algo == "SHA-512" ? detail::SHA_512
+                                 : detail::MD5;
 
     auto A1 = username + ":" + auth.at("realm") + ":" + password;
 
@@ -4058,7 +4083,7 @@ inline ssize_t Stream::write(const std::string &s) {
 }
 
 template <typename... Args>
-inline ssize_t Stream::write_format(const char *fmt, const Args &... args) {
+inline ssize_t Stream::write_format(const char *fmt, const Args &...args) {
   const auto bufsiz = 2048;
   std::array<char, bufsiz> buf;
 
@@ -4333,13 +4358,11 @@ inline Server &
 Server::set_file_extension_and_mimetype_mapping(const char *ext,
                                                 const char *mime) {
   file_extension_and_mimetype_map_[ext] = mime;
-
   return *this;
 }
 
 inline Server &Server::set_file_request_handler(Handler handler) {
   file_request_handler_ = std::move(handler);
-
   return *this;
 }
 
@@ -4373,7 +4396,6 @@ inline Server &Server::set_post_routing_handler(Handler handler) {
 
 inline Server &Server::set_logger(Logger logger) {
   logger_ = std::move(logger);
-
   return *this;
 }
 
@@ -4384,81 +4406,75 @@ Server::set_expect_100_continue_handler(Expect100ContinueHandler handler) {
   return *this;
 }
 
+inline Server &Server::set_address_family(int family) {
+  address_family_ = family;
+  return *this;
+}
+
 inline Server &Server::set_tcp_nodelay(bool on) {
   tcp_nodelay_ = on;
-
   return *this;
 }
 
 inline Server &Server::set_socket_options(SocketOptions socket_options) {
   socket_options_ = std::move(socket_options);
-
   return *this;
 }
 
 inline Server &Server::set_keep_alive_max_count(size_t count) {
   keep_alive_max_count_ = count;
-
   return *this;
 }
 
 inline Server &Server::set_keep_alive_timeout(time_t sec) {
   keep_alive_timeout_sec_ = sec;
-
   return *this;
 }
 
 inline Server &Server::set_read_timeout(time_t sec, time_t usec) {
   read_timeout_sec_ = sec;
   read_timeout_usec_ = usec;
-
   return *this;
 }
 
 template <class Rep, class Period>
-inline Server &Server::set_read_timeout(
-  const std::chrono::duration<Rep, Period> &duration) {
-  detail::duration_to_sec_and_usec(duration, [&](time_t sec, time_t usec) {
-    set_read_timeout(sec, usec);
-  });
+inline Server &
+Server::set_read_timeout(const std::chrono::duration<Rep, Period> &duration) {
+  detail::duration_to_sec_and_usec(
+      duration, [&](time_t sec, time_t usec) { set_read_timeout(sec, usec); });
   return *this;
 }
 
 inline Server &Server::set_write_timeout(time_t sec, time_t usec) {
   write_timeout_sec_ = sec;
   write_timeout_usec_ = usec;
-
   return *this;
 }
 
 template <class Rep, class Period>
-inline Server &Server::set_write_timeout(
-  const std::chrono::duration<Rep, Period> &duration) {
-  detail::duration_to_sec_and_usec(duration, [&](time_t sec, time_t usec) {
-    set_write_timeout(sec, usec);
-  });
+inline Server &
+Server::set_write_timeout(const std::chrono::duration<Rep, Period> &duration) {
+  detail::duration_to_sec_and_usec(
+      duration, [&](time_t sec, time_t usec) { set_write_timeout(sec, usec); });
   return *this;
 }
 
 inline Server &Server::set_idle_interval(time_t sec, time_t usec) {
   idle_interval_sec_ = sec;
   idle_interval_usec_ = usec;
-
   return *this;
 }
 
 template <class Rep, class Period>
-inline Server &Server::set_idle_interval(
-  const std::chrono::duration<Rep, Period> &duration) {
-  detail::duration_to_sec_and_usec(duration, [&](time_t sec, time_t usec) {
-    set_idle_interval(sec, usec);
-  });
+inline Server &
+Server::set_idle_interval(const std::chrono::duration<Rep, Period> &duration) {
+  detail::duration_to_sec_and_usec(
+      duration, [&](time_t sec, time_t usec) { set_idle_interval(sec, usec); });
   return *this;
 }
 
 inline Server &Server::set_payload_max_length(size_t length) {
   payload_max_length_ = length;
-
   return *this;
 }
 
@@ -4774,7 +4790,8 @@ inline socket_t
 Server::create_server_socket(const char *host, int port, int socket_flags,
                              SocketOptions socket_options) const {
   return detail::create_socket(
-      host, port, socket_flags, tcp_nodelay_, std::move(socket_options),
+      host, port, address_family_, socket_flags, tcp_nodelay_,
+      std::move(socket_options),
       [](socket_t sock, struct addrinfo &ai) -> bool {
         if (::bind(sock, ai.ai_addr, static_cast<socklen_t>(ai.ai_addrlen))) {
           return false;
@@ -4847,6 +4864,19 @@ inline bool Server::listen_internal() {
           ; // The server socket was closed by user.
         }
         break;
+      }
+
+      {
+        timeval tv;
+        tv.tv_sec = static_cast<long>(read_timeout_sec_);
+        tv.tv_usec = static_cast<decltype(tv.tv_usec)>(read_timeout_usec_);
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv));
+      }
+      {
+        timeval tv;
+        tv.tv_sec = static_cast<long>(write_timeout_sec_);
+        tv.tv_usec = static_cast<decltype(tv.tv_usec)>(write_timeout_usec_);
+        setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(tv));
       }
 
 #if __cplusplus > 201703L
@@ -5263,12 +5293,16 @@ inline void ClientImpl::copy_settings(const ClientImpl &rhs) {
 inline socket_t ClientImpl::create_client_socket(Error &error) const {
   if (!proxy_host_.empty() && proxy_port_ != -1) {
     return detail::create_client_socket(
-        proxy_host_.c_str(), proxy_port_, tcp_nodelay_, socket_options_,
-        connection_timeout_sec_, connection_timeout_usec_, interface_, error);
+        proxy_host_.c_str(), proxy_port_, address_family_, tcp_nodelay_,
+        socket_options_, connection_timeout_sec_, connection_timeout_usec_,
+        read_timeout_sec_, read_timeout_usec_, write_timeout_sec_,
+        write_timeout_usec_, interface_, error);
   }
   return detail::create_client_socket(
-      host_.c_str(), port_, tcp_nodelay_, socket_options_,
-      connection_timeout_sec_, connection_timeout_usec_, interface_, error);
+      host_.c_str(), port_, address_family_, tcp_nodelay_, socket_options_,
+      connection_timeout_sec_, connection_timeout_usec_, read_timeout_sec_,
+      read_timeout_usec_, write_timeout_sec_, write_timeout_usec_, interface_,
+      error);
 }
 
 inline bool ClientImpl::create_and_connect_socket(Socket &socket,
@@ -5714,7 +5748,7 @@ inline std::unique_ptr<Response> ClientImpl::send_with_content_provider(
       size_t offset = 0;
       DataSink data_sink;
 
-      data_sink.write = [&](const char *data, size_t data_len) {
+      data_sink.write = [&](const char *data, size_t data_len) -> bool {
         if (ok) {
           auto last = offset + data_len == content_length;
 
@@ -5730,6 +5764,7 @@ inline std::unique_ptr<Response> ClientImpl::send_with_content_provider(
             ok = false;
           }
         }
+        return ok;
       };
 
       data_sink.is_writable = [&](void) { return ok && true; };
@@ -5807,19 +5842,22 @@ inline bool ClientImpl::process_request(Stream &strm, Request &req,
     return false;
   }
 
-  if (req.response_handler) {
-    if (!req.response_handler(res)) {
-      error = Error::Canceled;
-      return false;
-    }
-  }
-
   // Body
   if ((res.status != 204) && req.method != "HEAD" && req.method != "CONNECT") {
+    auto redirect = 300 < res.status && res.status < 400 && follow_location_;
+
+    if (req.response_handler && !redirect) {
+      if (!req.response_handler(res)) {
+        error = Error::Canceled;
+        return false;
+      }
+    }
+
     auto out =
         req.content_receiver
             ? static_cast<ContentReceiverWithProgress>(
                   [&](const char *buf, size_t n, uint64_t off, uint64_t len) {
+                    if (redirect) { return true; }
                     auto ret = req.content_receiver(buf, n, off, len);
                     if (!ret) { error = Error::Canceled; }
                     return ret;
@@ -5835,7 +5873,7 @@ inline bool ClientImpl::process_request(Stream &strm, Request &req,
                   });
 
     auto progress = [&](uint64_t current, uint64_t total) {
-      if (!req.progress) { return true; }
+      if (!req.progress || redirect) { return true; }
       auto ret = req.progress(current, total);
       if (!ret) { error = Error::Canceled; }
       return ret;
@@ -6336,7 +6374,7 @@ inline void ClientImpl::set_connection_timeout(time_t sec, time_t usec) {
 
 template <class Rep, class Period>
 inline void ClientImpl::set_connection_timeout(
-  const std::chrono::duration<Rep, Period> &duration) {
+    const std::chrono::duration<Rep, Period> &duration) {
   detail::duration_to_sec_and_usec(duration, [&](time_t sec, time_t usec) {
     set_connection_timeout(sec, usec);
   });
@@ -6349,10 +6387,9 @@ inline void ClientImpl::set_read_timeout(time_t sec, time_t usec) {
 
 template <class Rep, class Period>
 inline void ClientImpl::set_read_timeout(
-  const std::chrono::duration<Rep, Period> &duration) {
-  detail::duration_to_sec_and_usec(duration, [&](time_t sec, time_t usec) {
-    set_read_timeout(sec, usec);
-  });
+    const std::chrono::duration<Rep, Period> &duration) {
+  detail::duration_to_sec_and_usec(
+      duration, [&](time_t sec, time_t usec) { set_read_timeout(sec, usec); });
 }
 
 inline void ClientImpl::set_write_timeout(time_t sec, time_t usec) {
@@ -6362,10 +6399,9 @@ inline void ClientImpl::set_write_timeout(time_t sec, time_t usec) {
 
 template <class Rep, class Period>
 inline void ClientImpl::set_write_timeout(
-  const std::chrono::duration<Rep, Period> &duration) {
-  detail::duration_to_sec_and_usec(duration, [&](time_t sec, time_t usec) {
-    set_write_timeout(sec, usec);
-  });
+    const std::chrono::duration<Rep, Period> &duration) {
+  detail::duration_to_sec_and_usec(
+      duration, [&](time_t sec, time_t usec) { set_write_timeout(sec, usec); });
 }
 
 inline void ClientImpl::set_basic_auth(const char *username,
@@ -6392,6 +6428,10 @@ inline void ClientImpl::set_follow_location(bool on) { follow_location_ = on; }
 
 inline void ClientImpl::set_default_headers(Headers headers) {
   default_headers_ = std::move(headers);
+}
+
+inline void ClientImpl::set_address_family(int family) {
+  address_family_ = family;
 }
 
 inline void ClientImpl::set_tcp_nodelay(bool on) { tcp_nodelay_ = on; }
@@ -6655,7 +6695,7 @@ static SSLInit sslinit_;
 inline SSLServer::SSLServer(const char *cert_path, const char *private_key_path,
                             const char *client_ca_cert_file_path,
                             const char *client_ca_cert_dir_path) {
-  ctx_ = SSL_CTX_new(SSLv23_server_method());
+  ctx_ = SSL_CTX_new(TLS_method());
 
   if (ctx_) {
     SSL_CTX_set_options(ctx_,
@@ -7456,6 +7496,10 @@ inline void Client::set_default_headers(Headers headers) {
   cli_->set_default_headers(std::move(headers));
 }
 
+inline void Client::set_address_family(int family) {
+  cli_->set_address_family(family);
+}
+
 inline void Client::set_tcp_nodelay(bool on) { cli_->set_tcp_nodelay(on); }
 
 inline void Client::set_socket_options(SocketOptions socket_options) {
@@ -7468,7 +7512,7 @@ inline void Client::set_connection_timeout(time_t sec, time_t usec) {
 
 template <class Rep, class Period>
 inline void Client::set_connection_timeout(
-  const std::chrono::duration<Rep, Period> &duration) {
+    const std::chrono::duration<Rep, Period> &duration) {
   cli_->set_connection_timeout(duration);
 }
 
@@ -7477,8 +7521,8 @@ inline void Client::set_read_timeout(time_t sec, time_t usec) {
 }
 
 template <class Rep, class Period>
-inline void Client::set_read_timeout(
-  const std::chrono::duration<Rep, Period> &duration) {
+inline void
+Client::set_read_timeout(const std::chrono::duration<Rep, Period> &duration) {
   cli_->set_read_timeout(duration);
 }
 
@@ -7487,8 +7531,8 @@ inline void Client::set_write_timeout(time_t sec, time_t usec) {
 }
 
 template <class Rep, class Period>
-inline void Client::set_write_timeout(
-  const std::chrono::duration<Rep, Period> &duration) {
+inline void
+Client::set_write_timeout(const std::chrono::duration<Rep, Period> &duration) {
   cli_->set_write_timeout(duration);
 }
 

@@ -88,6 +88,7 @@ void AnalyzerSeries::GetSeries(HTTPRequest &req) const {
   req.SuccessStreamArray(Func);
 }
 void AnalyzerSeries::SetSeries(HTTPRequest &req) const {
+  if(pSerial == "F100A2009034E42413032302_3PN") printf("%s\n", req.Params().dump().c_str());
   if(!req.CheckParamEnum("Aggreg", {"200MS", "3S", "1M", "10M", "15M", "1H"}) || !req.CheckParamArray("Samples")) return;
   if((req.Param("Aggreg") == "200MS") && !req.CheckParamSet("Headers", {"Time", "Frequency", "Unbalance", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Harmonics_Complex", "Current_Harmonics_Complex", "Power_Harmonics"}, true)) return;
   else if((req.Param("Aggreg") == "3S") && !req.CheckParamSet("Headers", {"Time", "Frequency", "Flag", "Voltage", "Current", "Active_Power", "Reactive_Power"}, true)) return;

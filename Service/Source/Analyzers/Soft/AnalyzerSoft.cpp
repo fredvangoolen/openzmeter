@@ -73,7 +73,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   LogFile::Info("AnalyzerSoft with serial '%s' started", pSerial.c_str());
 }
 AnalyzerSoft::~AnalyzerSoft() {
-  LogFile::Info("Stopping analyzer with serial '%s'", pSerial.c_str());
+  LogFile::Info("Stopping AnalyzerSoft with serial '%s'", pSerial.c_str());
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
   pthread_cond_signal(&pCond);
@@ -99,7 +99,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   delete pFrequency;
   delete pZeroCross;
   delete pAccess;
-  LogFile::Info("Analyzer with serial '%s' stopped", pSerial.c_str());
+  LogFile::Info("AnalyzerSoft with serial '%s' stopped", pSerial.c_str());
 }
 void AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
   AnalyzerSoftBlock *Result = pZeroCross->PushSample(voltageSamples, currentSamples);
