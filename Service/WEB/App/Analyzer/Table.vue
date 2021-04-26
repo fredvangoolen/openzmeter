@@ -105,7 +105,7 @@
       CloseSelect: function(analyzer) {
         this.View = null;
         this.GetAnalyzers();
-        if(analyzer == this.analyzer.Analyzer) this.Select(analyzer, false);
+        if((analyzer != null) && (analyzer == this.analyzer.Analyzer)) this.Select(analyzer, false);
       },
       LoadView: function(view, analyzer) {
         this.ShowSpinner = true;

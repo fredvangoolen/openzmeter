@@ -514,10 +514,6 @@
           );
         }
       },
-      Back: function () {
-        this.$refs.Dialog.Close();
-        this.$parent.$refs.Dialog.Show();
-      },
       FileSet: function (evt) {
         if (evt.target.files.length !== 1)
           return;
@@ -599,14 +595,5 @@
   input[type=checkbox] {
     margin-top: 6px;
     margin-right: 4px;
-  }
-
-
-
-  div .progress {
-    height: 12px;
-    background-color: #FFFFFF;
-    border:1px solid #BBB;
-    margin-bottom: 0px;
   }
 </style>
