@@ -24,7 +24,15 @@
           </tr>
           <tr class="line">
             <td>Download all table data to a file</td>
-            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('200MS', false)">Execute</button></td>
+            <td class="action">
+              <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" @click="Download('200MS', false, 'application/json')">As JSON text file</a></li>
+                  <li><a class="dropdown-item" @click="Download('200MS', false, 'application/cbor')">As CBOR binary file</a></li>
+                </ul>
+              </div>
+            </td>
           </tr>
           <tr class="line">
             <td>Restore data from file</td>
