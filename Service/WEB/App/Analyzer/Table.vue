@@ -60,7 +60,7 @@
     data() {
       return { View: null, Analyzers: [], FilterAnalyzers: [], ShowSpinner: true, Analyzer: null, Filter: '', Timer: null,
         Columns: [
-          { name: '__slot:state', title: 'Online' },
+          { name: '__slot:state', title: '' },
           { name: 'User', title: 'Owner' },
           { name: 'Name', title: 'Description' },
           { name: 'Analyzer', title: 'Serial' },
@@ -132,7 +132,7 @@
 <style scoped>
   @media screen and (min-width: 600px) {
     .table >>> th:nth-child(1) {
-      width: 60px;
+      width: 20px;
       text-align: center;
     }
     .table >>> td:nth-child(1) {
@@ -147,7 +147,7 @@
       text-align: center;
     }
     .table >>> th:nth-child(5) {
-      width: 90px;
+      width: 94px;
     }
   }
 </style>

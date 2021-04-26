@@ -36,10 +36,11 @@ class AnalyzerSoftSync final {
   private :
     volatile bool                 pTerminate;        //Termination signal
     pthread_t                     pThread;           //Export thread
-    pthread_mutex_t               pMutex;            //Shared variables lock
     string                        pServer;           //Export server address
     string                        pUser;             //Export server user
     string                        pPass;             //Export server password
+    pthread_mutex_t               pMutexInternal;    //Internal variables lock
+    pthread_mutex_t               pMutexConfig;      //Configuration lock
     queue<json>                   pPendingActions;   //Queue of pending actions
   private :
     const function<void(const string &name, const json &params)>  pHandleAction;  //Handle server actions

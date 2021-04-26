@@ -54,7 +54,15 @@
                 <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get3SRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
-            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('3S', Get3SRanged)">Execute</button></td>
+            <td class="action">
+              <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" @click="Download('3S', Get3SRanged, 'application/json')">As JSON text file</a></li>
+                  <li><a class="dropdown-item" @click="Download('3S', Get3SRanged, 'application/cbor')">As CBOR binary file</a></li>
+                </ul>
+              </div>
+            </td>
           </tr>
           <tr class="line">
             <td>Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span></td>
@@ -84,7 +92,15 @@
                 <label>To:</label><date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', timeZone: analyzer.TimeZone }" :disabled="!Get1MRanged" v-model="To" style="flex-grow:2"></date-picker>
               </div>
             </td>
-            <td class="action"><button type="button" class="btn btn-default btn-xs" @click="Download('1M', Get1MRanged)">Execute</button></td>
+            <td class="action">
+              <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" @click="Download('1M', Get1MRanged, 'application/json')">As JSON text file</a></li>
+                  <li><a class="dropdown-item" @click="Download('1M', Get1MRanged, 'application/cbor')">As CBOR binary file</a></li>
+                </ul>
+              </div>
+            </td>
           </tr>
           <tr class="line">
             <td>Restore data from file<br><span class="help">Stored rows in overlapped period are replaced with new ones</span></td>
@@ -119,7 +135,13 @@
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Download('10M', Get10MRanged)">Execute</button>
+              <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" @click="Download('10M', Get10MRanged, 'application/json')">As JSON text file</a></li>
+                  <li><a class="dropdown-item" @click="Download('10M', Get10MRanged, 'application/cbor')">As CBOR binary file</a></li>
+                </ul>
+              </div>
             </td>
           </tr>
           <tr class="line">
@@ -159,7 +181,13 @@
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Download('15M', Get15MRanged)">Execute</button>
+              <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" @click="Download('15M', Get15MRanged, 'application/json')">As JSON text file</a></li>
+                  <li><a class="dropdown-item" @click="Download('15M', Get15MRanged, 'application/cbor')">As CBOR binary file</a></li>
+                </ul>
+              </div>
             </td>
           </tr>
           <tr class="line">
@@ -199,7 +227,13 @@
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Download('1H', Get1HRanged)">Execute</button>
+              <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" @click="Download('1H', Get1HRanged, 'application/json')">As JSON text file</a></li>
+                  <li><a class="dropdown-item" @click="Download('1H', Get1HRanged, 'application/cbor')">As CBOR binary file</a></li>
+                </ul>
+              </div>
             </td>
           </tr>
           <tr class="line">
@@ -241,7 +275,13 @@
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Download('Events', GetEventsRanged)">Execute</button>
+              <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" @click="Download('Events', GetEventsRanged, 'application/json')">As JSON text file</a></li>
+                  <li><a class="dropdown-item" @click="Download('Events', GetEventsRanged, 'application/cbor')">As CBOR binary file</a></li>
+                </ul>
+              </div>
             </td>
           </tr>
           <tr class="line">
@@ -281,7 +321,13 @@
               </div>
             </td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Download('Alarms', GetAlarmsRanged)">Execute</button>
+              <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" @click="Download('Alarms', GetAlarmsRanged, 'application/json')">As JSON text file</a></li>
+                  <li><a class="dropdown-item" @click="Download('Alarms', GetAlarmsRanged, 'application/cbor')">As CBOR binary file</a></li>
+                </ul>
+              </div>
             </td>
           </tr>
           <tr class="line">
@@ -300,7 +346,13 @@
           <tr class="line">
             <td>Save analyzer settings</td>
             <td class="action">
-              <button type="button" class="btn btn-default btn-xs" @click="Download('Analyzer')">Execute</button>
+              <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown">Execute <span class="caret"></span></button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" @click="Download('Analyzer', null, 'application/json')">As JSON text file</a></li>
+                  <li><a class="dropdown-item" @click="Download('Analyzer', null, 'application/cbor')">As CBOR binary file</a></li>
+                </ul>
+              </div>
             </td>
           </tr>
           <tr class="line">
@@ -391,10 +443,10 @@
           (fail) => { this.ShowSpinner = false; }
         );
       },
-      CreateFile: function(filename, reader) {
+      CreateFile: function(filename, reader, encoding) {
         var Toast = this.$toast.open({type:'info', message: "Downloading '" + filename + "'", dismissible: false});
         var Progress = 0;
-        var fileStream = streamSaver.createWriteStream(filename + '.cbor', null);
+        var fileStream = streamSaver.createWriteStream(filename + ((encoding == 'application/json') ? '.json' : '.cbor'), null);
         var writeStream = fileStream.getWriter();
         var pump = () => reader.read().then(
           ({ value, done }) => {
@@ -411,21 +463,21 @@
           Toast.duration = 3000;
         });
       },
-      Download: function(aggreg, all) {
+      Download: function(aggreg, all, encoding) {
         var From = (all) ? 0 : this.From;
         var To   = (all) ? Number.MAX_SAFE_INTEGER : this.To;
         if(From == null) From = 0;
         if(To == null) To = 0;
         if(aggreg == 'Analyzer') {
-          fetch('getAnalyzer', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer }), headers: { 'Content-Type': 'application/cbor', 'Accept': 'application/cbor' } }).then(
+          fetch('getAnalyzer', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer }), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
             (res) => { this.CreateFile('Analyzer', res.body.getReader()); }
           );
         } else if(aggreg == 'Alarms') {
-          fetch('getAlarms', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Update: false, ChangeTime: 0 }), headers: { 'Content-Type': 'application/json', 'Accept': 'application/cbor' } }).then(
+          fetch('getAlarms', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Update: false, ChangeTime: 0 }), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
             (res) => { this.CreateFile('Alarms', res.body.getReader()); }
           );
         } else if(aggreg == 'Events') {
-          fetch('getEvents', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, ChangeTime: 0, Update: false, Samples: 'All' }), headers: { 'Content-Type': 'application/json', 'Accept': 'application/cbor' } }).then(
+          fetch('getEvents', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, ChangeTime: 0, Update: false, Samples: 'All' }), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
             (res) => { this.CreateFile('Events', res.body.getReader()); }
           );
         } else {
@@ -436,8 +488,8 @@
           if(aggreg == '10M')   Series = ['Frequency', 'Flag', 'Voltage', 'Current'];
           if(aggreg == '15M')   Series = ['Active_Power', 'Reactive_Power'];
           if(aggreg == '1H')    Series = ['Frequency', 'Flag', 'Voltage', 'Current', 'Active_Power', 'Reactive_Power', 'Voltage_Stats', 'Frequency_Stats', 'Voltage_THD_Stats', 'Voltage_Harmonics_Stats', 'Unbalance_Stats'];
-          fetch('getSeries', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg, Series: Series}), headers: { 'Content-Type': 'application/json', 'Accept': 'application/cbor' } }).then(
-            (res) => { this.CreateFile(aggreg, res.body.getReader()); }
+          fetch('getSeries', { method: 'POST', body: this.CBOR.encode({ Analyzer: this.analyzer.Analyzer, From: From, To: To, Aggreg: aggreg, Series: Series}), headers: { 'Content-Type': 'application/cbor', 'Accept': encoding } }).then(
+            (res) => { this.CreateFile(aggreg, res.body.getReader(), encoding); }
           );
         }
       },
@@ -514,7 +566,7 @@
     width: 80px;
     vertical-align: bottom;
   }
-  .action > button {
+  .action button, .action .btn-group {
     width: 100%;
   }
   .line td {

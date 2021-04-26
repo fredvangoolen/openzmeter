@@ -21,26 +21,31 @@
 #include "AnalyzerSoft.h"
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerSoftSync::AnalyzerSoftSync(const string &id, const string &path, const Analyzer::AnalyzerMode mode, float samplerate, function<void(const string &name, const json &params)> handleAction, function<json(const vector<string> &series)> status, function<json(const vector<string> &series)> now) :  pSerial(id), pConfigPath(path), pMode(mode), pSampleRate(samplerate), pHandleAction(handleAction), pStatus(status), pNow(now) {
-  pMutex  = PTHREAD_MUTEX_INITIALIZER;
+  LogFile::Debug("Starting AnalyzerSoftSync...");
+  pMutexConfig   = PTHREAD_MUTEX_INITIALIZER;
+  pMutexInternal = PTHREAD_MUTEX_INITIALIZER;
   pThread = 0;
+  LogFile::Debug("AnalyzerSoftSync started");
 }
 AnalyzerSoftSync::~AnalyzerSoftSync() {
+  LogFile::Debug("Stopping AnalyzerSoftSync...");
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
+  LogFile::Debug("AnalyzerSoftSync stoped");
 }
 bool AnalyzerSoftSync::ShouldPush() {
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_lock(&pMutexInternal);
   uint16_t Count = pPendingActions.size();
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pMutexInternal);
   return (Count < pMaxActions);
 }
 void AnalyzerSoftSync::Push(const string name, const json &params) {
   json Action = json::object();
   Action["Type"] = name;
   Action["Params"] = params;
-  pthread_mutex_lock(&pMutex);
+  pthread_mutex_lock(&pMutexInternal);
   pPendingActions.push(Action);
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pMutexInternal);
 }
 json AnalyzerSoftSync::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
@@ -57,7 +62,8 @@ json AnalyzerSoftSync::CheckConfig(const json &config) {
   return ConfigOUT;
 }
 void AnalyzerSoftSync::Config(const json &config) {
-  pthread_mutex_lock(&pMutex);
+  LogFile::Debug("Reconfiguring AnalyzerSoftSync...");
+  pthread_mutex_lock(&pMutexConfig);
   pServer = config["Server"];
   pUser   = config["User"];
   pPass   = config["Pass"];
@@ -79,7 +85,8 @@ void AnalyzerSoftSync::Config(const json &config) {
       }
     }
   }
-  pthread_mutex_unlock(&pMutex);
+  pthread_mutex_unlock(&pMutexConfig);
+  LogFile::Debug("AnalyzerSoftSync reconfigured");
 }
 void *AnalyzerSoftSync::Thread() {
   string         Cookie, Path, Server, User, Pass;
@@ -95,28 +102,24 @@ void *AnalyzerSoftSync::Thread() {
   uint64_t       LastAlarm       = UINT64_MAX;
   Stage          Stage           = LOGIN;
   while(pTerminate == false) {
-    pthread_mutex_lock(&pMutex);
+    pthread_mutex_lock(&pMutexInternal);
     if((User != pUser) || (Pass != pPass) || (Server != pServer)) {
       User   = pUser;
       Pass   = pPass;
       Server = pServer;
       Stage  = LOGIN;
     }
-    pthread_mutex_unlock(&pMutex);
+    pthread_mutex_unlock(&pMutexInternal);
     if(Stage == LOGIN) {
+      URL  Url(Server);
       if(HTTPClient != NULL) delete HTTPClient;
-      HTTPClient = NULL;
-      pthread_mutex_lock(&pMutex);
-      URL  Url(pServer);
-      json Content = { {"User", pUser}, {"Password", pPass}, {"UpdateLastLogin", false} };
+      HTTPClient   = NULL;
       Path         = Url.Path();
       HTTPClient   = new Client(Url.Host(), Url.Port());
-      pthread_mutex_unlock(&pMutex);
-      HTTPClient->set_compress(true);
-      HTTPClient->set_keep_alive(true);
-      HTTPClient->set_read_timeout(120);
-      HTTPClient->set_write_timeout(120);
-      vector<uint8_t> Buff = json::to_cbor(Content);
+      HTTPClient->set_keep_alive(false);
+      HTTPClient->set_read_timeout(20);
+      HTTPClient->set_write_timeout(20);
+      vector<uint8_t> Buff = json::to_cbor({ {"User", pUser}, {"Password", pPass}, {"UpdateLastLogin", false} });
       auto Response = HTTPClient->Post((Path + "/logIn").c_str(), { {"Accept", "application/cbor"} }, (char*)Buff.data(), Buff.size(), "application/cbor");
       if((Response != nullptr) && (Response->status == HTTP_OK) && (Response->has_header("Set-Cookie") == true)) {
         LogFile::Debug("Analyzer '%s' logged on remote server", pSerial.c_str());
@@ -225,13 +228,13 @@ void *AnalyzerSoftSync::Thread() {
         }
         if(Action["Params"]["Events"].size() > 0) Content["Actions"].push_back(Action);
       }
-      pthread_mutex_lock(&pMutex);
+      pthread_mutex_lock(&pMutexInternal);
       while(pPendingActions.empty() == false) {
         Actions.push_back(pPendingActions.front());
         pPendingActions.pop();
       }
       if(Actions.size() > 0) Content["Actions"] = Actions;
-      pthread_mutex_unlock(&pMutex);
+      pthread_mutex_unlock(&pMutexInternal);
       if(RequestNow.size()) {
         json Now = pNow(RequestNow);
         if(Now != nullptr) Content["Now"] = Now;
