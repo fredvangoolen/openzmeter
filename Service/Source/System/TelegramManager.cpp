@@ -94,7 +94,6 @@ void TelegramManager::SetTelegramCallback(HTTPRequest &req) {
   req.Success(json::object());
 }
 json TelegramManager::SendRequest(SSLClient &client, const string &url, const json &params) {
-  json Result = nullptr;
   string URL    = "/bot" + pToken + "/" + url;
   auto Response = client.Post(URL.c_str(), {{"Accept", "application/json"}, {"Host", "api.telegram.org"}, {"Accept-Encoding", "gzip, deflate"}}, params.dump(), "application/json");
   if((Response == nullptr) || (Response->status != 200)) return nullptr;

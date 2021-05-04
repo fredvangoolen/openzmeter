@@ -24,7 +24,7 @@ AnalyzerRemoteNow::AnalyzerRemoteNow(const string &serial) : pSerial(serial) {
   pStatusMutex   = PTHREAD_MUTEX_INITIALIZER;
   pStatusCond    = PTHREAD_COND_INITIALIZER;
   pNowRequest    = {{"Frequency", 0}, {"Flag", 0}, {"Unbalance", 0}, {"Voltage", 0}, {"Current", 0}, {"Active_Power", 0}, {"Reactive_Power", 0}, {"Active_Energy", 0}, {"Reactive_Energy", 0}, {"Apparent_Power", 0}, {"Power_Factor", 0}, {"Voltage_THD", 0}, {"Current_THD", 0}, {"Phi", 0}, {"Voltage_Phase", 0}, {"Voltage_Harmonics", 0}, {"Current_Harmonics", 0}, {"Power_Harmonics", 0}, {"Voltage_Harmonics_Complex", 0}, {"Current_Harmonics_Complex", 0}, {"Voltage_FFT", 0}, {"Current_FFT", 0}, {"Voltage_Samples", 0}, {"Current_Samples", 0}};
-  pStatusRequest = {{"Log", 0}, {"System", 0}, {"SystemLog", 0}, {"Storage", 0}};
+  pStatusRequest = {{"Version", 0}, {"Log", 0}, {"System", 0}, {"SystemLog", 0}, {"Storage", 0}};
 }
 AnalyzerRemoteNow::~AnalyzerRemoteNow() {
 }
@@ -56,7 +56,7 @@ void AnalyzerRemoteNow::SetRemote(const json &params, json &response) {
 bool AnalyzerRemoteNow::CheckSeries(const json &params, const vector<string> &series, const uint64_t time) {
   if((params.contains("Time") == false) || (params["Time"].is_number() == false) || (params["Time"].get<uint64_t>() < (time - 30000))) return false;
   for(auto &Serie : series) {
-    if(pNow.contains(Serie) == false) return false;
+    if(params.contains(Serie) == false) return false;
   }
   return true;
 }

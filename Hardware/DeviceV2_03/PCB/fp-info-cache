@@ -1,4 +1,4 @@
-18573866487969892
+18577105776502892
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -50589,6 +50589,13 @@ emi filter
 5
 5
 Footprints
+18650-2C-THM
+
+
+0
+4
+4
+Footprints
 803062
 
 
@@ -50714,6 +50721,13 @@ KF2EDGR_2.54x4
 0
 4
 4
+Footprints
+LCD_58.6x39.5
+
+
+0
+0
+0
 Footprints
 LED_D3.0mm
 LED, diameter 3.0mm, 2 pins
