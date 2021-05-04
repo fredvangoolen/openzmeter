@@ -80,7 +80,7 @@ void AnalyzerSoftAlarms::Alarms_Func(const string &name, AnalyzerSoftAggreg *par
 }
 void AnalyzerSoftAlarms::Run(const string &aggreg, AnalyzerSoftAggreg *params) {
   pthread_rwlock_rdlock(&pLock);
-  if(pEnabled) pTask = TaskPool::Run([&, aggreg]() { this->Alarms_Func(aggreg, params); }, TaskPool::ABOUTNORMAL);
+  if(pEnabled) pTask = TaskPool::Run([&, aggreg, params]() { this->Alarms_Func(aggreg, params); }, TaskPool::ABOUTNORMAL);
   pthread_rwlock_unlock(&pLock);
 }
 void AnalyzerSoftAlarms::Wait() {

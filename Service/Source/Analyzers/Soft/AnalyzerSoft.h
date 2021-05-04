@@ -19,7 +19,7 @@
 #include "cctz/time_zone.h"
 #include "cpp-httplib/httplib.h"
 #include "Analyzer.h"
-#include "ProviderLocks.h"
+#include "ConsumerQueue.h"
 #include "AnalyzerSoftFFTs.h"
 #include "AnalyzerSoftBlock.h"
 #include "AnalyzerSoftZeroCrossing.h"
@@ -65,8 +65,8 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerSoftMQTT          *pMQTT;                    //MQTT Control object
     AnalyzerSoftAlarms        *pAlarms;                  //Alarms control
     AnalyzerSoftSync          *pSync;                    //Remote sync object
-//    AnalyzerSoftGA            *pGA;                      //Geometric algebra calculator
     AnalyzerSoftBlock         *pWorkingBlock;            //Current block
+    ConsumerQueue             *pConsumers;               //Block analysis consumers control
   private :
     volatile bool              pTerminate;               //Terminate thread
     deque<AnalyzerSoftBlock*>  pPendingBlocks;           //Pending blocks to analyze
@@ -76,7 +76,6 @@ class AnalyzerSoft : public Analyzer {
     float                      pNominalVoltage;          //Configured nominal voltage
     float                      pNominalFrequency;        //Configured nominal frequency
     bool                       pSave200MS;               //Save 10/12 cycles aggregation to database
-    ProviderLocks              pNowDataLock;             //GetSeriesNow access control
   private :
     void Thread();
     void Config(const json &options);

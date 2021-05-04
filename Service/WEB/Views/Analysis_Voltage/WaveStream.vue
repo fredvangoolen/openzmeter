@@ -92,7 +92,7 @@
             this.Abort = null;
           }
         });
-        fetch('getWaveStream', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, Series: (this.DownloadSamples == 'Voltage') ? ['Voltage_Samples'] : (this.DownloadSamples == 'Current') ? ['Current_Samples'] : ['Voltage_Samples', 'CURRENT_SAMPLES']}), headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', signal: this.Abort.signal }).then(
+        fetch('getWaveStream', { method: 'POST', body: JSON.stringify({ Analyzer: this.analyzer.Analyzer, Series: (this.DownloadSamples == 'Voltage') ? ['Voltage_Samples'] : (this.DownloadSamples == 'Current') ? ['Current_Samples'] : ['Voltage_Samples', 'CURRENT_SAMPLES']}), headers: { 'Accept': 'application/cbor', 'Content-Type': 'application/json' }, credentials: 'same-origin', signal: this.Abort.signal }).then(
           (response) => {
             response.body.pipeThrough(new TextDecoderStream()).pipeThrough(jsonDecoder).pipeTo(eventStream);
           },
