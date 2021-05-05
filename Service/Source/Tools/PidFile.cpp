@@ -25,7 +25,7 @@
 using json = nlohmann::json;
 //----------------------------------------------------------------------------------------------------------------------
 PidFile::PidFile() {
-  LogFile::Debug("Starting PidFile...");
+  LogFile::Info("Starting PidFile...");
   pFile = "/var/run/openZmeter.pid";
   json Config = ConfigFile::ReadConfig("/PidFile");
   if(Config.is_string()) pFile = Config;
@@ -36,10 +36,10 @@ PidFile::PidFile() {
   if(File < 0) LogFile::Warning("Can not create PID file (%s)", strerror(errno));
   if(write(File, PID_Number, Len) <= 0) LogFile::Warning("Can not create PID file (%s)", strerror(errno));
   if(File > 0) close(File);
-  LogFile::Debug("PidFile started");
+  LogFile::Info("PidFile started");
 }
 PidFile::~PidFile() {
-  LogFile::Debug("Stoping PidFile...");
+  LogFile::Info("Stoping PidFile...");
   if(!pFile.empty()) remove(pFile.c_str());
-  LogFile::Debug("PidFile stoped");
+  LogFile::Info("PidFile stoped");
 }
