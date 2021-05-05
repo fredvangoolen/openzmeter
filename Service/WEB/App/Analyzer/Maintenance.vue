@@ -452,7 +452,7 @@
         );
       },
       CreateFile: function(filename, reader, encoding) {
-        var Toast = this.$toast.open({type:'info', message: "Downloading '" + filename + "'", dismissible: false});
+        var Toast = this.$toast.open({type:'info', message: "Downloading '" + filename + "'", dismissible: false, duration: 0});
         var Progress = 0;
         var fileStream = streamSaver.createWriteStream(filename + ((encoding == 'application/json') ? '.json' : '.cbor'), null);
         var writeStream = fileStream.getWriter();

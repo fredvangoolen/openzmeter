@@ -424,10 +424,13 @@ void AnalyzerSoft::GetStatus(HTTPRequest &req) {
 void AnalyzerSoft::GetWaveStream(HTTPRequest &req) {
   if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   if(!req.CheckParamSet("Series", {"Voltage_Samples", "Current_Samples"})) return;
+  if(!req.CheckParamNumber("Length")) return;
   vector<string> Headers;
+  uint32_t       Length = req.Param("Length");
   for(auto &Serie : req.Param("Series")) Headers.push_back(Serie);
-  auto Func = [&, Headers](function<bool(const json &content)> Write) {
+  auto Func = [&, Headers, Length](function<bool(const json &content)> Write) {
     Write(Headers);
+    uint32_t Pending = Length;
     auto Func2 = [&]() {
       for(uint16_t i = 0; i < pWorkingBlock->Samples(); i++) {
         json Result = json::array();
@@ -443,7 +446,9 @@ void AnalyzerSoft::GetWaveStream(HTTPRequest &req) {
             Result.push_back(Tmp);
           }
         }
-        if(Write(Result) == false) return false;
+        bool Res = Write(Result);
+        Pending--;
+        if((Pending == 0) || (Res == false)) return false;
       }
       return true;
     };
