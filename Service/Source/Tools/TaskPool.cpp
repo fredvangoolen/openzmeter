@@ -26,42 +26,31 @@ pthread_cond_t           TaskPool::pCond         = PTHREAD_COND_INITIALIZER;
 uint32_t                 TaskPool::pRunningTasks = 0;
 int                      TaskPool::pMinPrio      = -1;
 int                      TaskPool::pMaxPrio      = -1;
-volatile bool            TaskPool::pUsePrio      = false;
+volatile bool            TaskPool::pUsePrio      = true;
 deque<TaskPool::Task_t*> TaskPool::pFreeTasks;
 // ---------------------------------------------------------------------------------------------------------------------
 TaskPool::TaskPool() {
-  LogFile::Debug("Starting TaskPool...");
+  LogFile::Info("Starting TaskPool...");
   rlimit Limits;
   if(getrlimit(RLIMIT_RTPRIO, &Limits) != 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return;
   }
   pMinPrio = sched_get_priority_min(SCHED_FIFO);
-  if(pMinPrio == -1) {
+  if(pMinPrio == -1) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  pMaxPrio = sched_get_priority_max(SCHED_FIFO);
+  if(pMaxPrio == -1) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  Limits.rlim_cur = pMaxPrio;
+  Limits.rlim_max = pMaxPrio;
+  if(setrlimit(RLIMIT_RTPRIO, &Limits) != 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     return;
   }
-  if(Limits.rlim_cur < (rlim_t)pMinPrio) {
-    Limits.rlim_cur = pMinPrio;
-    if(setrlimit(RLIMIT_RTPRIO, &Limits) != 0) {
-      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-      return;
-    }
-  }
-  pMaxPrio = sched_get_priority_max(SCHED_FIFO);
-  if(pMaxPrio == -1) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  if(Limits.rlim_max < (rlim_t)pMaxPrio) {
-    Limits.rlim_max = pMaxPrio;
-    if(setrlimit(RLIMIT_RTPRIO, &Limits) != 0) {
-      LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-      return;
-    }
-  }
   MessageLoop::RegisterListener("TaskPool_PeriodicTasks", [&]() { this->PeriodicTasks(); }, 60000);
-  LogFile::Debug("TaskPool started");
+  LogFile::Info("TaskPool started (MinPrio: %d, MaxPrio: %d)", pMinPrio, pMaxPrio);
 }
 TaskPool::~TaskPool() {
-  LogFile::Debug("Stoping TaskPool...");
+  LogFile::Info("Stoping TaskPool...");
   pthread_mutex_lock(&pMutex);
   MessageLoop::UnregisterListener("TaskPool_PeriodicTasks");
   while(pRunningTasks > 0) pthread_cond_wait(&pCond, &pMutex);
@@ -76,7 +65,7 @@ TaskPool::~TaskPool() {
     delete Tmp;
   }
   pthread_mutex_unlock(&pMutex);
-  LogFile::Debug("TaskPool stoped");
+  LogFile::Info("TaskPool stoped");
 }
 TaskPool::Task_t *TaskPool::Run(function<void()> callback, Prio prio) {
   pthread_mutex_lock(&pMutex);
