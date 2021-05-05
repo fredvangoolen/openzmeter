@@ -38,7 +38,7 @@ uint64_t                   LogFile::pWarningCount = 0;
 deque<LogFile::Message_t>  LogFile::pWarning;
 //----------------------------------------------------------------------------------------------------------------------
 LogFile::LogFile() {
-  LogFile::Debug("Starting LogFile...");
+  LogFile::Info("Starting LogFile...");
   string Name = "/var/log/openZmeter.log";
   json Config = ConfigFile::ReadConfig("/Log");
   if(Config.is_object()) {
@@ -53,14 +53,14 @@ LogFile::LogFile() {
     pFile = open(Name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if(pFile < 0) LogFile::Warning("Can not create or open log file (%s)", strerror(errno));
   }
-  LogFile::Debug("LogFile started");
+  LogFile::Info("LogFile started");
 }
 LogFile::~LogFile() {
-  LogFile::Debug("Stopping LogFile...");
+  LogFile::Info("Stopping LogFile...");
   pthread_mutex_lock(&pMutex);
   if(pFile != -1) close(pFile);
   pthread_mutex_unlock(&pMutex);
-  LogFile::Debug("LogFile stopped");
+  LogFile::Info("LogFile stopped");
 }
 json LogFile::ToJSON() {
   json Result = json::object();

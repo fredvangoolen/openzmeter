@@ -25,7 +25,7 @@ pthread_mutex_t ConfigFile::pMutex  = PTHREAD_MUTEX_INITIALIZER;
 json            ConfigFile::pConfig = nullptr;
 //----------------------------------------------------------------------------------------------------------------------
 ConfigFile::ConfigFile(const string &name) {
-  LogFile::Debug("Starting ConfigFile...");
+  LogFile::Info("Starting ConfigFile...");
   pthread_mutex_lock(&pMutex);
   pFile = open(name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
   if(pFile < 0) {
@@ -44,15 +44,15 @@ ConfigFile::ConfigFile(const string &name) {
   pConfig = json::parse(Read, NULL, false);
   if(pConfig.is_discarded()) pConfig = json::object();
   pthread_mutex_unlock(&pMutex);
-  LogFile::Debug("ConfigFile started");
+  LogFile::Info("ConfigFile started");
 }
 ConfigFile::~ConfigFile() {
-  LogFile::Debug("Stopping ConfigFile...");
+  LogFile::Info("Stopping ConfigFile...");
   pthread_mutex_lock(&pMutex);
   if(pFile != -1) close(pFile);
   pFile = -1;
   pthread_mutex_unlock(&pMutex);
-  LogFile::Debug("ConfigFile stopped");
+  LogFile::Info("ConfigFile stopped");
 }
 bool ConfigFile::WriteConfig(const string &path, const json &val) {
   LogFile::Debug("Saving '%s' settings...", path.c_str());
