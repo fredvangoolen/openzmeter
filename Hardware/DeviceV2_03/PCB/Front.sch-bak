@@ -66,17 +66,6 @@ $EndComp
 Wire Wire Line
 	4025 725  4025 775 
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R1
-U 1 1 5FE634D2
-P 2375 6700
-F 0 "R1" V 2455 6700 50  0000 C CNN
-F 1 "100k" H 2375 6700 50  0001 C CNN
-F 2 "Footprints:R_0603_1608Metric" V 2305 6700 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 2375 6700 50  0001 C CNN
-	1    2375 6700
-	1    0    0    1   
-$EndComp
-$Comp
 L Components:MC34063AD U4
 U 1 1 6072003E
 P 3100 1500
@@ -123,13 +112,13 @@ $EndComp
 $Comp
 L 3Phase-rescue:Buzzer-3Phase-rescue BZ2
 U 1 1 628A53C3
-P 1750 7125
-F 0 "BZ2" V 1625 7050 50  0000 L CNN
-F 1 "QMB-09B-05" H 1900 7075 50  0001 L CNN
-F 2 "Footprints:Buzzer_CUI_CPT-9019S-SMT" V 1725 7225 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Buzzers_Jiangsu-Huaneng-Elec-QMB-09B-05_C161819.html" V 1725 7225 50  0001 C CNN
-	1    1750 7125
-	0    -1   -1   0   
+P 6075 2550
+F 0 "BZ2" V 5950 2475 50  0000 L CNN
+F 1 "QMB-09B-05" H 6225 2500 50  0001 L CNN
+F 2 "Footprints:Buzzer_CUI_CPT-9019S-SMT" V 6050 2650 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Buzzers_Jiangsu-Huaneng-Elec-QMB-09B-05_C161819.html" V 6050 2650 50  0001 C CNN
+	1    6075 2550
+	0    1    -1   0   
 $EndComp
 $Comp
 L Components:Battery_Cell BT1
@@ -378,7 +367,7 @@ $Comp
 L 3Phase-rescue:D_Schottky_Small_ALT-3Phase-rescue D2
 U 1 1 6073F459
 P 3750 1100
-F 0 "D2" H 3750 987 50  0000 C CNN
+F 0 "D2" H 3650 1050 50  0000 C CNN
 F 1 "SS14" H 3750 1304 50  0001 C CNN
 F 2 "Diode_SMD:D_SMA" H 3750 1213 50  0001 C CNN
 F 3 "" V 3750 1100 50  0000 C CNN
@@ -411,8 +400,8 @@ $Comp
 L Device:CP_Small C7
 U 1 1 60743158
 P 4025 1200
-F 0 "C7" H 4113 1246 50  0000 L CNN
-F 1 "CP_Small" H 4113 1155 50  0000 L CNN
+F 0 "C7" H 4050 1300 50  0000 L CNN
+F 1 "CP_Small" H 4113 1155 50  0001 L CNN
 F 2 "Footprints:CP_Radial_D6.3mm_P2.50mm" H 4025 1200 50  0001 C CNN
 F 3 "~" H 4025 1200 50  0001 C CNN
 	1    4025 1200
@@ -438,7 +427,7 @@ L Device:L_Small L1
 U 1 1 6073E06C
 P 3750 1625
 F 0 "L1" H 3798 1671 50  0000 L CNN
-F 1 "L_Small" H 3798 1580 50  0000 L CNN
+F 1 "L_Small" H 3798 1580 50  0001 L CNN
 F 2 "Footprints:L_Radial_D6.0mm_P3.00mm" H 3750 1625 50  0001 C CNN
 F 3 "~" H 3750 1625 50  0001 C CNN
 	1    3750 1625
@@ -474,8 +463,8 @@ $Comp
 L Device:CP_Small C5
 U 1 1 607F0664
 P 2600 925
-F 0 "C5" H 2688 971 50  0000 L CNN
-F 1 "CP_Small" H 2688 880 50  0000 L CNN
+F 0 "C5" H 2625 1000 50  0000 L CNN
+F 1 "CP_Small" H 2688 880 50  0001 L CNN
 F 2 "Footprints:CP_Radial_D6.3mm_P2.50mm" H 2600 925 50  0001 C CNN
 F 3 "~" H 2600 925 50  0001 C CNN
 	1    2600 925 
@@ -517,26 +506,26 @@ Wire Wire Line
 	2275 1375 2250 1375
 Connection ~ 2250 1375
 Wire Wire Line
-	1000 1175 1000 1275
+	1000 1025 1000 1125
 Wire Wire Line
-	1000 1075 1000 1175
-Connection ~ 1000 1175
+	1000 925  1000 1025
+Connection ~ 1000 1025
 $Comp
 L Connector:Conn_01x10_Male J7
 U 1 1 62932ADC
-P 1250 5500
-F 0 "J7" H 1358 5881 50  0000 C CNN
-F 1 "Conn_01x06_Male" H 1358 5790 50  0001 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical" H 1250 5500 50  0001 C CNN
-F 3 "~" H 1250 5500 50  0001 C CNN
-	1    1250 5500
+P 800 2225
+F 0 "J7" H 908 2606 50  0000 C CNN
+F 1 "Conn_01x06_Male" H 908 2515 50  0001 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical" H 800 2225 50  0001 C CNN
+F 3 "~" H 800 2225 50  0001 C CNN
+	1    800  2225
 	1    0    0    -1  
 $EndComp
 $Comp
 L 3Phase-rescue:C_Small-3Phase-rescue C4
 U 1 1 6095FE52
 P 2250 925
-F 0 "C4" H 2260 995 50  0000 L CNN
+F 0 "C4" H 2125 850 50  0000 L CNN
 F 1 "100nF 25v" H 2260 845 50  0001 L CNN
 F 2 "Capacitor_SMD:C_0603_1608Metric" H 2250 925 50  0001 C CNN
 F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 2250 925 50  0001 C CNN
@@ -549,88 +538,10 @@ Wire Wire Line
 	2250 775  2600 775 
 Wire Wire Line
 	2250 1375 2250 1025
-$Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C8
-U 1 1 60DFD8CD
-P 2375 7075
-F 0 "C8" H 2385 7145 50  0000 L CNN
-F 1 "100nF 25v" H 2385 6995 50  0001 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric" H 2375 7075 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 2375 7075 50  0001 C CNN
-	1    2375 7075
-	-1   0    0    -1  
-$EndComp
-Text GLabel 1050 1175 2    50   Input ~ 0
+Text GLabel 1050 1025 2    50   Input ~ 0
 +32v
-Text GLabel 1950 2650 0    50   Input ~ 0
-+5v
-Text GLabel 2425 6150 2    50   Input ~ 0
-Vrtc
-$Comp
-L 3Phase-rescue:SW_Push-3Phase-rescue SW2
-U 1 1 609B2370
-P 2000 6350
-F 0 "SW2" V 2091 6302 50  0000 R CNN
-F 1 "SW_Push-3Phase-rescue" V 2000 6302 50  0001 R CNN
-F 2 "Footprints:SW_Push_6x6mm_H8mm" V 1909 6302 50  0001 R CNN
-F 3 "" H 2000 6550 50  0000 C CNN
-	1    2000 6350
-	0    -1   1    0   
-$EndComp
 Text GLabel 4375 1925 3    50   Input ~ 0
 Vbat
-$Comp
-L 3Phase-rescue:SW_Push-3Phase-rescue SW1
-U 1 1 5FE4F8B5
-P 2375 6350
-F 0 "SW1" V 2466 6302 50  0000 R CNN
-F 1 "SW_Push-3Phase-rescue" V 2375 6302 50  0001 R CNN
-F 2 "Footprints:SW_Push_6x6mm_H8mm" V 2284 6302 50  0001 R CNN
-F 3 "" H 2375 6550 50  0000 C CNN
-	1    2375 6350
-	0    -1   1    0   
-$EndComp
-Wire Wire Line
-	2000 6150 2375 6150
-Wire Wire Line
-	2425 6150 2375 6150
-Connection ~ 2375 6150
-$Comp
-L 3Phase-rescue:R-3Phase-rescue R12
-U 1 1 60A96CB5
-P 2000 6700
-F 0 "R12" V 2080 6700 50  0000 C CNN
-F 1 "100k" H 2000 6700 50  0001 C CNN
-F 2 "Footprints:R_0603_1608Metric" V 1930 6700 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 2000 6700 50  0001 C CNN
-	1    2000 6700
-	1    0    0    1   
-$EndComp
-$Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C9
-U 1 1 60A9804E
-P 2000 7075
-F 0 "C9" H 2010 7145 50  0000 L CNN
-F 1 "100nF 25v" H 2010 6995 50  0001 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric" H 2000 7075 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 2000 7075 50  0001 C CNN
-	1    2000 7075
-	-1   0    0    -1  
-$EndComp
-Wire Wire Line
-	2000 7175 2000 7225
-Wire Wire Line
-	2375 6975 2375 6875
-Wire Wire Line
-	2000 6975 2000 6950
-Wire Wire Line
-	2375 6875 1600 6875
-Connection ~ 2375 6875
-Wire Wire Line
-	2375 6875 2375 6850
-Wire Wire Line
-	2000 7225 1850 7225
-Connection ~ 2000 7225
 $Comp
 L 3Phase-rescue:R-3Phase-rescue R13
 U 1 1 60B921EF
@@ -654,254 +565,34 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C10
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	1450 6000 1450 7225
-Wire Wire Line
-	1450 7225 1650 7225
-Wire Wire Line
-	2000 6150 1675 6150
-Wire Wire Line
-	1675 6150 1675 5700
-Connection ~ 2000 6150
-Wire Wire Line
-	1525 6950 2000 6950
-Connection ~ 2000 6950
-Wire Wire Line
-	2000 6950 2000 6850
-Connection ~ 2375 7225
-Wire Wire Line
-	2375 7225 2375 7175
-Wire Wire Line
-	2000 7225 2375 7225
-$Comp
-L power:GND #PWR0102
-U 1 1 60A9AB04
-P 2375 7225
-F 0 "#PWR0102" H 2375 6975 50  0001 C CNN
-F 1 "GND" H 2380 7052 50  0000 C CNN
-F 2 "" H 2375 7225 50  0001 C CNN
-F 3 "" H 2375 7225 50  0001 C CNN
-	1    2375 7225
-	1    0    0    -1  
-$EndComp
-$Comp
-L Connector:Conn_01x12_Female J?
-U 1 1 608DA3B1
-P 8175 2475
-F 0 "J?" H 8203 2451 50  0000 L CNN
-F 1 "Conn_01x12_Female" H 8203 2360 50  0000 L CNN
-F 2 "" H 8175 2475 50  0001 C CNN
-F 3 "~" H 8175 2475 50  0001 C CNN
-	1    8175 2475
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR?
-U 1 1 6093A4AA
-P 2450 3550
-F 0 "#PWR?" H 2450 3300 50  0001 C CNN
-F 1 "GND" H 2455 3377 50  0000 C CNN
-F 2 "" H 2450 3550 50  0001 C CNN
-F 3 "" H 2450 3550 50  0001 C CNN
-	1    2450 3550
-	1    0    0    -1  
-$EndComp
-$Comp
-L Components:MC34063AD U?
-U 1 1 6093A9BA
-P 3225 2875
-F 0 "U?" H 2950 2975 50  0000 C CNN
-F 1 "MC34063AD" H 3225 2975 50  0000 C CNN
-F 2 "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" H 3275 2425 50  0001 L CNN
-F 3 "http://www.onsemi.com/pub_link/Collateral/MC34063A-D.PDF" H 3725 2775 50  0001 C CNN
-	1    3225 2875
-	-1   0    0    -1  
-$EndComp
-$Comp
-L 3Phase-rescue:D_Schottky_Small_ALT-3Phase-rescue D?
-U 1 1 6093A9E2
-P 2575 3175
-F 0 "D?" H 2575 3062 50  0000 C CNN
-F 1 "SS14" H 2575 3379 50  0001 C CNN
-F 2 "Diode_SMD:D_SMA" H 2575 3288 50  0001 C CNN
-F 3 "" V 2575 3175 50  0000 C CNN
-	1    2575 3175
-	0    1    1    0   
-$EndComp
-$Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C?
-U 1 1 6093A9EC
-P 2700 3350
-F 0 "C?" H 2710 3420 50  0000 L CNN
-F 1 "100nF 25v" H 2710 3270 50  0001 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric" H 2700 3350 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 2700 3350 50  0001 C CNN
-	1    2700 3350
-	1    0    0    1   
-$EndComp
-$Comp
-L 3Phase-rescue:R-3Phase-rescue R?
-U 1 1 6093A9F6
-P 2450 2825
-F 0 "R?" V 2530 2825 50  0000 C CNN
-F 1 "100k" H 2450 2825 50  0001 C CNN
-F 2 "Footprints:R_0603_1608Metric" V 2380 2825 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 2450 2825 50  0001 C CNN
-	1    2450 2825
-	-1   0    0    1   
-$EndComp
-$Comp
-L 3Phase-rescue:R-3Phase-rescue R?
-U 1 1 6093AA00
-P 2450 3325
-F 0 "R?" V 2530 3325 50  0000 C CNN
-F 1 "100k" H 2450 3325 50  0001 C CNN
-F 2 "Footprints:R_0603_1608Metric" V 2380 3325 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 2450 3325 50  0001 C CNN
-	1    2450 3325
-	-1   0    0    1   
-$EndComp
-$Comp
-L Device:L_Small L?
-U 1 1 6093AA0A
-P 2575 2775
-F 0 "L?" H 2623 2821 50  0000 L CNN
-F 1 "L_Small" H 2623 2730 50  0000 L CNN
-F 2 "Footprints:L_Radial_D6.0mm_P3.00mm" H 2575 2775 50  0001 C CNN
-F 3 "~" H 2575 2775 50  0001 C CNN
-	1    2575 2775
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	2575 2875 2575 2900
-Wire Wire Line
-	2575 2900 2575 3075
-Wire Wire Line
-	2575 2900 2825 2900
-Connection ~ 2575 2900
-Wire Wire Line
-	2450 3000 2450 3175
-Wire Wire Line
-	2700 3250 2700 3100
-Wire Wire Line
-	2700 3100 2825 3100
-Wire Wire Line
-	2825 3200 2825 3500
-Wire Wire Line
-	2825 3500 2700 3500
-Wire Wire Line
-	2700 3450 2700 3500
-Connection ~ 2700 3500
-Wire Wire Line
-	2700 3500 2575 3500
-Wire Wire Line
-	2575 3275 2575 3500
-Connection ~ 2575 3500
-$Comp
-L Device:CP_Small C?
-U 1 1 6093AA26
-P 3725 3350
-F 0 "C?" H 3813 3396 50  0000 L CNN
-F 1 "CP_Small" H 3813 3305 50  0000 L CNN
-F 2 "Footprints:CP_Radial_D6.3mm_P2.50mm" H 3725 3350 50  0001 C CNN
-F 3 "~" H 3725 3350 50  0001 C CNN
-	1    3725 3350
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	3625 3200 3725 3200
-Wire Wire Line
-	3725 3200 3725 3250
-Wire Wire Line
-	3625 3100 3725 3100
-Wire Wire Line
-	3725 3100 3725 3200
-Connection ~ 3725 3200
-Wire Wire Line
-	3625 3000 3725 3000
-Wire Wire Line
-	3725 3100 3725 3000
-Connection ~ 3725 3100
-Wire Wire Line
-	3725 3450 3725 3500
-Wire Wire Line
-	3725 3500 2825 3500
-Connection ~ 2825 3500
-Wire Wire Line
-	2575 2650 2450 2650
-Wire Wire Line
-	2450 2650 2450 2675
-Connection ~ 2450 2650
-Wire Wire Line
-	2450 2650 2275 2650
-Wire Wire Line
-	2450 3000 2825 3000
-Connection ~ 3725 3500
-$Comp
-L 3Phase-rescue:C_Small-3Phase-rescue C?
-U 1 1 6093AA66
-P 4025 3200
-F 0 "C?" H 4035 3270 50  0000 L CNN
-F 1 "100nF 25v" H 4035 3120 50  0001 L CNN
-F 2 "Capacitor_SMD:C_0603_1608Metric" H 4025 3200 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 4025 3200 50  0001 C CNN
-	1    4025 3200
-	1    0    0    1   
-$EndComp
-Wire Wire Line
-	4025 3300 4025 3500
-Wire Wire Line
-	4025 3500 3725 3500
-$Comp
-L Device:CP_Small C?
-U 1 1 6096E724
-P 2275 3125
-F 0 "C?" H 2363 3171 50  0000 L CNN
-F 1 "CP_Small" H 2363 3080 50  0000 L CNN
-F 2 "Footprints:CP_Radial_D6.3mm_P2.50mm" H 2275 3125 50  0001 C CNN
-F 3 "~" H 2275 3125 50  0001 C CNN
-	1    2275 3125
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
 	2250 1375 2250 1475
 Wire Wire Line
 	3750 1725 3750 1775
 Connection ~ 3750 1775
 Wire Wire Line
 	3750 1775 3875 1775
-Text GLabel 1550 5400 2    50   Input ~ 0
+Text GLabel 1050 2125 2    50   Input ~ 0
 ENABLE
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R?
+L 3Phase-rescue:R-3Phase-rescue R11
 U 1 1 60AD6151
 P 2075 1300
-F 0 "R?" V 2155 1300 50  0000 C CNN
+F 0 "R11" V 1975 1300 50  0000 C CNN
 F 1 "100k" H 2075 1300 50  0001 C CNN
 F 2 "Footprints:R_0603_1608Metric" V 2005 1300 50  0001 C CNN
 F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 2075 1300 50  0001 C CNN
 	1    2075 1300
 	1    0    0    -1  
 $EndComp
-$Comp
-L power:GND #PWR?
-U 1 1 60B2E019
-P 1050 875
-F 0 "#PWR?" H 1050 625 50  0001 C CNN
-F 1 "GND" H 1055 702 50  0000 C CNN
-F 2 "" H 1050 875 50  0001 C CNN
-F 3 "" H 1050 875 50  0001 C CNN
-	1    1050 875 
-	0    -1   -1   0   
-$EndComp
 Text GLabel 2000 1475 0    50   Input ~ 0
 +32v
 Wire Wire Line
-	1000 1175 1050 1175
+	1000 1025 1050 1025
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R?
+L 3Phase-rescue:R-3Phase-rescue R10
 U 1 1 60B120AD
 P 2075 950
-F 0 "R?" V 2155 950 50  0000 C CNN
+F 0 "R10" V 1975 950 50  0000 C CNN
 F 1 "100k" H 2075 950 50  0001 C CNN
 F 2 "Footprints:R_0603_1608Metric" V 2005 950 50  0001 C CNN
 F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 2075 950 50  0001 C CNN
@@ -928,7 +619,7 @@ $Comp
 L 3Phase-rescue:D_Schottky_Small_ALT-3Phase-rescue D1
 U 1 1 60B3865C
 P 2250 1625
-F 0 "D1" H 2175 1675 50  0000 C CNN
+F 0 "D1" H 2225 1725 50  0000 C CNN
 F 1 "SS14" H 2250 1829 50  0001 C CNN
 F 2 "Diode_SMD:D_SMA" H 2250 1738 50  0001 C CNN
 F 3 "" V 2250 1625 50  0000 C CNN
@@ -937,10 +628,10 @@ F 3 "" V 2250 1625 50  0000 C CNN
 $EndComp
 Wire Wire Line
 	2250 1525 2250 1475
-Text GLabel 1900 1125 0    50   Input ~ 0
-Ext
+Text GLabel 1925 1125 0    50   Input ~ 0
+EXT
 Wire Wire Line
-	1900 1125 2075 1125
+	1925 1125 2075 1125
 Connection ~ 2075 1125
 Wire Wire Line
 	2075 1125 2075 1150
@@ -980,218 +671,644 @@ Wire Wire Line
 	2000 1475 2075 1475
 Connection ~ 2075 1475
 Wire Wire Line
-	4025 2900 4025 3000
-Wire Wire Line
-	2575 2650 2575 2675
-Wire Wire Line
-	2450 3475 2450 3500
-Connection ~ 2450 3500
-Wire Wire Line
-	2450 3500 2575 3500
-Wire Wire Line
-	2450 2975 2450 3000
-Connection ~ 2450 3000
-Wire Wire Line
-	2275 3025 2275 2650
-Connection ~ 2275 2650
-Wire Wire Line
-	2275 2650 1950 2650
-Wire Wire Line
-	2275 3225 2275 3500
-Wire Wire Line
-	2275 3500 2450 3500
-Wire Wire Line
-	2450 3550 2450 3500
-Wire Wire Line
 	2800 1775 3750 1775
-Wire Wire Line
-	3450 1975 3400 1975
-Wire Wire Line
-	2250 1975 2250 1775
 Connection ~ 2250 1775
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R?
+L 3Phase-rescue:R-3Phase-rescue R16
 U 1 1 612850F8
-P 3275 2150
-F 0 "R?" V 3355 2150 50  0000 C CNN
-F 1 "100k" H 3275 2150 50  0001 C CNN
-F 2 "Footprints:R_1206_3216Metric" V 3205 2150 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 3275 2150 50  0001 C CNN
-	1    3275 2150
-	-1   0    0    1   
+P 2425 1950
+F 0 "R16" V 2505 1950 50  0000 C CNN
+F 1 "100k" H 2425 1950 50  0001 C CNN
+F 2 "Footprints:R_1206_3216Metric" V 2355 1950 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 2425 1950 50  0001 C CNN
+	1    2425 1950
+	0    -1   -1   0   
 $EndComp
 $Comp
-L Device:D_Zener_Small_ALT D?
+L Device:D_Zener_Small_ALT D3
 U 1 1 61286EFB
-P 3400 2150
-F 0 "D?" V 3354 2220 50  0000 L CNN
-F 1 "D_Zener_Small_ALT" V 3445 2220 50  0000 L CNN
-F 2 "" V 3400 2150 50  0001 C CNN
-F 3 "~" V 3400 2150 50  0001 C CNN
-	1    3400 2150
-	0    1    1    0   
+P 2425 2075
+F 0 "D3" H 2475 2025 50  0000 L CNN
+F 1 "D_Zener_Small_ALT" V 2470 2145 50  0001 L CNN
+F 2 "Diode_SMD:D_SOD-323" V 2425 2075 50  0001 C CNN
+F 3 "~" V 2425 2075 50  0001 C CNN
+	1    2425 2075
+	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	3400 2050 3400 1975
-Connection ~ 3400 1975
-Wire Wire Line
-	3400 1975 3275 1975
-Wire Wire Line
-	3275 2000 3275 1975
-Connection ~ 3275 1975
-Wire Wire Line
-	3275 1975 2250 1975
 $Comp
-L Transistor_FET:2N7002 Q?
+L Transistor_FET:2N7002 Q4
 U 1 1 612A3956
-P 2625 2275
-F 0 "Q?" V 2874 2275 50  0000 C CNN
-F 1 "DMP4047" V 2965 2275 50  0000 C CNN
-F 2 "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" H 2825 2200 50  0001 L CIN
-F 3 "http://www.infineon.com/dgdl/irf7324pbf.pdf?fileId=5546d462533600a4015355f5f0861b4b" H 2625 2275 50  0001 L CNN
-	1    2625 2275
-	0    1    1    0   
+P 3150 2050
+F 0 "Q4" V 3399 2050 50  0000 C CNN
+F 1 "DMP4047" V 3490 2050 50  0000 C CNN
+F 2 "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" H 3350 1975 50  0001 L CIN
+F 3 "http://www.infineon.com/dgdl/irf7324pbf.pdf?fileId=5546d462533600a4015355f5f0861b4b" H 3150 2050 50  0001 L CNN
+	1    3150 2050
+	0    -1   -1   0   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R?
+L 3Phase-rescue:R-3Phase-rescue R17
 U 1 1 612ACBF3
-P 3025 2375
-F 0 "R?" V 3105 2375 50  0000 C CNN
-F 1 "100k" H 3025 2375 50  0001 C CNN
-F 2 "Footprints:R_1206_3216Metric" V 2955 2375 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 3025 2375 50  0001 C CNN
-	1    3025 2375
+P 2775 1950
+F 0 "R17" V 2855 1950 50  0000 C CNN
+F 1 "100k" H 2775 1950 50  0001 C CNN
+F 2 "Footprints:R_1206_3216Metric" V 2705 1950 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 2775 1950 50  0001 C CNN
+	1    2775 1950
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	2950 1950 2925 1950
+$Comp
+L power:GND #PWR0102
+U 1 1 613399EA
+P 3375 1950
+F 0 "#PWR0102" H 3375 1700 50  0001 C CNN
+F 1 "GND" H 3380 1777 50  0000 C CNN
+F 2 "" H 3375 1950 50  0001 C CNN
+F 3 "" H 3375 1950 50  0001 C CNN
+	1    3375 1950
 	0    -1   -1   0   
 $EndComp
 Wire Wire Line
-	3175 2375 3275 2375
-Wire Wire Line
-	3650 2375 3650 2275
-Wire Wire Line
-	3275 2300 3275 2375
-Connection ~ 3275 2375
-Wire Wire Line
-	3275 2375 3400 2375
-Wire Wire Line
-	3400 2250 3400 2375
-Connection ~ 3400 2375
-Wire Wire Line
-	3400 2375 3650 2375
-Wire Wire Line
-	2825 2375 2875 2375
+	3375 1950 3350 1950
 $Comp
-L power:GND #PWR?
-U 1 1 613399EA
-P 2375 2375
-F 0 "#PWR?" H 2375 2125 50  0001 C CNN
-F 1 "GND" H 2380 2202 50  0000 C CNN
-F 2 "" H 2375 2375 50  0001 C CNN
-F 3 "" H 2375 2375 50  0001 C CNN
-	1    2375 2375
-	0    1    1    0   
-$EndComp
-Wire Wire Line
-	2375 2375 2425 2375
-Text GLabel 2075 2050 0    50   Input ~ 0
-ENABLE
-Wire Wire Line
-	2075 2050 2625 2050
-Wire Wire Line
-	2625 2050 2625 2075
-$Comp
-L Transistor_FET:IRF7324 Q?
-U 1 1 6135A625
+L Transistor_FET:IRF7324 Q3
+U 2 1 6135A625
 P 2600 1675
-F 0 "Q?" V 2849 1675 50  0000 C CNN
-F 1 "DMP4047" V 2940 1675 50  0000 C CNN
+F 0 "Q3" V 2550 1500 50  0000 C CNN
+F 1 "DMP4047" V 2940 1675 50  0001 C CNN
 F 2 "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" H 2800 1600 50  0001 L CNN
 F 3 "http://www.infineon.com/dgdl/irf7324pbf.pdf?fileId=5546d462533600a4015355f5f0861b4b" H 2700 1675 50  0001 L CNN
-	1    2600 1675
+	2    2600 1675
 	0    1    1    0   
-$EndComp
-$Comp
-L Transistor_FET:IRF7324 Q?
-U 2 1 6135C025
-P 3650 2075
-F 0 "Q?" V 3992 2075 50  0000 C CNN
-F 1 "DMP4047" V 3901 2075 50  0000 C CNN
-F 2 "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" H 3850 2000 50  0001 L CNN
-F 3 "http://www.infineon.com/dgdl/irf7324pbf.pdf?fileId=5546d462533600a4015355f5f0861b4b" H 3750 2075 50  0001 L CNN
-	2    3650 2075
-	0    1    -1   0   
 $EndComp
 Wire Wire Line
 	2250 1475 2600 1475
 Connection ~ 2600 1475
 Wire Wire Line
 	2600 1475 2700 1475
-Wire Wire Line
-	4025 2900 4025 1975
-Wire Wire Line
-	4025 1975 3850 1975
-Connection ~ 4025 2900
-Wire Wire Line
-	3625 2900 4025 2900
-$Comp
-L 3Phase-rescue:R-3Phase-rescue R?
-U 1 1 61473101
-P 3875 3000
-F 0 "R?" V 3955 3000 50  0000 C CNN
-F 1 "100k" H 3875 3000 50  0001 C CNN
-F 2 "Footprints:R_1206_3216Metric" V 3805 3000 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 3875 3000 50  0001 C CNN
-	1    3875 3000
-	0    1    1    0   
-$EndComp
-Connection ~ 4025 3000
-Wire Wire Line
-	4025 3000 4025 3100
-Connection ~ 3725 3000
-Text GLabel 1550 5100 2    50   Input ~ 0
+Text GLabel 1050 1825 2    50   Input ~ 0
 SDA
-Text GLabel 1550 5200 2    50   Input ~ 0
+Text GLabel 1050 1925 2    50   Input ~ 0
 SCL
-Text GLabel 1550 5300 2    50   Input ~ 0
-PWM
-Connection ~ 1000 875 
+Text GLabel 1050 2025 2    50   Input ~ 0
+LCD_BL
+Connection ~ 1000 725 
 Wire Wire Line
-	1000 975  1000 875 
-Wire Wire Line
-	1000 875  1000 775 
+	1000 825  1000 725 
 $Comp
-L Connector:Conn_01x09_Male J8
+L Connector:Conn_01x10_Male J8
 U 1 1 604239FD
-P 800 1175
-F 0 "J8" H 772 1057 50  0000 R CNN
-F 1 "Conn_01x06_Male" H 772 1148 50  0001 R CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x09_P2.54mm_Vertical" H 800 1175 50  0001 C CNN
-F 3 "~" H 800 1175 50  0001 C CNN
-	1    800  1175
+P 800 1225
+F 0 "J8" H 772 1107 50  0000 R CNN
+F 1 "Conn_01x06_Male" H 772 1198 50  0001 R CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical" H 800 1225 50  0001 C CNN
+F 3 "~" H 800 1225 50  0001 C CNN
+	1    800  1225
 	1    0    0    1   
 $EndComp
-Wire Wire Line
-	1450 5900 1525 5900
-Wire Wire Line
-	1525 5900 1525 6950
-Wire Wire Line
-	1450 5800 1600 5800
-Wire Wire Line
-	1600 5800 1600 6875
-Wire Wire Line
-	1450 5700 1675 5700
-Text GLabel 1550 5600 2    50   Input ~ 0
-Ext
-Text GLabel 1550 5500 2    50   Input ~ 0
+Text GLabel 1050 2225 2    50   Input ~ 0
+EXT
+Text GLabel 1050 2625 2    50   Input ~ 0
 Vbat
-Text GLabel 1050 1475 2    50   Input ~ 0
+Text GLabel 1050 1325 2    50   Input ~ 0
 +5v
 Wire Wire Line
-	1000 1375 1000 1475
+	1000 1225 1000 1325
 Wire Wire Line
-	1000 1575 1000 1475
-Connection ~ 1000 1475
+	1000 1425 1000 1325
+Connection ~ 1000 1325
 Wire Wire Line
-	1000 1475 1050 1475
+	1000 1325 1050 1325
 Wire Wire Line
-	1000 875  1050 875 
+	1000 725  1050 725 
+$Comp
+L power:GND #PWR0103
+U 1 1 60B2E019
+P 1050 725
+F 0 "#PWR0103" H 1050 475 50  0001 C CNN
+F 1 "GND" H 1055 552 50  0000 C CNN
+F 2 "" H 1050 725 50  0001 C CNN
+F 3 "" H 1050 725 50  0001 C CNN
+	1    1050 725 
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:GND #PWR0104
+U 1 1 6092AD6E
+P 1075 1625
+F 0 "#PWR0104" H 1075 1375 50  0001 C CNN
+F 1 "GND" H 1080 1452 50  0000 C CNN
+F 2 "" H 1075 1625 50  0001 C CNN
+F 3 "" H 1075 1625 50  0001 C CNN
+	1    1075 1625
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	1000 1525 1000 1625
+Wire Wire Line
+	1075 1625 1000 1625
+Connection ~ 1000 1625
+Text GLabel 1050 2725 2    50   Input ~ 0
+Vrtc
+Text GLabel 1050 2325 2    50   Input ~ 0
+BTN1
+Text GLabel 1050 2425 2    50   Input ~ 0
+BTN2
+Text GLabel 1050 2525 2    50   Input ~ 0
+BEEP
+$Comp
+L Transistor_FET:2N7002 Q5
+U 1 1 60A118A9
+P 6075 3025
+F 0 "Q5" H 6280 3071 50  0000 L CNN
+F 1 "2N7002" H 6280 2980 50  0000 L CNN
+F 2 "Package_TO_SOT_SMD:SOT-23" H 6275 2950 50  0001 L CIN
+F 3 "https://www.onsemi.com/pub/Collateral/NDS7002A-D.PDF" H 6075 3025 50  0001 L CNN
+	1    6075 3025
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	1000 1825 1050 1825
+Wire Wire Line
+	1050 1925 1000 1925
+Wire Wire Line
+	1000 2025 1050 2025
+Wire Wire Line
+	1050 2125 1000 2125
+Wire Wire Line
+	1000 2225 1050 2225
+Wire Wire Line
+	1050 2325 1000 2325
+Wire Wire Line
+	1000 2425 1050 2425
+Wire Wire Line
+	1000 2525 1050 2525
+Wire Wire Line
+	1000 2625 1050 2625
+Wire Wire Line
+	1000 2725 1050 2725
+$Comp
+L Connector:Conn_01x12_Female J1
+U 1 1 608DA3B1
+P 800 3525
+F 0 "J1" H 828 3501 50  0000 L CNN
+F 1 "Conn_01x12_Female" H 828 3410 50  0000 L CNN
+F 2 "Connector_FFC-FPC:Hirose_FH12-12S-0.5SH_1x12-1MP_P0.50mm_Horizontal" H 800 3525 50  0001 C CNN
+F 3 "~" H 800 3525 50  0001 C CNN
+	1    800  3525
+	-1   0    0    1   
+$EndComp
+$Comp
+L Transistor_FET:IRF7324 Q3
+U 1 1 6135C025
+P 2350 2300
+F 0 "Q3" V 2575 2300 50  0000 C CNN
+F 1 "DMP4047" V 2601 2300 50  0001 C CNN
+F 2 "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" H 2550 2225 50  0001 L CNN
+F 3 "http://www.infineon.com/dgdl/irf7324pbf.pdf?fileId=5546d462533600a4015355f5f0861b4b" H 2450 2300 50  0001 L CNN
+	1    2350 2300
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	2250 1775 2250 1950
+Wire Wire Line
+	2250 1950 2275 1950
+Connection ~ 2250 1950
+Wire Wire Line
+	2250 1950 2250 2075
+Wire Wire Line
+	2325 2075 2250 2075
+Connection ~ 2250 2075
+Wire Wire Line
+	2250 2075 2250 2100
+Wire Wire Line
+	2575 1950 2600 1950
+Wire Wire Line
+	2600 1950 2600 2075
+Wire Wire Line
+	2600 2300 2550 2300
+Wire Wire Line
+	2525 2075 2600 2075
+Connection ~ 2600 2075
+Wire Wire Line
+	2600 2075 2600 2300
+Wire Wire Line
+	2625 1950 2600 1950
+Connection ~ 2600 1950
+Wire Wire Line
+	3150 2250 3150 2300
+Wire Wire Line
+	3150 2300 3050 2300
+Text GLabel 3050 2300 0    50   Input ~ 0
+ENABLE
+Connection ~ 2550 2675
+Wire Wire Line
+	2250 2675 2250 2900
+Connection ~ 2250 2675
+$Comp
+L 3Phase-rescue:R-3Phase-rescue R15
+U 1 1 61473101
+P 2400 2675
+F 0 "R15" V 2480 2675 50  0000 C CNN
+F 1 "100k" H 2400 2675 50  0001 C CNN
+F 2 "Footprints:R_1206_3216Metric" V 2330 2675 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 2400 2675 50  0001 C CNN
+	1    2400 2675
+	0    -1   1    0   
+$EndComp
+Wire Wire Line
+	2650 2575 2250 2575
+Connection ~ 2250 2575
+Wire Wire Line
+	2250 2575 2250 2500
+Wire Wire Line
+	3825 3225 3825 3175
+Wire Wire Line
+	4000 3175 3825 3175
+Wire Wire Line
+	4000 2900 4000 3175
+Wire Wire Line
+	4000 2700 4000 2300
+Connection ~ 3825 2675
+Wire Wire Line
+	3825 2650 3825 2675
+Wire Wire Line
+	3825 3175 3700 3175
+Connection ~ 3825 3175
+Wire Wire Line
+	3825 3150 3825 3175
+Wire Wire Line
+	3700 2300 3700 2350
+Wire Wire Line
+	2250 2575 2250 2675
+$Comp
+L Device:CP_Small C15
+U 1 1 6096E724
+P 4000 2800
+F 0 "C15" H 3850 2725 50  0000 L CNN
+F 1 "CP_Small" H 4088 2755 50  0001 L CNN
+F 2 "Footprints:CP_Radial_D6.3mm_P2.50mm" H 4000 2800 50  0001 C CNN
+F 3 "~" H 4000 2800 50  0001 C CNN
+	1    4000 2800
+	-1   0    0    -1  
+$EndComp
+Wire Wire Line
+	2250 3175 2550 3175
+Wire Wire Line
+	2250 3100 2250 3175
+$Comp
+L 3Phase-rescue:C_Small-3Phase-rescue C12
+U 1 1 6093AA66
+P 2250 3000
+F 0 "C12" H 2260 3070 50  0000 L CNN
+F 1 "100nF 25v" H 2260 2920 50  0001 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 2250 3000 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 2250 3000 50  0001 C CNN
+	1    2250 3000
+	-1   0    0    1   
+$EndComp
+Connection ~ 2550 3175
+Wire Wire Line
+	3825 2675 3450 2675
+Wire Wire Line
+	3825 2300 4000 2300
+Connection ~ 3825 2300
+Wire Wire Line
+	3825 2300 3825 2350
+Wire Wire Line
+	3700 2300 3825 2300
+Connection ~ 3450 3175
+Wire Wire Line
+	2550 3175 3450 3175
+Wire Wire Line
+	2550 3125 2550 3175
+Connection ~ 2550 2775
+Wire Wire Line
+	2550 2775 2550 2675
+Wire Wire Line
+	2650 2675 2550 2675
+Connection ~ 2550 2875
+Wire Wire Line
+	2550 2775 2550 2875
+Wire Wire Line
+	2650 2775 2550 2775
+Wire Wire Line
+	2550 2875 2550 2925
+Wire Wire Line
+	2650 2875 2550 2875
+$Comp
+L Device:CP_Small C13
+U 1 1 6093AA26
+P 2550 3025
+F 0 "C13" H 2575 2950 50  0000 L CNN
+F 1 "CP_Small" H 2638 2980 50  0001 L CNN
+F 2 "Footprints:CP_Radial_D6.3mm_P2.50mm" H 2550 3025 50  0001 C CNN
+F 3 "~" H 2550 3025 50  0001 C CNN
+	1    2550 3025
+	-1   0    0    -1  
+$EndComp
+Connection ~ 3700 3175
+Wire Wire Line
+	3700 2950 3700 3175
+Wire Wire Line
+	3575 3175 3700 3175
+Connection ~ 3575 3175
+Wire Wire Line
+	3575 3125 3575 3175
+Wire Wire Line
+	3450 3175 3575 3175
+Wire Wire Line
+	3450 2875 3450 3175
+Wire Wire Line
+	3575 2775 3450 2775
+Wire Wire Line
+	3575 2925 3575 2775
+Wire Wire Line
+	3825 2675 3825 2850
+Connection ~ 3700 2575
+Wire Wire Line
+	3700 2575 3450 2575
+Wire Wire Line
+	3700 2575 3700 2750
+Wire Wire Line
+	3700 2550 3700 2575
+$Comp
+L Device:L_Small L2
+U 1 1 6093AA0A
+P 3700 2450
+F 0 "L2" H 3748 2496 50  0000 L CNN
+F 1 "L_Small" H 3748 2405 50  0001 L CNN
+F 2 "Footprints:L_Radial_D6.0mm_P3.00mm" H 3700 2450 50  0001 C CNN
+F 3 "~" H 3700 2450 50  0001 C CNN
+	1    3700 2450
+	-1   0    0    -1  
+$EndComp
+$Comp
+L 3Phase-rescue:R-3Phase-rescue R19
+U 1 1 6093AA00
+P 3825 3000
+F 0 "R19" V 3905 3000 50  0000 C CNN
+F 1 "100k" H 3825 3000 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" V 3755 3000 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 3825 3000 50  0001 C CNN
+	1    3825 3000
+	1    0    0    1   
+$EndComp
+$Comp
+L 3Phase-rescue:R-3Phase-rescue R18
+U 1 1 6093A9F6
+P 3825 2500
+F 0 "R18" V 3905 2500 50  0000 C CNN
+F 1 "100k" H 3825 2500 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" V 3755 2500 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 3825 2500 50  0001 C CNN
+	1    3825 2500
+	1    0    0    1   
+$EndComp
+$Comp
+L 3Phase-rescue:C_Small-3Phase-rescue C14
+U 1 1 6093A9EC
+P 3575 3025
+F 0 "C14" H 3585 3095 50  0000 L CNN
+F 1 "100nF 25v" H 3585 2945 50  0001 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 3575 3025 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 3575 3025 50  0001 C CNN
+	1    3575 3025
+	-1   0    0    1   
+$EndComp
+$Comp
+L 3Phase-rescue:D_Schottky_Small_ALT-3Phase-rescue D4
+U 1 1 6093A9E2
+P 3700 2850
+F 0 "D4" H 3600 2800 50  0000 C CNN
+F 1 "SS14" H 3700 3054 50  0001 C CNN
+F 2 "Diode_SMD:D_SMA" H 3700 2963 50  0001 C CNN
+F 3 "" V 3700 2850 50  0000 C CNN
+	1    3700 2850
+	0    -1   1    0   
+$EndComp
+$Comp
+L Components:MC34063AD U5
+U 1 1 6093A9BA
+P 3050 2550
+F 0 "U5" H 2775 2650 50  0000 C CNN
+F 1 "MC34063AD" H 3050 2650 50  0000 C CNN
+F 2 "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" H 3100 2100 50  0001 L CNN
+F 3 "http://www.onsemi.com/pub_link/Collateral/MC34063A-D.PDF" H 3550 2450 50  0001 C CNN
+	1    3050 2550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0105
+U 1 1 6093A4AA
+P 3825 3225
+F 0 "#PWR0105" H 3825 2975 50  0001 C CNN
+F 1 "GND" H 3830 3052 50  0000 C CNN
+F 2 "" H 3825 3225 50  0001 C CNN
+F 3 "" H 3825 3225 50  0001 C CNN
+	1    3825 3225
+	-1   0    0    -1  
+$EndComp
+Text GLabel 3525 2300 0    50   Input ~ 0
++5v
+Wire Wire Line
+	3525 2300 3700 2300
+Connection ~ 3700 2300
+$Comp
+L Regulator_Linear:LM2936-3.3 U6
+U 1 1 610920CB
+P 4500 2450
+F 0 "U6" H 4500 2692 50  0000 C CNN
+F 1 "LM2936-3.3" H 4500 2601 50  0000 C CNN
+F 2 "Package_TO_SOT_SMD:SOT-23" H 4500 2675 50  0001 C CIN
+F 3 "http://www.ti.com/lit/ds/symlink/lm2936.pdf" H 4500 2400 50  0001 C CNN
+	1    4500 2450
+	1    0    0    -1  
+$EndComp
+$Comp
+L 3Phase-rescue:C_Small-3Phase-rescue C16
+U 1 1 61094DE8
+P 4825 3025
+F 0 "C16" H 4835 3095 50  0000 L CNN
+F 1 "100nF 25v" H 4835 2945 50  0001 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 4825 3025 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 4825 3025 50  0001 C CNN
+	1    4825 3025
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	4000 3175 4500 3175
+Connection ~ 4000 3175
+Wire Wire Line
+	4500 2750 4500 3175
+Connection ~ 4500 3175
+Wire Wire Line
+	4500 3175 4825 3175
+Wire Wire Line
+	4825 3125 4825 3175
+Wire Wire Line
+	4800 2450 4825 2450
+Wire Wire Line
+	4825 2450 4825 2925
+Wire Wire Line
+	4200 2450 4175 2450
+Wire Wire Line
+	4175 2450 4175 2300
+Connection ~ 4175 2300
+$Comp
+L 3Phase-rescue:C_Small-3Phase-rescue C9
+U 1 1 60A9804E
+P 5125 3350
+F 0 "C9" H 5135 3420 50  0000 L CNN
+F 1 "100nF 25v" H 5135 3270 50  0001 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 5125 3350 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5125 3350 50  0001 C CNN
+	1    5125 3350
+	-1   0    0    -1  
+$EndComp
+$Comp
+L 3Phase-rescue:R-3Phase-rescue R12
+U 1 1 60A96CB5
+P 5125 3050
+F 0 "R12" V 5205 3050 50  0000 C CNN
+F 1 "100k" H 5125 3050 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" V 5055 3050 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 5125 3050 50  0001 C CNN
+	1    5125 3050
+	1    0    0    1   
+$EndComp
+$Comp
+L 3Phase-rescue:SW_Push-3Phase-rescue SW1
+U 1 1 5FE4F8B5
+P 5550 2675
+F 0 "SW1" V 5641 2627 50  0000 R CNN
+F 1 "SW_Push-3Phase-rescue" V 5550 2627 50  0001 R CNN
+F 2 "Footprints:SW_Push_6x6mm_H8mm" V 5459 2627 50  0001 R CNN
+F 3 "" H 5550 2875 50  0000 C CNN
+	1    5550 2675
+	0    -1   1    0   
+$EndComp
+$Comp
+L 3Phase-rescue:SW_Push-3Phase-rescue SW2
+U 1 1 609B2370
+P 5125 2675
+F 0 "SW2" V 5216 2627 50  0000 R CNN
+F 1 "SW_Push-3Phase-rescue" V 5125 2627 50  0001 R CNN
+F 2 "Footprints:SW_Push_6x6mm_H8mm" V 5034 2627 50  0001 R CNN
+F 3 "" H 5125 2875 50  0000 C CNN
+	1    5125 2675
+	0    -1   1    0   
+$EndComp
+Text GLabel 5625 2450 2    50   Input ~ 0
+Vrtc
+$Comp
+L 3Phase-rescue:C_Small-3Phase-rescue C8
+U 1 1 60DFD8CD
+P 5550 3350
+F 0 "C8" H 5560 3420 50  0000 L CNN
+F 1 "100nF 25v" H 5560 3270 50  0001 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 5550 3350 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5550 3350 50  0001 C CNN
+	1    5550 3350
+	-1   0    0    -1  
+$EndComp
+$Comp
+L 3Phase-rescue:R-3Phase-rescue R1
+U 1 1 5FE634D2
+P 5550 3050
+F 0 "R1" V 5630 3050 50  0000 C CNN
+F 1 "100k" H 5550 3050 50  0001 C CNN
+F 2 "Footprints:R_0603_1608Metric" V 5480 3050 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 5550 3050 50  0001 C CNN
+	1    5550 3050
+	1    0    0    1   
+$EndComp
+Text GLabel 5175 3225 2    50   Input ~ 0
+BTN1
+Wire Wire Line
+	4825 2450 5125 2450
+Connection ~ 4825 2450
+Wire Wire Line
+	5125 2475 5125 2450
+Connection ~ 5125 2450
+Wire Wire Line
+	5125 2450 5550 2450
+Wire Wire Line
+	5125 2900 5125 2875
+Wire Wire Line
+	5125 3250 5125 3225
+Wire Wire Line
+	5175 3225 5125 3225
+Connection ~ 5125 3225
+Wire Wire Line
+	5125 3225 5125 3200
+Wire Wire Line
+	4825 3175 4825 3475
+Wire Wire Line
+	4825 3475 5125 3475
+Wire Wire Line
+	5125 3475 5125 3450
+Connection ~ 4825 3175
+Wire Wire Line
+	5125 3475 5550 3475
+Wire Wire Line
+	5550 3475 5550 3450
+Connection ~ 5125 3475
+Wire Wire Line
+	5550 3250 5550 3225
+Wire Wire Line
+	5550 2900 5550 2875
+Wire Wire Line
+	5550 2475 5550 2450
+Connection ~ 5550 2450
+Wire Wire Line
+	5550 2450 5625 2450
+Text GLabel 5600 3225 2    50   Input ~ 0
+BTN2
+Wire Wire Line
+	5600 3225 5550 3225
+Connection ~ 5550 3225
+Wire Wire Line
+	5550 3225 5550 3200
+Wire Wire Line
+	5550 3475 5975 3475
+Wire Wire Line
+	5975 3475 5975 3225
+Connection ~ 5550 3475
+Text GLabel 6350 3025 2    50   Input ~ 0
+BEEP
+Wire Wire Line
+	6275 3025 6350 3025
+Wire Wire Line
+	5975 2650 5975 2825
+Text GLabel 6350 2875 2    50   Input ~ 0
++5v
+Wire Wire Line
+	6350 2875 6175 2875
+Wire Wire Line
+	6175 2875 6175 2650
+$Comp
+L 3Phase-rescue:C_Small-3Phase-rescue C10
+U 1 1 6097B2D2
+P 1375 3000
+F 0 "C10" H 1385 3070 50  0000 L CNN
+F 1 "100nF 25v" H 1385 2920 50  0001 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 1375 3000 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 1375 3000 50  0001 C CNN
+	1    1375 3000
+	-1   0    0    1   
+$EndComp
+$Comp
+L 3Phase-rescue:C_Small-3Phase-rescue C11
+U 1 1 6097C461
+P 1375 3350
+F 0 "C11" H 1385 3420 50  0000 L CNN
+F 1 "100nF 25v" H 1385 3270 50  0001 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 1375 3350 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 1375 3350 50  0001 C CNN
+	1    1375 3350
+	-1   0    0    1   
+$EndComp
 $EndSCHEMATC

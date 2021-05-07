@@ -197,7 +197,7 @@ void AnalyzerRemote::DelEvent(HTTPRequest &req) {
   if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   if(State() == UNCONFIGURED) return req.Error("", HTTP_METHOD_NOT_ALLOWED);
   if(pActions->ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
-  pEvents->DelEventsRange(req);
+  pEvents->DelEvent(req);
   if(req.Status() == HTTP_OK) pActions->Push("DelEvent", req.Params());
 }
 void AnalyzerRemote::TestAlarm(HTTPRequest &req) {
