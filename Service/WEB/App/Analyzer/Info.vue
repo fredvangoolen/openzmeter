@@ -8,9 +8,8 @@
     </template>
     <template v-slot:footer v-if="(TransferStatus.Data!=null)&&(TransferStatus.Data.Version!=null)">
       <div class="row" style="text-align: center">
-        <div class="col-xs-4">Branch is {{ TransferStatus.Data.Version.Branch }}</div>
         <div class="col-xs-4">Architecture is {{ TransferStatus.Data.Version.Arch }}</div>
-        <div class="col-xs-4">Build is {{ TransferStatus.Data.Version.Build }}</div>
+        <div class="col-xs-4">Build is {{ TransferStatus.Data.Version.Branch }}_{{ TransferStatus.Data.Version.Build }}</div>
       </div>
     </template>
     <div class="cards" v-if="TransferStatus.Data!=null">
