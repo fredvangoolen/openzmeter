@@ -33,10 +33,8 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) :
-  Analyzer(id, mode), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4), pAccess(id), pZeroCross(mode, samplerate), pFrequency(samplerate), pFFTs(mode),
-  pAggreg200MS(id, mode), pAggreg3S(id, mode), pAggreg1M(id, mode), pAggreg10M(id, mode), pAggreg15M(id, mode), pAggreg1H(id, mode), pRates(id), pSeries(id, mode), pEvents(id, mode, samplerate), pMQTT(id), pAlarms(id, &pMQTT),
-  pSync(id, optionPath, mode, samplerate, [&](const string &name, const json &params) { HandleAction(name, params); }, [&](const vector<string> &series) { return pAccess.GetStatus(series); }, [&](const vector<string> &series) { return GetSeriesNow(series); }) {
+AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id, mode), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4) {
+  LogFile::Info("Starting AnalyzerSoft with serial '%s'...", pSerial.c_str());
   LogFile::Debug("Creating tables for analyzer '%s'", pSerial.c_str());
   Database DB(pSerial, true);
   DB.ExecResource("SQL/Database_Analyzer.sql");
@@ -44,6 +42,27 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pCond           = PTHREAD_COND_INITIALIZER;
   pTerminate      = false;
   pWorkingBlock   = NULL;
+  pConsumers      = new ConsumerQueue(16);
+  pAccess         = new AnalyzerAccess(id);
+  pZeroCross      = new AnalyzerSoftZeroCrossing(mode, samplerate);
+  pFrequency      = new AnalyzerSoftFrequency(samplerate);
+  pFFTs           = new AnalyzerSoftFFTs(mode);
+  pAggreg200MS    = new AnalyzerSoftAggreg200MS(id, mode);
+  pAggreg3S       = new AnalyzerSoftAggreg3S(id, mode);
+  pAggreg1M       = new AnalyzerSoftAggreg1M(id, mode);
+  pAggreg10M      = new AnalyzerSoftAggreg10M(id, mode);
+  pAggreg15M      = new AnalyzerSoftAggreg15M(id, mode);
+  pAggreg1H       = new AnalyzerSoftAggreg1H(id, mode);
+  pRates          = new AnalyzerRates(id);
+  pSeries         = new AnalyzerSeries(id, mode);
+  pEvents         = new AnalyzerSoftEvents(id, mode, samplerate);
+  pMQTT           = new AnalyzerSoftMQTT(id);
+  pAlarms         = new AnalyzerSoftAlarms(id, pMQTT);
+  pSync           = new AnalyzerSoftSync(id, optionPath, mode, samplerate,
+    [&](const string &name, const json &params) { HandleAction(name, params); },
+    [&](const vector<string> &series) { return pAccess->GetStatus(series); },
+    [&](const vector<string> &series) { return GetSeriesNow(series); }
+  );
   if(pthread_create(&pThread, NULL, [](void *params) -> void* { ((AnalyzerSoft*)params)->Thread(); return NULL; }, this) != 0) {
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     pThread = 0;
@@ -52,9 +71,10 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
     TaskPool::SetThreadProperties(pThread, TaskPool::ABOUTNORMAL);
   }
   Config(CheckConfig(ConfigFile::ReadConfig(optionPath), mode, false));
+  LogFile::Info("AnalyzerSoft with serial '%s' started", pSerial.c_str());
 }
 AnalyzerSoft::~AnalyzerSoft() {
-  LogFile::Info("Stopping analyzer with serial '%s'", pSerial.c_str());
+  LogFile::Info("Stopping AnalyzerSoft with serial '%s'", pSerial.c_str());
   pthread_mutex_lock(&pMutex);
   pTerminate = true;
   pthread_cond_signal(&pCond);
@@ -64,10 +84,27 @@ AnalyzerSoft::~AnalyzerSoft() {
     delete pPendingBlocks.front();
     pPendingBlocks.pop_front();
   }
-  LogFile::Info("Analyzer with serial '%s' stopped", pSerial.c_str());
+  delete pSync;
+  delete pAlarms;
+  delete pMQTT;
+  delete pEvents;
+  delete pSeries;
+  delete pRates;
+  delete pAggreg1H;
+  delete pAggreg15M;
+  delete pAggreg10M;
+  delete pAggreg1M;
+  delete pAggreg3S;
+  delete pAggreg200MS;
+  delete pFFTs;
+  delete pFrequency;
+  delete pZeroCross;
+  delete pAccess;
+  delete pConsumers;
+  LogFile::Info("AnalyzerSoft with serial '%s' stopped", pSerial.c_str());
 }
 void AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
-  AnalyzerSoftBlock *Result = pZeroCross.PushSample(voltageSamples, currentSamples);
+  AnalyzerSoftBlock *Result = pZeroCross->PushSample(voltageSamples, currentSamples);
   if(Result == NULL) return;
   pthread_mutex_lock(&pMutex);
   pthread_cond_signal(&pCond);
@@ -135,12 +172,13 @@ void AnalyzerSoft::Config(const json &options) {
   pNominalVoltage   = options["NominalVoltage"];
   pNominalFrequency = options["NominalFrequency"];
   pSave200MS        = options["Save200MS"];
-  pZeroCross.Config(pNominalVoltage, pNominalFrequency);
-  pRates.Config(options["TimeZone"], options["Rates"]);
-  pAlarms.Config(options["AlarmsEnabled"], options["TimeZone"], options["Alarms"], pNominalVoltage, pNominalFrequency);
-  pEvents.Config(options["EventsEnabled"], pNominalVoltage, pNominalFrequency);
-  pSync.Config(options["Sync"]);
-  pMQTT.Config(options);
+  pZeroCross->Config(pNominalVoltage, pNominalFrequency);
+  pAggreg1H->Config(pNominalVoltage, pNominalFrequency);
+  pRates->Config(options["TimeZone"], options["Rates"]);
+  pAlarms->Config(options["AlarmsEnabled"], options["TimeZone"], options["Alarms"], pNominalVoltage, pNominalFrequency);
+  pEvents->Config(options["EventsEnabled"], pNominalVoltage, pNominalFrequency);
+  pSync->Config(options["Sync"]);
+  pMQTT->Config(options);
   pthread_mutex_unlock(&pMutex);
 }
 void AnalyzerSoft::Thread() {
@@ -148,179 +186,171 @@ void AnalyzerSoft::Thread() {
   while(pTerminate == false) {
     if(pPendingBlocks.size() == 0) {
       if(pthread_cond_wait(&pCond, &pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-    } else {
-      pWorkingBlock = pPendingBlocks.front();
-      pPendingBlocks.pop_front();
-      if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-      uint64_t Start     = Tools::GetTime64();
-      uint16_t BlockSize = pWorkingBlock->Samples();
-      pAggreg200MS.Reset();
-      pAggreg200MS.setTimestamp(pWorkingBlock->Timestamp());
-      pFFTs.Run(pWorkingBlock, (pWorkingBlock->NominalFrequency() == 0.0) ? 0 : (pWorkingBlock->NominalFrequency() == 50.0) ? 10 : 12);
-      pEvents.Run(pWorkingBlock, pAggreg200MS.Timestamp());
-      pAggreg200MS.setFrequency(pFrequency.Frequency(pWorkingBlock));
-      for(uint8_t j = 0; j < pVoltageChannels; j++) {
-        float Voltage     = 0.0;
-        float Current     = 0.0;
-        float ActivePower = 0.0;
-        for(uint16_t i = 0; i < BlockSize; i++) {
-          Voltage     += pWorkingBlock->VoltageSample(j, i) * pWorkingBlock->VoltageSample(j, i);
-          Current     += pWorkingBlock->CurrentSample(j, i) * pWorkingBlock->CurrentSample(j, i);
-          ActivePower += pWorkingBlock->VoltageSample(j, i) * pWorkingBlock->CurrentSample(j, i);
-        }
-        pAggreg200MS.setVoltage(j, sqrt(Voltage / BlockSize));
-        pAggreg200MS.setCurrent(j, sqrt(Current / BlockSize));
-        pAggreg200MS.setActivePower(j, ActivePower / BlockSize);
-        pAggreg200MS.setApparentPower(j, pAggreg200MS.Voltage(j) * pAggreg200MS.Current(j));
-        pAggreg200MS.setActiveEnergy(j, (pAggreg200MS.ActivePower(j) * BlockSize) / (pSamplerate * 3600.0));
-        pAggreg200MS.setPowerFactor(j, pAggreg200MS.ActivePower(j) / pAggreg200MS.ApparentPower(j));
-        pAggreg200MS.setReactiveEnergy(j, (pAggreg200MS.ReactivePower(j) * BlockSize) / (pSamplerate * 3600.0));
-      }
-      pFFTs.Wait();
-      for(uint8_t j = 0; j < pVoltageChannels; j++) {
-        float THDv        = 0.0;
-        float THDi        = 0.0;
-        for(uint8_t i = 0; i < 50; i++) {
-          pAggreg200MS.setVoltageHarmonic(j, i, pFFTs.VoltageHarmonic(j, i));
-          if(i > 0) THDv += pFFTs.VoltageHarmonicPower(j, i);
-          pAggreg200MS.setCurrentHarmonic(j, i, pFFTs.CurrentHarmonic(j, i));
-          if(i > 0) THDi += pFFTs.CurrentHarmonicPower(j, i);
-          pAggreg200MS.setPowerHarmonic(j, i, pFFTs.VoltageHarmonicPower(j, i) * pFFTs.CurrentHarmonicPower(j, i) * cos(AnalyzerSoftFFTs::CalcAngle(pFFTs.CurrentHarmonic(j, i), pFFTs.VoltageHarmonic(j, i))));
-        }
-        pAggreg200MS.setVoltageTHD(j, (THDv / pAggreg200MS.VoltageHarmonic(j, 0)) * 100.0);
-        pAggreg200MS.setCurrentTHD(j, (THDi / pAggreg200MS.CurrentHarmonic(j, 0)) * 100.0);
-        pAggreg200MS.setVoltagePhase(j, (j == 0) ? 0.0 : AnalyzerSoftFFTs::CalcAngle(pFFTs.VoltageHarmonic(j, 0), pFFTs.VoltageHarmonic(0, 0)) * 180.0 / M_PI);
-        pAggreg200MS.setReactivePower(j, pFFTs.VoltageHarmonicPower(j, 0) * pFFTs.CurrentHarmonicPower(j, 0) * sin(-AnalyzerSoftFFTs::CalcAngle(pFFTs.CurrentHarmonic(j, 0), pFFTs.VoltageHarmonic(j, 0))));
-        pAggreg200MS.setPhi(j, AnalyzerSoftFFTs::CalcAngle(pFFTs.CurrentHarmonic(j, 0), pFFTs.VoltageHarmonic(j, 0)) * 180.0 / M_PI);
-      }
-      if((pMode == PHASE3N) || (pMode == PHASE3)) {
-        complex<float> A(cos(120.0 * M_PI / 180.0), sin(120.0 * M_PI / 180.0));
-        complex<float> V1(pFFTs.VoltageHarmonic(0, 0).Re, pFFTs.VoltageHarmonic(0, 0).Im);
-        complex<float> V2(pFFTs.VoltageHarmonic(1, 0).Re, pFFTs.VoltageHarmonic(1, 0).Im);
-        complex<float> V3(pFFTs.VoltageHarmonic(2, 0).Re, pFFTs.VoltageHarmonic(2, 0).Im);
-        pAggreg200MS.setUnbalance(((abs(V1 + A * A * V2 + A * V3) / 3.0) / (abs(V1 + A * V2 + A * A * V3) / 3.0)) * 100.0);
-      }
-      if(pMode == PHASE3N) {
-        float Current = 0.0;
-        float THD     = 0.0;
-        for(uint16_t i = 0; i < BlockSize; i++) Current += pWorkingBlock->CurrentSample(3, i) * pWorkingBlock->CurrentSample(3, i);
-        pAggreg200MS.setCurrent(3, sqrt(Current / BlockSize));
-        for(uint8_t i = 0; i < 50; i++) {
-          pAggreg200MS.setCurrentHarmonic(3, i, pFFTs.CurrentHarmonic(3, i));
-          if(i > 0) THD += pFFTs.CurrentHarmonicPower(3, i);
-        }
-        pAggreg200MS.setCurrentTHD(3, (THD / pAggreg200MS.CurrentHarmonic(3, 0)) * 100.0);
-      }
-      pAggreg200MS.setFlag(pEvents.Wait());
-      if(pWorkingBlock->Sequence() < 100) {
-        if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-        LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pWorkingBlock->Sequence());
-      } else {
-        State(ONLINE);
-        pNowDataLock.ProviderWrite();
-        if((pWorkingBlock->Sequence() % 15) == 0) {
-          LogFile::Debug("Storing 3S aggregation for analyzer '%s'", pSerial.c_str());
-          if(pAggreg3S.Normalize() == true) {
-            pAlarms.Run("3S", pAggreg3S);
-            pAggreg3S.Save();
-            pAggreg1H.AccumulateStats(pAggreg3S, pWorkingBlock->NominalFrequency());
-            pMQTT.PublishAggreg("3S", pAggreg3S);
-            pAlarms.Wait();
-          }
-          pAggreg3S.Reset();
-        }
-        pAggreg3S.Accumulate(pAggreg200MS);
-        if((pAggreg1M.Timestamp() != 0) && ((pAggreg1M.Timestamp() / 60000) < (pAggreg200MS.Timestamp() / 60000))) {
-          LogFile::Debug("Storing 1M aggregation for analyzer '%s'", pSerial.c_str());
-          if(pAggreg1M.Normalize() == true) {
-            pAlarms.Run("1M", pAggreg1M);
-            pAggreg1M.Save();
-            pMQTT.PublishAggreg("1M", pAggreg1M);
-            pAlarms.Wait();
-          }
-          pAggreg1M.Reset();
-        }
-        pAggreg1M.Accumulate(pAggreg200MS);
-        if((pAggreg10M.Timestamp() != 0) && ((pAggreg10M.Timestamp() / 600000) < (pAggreg200MS.Timestamp() / 600000))) {
-          LogFile::Debug("Storing 10M aggregation for analyzer '%s", pSerial.c_str());
-          if(pAggreg10M.Normalize() == true) {
-            pAlarms.Run("10M", pAggreg10M);
-            pAggreg1H.AccumulateStats(pAggreg10M, pWorkingBlock->NominalVoltage());
-            pAggreg10M.Save();
-            pMQTT.PublishAggreg("10M", pAggreg10M);
-            pAlarms.Wait();
-          }
-          pAggreg10M.Reset();
-        }
-        pAggreg10M.Accumulate(pAggreg200MS);
-        if((pAggreg15M.Timestamp() != 0) && ((pAggreg15M.Timestamp() / 900000) < (pAggreg200MS.Timestamp() / 900000))) {
-          LogFile::Debug("Storing 15M aggregation for analyzer '%s'", pSerial.c_str());
-          if(pAggreg15M.Normalize() == true) {
-            pAlarms.Run("15M", pAggreg15M);
-            pAggreg15M.Save();
-            pMQTT.PublishAggreg("15M", pAggreg15M);
-            pAlarms.Wait();
-          }
-          pAggreg15M.Reset();
-        }
-        pAggreg15M.Accumulate(pAggreg200MS);
-        if((pAggreg1H.Timestamp() != 0) && ((pAggreg1H.Timestamp() / 3600000) < (pAggreg200MS.Timestamp() / 3600000))) {
-          LogFile::Debug("Storing 1H aggregation for analyzer '%s'", pSerial.c_str());
-          if(pAggreg1H.Normalize() == true) {
-            pAlarms.Run("1H", pAggreg1H);
-            pAggreg1H.Save();
-            pMQTT.PublishAggreg("1H", pAggreg1H);
-            pAlarms.Wait();
-          }
-          pAggreg1H.Reset();
-        }
-        pAggreg1H.Accumulate(pAggreg200MS);
-        pAlarms.Run("200MS", pAggreg200MS);
-        if(pSave200MS) {
-          LogFile::Debug("Storing 200MS aggregation for analyzer '%s'", pSerial.c_str());
-          pAggreg200MS.Save();
-        }
-        pMQTT.PublishAggreg("200MS", pAggreg200MS);
-        pAlarms.Wait();
-        pNowDataLock.ProviderWait();
-        ResultsReady(pAggreg200MS);
-        uint64_t TotalTime = Tools::GetTime64() - Start;
-        if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-        if(TotalTime > 200) {
-          LogFile::Warning("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (%d pending blocks)", pSerial.c_str(), TotalTime, pWorkingBlock->Sequence(), pPendingBlocks.size());
-        } else {
-          LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (%d pending blocks)", pSerial.c_str(), TotalTime, pWorkingBlock->Sequence(), pPendingBlocks.size());
-        }
-      }
-      delete pWorkingBlock;
+      continue;
     }
+    pWorkingBlock = pPendingBlocks.front();
+    pPendingBlocks.pop_front();
+    if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    uint64_t Start     = Tools::GetTime64();
+    uint16_t BlockSize = pWorkingBlock->Samples();
+    pAggreg200MS->Reset();
+    pAggreg200MS->setTimestamp(pWorkingBlock->Timestamp());
+    pFFTs->Run(pWorkingBlock, (pWorkingBlock->NominalFrequency() == 0.0) ? 0 : (pWorkingBlock->NominalFrequency() == 50.0) ? 10 : 12);
+    pEvents->Run(pWorkingBlock, pAggreg200MS->Timestamp());
+    pAggreg200MS->setFrequency(pFrequency->Frequency(pWorkingBlock));
+    for(uint8_t j = 0; j < pVoltageChannels; j++) {
+      float Voltage     = 0.0;
+      float Current     = 0.0;
+      float ActivePower = 0.0;
+      for(uint16_t i = 0; i < BlockSize; i++) {
+        Voltage     += pWorkingBlock->VoltageSample(j, i) * pWorkingBlock->VoltageSample(j, i);
+        Current     += pWorkingBlock->CurrentSample(j, i) * pWorkingBlock->CurrentSample(j, i);
+        ActivePower += pWorkingBlock->VoltageSample(j, i) * pWorkingBlock->CurrentSample(j, i);
+      }
+      pAggreg200MS->setVoltage(j, sqrt(Voltage / BlockSize));
+      pAggreg200MS->setCurrent(j, sqrt(Current / BlockSize));
+      pAggreg200MS->setActivePower(j, ActivePower / BlockSize);
+      pAggreg200MS->setApparentPower(j, pAggreg200MS->Voltage(j) * pAggreg200MS->Current(j));
+      pAggreg200MS->setActiveEnergy(j, (pAggreg200MS->ActivePower(j) * BlockSize) / (pSamplerate * 3600.0));
+      pAggreg200MS->setPowerFactor(j, pAggreg200MS->ActivePower(j) / pAggreg200MS->ApparentPower(j));
+      pAggreg200MS->setReactiveEnergy(j, (pAggreg200MS->ReactivePower(j) * BlockSize) / (pSamplerate * 3600.0));
+    }
+    pFFTs->Wait();
+    for(uint8_t j = 0; j < pVoltageChannels; j++) {
+      float THDv        = 0.0;
+      float THDi        = 0.0;
+      for(uint8_t i = 0; i < 50; i++) {
+        pAggreg200MS->setVoltageHarmonic(j, i, pFFTs->VoltageHarmonic(j, i));
+        if(i > 0) THDv += pFFTs->VoltageHarmonicPower(j, i);
+        pAggreg200MS->setCurrentHarmonic(j, i, pFFTs->CurrentHarmonic(j, i));
+        if(i > 0) THDi += pFFTs->CurrentHarmonicPower(j, i);
+        pAggreg200MS->setPowerHarmonic(j, i, pFFTs->VoltageHarmonicPower(j, i) * pFFTs->CurrentHarmonicPower(j, i) * cos(AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, i), pFFTs->VoltageHarmonic(j, i))));
+      }
+      pAggreg200MS->setVoltageTHD(j, (THDv / pAggreg200MS->VoltageHarmonic(j, 0)) * 100.0);
+      pAggreg200MS->setCurrentTHD(j, (THDi / pAggreg200MS->CurrentHarmonic(j, 0)) * 100.0);
+      pAggreg200MS->setVoltagePhase(j, (j == 0) ? 0.0 : AnalyzerSoftFFTs::CalcAngle(pFFTs->VoltageHarmonic(j, 0), pFFTs->VoltageHarmonic(0, 0)) * 180.0 / M_PI);
+      pAggreg200MS->setReactivePower(j, pFFTs->VoltageHarmonicPower(j, 0) * pFFTs->CurrentHarmonicPower(j, 0) * sin(-AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, 0), pFFTs->VoltageHarmonic(j, 0))));
+      pAggreg200MS->setPhi(j, AnalyzerSoftFFTs::CalcAngle(pFFTs->CurrentHarmonic(j, 0), pFFTs->VoltageHarmonic(j, 0)) * 180.0 / M_PI);
+    }
+    if((pMode == PHASE3N) || (pMode == PHASE3)) {
+      complex<float> A(cos(120.0 * M_PI / 180.0), sin(120.0 * M_PI / 180.0));
+      complex<float> V1(pFFTs->VoltageHarmonic(0, 0).Re, pFFTs->VoltageHarmonic(0, 0).Im);
+      complex<float> V2(pFFTs->VoltageHarmonic(1, 0).Re, pFFTs->VoltageHarmonic(1, 0).Im);
+      complex<float> V3(pFFTs->VoltageHarmonic(2, 0).Re, pFFTs->VoltageHarmonic(2, 0).Im);
+      pAggreg200MS->setUnbalance(((abs(V1 + A * A * V2 + A * V3) / 3.0) / (abs(V1 + A * V2 + A * A * V3) / 3.0)) * 100.0);
+    }
+    if(pMode == PHASE3N) {
+      float Current = 0.0;
+      float THD     = 0.0;
+      for(uint16_t i = 0; i < BlockSize; i++) Current += pWorkingBlock->CurrentSample(3, i) * pWorkingBlock->CurrentSample(3, i);
+      pAggreg200MS->setCurrent(3, sqrt(Current / BlockSize));
+      for(uint8_t i = 0; i < 50; i++) {
+        pAggreg200MS->setCurrentHarmonic(3, i, pFFTs->CurrentHarmonic(3, i));
+        if(i > 0) THD += pFFTs->CurrentHarmonicPower(3, i);
+      }
+      pAggreg200MS->setCurrentTHD(3, (THD / pAggreg200MS->CurrentHarmonic(3, 0)) * 100.0);
+    }
+    pAggreg200MS->setFlag(pEvents->Wait());
+    pConsumers->Write();
+    if(pWorkingBlock->Sequence() < 100) {
+      LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in ommited block %" PRIu64 "", pSerial.c_str(), Tools::GetTime64() - Start, pWorkingBlock->Sequence());
+    } else {
+      State(ONLINE);
+      if((pWorkingBlock->Sequence() % 15) == 0) {
+        LogFile::Debug("Storing 3S aggregation for analyzer '%s'", pSerial.c_str());
+        if(pAggreg3S->Normalize() == true) {
+          pAlarms->Run("3S", pAggreg3S);
+          pAggreg3S->Save();
+          pAggreg1H->AccumulateStats(pAggreg3S);
+          pMQTT->PublishAggreg("3S", pAggreg3S);
+          pAlarms->Wait();
+        }
+        pAggreg3S->Reset();
+      }
+      pAggreg3S->Accumulate(pAggreg200MS);
+      if((pAggreg1M->Timestamp() != 0) && ((pAggreg1M->Timestamp() / 60000) < (pAggreg200MS->Timestamp() / 60000))) {
+        LogFile::Debug("Storing 1M aggregation for analyzer '%s'", pSerial.c_str());
+        if(pAggreg1M->Normalize() == true) {
+          pAlarms->Run("1M", pAggreg1M);
+          pAggreg1M->Save();
+          pMQTT->PublishAggreg("1M", pAggreg1M);
+          pAlarms->Wait();
+        }
+        pAggreg1M->Reset();
+      }
+      pAggreg1M->Accumulate(pAggreg200MS);
+      if((pAggreg10M->Timestamp() != 0) && ((pAggreg10M->Timestamp() / 600000) < (pAggreg200MS->Timestamp() / 600000))) {
+        LogFile::Debug("Storing 10M aggregation for analyzer '%s", pSerial.c_str());
+        if(pAggreg10M->Normalize() == true) {
+          pAlarms->Run("10M", pAggreg10M);
+          pAggreg1H->AccumulateStats(pAggreg10M);
+          pAggreg10M->Save();
+          pMQTT->PublishAggreg("10M", pAggreg10M);
+          pAlarms->Wait();
+        }
+        pAggreg10M->Reset();
+      }
+      pAggreg10M->Accumulate(pAggreg200MS);
+      if((pAggreg15M->Timestamp() != 0) && ((pAggreg15M->Timestamp() / 900000) < (pAggreg200MS->Timestamp() / 900000))) {
+        LogFile::Debug("Storing 15M aggregation for analyzer '%s'", pSerial.c_str());
+        if(pAggreg15M->Normalize() == true) {
+          pAlarms->Run("15M", pAggreg15M);
+          pAggreg15M->Save();
+          pMQTT->PublishAggreg("15M", pAggreg15M);
+          pAlarms->Wait();
+        }
+        pAggreg15M->Reset();
+      }
+      pAggreg15M->Accumulate(pAggreg200MS);
+      if((pAggreg1H->Timestamp() != 0) && ((pAggreg1H->Timestamp() / 3600000) < (pAggreg200MS->Timestamp() / 3600000))) {
+        LogFile::Debug("Storing 1H aggregation for analyzer '%s'", pSerial.c_str());
+        if(pAggreg1H->Normalize() == true) {
+          pAlarms->Run("1H", pAggreg1H);
+          pAggreg1H->Save();
+          pMQTT->PublishAggreg("1H", pAggreg1H);
+          pAlarms->Wait();
+        }
+        pAggreg1H->Reset();
+      }
+      pAggreg1H->Accumulate(pAggreg200MS);
+      pAlarms->Run("200MS", pAggreg200MS);
+      if(pSave200MS) {
+        LogFile::Debug("Storing 200MS aggregation for analyzer '%s'", pSerial.c_str());
+        pAggreg200MS->Save();
+      }
+      pMQTT->PublishAggreg("200MS", pAggreg200MS);
+      pAlarms->Wait();
+      uint64_t TotalTime = Tools::GetTime64() - Start;
+      if(TotalTime > 200) {
+        LogFile::Warning("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (%d pending blocks)", pSerial.c_str(), TotalTime, pWorkingBlock->Sequence(), pPendingBlocks.size());
+      } else {
+        LogFile::Debug("Analyzer '%s' take %" PRIu64 "mS in block %" PRIu64 " (%d pending blocks)", pSerial.c_str(), TotalTime, pWorkingBlock->Sequence(), pPendingBlocks.size());
+      }
+    }
+    pConsumers->Wait();
+    delete pWorkingBlock;
+    if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   }
   if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
 }
-void AnalyzerSoft::ResultsReady(AnalyzerSoftAggreg200MS &params) {
+void AnalyzerSoft::ResultsReady(AnalyzerSoftAggreg200MS *params) {
 }
 json AnalyzerSoft::GetSeriesNow(const vector<string> &series) {
-  json Result  = json::object();
-  if(pNowDataLock.ConsumerWait(5) == false) return nullptr;
-  Result["Time"] = pAggreg200MS.Timestamp();
-  for(auto &Serie : series) {
-    if(pAggreg200MS.GetSeriesJSON(Serie, Result) == true) continue;
-    if(pFFTs.GetSeriesJSON(Serie, Result) == true) continue;
-    if(pWorkingBlock->GetSeriesJSON(Serie, Result) == true) continue;
-//    if(pGA->GetSeriesNow(Serie, Result) == true) continue;
-    // == "GA_POWER") {
-//      Result["GA_Power"] = CalcGA();
- //     continue;
- //   }
-    pNowDataLock.ConsumerEnds();
-    return string("Invalid serie '" + Serie + "'");
-  }
-  pNowDataLock.ConsumerEnds();
+  json Result = json::object();
+  auto Func = [&]() {
+    Result["Time"] = pAggreg200MS->Timestamp();
+    for(auto &Serie : series) {
+      if(pWorkingBlock->GetSeriesJSON(Serie, Result) == true) continue;
+      if(pFFTs->GetSeriesJSON(Serie, Result) == true) continue;
+      if(pAggreg200MS->GetSeriesJSON(Serie, Result) == true) continue;
+    }
+  };
+  if(pConsumers->OnWrite(Func) == false) return nullptr;
   return Result;
 }
 void AnalyzerSoft::HandleAction(const string &name, const json &params) {
   if(name == "SetAnalyzer") {
-    if(params.contains("Users")) pAccess.Config(AnalyzerAccess::CheckConfig(params["Users"]));
+    if(params.contains("Users")) pAccess->Config(AnalyzerAccess::CheckConfig(params["Users"]));
     try {
       Config(CheckConfig(params, pMode, true));
     } catch(const string &err) {
@@ -328,15 +358,15 @@ void AnalyzerSoft::HandleAction(const string &name, const json &params) {
     }
   } else {
     HTTPRequest Req(params);
-    if(name == "SetSeries")           pSeries.SetSeries(Req);
-    else if(name == "DelSeriesRange") pSeries.DelSeriesRange(Req);
-    else if(name == "SetEvents")      pEvents.SetEvents(Req);
-    else if(name == "DelEventsRange") pEvents.DelEventsRange(Req);
-    else if(name == "DelEvent")       pEvents.DelEvent(Req);
-    else if(name == "SetAlarms")      pAlarms.SetAlarms(Req);
-    else if(name == "SetAlarm")       pAlarms.SetAlarm(Req);
-    else if(name == "DelAlarm")       pAlarms.DelAlarm(Req);
-    else if(name == "DelAlarmsRange") pAlarms.DelAlarmsRange(Req);
+    if(name == "SetSeries")           pSeries->SetSeries(Req);
+    else if(name == "DelSeriesRange") pSeries->DelSeriesRange(Req);
+    else if(name == "SetEvents")      pEvents->SetEvents(Req);
+    else if(name == "DelEventsRange") pEvents->DelEventsRange(Req);
+    else if(name == "DelEvent")       pEvents->DelEvent(Req);
+    else if(name == "SetAlarms")      pAlarms->SetAlarms(Req);
+    else if(name == "SetAlarm")       pAlarms->SetAlarm(Req);
+    else if(name == "DelAlarm")       pAlarms->DelAlarm(Req);
+    else if(name == "DelAlarmsRange") pAlarms->DelAlarmsRange(Req);
     else {
       LogFile::Warning("AnayzerSoft receive invalid action from AnalyzerRemote '%s' (%s)", pSerial.c_str(), name.c_str());
       return;
@@ -351,211 +381,180 @@ void AnalyzerSoft::HandleAction(const string &name, const json &params) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   json   Response = ConfigFile::ReadConfig(pConfigPath);
   Response["User"]         = pOwner;
   Response["Mode"]         = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
   Response["SampleRate"]   = pSamplerate;
   Response["PriceModules"] = PriceSource::VarsInfo();
-  Response["Users"]        = pAccess.Users();
+  Response["Users"]        = pAccess->Users();
   req.Success(Response);
 }
 void AnalyzerSoft::SetAnalyzer(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::CONFIG, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pAccess->TestUser(AnalyzerAccess::CONFIG, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   json Users = nullptr;
   if(req.CheckParamArray("Users")) Users = AnalyzerAccess::CheckConfig(req.Param("Users"));
   try {
     Config(CheckConfig(req.Params(), pMode, true));
-    if(Users != nullptr) pAccess.Config(Users);
+    if(Users != nullptr) pAccess->Config(Users);
     req.Success(json::object());
   } catch(const string &err) {
     req.Error(err, HTTP_BAD_REQUEST);
   }
 }
 void AnalyzerSoft::GetSeries(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  pSeries.GetSeries(req);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pSeries->GetSeries(req);
 }
 void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   if(!req.CheckParamSet("Series", {"Frequency", "Flag", "Unbalance", "Voltage", "Current", "Active_Power", "Reactive_Power", "Active_Energy", "Reactive_Energy", "Apparent_Power", "Power_Factor", "Voltage_THD", "Current_THD", "Phi", "Voltage_Phase", "Voltage_Harmonics", "Current_Harmonics", "Power_Harmonics", "Voltage_Harmonics_Complex", "Current_Harmonics_Complex", "Voltage_FFT", "Current_FFT", "Voltage_Samples", "Current_Samples"})) return;
   json Result = GetSeriesNow(req.Param("Series"));
   if(Result == nullptr) return req.Error("", HTTP_METHOD_NOT_ALLOWED);
-  if(Result.is_string()) return req.Error(Result, HTTP_BAD_REQUEST);
   req.Success(Result);
 }
 void AnalyzerSoft::GetStatus(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   if(!req.CheckParamSet("Series", {"Version", "Log", "System", "SystemLog", "Events", "Alarms", "Storage"})) return;
-  json Result = pAccess.GetStatus(req.Param("Series"), req.UserName());
+  json Result = pAccess->GetStatus(req.Param("Series"), req.UserName());
   Result["State"] = (State() == UNCONFIGURED) ? "UNCONFIGURED" : (State() == OFFLINE) ? "OFFLINE" : (State() == SYNCING) ? "SYNCING" : "ONLINE";
   req.Success(Result);
 }
 void AnalyzerSoft::GetWaveStream(HTTPRequest &req) {
-  //if(TestUser(req.UserName(), READ) == false)
-  return req.Error("", HTTP_FORBIDDEN);
-//  if((params.contains("Series") == false) || (params["Series"].is_array() == false)) return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
-//  typedef struct {
-//    uint64_t Block;
-//    bool     Current;
-//    bool     Voltage;
-//  } WaveStream_t;
-//  WaveStream_t *Params = (WaveStream_t *)calloc(sizeof(WaveStream_t), 1);
-//  Params->Block = 0;
-//  for(uint8_t i = 0; i < params["Series"].size(); i++) {
-//    if(params["Series"][i].is_string() == false) {
-//      return HTTPServer::FillResponse(response, "'Series' param is required", "text/plain", HTTP_BAD_REQUEST);
-//    } else if(params["Series"][i] == "Current_Samples") {
-//      Params->Current = true;
-//    } else if(params["Series"][i] == "Voltage_Samples") {
-//      Params->Voltage = true;
-//    } else {
-//      return HTTPServer::FillResponse(response, "Unknown serie name", "text/plain", HTTP_BAD_REQUEST);
-//    }
-//  }
-//  auto Func = [this, Params](uint64_t offset, DataSink &sink) {
-//    if(pNowDataLock.ConsumerWait(5) == false) {
-//      sink.done();
-//      return false;
-//    }
-//    Params->Block = (Params->Block == 0) ? pInputBlock->Sequence() : Params->Block + 1;
-//    if(Params->Block != pInputBlock->Sequence()) {
-//      pNowDataLock.ConsumerEnds();
-//      sink.done();
-//      return false;
-//    }
-//    json Result = json::object();
-//    Result["Samples"] = pBlockSamples;
-//    if(Params->Voltage) {
-//      Result["Voltage_Samples"] = json::array();
-//      for(uint8_t n = 0; n < pVoltageChannels; n++) {
-//        Result["Voltage_Samples"].push_back(json::array());
-//        for(uint16_t i = 0; i < pBlockSamples; i++) Result["Voltage_Samples"][n].push_back(pVoltageSamples[n * pMaxSamples + i]);
-//      }
-//    }
-//    if(Params->Current) {
-//      Result["Current_Samples"] = json::array();
-//      for(uint8_t n = 0; n < pCurrentChannels; n++) {
-//        Result["Current_Samples"].push_back(json::array());
-//        for(uint16_t i = 0; i < pBlockSamples; i++) Result["Current_Samples"][n].push_back(pCurrentSamples[n * pMaxSamples + i]);
-//      }
-//    }
-//    pNowDataLock.ConsumerEnds();
-//    string Data = Result.dump() + "\n\n";
-//    sink.write(Data.c_str(), Data.size());
-//    sink.done();
-//    return true;
-//  };
-//  auto Free = [Params]() {
-//    free(Params);
-//  };
-//  response.set_chunked_content_provider("application/json", Func, Free);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamSet("Series", {"Voltage_Samples", "Current_Samples"})) return;
+  if(!req.CheckParamNumber("Length")) return;
+  vector<string> Headers;
+  uint32_t       Length = req.Param("Length");
+  for(auto &Serie : req.Param("Series")) Headers.push_back(Serie);
+  auto Func = [&, Headers, Length](function<bool(const json &content)> Write) {
+    Write(Headers);
+    uint32_t Pending = Length;
+    auto Func2 = [&]() {
+      for(uint16_t i = 0; i < pWorkingBlock->Samples(); i++) {
+        json Result = json::array();
+        for(auto &Serie : Headers) {
+          if(Serie == "Voltage_Samples") {
+            json Tmp = json::array();
+            for(uint8_t n = 0; n < pVoltageChannels; n++) Tmp.push_back(pWorkingBlock->VoltageSample(n, i));
+            Result.push_back(Tmp);
+          }
+          if(Serie == "Current_Samples") {
+            json Tmp = json::array();
+            for(uint8_t n = 0; n < pCurrentChannels; n++) Tmp.push_back(pWorkingBlock->CurrentSample(n, i));
+            Result.push_back(Tmp);
+          }
+        }
+        bool Res = Write(Result);
+        Pending--;
+        if((Pending == 0) || (Res == false)) return false;
+      }
+      return true;
+    };
+    pConsumers->OnAllWrite(Func2);
+  };
+  req.SuccessStreamArray(Func);
 }
 void AnalyzerSoft::GetSeriesRange(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  pSeries.GetSeriesRange(req);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pSeries->GetSeriesRange(req);
 }
 void AnalyzerSoft::DelSeriesRange(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
-  pSeries.DelSeriesRange(req);
-  if(req.Status() == HTTP_OK) pSync.Push("DelSeriesRange", req.Params());
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync->ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pSeries->DelSeriesRange(req);
+  if(req.Status() == HTTP_OK) pSync->Push("DelSeriesRange", req.Params());
 }
 void AnalyzerSoft::GetEvents(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  pEvents.GetEvents(req);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pEvents->GetEvents(req);
 }
 void AnalyzerSoft::GetEventsRange(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  pEvents.GetEventsRange(req);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pEvents->GetEventsRange(req);
 }
 void AnalyzerSoft::DelEventsRange(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.DelEventsRange(req);
-  if(req.Status() == HTTP_OK) pSync.Push("DelEventsRange", req.Params());
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync->ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents->DelEventsRange(req);
+  if(req.Status() == HTTP_OK) pSync->Push("DelEventsRange", req.Params());
 }
 void AnalyzerSoft::GetEvent(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  pEvents.GetEvent(req);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pEvents->GetEvent(req);
 }
 void AnalyzerSoft::SetEvent(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.SetEvent(req);
-  if(req.Status() == HTTP_OK) pSync.Push("SetEvent", req.Params());
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync->ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents->SetEvent(req);
+  if(req.Status() == HTTP_OK) pSync->Push("SetEvent", req.Params());
 }
 void AnalyzerSoft::DelEvent(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.DelEvent(req);
-  if(req.Status() == HTTP_OK) pSync.Push("DelEvent", req.Params());
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync->ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents->DelEvent(req);
+  if(req.Status() == HTTP_OK) pSync->Push("DelEvent", req.Params());
 }
 void AnalyzerSoft::TestAlarm(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pNowDataLock.ConsumerWait(5) == false) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
-  pAlarms.TestAlarm(req, pAggreg200MS);
-  pNowDataLock.ConsumerEnds();
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pConsumers->OnWrite([&]() { pAlarms->TestAlarm(req, pAggreg200MS); }) == false) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::GetAlarms(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  pAlarms.GetAlarms(req);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pAlarms->GetAlarms(req);
 }
 void AnalyzerSoft::GetAlarmsRange(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  pAlarms.GetAlarmsRange(req);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pAlarms->GetAlarmsRange(req);
 }
 void AnalyzerSoft::DelAlarm(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
-  pAlarms.DelAlarm(req);
-  if(req.Status() == HTTP_OK) pSync.Push("DelAlarm", req.Params());
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync->ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pAlarms->DelAlarm(req);
+  if(req.Status() == HTTP_OK) pSync->Push("DelAlarm", req.Params());
 }
 void AnalyzerSoft::SetAlarm(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
-  pAlarms.SetAlarm(req);
-  if(req.Status() == HTTP_OK) pSync.Push("SetAlarm", req.Params());
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync->ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pAlarms->SetAlarm(req);
+  if(req.Status() == HTTP_OK) pSync->Push("SetAlarm", req.Params());
 }
 void AnalyzerSoft::DelAlarmsRange(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
-  pAlarms.DelAlarmsRange(req);
-  if(req.Status() == HTTP_OK) pSync.Push("DelAlarmsRange", req.Params());
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync->ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pAlarms->DelAlarmsRange(req);
+  if(req.Status() == HTTP_OK) pSync->Push("DelAlarmsRange", req.Params());
 }
 void AnalyzerSoft::GetCosts(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  pRates.GetCosts(req);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pRates->GetCosts(req);
 }
 void AnalyzerSoft::GetBills(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  pRates.GetBills(req);
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  pRates->GetBills(req);
 }
 void AnalyzerSoft::SetRemote(HTTPRequest &req) {
   req.Error("", HTTP_METHOD_NOT_ALLOWED);
 }
 void AnalyzerSoft::SetSeries(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
-  pSeries.SetSeries(req);
-  if(req.Status() == HTTP_OK) pSync.Push("SetSeries", req.Params());
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync->ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pSeries->SetSeries(req);
+  if(req.Status() == HTTP_OK) pSync->Push("SetSeries", req.Params());
 }
 void AnalyzerSoft::SetEvents(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
-  pEvents.SetEvents(req);
-  if(req.Status() == HTTP_OK) pSync.Push("SetEvents", req.Params());
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync->ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pEvents->SetEvents(req);
+  if(req.Status() == HTTP_OK) pSync->Push("SetEvents", req.Params());
 }
 void AnalyzerSoft::SetAlarms(HTTPRequest &req) {
-  if(pAccess.TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pSync.ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
-  pAlarms.SetAlarms(req);
-  if(req.Status() == HTTP_OK) pSync.Push("SetAlarms", req.Params());
+  if(pAccess->TestUser(AnalyzerAccess::WRITE, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+  if(pSync->ShouldPush() == false) return req.Error("Too much pending actions in queue", HTTP_METHOD_NOT_ALLOWED);
+  pAlarms->SetAlarms(req);
+  if(req.Status() == HTTP_OK) pSync->Push("SetAlarms", req.Params());
 }
 bool AnalyzerSoft::HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) {
-  if(pNowDataLock.ConsumerWait(5) == false) return false;
-  pAggreg200MS.HandleModbus(buff, start, len);
-  pNowDataLock.ConsumerEnds();
-  return true;
+  return pConsumers->OnWrite([&]() { pAggreg200MS->HandleModbus(buff, start, len); });
 }
 //----------------------------------------------------------------------------------------------------------------------

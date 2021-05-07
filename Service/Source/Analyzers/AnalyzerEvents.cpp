@@ -113,15 +113,15 @@ void AnalyzerEvents::DelEvent(HTTPRequest &req) const {
   req.Success(json::object());
 }
 void AnalyzerEvents::SetEvents(HTTPRequest &req) const {
-  if(!req.CheckParamSet("Headers", {"ChangeTime", "StartTime", "Type", "SampleRate", "Reference", "Peak", "Change", "Duration", "Notes", "LengthRAW", "SamplesRAW", "LengthRMS", "SamplesRMS"}, true) || !req.CheckParamArray("Alarms")) return;
+  if(!req.CheckParamSet("Headers", {"ChangeTime", "StartTime", "Type", "SampleRate", "Reference", "Peak", "Change", "Duration", "Notes", "LengthRAW", "SamplesRAW", "LengthRMS", "SamplesRMS"}, true) || !req.CheckParamArray("Events")) return;
   vector<string> Series  = req.Param("Headers");
   Database DB(pSerial);
-  for(auto &Row : req.Param("Alarms")) {
+  for(auto &Row : req.Param("Events")) {
     if((Row.is_array() == false) || (Row.size() != Series.size())) return req.Error("Invalid 'Samples' param", HTTP_BAD_REQUEST);
     string   ChangeTime, StartTime, Type, SampleRate, Reference, Peak, Change, Duration, Notes, LengthRAW, LengthRMS, SamplesRAW, SamplesRMS;
     auto     RowPtr = Row.begin();
     for(auto &Col : Series) {
-      if(Col == "ChangeTime")      ChangeTime  = DB.BindUint(*RowPtr);
+      if(Col == "ChangeTime")      ChangeTime = DB.BindUint(*RowPtr);
       else if(Col == "StartTime")  StartTime  = DB.BindUint(*RowPtr);
       else if(Col == "Type")       Type       = DB.BindEnum(*RowPtr, {"RVC", "DIP", "SWELL", "INTERRUPTION"});
       else if(Col == "SampleRate") SampleRate = DB.BindFloat(*RowPtr);
@@ -139,7 +139,7 @@ void AnalyzerEvents::SetEvents(HTTPRequest &req) const {
     if(SamplesRAW.empty()) SamplesRAW = "NULL";
     if(SamplesRMS.empty()) SamplesRMS = "NULL";
     if(!ChangeTime.empty() && !StartTime.empty() && !Type.empty() && !SampleRate.empty() && !Reference.empty() && !Peak.empty() && !Change.empty() && !Duration.empty() && !Notes.empty() && !LengthRAW.empty() && !LengthRMS.empty() && !SamplesRAW.empty() && !SamplesRMS.empty()) {
-      if(DB.ExecSentenceNoResult("INSERT INTO events(changetime, starttime, evttype, samplerate, reference, peak, change, notes, duration, size_raw, size_rms, samples_raw, samples_rms) "
+      if(DB.ExecSentenceNoResult("INSERT INTO events(changetime, starttime, evttype, samplerate, reference, peak, change, notes, duration, size_raw, samples_raw, size_rms, samples_rms) "
                                  "VALUES (" + ChangeTime + ", " + StartTime + ", " + Type + ", " + SampleRate + ", " + Reference + ", " + Peak + ", " + Change + ", " + Notes + ", " + Duration + ", " + LengthRAW + ", " + SamplesRAW + ", " + LengthRMS + ", " + SamplesRMS + ") "
                                  "ON CONFLICT(starttime) DO UPDATE SET changetime = EXCLUDED.changetime, starttime = EXCLUDED.starttime, evttype = EXCLUDED.evttype, samplerate = EXCLUDED.samplerate, reference = EXCLUDED.reference, peak = EXCLUDED.peak, change = EXCLUDED.change, notes = EXCLUDED.notes, duration = EXCLUDED.duration, size_raw = EXCLUDED.size_raw, size_rms = EXCLUDED.size_rms, samples_raw = EXCLUDED.samples_raw, samples_rms = EXCLUDED.samples_rms") == false) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
     } else {

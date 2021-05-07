@@ -18,14 +18,14 @@
 // ---------------------------------------------------------------------------------------------------------------------
 AnalyzerRemoteActions::AnalyzerRemoteActions(function<void(const string &name, const json &params)> handleAction) {
   pHandleAction = handleAction;
-  pMutex        = PTHREAD_MUTEX_INITIALIZER;
+  pLock         = PTHREAD_RWLOCK_INITIALIZER;
 }
 AnalyzerRemoteActions::~AnalyzerRemoteActions() {
 }
 bool AnalyzerRemoteActions::ShouldPush() {
-  pthread_mutex_lock(&pMutex);
+  pthread_rwlock_rdlock(&pLock);
   uint16_t Count = pPendingActions.size();
-  pthread_mutex_unlock(&pMutex);
+  pthread_rwlock_unlock(&pLock);
   return (Count < pMaxActions);
 }
 void AnalyzerRemoteActions::Push(const string name, const json &params) {
@@ -33,14 +33,14 @@ void AnalyzerRemoteActions::Push(const string name, const json &params) {
   Action["Type"] = name;
   Action["Params"] = params;
   if(Action["Params"].contains("UserName")) Action["Params"].erase("UserName");
-  pthread_mutex_lock(&pMutex);
+  pthread_rwlock_wrlock(&pLock);
   pPendingActions.push(Action);
-  pthread_mutex_unlock(&pMutex);
+  pthread_rwlock_unlock(&pLock);
 }
 uint16_t AnalyzerRemoteActions::Count() {
-  pthread_mutex_lock(&pMutex);
+  pthread_rwlock_rdlock(&pLock);
   uint16_t Size = pPendingActions.size();
-  pthread_mutex_unlock(&pMutex);
+  pthread_rwlock_unlock(&pLock);
   return Size;
 }
 void AnalyzerRemoteActions::SetRemote(const json &params, json &response) {
@@ -51,7 +51,7 @@ void AnalyzerRemoteActions::SetRemote(const json &params, json &response) {
       pHandleAction(Action["Type"], Action["Params"]);
     }
   }
-  pthread_mutex_lock(&pMutex);
+  pthread_rwlock_wrlock(&pLock);
   if(pPendingActions.size() > 0) {
     response["Actions"] = json::array();
     while(pPendingActions.empty() == false) {
@@ -59,6 +59,6 @@ void AnalyzerRemoteActions::SetRemote(const json &params, json &response) {
       pPendingActions.pop();
     }
   }
-  pthread_mutex_unlock(&pMutex);
+  pthread_rwlock_unlock(&pLock);
 }
 // ---------------------------------------------------------------------------------------------------------------------

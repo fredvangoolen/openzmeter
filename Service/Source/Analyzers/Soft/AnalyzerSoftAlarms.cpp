@@ -61,26 +61,26 @@ void AnalyzerSoftAlarms::Config(const bool enabled, const string &tz, const json
   }
   pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerSoftAlarms::Alarms_Func(const string &name, AnalyzerSoftAggreg &params) {
+void AnalyzerSoftAlarms::Alarms_Func(const string &name, AnalyzerSoftAggreg *params) {
   pthread_rwlock_rdlock(&pLock);
   auto List = pAlarms.find(name);
   if(List != pAlarms.end()) {
     for(auto &Alarm : List->second) {
       auto Result = Alarm->PushAggreg(params);
       if(Result == AnalyzerSoftAlarm::TRIGGERED) {
-        pMQTT->PublishAlarm(params.Timestamp(), Alarm->Name(), Alarm->Priority(), true);
-        TelegramManager::SendAlarm(pSerial, pTimeZone, params.Timestamp(), Alarm->Name(), Alarm->Priority(), true);
+        pMQTT->PublishAlarm(params->Timestamp(), Alarm->Name(), Alarm->Priority(), true);
+        TelegramManager::SendAlarm(pSerial, pTimeZone, params->Timestamp(), Alarm->Name(), Alarm->Priority(), true);
       } else if(Result == AnalyzerSoftAlarm::RELEASED) {
-        pMQTT->PublishAlarm(params.Timestamp(), Alarm->Name(), Alarm->Priority(), false);
-        TelegramManager::SendAlarm(pSerial, pTimeZone, params.Timestamp(), Alarm->Name(), Alarm->Priority(), false);
+        pMQTT->PublishAlarm(params->Timestamp(), Alarm->Name(), Alarm->Priority(), false);
+        TelegramManager::SendAlarm(pSerial, pTimeZone, params->Timestamp(), Alarm->Name(), Alarm->Priority(), false);
       }
     }
   }
   pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerSoftAlarms::Run(const string &aggreg, AnalyzerSoftAggreg &params) {
+void AnalyzerSoftAlarms::Run(const string &aggreg, AnalyzerSoftAggreg *params) {
   pthread_rwlock_rdlock(&pLock);
-  if(pEnabled) pTask = TaskPool::Run([&, aggreg]() { this->Alarms_Func(aggreg, params); }, TaskPool::ABOUTNORMAL);
+  if(pEnabled) pTask = TaskPool::Run([&, aggreg, params]() { this->Alarms_Func(aggreg, params); }, TaskPool::ABOUTNORMAL);
   pthread_rwlock_unlock(&pLock);
 }
 void AnalyzerSoftAlarms::Wait() {
@@ -88,7 +88,7 @@ void AnalyzerSoftAlarms::Wait() {
   if(pTask != NULL) TaskPool::Wait(pTask);
   pthread_rwlock_unlock(&pLock);
 }
-void AnalyzerSoftAlarms::TestAlarm(HTTPRequest &req, AnalyzerSoftAggreg200MS &aggreg) const {
+void AnalyzerSoftAlarms::TestAlarm(HTTPRequest &req, AnalyzerSoftAggreg200MS *aggreg) const {
   if(!req.CheckParamString("Expression")) return;
   Parser Evaluator;
   json   Result = json::object();
@@ -96,7 +96,7 @@ void AnalyzerSoftAlarms::TestAlarm(HTTPRequest &req, AnalyzerSoftAggreg200MS &ag
   float  NominalFrequency = pNominalFrequency;
   Evaluator.DefineVar("NominalVoltage", &NominalVoltage);
   Evaluator.DefineVar("NominalFrequency", &NominalFrequency);
-  aggreg.muParserInit(Evaluator, req.Param("Expression"));
+  aggreg->muParserInit(Evaluator, req.Param("Expression"));
   Result["Variables"] = json::object();
   for(auto Var : Evaluator.GetVar()) Result["Variables"][Var.first] = *Var.second;
   try {

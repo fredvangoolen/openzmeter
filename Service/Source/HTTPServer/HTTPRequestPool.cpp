@@ -40,7 +40,7 @@ void HTTPRequestPool::enqueue(function<void()> fn) {
     }
     if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   };
-  TaskPool::Run(Func, TaskPool::NORMAL);
+  TaskPool::Run(Func, TaskPool::IDLE);
 }
 void HTTPRequestPool::shutdown() {
   pthread_mutex_lock(&pMutex);

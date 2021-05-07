@@ -36,15 +36,15 @@ class AnalyzerSoftAlarms final : public AnalyzerAlarms {
     AnalyzerSoftMQTT                         *pMQTT;
     time_zone                                 pTimeZone;
   private :
-    void Alarms_Func(const string &name, AnalyzerSoftAggreg &params);
+    void Alarms_Func(const string &name, AnalyzerSoftAggreg *params);
   public :
     static json CheckConfig(const json &config);
   public :
     AnalyzerSoftAlarms(const string &serial, AnalyzerSoftMQTT *mqtt);
     ~AnalyzerSoftAlarms();
     void Config(const bool enabled, const string &tz, const json &alarms, const float nominalVoltage, const float nominalFreq);
-    void Run(const string &name, AnalyzerSoftAggreg &params);
+    void Run(const string &name, AnalyzerSoftAggreg *params);
     void Wait();
-    void TestAlarm(HTTPRequest &req, AnalyzerSoftAggreg200MS &aggreg) const;
+    void TestAlarm(HTTPRequest &req, AnalyzerSoftAggreg200MS *aggreg) const;
 };
 // ---------------------------------------------------------------------------------------------------------------------

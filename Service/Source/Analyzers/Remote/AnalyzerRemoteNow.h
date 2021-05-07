@@ -33,6 +33,8 @@ class AnalyzerRemoteNow final {
     pthread_mutex_t            pStatusMutex;             //Update Status mutex
     pthread_cond_t             pNowCond;                 //Update Now cond
     pthread_cond_t             pStatusCond;              //Update Status cond
+  private :
+    bool CheckSeries(const json &params, const vector<string> &series, const uint64_t time);
   public :
     void GetSeriesNow(HTTPRequest &req);
     void GetStatus(HTTPRequest &req, const json extraProps = json::object());
