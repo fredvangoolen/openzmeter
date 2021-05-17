@@ -154,17 +154,6 @@ F 3 "http://www.diodes.com/assets/Datasheets/DMG2302U.pdf" H 6175 1050 50  0001 
 	-1   0    0    1   
 $EndComp
 $Comp
-L 3Phase-rescue:R-3Phase-rescue R4
-U 1 1 6082E83A
-P 6075 2150
-F 0 "R4" V 6155 2150 50  0000 C CNN
-F 1 "100k" H 6075 2150 50  0001 C CNN
-F 2 "Resistor_SMD:R_1206_3216Metric" V 6005 2150 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 6075 2150 50  0001 C CNN
-	1    6075 2150
-	1    0    0    -1  
-$EndComp
-$Comp
 L Device:C_Small C2
 U 1 1 60838577
 P 7075 1050
@@ -227,17 +216,6 @@ F 1 "100k" H 7075 1325 50  0001 C CNN
 F 2 "Footprints:R_0603_1608Metric" V 7005 1325 50  0001 C CNN
 F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 7075 1325 50  0001 C CNN
 	1    7075 1325
-	1    0    0    -1  
-$EndComp
-$Comp
-L 3Phase-rescue:R-3Phase-rescue R5
-U 1 1 608E33E2
-P 6075 1400
-F 0 "R5" V 6155 1400 50  0000 C CNN
-F 1 "100k" H 6075 1400 50  0001 C CNN
-F 2 "Resistor_SMD:R_1206_3216Metric" V 6005 1400 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C100048.html" H 6075 1400 50  0001 C CNN
-	1    6075 1400
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
@@ -513,12 +491,12 @@ Connection ~ 1000 1025
 $Comp
 L Connector:Conn_01x10_Male J7
 U 1 1 62932ADC
-P 800 2225
-F 0 "J7" H 908 2606 50  0000 C CNN
-F 1 "Conn_01x06_Male" H 908 2515 50  0001 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical" H 800 2225 50  0001 C CNN
-F 3 "~" H 800 2225 50  0001 C CNN
-	1    800  2225
+P 800 2125
+F 0 "J7" H 908 2506 50  0000 C CNN
+F 1 "Conn_01x06_Male" H 908 2415 50  0001 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical" H 800 2125 50  0001 C CNN
+F 3 "~" H 800 2125 50  0001 C CNN
+	1    800  2125
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -539,7 +517,7 @@ Wire Wire Line
 Wire Wire Line
 	2250 1375 2250 1025
 Text GLabel 1050 1025 2    50   Input ~ 0
-+32v
++12v
 Text GLabel 4375 1925 3    50   Input ~ 0
 Vbat
 $Comp
@@ -565,8 +543,6 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C10
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	2250 1375 2250 1475
-Wire Wire Line
 	3750 1725 3750 1775
 Connection ~ 3750 1775
 Wire Wire Line
@@ -585,7 +561,7 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C10
 	1    0    0    -1  
 $EndComp
 Text GLabel 2000 1475 0    50   Input ~ 0
-+32v
++12v
 Wire Wire Line
 	1000 1025 1050 1025
 $Comp
@@ -613,8 +589,6 @@ Wire Wire Line
 Connection ~ 2250 775 
 Wire Wire Line
 	2250 1775 2400 1775
-Wire Wire Line
-	2250 1725 2250 1775
 $Comp
 L 3Phase-rescue:D_Schottky_Small_ALT-3Phase-rescue D1
 U 1 1 60B3865C
@@ -626,8 +600,6 @@ F 3 "" V 2250 1625 50  0000 C CNN
 	1    2250 1625
 	0    -1   -1   0   
 $EndComp
-Wire Wire Line
-	2250 1525 2250 1475
 Text GLabel 1925 1125 0    50   Input ~ 0
 EXT
 Wire Wire Line
@@ -749,25 +721,14 @@ Connection ~ 2600 1475
 Wire Wire Line
 	2600 1475 2700 1475
 Text GLabel 1050 1825 2    50   Input ~ 0
-SDA
+MOSI
 Text GLabel 1050 1925 2    50   Input ~ 0
-SCL
+MCLK
 Text GLabel 1050 2025 2    50   Input ~ 0
 LCD_BL
 Connection ~ 1000 725 
 Wire Wire Line
 	1000 825  1000 725 
-$Comp
-L Connector:Conn_01x10_Male J8
-U 1 1 604239FD
-P 800 1225
-F 0 "J8" H 772 1107 50  0000 R CNN
-F 1 "Conn_01x06_Male" H 772 1198 50  0001 R CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical" H 800 1225 50  0001 C CNN
-F 3 "~" H 800 1225 50  0001 C CNN
-	1    800  1225
-	1    0    0    1   
-$EndComp
 Text GLabel 1050 2225 2    50   Input ~ 0
 EXT
 Text GLabel 1050 2625 2    50   Input ~ 0
@@ -847,8 +808,6 @@ Wire Wire Line
 	1000 2525 1050 2525
 Wire Wire Line
 	1000 2625 1050 2625
-Wire Wire Line
-	1000 2725 1050 2725
 $Comp
 L Connector:Conn_01x12_Female J1
 U 1 1 608DA3B1
@@ -903,7 +862,6 @@ Wire Wire Line
 	3150 2300 3050 2300
 Text GLabel 3050 2300 0    50   Input ~ 0
 ENABLE
-Connection ~ 2550 2675
 Wire Wire Line
 	2250 2675 2250 2900
 Connection ~ 2250 2675
@@ -919,30 +877,14 @@ F 3 "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount_100KR-104-5_C10
 	0    -1   1    0   
 $EndComp
 Wire Wire Line
-	2650 2575 2250 2575
-Connection ~ 2250 2575
+	3700 3500 3700 3475
 Wire Wire Line
-	2250 2575 2250 2500
+	4000 2325 4000 1925
+Connection ~ 3700 3475
 Wire Wire Line
-	3825 3225 3825 3175
+	3700 2775 3700 3475
 Wire Wire Line
-	4000 3175 3825 3175
-Wire Wire Line
-	4000 2900 4000 3175
-Wire Wire Line
-	4000 2700 4000 2300
-Connection ~ 3825 2675
-Wire Wire Line
-	3825 2650 3825 2675
-Wire Wire Line
-	3825 3175 3700 3175
-Connection ~ 3825 3175
-Wire Wire Line
-	3825 3150 3825 3175
-Wire Wire Line
-	3700 2300 3700 2350
-Wire Wire Line
-	2250 2575 2250 2675
+	3750 1925 3750 1975
 $Comp
 L Device:CP_Small C15
 U 1 1 6096E724
@@ -969,35 +911,15 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	1    2250 3000
 	-1   0    0    1   
 $EndComp
-Connection ~ 2550 3175
 Wire Wire Line
-	3825 2675 3450 2675
+	3875 1925 4000 1925
+Connection ~ 3875 1925
 Wire Wire Line
-	3825 2300 4000 2300
-Connection ~ 3825 2300
+	3875 1925 3875 1975
 Wire Wire Line
-	3825 2300 3825 2350
+	3750 1925 3875 1925
 Wire Wire Line
-	3700 2300 3825 2300
-Connection ~ 3450 3175
-Wire Wire Line
-	2550 3175 3450 3175
-Wire Wire Line
-	2550 3125 2550 3175
-Connection ~ 2550 2775
-Wire Wire Line
-	2550 2775 2550 2675
-Wire Wire Line
-	2650 2675 2550 2675
-Connection ~ 2550 2875
-Wire Wire Line
-	2550 2775 2550 2875
-Wire Wire Line
-	2650 2775 2550 2775
-Wire Wire Line
-	2550 2875 2550 2925
-Wire Wire Line
-	2650 2875 2550 2875
+	2475 3075 2475 3475
 $Comp
 L Device:CP_Small C13
 U 1 1 6093AA26
@@ -1009,31 +931,9 @@ F 3 "~" H 2550 3025 50  0001 C CNN
 	1    2550 3025
 	-1   0    0    -1  
 $EndComp
-Connection ~ 3700 3175
+Connection ~ 3550 3475
 Wire Wire Line
-	3700 2950 3700 3175
-Wire Wire Line
-	3575 3175 3700 3175
-Connection ~ 3575 3175
-Wire Wire Line
-	3575 3125 3575 3175
-Wire Wire Line
-	3450 3175 3575 3175
-Wire Wire Line
-	3450 2875 3450 3175
-Wire Wire Line
-	3575 2775 3450 2775
-Wire Wire Line
-	3575 2925 3575 2775
-Wire Wire Line
-	3825 2675 3825 2850
-Connection ~ 3700 2575
-Wire Wire Line
-	3700 2575 3450 2575
-Wire Wire Line
-	3700 2575 3700 2750
-Wire Wire Line
-	3700 2550 3700 2575
+	3550 3050 3550 3475
 $Comp
 L Device:L_Small L2
 U 1 1 6093AA0A
@@ -1111,11 +1011,11 @@ F 3 "" H 3825 3225 50  0001 C CNN
 	1    3825 3225
 	-1   0    0    -1  
 $EndComp
-Text GLabel 3525 2300 0    50   Input ~ 0
+Text GLabel 3525 1925 0    50   Input ~ 0
 +5v
 Wire Wire Line
-	3525 2300 3700 2300
-Connection ~ 3700 2300
+	3525 1925 3750 1925
+Connection ~ 3750 1925
 $Comp
 L Regulator_Linear:LM2936-3.3 U6
 U 1 1 610920CB
@@ -1139,15 +1039,12 @@ F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	4000 3175 4500 3175
-Connection ~ 4000 3175
+	4500 2750 4500 3475
+Connection ~ 4500 3475
 Wire Wire Line
-	4500 2750 4500 3175
-Connection ~ 4500 3175
+	4500 3475 4825 3475
 Wire Wire Line
-	4500 3175 4825 3175
-Wire Wire Line
-	4825 3125 4825 3175
+	4825 3125 4825 3475
 Wire Wire Line
 	4800 2450 4825 2450
 Wire Wire Line
@@ -1245,12 +1142,10 @@ Connection ~ 5125 3225
 Wire Wire Line
 	5125 3225 5125 3200
 Wire Wire Line
-	4825 3175 4825 3475
-Wire Wire Line
 	4825 3475 5125 3475
 Wire Wire Line
 	5125 3475 5125 3450
-Connection ~ 4825 3175
+Connection ~ 4825 3475
 Wire Wire Line
 	5125 3475 5550 3475
 Wire Wire Line

@@ -1,4 +1,4 @@
-18577105776502892
+18582692085618892
 Battery
 BatteryHolder_Bulgin_BX0036_1xC
 Bulgin Battery Holder, BX0036, Battery Type C (https://www.bulgin.com/products/pub/media/bulgin/data/Battery_holders.pdf)
@@ -50631,6 +50631,13 @@ buzzer
 2
 2
 Footprints
+Buzzer_CUI_CPT-9019S-SMT
+https://www.cui.com/product/resource/cpt-9019s-smt.pdf
+buzzer piezo
+0
+2
+2
+Footprints
 CD32_3.5x3.0
 Inductor, CD32 3.5x3.0
 inductor Wuerth smd
@@ -50907,6 +50914,13 @@ Footprints
 SW_PUSH_6mm_H13mm
 tactile push button, 6x6mm e.g. PHAP33xx series, height=13mm
 tact sw push 6mm
+0
+4
+2
+Footprints
+SW_Push_6x6mm_H8mm
+tactile push button, 6x6mm e.g. PTS645xx series, height=9.5mm
+tact sw push 6mm smd
 0
 4
 2
