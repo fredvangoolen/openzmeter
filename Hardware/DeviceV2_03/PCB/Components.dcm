@@ -16,6 +16,12 @@ K 4P4C RJ female connector
 F ~
 $ENDCMP
 #
+$CMP AP64350
+D 1.5A, step-up/down/inverting switching regulator, 3-40V Vin, 100kHz, SO-8
+K smps buck boost inverting
+F http://www.onsemi.com/pub_link/Collateral/MC34063A-D.PDF
+$ENDCMP
+#
 $CMP BQ21040
 D Constant-current/constant-voltage linear charger for single cell lithium-ion batteries with 2.9V Trickle Charge, 4.5V to 6.5V VDD, -40 to +85 degree Celcius, TSOT-23-5
 K Constant-current constant-voltage linear charger single cell lithium-ion battery

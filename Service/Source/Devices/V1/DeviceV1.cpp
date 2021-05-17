@@ -324,7 +324,7 @@ void DeviceV1::GetDevice(HTTPRequest &req) {
   Config["Wave_Average"]["Voltage"] = pAverageValues[0];
   Config["Wave_Average"]["Current"] = pAverageValues[1];
   pthread_rwlock_unlock(&pAverageLocks);
-  req.Success(json::object());
+  req.Success(Config);
 }
 void DeviceV1::SetDevice(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
