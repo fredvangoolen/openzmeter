@@ -16,21 +16,15 @@
 #pragma once
 #include <AnalyzerSoft.h>
 // ---------------------------------------------------------------------------------------------------------------------
-class DeviceV2Analyzer final : public AnalyzerSoft {
+class DeviceV3Analyzer final : public AnalyzerSoft {
   protected :
-    uint8_t                 pVoltageMap[3];
-    uint8_t                 pCurrentMap[4];
-    float                   pInvertMap[4];
-    uint8_t                 pVoltageChannels;
-    uint8_t                 pCurrentChannels;
-    bool                    pCalc;
-    uint64_t                pLastEvent;
+    uint8_t pCurrent;
+    bool    pCalc;
   private :
-    void ResultsReady(AnalyzerSoftAggreg200MS &params) override;
+//    void ResultsReady(AnalyzerSoftAggreg200MS &params) override;
   public :
-    DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerMode mode, const string &configPath, const float samplerate, const uint8_t *voltage, const uint8_t *current, const bool *invert);
-    DeviceV2Analyzer(const string &name, const string &configPath, const float samplerate, const uint8_t voltage, const float *current);
-    void     BufferAppend(const float *values);
-    uint64_t GetLastEvent();
+    DeviceV3Analyzer(const string &name, const string &configPath, const uint8_t current);
+    DeviceV3Analyzer(const string &name, const string &configPath);
+    void BufferAppend(const float *values);
 };
 // ---------------------------------------------------------------------------------------------------------------------

@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "DeviceV2Analyzer.h"
 // ---------------------------------------------------------------------------------------------------------------------
-DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerMode mode, const string &configPath, const float samplerate, const uint8_t *voltage, const uint8_t *current, const bool *invert) : AnalyzerSoft(name, mode, configPath, samplerate) {
+DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerMode mode, const string &configPath, const uint8_t *voltage, const uint8_t *current, const bool *invert) : AnalyzerSoft(name, mode, configPath, 24000.0) {
   if(mode == Analyzer::PHASE1) {
     pVoltageChannels = 1;
     pCurrentChannels = 1;
@@ -32,7 +32,7 @@ DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerM
   pCalc      = false;
   pLastEvent = 0;
 }
-DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const string &configPath, const float samplerate, const uint8_t voltage, const float *current) : AnalyzerSoft(name, Analyzer::PHASE1, configPath, samplerate) {
+DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const string &configPath, const uint8_t voltage, const float *current) : AnalyzerSoft(name, Analyzer::PHASE1, configPath, 24000.0) {
   pVoltageChannels = 1;
   pCurrentChannels = 4;
   pVoltageMap[0]   = voltage;

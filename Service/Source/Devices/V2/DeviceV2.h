@@ -25,9 +25,7 @@
 #define DEVICEV2_PRODSTRING      "openZmeter - Capture device"   //Product string
 #define DEVICEV2_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
 #define DEVICEV2_ENDPOINT_OUT      0x02                          //Endpoint de escritura de datos
-#define DEVICEV2_SAMPLEFREQ       24000                          //Frequencia de muestreo
 #define DEVICEV2_TRANSFERS          128                          //Numero de transferencias a encolar
-#define DEVICEV2_CONTROL_SETSTATUS 0x20
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2 final : public Device {
   private :
@@ -39,7 +37,8 @@ class DeviceV2 final : public Device {
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pThread;                  //Descriptor del hilo de captura
     volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
-    vector<DeviceV2Analyzer*>    pAnalyzers;               //Listado de analyzadores
+    DeviceV2Analyzer            *pAnalyzers[5];            //Listado de analyzadores
+    uint8_t                      pAnalyzersCount;          //Running analyzers
     pthread_mutex_t              pConfigLock;              //Block configuration params
     float                        pVoltageGain[3];          //Ganancia de tension
     float                        pCurrentGain[4];          //Ganancia de corriente
