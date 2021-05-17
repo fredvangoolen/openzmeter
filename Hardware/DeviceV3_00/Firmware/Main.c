@@ -88,7 +88,8 @@ void USB_HandleEP1_TX(uint8_t event) {
 //    }
 //    *pma++ = Bytes[1] << 8 | Bytes[0];
   }
-  Ptr->cnt = 64;
+  Vars.LED_Counter = 16;
+  Ptr->cnt         = 64;
   *Reg = (*Reg & USB_EPREG_MASK) | USB_EP_SWBUF_TX;
 }
 USB_Response USB_SetConfiguration(uint8_t cfg) {

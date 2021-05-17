@@ -146,13 +146,13 @@ DeviceV3::~DeviceV3() {
 }
 json DeviceV3::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
-  ConfigOUT["VoltageGain"] = 1.0;
+  ConfigOUT["VoltageGain"] = 100.0;
   ConfigOUT["VoltageOffset"] = 0.0;
   ConfigOUT["Enabled"] = false;
   ConfigOUT["Outputs"] = json::array();
   for(uint8_t n = 0; n < 8; n++) {
     json Output = json::object();
-    Output["CurrentGain"] = 1.0;
+    Output["CurrentGain"] = 100.0;
     Output["CurrentOffset"] = 0.0;
     Output["Enabled"] = false;
     Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1, false);
@@ -162,14 +162,14 @@ json DeviceV3::CheckConfig(const json &config) {
   ConfigOUT["Calculated"]["Enabled"]  = false;
   ConfigOUT["Calculated"]["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1, false);
   if(config.is_object()) {
-    if(config.contains("VoltageGain") && config["VoltageGain"].is_number() && (config["VoltageGain"] > 0.0) && (config["VoltageGain"] <= 1000.0)) ConfigOUT["VoltageGain"] = config["VoltageGain"];
+    if(config.contains("VoltageGain") && config["VoltageGain"].is_number() && (config["VoltageGain"] > 90.0) && (config["VoltageGain"] <= 110.0)) ConfigOUT["VoltageGain"] = config["VoltageGain"];
     if(config.contains("VoltageOffset") && config["VoltageOffset"].is_number() && (config["VoltageOffset"] >= -200.0) && (config["VoltageOffset"] <= 200.0)) ConfigOUT["VoltageOffset"] = config["VoltageOffset"];
     if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
     if(config.contains("Outputs") && config["Outputs"].is_array() && (config["Outputs"].size() == 8)) {
       for(uint8_t n = 0; n < 8; n++) {
         if(!config["Outputs"][n].is_object()) continue;
-        if(config["Outputs"][n].contains("CurrentGain") && config["Outputs"][n]["CurrentGain"].is_number() && (config["Outputs"][n]["CurrentGain"] > 0.0) && (config["Outputs"][n]["CurrentGain"] <= 1000.0)) ConfigOUT["Outputs"][n]["CurrentGain"] = config["Outputs"][n]["CurrentGain"];
-        if(config["Outputs"][n].contains("CurrentOffset") && config["Outputs"][n]["CurrentOffset"].is_number() && (config["Outputs"][n]["CurrentOffset"] >= -200.0) && (config["Outputs"][n]["CurrentOffset"][n] <= 200.0)) ConfigOUT["Outputs"][n]["CurrentOffset"] = config["Outputs"][n]["CurrentOffset"];
+        if(config["Outputs"][n].contains("CurrentGain") && config["Outputs"][n]["CurrentGain"].is_number() && (config["Outputs"][n]["CurrentGain"] > 90.0) && (config["Outputs"][n]["CurrentGain"] <= 110.0)) ConfigOUT["Outputs"][n]["CurrentGain"] = config["Outputs"][n]["CurrentGain"];
+        if(config["Outputs"][n].contains("CurrentOffset") && config["Outputs"][n]["CurrentOffset"].is_number() && (config["Outputs"][n]["CurrentOffset"] >= -200.0) && (config["Outputs"][n]["CurrentOffset"] <= 200.0)) ConfigOUT["Outputs"][n]["CurrentOffset"] = config["Outputs"][n]["CurrentOffset"];
         if(config["Outputs"][n].contains("Enabled") && config["Outputs"][n]["Enabled"].is_boolean()) ConfigOUT["Outputs"][n]["Enabled"] = config["Outputs"][n]["Enabled"];
         if(config["Outputs"][n].contains("Analyzer") && config["Outputs"][n]["Analyzer"].is_object()) ConfigOUT["Outputs"][n]["Analyzer"] = AnalyzerSoft::CheckConfig(config["Outputs"][n]["Analyzer"], Analyzer::PHASE1, false);
       }
@@ -422,6 +422,7 @@ void DeviceV3::SetDevice(HTTPRequest &req) {
       if(n < Orig["Outputs"].size() && (ConfigIN["Outputs"][n].contains("Mode") && Orig["Outputs"][n].contains("Mode")) && Orig["Outputs"][n].contains("Analyzer") && (ConfigIN["Outputs"][n]["Mode"] == Orig["Outputs"][n]["Mode"])) ConfigIN["Outputs"][n]["Analyzer"] = Orig["Outputs"][n]["Analyzer"];
     }
   }
+  if(ConfigIN.contains("Calculated") && ConfigIN["Calculated"].is_object() && Orig.contains("Calculated") && Orig["Calculated"].contains("Analyzer")) ConfigIN["Calculated"]["Analyzer"] = Orig["Calculated"]["Analyzer"];
   Config(CheckConfig(ConfigIN));
   req.Success(json::object());
 }
