@@ -24,7 +24,7 @@ AnalyzerRemoteNow::AnalyzerRemoteNow(const string &serial) : pSerial(serial) {
   pStatusMutex   = PTHREAD_MUTEX_INITIALIZER;
   pStatusCond    = PTHREAD_COND_INITIALIZER;
   pNowRequest    = {{"Frequency", 0}, {"Flag", 0}, {"Unbalance", 0}, {"Voltage", 0}, {"Current", 0}, {"Active_Power", 0}, {"Reactive_Power", 0}, {"Active_Energy", 0}, {"Reactive_Energy", 0}, {"Apparent_Power", 0}, {"Power_Factor", 0}, {"Voltage_THD", 0}, {"Current_THD", 0}, {"Phi", 0}, {"Voltage_Phase", 0}, {"Voltage_Harmonics", 0}, {"Current_Harmonics", 0}, {"Power_Harmonics", 0}, {"Voltage_Harmonics_Complex", 0}, {"Current_Harmonics_Complex", 0}, {"Voltage_FFT", 0}, {"Current_FFT", 0}, {"Voltage_Samples", 0}, {"Current_Samples", 0}};
-  pStatusRequest = {{"Log", 0}, {"System", 0}, {"SystemLog", 0}, {"Storage", 0}};
+  pStatusRequest = {{"Version", 0}, {"Log", 0}, {"System", 0}, {"SystemLog", 0}, {"Storage", 0}};
 }
 AnalyzerRemoteNow::~AnalyzerRemoteNow() {
 }
@@ -53,6 +53,13 @@ void AnalyzerRemoteNow::SetRemote(const json &params, json &response) {
   if(Now.size() > 0) response["Now"] = Now;
   if(Status.size() > 0) response["Status"] = Status;
 }
+bool AnalyzerRemoteNow::CheckSeries(const json &params, const vector<string> &series, const uint64_t time) {
+  if((params.contains("Time") == false) || (params["Time"].is_number() == false) || (params["Time"].get<uint64_t>() < (time - 30000))) return false;
+  for(auto &Serie : series) {
+    if(params.contains(Serie) == false) return false;
+  }
+  return true;
+}
 void AnalyzerRemoteNow::GetSeriesNow(HTTPRequest &req) {
   uint64_t       Time = Tools::GetTime64();
   timespec       To;
@@ -60,19 +67,13 @@ void AnalyzerRemoteNow::GetSeriesNow(HTTPRequest &req) {
   json           Result = json::object();
   if(clock_gettime(CLOCK_REALTIME, &To) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   To.tv_sec += 10;
-  auto CheckSeries = [&](const vector<string> &series) {
-    for(auto &Serie : series) {
-      if(pNow.contains(Serie) == false) return false;
-    }
-    return true;
-  };
   if(pthread_mutex_lock(&pNowMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   for(auto &Serie : req.Param("Series")) {
     Series.push_back(Serie);
     pNowRequest.find(Serie)->second = Time;
   }
   json Tmp = Series;
-  while(CheckSeries(Series) == false) {
+  while((Series.size() > 0) && (CheckSeries(pNow, Series, Time) == false)) {
     int Error = pthread_cond_timedwait(&pNowCond, &pNowMutex, &To);
     if(Error != 0) {
       if(Error != ETIMEDOUT) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
@@ -92,12 +93,6 @@ void AnalyzerRemoteNow::GetStatus(HTTPRequest &req, const json extraProps) {
   json           Result = extraProps;
   if(clock_gettime(CLOCK_REALTIME, &To) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   To.tv_sec += 10;
-  auto CheckSeries = [&](const vector<string> &series) {
-    for(auto &Serie : series) {
-      if(pStatus.contains(Serie) == false) return false;
-    }
-    return true;
-  };
   if(pthread_mutex_lock(&pStatusMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   for(auto &Serie : req.Param("Series")) {
     if(Serie == "Events") {
@@ -127,7 +122,7 @@ void AnalyzerRemoteNow::GetStatus(HTTPRequest &req, const json extraProps) {
       Series.push_back(Serie);
     }
   }
-  while(CheckSeries(Series) == false) {
+  while((Series.size() > 0) && (CheckSeries(pStatus, Series, Time) == false)) {
     int Error = pthread_cond_timedwait(&pStatusCond, &pStatusMutex, &To);
     if(Error != 0) {
       if(Error != ETIMEDOUT) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));

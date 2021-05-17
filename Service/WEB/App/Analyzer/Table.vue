@@ -6,7 +6,7 @@
         <div class="pull-right btn-group">
           <button type="button" class="btn btn-default btn-xs" @click="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
-        <toolbar-pager class="pull-right" :pageSize="10" :input="Analyzers" :output.sync="FilterAnalyzers" :filtercols="['Name', 'Analyzer']"></toolbar-pager>
+        <toolbar-pager class="pull-right" :pageSize="10" :input="Analyzers" :output.sync="FilterAnalyzers" :filtercols="['Name', 'Analyzer', 'User']"></toolbar-pager>
       </template>
       <div class="alert alert-danger text-center" v-if="Analyzers.length == 0" style="margin-bottom: 5px; padding: 5px">
         <p>There are no analyzers available.</p>
@@ -60,7 +60,7 @@
     data() {
       return { View: null, Analyzers: [], FilterAnalyzers: [], ShowSpinner: true, Analyzer: null, Filter: '', Timer: null,
         Columns: [
-          { name: '__slot:state', title: 'Online' },
+          { name: '__slot:state', title: '' },
           { name: 'User', title: 'Owner' },
           { name: 'Name', title: 'Description' },
           { name: 'Analyzer', title: 'Serial' },
@@ -105,7 +105,7 @@
       CloseSelect: function(analyzer) {
         this.View = null;
         this.GetAnalyzers();
-        if(analyzer == this.analyzer.Analyzer) this.Select(analyzer, false);
+        if((analyzer != null) && (analyzer == this.analyzer.Analyzer)) this.Select(analyzer, false);
       },
       LoadView: function(view, analyzer) {
         this.ShowSpinner = true;
@@ -132,7 +132,7 @@
 <style scoped>
   @media screen and (min-width: 600px) {
     .table >>> th:nth-child(1) {
-      width: 60px;
+      width: 20px;
       text-align: center;
     }
     .table >>> td:nth-child(1) {
@@ -147,7 +147,7 @@
       text-align: center;
     }
     .table >>> th:nth-child(5) {
-      width: 90px;
+      width: 94px;
     }
   }
 </style>

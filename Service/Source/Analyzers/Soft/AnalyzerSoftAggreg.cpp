@@ -101,25 +101,25 @@ void AnalyzerSoftAggreg::Reset() {
   memset(pCurrent_Harmonics, 0, sizeof(pCurrent_Harmonics));
   memset(pPower_Harmonics, 0, sizeof(pPower_Harmonics));
 }
-void AnalyzerSoftAggreg::Accumulate(const AnalyzerSoftAggreg &src) {
-  pFrequency += src.pFrequency;
-  pUnbalance += src.pUnbalance;
-  pFlag      |= src.pFlag;
-  for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage[n] += src.pVoltage[n] * src.pVoltage[n];
-  for(uint8_t n = 0; n < pCurrentChannels; n++)        pCurrent[n] += src.pCurrent[n] * src.pCurrent[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++)        pActive_Power[n] += src.pActive_Power[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++)        pReactive_Power[n] += src.pReactive_Power[n];
-  for(uint8_t n = 0; n < pCurrentChannels; n++)        pCurrent_THD[n] += src.pCurrent_THD[n] * src.pCurrent_THD[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++)        pPhi[n] += src.pPhi[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++)        pPower_Factor[n] += src.pPower_Factor[n];
-  for(uint8_t n = 0; n < (50 * pCurrentChannels); n++) pCurrent_Harmonics[n] += src.pCurrent_Harmonics[n] * src.pCurrent_Harmonics[n];
-  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) pVoltage_Harmonics[n] += src.pVoltage_Harmonics[n] * src.pVoltage_Harmonics[n];
-  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) pPower_Harmonics[n] += src.pPower_Harmonics[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage_THD[n] += src.pVoltage_THD[n] * src.pVoltage_THD[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++)        pActive_Energy[n] += src.pActive_Energy[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage_Phase[n] += src.pVoltage_Phase[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++)        pReactive_Energy[n] += src.pReactive_Energy[n];
-  for(uint8_t n = 0; n < pVoltageChannels; n++)        pApparent_Power[n] += src.pApparent_Power[n];
+void AnalyzerSoftAggreg::Accumulate(const AnalyzerSoftAggreg *src) {
+  pFrequency += src->pFrequency;
+  pUnbalance += src->pUnbalance;
+  pFlag      |= src->pFlag;
+  for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage[n] += src->pVoltage[n] * src->pVoltage[n];
+  for(uint8_t n = 0; n < pCurrentChannels; n++)        pCurrent[n] += src->pCurrent[n] * src->pCurrent[n];
+  for(uint8_t n = 0; n < pVoltageChannels; n++)        pActive_Power[n] += src->pActive_Power[n];
+  for(uint8_t n = 0; n < pVoltageChannels; n++)        pReactive_Power[n] += src->pReactive_Power[n];
+  for(uint8_t n = 0; n < pCurrentChannels; n++)        pCurrent_THD[n] += src->pCurrent_THD[n] * src->pCurrent_THD[n];
+  for(uint8_t n = 0; n < pVoltageChannels; n++)        pPhi[n] += src->pPhi[n];
+  for(uint8_t n = 0; n < pVoltageChannels; n++)        pPower_Factor[n] += src->pPower_Factor[n];
+  for(uint8_t n = 0; n < (50 * pCurrentChannels); n++) pCurrent_Harmonics[n] += src->pCurrent_Harmonics[n] * src->pCurrent_Harmonics[n];
+  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) pVoltage_Harmonics[n] += src->pVoltage_Harmonics[n] * src->pVoltage_Harmonics[n];
+  for(uint8_t n = 0; n < (50 * pVoltageChannels); n++) pPower_Harmonics[n] += src->pPower_Harmonics[n];
+  for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage_THD[n] += src->pVoltage_THD[n] * src->pVoltage_THD[n];
+  for(uint8_t n = 0; n < pVoltageChannels; n++)        pActive_Energy[n] += src->pActive_Energy[n];
+  for(uint8_t n = 0; n < pVoltageChannels; n++)        pVoltage_Phase[n] += src->pVoltage_Phase[n];
+  for(uint8_t n = 0; n < pVoltageChannels; n++)        pReactive_Energy[n] += src->pReactive_Energy[n];
+  for(uint8_t n = 0; n < pVoltageChannels; n++)        pApparent_Power[n] += src->pApparent_Power[n];
 }
 void AnalyzerSoftAggreg::Normalize(const uint16_t samples) {
   pFrequency = pFrequency / samples;

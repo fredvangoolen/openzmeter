@@ -15,15 +15,23 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "UpdateManager.h"
 #include "LogFile.h"
+#include "ConfigFile.h"
 #include "SystemManager.h"
+#include "URL.h"
+#include "MessageLoop.h"
 //----------------------------------------------------------------------------------------------------------------------
 #ifdef OPENWRT
-string UpdateManager::pUpdateURL = "https://www.openzmeter.com/update/";
+string          UpdateManager::pUpdateURL  = "https://www.openzmeter.com/update/" __BUILD_ARCH__ "/" __BUILD_BRANCH__;
+bool            UpdateManager::pAutoUpdate = true;
+json            UpdateManager::pRelease    = nullptr;
+pthread_mutex_t UpdateManager::pMutex      = PTHREAD_MUTEX_INITIALIZER;
 #endif
 // ---------------------------------------------------------------------------------------------------------------------
 UpdateManager::UpdateManager() {
 #ifdef OPENWRT
   LogFile::Info("Starting UpdateManager...");
+  Config(CheckConfig(ConfigFile::ReadConfig("/Update")));
+  MessageLoop::RegisterListener("Updates_PeriodicTasks", PeriodicTasks, 900000);
   HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
   HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
   LogFile::Info("UpdateManager started");
@@ -31,52 +39,81 @@ UpdateManager::UpdateManager() {
 }
 UpdateManager::~UpdateManager() {
 #ifdef OPENWRT
-  LogFile::Info("UpdateManager", "Stopping Update manager...");
+  LogFile::Info("UpdateManager", "Stopping UpdateManager...");
+  MessageLoop::UnregisterListener("Updates_PeriodicTasks");
   HTTPServer::UnregisterCallback("getUpdates");
   HTTPServer::UnregisterCallback("setUpgrade");
-  LogFile::Info("UpdateManager", "Update manager stoped");
+  LogFile::Info("UpdateManager", "UpdateManager stoped");
 #endif
 }
 #ifdef OPENWRT
+json UpdateManager::CheckConfig(const json &config) {
+  json ConfigOUT = json::object();
+  ConfigOUT["URL"] = pUpdateURL;
+  ConfigOUT["Auto"] = true;
+  if(config.is_object() == true) {
+    if(config.contains("URL") && config["URL"].is_string()) ConfigOUT["URL"] = config["URL"];
+    if(config.contains("Auto") && config["Auto"].is_boolean()) ConfigOUT["Auto"] = config["Auto"];
+  }
+  return ConfigOUT;
+}
+void UpdateManager::Config(const json &config) {
+  pthread_mutex_lock(&pMutex);
+  pUpdateURL  = config["URL"];
+  pAutoUpdate = config["Auto"];
+  pthread_mutex_unlock(&pMutex);
+}
+void UpdateManager::PeriodicTasks() {
+  pthread_mutex_lock(&pMutex);
+  if(pAutoUpdate == false) {
+    pthread_mutex_unlock(&pMutex);
+    return;
+  }
+  pthread_mutex_unlock(&pMutex);
+  GetUpdates();
+  pthread_mutex_lock(&pMutex);
+  //Si mi version es distinta a la que obtengo, descargo, guardo y llamo a reiniciar el servicio
+  pthread_mutex_unlock(&pMutex);
+}
+void UpdateManager::GetUpdates() {
+  pthread_mutex_lock(&pMutex);
+  URL Url(pUpdateURL);
+  pthread_mutex_unlock(&pMutex);
+  Client HTTPClient(Url.Host(), Url.Port());
+  HTTPClient.set_read_timeout(20);
+  HTTPClient.set_write_timeout(20);
+  auto Response = HTTPClient.Get(string(Url.Path() + "/Release.json").c_str(), {{"Accept", "application/json"}, {"Accept-Encoding", "gzip, deflate"}});
+  if((Response != nullptr) && (Response->status == HTTP_OK)) {
+    json Content = json::parse(Response->body, NULL, false);
+    if(Content.is_discarded()) {
+      LogFile::Error("Malformed JSON params in UpdateManager");
+    } else {
+      if((Content.contains("Version") == false) || (Content["Version"].is_string() == false) || (Content.contains("ChangeLog") == false) || (Content["ChangeLog"].is_string() == false)) {
+        pthread_mutex_lock(&pMutex);
+        pRelease = nullptr;
+        pthread_mutex_unlock(&pMutex);
+      } else {
+        pthread_mutex_lock(&pMutex);
+        pRelease = json::object();
+        pRelease["Version"] = Content["Version"];
+        pRelease["ChangeLog"] = Content["ChangeLog"];
+        pthread_mutex_unlock(&pMutex);
+      }
+    }
+  }
+}
 void UpdateManager::GetUpdatesCallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
-  // EL JSON TIENE ESTA FORMA
-  // {
-  //  "devel": {
-//      "1231231.3423": {
-//        "ChangeLog":"dsdfsfdsf"
-//        "arm_....": "HTTPS://......"
-//      }
-//    }
-  //}
-//me descargo el JSON de versiones
-//busco mi arquitectura
-//si esta devuelvo el changelog
-
-//  int ResultCode = 0;
-//  if(params.contains("Force") && params["Force"].is_boolean() && (params["Force"] == true)) {
-//    SystemManager::Exec("opkg update", &ResultCode);
-//    if(ResultCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-//  }
-//  string Result = SystemManager::Exec("opkg list-upgradable", &ResultCode);
-//  if(ResultCode != 0) return HTTPServer::FillResponse(response, "", "text/plain", HTTP_INTERNAL_SERVER_ERROR);
-//  json Response = json::array();
-//  size_t Pos = 0;
-//  while(Pos < Result.size()) {
-//    json Update = json::object();
-//    size_t Pos2 = Result.find(" - ", Pos);
-//    Update["Package"] = Result.substr(Pos, Pos2 - Pos);
-//    Pos = Pos2 + 3;
-//    Pos2 = Result.find(" - ", Pos);
-//    Update["From"] = Result.substr(Pos, Pos2 - Pos);
-//    Pos = Pos2 + 3;
-//    Pos2 = Result.find("\n", Pos);
-//    if(Pos2 == string::npos) Pos2 = Result.size();
-//    Update["To"] = Result.substr(Pos, Pos2 - Pos);
-//    Pos = Pos2 + 1;
-//    Response.push_back(Update);
-//  }
-//  HTTPServer::FillResponse(response, Response.dump(), "application/json", HTTP_OK);
+  json Config = json::object();
+  GetUpdates();
+  pthread_mutex_lock(&pMutex);
+  Config["URL"] = pUpdateURL;
+  if(pRelease != nullptr) {
+    Config["Version"]   = pRelease["Version"];
+    Config["ChangeLog"] = pRelease["ChangeLog"];
+  }
+  pthread_mutex_unlock(&pMutex);
+  req.Success(Config);
 }
 void UpdateManager::SetUpgradeCallback(HTTPRequest &req) {
 //  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);

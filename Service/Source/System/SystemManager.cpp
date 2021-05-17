@@ -25,14 +25,18 @@ json            SystemManager::pStatus = json::object();
 pthread_mutex_t SystemManager::pMutex  = PTHREAD_MUTEX_INITIALIZER;
 // ---------------------------------------------------------------------------------------------------------------------
 SystemManager::SystemManager() {
+  LogFile::Debug("Starting SystemManager...");
   MessageLoop::RegisterListener("SystemManager_PeriodicTasks", PeriodicTasks, 5000);
   MessageLoop::RegisterListener("PowerOff", PowerOff);
   HTTPServer::RegisterCallback("getSystem", GetSystemCallback, "API/GetSystem.json");
+  LogFile::Debug("SystemManager started");
 }
 SystemManager::~SystemManager() {
+  LogFile::Debug("Stopping SystemManager...");
   MessageLoop::UnregisterListener("SystemManager_PeriodicTasks");
   MessageLoop::UnregisterListener("PowerOff");
   HTTPServer::UnregisterCallback("getSystem");
+  LogFile::Debug("SystemManager stopped");
 }
 uint64_t SystemManager::ParseProcMem(const string &name, const string &buff) {
   auto Pos = buff.find(name + ":");

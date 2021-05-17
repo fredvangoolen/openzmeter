@@ -26,7 +26,7 @@ class DeviceV2Analyzer final : public AnalyzerSoft {
     bool                    pCalc;
     uint64_t                pLastEvent;
   private :
-    void ResultsReady(AnalyzerSoftAggreg200MS &params) override;
+    void ResultsReady(AnalyzerSoftAggreg200MS *params) override;
   public :
     DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerMode mode, const string &configPath, const uint8_t *voltage, const uint8_t *current, const bool *invert);
     DeviceV2Analyzer(const string &name, const string &configPath, const uint8_t voltage, const float *current);

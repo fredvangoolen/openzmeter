@@ -60,10 +60,10 @@ json AnalyzerSoftAlarm::CheckConfig(const json &config) {
   if((config.contains("Enabled") == true) && (config["Enabled"].is_boolean() == true)) ConfigOUT["Enabled"] = config["Enabled"];
   return ConfigOUT;
 }
-AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(AnalyzerSoftAggreg &data) {
+AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(AnalyzerSoftAggreg *data) {
   if(pEnabled == false) return NONE;
   if(pInitialized == false) {
-    data.muParserInit(pEvaluator, pExpression);
+    data->muParserInit(pEvaluator, pExpression);
     pInitialized = true;
   }
   uint8_t *Byte   = &pResults[pResultPos / 8];
@@ -81,14 +81,14 @@ AnalyzerSoftAlarm::Alarm_Result AnalyzerSoftAlarm::PushAggreg(AnalyzerSoftAggreg
   pResultPos = (pResultPos + 1) % pWindow;
   if((pResultCount == pSamples) && (pTriggerTime == 0)) {
     Database DB(pSerial);
-    pTriggerTime = data.Timestamp();
+    pTriggerTime = data->Timestamp();
     LogFile::Debug("Alarm triggered on analyzer '%s'", pSerial.c_str());
     DB.ExecSentenceNoResult("INSERT INTO alarms(changetime, id, trigger, release, notes) VALUES(" + DB.Bind(Tools::GetTime64()) + ", " + DB.Bind(pUID) + ", " + DB.Bind(pTriggerTime) + ", null, '')");
     return TRIGGERED;
   } else if((pResultCount == 0) && (pTriggerTime != 0)) {
     Database DB(pSerial);
     LogFile::Debug("Alarm reseted on analyzer '%s'", pSerial.c_str());
-    DB.ExecSentenceNoResult("UPDATE alarms SET changetime = " + DB.Bind(Tools::GetTime64()) + ", release = " + DB.Bind(data.Timestamp()) + " WHERE id = " + DB.Bind(pUID) + " AND trigger = " + DB.Bind(pTriggerTime));
+    DB.ExecSentenceNoResult("UPDATE alarms SET changetime = " + DB.Bind(Tools::GetTime64()) + ", release = " + DB.Bind(data->Timestamp()) + " WHERE id = " + DB.Bind(pUID) + " AND trigger = " + DB.Bind(pTriggerTime));
     pTriggerTime = 0;
     return RELEASED;
   }

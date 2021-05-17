@@ -31,6 +31,7 @@
   import ModbusTcp from './Connectivity/ModbusTCP.vue';
   import Telegram from './Connectivity/Telegram.vue';
   import Vpn from './Connectivity/OpenVPN.vue';
+  import Updates from './Connectivity/Updates.vue'
   export default {
     data: function() {
       return { View: null,
@@ -41,7 +42,8 @@
                  'NTP': { Module: 'NTP synchronization', Settings: null, Method: this.LoadNTP },
                  'Telegram': { Module: 'Telegram Bot', Settings: null, Method: this.LoadTelegram },
                  'ModbusTCP': { Module: 'ModbusTCP', Settings: null, Method: this.LoadModbusTCP },
-                 'OpenVPN': { Module: 'OpenVPN', Settings: null, Method: this.LoadOpenVPN }
+                 'OpenVPN': { Module: 'OpenVPN', Settings: null, Method: this.LoadOpenVPN },
+                 'Updates': { Module: 'Updates', Settings: null, Method: this.LoadUpdates }
                },
                Columns: [
                  { name: 'Module', title: 'Module' },
@@ -139,8 +141,17 @@
           (fail) => { }
         );
       },
+      LoadUpdates: function(show) {
+        this.Post('getUpdates', { }).then(
+          (result) => {
+            this.Modules.Updates.Settings = result;
+            if(show) this.View = 'Updates';
+          },
+          (fail) => { }
+        );
+      }
     },
-    components: { Bluetooth, Wifi, Ethernet, Ntp, ModbusTcp, Telegram, Vuetable, Vpn }
+    components: { Bluetooth, Wifi, Ethernet, Ntp, ModbusTcp, Telegram, Vuetable, Vpn, Updates }
   }
 </script>
 

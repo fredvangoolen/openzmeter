@@ -38,9 +38,9 @@ bool AnalyzerSoftAggreg15M::Normalize() {
   pSamples = 1;
   return true;
 }
-void AnalyzerSoftAggreg15M::Accumulate(const AnalyzerSoftAggreg200MS &src) {
+void AnalyzerSoftAggreg15M::Accumulate(const AnalyzerSoftAggreg200MS *src) {
   pSamples++;
-  if(pTimestamp == 0) pTimestamp = src.Timestamp() / 900000 * 900000 + 899999;
+  if(pTimestamp == 0) pTimestamp = src->Timestamp() / 900000 * 900000 + 899999;
   AnalyzerSoftAggreg::Accumulate(src);
 }
 // ---------------------------------------------------------------------------------------------------------------------

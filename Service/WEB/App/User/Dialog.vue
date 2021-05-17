@@ -38,7 +38,7 @@
               </div>
             </div>
             <div class="col-xs-12 col-sm-6" v-if="user==null">
-              <label class="control-label">Full name</label>
+              <label class="control-label">User name</label>
               <input type="text" class="form-control" v-model="User.User">
             </div>
             <div class="col-xs-12 col-sm-6" v-if="user==null">

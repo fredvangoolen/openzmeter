@@ -31,13 +31,13 @@ class AnalyzerRemote : public Analyzer {
     float                      pSamplerate;              //Cached samplerate
     json                       pConfig;                  //Cached analyzer configuration
   private :
-    AnalyzerAccess             pAccess;                  //Access control class
-    AnalyzerRates              pRates;                   //Rate calculation from database stored data
-    AnalyzerSeries             pSeries;                  //Series base class
-    AnalyzerAlarms             pAlarms;                  //Alarms base class
-    AnalyzerEvents             pEvents;                  //Events base class
-    AnalyzerRemoteNow          pNow;                     //Manage temporal data
-    AnalyzerRemoteActions      pActions;                 //Manage pending actions
+    AnalyzerAccess            *pAccess;                  //Access control class
+    AnalyzerRates             *pRates;                   //Rate calculation from database stored data
+    AnalyzerSeries            *pSeries;                  //Series base class
+    AnalyzerAlarms            *pAlarms;                  //Alarms base class
+    AnalyzerEvents            *pEvents;                  //Events base class
+    AnalyzerRemoteNow         *pNow;                     //Manage temporal data
+    AnalyzerRemoteActions     *pActions;                 //Manage pending actions
   private :
     void GetAnalyzer(HTTPRequest &req) override;
     void SetAnalyzer(HTTPRequest &req) override;

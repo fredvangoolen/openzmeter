@@ -48,7 +48,7 @@ class AnalyzerSoftAlarm final {
   public :
     AnalyzerSoftAlarm(const string &serial, float &voltage, float &freq, const json &config);
     ~AnalyzerSoftAlarm();
-    Alarm_Result PushAggreg(AnalyzerSoftAggreg &data);
+    Alarm_Result PushAggreg(AnalyzerSoftAggreg *data);
     string       Name() const;
     uint8_t      Priority() const;
 };
