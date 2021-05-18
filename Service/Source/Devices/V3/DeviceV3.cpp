@@ -328,7 +328,7 @@ void DeviceV3::ReadCallback(struct libusb_transfer *transfer) {
         }
         if(pEnabled == true) {
           float Values[9];
-          Values[0] = (pCapture[4] + pVoltageOffset) * 0.110266113281 * pVoltageGain;
+          Values[0] = (pCapture[4] + pVoltageOffset) * pVoltageGain;
           Values[1] = (pCapture[3] + pCurrentOffset[0]) * pCurrentGain[0];
           Values[2] = (pCapture[3] + pCurrentOffset[1]) * pCurrentGain[1];
           Values[3] = (pCapture[3] + pCurrentOffset[2]) * pCurrentGain[2];
