@@ -23,14 +23,13 @@ DeviceV3Analyzer::DeviceV3Analyzer(const string &name, const string &configPath)
   pCalc    = true;
 }
 void DeviceV3Analyzer::BufferAppend(const float *values) {
-//  float Voltage[3], Current[4];
-//  if(pCalc == false) {
-//    for(uint8_t Ch = 0; Ch < pVoltageChannels; Ch++) Voltage[Ch] = values[pVoltageMap[Ch]];
-//    for(uint8_t Ch = 0; Ch < pCurrentChannels; Ch++) Current[Ch] = values[pCurrentMap[Ch]] * pInvertMap[Ch];
-//  } else {
-//    Voltage[0] = values[pVoltageMap[0]];
-//    Current[0] = values[3] * pInvertMap[0] + values[4] * pInvertMap[1] + values[5] * pInvertMap[2] + values[6] * pInvertMap[3];
-//  }
-//  AnalyzerSoft::BufferAppend(Voltage, Current);
+  float Voltage = values[0];
+  float Current = 0.0;
+  if(pCalc == false) {
+    Current = values[pCurrent + 1];
+  } else {
+    for(uint8_t n = 0; n < 8; n++) Current += values[n + 1];
+  }
+  AnalyzerSoft::BufferAppend(&Voltage, &Current);
 }
 // ---------------------------------------------------------------------------------------------------------------------

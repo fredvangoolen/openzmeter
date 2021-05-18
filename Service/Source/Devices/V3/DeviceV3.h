@@ -24,7 +24,7 @@
 #define DEVICEV3_MANSTRING       "zRed"                          //Manufacturer string
 #define DEVICEV3_PRODSTRING      "openZmeter - Capture device"   //Product string
 #define DEVICEV3_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
-#define DEVICEV3_SAMPLEFREQ       24000                          //Frequencia de muestreo
+#define DEVICEV3_SAMPLEFREQ       20000                          //Frequencia de muestreo
 #define DEVICEV3_TRANSFERS          128                          //Numero de transferencias a encolar
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV3 final : public Device {

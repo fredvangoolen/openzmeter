@@ -188,33 +188,13 @@ void DeviceV3::Config(const json& config) {
   pVoltageGain = config["VoltageGain"];
   pVoltageOffset = config["VoltageOffset"];
   pEnabled = config["Enabled"];
-//  uint8_t  MaxDelay = 0;
-//  uint16_t DelayLen = 0;
-//  uint8_t  Delays[8];
   for(uint8_t n = 0; n < 8; n++) {
     if(config["Outputs"][n]["Enabled"] == false) {
       pCurrentGain[n] = 0.0;
       pCurrentOffset[n] = 0.0;
     } else {
-      pCurrentGain[n] = config["Outputs"][n]["CurrentGain"];
+      pCurrentGain[n]   = config["Outputs"][n]["CurrentGain"];
       pCurrentOffset[n] = config["Outputs"][n]["CurrentOffset"];
-//    Delays[Ch] = config["CurrentDelay"][Ch];
-//    if(Delays[Ch] > MaxDelay) MaxDelay = Delays[Ch];
-//  for(uint8_t Ch = 0; Ch < 7; Ch++) pChannelsDelayPos[Ch] = 0;
-//  for(uint8_t Ch = 0; Ch < 3; Ch++) pChannelsDelaySize[Ch] = MaxDelay + 1;
-//  for(uint8_t Ch = 0; Ch < 4; Ch++) pChannelsDelaySize[3 + Ch] = (MaxDelay + 1) - Delays[Ch];
-//  for(uint8_t Ch = 0; Ch < 7; Ch++) DelayLen = DelayLen + pChannelsDelaySize[Ch];
-//  pChannelsDelay = (int16_t*)realloc(pChannelsDelay, sizeof(int16_t) * DelayLen);
-//  memset(pChannelsDelay, 0, sizeof(int16_t) * DelayLen);
-//    Analyzer::AnalyzerMode  Mode = (Tmp["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Tmp["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
-//    uint8_t VoltageMap[3];
-//    uint8_t CurrentMap[4];
-//    bool    InvertMap[4];
-//    string Voltage = Tmp["Voltage"];
-//    string Current = Tmp["Current"];
-//    VoltageMap[0] = (Voltage[2] - '1');
-//    CurrentMap[0] = (Current[3] - '1') + 3;
-//    InvertMap[0]  = (Current[0] == '+') ? false : true;
       pAnalyzers[pAnalyzersCount] = new DeviceV3Analyzer(pSerial + "_CH" + to_string(n + 1) + "_1P", "/Devices/" + pSerial + "/Outputs/" + to_string(n) + "/Analyzer", n);
       AnalyzerManager::AddAnalyzer(pAnalyzers[pAnalyzersCount]);
       pAnalyzersCount++;
@@ -316,61 +296,60 @@ void DeviceV3::ReadCallback(struct libusb_transfer *transfer) {
   if((transfer->endpoint == DEVICEV3_ENDPOINT_IN) && (transfer->status == LIBUSB_TRANSFER_COMPLETED)) {
     uint16_t *Samples = (uint16_t*)transfer->buffer;
     pthread_mutex_lock(&pConfigLock);
-    /*
+    /* 00xxxxxx xxxxxxxx -> Unused word
+       01xxxxxx xxxxxxxx -> Status word (Unused)
+       10xxxxxx xxxxxxxx -> First data channel
+       11xxxxxx xxxxxxxx -> Other data channels
+    */
     for(int Pos = 0; Pos < (transfer->actual_length / 2); Pos++) {
-      uint8_t  Seq    = Samples[Pos] >> 13;
-      uint16_t Sample = (Samples[Pos] & 0x1FFF);
-      if(Seq == 7) {
-
-      } else if(pCaptureSize == Seq) {
-        pCapture[pCaptureSize] = Sample - 4096;
-        if(pCaptureSize == 6) {
-          for(uint8_t Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] += pCapture[Ch];
-          pRunAverageCounter++;
-          if(pRunAverageCounter == (DEVICEV3_SAMPLEFREQ * 10)) {
-            pthread_rwlock_wrlock(&pAverageLocks);
-            for(uint8_t Ch = 0; Ch < 7; Ch++) {
-              pAverageValues[Ch] = pRunAverageValues[Ch] / (DEVICEV3_SAMPLEFREQ * 10.0);
-              pRunAverageValues[Ch] = 0;
-            }
-            pthread_rwlock_unlock(&pAverageLocks);
-            pRunAverageCounter = 0;
+      uint16_t Type   = (Samples[Pos] & 0xC000);
+      uint16_t Sample = (Samples[Pos] & 0x3FFF);
+      if((Type == 0x0000) || (Type == 0x4000)) {
+        continue;
+      } else if((Type == 0x8000) && (pCaptureSize == 0)) {
+        pCapture[0] = Sample;
+        pCaptureSize = 1;
+      } else if((Type == 0xC000) && (pCaptureSize < 8)) {
+        pCapture[pCaptureSize] = Sample;
+        pCaptureSize++;
+      } else if((Type == 0xC000) && (pCaptureSize == 8)) {
+        pCapture[8] = Sample;
+        pCaptureSize = 0;
+        for(uint8_t n = 0; n < 9; n++) pRunAverageValues[n] += pCapture[n];
+        pRunAverageCounter++;
+        if(pRunAverageCounter == (DEVICEV3_SAMPLEFREQ * 10)) {
+          pthread_rwlock_wrlock(&pAverageLocks);
+          for(uint8_t n = 0; n < 9; n++) {
+            pAverageValues[n] = pRunAverageValues[n] / (DEVICEV3_SAMPLEFREQ * 10.0);
+            pRunAverageValues[n] = 0;
           }
-          if(pEnabled == true) {
-            float Values[7];
-            int16_t *DelayPtr = pChannelsDelay;
-            for(uint8_t Ch = 0; Ch < 7; Ch++) {
-              Values[Ch] = DelayPtr[pChannelsDelayPos[Ch]];
-              DelayPtr[pChannelsDelayPos[Ch]] = pCapture[Ch];
-              pChannelsDelayPos[Ch] = (pChannelsDelayPos[Ch] + 1) % pChannelsDelaySize[Ch];
-              DelayPtr = &DelayPtr[pChannelsDelaySize[Ch]];
-            }
-            Values[0] = (Values[0] + pVoltageOffset[0]) * 0.110266113281 * pVoltageGain[0];
-            Values[1] = (Values[1] + pVoltageOffset[1]) * 0.110266113281 * pVoltageGain[1];
-            Values[2] = (Values[2] + pVoltageOffset[2]) * 0.110266113281 * pVoltageGain[2];
-            Values[3] = (Values[3] + pCurrentOffset[0]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[0];
-            Values[4] = (Values[4] + pCurrentOffset[1]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[1];
-            Values[5] = (Values[5] + pCurrentOffset[2]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[2];
-            Values[6] = (Values[6] + pCurrentOffset[3]) * (pHighGain ? 0.08132749817 : 0.15165198897) *  pCurrentGain[3];
-            for(auto &Tmp : pAnalyzers) Tmp->BufferAppend(Values);
-          }
-          pCaptureSize = 0;
-        } else {
-          pCaptureSize++;
+          pthread_rwlock_unlock(&pAverageLocks);
+          pRunAverageCounter = 0;
         }
-      } else {
-        if((Seq == 0) && (pCaptureSize > 0x10)) {
-          pCaptureSize--;
-        } else if((Seq == 0) && (pCaptureSize == 0x10)) {
-          pCapture[0] = Sample - 4096;
-          pCaptureSize = 1;
-        } else {
-          if(pCaptureSize < 0x10) LogFile::Warning("Lost sample, restarting adquisition");
-          pCaptureSize = 0;
-          break;
+        if(pEnabled == true) {
+          float Values[9];
+          Values[0] = (pCapture[4] + pVoltageOffset) * 0.110266113281 * pVoltageGain;
+          Values[1] = (pCapture[3] + pCurrentOffset[0]) * pCurrentGain[0];
+          Values[2] = (pCapture[3] + pCurrentOffset[1]) * pCurrentGain[1];
+          Values[3] = (pCapture[3] + pCurrentOffset[2]) * pCurrentGain[2];
+          Values[4] = (pCapture[4] + pCurrentOffset[3]) * pCurrentGain[3];
+          Values[5] = (pCapture[5] + pCurrentOffset[4]) * pCurrentGain[4];
+          Values[6] = (pCapture[6] + pCurrentOffset[5]) * pCurrentGain[5];
+          Values[7] = (pCapture[6] + pCurrentOffset[6]) * pCurrentGain[6];
+          Values[8] = (pCapture[6] + pCurrentOffset[7]) * pCurrentGain[7];
+          for(auto &Tmp : pAnalyzers) Tmp->BufferAppend(Values);
         }
+      } else if((Type == 0x8000) && (pCaptureSize > 0x10)) {
+        pCaptureSize--;
+      } else if((Type == 0x8000) && (pCaptureSize == 0x10)) {
+        pCapture[0] = Sample;
+        pCaptureSize = 1;
+      } else if(pCaptureSize < 0x10) {
+        LogFile::Warning("Lost sample, restarting adquisition");
+        pCaptureSize = 0xFF;
+        break;
       }
-    }*/
+    }
     pthread_mutex_unlock(&pConfigLock);
   }
   if((pTerminate == false) && (transfer->endpoint == DEVICEV3_ENDPOINT_IN)) {
@@ -400,16 +379,16 @@ void DeviceV3::GetDevice(HTTPRequest &req) {
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
   pthread_rwlock_rdlock(&pAverageLocks);
   Config["Wave_Average"] = json::object();
-  Config["Wave_Average"]["Voltage"] = pAverageValues[0];
+  Config["Wave_Average"]["Voltage"] = pAverageValues[4];
   Config["Wave_Average"]["Current"] = json::array();
-  Config["Wave_Average"]["Current"].push_back(pAverageValues[1]);
-  Config["Wave_Average"]["Current"].push_back(pAverageValues[2]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[3]);
-  Config["Wave_Average"]["Current"].push_back(pAverageValues[4]);
-  Config["Wave_Average"]["Current"].push_back(pAverageValues[5]);
-  Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
-  Config["Wave_Average"]["Current"].push_back(pAverageValues[7]);
+  Config["Wave_Average"]["Current"].push_back(pAverageValues[2]);
+  Config["Wave_Average"]["Current"].push_back(pAverageValues[1]);
+  Config["Wave_Average"]["Current"].push_back(pAverageValues[0]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[8]);
+  Config["Wave_Average"]["Current"].push_back(pAverageValues[7]);
+  Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
+  Config["Wave_Average"]["Current"].push_back(pAverageValues[5]);
   pthread_rwlock_unlock(&pAverageLocks);
   req.Success(Config);
 }
