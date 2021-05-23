@@ -28,8 +28,8 @@ class DeviceV2Analyzer final : public AnalyzerSoft {
   private :
     void ResultsReady(AnalyzerSoftAggreg200MS *params) override;
   public :
-    DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerMode mode, const string &configPath, const float samplerate, const uint8_t *voltage, const uint8_t *current, const bool *invert);
-    DeviceV2Analyzer(const string &name, const string &configPath, const float samplerate, const uint8_t voltage, const float *current);
+    DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerMode mode, const string &configPath, const uint8_t *voltage, const uint8_t *current, const bool *invert);
+    DeviceV2Analyzer(const string &name, const string &configPath, const uint8_t voltage, const float *current);
     void     BufferAppend(const float *values);
     uint64_t GetLastEvent();
 };

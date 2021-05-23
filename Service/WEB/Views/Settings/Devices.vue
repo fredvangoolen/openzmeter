@@ -16,16 +16,17 @@
     <device-virtual v-if="Driver=='DeviceVirtual'" :settings="Settings" @close="LoadTable"></device-virtual>
     <device-v1 v-if="Driver=='DeviceV1'" :settings="Settings" @close="LoadTable"></device-v1>
     <device-v2 v-if="Driver=='DeviceV2'" :settings="Settings" @close="LoadTable"></device-v2>
+    <device-v3 v-if="Driver=='DeviceV3'" :settings="Settings" @close="LoadTable"></device-v3>
     <device-remote v-if="Driver=='DeviceRemote'" :settings="Settings" @close="LoadTable"></device-remote>
   </div>
 </template>
 
 <script>
   import Vuetable from 'vuetable-2';
-  import Spinner from 'Components/Spinner.vue';
   import DeviceVirtual from './Devices/Virtual.vue';
   import DeviceV1 from './Devices/V1.vue';
   import DeviceV2 from './Devices/V2.vue';
+  import DeviceV3 from './Devices/V3.vue';
   import DeviceRemote from './Devices/Remote.vue';
   import 'CSS/table-responsive.css';
   import * as oZm from 'JS/openZmeter.js';
@@ -66,6 +67,7 @@
             if(id.Driver === 'Virtual') this.Driver = 'DeviceVirtual';
             if(id.Driver === 'V1') this.Driver = 'DeviceV1';
             if(id.Driver === 'V2') this.Driver = 'DeviceV2';
+            if(id.Driver === 'V3') this.Driver = 'DeviceV3';
             if(id.Driver === 'Remote') this.Driver = 'DeviceRemote';
             this.ShowSpinner = false;
           },
@@ -81,7 +83,7 @@
     updated: function () {
       oZm.createCaptionsForResponsiveTable(this.$refs.table);
     },
-    components: {Vuetable, DeviceVirtual, DeviceV1, DeviceV2, DeviceRemote}
+    components: {Vuetable, DeviceVirtual, DeviceV1, DeviceV2, DeviceV3, DeviceRemote}
   }
 </script>
 
