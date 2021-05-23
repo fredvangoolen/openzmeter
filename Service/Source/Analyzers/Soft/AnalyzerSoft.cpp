@@ -103,7 +103,7 @@ AnalyzerSoft::~AnalyzerSoft() {
   delete pConsumers;
   LogFile::Info("AnalyzerSoft with serial '%s' stopped", pSerial.c_str());
 }
-void AnalyzerSoft::BufferAppend(float *voltageSamples, float *currentSamples) {
+void AnalyzerSoft::BufferAppend(const float *voltageSamples, const float *currentSamples) {
   AnalyzerSoftBlock *Result = pZeroCross->PushSample(voltageSamples, currentSamples);
   if(Result == NULL) return;
   pthread_mutex_lock(&pMutex);
@@ -344,6 +344,7 @@ json AnalyzerSoft::GetSeriesNow(const vector<string> &series) {
       if(pFFTs->GetSeriesJSON(Serie, Result) == true) continue;
       if(pAggreg200MS->GetSeriesJSON(Serie, Result) == true) continue;
     }
+    return false;
   };
   if(pConsumers->OnWrite(Func) == false) return nullptr;
   return Result;
@@ -424,34 +425,47 @@ void AnalyzerSoft::GetWaveStream(HTTPRequest &req) {
   if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   if(!req.CheckParamSet("Series", {"Voltage_Samples", "Current_Samples"})) return;
   if(!req.CheckParamNumber("Length")) return;
-  vector<string> Headers;
-  uint32_t       Length = req.Param("Length");
-  for(auto &Serie : req.Param("Series")) Headers.push_back(Serie);
-  auto Func = [&, Headers, Length](function<bool(const json &content)> Write) {
+  if(!req.CheckParamNumber("Downsample")) return;
+  vector<string> Headers    = req.Param("Series");
+  uint8_t        Downsample = req.Param("Downsample").get<uint8_t>();
+  uint64_t       Length     = req.Param("Length").get<float>() * pSamplerate / Downsample;
+  auto Func = [&, Headers, Length, Downsample](function<bool(const json &content)> Write) {
     Write(Headers);
+    float Voltage[3], Current[4];
+    uint8_t  Count   = 0;
     uint32_t Pending = Length;
     auto Func2 = [&]() {
       for(uint16_t i = 0; i < pWorkingBlock->Samples(); i++) {
-        json Result = json::array();
-        for(auto &Serie : Headers) {
-          if(Serie == "Voltage_Samples") {
-            json Tmp = json::array();
-            for(uint8_t n = 0; n < pVoltageChannels; n++) Tmp.push_back(pWorkingBlock->VoltageSample(n, i));
-            Result.push_back(Tmp);
-          }
-          if(Serie == "Current_Samples") {
-            json Tmp = json::array();
-            for(uint8_t n = 0; n < pCurrentChannels; n++) Tmp.push_back(pWorkingBlock->CurrentSample(n, i));
-            Result.push_back(Tmp);
-          }
+        if(Count == 0) {
+          for(uint8_t n = 0; n < pVoltageChannels; n++) Voltage[n] = 0.0;
+          for(uint8_t n = 0; n < pCurrentChannels; n++) Current[n] = 0.0;
         }
-        bool Res = Write(Result);
-        Pending--;
-        if((Pending == 0) || (Res == false)) return false;
+        for(uint8_t n = 0; n < pVoltageChannels; n++) Voltage[n] += pWorkingBlock->VoltageSample(n, i);
+        for(uint8_t n = 0; n < pCurrentChannels; n++) Current[n] += pWorkingBlock->CurrentSample(n, i);
+        Count++;
+        if(Count == Downsample) {
+          Count = 0;
+          json Result = json::array();
+          for(auto &Serie : Headers) {
+            if(Serie == "Voltage_Samples") {
+              json Tmp = json::array();
+              for(uint8_t n = 0; n < pVoltageChannels; n++) Tmp.push_back(Voltage[n] / Downsample);
+              Result.push_back(Tmp);
+            }
+            if(Serie == "Current_Samples") {
+              json Tmp = json::array();
+              for(uint8_t n = 0; n < pCurrentChannels; n++) Tmp.push_back(Current[n] / Downsample);
+              Result.push_back(Tmp);
+            }
+          }
+          bool Res = Write(Result);
+          Pending--;
+          if((Pending == 0) || (Res == false)) return false;
+        }
       }
       return true;
     };
-    pConsumers->OnAllWrite(Func2);
+    pConsumers->OnWrite(Func2);
   };
   req.SuccessStreamArray(Func);
 }
@@ -497,7 +511,11 @@ void AnalyzerSoft::DelEvent(HTTPRequest &req) {
 }
 void AnalyzerSoft::TestAlarm(HTTPRequest &req) {
   if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
-  if(pConsumers->OnWrite([&]() { pAlarms->TestAlarm(req, pAggreg200MS); }) == false) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
+  auto Func = [&]() {
+    pAlarms->TestAlarm(req, pAggreg200MS);
+    return false;
+  };
+  if(pConsumers->OnWrite(Func) == false) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
 }
 void AnalyzerSoft::GetAlarms(HTTPRequest &req) {
   if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
@@ -555,6 +573,10 @@ void AnalyzerSoft::SetAlarms(HTTPRequest &req) {
   if(req.Status() == HTTP_OK) pSync->Push("SetAlarms", req.Params());
 }
 bool AnalyzerSoft::HandleModbus(uint8_t *buff, const uint16_t start, const uint8_t len) {
-  return pConsumers->OnWrite([&]() { pAggreg200MS->HandleModbus(buff, start, len); });
+  auto Func = [&]() {
+    pAggreg200MS->HandleModbus(buff, start, len);
+    return false;
+  };
+  return pConsumers->OnWrite(Func);
 }
 //----------------------------------------------------------------------------------------------------------------------

@@ -43,7 +43,7 @@ clean:
 	@rm -rf Tmp/$(TARGET) Tmp/*.js
 
 READCONFIG:
-	@echo "Building version '$(BUILD_NAME)_$(BUILD_DATE)'"
+	@echo "Building version '$(BUILD_BRANCH)_$(BUILD_DATE)'"
 ifdef CONFIG
 	@mkdir -p Tmp/$(TARGET)
 	@echo "Reading configuration from '$(CONFIG)'"

@@ -33,12 +33,12 @@ AnalyzerSoftBlock::~AnalyzerSoftBlock() {
   if(pVoltageSamples != NULL) free(pVoltageSamples);
   if(pCurrentSamples != NULL) free(pCurrentSamples);
 }
-void AnalyzerSoftBlock::PushSample(float *voltageSamples, float *currentSamples) {
+void AnalyzerSoftBlock::PushSample(const float *voltageSamples, const float *currentSamples) {
   memcpy(&pVoltageSamples[pVoltageChannels * pBlockSamples], voltageSamples, sizeof(float) * pVoltageChannels);
   memcpy(&pCurrentSamples[pCurrentChannels * pBlockSamples], currentSamples, sizeof(float) * pCurrentChannels);
   pBlockSamples++;
 }
-void AnalyzerSoftBlock::PushCycle(uint16_t len) {
+void AnalyzerSoftBlock::PushCycle(const uint16_t len) {
   pBlockCycles[pBlockCyclesCount] = len;
   pBlockCyclesCount++;
 }

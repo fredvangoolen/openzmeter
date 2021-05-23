@@ -23,12 +23,11 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class ConsumerQueue {
   private :
-    volatile bool           pTerminate;
-    uint16_t                pConsumers;
     uint16_t                pHandledCallbacks;
     uint16_t                pCallbacks;
-    uint16_t                pMaxConsumers;
-    bool                    pDataReady;
+    uint16_t                pMaxCallbacks;
+    uint16_t                pDataSequence;
+    bool                    pConsumerEnter;
     pthread_mutex_t         pMutex;
     pthread_cond_t          pConsumerEnterCond;
     pthread_cond_t          pConsumerWaitCond;
@@ -38,6 +37,6 @@ class ConsumerQueue {
     ~ConsumerQueue();
     void  Write();
     void  Wait();
-    bool  OnWrite(function<void()> fn);
-    bool  OnAllWrite(function<bool()> fn);
+//    bool  OnWrite(function<void()> fn);
+    bool  OnWrite(function<bool()> fn);
 };

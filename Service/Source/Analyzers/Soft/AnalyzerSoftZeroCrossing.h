@@ -53,6 +53,6 @@ class AnalyzerSoftZeroCrossing final {
     AnalyzerSoftZeroCrossing(const Analyzer::AnalyzerMode mode, const float samplerate);
     ~AnalyzerSoftZeroCrossing();
     void               Config(const float nominalVolt, const float nominalFreq);
-    AnalyzerSoftBlock *PushSample(float *voltageSamples, float *currentSamples);
+    AnalyzerSoftBlock *PushSample(const float *voltageSamples, const float *currentSamples);
 };
 // ---------------------------------------------------------------------------------------------------------------------

@@ -116,6 +116,6 @@ class AnalyzerSoft : public Analyzer {
   public :
     AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate);
     ~AnalyzerSoft();
-    void BufferAppend(float *voltageSamples, float *currentSamples);
+    void BufferAppend(const float *voltageSamples, const float *currentSamples);
 };
 //----------------------------------------------------------------------------------------------------------------------

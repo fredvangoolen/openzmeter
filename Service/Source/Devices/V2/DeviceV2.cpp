@@ -330,7 +330,7 @@ void DeviceV2::Config(const json& config) {
   pthread_mutex_unlock(&pConfigLock);
 }
 void *DeviceV2::Thread() {
-  uint64_t     TimeCounter    = Tools::GetTime64();
+  uint64_t     LastTime       = 0;
   USBTransfer *SignalTransfer = new USBTransfer(this, 2);
   USBTransfer *Transfers[DEVICEV2_TRANSFERS];
   for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) Transfers[n] = new USBTransfer(this, 4096);
@@ -341,8 +341,8 @@ void *DeviceV2::Thread() {
     if(pTerminate == true) continue;
     if(pDeviceHandle != NULL) {
       uint64_t Time = Tools::GetTime64();
-      if((Time - 1000) > TimeCounter) {
-        TimeCounter = Time;
+      if((Time - 1000) > LastTime) {
+        LastTime = Time;
         uint16_t Status = 0x0000;
         if(pEnabled == false) {
           Status |= 0x0001;
@@ -438,7 +438,7 @@ void *DeviceV2::Thread() {
       }
       LogFile::Info("DeviceV2 with serial '%s' connected", pSerial.c_str());
       pNewDevice = NULL;
-      TimeCounter = 0;
+      LastTime = 0;
     }
   }
   if(pDeviceHandle != NULL) libusb_release_interface(pDeviceHandle, 0);
@@ -456,7 +456,8 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
     for(int Pos = 0; Pos < (transfer->actual_length / 2); Pos++) {
       uint8_t  Seq    = Samples[Pos] >> 13;
       uint16_t Sample = (Samples[Pos] & 0x1FFF);
-      if((Seq == 7) && (StatusRecv == false)) {
+      if(Seq == 7) {
+        if(StatusRecv == true) continue;
         uint8_t Action  = (Sample & 0x0300) >> 8;
         if((Action == CLICK) && (pButtonAction == false)) {
           MessageLoop::SendMessage("Bluetooth_Toogle");

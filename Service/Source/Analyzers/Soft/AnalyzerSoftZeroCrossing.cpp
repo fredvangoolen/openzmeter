@@ -77,7 +77,7 @@ void AnalyzerSoftZeroCrossing::Config(const float nominalVolt, const float nomin
   pthread_mutex_unlock(&pMutex);
   LogFile::Debug("AnalyzerSoftZeroCrosing configured");
 }
-AnalyzerSoftBlock *AnalyzerSoftZeroCrossing::PushSample(float *voltageSamples, float *currentSamples) {
+AnalyzerSoftBlock *AnalyzerSoftZeroCrossing::PushSample(const float *voltageSamples, const float *currentSamples) {
   pthread_mutex_lock(&pMutex);
   if(pWorkingBlock == NULL) {
     pWorkingBlock = new AnalyzerSoftBlock(pVoltageChannels, pCurrentChannels, pSequence, pMaxSamples, pNominalVoltage, pNominalFrequency);
@@ -86,24 +86,26 @@ AnalyzerSoftBlock *AnalyzerSoftZeroCrossing::PushSample(float *voltageSamples, f
   if(pNominalFrequency == 0) {
     pWorkingBlock->PushSample(voltageSamples, currentSamples);
   } else {
+    float VoltageSamples[3];
     pWorkingBlock->PushSample(&pDelayVoltage[pVoltageChannels * pDelayPos], &pDelayCurrent[pCurrentChannels * pDelayPos]);
     memcpy(&pDelayVoltage[pDelayPos * pVoltageChannels], voltageSamples, sizeof(float) * pVoltageChannels);
     memcpy(&pDelayCurrent[pDelayPos * pCurrentChannels], currentSamples, sizeof(float) * pCurrentChannels);
     pDelayPos = (pDelayPos + 1) % pDelaySize;
     for(uint8_t i = 0; i < pVoltageChannels; i++) {
+      VoltageSamples[i] = voltageSamples[i];
       for(uint8_t n = 0; n < FILTERSTAGES; n++) {
-        float Out = voltageSamples[i] * pFilters[n].A0 + pFilters[n].ChannelsZ1[i];
-        pFilters[n].ChannelsZ1[i] = voltageSamples[i] * pFilters[n].A1 + pFilters[n].ChannelsZ2[i] - pFilters[n].B1 * Out;
-        pFilters[n].ChannelsZ2[i] = voltageSamples[i] * pFilters[n].A2 - pFilters[n].B2 * Out;
-        voltageSamples[i] = Out;
+        float Out = VoltageSamples[i] * pFilters[n].A0 + pFilters[n].ChannelsZ1[i];
+        pFilters[n].ChannelsZ1[i] = VoltageSamples[i] * pFilters[n].A1 + pFilters[n].ChannelsZ2[i] - pFilters[n].B1 * Out;
+        pFilters[n].ChannelsZ2[i] = VoltageSamples[i] * pFilters[n].A2 - pFilters[n].B2 * Out;
+        VoltageSamples[i] = Out;
       }
     }
     pCycleLen++;
-    if((((pLastSamples[0] >= 0.0) && (voltageSamples[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (voltageSamples[0] > 0.0))) && (pCycleLen > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))) {
+    if((((pLastSamples[0] >= 0.0) && (VoltageSamples[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (VoltageSamples[0] > 0.0))) && (pCycleLen > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))) {
       pWorkingBlock->PushCycle(pCycleLen);
       pCycleLen = 0;
     }
-    memcpy(pLastSamples, voltageSamples, sizeof(pLastSamples));
+    memcpy(pLastSamples, VoltageSamples, sizeof(pLastSamples));
   }
   AnalyzerSoftBlock *Result = NULL;
   if((pWorkingBlock->Samples() == pMaxSamples) || (pWorkingBlock->Cycles() == pMaxCycles)) {

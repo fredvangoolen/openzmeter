@@ -53,7 +53,9 @@ TaskPool::~TaskPool() {
   LogFile::Info("Stoping TaskPool...");
   pthread_mutex_lock(&pMutex);
   MessageLoop::UnregisterListener("TaskPool_PeriodicTasks");
-  while(pRunningTasks > 0) pthread_cond_wait(&pCond, &pMutex);
+  while(pRunningTasks > 0) {
+    if(pthread_cond_wait(&pCond, &pMutex) != 0)  LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+  }
   while(pFreeTasks.size() > 0) {
     Task_t *Tmp = pFreeTasks.front();
     if(pthread_mutex_lock(&Tmp->Mutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
@@ -133,7 +135,7 @@ void TaskPool::SetThreadNice(pthread_t &thread, const Prio prio) {
 void TaskPool::SetThreadProperties(pthread_t thread, const Prio prio) {
   if((pMinPrio == -1) || (pMaxPrio == -1) || (pUsePrio == false)) return SetThreadNice(thread, prio);
   sched_param Param;
-  Param.sched_priority = (prio == IDLE) ? 1 : (prio == LOW) ? 10 : (prio == NORMAL) ? 30 : (prio == ABOUTNORMAL) ? 40 : 90;
+  Param.sched_priority = (prio == IDLE) ? 1 : (prio == LOW) ? 10 : (prio == NORMAL) ? 30 : (prio == ABOUTNORMAL) ? 40 : pMaxPrio;
   if(Param.sched_priority < pMinPrio) Param.sched_priority = pMinPrio;
   if(Param.sched_priority > pMaxPrio) Param.sched_priority = pMaxPrio;
   if(pthread_setschedparam(thread, SCHED_FIFO, &Param) != 0) {

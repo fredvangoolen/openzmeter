@@ -32,8 +32,8 @@ class AnalyzerSoftBlock {
   public :
     AnalyzerSoftBlock(const uint8_t vChanels, const uint8_t cChannels, const uint64_t seq, const uint16_t maxLen, const float nominalVolt, const float nominalFreq);
     ~AnalyzerSoftBlock();
-    void      PushSample(float *voltageSamples, float *currentSamples);
-    void      PushCycle(uint16_t len);
+    void      PushSample(const float *voltageSamples, const float *currentSamples);
+    void      PushCycle(const uint16_t len);
     uint16_t  Samples() const;
     uint8_t   Cycles() const;
     uint16_t  CycleLen(const uint8_t cycle) const;
