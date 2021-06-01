@@ -36,7 +36,8 @@ class DeviceV2 final : public Device {
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pThread;                  //Descriptor del hilo de captura
     volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
-    vector<DeviceV2Analyzer*>    pAnalyzers;               //Listado de analyzadores
+    DeviceV2Analyzer            *pAnalyzers[5];            //Listado de analyzadores
+    uint8_t                      pAnalyzersCount;          //Running analyzers
     pthread_mutex_t              pConfigLock;              //Block configuration params
     float                        pVoltageGain[3];          //Ganancia de tension
     float                        pCurrentGain[4];          //Ganancia de corriente

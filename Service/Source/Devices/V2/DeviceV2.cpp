@@ -91,6 +91,7 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
   pAverageLocks       = PTHREAD_RWLOCK_INITIALIZER;
   pConfigLock         = PTHREAD_MUTEX_INITIALIZER;
   pThread             = 0;
+  pAnalyzersCount     = 0;
   pChannelsDelay      = NULL;
   pButtonAction       = false;
   pDeviceHandle       = NULL;
@@ -128,17 +129,17 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
 }
 uint32_t DeviceV2::AnalyzersCount() {
   pthread_mutex_lock(&pConfigLock);
-  uint32_t Count = pAnalyzers.size();
+  uint32_t Count = pAnalyzersCount;
   pthread_mutex_unlock(&pConfigLock);
   return Count;
 }
 void DeviceV2::ClearAnalyzers() {
   pthread_mutex_lock(&pConfigLock);
-  while(pAnalyzers.size() > 0) {
-    AnalyzerManager::DelAnalyzer(pAnalyzers.back()->Serial());
-    delete pAnalyzers.back();
-    pAnalyzers.pop_back();
+  for(uint8_t n = 0; n < pAnalyzersCount; n++) {
+    AnalyzerManager::DelAnalyzer(pAnalyzers[n]->Serial());
+    delete pAnalyzers[n];
   }
+  pAnalyzersCount = 0;
   pthread_mutex_unlock(&pConfigLock);
 }
 DeviceV2::~DeviceV2() {
@@ -318,15 +319,17 @@ void DeviceV2::Config(const json& config) {
       }
       Name = Name + ((Mode == Analyzer::PHASE3) ? "_3P" : "_3PN");
     }
-    pAnalyzers.push_back(new DeviceV2Analyzer(Name, Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzers.size()) + "/Analyzer", 24000.0, VoltageMap, CurrentMap, InvertMap));
-    AnalyzerManager::AddAnalyzer(pAnalyzers.back());
+    pAnalyzers[pAnalyzersCount] = new DeviceV2Analyzer(Name, Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzersCount) + "/Analyzer", VoltageMap, CurrentMap, InvertMap);
+    AnalyzerManager::AddAnalyzer(pAnalyzers[pAnalyzersCount]);
+    pAnalyzersCount++;
   }
   if(config["Calculated"]["Enabled"]) {
     string Voltage = config["Calculated"]["Voltage"];
     float CurrentMap[4];
     for(uint8_t Ch = 0; Ch < 4; Ch++) CurrentMap[Ch] = (config["Calculated"]["Current"][Ch] == "UNUSED") ? 0.0 : (config["Calculated"]["Current"][Ch] == "ADD") ? 1.0 : -1.0;
-    pAnalyzers.push_back(new DeviceV2Analyzer(pSerial + "_CAL_1P", "/Devices/" + pSerial + "/Calculated/Analyzer", 24000.0, Voltage[2] - '1', CurrentMap));
-    AnalyzerManager::AddAnalyzer(pAnalyzers.back());
+    pAnalyzers[pAnalyzersCount] = new DeviceV2Analyzer(pSerial + "_CAL_1P", "/Devices/" + pSerial + "/Calculated/Analyzer", Voltage[2] - '1', CurrentMap);
+    AnalyzerManager::AddAnalyzer(pAnalyzers[pAnalyzersCount]);
+    pAnalyzersCount++;
   }
   pthread_mutex_unlock(&pConfigLock);
 }
@@ -516,7 +519,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
               Values[5] = (Values[5] + pCurrentOffset[2]) * pCurrentGain[2];
               Values[6] = (Values[6] + pCurrentOffset[3]) * pCurrentGain[3];
             }
-            for(auto &Tmp : pAnalyzers) Tmp->BufferAppend(Values);
+            for(uint8_t n = 0; n < pAnalyzersCount; n++) pAnalyzers[n]->BufferAppend(Values);
           }
           pCaptureSize = 0;
         } else {
@@ -562,6 +565,7 @@ void DeviceV2::GetDevice(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
   json Config = ConfigFile::ReadConfig("/Devices/" + pSerial);
   for(uint8_t n = 0; n < Config["Outputs"].size(); n++) Config["Outputs"][n].erase("Analyzer");
+  Config["Calculated"].erase("Analyzer");
   pthread_rwlock_rdlock(&pAverageLocks);
   Config["Wave_Average"] = json::object();
   Config["Wave_Average"]["Voltage"] = json::array();
@@ -590,6 +594,7 @@ void  DeviceV2::SetDevice(HTTPRequest &req) {
       if(n < Orig["Outputs"].size() && (ConfigIN["Outputs"][n].contains("Mode") && Orig["Outputs"][n].contains("Mode")) && Orig["Outputs"][n].contains("Analyzer") && (ConfigIN["Outputs"][n]["Mode"] == Orig["Outputs"][n]["Mode"])) ConfigIN["Outputs"][n]["Analyzer"] = Orig["Outputs"][n]["Analyzer"];
     }
   }
+  if(ConfigIN.contains("Calculated") && ConfigIN["Calculated"].is_object() && Orig.contains("Calculated") && Orig["Calculated"].contains("Analyzer")) ConfigIN["Calculated"]["Analyzer"] = Orig["Calculated"]["Analyzer"];
   Config(CheckConfig(ConfigIN));
   req.Success(json::object());
 }
