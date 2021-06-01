@@ -10,11 +10,11 @@
       </div>
     </template>
     <template v-slot:footer>
-      <div class="row" style="text-align: center">
+      <!--div class="row" style="text-align: center">
         <div class="col-xs-4">Device is {{ Settings.MainsPowered ? '' : ' NOT ' }} mains powered</div>
         <div class="col-xs-4">Battery is {{ Settings.Charging ? '' : ' NOT ' }} charging </div>
         <div class="col-xs-4">Battery voltage is {{ Round(Settings.BatteryVoltage, 2) }} V</div>
-      </div>
+      </div-->
     </template>
     <div class="row" v-if="View=='Inputs'">
       <div class="col-xs-12" style="margin-top:5px;">

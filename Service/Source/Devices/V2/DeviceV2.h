@@ -20,13 +20,11 @@
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV2_VID             0x0483                          //Product ID
 #define DEVICEV2_PID             0x7270                          //Device ID
-#define DEVICEV2_VERSION         0x0201                          //Device version
 #define DEVICEV2_MANSTRING       "zRed"                          //Manufacturer string
 #define DEVICEV2_PRODSTRING      "openZmeter - Capture device"   //Product string
 #define DEVICEV2_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
 #define DEVICEV2_ENDPOINT_OUT      0x02                          //Endpoint de escritura de datos
-#define DEVICEV2_SAMPLEFREQ       24000                          //Frequencia de muestreo
-#define DEVICEV2_TRANSFERS           16                          //Numero de transferencias a encolar
+#define DEVICEV2_TRANSFERS          128                          //Numero de transferencias a encolar
 //----------------------------------------------------------------------------------------------------------------------
 class DeviceV2 final : public Device {
   private :
@@ -62,9 +60,9 @@ class DeviceV2 final : public Device {
     uint8_t                      pChannelsDelaySize[7];    //Delay line size for each channel
     uint8_t                      pChannelsDelayPos[7];     //Delay line position for each channel
     int16_t                     *pChannelsDelay;           //Channel delay line buffers
-    float                        pBatteryVoltage;          //Device battery voltage
-    bool                         pMainsPowered;            //Device is mains powered
-    bool                         pCharging;                //Device batery is charging
+//    float                        pBatteryVoltage;          //Device battery voltage
+//    bool                         pMainsPowered;            //Device is mains powered
+//    bool                         pCharging;                //Device batery is charging
   private :
     static bool  Register();
     static void  GetInstances();

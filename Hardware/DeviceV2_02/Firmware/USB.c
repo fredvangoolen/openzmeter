@@ -35,7 +35,7 @@ const uint8_t USB_Descriptor[] = {
   0x08,                                   /* bMaxPacketSize0 */
   0x83, 0x04,                             /* idVendor */
   0x70, 0x72,                             /* idProduct */
-  0x01, 0x02,                             /* bcdDevice = 2.02 */
+  0x01, 0x02,                             /* bcdDevice = 2.01 */
   1,                                      /* Index of string descriptor describing manufacturer */
   2,                                      /* Index of string descriptor describing product */
   3,                                      /* Index of string descriptor describing the device's serial number */
@@ -101,17 +101,17 @@ uint8_t      USB_Buffer[32] __attribute__ ((aligned (4)));
 PMA_Table_t *EPT(uint8_t ep) {
   return (PMA_Table_t*)((ep & 0x07) * 8 + USB_PMAADDR);
 }
-volatile uint16_t *EPR(uint8_t ep) {
+uint16_t *EPR(uint8_t ep) {
   return (uint16_t*) ((ep & 0x07) * 4 + USB_BASE);
 }
-void         USB_IntToUnicode(uint32_t value, uint8_t *pbuf) {
+void USB_IntToUnicode(uint32_t value, uint8_t *pbuf) {
   for(uint8_t i = 0; i < 8; i++) {
     *(pbuf++) = (value & 0x0F) + (((value & 0x0F) < 0x0A) ? '0' : 'A' - 10);
     *(pbuf++) = 0;
     value = value >> 4;
   }
 }
-uint16_t     USB_GetNextPMA(uint16_t sz) {
+uint16_t USB_GetNextPMA(uint16_t sz) {
   unsigned _result = USB_PMASIZE;
   for(int i = 0; i < 8; i++) {
     PMA_Table_t *tbl = EPT(i);

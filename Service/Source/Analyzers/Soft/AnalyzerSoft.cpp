@@ -425,7 +425,7 @@ void AnalyzerSoft::GetWaveStream(HTTPRequest &req) {
   if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   if(!req.CheckParamSet("Series", {"Voltage_Samples", "Current_Samples"})) return;
   if(!req.CheckParamNumber("Length")) return;
-  if(!req.CheckParamNumber("Downsample")) return;
+  if(!req.CheckParamNumber("Downsample") || (req.Param("Downsample") < 1)) return;
   vector<string> Headers    = req.Param("Series");
   uint8_t        Downsample = req.Param("Downsample").get<uint8_t>();
   uint64_t       Length     = req.Param("Length").get<float>() * pSamplerate / Downsample;

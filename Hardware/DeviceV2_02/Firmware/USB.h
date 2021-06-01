@@ -116,7 +116,8 @@ int32_t      USB_WriteEP(uint8_t ep, void *buf, uint16_t blen);
 USB_Response USB_HandleEP0_Class(USB_ControlRequest_t *req, USB_Request_Callback_t *callback);
 USB_Response USB_SetConfiguration (uint8_t cfg);
 
-
+PMA_Table_t *EPT(uint8_t ep);
+uint16_t *EPR(uint8_t ep);
 
 /**\addtogroup USBD_HW USB hardware driver
  * \brief Contains HW driver API

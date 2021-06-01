@@ -37,6 +37,5 @@ class ConsumerQueue {
     ~ConsumerQueue();
     void  Write();
     void  Wait();
-//    bool  OnWrite(function<void()> fn);
     bool  OnWrite(function<bool()> fn);
 };

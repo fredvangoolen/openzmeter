@@ -43,7 +43,7 @@ void DeviceV2::GetInstances() {
     if(Error < 0) return LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, libusb_error_name(Error));
     if(Descriptor.idVendor != DEVICEV2_VID) continue;
     if(Descriptor.idProduct != DEVICEV2_PID) continue;
-    if(Descriptor.bcdDevice != DEVICEV2_VERSION) continue;
+    if(Descriptor.bcdDevice != 0x0201) continue;
     libusb_device_handle *Dev_Handle = NULL;
     Error = libusb_open(Devs[i], &Dev_Handle);
     if(Error < 0) {
@@ -85,9 +85,9 @@ void DeviceV2::GetInstances() {
 }
 DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device V2") {
   LogFile::Info("Starting DeviceV2 with serial '%s' ...", serial.c_str());
-  pBatteryVoltage     = 0;
-  pMainsPowered       = false;
-  pCharging           = false;
+//  pBatteryVoltage     = 0;
+//  pMainsPowered       = false;
+//  pCharging           = false;
   pAverageLocks       = PTHREAD_RWLOCK_INITIALIZER;
   pConfigLock         = PTHREAD_MUTEX_INITIALIZER;
   pThread             = 0;
@@ -213,8 +213,9 @@ json DeviceV2::CheckConfig(const json &config) {
           if((CurrentMask & (1 << Channel)) != 0) Error = true;
           CurrentMask |= (1 << Channel);
         } else {
-          Output["Voltage"] = json::parse("[\"CH1\", \"CH2\", \"CH3\"]");
-          Output["Current"] = ((Output["Mode"] == "3PHASE") ? json::parse("[\"+CH1\", \"+CH2\", \"+CH3\"]") : json::parse("[\"+CH1\", \"+CH2\", \"+CH3\", \"+CH4\"]"));
+          Output["Voltage"] = {"CH1", "CH2", "CH3"};
+          Output["Current"] = {"+CH1", "+CH2", "+CH3"};
+          if(Output["Mode"] == "3PHASE+N") Output["Current"].push_back("+CH4");
           if(Tmp.contains("Voltage") && Tmp["Voltage"].is_array() && (Tmp["Voltage"].size() == Output["Voltage"].size()) && Tmp.contains("Current") && Tmp["Current"].is_array() && (Tmp["Current"].size() == Output["Current"].size())) {
             for(uint8_t i = 0; i < Output["Voltage"].size(); i++) {
               if(Tmp["Voltage"][i].is_string() && ((Tmp["Voltage"][i] == "CH1") || (Tmp["Voltage"][i] == "CH2") || (Tmp["Voltage"][i] == "CH3"))) Output["Voltage"][i] = Tmp["Voltage"][i];
@@ -317,14 +318,14 @@ void DeviceV2::Config(const json& config) {
       }
       Name = Name + ((Mode == Analyzer::PHASE3) ? "_3P" : "_3PN");
     }
-    pAnalyzers.push_back(new DeviceV2Analyzer(Name, Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzers.size()) + "/Analyzer", DEVICEV2_SAMPLEFREQ, VoltageMap, CurrentMap, InvertMap));
+    pAnalyzers.push_back(new DeviceV2Analyzer(Name, Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzers.size()) + "/Analyzer", 24000.0, VoltageMap, CurrentMap, InvertMap));
     AnalyzerManager::AddAnalyzer(pAnalyzers.back());
   }
   if(config["Calculated"]["Enabled"]) {
     string Voltage = config["Calculated"]["Voltage"];
     float CurrentMap[4];
     for(uint8_t Ch = 0; Ch < 4; Ch++) CurrentMap[Ch] = (config["Calculated"]["Current"][Ch] == "UNUSED") ? 0.0 : (config["Calculated"]["Current"][Ch] == "ADD") ? 1.0 : -1.0;
-    pAnalyzers.push_back(new DeviceV2Analyzer(pSerial + "_CAL_1P", "/Devices/" + pSerial + "/Calculated/Analyzer", DEVICEV2_SAMPLEFREQ, Voltage[2] - '1', CurrentMap));
+    pAnalyzers.push_back(new DeviceV2Analyzer(pSerial + "_CAL_1P", "/Devices/" + pSerial + "/Calculated/Analyzer", 24000.0, Voltage[2] - '1', CurrentMap));
     AnalyzerManager::AddAnalyzer(pAnalyzers.back());
   }
   pthread_mutex_unlock(&pConfigLock);
@@ -333,7 +334,7 @@ void *DeviceV2::Thread() {
   uint64_t     LastTime       = 0;
   USBTransfer *SignalTransfer = new USBTransfer(this, 2);
   USBTransfer *Transfers[DEVICEV2_TRANSFERS];
-  for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) Transfers[n] = new USBTransfer(this, 4096);
+  for(uint8_t n = 0; n < DEVICEV2_TRANSFERS; n++) Transfers[n] = new USBTransfer(this, 8192);
   while((pTerminate == false) || (pSubmittedTransfers > 0)) {
     struct timeval tv = { 0, 10000 };
     int Result = libusb_handle_events_timeout_completed(pContext, &tv, NULL);
@@ -464,9 +465,9 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
         } else if((Action == LONG_CLICK) && (pButtonAction == false)) {
           MessageLoop::SendMessage("PowerOff");
         }
-        pBatteryVoltage = 2.96 + ((Sample & 0x00FC) >> 2) * 0.02;
-        pCharging       = (Sample & 0x0002) ? true: false;
-        pMainsPowered   = (Sample & 0x0001) ? true: false;
+//        pBatteryVoltage = 0;
+//        pCharging       = false;
+//        pMainsPowered   = false;
         pButtonAction = (Action != NONE);
         StatusRecv = true;
       } else if(pCaptureSize == Seq) {
@@ -474,10 +475,10 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
         if(pCaptureSize == 6) {
           for(uint8_t Ch = 0; Ch < 7; Ch++) pRunAverageValues[Ch] += pCapture[Ch];
           pRunAverageCounter++;
-          if(pRunAverageCounter == (DEVICEV2_SAMPLEFREQ * 10)) {
+          if(pRunAverageCounter == 240000) {
             pthread_rwlock_wrlock(&pAverageLocks);
             for(uint8_t Ch = 0; Ch < 7; Ch++) {
-              pAverageValues[Ch] = pRunAverageValues[Ch] / (DEVICEV2_SAMPLEFREQ * 10.0);
+              pAverageValues[Ch] = pRunAverageValues[Ch] / 240000.0;
               pRunAverageValues[Ch] = 0;
             }
             pthread_rwlock_unlock(&pAverageLocks);
@@ -574,9 +575,9 @@ void DeviceV2::GetDevice(HTTPRequest &req) {
   Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
   pthread_rwlock_unlock(&pAverageLocks);
   pthread_mutex_lock(&pConfigLock);
-  Config["MainsPowered"] = pMainsPowered;
-  Config["Charging"] = pCharging;
-  Config["BatteryVoltage"] = pBatteryVoltage;
+//  Config["MainsPowered"] = pMainsPowered;
+//  Config["Charging"] = pCharging;
+//  Config["BatteryVoltage"] = pBatteryVoltage;
   pthread_mutex_unlock(&pConfigLock);
   req.Success(Config);
 }
