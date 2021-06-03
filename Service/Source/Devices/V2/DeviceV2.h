@@ -17,6 +17,7 @@
 #include "Device.h"
 #include "USBTransfer.h"
 #include "DeviceV2Analyzer.h"
+#include "FilterDC.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV2_VID             0x0483                          //Product ID
 #define DEVICEV2_PID             0x7270                          //Device ID
@@ -33,6 +34,7 @@ class DeviceV2 final : public Device {
   private :
     static bool                  pRegistered;
   private :
+    FilterDC                    *pFilterDC;                //DC Filter
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pThread;                  //Descriptor del hilo de captura
     volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes
@@ -43,9 +45,6 @@ class DeviceV2 final : public Device {
     float                        pCurrentGain[4];          //Ganancia de corriente
     float                        pVoltageOffset[3];        //Offset de tension
     float                        pCurrentOffset[4];        //Offset de corriente
-    float                        pFilterZ1[7];             //DC block filter coeff
-    float                        pFilterZ2[7];             //DC block filter coeff
-    bool                         pBlockDC;                 //DC blocking enabled
     bool                         pHighGain;                //Choose high gain mode
     int16_t                      pCapture[7];              //Captured samples
     uint8_t                      pCaptureSize;             //Captured samples count
@@ -61,9 +60,6 @@ class DeviceV2 final : public Device {
     uint8_t                      pChannelsDelaySize[7];    //Delay line size for each channel
     uint8_t                      pChannelsDelayPos[7];     //Delay line position for each channel
     int16_t                     *pChannelsDelay;           //Channel delay line buffers
-//    float                        pBatteryVoltage;          //Device battery voltage
-//    bool                         pMainsPowered;            //Device is mains powered
-//    bool                         pCharging;                //Device batery is charging
   private :
     static bool  Register();
     static void  GetInstances();

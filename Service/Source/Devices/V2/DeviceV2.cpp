@@ -85,9 +85,6 @@ void DeviceV2::GetInstances() {
 }
 DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device V2") {
   LogFile::Info("Starting DeviceV2 with serial '%s' ...", serial.c_str());
-//  pBatteryVoltage     = 0;
-//  pMainsPowered       = false;
-//  pCharging           = false;
   pAverageLocks       = PTHREAD_RWLOCK_INITIALIZER;
   pConfigLock         = PTHREAD_MUTEX_INITIALIZER;
   pThread             = 0;
@@ -96,14 +93,15 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
   pButtonAction       = false;
   pDeviceHandle       = NULL;
   pNewDevice          = NULL;
+  pFilterDC           = NULL;
   pSubmittedTransfers = 0;
   pRunAverageCounter  = 0;
   pTerminate          = false;
   pCaptureSize        = 0xFF;
   for(uint8_t n = 0; n < 7; n++) pRunAverageValues[n] = 0;
-  for(uint8_t n = 0; n < 7; n++) pAverageValues[n] = 0.0;
-  for(uint8_t n = 0; n < 7; n++) pFilterZ1[n] = 0.0;
-  for(uint8_t n = 0; n < 7; n++) pFilterZ2[n] = 0.0;
+  for(uint8_t n = 0; n < 7; n++) pAverageValues[n]    = 0.0;
+//  for(uint8_t n = 0; n < 7; n++) pFilterZ1[n] = 0.0;
+//  for(uint8_t n = 0; n < 7; n++) pFilterZ2[n] = 0.0;
   Config(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
   int Error = libusb_init(&pContext);
   if(Error < 0) {
@@ -147,6 +145,7 @@ DeviceV2::~DeviceV2() {
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   ClearAnalyzers();
+  if(pFilterDC != NULL) delete pFilterDC;
   if(pChannelsDelay != NULL) free(pChannelsDelay);
   LogFile::Info("DeviceV2 with serial '%s' stopped", pSerial.c_str());
 }
@@ -280,7 +279,6 @@ void DeviceV2::Config(const json& config) {
   uint8_t  MaxDelay = 0;
   uint16_t DelayLen = 0;
   pHighGain = config["HighGain"];
-  pBlockDC = config["BlockDC"];
   pEnabled = config["Enabled"];
   for(uint8_t Ch = 0; Ch < 4; Ch++) {
     pCurrentGain[Ch] = config["CurrentGain"][Ch].get<float>() * (pHighGain ? 0.08132749817 : 0.15165198897);
@@ -293,6 +291,14 @@ void DeviceV2::Config(const json& config) {
   for(uint8_t Ch = 0; Ch < 4; Ch++) pChannelsDelaySize[3 + Ch] = (MaxDelay + 1) - Delays[Ch];
   for(uint8_t Ch = 0; Ch < 7; Ch++) DelayLen = DelayLen + pChannelsDelaySize[Ch];
   pChannelsDelay = (int16_t*)realloc(pChannelsDelay, sizeof(int16_t) * DelayLen);
+  if((config["BlockDC"] == true) && (pFilterDC == NULL)) {
+    pFilterDC = new FilterDC(7, 0.99999);
+    for(uint8_t Ch = 0; Ch < 3; Ch++) pVoltageOffset[Ch] = 0.0;
+    for(uint8_t Ch = 0; Ch < 4; Ch++) pCurrentOffset[Ch] = 0.0;
+  } else if((config["BlockDC"] == false) && (pFilterDC != NULL)) {
+    delete pFilterDC;
+    pFilterDC = NULL;
+  }
   memset(pChannelsDelay, 0, sizeof(int16_t) * DelayLen);
   for(auto &Tmp : config["Outputs"]) {
     Analyzer::AnalyzerMode  Mode = (Tmp["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Tmp["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
@@ -468,9 +474,6 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
         } else if((Action == LONG_CLICK) && (pButtonAction == false)) {
           MessageLoop::SendMessage("PowerOff");
         }
-//        pBatteryVoltage = 0;
-//        pCharging       = false;
-//        pMainsPowered   = false;
         pButtonAction = (Action != NONE);
         StatusRecv = true;
       } else if(pCaptureSize == Seq) {
@@ -496,29 +499,14 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
               pChannelsDelayPos[Ch] = (pChannelsDelayPos[Ch] + 1) % pChannelsDelaySize[Ch];
               DelayPtr = &DelayPtr[pChannelsDelaySize[Ch]];
             }
-            if(pBlockDC) { //Si el filtro DC esta activado
-              Values[0] = Values[0] * pVoltageGain[0];
-              Values[1] = Values[1] * pVoltageGain[1];
-              Values[2] = Values[2] * pVoltageGain[2];
-              Values[3] = Values[3] * pCurrentGain[0];
-              Values[4] = Values[4] * pCurrentGain[1];
-              Values[5] = Values[5] * pCurrentGain[2];
-              Values[6] = Values[6] * pCurrentGain[3];
-              for(uint8_t Ch = 0; Ch < 7; Ch++) {
-                float In = Values[Ch];
-                Values[Ch] = In - pFilterZ1[Ch] + 0.99999 * pFilterZ2[Ch];
-                pFilterZ1[Ch] = In;
-                pFilterZ2[Ch] = Values[Ch];
-              }
-            } else {
-              Values[0] = (Values[0] + pVoltageOffset[0]) * pVoltageGain[0];
-              Values[1] = (Values[1] + pVoltageOffset[1]) * pVoltageGain[1];
-              Values[2] = (Values[2] + pVoltageOffset[2]) * pVoltageGain[2];
-              Values[3] = (Values[3] + pCurrentOffset[0]) * pCurrentGain[0];
-              Values[4] = (Values[4] + pCurrentOffset[1]) * pCurrentGain[1];
-              Values[5] = (Values[5] + pCurrentOffset[2]) * pCurrentGain[2];
-              Values[6] = (Values[6] + pCurrentOffset[3]) * pCurrentGain[3];
-            }
+            Values[0] = (Values[0] + pVoltageOffset[0]) * pVoltageGain[0];
+            Values[1] = (Values[1] + pVoltageOffset[1]) * pVoltageGain[1];
+            Values[2] = (Values[2] + pVoltageOffset[2]) * pVoltageGain[2];
+            Values[3] = (Values[3] + pCurrentOffset[0]) * pCurrentGain[0];
+            Values[4] = (Values[4] + pCurrentOffset[1]) * pCurrentGain[1];
+            Values[5] = (Values[5] + pCurrentOffset[2]) * pCurrentGain[2];
+            Values[6] = (Values[6] + pCurrentOffset[3]) * pCurrentGain[3];
+            if(pFilterDC != NULL) pFilterDC->Push(Values);
             for(uint8_t n = 0; n < pAnalyzersCount; n++) pAnalyzers[n]->BufferAppend(Values);
           }
           pCaptureSize = 0;
@@ -578,11 +566,6 @@ void DeviceV2::GetDevice(HTTPRequest &req) {
   Config["Wave_Average"]["Current"].push_back(pAverageValues[5]);
   Config["Wave_Average"]["Current"].push_back(pAverageValues[6]);
   pthread_rwlock_unlock(&pAverageLocks);
-  pthread_mutex_lock(&pConfigLock);
-//  Config["MainsPowered"] = pMainsPowered;
-//  Config["Charging"] = pCharging;
-//  Config["BatteryVoltage"] = pBatteryVoltage;
-  pthread_mutex_unlock(&pConfigLock);
   req.Success(Config);
 }
 void  DeviceV2::SetDevice(HTTPRequest &req) {

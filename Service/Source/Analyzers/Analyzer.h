@@ -22,7 +22,7 @@ using namespace std;
 //----------------------------------------------------------------------------------------------------------------------
 class Analyzer {
   public :
-    enum AnalyzerMode { PHASE1, PHASE3, PHASE3N };
+    enum AnalyzerMode { PHASE1, PHASE2, PHASE2N, PHASE3, PHASE3N };
     enum AnalyzerState { UNCONFIGURED, OFFLINE, SYNCING, ONLINE };
   public :
     static constexpr float   FrequencyRanges[]   = { -INFINITY, -5, -4, -3, -2, -1, -0.9, -0.8, -0.7, -0.6, -0.5, -0.45, -0.40, -0.35, -0.30, -0.25, -0.20, -0.15, -0.10, -0.05, 0.00, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 5, INFINITY };
