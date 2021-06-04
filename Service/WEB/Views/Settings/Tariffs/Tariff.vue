@@ -4,14 +4,13 @@
       <template v-slot:header>
         <div class="pull-left"><h4 class="modal-title">Tariffs template</h4></div>
         <div class="pull-right btn-group">
-          <button type="button" class="btn btn-default btn-xs" @click="Save" :class="{disabled: (Error!=null)}"><img :src="require('Imgs/diskette.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Main' }" @click="View='Main'">Main</button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Periods' }" @click="View='Periods'">Billing terms</button>
           <button type="button" class="btn btn-default btn-xs" :class="{ active: View=='Calendar' }" @click="View='Calendar'">Calendar</button>
           <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
         </div>
       </template>
-      <div class="alert alert-danger text-center" v-if="Error!=null">{{ Error }}</div>
       <div class="row" v-if="View=='Main'">
         <div class="col-xs-12">
           <label class="control-label">Name</label>
@@ -243,7 +242,7 @@
   export default {
     props: { tariff: Object, source: Object },
     data: function() {
-      return { Error: null, View: 'Main', ActivePeriod: 'P1', ActivePeriodIdx: 0, ActiveDay: 'D1', ActiveDayIdx: 0, ActiveYear: '2020', NewYearSelect: moment().year(), Tariff: null, ShowSpinner: false, FilterConcepts: [],
+      return { View: 'Main', ActivePeriod: 'P1', ActivePeriodIdx: 0, ActiveDay: 'D1', ActiveDayIdx: 0, ActiveYear: '2020', NewYearSelect: moment().year(), Tariff: null, ShowSpinner: false, FilterConcepts: [],
                Columns: [
                  { name: '__slot:concept', title: 'Concept' },
                  { name: '__slot:variable', title: 'Variable' },
@@ -338,13 +337,16 @@
         this.ActiveYear = String(this.NewYearSelect);
       },
       Save: function() {
+        this.ShowSpinner = true;
         this.Post((this.tariff == null) ? 'addTariff' : 'setTariff', this.Tariff).then(
-          (result) => {
+          () => {
+            this.$toast.open({type:'success', message: "Tariff '" + this.Tariff.Name + "' saved", duration: 3000});
+            this.ShowSpinner = false;
             this.$emit('close');
           },
           (fail) => {
-            this.Error = fail.body;
-            setTimeout(() => { this.Error = null; }, 5000);
+            if(fail != null) this.$toast.open({type:'error', message: "Failed to save tariff<br>" + fail.message, duration: 3000});
+            this.ShowSpinner = false;
           }
         );
       }

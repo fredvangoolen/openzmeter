@@ -99,7 +99,7 @@
         this.ShowSpinner = true;
         this.Post('getTariff', { Name: tariff.Name }).then(
           (result) => {
-            this.SourceTariff = result.body;
+            this.SourceTariff = result;
             this.ShowDialog = true;
             this.ShowSpinner = false;
           },
@@ -111,7 +111,7 @@
         this.ShowSpinner = true;
         this.Post('getTariff', { Name: tariff.Name }).then(
           (result) => {
-            this.Tariff = result.body;
+            this.Tariff = result;
             this.ShowDialog = true;
             this.ShowSpinner = false;
           },
@@ -131,7 +131,7 @@
       Configure: function(module) {
         if(module.Name == 'ESP_ESIOS') {
           this.Post('getESIOS', { }).then(
-            (result) => { this.Module = result.body; this.Module.Name = module.Name; },
+            (result) => { this.Module = result; this.Module.Name = module.Name; },
             (fail) => { }
           );
         }

@@ -47,14 +47,12 @@ FilterBandPass::FilterBandPass(const uint8_t channels, const uint8_t order, cons
     float w = 2.0 * M_PI * f0 / samplerate;
     complex<float> hc = exp(complex<float>(0, 1) * w);
     complex<float> hb = pow(hc, 2.0) - 1.0;
-    complex<float> ha = pow(hc, 2.0) +  pStages[i].CA1 * hc + pStages[i].CA2;
+    complex<float> ha = pow(hc, 2.0) + pStages[i].CA1 * hc + pStages[i].CA2;
     complex<float> h = hb / ha;
     pStages[i].CB0 = 1.0 / abs(h);
     pStages[i].CB1 = 0.0;
     pStages[i].CB2 = -1.0 / abs(h);
   }
-
-
 }
 FilterBandPass::~FilterBandPass() {
 
