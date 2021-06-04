@@ -24,10 +24,8 @@ constexpr float AnalyzerSoftEvents::Event_INT;
 constexpr float AnalyzerSoftEvents::Event_Hysteresis;
 constexpr float AnalyzerSoftEvents::Event_RAW_Time;
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate) : AnalyzerEvents(serial, mode) {
+AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate) : AnalyzerEvents(serial, mode), pSamplerate(samplerate), pVoltageChannels(Analyzer::VoltageChannels(mode)) {
   pMutex            = PTHREAD_MUTEX_INITIALIZER;
-  pVoltageChannels  = (mode == Analyzer::PHASE1) ? 1 : 3;
-  pSamplerate       = samplerate;
   pNominalVoltage   = 230.0;
   pEvent            = NULL;
   pPrevStationary   = false;

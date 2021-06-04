@@ -19,7 +19,7 @@
 #include "Tools.h"
 #include "MessageLoop.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSeries::AnalyzerSeries(const string &serial, const Analyzer::AnalyzerMode mode) : pSerial(serial), pVoltageChannels((mode == Analyzer::PHASE1) ? 1 : 3), pCurrentChannels((mode == Analyzer::PHASE1) ? 1 : (mode == Analyzer::PHASE3) ? 3 : 4) {
+AnalyzerSeries::AnalyzerSeries(const string &serial, const Analyzer::AnalyzerMode mode) : pSerial(serial), pVoltageChannels(Analyzer::VoltageChannels(mode)), pCurrentChannels(Analyzer::CurrentChannels(mode)) {
   MessageLoop::RegisterListener("Analyzer_" + pSerial + "_PeriodicTasks", [&]() { this->CleanOldSamples(); }, 60000);
 }
 AnalyzerSeries::~AnalyzerSeries() {

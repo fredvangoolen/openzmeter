@@ -42,9 +42,10 @@ class AnalyzerSoftEvents final : public AnalyzerEvents {
     static constexpr float Event_Hysteresis =  2.0;   //Hysteresis in % to end and event
     static constexpr float Event_RAW_Time   =  0.2;   //Time in seconds before and after event to store RAW samples
   private :
+    const float      pSamplerate;               //Input samplerate
+    const uint8_t    pVoltageChannels;          //Input channels
+  private :
     pthread_mutex_t  pMutex;                    //Configuration lock
-    uint8_t          pVoltageChannels;          //Input channels
-    float            pSamplerate;               //Input samplerate
     float            pNominalVoltage;           //Nominal voltage
     float            pNominalFrequency;         //Nominal frequency
     bool             pEnabled;                  //Events detection enabled

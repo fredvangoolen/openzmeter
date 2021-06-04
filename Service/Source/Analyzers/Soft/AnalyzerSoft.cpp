@@ -33,7 +33,7 @@
 //----------------------------------------------------------------------------------------------------------------------
 using namespace cctz;
 //----------------------------------------------------------------------------------------------------------------------
-AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id, mode), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels((mode == PHASE1) ? 1 : 3), pCurrentChannels((mode == PHASE1) ? 1 : (mode == PHASE3) ? 3 : 4) {
+AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, const string &optionPath, const float samplerate) : Analyzer(id, mode), pSamplerate(samplerate), pConfigPath(optionPath), pVoltageChannels(Analyzer::VoltageChannels(mode)), pCurrentChannels(Analyzer::CurrentChannels(mode)) {
   LogFile::Info("Starting AnalyzerSoft with serial '%s'...", pSerial.c_str());
   LogFile::Debug("Creating tables for analyzer '%s'", pSerial.c_str());
   Database DB(pSerial, true);
@@ -118,7 +118,16 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   ConfigOUT["NominalFrequency"] = 50.0;
   ConfigOUT["MaxCurrent"] = 35.0;
   ConfigOUT["MinCurrent"] = 0.1;
-  if(mode != Analyzer::PHASE1) {
+  if(mode == Analyzer::PHASE1) {
+    ConfigOUT["PhaseNames"] = json::array();
+    ConfigOUT["PhaseNames"].push_back("L");
+  } else if((mode == Analyzer::PHASE2) || (mode == Analyzer::PHASEN)) {
+    ConfigOUT["PhaseNames"] = json::array();
+    ConfigOUT["PhaseNames"].push_back("R");
+    ConfigOUT["PhaseNames"].push_back("S");
+    ConfigOUT["PhaseNames"].push_back("T");
+    if(mode == Analyzer::PHASE2N) ConfigOUT["PhaseNames"].push_back("N");
+  } else if((mode == Analyzer::PHASE3) || (mode == Analyzer::PHASE3N)) {
     ConfigOUT["PhaseNames"] = json::array();
     ConfigOUT["PhaseNames"].push_back("R");
     ConfigOUT["PhaseNames"].push_back("S");
@@ -239,16 +248,16 @@ void AnalyzerSoft::Thread() {
       complex<float> V3(pFFTs->VoltageHarmonic(2, 0).Re, pFFTs->VoltageHarmonic(2, 0).Im);
       pAggreg200MS->setUnbalance(((abs(V1 + A * A * V2 + A * V3) / 3.0) / (abs(V1 + A * V2 + A * A * V3) / 3.0)) * 100.0);
     }
-    if(pMode == PHASE3N) {
+    if((pMode == PHASE2N) || (pMode == PHASE3N)) {
       float Current = 0.0;
       float THD     = 0.0;
-      for(uint16_t i = 0; i < BlockSize; i++) Current += pWorkingBlock->CurrentSample(3, i) * pWorkingBlock->CurrentSample(3, i);
-      pAggreg200MS->setCurrent(3, sqrt(Current / BlockSize));
+      for(uint16_t i = 0; i < BlockSize; i++) Current += pWorkingBlock->CurrentSample(pCurrentChannels - 1, i) * pWorkingBlock->CurrentSample(pCurrentChannels - 1, i);
+      pAggreg200MS->setCurrent(pCurrentChannels - 1, sqrt(Current / BlockSize));
       for(uint8_t i = 0; i < 50; i++) {
-        pAggreg200MS->setCurrentHarmonic(3, i, pFFTs->CurrentHarmonic(3, i));
-        if(i > 0) THD += pFFTs->CurrentHarmonicPower(3, i);
+        pAggreg200MS->setCurrentHarmonic(pCurrentChannels - 1, i, pFFTs->CurrentHarmonic(pCurrentChannels - 1, i));
+        if(i > 0) THD += pFFTs->CurrentHarmonicPower(pCurrentChannels - 1, i);
       }
-      pAggreg200MS->setCurrentTHD(3, (THD / pAggreg200MS->CurrentHarmonic(3, 0)) * 100.0);
+      pAggreg200MS->setCurrentTHD(pCurrentChannels - 1, (THD / pAggreg200MS->CurrentHarmonic(pCurrentChannels - 1, 0)) * 100.0);
     }
     pAggreg200MS->setFlag(pEvents->Wait());
     pConsumers->Write();

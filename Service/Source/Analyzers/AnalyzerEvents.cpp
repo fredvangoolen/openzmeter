@@ -18,7 +18,7 @@
 #include "HTTPServer.h"
 #include "Tools.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerEvents::AnalyzerEvents(const string &id, const Analyzer::AnalyzerMode mode) : pSerial(id), pVoltageChannels((mode == Analyzer::PHASE1) ? 1 : 3) {
+AnalyzerEvents::AnalyzerEvents(const string &id, const Analyzer::AnalyzerMode mode) : pSerial(id), pVoltageChannels(Analyzer::VoltageChannels(mode)) {
 }
 AnalyzerEvents::~AnalyzerEvents() {
 }

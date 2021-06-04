@@ -15,10 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "AnalyzerSoft.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftAggreg::AnalyzerSoftAggreg(const string &serial, const Analyzer::AnalyzerMode mode) {
-  pSerial = serial;
-  pVoltageChannels = (mode == Analyzer::PHASE1) ? 1 : 3;
-  pCurrentChannels = (mode == Analyzer::PHASE1) ? 1 : (mode == Analyzer::PHASE3) ? 3 : 4;
+AnalyzerSoftAggreg::AnalyzerSoftAggreg(const string &serial, const Analyzer::AnalyzerMode mode) : pSerial(serial), pVoltageChannels(Analyzer::VoltageChannels(mode)), pCurrentChannels(Analyzer::CurrentChannels(mode)) {
   Reset();
 }
 AnalyzerSoftAggreg::~AnalyzerSoftAggreg() {

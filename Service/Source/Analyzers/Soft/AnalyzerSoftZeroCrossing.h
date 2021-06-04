@@ -36,6 +36,7 @@ class AnalyzerSoftZeroCrossing final {
     const float        pSamplerate;                 //Velocidad de muestreo
     const uint8_t      pVoltageChannels;            //Number of voltage channels
     const uint8_t      pCurrentChannels;            //Number of current channels
+  private :
     pthread_mutex_t    pMutex;                      //Configuration mutex
     uint64_t           pSequence;                   //Sequence number of analyzed blocks
     Filter_t           pFilters[FILTERSTAGES];      //Filter bank

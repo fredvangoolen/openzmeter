@@ -45,6 +45,9 @@ class Analyzer {
     const string       pOwner;                   //Analyzer owner user
     const AnalyzerMode pMode;                    //Analyzer mode
   public :
+    static uint8_t VoltageChannels(const AnalyzerMode mode);
+    static uint8_t CurrentChannels(const AnalyzerMode mode);
+  public :
     virtual void GetAnalyzer(HTTPRequest &req) = 0;
     virtual void SetAnalyzer(HTTPRequest &req) = 0;
     virtual void GetStatus(HTTPRequest &req) = 0;

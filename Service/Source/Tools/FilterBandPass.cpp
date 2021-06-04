@@ -55,6 +55,10 @@ FilterBandPass::FilterBandPass(const uint8_t channels, const uint8_t order, cons
   }
 }
 FilterBandPass::~FilterBandPass() {
-
+  for(uint8_t n = 0; n < pStageCount; n++) {
+    free(pStages[n].Z1);
+    free(pStages[n].Z2);
+  }
+  free(pStages);
 }
 // ---------------------------------------------------------------------------------------------------------------------

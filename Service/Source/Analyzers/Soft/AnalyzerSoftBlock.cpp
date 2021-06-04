@@ -16,14 +16,9 @@
 #include "AnalyzerSoftBlock.h"
 #include "Tools.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftBlock::AnalyzerSoftBlock(const uint8_t vChanels, const uint8_t cChannels, const uint64_t seq, const uint16_t maxLen, const float nominalVolt, const float nominalFreq) {
-  pVoltageChannels  = vChanels;
-  pCurrentChannels  = cChannels;
-  pSequence         = seq;
+AnalyzerSoftBlock::AnalyzerSoftBlock(const uint8_t vChanels, const uint8_t cChannels, const uint64_t seq, const uint16_t maxLen, const float nominalVolt, const float nominalFreq) : pSequence(seq), pVoltageChannels(vChanels), pCurrentChannels(cChannels), pNominalFrequency(nominalFreq), pNominalVoltage(nominalVolt) {
   pBlockCyclesCount = 0;
   pBlockSamples     = 0;
-  pNominalFrequency = nominalFreq;
-  pNominalVoltage   = nominalVolt;
   pVoltageSamples   = (float*)malloc(sizeof(float) * pVoltageChannels * maxLen);
   pCurrentSamples   = (float*)malloc(sizeof(float) * pCurrentChannels * maxLen);
   pTimestamp        = Tools::GetTime64();

@@ -18,17 +18,18 @@
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftBlock {
   private :
-    uint64_t        pSequence;                    //Sequence number of analyzed blocks
+    const uint64_t  pSequence;                    //Sequence number of analyzed blocks
+    const uint8_t   pVoltageChannels;             //Number of voltage channels
+    const uint8_t   pCurrentChannels;             //Number of current channels
+    const float     pNominalFrequency;            //Configured grid frequency
+    const float     pNominalVoltage;              //Configured grid voltage
+  private :
     uint64_t        pTimestamp;                   //Current block timestamp
-    uint8_t         pVoltageChannels;             //Number of voltage channels
-    uint8_t         pCurrentChannels;             //Number of current channels
     uint8_t         pBlockCyclesCount;            //Block cycles count
     uint16_t        pBlockSamples;                //Number of samples in block
     uint16_t        pBlockCycles[24];             //Max block sizes
     float          *pVoltageSamples;              //Output voltage signal
     float          *pCurrentSamples;              //Output current signal
-    float           pNominalFrequency;            //Configured grid frequency
-    float           pNominalVoltage;              //Configured grid voltage
   public :
     AnalyzerSoftBlock(const uint8_t vChanels, const uint8_t cChannels, const uint64_t seq, const uint16_t maxLen, const float nominalVolt, const float nominalFreq);
     ~AnalyzerSoftBlock();

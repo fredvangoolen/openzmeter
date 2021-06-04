@@ -33,8 +33,9 @@ class AnalyzerSoftFFTs final {
     static pthread_mutex_t pFFTMutex;             //Planer mutex
     static uint32_t        pFFTRunning;           //Currently running FFTs
   private :
-    uint8_t                pVoltageChannels;      //Avaliable voltage channels
-    uint8_t                pCurrentChannels;      //Avaliable current channels
+    const uint8_t          pVoltageChannels;      //Avaliable voltage channels
+    const uint8_t          pCurrentChannels;      //Avaliable current channels
+  private :
     FFT_t                  pFFTVoltageData[3];    //Worker data
     FFT_t                  pFFTCurrentData[4];    //Worker data
     uint16_t               pInLen;                //Input length

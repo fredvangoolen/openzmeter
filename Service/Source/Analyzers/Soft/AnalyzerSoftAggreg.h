@@ -22,9 +22,10 @@ using namespace mu;
 // ---------------------------------------------------------------------------------------------------------------------
 class AnalyzerSoftAggreg {
   protected :
-    string         pSerial;                           //Serial number of parent analyzer
-    uint8_t        pVoltageChannels;                  //Avaliable voltage channels
-    uint8_t        pCurrentChannels;                  //Avaliable current channels
+    const string   pSerial;                           //Serial number of parent analyzer
+    const uint8_t  pVoltageChannels;                  //Avaliable voltage channels
+    const uint8_t  pCurrentChannels;                  //Avaliable current channels
+  protected :
     bool           pFlag;                             //Flagged period
     float          pFrequency;                        //Frecuency
     float          pUnbalance;                        //Unbalance (only in 3phase)

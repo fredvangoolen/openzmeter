@@ -16,8 +16,7 @@
 #include "AnalyzerSoftZeroCrossing.h"
 #include "LogFile.h"
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftZeroCrossing::AnalyzerSoftZeroCrossing(const Analyzer::AnalyzerMode mode, const float samplerate) : pSamplerate(samplerate),
-  pVoltageChannels((mode == Analyzer::PHASE1) ? 1 : 3), pCurrentChannels((mode == Analyzer::PHASE1) ? 1 : (mode == Analyzer::PHASE3) ? 3 : 4) {
+AnalyzerSoftZeroCrossing::AnalyzerSoftZeroCrossing(const Analyzer::AnalyzerMode mode, const float samplerate) : pSamplerate(samplerate), pVoltageChannels(Analyzer::VoltageChannels(mode)), pCurrentChannels(Analyzer::CurrentChannels(mode)) {
   LogFile::Debug("Starting AnalyzerSoftZeroCrosing...");
   pWorkingBlock      = NULL;
   pMutex             = PTHREAD_MUTEX_INITIALIZER;

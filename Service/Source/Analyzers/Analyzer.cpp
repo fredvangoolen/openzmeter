@@ -71,4 +71,20 @@ Analyzer::AnalyzerState Analyzer::State() {
   pthread_rwlock_unlock(&pMembersLocks);
   return State;
 }
+uint8_t Analyzer::VoltageChannels(const AnalyzerMode mode) {
+  if(mode == Analyzer::PHASE1)  return 1;
+  if(mode == Analyzer::PHASE2)  return 2;
+  if(mode == Analyzer::PHASE2N) return 2;
+  if(mode == Analyzer::PHASE3)  return 3;
+  if(mode == Analyzer::PHASE3N) return 3;
+  return 0;
+}
+uint8_t Analyzer::CurrentChannels(const AnalyzerMode mode) {
+  if(mode == Analyzer::PHASE1)  return 1;
+  if(mode == Analyzer::PHASE2)  return 2;
+  if(mode == Analyzer::PHASE2N) return 3;
+  if(mode == Analyzer::PHASE3)  return 3;
+  if(mode == Analyzer::PHASE3N) return 4;
+  return 0;
+}
 //----------------------------------------------------------------------------------------------------------------------
