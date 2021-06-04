@@ -15,12 +15,9 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "DeviceV3Analyzer.h"
 // ---------------------------------------------------------------------------------------------------------------------
-DeviceV3Analyzer::DeviceV3Analyzer(const string &name, const string &configPath, const uint8_t current) : AnalyzerSoft(name, Analyzer::PHASE1, configPath, 24000.0) {
-  pCurrent = current;
-  pCalc    = false;
+DeviceV3Analyzer::DeviceV3Analyzer(const string &name, const string &configPath, const uint8_t current) : AnalyzerSoft(name, Analyzer::PHASE1, configPath, 24000.0), pCalc(false), pCurrent(current) {
 }
-DeviceV3Analyzer::DeviceV3Analyzer(const string &name, const string &configPath) : AnalyzerSoft(name, Analyzer::PHASE1, configPath, 24000.0) {
-  pCalc    = true;
+DeviceV3Analyzer::DeviceV3Analyzer(const string &name, const string &configPath) : AnalyzerSoft(name, Analyzer::PHASE1, configPath, 24000.0), pCalc(true), pCurrent(0) {
 }
 void DeviceV3Analyzer::BufferAppend(const float *values) {
   float Voltage = values[0];

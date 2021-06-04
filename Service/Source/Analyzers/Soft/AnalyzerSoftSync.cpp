@@ -135,7 +135,7 @@ void *AnalyzerSoftSync::Thread() {
     if(Stage == CONFIG) {
       Content["Config"]     = ConfigFile::ReadConfig(pConfigPath);
       Content["SampleRate"] = pSampleRate;
-      Content["Mode"]       = (pMode == Analyzer::PHASE1) ? "1PHASE" : (pMode == Analyzer::PHASE3) ? "3PHASE" : "3PHASE+N";
+      Content["Mode"]       = Analyzer::ModeToString(pMode);
       Content["Synced"]     = false;
     } else {
       Database DB(pSerial);

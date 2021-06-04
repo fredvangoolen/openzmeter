@@ -71,7 +71,7 @@ json DeviceVirtual::CheckConfig(const json &config) {
     if(config.contains("CurrentPhase") && config["CurrentPhase"].is_number() && (config["CurrentPhase"] >= -180.0) && (config["CurrentPhase"] <= 180.0)) ConfigOUT["CurrentPhase"] = config["CurrentPhase"];
     if(config.contains("Mode") && config["Mode"].is_string() && ((config["Mode"] == "1PHASE") || (config["Mode"] == "2PHASE") || (config["Mode"] == "2PHASE+N") || (config["Mode"] == "3PHASE") || (config["Mode"] == "3PHASE+N"))) ConfigOUT["Mode"] = config["Mode"];
     if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
-    if(config.contains("Analyzer") && config["Analyzer"].is_object()) ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(config["Analyzer"], (ConfigOUT["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (ConfigOUT["Mode"] == "2PHASE") ? Analyzer::PHASE2 : (ConfigOUT["Mode"] == "2PHASE+N") ? Analyzer::PHASE2N : (ConfigOUT["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N, false);
+    if(config.contains("Analyzer") && config["Analyzer"].is_object()) ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(config["Analyzer"], Analyzer::StringToMode(ConfigOUT["Mode"]), false);
   }
   return ConfigOUT;
 }
@@ -96,7 +96,7 @@ void DeviceVirtual::Config(const json &config) {
   pSampleRate       = config["SampleRate"];
   pCurrent          = config["Current"];
   pCurrentPhase     = config["CurrentPhase"];
-  pMode             = (config["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (config["Mode"] == "2PHASE") ? Analyzer::PHASE2 : (config["Mode"] == "2PHASE+N") ? Analyzer::PHASE2N : (config["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
+  pMode             = Analyzer::StringToMode(config["Mode"]);
   pEnabled          = config["Enabled"];
   pAnalyzer         = new AnalyzerSoft(pSerial + ModeString, pMode, "/Devices/" + pSerial + "/Analyzer", pSampleRate);
   AnalyzerManager::AddAnalyzer(pAnalyzer);

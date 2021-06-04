@@ -15,34 +15,14 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #include "DeviceV2Analyzer.h"
 // ---------------------------------------------------------------------------------------------------------------------
-DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerMode mode, const string &configPath, const uint8_t *voltage, const uint8_t *current, const bool *invert) : AnalyzerSoft(name, mode, configPath, 24000.0) {
-  if(mode == Analyzer::PHASE1) {
-    pVoltageChannels = 1;
-    pCurrentChannels = 1;
-  } else if(mode == Analyzer::PHASE2) {
-    pVoltageChannels = 2;
-    pCurrentChannels = 2;
-  } else if(mode == Analyzer::PHASE2N) {
-    pVoltageChannels = 2;
-    pCurrentChannels = 3;
-  } else if(mode == Analyzer::PHASE3) {
-    pVoltageChannels = 3;
-    pCurrentChannels = 3;
-  } else if(mode == Analyzer::PHASE3N) {
-    pVoltageChannels = 3;
-    pCurrentChannels = 4;
-  }
+DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerMode mode, const string &configPath, const uint8_t *voltage, const uint8_t *current, const bool *invert) : AnalyzerSoft(name, mode, configPath, 24000.0), pVoltageChannels(VoltageChannels(mode)), pCurrentChannels(CurrentChannels(mode)), pCalc(false) {
   for(uint8_t Ch = 0; Ch < pVoltageChannels; Ch++) pVoltageMap[Ch] = voltage[Ch];
   for(uint8_t Ch = 0; Ch < pCurrentChannels; Ch++) pCurrentMap[Ch] = current[Ch];
   for(uint8_t Ch = 0; Ch < pCurrentChannels; Ch++) pInvertMap[Ch]  = (invert[Ch] == true) ? -1.0 : 1.0;
-  pCalc      = false;
   pLastEvent = 0;
 }
-DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const string &configPath, const uint8_t voltage, const float *current) : AnalyzerSoft(name, Analyzer::PHASE1, configPath, 24000.0) {
-  pVoltageChannels = 1;
-  pCurrentChannels = 4;
+DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const string &configPath, const uint8_t voltage, const float *current) : AnalyzerSoft(name, Analyzer::PHASE1, configPath, 24000.0), pVoltageChannels(1), pCurrentChannels(4), pCalc(true) {
   pVoltageMap[0]   = voltage;
-  pCalc            = true;
   for(uint8_t Ch = 0; Ch < pCurrentChannels; Ch++) pCurrentMap[Ch] = 0;
   for(uint8_t Ch = 0; Ch < pCurrentChannels; Ch++) pInvertMap[Ch]  = current[Ch];
 }

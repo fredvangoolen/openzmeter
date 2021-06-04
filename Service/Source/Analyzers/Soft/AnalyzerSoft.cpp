@@ -121,11 +121,10 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   if(mode == Analyzer::PHASE1) {
     ConfigOUT["PhaseNames"] = json::array();
     ConfigOUT["PhaseNames"].push_back("L");
-  } else if((mode == Analyzer::PHASE2) || (mode == Analyzer::PHASEN)) {
+  } else if((mode == Analyzer::PHASE2) || (mode == Analyzer::PHASE2N)) {
     ConfigOUT["PhaseNames"] = json::array();
     ConfigOUT["PhaseNames"].push_back("R");
     ConfigOUT["PhaseNames"].push_back("S");
-    ConfigOUT["PhaseNames"].push_back("T");
     if(mode == Analyzer::PHASE2N) ConfigOUT["PhaseNames"].push_back("N");
   } else if((mode == Analyzer::PHASE3) || (mode == Analyzer::PHASE3N)) {
     ConfigOUT["PhaseNames"] = json::array();
@@ -149,7 +148,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
   if(config.contains("NominalFrequency") && config["NominalFrequency"].is_number() && ((config["NominalFrequency"] == 50.0) || (config["NominalFrequency"] == 60.0) || (config["NominalFrequency"] == 0.0))) ConfigOUT["NominalFrequency"] = config["NominalFrequency"];
   if(config.contains("MaxCurrent") && config["MaxCurrent"].is_number() && (config["MaxCurrent"] >= 1) && (config["MaxCurrent"] <= 100000)) ConfigOUT["MaxCurrent"] = config["MaxCurrent"];
   if(config.contains("MinCurrent") && config["MinCurrent"].is_number() && (config["MinCurrent"] >= 0.01) && (config["MinCurrent"] <= 100)) ConfigOUT["MinCurrent"] = config["MinCurrent"];
-  if((mode != Analyzer::PHASE1) && config.contains("PhaseNames") && config["PhaseNames"].is_array() && (config["PhaseNames"].size() == ConfigOUT["PhaseNames"].size())) {
+  if(config.contains("PhaseNames") && config["PhaseNames"].is_array() && (config["PhaseNames"].size() == ConfigOUT["PhaseNames"].size())) {
     for(uint8_t n = 0; n < ConfigOUT["PhaseNames"].size(); n++) {
       if(config["PhaseNames"][n].is_string() && (config["PhaseNames"][n].size() < 3) && (config["PhaseNames"][n].size() > 0)) ConfigOUT["PhaseNames"][n] = config["PhaseNames"][n];
     }
@@ -394,7 +393,7 @@ void AnalyzerSoft::GetAnalyzer(HTTPRequest &req) {
   if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
   json   Response = ConfigFile::ReadConfig(pConfigPath);
   Response["User"]         = pOwner;
-  Response["Mode"]         = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
+  Response["Mode"]         = ModeToString(pMode);
   Response["SampleRate"]   = pSamplerate;
   Response["PriceModules"] = PriceSource::VarsInfo();
   Response["Users"]        = pAccess->Users();

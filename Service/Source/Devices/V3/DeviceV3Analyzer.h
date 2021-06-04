@@ -17,11 +17,9 @@
 #include <AnalyzerSoft.h>
 // ---------------------------------------------------------------------------------------------------------------------
 class DeviceV3Analyzer final : public AnalyzerSoft {
-  protected :
-    uint8_t pCurrent;
-    bool    pCalc;
   private :
-//    void ResultsReady(AnalyzerSoftAggreg200MS &params) override;
+    const bool    pCalc;
+    const uint8_t pCurrent;
   public :
     DeviceV3Analyzer(const string &name, const string &configPath, const uint8_t current);
     DeviceV3Analyzer(const string &name, const string &configPath);

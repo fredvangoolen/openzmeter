@@ -87,4 +87,20 @@ uint8_t Analyzer::CurrentChannels(const AnalyzerMode mode) {
   if(mode == Analyzer::PHASE3N) return 4;
   return 0;
 }
+string Analyzer::ModeToString(const AnalyzerMode mode) {
+  if(mode == PHASE1)  return "1PHASE";
+  if(mode == PHASE2)  return "2PHASE";
+  if(mode == PHASE2N) return "2PHASE+N";
+  if(mode == PHASE3)  return "3PHASE";
+  if(mode == PHASE3N) return "3PHASE+N";
+  return "";
+}
+Analyzer::AnalyzerMode Analyzer::StringToMode(const string mode) {
+  if(mode == "1PHASE")   return Analyzer::PHASE1;
+  if(mode == "2PHASE")   return Analyzer::PHASE2;
+  if(mode == "2PHASE+N") return Analyzer::PHASE2N;
+  if(mode == "3PHASE")   return Analyzer::PHASE3;
+  if(mode == "3PHASE+N") return Analyzer::PHASE3N;
+  return Analyzer::INVALID;
+}
 //----------------------------------------------------------------------------------------------------------------------

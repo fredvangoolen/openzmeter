@@ -17,13 +17,14 @@
 #include <AnalyzerSoft.h>
 // ---------------------------------------------------------------------------------------------------------------------
 class DeviceV2Analyzer final : public AnalyzerSoft {
-  protected :
+  private :
+    const uint8_t           pVoltageChannels;
+    const uint8_t           pCurrentChannels;
+    const bool              pCalc;
+  private :
     uint8_t                 pVoltageMap[3];
     uint8_t                 pCurrentMap[4];
     float                   pInvertMap[4];
-    uint8_t                 pVoltageChannels;
-    uint8_t                 pCurrentChannels;
-    bool                    pCalc;
     uint64_t                pLastEvent;
   private :
     void ResultsReady(AnalyzerSoftAggreg200MS *params) override;

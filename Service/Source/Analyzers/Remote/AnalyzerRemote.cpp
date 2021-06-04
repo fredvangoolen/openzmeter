@@ -79,7 +79,7 @@ void AnalyzerRemote::GetAnalyzer(HTTPRequest &req) {
   json Response = pConfig;
   pthread_rwlock_unlock(&pLock);
   Response["User"]           = pOwner;
-  Response["Mode"]           = (pMode == PHASE1) ? "1PHASE" : (pMode == PHASE3) ? "3PHASE" : "3PHASE+N";
+  Response["Mode"]           = Analyzer::ModeToString(pMode);
   Response["SampleRate"]     = pSamplerate;
   Response["PriceModules"]   = PriceSource::VarsInfo();
   Response["Users"]          = pAccess->Users();
@@ -250,8 +250,7 @@ void AnalyzerRemote::SetRemote(HTTPRequest &req) {
     if(!req.CheckParamObject("Config") || !req.CheckParamNumber("SampleRate") || !req.CheckParamString("Mode")) return;
   }
   if(req.CheckParamString("Mode")) {
-    string Mode = (pMode == Analyzer::PHASE1) ? "1PHASE" : (pMode == Analyzer::PHASE3) ? "3PHASE" : "3PHASE+N";
-    if(Mode != req.Param("Mode")) return req.Error("Analyzer mode do not match", HTTP_BAD_REQUEST);
+    if(Analyzer::ModeToString(pMode) != req.Param("Mode")) return req.Error("Analyzer mode do not match", HTTP_BAD_REQUEST);
   }
   if(req.CheckParamNumber("SampleRate")) {
     pthread_rwlock_wrlock(&pLock);
