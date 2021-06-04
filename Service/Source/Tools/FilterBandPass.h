@@ -18,15 +18,21 @@
 // ---------------------------------------------------------------------------------------------------------------------
 class FilterBandPass final {
   private :
-    const uint8_t  pChannels;       //Channels count
+    typedef struct {
+      float  CA0;
+      float  CA1;
+      float  CA2;
+      float  CB0;
+      float  CB1;
+      float  CB2;
+      float *Z1;
+      float *Z2;
+    } Stage_t;
   private :
-    float          pA0;
-    float          pA1;
-    float          pA2;
-    float          pB1;
-    float          pB2;
-    float         *pZ1;
-    float         *pZ2;
+    const uint8_t  pChannels;       //Channels count
+    const uint8_t  pStageCount;
+  private :
+    Stage_t *pStages;
   public :
     FilterBandPass(const uint8_t channels, const uint8_t order, const float samplerate, const float freq, const float bandwidth);
     ~FilterBandPass();

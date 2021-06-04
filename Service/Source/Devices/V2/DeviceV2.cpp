@@ -292,7 +292,7 @@ void DeviceV2::Config(const json& config) {
   for(uint8_t Ch = 0; Ch < 7; Ch++) DelayLen = DelayLen + pChannelsDelaySize[Ch];
   pChannelsDelay = (int16_t*)realloc(pChannelsDelay, sizeof(int16_t) * DelayLen);
   if((config["BlockDC"] == true) && (pFilterDC == NULL)) {
-    pFilterDC = new FilterDC(7, 0.99999);
+    pFilterDC = new FilterDC(7, 24000.0, 1.0);
     for(uint8_t Ch = 0; Ch < 3; Ch++) pVoltageOffset[Ch] = 0.0;
     for(uint8_t Ch = 0; Ch < 4; Ch++) pCurrentOffset[Ch] = 0.0;
   } else if((config["BlockDC"] == false) && (pFilterDC != NULL)) {

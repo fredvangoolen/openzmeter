@@ -13,52 +13,48 @@
 // You should have received a copy of the GNU General Public License
 // along with openZmeter.  If not, see <https://www.gnu.org/licenses/>
 // ---------------------------------------------------------------------------------------------------------------------
+#include <complex>
+#include <stdlib.h>
+#include <math.h>
 #include "FilterBandPass.h"
 // ---------------------------------------------------------------------------------------------------------------------
-FilterBandPass::FilterBandPass(const uint8_t channels, const uint8_t order, const float samplerate, const float freq, const float bandwidth) : pChannels(channels) {
+using namespace std;
+// ---------------------------------------------------------------------------------------------------------------------
+FilterBandPass::FilterBandPass(const uint8_t channels, const uint8_t order, const float samplerate, const float freq, const float bandwidth) : pChannels(channels), pStageCount(order) {
+  pStages = (Stage_t*)calloc(sizeof(Stage_t), order);
+  for(uint8_t n = 0; n < order; n++) {
+    pStages[n].Z1 = (float*)calloc(sizeof(float), channels);
+    pStages[n].Z2 = (float*)calloc(sizeof(float), channels);
+  }
+  float f1 = freq - bandwidth / 2.0;
+  float f2 = freq + bandwidth / 2.0;
+  float f0 = sqrt(f1 * f2);
+  if((f1 <= 0) || (f2 >= (samplerate / 2.0))) return;
+  float F1 = samplerate / M_PI * tan(M_PI * f1 / samplerate);
+  float F2 = samplerate / M_PI * tan(M_PI * f2 / samplerate);
+  float F0 = sqrt(F1 * F2);
+  for(uint8_t i = 0; i < order; i++) {
+    float theta = (2.0 * (i + 1.0) - 1.0) * M_PI / (2.0 * order);
+    complex<float> p_lp = complex<float>(0, 1) * cos(theta) - sin(theta);
+    complex<float> alpha = (F2 - F1) / F0 * 0.5 * p_lp;
+    complex<float> beta = sqrt(1.0 - pow((F2 - F1) / F0 * p_lp / 2.0, 2.0));
+    complex<float> pa = 2.0 * M_PI * F0 * (alpha + complex<float>(0, 1) * beta);
+    complex<float> p = (1.0 + pa / (2.0 * samplerate)) / (1.0 - pa / (2.0 * samplerate));
+    pStages[i].CA0 = 1.0;
+    pStages[i].CA1 = -2.0 * p.real();
+    pStages[i].CA2 = pow(abs(p), 2.0);
 
-/*function [a,K]= biquad_bp(N,fcenter,bw,fs)
-  f1= fcenter- bw/2;                % Hz lower -3 dB frequency
-  f2= fcenter+ bw/2;                % Hz upper -3 dB frequency
-  if f2>=fs/2;
-      error('fcenter+ bw/2 must be less than fs/2')
-  end
-  if f1<=0
-      error('fcenter- bw/2 must be greater than 0')
-  end
+    float w = 2.0 * M_PI * f0 / samplerate;
+    complex<float> hc = exp(complex<float>(0, 1) * w);
+    complex<float> hb = pow(hc, 2.0) - 1.0;
+    complex<float> ha = pow(hc, 2.0) +  pStages[i].CA1 * hc + pStages[i].CA2;
+    complex<float> h = hb / ha;
+    pStages[i].CB0 = 1.0 / abs(h);
+    pStages[i].CB1 = 0.0;
+    pStages[i].CB2 = -1.0 / abs(h);
+  }
 
-  % pre-warp f0, f1, and f2 (uppercase == continuous frequency variables)
-  F1= fs/pi * tan(pi*f1/fs);
-  F2= fs/pi * tan(pi*f2/fs);
-  BW_hz= F2-F1;                % Hz -3 dB bandwidth
-  F0= sqrt(F1*F2);             % Hz geometric mean frequency
 
-  % transform poles for bpf centered at W0
-  % pa contains N poles of the total 2N -- the other N poles not computed
-  % are conjugates of these.
-  for i= 1:N;
-    theta= (2*i -1)*pi/(2*N);
-    p_lp= -sin(theta) + j*cos(theta);
-    alpha= BW_hz/F0 * 1/2*p_lp;
-    beta= sqrt(1- (BW_hz/F0*p_lp/2).^2);
-    pa(i)= 2*pi*F0*(alpha +j*beta);
-    p= (1 + pa(i)/(2*fs))./(1 - pa(i)/(2*fs));    % bilinear transform
-    a1= -2*real(p);
-    a2= abs(p)^2;
-    a(i,:)= [1 a1 a2];                 % denominator coeffs of biquad k
-  end
-  b= [1 0 -1];                           % biquad numerator coeffs
-  % compute biquad gain K for response amplitude = 1.0 at f0
-  f0= sqrt(f1*f2)                        % geometric mean frequency
-
-  for k= 1:N;
-    aa= a(k,:);
-    h= freqzEdu(b,aa,[f0 f0],fs);         % frequency response at f = f0
-    K(k)= 1/abs(h(1));
-  end
-
-endfunction
-*/
 }
 FilterBandPass::~FilterBandPass() {
 

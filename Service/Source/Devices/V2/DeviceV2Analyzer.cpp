@@ -19,6 +19,12 @@ DeviceV2Analyzer::DeviceV2Analyzer(const string &name, const Analyzer::AnalyzerM
   if(mode == Analyzer::PHASE1) {
     pVoltageChannels = 1;
     pCurrentChannels = 1;
+  } else if(mode == Analyzer::PHASE2) {
+    pVoltageChannels = 2;
+    pCurrentChannels = 2;
+  } else if(mode == Analyzer::PHASE2N) {
+    pVoltageChannels = 2;
+    pCurrentChannels = 3;
   } else if(mode == Analyzer::PHASE3) {
     pVoltageChannels = 3;
     pCurrentChannels = 3;

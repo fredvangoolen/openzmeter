@@ -32,7 +32,7 @@
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Mode</label>
-        <option-picker :options="[ {name: '1PHASE', value: '1PHASE'}, {name: '3PHASE', value: '3PHASE'}, {name: '3PHASE+N', value: '3PHASE+N'} ]" v-model="Settings.Mode" :big="true"></option-picker>
+        <option-picker :options="[ {name: '1PHASE', value: '1PHASE'}, {name: '2PHASE', value: '2PHASE'}, {name: '2PHASE+N', value: '2PHASE+N'}, {name: '3PHASE', value: '3PHASE'}, {name: '3PHASE+N', value: '3PHASE+N'} ]" v-model="Settings.Mode" :big="true"></option-picker>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Samplerate</label>
