@@ -27,11 +27,11 @@
       </div>
       <div class="col-md-3 col-sm-6">
         <label class="control-label">Mode</label>
-        <option-picker :options="[{name: 'NONE', value: 'NONE'}, {name: 'WEP', value: 'WEP'}, {name: 'WPA', value: 'WPA'}, {name: 'WPA2', value: 'WPA2'}]" v-model="Config.KeyMode" :big="true"></option-picker>
+        <option-picker :options="[{name: 'NONE', value: 'NONE'}, {name: 'WEP', value: 'WEP'}, {name: 'WPA', value: 'WPA'}, {name: 'WPA2', value: 'WPA2'}]" v-model="Config.KeyMode"></option-picker>
       </div>
       <div class="col-md-3 col-sm-6">
         <label class="control-label">IP Mode</label>
-        <option-picker :options="[{name: 'DHCP', value: 'DHCP'}, {name: 'STATIC', value: 'STATIC'}]" v-model="Config.IPMode" :big="true"></option-picker>
+        <option-picker :options="[{name: 'DHCP', value: 'DHCP'}, {name: 'STATIC', value: 'STATIC'}]" v-model="Config.IPMode"></option-picker>
       </div>
       <div class="col-md-6 col-sm-12">
         <label class="control-label">ESSID Key</label>

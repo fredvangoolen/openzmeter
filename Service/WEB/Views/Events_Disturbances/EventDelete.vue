@@ -11,7 +11,7 @@
     <div class="row">
       <div class="col-xs-12">
         <label>Mode:</label>
-        <option-picker :options="[{name: 'All', value: 'All'}, {name: 'Only samples', value: 'Samples'}, {name: 'RMS samples only', value: 'RMS'}, {name: 'RAW samples only', value: 'RAW'}]" v-model="Mode" :big="true"></option-picker>
+        <option-picker :options="[{name: 'All', value: 'All'}, {name: 'Only samples', value: 'Samples'}, {name: 'RMS samples only', value: 'RMS'}, {name: 'RAW samples only', value: 'RAW'}]" v-model="Mode"></option-picker>
       </div>
     </div>
   </dlg>

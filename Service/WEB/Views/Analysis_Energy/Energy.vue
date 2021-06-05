@@ -30,7 +30,7 @@
         Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
         Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.data) };
         Opt.labels = (this.serie == 'Active_Energy') ? ['Time', 'Active Energy'] : ['Time', 'Reactive Energy'];
-        Opt.colors = [this.analyzer.Color[this.serie]];
+        Opt.colors = [this.analyzer.SerieColor(this.serie)];
         Opt.xAxisHeight = 12;
         Opt.selectMode = 'euclidian';
         Opt.axes.y.pixelsPerLabel = 15;

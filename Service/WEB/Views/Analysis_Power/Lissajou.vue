@@ -46,7 +46,7 @@
         Opt.showRangeSelector = false;
         Opt.strokeWidth = 0.5;
         Opt.labels = ['Voltage', 'Current'];
-        Opt.colors = [this.analyzer.Color.Voltage, this.analyzer.Color.Current, this.analyzer.Color.Active_Power].concat(this.analyzer.VoltageChannels > 1 ? [this.analyzer.Color.Active_Power] : []);
+        Opt.colors = [this.analyzer.SerieColor('Voltage')];
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         if((this.Phase != null) && (this.data != null)) {

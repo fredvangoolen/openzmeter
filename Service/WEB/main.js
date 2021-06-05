@@ -46,6 +46,8 @@ import Graph from 'Components/Graph.vue';
 Vue.component('Graph', Graph);
 import InputMath from 'Components/InputMath.vue';
 Vue.component('InputMath', InputMath);
+import InputText from 'Components/InputText.vue';
+Vue.component('InputText', InputText);
 import InputSpin from 'Components/InputSpin.vue';
 Vue.component('InputSpin', InputSpin);
 import OptionAdder from 'Components/OptionAdder.vue';

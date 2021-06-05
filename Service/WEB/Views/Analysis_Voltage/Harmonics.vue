@@ -48,11 +48,8 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         if((this.Phases == null) || (this.Options == null)) return { };
         Opt.visibility = [];
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, 0);
-        var CurrentStyle = oZm.SerieStyle(oZm.Series['Current'], this.analyzer, 0);
-        for(var c in CurrentStyle.Colors) CurrentStyle.Colors[c] = chroma(CurrentStyle.Colors[c]).darken();
-        var VoltageNames = oZm.Series['Voltage'].Names(this.analyzer);
-        var CurrentNames = oZm.Series['Current'].Names(this.analyzer);
+        var VoltageNames = this.analyzer.SerieNames('Voltage');
+        var CurrentNames = this.analyzer.SerieNames('Current');
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
         for(var n in CurrentNames) Opt.series[CurrentNames[n]] = { axis: 'y2' };
@@ -72,7 +69,7 @@
         Opt.axes.x.axisLabelFormatter = (x) => { return oZm.Series['HARMONICS'].Names[x]; };
         Opt.axes.x.valueFormatter = (y) => { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (this.analyzer.NominalFrequency * (y + 1)) + 'Hz)'; };
         Opt.labels = ['Harmonic'].concat(VoltageNames).concat(CurrentNames);
-        Opt.colors = VoltageStyle.Colors.concat(CurrentStyle.Colors);
+        Opt.colors = this.analyzer.SerieColors('Voltage').concat(this.analyzer.SerieColors('Current').map((val) => { return chroma(val).darken() }));
         if(this.data != null) {
           for(var i = 0; i < 50; i++) {
             if((this.Options['1st Harmonic'] == false) && (i == 0)) continue;

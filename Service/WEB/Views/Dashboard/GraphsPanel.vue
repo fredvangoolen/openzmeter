@@ -2,7 +2,7 @@
   <div class="panel" :class="PanelClass">
     <div class="panel-heading">
       <div class="header-text">
-        <div>{{ analyzer.Title[serie] }}</div>
+        <div>{{ analyzer.SerieName(serie) }}</div>
         <div class="aggreg-row" v-if="data!=null">From {{ analyzer.FormatAggregation(data.Aggreg) }} aggregation {{ paused ? '(Paused)' : '' }}</div>
       </div>
       <div class="header-buttons">
@@ -23,7 +23,7 @@
       <portal to="fs-toolbar" :disabled="!Expanded" class="header-buttons">
         <toolbar-phases :analyzer="analyzer" v-model="Phases" v-if="serie != 'Frequency'" :storage="'Dashboard_' + serie" :current="serie=='Current'" :multi="true"></toolbar-phases>
         <div class="btn-group">
-          <button-export :rows="Export" :file="analyzer.Title[serie]"></button-export>
+          <button-export :rows="Export" :file="analyzer.SerieName(serie)"></button-export>
           <button-expand v-model="Expanded"></button-expand>
         </div>
       </portal>
@@ -75,8 +75,8 @@
           Val.Value = Math.sqrt(Val.Value / this.analyzer.VoltageChannels);
           Val.Units = this.BestUnits(Val.Value);
           Val.Value = this.Round(this.ScaleUnits(Val.Value, Val.Units), 2, true);
-          for(var n = 0; n < this.last[this.serie].length; n++) Val.Phases.push(this.Round(this.ScaleUnits(this.last[this.serie][n], Val.Units), 2, true) + ' ' + Val.Units + this.analyzer.Unit[this.serie]);
-          Val.Units += this.analyzer.Unit[this.serie];
+          for(var n = 0; n < this.last[this.serie].length; n++) Val.Phases.push(this.Round(this.ScaleUnits(this.last[this.serie][n], Val.Units), 2, true) + ' ' + Val.Units + this.analyzer.SerieUnits(this.serie));
+          Val.Units += this.analyzer.SerieUnits(this.serie);
         }
         return Val;
       },
@@ -95,8 +95,8 @@
         Opt.connectSeparatedPoints = false;
         Opt.fillGraph = false;
         Opt.legend = 'follow';
-        Opt.labels = ['Time'].concat(this.analyzer.GetSeriesNames(this.analyzer.Title[this.serie], this.analyzer.Channels[this.serie]));
-        Opt.colors = this.analyzer.Style(this.serie, true).Colors;
+        Opt.labels = ['Time'].concat(this.analyzer.SerieNames(this.serie));
+        Opt.colors = this.analyzer.SerieColors(this.serie);
         Opt.selectMode = 'euclidian';
         Opt.xAxisHeight = 12;
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatTime(x); };
@@ -126,8 +126,8 @@
         } else if(this.serie == 'Frequency') {
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.1 });
         }
-        var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
-        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, this.analyzer.Unit[this.serie], (this.serie == 'Frequency') ? 3 : 2, true); };
+        //var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
+        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, this.analyzer.SerieUnits[this.serie], (this.serie == 'Frequency') ? 3 : 2, true); };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', (this.serie == 'Frequency') ? 3 : 2, true); };
         return Object.seal(Opt);
       }
@@ -135,7 +135,7 @@
     methods: {
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
-        var Header = [['Time'].concat(this.analyzer.GetSeriesNames(this.analyzer.Title[this.serie], this.analyzer.Channels[this.serie]))];
+        var Header = [['Time'].concat(this.analyzer.GetSeriesNames(this.analyzer.SerieName(this.serie), this.analyzer.Channels[this.serie]))];
         var TimeCol = this.data.Headers.indexOf('Time');
         var ValueCol = this.data.Headers.indexOf(this.serie);
         for(var n = 0; n < this.data.Rows.length; n++) {

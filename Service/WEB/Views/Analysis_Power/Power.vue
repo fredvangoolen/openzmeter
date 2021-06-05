@@ -30,7 +30,7 @@
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
         Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.data); };
         Opt.labels = (this.serie == 'Active_Power') ? ['Time', 'Active Power', 'Contracted Power'] : ['Time', 'Reactive Power'];
-        Opt.colors = [this.analyzer.Color[this.serie], '#318ce7'];
+        Opt.colors = [this.analyzer.SerieColor(this.serie), '#318ce7'];
         Opt.xAxisHeight = 12;
         Opt.selectMode = 'euclidian';
         Opt.axes.y.pixelsPerLabel = 15;

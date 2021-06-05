@@ -57,15 +57,19 @@
     methods: {
       SetAnalyzer: function(analyzer) {
         if(analyzer != null) {
-          analyzer.VoltageChannels = (analyzer.Mode == '1PHASE') ? 1 : 3;
-          analyzer.CurrentChannels = (analyzer.Mode == '1PHASE') ? 1 : (analyzer.Mode == '3PHASE') ? 3 : 4;
-          analyzer.Color = { Voltage: '#d9534f', Current: '#428bca', Active_Power: '#f0ad4e', Reactive_Power: '#DF842A', Apparent_Power: '#DF842A', Active_Energy: '#3d3d8b', Reactive_Energy: '#643d8b', Frequency: '#5cb85c' };
-          analyzer.Style = this.Style.bind(this);
-          analyzer.Title = { Voltage: 'Voltage', Current: 'Current', Active_Power: 'Active Power', Frequency: 'Frequency' };
-          analyzer.Channels = { Voltage: analyzer.VoltageChannels, Current: analyzer.CurrentChannels, Active_Power: analyzer.VoltageChannels, Frequency: 1 };
-          analyzer.Unit = { Voltage: 'V', Current: 'A', Active_Power: 'W', Active_Energy: 'Wh', Frequency: 'Hz'};
+//          analyzer.VoltageChannels = analyzer.PhaseNames.length;
+//          analyzer.CurrentChannels = analyzer.VoltageChannels + ((analyzer.NeutralName != null) ? 1 : 0);
+//          analyzer.PhaseColors = ['#d9534f', '#5cb85c', '#318ce7'].slice(0, analyzer.VoltageChannels);
+//          analyzer.NeutralColor = (analyzer.NeutralName != null) ? '#333333' : null;
+          analyzer.SerieColor = this.SerieColor.bind(this);
+          analyzer.SerieColors = this.SerieColors.bind(this);
+          analyzer.SerieName = this.SerieName.bind(this);
+          analyzer.SerieUnits = this.SerieUnits.bind(this);
+          analyzer.SerieNames = this.SerieNames.bind(this);
+//         analyzer.Channels = { Voltage: analyzer.VoltageChannels, Current: analyzer.CurrentChannels, Active_Power: analyzer.VoltageChannels, Frequency: 1 };
+
           analyzer.HarmonicsNames = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'];
-          analyzer.GetSeriesNames = this.GetSeriesNames.bind(this);
+
           analyzer.FormatAggregation = this.FormatAggregation.bind(this);
           analyzer.FormatTime = this.FormatTime.bind(this);
           analyzer.FormatDate = this.FormatDate.bind(this);
@@ -76,10 +80,43 @@
         }
         this.$emit('update:analyzer', analyzer);
       },
-      GetSeriesNames: function(serie, len) {
-        if(len == 1) return [serie];
+      SerieColor: function(serie) {
+        if(serie == 'Frequency') return '#5cb85c';
+        if(serie == 'Voltage') return '#d9534f';
+        if(serie == 'Current') return '#428bca';
+        if(serie == 'Active_Power') return '#f0ad4e';
+        if(serie == 'Reactive_Power') return '#DF842A';
+        if(serie == 'Apparent_Power') return '#DF842A';
+        if(serie == 'Active_Energy') return '#3d3d8b';
+        if(serie == 'Reactive_Energy') return '#643d8b';
+      },
+      SerieColors: function(serie) {
+        if((this.analyzer.PhaseNames.length == 1) || (serie == 'Frequency')) return [this.SerieColor(serie)];
+        var Colors = [];
+        Colors = ['#d9534f', '#5cb85c', '#318ce7'].slice(0, this.analyzer.PhaseNames.length);
+        if((serie == 'Current') && (this.analyzer.NeutralName != null)) Colors.push('#333333');
+        return Colors;
+      },
+      SerieUnits: function(serie) {
+        if(serie == 'Voltage') return 'V';
+        if(serie == 'Current') return 'A';
+        if(serie == 'Active_Power') return 'W';
+        if(serie == 'Active_Energy') return 'Wh';
+        if(serie == 'Frequency') return 'Hz';
+      },
+      SerieName: function(serie) {
+        if(serie == 'Voltage') return 'Voltage';
+        if(serie == 'Current') return 'Current';
+        if(serie == 'Active_Power') return 'Active Power';
+        if(serie == 'Frequency') return 'Frequency';
+        return serie;
+      },
+      SerieNames: function(serie) {
         var Result = [];
-        for(var n = 0; n < len; n++) Result.push(serie + ' (' + this.analyzer.PhaseNames[n] + ')');
+        var Name = this.SerieName(serie);
+        if((serie == 'Frequency') || (this.analyzer.PhaseNames.length == 1)) return Name;
+        for(var n = 0; n < this.analyzer.PhaseNames.length; n++) Result.push(Name + ' (' + this.analyzer.PhaseNames[n] + ')');
+        if((serie == 'Current') && (this.analyzer.NeutralName != null)) Result.push(Name + ' (' + this.analyzer.NeutralName + ')');
         return Result;
       },
       FormatAggregation: function(val) {
@@ -106,7 +143,7 @@
       CalcRange: function(range, aggreg) {
         var Now = moment().tz(this.analyzer.TimeZone);
         if(range == 'LastSamples') {
-          var Period    = (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
+          var Period = (aggreg == '3S') ? 3000 : (aggreg == '1M') ? 60000 : (aggreg == '10M') ? 600000 : (aggreg == '15M') ? 900000 : 3600000;
           return [Now.valueOf() - Period * 2, Now.valueOf()];
         } else if(range == 'LastMinute')
           return [Now.valueOf() - 60000, Now.valueOf()];

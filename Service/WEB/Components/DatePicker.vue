@@ -1,5 +1,5 @@
 <template>
-  <div class='input-group' :class="{'input-group-xs': (big==false)}">
+  <div class="input-group input-group-xs">
     <input type='text' class="form-control"/>
     <span class="input-group-addon"><span class="glyphicon-calendar"></span></span>
   </div>
@@ -10,7 +10,7 @@
   import datetimepicker from 'eonasdan-bootstrap-datetimepicker';
   import 'eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css'
   export default {
-    props: { options: Object, big: Boolean, disabled: Boolean, value: Number },
+    props: { options: Object, disabled: Boolean, value: Number },
     data() {
       return { Options: {} };
     },

@@ -516,31 +516,12 @@ export function RoundPlain(val, decimals) {
     return (((Integer === 0) && (val < 0.0)) ? '-' : '') + Integer.toString() + '.' + Fraction;
   }
 }
-export function SerieStyle(serie, analyzer, order) {
+/*export function SerieStyle(serie, analyzer, order) {
   var SerieLen = serie.Names(analyzer).length;
   if(SerieLen === 1) return { Colors: [serie.Color], Width: 0.5 };
   var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];
   return {Colors: Colors.slice(0, SerieLen), Width: (order == 0) ? 0.5 : 1.5 }
-}
-export function MergeSeriesResult(result, previous) {
-  var Out = Object.assign({}, previous);
-  if(Out == null) Out = {};
-  if(Out.LastSample == undefined) Out.LastSample = 0;
-  for(var serie in result) {
-    if(Array.isArray(result[serie]) == false) {
-      Out[serie] = result[serie];
-    } else {
-      if(Out[serie] == undefined) Out[serie] = [];
-      for(var pos in result.Sampletime) {
-        if(result.Sampletime[pos] > Out.LastSample) Out[serie].push(result[serie][pos]);
-        if(Out[serie].length > result.MaxSamples) Out[serie].shift();
-
-      }
-    }
-  }
-  if(Out.Sampletime.length > 0) Out.LastSample = Out.Sampletime.slice(-1)[0];
-  return Object.freeze(Out);
-}
+}*/
 
 export var Series = {
   'Voltage': { CSS_Class: 'panel-voltage', Title: 'Voltage', Serie: 'Voltage', Units: 'V',  Link: '/Analysis/Voltage', Color: '#d9534f', Decimals: 2,
@@ -724,11 +705,11 @@ export var Series = {
     Link:'',
     FormatValue: function(val) { return { Units: '%', Value: Round2(val * 100) }; }
   },
-  'HARMONICS': {
-    FormatValue: function(val) { return { Units: 'dB', Value: Round2(val) }; },
-    Units: 'dB',
-    Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th']
-  },
+//  'HARMONICS': {
+//    FormatValue: function(val) { return { Units: 'dB', Value: Round2(val) }; },
+//    Units: 'dB',
+//    Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th', '21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th']
+//  },
   'HARMONICS_POWER': {
     FormatValue: function(val) { var Units = GetBestUnits(val); return { Units: Units + 'W', Value: Round2(ScaleToUnits(val, Units)) }; },
     Units: 'W',

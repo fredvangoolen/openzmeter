@@ -125,13 +125,13 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
     ConfigOUT["PhaseNames"] = json::array();
     ConfigOUT["PhaseNames"].push_back("R");
     ConfigOUT["PhaseNames"].push_back("S");
-    if(mode == Analyzer::PHASE2N) ConfigOUT["PhaseNames"].push_back("N");
+    if(mode == Analyzer::PHASE2N) ConfigOUT["NeutralName"] = "N";
   } else if((mode == Analyzer::PHASE3) || (mode == Analyzer::PHASE3N)) {
     ConfigOUT["PhaseNames"] = json::array();
     ConfigOUT["PhaseNames"].push_back("R");
     ConfigOUT["PhaseNames"].push_back("S");
     ConfigOUT["PhaseNames"].push_back("T");
-    if(mode == Analyzer::PHASE3N) ConfigOUT["PhaseNames"].push_back("N");
+    if(mode == Analyzer::PHASE3N) ConfigOUT["NeutralName"] ="N";
   }
   ConfigOUT["TimeZone"] = "UTC";
   ConfigOUT["Tags"] = json::object();

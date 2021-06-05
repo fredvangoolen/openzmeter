@@ -38,11 +38,8 @@
       GraphOptions: function() {
         if((this.analyzer == null) || (this.Phases == null) || (this.Options == null)) return { };
         var Opt = { visibility: [], series: {}, axes: { y: {}, y2: {}, x: {} }, file: [] };
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, 0);
-        var CurrentStyle = oZm.SerieStyle(oZm.Series['Current'], this.analyzer, 0);
-        for(var c in VoltageStyle.Colors) VoltageStyle.Colors[c] = chroma(VoltageStyle.Colors[c]).darken();
-        var VoltageNames = oZm.Series['Voltage'].Names(this.analyzer);
-        var CurrentNames = oZm.Series['Current'].Names(this.analyzer);
+        var VoltageNames = this.analyzer.SerieNames('Voltage');
+        var CurrentNames = this.analyzer.SerieNames('Current');
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n]);
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n] && this.Options['Voltage']);
         for(var n in VoltageNames) Opt.series[VoltageNames[n]] = { axis: 'y2' };
@@ -69,10 +66,10 @@
         Opt.axes.y2.ticker = this.Options['Voltage'] ? this.Options['Log'] ? (min, max) => { return Graph.Tickers.DBTicks(min, max, this.COffset) } : Dygraph.numericTicks : () => { return []; };
         Opt.axes.x.drawGrid = false;
         Opt.axes.x.ticker = () => { return Graph.Tickers.OddHarmonicsTicks(this.analyzer); };
-        Opt.axes.x.axisLabelFormatter = (x) => { return oZm.Series['HARMONICS'].Names[x]; };
-        Opt.axes.x.valueFormatter = (y) => { return oZm.Series['HARMONICS'].Names[y] + ' Harmonic (' + (this.analyzer.NominalFrequency * (y + 1)) + 'Hz)'; };
+        Opt.axes.x.axisLabelFormatter = (x) => { return this.analyzer.HarmonicsNames[x]; };
+        Opt.axes.x.valueFormatter = (y) => { return this.analyzer.HarmonicsNames[y] + ' Harmonic (' + (this.analyzer.NominalFrequency * (y + 1)) + 'Hz)'; };
         Opt.labels = ['Harmonic'].concat(CurrentNames).concat(VoltageNames);
-        Opt.colors = CurrentStyle.Colors.concat(VoltageStyle.Colors);
+        Opt.colors = this.analyzer.SerieColors('Current').concat(this.analyzer.SerieColors('Voltage').map((val) => { return chroma(val).darken() }));
         if(this.data != null) {
           for(var i = 0; i < 50; i++) {
             if((this.Options['1st Harmonic'] == false) && (i == 0)) continue;

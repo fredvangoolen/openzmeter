@@ -51,10 +51,8 @@
         Opt.axes.x.ticker = (min, max) => { return Graph.Tickers.WaveTimeTicks(max, this.analyzer); };
         if((this.Phases == null) || (this.Options == null)) return Opt;
         Opt.visibility = [];
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, ((this.Options['Current'] == true) ? 1 : 0));
-        var CurrentStyle = oZm.SerieStyle(oZm.Series['Current'], this.analyzer, 0);
-        var VoltageNames = oZm.Series['Voltage'].Names(this.analyzer);
-        var CurrentNames = oZm.Series['Current'].Names(this.analyzer);
+        var VoltageNames = this.analyzer.SerieNames('Voltage');
+        var CurrentNames = this.analyzer.SerieNames('Current');
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n]);
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n] && this.Options['Current']);
         Opt.series = {};
@@ -64,16 +62,16 @@
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 2, true) + ' V'; };
         Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x, 2, true); };
-        Opt.axes.y.strokeWidth = VoltageStyle.Width;
+        Opt.axes.y.strokeWidth = (this.Options['Current'] == true) ? 2 : 0.5;;
         Opt.axes.y2.pixelsPerLabel = 15;
         Opt.axes.y2.drawAxis = this.Options['Current'];
         Opt.axes.y2.axisLabelWidth = this.Options['Current'] ? 34 : 0;
-        Opt.axes.y2.strokeWidth = CurrentStyle.Width;
+        Opt.axes.y2.strokeWidth = 0.5;
         Opt.axes.y2.valueFormatter = (x) => { return this.Round(x, 2, true) + ' A'; };
         Opt.axes.y2.axisLabelFormatter = this.Options['Current'] ? (x) => { return this.Round(x, 2, true); } : (x)  => { return ''};
         Opt.axes.x.valueFormatter = (x) => { return this.Round((x * 1000) / this.analyzer.SampleRate, 2, true) + ' ms'; };
         Opt.labels = ['Sample'].concat(VoltageNames).concat(CurrentNames);
-        Opt.colors = VoltageStyle.Colors.concat(CurrentStyle.Colors);
+        Opt.colors = this.analyzer.SerieColors('Voltage').concat(this.analyzer.SerieColors('Current'));
         if(this.data != null) {
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [i];

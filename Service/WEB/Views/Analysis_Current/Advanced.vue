@@ -46,10 +46,8 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         if((this.Phases == null) || (this.Options == null)) return Opt;
         Opt.visibility = [];
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, ((this.Options['Voltage'] == true) ? 1 : 0));
-        var CurrentStyle = oZm.SerieStyle(oZm.Series['Current'], this.analyzer, 0);
-        var VoltageNames = oZm.Series['Voltage'].Names(this.analyzer);
-        var CurrentNames = oZm.Series['Current'].Names(this.analyzer);
+        var VoltageNames = this.analyzer.SerieNames('Voltage');
+        var CurrentNames = this.analyzer.SerieNames('Current');
         for(var n in CurrentNames) Opt.visibility.push(this.Phases[n]);
         for(var n in VoltageNames) Opt.visibility.push(this.Phases[n] && this.Options['Voltage']);
         for(var n in VoltageNames) Opt.series[VoltageNames[n]] = { axis: 'y2' };
@@ -58,8 +56,8 @@
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x - this.VOffset, 2, true) + ' ' + (this.Options['Log'] ? 'dB' : 'A'); };
         Opt.axes.y.axisLabelFormatter = (x) => { return this.Round(x - this.VOffset, 2, true); };
         Opt.axes.y.ticker = this.Options['Log'] ? (min, max) => { return Graph.Tickers.DBTicks(min, max, this.VOffset); } : Graph.Tickers.Default;
-        Opt.axes.y.strokeWidth = CurrentStyle.Width;
-        Opt.axes.y2.strokeWidth = VoltageStyle.Width;
+        Opt.axes.y.strokeWidth = (this.Options['Voltage'] == true) ? 2 : 0.5;;
+        Opt.axes.y2.strokeWidth = 0.5;
         Opt.axes.y2.pixelsPerLabel = 15;
         Opt.axes.y2.drawAxis = this.Options['Current'];
         Opt.axes.y2.axisLabelWidth = this.Options['Current'] ? 34 : 0;
@@ -70,7 +68,7 @@
         Opt.axes.x.axisLabelFormatter = (y) => { return Graph.Formatters.FFTAxis(this.analyzer, y); };
         Opt.axes.x.valueFormatter = (y) => { return Graph.Formatters.FFTVal(this.analyzer, y); };
         Opt.labels = ['Bin'].concat(VoltageNames).concat(CurrentNames);
-        Opt.colors = CurrentStyle.Colors.concat(VoltageStyle.Colors);
+        Opt.colors = this.analyzer.SerieColors('Current').concat(this.analyzer.SerieColors('Voltage'));
         if(this.data != null) {
           for(var i = 0; i < this.data.Voltage_FFT[0].length; i++) {
           var Row = [i];

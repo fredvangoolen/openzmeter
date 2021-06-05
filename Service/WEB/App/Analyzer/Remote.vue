@@ -20,11 +20,15 @@
       <div class="col-xs-12"><hr style="margin: 5px 0px 5px 0px"/></div>
       <div class="col-xs-12">
         <label class="control-label">Remote URL</label>
-        <input type="text" class="form-control" v-model="Analyzer.Sync.Server">
+        <div class="input-group input-group-xs">
+          <input type="text" class="form-control rounded" v-model="Analyzer.Sync.Server">
+        </div>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">User name</label>
-        <input type="text" class="form-control" v-model="Analyzer.Sync.User">
+        <div class="input-group input-group-xs">
+          <input type="text" class="form-control rounded" v-model="Analyzer.Sync.User">
+        </div>
       </div>
       <div class="col-xs-12 col-sm-6">
         <label class="control-label">Password</label>
@@ -40,15 +44,21 @@
       <div class="col-xs-12"><hr style="margin: 5px 0px 5px 0px"/></div>
       <div class="col-xs-8">
         <label class="control-label" style="line-height: 22px">Broker</label>
-        <input type="text" class="form-control" v-model="Analyzer.MQTT.Server">
+        <div class="input-group input-group-xs">
+          <input type="text" class="form-control rounded" v-model="Analyzer.MQTT.Server">
+        </div>
       </div>
       <div class="col-xs-4">
         <label class="control-label" style="line-height: 22px">Prefix</label>
-        <input type="text" class="form-control" v-model="Analyzer.MQTT.Prefix">
+        <div class="input-group input-group-xs">
+          <input type="text" class="form-control rounded" v-model="Analyzer.MQTT.Prefix">
+        </div>
       </div>
       <div class="col-xs-6">
         <label class="control-label" style="line-height: 22px">User</label>
-        <input type="text" class="form-control" v-model="Analyzer.MQTT.User">
+        <div class="input-group input-group-xs">
+          <input type="text" class="form-control rounded" v-model="Analyzer.MQTT.User">
+        </div>
       </div>
       <div class="col-xs-6">
         <label class="control-label" style="line-height: 22px">Password</label>
@@ -119,5 +129,11 @@
   }
   .table >>> th:nth-child(3) {
     width: 60px;
+  }
+  .input-group {
+    width: 100%;
+  }
+  .rounded {
+    border-radius: 4px !important;
   }
 </style>

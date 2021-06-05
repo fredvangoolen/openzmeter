@@ -11,7 +11,6 @@
 <script>
   import Topbar from './Topbar.vue';
   import Sidebar from './Sidebar.vue';
-  import * as oZm from 'JS/openZmeter.js';
   export default {
     data: function() {
       return { Analyzer: null, User: null, Expanded: false, CloseTimer: null, TransferStatus: this.StatusTransfer(['Events', 'Alarms']) };

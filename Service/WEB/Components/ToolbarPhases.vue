@@ -1,9 +1,7 @@
 <template>
   <div class="btn-group" v-if="analyzer.Mode != '1PHASE'">
-    <button type="button" @click="Toggle(0)" :class="{ active: (Active[0]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + analyzer.PhaseNames[0]"><img :src="PhaseImgs[0]"></button>
-    <button type="button" @click="Toggle(1)" :class="{ active: (Active[1]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + analyzer.PhaseNames[1]"><img :src="PhaseImgs[1]"></button>
-    <button type="button" @click="Toggle(2)" :class="{ active: (Active[2]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + analyzer.PhaseNames[2]"><img :src="PhaseImgs[2]"></button>
-    <button type="button" @click="Toggle(3)" :class="{ active: (Active[3]==true) }" v-if="(analyzer.Mode=='3PHASE+N') && (current==true)" class="btn btn-default btn-xs" :title="'Show phase ' + analyzer.PhaseNames[3]"><img :src="PhaseImgs[3]"></button>
+    <button type="button" v-for="(item, index) in analyzer.PhaseNames" @click="Toggle(index)" :key="index" :class="{ active: (Active[index]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + item"><img :src="PhaseImgs[index]"></button>
+    <button type="button" v-if="(analyzer.NeutralName!=null)&&(current==true)" @click="Toggle(analyzer.PhaseNames.length)" :class="{ active: (Active[analyzer.PhaseNames.length]==true) }" class="btn btn-default btn-xs" :title="'Show phase ' + analyzer.NeutralName"><img :src="NeutralImg"></button>
   </div>
 </template>
 
@@ -38,34 +36,36 @@
       PhaseImgs: function() {
         var Imgs = [];
         var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];
-        for(var n in this.analyzer.PhaseNames) {
-          var elem = document.createElement('canvas');
-          elem.width = 16;
-          elem.height = 16;
-          var ctx = elem.getContext('2d');
-          ctx.globalAlpha = 0.5;
-          if(this.BaseImg != null) ctx.drawImage(this.BaseImg, 0, 0, 16, 16);
-          ctx.globalAlpha = 1.0;
-          ctx.font = "bold 11px Titillium Web";
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 0;
-          ctx.shadowBlur = 2;
-          ctx.shadowColor = "rgba(0,0,0,0.4)";
-          ctx.fillText(this.analyzer.PhaseNames[n], 0, 15);
-          if(this.multi == true) {
-            ctx.beginPath();
-            ctx.arc(13, 3, 2.5, 0, 2 * Math.PI, false);
-            ctx.fillStyle = Colors[n];
-            ctx.fill();
-          }
-          Imgs.push(ctx.canvas.toDataURL());
-        }
+        for(var n in this.analyzer.PhaseNames) Imgs.push(this.CreateImage(this.analyzer.PhaseNames[n], Colors[n]));
         return Imgs;
       }
     },
     methods: {
+      CreateImage: function(name, color) {
+        var elem = document.createElement('canvas');
+        elem.width = 16;
+        elem.height = 16;
+        var ctx = elem.getContext('2d');
+        ctx.globalAlpha = 0.5;
+        if(this.BaseImg != null) ctx.drawImage(this.BaseImg, 0, 0, 16, 16);
+        ctx.globalAlpha = 1.0;
+        ctx.font = "bold 11px Titillium Web";
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.shadowBlur = 2;
+        ctx.shadowColor = "rgba(0,0,0,0.4)";
+        ctx.fillText(name, 0, 15);
+        if(this.multi == true) {
+          ctx.beginPath();
+          ctx.arc(13, 3, 2.5, 0, 2 * Math.PI, false);
+          ctx.fillStyle = color;
+          ctx.fill();
+        }
+        return ctx.canvas.toDataURL();
+      },
       Configure: function() {
-        this.Active = new Array((this.analyzer.Mode == '1PHASE') ? 1 : (this.analyzer.Mode == '3PHASE') ? 3 : (this.current == true) ? 4 : 3). fill(false);
+        this.Active = new Array(this.analyzer.PhaseNames.length).fill(false);
+        if((this.analyzer.NeutralName != null) && (this.current == true)) this.Active.push(false);
         if(this.storage != null) {
           var Mode = this.analyzer.Mode + '_' + ((this.multi == true) ? 'Multi' : 'Single') + '_' + ((this.current == true) ? 'Current' : 'Voltage');
           var Stored = JSON.parse(localStorage.getItem(this.storage));
@@ -110,8 +110,7 @@
 </script>
 
 <style>
-  .btn-default:active:hover,
-  .btn-default.active:hover {
+  .btn-default:active:hover, .btn-default.active:hover {
     background-color: #ADC5D9;
   }
 </style>

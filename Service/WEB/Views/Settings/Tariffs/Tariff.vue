@@ -14,7 +14,7 @@
       <div class="row" v-if="View=='Main'">
         <div class="col-xs-12">
           <label class="control-label">Name</label>
-          <input type="text" class="form-control" v-model="Tariff.Name" :disabled="tariff!=null">
+          <input-text v-model="Tariff.Name" :disabled="tariff!=null"></input-text>
         </div>
         <div class="col-xs-12">
           <label class="control-label">Description</label>

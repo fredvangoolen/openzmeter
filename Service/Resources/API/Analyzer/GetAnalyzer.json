@@ -134,7 +134,7 @@
                     "EventsEnabled": { "type": "boolean" },
                     "MaxCurrent": { "type": "number" },
                     "MinCurrent": { "type": "number" },
-                    "Mode": { "type": "string", "enum": ["1PHASE", "3PHASE", "3PHASE+N"] },
+                    "Mode": { "type": "string", "enum": ["1PHASE", "2PHASE", "2PHASE+N", "3PHASE", "3PHASE+N"] },
                     "Name": { "type": "string" },
                     "NominalFrequency": { "type": "number" },
                     "NominalVoltage": { "type": "number" },
@@ -153,6 +153,7 @@
                     "MQTT": { "$ref": "#/components/schemas/MQTTTemplate" },
                     "Tags": { "$ref": "#/components/schemas/TagsTemplate" },
                     "PhaseNames": { "type": "array", "items": { "type": "string"} },
+                    "NeutralName": { "type": "string" },
                     "Sync": { "$ref": "#/components/schemas/SyncTemplate" },
                     "PriceModules": { "$ref": "#/components/schemas/PriceModuleTemplate" },
                     "Rates": { "type": "array", "items": { "$ref": "#/components/schemas/RateTemplate" } }
@@ -171,7 +172,8 @@
                     "Save200MS": false,
                     "TimeZone": "Europe/Madrid",
                     "User": "admin",
-                    "PhaseNames": [ "R", "S", "T", "N" ]
+                    "PhaseNames": [ "R", "S", "T" ],
+                    "NeutralName": "N"
                   }
                 }
               }

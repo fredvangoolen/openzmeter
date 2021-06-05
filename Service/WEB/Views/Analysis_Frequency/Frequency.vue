@@ -30,7 +30,7 @@
         Opt.underlayCallback = Graph.Callbacks.Underlay_DrawBorder;
         Opt.labels = ['Time', 'Frequency'];
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
-        Opt.colors = [this.analyzer.Color.Frequency];
+        Opt.colors = this.analyzer.SerieColors('Frequency');
         Opt.xAxisHeight = 12;
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;

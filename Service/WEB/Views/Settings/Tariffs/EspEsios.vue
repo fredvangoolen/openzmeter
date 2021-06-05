@@ -17,11 +17,11 @@
       <div class="col-xs-12"><hr style="margin-top: 5px; margin-bottom: 5px;"/></div>
       <div class="col-xs-12">
         <label class="control-label">Token</label>
-        <input type="text" class="form-control" v-model="Config.Token">
+        <input-text v-model="Config.Token"></input-text>
       </div>
       <div class="col-xs-12">
         <label class="control-label">Last data requested</label>
-        <date-picker :options="{ format: 'DD/MM/YYYY - HH:MM:ss', viewMode: 'months', timeZone: 'Europe/Madrid' }" :disabled="true" v-model="Config.LastDate" :big="true"></date-picker>
+        <date-picker :options="{ format: 'DD/MM/YYYY - HH:MM:ss', viewMode: 'months', timeZone: 'Europe/Madrid' }" :disabled="true" v-model="Config.LastDate"></date-picker>
       </div>
     </div>
   </dlg>

@@ -30,7 +30,7 @@
           <div class="row">
             <div class="col-xs-12" v-if="user!=null">
               <label class="control-label">Username</label>
-              <div class="input-group">
+              <div class="input-group input-group-xs">
                 <input type="text" class="form-control" v-model="User.User" :disabled="user!=null">
                 <span class="input-group-btn">
                   <button class="btn btn-default" title="Change password" type="button" @click="ShowDialog=true"><img :src="require('Imgs/key.png')"></button>
@@ -39,7 +39,9 @@
             </div>
             <div class="col-xs-12 col-sm-6" v-if="user==null">
               <label class="control-label">User name</label>
-              <input type="text" class="form-control" v-model="User.User">
+              <div class="input-group input-group-xs">
+                <input type="text" class="form-control" v-model="User.User">
+              </div>
             </div>
             <div class="col-xs-12 col-sm-6" v-if="user==null">
               <label class="control-label">Password</label>
@@ -47,31 +49,37 @@
             </div>
             <div class="col-xs-12">
               <label class="control-label">Full name</label>
-              <input type="text" class="form-control" v-model="User.Name">
+              <div class="input-group input-group-xs">
+                <input type="text" class="form-control rounded" v-model="User.Name">
+              </div>
             </div>
             <div class="col-xs-12">
               <label class="control-label">Address</label>
-              <input type="text" class="form-control" v-model="User.Address">
+              <div class="input-group input-group-xs">
+                <input type="text" class="form-control rounded" v-model="User.Address">
+              </div>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+              <label class="control-label">E-Mail</label>
+              <div class="input-group input-group-xs">
+                <input type="text" class="form-control rounded" v-model="User.Email">
+              </div>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+              <label class="control-label">Company</label>
+              <div class="input-group input-group-xs">
+                <input type="text" class="form-control rounded" v-model="User.Company">
+              </div>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+              <label class="control-label">Telegram ID</label>
+              <input-spin :decimals="0" :min="-100000000000000" :max="100000000000000" v-model="User.Telegram"></input-spin>
+            </div>
+            <div class="col-xs-12 col-sm-6">
+              <label class="control-label">Time zone</label>
+              <option-picker :options="TimeZones" v-model="User.TimeZone"></option-picker>
             </div>
           </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-xs-12 col-sm-6">
-          <label class="control-label">Telegram ID</label>
-          <input-spin :big="true" :decimals="0" :min="-100000000000000" :max="100000000000000" v-model="User.Telegram"></input-spin>
-        </div>
-        <div class="col-xs-12 col-sm-6">
-          <label class="control-label">E-Mail</label>
-          <input type="text" class="form-control" v-model="User.Email">
-        </div>
-        <div class="col-xs-12 col-sm-6">
-          <label class="control-label">Time zone</label>
-          <option-picker :options="TimeZones" v-model="User.TimeZone" :big="true"></option-picker>
-        </div>
-        <div class="col-xs-12 col-sm-6">
-          <label class="control-label">Company</label>
-          <input type="text" class="form-control" v-model="User.Company">
         </div>
       </div>
     </dlg>
@@ -117,12 +125,13 @@
 </script>
 
 <style>
-  .modal-dialog {
-    z-index: 1100;
-    color: #333;
-    font-size: 14px;
-  }
   .popover-title {
     padding: 6px;
+  }
+  .input-group {
+    width: 100%;
+  }
+  .rounded {
+    border-radius: 4px !important;
   }
 </style>

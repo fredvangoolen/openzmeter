@@ -1,5 +1,5 @@
 <template>
-  <div class="input-group">
+  <div class="input-group input-group-xs">
     <input :type="Show ? 'text' : 'password'" class="form-control" :value="value" @input="$emit('input', $event.target.value)">
     <span class="input-group-btn">
       <button class="btn btn-default" title="Show password" type="button" v-if="!Show" @click="Show=true"><img :src="require('Imgs/lock.png')"></button>

@@ -1,10 +1,10 @@
 <template>
-  <div class="indicator" :style="{ 'background-color': analyzer.Color[serie], 'border-color': analyzer.Color[serie] }">
+  <div class="indicator" :style="{ 'background-color': analyzer.SerieColor(serie), 'border-color': analyzer.SerieColor(serie) }">
     <div>
       <div>
         <span v-for="(val, idx) in Value.Value" v-html="val" :key="idx"></span>
       </div>
-      <div>{{ Value.Units }}{{ analyzer.Unit[serie] }}<br><span style="font-size: 10px; font-weight: normal; font-stretch: condensed">{{ Value.Aggreg }}</span></div>
+      <div>{{ Value.Units }}{{ analyzer.SerieUnits(serie) }}<br><span style="font-size: 10px; font-weight: normal; font-stretch: condensed">{{ Value.Aggreg }}</span></div>
     </div>
   </div>
 </template>

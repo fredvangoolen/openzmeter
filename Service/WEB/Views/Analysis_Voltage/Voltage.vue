@@ -16,8 +16,6 @@
     },
     computed: {
       GraphOptions: function(val) {
-        var VoltageStyle = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, 0);
-        var VoltageNames = oZm.Series['Voltage'].Names(this.analyzer);
         var Opt = { file: [], axes: { x: {}, y: {} } };
         Opt.panEdgeFraction = 1;
         Opt.interactionModel = Graph.InteractionModels.Scrollable(this);
@@ -41,8 +39,8 @@
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         Opt.axes.x.ticker = (min, max, pixels) => { return Graph.Formatters.X_HourlyFull(min, max, pixels, (this.analyzer != null) ? this.analyzer.TimeZone : null); };
         Opt.axes.x.valueFormatter = (x) => { return moment(x).format('DD/MM/YYYY - HH:mm:ss'); };
-        Opt.labels = ['Time'].concat(VoltageNames);
-        Opt.colors = VoltageStyle.Colors;
+        Opt.labels = ['Time'].concat(this.analyzer.SerieNames('Voltage'));
+        Opt.colors = this.analyzer.SerieColors('Voltage')
         if(this.data != null) {
           var TimeCol = this.data.Headers.indexOf('Time');
           var ValueCol = this.data.Headers.indexOf('Voltage');

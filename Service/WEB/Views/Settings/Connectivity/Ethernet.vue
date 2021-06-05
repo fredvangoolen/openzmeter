@@ -15,27 +15,27 @@
       <div class="col-xs-12"><hr style="margin-top: 5px; margin-bottom: 5px;"/></div>
       <div class="col-md-12">
         <label class="control-label">IP Mode</label>
-        <option-picker :options="[{name: 'DHCP', value: 'DHCP'}, {name: 'STATIC', value: 'STATIC'}]" v-model="Config.IPMode" :big="true"></option-picker>
+        <option-picker :options="[{name: 'DHCP', value: 'DHCP'}, {name: 'STATIC', value: 'STATIC'}]" v-model="Config.IPMode"></option-picker>
       </div>
       <div class="col-md-12" v-if="Config.IPMode=='STATIC'">
         <label class="control-label">IP address</label>
-        <input type="text" class="form-control" :disabled="Config.IPMode=='DHCP'" v-model="Config.IP">
+        <input-text :disabled="Config.IPMode=='DHCP'" v-model="Config.IP"></input-text>
       </div>
       <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
         <label class="control-label">Network mask</label>
-        <input type="text" class="form-control" v-model="Config.Netmask">
+        <input-text v-model="Config.Netmask"></input-text>
       </div>
       <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
         <label class="control-label">Gateway address</label>
-        <input type="text" class="form-control" v-model="Config.Gateway">
+        <input-text v-model="Config.Gateway"></input-text>
       </div>
       <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
         <label class="control-label">Primary DNS address</label>
-        <input type="text" class="form-control" v-model="Config.DNS[0]">
+        <input-text v-model="Config.DNS[0]"></input-text>
       </div>
       <div class="col-md-6" v-if="Config.IPMode=='STATIC'">
         <label class="control-label">Secondary DNS address</label>
-        <input type="text" class="form-control" v-model="Config.DNS[1]">
+        <input-text v-model="Config.DNS[1]"></input-text>
       </div>
       <div class="col-xs-12">
         <label class="control-label">Details</label>

@@ -16,7 +16,7 @@
       </div>
       <div class="col-xs-6" style="display: flex">
         <label class="control-label">Port</label>
-        <input-spin v-model="Config.Port" :big="false" :decimals="0" :min="1" :max="65535" :increment="1" style="width: 100%; margin-left: 10px; margin-top: 1px"></input-spin>
+        <input-spin v-model="Config.Port" :decimals="0" :min="1" :max="65535" :increment="1" style="width: 100%; margin-left: 10px; margin-top: 1px"></input-spin>
       </div>
       <div class="col-xs-12">
         <detail-tabs :tabs="['Analyzers', 'Mapping']" v-model="ActiveTab" :light="true"></detail-tabs>
@@ -35,7 +35,7 @@
                   <span class="input-group-btn">
                     <button class="btn btn-default" type="button" @click="Config.Analyzers.splice(props.rowData.id, 1)"><img :src="require('Imgs/cross.png')"></button>
                   </span>
-                  <input type="text" class="form-control" v-model="Config.Analyzers[props.rowData.id]">
+                  <input-text v-model="Config.Analyzers[props.rowData.id]"></input-text>
                 </div>
               </template>
             </vuetable>

@@ -1,7 +1,7 @@
 <template>
-  <div class="input-group inputspin" :class="{ small: (big==false) }">
+  <div class="input-group inputspin small">
     <div class="input-group-btn" v-if="list != null">
-      <button type="button" :disabled="disabled" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>
+      <button type="button" :disabled="disabled" class="btn btn-default dropdown-toggle btn-xs" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>
       <ul class="dropdown-menu">
         <li v-for="item in list" :key="item.name"><a @click="$emit('input', item.value)">{{ item.name }}</a></li>
       </ul>
@@ -10,7 +10,7 @@
       <slot name="buttons"></slot>
     </div>
     <input type="text" class="form-control" :disabled="disabled" :value="Format(value)" @change="Change($event.target.value)">
-    <span v-if="prepend" class="input-group-addon" id="basic-addon1">{{ prepend }}</span>
+    <span v-if="prepend" class="input-group-addon">{{ prepend }}</span>
     <div class="input-group-btn-vertical">
       <button class="btn btn-default" type="button" :disabled="disabled || (value + increment) > max" @click="$emit('input', value + increment)"><div>&#9650;</div></button>
       <button class="btn btn-default" type="button" :disabled="disabled || (value - increment) < min" @click="$emit('input', value - increment)"><div>&#9660;</div></button>
@@ -20,7 +20,7 @@
 
 <script>
   export default {
-    props: { big: Boolean, prepend: String, min: Number, max: Number, increment: Number, value: Number, decimals: Number, list: Array, disabled: Boolean },
+    props: { prepend: String, min: Number, max: Number, increment: Number, value: Number, decimals: Number, list: Array, disabled: Boolean },
     data: function() {
       return { };
     },

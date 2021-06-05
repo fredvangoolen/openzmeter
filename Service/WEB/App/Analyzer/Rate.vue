@@ -30,11 +30,13 @@
       <div class="row" v-if="View=='Main'">
         <div class="col-xs-8">
           <label class="control-label">Name</label>
-          <input type="text" class="form-control" v-model="Rate.Name">
+          <div class="input-group input-group-xs">
+            <input type="text" class="form-control rounded" v-model="Rate.Name">
+          </div>
         </div>
         <div class="col-xs-4">
           <label class="control-label">Group:</label>
-          <option-picker :big="true" v-model="Rate.Group" :options="[{name: 'Contracted', value: 0}, {name: 'Compare group 1', value: 1}, {name: 'Compare group 2', value: 2}, {name: 'Compare group 3', value: 3}, {name: 'Compare group 4', value: 4}, {name: 'Compare group 5', value: 5}, {name: 'Compare group 6', value: 6}, {name: 'Compare group 7', value: 7}, {name: 'Compare group 8', value: 8}, {name: 'Compare group 9', value: 9}, {name: 'Compare group 10', value: 10}]"></option-picker>
+          <option-picker v-model="Rate.Group" :options="[{name: 'Contracted', value: 0}, {name: 'Compare group 1', value: 1}, {name: 'Compare group 2', value: 2}, {name: 'Compare group 3', value: 3}, {name: 'Compare group 4', value: 4}, {name: 'Compare group 5', value: 5}, {name: 'Compare group 6', value: 6}, {name: 'Compare group 7', value: 7}, {name: 'Compare group 8', value: 8}, {name: 'Compare group 9', value: 9}, {name: 'Compare group 10', value: 10}]"></option-picker>
         </div>
         <div class="col-xs-12">
           <label class="control-label">Description</label>
@@ -42,15 +44,15 @@
         </div>
         <div class="col-xs-4">
           <label class="control-label">From</label>
-          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" :big="true" :value="DateStringToTimestamp(Rate.StartDate)" @input="Rate.StartDate=TimestampToDateString($event)"></date-picker>
+          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" :value="DateStringToTimestamp(Rate.StartDate)" @input="Rate.StartDate=TimestampToDateString($event)"></date-picker>
         </div>
         <div class="col-xs-4">
           <label class="control-label">To</label>
-          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" :big="true" :value="DateStringToTimestamp(Rate.EndDate)" @input="Rate.EndDate=TimestampToDateString($event)"></date-picker>
+          <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months' }" :value="DateStringToTimestamp(Rate.EndDate)" @input="Rate.EndDate=TimestampToDateString($event)"></date-picker>
         </div>
         <div class="col-xs-4">
           <label class="control-label">Price source</label>
-          <option-picker :options="[ {name: 'NONE', value: 'NONE'}, {name: 'ESP - ESIOS', value: 'ESP_ESIOS'} ]" v-model="Rate.Module" :big="true"></option-picker>
+          <option-picker :options="[ {name: 'NONE', value: 'NONE'}, {name: 'ESP - ESIOS', value: 'ESP_ESIOS'} ]" v-model="Rate.Module"></option-picker>
         </div>
         <div class="col-xs-12"><hr style="margin-top: 10px; margin-bottom: 5px;"/></div>
         <div class="col-xs-12" style="margin-top: 5px">
@@ -192,7 +194,7 @@
                 </ul>
               </div>
               <div class="pull-right btn-group" style="width: 110px">
-                <date-picker :big="false" :options="{ format: 'DD/MM/YYYY', viewMode: 'months', minDate: Rate.StartDate, maxDate: Rate.EndDate, disabledDates: Rate.Billing.concat([ Rate.StartDate, Rate.EndDate]), date: SelDate }" @input="SelDate=TimestampToDateString($event)"></date-picker>
+                <date-picker :options="{ format: 'DD/MM/YYYY', viewMode: 'months', minDate: Rate.StartDate, maxDate: Rate.EndDate, disabledDates: Rate.Billing.concat([ Rate.StartDate, Rate.EndDate]), date: SelDate }" @input="SelDate=TimestampToDateString($event)"></date-picker>
               </div>
               <toolbar-pager class="pull-right" style="width: 120px" :pageSize="10" :input="Cycles" :output.sync="FilterCycles" :filtercols="['From', 'To', 'Days']"></toolbar-pager>
               <div class="clearfix"></div>
@@ -371,6 +373,12 @@
 </script>
 
 <style scoped>
+  .input-group {
+    width: 100%;
+  }
+  .rounded {
+    border-radius: 4px !important;
+  }
   .tariffs.table >>> th:nth-child(2) {
     width: 120px;
     text-align: center;

@@ -16,19 +16,19 @@
       </div>
       <div class="col-md-5">
         <label class="control-label">Waves</label>
-        <option-picker :options="[{name: 'Voltage', value: 'Voltage' }, {name: 'Current', value: 'CURRENT'}, {name: 'Voltage and Current', value: 'Voltage_Current'}]" v-model="DownloadSamples" :big="true"></option-picker>
+        <option-picker :options="[{name: 'Voltage', value: 'Voltage' }, {name: 'Current', value: 'CURRENT'}, {name: 'Voltage and Current', value: 'Voltage_Current'}]" v-model="DownloadSamples"></option-picker>
       </div>
       <div class="col-md-3">
         <label class="control-label">File format</label>
-        <option-picker :options="[{name: 'CBOR', value: 'application/cbor' }, {name: 'JSON', value: 'application/json'}]" v-model="DownloadFormat" :big="true"></option-picker>
+        <option-picker :options="[{name: 'CBOR', value: 'application/cbor' }, {name: 'JSON', value: 'application/json'}]" v-model="DownloadFormat"></option-picker>
       </div>
       <div class="col-md-6">
         <label class="control-label">Length</label>
-        <input-spin :min="0" :max="1000" v-model="Length" :big="true" :increment="1" :decimals="1" prepend="Seconds" :list="[{name: 'Unlimited', value: 0}, {name: '10 seconds', value: 10}, {name: '1 minute', value: 60}]"></input-spin>
+        <input-spin :min="0" :max="1000" v-model="Length" :increment="1" :decimals="1" prepend="Seconds" :list="[{name: 'Unlimited', value: 0}, {name: '10 seconds', value: 10}, {name: '1 minute', value: 60}]"></input-spin>
       </div>
       <div class="col-md-6">
         <label class="control-label">Downsample</label>
-        <input-spin :min="1" :max="MaxDivisor" v-model="Downsample" :big="true" :increment="1" :decimals="0"></input-spin>
+        <input-spin :min="1" :max="MaxDivisor" v-model="Downsample" :increment="1" :decimals="0"></input-spin>
       </div>
       <div class="col-xs-12" style="margin-top: 5px">
         <button type="button" class="btn btn-default btn-sm" style="width:100%" title="Close dialog" @click="StartStream">Start</button>

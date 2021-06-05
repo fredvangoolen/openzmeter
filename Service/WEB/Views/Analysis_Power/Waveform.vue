@@ -45,7 +45,7 @@
         Opt.strokeWidth = 0.5;
         Opt.series = { 'Voltage': { axis: 'y2' }, 'Current': { axis: 'y2' }, 'Power': { fillGraph: true }, 'Power SUM': { axis: 'y', strokeWidth: 2 } };
         Opt.labels = ['Sample', 'Voltage', 'Current', 'Power'].concat(this.analyzer.VoltageChannels > 1 ? ['Power SUM'] : []);
-        Opt.colors = [this.analyzer.Color.Voltage, this.analyzer.Color.Current, this.analyzer.Color.Active_Power].concat(this.analyzer.VoltageChannels > 1 ? [this.analyzer.Color.Active_Power] : []);
+        Opt.colors = [this.analyzer.SerieColor('Voltage'), this.analyzer.SerieColor('Current'), this.analyzer.SerieColor('Active_Power')].concat(this.analyzer.PhaseNames.length > 1 ? [this.analyzer.SerieColor('Active_Power')] : []);
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y2.pixelsPerLabel = 15;
@@ -55,7 +55,7 @@
         Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, 'W', 2, true);  };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         Opt.axes.y2.valueFormatter = (x, opts, seriesName) => { return this.Round((seriesName == 'Voltage') ? x : (x / this.CurrentMult), 2, false) + ((seriesName == 'Voltage') ? ' V' : ' A'); };
-        Opt.axes.y2.axisLabelFormatter = (x) => { return '<div style="display: inline-block; text-align: right; width: 36px; color: ' + this.analyzer.Color['Voltage'] + ' ">' + this.Round(x, 2, false) + '</div><div style="display: inline-block; text-align: right; width: 36px; color: ' + this.analyzer.Color['Current'] + ' ">' + this.Round(x / this.CurrentMult, 2, false) + '</div>'; };
+        Opt.axes.y2.axisLabelFormatter = (x) => { return '<div style="display: inline-block; text-align: right; width: 36px; color: ' + this.analyzer.SerieColor('Voltage') + ' ">' + this.Round(x, 2, false) + '</div><div style="display: inline-block; text-align: right; width: 36px; color: ' + this.analyzer.SerieColor('Current') + ' ">' + this.Round(x / this.CurrentMult, 2, false) + '</div>'; };
         if((this.Phase != null) && (this.data != null)) {
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [i, this.data.Voltage_Samples[this.Phase][i], this.data.Current_Samples[this.Phase][i]];

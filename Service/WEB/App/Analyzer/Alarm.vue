@@ -16,25 +16,29 @@
         <label class="control-label" style="line-height: 22px">Enabled</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Alarm.Enabled"></toggle>
       </div>
+    </div>
+    <div class="row" v-if="View=='Main'">
       <div class="col-xs-12">
         <label class="control-label">Name</label>
-        <input type="text" class="form-control form-control-sm" v-model="Alarm.Name"/>
+        <div class="input-group input-group-xs">
+          <input type="text" class="form-control rounded" v-model="Alarm.Name"/>
+        </div>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Priority</label>
-        <option-picker :options="[{name: 'LOW', value: 0}, {name: 'NORMAL', value: 1}, {name: 'HIGH', value:2}]" v-model="Alarm.Priority" :big="true"></option-picker>
+        <option-picker :options="[{name: 'LOW', value: 0}, {name: 'NORMAL', value: 1}, {name: 'HIGH', value:2}]" v-model="Alarm.Priority"></option-picker>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Aggregation</label>
-        <option-picker :options="[{name: '200 miliseconds', value: '200MS'}, {name: '3 seconds', value: '3S'}, {name: '1 minute', value: '1M'}, {name: '10 minutes', value: '10M'}, {name: '15 minutes', value: '15M'}, {name: '1 hour', value: '1H'}]" v-model="Alarm.Aggreg" :big="true"></option-picker>
+        <option-picker :options="[{name: '200 miliseconds', value: '200MS'}, {name: '3 seconds', value: '3S'}, {name: '1 minute', value: '1M'}, {name: '10 minutes', value: '10M'}, {name: '15 minutes', value: '15M'}, {name: '1 hour', value: '1H'}]" v-model="Alarm.Aggreg"></option-picker>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Occurrences</label>
-        <input-spin :min="1" :max="1000" v-model="Alarm.Samples" :increment="1" :decimals="0" :big="true"></input-spin>
+        <input-spin :min="1" :max="1000" v-model="Alarm.Samples" :increment="1" :decimals="0"></input-spin>
       </div>
       <div class="col-xs-6">
         <label class="control-label">Window</label>
-        <input-spin :min="1" :max="1000" v-model="Alarm.Window" :increment="1" :decimals="0" :big="true"></input-spin>
+        <input-spin :min="1" :max="1000" v-model="Alarm.Window" :increment="1" :decimals="0"></input-spin>
       </div>
     </div>
     <div class="row" v-if="View=='Expression'">
@@ -96,3 +100,12 @@
     }
   }
 </script>
+
+<style scoped>
+  .input-group {
+    width: 100%;
+  }
+  .rounded {
+    border-radius: 4px !important;
+  }
+</style>
