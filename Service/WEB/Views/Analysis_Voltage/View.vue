@@ -110,7 +110,7 @@
     methods: {
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
-        var Rows = [['Time'].concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels))];
+        var Rows = [['Time'].concat(this.analyzer.SerieNames('Voltage'))];
         var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
         var VoltageCol = this.TransferGraph.Data.Headers.indexOf('Voltage');
         for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) {

@@ -60,11 +60,11 @@
       Export: function() {
         if(this.data == null) return [];
         var Header = [['Sample']
-          .concat(this.analyzer.GetSeriesNames('Active Power', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Reactive Power', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Apparent Power', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Power Factor', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.SerieNames('Active Power'))
+          .concat(this.analyzer.SerieNames('Reactive Power'))
+          .concat(this.analyzer.SerieNames('Apparent Power'))
+          .concat(this.analyzer.SerieNames('Power Factor'))
+          .concat(this.analyzer.SerieNames('Phi'))
         ];
         var TimeCol = this.data.Headers.indexOf('Time');
         var ActiveCol = this.data.Headers.indexOf('Active_Power');

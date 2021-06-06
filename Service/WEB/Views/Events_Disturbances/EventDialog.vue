@@ -43,8 +43,8 @@
         Opt.xAxisHeight = 24;
         Opt.includeZero = true;
         Opt.showRangeSelector = false;
-        Opt.labels = ['Sample'].concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels));
-        Opt.colors = oZm.SerieStyle(oZm.Series['Voltage'], this.analyzer, false).Colors;
+        Opt.labels = ['Sample'].concat(this.analyzer.SerieNames('Voltage'));
+        Opt.colors = this.analyzer.SerieColors('Voltage');
         Opt.axes.y.pixelsPerLabel = 15;
         Opt.axes.y.axisLabelWidth = 34;
         Opt.axes.y.valueFormatter = (x) => { return this.Round(x, 2, true) + ' V'; };
@@ -207,7 +207,7 @@
     },
     methods: {
        Export: function() {
-         var Rows = [['Sample'].concat(oZm.Series['Voltage'].Names(this.analyzer))];
+         var Rows = [['Sample'].concat(this.analyzer.SerieNames('Voltage'))];
          for(var i = 0; i < this.event.Samples.length; i++) {
           var Row = [i];
           for(var ch = 0; ch < this.analyzer.VoltageChannels; ch++) Row.push(this.Round(this.event.Samples[i][ch], 2));

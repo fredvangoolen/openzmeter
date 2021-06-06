@@ -54,9 +54,9 @@
       Export: function() {
         if(this.data == null) return [];
         var Header = [['Sample']
-          .concat(this.analyzer.GetSeriesNames('Power Factor', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Current THD', this.analyzer.CurrentChannels))
-          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.SerieNames('Power Factor'))
+          .concat(this.analyzer.SerieNames('Current_THD'))
+          .concat(this.analyzer.SerieNames('Phi'))
         ];
         var TimeCol = this.data.Headers.indexOf('Time');
         var PowerFactorCol = this.data.Headers.indexOf('Power_Factor');

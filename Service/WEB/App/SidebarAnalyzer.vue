@@ -109,6 +109,7 @@
         if(serie == 'Current') return 'Current';
         if(serie == 'Active_Power') return 'Active Power';
         if(serie == 'Frequency') return 'Frequency';
+        if(serie == 'Current_THD') return 'Current THD';
         return serie;
       },
       SerieNames: function(serie) {
@@ -116,7 +117,7 @@
         var Name = this.SerieName(serie);
         if((serie == 'Frequency') || (this.analyzer.PhaseNames.length == 1)) return Name;
         for(var n = 0; n < this.analyzer.PhaseNames.length; n++) Result.push(Name + ' (' + this.analyzer.PhaseNames[n] + ')');
-        if((serie == 'Current') && (this.analyzer.NeutralName != null)) Result.push(Name + ' (' + this.analyzer.NeutralName + ')');
+        if(((serie == 'Current') || (serie == 'Current_THD')) && (this.analyzer.NeutralName != null)) Result.push(Name + ' (' + this.analyzer.NeutralName + ')');
         return Result;
       },
       FormatAggregation: function(val) {

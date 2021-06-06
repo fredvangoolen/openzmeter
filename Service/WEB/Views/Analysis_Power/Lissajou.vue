@@ -71,9 +71,9 @@
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
         var Header = ['Sample']
-          .concat(this.analyzer.GetSeriesNames('Voltage', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Current', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Power', this.analyzer.VoltageChannels));
+          .concat(this.analyzer.SerieNames('Voltage'))
+          .concat(this.analyzer.SerieNames('Current'))
+          .concat(this.analyzer.SerieNames('Power'));
         var Data = [Header];
         for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
           var Row = [i];

@@ -64,12 +64,12 @@
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
         var Header = [['Time']
-          .concat(this.analyzer.GetSeriesNames('Active Power', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Reactive Power', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Power Factor', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Voltage THD', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Current THD', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.SerieNames('Active Power'))
+          .concat(this.analyzer.SerieNames('Reactive Power'))
+          .concat(this.analyzer.SerieNames('Power Factor'))
+          .concat(this.analyzer.SerieNames('Phi'))
+          .concat(this.analyzer.SerieNames('Voltage THD'))
+          .concat(this.analyzer.SerieNames('Current THD'))
         ];
         var TimeCol = this.data.Headers.indexOf('Time');
         var ActiveCol = this.data.Headers.indexOf('Active_Power');

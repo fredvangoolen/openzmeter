@@ -206,7 +206,6 @@
       },
       Plotter: function(e) {
         if((this.analyzer == null) || (e.seriesIndex != 0) || (e.plotArea.h < 0) || (e.plotArea.w < 0) || (e.dygraph.file_.length == 0) || (e.dygraph.file_[0].length != 3)) return;
-        var Phases = (oZm.Series['Voltage'].Names(this.analyzer).length == 1) ? ['L'] : ['R', 'S', 'T'];
         var ctx = e.drawingContext;
         var MaxCurrent = 0;
         for(var i = 0; i < e.points.length; i++) {
@@ -245,7 +244,7 @@
             ctx.fillText(this.Round(e.dygraph.file_[i][1] - e.dygraph.file_[i - 1][1], 2, false) + "°", 3, 0);
             ctx.font = "bold 12px sans";
             ctx.textAlign = "right";
-            ctx.fillText(Phases[(i - 1) / 2], -3, 0);
+            ctx.fillText(this.analyzer.PhaseNames[(i - 1) / 2], -3, 0);
             ctx.fill();
             ctx.restore();
           }
@@ -258,7 +257,7 @@
             ctx.textAlign = "right";
             ctx.font = "bold 12px sans";
             ctx.fillStyle = "#333";
-            ctx.fillText((e.dygraph.file_.length == 1) ? 'ALL' : Phases[(e.dygraph.file_[i][0]) / 2], -15, -5);
+            ctx.fillText((e.dygraph.file_.length == 1) ? 'ALL' : this.analyzer.PhaseNames[(e.dygraph.file_[i][0]) / 2], -15, -5);
             ctx.fill();
             ctx.restore();
           }

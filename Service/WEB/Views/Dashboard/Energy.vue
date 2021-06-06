@@ -6,8 +6,6 @@
 
 <script>
   import Graph from 'Components/Graph.vue';
-  import * as oZm from 'JS/openZmeter.js';
-  import Dygraph from 'JS/dygraph.js';
   export default {
     props: { analyzer: Object, height: Number, data: Object },
     data() {
@@ -28,7 +26,7 @@
         Opt.legendFormatter = Graph.Formatters.Legend_Follow;
         Opt.plotter = (e) => { Graph.Plotters.BarOffset(e, ((this.data != null) && (this.data.Aggreg == '1H')) ? 3600000 : 900000); };
         Opt.labels = ['Time', 'Energy'];
-        Opt.colors = [oZm.Series['Active_Energy'].Color];
+        Opt.colors = [this.analyzer.SerieColor('Active_Energy')];
         Opt.xAxisHeight = 12;
         Opt.underlayCallback = (ctx, area, dygraph) => { Graph.Callbacks.Underlay_DrawPeriods(ctx, area, dygraph, this.data); };
         Opt.drawHighlightPointCallback = Graph.Callbacks.DrawHighlightPoint_HighlightBar;
@@ -42,7 +40,7 @@
           var TimeCol = this.data.Headers.indexOf('Time');
           var EnergyCol = this.data.Headers.indexOf('Active_Energy');
           for(var n in this.data.Rows) Opt.file.push([this.data.Rows[n][TimeCol], this.data.Rows[n][EnergyCol]]);
-          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { defMin: 0, defMax: 1, upperPercent: 0.1, lowerPercent: 0.1, minUpperWidth: 10, minLowerWidth: 10 });
+          Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { incZero: 10 });
           Opt.dateWindow = [this.data.From, this.data.To];
         }
         return Opt;

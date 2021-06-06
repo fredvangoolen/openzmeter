@@ -34,7 +34,6 @@
       };
     },
     created: function() {
-      this.SerieProps = oZm.Series[this.serie];
       this.TransferGraph.Update(this.analyzer, '200MS', this.range);
     },
     beforeDestroy: function() {
@@ -46,8 +45,7 @@
       },
       range: function(val, prev) {
         this.TransferGraph.Update(this.analyzer, '200MS', this.range);
-      },
-
+      }
     },
     computed: {
       PanelClass: function() {
@@ -77,8 +75,8 @@
         Opt.connectSeparatedPoints = false;
         Opt.fillGraph = false;
         Opt.legend = 'follow';
-        Opt.labels = ['Time'].concat(this.SerieProps.Names(this.analyzer));
-        Opt.colors = oZm.SerieStyle(this.SerieProps, this.analyzer, 0).Colors;
+        Opt.labels = ['Time'].concat(this.analyzer.SerieNames(this.serie));
+        Opt.colors = this.analyzer.SerieColors(this.serie);
         Opt.selectMode = 'euclidian';
         Opt.xAxisHeight = 12;
         Opt.axes.x.valueFormatter = (x) => { return this.analyzer.FormatTime(x); };
@@ -109,7 +107,7 @@
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.1 });
         }
         var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
-        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, this.SerieProps.Units, 2, true); };
+        Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, this.analyzer.SerieUnits(this.serie), 2, true); };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', 2, true); };
         return Object.seal(Opt);
       }
@@ -117,7 +115,7 @@
     methods: {
       Export: function() {
         if(this.data == null) return [];
-        var Header = [['Time'].concat(this.SerieProps.Names(this.analyzer))];
+        var Header = [['Time'].concat(this.analyzer.SerieNames(this.serie))];
         for(var n in this.data.Sampletime) {
           var Row = [this.data.Sampletime[n]];
           if(this.serie == 'Voltage') {

@@ -104,22 +104,24 @@
         var Data = [];
         if(this.data == null) return Data;
         var Header = ['Index'];
-        for(var i = 0; i < oZm.Series['Voltage'].Names(this.analyzer).length; i++) {
-          Header.push(oZm.Series['Voltage'].Names(this.analyzer)[i]);
-          Header.push(oZm.Series['Voltage'].Names(this.analyzer)[i] + ' (dB)');
+        var VoltageNames = this.analyzer.SerieNames('Voltage');
+        for(var i = 0; i < VoltageNames.length; i++) {
+          Header.push(VoltageNames[i]);
+          Header.push(VoltageNames + ' (dB)');
         }
-        for(var i = 0; i < oZm.Series['Current'].Names(this.analyzer).length; i++) {
-          Header.push(oZm.Series['Current'].Names(this.analyzer)[i]);
-          Header.push(oZm.Series['Current'].Names(this.analyzer)[i] + ' (dB)');
+        var CurrentNames = this.analyzer.SerieNames('Current');
+        for(var i = 0; i < CurrentNames.length; i++) {
+          Header.push(CurrentNames[i]);
+          Header.push(CurrentNames[i] + ' (dB)');
         }
         Data.push(Header);
         for(var i = 0; i < this.data['Voltage_FFT'][0].length; i++) {
           var Row = [i];
-          for(var n = 0; n < oZm.Series['Voltage'].Names(this.analyzer).length; n++) {
+          for(var n = 0; n < VoltageNames.length; n++) {
             Row.push(this.Round(this.data.Voltage_FFT[n][i], 3));
             Row.push(this.Round(20.0 * Math.log10(Math.max(0.001, this.data.Voltage_FFT[n][i])), 3));
           }
-          for(var n = 0; n < oZm.Series['Current'].Names(this.analyzer).length; n++) {
+          for(var n = 0; n < CurrentNames.length; n++) {
             Row.push(this.Round(this.data.Current_FFT[n][i], 3));
             Row.push(this.Round(20.0 * Math.log10(Math.max(0.001, this.data.Current_FFT[n][i])), 3));
           }

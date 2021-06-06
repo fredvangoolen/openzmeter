@@ -105,7 +105,7 @@
     methods: {
       Export: function() {
         if(this.TransferGraph.Data == null) return [];
-        var Rows = [['Time'].concat(this.analyzer.GetSeriesNames('Current', this.analyzer.CurrentChannels))];
+        var Rows = [['Time'].concat(this.analyzer.SerieNames('Current'))];
         var TimeCol = this.TransferGraph.Data.Headers.indexOf('Time');
         var CurrentCol = this.TransferGraph.Data.Headers.indexOf('Current');
         for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) {

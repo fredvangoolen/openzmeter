@@ -56,9 +56,9 @@
       Export: function() {
         if(this.data == null) return [];
         var Header = [['Time']
-          .concat(this.analyzer.GetSeriesNames('Power Factor', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Voltage THD', this.analyzer.VoltageChannels))
-          .concat(this.analyzer.GetSeriesNames('Phi', this.analyzer.VoltageChannels))
+          .concat(this.analyzer.SerieNames('Power Factor'))
+          .concat(this.analyzer.SerieNames('Voltage THD'))
+          .concat(this.analyzer.SerieNames('Phi'))
         ];
         if(this.analyzer.VoltageChannels > 1) Header[0].concat('Unbalance');
         var TimeCol = this.data.Headers.indexOf('Time');

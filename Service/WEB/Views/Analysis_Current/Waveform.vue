@@ -85,7 +85,7 @@
     },
     methods: {
       Export: function() {
-        var Rows = [['Sample'].concat(oZm.Series['Current'].Names(this.analyzer).concat(oZm.Series['Voltage'].Names(this.analyzer)))];
+        var Rows = [['Sample'].concat(this.analyzer.SerieNames('Current').concat(this.analyzer.SerieNames('Voltage')))];
         if(this.data != null) {
           for(var i = 0; i < this.data.Voltage_Samples[0].length; i++) {
             var Row = [i];

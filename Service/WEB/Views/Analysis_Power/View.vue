@@ -105,9 +105,9 @@
   import Parameters from './Parameters.vue';
   import Waveform from './Waveform.vue';
   import Harmonics from './Harmonics.vue';
-  import Ga from './GA.vue';
+//  import Ga from './GA.vue';
   import Evolution from './Evolution.vue';
-  import Distribution from './Distribution.vue';
+//  import Distribution from './Distribution.vue';
   import Lissajou from './Lissajou.vue';
   export default {
     props: { analyzer: { type: Object } },
@@ -171,7 +171,7 @@
         return Object.seal(Data);
       }
     },
-    components: { Power, Counters, Distribution, Waveform, Harmonics, Ga, Evolution, Parameters, Lissajou }
+    components: { Power, Counters, /*Distribution, */Waveform, Harmonics, /*Ga,*/ Evolution, Parameters, Lissajou }
   }
 </script>
 

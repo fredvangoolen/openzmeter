@@ -50,7 +50,7 @@
         if(this.data == null) return [];
         var Data = [];
         var Header = ['Time'];
-        for(var n in this.analyzer.HarmonicsNames) Header = Header.concat(this.analyzer.GetSeriesNames(this.analyzer.HarmonicsNames[n], this.analyzer.CurrentChannels));
+        for(var n in this.analyzer.HarmonicsNames) Header = Header.concat(this.analyzer.SerieNames(this.analyzer.HarmonicsNames[n]));
         Data.push(Header);
         var TimeCol = this.data.Headers.indexOf('Time');
         var DataCol = this.data.Headers.indexOf('Current_Harmonics');

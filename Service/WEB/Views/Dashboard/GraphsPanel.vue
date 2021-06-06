@@ -126,7 +126,6 @@
         } else if(this.serie == 'Frequency') {
           Opt.axes.y.valueRange = this.MatrixColsRange(Opt.file, [false, true], { rmsRange: 0.1 });
         }
-        //var Units = this.BestUnits(Math.max(Math.abs(Opt.axes.y.valueRange[0]), Math.abs(Opt.axes.y.valueRange[1])));
         Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, this.analyzer.SerieUnits[this.serie], (this.serie == 'Frequency') ? 3 : 2, true); };
         Opt.axes.y.axisLabelFormatter = (x, gran, opts, g) => { return Graph.Formatters.Y_UnitScaleFull(x, gran, opts, g, '', (this.serie == 'Frequency') ? 3 : 2, true); };
         return Object.seal(Opt);
@@ -135,7 +134,7 @@
     methods: {
       Export: function() {
         if((this.data == null) || (this.analyzer == null)) return [];
-        var Header = [['Time'].concat(this.analyzer.GetSeriesNames(this.analyzer.SerieName(this.serie), this.analyzer.Channels[this.serie]))];
+        var Header = [['Time'].concat(this.analyzer.SerieNames(this.analyzer.SerieName(this.serie)))];
         var TimeCol = this.data.Headers.indexOf('Time');
         var ValueCol = this.data.Headers.indexOf(this.serie);
         for(var n = 0; n < this.data.Rows.length; n++) {
