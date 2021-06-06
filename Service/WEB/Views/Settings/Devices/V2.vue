@@ -10,11 +10,6 @@
       </div>
     </template>
     <template v-slot:footer>
-      <!--div class="row" style="text-align: center">
-        <div class="col-xs-4">Device is {{ Settings.MainsPowered ? '' : ' NOT ' }} mains powered</div>
-        <div class="col-xs-4">Battery is {{ Settings.Charging ? '' : ' NOT ' }} charging </div>
-        <div class="col-xs-4">Battery voltage is {{ Round(Settings.BatteryVoltage, 2) }} V</div>
-      </div-->
     </template>
     <div class="row" v-if="View=='Inputs'">
       <div class="col-xs-12" style="margin-top:5px;">
@@ -96,7 +91,7 @@
       <div class="col-xs-12" style="margin-top:5px;">
         <div style="display: flex">
           <label class="control-label" style="line-height: 22px; min-width: 180px">Outputs configuration model</label>
-          <option-picker :options="[ {name: 'NONE', value: 'NONE'}, {name: '3PHASE+N', value: '3PHASE+N'}, {name: '3PHASE', value: '3PHASE'}, {name: '3PHASE + 1PHASE', value: '3PHASE + 1PHASE'}, {name: '1PHASE', value: '1PHASE'}, {name: '1PHASE + 1PHASE', value: '1PHASE + 1PHASE'}, {name: '1PHASE + 1PHASE + 1PHASE', value: '1PHASE + 1PHASE + 1PHASE'}, {name: '1PHASE + 1PHASE + 1PHASE + 1PHASE', value: '1PHASE + 1PHASE + 1PHASE + 1PHASE'}]" v-model="OutputMode"></option-picker>
+          <option-picker :options="AvaliableModes" v-model="OutputMode"></option-picker>
         </div>
       </div>
       <div class="col-xs-12">
@@ -150,6 +145,48 @@
               <td class="text-right"><option-picker :options="[{name: '+CH1', value: '+CH1'}, {name: '-CH1', value: '-CH1'}, {name: '+CH2', value: '+CH2'}, {name: '-CH2', value: '-CH2'}, {name: '+CH3', value: '+CH3'}, {name: '-CH3', value: '-CH3'}, {name: '+CH4', value: '+CH4'}, {name: '-CH4', value: '-CH4'}]" v-model="item.Current[0]"></option-picker></td>
               <td class="text-right"><option-picker :options="[{name: '+CH1', value: '+CH1'}, {name: '-CH1', value: '-CH1'}, {name: '+CH2', value: '+CH2'}, {name: '-CH2', value: '-CH2'}, {name: '+CH3', value: '+CH3'}, {name: '-CH3', value: '-CH3'}, {name: '+CH4', value: '+CH4'}, {name: '-CH4', value: '-CH4'}]" v-model="item.Current[1]"></option-picker></td>
               <td class="text-right"><option-picker :options="[{name: '+CH1', value: '+CH1'}, {name: '-CH1', value: '-CH1'}, {name: '+CH2', value: '+CH2'}, {name: '-CH2', value: '-CH2'}, {name: '+CH3', value: '+CH3'}, {name: '-CH3', value: '-CH3'}, {name: '+CH4', value: '+CH4'}, {name: '-CH4', value: '-CH4'}]" v-model="item.Current[2]"></option-picker></td>
+            </tr>
+          </table>
+
+
+          <table v-if="item.Mode == '2PHASE+N'">
+            <tr><td colspan="5" class="border-bottom">2PHASE+N<span class="serial-number">{{ Settings.Serial }}_2PN</span></td></tr>
+            <tr>
+              <td class="text-center border-right" colspan="2"><strong>Voltage</strong></td>
+              <td class="text-center" colspan="3"><strong>Current</strong></td>
+            </tr>
+            <tr>
+              <td class="text-center"><strong>L1</strong></td>
+              <td class="text-center border-right"><strong>L2</strong></td>
+              <td class="text-center"><strong>L1</strong></td>
+              <td class="text-center"><strong>L2</strong></td>
+              <td class="text-center"><strong>N</strong></td>
+            </tr>
+            <tr>
+              <td class="text-right"><option-picker :options="[{name: 'CH1', value: 'CH1'}, {name: 'CH2', value: 'CH2'}, {name: 'CH3', value: 'CH3'}]" v-model="item.Voltage[0]"></option-picker></td>
+              <td class="text-right border-right"><option-picker :options="[{name: 'CH1', value: 'CH1'}, {name: 'CH2', value: 'CH2'}, {name: 'CH3', value: 'CH3'}]" v-model="item.Voltage[1]"></option-picker></td>
+              <td class="text-right"><option-picker :options="[{name: '+CH1', value: '+CH1'}, {name: '-CH1', value: '-CH1'}, {name: '+CH2', value: '+CH2'}, {name: '-CH2', value: '-CH2'}, {name: '+CH3', value: '+CH3'}, {name: '-CH3', value: '-CH3'}, {name: '+CH4', value: '+CH4'}, {name: '-CH4', value: '-CH4'}]" v-model="item.Current[0]"></option-picker></td>
+              <td class="text-right"><option-picker :options="[{name: '+CH1', value: '+CH1'}, {name: '-CH1', value: '-CH1'}, {name: '+CH2', value: '+CH2'}, {name: '-CH2', value: '-CH2'}, {name: '+CH3', value: '+CH3'}, {name: '-CH3', value: '-CH3'}, {name: '+CH4', value: '+CH4'}, {name: '-CH4', value: '-CH4'}]" v-model="item.Current[1]"></option-picker></td>
+              <td class="text-right"><option-picker :options="[{name: '+CH1', value: '+CH1'}, {name: '-CH1', value: '-CH1'}, {name: '+CH2', value: '+CH2'}, {name: '-CH2', value: '-CH2'}, {name: '+CH3', value: '+CH3'}, {name: '-CH3', value: '-CH3'}, {name: '+CH4', value: '+CH4'}, {name: '-CH4', value: '-CH4'}]" v-model="item.Current[2]"></option-picker></td>
+            </tr>
+          </table>
+          <table v-if="item.Mode == '2PHASE'">
+            <tr><td colspan="4" class="border-bottom">2PHASE<span class="serial-number">{{ Settings.Serial }}_2P</span></td></tr>
+            <tr>
+              <td class="text-center border-right" colspan="2"><strong>Voltage</strong></td>
+              <td class="text-center" colspan="2"><strong>Current</strong></td>
+            </tr>
+            <tr>
+              <td class="text-center"><strong>L1</strong></td>
+              <td class="text-center border-right"><strong>L2</strong></td>
+              <td class="text-center"><strong>L1</strong></td>
+              <td class="text-center"><strong>L2</strong></td>
+            </tr>
+            <tr>
+              <td class="text-right"><option-picker :options="[{name: 'CH1', value: 'CH1'}, {name: 'CH2', value: 'CH2'}, {name: 'CH3', value: 'CH3'}]" v-model="item.Voltage[0]"></option-picker></td>
+              <td class="text-right border-right"><option-picker :options="[{name: 'CH1', value: 'CH1'}, {name: 'CH2', value: 'CH2'}, {name: 'CH3', value: 'CH3'}]" v-model="item.Voltage[1]"></option-picker></td>
+              <td class="text-right"><option-picker :options="[{name: '+CH1', value: '+CH1'}, {name: '-CH1', value: '-CH1'}, {name: '+CH2', value: '+CH2'}, {name: '-CH2', value: '-CH2'}, {name: '+CH3', value: '+CH3'}, {name: '-CH3', value: '-CH3'}, {name: '+CH4', value: '+CH4'}, {name: '-CH4', value: '-CH4'}]" v-model="item.Current[0]"></option-picker></td>
+              <td class="text-right"><option-picker :options="[{name: '+CH1', value: '+CH1'}, {name: '-CH1', value: '-CH1'}, {name: '+CH2', value: '+CH2'}, {name: '-CH2', value: '-CH2'}, {name: '+CH3', value: '+CH3'}, {name: '-CH3', value: '-CH3'}, {name: '+CH4', value: '+CH4'}, {name: '-CH4', value: '-CH4'}]" v-model="item.Current[1]"></option-picker></td>
             </tr>
           </table>
           <table v-if="item.Mode == '1PHASE'">
@@ -233,6 +270,24 @@
         if(this.CalcCh.CH2.Count > 1) Result.push({name: 'CH2', value: 'CH2'});
         if(this.CalcCh.CH3.Count > 1) Result.push({name: 'CH3', value: 'CH3'});
         return Result;
+      },
+      AvaliableModes: function() {
+        var Modes = [];
+        Modes.push({name: 'NONE', value: 'NONE'});
+        Modes.push({name: '1PHASE', value: '1PHASE'});
+        Modes.push({name: '1PHASE, 1PHASE', value: '1PHASE, 1PHASE'});
+        Modes.push({name: '1PHASE, 1PHASE, 1PHASE', value: '1PHASE, 1PHASE, 1PHASE'});
+        Modes.push({name: '1PHASE, 1PHASE, 1PHASE, 1PHASE', value: '1PHASE, 1PHASE, 1PHASE, 1PHASE'});
+        Modes.push({name: '2PHASE', value: '2PHASE'});
+        Modes.push({name: '2PHASE, 1PHASE', value: '2PHASE, 1PHASE'});
+        Modes.push({name: '2PHASE, 1PHASE, 1PHASE', value: '2PHASE, 1PHASE, 1PHASE'});
+        Modes.push({name: '2PHASE, 2PHASE', value: '2PHASE, 2PHASE'});
+        Modes.push({name: '2PHASE+N', value: '2PHASE+N'});
+        Modes.push({name: '2PHASE+N, 1PHASE', value: '2PHASE+N, 1PHASE'});
+        Modes.push({name: '3PHASE', value: '3PHASE'});
+        Modes.push({name: '3PHASE, 1PHASE', value: '3PHASE, 1PHASE'});
+        Modes.push({name: '3PHASE+N', value: '3PHASE+N'});
+        return Modes;
       }
     },
     watch: {
@@ -245,16 +300,28 @@
           this.$set(this.Settings, 'Outputs', [ { Mode: '3PHASE+N', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3', '+CH4'] } ]);
         } else if(val == '3PHASE') {
           this.$set(this.Settings, 'Outputs', [ { Mode: '3PHASE', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3'] } ]);
-        } else if(val == '3PHASE + 1PHASE') {
+        } else if(val == '3PHASE, 1PHASE') {
           this.$set(this.Settings, 'Outputs', [ { Mode: '3PHASE', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3'] }, { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH4' } ]);
         } else if(val == '1PHASE') {
           this.$set(this.Settings, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' } ]);
-        } else if(val == '1PHASE + 1PHASE') {
+        } else if(val == '1PHASE, 1PHASE') {
           this.$set(this.Settings, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' }, { Mode: '1PHASE', Voltage: 'CH2', Current: '+CH2' } ]);
-        } else if(val == '1PHASE + 1PHASE + 1PHASE')  {
+        } else if(val == '1PHASE, 1PHASE, 1PHASE')  {
           this.$set(this.Settings, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' }, { Mode: '1PHASE', Voltage: 'CH2', Current: '+CH2' }, { Mode: '1PHASE', Voltage: 'CH3', Current: '+CH3' } ]);
-        } else if(val == '1PHASE + 1PHASE + 1PHASE + 1PHASE') {
+        } else if(val == '1PHASE, 1PHASE, 1PHASE, 1PHASE') {
           this.$set(this.Settings, 'Outputs', [ { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH1' }, { Mode: '1PHASE', Voltage: 'CH2', Current: '+CH2' }, { Mode: '1PHASE', Voltage: 'CH3', Current: '+CH3' }, { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH4' } ]);
+        } else if(val == '2PHASE') {
+          this.$set(this.Settings, 'Outputs', [ { Mode: '2PHASE', Voltage: ['CH1', 'CH2'], Current: ['+CH1', '+CH2'] } ]);
+        } else if(val == '2PHASE, 2PHASE') {
+          this.$set(this.Settings, 'Outputs', [ { Mode: '2PHASE', Voltage: ['CH1', 'CH2'], Current: ['+CH1', '+CH2'] }, { Mode: '2PHASE', Voltage: ['CH1', 'CH2'], Current: ['+CH3', '+CH4'] } ]);
+        } else if(val == '2PHASE, 1PHASE') {
+          this.$set(this.Settings, 'Outputs', [ { Mode: '2PHASE', Voltage: ['CH1', 'CH2'], Current: ['+CH1', '+CH2'] }, { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH3' } ]);
+        } else if(val == '2PHASE, 1PHASE, 1PHASE') {
+          this.$set(this.Settings, 'Outputs', [ { Mode: '2PHASE', Voltage: ['CH1', 'CH2'], Current: ['+CH1', '+CH2'] }, { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH3' }, { Mode: '1PHASE', Voltage: 'CH2', Current: '+CH4' } ]);
+        } else if(val == '2PHASE+N') {
+          this.$set(this.Settings, 'Outputs', [ { Mode: '2PHASE', Voltage: ['CH1', 'CH2'], Current: ['+CH1', '+CH2', '+CH3'] } ]);
+        } else if(val == '2PHASE+N, 1PHASE') {
+          this.$set(this.Settings, 'Outputs', [ { Mode: '2PHASE', Voltage: ['CH1', 'CH2'], Current: ['+CH1', '+CH2', '+CH3'] }, { Mode: '1PHASE', Voltage: 'CH1', Current: '+CH4' } ]);
         }
       },
       Settings: {

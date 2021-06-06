@@ -153,6 +153,7 @@ json AnalyzerSoft::CheckConfig(const json &config, const Analyzer::AnalyzerMode 
       if(config["PhaseNames"][n].is_string() && (config["PhaseNames"][n].size() < 3) && (config["PhaseNames"][n].size() > 0)) ConfigOUT["PhaseNames"][n] = config["PhaseNames"][n];
     }
   }
+  if(config.contains("NeutralName") && config["NeutralName"].is_string() && (config["NeutralName"].size() < 3) && (config["NeutralName"].size() > 0) && ConfigOUT.contains("NeutralName")) ConfigOUT["NeutralName"] = config["NeutralName"];
   if(config.contains("TimeZone") && config["TimeZone"].is_string()) {
     time_zone TimeZone;
     string TZ = config["TimeZone"];

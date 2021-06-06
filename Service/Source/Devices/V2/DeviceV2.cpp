@@ -202,7 +202,7 @@ json DeviceV2::CheckConfig(const json &config) {
         bool Error      = false;
         Output["Mode"]  = "1PHASE";
         Output["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1, false);
-        if(Tmp.contains("Mode") && Tmp["Mode"].is_string() && ((Tmp["Mode"] == "1PHASE") || (Tmp["Mode"] == "3PHASE") || (Tmp["Mode"] == "3PHASE+N"))) Output["Mode"] = Tmp["Mode"];
+        if(Tmp.contains("Mode") && Tmp["Mode"].is_string() && ((Tmp["Mode"] == "1PHASE") || (Tmp["Mode"] == "2PHASE") || (Tmp["Mode"] == "2PHASE+N") || (Tmp["Mode"] == "3PHASE") || (Tmp["Mode"] == "3PHASE+N"))) Output["Mode"] = Tmp["Mode"];
         if(Output["Mode"] == "1PHASE") {
           Output["Voltage"] = "CH1";
           Output["Current"] = "+CH1";
@@ -213,9 +213,19 @@ json DeviceV2::CheckConfig(const json &config) {
           if((CurrentMask & (1 << Channel)) != 0) Error = true;
           CurrentMask |= (1 << Channel);
         } else {
-          Output["Voltage"] = {"CH1", "CH2", "CH3"};
-          Output["Current"] = {"+CH1", "+CH2", "+CH3"};
-          if(Output["Mode"] == "3PHASE+N") Output["Current"].push_back("+CH4");
+          if(Output["Mode"] == "2PHASE") {
+            Output["Voltage"] = {"CH1", "CH2"};
+            Output["Current"] = {"+CH1", "+CH2"};
+          } else if(Output["Mode"] == "2PHASE") {
+            Output["Voltage"] = {"CH1", "CH2"};
+            Output["Current"] = {"+CH1", "+CH2", "+CH3"};
+          } else if(Output["Mode"] == "3PHASE") {
+            Output["Voltage"] = {"CH1", "CH2", "CH3"};
+            Output["Current"] = {"+CH1", "+CH2", "+CH3"};
+          } else {
+            Output["Voltage"] = {"CH1", "CH2", "CH3"};
+            Output["Current"] = {"+CH1", "+CH2", "+CH3", "+CH4"};
+          }
           if(Tmp.contains("Voltage") && Tmp["Voltage"].is_array() && (Tmp["Voltage"].size() == Output["Voltage"].size()) && Tmp.contains("Current") && Tmp["Current"].is_array() && (Tmp["Current"].size() == Output["Current"].size())) {
             for(uint8_t i = 0; i < Output["Voltage"].size(); i++) {
               if(Tmp["Voltage"][i].is_string() && ((Tmp["Voltage"][i] == "CH1") || (Tmp["Voltage"][i] == "CH2") || (Tmp["Voltage"][i] == "CH3"))) Output["Voltage"][i] = Tmp["Voltage"][i];
@@ -231,7 +241,7 @@ json DeviceV2::CheckConfig(const json &config) {
             CurrentMask |= (1 << Channel);
           }
         }
-        if(Tmp.contains("Analyzer") && Tmp["Analyzer"].is_object()) Output["Analyzer"] = AnalyzerSoft::CheckConfig(Tmp["Analyzer"], (Output["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Output["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N, false);
+        if(Tmp.contains("Analyzer") && Tmp["Analyzer"].is_object()) Output["Analyzer"] = AnalyzerSoft::CheckConfig(Tmp["Analyzer"], Analyzer::StringToMode(Output["Mode"]), false);
         if(Error == false) ConfigOUT["Outputs"].push_back(Output);
       }
     }
@@ -301,7 +311,7 @@ void DeviceV2::Config(const json& config) {
   }
   memset(pChannelsDelay, 0, sizeof(int16_t) * DelayLen);
   for(auto &Tmp : config["Outputs"]) {
-    Analyzer::AnalyzerMode  Mode = (Tmp["Mode"] == "1PHASE") ? Analyzer::PHASE1 : (Tmp["Mode"] == "3PHASE") ? Analyzer::PHASE3 : Analyzer::PHASE3N;
+    Analyzer::AnalyzerMode  Mode = Analyzer::StringToMode(Tmp["Mode"]);
     string                  Name = pSerial;
     uint8_t VoltageMap[3];
     uint8_t CurrentMap[4];
@@ -314,6 +324,10 @@ void DeviceV2::Config(const json& config) {
       InvertMap[0]  = (Current[0] == '+') ? false : true;
       Name          = Name + "_CH" + to_string(Current[3] - '0') + "_1P";
     } else {
+      if(Mode == Analyzer::PHASE2)  Name = Name + "_2P";
+      if(Mode == Analyzer::PHASE2N) Name = Name + "_2PN";
+      if(Mode == Analyzer::PHASE3)  Name = Name + "_3P";
+      if(Mode == Analyzer::PHASE3N) Name = Name + "_3PN";
       for(uint8_t Ch = 0; Ch < Tmp["Voltage"].size(); Ch++) {
         string Voltage = Tmp["Voltage"][Ch];
         VoltageMap[Ch] = (Voltage[2] - '1');
@@ -323,7 +337,6 @@ void DeviceV2::Config(const json& config) {
         CurrentMap[Ch] = Current[3] - '1' + 3;
         InvertMap[Ch] = (Current[0] == '-');
       }
-      Name = Name + ((Mode == Analyzer::PHASE3) ? "_3P" : "_3PN");
     }
     pAnalyzers[pAnalyzersCount] = new DeviceV2Analyzer(Name, Mode, "/Devices/" + pSerial + "/Outputs/" + to_string(pAnalyzersCount) + "/Analyzer", VoltageMap, CurrentMap, InvertMap);
     AnalyzerManager::AddAnalyzer(pAnalyzers[pAnalyzersCount]);
@@ -358,8 +371,8 @@ void *DeviceV2::Thread() {
           Status |= 0x0001;
         } else {
           bool Online = true;
-          for(auto &Tmp : pAnalyzers) {
-            if(Tmp->State() != Analyzer::ONLINE) Online = false;
+          for(uint8_t n = 0; n < pAnalyzersCount; n++) {
+            if(pAnalyzers[n]->State() != Analyzer::ONLINE) Online = false;
           }
           Status |= (Online ? 0x0002 : 0x0003);
         }
