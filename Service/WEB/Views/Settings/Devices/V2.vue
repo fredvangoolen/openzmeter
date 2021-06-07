@@ -247,21 +247,31 @@
       this.Settings = Object.assign({}, this.settings);
       var Phase3N = 0;
       var Phase3  = 0;
+      var Phase2  = 0;
+      var Phase2N = 0;
       var Phase1  = 0;
       if(this.Settings.Outputs.lengt == 0) this.$set(this.Settings, 'Outputs', [ { Mode: '3PHASE+N', Voltage: ['CH1', 'CH2', 'CH3'], Current: ['+CH1', '+CH2', '+CH3', '+CH4'] } ]);
       for(var idx in this.Settings.Outputs) {
         if(this.Settings.Outputs[idx].Mode == '3PHASE+N') Phase3N++;
         if(this.Settings.Outputs[idx].Mode == '3PHASE') Phase3++;
+        if(this.Settings.Outputs[idx].Mode == '2PHASE+N') Phase2N++;
+        if(this.Settings.Outputs[idx].Mode == '2PHASE') Phase2++;
         if(this.Settings.Outputs[idx].Mode == '1PHASE') Phase1++;
       }
-      if((Phase3N == 0) && (Phase3 == 0) && (Phase1 == 0)) this.OutputMode = 'NONE';
-      if((Phase3N == 1) && (Phase3 == 0) && (Phase1 == 0)) this.OutputMode = '3PHASE+N';
-      if((Phase3N == 0) && (Phase3 == 1) && (Phase1 == 0)) this.OutputMode = '3PHASE';
-      if((Phase3N == 0) && (Phase3 == 1) && (Phase1 == 1)) this.OutputMode = '3PHASE + 1PHASE';
-      if((Phase3N == 0) && (Phase3 == 0) && (Phase1 == 1)) this.OutputMode = '1PHASE';
-      if((Phase3N == 0) && (Phase3 == 0) && (Phase1 == 2)) this.OutputMode = '1PHASE + 1PHASE';
-      if((Phase3N == 0) && (Phase3 == 0) && (Phase1 == 3)) this.OutputMode = '1PHASE + 1PHASE + 1PHASE';
-      if((Phase3N == 0) && (Phase3 == 0) && (Phase1 == 4)) this.OutputMode = '1PHASE + 1PHASE + 1PHASE + 1PHASE';
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase2N == 0) && (Phase2 == 0) && (Phase1 == 0)) this.OutputMode = 'NONE';
+      if((Phase3N == 1) && (Phase3 == 0) && (Phase2N == 0) && (Phase2 == 0) && (Phase1 == 0)) this.OutputMode = '3PHASE+N';
+      if((Phase3N == 0) && (Phase3 == 1) && (Phase2N == 0) && (Phase2 == 0) && (Phase1 == 0)) this.OutputMode = '3PHASE';
+      if((Phase3N == 0) && (Phase3 == 1) && (Phase2N == 0) && (Phase2 == 0) && (Phase1 == 1)) this.OutputMode = '3PHASE, 1PHASE';
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase2N == 0) && (Phase2 == 0) && (Phase1 == 1)) this.OutputMode = '1PHASE';
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase2N == 0) && (Phase2 == 0) && (Phase1 == 2)) this.OutputMode = '1PHASE, 1PHASE';
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase2N == 0) && (Phase2 == 0) && (Phase1 == 3)) this.OutputMode = '1PHASE, 1PHASE, 1PHASE';
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase2N == 0) && (Phase2 == 0) && (Phase1 == 4)) this.OutputMode = '1PHASE, 1PHASE, 1PHASE, 1PHASE';
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase2N == 0) && (Phase2 == 1) && (Phase1 == 0)) this.OutputMode = '2PHASE';
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase2N == 0) && (Phase2 == 1) && (Phase1 == 1)) this.OutputMode = '2PHASE, 1PHASE';
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase2N == 0) && (Phase2 == 1) && (Phase1 == 2)) this.OutputMode = '2PHASE, 1PHASE, 1PHASE';
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase2N == 0) && (Phase2 == 2) && (Phase1 == 0)) this.OutputMode = '2PHASE, 2PHASE';
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase2N == 1) && (Phase2 == 0) && (Phase1 == 0)) this.OutputMode = '2PHASE+N';
+      if((Phase3N == 0) && (Phase3 == 0) && (Phase2N == 1) && (Phase2 == 0) && (Phase1 == 1)) this.OutputMode = '2PHASE+N, 1PHASE';
     },
     computed: {
       AvaliableVoltageChannels: function() {
