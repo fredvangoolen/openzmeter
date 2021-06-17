@@ -22,17 +22,20 @@ AnalyzerSoftZeroCrossing::AnalyzerSoftZeroCrossing(const Analyzer::AnalyzerMode 
   pMutex             = PTHREAD_MUTEX_INITIALIZER;
   pDelayVoltage      = NULL;
   pDelayCurrent      = NULL;
+  pFilter            = NULL;
   pDelaySize         = 0;
   pSequence          = 0;
   pCycleLen          = 0;
   pDelayPos          = 0;
   pMaxCycles         = 1;
   pMaxSamples        = pSamplerate * 0.2;
-  memset(pFilters, 0, sizeof(pFilters));
+  pNominalVoltage    = 230.0;
+  pNominalFrequency  = 0;
   LogFile::Debug("AnalyzerSoftZeroCrosing started");
 }
 AnalyzerSoftZeroCrossing::~AnalyzerSoftZeroCrossing() {
   LogFile::Debug("Stoping AnalyzerSoftZeroCrosing...");
+  if(pFilter != NULL) delete pFilter;
   if(pDelayVoltage != NULL) free(pDelayVoltage);
   if(pDelayCurrent != NULL) free(pDelayCurrent);
   if(pWorkingBlock != NULL) delete pWorkingBlock;
@@ -43,6 +46,8 @@ void AnalyzerSoftZeroCrossing::Config(const float nominalVolt, const float nomin
   pthread_mutex_lock(&pMutex);
   pNominalVoltage   = nominalVolt;
   if(pNominalFrequency != nominalFreq) {
+    if(pFilter != NULL) delete pFilter;
+    pFilter           = NULL;
     if(pWorkingBlock != NULL) delete pWorkingBlock;
     pWorkingBlock     = NULL;
     if(pDelayVoltage != NULL) free(pDelayVoltage);
@@ -56,22 +61,12 @@ void AnalyzerSoftZeroCrossing::Config(const float nominalVolt, const float nomin
     pMaxCycles        = (pNominalFrequency == 0.0) ? 1 : (pNominalFrequency == 50.0) ? 20 : 24;
     pMaxSamples       = (pNominalFrequency == 0.0) ? pSamplerate * 0.2 : (pMaxCycles * pSamplerate * 1.15 * 0.5) / pNominalFrequency;
     if(pNominalFrequency != 0.0) {
-      for(uint8_t n = 0; n < FILTERSTAGES; n++) {
-        float w0 = 2 * M_PI * (pNominalFrequency / pSamplerate);
-        float alpha = sin(w0) / 2.0;
-        pFilters[n].A0 = alpha / (1.0 + alpha);
-        pFilters[n].A1 = 0.0;
-        pFilters[n].A2 = -alpha / (1.0 + alpha);
-        pFilters[n].B1 = (-2.0 * cos(w0)) / (1.0 + alpha);
-        pFilters[n].B2 = (1.0 - alpha) / (1.0 + alpha);
-        memset(pFilters[n].ChannelsZ1, 0, sizeof(Filter_t::ChannelsZ1));
-        memset(pFilters[n].ChannelsZ2, 0, sizeof(Filter_t::ChannelsZ2));
-      }
+      pFilter = new FilterBiquad(1, 5, pSamplerate, pNominalFrequency, pNominalFrequency * 0.1);
       pDelaySize = ((pSamplerate / pNominalFrequency) / 2.0) * FILTERSTAGES;
       pDelayVoltage = (float*)calloc(sizeof(float), pDelaySize * pVoltageChannels);
       pDelayCurrent = (float*)calloc(sizeof(float), pDelaySize * pCurrentChannels);
     }
-    memset(pLastSamples, 0, sizeof(pLastSamples));
+    pLastSample = 0.0;
   }
   pthread_mutex_unlock(&pMutex);
   LogFile::Debug("AnalyzerSoftZeroCrosing configured");
@@ -85,26 +80,28 @@ AnalyzerSoftBlock *AnalyzerSoftZeroCrossing::PushSample(const float *voltageSamp
   if(pNominalFrequency == 0) {
     pWorkingBlock->PushSample(voltageSamples, currentSamples);
   } else {
-    float VoltageSamples[3];
+    float VoltageSample;
     pWorkingBlock->PushSample(&pDelayVoltage[pVoltageChannels * pDelayPos], &pDelayCurrent[pCurrentChannels * pDelayPos]);
     memcpy(&pDelayVoltage[pDelayPos * pVoltageChannels], voltageSamples, sizeof(float) * pVoltageChannels);
     memcpy(&pDelayCurrent[pDelayPos * pCurrentChannels], currentSamples, sizeof(float) * pCurrentChannels);
     pDelayPos = (pDelayPos + 1) % pDelaySize;
-    for(uint8_t i = 0; i < pVoltageChannels; i++) {
-      VoltageSamples[i] = voltageSamples[i];
-      for(uint8_t n = 0; n < FILTERSTAGES; n++) {
-        float Out = VoltageSamples[i] * pFilters[n].A0 + pFilters[n].ChannelsZ1[i];
-        pFilters[n].ChannelsZ1[i] = VoltageSamples[i] * pFilters[n].A1 + pFilters[n].ChannelsZ2[i] - pFilters[n].B1 * Out;
-        pFilters[n].ChannelsZ2[i] = VoltageSamples[i] * pFilters[n].A2 - pFilters[n].B2 * Out;
-        VoltageSamples[i] = Out;
-      }
-    }
+    VoltageSample = voltageSamples[0];
+    pFilter->Push(&VoltageSample);
+//    for(uint8_t i = 0; i < pVoltageChannels; i++) {
+//      VoltageSamples[i] = voltageSamples[i];
+//      for(uint8_t n = 0; n < FILTERSTAGES; n++) {
+//        float Out = VoltageSamples[i] * pFilters[n].A0 + pFilters[n].ChannelsZ1[i];
+//        pFilters[n].ChannelsZ1[i] = VoltageSamples[i] * pFilters[n].A1 + pFilters[n].ChannelsZ2[i] - pFilters[n].B1 * Out;
+//        pFilters[n].ChannelsZ2[i] = VoltageSamples[i] * pFilters[n].A2 - pFilters[n].B2 * Out;
+//        VoltageSamples[i] = Out;
+//      }
+//    }
     pCycleLen++;
-    if((((pLastSamples[0] >= 0.0) && (VoltageSamples[0] < 0.0)) || ((pLastSamples[0] <= 0.0) && (VoltageSamples[0] > 0.0))) && (pCycleLen > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))) {
+    if((((pLastSample >= 0.0) && (VoltageSample < 0.0)) || ((pLastSample <= 0.0) && (VoltageSample > 0.0))) && (pCycleLen > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))) {
       pWorkingBlock->PushCycle(pCycleLen);
       pCycleLen = 0;
     }
-    memcpy(pLastSamples, VoltageSamples, sizeof(pLastSamples));
+    pLastSample = VoltageSample;
   }
   AnalyzerSoftBlock *Result = NULL;
   if((pWorkingBlock->Samples() == pMaxSamples) || (pWorkingBlock->Cycles() == pMaxCycles)) {

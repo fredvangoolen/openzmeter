@@ -97,6 +97,7 @@ DeviceV1::DeviceV1(const string &serial, const uint16_t version) : Device(serial
   pAnalyzer           = NULL;
   pDeviceHandle       = NULL;
   pNewDevice          = NULL;
+  pFilter             = NULL;
   pSubmittedTransfers = 0;
   pRunAverageCounter  = 0;
   memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
@@ -129,6 +130,7 @@ DeviceV1::~DeviceV1() {
   pTerminate = true;
   if(pThread != 0) pthread_join(pThread, NULL);
   ClearAnalyzers();
+  delete pFilter;
   LogFile::Info("DeviceV1 with serial '%s' stopped", pSerial.c_str());
 }
 void DeviceV1::ClearAnalyzers() {
@@ -148,6 +150,7 @@ json DeviceV1::CheckConfig(const json &config) {
   ConfigOUT["CurrentOffset"] = 0.0;
   ConfigOUT["CurrentInvert"] = false;
   ConfigOUT["Enabled"] = false;
+  ConfigOUT["LowPass"] = true;
   ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(json::object(), Analyzer::PHASE1, false);
   if(config.is_object()) {
     if(config.contains("VoltageGain") && config["VoltageGain"].is_number() && (config["VoltageGain"] >= -10.0) && (config["VoltageGain"] <= 10.0)) ConfigOUT["VoltageGain"] = config["VoltageGain"];
@@ -156,6 +159,7 @@ json DeviceV1::CheckConfig(const json &config) {
     if(config.contains("CurrentOffset") && config["CurrentOffset"].is_number() && (config["CurrentOffset"] >= -100.0) && (config["CurrentOffset"] <= 100.0)) ConfigOUT["CurrentOffset"] = config["CurrentOffset"];
     if(config.contains("CurrentInvert") && config["CurrentInvert"].is_boolean()) ConfigOUT["CurrentInvert"] = config["CurrentInvert"];
     if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
+    if(config.contains("LowPass") && config["LowPass"].is_boolean()) ConfigOUT["LowPass"] = config["LowPass"];
     if(config.contains("Analyzer") && config["Analyzer"].is_object()) ConfigOUT["Analyzer"] = AnalyzerSoft::CheckConfig(config["Analyzer"], Analyzer::PHASE1, false);
   }
   return ConfigOUT;
@@ -164,6 +168,9 @@ void DeviceV1::Config(const json& config) {
   ClearAnalyzers();
   pthread_mutex_lock(&pConfigLock);
   ConfigFile::WriteConfig("/Devices/" + pSerial, config);
+  if(pFilter != NULL) delete pFilter;
+  pFilter          = NULL;
+  if(config["LowPass"] == true) pFilter = new FilterBiquad(2, 5, 15625.0, 15625.0 / 4.0);
   pVoltageOffset   = config["VoltageOffset"];
   pVoltageGain     = config["VoltageGain"];
   pVoltageGain     = ((pHWVersion == 0x0100) ? 0.010683471 : 0.014244628) * (1.0 + (pVoltageGain / 100.0));
@@ -174,7 +181,7 @@ void DeviceV1::Config(const json& config) {
   pEnabled         = config["Enabled"];
   pVoltageDelayPos = 0;
   memset(pVoltageDelay, 0, sizeof(pVoltageDelay));
-  pAnalyzer = new AnalyzerSoft(pSerial + "_1P", Analyzer::PHASE1, "/Devices/" + pSerial + "/Analyzer", DEVICEV1_SAMPLEFREQ);
+  pAnalyzer = new AnalyzerSoft(pSerial + "_1P", Analyzer::PHASE1, "/Devices/" + pSerial + "/Analyzer", 15625.0);
   AnalyzerManager::AddAnalyzer(pAnalyzer);
   pthread_mutex_unlock(&pConfigLock);
 }
@@ -276,19 +283,21 @@ void DeviceV1::ReadCallback(struct libusb_transfer *transfer) {
       if(Samples[Pos] != -32768) {
         for(uint8_t Ch = 0; Ch < 2; Ch++) pRunAverageValues[Ch] += Samples[Pos + Ch];
         pRunAverageCounter++;
-        if(pRunAverageCounter == (DEVICEV1_SAMPLEFREQ * 10)) {
+        if(pRunAverageCounter == 156250) {
           pthread_rwlock_wrlock(&pAverageLocks);
-          for(uint8_t Ch = 0; Ch < 2; Ch++) pAverageValues[Ch] = pRunAverageValues[Ch] / (DEVICEV1_SAMPLEFREQ * 10.0);
+          for(uint8_t Ch = 0; Ch < 2; Ch++) pAverageValues[Ch] = pRunAverageValues[Ch] / 156250.0;
           pthread_rwlock_unlock(&pAverageLocks);
           memset(pRunAverageValues, 0, sizeof(pRunAverageValues));
           pRunAverageCounter = 0;
         }
         if((pAnalyzer != NULL) && (pEnabled == true)) {
-          float Voltage = (pVoltageDelay[pVoltageDelayPos] + pVoltageOffset) * pVoltageGain;
-          float Current = (Samples[Pos + 1] + pCurrentOffset) * pCurrentGain;
+          float Smp[2];
+          Smp[0] = (pVoltageDelay[pVoltageDelayPos] + pVoltageOffset) * pVoltageGain;
+          Smp[1] = (Samples[Pos + 1] + pCurrentOffset) * pCurrentGain;
           pVoltageDelay[pVoltageDelayPos] = Samples[Pos];
           pVoltageDelayPos = (pVoltageDelayPos + 1) % DEVICEV1_VOLTAGEDELAY;
-          pAnalyzer->BufferAppend(&Voltage, &Current);
+          if(pFilter != NULL) pFilter->Push(Smp);
+          pAnalyzer->BufferAppend(&Smp[0], &Smp[1]);
         }
       }
     }

@@ -155,7 +155,7 @@ bool AnalyzerSoftFFTs::GetSeriesJSON(const string &serie, json &result) {
     json Tmp1 = json::array();
     for(uint8_t n = 0; n < pVoltageChannels; n++) {
       json Tmp2 = json::array();
-      for(uint16_t i = 0; i < pOutLen; i++) Tmp2.push_back(VoltageBinPower(n, i));
+      for(uint16_t i = 0; i < (pOutLen / 2); i++) Tmp2.push_back(VoltageBinPower(n, i));
       Tmp1.push_back(Tmp2);
     }
     result["Voltage_FFT"] = Tmp1;
@@ -163,7 +163,7 @@ bool AnalyzerSoftFFTs::GetSeriesJSON(const string &serie, json &result) {
     json Tmp1 = json::array();
     for(uint8_t n = 0; n < pCurrentChannels; n++) {
       json Tmp2 = json::array();
-      for(uint16_t i = 0; i < pOutLen; i++) Tmp2.push_back(CurrentBinPower(n, i));
+      for(uint16_t i = 0; i < (pOutLen / 2); i++) Tmp2.push_back(CurrentBinPower(n, i));
       Tmp1.push_back(Tmp2);
     }
     result["Current_FFT"] = Tmp1;

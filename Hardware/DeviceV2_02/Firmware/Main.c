@@ -58,12 +58,12 @@ void DMA_CH1_ISR() {
     uint16_t Next = Samples_Buffer.Head + 1;
     if(Next == BUFF_LEN) Next = 0;
     Ptr++;
-    if(Next != Samples_Buffer.Tail) {
+    //if(Next != Samples_Buffer.Tail) {
       Samples_Buffer.Buffer[Samples_Buffer.Head] = (((Ptr[0] + Ptr[8] + Ptr[16] + Ptr[24] + Offset) >> 1) & 0x1FFF) | (Count << 13);
       Samples_Buffer.Head = Next;
-    } else {
-      Samples_Buffer.Head = 0;
-      Samples_Buffer.Tail = 0;
+    if(Next == Samples_Buffer.Tail) {
+    //  Samples_Buffer.Head = 0;
+    //  Samples_Buffer.Tail = 0;
       SignalsStatus.Status_Color = OFF;
       SignalsStatus.Wifi_Color = OFF;
       SignalsStatus.Bluetooth_Color = OFF;

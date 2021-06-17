@@ -71,8 +71,8 @@
           Val.Units += 'W';
         } else if((this.serie == 'Voltage') || (this.serie == 'Current')) {
           Val.Value = 0.0;
-          for(var n = 0; n < this.analyzer.VoltageChannels; n++) Val.Value += Math.pow(this.last[this.serie][n], 2.0);
-          Val.Value = Math.sqrt(Val.Value / this.analyzer.VoltageChannels);
+          for(var n = 0; n < this.last.Voltage.length; n++) Val.Value += Math.pow(this.last[this.serie][n], 2.0);
+          Val.Value = Math.sqrt(Val.Value / this.last.Voltage.length);
           Val.Units = this.BestUnits(Val.Value);
           Val.Value = this.Round(this.ScaleUnits(Val.Value, Val.Units), 2, true);
           for(var n = 0; n < this.last[this.serie].length; n++) Val.Phases.push(this.Round(this.ScaleUnits(this.last[this.serie][n], Val.Units), 2, true) + ' ' + Val.Units + this.analyzer.SerieUnits(this.serie));

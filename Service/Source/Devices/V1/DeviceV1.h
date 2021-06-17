@@ -18,13 +18,13 @@
 #include <deque>
 #include "Device.h"
 #include "AnalyzerSoft.h"
+#include "FilterBiquad.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV1_VID             0x0483                          //Product ID
 #define DEVICEV1_PID             0x7270                          //Device ID
 #define DEVICEV1_MANSTRING       "zRed"                          //Manufacturer string
 #define DEVICEV1_01_PRODSTRING   "openZmeter - Capture device"   //Product string
 #define DEVICEV1_ENDPOINT_IN       0x81                          //Endpoint de lectura de datos
-#define DEVICEV1_SAMPLEFREQ       15625                          //Frequencia de muestreo
 #define DEVICEV1_BUFFERSECONDS       10                          //Tamaño del buffer (10 segundos)
 #define DEVICEV1_TRANSFERS            8                          //Numero de transferencias a encolar
 #define DEVICEV1_VOLTAGEDELAY         2                          //Samples to delay
@@ -52,6 +52,7 @@ class DeviceV1 final : public Device {
     float                        pAverageValues[2];        //Average wave value of last second
     pthread_rwlock_t             pAverageLocks;            //Lock access to average values
     AnalyzerSoft                *pAnalyzer;
+    FilterBiquad                *pFilter;
     uint8_t                      pVoltageDelayPos;
     int16_t                      pVoltageDelay[DEVICEV1_VOLTAGEDELAY];
   private :

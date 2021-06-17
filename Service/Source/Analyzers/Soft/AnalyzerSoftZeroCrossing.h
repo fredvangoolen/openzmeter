@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------------------------------------------------
 #pragma once
 #include <pthread.h>
-#include "FilterBandPass.h"
+#include "FilterBiquad.h"
 #include "Analyzer.h"
 #include "AnalyzerSoftBlock.h"
 // ---------------------------------------------------------------------------------------------------------------------
@@ -23,31 +23,21 @@ class AnalyzerSoftZeroCrossing final {
   private :
     static const uint8_t FILTERSTAGES = 5; //Filter stages for zerocrossing
   private :
-    typedef struct {
-      float  A0;
-      float  A1;
-      float  A2;
-      float  B1;
-      float  B2;
-      float  ChannelsZ1[3];
-      float  ChannelsZ2[3];
-    } Filter_t;
-  private :
     const float        pSamplerate;                 //Velocidad de muestreo
     const uint8_t      pVoltageChannels;            //Number of voltage channels
     const uint8_t      pCurrentChannels;            //Number of current channels
   private :
     pthread_mutex_t    pMutex;                      //Configuration mutex
     uint64_t           pSequence;                   //Sequence number of analyzed blocks
-    Filter_t           pFilters[FILTERSTAGES];      //Filter bank
     uint8_t            pMaxCycles;                  //Allowed cicles for configured frequency
     uint16_t           pMaxSamples;                 //Max samples for configured frequency
     uint16_t           pDelaySize;                  //Delay samples
     uint16_t           pDelayPos;                   //Delay pos
     uint16_t           pCycleLen;                   //Current cicle length
+    FilterBiquad      *pFilter;                     //Band pass filter for nominal frequency
     float             *pDelayVoltage;               //Delay line for voltage
     float             *pDelayCurrent;               //Delay line for current
-    float              pLastSamples[3];             //Filter samples backup
+    float              pLastSample;                 //Filter sample backup
     float              pNominalFrequency;           //Configured grid frequency
     float              pNominalVoltage;             //Configured grid voltage
     AnalyzerSoftBlock *pWorkingBlock;               //Current filling block
