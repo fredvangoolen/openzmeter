@@ -110,7 +110,7 @@
         var CurrentCol = this.TransferGraph.Data.Headers.indexOf('Current');
         for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) {
           var Row = [this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[n][TimeCol])];
-          for(var i = 0; i < this.analyzer.CurrentChannels; i++) Row.push(this.Round(this.TransferGraph.Data.Rows[n][CurrentCol][i], 3));
+          for(var i = 0; i < this.TransferGraph.Data.Rows[n][CurrentCol].length; i++) Row.push(this.Round(this.TransferGraph.Data.Rows[n][CurrentCol][i], 3));
           Rows.push(Row);
         }
         return Object.seal(Rows);

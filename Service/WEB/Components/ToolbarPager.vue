@@ -4,7 +4,7 @@
       <div class="input-group-btn">
         <button class="btn btn-default narrow" type="button" @click="CalcView(-1)"><img :src="require('Imgs/resultset_previous.png')"></button>
       </div>
-      <input type="text" class="form-control" placeholder="Filter..." v-model="Filter">
+      <input type="text" class="form-control" placeholder="Filter..." v-model="Filter" :disabled="filtercols==null">
       <div class="input-group-btn">
         <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"><span class="caret"></span></button>
         <ul class="dropdown-menu pull-right">
@@ -42,17 +42,20 @@
     },
     methods: {
       FilterOutput: function() {
-        this.Filter = this.Filter.toLowerCase();
-        this.Output = [];
         this.Pages = [];
-        for(var row = 0; row < this.input.length; row++) {
-          this.input[row].rowNum = row;
-          for(var n = 0; n < this.filtercols.length; n++) {
-            var Val = String(this.input[row][this.filtercols[n]]).toLowerCase();
-            if(Val == undefined) continue;
-            if(Val.includes(this.Filter)) {
-              this.Output.push(this.input[row]);
-              break;
+        if(this.filtercols == null) {
+          this.Output = this.input;
+        } else {
+          this.Filter = this.Filter.toLowerCase();
+          for(var row = 0; row < this.input.length; row++) {
+            this.input[row].rowNum = row;
+            for(var n = 0; n < this.filtercols.length; n++) {
+              var Val = String(this.input[row][this.filtercols[n]]).toLowerCase();
+              if(Val == undefined) continue;
+              if(Val.includes(this.Filter)) {
+                this.Output.push(this.input[row]);
+                break;
+              }
             }
           }
         }

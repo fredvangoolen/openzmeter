@@ -8,6 +8,7 @@
           <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')"></button>
           <button type="button" class="btn btn-default btn-xs" @click="ShowDialog=false"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
+        <toolbar-pager class="pull-right" :pageSize="100" :input="Rows" :output.sync="FilterRows"></toolbar-pager>
       </template>
       <div class="row">
         <div class="col-md-12">
@@ -18,9 +19,11 @@
           </div>
         </div>
         <div class="col-md-12 scrollpanel">
-          <button type="button" class="btn btn-default btn-sm" v-if="!Preview" @click="Preview=true"><img :src="require('Imgs/magnifier.png')">Load preview</button>
-          <table v-if="Preview" class="table small">
-            <tr v-for="(row, idx) in Rows" :key="idx">
+          <table class="table small">
+            <tr>
+              <td v-for="(val, idx) in Headers" :key="idx">{{ val }}</td>
+            </tr>
+            <tr v-for="(row, idx) in FilterRows" :key="idx">
               <td v-for="(val, idx2) in row" :key="idx2">{{ val }}</td>
             </tr>
           </table>
@@ -28,7 +31,7 @@
       </div>
       <textarea type="text" ref="copyInput" style="max-height: 1px; position: absolute; top: -1000px;"></textarea>
       <template v-slot:footer>
-      Document have {{ Rows.length }} rows.
+        Document have {{ Rows.length }} rows.
       </template>
     </dlg>
   </button>
@@ -38,14 +41,16 @@
   export default {
     props: { rows: Function, file: String },
     data() {
-      return { ShowDialog: false, File: '', Preview: false, Rows: null };
+      return { ShowDialog: false, File: '', Preview: 0, AllRows: null, Headers: null, Rows: null, FilterRows: null };
     },
     methods: {
       Show: function() {
         this.File = this.file;
         this.ShowDialog = true;
         this.Preview = false;
-        this.Rows = this.rows();
+        this.AllRows = this.rows();
+        this.Headers = this.AllRows.slice(0, 1)[0];
+        this.Rows = this.AllRows.slice(1);
       },
       FormatText: function() {
         var processRow = function (row) {
@@ -61,7 +66,7 @@
           return finalVal + '\r\n';
         };
         var csvFile = '';
-        for(var i in this.Rows) csvFile += processRow(this.Rows[i]);
+        for(var i in this.AllRows) csvFile += processRow(this.AllRows[i]);
         return csvFile;
       },
       Clipboard: function() {
@@ -74,19 +79,15 @@
       Save: function() {
         var csvFile = this.FormatText();
         var blob = new Blob([csvFile], {type: 'text/csv;charset=utf-8;'});
-        if(navigator.msSaveBlob) { // IE 10+
-          navigator.msSaveBlob(blob, this.File + '.csv');
-        } else {
-          var link = document.createElement("a");
-          if(link.download !== undefined) {
-            var url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", this.File + '.csv');
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          }
+        var link = document.createElement("a");
+        if(link.download !== undefined) {
+          var url = URL.createObjectURL(blob);
+          link.setAttribute("href", url);
+          link.setAttribute("download", this.File + '.csv');
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         }
         this.ShowDialog = false;
       }

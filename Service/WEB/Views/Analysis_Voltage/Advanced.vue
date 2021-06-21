@@ -107,7 +107,7 @@
         var VoltageNames = this.analyzer.SerieNames('Voltage');
         for(var i = 0; i < VoltageNames.length; i++) {
           Header.push(VoltageNames[i]);
-          Header.push(VoltageNames + ' (dB)');
+          Header.push(VoltageNames[i] + ' (dB)');
         }
         var CurrentNames = this.analyzer.SerieNames('Current');
         for(var i = 0; i < CurrentNames.length; i++) {

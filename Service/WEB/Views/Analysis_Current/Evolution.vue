@@ -6,7 +6,7 @@
         <toolbar-phases storage="DetailsPhases" :analyzer="analyzer" :multi="false" :current="true" v-model="Phase"></toolbar-phases>
         <toolbar-options storage="DetailsOptions" :options="['Log']" v-model="Options"></toolbar-options>
         <div class="btn-group">
-          <button type="button" class="btn btn-default btn-xs" v-if="Names.length==20" title="Show full 50 harmonics view" @click="Names=Names.concat(['21th', '22th', '23th', '24th', '25th', '26th', '27th', '28th', '29th', '30th', '31th', '32th', '33th', '34th', '35th', '36th', '37th', '38th', '39th', '40th', '41th', '42th', '43th', '44th', '45th', '46th', '47th', '48th', '49th', '50th'])"><img :src="require('Imgs/table_rows_insert_below_word.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" v-if="Names.length==20" title="Show full 50 harmonics view" @click="ShowAll"><img :src="require('Imgs/table_rows_insert_below_word.png')"></button>
           <button-export file="Evolution" :rows="Export"></button-export>
         </div>
       </div>
@@ -25,7 +25,7 @@
   export default {
     props: { analyzer: Object, data: Object },
     data() {
-      return { MouseOver: false, Options: null, Phase: null, Names: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', '13th', '14th', '15th', '16th', '17th', '18th', '19th', '20th'] };
+      return { MouseOver: false, Options: null, Phase: null, Names: [] };
     },
     computed: {
       Data: function() {
@@ -34,7 +34,18 @@
         return Object.seal(Series);
       }
     },
+    created: function() {
+      if(this.analyzer != null) this.Names = this.analyzer.HarmonicsNames.slice(0, 20);
+    },
+    watch: {
+      analyzer: function() {
+        if(this.analyzer != null) this.Names = this.analyzer.HarmonicsNames.slice(0, 20);
+      }
+    },
     methods: {
+      ShowAll: function() {
+        if(this.analyzer != null) this.Names = this.analyzer.HarmonicsNames;
+      },
       Formatter: function(val) {
         return this.Round(val, 2, true) + (this.Options['Log'] ? 'dB' : 'A');
       },
@@ -57,7 +68,7 @@
         for(var n = 0; n < this.data.Rows.length; n++) {
           var Row = [this.analyzer.FormatDateTime(this.data.Rows[n][TimeCol])];
           for(var i = 0; i < this.analyzer.HarmonicsNames.length; i++) {
-            for(var j = 0; j < this.analyzer.CurrentChannels; j++) Row.push(this.Round(this.data.Rows[n][DataCol][j][i], 3));
+            for(var j = 0; j < this.data.Rows[n][DataCol].length; j++) Row.push(this.Round(this.data.Rows[n][DataCol][j][i], 3));
           }
           Data.push(Row);
         }

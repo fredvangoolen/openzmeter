@@ -115,7 +115,7 @@
         var VoltageCol = this.TransferGraph.Data.Headers.indexOf('Voltage');
         for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) {
           var Row = [this.analyzer.FormatDateTime(this.TransferGraph.Data.Rows[n][TimeCol])];
-          for(var i = 0; i < this.analyzer.VoltageChannels; i++) Row.push(this.Round(this.TransferGraph.Data.Rows[n][VoltageCol][i], 3));
+          for(var i = 0; i < this.TransferGraph.Data.Rows[n][VoltageCol].length; i++) Row.push(this.Round(this.TransferGraph.Data.Rows[n][VoltageCol][i], 3));
           Rows.push(Row);
         }
         return Object.seal(Rows);
