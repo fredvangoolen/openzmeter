@@ -29,8 +29,8 @@
           var Aggreg = 0.0;
           if((this.serie == 'Voltage') || (this.serie == 'Current')) {
             Val.Aggreg = "RMS";
-            for(var n = 0; n < this.analyzer.VoltageChannels; n++) Aggreg += Math.pow(this.value[this.serie][n], 2.0);
-            Aggreg = Math.sqrt(Aggreg / this.analyzer.VoltageChannels);
+            for(var n in this.value.Voltage) Aggreg += Math.pow(this.value[this.serie][n], 2.0);
+            Aggreg = Math.sqrt(Aggreg / this.value.Voltage.length);
           } else if((this.serie == 'Active_Power') || (this.serie == 'Active_Energy')) {
             Val.Aggreg = "SUM";
             for(var i in this.value[this.serie]) Aggreg += this.value[this.serie][i];

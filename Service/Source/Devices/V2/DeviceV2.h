@@ -18,6 +18,7 @@
 #include "USBTransfer.h"
 #include "DeviceV2Analyzer.h"
 #include "FilterDC.h"
+#include "FilterBiquad.h"
 //----------------------------------------------------------------------------------------------------------------------
 #define DEVICEV2_VID             0x0483                          //Product ID
 #define DEVICEV2_PID             0x7270                          //Device ID
@@ -35,6 +36,7 @@ class DeviceV2 final : public Device {
     static bool                  pRegistered;
   private :
     FilterDC                    *pFilterDC;                //DC Filter
+    FilterBiquad                *pFilter;                  //Low pass filter
     uint8_t                      pSubmittedTransfers;      //Keep count of currently submitted transfers
     pthread_t                    pThread;                  //Descriptor del hilo de captura
     volatile bool                pTerminate;               //Marca que deben detenerse los trabajos pendientes

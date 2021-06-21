@@ -107,7 +107,7 @@
       },
       FormatPhases: function(val) {
         var Return = [];
-        for(var n in val.Current.length) Return.push(this.FormatHTML(val.Current[n]));
+        for(var n in val.Current) Return.push(this.FormatHTML(val.Current[n]));
         return Return;
       }
     }

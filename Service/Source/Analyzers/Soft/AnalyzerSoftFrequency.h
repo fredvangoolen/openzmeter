@@ -27,9 +27,9 @@ class AnalyzerSoftFrequency final {
     uint16_t                   pFreqCyclesPos;           //Frequency cycles write position
     uint16_t                   pFreqCyclesLen;           //Frequency cycles buffer len
     uint16_t                  *pFreqCycles;              //Frequency calc cycles lenghts
-    uint16_t                   pInvalidValues;           //Invalid samples in buffer
-    uint16_t                   pMinCycle;                //Minimum cycle len
-    uint16_t                   pMaxCycle;                //Maximun cycle len
+    uint16_t                   pCyclesCount;             //Valid samples in buffer
+//    uint16_t                   pMinCycle;                //Minimum cycle len
+//    uint16_t                   pMaxCycle;                //Maximun cycle len
     uint32_t                   pBufferLen;               //Total length of valid cycles
   private :
     void  PushCycle(const uint16_t len);

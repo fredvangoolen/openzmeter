@@ -18,6 +18,10 @@
         <hr style="margin: 5px 0px 5px 0px"/>
         <label class="control-label" style="line-height: 22px">AC Coupling</label>
         <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.BlockDC"></toggle>
+        <hr style="margin: 5px 0px 5px 0px"/>
+        <label class="control-label" style="line-height: 22px">6KHz low pass filter</label>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="Settings.LowPass"></toggle>
+        <hr style="margin: 5px 0px 5px 0px"/>
         <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px">Device inputs can be calibrated to compensate components derating over time.</div>
       </div>
       <div class="col-xs-12">

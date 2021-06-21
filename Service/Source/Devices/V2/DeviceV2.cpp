@@ -94,14 +94,13 @@ DeviceV2::DeviceV2(const string &serial) : Device(serial, "V2", "Capture device 
   pDeviceHandle       = NULL;
   pNewDevice          = NULL;
   pFilterDC           = NULL;
+  pFilter             = NULL;
   pSubmittedTransfers = 0;
   pRunAverageCounter  = 0;
   pTerminate          = false;
   pCaptureSize        = 0xFF;
   for(uint8_t n = 0; n < 7; n++) pRunAverageValues[n] = 0;
   for(uint8_t n = 0; n < 7; n++) pAverageValues[n]    = 0.0;
-//  for(uint8_t n = 0; n < 7; n++) pFilterZ1[n] = 0.0;
-//  for(uint8_t n = 0; n < 7; n++) pFilterZ2[n] = 0.0;
   Config(CheckConfig(ConfigFile::ReadConfig("/Devices/" + pSerial)));
   int Error = libusb_init(&pContext);
   if(Error < 0) {
@@ -146,6 +145,7 @@ DeviceV2::~DeviceV2() {
   if(pThread != 0) pthread_join(pThread, NULL);
   ClearAnalyzers();
   if(pFilterDC != NULL) delete pFilterDC;
+  if(pFilter != NULL) delete pFilter;
   if(pChannelsDelay != NULL) free(pChannelsDelay);
   LogFile::Info("DeviceV2 with serial '%s' stopped", pSerial.c_str());
 }
@@ -157,6 +157,7 @@ json DeviceV2::CheckConfig(const json &config) {
   ConfigOUT["CurrentOffset"] = vector<float>(4, 0.0);
   ConfigOUT["CurrentDelay"] = vector<uint8_t>(4, 0);
   ConfigOUT["Enabled"] = false;
+  ConfigOUT["LowPass"] = true;
   ConfigOUT["HighGain"] = false;
   ConfigOUT["BlockDC"] = true;
   ConfigOUT["Outputs"] = json::array();
@@ -194,6 +195,7 @@ json DeviceV2::CheckConfig(const json &config) {
     if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
     if(config.contains("HighGain") && config["HighGain"].is_boolean()) ConfigOUT["HighGain"] = config["HighGain"];
     if(config.contains("BlockDC") && config["BlockDC"].is_boolean()) ConfigOUT["BlockDC"] = config["BlockDC"];
+    if(config.contains("LowPass") && config["LowPass"].is_boolean()) ConfigOUT["LowPass"] = config["LowPass"];
     if(config.contains("Outputs") && config["Outputs"].is_array()) {
       uint8_t CurrentMask = 0x00;
       for(auto Tmp : config["Outputs"]) {
@@ -301,13 +303,15 @@ void DeviceV2::Config(const json& config) {
   for(uint8_t Ch = 0; Ch < 4; Ch++) pChannelsDelaySize[3 + Ch] = (MaxDelay + 1) - Delays[Ch];
   for(uint8_t Ch = 0; Ch < 7; Ch++) DelayLen = DelayLen + pChannelsDelaySize[Ch];
   pChannelsDelay = (int16_t*)realloc(pChannelsDelay, sizeof(int16_t) * DelayLen);
-  if((config["BlockDC"] == true) && (pFilterDC == NULL)) {
+  if(pFilterDC != NULL) delete pFilterDC;
+  if(pFilter != NULL) delete pFilter;
+  pFilterDC = NULL;
+  pFilter   = NULL;
+  if(config["LowPass"] == true) pFilter = new FilterBiquad(7, 5, 24000.0, 24000.0 / 4.0);
+  if(config["BlockDC"] == true) {
     pFilterDC = new FilterDC(7, 24000.0, 1.0);
     for(uint8_t Ch = 0; Ch < 3; Ch++) pVoltageOffset[Ch] = 0.0;
     for(uint8_t Ch = 0; Ch < 4; Ch++) pCurrentOffset[Ch] = 0.0;
-  } else if((config["BlockDC"] == false) && (pFilterDC != NULL)) {
-    delete pFilterDC;
-    pFilterDC = NULL;
   }
   memset(pChannelsDelay, 0, sizeof(int16_t) * DelayLen);
   for(auto &Tmp : config["Outputs"]) {
@@ -520,6 +524,7 @@ void DeviceV2::ReadCallback(struct libusb_transfer *transfer) {
             Values[5] = (Values[5] + pCurrentOffset[2]) * pCurrentGain[2];
             Values[6] = (Values[6] + pCurrentOffset[3]) * pCurrentGain[3];
             if(pFilterDC != NULL) pFilterDC->Push(Values);
+            if(pFilter != NULL) pFilter->Push(Values);
             for(uint8_t n = 0; n < pAnalyzersCount; n++) pAnalyzers[n]->BufferAppend(Values);
           }
           pCaptureSize = 0;

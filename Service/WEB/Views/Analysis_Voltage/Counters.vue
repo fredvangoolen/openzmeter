@@ -147,7 +147,7 @@
       },
       FormatPhases: function(val) {
         var Return = [];
-        for(var n in val.Voltage.length) Return.push(this.FormatHTML(val.Voltage[n]));
+        for(var n in val.Voltage) Return.push(this.FormatHTML(val.Voltage[n]));
         return Return;
       }
     }

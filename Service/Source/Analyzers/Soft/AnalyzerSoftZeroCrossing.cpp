@@ -87,17 +87,8 @@ AnalyzerSoftBlock *AnalyzerSoftZeroCrossing::PushSample(const float *voltageSamp
     pDelayPos = (pDelayPos + 1) % pDelaySize;
     VoltageSample = voltageSamples[0];
     pFilter->Push(&VoltageSample);
-//    for(uint8_t i = 0; i < pVoltageChannels; i++) {
-//      VoltageSamples[i] = voltageSamples[i];
-//      for(uint8_t n = 0; n < FILTERSTAGES; n++) {
-//        float Out = VoltageSamples[i] * pFilters[n].A0 + pFilters[n].ChannelsZ1[i];
-//        pFilters[n].ChannelsZ1[i] = VoltageSamples[i] * pFilters[n].A1 + pFilters[n].ChannelsZ2[i] - pFilters[n].B1 * Out;
-//        pFilters[n].ChannelsZ2[i] = VoltageSamples[i] * pFilters[n].A2 - pFilters[n].B2 * Out;
-//        VoltageSamples[i] = Out;
-//      }
-//    }
     pCycleLen++;
-    if((((pLastSample >= 0.0) && (VoltageSample < 0.0)) || ((pLastSample <= 0.0) && (VoltageSample > 0.0))) && (pCycleLen > ((pSamplerate * 0.85) / (2.0 * pNominalFrequency)))) {
+    if(((pLastSample >= 0.0) && (VoltageSample < 0.0)) || ((pLastSample <= 0.0) && (VoltageSample > 0.0))) {
       pWorkingBlock->PushCycle(pCycleLen);
       pCycleLen = 0;
     }
