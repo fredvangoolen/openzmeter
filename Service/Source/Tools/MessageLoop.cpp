@@ -43,7 +43,6 @@ void MessageLoop::SendMessage(const string &id) {
   pthread_mutex_unlock(&pMessagesMutex);
 }
 void MessageLoop::HandleEvents() {
-  uint64_t Time = Tools::GetTime64();
   pthread_mutex_lock(&pListenersMutex);
   for(auto &Item : pListeners) {
     bool Call = false;
@@ -54,11 +53,11 @@ void MessageLoop::HandleEvents() {
       Call = true;
     }
     pthread_mutex_unlock(&pMessagesMutex);
-    if((Call == false) && (Item.second.Interval != 0) && ((Item.second.LastCall + Item.second.Interval) < Time)) Call = true;
+    if((Call == false) && (Item.second.Interval != 0) && ((Item.second.LastCall + Item.second.Interval) < Tools::GetTime64())) Call = true;
     if(Call == false) continue;
     LogFile::Debug("Handling event '%s'", Item.first.c_str());
     Item.second.Function();
-    Item.second.LastCall = Time;
+    Item.second.LastCall = Tools::GetTime64();
   }
   pthread_mutex_unlock(&pListenersMutex);
   usleep(100000);

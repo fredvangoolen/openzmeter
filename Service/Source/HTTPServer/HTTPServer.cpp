@@ -63,7 +63,7 @@ HTTPServer::HTTPServer() {
   pLogoImg = Tools::DecodeBase64(Logo);
   RegisterCallback("getVersion", GetVersionCallback, "API/GetVersion.json");
   RegisterCallback("getAPI", GetAPICallback, "API/GetAPI.json");
-  MessageLoop::RegisterListener("HTTPServer_PeriodicTasks", PeriodicTasks, 60000);
+  MessageLoop::RegisterListener("HTTPServer_PeriodicTasks", PeriodicTasks, 600000);
   if(pthread_create(&pThread, NULL, [](void *params) { return ((HTTPServer*)params)->Thread(); }, (void*)this) != 0) {
     pThread = 0;
     LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));

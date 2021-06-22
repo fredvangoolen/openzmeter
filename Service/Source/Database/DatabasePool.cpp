@@ -52,7 +52,7 @@ DatabasePool::DatabasePool() {
   LogFile::Debug("Creating database tables");
   Database DB;
   if(DB.ExecResource("SQL/Database.sql") == false) LogFile::Error("Database is damaged, manual repair is nedded");
-  MessageLoop::RegisterListener("DatabasePool_PeriodicTasks", PeriodicTasks, 60000);
+  MessageLoop::RegisterListener("DatabasePool_PeriodicTasks", PeriodicTasks, 600000);
 }
 DatabasePool::~DatabasePool() {
   MessageLoop::UnregisterListener("DatabasePool_PeriodicTasks");
@@ -66,7 +66,7 @@ DatabasePool::~DatabasePool() {
 }
 void DatabasePool::PeriodicTasks() {
   Database DB;
-  DB.ExecSentenceNoResult("VACUUM FREEZE");
+  DB.ExecSentenceNoResult("VACUUM");
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   uint64_t Time = Tools::GetTime64();
   while(pConnectionPool.size() > 0) {
