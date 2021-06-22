@@ -1,7 +1,7 @@
 //
 //  httplib.h
 //
-//  Copyright (c) 2020 Yuji Hirose. All rights reserved.
+//  Copyright (c) 2021 Yuji Hirose. All rights reserved.
 //  MIT License
 //
 
@@ -337,6 +337,8 @@ using ContentProvider =
 using ContentProviderWithoutLength =
     std::function<bool(size_t offset, DataSink &sink)>;
 
+using ContentProviderResourceReleaser = std::function<void(bool success)>;
+
 using ContentReceiverWithProgress =
     std::function<bool(const char *data, size_t data_length, uint64_t offset,
                        uint64_t total_length)>;
@@ -446,15 +448,15 @@ struct Response {
 
   void set_content_provider(
       size_t length, const char *content_type, ContentProvider provider,
-      const std::function<void()> &resource_releaser = nullptr);
+      ContentProviderResourceReleaser resource_releaser = nullptr);
 
   void set_content_provider(
       const char *content_type, ContentProviderWithoutLength provider,
-      const std::function<void()> &resource_releaser = nullptr);
+      ContentProviderResourceReleaser resource_releaser = nullptr);
 
   void set_chunked_content_provider(
       const char *content_type, ContentProviderWithoutLength provider,
-      const std::function<void()> &resource_releaser = nullptr);
+      ContentProviderResourceReleaser resource_releaser = nullptr);
 
   Response() = default;
   Response(const Response &) = default;
@@ -463,15 +465,16 @@ struct Response {
   Response &operator=(Response &&) = default;
   ~Response() {
     if (content_provider_resource_releaser_) {
-      content_provider_resource_releaser_();
+      content_provider_resource_releaser_(content_provider_success_);
     }
   }
 
   // private members...
   size_t content_length_ = 0;
   ContentProvider content_provider_;
-  std::function<void()> content_provider_resource_releaser_;
+  ContentProviderResourceReleaser content_provider_resource_releaser_;
   bool is_chunked_content_provider_ = false;
+  bool content_provider_success_ = false;
 };
 
 class Stream {
@@ -667,6 +670,8 @@ public:
   Server &set_tcp_nodelay(bool on);
   Server &set_socket_options(SocketOptions socket_options);
 
+  Server &set_default_headers(Headers headers);
+
   Server &set_keep_alive_max_count(size_t count);
   Server &set_keep_alive_timeout(time_t sec);
 
@@ -786,6 +791,8 @@ private:
   int address_family_ = AF_UNSPEC;
   bool tcp_nodelay_ = CPPHTTPLIB_TCP_NODELAY;
   SocketOptions socket_options_ = default_socket_options;
+
+  Headers default_headers_;
 };
 
 enum class Error {
@@ -803,6 +810,11 @@ enum class Error {
   UnsupportedMultipartBoundaryChars,
   Compression,
 };
+
+inline std::ostream &operator<<(std::ostream &os, const Error &obj) {
+  os << static_cast<std::underlying_type<Error>::type>(obj);
+  return os;
+}
 
 class Result {
 public:
@@ -999,6 +1011,8 @@ public:
   void set_keep_alive(bool on);
   void set_follow_location(bool on);
 
+  void set_url_encode(bool on);
+
   void set_compress(bool on);
 
   void set_decompress(bool on);
@@ -1042,10 +1056,6 @@ protected:
   virtual void shutdown_ssl(Socket &socket, bool shutdown_gracefully);
   void shutdown_socket(Socket &socket);
   void close_socket(Socket &socket);
-
-  // Similar to shutdown_ssl and close_socket, this should NOT be called
-  // concurrently with a DIFFERENT thread sending requests from the socket
-  void lock_socket_and_shutdown_and_close();
 
   bool process_request(Stream &strm, Request &req, Response &res,
                        bool close_connection, Error &error);
@@ -1094,6 +1104,8 @@ protected:
 
   bool keep_alive_ = false;
   bool follow_location_ = false;
+
+  bool url_encode_ = true;
 
   int address_family_ = AF_UNSPEC;
   bool tcp_nodelay_ = CPPHTTPLIB_TCP_NODELAY;
@@ -1312,6 +1324,8 @@ public:
   void set_keep_alive(bool on);
   void set_follow_location(bool on);
 
+  void set_url_encode(bool on);
+
   void set_compress(bool on);
 
   void set_decompress(bool on);
@@ -1401,6 +1415,7 @@ public:
 private:
   bool create_and_connect_socket(Socket &socket, Error &error) override;
   void shutdown_ssl(Socket &socket, bool shutdown_gracefully) override;
+  void shutdown_ssl_impl(Socket &socket, bool shutdown_socket);
 
   bool process_socket(const Socket &socket,
                       std::function<bool(Stream &strm)> callback) override;
@@ -2224,45 +2239,45 @@ inline socket_t create_client_socket(
     time_t write_timeout_usec, const std::string &intf, Error &error) {
   auto sock = create_socket(
       host, port, address_family, 0, tcp_nodelay, std::move(socket_options),
-      [&](socket_t sock, struct addrinfo &ai) -> bool {
+      [&](socket_t sock2, struct addrinfo &ai) -> bool {
         if (!intf.empty()) {
 #ifdef USE_IF2IP
           auto ip = if2ip(intf);
           if (ip.empty()) { ip = intf; }
-          if (!bind_ip_address(sock, ip.c_str())) {
+          if (!bind_ip_address(sock2, ip.c_str())) {
             error = Error::BindIPAddress;
             return false;
           }
 #endif
         }
 
-        set_nonblocking(sock, true);
+        set_nonblocking(sock2, true);
 
         auto ret =
-            ::connect(sock, ai.ai_addr, static_cast<socklen_t>(ai.ai_addrlen));
+            ::connect(sock2, ai.ai_addr, static_cast<socklen_t>(ai.ai_addrlen));
 
         if (ret < 0) {
           if (is_connection_error() ||
-              !wait_until_socket_is_ready(sock, connection_timeout_sec,
+              !wait_until_socket_is_ready(sock2, connection_timeout_sec,
                                           connection_timeout_usec)) {
             error = Error::Connection;
             return false;
           }
         }
 
-        set_nonblocking(sock, false);
+        set_nonblocking(sock2, false);
 
         {
           timeval tv;
           tv.tv_sec = static_cast<long>(read_timeout_sec);
           tv.tv_usec = static_cast<decltype(tv.tv_usec)>(read_timeout_usec);
-          setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv));
+          setsockopt(sock2, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(tv));
         }
         {
           timeval tv;
           tv.tv_sec = static_cast<long>(write_timeout_sec);
           tv.tv_usec = static_cast<decltype(tv.tv_usec)>(write_timeout_usec);
-          setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(tv));
+          setsockopt(sock2, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(tv));
         }
 
         error = Error::Success;
@@ -2319,7 +2334,7 @@ inline unsigned int str2tag(const std::string &s) {
 
 namespace udl {
 
-inline constexpr unsigned int operator"" _(const char *s, size_t l) {
+inline constexpr unsigned int operator"" _t(const char *s, size_t l) {
   return str2tag_core(s, l, 0);
 }
 
@@ -2333,59 +2348,59 @@ find_content_type(const std::string &path,
   auto it = user_data.find(ext);
   if (it != user_data.end()) { return it->second.c_str(); }
 
-  using udl::operator""_;
+  using udl::operator""_t;
 
   switch (str2tag(ext)) {
   default: return nullptr;
-  case "css"_: return "text/css";
-  case "csv"_: return "text/csv";
-  case "txt"_: return "text/plain";
-  case "vtt"_: return "text/vtt";
-  case "htm"_:
-  case "html"_: return "text/html";
+  case "css"_t: return "text/css";
+  case "csv"_t: return "text/csv";
+  case "txt"_t: return "text/plain";
+  case "vtt"_t: return "text/vtt";
+  case "htm"_t:
+  case "html"_t: return "text/html";
 
-  case "apng"_: return "image/apng";
-  case "avif"_: return "image/avif";
-  case "bmp"_: return "image/bmp";
-  case "gif"_: return "image/gif";
-  case "png"_: return "image/png";
-  case "svg"_: return "image/svg+xml";
-  case "webp"_: return "image/webp";
-  case "ico"_: return "image/x-icon";
-  case "tif"_: return "image/tiff";
-  case "tiff"_: return "image/tiff";
-  case "jpg"_:
-  case "jpeg"_: return "image/jpeg";
+  case "apng"_t: return "image/apng";
+  case "avif"_t: return "image/avif";
+  case "bmp"_t: return "image/bmp";
+  case "gif"_t: return "image/gif";
+  case "png"_t: return "image/png";
+  case "svg"_t: return "image/svg+xml";
+  case "webp"_t: return "image/webp";
+  case "ico"_t: return "image/x-icon";
+  case "tif"_t: return "image/tiff";
+  case "tiff"_t: return "image/tiff";
+  case "jpg"_t:
+  case "jpeg"_t: return "image/jpeg";
 
-  case "mp4"_: return "video/mp4";
-  case "mpeg"_: return "video/mpeg";
-  case "webm"_: return "video/webm";
+  case "mp4"_t: return "video/mp4";
+  case "mpeg"_t: return "video/mpeg";
+  case "webm"_t: return "video/webm";
 
-  case "mp3"_: return "audio/mp3";
-  case "mpga"_: return "audio/mpeg";
-  case "weba"_: return "audio/webm";
-  case "wav"_: return "audio/wave";
+  case "mp3"_t: return "audio/mp3";
+  case "mpga"_t: return "audio/mpeg";
+  case "weba"_t: return "audio/webm";
+  case "wav"_t: return "audio/wave";
 
-  case "otf"_: return "font/otf";
-  case "ttf"_: return "font/ttf";
-  case "woff"_: return "font/woff";
-  case "woff2"_: return "font/woff2";
+  case "otf"_t: return "font/otf";
+  case "ttf"_t: return "font/ttf";
+  case "woff"_t: return "font/woff";
+  case "woff2"_t: return "font/woff2";
 
-  case "7z"_: return "application/x-7z-compressed";
-  case "atom"_: return "application/atom+xml";
-  case "pdf"_: return "application/pdf";
-  case "js"_:
-  case "mjs"_: return "application/javascript";
-  case "json"_: return "application/json";
-  case "rss"_: return "application/rss+xml";
-  case "tar"_: return "application/x-tar";
-  case "xht"_:
-  case "xhtml"_: return "application/xhtml+xml";
-  case "xslt"_: return "application/xslt+xml";
-  case "xml"_: return "application/xml";
-  case "gz"_: return "application/gzip";
-  case "zip"_: return "application/zip";
-  case "wasm"_: return "application/wasm";
+  case "7z"_t: return "application/x-7z-compressed";
+  case "atom"_t: return "application/atom+xml";
+  case "pdf"_t: return "application/pdf";
+  case "js"_t:
+  case "mjs"_t: return "application/javascript";
+  case "json"_t: return "application/json";
+  case "rss"_t: return "application/rss+xml";
+  case "tar"_t: return "application/x-tar";
+  case "xht"_t:
+  case "xhtml"_t: return "application/xhtml+xml";
+  case "xslt"_t: return "application/xslt+xml";
+  case "xml"_t: return "application/xml";
+  case "gz"_t: return "application/gzip";
+  case "zip"_t: return "application/zip";
+  case "wasm"_t: return "application/wasm";
   }
 }
 
@@ -2552,7 +2567,7 @@ public:
 
     std::array<char, CPPHTTPLIB_COMPRESSION_BUFSIZ> buff{};
     do {
-      strm_.avail_out = buff.size();
+      strm_.avail_out = static_cast<uInt>(buff.size());
       strm_.next_out = reinterpret_cast<Bytef *>(buff.data());
 
       ret = deflate(&strm_, flush);
@@ -2603,7 +2618,7 @@ public:
 
     std::array<char, CPPHTTPLIB_COMPRESSION_BUFSIZ> buff{};
     while (strm_.avail_in > 0) {
-      strm_.avail_out = buff.size();
+      strm_.avail_out = static_cast<uInt>(buff.size());
       strm_.next_out = reinterpret_cast<Bytef *>(buff.data());
 
       ret = inflate(&strm_, Z_NO_FLUSH);
@@ -2940,8 +2955,8 @@ bool prepare_content_receiver(T &x, int &status,
         ContentReceiverWithProgress out = [&](const char *buf, size_t n,
                                               uint64_t off, uint64_t len) {
           return decompressor->decompress(buf, n,
-                                          [&](const char *buf, size_t n) {
-                                            return receiver(buf, n, off, len);
+                                          [&](const char *buf2, size_t n2) {
+                                            return receiver(buf2, n2, off, len);
                                           });
         };
         return callback(std::move(out));
@@ -3111,9 +3126,7 @@ write_content_chunked(Stream &strm, const ContentProvider &content_provider,
           // Emit chunked response header and footer for each chunk
           auto chunk =
               from_i_to_hex(payload.size()) + "\r\n" + payload + "\r\n";
-          if (!write_data(strm, chunk.data(), chunk.size())) {
-            ok = false;
-          }
+          if (!write_data(strm, chunk.data(), chunk.size())) { ok = false; }
         }
       } else {
         ok = false;
@@ -4020,10 +4033,9 @@ inline void Response::set_content(const std::string &s,
   set_content(s.data(), s.size(), content_type);
 }
 
-inline void
-Response::set_content_provider(size_t in_length, const char *content_type,
-                               ContentProvider provider,
-                               const std::function<void()> &resource_releaser) {
+inline void Response::set_content_provider(
+    size_t in_length, const char *content_type, ContentProvider provider,
+    ContentProviderResourceReleaser resource_releaser) {
   assert(in_length > 0);
   set_header("Content-Type", content_type);
   content_length_ = in_length;
@@ -4032,10 +4044,9 @@ Response::set_content_provider(size_t in_length, const char *content_type,
   is_chunked_content_provider_ = false;
 }
 
-inline void
-Response::set_content_provider(const char *content_type,
-                               ContentProviderWithoutLength provider,
-                               const std::function<void()> &resource_releaser) {
+inline void Response::set_content_provider(
+    const char *content_type, ContentProviderWithoutLength provider,
+    ContentProviderResourceReleaser resource_releaser) {
   set_header("Content-Type", content_type);
   content_length_ = 0;
   content_provider_ = detail::ContentProviderAdapter(std::move(provider));
@@ -4045,7 +4056,7 @@ Response::set_content_provider(const char *content_type,
 
 inline void Response::set_chunked_content_provider(
     const char *content_type, ContentProviderWithoutLength provider,
-    const std::function<void()> &resource_releaser) {
+    ContentProviderResourceReleaser resource_releaser) {
   set_header("Content-Type", content_type);
   content_length_ = 0;
   content_provider_ = detail::ContentProviderAdapter(std::move(provider));
@@ -4421,6 +4432,11 @@ inline Server &Server::set_socket_options(SocketOptions socket_options) {
   return *this;
 }
 
+inline Server &Server::set_default_headers(Headers headers) {
+  default_headers_ = std::move(headers);
+  return *this;
+}
+
 inline Server &Server::set_keep_alive_max_count(size_t count) {
   keep_alive_max_count_ = count;
   return *this;
@@ -4599,8 +4615,11 @@ inline bool Server::write_response_core(Stream &strm, bool close_connection,
     if (!res.body.empty()) {
       if (!strm.write(res.body)) { ret = false; }
     } else if (res.content_provider_) {
-      if (!write_content_with_provider(strm, req, res, boundary,
-                                       content_type)) {
+      if (write_content_with_provider(strm, req, res, boundary,
+                                      content_type)) {
+        res.content_provider_success_ = true;
+      } else {
+        res.content_provider_success_ = false;
         ret = false;
       }
     }
@@ -5125,6 +5144,12 @@ Server::process_request(Stream &strm, bool close_connection,
 
   res.version = "HTTP/1.1";
 
+  for (const auto &header : default_headers_) {
+    if (res.headers.find(header.first) == res.headers.end()) {
+      res.headers.insert(header);
+    }
+  }
+
 #ifdef _WIN32
   // TODO: Increase FD_SETSIZE statically (libzmq), dynamically (MySQL).
 #else
@@ -5249,7 +5274,11 @@ inline ClientImpl::ClientImpl(const std::string &host, int port,
       host_and_port_(host_ + ":" + std::to_string(port_)),
       client_cert_path_(client_cert_path), client_key_path_(client_key_path) {}
 
-inline ClientImpl::~ClientImpl() { lock_socket_and_shutdown_and_close(); }
+inline ClientImpl::~ClientImpl() {
+  std::lock_guard<std::mutex> guard(socket_mutex_);
+  shutdown_socket(socket_);
+  close_socket(socket_);
+}
 
 inline bool ClientImpl::is_valid() const { return true; }
 
@@ -5270,6 +5299,8 @@ inline void ClientImpl::copy_settings(const ClientImpl &rhs) {
 #endif
   keep_alive_ = rhs.keep_alive_;
   follow_location_ = rhs.follow_location_;
+  url_encode_ = rhs.url_encode_;
+  address_family_ = rhs.address_family_;
   tcp_nodelay_ = rhs.tcp_nodelay_;
   socket_options_ = rhs.socket_options_;
   compress_ = rhs.compress_;
@@ -5343,13 +5374,6 @@ inline void ClientImpl::close_socket(Socket &socket) {
   if (socket.sock == INVALID_SOCKET) { return; }
   detail::close_socket(socket.sock);
   socket.sock = INVALID_SOCKET;
-}
-
-inline void ClientImpl::lock_socket_and_shutdown_and_close() {
-  std::lock_guard<std::mutex> guard(socket_mutex_);
-  shutdown_ssl(socket_, true);
-  shutdown_socket(socket_);
-  close_socket(socket_);
 }
 
 inline bool ClientImpl::read_response_line(Stream &strm, const Request &req,
@@ -5646,7 +5670,7 @@ inline bool ClientImpl::write_request(Stream &strm, Request &req,
   if (!req.has_header("Accept")) { req.headers.emplace("Accept", "*/*"); }
 
   if (!req.has_header("User-Agent")) {
-    req.headers.emplace("User-Agent", "cpp-httplib/0.7");
+    req.headers.emplace("User-Agent", "cpp-httplib/0.9");
   }
 
   if (req.body.empty()) {
@@ -5672,7 +5696,7 @@ inline bool ClientImpl::write_request(Stream &strm, Request &req,
     }
   }
 
-  if (!basic_auth_password_.empty()) {
+  if (!basic_auth_password_.empty() || !basic_auth_username_.empty()) {
     req.headers.insert(make_basic_authentication_header(
         basic_auth_username_, basic_auth_password_, false));
   }
@@ -5697,7 +5721,7 @@ inline bool ClientImpl::write_request(Stream &strm, Request &req,
   {
     detail::BufferStream bstrm;
 
-    const auto &path = detail::encode_url(req.path);
+    const auto &path = url_encode_ ? detail::encode_url(req.path) : req.path;
     bstrm.write_format("%s %s HTTP/1.1\r\n", req.method.c_str(), path.c_str());
 
     detail::write_headers(bstrm, req.headers);
@@ -5713,11 +5737,9 @@ inline bool ClientImpl::write_request(Stream &strm, Request &req,
   // Body
   if (req.body.empty()) {
     return write_content_with_provider(strm, req, error);
-  } else {
-    return detail::write_data(strm, req.body.data(), req.body.size());
   }
 
-  return true;
+  return detail::write_data(strm, req.body.data(), req.body.size());
 }
 
 inline std::unique_ptr<Response> ClientImpl::send_with_content_provider(
@@ -5900,7 +5922,10 @@ inline bool ClientImpl::process_request(Stream &strm, Request &req,
     // mutex during the process. It would be a bug to call it from a different
     // thread since it's a thread-safety issue to do these things to the socket
     // if another thread is using the socket.
-    lock_socket_and_shutdown_and_close();
+    std::lock_guard<std::mutex> guard(socket_mutex_);
+    shutdown_ssl(socket_, true);
+    shutdown_socket(socket_);
+    close_socket(socket_);
   }
 
   // Log
@@ -6426,6 +6451,8 @@ inline void ClientImpl::set_keep_alive(bool on) { keep_alive_ = on; }
 
 inline void ClientImpl::set_follow_location(bool on) { follow_location_ = on; }
 
+inline void ClientImpl::set_url_encode(bool on) { url_encode_ = on; }
+
 inline void ClientImpl::set_default_headers(Headers headers) {
   default_headers_ = std::move(headers);
 }
@@ -6658,10 +6685,17 @@ inline ssize_t SSLSocketStream::read(char *ptr, size_t size) {
     auto ret = SSL_read(ssl_, ptr, static_cast<int>(size));
     if (ret < 0) {
       auto err = SSL_get_error(ssl_, ret);
-      while (err == SSL_ERROR_WANT_READ) {
+      int n = 1000;
+#ifdef _WIN32
+      while (--n >= 0 && (err == SSL_ERROR_WANT_READ ||
+             err == SSL_ERROR_SYSCALL && WSAGetLastError() == WSAETIMEDOUT)) {
+#else
+      while (--n >= 0 && err == SSL_ERROR_WANT_READ) {
+#endif
         if (SSL_pending(ssl_) > 0) {
           return SSL_read(ssl_, ptr, static_cast<int>(size));
         } else if (is_readable()) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(1));
           ret = SSL_read(ssl_, ptr, static_cast<int>(size));
           if (ret >= 0) { return ret; }
           err = SSL_get_error(ssl_, ret);
@@ -6846,7 +6880,7 @@ inline SSLClient::~SSLClient() {
   // Make sure to shut down SSL since shutdown_ssl will resolve to the
   // base function rather than the derived function once we get to the
   // base class destructor, and won't free the SSL (causing a leak).
-  SSLClient::shutdown_ssl(socket_, true);
+  shutdown_ssl_impl(socket_, true);
 }
 
 inline bool SSLClient::is_valid() const { return ctx_; }
@@ -7025,6 +7059,11 @@ inline bool SSLClient::initialize_ssl(Socket &socket, Error &error) {
 }
 
 inline void SSLClient::shutdown_ssl(Socket &socket, bool shutdown_gracefully) {
+  shutdown_ssl_impl(socket, shutdown_gracefully);
+}
+
+inline void SSLClient::shutdown_ssl_impl(Socket &socket,
+                                         bool shutdown_gracefully) {
   if (socket.sock == INVALID_SOCKET) {
     assert(socket.ssl == nullptr);
     return;
@@ -7553,6 +7592,8 @@ inline void Client::set_keep_alive(bool on) { cli_->set_keep_alive(on); }
 inline void Client::set_follow_location(bool on) {
   cli_->set_follow_location(on);
 }
+
+inline void Client::set_url_encode(bool on) { cli_->set_url_encode(on); }
 
 inline void Client::set_compress(bool on) { cli_->set_compress(on); }
 
