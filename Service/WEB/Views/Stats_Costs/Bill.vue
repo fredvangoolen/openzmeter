@@ -130,7 +130,7 @@
           var EnergyCol = this.TransferGraph.Data.Headers.indexOf('Active_Energy');
           var CostCol = this.TransferGraph.Data.Headers.indexOf('Energy_Cost');
           Opt.labels = ['Time', 'Energy', 'Energy cost'];
-          Opt.colors = [this.analyzer.Color.Active_Energy, '#d9534f'];
+          Opt.colors = [this.analyzer.SerieColor('Active_Energy'), '#d9534f'];
           Opt.series = { 'Energy': { axis: 'y', plotter: (e) => { Graph.Plotters.BarOffset(e, (this.Aggreg == '1D') ? 86400000 : (this.Aggreg == '1H') ? 3600000 : 900000); } }, 'Energy cost': { axis: 'y2' } };
           for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) Opt.file.push([this.TransferGraph.Data.Rows[n][TimeCol], this.TransferGraph.Data.Rows[n][EnergyCol], this.TransferGraph.Data.Rows[n][CostCol]]);
           Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, 'Wh', 2, true);  };
