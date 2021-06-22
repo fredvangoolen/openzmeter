@@ -98,6 +98,7 @@ void AnalyzerRemote::SetAnalyzer(HTTPRequest &req) {
     pthread_rwlock_wrlock(&pLock);
     pConfig = AnalyzerSoft::CheckConfig(req.Params(), pMode, true);
     Name(pConfig["Name"]);
+    pRates->Config(pConfig["TimeZone"], pConfig["Rates"]);
     pActions->Push("SetAnalyzer", pConfig);
     pthread_rwlock_unlock(&pLock);
     req.Success(json::object());
