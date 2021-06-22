@@ -46,6 +46,7 @@
         if(this.filtercols == null) {
           this.Output = this.input;
         } else {
+          this.Output = [];
           this.Filter = this.Filter.toLowerCase();
           for(var row = 0; row < this.input.length; row++) {
             this.input[row].rowNum = row;
