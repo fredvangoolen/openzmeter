@@ -140,7 +140,7 @@
           var CostCol = this.TransferGraph.Data.Headers.indexOf('Power_Cost');
           var ContractedCol = this.TransferGraph.Data.Headers.indexOf('Contracted');
           Opt.labels = ['Time', 'Power', 'Contracted', 'Cost'];
-          Opt.colors = [this.analyzer.Color.Active_Power, '#428bca', '#d9534f'];
+          Opt.colors = [this.analyzer.SerieColor('Active_Power'), '#428bca', '#d9534f'];
           Opt.series = { 'Power': { axis: 'y', fillGraph: true, plotter: (e) => { Graph.Plotters.LineOffset(e, (this.Aggreg == '1D') ? 86400000 : (this.Aggreg == '1H') ? 3600000 : 900000); } }, 'Contracted': { axis: 'y', strokeWidth: 1.0 }, 'Cost': { axis: 'y2' } };
           for(var n = 0; n < this.TransferGraph.Data.Rows.length; n++) Opt.file.push([this.TransferGraph.Data.Rows[n][TimeCol], this.TransferGraph.Data.Rows[n][ActiveCol], this.TransferGraph.Data.Rows[n][ContractedCol] * 1000.0, this.TransferGraph.Data.Rows[n][CostCol]]);
           Opt.axes.y.valueFormatter = (x) => { return Graph.Formatters.Y_UnitScale(x, 'W', 2, true); };
