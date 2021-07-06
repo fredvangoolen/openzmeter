@@ -66,7 +66,6 @@ DatabasePool::~DatabasePool() {
 }
 void DatabasePool::PeriodicTasks() {
   Database DB;
-  DB.ExecSentenceNoResult("VACUUM");
   if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
   uint64_t Time = Tools::GetTime64();
   while(pConnectionPool.size() > 0) {

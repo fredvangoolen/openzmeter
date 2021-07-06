@@ -35,9 +35,12 @@
     computed: {
       PhaseImgs: function() {
         var Imgs = [];
-        var Colors = ['#d9534f', '#5cb85c', '#318ce7', '#333333'];
+        var Colors = ['#d9534f', '#5cb85c', '#318ce7'];
         for(var n in this.analyzer.PhaseNames) Imgs.push(this.CreateImage(this.analyzer.PhaseNames[n], Colors[n]));
         return Imgs;
+      },
+      NeutralImg: function() {
+        return this.CreateImage(this.analyzer.NeutralName, '#333333');
       }
     },
     methods: {

@@ -326,7 +326,7 @@ const openZmeter = {
         }
         var Data = { Headers: data[0], Rows: data.slice(1), From: range[0], To: range[1]};
         for(var n = 0; n < Data.Rows.length; n++) this.ChangeTime = Math.max(this.ChangeTime, Data.Rows[n][0]);
-        Transfer.Data = Object.seal(Data);
+        if((Transfer.Data == null) || (Transfer.Data.From != range[0]) || (Transfer.Data.To != range[1]) || (Transfer.Data.Rows.length != Data.Rows.length)) Transfer.Data = Object.seal(Data);
       };
       Transfer.Update = (analyzer, range) => {
         if((analyzer == null) || (range == null)) {

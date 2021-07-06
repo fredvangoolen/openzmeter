@@ -24,7 +24,7 @@ AnalyzerSoftSync::AnalyzerSoftSync(const string &id, const string &path, const A
   LogFile::Debug("Starting AnalyzerSoftSync...");
   pMutexConfig   = PTHREAD_MUTEX_INITIALIZER;
   pMutexInternal = PTHREAD_MUTEX_INITIALIZER;
-  pThread = 0;
+  pThread        = 0;
   LogFile::Debug("AnalyzerSoftSync started");
 }
 AnalyzerSoftSync::~AnalyzerSoftSync() {
@@ -44,7 +44,7 @@ void AnalyzerSoftSync::Push(const string name, const json &params) {
   Action["Type"] = name;
   Action["Params"] = params;
   pthread_mutex_lock(&pMutexInternal);
-  pPendingActions.push(Action);
+  if(pEnabled == true) pPendingActions.push(Action);
   pthread_mutex_unlock(&pMutexInternal);
 }
 json AnalyzerSoftSync::CheckConfig(const json &config) {
@@ -64,10 +64,11 @@ json AnalyzerSoftSync::CheckConfig(const json &config) {
 void AnalyzerSoftSync::Config(const json &config) {
   LogFile::Debug("Reconfiguring AnalyzerSoftSync...");
   pthread_mutex_lock(&pMutexConfig);
-  pServer = config["Server"];
-  pUser   = config["User"];
-  pPass   = config["Pass"];
-  if(config["Enabled"] == false) {
+  pServer  = config["Server"];
+  pUser    = config["User"];
+  pPass    = config["Pass"];
+  pEnabled = config["Enabled"];
+  if(pEnabled == false) {
     pTerminate = true;
     if(pThread != 0) {
       pthread_join(pThread, NULL);

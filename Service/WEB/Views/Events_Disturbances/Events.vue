@@ -147,6 +147,7 @@
         var Selection = this.$refs.table.selectedTo;
         this.Delete = [];
         for(var n = 0; n < Selection.length; n++) this.Delete.push(Selection[n]);
+        this.$refs.table.selectedTo = [];
       },
       DeleteEvent: function(evt) {
         this.Delete = [evt.StartTime];

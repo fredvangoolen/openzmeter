@@ -31,7 +31,7 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Range: null, TransferEvents: this.EventsTransfer(this) };
+      return { Range: null, TransferEvents: this.EventsTransfer() };
     },
     created: function() {
       if((this.$route.query.From != null) && (this.$route.query.To != null)) {

@@ -46,7 +46,7 @@
   export default {
     props: { analyzer: Object },
     data: function() {
-      return { Year: null, TransferEvents: this.EventsTransfer(this) };
+      return { Year: null, TransferEvents: this.EventsTransfer() };
     },
     watch: {
       analyzer: function() { if(this.Year == null) return; this.TransferEvents.Update(this.analyzer, [moment().tz(this.analyzer.TimeZone).year(this.Year).startOf('year').valueOf(), moment().tz(this.analyzer.TimeZone).year(this.Year).endOf('year').valueOf()]); },

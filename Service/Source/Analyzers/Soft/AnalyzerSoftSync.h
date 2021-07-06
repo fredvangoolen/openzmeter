@@ -35,6 +35,7 @@ class AnalyzerSoftSync final {
     const float                   pSampleRate;       //parent samplerate
   private :
     volatile bool                 pTerminate;        //Termination signal
+    bool                          pEnabled;          //Remote service enabled
     pthread_t                     pThread;           //Export thread
     string                        pServer;           //Export server address
     string                        pUser;             //Export server user

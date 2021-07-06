@@ -61,7 +61,7 @@
       MaxDiff: function(a) {
         var Max = a[0] - this.analyzer.NominalVoltage;
         for(var n = 1; n < a.length; n++) {
-          if(Math.abs(a[n] - this.analyzer.NominalVoltage) > Math.abs(Max)) Max = a[n] - this.nalyzer.NominalVoltage;
+          if(Math.abs(a[n] - this.analyzer.NominalVoltage) > Math.abs(Max)) Max = a[n] - this.analyzer.NominalVoltage;
         }
         return (Max * 100.0) / this.analyzer.NominalVoltage;
       }
