@@ -335,7 +335,7 @@ U 1 1 63915146
 P 2650 3600
 F 0 "U18" H 2425 3425 50  0000 C CNN
 F 1 "B0505D-1W" H 2662 3801 50  0001 C CNN
-F 2 "Converter_DCDC:Converter_DCDC_muRata_CRE1xxxxxx3C_THT" H 2650 3200 50  0001 C CNN
+F 2 "Footprints:Converter_DCDC_muRata_CRE1xxxxxx3C_THT" H 2650 3200 50  0001 C CNN
 F 3 "http://power.murata.com/datasheet?/data/power/ncl/kdc_cre1.pdf" H 2650 3100 50  0001 C CNN
 	1    2650 3600
 	-1   0    0    -1  
@@ -1294,7 +1294,7 @@ U 1 1 699206B6
 P 5375 10000
 F 0 "U11" H 5100 10025 50  0000 C CNN
 F 1 "SSR_MOSFET_DIP4" H 5375 9774 50  0001 C CNN
-F 2 "Package_DIP:DIP-4_W7.62mm" H 5175 9800 50  0001 L CIN
+F 2 "Footprints:DIP-4_W7.62mm" H 5175 9800 50  0001 L CIN
 F 3 "https://docs.broadcom.com/docs/AV02-0173EN" H 5375 10000 50  0001 L CNN
 	1    5375 10000
 	-1   0    0    -1  
@@ -1352,7 +1352,7 @@ Wire Wire Line
 Wire Wire Line
 	8075 7725 8075 7700
 Text GLabel 9175 7700 2    50   Input ~ 0
-1.25v
+1.25V
 $Comp
 L 3Phase-rescue:C_Small-3Phase-rescue C29
 U 1 1 643D8EA9
@@ -3276,54 +3276,52 @@ F 4 "GPS" V 4950 6175 50  0000 C CNN "Name"
 	-1   0    0    -1  
 $EndComp
 $Comp
-L 3Phase-rescue:CONN_01X04-3Phase-rescue J5
+L Components:Conn_01x03 J5
 U 1 1 67B0D029
-P 4850 5600
-F 0 "J5" H 4850 5850 50  0000 C CNN
-F 1 "95001-6P6C" H 4650 5950 50  0001 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" H 4850 5600 50  0001 C CNN
-F 3 "" H 4850 5600 50  0001 C CNN
-F 4 "Debug" V 4950 5600 50  0000 C CNN "Name"
-	1    4850 5600
+P 4850 5550
+F 0 "J5" H 4850 5800 50  0000 C CNN
+F 1 "95001-6P6C" H 4650 5900 50  0001 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical" H 4850 5550 50  0001 C CNN
+F 3 "" H 4850 5550 50  0001 C CNN
+F 4 "Debug" V 4950 5550 50  0000 C CNN "Name"
+	1    4850 5550
 	-1   0    0    -1  
 $EndComp
-Text GLabel 5225 5750 2    50   Input ~ 0
+Text GLabel 5025 5825 0    50   Input ~ 0
 5V
-Wire Wire Line
-	5225 5750 5075 5750
 $Comp
 L power:GND #PWR0118
 U 1 1 67EFDF64
-P 5875 6325
-F 0 "#PWR0118" H 5875 6075 50  0001 C CNN
-F 1 "GND" V 5875 6125 50  0000 C CNN
-F 2 "" H 5875 6325 50  0000 C CNN
-F 3 "" H 5875 6325 50  0000 C CNN
-	1    5875 6325
+P 6075 6325
+F 0 "#PWR0118" H 6075 6075 50  0001 C CNN
+F 1 "GND" V 6025 6375 50  0000 C CNN
+F 2 "" H 6075 6325 50  0000 C CNN
+F 3 "" H 6075 6325 50  0000 C CNN
+	1    6075 6325
 	0    -1   -1   0   
 $EndComp
 $Comp
 L Components:74LVC2G17 U13
 U 1 1 68051808
-P 5400 6025
-F 0 "U13" H 5300 6125 50  0000 C CNN
-F 1 "74LVC2G17" H 5437 6200 50  0001 C CNN
-F 2 "Footprints:SOT-23-6" H 5800 5775 50  0001 C CNN
-F 3 "http://www.ti.com/lit/sg/scyt129e/scyt129e.pdf" H 5800 5775 50  0001 C CNN
-	1    5400 6025
+P 5525 6025
+F 0 "U13" H 5425 6125 50  0000 C CNN
+F 1 "74LVC2G17" H 5562 6200 50  0001 C CNN
+F 2 "Footprints:SOT-23-6" H 5925 5775 50  0001 C CNN
+F 3 "http://www.ti.com/lit/sg/scyt129e/scyt129e.pdf" H 5925 5775 50  0001 C CNN
+	1    5525 6025
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5050 6125 5100 6125
+	5050 6125 5225 6125
 $Comp
 L 3Phase-rescue:C_Small-3Phase-rescue C58
 U 1 1 687B03EC
-P 5500 5875
-F 0 "C58" V 5450 5925 50  0000 L CNN
-F 1 "100nF 25v" H 5510 5795 50  0001 L CNN
-F 2 "Footprints:C_0603_1608Metric" H 5500 5875 50  0001 C CNN
-F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5500 5875 50  0001 C CNN
-	1    5500 5875
+P 5550 5875
+F 0 "C58" V 5500 5925 50  0000 L CNN
+F 1 "100nF 25v" H 5560 5795 50  0001 L CNN
+F 2 "Footprints:C_0603_1608Metric" H 5550 5875 50  0001 C CNN
+F 3 "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10B104KA8NNNC_100nF-104-10-25V_C1590.html" H 5550 5875 50  0001 C CNN
+	1    5550 5875
 	0    1    -1   0   
 $EndComp
 $Comp
@@ -3530,7 +3528,7 @@ Connection ~ 5850 5250
 Wire Wire Line
 	5850 5250 5875 5250
 Text GLabel 5500 5250 0    50   Input ~ 0
-2.5v
+2.5V
 $Comp
 L 3Phase-rescue:R-3Phase-rescue R39
 U 1 1 622D07DA
@@ -3975,7 +3973,7 @@ Wire Wire Line
 Wire Wire Line
 	7775 8775 7750 8775
 Wire Wire Line
-	5725 6225 6200 6225
+	5850 6225 6200 6225
 Wire Wire Line
 	6200 6525 5075 6525
 Wire Wire Line
@@ -4119,7 +4117,7 @@ Wire Wire Line
 Wire Wire Line
 	5075 7925 6200 7925
 $Comp
-L Components:STM32L412R8T6 U7
+L 3Phase-rescue:STM32L412R8T6-Components U7
 U 1 1 6148C9C3
 P 6900 5175
 F 0 "U7" H 6900 3286 50  0000 C CNN
@@ -4199,21 +4197,11 @@ Wire Wire Line
 Wire Wire Line
 	3075 3750 3100 3750
 Wire Wire Line
-	5050 6025 5075 6025
+	5050 6225 5225 6225
 Wire Wire Line
-	5075 6025 5075 5875
-Connection ~ 5075 5750
+	6075 6325 5875 6325
 Wire Wire Line
-	5075 5750 5050 5750
-Wire Wire Line
-	5050 6225 5100 6225
-Wire Wire Line
-	5100 6025 5075 6025
-Connection ~ 5075 6025
-Wire Wire Line
-	5875 6325 5800 6325
-Wire Wire Line
-	5725 6125 6125 6125
+	5850 6125 6125 6125
 Wire Wire Line
 	6125 6100 6125 6125
 Connection ~ 6125 6125
@@ -4235,30 +4223,25 @@ Wire Wire Line
 Wire Wire Line
 	6125 5650 6125 5800
 Wire Wire Line
-	5050 5650 5800 5650
+	5050 5650 5875 5650
 Wire Wire Line
-	5800 6325 5800 6025
-Connection ~ 5800 6325
+	5875 6325 5875 6025
+Connection ~ 5875 6325
 Wire Wire Line
-	5800 6325 5050 6325
-Connection ~ 5800 5650
+	5875 6325 5050 6325
+Connection ~ 5875 5650
 Wire Wire Line
-	5800 5650 5900 5650
+	5875 5650 5900 5650
 Wire Wire Line
-	5725 6025 5800 6025
-Connection ~ 5800 6025
+	5850 6025 5875 6025
+Connection ~ 5875 6025
 Wire Wire Line
-	5800 6025 5800 5875
+	5875 6025 5875 5875
 Wire Wire Line
-	5600 5875 5800 5875
-Connection ~ 5800 5875
+	5650 5875 5875 5875
+Connection ~ 5875 5875
 Wire Wire Line
-	5800 5875 5800 5650
-Wire Wire Line
-	5400 5875 5075 5875
-Connection ~ 5075 5875
-Wire Wire Line
-	5075 5875 5075 5750
+	5875 5875 5875 5650
 $Comp
 L 3Phase-rescue:R-3Phase-rescue R62
 U 1 1 795BCADF
@@ -4289,4 +4272,29 @@ Wire Wire Line
 	8125 6725 8175 6725
 Wire Wire Line
 	8125 6825 8175 6825
+Text GLabel 8400 7475 2    50   Input ~ 0
+2.5V
+Wire Wire Line
+	8400 7475 8075 7475
+Wire Wire Line
+	8075 7475 8075 7700
+Wire Wire Line
+	5450 5875 5200 5875
+Wire Wire Line
+	5200 5875 5200 6025
+Wire Wire Line
+	5200 6025 5225 6025
+Wire Wire Line
+	5025 5825 5075 5825
+Wire Wire Line
+	5075 5825 5075 6025
+Wire Wire Line
+	5075 6025 5050 6025
+Text GLabel 5225 5750 2    50   Input ~ 0
+3.3V
+Wire Wire Line
+	5225 5750 5200 5750
+Wire Wire Line
+	5200 5750 5200 5875
+Connection ~ 5200 5875
 $EndSCHEMATC
