@@ -24,7 +24,7 @@ constexpr float AnalyzerSoftEvents::Event_INT;
 constexpr float AnalyzerSoftEvents::Event_Hysteresis;
 constexpr float AnalyzerSoftEvents::Event_RAW_Time;
 // ---------------------------------------------------------------------------------------------------------------------
-AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate) : AnalyzerEvents(serial, mode), pSamplerate(samplerate), pVoltageChannels(Analyzer::VoltageChannels(mode)) {
+AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::AnalyzerMode mode, const float samplerate, AnalyzerSoftCyclicHistogram *cyclicHistogram) : AnalyzerEvents(serial, mode), pSamplerate(samplerate), pVoltageChannels(Analyzer::VoltageChannels(mode)) {
   pMutex            = PTHREAD_MUTEX_INITIALIZER;
   pNominalVoltage   = 230.0;
   pEvent            = NULL;
@@ -38,6 +38,7 @@ AnalyzerSoftEvents::AnalyzerSoftEvents(const string &serial, const Analyzer::Ana
   pTask             = NULL;
   pHaveEvent        = false;
   pEnabled          = false;
+  pCyclicHistogram  = cyclicHistogram;
 }
 AnalyzerSoftEvents::~AnalyzerSoftEvents() {
   if(pTask != NULL) TaskPool::Wait(pTask);
@@ -206,6 +207,12 @@ void AnalyzerSoftEvents::Events_Func(const AnalyzerSoftBlock *block, const uint6
         DB.ExecSentenceNoResult("INSERT INTO events(changetime, starttime, evttype, samplerate, reference, peak, change, notes, duration, size_raw, size_rms) VALUES (" + DB.Bind(Tools::GetTime64()) + ", " + DB.Bind(pEvent->Start) + ", " + DB.Bind(Type) + ", " + DB.Bind(pSamplerate) + ", " + DB.Bind(pEvent->Reference, pVoltageChannels) + ", " + DB.Bind(pEvent->PeakValue, pVoltageChannels) + ", " + DB.Bind(pEvent->ChangeValue, pVoltageChannels) + ", '', 0, " + DB.Bind(pPrevSamplesLen) + ", " + DB.Bind(pPrevCyclesLen) + ")");
         SaveSamples(pEvent->Start, SAMPLES_RMS, pPrevCyclesLen + 1);
         SaveSamples(pEvent->Start, SAMPLES_RAW, pPrevSamplesLen);
+
+        if (pCyclicHistogram != NULL)
+        {
+          pCyclicHistogram->WriteToDatabase(pEvent->Start);
+          pCyclicHistogram->Clear();
+        }
       } else if(pEvent->Type == EVT_INTERRUPTION) {
         for(uint8_t n = 0; n < pVoltageChannels; n++) pEvent->PeakValue[n] = fmin(pEvent->PeakValue[n], Cycle[n]);
       } else if(pEvent->Type == EVT_DIP) {

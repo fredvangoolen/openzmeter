@@ -55,6 +55,9 @@ float AnalyzerSoftBlock::NominalFrequency() const {
 float AnalyzerSoftBlock::NominalVoltage() const {
   return pNominalVoltage;
 }
+uint16_t AnalyzerSoftBlock::VoltageChannels() const {
+  return pVoltageChannels;
+}
 float AnalyzerSoftBlock::VoltageSample(const uint8_t ch, const uint16_t sample) const {
   return pVoltageSamples[pVoltageChannels * sample + ch];
 }

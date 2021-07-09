@@ -56,6 +56,8 @@ class Analyzer {
     virtual void GetSeries(HTTPRequest &req) = 0;
     virtual void SetSeries(HTTPRequest &req) = 0;
     virtual void GetSeriesNow(HTTPRequest &req) = 0;
+    virtual void GetCyclicHistogram(HTTPRequest &req) = 0;
+    virtual void GetJoltData(HTTPRequest &req) = 0;
     virtual void GetCosts(HTTPRequest &req) = 0;
     virtual void GetBills(HTTPRequest &req) = 0;
     virtual void GetWaveStream(HTTPRequest &req) = 0;

@@ -30,6 +30,8 @@ AnalyzerManager::AnalyzerManager() {
   HTTPServer::RegisterCallback("getStatus",       GetStatusCallback,      "API/Analyzer/GetStatus.json");
   HTTPServer::RegisterCallback("getSeries",       GetSeriesCallback,      "API/Analyzer/GetSeries.json");
   HTTPServer::RegisterCallback("getSeriesNow",    GetSeriesNowCallback,   "API/Analyzer/GetSeriesNow.json");
+  HTTPServer::RegisterCallback("getCyclicHistogram", GetCyclicHistogramCallback, "API/Analyzer/GetCyclicHistogram.json");
+  HTTPServer::RegisterCallback("getJoltData",     GetJoltDataCallback,    "API/Analyzer/GetJoltData.json");
   HTTPServer::RegisterCallback("getCosts",        GetCostsCallback,       "API/Analyzer/GetCosts.json");
   HTTPServer::RegisterCallback("getBills",        GetBillsCallback,       "API/Analyzer/GetBills.json");
   HTTPServer::RegisterCallback("getWaveStream",   GetWaveStream);
@@ -57,6 +59,8 @@ AnalyzerManager::~AnalyzerManager() {
   HTTPServer::UnregisterCallback("getStatus");
   HTTPServer::UnregisterCallback("getSeries");
   HTTPServer::UnregisterCallback("getSeriesNow");
+  HTTPServer::UnregisterCallback("getCyclicHistogram");
+  HTTPServer::UnregisterCallback("getJoltData");
   HTTPServer::UnregisterCallback("getCosts");
   HTTPServer::UnregisterCallback("getBills");
   HTTPServer::UnregisterCallback("getWaveStream");
@@ -155,6 +159,12 @@ void AnalyzerManager::GetSeriesCallback(HTTPRequest &req) {
 }
 void AnalyzerManager::GetSeriesNowCallback(HTTPRequest &req) {
   CallAnalyzerFunction(req, &Analyzer::GetSeriesNow);
+}
+void AnalyzerManager::GetCyclicHistogramCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetCyclicHistogram);
+}
+void AnalyzerManager::GetJoltDataCallback(HTTPRequest &req) {
+  CallAnalyzerFunction(req, &Analyzer::GetJoltData);
 }
 void AnalyzerManager::GetCostsCallback(HTTPRequest &req) {
   CallAnalyzerFunction(req, &Analyzer::GetCosts);

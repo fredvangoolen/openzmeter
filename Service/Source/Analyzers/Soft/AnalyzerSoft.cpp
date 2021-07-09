@@ -38,6 +38,8 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   LogFile::Debug("Creating tables for analyzer '%s'", pSerial.c_str());
   Database DB(pSerial, true);
   DB.ExecResource("SQL/Database_Analyzer.sql");
+  pCyclicHistogram = new AnalyzerSoftCyclicHistogram(id, 200, 4096); // Setup cyclic histogram manager
+  pJoltAlgorithm  = new AnalyzerSoftJoltAlgorithm(id); // Setup jolt manager
   pMutex          = PTHREAD_MUTEX_INITIALIZER;
   pCond           = PTHREAD_COND_INITIALIZER;
   pTerminate      = false;
@@ -55,7 +57,7 @@ AnalyzerSoft::AnalyzerSoft(const string &id, const Analyzer::AnalyzerMode mode, 
   pAggreg1H       = new AnalyzerSoftAggreg1H(id, mode);
   pRates          = new AnalyzerRates(id);
   pSeries         = new AnalyzerSeries(id, mode);
-  pEvents         = new AnalyzerSoftEvents(id, mode, samplerate);
+  pEvents         = new AnalyzerSoftEvents(id, mode, samplerate, pCyclicHistogram);
   pMQTT           = new AnalyzerSoftMQTT(id);
   pAlarms         = new AnalyzerSoftAlarms(id, pMQTT);
   pSync           = new AnalyzerSoftSync(id, optionPath, mode, samplerate,
@@ -422,6 +424,54 @@ void AnalyzerSoft::GetSeriesNow(HTTPRequest &req) {
   json Result = GetSeriesNow(req.Param("Series"));
   if(Result == nullptr) return req.Error("", HTTP_METHOD_NOT_ALLOWED);
   req.Success(Result);
+}
+void AnalyzerSoft::GetCyclicHistogram(HTTPRequest &req)
+{
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+
+  Database DB(Serial());
+
+  uint64_t ID = 0;
+
+  if (req.Params().contains("ID"))
+    ID = req.Params()["ID"];
+
+  json result = json::object();
+
+  if (ID == 0)
+  {
+    // Fetch current (in-memory) cyclic histogram data
+    result = pCyclicHistogram->GetCurrentCyclicHistogram();
+  }
+  else
+  {
+    // Fetch cyclic histogram for the specified event
+    result = pCyclicHistogram->GetCyclicHistogramForEvent(ID);
+  }
+
+  if(result == nullptr) return req.Error("", HTTP_METHOD_NOT_ALLOWED);
+  req.Success(result);
+  //return HTTPServer::FillResponse(response, result.dump(), "application/json", HTTP_OK);
+}
+void AnalyzerSoft::GetJoltData(HTTPRequest &req)
+{
+  if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);
+
+  Database DB(Serial());
+
+  if (!req.Params().contains("StartTime") || !req.Params()["StartTime"].is_number() || !req.Params().contains("EndTime") || !req.Params()["EndTime"].is_number()){
+    req.Error("StartTime and EndTime parameters are required.", HTTP_BAD_REQUEST);
+    return;
+  }
+
+  uint64_t startTime = req.Params()["StartTime"];
+  uint64_t endTime = req.Params()["EndTime"];
+
+  json result = pJoltAlgorithm->GetJoltData(startTime, endTime);
+
+  if(result == nullptr) return req.Error("", HTTP_METHOD_NOT_ALLOWED);
+  req.Success(result);
+  // return HTTPServer::FillResponse(response, result.dump(), "application/json", HTTP_OK);
 }
 void AnalyzerSoft::GetStatus(HTTPRequest &req) {
   if(pAccess->TestUser(AnalyzerAccess::READ, req.UserName()) == false) return req.Error("", HTTP_FORBIDDEN);

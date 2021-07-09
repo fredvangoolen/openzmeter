@@ -18,6 +18,7 @@
             <button type="button" class="btn btn-xs btn-success" @click="Edit(props.rowData)">Add notes</button>
             <button type="button" class="btn btn-xs btn-default" :class="{ disabled: !props.rowData.AvaliableRAW }" @click="RMS(props.rowData)">RMS</button>
             <button type="button" class="btn btn-xs btn-default" :class="{ disabled: !props.rowData.AvaliableRAW }" @click="RAW(props.rowData)">Wave</button>
+            <button type="button" class="btn btn-xs btn-default" @click="CyclicHistogram(props.rowData)">CH</button>
             <button type="button" class="btn btn-danger btn-xs"  @click="DeleteEvent(props.rowData)">Delete</button>
           </div>
         </template>
@@ -142,6 +143,23 @@
             this.ShowSpinner = false;
           }
         );
+      },
+      CyclicHistogram: function(evt){
+        this.ShowSpinner = true;
+        this.$http.post('getCyclicHistogram', { ID: evt.id, Analyzer: this.analyzer.Analyzer }).then(
+          (result) => {
+            this.ShowSpinner = false;
+            this.$router.push({name: 'CyclicHistogram' , params: {id: evt.id}});
+          },
+          (fail) => {
+            this.ShowSpinner = false;
+            alert("Event samples are not avaliable now. Maybe event is still running or deleted.");
+          }
+        );
+
+        this.Event = evt;
+        this.View = 'About';
+        return;
       },
       DeleteSelected: function() {
         var Selection = this.$refs.table.selectedTo;

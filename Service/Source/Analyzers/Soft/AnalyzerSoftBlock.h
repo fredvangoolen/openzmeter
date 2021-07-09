@@ -41,6 +41,7 @@ class AnalyzerSoftBlock {
     uint64_t  Sequence() const;
     float     NominalFrequency() const;
     float     NominalVoltage() const;
+    uint16_t  VoltageChannels() const;
     uint64_t  Timestamp() const;
     float     VoltageSample(const uint8_t ch, const uint16_t sample) const;
     float     CurrentSample(const uint8_t ch, const uint16_t sample) const;

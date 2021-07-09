@@ -38,6 +38,8 @@
 #include "AnalyzerSeries.h"
 #include "AnalyzerRates.h"
 #include "AnalyzerAccess.h"
+#include "AnalyzerSoftCyclicHistogram.h"
+#include "AnalyzerSoftJoltAlgorithm.h"
 //----------------------------------------------------------------------------------------------------------------------
 using namespace httplib;
 using namespace cctz;
@@ -67,6 +69,8 @@ class AnalyzerSoft : public Analyzer {
     AnalyzerSoftSync          *pSync;                    //Remote sync object
     AnalyzerSoftBlock         *pWorkingBlock;            //Current block
     ConsumerQueue             *pConsumers;               //Block analysis consumers control
+    AnalyzerSoftCyclicHistogram *pCyclicHistogram;       //Cyclic Histogram analyzer
+    AnalyzerSoftJoltAlgorithm *pJoltAlgorithm;           //Jolt Algorithm analyzer
   private :
     volatile bool              pTerminate;               //Terminate thread
     deque<AnalyzerSoftBlock*>  pPendingBlocks;           //Pending blocks to analyze
@@ -88,6 +92,8 @@ class AnalyzerSoft : public Analyzer {
     void GetSeries(HTTPRequest &req) override;
     void SetSeries(HTTPRequest &req) override;
     void GetSeriesNow(HTTPRequest &req) override;
+    void GetCyclicHistogram(HTTPRequest &req) override;
+    void GetJoltData(HTTPRequest &req) override;
     void GetCosts(HTTPRequest &req) override;
     void GetBills(HTTPRequest &req) override;
     void GetWaveStream(HTTPRequest &req) override;
