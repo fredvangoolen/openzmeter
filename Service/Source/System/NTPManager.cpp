@@ -39,14 +39,17 @@ NTPManager::~NTPManager() {
 #ifdef OPENWRT
 void NTPManager::GetNTPCallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamBool("Full")) return;
   json Result = json::object();
   json Tmp = SystemManager::uBusCall("uci", "get", { {"config", "system"}, {"section", "ntp"} } );
   if((Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
   Result["Enabled"] = false;
-  if(Tmp["values"]["enabled"].is_string()) Result["Enabled"] = (Tmp["values"]["enabled"] == "1");
-  Result["Server"] = "";
-  if(Tmp["values"]["server"].is_string()) Result["Server"] = Tmp["values"]["server"];
-  Result["Time"] = Tools::GetTime64();
+  if(req.Param("Full")) {
+    if(Tmp["values"]["enabled"].is_string()) Result["Enabled"] = (Tmp["values"]["enabled"] == "1");
+    Result["Server"] = "";
+    if(Tmp["values"]["server"].is_string()) Result["Server"] = Tmp["values"]["server"];
+    Result["Time"] = Tools::GetTime64();
+  }
   req.Success(Result);
 }
 void NTPManager::SetNTPCallback(HTTPRequest &req) {

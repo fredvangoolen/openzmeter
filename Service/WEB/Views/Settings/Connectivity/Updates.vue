@@ -1,60 +1,55 @@
 <template>
-  <div class="panel panel-other">
-    <div class="panel-heading clearfix">
-      <div class="header-text">Current version: {{ (Version==null) ? 'Loading data...' : Version }}</div>
-      <div class="header-buttons">
-        <div class="btn-group">
-          <button type="button" class="btn btn-success btn-xs" @click="Upgrade">Upgrade selected</button>
-          <button type="button" class="btn btn-default btn-xs" title="Update" @click="Update(true)"><img :src="require('Imgs/update.png')"> Check updates</button>
-        </div>
+  <dlg :loading="ShowSpinner">
+    <template v-slot:header>
+      <div class="pull-left"><h4 class="modal-title">Automatic updates</h4></div>
+      <div class="pull-right btn-group">
+        <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes and close"></button>
+        <button type="button" class="btn btn-default btn-xs" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')" alt="Discard"></button>
+      </div>
+    </template>
+    <div class="row">
+      <div class="col-xs-12">
+        <label class="control-label" style="line-height: 22px">Enable</label>
+        <toggle class="float-right" onText="Yes" offText="No" v-model="Config.Enabled"></toggle>
+      </div>
+      <div class="col-xs-12"><hr style="margin-top: 5px; margin-bottom: 5px; "/></div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <label class="control-label">Update URL</label>
+        <input type="text" class="form-control" v-model="Config.URL">
+      </div>
+      <div class="col-xs-12">
+        <label class="control-label">Details</label>
+        <textarea rows="4" class="form-control" disabled :value="Details"></textarea>
+      </div>
+      <div class="col-xs-12">
+        <label class="control-label">System log messages</label>
+        <textarea rows="10" class="form-control" disabled :value="SysMessages"></textarea>
       </div>
     </div>
-    <div class="panel-body" style="min-height: 100px">
-      <spinner v-if="ShowSpinner"></spinner>
-      <div class="alert alert-info text-center" style="margin-bottom: 5px; padding: 5px" v-if="Updates==null">
-        Click 'Check  updates' button. This operation may take up to a minute. After finish all upgradable packages are shown and can be upgraded.
-      </div>
-      <vuetable ref="table" :data="Updates" :fields="Columns" :api-mode="false" class="table small table-striped"></vuetable>
-    </div>
-      <dlg :loading="false" v-if="ShowDialog">
-        <template v-slot:header>
-          <div class="pull-left"><h4 class="modal-title">Upgrading packages...</h4></div>
-          <div class="pull-right btn-group">
-            <button type="button" class="btn btn-default btn-xs" v-if="Done==true" @click="Update(false)"><img :src="require('Imgs/arrow_undo.png')" alt="Close"></button>
-          </div>
-        </template>
-        <div class="alert alert-success text-center" style="margin-bottom: 5px; padding: 5px" v-if="Status==true">All selected packages upgraded correctly</div>
-        <div class="alert alert-danger text-center" style="margin-bottom: 5px; padding: 5px" v-if="Status==false">Upgrade failed, see log messages</div>
-        <div class="row">
-          <div class="col-xs-12">
-            <textarea ref="log" rows="20" class="form-control" readonly="true" v-model="Log"></textarea>
-          </div>
-        </div>
-      </dlg>
-  </div>
+  </dlg>
 </template>
 
 <script>
-  import vuetable from 'vuetable-2';
-  import { SSE } from 'sse.js';
   export default {
+    props: { settings: Object },
     data: function() {
-      return { ShowDialog: false, ShowSpinner: false, Version: null, Updates: null, Done: false, Status: null, Log: '',
-        Columns: [
-          { name: '__checkbox' },
-          { name: 'Package', title: 'Package' },
-          { name: 'From', title: 'From' },
-          { name: 'To', title: 'To' }
-        ]
-      };
+      return { ShowSpinner: false, Config: null };
     },
     created: function() {
-      this.CheckVersion();
+      this.Config = Object.assign({}, this.settings);
     },
     methods: {
+      Back: function() {
+
+      },
+      Save: function() {
+
+      },
       CheckVersion: function() {
         this.Post('getVersion', {}).then(
-          (result) => { this.Version = result.data.Version; },
+          (result) => { /*this.Version = result.data.Version; */ },
           (fail) => { this.Version = 'Not avaliable'; }
         );
       },
@@ -88,14 +83,20 @@
         Source.stream();
       }
     },
-    components: { vuetable }
+    components: {  }
   }
 </script>
 
 <style scoped>
-  .header-text {
-    font-size: 14px;
+  textarea {
+    resize: none;
+    font-family: 'Fira Code';
+    font-size: 10px;
+    white-space: pre;
   }
+
+
+
   .table >>> th:nth-child(3) {
     text-align: center;
   }

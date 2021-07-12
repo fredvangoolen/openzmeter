@@ -27,7 +27,6 @@
     "moment-timezone": "^0.5.31",
     "portal-vue": "^2.1.7",
     "rapidoc": "^8.4.8",
-    "sse.js": "^0.4.5",
     "vis-data": "^7.0.0",
     "vis-timeline": "^7.3.9",
     "vue": "^2.6.12",

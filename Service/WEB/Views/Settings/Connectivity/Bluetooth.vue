@@ -39,10 +39,7 @@
       Save: function() {
         this.ShowSpinner = true;
         this.Post('setBluetooth', { Enabled: this.Config.Enabled }).then(
-          (result) => {
-            this.$emit('update:settings', this.Config);
-            this.$emit('close');
-          },
+          (result) => { this.$emit('close'); },
           (fail) => { this.ShowSpinner = false; }
         );
       }
