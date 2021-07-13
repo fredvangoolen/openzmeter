@@ -88,7 +88,7 @@ void TelegramManager::GetTelegramCallback(HTTPRequest &req) {
     Config["Status"] = pStatus;
     pthread_mutex_unlock(&pMutex);
   } else {
-    req.Success({"Enabled", Config["Enabled"]});
+    req.Success({{"Enabled", Config["Enabled"]}});
   }
   req.Success(Config);
 }

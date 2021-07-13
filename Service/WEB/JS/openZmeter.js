@@ -4,12 +4,12 @@ const openZmeter = {
     Vue.prototype.CBOR = CBOR;
     Vue.prototype.PostToastError = null;
     Vue.prototype.Post = (url, params) => {
-      const CommMode = 'application/cbor';
+      const CommMode = 'application/json';
       return new Promise(function(resolve, reject) {
-        Vue.http.post(url, CBOR.encode(params), { responseType: 'arraybuffer', headers: { 'Accept': CommMode, 'Content-Type': CommMode } }).then(
+        Vue.http.post(url, (CommMode == 'application/cbor') ? CBOR.encode(params) : params, { responseType: (CommMode == 'application/cbor') ? 'arraybuffer' : 'json', headers: { 'Accept': CommMode, 'Content-Type': CommMode } }).then(
           (result) => {
             EventBus.$emit('NoNetwork', false);
-            resolve(CBOR.decode(result.data));
+            resolve((CommMode == 'application/cbor') ? CBOR.decode(result.data) : result.body);
           },
           (error) => {
             if(error.status == 0) {

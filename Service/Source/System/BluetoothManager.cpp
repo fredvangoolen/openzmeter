@@ -93,7 +93,7 @@ void BluetoothManager::GetBluetoothCallback(HTTPRequest &req) {
     if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
     req.Success(Config);
   } else {
-    req.Success({"Enabled", Config["Enabled"]});
+    req.Success({{"Enabled", Config["Enabled"]}});
   }
 #else
   req.Error("", HTTP_METHOD_NOT_ALLOWED);

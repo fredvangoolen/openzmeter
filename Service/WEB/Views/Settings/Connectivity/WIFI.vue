@@ -17,7 +17,7 @@
     <div class="row" v-if="View=='Edit'">
       <div class="col-xs-12" v-if="Saving==null">
         <label class="control-label">SSID</label>
-        <div class="input-group">
+        <div class="input-group input-group-xs">
           <input type="text" class="form-control" v-model="Config.ESSID" autocomplete="off" autocapitalize="off" autocorrect="off">
           <span class="input-group-btn">
             <button type="button" class="btn btn-default" @click="Scan"><img :src="require('Imgs/magnifier.png')" alt="Scan networks"></button>

@@ -56,6 +56,7 @@ int main(int argc, char** argv) {
   signal(SIGTERM, SignalHandler);
 
   string ConfigFileName = "/etc/openZmeter.conf";
+  LogFile::Info("Starting openZmeter service (Version: &s - Branch: %s - Arch: %s)", __BUILD_DATE__, __BUILD_BRANCH__, __BUILD_ARCH__);
   for(int i = 1; i != argc; i++) {
     if(memcmp(argv[i], "--config=", 9) == 0) {
       ConfigFileName = &argv[i][9];

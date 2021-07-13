@@ -6,7 +6,7 @@
         <div class="pull-right btn-group">
         <button type="button" class="btn btn-default btn-xs" @click="Save"><img :src="require('Imgs/diskette.png')" alt="Save changes and close"></button>
           <button type="button" class="btn btn-default btn-xs" @click="Apply"><img :src="require('Imgs/update.png')" alt="Apply changes"></button>
-          <button type="button" class="btn btn-default btn-xs" title="Back" @click="$emit('close')"><img :src="require('Imgs/arrow_undo.png')"></button>
+          <button type="button" class="btn btn-default btn-xs" title="Back" @click="Back"><img :src="require('Imgs/arrow_undo.png')"></button>
         </div>
       </div>
     </template>
@@ -39,6 +39,10 @@
       this.Refresh();
     },
      methods: {
+      Back: function() {
+        if(this.Timer != null) clearTimeout(this.Timer);
+        this.$emit('close');
+      },
       Refresh: function() {
         if(this.Timer != null) clearTimeout(this.Timer);
         this.Post('getSystem', { Series: ['SystemLog']}).then(
