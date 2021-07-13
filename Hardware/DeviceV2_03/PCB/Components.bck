@@ -118,6 +118,12 @@ K connector
 F ~
 $ENDCMP
 #
+$CMP Conn_02x12_Counter_Clockwise
+D Generic connector, double row, 02x12, counter clockwise pin numbering scheme (similar to DIP packge numbering), script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
 $CMP HLK-PM03
 D Compact AC/DC board mount power module 3W 3V3
 K AC/DC module power supply
@@ -235,6 +241,18 @@ $CMP MCP6004
 D Microchip quad general purpose rail to rail op-amp, 1MHz GBWP
 K quad op amp operational amplifier
 F http://ww1.microchip.com/downloads/en/DeviceDoc/21733j.pdf
+$ENDCMP
+#
+$CMP MIC2005A-2YM6
+D Single-channel, high side, power distribution switch, 2.7V-5.5V, Active High Output, SOIC-8
+K mosfet distribution
+F https://ww1.microchip.com/downloads/en/DeviceDoc/MIC2025-2075-Single-Channel-Power-Distribution-Switch-DS20006030A.pdf
+$ENDCMP
+#
+$CMP MIC2025-2YM
+D Single-channel, high side, power distribution switch, 2.7V-5.5V, Active Low Output, SOIC-8
+K mosfet distribution
+F https://ww1.microchip.com/downloads/en/DeviceDoc/MIC2025-2075-Single-Channel-Power-Distribution-Switch-DS20006030A.pdf
 $ENDCMP
 #
 $CMP REF2025

@@ -64,4 +64,7 @@ string URL::Path() const {
 string URL::Query() const {
   return pQuery;
 }
+string URL::Protocol() const {
+  return pProtocol;
+}
 //----------------------------------------------------------------------------------------------------------------------

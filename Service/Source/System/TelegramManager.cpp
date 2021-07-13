@@ -81,10 +81,15 @@ void TelegramManager::Config(const json &config) {
 }
 void TelegramManager::GetTelegramCallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamBool("Full")) return;
   json Config = ConfigFile::ReadConfig("/Telegram");
-  pthread_mutex_lock(&pMutex);
-  Config["Status"] = pStatus;
-  pthread_mutex_unlock(&pMutex);
+  if(req.Param("Full")) {
+    pthread_mutex_lock(&pMutex);
+    Config["Status"] = pStatus;
+    pthread_mutex_unlock(&pMutex);
+  } else {
+    req.Success({{"Enabled", Config["Enabled"]}});
+  }
   req.Success(Config);
 }
 void TelegramManager::SetTelegramCallback(HTTPRequest &req) {

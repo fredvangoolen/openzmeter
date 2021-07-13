@@ -47,7 +47,7 @@
     methods: {
       Refresh: function() {
         clearTimeout(this.Timer);
-        this.Post('getNTP', { }).then(
+        this.Post('getNTP', { Full: true }).then(
           (result) => {
             if(this.Timer == null) return;
             this.Details = 'Local timezone : ' + moment.tz.zone(moment.tz.guess()).name + '\nTime           : ' + moment(result.Time).format('DD/MM/YYYY HH:mm:ss');

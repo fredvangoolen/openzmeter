@@ -21,9 +21,8 @@
 #include "MessageLoop.h"
 //----------------------------------------------------------------------------------------------------------------------
 #ifdef OPENWRT
-string          UpdateManager::pUpdateURL  = "https://www.openzmeter.com/update/" __BUILD_ARCH__ "/" __BUILD_BRANCH__;
+string          UpdateManager::pUpdateURL  = "https://www.openzmeter.com/update";
 bool            UpdateManager::pAutoUpdate = true;
-json            UpdateManager::pRelease    = nullptr;
 pthread_mutex_t UpdateManager::pMutex      = PTHREAD_MUTEX_INITIALIZER;
 #endif
 // ---------------------------------------------------------------------------------------------------------------------
@@ -33,7 +32,7 @@ UpdateManager::UpdateManager() {
   Config(CheckConfig(ConfigFile::ReadConfig("/Update")));
   MessageLoop::RegisterListener("Updates_PeriodicTasks", PeriodicTasks, 900000);
   HTTPServer::RegisterCallback("getUpdates",   GetUpdatesCallback);
-  HTTPServer::RegisterCallback("setUpgrade",   SetUpgradeCallback);
+  HTTPServer::RegisterCallback("setUpdates",   SetUpdatesCallback);
   LogFile::Info("UpdateManager started");
 #endif
 }
@@ -42,7 +41,7 @@ UpdateManager::~UpdateManager() {
   LogFile::Info("UpdateManager", "Stopping UpdateManager...");
   MessageLoop::UnregisterListener("Updates_PeriodicTasks");
   HTTPServer::UnregisterCallback("getUpdates");
-  HTTPServer::UnregisterCallback("setUpgrade");
+  HTTPServer::UnregisterCallback("setUpdates");
   LogFile::Info("UpdateManager", "UpdateManager stoped");
 #endif
 }
@@ -50,17 +49,18 @@ UpdateManager::~UpdateManager() {
 json UpdateManager::CheckConfig(const json &config) {
   json ConfigOUT = json::object();
   ConfigOUT["URL"] = pUpdateURL;
-  ConfigOUT["Auto"] = true;
+  ConfigOUT["Enabled"] = true;
   if(config.is_object() == true) {
     if(config.contains("URL") && config["URL"].is_string()) ConfigOUT["URL"] = config["URL"];
-    if(config.contains("Auto") && config["Auto"].is_boolean()) ConfigOUT["Auto"] = config["Auto"];
+    if(config.contains("Enabled") && config["Enabled"].is_boolean()) ConfigOUT["Enabled"] = config["Enabled"];
   }
   return ConfigOUT;
 }
 void UpdateManager::Config(const json &config) {
+  ConfigFile::WriteConfig("/Update", config);
   pthread_mutex_lock(&pMutex);
   pUpdateURL  = config["URL"];
-  pAutoUpdate = config["Auto"];
+  pAutoUpdate = config["Enabled"];
   pthread_mutex_unlock(&pMutex);
 }
 void UpdateManager::PeriodicTasks() {
@@ -69,76 +69,81 @@ void UpdateManager::PeriodicTasks() {
     pthread_mutex_unlock(&pMutex);
     return;
   }
-  pthread_mutex_unlock(&pMutex);
-  GetUpdates();
-  pthread_mutex_lock(&pMutex);
-  //Si mi version es distinta a la que obtengo, descargo, guardo y llamo a reiniciar el servicio
-  pthread_mutex_unlock(&pMutex);
-}
-void UpdateManager::GetUpdates() {
-  pthread_mutex_lock(&pMutex);
   URL Url(pUpdateURL);
   pthread_mutex_unlock(&pMutex);
-  Client HTTPClient(Url.Host(), Url.Port());
+  LogFile::Debug("Checking for updates...");
+  Client HTTPClient(string(Url.Protocol() + "://" + Url.Host() + ":" + to_string(Url.Port())).c_str());
   HTTPClient.set_read_timeout(20);
   HTTPClient.set_write_timeout(20);
-  auto Response = HTTPClient.Get(string(Url.Path() + "/Release.json").c_str(), {{"Accept", "application/json"}, {"Accept-Encoding", "gzip, deflate"}});
-  if((Response != nullptr) && (Response->status == HTTP_OK)) {
-    json Content = json::parse(Response->body, NULL, false);
-    if(Content.is_discarded()) {
-      LogFile::Error("Malformed JSON params in UpdateManager");
-    } else {
-      if((Content.contains("Version") == false) || (Content["Version"].is_string() == false) || (Content.contains("ChangeLog") == false) || (Content["ChangeLog"].is_string() == false)) {
-        pthread_mutex_lock(&pMutex);
-        pRelease = nullptr;
-        pthread_mutex_unlock(&pMutex);
-      } else {
-        pthread_mutex_lock(&pMutex);
-        pRelease = json::object();
-        pRelease["Version"] = Content["Version"];
-        pRelease["ChangeLog"] = Content["ChangeLog"];
-        pthread_mutex_unlock(&pMutex);
-      }
-    }
+  HTTPClient.set_compress(true);
+  HTTPClient.enable_server_certificate_verification(false);
+  auto Response = HTTPClient.Get(string(Url.Path() + "/" + __BUILD_ARCH__ + "/" __BUILD_BRANCH__ + "/Release.json").c_str(), {{"Accept", "application/json"}, {"Accept-Encoding", "gzip, deflate"}});
+  if(Response.error() != Error::Success) {
+    LogFile::Warning("Fail to check for updates (Socket error %d)", Response.error());
+    return;
   }
+  if(Response->status != HTTP_OK) {
+    LogFile::Warning("Fail to check for updates (Error code %d)", Response->status);
+    return;
+  }
+  json Content = json::parse(Response->body, NULL, false);
+  if(Content.is_discarded()) {
+    LogFile::Error("Malformed JSON params in UpdateManager");
+    return;
+  }
+  if((Content.contains("Version") == false) || (Content["Version"].is_string() == false) || (Content.contains("Hash") == false) || (Content["Hash"].is_string() == false)) {
+    LogFile::Error("Malformed JSON params in UpdateManager");
+    return;
+  }
+  if(Content["Version"] == string(__BUILD_DATE__)) return;
+  LogFile::Info("Updating from '%s' to '%s'", __BUILD_DATE__, Content["Version"].get<string>().c_str());
+  string Hash = Content["Hash"];
+  remove("/tmp/openZmeter");
+  Response = HTTPClient.Get(string(Url.Path() + "/" + __BUILD_ARCH__ + "/" __BUILD_BRANCH__ + "/openZmeter").c_str(), {{"Accept", "application/octet-stream"}, {"Accept-Encoding", "gzip, deflate"}});
+  if(Response.error() != Error::Success) {
+    LogFile::Warning("Fail to check for updates (Socket error %d)", Response.error());
+    return;
+  }
+  if(Response->status != HTTP_OK) {
+    LogFile::Warning("Fail to check for updates (Error code %d)", Response->status);
+    return;
+  }
+  uint8_t MD5Hash[MD5_DIGEST_LENGTH];
+  char    MD5String[MD5_DIGEST_LENGTH * 2 + 1];
+  MD5((uint8_t*)Response->body.c_str(), Response->body.size(), MD5Hash);
+  for(uint8_t n = 0; n < MD5_DIGEST_LENGTH; n++) sprintf(&MD5String[n * 2], "%02x", MD5Hash[n]);
+  if(Hash != string(MD5String)) {
+    LogFile::Warning("Fail to check update MD5");
+    return;
+  }
+  int File = open("/tmp/openZmeter", O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+  if(File < 0) {
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    return;
+  }
+  if(write(File, Response->body.c_str(), Response->body.size()) != (ssize_t)Response->body.size()) {
+    LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    close(File);
+    return;
+  }
+  close(File);
+  LogFile::Info("UpdateManager is restarting service...");
+  SystemManager::Exec("chmod 755 /tmp/openZmeter && mv /tmp/openZmeter /usr/sbin/openZmeter && /etc/init.d/openZmeter restart");
+  _exit(0);
 }
 void UpdateManager::GetUpdatesCallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
-  json Config = json::object();
-  GetUpdates();
-  pthread_mutex_lock(&pMutex);
-  Config["URL"] = pUpdateURL;
-  if(pRelease != nullptr) {
-    Config["Version"]   = pRelease["Version"];
-    Config["ChangeLog"] = pRelease["ChangeLog"];
-  }
-  pthread_mutex_unlock(&pMutex);
+  json Config = ConfigFile::ReadConfig("/Update");
+  Config["Build"] = __BUILD_DATE__;
+  Config["Arch"] = __BUILD_ARCH__;
+  Config["Branch"] = __BUILD_BRANCH__;
   req.Success(Config);
 }
-void UpdateManager::SetUpgradeCallback(HTTPRequest &req) {
-//  if(req.UserName() != "admin") return HTTPServer::FillResponse(response, "", "text/plain", HTTP_FORBIDDEN);
-//  if((params.contains("Packages") == false) || (params["Packages"].is_array() == false) || (params["Packages"].size() == 0)) return HTTPServer::FillResponse(response, "'Packages' param is required", "text/plain", HTTP_BAD_REQUEST);
-//  string Command = "opkg upgrade --force-depends";
-//  for(auto &Package : params["Packages"]) {
-//    if(Package.is_string() == false) return HTTPServer::FillResponse(response, "'Packages' param is required", "text/plain", HTTP_BAD_REQUEST);
-//    Command.append(" " + Package.get<string>());
-//  }
-//  auto Func = [Command](uint64_t offset, DataSink &sink) {
-//    char   Buffer[128];
-//    string Result = "";
-//    FILE  *Pipe   = popen(Command.c_str(), "r");
-//    if(!Pipe) {
-//      LogFile::Error("Can not exec 'opkg upgrade' (%s)", strerror(errno));
-//      sink.os << "event: status\ndata: ERROR (Can not exec 'opkg upgrade')\n\n";
-//      return false;
-//    }
-//    while((fgets(Buffer, sizeof(Buffer), Pipe) != NULL) && sink.is_writable()) sink.os << "event: text\ndata: " + string(Buffer) + "\n\n";
-//    int Code = WEXITSTATUS(pclose(Pipe));
-//    sink.os << ((Code == 0) ? "event: status\ndata: OK (Upgrade finished)\n\n" : "event: status\ndata: ERROR (Upgrade failed)\n\n");
-//    sink.done();
-//    return true;
-//  };
-//  response.set_chunked_content_provider("text/event-stream", Func);
+void UpdateManager::SetUpdatesCallback(HTTPRequest &req) {
+  if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
+  if(!req.CheckParamBool("Enabled") || !req.CheckParamString("URL")) return;
+  Config(CheckConfig(req.Params()));
+  req.Success(json::object());
 }
 #endif
 //----------------------------------------------------------------------------------------------------------------------

@@ -114,7 +114,6 @@ void WifiManager::GetWIFICallback(HTTPRequest &req) {
   if((Tmp.is_object() == false) || (Tmp["values"].is_object() == false)) return req.Error("", HTTP_INTERNAL_SERVER_ERROR);
   Result["Enabled"] = true;
   if(Tmp["values"]["disabled"].is_string()) Result["Enabled"] = (Tmp["values"]["disabled"] == "0");
-
   if(req.Param("Full")) {
     if(Tmp["values"]["ssid"].is_string()) Result["ESSID"] = Tmp["values"]["ssid"];
     if(Tmp["values"]["encryption"].is_string()) Result["KeyMode"] = (Tmp["values"]["encryption"] == "none") ? "NONE" : (Tmp["values"]["encryption"] == "wep") ? "WEP" : (Tmp["values"]["encryption"] == "psk") ? "WPA" : "WPA2";
@@ -170,7 +169,7 @@ void WifiManager::SetWIFICallback(HTTPRequest &req) {
     if(!req.CheckParamString("Key")) return;
     SystemManager::uBusCall("uci", "set", { {"config", "wireless"}, {"section", "@wifi-iface[0]"}, {"values", {{"ssid", req.Param("ESSID")}, {"key", req.Param("Key")}, {"encryption", (req.Param("KeyMode") == "WEP") ? "wep" : (req.Param("KeyMode") == "WPA") ? "psk" : "psk2"}}}});
   }
-  SystemManager::Exec("uci commit && /etc/init.d/network restart");
+  SystemManager::Exec("uci commit && wifi reload");
   req.Success(json::object());
 }
 #endif

@@ -84,12 +84,17 @@ bool BluetoothManager::Enabled() {
 void BluetoothManager::GetBluetoothCallback(HTTPRequest &req) {
   if(req.UserName() != "admin") return req.Error("", HTTP_FORBIDDEN);
 #ifdef OPENWRT
+  if(!req.CheckParamBool("Full")) return;
   json Config = ConfigFile::ReadConfig("/Bluetooth");
-  if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  Config["Name"] = pServerName;
-  Config["Running"] = pEnabled;
-  if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
-  req.Success(Config);
+  if(req.Param("Full")) {
+    if(pthread_mutex_lock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    Config["Name"] = pServerName;
+    Config["Running"] = pEnabled;
+    if(pthread_mutex_unlock(&pMutex) != 0) LogFile::Error("%s:%d -> %s", __FILE__, __LINE__, strerror(errno));
+    req.Success(Config);
+  } else {
+    req.Success({{"Enabled", Config["Enabled"]}});
+  }
 #else
   req.Error("", HTTP_METHOD_NOT_ALLOWED);
 #endif

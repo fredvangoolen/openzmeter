@@ -22,14 +22,13 @@ class UpdateManager final {
     static string          pUpdateURL;
     static bool            pAutoUpdate;
     static pthread_mutex_t pMutex;
-    static json            pRelease;
   private :
-    static void  GetUpdates();
+//    static void  GetUpdates();
     static void  PeriodicTasks();
     static void  Config(const json &config);
     static json  CheckConfig(const json &config);
     static void  GetUpdatesCallback(HTTPRequest &req);
-    static void  SetUpgradeCallback(HTTPRequest &req);
+    static void  SetUpdatesCallback(HTTPRequest &req);
   #endif
   public :
     UpdateManager();

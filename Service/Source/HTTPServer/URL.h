@@ -31,5 +31,6 @@ class URL final {
     string     Host() const;
     string     Path() const;
     string     Query() const;
+    string     Protocol() const;
 };
 //----------------------------------------------------------------------------------------------------------------------

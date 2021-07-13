@@ -243,6 +243,18 @@ K quad op amp operational amplifier
 F http://ww1.microchip.com/downloads/en/DeviceDoc/21733j.pdf
 $ENDCMP
 #
+$CMP MIC2005A-2YM6
+D Single-channel, high side, power distribution switch, 2.7V-5.5V, Active High Output, SOIC-8
+K mosfet distribution
+F https://ww1.microchip.com/downloads/en/DeviceDoc/MIC2025-2075-Single-Channel-Power-Distribution-Switch-DS20006030A.pdf
+$ENDCMP
+#
+$CMP MIC2025-2YM
+D Single-channel, high side, power distribution switch, 2.7V-5.5V, Active Low Output, SOIC-8
+K mosfet distribution
+F https://ww1.microchip.com/downloads/en/DeviceDoc/MIC2025-2075-Single-Channel-Power-Distribution-Switch-DS20006030A.pdf
+$ENDCMP
+#
 $CMP REF2025
 D 1.25V 100μA Micropower Precision Voltage Reference, SOT-23-6
 K Micropower Precision Voltage Reference 1.25V

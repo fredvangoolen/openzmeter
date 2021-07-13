@@ -1,23 +1,24 @@
 <template>
-  <div class="panel panel-other" v-show="Rows.length>0">
+  <div class="panel panel-other">
     <div class="panel-heading">
       <div class="huge-small header-text">Connectivity</div>
     </div>
     <div class="panel-body">
-      <vuetable ref="table" :fields="Columns" :data="Rows" :api-mode="false" class="table small table-striped">
+      <vuetable ref="table" :fields="Columns" :data="Modules" :api-mode="false" class="table small table-striped">
         <template slot="actions" slot-scope="props">
           <div class="btn-group" >
-            <button class="btn btn-xs btn-default" @click="props.rowData.Method(true)">Configure</button>
+            <button class="btn btn-xs btn-default" :disabled="props.rowData.Avaliable==false" @click="LoadModule(props.rowData, true)">Configure</button>
           </div>
         </template>
       </vuetable>
-      <bluetooth :settings.sync="Modules.Bluetooth.Settings" v-if="View=='Bluetooth'" @close="Update"></bluetooth>
-      <wifi :settings.sync="Modules.Wifi.Settings" v-if="View=='Wifi'" @close="Update"></wifi>
-      <ethernet :settings.sync="Modules.Ethernet.Settings" v-if="View=='Ethernet'" @close="Update"></ethernet>
-      <ntp :settings.sync="Modules.NTP.Settings" v-if="View=='NTP'" @close="Update"></ntp>
-      <telegram :settings.sync="Modules.Telegram.Settings" v-if="View=='Telegram'" @close="Update"></telegram>
-      <modbus-tcp :settings.sync="Modules.ModbusTCP.Settings" v-if="View=='ModbusTCP'" @close="Update"></modbus-tcp>
-      <vpn :settings.sync="Modules.OpenVPN.Settings" v-if="View=='OpenVPN'" @close="Update"></vpn>
+      <bluetooth :settings="Settings" v-if="View=='Bluetooth'" @close="Update"></bluetooth>
+      <wifi :settings="Settings" v-if="View=='Wifi'" @close="Update"></wifi>
+      <ethernet :settings="Settings" v-if="View=='Ethernet'" @close="Update"></ethernet>
+      <ntp :settings="Settings" v-if="View=='NTP'" @close="Update"></ntp>
+      <telegram :settings="Settings" v-if="View=='Telegram'" @close="Update"></telegram>
+      <modbus-tcp :settings="Settings" v-if="View=='ModbusTCP'" @close="Update"></modbus-tcp>
+      <vpn :settings="Settings" v-if="View=='OpenVPN'" @close="Update"></vpn>
+      <updates :settings="Settings" v-if="View=='Updates'" @close="Update"></updates>
     </div>
   </div>
 </template>
@@ -34,32 +35,23 @@
   import Updates from './Connectivity/Updates.vue'
   export default {
     data: function() {
-      return { View: null,
-               Modules: {
-                 'Bluetooth': { Module: 'Bluetooth connection', Settings: null, Method: this.LoadBluetooth },
-                 'Wifi': { Module: 'Wifi connection', Settings: null, Method: this.LoadWIFI },
-                 'Ethernet': { Module: 'Ethernet', Settings: null, Method: this.LoadEthernet },
-                 'NTP': { Module: 'NTP synchronization', Settings: null, Method: this.LoadNTP },
-                 'Telegram': { Module: 'Telegram Bot', Settings: null, Method: this.LoadTelegram },
-                 'ModbusTCP': { Module: 'ModbusTCP', Settings: null, Method: this.LoadModbusTCP },
-                 'OpenVPN': { Module: 'OpenVPN', Settings: null, Method: this.LoadOpenVPN },
-                 'Updates': { Module: 'Updates', Settings: null, Method: this.LoadUpdates }
-               },
+      return { View: null, Settings: null,
+               Modules: [
+                 { Name: 'Bluetooth', Title: 'Bluetooth connection', Enabled: false, Avaliable: false, Method: 'getBluetooth' },
+                 { Name: 'Wifi', Title: 'Wifi connection', Enabled: false, Avaliable: false, Method: 'getWIFI' },
+                 { Name: 'Ethernet', Title: 'Ethernet', Enabled: false, Avaliable: false, Method: 'getEthernet' },
+                 { Name: 'NTP', Title: 'NTP synchronization', Enabled: false, Avaliable: false, Method: 'getNTP' },
+                 { Name: 'Telegram', Title: 'Telegram Bot', Enabled: false, Avaliable: false, Method: 'getTelegram' },
+                 { Name: 'ModbusTCP', Title: 'ModbusTCP', Enabled: false, Avaliable: false, Method: 'getModbusTCP' },
+                 { Name: 'OpenVPN', Title: 'OpenVPN', Enabled: false, Avaliable: false, Method: 'getVPN' },
+                 { Name: 'Updates', Title: 'Automatic updates', Enabled: false, Avaliable: false, Method: 'getUpdates' }
+               ],
                Columns: [
-                 { name: 'Module', title: 'Module' },
-                 { name: 'Settings.Enabled', title: 'Enabled', callback: this.EnabledStatus},
+                 { name: 'Title', title: 'Module' },
+                 { name: 'Enabled', title: 'Enabled', callback: this.EnabledStatus },
                  { name: '__slot:actions', title: '' }
                ],
              };
-    },
-    computed: {
-      Rows: function() {
-        var Rows = [];
-        for(var n in this.Modules) {
-          if(this.Modules[n].Settings != null) Rows.push(Object.assign({ Name: n }, this.Modules[n]));
-        }
-        return Rows;
-      }
     },
     created: function() {
       this.Update();
@@ -67,87 +59,22 @@
     methods: {
       Update: function() {
         this.View = null;
-        this.LoadBluetooth(false);
-        this.LoadWIFI(false);
-        this.LoadEthernet(false);
-        this.LoadNTP(false);
-        this.LoadTelegram(false);
-        this.LoadModbusTCP(false);
-        this.LoadOpenVPN(false);
+        for(var n in this.Modules) this.LoadModule(this.Modules[n], false);
       },
       EnabledStatus: function(value) {
         return (value === true) ? '&#9635;' : '&#9633;';
       },
-      LoadOpenVPN: function(show) {
-        this.Post('getVPN', { Full: show }).then(
+      LoadModule: function(module, full) {
+        this.Post(module.Method, { Full: full }).then(
           (result) => {
-            this.Modules.OpenVPN.Settings = result;
-            if(show) this.View = 'OpenVPN';
+            module.Enabled = result.Enabled;
+            module.Avaliable = true;
+            if(full) {
+              this.Settings = result;
+              this.View = module.Name;
+            }
           },
-          (fail) => { }
-        );
-      },
-      LoadBluetooth: function(show) {
-        this.Post('getBluetooth', { }).then(
-          (result) => {
-            this.Modules.Bluetooth.Settings = result;
-            if(show) this.View = 'Bluetooth';
-          },
-          (fail) => { }
-        );
-      },
-      LoadWIFI: function(show) {
-        this.Post('getWIFI', { Full: show }).then(
-          (result) => {
-            this.Modules.Wifi.Settings = result;
-            if(show) this.View = 'Wifi';
-          },
-          (fail) => { }
-        );
-      },
-      LoadEthernet: function(show) {
-        this.Post('getEthernet', {  }).then(
-          (result) => {
-            this.Modules.Ethernet.Settings = result;
-            if(show) this.View = 'Ethernet';
-          },
-          (fail) => { }
-        );
-      },
-      LoadNTP: function(show) {
-        this.Post('getNTP', { }).then(
-          (result) => {
-            this.Modules.NTP.Settings = result;
-            if(show) this.View = 'NTP';
-          },
-          (fail) => { }
-        );
-      },
-      LoadTelegram: function(show) {
-        this.Post('getTelegram', { }).then(
-          (result) => {
-            this.Modules.Telegram.Settings = result;
-            if(show) this.View = 'Telegram';
-          },
-          (fail) => { }
-        );
-      },
-      LoadModbusTCP: function(show) {
-        this.Post('getModbusTCP', { }).then(
-          (result) => {
-            this.Modules.ModbusTCP.Settings = result;
-            if(show) this.View = 'ModbusTCP';
-          },
-          (fail) => { }
-        );
-      },
-      LoadUpdates: function(show) {
-        this.Post('getUpdates', { }).then(
-          (result) => {
-            this.Modules.Updates.Settings = result;
-            if(show) this.View = 'Updates';
-          },
-          (fail) => { }
+          (fail) => { module.Avaliable = false; }
         );
       }
     },
